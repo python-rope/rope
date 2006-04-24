@@ -108,6 +108,7 @@ rope; A Python IDE
   * Use idlelib or Modified event for updating highlighting when necessary
   * Only highlighting the changed region
   * Extend highlighting region while highlighting if necessay
+  * Highlighting after cut and paste
 
 
 * Enhancing menu @ 1

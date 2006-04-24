@@ -73,7 +73,7 @@ class Match(object):
         self.side = side
 
 class Searcher(object):
-    '''A class for searching GraphicalEditors'''
+    '''A class for searching TextEditors'''
 
     def __init__(self, editor):
         self.editor = editor

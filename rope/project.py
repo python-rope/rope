@@ -29,7 +29,10 @@ class Project(object):
             return Folder(self, resourceName)
         raise rope.core.RopeException('Unknown resource ' + resourceName)
 
-    def create_file(self, fileName):
+    def get_files(self):
+        return self._get_files_recursively(self.get_root_folder())
+
+    def _create_file(self, fileName):
         filePath = self._get_resource_path(fileName)
         if os.path.exists(filePath):
             if not os.path.isfile(filePath):
@@ -42,7 +45,7 @@ class Project(object):
             raise rope.core.RopeException(e)
         newFile.close()
 
-    def create_folder(self, folderName):
+    def _create_folder(self, folderName):
         folderPath = self._get_resource_path(folderName)
         if os.path.exists(folderPath):
             if not os.path.isdir(folderPath):
@@ -63,9 +66,6 @@ class Project(object):
             if not folder.get_name().startswith('.'):
                 result.extend(self._get_files_recursively(folder))
         return result
-
-    def get_files(self):
-        return self._get_files_recursively(self.get_root_folder())
 
     def _is_package(self, folder):
         init_dot_py = folder.get_path() + '/__init__.py'
@@ -174,7 +174,7 @@ class Folder(Resource):
         self.project = project
         self.folderName = folderName
 
-    def _getFolderPath(self):
+    def _get_real_path(self):
         return self.project._get_resource_path(self.folderName)
     
     def remove(self):
@@ -191,17 +191,38 @@ class Folder(Resource):
 
     def get_children(self):
         '''Returns the children resources of this folder'''
-        path = self._getFolderPath()
+        path = self._get_real_path()
         result = []
         content = os.listdir(path)
         for name in content:
             if self.get_path() != '':
-                resourceName = self.get_path() + '/' + name
+                resource_name = self.get_path() + '/' + name
             else:
-                resourceName = name
-            result.append(self.project.get_resource(resourceName))
+                resource_name = name
+            result.append(self.project.get_resource(resource_name))
         return result
 
+    def create_file(self, file_name):
+        if self.get_path():
+            file_path = self.get_path() + '/' + file_name
+        else:
+            file_path = file_name
+        self.project._create_file(file_path)
+
+    def create_folder(self, folder_name):
+        if self.get_path():
+            folder_path = self.get_path() + '/' + folder_name
+        else:
+            folder_path = folder_name
+        self.project._create_folder(folder_path)
+
+    def get_child(self, name):
+        if self.get_path():
+            child_path = self.get_path() + '/' + name
+        else:
+            child_path = name
+        return self.project.get_resource(child_path)
+    
     def get_files(self):
         result = []
         for resource in self.get_children():

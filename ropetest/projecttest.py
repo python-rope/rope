@@ -74,15 +74,15 @@ class ProjectTest(unittest.TestCase):
         projectFile.write('another text\n')
         self.assertEquals('another text\n', projectFile.read())
 
-    def testCreatingFiles(self):
-        projectFile = 'NewFile.txt'
-        self.project.create_file(projectFile)
+    def test_creating_files(self):
+        projectFile = 'newfile.txt'
+        self.project.get_root_folder().create_file(projectFile)
         newFile = self.project.get_resource(projectFile)
         self.assertTrue(newFile is not None)
 
     def testCreatingFilesThatAlreadyExist(self):
         try:
-            self.project.create_file(self.projectMaker.getSampleFileName())
+            self.project.get_root_folder().create_file(self.projectMaker.getSampleFileName())
             self.fail('Should have failed')
         except RopeException:
             pass
@@ -106,51 +106,57 @@ class ProjectTest(unittest.TestCase):
 
     def testCreatingFolders(self):
         folderName = 'SampleFolder'
-        self.project.create_folder(folderName)
+        self.project.get_root_folder().create_folder(folderName)
         folderPath = os.path.join(self.project.get_root_address(), folderName)
         self.assertTrue(os.path.exists(folderPath) and os.path.isdir(folderPath))
 
     def testMakingAFolderThatAlreadyExists(self):
         folderName = 'SampleFolder'
-        self.project.create_folder(folderName)
+        self.project.get_root_folder().create_folder(folderName)
         try:
-            self.project.create_folder(folderName)
+            self.project.get_root_folder().create_folder(folderName)
             self.fail('Should have failed')
         except RopeException:
             pass
 
     def testFailingIfCreatingAFolderWhileAFileAlreadyExists(self):
         folderName = 'SampleFolder'
-        self.project.create_file(folderName)
+        self.project.get_root_folder().create_file(folderName)
         try:
-            self.project.create_folder(folderName)
+            self.project.get_root_folder().create_folder(folderName)
             self.fail('Should have failed')
         except RopeException:
             pass
 
     def testCreatingAFileInsideAFolder(self):
-        folderName = 'sampleFolder'
-        self.project.create_folder(folderName)
-        insideFile = folderName + '/sample2.txt'
-        self.project.create_file(insideFile)
-        file = self.project.get_resource(insideFile)
+        folder_name = 'sampleFolder'
+        file_name = 'sample2.txt'
+        file_path = folder_name + '/' + file_name
+        self.project.get_root_folder().create_folder(folder_name)
+        parent_folder = self.project.get_resource(folder_name)
+        parent_folder.create_file(file_name)
+        file = self.project.get_resource(file_path)
         file.write('sample notes')
+        self.assertEquals(file_path, file.get_path())
         self.assertEquals('sample notes',
-                          open(os.path.join(self.project.get_root_address(), insideFile)).read())
+                          open(os.path.join(self.project.get_root_address(),
+                                            file_path))
+                          .read())
 
     def testFailingWhenCreatingAFileInsideANonExistantFolder(self):
         try:
-            self.project.create_file('NonexistantFolder/SomeFile.txt')
+            self.project.get_root_folder().create_file('NonexistantFolder/SomeFile.txt')
             self.fail('Should have failed')
         except RopeException:
             pass
 
     def testNestedDirectories(self):
-        folderName = 'SampleFolder'
-        self.project.create_folder(folderName)
-        self.project.create_folder(folderName + '/' + folderName)
-        folderPath = os.path.join(self.project.get_root_address(), folderName, folderName)
-        self.assertTrue(os.path.exists(folderPath) and os.path.isdir(folderPath))
+        folder_name = 'SampleFolder'
+        self.project.get_root_folder().create_folder(folder_name)
+        parent = self.project.get_resource(folder_name)
+        parent.create_folder(folder_name)
+        folder_path = os.path.join(self.project.get_root_address(), folder_name, folder_name)
+        self.assertTrue(os.path.exists(folder_path) and os.path.isdir(folder_path))
 
     def testRemovingFiles(self):
         self.assertTrue(os.path.exists(os.path.join(self.project.get_root_address(),
@@ -175,7 +181,7 @@ class ProjectTest(unittest.TestCase):
 
     def testRemovingNestedFiles(self):
         fileName = self.projectMaker.getSampleFolderName() + '/SampleFile.txt'
-        self.project.create_file(fileName)
+        self.project.get_root_folder().create_file(fileName)
         self.project.get_resource(fileName).remove()
         self.assertTrue(os.path.exists(os.path.join(self.project.get_root_address(),
                                                     self.projectMaker.getSampleFolderName())))
@@ -185,11 +191,12 @@ class ProjectTest(unittest.TestCase):
     def testFileGetName(self):
         file = self.project.get_resource(self.projectMaker.getSampleFileName())
         self.assertEquals(self.projectMaker.getSampleFileName(), file.get_name())
-        fileName = 'nestedFile.txt'
-        filePath = self.projectMaker.getSampleFolderName() + '/' + fileName
-        self.project.create_file(filePath)
+        file_name = 'nestedFile.txt'
+        parent = self.project.get_resource(self.projectMaker.getSampleFolderName())
+        filePath = self.projectMaker.getSampleFolderName() + '/' + file_name
+        parent.create_file(file_name)
         nestedFile = self.project.get_resource(filePath)
-        self.assertEquals(fileName, nestedFile.get_name())
+        self.assertEquals(file_name, nestedFile.get_name())
 
     def testFolderGetName(self):
         folder = self.project.get_resource(self.projectMaker.getSampleFolderName())
@@ -199,12 +206,13 @@ class ProjectTest(unittest.TestCase):
         file = self.project.get_resource(self.projectMaker.getSampleFileName())
         self.assertEquals(self.projectMaker.getSampleFileName(), file.get_path())
         fileName = 'nestedFile.txt'
+        parent = self.project.get_resource(self.projectMaker.getSampleFolderName())
         filePath = self.projectMaker.getSampleFolderName() + '/' + fileName
-        self.project.create_file(filePath)
+        parent.create_file(fileName)
         nestedFile = self.project.get_resource(filePath)
         self.assertEquals(filePath, nestedFile.get_path())
 
-    def testFolderget_path(self):
+    def test_folder_get_path(self):
         folder = self.project.get_resource(self.projectMaker.getSampleFolderName())
         self.assertEquals(self.projectMaker.getSampleFolderName(), folder.get_path())
 
@@ -217,18 +225,23 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals([], children)
     
     def test_nonempty_get_children(self):
-        filePath = self.projectMaker.getSampleFolderName() + '/nestedFile.txt'
-        self.project.create_file(filePath)
-        children = self.project.get_resource(self.projectMaker.getSampleFolderName()).get_children()
+        file_name = 'nestedfile.txt'
+        filePath = self.projectMaker.getSampleFolderName() + '/' + file_name
+        parent = self.project.get_resource(self.projectMaker.getSampleFolderName())
+        parent.create_file(file_name)
+        children = parent.get_children()
         self.assertEquals(1, len(children))
         self.assertEquals(filePath, children[0].get_path())
 
     def test_nonempty_get_children2(self):
-        filePath = self.projectMaker.getSampleFolderName() + '/nestedFile.txt'
-        folderPath = self.projectMaker.getSampleFolderName() + '/nestedFolder'
-        self.project.create_file(filePath)
-        self.project.create_folder(folderPath)
-        children = self.project.get_resource(self.projectMaker.getSampleFolderName()).get_children()
+        file_name = 'nestedfile.txt'
+        folder_name = 'nestedfolder.txt'
+        filePath = self.projectMaker.getSampleFolderName() + '/' + file_name
+        folderPath = self.projectMaker.getSampleFolderName() + '/' + folder_name
+        parent = self.project.get_resource(self.projectMaker.getSampleFolderName())
+        parent.create_file(file_name)
+        parent.create_folder(folder_name)
+        children = parent.get_children()
         self.assertEquals(2, len(children))
         self.assertTrue(filePath, children[0].get_path() or filePath == children[1].get_path())
         self.assertEquals(folderPath, children[0].get_path() or folderPath == children[1].get_path())
@@ -244,22 +257,24 @@ class ProjectTest(unittest.TestCase):
         self.assertTrue(self.project.get_resource(self.projectMaker.getSampleFolderName()) in folders)
 
     def test_nested_folder_get_files(self):
-        self.project.create_folder('top')
-        self.project.create_file('top/file1.txt')
-        self.project.create_file('top/file2.txt')
-        files = self.project.get_resource('top').get_files()
+        self.project.get_root_folder().create_folder('top')
+        parent = self.project.get_resource('top')
+        parent.create_file('file1.txt')
+        parent.create_file('file2.txt')
+        files = parent.get_files()
         self.assertEquals(2, len(files))
         self.assertTrue(self.project.get_resource('top/file2.txt') in files)
-        self.assertEquals(0, len(self.project.get_resource('top').get_folders()))
+        self.assertEquals(0, len(parent.get_folders()))
         
     def test_nested_folder_get_folders(self):
-        self.project.create_folder('top')
-        self.project.create_folder('top/dir1')
-        self.project.create_folder('top/dir2')
-        folders = self.project.get_resource('top').get_folders()
+        self.project.get_root_folder().create_folder('top')
+        parent = self.project.get_resource('top')
+        parent.create_folder('dir1')
+        parent.create_folder('dir2')
+        folders = parent.get_folders()
         self.assertEquals(2, len(folders))
         self.assertTrue(self.project.get_resource('top/dir1') in folders)
-        self.assertEquals(0, len(self.project.get_resource('top').get_files()))
+        self.assertEquals(0, len(parent.get_files()))
         
     def testRootFolder(self):
         rootFolder = self.project.get_root_folder()
@@ -274,45 +289,52 @@ class ProjectTest(unittest.TestCase):
 
     def testMultifileGetAllFiles(self):
         fileName = 'nestedFile.txt'
-        self.project.create_file(self.projectMaker.getSampleFolderName() + '/' + fileName)
+        parent = self.project.get_resource(self.projectMaker.getSampleFolderName())
+        parent.create_file(fileName)
         files = self.project.get_files()
         self.assertEquals(2, len(files))
-        self.assertTrue(fileName, files[0].get_name() or fileName == files[1].get_name())
+        self.assertTrue(fileName == files[0].get_name() or fileName == files[1].get_name())
 
     def test_getting_empty_source_folders(self):
         self.assertEquals([], self.project.get_source_folders())
 
     def test_root_source_folder(self):
-        self.project.create_file('sample.py')
+        self.project.get_root_folder().create_file('sample.py')
         source_folders = self.project.get_source_folders()
         self.assertEquals(1, len(source_folders))
         self.assertTrue(self.project.get_root_folder() in source_folders)
 
     def test_src_source_folder(self):
-        self.project.create_folder('src')
-        self.project.create_file('src/sample.py')
+        self.project.get_root_folder().create_folder('src')
+        src = self.project.get_resource('src')
+        src.create_file('sample.py')
         source_folders = self.project.get_source_folders()
         self.assertEquals(1, len(source_folders))
         self.assertTrue(self.project.get_resource('src') in source_folders)
 
     def test_packages(self):
-        self.project.create_folder('src')
-        self.project.create_folder('src/package')
-        self.project.create_file('src/package/__init__.py')
+        self.project.get_root_folder().create_folder('src')
+        src = self.project.get_resource('src')
+        src.create_folder('package')
+        pkg = self.project.get_resource('src/package')
+        pkg.create_file('__init__.py')
         source_folders = self.project.get_source_folders()
         self.assertEquals(1, len(source_folders))
-        self.assertTrue(self.project.get_resource('src') in source_folders)
+        self.assertTrue(src in source_folders)
 
     def test_multi_source_folders(self):
-        self.project.create_folder('src')
-        self.project.create_folder('src/package')
-        self.project.create_file('src/package/__init__.py')
-        self.project.create_folder('test')
-        self.project.create_file('test/alltests.py')
+        self.project.get_root_folder().create_folder('src')
+        src = self.project.get_resource('src')
+        src.create_folder('package')
+        package = self.project.get_resource('src/package')
+        package.create_file('__init__.py')
+        self.project.get_root_folder().create_folder('test')
+        test = self.project.get_resource('test')
+        test.create_file('alltests.py')
         source_folders = self.project.get_source_folders()
         self.assertEquals(2, len(source_folders))
-        self.assertTrue(self.project.get_resource('src') in source_folders)
-        self.assertTrue(self.project.get_resource('test') in source_folders)
+        self.assertTrue(src in source_folders)
+        self.assertTrue(test in source_folders)
 
     def test_ignoring_dot_star_folders_in_get_files(self):
         root = self.project.get_root_address()
@@ -332,7 +354,55 @@ class ProjectTest(unittest.TestCase):
         for x in self.project.get_files():
             self.assertNotEquals('src/test.pyc', x.get_path())
 
+    def test_folder_creating_files(self):
+        projectFile = 'NewFile.txt'
+        self.project.get_root_folder().create_file(projectFile)
+        new_file = self.project.get_resource(projectFile)
+        self.assertTrue(new_file is not None and not new_file.is_folder())
 
+    def test_folder_creating_nested_files(self):
+        project_file = 'NewFile.txt'
+        parent_folder = self.project.get_resource(self.projectMaker.getSampleFolderName())
+        parent_folder.create_file(project_file)
+        newFile = self.project.get_resource(self.projectMaker.getSampleFolderName()
+                                            + '/' + project_file)
+        self.assertTrue(new_file is not None and not new_file.is_folder())
+
+    def test_folder_creating_files(self):
+        projectFile = 'newfolder'
+        self.project.get_root_folder().create_folder(projectFile)
+        new_folder = self.project.get_resource(projectFile)
+        self.assertTrue(new_folder is not None and new_folder.is_folder())
+
+    def test_folder_creating_nested_files(self):
+        project_file = 'newfolder'
+        parent_folder = self.project.get_resource(self.projectMaker.getSampleFolderName())
+        parent_folder.create_folder(project_file)
+        new_folder = self.project.get_resource(self.projectMaker.getSampleFolderName()
+                                               + '/' + project_file)
+        self.assertTrue(new_folder is not None and new_folder.is_folder())
+
+    def test_folder_get_child(self):
+        folder = self.project.get_root_folder()
+        folder.create_file('myfile.txt')
+        folder.create_folder('myfolder')
+        self.assertEquals(self.project.get_resource('myfile.txt'), 
+                          folder.get_child('myfile.txt'))
+        self.assertEquals(self.project.get_resource('myfolder'), 
+                          folder.get_child('myfolder'))
+
+    def test_folder_get_child_nested(self):
+        root = self.project.get_root_folder()
+        root.create_folder('myfolder')
+        folder = root.get_child('myfolder')
+        folder.create_file('myfile.txt')
+        folder.create_folder('myfolder')
+        self.assertEquals(self.project.get_resource('myfolder/myfile.txt'), 
+                          folder.get_child('myfile.txt'))
+        self.assertEquals(self.project.get_resource('myfolder/myfolder'), 
+                          folder.get_child('myfolder'))
+
+        
 class FileFinderTest(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -340,14 +410,15 @@ class FileFinderTest(unittest.TestCase):
         self.project = Project(self.projectMaker.getRoot())
         self.finder = FileFinder(self.project)
         self.project.get_resource(self.projectMaker.getSampleFileName()).remove()
-        self.file1 = self.projectMaker.getSampleFolderName() + '/aa'
-        self.file2 = self.projectMaker.getSampleFolderName() + '/abb'
-        self.file3 = self.projectMaker.getSampleFolderName() + '/abc'
-        self.file4 = self.projectMaker.getSampleFolderName() + '/b'
-        self.project.create_file(self.file1)
-        self.project.create_file(self.file2)
-        self.project.create_file(self.file3)
-        self.project.create_file(self.file4)
+        self.file1 = 'aa'
+        self.file2 = 'abb'
+        self.file3 = 'abc'
+        self.file4 = 'b'
+        self.parent = self.project.get_resource(self.projectMaker.getSampleFolderName())
+        self.parent.create_file(self.file1)
+        self.parent.create_file(self.file2)
+        self.parent.create_file(self.file3)
+        self.parent.create_file(self.file4)
         
     def tearDown(self):
         self.projectMaker.removeAll()
@@ -363,8 +434,8 @@ class FileFinderTest(unittest.TestCase):
     def testAbsoluteFinding(self):
         result = self.finder.find_files_starting_with('aa')
         self.assertEquals(1, len(result))
-        self.assertEquals(self.file1, result[0].get_path())
-        self.assertEquals(self.file2, self.finder.find_files_starting_with('abb')[0].get_path())
+        self.assertEquals(self.file1, result[0].get_name())
+        self.assertEquals(self.file2, self.finder.find_files_starting_with('abb')[0].get_name())
 
     def testSpecializedFinding(self):
         result = self.finder.find_files_starting_with('ab')
@@ -394,7 +465,7 @@ class TestPythonFileRunner(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def make_sample_python_file(self, file_path, get_text_function_source=None):
-        self.project.create_file(file_path)
+        self.project.get_root_folder().create_file(file_path)
         file = self.project.get_resource(file_path)
         if not get_text_function_source:
             get_text_function_source = "def get_text():\n    return 'run'\n\n"
@@ -433,7 +504,7 @@ class TestPythonFileRunner(unittest.TestCase):
         self.assertEquals('', self.get_output_file_content(file_path))
 
     def test_running_nested_files(self):
-        self.project.create_folder('src')
+        self.project.get_root_folder().create_folder('src')
         file_path = 'src/sample.py'
         self.make_sample_python_file(file_path)
         file_resource = self.project.get_resource(file_path)
@@ -479,10 +550,11 @@ class TestPythonFileRunner(unittest.TestCase):
             os.remove(temp_file_name)
 
     def test_setting_pythonpath(self):
-        self.project.create_folder('src')
-        self.project.create_file('src/sample.py')
-        self.project.get_resource('src/sample.py').write('def f():\n    pass\n')
-        self.project.create_folder('test')
+        self.project.get_root_folder().create_folder('src')
+        src = self.project.get_resource('src')
+        src.create_file('sample.py')
+        src.get_child('sample.py').write('def f():\n    pass\n')
+        self.project.get_root_folder().create_folder('test')
         file_path = 'test/test.py'
         self.make_sample_python_file(file_path,
                                      "def get_text():" +

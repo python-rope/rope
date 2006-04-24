@@ -1,3 +1,12 @@
+*** Make a new module @ 1 ***
+
+- Where does this belong to Project or another class: Project
+- Add Folder.create_file, Folder.create_folder, Folder.get_child
+
+* Should ask the source folder and the package
+* Add to CoreUI
+* Open module after creating
+
 
 ? Iterator for accessing editor text or LineOrientedOutput
 ? Should workingon.txt be under version control?

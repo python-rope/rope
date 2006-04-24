@@ -250,11 +250,17 @@ class Core(object):
         if activeEditor:
             activeEditor.save()
 
-    def create_file(self, fileName):
+    def create_file(self, file_name):
         if self.project is None:
             raise RopeException('No project is open')
-        self.project.create_file(fileName)
-        return self.open_file(fileName)
+        try:
+            last_slash = file_name.rindex('/')
+            parent = project.get_resource(file_name[: last_slash])
+            file_name = file_name[last_slash + 1:]
+        except ValueError:
+            parent = self.project.get_root_folder()
+        parent.create_file(file_name)
+        return self.open_file(file_name)
 
     def open_project(self, projectRoot):
         if self.project:
@@ -266,8 +272,14 @@ class Core(object):
             self.close_active_editor()
         self.project = None
 
-    def create_folder(self, folderName):
-        self.project.create_folder(folderName)
+    def create_folder(self, folder_name):
+        try:
+            last_slash = folder_name.rindex('/')
+            parent = project.get_resource(folder_name[: last_slash])
+            folder_name = folder_name[last_slash + 1:]
+        except ValueError:
+            parent = self.project.get_root_folder()
+        parent.create_folder(folder_name)
 
     def exit(self):
         self.root.quit()
