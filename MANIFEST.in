@@ -1,0 +1,6 @@
+recursive-include docs *.html
+include *.txt
+
+recursive-include rope *.py
+recursive-include ropetest *.py
+include *.py

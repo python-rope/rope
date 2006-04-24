@@ -1,0 +1,186 @@
+rope; A Python IDE
+
+--- Stories ---
+
+* Organize imports @ 2
+
+
+* Add import @ 2
+
+
+* Auto-complete class and function names @ 2
+
+
+* Show PyDoc @ 2
+
+
+* Variable indentation and tab size @ 1
+
+
+* Open Type @ 2
+
+
+* Showing syntactical errors @ 3
+
+
+* Having multiple clipboards @ 2
+
+
+* Adding tool bar @ 1
+
+
+* Commanding buffer @ 4
+
+
+* Subversion support using pysvn @ 3
+
+
+* Rename local variable @ 2
+
+
+* Rename function @ 2
+
+
+* Rename class @ 3
+
+
+* Move a class to another module @ 3
+
+
+* Local history @ 4
+
+
+* Find matching parens @ 1
+
+
+* Rename module refactoring @ 2
+
+
+* Last edit location; C-q @ 2
+
+
+* Running unit tests @ 3
+  Add a graphical view for running tests.
+
+
+* Enhance open dialog @ 1
+
+
+* Replacement; M-% @ 1
+
+
+* Save as; C-x C-w
+
+
+* Remembering last open project @ 1
+
+
+* File Encodings @ 2
+
+
+* Changing next/prev word to stop on underline and capital letters @ 1
+
+
+* Commenting and uncommenting lines @ 1
+
+
+* Enhancing searching @ 1
+  * End the search when some other key sequence is typed
+  * C-s C-s should start the last search
+  * Search history; BackSpace should go back to the matches found before
+  * Starting from begining when end of file is reached
+
+
+* Enhancing module running @ 2
+  * Showing running status in the GUI
+  * Printing output somewhere
+  * Getting input from somewhere
+  * Customizing CWD and parameters
+  * Running last run
+
+
+* User specified source folders @ 2
+    You should save this project specific information somewhere. How should
+  guessed source folders be used.
+
+
+* Enhancing syntax highlighting @ 1
+  * Use idlelib or Modified event for updating highlighting when necessary
+  * Only highlighting the changed region
+  * Extend highlighting region while highlighting if necessay
+
+
+* Enhancing menu @ 1
+  * Disable inaccessable items
+  * Showing keyboard short-cuts in front of menu items
+
+
+* Enhancing editor @ 1
+  * Kill line; C-k
+  * Select all; C-x h
+  * Go to line
+
+
+* Enhancing auto indentation @ 1
+  * Implicit line joining: Indenting lines whose previous line contains a ([{'''
+  * Indenting a range of file
+  * Faster indentation using line oriented tools; 3 times faster
+  * Removing extra spaces
+
+
+* Formating Code @ 2
+
+
+* Writing ASTs @ 4
+
+
+* Auto-complete variable names @ 3
+
+
+* Enhancing editor @ 1
+  * Clearing selection if something happens
+  * Unifying builtin and emacs-style selections; if selection
+    is active do the builtin cut and paste
+  * Edit menu: cut, paste, undo, redo, revert
+
+
+> Public release 0.1 : May 6, 2006
+
+
+* Making ASTs @ 4
+
+
+* Auto-complete module names @ 2
+
+
+* Enhancing editor and indentation @ 1
+  * Clearing undo list when opening a file; undoSeparator when saving
+  * Pressing back space should deindent; shortcuts for indenting and deindenting
+  * Showing modified file status
+
+
+* Showing current line in status bar @ 1
+
+
+* Make a new package @ 1
+  Should ask the source folder.
+
+
+* Switch editor dialog; C-x b and C-F6 @ 1
+
+
+* Make a new module @ 1
+  Should ask the source folder and package.
+
+
+--- Remaining Stories ---
+? Rename rope; maybe pyrope
+? Using underlined_words function style
+? Separate domain and presentation everywhere
+* Make tests less dependant
+* Make a new Project; Seperate Opening and creating projects
+* Add removing resources to Core
+? Project resource consistency; What if it is deleted after being created.
+? Distinction of functional and unit tests
+? Logging and status bar
+? Using SF SVN; Making a script for committing to SF

@@ -1,0 +1,35 @@
+> Public release 0.1pre : April 22, 2006
+
+
+- Extending syntax highlighted elements : April 22, 2006
+
+
+- Auto indentation; C-i : April 20, 2006
+
+
+- Basic searching; C-s : April 12, 2006
+
+
+> SF registration : April 10, 2006
+
+
+- Multiple buffers : April 8, 2006
+  The editor should have a notebook view.
+
+
+- Enhancing dialogs : April 7, 2006
+  Using tkMessageBox, tkFileDialog, tkSimpleDialog, ScrolledText
+
+
+- Running modules : April 6, 2006
+  You should add the required directories to the python path.
+
+
+- Guessing source folders in the project : April 5, 2006
+
+
+- Finding a file in a project : April 4, 2006
+
+
+- Highlighting keywords : March 21, 2006
+  Only python files(*.py) should be highlighted.

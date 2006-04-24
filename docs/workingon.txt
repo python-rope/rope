@@ -1,0 +1,6 @@
+
+? Iterator for accessing editor text or LineOrientedOutput
+? Should workingon.txt be under version control?
+? Consider using Tix or Pmw or idlelib
+? Separating domain and presentation in Core
+? not using editor._rope_title
