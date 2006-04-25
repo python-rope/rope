@@ -69,6 +69,7 @@ class TextEditor(object):
     def search(self, keyword, start, case=True, forwards=True):
         pass
 
+
 class TextIndex(object):
     '''A class for pointing to a position in a text'''
 
@@ -157,7 +158,10 @@ class GraphicalEditor(TextEditor):
             if self.get_searcher().is_searching():
                 self.get_searcher().cancel_searching()
         self.text.bind('<Control-g>', escape)
-        self.text.bind('<Control-x><Control-x>', lambda event: self.swapMarkAndInsert())
+        def do_swap_mark_and_insert(event):
+            self.swapMarkAndInsert()
+            return 'break'
+        self.text.bind('<Control-x><Control-x>', do_swap_mark_and_insert)
         def goNextPage(event):
             self.nextPage()
             return 'break'
@@ -471,7 +475,7 @@ class GraphicalTextIndex(TextIndex):
         if self.editor.text.compare(self.index, '>', index.index):
             return +1
         return 0
-    
+
     def _getIndex(self):
         return self.index
 

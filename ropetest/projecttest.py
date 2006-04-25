@@ -132,8 +132,7 @@ class ProjectTest(unittest.TestCase):
         folder_name = 'sampleFolder'
         file_name = 'sample2.txt'
         file_path = folder_name + '/' + file_name
-        self.project.get_root_folder().create_folder(folder_name)
-        parent_folder = self.project.get_resource(folder_name)
+        parent_folder = self.project.get_root_folder().create_folder(folder_name)
         parent_folder.create_file(file_name)
         file = self.project.get_resource(file_path)
         file.write('sample notes')
@@ -152,8 +151,7 @@ class ProjectTest(unittest.TestCase):
 
     def testNestedDirectories(self):
         folder_name = 'SampleFolder'
-        self.project.get_root_folder().create_folder(folder_name)
-        parent = self.project.get_resource(folder_name)
+        parent = self.project.get_root_folder().create_folder(folder_name)
         parent.create_folder(folder_name)
         folder_path = os.path.join(self.project.get_root_address(), folder_name, folder_name)
         self.assertTrue(os.path.exists(folder_path) and os.path.isdir(folder_path))
@@ -257,8 +255,7 @@ class ProjectTest(unittest.TestCase):
         self.assertTrue(self.project.get_resource(self.projectMaker.getSampleFolderName()) in folders)
 
     def test_nested_folder_get_files(self):
-        self.project.get_root_folder().create_folder('top')
-        parent = self.project.get_resource('top')
+        parent = self.project.get_root_folder().create_folder('top')
         parent.create_file('file1.txt')
         parent.create_file('file2.txt')
         files = parent.get_files()
@@ -267,8 +264,7 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(0, len(parent.get_folders()))
         
     def test_nested_folder_get_folders(self):
-        self.project.get_root_folder().create_folder('top')
-        parent = self.project.get_resource('top')
+        parent = self.project.get_root_folder().create_folder('top')
         parent.create_folder('dir1')
         parent.create_folder('dir2')
         folders = parent.get_folders()
@@ -305,31 +301,25 @@ class ProjectTest(unittest.TestCase):
         self.assertTrue(self.project.get_root_folder() in source_folders)
 
     def test_src_source_folder(self):
-        self.project.get_root_folder().create_folder('src')
-        src = self.project.get_resource('src')
+        src = self.project.get_root_folder().create_folder('src')
         src.create_file('sample.py')
         source_folders = self.project.get_source_folders()
         self.assertEquals(1, len(source_folders))
         self.assertTrue(self.project.get_resource('src') in source_folders)
 
     def test_packages(self):
-        self.project.get_root_folder().create_folder('src')
-        src = self.project.get_resource('src')
-        src.create_folder('package')
-        pkg = self.project.get_resource('src/package')
+        src = self.project.get_root_folder().create_folder('src')
+        pkg = src.create_folder('package')
         pkg.create_file('__init__.py')
         source_folders = self.project.get_source_folders()
         self.assertEquals(1, len(source_folders))
         self.assertTrue(src in source_folders)
 
     def test_multi_source_folders(self):
-        self.project.get_root_folder().create_folder('src')
-        src = self.project.get_resource('src')
-        src.create_folder('package')
-        package = self.project.get_resource('src/package')
+        src = self.project.get_root_folder().create_folder('src')
+        package = src.create_folder('package')
         package.create_file('__init__.py')
-        self.project.get_root_folder().create_folder('test')
-        test = self.project.get_resource('test')
+        test = self.project.get_root_folder().create_folder('test')
         test.create_file('alltests.py')
         source_folders = self.project.get_source_folders()
         self.assertEquals(2, len(source_folders))
@@ -393,16 +383,24 @@ class ProjectTest(unittest.TestCase):
 
     def test_folder_get_child_nested(self):
         root = self.project.get_root_folder()
-        root.create_folder('myfolder')
-        folder = root.get_child('myfolder')
+        folder = root.create_folder('myfolder')
         folder.create_file('myfile.txt')
         folder.create_folder('myfolder')
-        self.assertEquals(self.project.get_resource('myfolder/myfile.txt'), 
+        self.assertEquals(self.project.get_resource('myfolder/myfile.txt'),
                           folder.get_child('myfile.txt'))
-        self.assertEquals(self.project.get_resource('myfolder/myfolder'), 
+        self.assertEquals(self.project.get_resource('myfolder/myfolder'),
                           folder.get_child('myfolder'))
 
-        
+    def test_module_creation(self):
+        new_module = self.project.create_module(self.project.get_root_folder(), 'module')
+        self.assertEquals(self.project.get_resource('module.py'), new_module)
+
+    def test_packaged_module_creation(self):
+        package = self.project.get_root_folder().create_folder('package')
+        new_module = self.project.create_module(self.project.get_root_folder(), 'package.module')
+        self.assertEquals(self.project.get_resource('package/module.py'), new_module)
+
+
 class FileFinderTest(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -452,7 +450,7 @@ class FileFinderTest(unittest.TestCase):
         self.assertEquals(1, len(result3))
         result4 = self.finder.find_files_starting_with('a')
         self.assertEquals(3, len(result4))
-        
+
 
 class TestPythonFileRunner(unittest.TestCase):
     def setUp(self):
@@ -550,8 +548,7 @@ class TestPythonFileRunner(unittest.TestCase):
             os.remove(temp_file_name)
 
     def test_setting_pythonpath(self):
-        self.project.get_root_folder().create_folder('src')
-        src = self.project.get_resource('src')
+        src = self.project.get_root_folder().create_folder('src')
         src.create_file('sample.py')
         src.get_child('sample.py').write('def f():\n    pass\n')
         self.project.get_root_folder().create_folder('test')

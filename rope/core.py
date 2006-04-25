@@ -41,6 +41,7 @@ class Core(object):
         fileMenu.add_separator()
         fileMenu.add_command(label='New File ...', command=self._create_new_file, underline=0)
         fileMenu.add_command(label='New Folder ...', command=self._create_new_folder, underline=0)
+        fileMenu.add_command(label='New Module ...', command=self._create_module, underline=4)
         fileMenu.add_separator()
         fileMenu.add_command(label='Open File ...', command=self._open_file, underline=0)
         fileMenu.add_command(label='Find File ...', command=self._find_file, underline=0)
@@ -126,6 +127,44 @@ class Core(object):
         scrollbar.grid(row=3, column=1, columnspan=1, sticky=N+S)
         find_dialog.grid()
         name.focus_set()
+        toplevel.grab_set()
+        self.root.wait_window(toplevel)
+        if event:
+            return 'break'
+
+    def _create_module(self, event=None):
+        if not self.project:
+            tkMessageBox.showerror(parent=self.root, title='No Open Project',
+                                   message='No project is open')
+            return
+        toplevel = Toplevel()
+        toplevel.title('New Module')
+        create_dialog = Frame(toplevel)
+        source_label = Label(create_dialog, text='Source Folder')
+        source_entry = Entry(create_dialog)
+        module_label = Label(create_dialog, text='Module')
+        module_entry = Entry(create_dialog)
+        
+        def create_module():
+            source_folder = self.project.get_resource(source_entry.get())
+            new_module = self.project.create_module(source_folder,
+                                                    module_entry.get())
+            toplevel.destroy()
+        def cancel():
+            toplevel.destroy()
+        source_entry.bind('<Return>', lambda event: create_module())
+        source_entry.bind('<Escape>', lambda event: cancel())
+        module_entry.bind('<Return>', lambda event: create_module())
+        module_entry.bind('<Escape>', lambda event: cancel())
+
+#        ok_button = Button(create_dialog, text='Create', command=create_module)
+#        cancel_button = Button(create_dialog, text='Cancel', command=cancel)
+        source_label.grid(row=0, column=0)
+        source_entry.grid(row=0, column=1)
+        module_label.grid(row=1, column=0)
+        module_entry.grid(row=1, column=1)
+        create_dialog.grid()
+        module_entry.focus_set()
         toplevel.grab_set()
         self.root.wait_window(toplevel)
         if event:

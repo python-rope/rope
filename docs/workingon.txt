@@ -3,11 +3,15 @@
 - Where does this belong to Project or another class: Project
 - Add Folder.create_file, Folder.create_folder, Folder.get_child
 
+? Use Dialogs instead
+? Testing GUI? again!
 * Should ask the source folder and the package
-* Add to CoreUI
+* Add to UICore
 * Open module after creating
 
 
+? Separation of UI Wizards
+? Better multi-sequence key event handling
 ? Iterator for accessing editor text or LineOrientedOutput
 ? Should workingon.txt be under version control?
 ? Consider using Tix or Pmw or idlelib

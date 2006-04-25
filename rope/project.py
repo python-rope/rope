@@ -12,7 +12,7 @@ class Project(object):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise rope.core.RopeException('Project root exists and is not a directory')
-    
+
     def get_root_folder(self):
         return Folder(self, '')
 
@@ -91,6 +91,13 @@ class Project(object):
 
     def get_source_folders(self):
         return self._find_source_folders(self.get_root_folder())
+
+    def create_module(self, src_folder, module):
+        packages = module.split('.')
+        parent = self.get_root_folder()
+        for package in packages[:-1]:
+            parent = parent.get_child(package)
+        return parent.create_file(packages[-1] + '.py')
 
     @staticmethod
     def remove_recursively(file):
@@ -208,6 +215,7 @@ class Folder(Resource):
         else:
             file_path = file_name
         self.project._create_file(file_path)
+        return self.get_child(file_name)
 
     def create_folder(self, folder_name):
         if self.get_path():
@@ -215,6 +223,7 @@ class Folder(Resource):
         else:
             folder_path = folder_name
         self.project._create_folder(folder_path)
+        return self.get_child(folder_name)
 
     def get_child(self, name):
         if self.get_path():
