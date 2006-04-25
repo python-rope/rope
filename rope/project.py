@@ -92,12 +92,21 @@ class Project(object):
     def get_source_folders(self):
         return self._find_source_folders(self.get_root_folder())
 
-    def create_module(self, src_folder, module):
-        packages = module.split('.')
+    def create_module(self, src_folder, new_module):
+        packages = new_module.split('.')
         parent = src_folder
         for package in packages[:-1]:
             parent = parent.get_child(package)
         return parent.create_file(packages[-1] + '.py')
+
+    def create_package(self, src_folder, new_package):
+        packages = new_package.split('.')
+        parent = src_folder
+        for package in packages[:-1]:
+            parent = parent.get_child(package)
+        created_package = parent.create_folder(packages[-1])
+        created_package.create_file('__init__.py')
+        return created_package
 
     @staticmethod
     def remove_recursively(file):

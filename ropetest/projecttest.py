@@ -393,6 +393,7 @@ class ProjectTest(unittest.TestCase):
 
     def test_module_creation(self):
         new_module = self.project.create_module(self.project.get_root_folder(), 'module')
+        self.assertFalse(new_module.is_folder())
         self.assertEquals(self.project.get_resource('module.py'), new_module)
 
     def test_packaged_module_creation(self):
@@ -405,6 +406,24 @@ class ProjectTest(unittest.TestCase):
         package = src.create_folder('pkg')
         new_module = self.project.create_module(src, 'pkg.mod')
         self.assertEquals(self.project.get_resource('src/pkg/mod.py'), new_module)
+
+    def test_package_creation(self):
+        new_package = self.project.create_package(self.project.get_root_folder(), 'pkg')
+        self.assertTrue(new_package.is_folder())
+        self.assertEquals(self.project.get_resource('pkg'), new_package)
+        self.assertEquals(self.project.get_resource('pkg/__init__.py'), 
+                          new_package.get_child('__init__.py'));
+
+    def test_nested_package_creation(self):
+        package = self.project.create_package(self.project.get_root_folder(), 'pkg1')
+        nested_package = self.project.create_package(self.project.get_root_folder(), 'pkg1.pkg2')
+        self.assertEquals(self.project.get_resource('pkg1/pkg2'), nested_package)
+
+    def test_packaged_package_creation_with_nested_src(self):
+        src = self.project.get_root_folder().create_folder('src')
+        package = self.project.create_package(src, 'pkg1')
+        nested_package = self.project.create_package(src, 'pkg1.pkg2')
+        self.assertEquals(self.project.get_resource('src/pkg1/pkg2'), nested_package)
 
 
 class FileFinderTest(unittest.TestCase):

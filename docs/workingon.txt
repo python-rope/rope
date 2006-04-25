@@ -1,12 +1,11 @@
 * Make a new package @ 1
   Should ask the source folder.
 
+- Create package makes __init__.py in the package
+- create_package returns the folder
+- Add to core
 
-- Where does this belong to Project or another class: Project
-- Add Folder.create_file, Folder.create_folder, Folder.get_child
-- Should ask the source folder and the package
-- Add to UICore
-- Open module after creating
+- Remove duplication from core
 
 ? Use Dialogs instead
 ? GUI Testing Problems? again!
