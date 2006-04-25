@@ -1,15 +1,15 @@
-*** Make a new module @ 1 ***
+* Make a new package @ 1
+  Should ask the source folder.
+
 
 - Where does this belong to Project or another class: Project
 - Add Folder.create_file, Folder.create_folder, Folder.get_child
+- Should ask the source folder and the package
+- Add to UICore
+- Open module after creating
 
 ? Use Dialogs instead
-? Testing GUI? again!
-* Should ask the source folder and the package
-* Add to UICore
-* Open module after creating
-
-
+? GUI Testing Problems? again!
 ? Separation of UI Wizards
 ? Better multi-sequence key event handling
 ? Iterator for accessing editor text or LineOrientedOutput

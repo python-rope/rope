@@ -36,32 +36,32 @@ class Core(object):
     def _create_menu(self):
         fileMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='File', menu=fileMenu, underline=1)
-        fileMenu.add_command(label='Open Project ...', command=self._open_project, underline=6)
+        fileMenu.add_command(label='Open Project ...', command=self._open_project_dialog, underline=6)
         fileMenu.add_command(label='Close Project', command=self.close_project, underline=3)
         fileMenu.add_separator()
-        fileMenu.add_command(label='New File ...', command=self._create_new_file, underline=0)
-        fileMenu.add_command(label='New Folder ...', command=self._create_new_folder, underline=0)
-        fileMenu.add_command(label='New Module ...', command=self._create_module, underline=4)
+        fileMenu.add_command(label='New File ...', command=self._create_new_file_dialog, underline=0)
+        fileMenu.add_command(label='New Folder ...', command=self._create_new_folder_dialog, underline=0)
+        fileMenu.add_command(label='New Module ...', command=self._create_module_dialog, underline=4)
         fileMenu.add_separator()
-        fileMenu.add_command(label='Open File ...', command=self._open_file, underline=0)
-        fileMenu.add_command(label='Find File ...', command=self._find_file, underline=0)
+        fileMenu.add_command(label='Open File ...', command=self._open_file_dialog, underline=0)
+        fileMenu.add_command(label='Find File ...', command=self._find_file_dialog, underline=0)
         fileMenu.add_separator()
         fileMenu.add_command(label='Exit', command=self.exit, underline=1)
 
     def _set_key_binding(self, widget):
-        widget.bind('<Control-x><Control-f>', self._open_file)
-        widget.bind('<Control-x><Control-n>', self._create_new_file)
+        widget.bind('<Control-x><Control-f>', self._open_file_dialog)
+        widget.bind('<Control-x><Control-n>', self._create_new_file_dialog)
         def _save_active_editor(event):
             self.save_file()
             return 'break'
         widget.bind('<Control-x><Control-s>', _save_active_editor)
-        widget.bind('<Control-x><Control-p>', self._open_project)
+        widget.bind('<Control-x><Control-p>', self._open_project_dialog)
         def _exit(event):
             self.exit()
             return 'break'
         widget.bind('<Control-x><Control-c>', _exit)
-        widget.bind('<Control-x><Control-d>', self._create_new_folder)
-        widget.bind('<Control-R>', self._find_file)
+        widget.bind('<Control-x><Control-d>', self._create_new_folder_dialog)
+        widget.bind('<Control-R>', self._find_file_dialog)
         widget.bind('<Control-F11>', self._run_active_editor)
         def _close_active_editor(event):
             self.close_active_editor()
@@ -69,7 +69,7 @@ class Core(object):
         widget.bind('<Control-x><k>', _close_active_editor)
 
 
-    def _find_file(self, event=None):
+    def _find_file_dialog(self, event=None):
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
                                    message='No project is open')
@@ -132,7 +132,7 @@ class Core(object):
         if event:
             return 'break'
 
-    def _create_module(self, event=None):
+    def _create_module_dialog(self, event=None):
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
                                    message='No project is open')
@@ -145,19 +145,20 @@ class Core(object):
         module_label = Label(create_dialog, text='Module')
         module_entry = Entry(create_dialog)
         
-        def create_module():
+        def do_create_module():
             source_folder = self.project.get_resource(source_entry.get())
             new_module = self.project.create_module(source_folder,
                                                     module_entry.get())
+            self._open_file_resource(new_module)
             toplevel.destroy()
         def cancel():
             toplevel.destroy()
-        source_entry.bind('<Return>', lambda event: create_module())
+        source_entry.bind('<Return>', lambda event: do_create_module())
         source_entry.bind('<Escape>', lambda event: cancel())
-        module_entry.bind('<Return>', lambda event: create_module())
+        module_entry.bind('<Return>', lambda event: do_create_module())
         module_entry.bind('<Escape>', lambda event: cancel())
 
-#        ok_button = Button(create_dialog, text='Create', command=create_module)
+#        ok_button = Button(create_dialog, text='Create', command=do_create_module)
 #        cancel_button = Button(create_dialog, text='Cancel', command=cancel)
         source_label.grid(row=0, column=0)
         source_entry.grid(row=0, column=1)
@@ -178,7 +179,7 @@ class Core(object):
         self.run_active_editor()
         return 'break'
 
-    def _open_file(self, event=None):
+    def _open_file_dialog(self, event=None):
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
                                    message='No project is open')
@@ -188,7 +189,7 @@ class Core(object):
         self._show_open_dialog(doOpen, 'Open File Dialog')
         return 'break'
 
-    def _create_new_file(self, event=None):
+    def _create_new_file_dialog(self, event=None):
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
                                    message='No project is open')
@@ -198,7 +199,7 @@ class Core(object):
         self._show_open_dialog(doOpen, 'New File Dialog')
         return 'break'
 
-    def _create_new_folder(self, event=None):
+    def _create_new_folder_dialog(self, event=None):
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
                                    message='No project is open')
@@ -208,7 +209,7 @@ class Core(object):
         self._show_open_dialog(doOpen, 'New Folder Dialog')
         return 'break'
 
-    def _open_project(self, event=None):
+    def _open_project_dialog(self, event=None):
         def doOpen(projectRoot):
             self.open_project(projectRoot)
         directory = tkFileDialog.askdirectory(parent=self.root, title='Open Project')
@@ -244,6 +245,9 @@ class Core(object):
         if self.project is None:
             raise RopeException('No project is open')
         file = self.project.get_resource(fileName)
+        return self._open_file_resource(file)
+
+    def _open_file_resource(self, file):
         for editor in self.editors:
             if editor.get_file() == file:
                 editor._rope_title.invoke()

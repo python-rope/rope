@@ -400,6 +400,12 @@ class ProjectTest(unittest.TestCase):
         new_module = self.project.create_module(self.project.get_root_folder(), 'package.module')
         self.assertEquals(self.project.get_resource('package/module.py'), new_module)
 
+    def test_packaged_module_creation_with_nested_src(self):
+        src = self.project.get_root_folder().create_folder('src')
+        package = src.create_folder('pkg')
+        new_module = self.project.create_module(src, 'pkg.mod')
+        self.assertEquals(self.project.get_resource('src/pkg/mod.py'), new_module)
+
 
 class FileFinderTest(unittest.TestCase):
     def setUp(self):

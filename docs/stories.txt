@@ -163,15 +163,11 @@ rope; A Python IDE
 * Showing current line in status bar @ 1
 
 
-* Make a new package @ 1
-  Should ask the source folder.
-
-
 * Switch editor dialog; C-x b and C-F6 @ 1
 
 
-* Make a new module @ 1
-  Should ask the source folder and package.
+* Make a new package @ 1
+  Should ask the source folder.
 
 
 --- Remaining Stories ---

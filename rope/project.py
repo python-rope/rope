@@ -94,7 +94,7 @@ class Project(object):
 
     def create_module(self, src_folder, module):
         packages = module.split('.')
-        parent = self.get_root_folder()
+        parent = src_folder
         for package in packages[:-1]:
             parent = parent.get_child(package)
         return parent.create_file(packages[-1] + '.py')
