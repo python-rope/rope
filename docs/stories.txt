@@ -23,6 +23,9 @@ rope; A Python IDE
 * Showing syntactical errors @ 3
 
 
+* Editor folding @ 4
+
+
 * Having multiple clipboards @ 2
 
 
@@ -164,10 +167,6 @@ rope; A Python IDE
 
 
 * Switch editor dialog; C-x b and C-F6 @ 1
-
-
-* Make a new package @ 1
-  Should ask the source folder.
 
 
 --- Remaining Stories ---

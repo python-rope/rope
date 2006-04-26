@@ -1,4 +1,7 @@
-- Make a new module dialog : April 25, 2006
+- Make new package dialog : April 25, 2006
+
+
+- Make new module dialog : April 25, 2006
 
 
 > Public release 0.1pre : April 22, 2006

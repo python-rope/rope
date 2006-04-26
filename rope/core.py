@@ -40,7 +40,7 @@ class Core(object):
         fileMenu.add_command(label='Close Project', command=self.close_project, underline=3)
         fileMenu.add_separator()
         fileMenu.add_command(label='New File ...', command=self._create_new_file_dialog, underline=0)
-        fileMenu.add_command(label='New Folder ...', command=self._create_new_folder_dialog, underline=0)
+        fileMenu.add_command(label='New Folder ...', command=self._create_new_folder_dialog, underline=1)
         fileMenu.add_command(label='New Module ...', command=self._create_module_dialog, underline=4)
         fileMenu.add_command(label='New Package ...', command=self._create_package_dialog, underline=4)
         fileMenu.add_separator()
@@ -133,75 +133,58 @@ class Core(object):
         if event:
             return 'break'
 
-    def _create_module_dialog(self, event=None):
+    def _create_resource_dialog(self, creation_callback,
+                                resource_name='File', parent_name='Parent Folder'):
+        '''Ask user about the parent folder and the name of the resource to be created
+        
+        creation_callback is a function accepting the parent and the name
+        '''
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
                                    message='No project is open')
             return
         toplevel = Toplevel()
-        toplevel.title('New Module')
+        toplevel.title('New ' + resource_name)
         create_dialog = Frame(toplevel)
-        source_label = Label(create_dialog, text='Source Folder')
-        source_entry = Entry(create_dialog)
-        module_label = Label(create_dialog, text='Module')
-        module_entry = Entry(create_dialog)
+        parent_label = Label(create_dialog, text=parent_name)
+        parent_entry = Entry(create_dialog)
+        resource_label = Label(create_dialog, text=resource_name)
+        resource_entry = Entry(create_dialog)
         
-        def do_create_module():
-            source_folder = self.project.get_resource(source_entry.get())
-            new_module = self.project.create_module(source_folder,
-                                                    module_entry.get())
-            self._open_file_resource(new_module)
+        def do_create_resource():
+            parent_folder = self.project.get_resource(parent_entry.get())
+            creation_callback(parent_folder, resource_entry.get())
             toplevel.destroy()
         def cancel():
             toplevel.destroy()
-        source_entry.bind('<Return>', lambda event: do_create_module())
-        source_entry.bind('<Escape>', lambda event: cancel())
-        module_entry.bind('<Return>', lambda event: do_create_module())
-        module_entry.bind('<Escape>', lambda event: cancel())
-        source_label.grid(row=0, column=0)
-        source_entry.grid(row=0, column=1)
-        module_label.grid(row=1, column=0)
-        module_entry.grid(row=1, column=1)
+        parent_entry.bind('<Return>', lambda event: do_create_resource())
+        parent_entry.bind('<Escape>', lambda event: cancel())
+        resource_entry.bind('<Return>', lambda event: do_create_resource())
+        resource_entry.bind('<Escape>', lambda event: cancel())
+        parent_label.grid(row=0, column=0)
+        parent_entry.grid(row=0, column=1)
+        resource_label.grid(row=1, column=0)
+        resource_entry.grid(row=1, column=1)
         create_dialog.grid()
-        module_entry.focus_set()
+        resource_entry.focus_set()
         toplevel.grab_set()
         self.root.wait_window(toplevel)
+
+    def _create_module_dialog(self, event=None):
+        def do_create_module(source_folder, module_name):
+            new_module = self.project.create_module(source_folder,
+                                                    module_name)
+            self._open_file_resource(new_module)
+        self._create_resource_dialog(do_create_module, 'Module', 'Source Folder')
         if event:
             return 'break'
 
     def _create_package_dialog(self, event=None):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
-            return
-        toplevel = Toplevel()
-        toplevel.title('New Package')
-        create_dialog = Frame(toplevel)
-        source_label = Label(create_dialog, text='Source Folder')
-        source_entry = Entry(create_dialog)
-        package_label = Label(create_dialog, text='Package')
-        package_entry = Entry(create_dialog)
-        
-        def do_create_package():
-            source_folder = self.project.get_resource(source_entry.get())
+        def do_create_package(source_folder, package_name):
             new_package = self.project.create_package(source_folder,
-                                                      package_entry.get())
+                                                      package_name)
             self._open_file_resource(new_package.get_child('__init__.py'))
-            toplevel.destroy()
-        def cancel():
-            toplevel.destroy()
-        source_entry.bind('<Return>', lambda event: do_create_package())
-        source_entry.bind('<Escape>', lambda event: cancel())
-        package_entry.bind('<Return>', lambda event: do_create_package())
-        package_entry.bind('<Escape>', lambda event: cancel())
-        source_label.grid(row=0, column=0)
-        source_entry.grid(row=0, column=1)
-        package_label.grid(row=1, column=0)
-        package_entry.grid(row=1, column=1)
-        create_dialog.grid()
-        package_entry.focus_set()
-        toplevel.grab_set()
-        self.root.wait_window(toplevel)
+        self._create_resource_dialog(do_create_package, 'Package', 'Source Folder')
         if event:
             return 'break'
 
@@ -224,24 +207,19 @@ class Core(object):
         return 'break'
 
     def _create_new_file_dialog(self, event=None):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
+        def do_create_file(parent_folder, file_name):
+            new_file = parent_folder.create_file(file_name)
+            self._open_file_resource(new_file)
+        self._create_resource_dialog(do_create_file, 'File', 'Parent Folder')
+        if event:
             return 'break'
-        def doOpen(fileName):
-            self.create_file(fileName)
-        self._show_open_dialog(doOpen, 'New File Dialog')
-        return 'break'
 
     def _create_new_folder_dialog(self, event=None):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
+        def do_create_folder(parent_folder, folder_name):
+            new_folder = parent_folder.create_folder(folder_name)
+        self._create_resource_dialog(do_create_folder, 'Folder', 'Parent Folder')
+        if event:
             return 'break'
-        def doOpen(fileName):
-            self.create_folder(fileName)
-        self._show_open_dialog(doOpen, 'New Folder Dialog')
-        return 'break'
 
     def _open_project_dialog(self, event=None):
         def doOpen(projectRoot):

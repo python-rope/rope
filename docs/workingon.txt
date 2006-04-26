@@ -1,15 +1,9 @@
-* Make a new package @ 1
-  Should ask the source folder.
+- New file and new folder should get the parent folder
 
-- Create package makes __init__.py in the package
-- create_package returns the folder
-- Add to core
 
-- Remove duplication from core
-
+? Possible base UI classes: completion lists, dialogs, named fields
 ? Use Dialogs instead
 ? GUI Testing Problems? again!
-? Separation of UI Wizards
 ? Better multi-sequence key event handling
 ? Iterator for accessing editor text or LineOrientedOutput
 ? Should workingon.txt be under version control?
