@@ -1,12 +1,16 @@
-- New file and new folder should get the parent folder
+*** Switch editor dialog; C-x b and C-F6 @ 1 ***
+
+? Adding EditorManager class
+? Adding selection list class
 
 
+? Separation of acceptance and unit tests
+? GUI Testing Problems? again!
 ? Possible base UI classes: completion lists, dialogs, named fields
 ? Use Dialogs instead
-? GUI Testing Problems? again!
 ? Better multi-sequence key event handling
+? Consider using Tix or Pmw or idlelib
 ? Iterator for accessing editor text or LineOrientedOutput
 ? Should workingon.txt be under version control?
-? Consider using Tix or Pmw or idlelib
 ? Separating domain and presentation in Core
 ? not using editor._rope_title

@@ -68,6 +68,7 @@ class Core(object):
             self.close_active_editor()
             return 'break'
         widget.bind('<Control-x><k>', _close_active_editor)
+        widget.bind('<Control-x><b>', self._change_editor_dialog)
 
 
     def _find_file_dialog(self, event=None):
@@ -81,7 +82,7 @@ class Core(object):
         name_label = Label(find_dialog, text='Name')
         name = Entry(find_dialog)
         found_label = Label(find_dialog, text='Matching Files')
-        found = Listbox(find_dialog, selectmode=SINGLE, width=46, height=15)
+        found = Listbox(find_dialog, selectmode=SINGLE, width=48, height=15)
         scrollbar = Scrollbar(find_dialog, orient=VERTICAL)
         scrollbar['command'] = found.yview
         found.config(yscrollcommand=scrollbar.set)
@@ -101,6 +102,73 @@ class Core(object):
             if selection:
                 resource_name = found.get(selection[0])
                 self.open_file(resource_name)
+                toplevel.destroy()
+        def cancel():
+            toplevel.destroy()
+        name.bind('<Any-KeyRelease>', name_changed)
+        name.bind('<Return>', lambda event: open_selected())
+        name.bind('<Escape>', lambda event: cancel())
+        found.bind('<Return>', lambda event: open_selected())
+        found.bind('<Escape>', lambda event: cancel())
+        def select_prev(event):
+            active = found.index(ACTIVE)
+            if active - 1 >= 0:
+                found.activate(active - 1)
+                found.see(active - 1)
+        found.bind('<Control-p>', select_prev)
+        def select_next(event):
+            active = found.index(ACTIVE)
+            if active + 1 < found.size():
+                found.activate(active + 1)
+                found.see(active + 1)
+        found.bind('<Control-n>', select_next)
+        name_label.grid(row=0, column=0, columnspan=2)
+        name.grid(row=1, column=0, columnspan=2)
+        found_label.grid(row=2, column=0, columnspan=2)
+        found.grid(row=3, column=0, columnspan=1)
+        scrollbar.grid(row=3, column=1, columnspan=1, sticky=N+S)
+        find_dialog.grid()
+        name.focus_set()
+        toplevel.grab_set()
+        self.root.wait_window(toplevel)
+        if event:
+            return 'break'
+
+    def _change_editor_dialog(self, event=None):
+        if not self.project:
+            tkMessageBox.showerror(parent=self.root, title='No Open Project',
+                                   message='No project is open')
+            return
+        toplevel = Toplevel()
+        toplevel.title('Change Editor')
+        find_dialog = Frame(toplevel)
+        name_label = Label(find_dialog, text='Name')
+        name = Entry(find_dialog)
+        found_label = Label(find_dialog, text='Editors')
+        found = Listbox(find_dialog, selectmode=SINGLE, width=28, height=9)
+        scrollbar = Scrollbar(find_dialog, orient=VERTICAL)
+        scrollbar['command'] = found.yview
+        found.config(yscrollcommand=scrollbar.set)
+        for editor in self.editors:
+            found.insert(END, editor.get_file().get_name())
+        if len(self.editors) >= 2:
+            found.selection_set(1)
+        def name_changed(event):
+            if name.get() == '':
+                return
+            found.select_clear(0, END)
+            found_index = -1
+            for index, editor in enumerate(self.editors):
+                if editor.get_file().get_name().startswith(name.get()):
+                    found_index = index
+                    break
+            if found_index != -1:
+                found.selection_set(found_index)
+        def open_selected():
+            selection = found.curselection()
+            if selection:
+                editor = self.editors[int(selection[0])]
+                self.activate_editor(editor)
                 toplevel.destroy()
         def cancel():
             toplevel.destroy()
