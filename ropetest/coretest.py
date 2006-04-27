@@ -85,5 +85,16 @@ class CoreTest(unittest.TestCase):
         Core.get_core().close_active_editor()
         self.assertTrue(Core.get_core().get_active_editor() is None)
 
+    def test_switching_active_editor(self):
+        parent = self.project.get_root_folder();
+        parent.create_file('file1.txt')
+        parent.create_file('file2.txt')
+        editor1 = Core.get_core().open_file('file1.txt')
+        editor2 = Core.get_core().open_file('file2.txt')
+        self.assertEquals(editor2, Core.get_core().get_active_editor())
+        Core.get_core().switch_active_editor()
+        self.assertEquals(editor1, Core.get_core().get_active_editor())
+
+
 if __name__ == '__main__':
     unittest.main()

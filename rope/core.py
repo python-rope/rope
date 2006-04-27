@@ -69,6 +69,10 @@ class Core(object):
             return 'break'
         widget.bind('<Control-x><k>', _close_active_editor)
         widget.bind('<Control-x><b>', self._change_editor_dialog)
+        def do_switch_active_editor(event):
+            self.switch_active_editor()
+            return 'break'
+        widget.bind('<Control-F6>', do_switch_active_editor)
 
 
     def _find_file_dialog(self, event=None):
@@ -415,6 +419,10 @@ class Core(object):
         if activeEditor:
             runner = PythonFileRunner(activeEditor.get_file())
             return runner
+
+    def switch_active_editor(self):
+        if len(self.editors) >= 2:
+            self.activate_editor(self.editors[1])
 
     @staticmethod
     def get_core():

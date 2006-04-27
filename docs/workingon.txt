@@ -2,8 +2,6 @@
 
 ? Adding EditorManager class
 ? Adding selection list class
-
-
 ? Separation of acceptance and unit tests
 ? GUI Testing Problems? again!
 ? Possible base UI classes: completion lists, dialogs, named fields
