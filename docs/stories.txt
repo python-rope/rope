@@ -164,11 +164,9 @@ rope; A Python IDE
 
 
 --- Remaining Stories ---
-? Rename rope; maybe pyrope
-? Using underlined_words function style
+? Using SF SVN; Making a script for committing to SF
 ? Separate domain and presentation everywhere
 * Make tests less dependant
 * Make a new Project; Seperate opening and creating projects
 * Add removing resources to Core
 ? Project resource consistency; What if it is deleted after being created.
-? Using SF SVN; Making a script for committing to SF

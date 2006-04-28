@@ -104,7 +104,7 @@ class GraphicalEditor(TextEditor):
                 if self.text.compare(range[1], '>', end):
                     end = range[1]
             self._highlight_range(start, end)
-        self.text.bind('<Any-KeyRelease>', colorize)
+        self.text.bind('<Any-KeyRelease>', colorize, '+')
 
     def _highlight_range(self, startIndex, endIndex):
         for style in self.highlighting.getStyles().keys():

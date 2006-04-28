@@ -43,8 +43,8 @@ class Core(object):
         fileMenu.add_command(label='New Module ...', command=self._create_module_dialog, underline=4)
         fileMenu.add_command(label='New Package ...', command=self._create_package_dialog, underline=4)
         fileMenu.add_separator()
-        fileMenu.add_command(label='Open File ...', command=self._open_file_dialog, underline=0)
         fileMenu.add_command(label='Find File ...', command=self._find_file_dialog, underline=0)
+        fileMenu.add_command(label='Open File ...', command=self._open_file_dialog, underline=0)
         fileMenu.add_separator()
         fileMenu.add_command(label='Exit', command=self.exit, underline=1)
 
@@ -78,7 +78,7 @@ class Core(object):
                                            self.get_active_editor().get_editor().get_current_line_number()
             else:
                 self.status_text['text'] = ' '
-        widget.bind('<Any-KeyRelease>', show_current_line_number)
+        widget.bind('<Any-KeyRelease>', show_current_line_number, '+')
         widget.bind('<Any-Button>', show_current_line_number)
         widget.bind('<FocusIn>', show_current_line_number)
 
@@ -227,7 +227,7 @@ class Core(object):
         create_dialog = Frame(toplevel)
         parent_label = Label(create_dialog, text=parent_name)
         parent_entry = Entry(create_dialog)
-        resource_label = Label(create_dialog, text=resource_name)
+        resource_label = Label(create_dialog, text=('New' + resource_name))
         resource_entry = Entry(create_dialog)
         
         def do_create_resource():
@@ -240,9 +240,9 @@ class Core(object):
         parent_entry.bind('<Escape>', lambda event: cancel())
         resource_entry.bind('<Return>', lambda event: do_create_resource())
         resource_entry.bind('<Escape>', lambda event: cancel())
-        parent_label.grid(row=0, column=0)
+        parent_label.grid(row=0, column=0, sticky=W)
         parent_entry.grid(row=0, column=1)
-        resource_label.grid(row=1, column=0)
+        resource_label.grid(row=1, column=0, sticky=W)
         resource_entry.grid(row=1, column=1)
         create_dialog.grid()
         resource_entry.focus_set()
