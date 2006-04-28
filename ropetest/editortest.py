@@ -114,6 +114,14 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.undo()
         self.assertEquals('sample text', self.editor.get_text())
 
+    def test_current_line_number(self):
+        self.assertEquals(1, self.editor.get_current_line_number())
+        self.editor.set_text('sample\n text \n end')
+        self.editor.set_insert(self.editor.get_index(9))
+        self.assertEquals(2, self.editor.get_current_line_number())
+        self.editor.set_insert(self.editor.get_end())
+        self.assertEquals(3, self.editor.get_current_line_number())
+
 
 if __name__ == '__main__':
     unittest.main()

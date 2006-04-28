@@ -21,8 +21,7 @@ class Core(object):
         self.editor_list = Frame(self.main, borderwidth=0)
         self.editor_frame = Frame(self.main, borderwidth=0, relief=RIDGE)
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
-        self.status_text = Label(self.status_bar, text='')
-        self.status_text.pack(side=LEFT)
+        self.status_text = Label(self.status_bar, text=' ', height=1)
 
         self.editors = []
         self.active_file_path = StringVar('')
@@ -72,8 +71,16 @@ class Core(object):
         def do_switch_active_editor(event):
             self.switch_active_editor()
             return 'break'
-        widget.bind('<Control-F6>', do_switch_active_editor)
-
+        widget.bind('<Control-KeyRelease-F6>', do_switch_active_editor)
+        def show_current_line_number(event):
+            if self.get_active_editor():
+                self.status_text['text'] = 'line : %d' % \
+                                           self.get_active_editor().get_editor().get_current_line_number()
+            else:
+                self.status_text['text'] = ' '
+        widget.bind('<Any-KeyRelease>', show_current_line_number)
+        widget.bind('<Any-Button>', show_current_line_number)
+        widget.bind('<FocusIn>', show_current_line_number)
 
     def _find_file_dialog(self, event=None):
         if not self.project:
@@ -320,6 +327,8 @@ class Core(object):
         self.main.columnconfigure(0, weight=1)
         self.editor_list.pack(fill=BOTH, side=TOP)
         self.editor_frame.pack(fill=BOTH, expand=1)
+        self.editor_frame.pack_propagate(0)
+        self.status_text.pack(side=LEFT, fill=BOTH)
         self.status_bar.pack(fill=BOTH, side=BOTTOM)
         self.main.pack(fill=BOTH, expand=1)
         self.main.pack_propagate(0)

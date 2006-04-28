@@ -458,6 +458,9 @@ class GraphicalEditor(TextEditor):
     def get_indenter(self):
         return self.indenter
 
+    def get_current_line_number(self):
+        return self._get_line_from_index(INSERT)
+
 
 class GraphicalTextIndex(TextIndex):
     '''An immutable class for pointing to a position in a text'''

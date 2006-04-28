@@ -1,3 +1,9 @@
+- Showing current line in status bar : April 28, 2006
+
+
+- Switch editor dialog; C-x b and C-F6 : April 27, 2006
+
+
 - Make new package dialog : April 25, 2006
 
 

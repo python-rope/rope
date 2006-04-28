@@ -1,4 +1,4 @@
-*** Switch editor dialog; C-x b and C-F6 @ 1 ***
+
 
 ? Adding EditorManager class
 ? Adding selection list class

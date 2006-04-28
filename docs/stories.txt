@@ -163,20 +163,12 @@ rope; A Python IDE
   * Showing modified file status
 
 
-* Showing current line in status bar @ 1
-
-
-* Switch editor dialog; C-x b and C-F6 @ 1
-
-
 --- Remaining Stories ---
 ? Rename rope; maybe pyrope
 ? Using underlined_words function style
 ? Separate domain and presentation everywhere
 * Make tests less dependant
-* Make a new Project; Seperate Opening and creating projects
+* Make a new Project; Seperate opening and creating projects
 * Add removing resources to Core
 ? Project resource consistency; What if it is deleted after being created.
-? Distinction of functional and unit tests
-? Logging and status bar
 ? Using SF SVN; Making a script for committing to SF
