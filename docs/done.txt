@@ -1,3 +1,7 @@
+- Enhancing editor and indentation
+    - Pressing backspace should deindent
+
+
 - Showing current line in status bar : April 28, 2006
 
 

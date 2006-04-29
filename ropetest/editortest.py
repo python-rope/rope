@@ -16,14 +16,14 @@ class GraphicalEditorTest(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def test_undo(self):
-        self.editor.undoSeparator()
+        self.editor.undo_separator()
         self.editor.insert(self.editor.get_end(), '.')
         self.assertEquals('sample text.', self.editor.get_text())
         self.editor.undo()
         self.assertEquals('sample text', self.editor.get_text(),self.editor.get_text())
 
     def test_redo(self):
-        self.editor.undoSeparator()
+        self.editor.undo_separator()
         self.editor.insert(self.editor.get_end(), '.')
         self.editor.undo()
         self.editor.redo()

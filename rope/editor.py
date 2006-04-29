@@ -69,6 +69,8 @@ class TextEditor(object):
     def search(self, keyword, start, case=True, forwards=True):
         pass
 
+    def undo_separator(self):
+        pass
 
 class TextIndex(object):
     '''A class for pointing to a position in a text'''
@@ -212,6 +214,7 @@ class GraphicalEditor(TextEditor):
         self.text.insert('1.0', text)
         self.text.mark_set(INSERT, '1.0')
         self._highlight_range('0.0', 'end')
+        self.text.edit_reset()
 
     def get_start(self):
         return GraphicalTextIndex(self, '1.0')
@@ -299,7 +302,7 @@ class GraphicalEditor(TextEditor):
     def getWidget(self):
         return self.text
 
-    def undoSeparator(self):
+    def undo_separator(self):
         self.text.edit_separator()
 
     def undo(self):

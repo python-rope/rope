@@ -1,7 +1,7 @@
-* Pressing back space should deindent; shortcuts for indenting and deindenting
+* Clearing undo list when opening a file; undoSeparator when saving
 
-* Indenter.deindent
-^ Rename Indenter.indent_line to Indenter.correct_indentation
+- Calling editor.undo_separator in fileeditor.save
+- Clearing undo when editor.set_text is called
 
 ? Adding EditorManager class
 ? Adding selection list class
