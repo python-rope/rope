@@ -1,4 +1,7 @@
+* Pressing back space should deindent; shortcuts for indenting and deindenting
 
+* Indenter.deindent
+^ Rename Indenter.indent_line to Indenter.correct_indentation
 
 ? Adding EditorManager class
 ? Adding selection list class

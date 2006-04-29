@@ -166,6 +166,21 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.indent_line(self.editor.get_end())
         self.assertEquals('def f():\n    return (2,\n            3)\na = 10', self.editor.get_text())
 
+    def test_deindenting_empty_lines(self):
+        self.editor.set_text('\n')
+        self.indenter.deindent(self.editor.get_end())
+        self.assertEquals('\n', self.editor.get_text())
+
+    def test_deindenting_four_spaces(self):
+        self.editor.set_text('    print "hello"\n')
+        self.indenter.deindent(self.editor.get_start())
+        self.assertEquals('print "hello"\n', self.editor.get_text())
+
+    def test_deindenting(self):
+        self.editor.set_text('def f()\n    print "hello"\n    def g():\n')
+        self.indenter.deindent(self.editor.get_relative(self.editor.get_end(), -2))
+        self.assertEquals('def f()\n    print "hello"\ndef g():\n', self.editor.get_text())
+
 
 if __name__ == '__main__':
     unittest.main()

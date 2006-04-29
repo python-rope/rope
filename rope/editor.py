@@ -194,6 +194,15 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<<BackwardSearch>>',
                        lambda event: self._search_event(False))
         self.text.bind('<Any-KeyPress>', self._search_handler)
+        def backspace(event):
+            line_starting = self.text.get('insert linestart', 'insert')
+            current_char = self.text.get(INSERT)
+            if line_starting.isspace() and (not current_char.isspace() 
+                                            or current_char == '' or current_char == '\n'):
+                self.indenter.deindent(self.get_insert())
+                return 'break'
+        self.text.bind('<BackSpace>', backspace, '+')
+
 
     def get_text(self):
         return self.text.get('1.0', END)[0 : -1]

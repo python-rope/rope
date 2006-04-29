@@ -168,6 +168,13 @@ class PythonCodeIndenter(TextIndenter):
         return new_indent
 
     def indent_line(self, index):
+        '''Correct the indentation of the line containing the given index'''
         start = self._get_line_start(index)
         self._set_line_indents(start, self._get_correct_indentation(start))
 
+    def deindent(self, index):
+        '''Deindent the line containing the given index'''
+        start = self._get_line_start(index)
+        indents = self._count_line_indents(start)
+        new_indents = max(0, indents - 4)
+        self._set_line_indents(start, new_indents)

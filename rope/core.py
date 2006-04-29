@@ -227,7 +227,7 @@ class Core(object):
         create_dialog = Frame(toplevel)
         parent_label = Label(create_dialog, text=parent_name)
         parent_entry = Entry(create_dialog)
-        resource_label = Label(create_dialog, text=('New' + resource_name))
+        resource_label = Label(create_dialog, text=('New ' + resource_name))
         resource_entry = Entry(create_dialog)
         
         def do_create_resource():
