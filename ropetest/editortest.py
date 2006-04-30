@@ -108,12 +108,6 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.insertTab(self.editor.get_end())
         self.assertEquals((' ' * 8), self.editor.get_text())
 
-    def test_clear_undo(self):
-        self.editor.set_text('sample text')
-        self.editor.clear_undo()
-        self.editor.undo()
-        self.assertEquals('sample text', self.editor.get_text())
-
     def test_current_line_number(self):
         self.assertEquals(1, self.editor.get_current_line_number())
         self.editor.set_text('sample\n text \n end')
@@ -122,6 +116,11 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.set_insert(self.editor.get_end())
         self.assertEquals(3, self.editor.get_current_line_number())
 
+    def test_resetting_undo_after_set_text(self):
+        self.editor.set_text('sample text')
+        self.editor.undo()
+        self.editor.undo()
+        self.assertEquals('sample text', self.editor.get_text())
 
 if __name__ == '__main__':
     unittest.main()

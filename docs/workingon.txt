@@ -1,9 +1,10 @@
-* Clearing undo list when opening a file; undoSeparator when saving
+* Showing modified file status
 
-- Calling editor.undo_separator in fileeditor.save
-- Clearing undo when editor.set_text is called
+- BackSpace does not work while searching
 
-? Adding EditorManager class
+^ Extract class EditorManager from Core
+* Show searching status in the status bar
+
 ? Adding selection list class
 ? Separation of acceptance and unit tests
 ? GUI Testing Problems? again!

@@ -8,6 +8,62 @@ from rope.fileeditor import FileEditor
 from rope.editor import GraphicalEditor
 from rope.project import Project, FileFinder, PythonFileRunner
 
+class EditorManager(object):
+    def __init__(self, editor_panel, core):
+        self.core = core
+        self.editor_list = Frame(editor_panel, borderwidth=0)
+        self.editor_frame = Frame(editor_panel, borderwidth=0, relief=RIDGE)
+        self.editor_list.pack(fill=BOTH, side=TOP)
+        self.editor_frame.pack(fill=BOTH, expand=1)
+        self.editor_frame.pack_propagate(0)
+        self.editors = []
+        self.active_file_path = StringVar('')
+        self.active_editor = None
+
+    def activate_editor(self, editor):
+        if self.active_editor:
+            self.active_editor.get_editor().getWidget().forget()
+        editor.get_editor().getWidget().pack(fill=BOTH, expand=1)
+        editor.get_editor().getWidget().focus_set()
+        editor._rope_title.select()
+        self.active_editor = editor
+        self.editors.remove(editor)
+        self.editors.insert(0, editor)
+
+    def get_resource_editor(self, file):
+        for editor in self.editors:
+            if editor.get_file() == file:
+                editor._rope_title.invoke()
+                return editor
+        editor = FileEditor(file, GraphicalEditor(self.editor_frame))
+        self.editors.append(editor)
+        title = Radiobutton(self.editor_list, text=file.get_name(),
+                            variable=self.active_file_path,
+                            value=file.get_path(), indicatoron=0, bd=2,
+                            command=lambda: self.activate_editor(editor),
+                            selectcolor='#99A', relief=GROOVE)
+        editor._rope_title = title
+        title.select()
+        title.pack(fill=BOTH, side=LEFT)
+        self.activate_editor(editor)
+        self.core._set_key_binding(editor.get_editor().getWidget())
+        return editor
+
+    def switch_active_editor(self):
+        if len(self.editors) >= 2:
+            self.activate_editor(self.editors[1])
+
+    def close_active_editor(self):
+        if self.active_editor is None:
+            return
+        self.active_editor.get_editor().getWidget().forget()
+        self.editors.remove(self.active_editor)
+        self.active_editor._rope_title.forget()
+        self.active_editor = None
+        if self.editors:
+            self.editors[0]._rope_title.invoke()
+
+        
 class Core(object):
     '''The main class for the IDE'''
     def __init__(self):
@@ -18,14 +74,11 @@ class Core(object):
         self._create_menu()
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
-        self.editor_list = Frame(self.main, borderwidth=0)
-        self.editor_frame = Frame(self.main, borderwidth=0, relief=RIDGE)
+        self.editor_panel = Frame(self.main, borderwidth=0)
+        self.editor_manager = EditorManager(self.editor_panel, self)
+
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
         self.status_text = Label(self.status_bar, text=' ', height=1)
-
-        self.editors = []
-        self.active_file_path = StringVar('')
-        self.active_editor = None
 
         self._set_key_binding(self.root)
         self.root.protocol('WM_DELETE_WINDOW', self.exit)
@@ -73,9 +126,9 @@ class Core(object):
             return 'break'
         widget.bind('<Control-KeyRelease-F6>', do_switch_active_editor)
         def show_current_line_number(event):
-            if self.get_active_editor():
+            if self.editor_manager.active_editor:
                 self.status_text['text'] = 'line : %d' % \
-                                           self.get_active_editor().get_editor().get_current_line_number()
+                   self.editor_manager.active_editor.get_editor().get_current_line_number()
             else:
                 self.status_text['text'] = ' '
         widget.bind('<Any-KeyRelease>', show_current_line_number, '+')
@@ -160,16 +213,16 @@ class Core(object):
         scrollbar = Scrollbar(find_dialog, orient=VERTICAL)
         scrollbar['command'] = found.yview
         found.config(yscrollcommand=scrollbar.set)
-        for editor in self.editors:
+        for editor in self.editor_manager.editors:
             found.insert(END, editor.get_file().get_name())
-        if len(self.editors) >= 2:
+        if len(self.editor_manager.editors) >= 2:
             found.selection_set(1)
         def name_changed(event):
             if name.get() == '':
                 return
             found.select_clear(0, END)
             found_index = -1
-            for index, editor in enumerate(self.editors):
+            for index, editor in enumerate(self.editor_manager.editors):
                 if editor.get_file().get_name().startswith(name.get()):
                     found_index = index
                     break
@@ -178,7 +231,7 @@ class Core(object):
         def open_selected():
             selection = found.curselection()
             if selection:
-                editor = self.editors[int(selection[0])]
+                editor = self.editor_manager.editors[int(selection[0])]
                 self.activate_editor(editor)
                 toplevel.destroy()
         def cancel():
@@ -253,7 +306,7 @@ class Core(object):
         def do_create_module(source_folder, module_name):
             new_module = self.project.create_module(source_folder,
                                                     module_name)
-            self._open_file_resource(new_module)
+            self.editor_manager.get_file_editor(new_module)
         self._create_resource_dialog(do_create_module, 'Module', 'Source Folder')
         if event:
             return 'break'
@@ -262,13 +315,13 @@ class Core(object):
         def do_create_package(source_folder, package_name):
             new_package = self.project.create_package(source_folder,
                                                       package_name)
-            self._open_file_resource(new_package.get_child('__init__.py'))
+            self.editor_manager.get_file_editor(new_module)
         self._create_resource_dialog(do_create_package, 'Package', 'Source Folder')
         if event:
             return 'break'
 
     def _run_active_editor(self, event=None):
-        if not self.get_active_editor():
+        if not self.editor_manager.active_editor:
             tkMessageBox.showerror(parent=self.root, title='No Open Editor',
                                    message='No Editor is open.')
             return
@@ -288,7 +341,7 @@ class Core(object):
     def _create_new_file_dialog(self, event=None):
         def do_create_file(parent_folder, file_name):
             new_file = parent_folder.create_file(file_name)
-            self._open_file_resource(new_file)
+            self.editor_manager.get_file_editor(new_file)
         self._create_resource_dialog(do_create_file, 'File', 'Parent Folder')
         if event:
             return 'break'
@@ -325,9 +378,7 @@ class Core(object):
         self.root.columnconfigure(0, weight=1)
         self.main.rowconfigure(0, weight=1)
         self.main.columnconfigure(0, weight=1)
-        self.editor_list.pack(fill=BOTH, side=TOP)
-        self.editor_frame.pack(fill=BOTH, expand=1)
-        self.editor_frame.pack_propagate(0)
+        self.editor_panel.pack(fill=BOTH, expand=1)
         self.status_text.pack(side=LEFT, fill=BOTH)
         self.status_bar.pack(fill=BOTH, side=BOTTOM)
         self.main.pack(fill=BOTH, expand=1)
@@ -338,51 +389,16 @@ class Core(object):
         if self.project is None:
             raise RopeException('No project is open')
         file = self.project.get_resource(fileName)
-        return self._open_file_resource(file)
-
-    def _open_file_resource(self, file):
-        for editor in self.editors:
-            if editor.get_file() == file:
-                editor._rope_title.invoke()
-                return editor
-        editor = FileEditor(file, GraphicalEditor(self.editor_frame))
-        self.editors.append(editor)
-        title = Radiobutton(self.editor_list, text=file.get_name(), variable=self.active_file_path,
-                            value=file.get_path(), indicatoron=0, bd=2,
-                            command=lambda: self.activate_editor(editor),
-                            selectcolor='#99A', relief=GROOVE)
-        editor._rope_title = title
-        title.select()
-        title.pack(fill=BOTH, side=LEFT)
-        self.activate_editor(editor)
-        self._set_key_binding(editor.get_editor().getWidget())
-        return editor
+        return self.editor_manager.get_resource_editor(file)
 
     def activate_editor(self, editor):
-        if self.get_active_editor():
-            self.get_active_editor().get_editor().getWidget().forget()
-        editor.get_editor().getWidget().pack(fill=BOTH, expand=1)
-        editor.get_editor().getWidget().focus_set()
-        editor._rope_title.select()
-        self.active_editor = editor
-        self.editors.remove(editor)
-        self.editors.insert(0, editor)
-
-    def get_active_editor(self):
-        return self.active_editor
+        self.editor_manager.activate_editor(editor)
 
     def close_active_editor(self):
-        if self.active_editor is None:
-            return
-        self.active_editor.get_editor().getWidget().forget()
-        self.editors.remove(self.active_editor)
-        self.active_editor._rope_title.forget()
-        self.active_editor = None
-        if self.editors:
-            self.editors[0]._rope_title.invoke()
+        self.editor_manager.close_active_editor()
 
     def save_file(self):
-        activeEditor = self.get_active_editor()
+        activeEditor = self.editor_manager.active_editor
         if activeEditor:
             activeEditor.save()
 
@@ -404,14 +420,14 @@ class Core(object):
         self.project = Project(projectRoot)
 
     def close_project(self):
-        while self.get_active_editor() is not None:
+        while self.editor_manager.active_editor is not None:
             self.close_active_editor()
         self.project = None
 
     def create_folder(self, folder_name):
         try:
             last_slash = folder_name.rindex('/')
-            parent = project.get_resource(folder_name[: last_slash])
+            parent = project.get_resource(folder_name[:last_slash])
             folder_name = folder_name[last_slash + 1:]
         except ValueError:
             parent = self.project.get_root_folder()
@@ -424,14 +440,16 @@ class Core(object):
         return self.project
 
     def run_active_editor(self):
-        activeEditor = self.get_active_editor()
+        activeEditor = self.editor_manager.active_editor
         if activeEditor:
             runner = PythonFileRunner(activeEditor.get_file())
             return runner
 
     def switch_active_editor(self):
-        if len(self.editors) >= 2:
-            self.activate_editor(self.editors[1])
+        self.editor_manager.switch_active_editor()
+
+    def get_active_editor(self):
+        return self.editor_manager.active_editor
 
     @staticmethod
     def get_core():

@@ -158,7 +158,6 @@ rope; A Python IDE
 
 
 * Enhancing editor and indentation @ 1
-  * Clearing undo list when opening a file; undoSeparator when saving
   * Showing modified file status
 
 

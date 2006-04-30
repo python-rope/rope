@@ -188,6 +188,16 @@ class GraphicalEditor(TextEditor):
             self.indenter.indent_line(self.get_insert())
             self.text.see(INSERT)
             return 'break'
+        def backspace(event):
+            if self.searcher.is_searching():
+                self.searcher.shorten_keyword()
+                return 'break'
+            line_starting = self.text.get('insert linestart', 'insert')
+            current_char = self.text.get(INSERT)
+            if line_starting.isspace() and (not current_char.isspace() 
+                                            or current_char == '' or current_char == '\n'):
+                self.indenter.deindent(self.get_insert())
+                return 'break'
         self.text.bind('<Return>', return_handler)
         self.text.event_add('<<ForwardSearch>>', '<Control-s>')
         self.text.event_add('<<BackwardSearch>>', '<Control-r>')
@@ -196,13 +206,6 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<<BackwardSearch>>',
                        lambda event: self._search_event(False))
         self.text.bind('<Any-KeyPress>', self._search_handler)
-        def backspace(event):
-            line_starting = self.text.get('insert linestart', 'insert')
-            current_char = self.text.get(INSERT)
-            if line_starting.isspace() and (not current_char.isspace() 
-                                            or current_char == '' or current_char == '\n'):
-                self.indenter.deindent(self.get_insert())
-                return 'break'
         self.text.bind('<BackSpace>', backspace, '+')
 
 
@@ -311,9 +314,6 @@ class GraphicalEditor(TextEditor):
         except TclError:
             pass
 
-    def clear_undo(self):
-        self.text.edit_reset()
-        
     def redo(self):
         try:
             self.text.edit_redo()

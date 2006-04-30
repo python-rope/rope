@@ -1,5 +1,6 @@
 - Enhancing editor and indentation
-    - Pressing backspace should deindent
+  - Pressing backspace should deindent
+  - Clearing undo list when opening a file; undoSeparator when saving
 
 
 - Showing current line in status bar : April 28, 2006
