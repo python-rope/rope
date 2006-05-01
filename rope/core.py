@@ -17,6 +17,7 @@ class EditorManager(object):
         self.editor_frame.pack(fill=BOTH, expand=1)
         self.editor_frame.pack_propagate(0)
         self.editors = []
+        self.buttons = {}
         self.active_file_path = StringVar('')
         self.active_editor = None
 
@@ -25,7 +26,7 @@ class EditorManager(object):
             self.active_editor.get_editor().getWidget().forget()
         editor.get_editor().getWidget().pack(fill=BOTH, expand=1)
         editor.get_editor().getWidget().focus_set()
-        editor._rope_title.select()
+        self.buttons[editor].select()
         self.active_editor = editor
         self.editors.remove(editor)
         self.editors.insert(0, editor)
@@ -33,7 +34,7 @@ class EditorManager(object):
     def get_resource_editor(self, file):
         for editor in self.editors:
             if editor.get_file() == file:
-                editor._rope_title.invoke()
+                self.buttons[editor].invoke()
                 return editor
         editor = FileEditor(file, GraphicalEditor(self.editor_frame))
         self.editors.append(editor)
@@ -42,7 +43,7 @@ class EditorManager(object):
                             value=file.get_path(), indicatoron=0, bd=2,
                             command=lambda: self.activate_editor(editor),
                             selectcolor='#99A', relief=GROOVE)
-        editor._rope_title = title
+        self.buttons[editor] = title
         title.select()
         title.pack(fill=BOTH, side=LEFT)
         self.activate_editor(editor)
@@ -58,10 +59,11 @@ class EditorManager(object):
             return
         self.active_editor.get_editor().getWidget().forget()
         self.editors.remove(self.active_editor)
-        self.active_editor._rope_title.forget()
+        self.buttons[self.active_editor].forget()
+        del self.buttons[self.active_editor]
         self.active_editor = None
         if self.editors:
-            self.editors[0]._rope_title.invoke()
+            self.buttons[self.editors[0]].invoke()
 
         
 class Core(object):

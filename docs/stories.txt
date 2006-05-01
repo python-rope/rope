@@ -108,6 +108,7 @@ rope; A Python IDE
 
 
 * Enhancing syntax highlighting @ 1
+  * Ignoring comment lines
   * Only highlighting the changed region
   * Extend highlighting region while highlighting if necessay
   * Highlighting after cut, paste, undo and redo

@@ -6,6 +6,7 @@ from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.indenter import PythonCodeIndenter
 
 class GraphicalEditorTest(unittest.TestCase):
+    '''This class only tests features that are specific to GraphicalEditor; see mockeditortest'''
     __factory = GraphicalEditorFactory()
     def setUp(self):
         unittest.TestCase.setUp(self)

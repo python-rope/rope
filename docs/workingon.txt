@@ -1,8 +1,9 @@
 * Showing modified file status
 
-? not using editor._rope_title
+- not using editor._rope_title
 
-? SF repository
+
+? SF repository; Subversion or CVS? Synchronizing local SVN with SF?
 ? Adding selection list class
 ? Separation of acceptance and unit tests
 ? GUI Testing Problems? again!
