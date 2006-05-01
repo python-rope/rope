@@ -1,8 +1,8 @@
-from threading import Thread
-from Tkinter import *
 import tkMessageBox
 import tkFileDialog
 import tkSimpleDialog
+from threading import Thread
+from Tkinter import *
 
 from rope.fileeditor import FileEditor
 from rope.editor import GraphicalEditor

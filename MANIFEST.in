@@ -1,3 +1,4 @@
+include COPYING
 recursive-include docs *.html
 include *.txt
 

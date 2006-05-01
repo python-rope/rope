@@ -1,10 +1,8 @@
 * Showing modified file status
 
-- BackSpace does not work while searching
+? not using editor._rope_title
 
-^ Extract class EditorManager from Core
-* Show searching status in the status bar
-
+? SF repository
 ? Adding selection list class
 ? Separation of acceptance and unit tests
 ? GUI Testing Problems? again!
@@ -12,7 +10,5 @@
 ? Use Dialogs instead
 ? Better multi-sequence key event handling
 ? Consider using Tix or Pmw or idlelib
-? Iterator for accessing editor text or LineOrientedOutput
 ? Should workingon.txt be under version control?
 ? Separating domain and presentation in Core
-? not using editor._rope_title

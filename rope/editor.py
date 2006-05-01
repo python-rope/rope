@@ -80,7 +80,7 @@ class GraphicalEditor(TextEditor):
     def __init__(self, parent):
         self.text = ScrolledText(parent, bg='white', 
                          font=Font(family='Typewriter', size=14), 
-                         undo=True, maxundo=50, highlightcolor='#99A')
+                         undo=True, maxundo=20, highlightcolor='#99A')
         self.searcher = rope.searching.Searcher(self)
         self._bind_keys()
         self._initialize_highlighting()
@@ -210,7 +210,7 @@ class GraphicalEditor(TextEditor):
 
 
     def get_text(self):
-        return self.text.get('1.0', END)[0 : -1]
+        return self.text.get('1.0', 'end-1c')
     
     def set_text(self, text):
         self.text.delete('1.0', END)

@@ -108,10 +108,9 @@ rope; A Python IDE
 
 
 * Enhancing syntax highlighting @ 1
-  * Use idlelib or Modified event for updating highlighting when necessary
   * Only highlighting the changed region
   * Extend highlighting region while highlighting if necessay
-  * Highlighting after cut and paste
+  * Highlighting after cut, paste, undo and redo
 
 
 * Enhancing menu @ 1
@@ -128,7 +127,6 @@ rope; A Python IDE
 * Enhancing auto indentation @ 1
   * Implicit line joining: Indenting lines whose previous line contains a ([{'''
   * Indenting a range of file
-  * Faster indentation using line oriented tools; 3 times faster
   * Removing extra spaces
 
 
@@ -148,13 +146,22 @@ rope; A Python IDE
   * Edit menu: cut, paste, undo, redo, revert
 
 
-> Public release 0.1 : May 6, 2006
-
-
 * Making ASTs @ 4
 
 
 * Auto-complete module names @ 2
+
+
+> Public release 0.1 : May 6, 2006
+
+
+* Show searching status in the status bar @ 1
+
+
+* Adding TextIterator for Editor class @ 1
+
+
+* Use Modified event for updating highlighting only when necessary @ 1
 
 
 * Enhancing editor and indentation @ 1

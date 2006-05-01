@@ -3,7 +3,9 @@ import re
 class TextIndenter(object):
     '''A class for formatting texts'''
     def indent_line(self, index):
-        '''indent the current line'''
+        '''Correct the indentation of the line containing the given index'''
+    def deindent(self, index):
+        '''Deindent the line containing the given index'''
 
 class NullIndenter(TextIndenter):
     pass
