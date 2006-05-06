@@ -31,16 +31,16 @@ class EditorManager(object):
         self.editors.remove(editor)
         self.editors.insert(0, editor)
 
-    def get_resource_editor(self, file):
+    def get_resource_editor(self, file_):
         for editor in self.editors:
-            if editor.get_file() == file:
+            if editor.get_file() == file_:
                 self.buttons[editor].invoke()
                 return editor
-        editor = FileEditor(file, GraphicalEditor(self.editor_frame))
+        editor = FileEditor(file_, GraphicalEditor(self.editor_frame))
         self.editors.append(editor)
-        title = Radiobutton(self.editor_list, text=file.get_name(),
+        title = Radiobutton(self.editor_list, text=file_.get_name(),
                             variable=self.active_file_path,
-                            value=file.get_path(), indicatoron=0, bd=2,
+                            value=file_.get_path(), indicatoron=0, bd=2,
                             command=lambda: self.activate_editor(editor),
                             selectcolor='#99A', relief=GROOVE)
         self.buttons[editor] = title
@@ -65,7 +65,7 @@ class EditorManager(object):
         if self.editors:
             self.buttons[self.editors[0]].invoke()
 
-        
+
 class Core(object):
     '''The main class for the IDE'''
     def __init__(self):
@@ -86,7 +86,7 @@ class Core(object):
         self.root.protocol('WM_DELETE_WINDOW', self.exit)
         self.runningThread = Thread(target=self.run)
         self.project = None
-    
+
     def _create_menu(self):
         fileMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='File', menu=fileMenu, underline=1)
@@ -159,8 +159,8 @@ class Core(object):
             else:
                 result = file_finder.find_files_starting_with(name.get())
             found.delete(0, END)
-            for file in result:
-                found.insert(END, file.get_path())
+            for file_ in result:
+                found.insert(END, file_.get_path())
             if result:
                 found.selection_set(0)
         def open_selected():
@@ -364,10 +364,10 @@ class Core(object):
         return 'break'
 
     def _show_open_dialog(self, openCommand, title='Open Dialog'):
-        input = tkSimpleDialog.askstring(title, 'Address :', parent=self.root)
-        if input:
+        input_ = tkSimpleDialog.askstring(title, 'Address :', parent=self.root)
+        if input_:
             try:
-                openCommand(input)
+                openCommand(input_)
             except Exception, e:
                 tkMessageBox.showerror(parent=self.root, title='Failed',
                                        message=str(e))
@@ -390,8 +390,8 @@ class Core(object):
     def open_file(self, fileName):
         if self.project is None:
             raise RopeException('No project is open')
-        file = self.project.get_resource(fileName)
-        return self.editor_manager.get_resource_editor(file)
+        file_ = self.project.get_resource(fileName)
+        return self.editor_manager.get_resource_editor(file_)
 
     def activate_editor(self, editor):
         self.editor_manager.activate_editor(editor)

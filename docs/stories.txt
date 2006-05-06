@@ -112,6 +112,7 @@ rope; A Python IDE
   * Only highlighting the changed region
   * Extend highlighting region while highlighting if necessay
   * Highlighting after cut, paste, undo and redo
+  * Use Modified event for updating highlighting only when necessary
 
 
 * Enhancing menu @ 1
@@ -140,11 +141,18 @@ rope; A Python IDE
 * Auto-complete variable names @ 3
 
 
+* Show searching status in the status bar @ 1
+
+
+* Adding TextIterator or LineOriented to the Editor class @ 1
+
+
 * Enhancing editor @ 1
   * Clearing selection if something happens
   * Unifying builtin and emacs-style selections; if selection
     is active do the builtin cut and paste
   * Edit menu: cut, paste, undo, redo, revert
+  * Showing modified file status
 
 
 * Making ASTs @ 4
@@ -156,23 +164,11 @@ rope; A Python IDE
 > Public release 0.1 : May 6, 2006
 
 
-* Show searching status in the status bar @ 1
-
-
-* Adding TextIterator for Editor class @ 1
-
-
-* Use Modified event for updating highlighting only when necessary @ 1
-
-
-* Enhancing editor and indentation @ 1
-  * Showing modified file status
-
-
 --- Remaining Stories ---
 ? Using SF SVN; Making a script for committing to SF
 ? Separate domain and presentation everywhere
 * Make tests less dependant
+? Changing used graphical interface
 * Make a new Project; Seperate opening and creating projects
 * Add removing resources to Core
 ? Project resource consistency; What if it is deleted after being created.

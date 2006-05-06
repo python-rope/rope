@@ -2,24 +2,15 @@ import re
 
 class TextIndenter(object):
     '''A class for formatting texts'''
-    def indent_line(self, index):
-        '''Correct the indentation of the line containing the given index'''
-    def deindent(self, index):
-        '''Deindent the line containing the given index'''
 
-class NullIndenter(TextIndenter):
-    pass
-
-class PythonCodeIndenter(TextIndenter):
     def __init__(self, editor):
         self.editor = editor
 
-    def _get_line_start(self, index):
-        while index != self.editor.get_start():
-            index = self.editor.get_relative(index, -1)
-            if self.editor.get(index) == '\n':
-                return self.editor.get_relative(index, +1)
-        return self.editor.get_start()
+    def indent_line(self, index):
+        '''Correct the indentation of the line containing the given index'''
+
+    def deindent(self, index):
+        '''Deindent the line containing the given index'''
 
     def _get_prev_line_start(self, line_start):
         return self._get_line_start(self.editor.get_relative(line_start, -1))
@@ -31,6 +22,10 @@ class PythonCodeIndenter(TextIndenter):
             index = self.editor.get_relative(index, +1)
         return self.editor.get_end()
 
+    def _get_line_contents(self, line_start):
+        end = self._get_line_end(line_start)
+        return self.editor.get(line_start, end)
+
     def _set_line_indents(self, line_start, indents):
         old_indents = self._count_line_indents(line_start)
         indent_diffs = indents - old_indents
@@ -39,18 +34,15 @@ class PythonCodeIndenter(TextIndenter):
         if indent_diffs > 0:
             self.editor.insert(line_start, ' ' * indent_diffs)
         else:
-            self.editor.delete(line_start, self.editor.get_relative(line_start, -indent_diffs))
+            self.editor.delete(line_start, 
+                               self.editor.get_relative(line_start, -indent_diffs))
 
-    def _get_line_contents(self, line_start):
-        end = self._get_line_end(line_start)
-        return self.editor.get(line_start, end)
-
-    def _get_last_non_empty_line(self, line_start):
-        current_line = self._get_prev_line_start(line_start)
-        while current_line != self.editor.get_start() and \
-                  self._get_line_contents(current_line).strip() == '':
-            current_line = self._get_prev_line_start(current_line)
-        return current_line
+    def _get_line_start(self, index):
+        while index != self.editor.get_start():
+            index = self.editor.get_relative(index, -1)
+            if self.editor.get(index) == '\n':
+                return self.editor.get_relative(index, +1)
+        return self.editor.get_start()
 
     def _count_line_indents(self, index):
         contents = self._get_line_contents(index)
@@ -61,6 +53,35 @@ class PythonCodeIndenter(TextIndenter):
             else:
                 break
         return result
+
+
+class NormalIndenter(TextIndenter):
+    def __init__(self, editor):
+        super(NormalIndenter, self).__init__(editor)
+
+    def indent_line(self, index):
+        start = self._get_line_start(index)
+        current_indents = self._count_line_indents(start)
+        new_indents = current_indents + 4
+        self._set_line_indents(start, new_indents)
+        
+    def deindent(self, index):
+        start = self._get_line_start(index)
+        current_indents = self._count_line_indents(start)
+        new_indents = max(0, current_indents - 4)
+        self._set_line_indents(start, new_indents)
+
+
+class PythonCodeIndenter(TextIndenter):
+    def __init__(self, editor):
+        super(PythonCodeIndenter, self).__init__(editor)
+
+    def _get_last_non_empty_line(self, line_start):
+        current_line = self._get_prev_line_start(line_start)
+        while current_line != self.editor.get_start() and \
+                  self._get_line_contents(current_line).strip() == '':
+            current_line = self._get_prev_line_start(current_line)
+        return current_line
 
     def _get_starting_backslash_line(self, line_start):
         current = line_start

@@ -1,7 +1,7 @@
 import unittest
 
 from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
-from rope.indenter import PythonCodeIndenter
+from rope.indenter import PythonCodeIndenter, NormalIndenter
 
 class PythonCodeIndenterTest(unittest.TestCase):
     __factory = MockEditorFactory()
@@ -180,6 +180,18 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.editor.set_text('def f()\n    print "hello"\n    def g():\n')
         self.indenter.deindent(self.editor.get_relative(self.editor.get_end(), -2))
         self.assertEquals('def f()\n    print "hello"\ndef g():\n', self.editor.get_text())
+
+    def test_normal_indenter_indenting(self):
+        self.editor.set_text('a sample text')
+        indenter = NormalIndenter(self.editor)
+        indenter.indent_line(self.editor.get_start())
+        self.assertEquals('    a sample text', self.editor.get_text())
+
+    def test_normal_indenter_deindenting(self):
+        self.editor.set_text('a sample \n        text')
+        indenter = NormalIndenter(self.editor)
+        indenter.deindent(self.editor.get_end())
+        self.assertEquals('a sample \n    text', self.editor.get_text())
 
 
 if __name__ == '__main__':

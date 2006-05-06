@@ -1,8 +1,7 @@
-* Showing modified file status
-
-- not using editor._rope_title
+* Extract NormalIndenter class
 
 
+- Back space does not work for normal files when deindenting
 ? SF repository; Subversion or CVS? Synchronizing local SVN with SF?
 ? Adding selection list class
 ? Separation of acceptance and unit tests

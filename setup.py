@@ -7,4 +7,4 @@ setup(name='rope',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',
       packages=['rope'],
-      scripts=['rope'])
+      scripts=['rope.py'])

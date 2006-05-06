@@ -8,7 +8,7 @@ import rope.indenter
 
 
 class TextEditor(object):
-    '''A class representing a text editor'''
+    '''The base class for all text editor'''
     def get_text(self):
         pass
     
@@ -17,25 +17,25 @@ class TextEditor(object):
 
     def get_start(self):
         pass
-    
+
     def get_insert(self):
         pass
 
     def get_end(self):
         pass
-    
+
     def get_relative(self, base_index, offset):
         pass
-    
+
     def get_index(self, offset):
         pass
-    
+
     def set_insert(self, index):
         pass
 
     def get(self, start=None, end=None):
         pass
-    
+
     def insert(self, index, text):
         pass
 
@@ -85,28 +85,39 @@ class GraphicalEditor(TextEditor):
         self._bind_keys()
         self._initialize_highlighting()
         self.highlighting = rope.highlight.NoHighlighting()
-        self.indenter = rope.indenter.NullIndenter()
+        self.indenter = rope.indenter.NormalIndenter(self)
 
     def _initialize_highlighting(self):
-        def colorize(event):
+        def colorize(event=None):
             start = 'insert linestart-2c'
             end = 'insert lineend'
             start_tags = self.text.tag_names(start)
             if start_tags:
                 tag = start_tags[0]
-                range = self.text.tag_prevrange(tag, start + '+1c')
-                if self.text.compare(range[0], '<', start):
-                    start = range[0]
-                if self.text.compare(range[1], '>', end):
-                    end = range[1]
+                range_ = self.text.tag_prevrange(tag, start + '+1c')
+                if self.text.compare(range_[0], '<', start):
+                    start = range_[0]
+                if self.text.compare(range_[1], '>', end):
+                    end = range_[1]
             end_tags = self.text.tag_names(end)
             if end_tags:
                 tag = end_tags[0]
-                range = self.text.tag_prevrange(tag, end + '+1c')
-                if self.text.compare(range[1], '>', end):
-                    end = range[1]
+                range_ = self.text.tag_prevrange(tag, end + '+1c')
+                if self.text.compare(range_[1], '>', end):
+                    end = range_[1]
             self._highlight_range(start, end)
+        def modified(event):
+            if not self.modified_flag:
+                print 'start modified', event
+                self.modified_flag = True
+                colorize()
+                self.text.edit_modified(False)
+                self.modified_flag = False
+                print 'end modified', event
+        self.modified_flag = False
         self.text.bind('<Any-KeyRelease>', colorize, '+')
+#        self.text.bind('<<Modified>>', modified)
+        self.text.edit_modified(False)
 
     def _highlight_range(self, startIndex, endIndex):
         for style in self.highlighting.getStyles().keys():
@@ -211,13 +222,14 @@ class GraphicalEditor(TextEditor):
 
     def get_text(self):
         return self.text.get('1.0', 'end-1c')
-    
+
     def set_text(self, text):
         self.text.delete('1.0', END)
         self.text.insert('1.0', text)
         self.text.mark_set(INSERT, '1.0')
         self._highlight_range('0.0', 'end')
         self.text.edit_reset()
+        self.text.edit_modified(False)
 
     def get_start(self):
         return GraphicalTextIndex(self, '1.0')
@@ -242,10 +254,10 @@ class GraphicalEditor(TextEditor):
 
     def _get_line_from_index(self, index):
         return int(self.text.index(index).split('.')[0])
-        
+
     def _get_column_from_index(self, index):
         return int(self.text.index(index).split('.')[1])
-    
+
     def set_insert(self, textIndex):
         self.text.mark_set(INSERT, textIndex._getIndex())
 
