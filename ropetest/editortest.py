@@ -104,9 +104,9 @@ class GraphicalEditorTest(unittest.TestCase):
 
     def test_insert_tab(self):
         self.editor.set_text('')
-        self.editor.insertTab()
+        self.editor.insert_tab()
         self.assertEquals((' ' * 4), self.editor.get_text())
-        self.editor.insertTab(self.editor.get_end())
+        self.editor.insert_tab(self.editor.get_end())
         self.assertEquals((' ' * 8), self.editor.get_text())
 
     def test_current_line_number(self):

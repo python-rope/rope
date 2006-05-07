@@ -1,4 +1,5 @@
---- Separating indenting and correcting indentation @ 1 ---
+- Tab should insert 4 spaces
+
 
 ? SF repository; Subversion or CVS? Synchronizing local SVN with SF?
 ? Functional tests

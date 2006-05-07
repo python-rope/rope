@@ -204,6 +204,11 @@ class PythonCodeIndenterTest(unittest.TestCase):
         indenter.correct_indentation(self.editor.get_end())
         self.assertEquals('a sample \ntext', self.editor.get_text())
 
+    def test_inserting_tab(self):
+        self.editor.set_text('print "a"')
+        self.indenter.insert_tab(self.editor.get_end())
+        self.assertEquals('print "a"    ', self.editor.get_text())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -187,7 +187,7 @@ class GraphicalEditor(TextEditor):
             self.indenter.correct_indentation(self.get_insert())
             return 'break'
         def doInsertTab(event):
-            self.insertTab()
+            self.insert_tab()
             return 'break'
         self.text.bind('<Control-i>', indent_line)
         self.text.bind('<Tab>', doInsertTab)
@@ -388,10 +388,10 @@ class GraphicalEditor(TextEditor):
     def prevPage(self):
         self.text.event_generate('<Prior>')
 
-    def insertTab(self, text_index = None):
+    def insert_tab(self, text_index = None):
         if text_index is None:
             text_index = self.get_insert()
-        self.indenter.indent(text_index)
+        self.indenter.insert_tab(text_index)
 
     def set_highlighting(self, highlighting):
         self.highlighting = highlighting

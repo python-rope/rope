@@ -23,6 +23,10 @@ class TextIndenter(object):
         new_indents = current_indents + 4
         self._set_line_indents(start, new_indents)
 
+    def insert_tab(self, index):
+        '''Inserts a tab in the given index'''
+        self.editor.insert(index, ' ' * 4)
+
     def _get_prev_line_start(self, line_start):
         return self._get_line_start(self.editor.get_relative(line_start, -1))
 
