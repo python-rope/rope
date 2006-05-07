@@ -138,10 +138,10 @@ rope; A Python IDE
 * Writing ASTs @ 4
 
 
+* Better multi-sequence key event handling @ 2
+
+
 * Auto-complete variable names @ 3
-
-
-* Show searching status in the status bar @ 1
 
 
 * Adding TextIterator or LineOriented to the Editor class @ 1
@@ -153,6 +153,12 @@ rope; A Python IDE
     is active do the builtin cut and paste
   * Edit menu: cut, paste, undo, redo, revert
   * Showing modified file status
+
+
+> Public release 0.2pre : May 20, 2006
+
+
+* Show searching status in the status bar @ 1
 
 
 * Making ASTs @ 4
@@ -169,6 +175,4 @@ rope; A Python IDE
 ? Separate domain and presentation everywhere
 * Make tests less dependant
 ? Changing used graphical interface
-* Make a new Project; Seperate opening and creating projects
-* Add removing resources to Core
 ? Project resource consistency; What if it is deleted after being created.

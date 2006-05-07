@@ -6,11 +6,22 @@ class TextIndenter(object):
     def __init__(self, editor):
         self.editor = editor
 
-    def indent_line(self, index):
+    def correct_indentation(self, index):
         '''Correct the indentation of the line containing the given index'''
 
     def deindent(self, index):
         '''Deindent the line containing the given index'''
+        start = self._get_line_start(index)
+        current_indents = self._count_line_indents(start)
+        new_indents = max(0, current_indents - 4)
+        self._set_line_indents(start, new_indents)
+
+    def indent(self, index):
+        '''Indents the line containing the given index'''
+        start = self._get_line_start(index)
+        current_indents = self._count_line_indents(start)
+        new_indents = current_indents + 4
+        self._set_line_indents(start, new_indents)
 
     def _get_prev_line_start(self, line_start):
         return self._get_line_start(self.editor.get_relative(line_start, -1))
@@ -59,18 +70,9 @@ class NormalIndenter(TextIndenter):
     def __init__(self, editor):
         super(NormalIndenter, self).__init__(editor)
 
-    def indent_line(self, index):
-        start = self._get_line_start(index)
-        current_indents = self._count_line_indents(start)
-        new_indents = current_indents + 4
-        self._set_line_indents(start, new_indents)
+    def correct_indentation(self, index):
+        pass
         
-    def deindent(self, index):
-        start = self._get_line_start(index)
-        current_indents = self._count_line_indents(start)
-        new_indents = max(0, current_indents - 4)
-        self._set_line_indents(start, new_indents)
-
 
 class PythonCodeIndenter(TextIndenter):
     def __init__(self, editor):
@@ -190,14 +192,8 @@ class PythonCodeIndenter(TextIndenter):
             new_indent -= 4
         return new_indent
 
-    def indent_line(self, index):
+    def correct_indentation(self, index):
         '''Correct the indentation of the line containing the given index'''
         start = self._get_line_start(index)
         self._set_line_indents(start, self._get_correct_indentation(start))
 
-    def deindent(self, index):
-        '''Deindent the line containing the given index'''
-        start = self._get_line_start(index)
-        indents = self._count_line_indents(start)
-        new_indents = max(0, indents - 4)
-        self._set_line_indents(start, new_indents)

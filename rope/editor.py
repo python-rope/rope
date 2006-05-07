@@ -183,11 +183,11 @@ class GraphicalEditor(TextEditor):
             self.prevPage()
             return 'break'
         self.text.bind('<Alt-v>', goPrevPage)
+        def indent_line(event):
+            self.indenter.correct_indentation(self.get_insert())
+            return 'break'
         def doInsertTab(event):
             self.insertTab()
-            return 'break'
-        def indent_line(event):
-            self.indenter.indent_line(self.get_insert())
             return 'break'
         self.text.bind('<Control-i>', indent_line)
         self.text.bind('<Tab>', doInsertTab)
@@ -196,7 +196,7 @@ class GraphicalEditor(TextEditor):
                 self.searcher.end_searching()
                 return 'break'
             self.text.insert(INSERT, '\n')
-            self.indenter.indent_line(self.get_insert())
+            self.indenter.correct_indentation(self.get_insert())
             self.text.see(INSERT)
             return 'break'
         def backspace(event):
@@ -388,11 +388,10 @@ class GraphicalEditor(TextEditor):
     def prevPage(self):
         self.text.event_generate('<Prior>')
 
-    def insertTab(self, textIndex = None):
-        index = INSERT
-        if textIndex is not None:
-            index = textIndex._getIndex()
-        self.text.insert(INSERT, ' ' * 4)
+    def insertTab(self, text_index = None):
+        if text_index is None:
+            text_index = self.get_insert()
+        self.indenter.indent(text_index)
 
     def set_highlighting(self, highlighting):
         self.highlighting = highlighting

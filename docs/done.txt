@@ -1,4 +1,7 @@
-- Enhancing editor and indentation
+- Separating indenting and correcting indentation : May 7, 2006
+
+
+- Enhancing editor and indentation : May 4, 2006
   - Pressing backspace should deindent
   - Clearing undo list when opening a file; undoSeparator when saving
 
