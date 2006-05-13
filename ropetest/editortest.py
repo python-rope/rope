@@ -123,6 +123,22 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.undo()
         self.assertEquals('sample text', self.editor.get_text())
 
+    def test_get_current_offset(self):
+        self.editor.set_text('sample text')
+        self.editor.set_insert(self.editor.get_start())
+        self.assertEquals(0, self.editor.get_current_offset())
+        self.editor.set_insert(self.editor.get_end())
+        self.assertEquals(11, self.editor.get_current_offset())
+
+    def test_get_current_offset_multiline(self):
+        self.editor.set_text('sample text\n another text \n and yet another')
+        self.editor.set_insert(self.editor.get_index(20))
+        self.assertEquals(20, self.editor.get_current_offset())
+        self.editor.set_insert(self.editor.get_index(30))
+        self.assertEquals(30, self.editor.get_current_offset())
+        self.editor.set_insert(self.editor.get_index(40))
+        self.assertEquals(40, self.editor.get_current_offset())
+
 if __name__ == '__main__':
     unittest.main()
 

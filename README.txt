@@ -1,4 +1,4 @@
-            rope : A Python IDE
+                         rope : A Python IDE
 
 Overview
 --------
@@ -11,8 +11,8 @@ Version Overview
 ----------------
   We've just started. Right now, rope is a basic editor. One of our goals
 was to develop rope using rope and for achieving this we've implemented
-the a basic editor as our first task. We've already started using rope. From
-now on we will move toward the promised features like auto-completion.  
+a basic editor as our first task. We've already started using rope. From
+now on we will move toward the promised features like auto-completion.
 
 
 Keybinding
@@ -39,6 +39,7 @@ M-w            copy region
 C-y            paste
 C-x C-s        save
 C-i            correct line indentation
+C-/            auto-complete
 
 
 Description
@@ -52,15 +53,10 @@ that are not available in python IDEs yet.
 specially in java community. In the agile programing methodologies, like
 Extreme Programing, Refactoring is one of the core practices.
 
-  As Martin Fowler the writer of the "Refactoring: Improving the design of 
-existing code" book says "Refactoring is the process of changing a software
-system in such a way that it does not alter the external behavior of the code
-yet improves its internal structure."
-
   Some IDEs support some basic refactorings like 'PyDev' (which uses bicycle
 repair man). These IDEs have a limited set of refactorings and fail
 when doing refactorings that need to know the type of objects in the
-source code (specially for relatively large projects). rope tries to provide a 
+source code (specially for relatively large projects). rope tries to provide a
 rich set of refactorings. Some of the refactorings require type
 inferencing which is described later.
 
@@ -85,11 +81,11 @@ type inferencing to overcome this problem.
 of objects. But type inferencing python programs is very hard.
 There have been some attempts though not very successful (examples:
 psycho: only str and int types, StarKiller: wasn't released and
-ShedSkin: very limited). They where mostly directed at speeding up
+ShedSkin: good but limited). They where mostly directed at speeding up
 python programs by transforming its code to other typed languages 
 rather than building IDEs. Such algorithms might be helpful.
 
-  There is another approache toward type inferencing. That is the analysis
+  There is another approach toward type inferencing. That is the analysis
 of running programs. This dynamic approach records the types variables are
 assigned to during the program execution. Although this approach is
 a lot easier to implement than the alternative, it is limited. Only the
@@ -108,7 +104,7 @@ support a limited number of refactorings.
 
 * Why an IDE and not a standalone library or program?
 
-  As Don Roberts one of the writers of the famous "Refactoring Browser" for
+  As Don Roberts one of the writers of the "Refactoring Browser" for
 smalltalk writes in his doctoral thesis:
   "An early implementation of the Refactoring Browser for Smalltalk was a separate
 tool from the standard Smalltalk development tools. What we found was that no

@@ -20,6 +20,12 @@ rope; A Python IDE
 * Open Type @ 2
 
 
+* Configuring keys @ 2
+
+
+* Configuring fonts @ 1
+
+
 * Showing syntactical errors @ 3
 
 
@@ -38,9 +44,6 @@ rope; A Python IDE
 * Subversion support using pysvn @ 3
 
 
-* Rename local variable @ 2
-
-
 * Rename function @ 2
 
 
@@ -54,9 +57,6 @@ rope; A Python IDE
 
 
 * Find matching parens @ 1
-
-
-* Rename module refactoring @ 2
 
 
 * Last edit location; C-q @ 2
@@ -108,7 +108,6 @@ rope; A Python IDE
 
 
 * Enhancing syntax highlighting @ 1
-  * Ignoring comment lines
   * Only highlighting the changed region
   * Extend highlighting region while highlighting if necessay
   * Highlighting after cut, paste, undo and redo
@@ -127,21 +126,22 @@ rope; A Python IDE
 
 
 * Enhancing auto indentation @ 1
+  * Ignoring comment lines
   * Implicit line joining: Indenting lines whose previous line contains a ([{'''
   * Indenting a range of file
   * Removing extra spaces
 
 
+* Rename local variable @ 2
+
+
+* Rename module refactoring @ 2
+
+
 * Formating Code @ 2
 
 
-* Writing ASTs @ 4
-
-
 * Better multi-sequence key event handling @ 2
-
-
-* Auto-complete variable names @ 3
 
 
 * Adding TextIterator or LineOriented to the Editor class @ 1
@@ -155,24 +155,30 @@ rope; A Python IDE
   * Showing modified file status
 
 
+* Writing ASTs @ 4
+
+
+* Auto-complete variable names @ 3
+
+
+* Making ASTs @ 4
+
+
 > Public release 0.2pre : May 20, 2006
 
 
 * Show searching status in the status bar @ 1
 
 
-* Making ASTs @ 4
-
-
-* Auto-complete module names @ 2
-
-
-> Public release 0.1 : May 6, 2006
+* Auto-complete module names @ 3
 
 
 --- Remaining Stories ---
-? Using SF SVN; Making a script for committing to SF
+? Change program goals and description; principles.html
+  ? Go toward refactoring and ... library rather than an IDE
+? roadmap.html
+? Should workingon.txt be under version control?
+? Functional tests
 ? Separate domain and presentation everywhere
 * Make tests less dependant
-? Changing used graphical interface
 ? Project resource consistency; What if it is deleted after being created.

@@ -5,6 +5,7 @@ from ScrolledText import ScrolledText
 import rope.highlight
 import rope.searching
 import rope.indenter
+import rope.codeassist
 
 
 class TextEditor(object):
@@ -86,6 +87,7 @@ class GraphicalEditor(TextEditor):
         self._initialize_highlighting()
         self.highlighting = rope.highlight.NoHighlighting()
         self.indenter = rope.indenter.NormalIndenter(self)
+        self.code_assist = rope.codeassist.NoAssist()
 
     def _initialize_highlighting(self):
         def colorize(event=None):
@@ -218,7 +220,67 @@ class GraphicalEditor(TextEditor):
                        lambda event: self._search_event(False))
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
+        self.text.bind('<Alt-slash>', lambda event: self._show_completion_window());
 
+
+    def _show_completion_window(self):
+        toplevel = Toplevel()
+        frame = Frame(toplevel)
+        label = Label(frame, text='Hello World')
+        proposals = Listbox(frame, selectmode=SINGLE, width=23, height=7)
+        scrollbar = Scrollbar(frame, orient=VERTICAL)
+        scrollbar['command'] = proposals.yview
+        proposals.config(yscrollcommand=scrollbar.set)
+        result = self.code_assist.complete_code(self.get_text(), self.get_current_offset())
+        for proposal in result:
+            proposals.insert(END, proposal.completion)
+        if result:
+            proposals.selection_set(0)
+        self.text.see('insert')
+        local_x, local_y, cx, cy = self.text.bbox("insert")
+        x = local_x + self.text.winfo_rootx() + 2
+        y = local_y + cy + self.text.winfo_rooty()
+        #        toplevel.wm_geometry('+%d+%d' % (x, y))
+        #        toplevel.wm_overrideredirect(1)
+        def open_selected():
+            selection = proposals.curselection()
+            if selection:
+                selected = proposals.get(selection[0])
+                # TODO: insert the completion
+                toplevel.destroy()
+        def cancel():
+            toplevel.destroy()
+        proposals.bind('<Return>', lambda event: open_selected())
+        proposals.bind('<Escape>', lambda event: cancel())
+        proposals.bind('<FocusOut>', lambda event: cancel())
+        def select_prev(event):
+            selection = proposals.curselection()
+            if selection:
+                active = int(selection[0])
+                if active - 1 >= 0:
+                    proposals.select_clear(0, END)
+                    proposals.selection_set(active - 1)
+                    proposals.see(active - 1)
+                    proposals.activate(active - 1)
+                    proposals.see(active - 1)
+        proposals.bind('<Control-p>', select_prev)
+        def select_next(event):
+            selection = proposals.curselection()
+            if selection:
+                active = int(selection[0])
+                if active + 1 < proposals.size():
+                    proposals.select_clear(0, END)
+                    proposals.selection_set(active + 1)
+                    proposals.see(active + 1)
+                    proposals.activate(active + 1)
+                    proposals.see(active + 1)
+        proposals.bind('<Control-n>', select_next)
+        label.grid(row=0, column=0, columnspan=2)
+        proposals.grid(row=1, column=0, sticky=N+E+W+S)
+        scrollbar.grid(row=1, column=1, sticky=N+E+W+S)
+        frame.grid(sticky=N+E+W+S)
+        proposals.focus_set()
+        toplevel.grab_set()
 
     def get_text(self):
         return self.text.get('1.0', 'end-1c')
@@ -478,11 +540,23 @@ class GraphicalEditor(TextEditor):
     def set_indenter(self, text_indenter):
         self.indenter = text_indenter
 
+    def set_code_assist(self, code_assist):
+        self.code_assist = code_assist
+
     def get_indenter(self):
         return self.indenter
 
     def get_current_line_number(self):
         return self._get_line_from_index(INSERT)
+
+    def get_current_offset(self):
+        result = self._get_column_from_index(INSERT)
+        current_line = self._get_line_from_index(INSERT)
+        current_pos = '1.0 lineend'
+        for x in range(current_line - 1):
+            result += self._get_column_from_index(current_pos) + 1
+            current_pos = self.text.index(current_pos + ' +1l lineend')
+        return result
 
 
 class GraphicalTextIndex(TextIndex):

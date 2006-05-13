@@ -1,13 +1,13 @@
 *** PythonSource ***
-	* Formatting code
-	* Basic refactorings
-	* Content assist
-	* Advanced refactorings
-	* Type inferencing
-	  * static
-	  * dynamic
-	  * ask user
-	* Auto completion
+    * Formatting code
+    * Basic refactorings
+    * Content assist
+    * Advanced refactorings
+    * Type inferencing
+        * static
+        * dynamic
+        * ask user
+    * Auto completion
 
 >>> Advanced Refactorings; Need type inferencing
 * Rename method
@@ -34,7 +34,7 @@
 * Add import
 * Format source
 
->>> Content Assists
+>>> Code Assists
 * Make module/class/function/method
 * Surround with try statement
 * Remove try statement

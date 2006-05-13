@@ -1,6 +1,16 @@
-- Tab should insert 4 spaces
+*** Auto-complete imports names @ 3 ***
 
+- Test only reporting only completions with the given starting
+- Showing completions in GraphicalEditor
 
-? SF repository; Subversion or CVS? Synchronizing local SVN with SF?
-? Functional tests
-? Should workingon.txt be under version control?
+* Extract listbox; duplicates in editor and core
+? Proposing a name at most once? Use dicts instead of lists
+* Test not proposing local assigns as global proposals
+* Test not proposing the variables in current line
+* What if current line has errors
+? The connection between ASTs and Type Hierarchies
+? Should Projects have ContentAssist objects?
+
+* Better font selection on windows
+? Think about a library for functional testing
+? SF repository; SVN or CVS? How to synchronize local SVN with SF?

@@ -8,6 +8,8 @@ import ropetest.projecttest
 import ropetest.highlighttest
 import ropetest.searchingtest
 import ropetest.indentertest
+import ropetest.codeassisttest
+
 
 if __name__ == '__main__':
     result = unittest.TestSuite()
@@ -21,5 +23,6 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.projecttest.TestPythonFileRunner))
     result.addTests(unittest.makeSuite(ropetest.highlighttest.HighlightTest))
     result.addTests(unittest.makeSuite(ropetest.indentertest.PythonCodeIndenterTest))
+    result.addTests(unittest.makeSuite(ropetest.codeassisttest.CodeAssistTest))
     runner = unittest.TextTestRunner()
     runner.run(result)

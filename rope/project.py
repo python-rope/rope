@@ -3,6 +3,7 @@ import sys
 import subprocess
 
 import rope.core
+import rope.codeassist
 
 class Project(object):
     '''A Project containing files and folders'''
@@ -12,6 +13,7 @@ class Project(object):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise rope.core.RopeException('Project root exists and is not a directory')
+        self.code_assist = rope.codeassist.CodeAssist()
 
     def get_root_folder(self):
         return Folder(self, '')
@@ -107,6 +109,9 @@ class Project(object):
         created_package = parent.create_folder(packages[-1])
         created_package.create_file('__init__.py')
         return created_package
+
+    def get_code_assist(self):
+        return self.code_assist
 
     @staticmethod
     def remove_recursively(file):

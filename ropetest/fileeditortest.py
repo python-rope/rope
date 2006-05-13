@@ -14,7 +14,7 @@ class FileEditorTest(unittest.TestCase):
         self.projectMaker = SampleProjectMaker()
         self.fileName = self.projectMaker.getSampleFileName()
         self.project = Project(self.projectMaker.getRoot())
-        self.editor = FileEditor(self.project.get_resource(self.fileName), self.text)
+        self.editor = FileEditor(self.project, self.project.get_resource(self.fileName), self.text)
     
     def tearDown(self):
         self.projectMaker.removeAll()

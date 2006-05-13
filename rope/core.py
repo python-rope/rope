@@ -36,7 +36,8 @@ class EditorManager(object):
             if editor.get_file() == file_:
                 self.buttons[editor].invoke()
                 return editor
-        editor = FileEditor(file_, GraphicalEditor(self.editor_frame))
+        editor = FileEditor(Core.get_core().get_open_project(), file_,
+                            GraphicalEditor(self.editor_frame))
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),
                             variable=self.active_file_path,
@@ -308,7 +309,7 @@ class Core(object):
         def do_create_module(source_folder, module_name):
             new_module = self.project.create_module(source_folder,
                                                     module_name)
-            self.editor_manager.get_file_editor(new_module)
+            self.editor_manager.get_resource_editor(new_module)
         self._create_resource_dialog(do_create_module, 'Module', 'Source Folder')
         if event:
             return 'break'
@@ -317,7 +318,7 @@ class Core(object):
         def do_create_package(source_folder, package_name):
             new_package = self.project.create_package(source_folder,
                                                       package_name)
-            self.editor_manager.get_file_editor(new_module)
+            self.editor_manager.get_resource_editor(new_module)
         self._create_resource_dialog(do_create_package, 'Package', 'Source Folder')
         if event:
             return 'break'
@@ -343,7 +344,7 @@ class Core(object):
     def _create_new_file_dialog(self, event=None):
         def do_create_file(parent_folder, file_name):
             new_file = parent_folder.create_file(file_name)
-            self.editor_manager.get_file_editor(new_file)
+            self.editor_manager.get_resource_editor(new_file)
         self._create_resource_dialog(do_create_file, 'File', 'Parent Folder')
         if event:
             return 'break'

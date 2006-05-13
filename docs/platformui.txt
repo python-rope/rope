@@ -1,9 +1,9 @@
 *** PlatformUI ***
-	* Basic editing
-	* Syntax highlighting
-	* Multiple buffers
-	* Advanced search
-	* Different views
-	* Configuration editor
-	* Having multiple clipboards
-	* Adding status bar
+    * Basic editing
+    * Syntax highlighting
+    * Multiple buffers
+    * Advanced search
+    * Different views
+    * Configuration editor
+    * Having multiple clipboards
+    * Adding status bar
