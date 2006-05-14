@@ -226,7 +226,7 @@ class GraphicalEditor(TextEditor):
     def _show_completion_window(self):
         toplevel = Toplevel()
         frame = Frame(toplevel)
-        label = Label(frame, text='Hello World')
+        label = Label(frame, text='Completion Proposals')
         proposals = Listbox(frame, selectmode=SINGLE, width=23, height=7)
         scrollbar = Scrollbar(frame, orient=VERTICAL)
         scrollbar['command'] = proposals.yview
@@ -315,10 +315,10 @@ class GraphicalEditor(TextEditor):
             return fromIndex + ('%dc' % count)
 
     def _get_line_from_index(self, index):
-        return int(self.text.index(index).split('.')[0])
+        return int(str(self.text.index(index)).split('.')[0])
 
     def _get_column_from_index(self, index):
-        return int(self.text.index(index).split('.')[1])
+        return int(str(self.text.index(index)).split('.')[1])
 
     def set_insert(self, textIndex):
         self.text.mark_set(INSERT, textIndex._getIndex())
@@ -352,7 +352,7 @@ class GraphicalEditor(TextEditor):
         result = INSERT
         while self.text.compare(result, '!=', 'end-1c') and \
               not self.text.get(result)[0].isalnum():
-            result = self.text.index(result + '+1c')
+            result = str(self.text.index(result + '+1c'))
         return result + ' wordend'
 
     def nextWord(self):
@@ -363,7 +363,7 @@ class GraphicalEditor(TextEditor):
         result = INSERT
         while not self.text.compare(result, '==', '1.0') and \
               not self.text.get(result + '-1c')[0].isalnum():
-            result = self.text.index(result + '-1c')
+            result = str(self.text.index(result + '-1c'))
         return result + '-1c wordstart'
 
     def prevWord(self):
@@ -555,7 +555,7 @@ class GraphicalEditor(TextEditor):
         current_pos = '1.0 lineend'
         for x in range(current_line - 1):
             result += self._get_column_from_index(current_pos) + 1
-            current_pos = self.text.index(current_pos + ' +1l lineend')
+            current_pos = str(self.text.index(current_pos + ' +1l lineend'))
         return result
 
 
@@ -577,7 +577,7 @@ class GraphicalTextIndex(TextIndex):
         return 0
 
     def _getIndex(self):
-        return self.index
+        return str(self.index)
 
     def __str__(self):
         return '<%s, %s>' % (self.__class__.__name__, self.index)

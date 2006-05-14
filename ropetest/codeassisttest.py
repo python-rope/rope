@@ -39,6 +39,21 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_not_in_result('my_global', 'global_variable', result)
 
+    def test_not_proposing_local_assigns_as_global_completions(self):
+        code = 'def f():    my_global = 10\nt = my_'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('my_global', 'global_variable', result)
+
+    def test_proposing_functions(self):
+        code = 'def my_func():    return 2\nt = my_'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_func', 'function', result)
+
+    def test_proposing_classes(self):
+        code = 'class Sample(object):    pass\nt = Sam'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('Sample', 'class', result)
+
 
 if __name__ == '__main__':
     unittest.main()

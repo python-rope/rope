@@ -43,7 +43,7 @@ class PythonHighlighting(Highlighting):
         return {'keyword': HighlightingStyle(color='blue', bold=True),
                 'string' : HighlightingStyle(color='#004080'),
                 'comment' : HighlightingStyle(color='#008000', italic=True),
-                'builtin' : HighlightingStyle(color='pink'),
+                'builtin' : HighlightingStyle(color='#908080'),
                 'definition' : HighlightingStyle(color='purple', bold=True)}
 
     def highlights(self, start, end):

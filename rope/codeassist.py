@@ -18,6 +18,14 @@ class _GlobalVisitor(object):
         if node.name.startswith(self.starting):
             self.result.append(CompletionProposal(node.name, 'global_variable'))
 
+    def visitFunction(self, node):
+        if node.name.startswith(self.starting):
+            self.result.append(CompletionProposal(node.name, 'function'))
+    
+    def visitClass(self, node):
+        if node.name.startswith(self.starting):
+            self.result.append(CompletionProposal(node.name, 'class'))
+
 
 class ICodeAssist(object):
     def complete_code(self, source, offset):
