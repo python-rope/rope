@@ -14,13 +14,13 @@ class CodeAssistTest(unittest.TestCase):
         self.assist.complete_code('', 0)
 
     def assert_proposal_in_result(self, completion, kind, result):
-        for proposal in result:
+        for proposal in result.proposals:
             if proposal.completion == completion and proposal.kind == kind:
                 return
         self.fail('Completion %s not proposed' % completion)
 
     def assert_proposal_not_in_result(self, completion, kind, result):
-        for proposal in result:
+        for proposal in result.proposals:
             if proposal.completion == completion and proposal.kind == kind:
                 self.fail('Completion %s was proposed' % completion)
 
@@ -57,7 +57,8 @@ class CodeAssistTest(unittest.TestCase):
     def test_proposing_each_name_at_most_once(self):
         code = 'variable = 10\nvariable = 20\nt = vari'
         result = self.assist.complete_code(code, len(code))
-        count = len([x for x in result if x.completion == 'variable' and x.kind == 'global_variable'])
+        count = len([x for x in result.proposals
+                     if x.completion == 'variable' and x.kind == 'global_variable'])
         self.assertEquals(1, count)
 
     def test_throwing_exception_in_case_of_syntax_errors(self):
@@ -74,6 +75,12 @@ class CodeAssistTest(unittest.TestCase):
         code = 'def my_func():    return 2\nt = my_'
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_not_in_result('my_', 'global_variable', result)
+
+    def test_completion_result(self):
+        code = 'my_global = 10\nt = my'
+        result = self.assist.complete_code(code, len(code))
+        self.assertEquals(len(code) - 2, result.start_offset)
+        self.assertEquals(len(code), result.end_offset)
 
 
 if __name__ == '__main__':

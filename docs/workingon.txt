@@ -1,9 +1,10 @@
 *** Auto-complete imports names @ 3 ***
 
+- Applying the completion
+
 * What if the statement in current line is spread in more than one line
 * Extract listbox; duplicates in editor and core
 * Complete as you type (updating proposal list while typing)
-* Applying the completion
 ? The connection between ASTs and Type Hierarchies
 
 * Better font selection on windows

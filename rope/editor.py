@@ -232,7 +232,7 @@ class GraphicalEditor(TextEditor):
         scrollbar['command'] = proposals.yview
         proposals.config(yscrollcommand=scrollbar.set)
         result = self.code_assist.complete_code(self.get_text(), self.get_current_offset())
-        for proposal in result:
+        for proposal in result.proposals:
             proposals.insert(END, proposal.completion)
         if result:
             proposals.selection_set(0)
@@ -245,8 +245,11 @@ class GraphicalEditor(TextEditor):
         def open_selected():
             selection = proposals.curselection()
             if selection:
-                selected = proposals.get(selection[0])
-                # TODO: insert the completion
+                selected = int(selection[0])
+                self.text.delete('0.0 +%dc' % result.start_offset,
+                                 '0.0 +%dc' % result.end_offset)
+                self.text.insert('0.0 +%dc' % result.start_offset,
+                                 result.proposals[selected].completion)
                 toplevel.destroy()
         def cancel():
             toplevel.destroy()

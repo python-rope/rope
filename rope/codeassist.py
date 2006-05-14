@@ -8,11 +8,22 @@ class RopeSyntaxError(RopeException):
 
 
 class CompletionProposal(object):
-    global_variable = 'global_variable'
-
+    """A completion proposal.
+    
+    The kind instance variable shows the type of the completion and
+    can be global_variable, function, class
+    
+    """
     def __init__(self, completion, kind):
         self.completion = completion
         self.kind = kind
+
+
+class CompletionResult(object):
+    def __init__(self, proposals=[], start_offset=0, end_offset=0):
+        self.proposals = proposals
+        self.start_offset = start_offset
+        self.end_offset = end_offset
 
 
 class _GlobalVisitor(object):
@@ -28,7 +39,7 @@ class _GlobalVisitor(object):
     def visitFunction(self, node):
         if node.name.startswith(self.starting):
             self.result[node.name] = CompletionProposal(node.name, 'function')
-    
+
     def visitClass(self, node):
         if node.name.startswith(self.starting):
             self.result[node.name] = CompletionProposal(node.name, 'class')
@@ -41,18 +52,16 @@ class ICodeAssist(object):
 
 class NoAssist(ICodeAssist):
     def complete_code(self, source_code, offset):
-        return []
+        return CompletionResult()
 
 
 class CodeAssist(ICodeAssist):
-    def _find_starting(self, source_code, offset):
-        starting = ''
+    def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
                                        source_code[current_offset] == '_'):
-            starting = source_code[current_offset] + starting
             current_offset -= 1;
-        return starting
+        return current_offset + 1
 
     def _comment_current_line(self, source_code, offset):
         line_beginning = offset - 1
@@ -69,7 +78,8 @@ class CodeAssist(ICodeAssist):
     def complete_code(self, source_code, offset):
         if offset > len(source_code):
             return []
-        starting = self._find_starting(source_code, offset)
+        starting_offset = self._find_starting_offset(source_code, offset)
+        starting = source_code[starting_offset:offset]
         commented_source_code = self._comment_current_line(source_code, offset)
         result = {}
         try:
@@ -79,5 +89,5 @@ class CodeAssist(ICodeAssist):
         visitor = _GlobalVisitor(starting)
         compiler.walk(code_ast, visitor)
         result.update(visitor.result)
-        return result.values()
+        return CompletionResult(result.values(), starting_offset, offset)
 
