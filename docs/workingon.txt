@@ -1,12 +1,12 @@
 *** Auto-complete imports names @ 3 ***
 
+- Throwing Exceptions when encountering errors
+- What if current line has errors
+- Test not proposing the variables in current line
 
-- Proposing a name at most once? Use dicts instead of lists
-
+* What if the statement in current line is spread in more than one line
 * Extract listbox; duplicates in editor and core
 * Complete as you type (updating proposal list while typing)
-* Test not proposing the variables in current line
-* What if current line has errors
 * Applying the completion
 ? The connection between ASTs and Type Hierarchies
 

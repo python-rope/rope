@@ -1,5 +1,11 @@
 import compiler
 
+import rope.core
+
+
+class RopeSyntaxError(rope.core.RopeException):
+    pass
+
 class CompletionProposal(object):
     global_variable = 'global_variable'
 
@@ -38,17 +44,37 @@ class NoAssist(ICodeAssist):
 
 
 class CodeAssist(ICodeAssist):
-    def complete_code(self, source_code, offset):
-        if offset > len(source_code):
-            return []
+    def _find_starting(self, source_code, offset):
         starting = ''
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
                                        source_code[current_offset] == '_'):
             starting = source_code[current_offset] + starting
             current_offset -= 1;
+        return starting
+
+    def _comment_current_line(self, source_code, offset):
+        line_beginning = offset - 1
+        while line_beginning >= 0 and source_code[line_beginning] != '\n':
+            line_beginning -= 1
+        line_ending = offset
+        while line_ending < len(source_code) and source_code[line_ending] != '\n':
+            line_ending += 1
+        result = source_code
+        if line_beginning != -1 and line_beginning < line_ending - 1:
+            result = source_code[:line_beginning] + '#' + source_code[line_beginning + 2:]
+        return result
+
+    def complete_code(self, source_code, offset):
+        if offset > len(source_code):
+            return []
+        starting = self._find_starting(source_code, offset)
+        commented_source_code = self._comment_current_line(source_code, offset)
         result = {}
-        code_ast = compiler.parse(source_code)
+        try:
+            code_ast = compiler.parse(commented_source_code)
+        except SyntaxError, e:
+            raise RopeSyntaxError(e)
         visitor = _GlobalVisitor(starting)
         compiler.walk(code_ast, visitor)
         result.update(visitor.result)

@@ -8,6 +8,12 @@ from rope.fileeditor import FileEditor
 from rope.editor import GraphicalEditor
 from rope.project import Project, FileFinder, PythonFileRunner
 
+
+class RopeException(Exception):
+    '''Base exception for rope'''
+    pass
+
+
 class EditorManager(object):
     def __init__(self, editor_panel, core):
         self.core = core
@@ -461,7 +467,3 @@ class Core(object):
             Core._core = Core()
         return Core._core
 
-
-class RopeException(Exception):
-    '''Base exception for rope'''
-    pass

@@ -1,6 +1,6 @@
 import unittest
 
-from rope.codeassist import CodeAssist
+from rope.codeassist import CodeAssist, RopeSyntaxError
 
 class CodeAssistTest(unittest.TestCase):
     def setUp(self):
@@ -59,6 +59,21 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         count = len([x for x in result if x.completion == 'variable' and x.kind == 'global_variable'])
         self.assertEquals(1, count)
+
+    def test_throwing_exception_in_case_of_syntax_errors(self):
+        code = 'sample (sdf\n'
+        self.assertRaises(RopeSyntaxError, 
+                          lambda: self.assist.complete_code(code, len(code)))
+    
+    def test_ignoring_errors_in_current_line(self):
+        code = 'def my_func():    return 2\nt = '
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_func', 'function', result)
+
+    def test_not_reporting_variables_in_current_line(self):
+        code = 'def my_func():    return 2\nt = my_'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('my_', 'global_variable', result)
 
 
 if __name__ == '__main__':
