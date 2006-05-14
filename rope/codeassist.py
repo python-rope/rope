@@ -12,19 +12,19 @@ class _GlobalVisitor(object):
     
     def __init__(self, starting):
         self.starting = starting
-        self.result = []
+        self.result = {}
 
     def visitAssName(self, node):
         if node.name.startswith(self.starting):
-            self.result.append(CompletionProposal(node.name, 'global_variable'))
+            self.result[node.name] = CompletionProposal(node.name, 'global_variable')
 
     def visitFunction(self, node):
         if node.name.startswith(self.starting):
-            self.result.append(CompletionProposal(node.name, 'function'))
+            self.result[node.name] = CompletionProposal(node.name, 'function')
     
     def visitClass(self, node):
         if node.name.startswith(self.starting):
-            self.result.append(CompletionProposal(node.name, 'class'))
+            self.result[node.name] = CompletionProposal(node.name, 'class')
 
 
 class ICodeAssist(object):
@@ -47,9 +47,9 @@ class CodeAssist(ICodeAssist):
                                        source_code[current_offset] == '_'):
             starting = source_code[current_offset] + starting
             current_offset -= 1;
-        result = []
+        result = {}
         code_ast = compiler.parse(source_code)
         visitor = _GlobalVisitor(starting)
         compiler.walk(code_ast, visitor)
-        result.extend(visitor.result)
-        return result
+        result.update(visitor.result)
+        return result.values()

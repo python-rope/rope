@@ -54,6 +54,12 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('Sample', 'class', result)
 
+    def test_proposing_each_name_at_most_once(self):
+        code = 'variable = 10\nvariable = 20\nt = vari'
+        result = self.assist.complete_code(code, len(code))
+        count = len([x for x in result if x.completion == 'variable' and x.kind == 'global_variable'])
+        self.assertEquals(1, count)
+
 
 if __name__ == '__main__':
     unittest.main()
