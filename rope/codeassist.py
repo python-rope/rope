@@ -1,10 +1,11 @@
 import compiler
 
-import rope.core
+from rope.exceptions import RopeException
 
 
-class RopeSyntaxError(rope.core.RopeException):
+class RopeSyntaxError(RopeException):
     pass
+
 
 class CompletionProposal(object):
     global_variable = 'global_variable'
@@ -79,3 +80,4 @@ class CodeAssist(ICodeAssist):
         compiler.walk(code_ast, visitor)
         result.update(visitor.result)
         return result.values()
+

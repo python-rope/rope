@@ -4,14 +4,10 @@ import tkSimpleDialog
 from threading import Thread
 from Tkinter import *
 
-from rope.fileeditor import FileEditor
-from rope.editor import GraphicalEditor
+import rope.editor
+import rope.fileeditor
+from rope.exceptions import RopeException
 from rope.project import Project, FileFinder, PythonFileRunner
-
-
-class RopeException(Exception):
-    '''Base exception for rope'''
-    pass
 
 
 class EditorManager(object):
@@ -42,8 +38,8 @@ class EditorManager(object):
             if editor.get_file() == file_:
                 self.buttons[editor].invoke()
                 return editor
-        editor = FileEditor(Core.get_core().get_open_project(), file_,
-                            GraphicalEditor(self.editor_frame))
+        editor = rope.fileeditor.FileEditor(Core.get_core().get_open_project(), file_,
+                                            rope.editor.GraphicalEditor(self.editor_frame))
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),
                             variable=self.active_file_path,

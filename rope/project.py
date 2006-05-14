@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 
-import rope.core
+from rope.exceptions import RopeException
 import rope.codeassist
 
 class Project(object):
@@ -12,7 +12,7 @@ class Project(object):
         if not os.path.exists(self.root):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
-            raise rope.core.RopeException('Project root exists and is not a directory')
+            raise RopeException('Project root exists and is not a directory')
         self.code_assist = rope.codeassist.CodeAssist()
 
     def get_root_folder(self):
@@ -24,12 +24,12 @@ class Project(object):
     def get_resource(self, resourceName):
         path = self._get_resource_path(resourceName)
         if not os.path.exists(path):
-            raise rope.core.RopeException('resource %s does not exist' % resourceName)
+            raise RopeException('resource %s does not exist' % resourceName)
         if os.path.isfile(path):
             return File(self, resourceName)
         if os.path.isdir(path):
             return Folder(self, resourceName)
-        raise rope.core.RopeException('Unknown resource ' + resourceName)
+        raise RopeException('Unknown resource ' + resourceName)
 
     def get_files(self):
         return self._get_files_recursively(self.get_root_folder())
@@ -38,22 +38,22 @@ class Project(object):
         filePath = self._get_resource_path(fileName)
         if os.path.exists(filePath):
             if not os.path.isfile(filePath):
-                raise rope.core.RopeException('File already exists')
+                raise RopeException('File already exists')
             else:
-                raise rope.core.RopeException('A folder with the same name as this file already exists')
+                raise RopeException('A folder with the same name as this file already exists')
         try:
             newFile = open(filePath, 'w')
         except IOError, e:
-            raise rope.core.RopeException(e)
+            raise RopeException(e)
         newFile.close()
 
     def _create_folder(self, folderName):
         folderPath = self._get_resource_path(folderName)
         if os.path.exists(folderPath):
             if not os.path.isdir(folderPath):
-                raise rope.core.RopeException('A file with the same name as this folder already exists')
+                raise RopeException('A file with the same name as this folder already exists')
             else:
-                raise rope.core.RopeException('Folder already exists')
+                raise RopeException('Folder already exists')
         os.mkdir(folderPath)
 
     def _get_resource_path(self, name):
@@ -75,7 +75,7 @@ class Project(object):
             init_dot_py_file = self.get_resource(init_dot_py)
             if not init_dot_py_file.is_folder():
                 return True
-        except rope.core.RopeException:
+        except RopeException:
             pass
         return False
 

@@ -2,7 +2,7 @@ import unittest
 import os
 
 from rope.project import Project, FileFinder, PythonFileRunner
-from rope.core import RopeException
+from rope.exceptions import RopeException
 
 class SampleProjectMaker(object):
     def __init__(self):
