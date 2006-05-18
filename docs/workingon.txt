@@ -6,9 +6,7 @@
 - Showing status while searching
 - Separate module for StatusBarManager
 - create_status, get_status
-
-* What if the editor goes out of focus while searching
-* Fixed places for status texts
+- What if the editor goes out of focus while searching
 
 * Extract listbox; duplicates in editor and core
     ? uihelpers module

@@ -222,7 +222,12 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<Alt-slash>', lambda event: self._show_completion_window());
+        self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
 
+
+    def _focus_went_out(self):
+        if self.searcher.is_searching():
+            self.searcher.end_searching()
 
     def _show_completion_window(self):
         result = self.code_assist.complete_code(self.get_text(), self.get_current_offset())

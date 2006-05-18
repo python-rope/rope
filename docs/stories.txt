@@ -123,6 +123,7 @@ rope; A Python IDE
   * Kill line; C-k
   * Select all; C-x h
   * Go to line
+  * Fixed places for StatusTexts
 
 
 * Enhancing auto indentation @ 1
