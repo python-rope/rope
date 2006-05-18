@@ -8,9 +8,6 @@ rope; A Python IDE
 * Add import @ 2
 
 
-* Auto-complete class and function names @ 2
-
-
 * Show PyDoc @ 2
 
 
@@ -72,7 +69,7 @@ rope; A Python IDE
 * Replacement; M-% @ 1
 
 
-* Save as; C-x C-w
+* Save as and save all; C-x C-w, C-x s @ 1
 
 
 * Remembering last open project @ 1
@@ -82,6 +79,9 @@ rope; A Python IDE
 
 
 * Changing next/prev word to stop on underline and capital letters @ 1
+
+
+* Auto-completing function parameter names @ 2
 
 
 * Commenting and uncommenting lines @ 1
@@ -158,19 +158,33 @@ rope; A Python IDE
 * Writing ASTs @ 4
 
 
-* Auto-complete variable names @ 3
+* Auto-complete imported objects @ 3
 
 
-* Making ASTs @ 4
+* Proposing templates in auto-completion proposals @ 2
+
+
+* Auto completion type @ 3
+  * Inserting or overwriting
+  * Inserting common prefixes
+
+
+* Auto completing keywords and builtins @ 1
+
+
+* Auto-complete local variable names @ 3
+
+
+* Enhancing auto-completion @ 2
+  * What if the statement in current line is spread in more than one line
+  * Complete as you type (updating proposal list while typing)
+  * What to do when the program has syntax errors
 
 
 > Public release 0.2pre : May 20, 2006
 
 
-* Show searching status in the status bar @ 1
-
-
-* Auto-complete module names @ 3
+* Show searching status in the status bar @ 2
 
 
 --- Remaining Stories ---

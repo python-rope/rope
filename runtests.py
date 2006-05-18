@@ -9,6 +9,7 @@ import ropetest.highlighttest
 import ropetest.searchingtest
 import ropetest.indentertest
 import ropetest.codeassisttest
+import ropetest.statusbartest
 
 
 if __name__ == '__main__':
@@ -24,5 +25,6 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.highlighttest.HighlightTest))
     result.addTests(unittest.makeSuite(ropetest.indentertest.PythonCodeIndenterTest))
     result.addTests(unittest.makeSuite(ropetest.codeassisttest.CodeAssistTest))
+    result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))
     runner = unittest.TextTestRunner()
     runner.run(result)

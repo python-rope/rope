@@ -24,10 +24,6 @@ class SearchingTest(unittest.TestCase):
         self.assertEquals(False, self.searcher.is_searching())
         self.assertEquals(self.editor.get_start(), self.searcher.get_match().start)
 
-    def test_not_searching_when_not_searching(self):
-        self.searcher.append_keyword('s')
-        self.assertTrue(self.searcher.get_match() is None)
-
     def test_simple_one_char_searching(self):
         self.searcher.start_searching()
         self.searcher.append_keyword('s')
@@ -177,6 +173,42 @@ class SearchingTest(unittest.TestCase):
         self.searcher.append_keyword('a')
         self.searcher.append_keyword('a')
         self.assertEquals(self.editor.get_index(2), self.searcher.get_match().end)
+
+    def test_searching_status_bar(self):
+        self.editor.status_bar_manager = PlaceholderStatusBarManager()
+        # TODO: finish
+
+
+class PlaceholderStatusBarManager(object):
+    def get_status(self, kind):
+        if not self.status_text.has_key(kind):
+            self.status_text[kind] = StatusText(self, kind, label)
+            self.status_text[kind].set_text('')
+        return self.status_text[kind]
+
+    def remove_status(self, status):
+        del self.status_text[status.kind]
+
+
+class PlaceholderStatusText(object):
+    def __init__(self, status_bar_manager, kind):
+        self.manager = status_bar_manager
+        self.kind = kind
+        self.width = 0
+        self.text = ''
+    
+    def set_width(self, width):
+        self.width = width
+
+    def set_text(self, text):
+        self.text = text.ljust(self.width)
+
+    def get_text(self):
+        return self.text
+
+    def remove(self):
+        self.manager.remove_status(self)
+
 
 
 if __name__ == '__main__':

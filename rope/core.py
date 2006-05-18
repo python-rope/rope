@@ -6,6 +6,7 @@ from Tkinter import *
 
 import rope.editor
 import rope.fileeditor
+import rope.statusbar
 from rope.exceptions import RopeException
 from rope.project import Project, FileFinder, PythonFileRunner
 
@@ -40,6 +41,7 @@ class EditorManager(object):
                 return editor
         editor = rope.fileeditor.FileEditor(Core.get_core().get_open_project(), file_,
                                             rope.editor.GraphicalEditor(self.editor_frame))
+        editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),
                             variable=self.active_file_path,
@@ -70,7 +72,7 @@ class EditorManager(object):
 
 
 class Core(object):
-    '''The main class for the IDE'''
+    """The main class for the IDE"""
     def __init__(self):
         self.root = Tk()
         self.root.title('Rope')
@@ -83,7 +85,9 @@ class Core(object):
         self.editor_manager = EditorManager(self.editor_panel, self)
 
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
-        self.status_text = Label(self.status_bar, text=' ', height=1)
+        self.status_bar_manager = rope.statusbar.StatusBarManager(self.status_bar)
+        line_status = self.status_bar_manager.create_status('line')
+        line_status.set_width(20)
 
         self._set_key_binding(self.root)
         self.root.protocol('WM_DELETE_WINDOW', self.exit)
@@ -130,12 +134,13 @@ class Core(object):
             self.switch_active_editor()
             return 'break'
         widget.bind('<Control-KeyRelease-F6>', do_switch_active_editor)
+        line_status = self.status_bar_manager.get_status('line')
         def show_current_line_number(event):
+            line_text = ' '
             if self.editor_manager.active_editor:
-                self.status_text['text'] = 'line : %d' % \
-                   self.editor_manager.active_editor.get_editor().get_current_line_number()
-            else:
-                self.status_text['text'] = ' '
+                line_text = 'line : %d' % \
+                              self.editor_manager.active_editor.get_editor().get_current_line_number()
+            line_status.set_text(line_text)
         widget.bind('<Any-KeyRelease>', show_current_line_number, '+')
         widget.bind('<Any-Button>', show_current_line_number)
         widget.bind('<FocusIn>', show_current_line_number)
@@ -384,7 +389,6 @@ class Core(object):
         self.main.rowconfigure(0, weight=1)
         self.main.columnconfigure(0, weight=1)
         self.editor_panel.pack(fill=BOTH, expand=1)
-        self.status_text.pack(side=LEFT, fill=BOTH)
         self.status_bar.pack(fill=BOTH, side=BOTTOM)
         self.main.pack(fill=BOTH, expand=1)
         self.main.pack_propagate(0)

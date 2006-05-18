@@ -86,25 +86,43 @@ class Searcher(object):
         self.starting_index = self.editor.get_insert()
         self.searching_state = ForwardSearching()
         self.current_match = Match(self.starting_index, self.starting_index)
+        self.status_text = None
+        if self.editor.status_bar_manager:
+            self.status_text = self.editor.status_bar_manager.create_status('search')
+            self.status_text.set_width(25)
+        self.update_status_text()
+
+    def _finish_searching(self):
+        if self.status_text:
+            self.status_text.remove()
+        self.searching_state = NotSearching()
+        self.editor.highlight_match(self.current_match)
 
     def end_searching(self):
-        self.searching_state = NotSearching()
         self.current_match = Match(self.editor.get_insert(), self.editor.get_insert())
-        self.editor.highlight_match(self.current_match)
+        self._finish_searching()
 
     def is_searching(self):
         return self.searching_state.is_searching(self)
 
+    def update_status_text(self):
+        if self.status_text:
+            direction = ''
+            if isinstance(self.searching_state, BackwardSearching):
+                direction = ' backward'
+            self.status_text.set_text('searching%s: <%s>' % (direction, self.keyword))
+
     def append_keyword(self, postfix):
         self.searching_state.append_keyword(self, postfix)
+        self.update_status_text()
 
     def shorten_keyword(self):
         self.searching_state.shorten_keyword(self)
+        self.update_status_text()
 
     def cancel_searching(self):
-        self.searching_state = NotSearching()
         self.current_match = Match(self.starting_index, self.starting_index)
-        self.editor.highlight_match(self.current_match)
+        self._finish_searching()
 
     def configure_search(self, forward=True):
         if forward and self.searching_state.is_searching(self) and \
@@ -116,6 +134,7 @@ class Searcher(object):
 
     def next_match(self):
         self.searching_state.next_match(self)
+        self.update_status_text()
 
     def _match(self, start, forward=True, insert_side='right'):
         if self.keyword:

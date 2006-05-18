@@ -20,6 +20,14 @@ class CompletionProposal(object):
 
 
 class CompletionResult(object):
+    """A completion result.
+    
+    Attribute:
+    proposals -- A list of CompletionProposals
+    start_offset -- completion start offset
+    end_offset -- completion end offset
+    
+    """
     def __init__(self, proposals=[], start_offset=0, end_offset=0):
         self.proposals = proposals
         self.start_offset = start_offset

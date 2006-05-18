@@ -12,9 +12,9 @@ class CoreTest(unittest.TestCase):
         self.projectMaker = SampleProjectMaker()
         self.fileName = self.projectMaker.getSampleFileName()
         self.fileName2 = 'samplefile2.txt'
-        file = open(self.fileName, 'w')
-        file.write('sample text')
-        file.close()
+        file_ = open(self.fileName, 'w')
+        file_.write('sample text')
+        file_.close()
         Core.get_core().open_project(self.projectMaker.getRoot())
         self.textEditor = Core.get_core().open_file(self.fileName)
         self.project = Core.get_core().get_open_project()

@@ -88,6 +88,7 @@ class GraphicalEditor(TextEditor):
         self.highlighting = rope.highlight.NoHighlighting()
         self.indenter = rope.indenter.NormalIndenter(self)
         self.code_assist = rope.codeassist.NoAssist()
+        self.status_bar_manager = None
 
     def _initialize_highlighting(self):
         def colorize(event=None):
@@ -118,7 +119,7 @@ class GraphicalEditor(TextEditor):
                 print 'end modified', event
         self.modified_flag = False
         self.text.bind('<Any-KeyRelease>', colorize, '+')
-#        self.text.bind('<<Modified>>', modified)
+        #        self.text.bind('<<Modified>>', modified)
         self.text.edit_modified(False)
 
     def _highlight_range(self, startIndex, endIndex):
@@ -224,14 +225,15 @@ class GraphicalEditor(TextEditor):
 
 
     def _show_completion_window(self):
+        result = self.code_assist.complete_code(self.get_text(), self.get_current_offset())
         toplevel = Toplevel()
+        toplevel.title('Completion Proposals')
         frame = Frame(toplevel)
         label = Label(frame, text='Completion Proposals')
         proposals = Listbox(frame, selectmode=SINGLE, width=23, height=7)
         scrollbar = Scrollbar(frame, orient=VERTICAL)
         scrollbar['command'] = proposals.yview
         proposals.config(yscrollcommand=scrollbar.set)
-        result = self.code_assist.complete_code(self.get_text(), self.get_current_offset())
         for proposal in result.proposals:
             proposals.insert(END, proposal.completion)
         if result:
@@ -560,6 +562,9 @@ class GraphicalEditor(TextEditor):
             result += self._get_column_from_index(current_pos) + 1
             current_pos = str(self.text.index(current_pos + ' +1l lineend'))
         return result
+
+    def set_status_bar_manager(self, manager):
+        self.status_bar_manager = manager
 
 
 class GraphicalTextIndex(TextIndex):

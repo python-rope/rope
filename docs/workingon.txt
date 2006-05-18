@@ -1,12 +1,23 @@
-*** Auto-complete imports names @ 3 ***
+*** Show searching status in the status bar @ 2 ***
 
-- Applying the completion
+- Removing status kind
+- Return what when status kind does not exist
+- Setting width for status texts
+- Showing status while searching
+- Separate module for StatusBarManager
+- create_status, get_status
 
-* What if the statement in current line is spread in more than one line
+* What if the editor goes out of focus while searching
+* Fixed places for status texts
+
 * Extract listbox; duplicates in editor and core
-* Complete as you type (updating proposal list while typing)
-? The connection between ASTs and Type Hierarchies
+    ? uihelpers module
+? Separating ui modules and packages
+  ? Decide which modules are the domain and which are the presentation
+  ? Should editing tools access Editor directly? Which of them?
+? Specifing the type of each story; UI or Core
 
+? The connection between ASTs and Type Hierarchies
 * Better font selection on windows
 ? Think about a library for functional testing
 ? SF repository; SVN or CVS? How to synchronize local SVN with SF?

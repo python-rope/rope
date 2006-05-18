@@ -126,5 +126,5 @@ project page at http://sf.net/projects/rope.
 
 License
 -------
-  This program is under the terms of GPL(GNU General Public License). Have a look
-at copying file for more information.
+  This program is under the terms of GPL(GNU General Public License). Have a
+look at copying file for more information.

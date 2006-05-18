@@ -5,6 +5,7 @@ class MockEditor(TextEditor):
     def __init__(self):
         self.content = ''
         self.insertIndex = MockTextIndex(self, 0)
+        self.status_bar_manager = None
     
     def get_text(self):
         return self.content
