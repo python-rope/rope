@@ -71,10 +71,10 @@ class MockEditor(TextEditor):
                 break
         return current
 
-    def nextWord(self):
+    def next_word(self):
         self.insertIndex = MockTextIndex(self, self._getNextWordIndex())
 
-    def deleteNextWord(self):
+    def delete_next_word(self):
         self.content = self.content[0 : self.insertIndex._getIndex()] + \
                        self.content[self._getNextWordIndex() :]
 
@@ -86,17 +86,17 @@ class MockEditor(TextEditor):
             current -= 1
         return current
 
-    def prevWord(self):
+    def prev_word(self):
         self.insertIndex = MockTextIndex(self, self._getPrevWordIndex())
 
-    def deletePrevWord(self):
+    def delete_prev_word(self):
         self.content = self.content[0 : self._getPrevWordIndex()] + \
                        self.content[self.insertIndex._getIndex() :]
 
-    def goToTheStart(self):
+    def goto_start(self):
         self.set_insert(self.get_start())
 
-    def goToTheEnd(self):
+    def goto_end(self):
         self.set_insert(self.get_end())
 
     def set_highlighting(self, highlighting):

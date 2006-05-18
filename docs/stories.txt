@@ -92,6 +92,7 @@ rope; A Python IDE
   * C-s C-s should start the last search
   * Search history; BackSpace should go back to the matches found before
   * Starting from begining when end of file is reached
+  * Showing failed searches
 
 
 * Enhancing module running @ 2
@@ -131,6 +132,7 @@ rope; A Python IDE
   * Implicit line joining: Indenting lines whose previous line contains a ([{'''
   * Indenting a range of file
   * Removing extra spaces
+  * Correcting indentation sends the cursor to the last character of an empty line
 
 
 * Rename local variable @ 2
@@ -159,7 +161,7 @@ rope; A Python IDE
 * Writing ASTs @ 4
 
 
-* Auto-complete imported objects @ 3
+* Auto-complete imported objects @ 2
 
 
 * Proposing templates in auto-completion proposals @ 2
@@ -185,7 +187,7 @@ rope; A Python IDE
 > Public release 0.2pre : May 20, 2006
 
 
-* Show searching status in the status bar @ 2
+* Auto-complete imported objects @ 1
 
 
 --- Remaining Stories ---

@@ -124,99 +124,99 @@ class TextEditorTest(unittest.TestCase):
         self.assertEquals('sample textanother piece of text', self.editor.get_text())
 
     def testMoveNextWord(self):
-        self.editor.nextWord()
+        self.editor.next_word()
         self.assertEquals(' ', self.editor.get(), 'Expected <%c> but was <%c>' % (' ', self.editor.get()))
 
     def testMoveNextWordOnSpaces(self):
-        self.editor.nextWord()
+        self.editor.next_word()
         self.editor.insert(self.editor.get_end(), ' and\n')
-        self.editor.nextWord()
+        self.editor.next_word()
         self.assertEquals(' ', self.editor.get())
-        self.editor.nextWord()
+        self.editor.next_word()
         self.assertEquals('\n', self.editor.get())
 
     def testNextWordOnEnd(self):
         self.editor.set_insert(self.editor.get_end())
-        self.editor.nextWord()
+        self.editor.next_word()
         self.assertEquals(self.editor.get_end(), self.editor.get_insert())
 
     def testNextWordOnNewLine(self):
         self.editor.set_insert(self.editor.get_relative(self.editor.get_end(), -1))
         self.editor.insert(self.editor.get_end(), '\non a new line')
-        self.editor.nextWord()
+        self.editor.next_word()
         self.assertEquals('\n', self.editor.get())
 
     def testNextWordOnNewLine(self):
         self.editor.set_text('hello \n world\n')
-        self.editor.nextWord()
-        self.editor.nextWord()
+        self.editor.next_word()
+        self.editor.next_word()
         self.assertEquals('\n', self.editor.get(), self.editor.get())
 
     def testNextOneCharacterWord(self):
         self.editor.set_text('1 2\n')
-        self.editor.nextWord()
+        self.editor.next_word()
         self.assertEquals(' ', self.editor.get())
-        self.editor.nextWord()
+        self.editor.next_word()
         self.assertEquals('\n', self.editor.get())
 
     def testPrevWordOnTheBegining(self):
-        self.editor.prevWord()
+        self.editor.prev_word()
         self.assertEquals('s', self.editor.get())
 
     def testPrevWord(self):
         self.editor.set_insert(self.editor.get_end())
-        self.editor.prevWord()
+        self.editor.prev_word()
         self.assertEquals('t', self.editor.get())
-        self.editor.prevWord()
+        self.editor.prev_word()
         self.assertEquals('s', self.editor.get())
 
     def testPrevWordOnTheMiddleOfAWord(self):
         self.editor.set_insert(self.editor.get_relative(self.editor.get_end(), -2))
-        self.editor.prevWord()
+        self.editor.prev_word()
         self.assertEquals('t', self.editor.get())
 
     def testPrevOneCharacterWord(self):
         self.editor.set_text('1 2 3')
         self.editor.set_insert(self.editor.get_end())
-        self.editor.prevWord()
+        self.editor.prev_word()
         self.assertEquals('3', self.editor.get())
-        self.editor.prevWord()
+        self.editor.prev_word()
         self.assertEquals('2', self.editor.get())
-        self.editor.prevWord()
+        self.editor.prev_word()
         self.assertEquals('1', self.editor.get())
 
     def testDeletingNextWord(self):
-        self.editor.deleteNextWord()
+        self.editor.delete_next_word()
         self.assertEquals(' text', self.editor.get_text())
 
     def testDeletingNextWordInTheMiddle(self):
         self.editor.set_insert(self.editor.get_index(2))
-        self.editor.deleteNextWord()
+        self.editor.delete_next_word()
         self.assertEquals('sa text', self.editor.get_text())
 
     def testDeletingPrevWord(self):
         self.editor.set_insert(self.editor.get_end())
-        self.editor.deletePrevWord()
+        self.editor.delete_prev_word()
         self.assertEquals('sample ', self.editor.get_text(), self.editor.get_text())
 
     def testDeletingPrevWordInTheMiddle(self):
         self.editor.set_insert(self.editor.get_relative(self.editor.get_end(), -2))
-        self.editor.deletePrevWord()
+        self.editor.delete_prev_word()
         self.assertEquals('sample xt', self.editor.get_text(), self.editor.get_text())
 
     def testDeletingPrevWordAtTheBeginning(self):
         self.editor.set_insert(self.editor.get_index(3))
-        self.editor.deletePrevWord()
+        self.editor.delete_prev_word()
         self.assertEquals('ple text', self.editor.get_text(), self.editor.get_text())
 
     def testGoingToTheStart(self):
         self.editor.set_insert(self.editor.get_index(3))
-        self.editor.goToTheStart()
+        self.editor.goto_start()
         self.assertEquals(self.editor.get_start(), self.editor.get_insert())
 
     def testGoingToTheStart(self):
         self.editor.set_insert(self.editor.get_index(3))
-        self.editor.goToTheEnd()
+        self.editor.goto_end()
         self.assertEquals(self.editor.get_end(), self.editor.get_insert())
 
     def test_searching(self):

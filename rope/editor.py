@@ -43,22 +43,22 @@ class TextEditor(object):
     def delete(self, start=None, end=None):
         pass
 
-    def nextWord(self):
+    def next_word(self):
         pass
 
-    def prevWord(self):
+    def prev_word(self):
         pass
 
-    def deleteNextWord(self):
+    def delete_next_word(self):
         pass
 
-    def deletePrevWord(self):
+    def delete_prev_word(self):
         pass
 
-    def goToTheStart(self):
+    def goto_start(self):
         pass
 
-    def goToTheEnd(self):
+    def goto_end(self):
         pass
 
     def set_highlighting(self, highlighting):
@@ -130,70 +130,71 @@ class GraphicalEditor(TextEditor):
             self.text.tag_add(kind, start._getIndex(), end._getIndex())
 
     def _bind_keys(self):
-        self.text.bind('<Alt-f>', lambda event: self.nextWord())
-        self.text.bind('<Alt-b>', lambda event: self.prevWord())
-        self.text.bind('<Alt-d>', lambda event: self.deleteNextWord())
-        def deletePrevWordListener(event):
-            self.deletePrevWord()
+        self.text.bind('<Alt-f>', lambda event: self.next_word())
+        self.text.bind('<Alt-b>', lambda event: self.prev_word())
+        self.text.bind('<Alt-d>', lambda event: self.delete_next_word())
+        def delete_prev_wordListener(event):
+            self.delete_prev_word()
             return 'break'
-        self.text.bind('<Alt-BackSpace>', deletePrevWordListener)
-        def doUndo(event):
+        self.text.bind('<Alt-BackSpace>', delete_prev_wordListener)
+        def do_undo(event):
             self.undo()
             return 'break'
-        def doRedo(event):
+        def do_redo(event):
             self.redo()
             return 'break'
-        self.text.bind('<Control-x><u>', doUndo)
-        self.text.bind('<Control-x><r>', doRedo)
-        def doGoToTheStart(event):
-            self.goToTheStart()
+        self.text.bind('<Control-x><u>', do_undo)
+        self.text.bind('<Control-x><r>', do_redo)
+        def do_goto_start(event):
+            self.goto_start()
             self.text.see(INSERT)
-        def doGoToTheEnd(event):
-            self.goToTheEnd()
+        def do_goto_end(event):
+            self.goto_end()
             self.text.see(INSERT)
-        self.text.bind('<Alt-less>', doGoToTheStart)
-        self.text.bind('<Alt-KeyPress->>', doGoToTheEnd)
-        def doSetMark(event):
-            self.setMark()
+        self.text.bind('<Alt-less>', do_goto_start)
+        self.text.bind('<Alt-KeyPress->>', do_goto_end)
+        def do_set_mark(event):
+            self.set_mark()
             return 'break'
-        self.text.bind('<Control-space>', doSetMark)
-        def doCopy(event):
-            self.copyRegion()
+        self.text.bind('<Control-space>', do_set_mark)
+        def do_copy(event):
+            self.copy_region()
             return 'break'
-        self.text.bind('<Alt-w>', doCopy)
-        def doCut(event):
-            self.cutRegion()
+        self.text.bind('<Alt-w>', do_copy)
+        def do_cut(event):
+            self.cut_region()
             return 'break'
-        self.text.bind('<Control-w>', doCut)
-        def doPaste(event):
+        self.text.bind('<Control-w>', do_cut)
+        def do_paste(event):
             self.paste()
             return 'break'
-        self.text.bind('<Control-y>', doPaste)
+        self.text.bind('<Control-y>', do_paste)
         def escape(event):
-            self.clearMark()
+            self.clear_mark()
             if self.get_searcher().is_searching():
                 self.get_searcher().cancel_searching()
         self.text.bind('<Control-g>', escape)
+        self.text.bind('<Escape>', escape)
         def do_swap_mark_and_insert(event):
-            self.swapMarkAndInsert()
+            self.swap_mark_and_insert()
             return 'break'
         self.text.bind('<Control-x><Control-x>', do_swap_mark_and_insert)
-        def goNextPage(event):
-            self.nextPage()
+        def go_next_page(event):
+            self.next_page()
             return 'break'
-        self.text.bind('<Control-v>', goNextPage)
-        def goPrevPage(event):
-            self.prevPage()
+        self.text.bind('<Control-v>', go_next_page)
+        def go_prev_page(event):
+            self.prev_page()
             return 'break'
-        self.text.bind('<Alt-v>', goPrevPage)
+        self.text.bind('<Alt-v>', go_prev_page)
         def indent_line(event):
             self.indenter.correct_indentation(self.get_insert())
             return 'break'
-        def doInsertTab(event):
+        def do_insert_tab(event):
             self.insert_tab()
             return 'break'
         self.text.bind('<Control-i>', indent_line)
-        self.text.bind('<Tab>', doInsertTab)
+        self.text.bind('<Tab>', do_insert_tab)
         def return_handler(event):
             if self.searcher.is_searching():
                 self.searcher.end_searching()
@@ -365,7 +366,7 @@ class GraphicalEditor(TextEditor):
             result = str(self.text.index(result + '+1c'))
         return result + ' wordend'
 
-    def nextWord(self):
+    def next_word(self):
         self.text.mark_set(INSERT, self._get_next_word_index())
         self.text.see(INSERT)
 
@@ -376,14 +377,14 @@ class GraphicalEditor(TextEditor):
             result = str(self.text.index(result + '-1c'))
         return result + '-1c wordstart'
 
-    def prevWord(self):
+    def prev_word(self):
         self.text.mark_set(INSERT, self._get_prev_word_index())
         self.text.see(INSERT)
 
-    def deleteNextWord(self):
+    def delete_next_word(self):
         self.text.delete(INSERT, self._get_next_word_index())
 
-    def deletePrevWord(self):
+    def delete_prev_word(self):
         self.text.delete(self._get_prev_word_index(), INSERT)
 
     def getWidget(self):
@@ -404,39 +405,39 @@ class GraphicalEditor(TextEditor):
         except TclError:
             pass
 
-    def goToTheStart(self):
+    def goto_start(self):
         self.set_insert(self.get_start())
     
-    def goToTheEnd(self):
+    def goto_end(self):
         self.set_insert(self.get_end())
 
     def generate_event(self, event):
         self.text.event_generate(event)
 
-    def setMark(self):
+    def set_mark(self):
         self.text.mark_set('mark', INSERT)
 
-    def clearMark(self):
+    def clear_mark(self):
         self.text.mark_unset('mark')
 
-    def _selectRegion(self):
+    def _select_region(self):
         start = 'mark'
         end = INSERT
         if self.text.compare(start, '>', end):
             start, end = end, start
         self.text.tag_add(SEL, start, end)
 
-    def copyRegion(self):
+    def copy_region(self):
         try:
-            self._selectRegion()
+            self._select_region()
             self.text.event_generate('<<Copy>>')
             self.text.tag_remove(SEL, '1.0', END)
         except TclError:
             pass
 
-    def cutRegion(self):
+    def cut_region(self):
         try:
-            self._selectRegion()
+            self._select_region()
             self.text.event_generate('<<Cut>>')
             self.text.see(INSERT)
         except TclError:
@@ -446,18 +447,18 @@ class GraphicalEditor(TextEditor):
         self.text.event_generate('<<Paste>>')
         self.text.see(INSERT)
 
-    def swapMarkAndInsert(self):
+    def swap_mark_and_insert(self):
         try:
             mark = self.text.index('mark')
-            self.setMark()
+            self.set_mark()
             self.text.mark_set(INSERT, mark)
         except TclError:
             pass
 
-    def nextPage(self):
+    def next_page(self):
         self.text.event_generate('<Next>')
 
-    def prevPage(self):
+    def prev_page(self):
         self.text.event_generate('<Prior>')
 
     def insert_tab(self, text_index = None):

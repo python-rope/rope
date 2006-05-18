@@ -1,5 +1,6 @@
 import unittest
 
+from rope.statusbar import StatusBarException
 from rope.searching import Searcher
 from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 
@@ -176,15 +177,38 @@ class SearchingTest(unittest.TestCase):
 
     def test_searching_status_bar(self):
         self.editor.status_bar_manager = PlaceholderStatusBarManager()
-        # TODO: finish
+        manager = self.editor.status_bar_manager
+        try:
+            manager.get_status('search')
+            self.fail('Should have failed')
+        except StatusBarException:
+            pass
+        self.searcher.start_searching()
+        status = manager.get_status('search')
+        self.searcher.end_searching()
+        try:
+            manager.get_status('search')
+            self.fail('Should have failed')
+        except StatusBarException:
+            pass
 
 
 class PlaceholderStatusBarManager(object):
+    def __init__(self):
+        self.status_text = {}
+        
     def get_status(self, kind):
         if not self.status_text.has_key(kind):
-            self.status_text[kind] = StatusText(self, kind, label)
-            self.status_text[kind].set_text('')
+            raise StatusBarException('StatusText <%s> does not exist' % kind)
         return self.status_text[kind]
+
+    def create_status(self, kind):
+        if self.status_text.has_key(kind):
+            raise StatusBarException('StatusText <%s> already exists' % kind)
+        self.status_text[kind] = PlaceholderStatusText(self, kind)
+        self.status_text[kind].set_text('')
+        return self.status_text[kind]
+
 
     def remove_status(self, status):
         del self.status_text[status.kind]

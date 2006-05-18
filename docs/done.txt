@@ -1,3 +1,6 @@
+- Show searching status in the status bar : May 18, 2006
+
+
 - Auto-complete class and function names : May 16, 2006
 
 

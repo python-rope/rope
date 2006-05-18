@@ -1,20 +1,16 @@
-*** Show searching status in the status bar @ 2 ***
+*** Auto-complete imported objects @ 1 ***
 
-- Removing status kind
-- Return what when status kind does not exist
-- Setting width for status texts
-- Showing status while searching
-- Separate module for StatusBarManager
-- create_status, get_status
-- What if the editor goes out of focus while searching
+- import name
+- import name as name
 
-* Extract listbox; duplicates in editor and core
-    ? uihelpers module
+* from mod import name
+* from mod import name as name
+* from mod import *
+
 ? Separating ui modules and packages
-  ? Decide which modules are the domain and which are the presentation
-  ? Should editing tools access Editor directly? Which of them?
+    ? Decide which modules are the domain and which are the presentation
+    ? Should editing tools access Editor directly? Which of them?
 ? Specifing the type of each story; UI or Core
-
 ? The connection between ASTs and Type Hierarchies
 * Better font selection on windows
 ? Think about a library for functional testing

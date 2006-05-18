@@ -82,6 +82,22 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals(len(code) - 2, result.start_offset)
         self.assertEquals(len(code), result.end_offset)
 
+    def test_completing_imported_names(self):
+        code = 'import sys\na = sy'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('sys', 'module', result)
+
+    def test_completing_imported_names_with_as(self):
+        code = 'import sys as mysys\na = mys'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('mysys', 'module', result)
+
+    def test_not_completing_imported_names_with_as(self):
+        code = 'import sys as mysys\na = sy'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('sys', 'module', result)
+
+        
 
 if __name__ == '__main__':
     unittest.main()

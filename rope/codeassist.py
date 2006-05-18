@@ -40,6 +40,15 @@ class _GlobalVisitor(object):
         self.starting = starting
         self.result = {}
 
+    def visitImport(self, node):
+        for import_pair in node.names:
+            name, alias = import_pair
+            imported = name
+            if alias is not None:
+                imported = alias
+            if imported.startswith(self.starting):
+                self.result[imported] = CompletionProposal(imported, 'module')
+
     def visitAssName(self, node):
         if node.name.startswith(self.starting):
             self.result[node.name] = CompletionProposal(node.name, 'global_variable')

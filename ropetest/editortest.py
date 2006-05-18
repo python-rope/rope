@@ -39,67 +39,67 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.redo()
 
     def test_copying(self):
-        self.editor.setMark()
-        self.editor.goToTheEnd()
-        self.editor.copyRegion()
+        self.editor.set_mark()
+        self.editor.goto_end()
+        self.editor.copy_region()
         self.editor.paste()
         self.assertEquals('sample textsample text', self.editor.get_text())
 
     def test_copying_in_the_middle(self):
-        self.editor.nextWord()
-        self.editor.setMark()
-        self.editor.goToTheEnd()
-        self.editor.copyRegion()
-        self.editor.goToTheStart()
+        self.editor.next_word()
+        self.editor.set_mark()
+        self.editor.goto_end()
+        self.editor.copy_region()
+        self.editor.goto_start()
         self.editor.paste()
         self.assertEquals(' textsample text', self.editor.get_text())
 
     def test_cutting(self):
-        self.editor.setMark()
-        self.editor.nextWord()
-        self.editor.cutRegion()
+        self.editor.set_mark()
+        self.editor.next_word()
+        self.editor.cut_region()
         self.assertEquals(' text', self.editor.get_text())
         self.editor.paste()
         self.assertEquals('sample text', self.editor.get_text())
 
     def test_mark_not_set(self):
-        self.editor.cutRegion()
-        self.editor.copyRegion()
+        self.editor.cut_region()
+        self.editor.copy_region()
         self.assertEquals('sample text', self.editor.get_text())
 
     def test_clear_mark(self):
-        self.editor.setMark()
-        self.editor.nextWord()
-        self.editor.clearMark()
-        self.editor.cutRegion()
+        self.editor.set_mark()
+        self.editor.next_word()
+        self.editor.clear_mark()
+        self.editor.cut_region()
         self.assertEquals('sample text', self.editor.get_text())
 
     def test_when_insert_while_mark_precedes(self):
-        self.editor.nextWord()
-        self.editor.setMark()
-        self.editor.goToTheStart()
-        self.editor.cutRegion()
+        self.editor.next_word()
+        self.editor.set_mark()
+        self.editor.goto_start()
+        self.editor.cut_region()
         self.assertEquals(' text', self.editor.get_text())
 
     def test_swap_mark_and_insert(self):
-        self.editor.setMark()
-        self.editor.nextWord()
-        self.editor.swapMarkAndInsert()
+        self.editor.set_mark()
+        self.editor.next_word()
+        self.editor.swap_mark_and_insert()
         self.assertEquals(self.editor.get_start(), self.editor.get_insert())
-        self.editor.cutRegion()
+        self.editor.cut_region()
         self.assertEquals(' text', self.editor.get_text())
 
     def test_no_mark_swap_mark_and_insert(self):
-        self.editor.swapMarkAndInsert()
+        self.editor.swap_mark_and_insert()
         self.assertEquals('sample text', self.editor.get_text())
 
     def test_swap_mark_and_insert_while_insert_precedes(self):
-        self.editor.nextWord()
-        self.editor.setMark()
-        self.editor.goToTheStart()
-        self.editor.swapMarkAndInsert()
+        self.editor.next_word()
+        self.editor.set_mark()
+        self.editor.goto_start()
+        self.editor.swap_mark_and_insert()
         self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
-        self.editor.cutRegion()
+        self.editor.cut_region()
         self.assertEquals(' text', self.editor.get_text())
 
     def test_insert_tab(self):
