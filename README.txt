@@ -1,4 +1,4 @@
-                         rope : A Python IDE
+rope, A python IDE
 
 Overview
 --------
@@ -9,6 +9,14 @@ written in python and uses the Tkinter library.
 
 Version Overview
 ----------------
+Features added in this release:
+  * Auto complete global variables
+  * Auto complete class and function names
+  * Showing searching status in status bar
+  * Auto complete imported modules
+  * Auto complete keywords and builtins
+
+In this release some basic auto-completion support was added.
 
 
 Keybinding
@@ -32,6 +40,7 @@ C-x C-r        redo
 C-space        set mark
 C-w            cut region
 M-w            copy region
+C-x C-x        swap mark and insert
 C-y            paste
 C-x C-s        save
 C-i            correct line indentation
@@ -40,7 +49,6 @@ C-/            auto-complete
 
 Description
 -----------
-
   This program, rope, is a python IDE. It tries to give users lots of things
 that are not available in python IDEs yet.
 
@@ -91,7 +99,6 @@ unit tests and use test driven development this approach works very well.
 
 Project Road Map
 ----------------
-
   The main motive for starting this project was the lack of good
 refactoring tools for python language. Refactoring programs like "bicycle repair man"
 aren't reliable due to type inferencing problems discussed earlier and they
@@ -107,16 +114,34 @@ tool from the standard Smalltalk development tools. What we found was that no
 one used it. We did not even use it ourselves. Once we integrated the refactorings
 directly into the Smalltalk Browser, we used them extensively."
 
-  The main goal of rope is to concentrate on type inferencing and refactoring
-of python programs and not a state of art IDE (At least not in the first phase).
-The type inferencing and refactoring parts of the rope will not
+  The main goal of rope is to concentrate on type inferencing, auto-completion
+and refactoring of python programs and not a state of art IDE (At least not in
+the first phase).
+
+  The type inferencing and refactoring parts of the rope will not
 dependent on rope and if successful, will be released as standalone programs
 and libraries so that other projects may use them.
 
 
-Bug reports
+Get Involved!
+-------------
+  Rope has just started. Right now rope's design changes rapidly and it's not
+yet ready for code contributions. I hope in soon future, somewhere around version
+0.5 or 0.6, rope would be mature enough for being extended easily.
+
+  Anyway right now contributions are really needed in many places. For example
+patches and extensions in the UI part are extremely welcome. Have a look at the
+UI enhancement stories(docs/stories.txt). Send your patches in sourceforge.net
+project page, http://sf.net/projects/rope. Patches should use python coding
+style, PEP 8, and should have good unit tests. rope uses a local repository
+right now, but it will be moved to SVN repository on sourceforge.net some time
+before the 0.3 release. If you're making your patches using source package
+distributions specify the version of that package.
+
+
+Bug Reports
 -----------
-  Send your bug reports and feature requests to rope's sourceforge
+  Send your bug reports and feature requests to rope's sourceforge.net
 project page at http://sf.net/projects/rope.
 
 

@@ -162,9 +162,10 @@ class PythonCodeIndenterTest(unittest.TestCase):
 
     # TODO: handle this case
     def xxx_test_deindenting_after_implicit_continuation_after_return(self):
-        self.editor.set_text('def f():\n    return (2,\n3)\na = 10')
+        self.editor.set_text('def f():\n    return (2,\n            3)\na = 10')
         self.indenter.correct_indentation(self.editor.get_end())
-        self.assertEquals('def f():\n    return (2,\n            3)\na = 10', self.editor.get_text())
+        self.assertEquals('def f():\n    return (2,\n            3)\na = 10',
+                          self.editor.get_text())
 
     def test_deindenting_empty_lines(self):
         self.editor.set_text('\n')

@@ -52,3 +52,4 @@ class StatusBarManager(object):
     def remove_status(self, status):
         status.label.destroy()
         del self.status_text[status.kind]
+

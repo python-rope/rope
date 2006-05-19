@@ -14,6 +14,9 @@ rope; A Python IDE
 * Variable indentation and tab size @ 1
 
 
+* Find occurances @ 5
+
+
 * Open Type @ 2
 
 
@@ -176,9 +179,16 @@ rope; A Python IDE
 
 
 * Enhancing auto-completion @ 2
-  * What if the statement in current line is spread in more than one line
   * Complete as you type (updating proposal list while typing)
   * What to do when the program has syntax errors
+  * Sorting proposals
+
+
+* Auto completing and comments and strings @ 1
+
+
+* Auto-completion should ignore current statement @ 1
+  What if the statement in current line is spread in more than one line.
 
 
 * Auto-complete local variable names @ 3
@@ -191,10 +201,11 @@ rope; A Python IDE
 ? Change program goals and description; principles.html
   ? Go toward refactoring and ... library rather than an IDE
 ? roadmap.html
-? Migrating to sourceforge SVN before 0.2 release
-    ? SF repository; SVN or CVS? How to synchronize local SVN with SF?
+? Migrating to sourceforge SVN before 0.3 release
+  ? SF repository; SVN or CVS? How to synchronize local SVN with SF?
 ? Should workingon.txt be under version control?
 ? Functional tests
 ? Separate domain and presentation everywhere
+* Logo
 * Make tests less dependant
 ? Project resource consistency; What if it is deleted after being created.

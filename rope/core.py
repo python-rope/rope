@@ -87,7 +87,7 @@ class Core(object):
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
         self.status_bar_manager = rope.statusbar.StatusBarManager(self.status_bar)
         line_status = self.status_bar_manager.create_status('line')
-        line_status.set_width(20)
+        line_status.set_width(12)
 
         self._set_key_binding(self.root)
         self.root.protocol('WM_DELETE_WINDOW', self.exit)

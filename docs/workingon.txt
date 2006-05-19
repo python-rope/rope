@@ -3,7 +3,6 @@
 - Setting better font for status bar
 - Not auto completing only the words after dot
 
-? What to do after dots?
 ? Sorting the proposals
 ? Completions are context dependant
 

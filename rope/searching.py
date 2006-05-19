@@ -89,7 +89,7 @@ class Searcher(object):
         self.status_text = None
         if self.editor.status_bar_manager:
             self.status_text = self.editor.status_bar_manager.create_status('search')
-            self.status_text.set_width(25)
+            self.status_text.set_width(33)
         self.update_status_text()
 
     def _finish_searching(self):

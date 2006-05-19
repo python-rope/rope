@@ -10,24 +10,25 @@ class CoreTest(unittest.TestCase):
         unittest.TestCase.setUp(self)
         Core.get_core().close_project()
         self.projectMaker = SampleProjectMaker()
-        self.fileName = self.projectMaker.getSampleFileName()
+        self.fileName = self.projectMaker.get_sample_file_name()
         self.fileName2 = 'samplefile2.txt'
         file_ = open(self.fileName, 'w')
         file_.write('sample text')
         file_.close()
-        Core.get_core().open_project(self.projectMaker.getRoot())
+        Core.get_core().open_project(self.projectMaker.get_root())
         self.textEditor = Core.get_core().open_file(self.fileName)
         self.project = Core.get_core().get_open_project()
 
     def tearDown(self):
-        self.projectMaker.removeAll()
+        self.projectMaker.remove_all()
         os.remove(self.fileName)
         if os.path.exists(self.fileName2):
             os.remove(self.fileName2)
         unittest.TestCase.tearDown(self)
 
     def test_opening_files(self):
-        self.assertEquals(self.projectMaker.getSampleFileContents(), self.textEditor.get_editor().get_text())
+        self.assertEquals(self.projectMaker.get_sample_file_contents(),
+                          self.textEditor.get_editor().get_text())
 
     def test_active_editor(self):
         self.assertEquals(self.textEditor, Core.get_core().get_active_editor())
@@ -71,12 +72,12 @@ class CoreTest(unittest.TestCase):
         self.assertEquals('run', self.project.get_resource('output.txt').read())
 
     def test_not_reopening_editors(self):
-        editor1 = Core.get_core().open_file(self.projectMaker.getSampleFileName())
-        editor2 = Core.get_core().open_file(self.projectMaker.getSampleFileName())
+        editor1 = Core.get_core().open_file(self.projectMaker.get_sample_file_name())
+        editor2 = Core.get_core().open_file(self.projectMaker.get_sample_file_name())
         self.assertTrue(editor1 is editor2)
     
     def test_closing_editor(self):
-        editor = Core.get_core().open_file(self.projectMaker.getSampleFileName())
+        editor = Core.get_core().open_file(self.projectMaker.get_sample_file_name())
         self.assertEquals(Core.get_core().get_active_editor(), editor)
         Core.get_core().close_active_editor()
         self.assertNotEquals(Core.get_core().get_active_editor(), editor)
