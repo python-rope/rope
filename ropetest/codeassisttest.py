@@ -17,12 +17,12 @@ class CodeAssistTest(unittest.TestCase):
         for proposal in result.proposals:
             if proposal.completion == completion and proposal.kind == kind:
                 return
-        self.fail('Completion %s not proposed' % completion)
+        self.fail('completion <%s> not proposed' % completion)
 
     def assert_proposal_not_in_result(self, completion, kind, result):
         for proposal in result.proposals:
             if proposal.completion == completion and proposal.kind == kind:
-                self.fail('Completion %s was proposed' % completion)
+                self.fail('completion <%s> was proposed' % completion)
 
     def test_completing_global_variables(self):
         code = 'my_global = 10\nt = my'
@@ -111,6 +111,11 @@ class CodeAssistTest(unittest.TestCase):
         code = 'fo'
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('for', 'keyword', result)
+
+    def test_not_reporting_proposals_after_dot(self):
+        code = 'a_dict = {}\nkey = 3\na_dict.ke'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('key', 'global_variable', result)
 
 
 if __name__ == '__main__':

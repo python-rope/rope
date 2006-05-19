@@ -84,7 +84,7 @@ class CodeAssist(ICodeAssist):
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
-                                       source_code[current_offset] == '_'):
+                                       source_code[current_offset] in '_.'):
             current_offset -= 1;
         return current_offset + 1
 

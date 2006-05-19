@@ -42,7 +42,8 @@ class StatusBarManager(object):
     def create_status(self, kind):
         if self.status_text.has_key(kind):
             raise StatusBarException('StatusText <%s> already exists' % kind)
-        label = Label(self.status_bar, text=' ', height=1, relief=RIDGE)
+        label = Label(self.status_bar, text=' ', height=1,
+                      relief=RIDGE, font=('Courier', 12))
         self.status_text[kind] = StatusText(self, kind, label)
         label.pack(side=LEFT)
         self.status_text[kind].set_text('')

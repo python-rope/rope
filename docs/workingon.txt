@@ -1,8 +1,10 @@
 - Not proposing builtins and keywords when starting is empty
 - Should we have both function and method?
+- Setting better font for status bar
+- Not auto completing only the words after dot
 
-? Sorting the proposals
 ? What to do after dots?
+? Sorting the proposals
 ? Completions are context dependant
 
 ? Separating ui modules and packages
@@ -11,3 +13,5 @@
     ? Specifing the type of each story; UI or Core
 ? The connection between ASTs, module hierarchies and type databases
 * Better font selection on windows
+? Key selection for new module and package
+
