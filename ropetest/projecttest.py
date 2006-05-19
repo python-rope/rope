@@ -241,8 +241,8 @@ class ProjectTest(unittest.TestCase):
         parent.create_folder(folder_name)
         children = parent.get_children()
         self.assertEquals(2, len(children))
-        self.assertTrue(filePath, children[0].get_path() or filePath == children[1].get_path())
-        self.assertEquals(folderPath, children[0].get_path() or folderPath == children[1].get_path())
+        self.assertTrue(filePath == children[0].get_path() or filePath == children[1].get_path())
+        self.assertTrue(folderPath == children[0].get_path() or folderPath == children[1].get_path())
 
     def test_getting_files(self):
         files = self.project.get_root_folder().get_files()
