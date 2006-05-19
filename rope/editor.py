@@ -1,3 +1,5 @@
+import os
+
 from Tkinter import *
 from tkFont import *
 from ScrolledText import ScrolledText
@@ -79,8 +81,13 @@ class TextIndex(object):
 
 class GraphicalEditor(TextEditor):
     def __init__(self, parent):
-        self.text = ScrolledText(parent, bg='white', 
-                         font=Font(family='Typewriter', size=14), 
+        font = None
+        if os.name == 'posix':
+            font = Font(family='Typewriter', size=14)
+        else:
+            font = Font(family='Courier', size=13)
+        self.text = ScrolledText(parent, bg='white',
+                         font=font,
                          undo=True, maxundo=20, highlightcolor='#99A')
         self.searcher = rope.searching.Searcher(self)
         self._bind_keys()

@@ -1,8 +1,3 @@
-- Not proposing builtins and keywords when starting is empty
-- Should we have both function and method?
-- Setting better font for status bar
-- Not auto completing only the words after dot
-
 ? Sorting the proposals
 ? Completions are context dependant
 
@@ -11,6 +6,5 @@
     ? Should editing tools access Editor directly? Which of them?
     ? Specifing the type of each story; UI or Core
 ? The connection between ASTs, module hierarchies and type databases
-* Better font selection on windows
 ? Key selection for new module and package
 
