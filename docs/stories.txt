@@ -161,7 +161,10 @@ rope; A Python IDE
 * Writing ASTs @ 4
 
 
-* Auto-complete imported objects @ 2
+* Auto-complete from-import imported objects @ 2
+
+
+* Auto-completing self. @ 2
 
 
 * Proposing templates in auto-completion proposals @ 2
@@ -172,28 +175,24 @@ rope; A Python IDE
   * Inserting common prefixes
 
 
-* Auto completing keywords and builtins @ 1
-
-
-* Auto-complete local variable names @ 3
-
-
 * Enhancing auto-completion @ 2
   * What if the statement in current line is spread in more than one line
   * Complete as you type (updating proposal list while typing)
   * What to do when the program has syntax errors
 
 
+* Auto-complete local variable names @ 3
+
+
 > Public release 0.2pre : May 20, 2006
-
-
-* Auto-complete imported objects @ 1
 
 
 --- Remaining Stories ---
 ? Change program goals and description; principles.html
   ? Go toward refactoring and ... library rather than an IDE
 ? roadmap.html
+? Migrating to sourceforge SVN before 0.2 release
+    ? SF repository; SVN or CVS? How to synchronize local SVN with SF?
 ? Should workingon.txt be under version control?
 ? Functional tests
 ? Separate domain and presentation everywhere

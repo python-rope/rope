@@ -1,3 +1,9 @@
+- Auto completing keywords and builtins : May 19, 2006
+
+
+- Auto-complete imported objects : May 19, 2006
+
+
 - Show searching status in the status bar : May 18, 2006
 
 

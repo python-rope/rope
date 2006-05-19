@@ -1,17 +1,13 @@
-*** Auto-complete imported objects @ 1 ***
+- Not proposing builtins and keywords when starting is empty
+- Should we have both function and method?
 
-- import name
-- import name as name
-
-* from mod import name
-* from mod import name as name
-* from mod import *
+? Sorting the proposals
+? What to do after dots?
+? Completions are context dependant
 
 ? Separating ui modules and packages
     ? Decide which modules are the domain and which are the presentation
     ? Should editing tools access Editor directly? Which of them?
-? Specifing the type of each story; UI or Core
-? The connection between ASTs and Type Hierarchies
+    ? Specifing the type of each story; UI or Core
+? The connection between ASTs, module hierarchies and type databases
 * Better font selection on windows
-? Think about a library for functional testing
-? SF repository; SVN or CVS? How to synchronize local SVN with SF?

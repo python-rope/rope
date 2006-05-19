@@ -9,10 +9,6 @@ written in python and uses the Tkinter library.
 
 Version Overview
 ----------------
-  We've just started. Right now, rope is a basic editor. One of our goals
-was to develop rope using rope and for achieving this we've implemented
-a basic editor as our first task. We've already started using rope. From
-now on we will move toward the promised features like auto-completion.
 
 
 Keybinding

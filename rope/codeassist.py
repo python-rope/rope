@@ -1,4 +1,6 @@
 import compiler
+import inspect
+import __builtin__
 
 from rope.exceptions import RopeException
 
@@ -73,6 +75,12 @@ class NoAssist(ICodeAssist):
 
 
 class CodeAssist(ICodeAssist):
+    def __init__(self):
+        self.builtins = [str(name) for name in dir(__builtin__)
+                         if not name.startswith('_')]
+        import keyword
+        self.keywords = keyword.kwlist
+
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
@@ -91,6 +99,32 @@ class CodeAssist(ICodeAssist):
         if line_beginning != -1 and line_beginning < line_ending - 1:
             result = source_code[:line_beginning] + '#' + source_code[line_beginning + 2:]
         return result
+    
+    def _get_matching_builtins(self, starting):
+        result = {}
+        for builtin in self.builtins:
+            if builtin.startswith(starting):
+                obj = getattr(__builtin__, builtin)
+                kind = 'unknown'
+                if inspect.isclass(obj):
+                    kind = 'class'
+                if inspect.isbuiltin(obj):
+                    kind = 'builtin_function'
+                if inspect.ismodule(obj):
+                    kind = 'module'
+                if inspect.ismethod(obj):
+                    kind = 'method'
+                if inspect.isfunction(obj):
+                    kind = 'function'
+                result[builtin] = CompletionProposal(builtin, kind)
+        return result
+
+    def _get_matching_keywords(self, starting):
+        result = {}
+        for kw in self.keywords:
+            if kw.startswith(starting):
+                result[kw] = CompletionProposal(kw, 'keyword')
+        return result
 
     def complete_code(self, source_code, offset):
         if offset > len(source_code):
@@ -106,5 +140,8 @@ class CodeAssist(ICodeAssist):
         visitor = _GlobalVisitor(starting)
         compiler.walk(code_ast, visitor)
         result.update(visitor.result)
+        if len(starting) > 0:
+            result.update(self._get_matching_builtins(starting))
+            result.update(self._get_matching_keywords(starting))
         return CompletionResult(result.values(), starting_offset, offset)
 

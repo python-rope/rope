@@ -97,7 +97,21 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_not_in_result('sys', 'module', result)
 
+    def test_including_matching_builtins_types(self):
+        code = 'my_var = Excep'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('Exception', 'class', result)
         
+    def test_including_matching_builtins_functions(self):
+        code = 'my_var = zi'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('zip', 'builtin_function', result)
+        
+    def test_including_keywords(self):
+        code = 'fo'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('for', 'keyword', result)
+
 
 if __name__ == '__main__':
     unittest.main()
