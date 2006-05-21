@@ -1,5 +1,7 @@
+*** Auto-complete local variable names @ 3 ***
 
 
+? Remote pair programming support
 ? Completions are context dependant
 ? Separating ui modules and packages
     ? Decide which modules are the domain and which are the presentation

@@ -36,11 +36,17 @@ class CompletionResult(object):
         self.end_offset = end_offset
 
 
-class _GlobalVisitor(object):
-    
-    def __init__(self, starting):
+class _Scope(object):
+    def __init__(self, lineno, var_dict, children):
+        self.lineno = lineno
+        self.var_dict = var_dict
+        self.children = children
+
+
+class _FunctionScopeVisitor(object):
+    def __init__(self, starting, start_line):
         self.starting = starting
-        self.result = {}
+        self.scope = _Scope(start_line, {}, [])
 
     def visitImport(self, node):
         for import_pair in node.names:
@@ -49,27 +55,93 @@ class _GlobalVisitor(object):
             if alias is not None:
                 imported = alias
             if imported.startswith(self.starting):
-                self.result[imported] = CompletionProposal(imported, 'module')
+                self.scope.var_dict[imported] = CompletionProposal(imported, 'module')
 
     def visitAssName(self, node):
         if node.name.startswith(self.starting):
-            self.result[node.name] = CompletionProposal(node.name, 'global_variable')
+            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'local_variable')
+        
 
     def visitFunction(self, node):
         if node.name.startswith(self.starting):
-            self.result[node.name] = CompletionProposal(node.name, 'function')
+            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'function')
+        new_visitor = _FunctionScopeVisitor(self.starting, node)
+        compiler.walk(node, new_visitor)
+        self.scope.children.append(new_visitor.scope)
 
     def visitClass(self, node):
         if node.name.startswith(self.starting):
             self.result[node.name] = CompletionProposal(node.name, 'class')
+        new_visitor = _ClassScopeVisitor(self.starting, node)
+        compiler.walk(node, new_visitor)
+        self.scope.children.append(new_visitor.scope)
+
+    @staticmethod
+    def walk_function(starting, function_node):
+        new_visitor = _FunctionScopeVisitor(starting, function_node.lineno)
+        for node in function_node.getChildNodes():
+            compiler.walk(node, new_visitor)
+        return new_visitor
 
 
-class _FunctionVisitor(object):
-    def __init__(self):
+class _ClassScopeVisitor(object):
+    def __init__(self, starting, start_line):
+        self.starting = starting
+        self.scope = _Scope(start_line, {}, [])
+
+    def visitImport(self, node):
         pass
 
     def visitAssName(self, node):
         pass
+
+    def visitFunction(self, node):
+        new_visitor = _FunctionScopeVisitor.walk_function(self.starting, node)
+        self.scope.children.append(new_visitor.scope)
+
+    def visitClass(self, node):
+        new_visitor = _ClassScopeVisitor.walk_class(self.starting, node)
+        self.scope.children.append(new_visitor.scope)
+
+    @staticmethod
+    def walk_class(starting, class_node):
+        new_visitor = _ClassScopeVisitor(starting, class_node.lineno)
+        for node in class_node.getChildNodes():
+            compiler.walk(node, new_visitor)
+        return new_visitor
+
+
+class _GlobalScopeVisitor(object):
+    
+    def __init__(self, starting):
+        self.starting = starting
+        self.scope = _Scope(0, {}, [])
+
+    def visitImport(self, node):
+        for import_pair in node.names:
+            name, alias = import_pair
+            imported = name
+            if alias is not None:
+                imported = alias
+            if imported.startswith(self.starting):
+                self.scope.var_dict[imported] = CompletionProposal(imported, 'module')
+
+    def visitAssName(self, node):
+        if node.name.startswith(self.starting):
+            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'global_variable')
+        
+
+    def visitFunction(self, node):
+        if node.name.startswith(self.starting):
+            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'function')
+        new_visitor = _FunctionScopeVisitor.walk_function(self.starting, node)
+        self.scope.children.append(new_visitor.scope)
+
+    def visitClass(self, node):
+        if node.name.startswith(self.starting):
+            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'class')
+        new_visitor = _ClassScopeVisitor.walk_class(self.starting, node)
+        self.scope.children.append(new_visitor.scope)
 
 
 class ICodeAssist(object):
@@ -134,20 +206,38 @@ class CodeAssist(ICodeAssist):
                 result[kw] = CompletionProposal(kw, 'keyword')
         return result
 
+    def _get_all_completions(self, global_scope, lineno):
+        result = {}
+        current_scope = global_scope
+        while current_scope is not None:
+            result.update(current_scope.var_dict)
+            new_scope = None
+            for scope in current_scope.children:
+                if scope.lineno < lineno:
+                    new_scope = scope
+                else:
+                    break
+            current_scope = new_scope
+        return result
+    
+    def _get_line_number(self, source_code, offset):
+        return source_code[:offset].count('\n') + 1
+
     def complete_code(self, source_code, offset):
         if offset > len(source_code):
             return []
         starting_offset = self._find_starting_offset(source_code, offset)
         starting = source_code[starting_offset:offset]
         commented_source_code = self._comment_current_line(source_code, offset)
-        result = {}
         try:
             code_ast = compiler.parse(commented_source_code)
         except SyntaxError, e:
             raise RopeSyntaxError(e)
-        visitor = _GlobalVisitor(starting)
+        visitor = _GlobalScopeVisitor(starting)
         compiler.walk(code_ast, visitor)
-        result.update(visitor.result)
+#        result.update(visitor.scope.var_dict)
+        result = self._get_all_completions(visitor.scope,
+                                           self._get_line_number(source_code, offset))
         if len(starting) > 0:
             result.update(self._get_matching_builtins(starting))
             result.update(self._get_matching_keywords(starting))
