@@ -1,3 +1,6 @@
+> Public release 0.2pre : May 20, 2006
+
+
 - Auto completing keywords and builtins : May 19, 2006
 
 

@@ -1,13 +1,13 @@
 *** PythonSource ***
-    * Formatting code
-    * Basic refactorings
-    * Content assist
-    * Advanced refactorings
-    * Type inferencing
-        * static
-        * dynamic
-        * ask user
-    * Auto completion
+  * Formatting code
+  * Basic refactorings
+  * Content assist
+  * Advanced refactorings
+  * Type inferencing
+    * static
+    * dynamic
+    * ask user
+  * Auto completion
 
 >>> Advanced Refactorings; Need type inferencing
 * Rename method

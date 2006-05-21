@@ -117,6 +117,12 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_not_in_result('key', 'global_variable', result)
 
+    # TODO : proposing local variables
+    def xxx_test_proposing_local_variables_in_functions(self):
+        code = 'def f(self):\n    my_var = 10\n    my_'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'local_variable', result)
+
 
 if __name__ == '__main__':
     unittest.main()

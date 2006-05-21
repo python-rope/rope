@@ -1,11 +1,11 @@
 *** Platform ***
-    * Project
-    * File local history
-    * Commanding buffer
-    * Plugin support and extensibility
-    * Team
-    * Global and project specific preferences
-    * Saving states between sessions
-    * Acceleration keys
-    * Profiling
-    * Debugging
+  * Project
+  * File local history
+  * Commanding buffer
+  * Plugin support and extensibility
+  * Team
+  * Global and project specific preferences
+  * Saving states between sessions
+  * Acceleration keys
+  * Profiling
+  * Debugging

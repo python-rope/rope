@@ -64,6 +64,14 @@ class _GlobalVisitor(object):
             self.result[node.name] = CompletionProposal(node.name, 'class')
 
 
+class _FunctionVisitor(object):
+    def __init__(self):
+        pass
+
+    def visitAssName(self, node):
+        pass
+
+
 class ICodeAssist(object):
     def complete_code(self, source, offset):
         pass

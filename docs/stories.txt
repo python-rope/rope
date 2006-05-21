@@ -84,9 +84,6 @@ rope; A Python IDE
 * Changing next/prev word to stop on underline and capital letters @ 1
 
 
-* Auto-completing function parameter names @ 2
-
-
 * Commenting and uncommenting lines @ 1
 
 
@@ -135,7 +132,7 @@ rope; A Python IDE
   * Implicit line joining: Indenting lines whose previous line contains a ([{'''
   * Indenting a range of file
   * Removing extra spaces
-  * Correcting indentation sends the cursor to the last character of an empty line
+  ? Separating entering and correcting indentation
 
 
 * Rename local variable @ 2
@@ -144,7 +141,8 @@ rope; A Python IDE
 * Rename module refactoring @ 2
 
 
-* Formating Code @ 2
+* Formating Code @ 5
+  * Writing ASTs
 
 
 * Better multi-sequence key event handling @ 2
@@ -161,16 +159,10 @@ rope; A Python IDE
   * Showing modified file status
 
 
-* Writing ASTs @ 4
+* Auto-completing function parameter names when calling @ 2
 
 
-* Auto-complete from-import imported objects @ 2
-
-
-* Auto-completing self. @ 2
-
-
-* Proposing templates in auto-completion proposals @ 2
+* Lambdas and auto-completion @ 1
 
 
 * Auto completion type @ 3
@@ -184,17 +176,30 @@ rope; A Python IDE
   * Sorting proposals
 
 
+* Auto completion after "."s @ 3
+  * Auto-completing "self."s @ 2
+
+
 * Auto completing and comments and strings @ 1
+
+
+> Public release 0.2 : June 4, 2006
+
+
+* Proposing templates in auto-completion proposals @ 2
+
+
+* Auto-complete from-import imported objects @ 2
 
 
 * Auto-completion should ignore current statement @ 1
   What if the statement in current line is spread in more than one line.
 
 
+* Proposing function parameters in the function @ 1
+
+
 * Auto-complete local variable names @ 3
-
-
-> Public release 0.2pre : May 20, 2006
 
 
 --- Remaining Stories ---

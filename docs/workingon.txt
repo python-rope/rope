@@ -1,6 +1,6 @@
-? Sorting the proposals
-? Completions are context dependant
 
+
+? Completions are context dependant
 ? Separating ui modules and packages
     ? Decide which modules are the domain and which are the presentation
     ? Should editing tools access Editor directly? Which of them?

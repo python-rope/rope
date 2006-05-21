@@ -196,6 +196,8 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<Alt-v>', go_prev_page)
         def indent_line(event):
             self.indenter.correct_indentation(self.get_insert())
+            while self.text.get(INSERT) == ' ':
+                self.text.mark_set(INSERT, 'insert +1c')
             return 'break'
         def do_insert_tab(event):
             self.insert_tab()
