@@ -1,9 +1,7 @@
---- Proposing function parameters in functions @ 1 ---
 
-- Normal params
-- Keyword args
-
-? Loop variables
+! Scopes_count does not work because there might be loops and other blocks
+? Add rope.scopes module
+? For loop, except, lambda variables
 ? Not proposing local_variables that are defined after current position
 ? Remote pair programming support
 ? Completions are context dependant

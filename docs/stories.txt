@@ -177,7 +177,7 @@ rope; A Python IDE
 
 
 * Auto completion after "."s @ 3
-  * Auto-completing "self."s @ 2
+  * Auto-completing "self."s
 
 
 * Auto completing and comments and strings @ 1
