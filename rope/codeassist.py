@@ -65,15 +65,13 @@ class _FunctionScopeVisitor(object):
     def visitFunction(self, node):
         if node.name.startswith(self.starting):
             self.scope.var_dict[node.name] = CompletionProposal(node.name, 'function')
-        new_visitor = _FunctionScopeVisitor(self.starting, node)
-        compiler.walk(node, new_visitor)
+        new_visitor = _FunctionScopeVisitor.walk_function(self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
     def visitClass(self, node):
         if node.name.startswith(self.starting):
             self.result[node.name] = CompletionProposal(node.name, 'class')
-        new_visitor = _ClassScopeVisitor(self.starting, node)
-        compiler.walk(node, new_visitor)
+        new_visitor = _ClassScopeVisitor.walk_class(self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
     @staticmethod
@@ -155,7 +153,8 @@ class NoAssist(ICodeAssist):
 
 
 class CodeAssist(ICodeAssist):
-    def __init__(self):
+    def __init__(self, indentation_length=4):
+        self.indentation_length = indentation_length
         self.builtins = [str(name) for name in dir(__builtin__)
                          if not name.startswith('_')]
         import keyword
@@ -206,10 +205,11 @@ class CodeAssist(ICodeAssist):
                 result[kw] = CompletionProposal(kw, 'keyword')
         return result
 
-    def _get_all_completions(self, global_scope, lineno):
+    def _get_all_completions(self, global_scope, lineno, indents):
         result = {}
         current_scope = global_scope
-        while current_scope is not None:
+        nested_scope_count = 0
+        while current_scope is not None and nested_scope_count <= indents:
             result.update(current_scope.var_dict)
             new_scope = None
             for scope in current_scope.children:
@@ -218,10 +218,20 @@ class CodeAssist(ICodeAssist):
                 else:
                     break
             current_scope = new_scope
+            nested_scope_count += 1
         return result
     
     def _get_line_number(self, source_code, offset):
         return source_code[:offset].count('\n') + 1
+
+    def _count_line_indents(self, source_code, offset):
+        last_non_space = offset - 1
+        current_pos = offset - 1
+        while current_pos >= 0 and source_code[current_pos] != '\n':
+            if source_code[current_pos] != ' ':
+                last_non_space = current_pos
+            current_pos -= 1
+        return (last_non_space - current_pos - 1) / self.indentation_length
 
     def complete_code(self, source_code, offset):
         if offset > len(source_code):
@@ -235,9 +245,9 @@ class CodeAssist(ICodeAssist):
             raise RopeSyntaxError(e)
         visitor = _GlobalScopeVisitor(starting)
         compiler.walk(code_ast, visitor)
-#        result.update(visitor.scope.var_dict)
         result = self._get_all_completions(visitor.scope,
-                                           self._get_line_number(source_code, offset))
+                                           self._get_line_number(source_code, offset),
+                                           self._count_line_indents(source_code, offset))
         if len(starting) > 0:
             result.update(self._get_matching_builtins(starting))
             result.update(self._get_matching_keywords(starting))

@@ -1,6 +1,12 @@
-*** Auto-complete local variable names @ 3 ***
+--- Auto-complete local variable names @ 3 ---
 
+- Test not including class body variables
+- Test nested Functions
+- Better scope endpoints selection
+- Test imports inside functions
+- Test nested Classes
 
+? Not proposing local_variables that are defined after current position
 ? Remote pair programming support
 ? Completions are context dependant
 ? Separating ui modules and packages

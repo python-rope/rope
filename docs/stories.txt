@@ -199,9 +199,6 @@ rope; A Python IDE
 * Proposing function parameters in the function @ 1
 
 
-* Auto-complete local variable names @ 3
-
-
 --- Remaining Stories ---
 ? Change program goals and description; principles.html
   ? Go toward refactoring and ... library rather than an IDE

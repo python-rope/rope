@@ -127,6 +127,49 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'local_variable', result)
 
+    def test_not_including_class_body_variables(self):
+        code = 'class C(object):\n    my_var = 20\n    def f(self):\n        a = 20\n        my_'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('my_var', 'local_variable', result)
+
+    def test_nested_functions(self):
+        code = "def my_func():\n    func_var = 20\n    def inner_func():\n        a = 20\n        func"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('func_var', 'local_variable', result)
+
+    def test_scope_endpoint_selection(self):
+        code = "def my_func():\n    func_var = 20\n"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('func_var', 'local_variable', result)
+
+    def test_imports_inside_function(self):
+        code = "def f():\n    import sys\n    sy"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('sys', 'module', result)
+
+    def test_imports_inside_function_dont_mix_with_globals(self):
+        code = "def f():\n    import sys\nsy"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('sys', 'module', result)
+
+    def test_nested_classes_local_names(self):
+        code = "global_var = 10\ndef my_func():\n    func_var = 20\n    class C(object):\n" + \
+               "        def another_func(self):\n            local_var = 10\n            func"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('func_var', 'local_variable', result)
+
+    def test_nested_classes_global(self):
+        code = "global_var = 10\ndef my_func():\n    func_var = 20\n    class C(object):\n" + \
+               "        def another_func(self):\n            local_var = 10\n            globa"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('global_var', 'global_variable', result)
+
+    def test_nested_classes_global_function(self):
+        code = "global_var = 10\ndef my_func():\n    func_var = 20\n    class C(object):\n" + \
+               "        def another_func(self):\n            local_var = 10\n            my_f"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_func', 'function', result)
+
 
 if __name__ == '__main__':
     unittest.main()
