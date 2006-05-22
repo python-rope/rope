@@ -1,3 +1,6 @@
+- Proposing function parameters in functions : May 22, 2006
+
+
 - Auto-complete local variable names : May 22, 2006
 
 

@@ -170,6 +170,18 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_func', 'function', result)
 
+    def test_proposing_function_parameters_in_functions(self):
+        code = "def my_func(my_param):\n    my_var = 20\n    my_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_param', 'local_variable', result)
+
+    def test_proposing_function_keyword_parameters_in_functions(self):
+        code = "def my_func(my_param, *my_list, **my_kws):\n    my_var = 20\n    my_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_param', 'local_variable', result)
+        self.assert_proposal_in_result('my_list', 'local_variable', result)
+        self.assert_proposal_in_result('my_kws', 'local_variable', result)
+
 
 if __name__ == '__main__':
     unittest.main()

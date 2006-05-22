@@ -77,6 +77,8 @@ class _FunctionScopeVisitor(object):
     @staticmethod
     def walk_function(starting, function_node):
         new_visitor = _FunctionScopeVisitor(starting, function_node.lineno)
+        for arg in function_node.argnames:
+            new_visitor.scope.var_dict[arg] = CompletionProposal(arg, 'local_variable')
         for node in function_node.getChildNodes():
             compiler.walk(node, new_visitor)
         return new_visitor

@@ -196,9 +196,6 @@ rope; A Python IDE
   What if the statement in current line is spread in more than one line.
 
 
-* Proposing function parameters in the function @ 1
-
-
 --- Remaining Stories ---
 ? Change program goals and description; principles.html
   ? Go toward refactoring and ... library rather than an IDE
