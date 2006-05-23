@@ -210,6 +210,12 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.insert_tab(self.editor.get_end())
         self.assertEquals('print "a"    ', self.editor.get_text())
 
+    # ignoring strings while correcting indentations
+    def xxx_test_ignoring_parens_in_strings(self):
+        self.editor.set_text('print "("\na = 10')
+        self.indenter.correct_indentation(self.editor.get_end())
+        self.assertEquals('print "("\na = 10', self.editor.get_text())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,7 +1,14 @@
+*** Auto-completion should ignore current statement @ 2 ***
+  What if the statement in current line is spread in more than one line.
 
-! Scopes_count does not work because there might be loops and other blocks
+* Ignoring strings contents
+* When auto-completing at lines ending with a :
+? str joining is very fast
+? Use pass as placeholder
+
+! scopes_count does not work because there might be loops and other blocks
 ? Add rope.scopes module
-? For loop, except, lambda variables
+? Completions for for-loop, except, lambda, with variables
 ? Not proposing local_variables that are defined after current position
 ? Remote pair programming support
 ? Completions are context dependant

@@ -170,18 +170,41 @@ class CodeAssist(ICodeAssist):
             current_offset -= 1;
         return current_offset + 1
 
-    def _comment_current_line(self, source_code, offset):
-        line_beginning = offset - 1
-        while line_beginning >= 0 and source_code[line_beginning] != '\n':
-            line_beginning -= 1
-        line_ending = offset
-        while line_ending < len(source_code) and source_code[line_ending] != '\n':
-            line_ending += 1
-        result = source_code
-        if line_beginning != -1 and line_beginning < line_ending - 1:
-            result = source_code[:line_beginning] + '#' + source_code[line_beginning + 2:]
-        return result
-    
+    def _comment_current_statement(self, source_code, offset):
+        lines = source_code.split('\n')
+        current_pos = 0
+        lineno = 0
+        while current_pos + len(lines[lineno]) < offset:
+            current_pos += len(lines[lineno]) + 1
+            lineno += 1
+        last_statement = 0
+        open_parens = 0
+        explicit_continuation = False
+        for current_line in range(0, lineno + 1):
+            if not explicit_continuation and open_parens == 0:
+                last_statement = current_line
+            for char in lines[current_line]:
+                if char in '([{':
+                    open_parens += 1
+                if char in ')]}':
+                    open_parens -= 1
+            if lines[current_line].rstrip().endswith('\\'):
+                explicit_continuation = True
+            else:
+                explicit_continuation = False
+        last_indents = 0
+        for char in lines[last_statement]:
+            if char == ' ':
+                last_indents += 1
+            else:
+                break
+        lines[last_statement] = last_indents * ' ' + 'pass'
+        for line in range(last_statement + 1, lineno + 1):
+            lines[line] = '#' + lines[line]
+        lines.append('\n')
+        return '\n'.join(lines)
+
+
     def _get_matching_builtins(self, starting):
         result = {}
         for builtin in self.builtins:
@@ -241,7 +264,7 @@ class CodeAssist(ICodeAssist):
             return []
         starting_offset = self._find_starting_offset(source_code, offset)
         starting = source_code[starting_offset:offset]
-        commented_source_code = self._comment_current_line(source_code, offset)
+        commented_source_code = self._comment_current_statement(source_code, offset)
         try:
             code_ast = compiler.parse(commented_source_code)
         except SyntaxError, e:

@@ -10,13 +10,7 @@ written in python and uses the Tkinter library.
 Version Overview
 ----------------
 Features added in this release:
-  * Auto complete global variables
-  * Auto complete class and function names
-  * Showing searching status in status bar
-  * Auto complete imported modules
-  * Auto complete keywords and builtins
-
-In this release some basic auto-completion support was added.
+  *
 
 
 Keybinding
@@ -126,7 +120,7 @@ and libraries so that other projects may use them.
 Get Involved!
 -------------
   Rope has just started. Right now rope's design changes rapidly and it's not
-yet ready for code contributions. I hope in soon future, somewhere around version
+yet ready for code contributions. I hope in soon future, somewhere about version
 0.5 or 0.6, rope would be mature enough for being extended easily.
 
   Anyway right now contributions are really needed in many places. For example

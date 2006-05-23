@@ -81,6 +81,9 @@ rope; A Python IDE
 * File Encodings @ 2
 
 
+* Static type inference @ 6
+
+
 * Changing next/prev word to stop on underline and capital letters @ 1
 
 
@@ -133,6 +136,9 @@ rope; A Python IDE
   * Indenting a range of file
   * Removing extra spaces
   ? Separating entering and correcting indentation
+
+
+* Dynamic type inference @ 3
 
 
 * Rename local variable @ 2
@@ -189,10 +195,10 @@ rope; A Python IDE
 * Proposing templates in auto-completion proposals @ 2
 
 
-* Auto-complete from-import imported objects @ 2
+* Auto-complete from-import imported objects @ 3
 
 
-* Auto-completion should ignore current statement @ 1
+* Auto-completion should ignore current statement @ 2
   What if the statement in current line is spread in more than one line.
 
 

@@ -62,7 +62,7 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals(1, count)
 
     def test_throwing_exception_in_case_of_syntax_errors(self):
-        code = 'sample (sdf\n'
+        code = 'sample (sdf+)\n'
         self.assertRaises(RopeSyntaxError, 
                           lambda: self.assist.complete_code(code, len(code)))
     
@@ -186,6 +186,16 @@ class CodeAssistTest(unittest.TestCase):
         code = "def my_func(my_param):\n    my_var = 20\n    you_"
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_not_in_result('my_param', 'local_variable', result)
+
+    def test_ignoring_current_statement(self):
+        code = "my_var = 10\nmy_tuple = (10, \n           my_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_current_statement_while_the_first_statement_of_the_block(self):
+        code = "my_var = 10\ndef f():\n    my_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
 
 
 if __name__ == '__main__':
