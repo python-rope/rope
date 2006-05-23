@@ -2,6 +2,7 @@
   What if the statement in current line is spread in more than one line.
 
 - More tests for explicit and implicit continuations
+i Transform big unextractible methods into method objects
 
 * Ignoring """ or ''' string content
 

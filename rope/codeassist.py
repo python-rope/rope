@@ -155,6 +155,62 @@ class NoAssist(ICodeAssist):
         return CompletionResult()
 
 
+class _CurrentStatementRangeFinder(object):
+    """A method object for finding the range of current statement"""
+    def __init__(self, lines, lineno):
+        self.lines = lines
+        self.lineno = lineno
+
+    # TODO: extract methods to shorten
+    def get_range(self):
+        last_statement = 0
+        open_parens = 0
+        explicit_continuation = False
+        in_string = ''
+        for current_line_number in range(0, self.lineno + 1):
+            if not explicit_continuation and open_parens == 0 and in_string == '':
+                last_statement = current_line_number
+            current_line = self.lines[current_line_number]
+            for i in range(len(current_line)):
+                char = current_line[i]
+                if char in '\'"':
+                    if in_string == '':
+                        in_string = char
+                    elif in_string == char and \
+                         not (i > 0 and current_line[i - 1] == '\\' and
+                              not (i > 1 and current_line[i - 2:i] == '\\\\')):
+                        in_string = ''
+                if in_string != '':
+                    continue
+                if char == '#':
+                    break
+                if char in '([{':
+                    open_parens += 1
+                if char in ')]}':
+                    open_parens -= 1
+            if current_line.rstrip().endswith('\\'):
+                explicit_continuation = True
+            else:
+                explicit_continuation = False
+        last_indents = self.get_line_indents(last_statement)
+        end_line = self.lineno
+        if True or self.lines[self.lineno].rstrip().endswith(':'):
+            for i in range(self.lineno + 1, len(self.lines)):
+                if self.get_line_indents(i) > last_indents:
+                    end_line = i
+                else:
+                    break
+        return (last_statement, end_line)
+
+    def get_line_indents(self, line):
+        indents = 0
+        for char in self.lines[line]:
+            if char == ' ':
+                indents += 1
+            else:
+                break
+        return indents
+
 class CodeAssist(ICodeAssist):
     def __init__(self, indentation_length=4):
         self.indentation_length = indentation_length
@@ -177,53 +233,11 @@ class CodeAssist(ICodeAssist):
         while current_pos + len(lines[lineno]) < offset:
             current_pos += len(lines[lineno]) + 1
             lineno += 1
-        last_statement = 0
-        open_parens = 0
-        explicit_continuation = False
-        in_string = ''
-        for current_line_number in range(0, lineno + 1):
-            if not explicit_continuation and open_parens == 0 and in_string == '':
-                last_statement = current_line_number
-            current_line = lines[current_line_number]
-            for i in range(len(current_line)):
-                char = current_line[i]
-                if char in '\'"':
-                    if in_string == '':
-                        in_string = char
-                    elif in_string == char and \
-                         not (i > 0 and current_line[i - 1] == '\\' and
-                              not (i > 1 and current_line[i - 2:i] == '\\\\')):
-                        in_string = ''
-                if in_string != '':
-                    continue
-                if char == '#':
-                    break
-                if char in '([{':
-                    open_parens += 1
-                if char in ')]}':
-                    open_parens -= 1
-            if current_line.rstrip().endswith('\\'):
-                explicit_continuation = True
-            else:
-                explicit_continuation = False
-        def _count_line_indents(line):
-            indents = 0
-            for char in line:
-                if char == ' ':
-                    indents += 1
-                else:
-                    break
-            return indents
-        last_indents = _count_line_indents(lines[last_statement])
-        end_line = lineno
-        if True or lines[lineno].rstrip().endswith(':'):
-            for i in range(lineno + 1, len(lines)):
-                if _count_line_indents(lines[i]) > last_indents:
-                    end_line = i
-                else:
-                    break
-        lines[last_statement] = last_indents * ' ' + 'pass'
-        for line in range(last_statement + 1, end_line + 1):
+        range_finder = _CurrentStatementRangeFinder(lines, lineno)
+        start, end = range_finder.get_range()
+        last_indents = range_finder.get_line_indents(start)
+        lines[start] = last_indents * ' ' + 'pass'
+        for line in range(start + 1, end + 1):
             lines[line] = '#' # + lines[line]
         lines.append('\n')
         return '\n'.join(lines)
