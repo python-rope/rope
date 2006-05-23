@@ -233,13 +233,7 @@ class CodeAssist(ICodeAssist):
             current_offset -= 1;
         return current_offset + 1
 
-    def _comment_current_statement(self, source_code, offset):
-        lines = source_code.split('\n')
-        current_pos = 0
-        lineno = 0
-        while current_pos + len(lines[lineno]) < offset:
-            current_pos += len(lines[lineno]) + 1
-            lineno += 1
+    def _comment_current_statement(self, lines, lineno):
         range_finder = _CurrentStatementRangeFinder(lines, lineno)
         start, end = range_finder.get_range()
         last_indents = range_finder.get_line_indents(start)
@@ -247,8 +241,6 @@ class CodeAssist(ICodeAssist):
         for line in range(start + 1, end + 1):
             lines[line] = '#' # + lines[line]
         lines.append('\n')
-        return '\n'.join(lines)
-
 
     def _get_matching_builtins(self, starting):
         result = {}
@@ -276,11 +268,22 @@ class CodeAssist(ICodeAssist):
                 result[kw] = CompletionProposal(kw, 'keyword')
         return result
 
-    def _get_all_completions(self, global_scope, lineno, indents):
+    def _get_line_indents(self, lines, line_number):
+        indents = 0
+        for char in lines[line_number]:
+            if char == ' ':
+                indents += 1
+            else:
+                break
+        return indents
+
+
+    def _get_all_completions(self, global_scope, lines, lineno):
         result = {}
         current_scope = global_scope
-        nested_scope_count = 0
-        while current_scope is not None and nested_scope_count <= indents:
+        current_indents = self._get_line_indents(lines, lineno)
+        while current_scope is not None and \
+              self._get_line_indents(lines, current_scope.lineno) <= current_indents:
             result.update(current_scope.var_dict)
             new_scope = None
             for scope in current_scope.children:
@@ -289,9 +292,8 @@ class CodeAssist(ICodeAssist):
                 else:
                     break
             current_scope = new_scope
-            nested_scope_count += 1
         return result
-    
+
     def _get_line_number(self, source_code, offset):
         return source_code[:offset].count('\n') + 1
 
@@ -309,16 +311,21 @@ class CodeAssist(ICodeAssist):
             return []
         starting_offset = self._find_starting_offset(source_code, offset)
         starting = source_code[starting_offset:offset]
-        commented_source_code = self._comment_current_statement(source_code, offset)
+        lines = source_code.split('\n')
+        current_pos = 0
+        lineno = 0
+        while current_pos + len(lines[lineno]) < offset:
+            current_pos += len(lines[lineno]) + 1
+            lineno += 1
+        self._comment_current_statement(lines, lineno)
+        commented_source_code = '\n'.join(lines)
         try:
             code_ast = compiler.parse(commented_source_code)
         except SyntaxError, e:
             raise RopeSyntaxError(e)
         visitor = _GlobalScopeVisitor(starting)
         compiler.walk(code_ast, visitor)
-        result = self._get_all_completions(visitor.scope,
-                                           self._get_line_number(source_code, offset),
-                                           self._count_line_indents(source_code, offset))
+        result = self._get_all_completions(visitor.scope, lines, lineno)
         if len(starting) > 0:
             result.update(self._get_matching_builtins(starting))
             result.update(self._get_matching_keywords(starting))

@@ -1,3 +1,6 @@
+- Auto-completion should ignore current statement : May 23, 2006
+
+
 - Proposing function parameters in functions : May 22, 2006
 
 

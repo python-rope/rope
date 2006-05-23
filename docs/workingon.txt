@@ -1,13 +1,13 @@
-*** Auto-completion should ignore current statement @ 2 ***
+--- Auto-completion should ignore current statement @ 2 ---
   What if the statement in current line is spread in more than one line.
 
 - More tests for explicit and implicit continuations
 ? Transform big unextractible methods into method objects
 - Not proposing variables defined after current line in the same scope
 - Ignoring """ or ''' string content
+- scopes_count does not work because there might be loops and other blocks
 
 
-! scopes_count does not work because there might be loops and other blocks
 ? Add rope.scopes module
 ? Completions for for-loop, except, lambda, with variables
 ? Remote pair programming support

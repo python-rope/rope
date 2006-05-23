@@ -142,6 +142,11 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_not_in_result('func_var', 'local_variable', result)
 
+    def test_scope_better_endpoint_selection(self):
+        code = "if True:\n    def f():\n        my_var = 10\n    my_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('my_var', 'local_variable', result)
+
     def test_imports_inside_function(self):
         code = "def f():\n    import sys\n    sy"
         result = self.assist.complete_code(code, len(code))
