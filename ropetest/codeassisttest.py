@@ -197,6 +197,21 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'global_variable', result)
 
+    def test_ignoring_current_statement_while_current_line_ends_with_a_colon(self):
+        code = "my_var = 10\nif my_:\n    pass"
+        result = self.assist.complete_code(code, 18)
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_string_contents(self):
+        code = "my_var = '('\nmy_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_string_comments(self):
+        code = "my_var = 10 #(\nmy_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
 
 if __name__ == '__main__':
     unittest.main()

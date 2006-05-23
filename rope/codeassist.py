@@ -180,10 +180,20 @@ class CodeAssist(ICodeAssist):
         last_statement = 0
         open_parens = 0
         explicit_continuation = False
+        in_string = ''
         for current_line in range(0, lineno + 1):
-            if not explicit_continuation and open_parens == 0:
+            if not explicit_continuation and open_parens == 0 and in_string == '':
                 last_statement = current_line
             for char in lines[current_line]:
+                if char in '\'"':
+                    if in_string == '':
+                        in_string = char
+                    elif in_string == char:
+                        in_string = ''
+                if in_string != '':
+                    continue
+                if char == '#':
+                    break
                 if char in '([{':
                     open_parens += 1
                 if char in ')]}':
@@ -192,15 +202,25 @@ class CodeAssist(ICodeAssist):
                 explicit_continuation = True
             else:
                 explicit_continuation = False
-        last_indents = 0
-        for char in lines[last_statement]:
-            if char == ' ':
-                last_indents += 1
-            else:
-                break
+        def _count_line_indents(line):
+            indents = 0
+            for char in line:
+                if char == ' ':
+                    indents += 1
+                else:
+                    break
+            return indents
+        last_indents = _count_line_indents(lines[last_statement])
+        end_line = lineno
+        if lines[lineno].rstrip().endswith(':'):
+            for i in range(lineno + 1, len(lines)):
+                if _count_line_indents(lines[i]) > last_indents:
+                    end_line = i
+                else:
+                    break
         lines[last_statement] = last_indents * ' ' + 'pass'
-        for line in range(last_statement + 1, lineno + 1):
-            lines[line] = '#' + lines[line]
+        for line in range(last_statement + 1, end_line + 1):
+            lines[line] = '#' # + lines[line]
         lines.append('\n')
         return '\n'.join(lines)
 
