@@ -2,14 +2,14 @@
   What if the statement in current line is spread in more than one line.
 
 - More tests for explicit and implicit continuations
-i Transform big unextractible methods into method objects
+? Transform big unextractible methods into method objects
+- Not proposing variables defined after current line in the same scope
 
 * Ignoring """ or ''' string content
 
 ! scopes_count does not work because there might be loops and other blocks
 ? Add rope.scopes module
 ? Completions for for-loop, except, lambda, with variables
-? Not proposing local_variables that are defined after current position
 ? Remote pair programming support
 ? Completions are context dependant
 ? Separating ui modules and packages

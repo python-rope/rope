@@ -157,6 +157,7 @@ class NoAssist(ICodeAssist):
 
 class _CurrentStatementRangeFinder(object):
     """A method object for finding the range of current statement"""
+
     def __init__(self, lines, lineno):
         self.lines = lines
         self.lineno = lineno
@@ -196,7 +197,7 @@ class _CurrentStatementRangeFinder(object):
         end_line = self.lineno
         if True or self.lines[self.lineno].rstrip().endswith(':'):
             for i in range(self.lineno + 1, len(self.lines)):
-                if self.get_line_indents(i) > last_indents:
+                if self.get_line_indents(i) >= last_indents:
                     end_line = i
                 else:
                     break

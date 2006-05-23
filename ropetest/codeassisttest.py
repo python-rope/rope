@@ -232,6 +232,16 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'global_variable', result)
 
+    def test_not_proposing_later_defined_variables_in_current_block(self):
+        code = "my_\nmy_var = 10\n"
+        result = self.assist.complete_code(code, 3)
+        self.assert_proposal_not_in_result('my_var', 'global_variable', result)
+
+    def test_not_proposing_later_defined_variables_in_current_function(self):
+        code = "def f():\n    my_\n    my_var = 10\n"
+        result = self.assist.complete_code(code, 16)
+        self.assert_proposal_not_in_result('my_var', 'local_variable', result)
+
 
 if __name__ == '__main__':
     unittest.main()
