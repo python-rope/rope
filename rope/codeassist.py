@@ -181,14 +181,18 @@ class CodeAssist(ICodeAssist):
         open_parens = 0
         explicit_continuation = False
         in_string = ''
-        for current_line in range(0, lineno + 1):
+        for current_line_number in range(0, lineno + 1):
             if not explicit_continuation and open_parens == 0 and in_string == '':
-                last_statement = current_line
-            for char in lines[current_line]:
+                last_statement = current_line_number
+            current_line = lines[current_line_number]
+            for i in range(len(current_line)):
+                char = current_line[i]
                 if char in '\'"':
                     if in_string == '':
                         in_string = char
-                    elif in_string == char:
+                    elif in_string == char and \
+                         not (i > 0 and current_line[i - 1] == '\\' and
+                              not (i > 1 and current_line[i - 2:i] == '\\\\')):
                         in_string = ''
                 if in_string != '':
                     continue
@@ -198,7 +202,7 @@ class CodeAssist(ICodeAssist):
                     open_parens += 1
                 if char in ')]}':
                     open_parens -= 1
-            if lines[current_line].rstrip().endswith('\\'):
+            if current_line.rstrip().endswith('\\'):
                 explicit_continuation = True
             else:
                 explicit_continuation = False
@@ -212,7 +216,7 @@ class CodeAssist(ICodeAssist):
             return indents
         last_indents = _count_line_indents(lines[last_statement])
         end_line = lineno
-        if lines[lineno].rstrip().endswith(':'):
+        if True or lines[lineno].rstrip().endswith(':'):
             for i in range(lineno + 1, len(lines)):
                 if _count_line_indents(lines[i]) > last_indents:
                     end_line = i

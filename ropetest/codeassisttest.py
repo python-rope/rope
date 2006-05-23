@@ -192,6 +192,16 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'global_variable', result)
 
+    def test_ignoring_current_statement_brackets_continuation(self):
+        code = "my_var = 10\n'hello'[10:\n        my_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_current_statement_explicit_continuation(self):
+        code = "my_var = 10\nmy_var2 = 2 + \\\n          my_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
     def test_ignoring_current_statement_while_the_first_statement_of_the_block(self):
         code = "my_var = 10\ndef f():\n    my_"
         result = self.assist.complete_code(code, len(code))
@@ -207,8 +217,18 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'global_variable', result)
 
-    def test_ignoring_string_comments(self):
+    def test_ignoring_comment_contents(self):
         code = "my_var = 10 #(\nmy_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_string_contents_backslash_plus_quotes(self):
+        code = "my_var = '\\''\nmy_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_string_contents_backslash_plus_backslash(self):
+        code = "my_var = '\\\\'\nmy_"
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'global_variable', result)
 
