@@ -4,8 +4,8 @@
 - More tests for explicit and implicit continuations
 ? Transform big unextractible methods into method objects
 - Not proposing variables defined after current line in the same scope
+- Ignoring """ or ''' string content
 
-* Ignoring """ or ''' string content
 
 ! scopes_count does not work because there might be loops and other blocks
 ? Add rope.scopes module

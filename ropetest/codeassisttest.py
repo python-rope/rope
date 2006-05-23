@@ -242,6 +242,21 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, 16)
         self.assert_proposal_not_in_result('my_var', 'local_variable', result)
 
+    def test_ignoring_string_contents_with_triple_quotes(self):
+        code = "my_var = '''(\n'('''\nmy_"
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_string_contents_with_triple_quotes_and_backslash(self):
+        code = 'my_var = """\\"""("""\nmy_'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+    def test_ignoring_string_contents_with_triple_quotes_and_double_backslash(self):
+        code = 'my_var = """\\\\"""\nmy_'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('my_var', 'global_variable', result)
+
 
 if __name__ == '__main__':
     unittest.main()
