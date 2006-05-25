@@ -1,3 +1,6 @@
+- Auto-complete from-import imported objects : May 25, 2006
+
+
 - Not proposing variables which are not defined yet : May 23, 2006
 
 

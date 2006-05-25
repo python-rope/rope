@@ -9,34 +9,54 @@ class RopeSyntaxError(RopeException):
     pass
 
 
-class CompletionProposal(object):
-    """A completion proposal.
+class CodeAssistProposal(object):
+    """The base class for proposals reported by CodeAssist"""
+
+    def __init__(self, name):
+        self.name = name
+
+
+class CompletionProposal(CodeAssistProposal):
+    """A completion proposal
     
     The kind instance variable shows the type of the completion and
     can be global_variable, function, class
     
     """
-    def __init__(self, completion, kind):
-        self.completion = completion
+
+    def __init__(self, name, kind):
+        super(CompletionProposal, self).__init__(name)
         self.kind = kind
 
 
-class CompletionResult(object):
-    """A completion result.
+class TemplateProposal(CodeAssistProposal):
+    """A template proposal"""
+
+    def __init__(self, name, definition):
+        super(TemplateProposal, self).__init__(name)
+        self.definition = definition
+
+
+class Proposals(object):
+    """A CodeAssist result.
     
     Attribute:
-    proposals -- A list of CompletionProposals
+    completions -- A list of CompletionProposals
+    templates -- A list of TemplateProposals
     start_offset -- completion start offset
     end_offset -- completion end offset
     
     """
-    def __init__(self, proposals=[], start_offset=0, end_offset=0):
-        self.proposals = proposals
+
+    def __init__(self, completions=[], templates=[], start_offset=0, end_offset=0):
+        self.completions = completions
+        self.templates = templates
         self.start_offset = start_offset
         self.end_offset = end_offset
 
 
 class _Scope(object):
+
     def __init__(self, lineno, var_dict, children):
         self.lineno = lineno
         self.var_dict = var_dict
@@ -67,6 +87,7 @@ def _get_package_children(package):
 
 
 class _ScopeVisitor(object):
+
     def __init__(self, project, starting, start_line):
         self.project = project
         self.starting = starting
@@ -124,6 +145,7 @@ class _ScopeVisitor(object):
 
 
 class _FunctionScopeVisitor(_ScopeVisitor):
+
     def __init__(self, project, starting, start_line):
         super(_FunctionScopeVisitor, self).__init__(project, starting, start_line)
 
@@ -144,6 +166,7 @@ class _FunctionScopeVisitor(_ScopeVisitor):
 
 
 class _ClassScopeVisitor(_ScopeVisitor):
+
     def __init__(self, project, starting, start_line):
         super(_ClassScopeVisitor, self).__init__(project, starting, start_line)
 
@@ -186,7 +209,7 @@ class ICodeAssist(object):
 
 class NoAssist(ICodeAssist):
     def complete_code(self, source_code, offset):
-        return CompletionResult()
+        return Proposals()
 
 
 class _CurrentStatementRangeFinder(object):
@@ -259,6 +282,7 @@ class CodeAssist(ICodeAssist):
                          if not name.startswith('_')]
         import keyword
         self.keywords = keyword.kwlist
+        self.templates = []
 
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
@@ -340,7 +364,17 @@ class CodeAssist(ICodeAssist):
             current_pos -= 1
         return (last_non_space - current_pos - 1) / self.indentation_length
 
-    def complete_code(self, source_code, offset):
+    def add_template(self, name, definition):
+        self.templates.append(TemplateProposal(name, definition))
+
+    def _get_template_proposals(self, starting):
+        result = []
+        for template in self.templates:
+            if template.name.startswith(starting):
+                result.append(template)
+        return result
+
+    def assist(self, source_code, offset):
         if offset > len(source_code):
             return []
         starting_offset = self._find_starting_offset(source_code, offset)
@@ -363,5 +397,6 @@ class CodeAssist(ICodeAssist):
         if len(starting) > 0:
             result.update(self._get_matching_builtins(starting))
             result.update(self._get_matching_keywords(starting))
-        return CompletionResult(result.values(), starting_offset, offset)
+        template_proposals = self._get_template_proposals(starting)
+        return Proposals(result.values(), template_proposals, starting_offset, offset)
 

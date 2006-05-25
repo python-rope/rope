@@ -240,7 +240,7 @@ class GraphicalEditor(TextEditor):
             self.searcher.end_searching()
 
     def _show_completion_window(self):
-        result = self.code_assist.complete_code(self.get_text(), self.get_current_offset())
+        result = self.code_assist.assist(self.get_text(), self.get_current_offset())
         toplevel = Toplevel()
         toplevel.title('Completion Proposals')
         frame = Frame(toplevel)
@@ -250,7 +250,7 @@ class GraphicalEditor(TextEditor):
         scrollbar['command'] = proposals.yview
         proposals.config(yscrollcommand=scrollbar.set)
         for proposal in result.proposals:
-            proposals.insert(END, proposal.completion)
+            proposals.insert(END, proposal.name)
         if result:
             proposals.selection_set(0)
         self.text.see('insert')

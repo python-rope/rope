@@ -1,14 +1,20 @@
-*** Auto-complete from-import imported objects @ 3 ***
+*** Proposing templates in auto-completion proposals @ 1 ***
 
-- from package import package
-- from pkg import * should not import anything
+- Normal templates
 
-? Directories should contain __init__.py to be packages
+* Machanisms for getting and editing and setting template variables
+* Showing templates in completion dialog
+? Variabled templates; ${variable}
+? Use ${cursor} for setting the place of curser when necessary
+* Builtin templates
+
+* Showing active editor as the last entry in the change editor dialog?
+? Show the type of the completion in the codeassist dialog
+? From-import might cache module global variables
+? Directories should contain __init__.py to be packages in codeassist
 ? Auto-completion on relative imports
 ? Python C extensions
 ? Better version number selection
-? Add rope.scopes module
-? Completions are context dependant
 ? Remote pair programming support
 ? Separating ui modules and packages
     ? Decide which modules are the domain and which are the presentation

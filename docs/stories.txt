@@ -186,17 +186,14 @@ rope; A Python IDE
 * Auto completing and comments and strings @ 1
 
 
-> Public release 0.2 : June 4, 2006
+> Public release 0.2pre2 : June 4, 2006
 
 
 * Auto completion after "."s @ 3
   * Auto-completing "self."s
 
 
-* Proposing templates in auto-completion proposals @ 2
-
-
-* Auto-complete from-import imported objects @ 3
+* Proposing templates in auto-completion proposals @ 1
 
 
 --- Remaining Stories ---
