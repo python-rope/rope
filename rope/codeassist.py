@@ -43,11 +43,7 @@ class _Scope(object):
         self.children = children
 
 
-def _get_global_names_in_module(project, modname):
-    found_modules = project.find_module(modname)
-    if not found_modules:
-        return {}
-    
+def _get_global_names_in_module(module):
     result = {}
     class _GlobalModuleVisitor(object):
         def visitFunction(self, node):
@@ -56,10 +52,19 @@ def _get_global_names_in_module(project, modname):
             result[node.name] =  'class'
         def visitAssName(self, node):
             result[node.name] = 'global_variable'
-    ast = compiler.parse(found_modules[0].read())
+    ast = compiler.parse(module.read())
     compiler.walk(ast, _GlobalModuleVisitor())
     return result
-    
+
+def _get_package_children(package):
+    result = {}
+    for resource in package.get_children():
+        if resource.is_folder():
+            result[resource.get_name()] = 'module'
+        elif resource.get_name().endswith('.py'):
+            result[resource.get_name()[:-3]] = 'module'
+    return result
+
 
 class _ScopeVisitor(object):
     def __init__(self, project, starting, start_line):
@@ -77,8 +82,17 @@ class _ScopeVisitor(object):
                 self.scope.var_dict[imported] = CompletionProposal(imported, 'module')
 
     def visitFrom(self, node):
-        global_names = _get_global_names_in_module(self.project, node.modname)
-        if node.names[0][0] == '*':
+        found_modules = self.project.find_module(node.modname)
+        global_names = {}
+        is_module = True
+        if found_modules:
+            module = found_modules[0]
+            if module.is_folder():
+                global_names = _get_package_children(found_modules[0])
+                is_module = False
+            else:
+                global_names = _get_global_names_in_module(found_modules[0])
+        if node.names[0][0] == '*' and is_module:
             for (name, kind) in global_names.iteritems():
                 if name.startswith(self.starting) and not name.startswith('_'):
                     self.scope.var_dict[name] = CompletionProposal(name, kind)
@@ -307,7 +321,7 @@ class CodeAssist(ICodeAssist):
             result.update(current_scope.var_dict)
             new_scope = None
             for scope in current_scope.children:
-                if scope.lineno < lineno:
+                if scope.lineno < lineno + 1:
                     new_scope = scope
                 else:
                     break

@@ -276,6 +276,11 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'global_variable', result)
 
+    def test_reporting_params_when_in_the_first_line_of_a_function(self):
+        code = 'def f(param):\n    para'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('param', 'local_variable', result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
     def setUp(self):
@@ -287,6 +292,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
                         "\n\ndef sample_func():\n    pass\nsample_var = 10\n" + \
                         "\ndef _underlined_func():\n    pass\n\n" )
+        package = self.project.create_package(self.project.get_root_folder(), 'package')
+        nestedmod = self.project.create_module(package, 'nestedmod')
         self.assist = self.project.get_code_assist()
 
     def assert_proposal_in_result(self, completion, kind, result):
@@ -351,6 +358,21 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         code = 'from samplemod import *\n_under'
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_not_in_result('_underlined_func', 'function', result)
+
+    def test_from_package_import_mod(self):
+        code = 'from package import nestedmod\nnest'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('nestedmod', 'module', result)
+
+    def test_from_package_import_star(self):
+        code = 'from package import *\nnest'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('nestedmod', 'module', result)
+
+    def test_unknown_when_module_cannot_be_found(self):
+        code = 'from doesnotexist import nestedmod\nnest'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('nestedmod', 'unknown', result)
 
 
 if __name__ == '__main__':

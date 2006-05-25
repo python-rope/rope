@@ -1,3 +1,6 @@
+- Not proposing variables which are not defined yet : May 23, 2006
+
+
 - Auto-completion should ignore current statement : May 23, 2006
 
 

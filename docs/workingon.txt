@@ -1,24 +1,11 @@
 *** Auto-complete from-import imported objects @ 3 ***
 
-- Add Project.find_module(module_name) which should return a list
-- Resource.__hash__
-- imports inside functions
-- from module import *
-- Add new TestCase to runtests.py
-- Reduce duplication in visitors in codeassist.py
-- from mod import * should not import names starting with an underscore
-- Project.find_module might return package
+- from package import package
+- from pkg import * should not import anything
 
-* from package import package
 ? Directories should contain __init__.py to be packages
-* from pkg import * should not import anything
-
+? Auto-completion on relative imports
 ? Python C extensions
-? from name import *: loads everything without starting underscore or __all__
-? Packages: First look in the __init__.py module for that name and if
-  it did not exist, look for submodules or packages
-
-
 ? Better version number selection
 ? Add rope.scopes module
 ? Completions are context dependant
