@@ -1,17 +1,23 @@
---- Auto-completion should ignore current statement @ 2 ---
-  What if the statement in current line is spread in more than one line.
+*** Auto-complete from-import imported objects @ 3 ***
 
-- More tests for explicit and implicit continuations
-? Transform big unextractible methods into method objects
-- Not proposing variables defined after current line in the same scope
-- Ignoring """ or ''' string content
-- scopes_count does not work because there might be loops and other blocks
+- Add Project.find_module(module_name) which should return a list
+- Resource.__hash__
+- imports inside functions
+- from module import *
+- Add new TestCase to runtests.py
 
+* Star in functions
+* from mod import * should not import names starting with an underscore
+* from package import package
+? from name import *: loads everything without starting underscore or __all__
+? Packages: First look in the __init__.py module for that name and if
+  it did not exist, look for submodules or packages
+? Reduce the duplication in visitors in codeassist.py
 
+? Better version number selection
 ? Add rope.scopes module
-? Completions for for-loop, except, lambda, with variables
-? Remote pair programming support
 ? Completions are context dependant
+? Remote pair programming support
 ? Separating ui modules and packages
     ? Decide which modules are the domain and which are the presentation
     ? Should editing tools access Editor directly? Which of them?

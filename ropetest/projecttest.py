@@ -326,6 +326,16 @@ class ProjectTest(unittest.TestCase):
         self.assertTrue(src in source_folders)
         self.assertTrue(test in source_folders)
 
+    def test_multi_source_folders2(self):
+        mod1 = self.project.create_module(self.project.get_root_folder(), 'mod1')
+        src = self.project.get_root_folder().create_folder('src')
+        package = self.project.create_package(src, 'package')
+        mod2 = self.project.create_module(package, 'mod2')
+        source_folders = self.project.get_source_folders()
+        self.assertEquals(2, len(source_folders))
+        self.assertTrue(self.project.get_root_folder() in source_folders and \
+                        src in source_folders)
+
     def test_ignoring_dot_star_folders_in_get_files(self):
         root = self.project.get_root_address()
         dot_test = os.path.join(root, '.test')
@@ -424,6 +434,32 @@ class ProjectTest(unittest.TestCase):
         package = self.project.create_package(src, 'pkg1')
         nested_package = self.project.create_package(src, 'pkg1.pkg2')
         self.assertEquals(self.project.get_resource('src/pkg1/pkg2'), nested_package)
+
+    def test_find_module(self):
+        src = self.project.get_root_folder().create_folder('src')
+        samplemod = self.project.create_module(src, 'samplemod')
+        found_modules = self.project.find_module('samplemod')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplemod, found_modules[0])
+
+    def test_find_nested_module(self):
+        src = self.project.get_root_folder().create_folder('src')
+        samplepkg = self.project.create_package(src, 'samplepkg')
+        samplemod = self.project.create_module(samplepkg, 'samplemod')
+        found_modules = self.project.find_module('samplepkg.samplemod')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplemod, found_modules[0])
+
+    def test_find_multiple_module(self):
+        src = self.project.get_root_folder().create_folder('src')
+        samplemod1 = self.project.create_module(src, 'samplemod')
+        samplemod2 = self.project.create_module(self.project.get_root_folder(), 'samplemod')
+        test = self.project.get_root_folder().create_folder('test')
+        samplemod3 = self.project.create_module(test, 'samplemod')
+        found_modules = self.project.find_module('samplemod')
+        self.assertEquals(3, len(found_modules))
+        self.assertTrue(samplemod1 in found_modules and samplemod2 in found_modules and \
+                        samplemod3 in found_modules)
 
 
 class FileFinderTest(unittest.TestCase):

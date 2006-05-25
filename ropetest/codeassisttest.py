@@ -1,13 +1,27 @@
+import os
 import unittest
 
 from rope.codeassist import CodeAssist, RopeSyntaxError
+from rope.project import Project
+
+def _remove_recursively(file):
+    for root, dirs, files in os.walk(file, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
+    os.rmdir(file)
 
 class CodeAssistTest(unittest.TestCase):
     def setUp(self):
         super(CodeAssistTest, self).setUp()
-        self.assist = CodeAssist()
+        self.project_root = 'sample_project'
+        os.mkdir(self.project_root)
+        self.project = Project(self.project_root)
+        self.assist = self.project.get_code_assist()
         
     def tearDown(self):
+        _remove_recursively(self.project_root)
         super(CodeAssistTest, self).tearDown()
 
     def test_simple_assist(self):
@@ -261,6 +275,74 @@ class CodeAssistTest(unittest.TestCase):
         code = 'my_var = """\\\\"""\nmy_'
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('my_var', 'global_variable', result)
+
+
+class CodeAssistInProjectsTest(unittest.TestCase):
+    def setUp(self):
+        super(CodeAssistInProjectsTest, self).setUp()
+        self.project_root = 'sample_project'
+        os.mkdir(self.project_root)
+        self.project = Project(self.project_root)
+        samplemod = self.project.create_module(self.project.get_root_folder(), 'samplemod')
+        samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
+                        "\n\ndef sample_func():\n    pass\nsample_var = 10\n")
+        self.assist = self.project.get_code_assist()
+
+    def assert_proposal_in_result(self, completion, kind, result):
+        for proposal in result.proposals:
+            if proposal.completion == completion and proposal.kind == kind:
+                return
+        self.fail('completion <%s> not proposed' % completion)
+
+
+    def assert_proposal_not_in_result(self, completion, kind, result):
+        for proposal in result.proposals:
+            if proposal.completion == completion and proposal.kind == kind:
+                self.fail('completion <%s> was proposed' % completion)
+
+
+    def tearDown(self):
+        _remove_recursively(self.project_root)
+        super(self.__class__, self).tearDown()
+
+    def test_simple_import(self):
+        code = 'import samplemod\nsample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('samplemod', 'module', result)
+
+    def test_from_import_class(self):
+        code = 'from samplemod import SampleClass\nSample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('SampleClass', 'class', result)
+
+    def test_from_import_function(self):
+        code = 'from samplemod import sample_func\nsample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('sample_func', 'function', result)
+
+    def test_from_import_variable(self):
+        code = 'from samplemod import sample_var\nsample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('sample_var', 'global_variable', result)
+
+    def test_from_imports_inside_functions(self):
+        code = 'def f():\n    from samplemod import SampleClass\n    Sample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('SampleClass', 'class', result)
+
+    def test_from_import_only_imports_imported(self):
+        code = 'from samplemod import sample_func\nSample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('SampleClass', 'class', result)
+
+    def test_from_import_star(self):
+        code = 'from samplemod import *\nSample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('SampleClass', 'class', result)
+        code = 'from samplemod import *\nsample'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_in_result('sample_func', 'function', result)
+        self.assert_proposal_in_result('sample_var', 'global_variable', result)
 
 
 if __name__ == '__main__':

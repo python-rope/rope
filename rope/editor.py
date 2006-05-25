@@ -461,6 +461,7 @@ class GraphicalEditor(TextEditor):
             mark = self.text.index('mark')
             self.set_mark()
             self.text.mark_set(INSERT, mark)
+            self.text.see(INSERT)
         except TclError:
             pass
 

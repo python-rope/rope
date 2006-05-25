@@ -13,7 +13,7 @@ class Project(object):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise RopeException('Project root exists and is not a directory')
-        self.code_assist = rope.codeassist.CodeAssist()
+        self.code_assist = rope.codeassist.CodeAssist(self)
 
     def get_root_folder(self):
         return Folder(self, '')
@@ -80,13 +80,13 @@ class Project(object):
         return False
 
     def _find_source_folders(self, folder):
-        for resource in folder.get_files():
-            if resource.get_name().endswith('.py'):
-                return [folder]
         for resource in folder.get_folders():
             if self._is_package(resource):
                 return [folder]
         result = []
+        for resource in folder.get_files():
+            if resource.get_name().endswith('.py'):
+                result.append(folder)
         for resource in folder.get_folders():
             result.extend(self._find_source_folders(resource))
         return result
@@ -109,6 +109,34 @@ class Project(object):
         created_package = parent.create_folder(packages[-1])
         created_package.create_file('__init__.py')
         return created_package
+
+    def find_module(self, module_name):
+        source_folders = self.get_source_folders()
+        packages = module_name.split('.')
+        result = []
+        for src in source_folders:
+            current_resource = src
+            found = True
+            for pkg in packages[:-1]:
+                try:
+                    if not current_resource.is_folder():
+                        found = False
+                        break
+                    current_resource = current_resource.get_child(pkg)
+                except RopeException, e:
+                    found = False
+                    break
+            try:
+                if current_resource.is_folder():
+                    current_resource = current_resource.get_child(packages[-1] + '.py')
+                else:
+                    found = False
+            except RopeException, e:
+                found = False
+            if found:
+                result.append(current_resource)
+        return result
+
 
     def get_code_assist(self):
         return self.code_assist
@@ -181,6 +209,9 @@ class File(Resource):
         if not isinstance(resource, File):
             return False
         return self.get_path() == resource.get_path()
+
+    def __hash__(self, resource):
+        return hash(self.get_path())
 
     def _get_real_path(self):
         return self.project._get_resource_path(self.fileName)
@@ -264,6 +295,9 @@ class Folder(Resource):
         if not isinstance(resource, Folder):
             return False
         return self.get_path() == resource.get_path()
+
+    def __hash__(self, resource):
+        return hash(self.get_path())
 
     def get_project(self):
         return self.project

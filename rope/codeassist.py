@@ -44,7 +44,8 @@ class _Scope(object):
 
 
 class _FunctionScopeVisitor(object):
-    def __init__(self, starting, start_line):
+    def __init__(self, project, starting, start_line):
+        self.project = project
         self.starting = starting
         self.scope = _Scope(start_line, {}, [])
 
@@ -57,6 +58,23 @@ class _FunctionScopeVisitor(object):
             if imported.startswith(self.starting):
                 self.scope.var_dict[imported] = CompletionProposal(imported, 'module')
 
+    def visitFrom(self, node):
+        global_names = _get_global_names_in_module(self.project, node.modname)
+        if node.names[0][0] == '*':
+            for (name, kind) in global_names.iteritems():
+                if name.startswith(self.starting):
+                    self.scope.var_dict[name] = CompletionProposal(name, kind)
+            return
+        for (name, alias) in node.names:
+            imported = name
+            if alias is not None:
+                imported = alias
+            if imported.startswith(self.starting):
+                if global_names.has_key(name):
+                    self.scope.var_dict[imported] = CompletionProposal(imported, global_names[name])
+                else:
+                    self.scope.var_dict[imported] = CompletionProposal(imported, 'unknown')
+
     def visitAssName(self, node):
         if node.name.startswith(self.starting):
             self.scope.var_dict[node.name] = CompletionProposal(node.name, 'local_variable')
@@ -65,18 +83,18 @@ class _FunctionScopeVisitor(object):
     def visitFunction(self, node):
         if node.name.startswith(self.starting):
             self.scope.var_dict[node.name] = CompletionProposal(node.name, 'function')
-        new_visitor = _FunctionScopeVisitor.walk_function(self.starting, node)
+        new_visitor = _FunctionScopeVisitor.walk_function(self.project, self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
     def visitClass(self, node):
         if node.name.startswith(self.starting):
             self.result[node.name] = CompletionProposal(node.name, 'class')
-        new_visitor = _ClassScopeVisitor.walk_class(self.starting, node)
+        new_visitor = _ClassScopeVisitor.walk_class(self.project, self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
     @staticmethod
-    def walk_function(starting, function_node):
-        new_visitor = _FunctionScopeVisitor(starting, function_node.lineno)
+    def walk_function(project, starting, function_node):
+        new_visitor = _FunctionScopeVisitor(project, starting, function_node.lineno)
         for arg in function_node.argnames:
             if arg.startswith(starting):
                 new_visitor.scope.var_dict[arg] = CompletionProposal(arg, 'local_variable')
@@ -86,7 +104,8 @@ class _FunctionScopeVisitor(object):
 
 
 class _ClassScopeVisitor(object):
-    def __init__(self, starting, start_line):
+    def __init__(self, project, starting, start_line):
+        self.project = project
         self.starting = starting
         self.scope = _Scope(start_line, {}, [])
 
@@ -97,24 +116,43 @@ class _ClassScopeVisitor(object):
         pass
 
     def visitFunction(self, node):
-        new_visitor = _FunctionScopeVisitor.walk_function(self.starting, node)
+        new_visitor = _FunctionScopeVisitor.walk_function(self.project, self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
     def visitClass(self, node):
-        new_visitor = _ClassScopeVisitor.walk_class(self.starting, node)
+        new_visitor = _ClassScopeVisitor.walk_class(self.project, self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
     @staticmethod
-    def walk_class(starting, class_node):
-        new_visitor = _ClassScopeVisitor(starting, class_node.lineno)
+    def walk_class(project, starting, class_node):
+        new_visitor = _ClassScopeVisitor(project, starting, class_node.lineno)
         for node in class_node.getChildNodes():
             compiler.walk(node, new_visitor)
         return new_visitor
 
 
+def _get_global_names_in_module(project, modname):
+    found_modules = project.find_module(modname)
+    if not found_modules:
+        return {}
+    
+    result = {}
+    class _GlobalModuleVisitor(object):
+        def visitFunction(self, node):
+            result[node.name] = 'function'
+        def visitClass(self, node):
+            result[node.name] =  'class'
+        def visitAssName(self, node):
+            result[node.name] = 'global_variable'
+    ast = compiler.parse(found_modules[0].read())
+    compiler.walk(ast, _GlobalModuleVisitor())
+    return result
+    
+
 class _GlobalScopeVisitor(object):
     
-    def __init__(self, starting):
+    def __init__(self, project, starting):
+        self.project = project
         self.starting = starting
         self.scope = _Scope(0, {}, [])
 
@@ -127,6 +165,23 @@ class _GlobalScopeVisitor(object):
             if imported.startswith(self.starting):
                 self.scope.var_dict[imported] = CompletionProposal(imported, 'module')
 
+    def visitFrom(self, node):
+        global_names = _get_global_names_in_module(self.project, node.modname)
+        if node.names[0][0] == '*':
+            for (name, kind) in global_names.iteritems():
+                if name.startswith(self.starting):
+                    self.scope.var_dict[name] = CompletionProposal(name, kind)
+            return
+        for (name, alias) in node.names:
+            imported = name
+            if alias is not None:
+                imported = alias
+            if imported.startswith(self.starting):
+                if global_names.has_key(name):
+                    self.scope.var_dict[imported] = CompletionProposal(imported, global_names[name])
+                else:
+                    self.scope.var_dict[imported] = CompletionProposal(imported, 'unknown')
+
     def visitAssName(self, node):
         if node.name.startswith(self.starting):
             self.scope.var_dict[node.name] = CompletionProposal(node.name, 'global_variable')
@@ -135,13 +190,13 @@ class _GlobalScopeVisitor(object):
     def visitFunction(self, node):
         if node.name.startswith(self.starting):
             self.scope.var_dict[node.name] = CompletionProposal(node.name, 'function')
-        new_visitor = _FunctionScopeVisitor.walk_function(self.starting, node)
+        new_visitor = _FunctionScopeVisitor.walk_function(self.project, self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
     def visitClass(self, node):
         if node.name.startswith(self.starting):
             self.scope.var_dict[node.name] = CompletionProposal(node.name, 'class')
-        new_visitor = _ClassScopeVisitor.walk_class(self.starting, node)
+        new_visitor = _ClassScopeVisitor.walk_class(self.project, self.starting, node)
         self.scope.children.append(new_visitor.scope)
 
 
@@ -219,8 +274,8 @@ class _CurrentStatementRangeFinder(object):
 
 
 class CodeAssist(ICodeAssist):
-    def __init__(self, indentation_length=4):
-        self.indentation_length = indentation_length
+    def __init__(self, project):
+        self.project = project
         self.builtins = [str(name) for name in dir(__builtin__)
                          if not name.startswith('_')]
         import keyword
@@ -323,7 +378,7 @@ class CodeAssist(ICodeAssist):
             code_ast = compiler.parse(commented_source_code)
         except SyntaxError, e:
             raise RopeSyntaxError(e)
-        visitor = _GlobalScopeVisitor(starting)
+        visitor = _GlobalScopeVisitor(self.project, starting)
         compiler.walk(code_ast, visitor)
         result = self._get_all_completions(visitor.scope, lines, lineno)
         if len(starting) > 0:

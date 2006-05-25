@@ -25,6 +25,7 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.highlighttest.HighlightTest))
     result.addTests(unittest.makeSuite(ropetest.indentertest.PythonCodeIndenterTest))
     result.addTests(unittest.makeSuite(ropetest.codeassisttest.CodeAssistTest))
+    result.addTests(unittest.makeSuite(ropetest.codeassisttest.CodeAssistInProjectsTest))
     result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))
     runner = unittest.TextTestRunner()
     runner.run(result)
