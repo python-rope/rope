@@ -115,26 +115,25 @@ class Project(object):
         packages = module_name.split('.')
         result = []
         for src in source_folders:
-            current_resource = src
+            module = src
             found = True
             for pkg in packages[:-1]:
-                try:
-                    if not current_resource.is_folder():
-                        found = False
-                        break
-                    current_resource = current_resource.get_child(pkg)
-                except RopeException, e:
-                    found = False
-                    break
-            try:
-                if current_resource.is_folder():
-                    current_resource = current_resource.get_child(packages[-1] + '.py')
+                if  module.is_folder() and module.has_child(pkg):
+                    module = module.get_child(pkg)
                 else:
                     found = False
-            except RopeException, e:
+                    break
+
+            if module.is_folder() and module.has_child(packages[-1]) and\
+               module.get_child(packages[-1]).is_folder():
+                module = module.get_child(packages[-1])
+            elif module.is_folder() and module.has_child(packages[-1] + '.py') and\
+               not module.get_child(packages[-1] + '.py').is_folder():
+                module = module.get_child(packages[-1] + '.py')
+            else:
                 found = False
             if found:
-                result.append(current_resource)
+                result.append(module)
         return result
 
 
@@ -277,6 +276,13 @@ class Folder(Resource):
             child_path = name
         return self.project.get_resource(child_path)
     
+    def has_child(self, name):
+        try:
+            self.get_child(name)
+            return True
+        except RopeException:
+            return False
+
     def get_files(self):
         result = []
         for resource in self.get_children():

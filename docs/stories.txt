@@ -84,9 +84,6 @@ rope; A Python IDE
 * Static type inference @ 6
 
 
-* Changing next/prev word to stop on underline and capital letters @ 1
-
-
 * Commenting and uncommenting lines @ 1
 
 
@@ -144,6 +141,9 @@ rope; A Python IDE
 * Rename local variable @ 2
 
 
+* Changing next/prev word to stop on underline and capital letters @ 1
+
+
 * Rename module refactoring @ 2
 
 
@@ -186,11 +186,11 @@ rope; A Python IDE
 * Auto completing and comments and strings @ 1
 
 
+> Public release 0.2 : June 4, 2006
+
+
 * Auto completion after "."s @ 3
   * Auto-completing "self."s
-
-
-> Public release 0.2 : June 4, 2006
 
 
 * Proposing templates in auto-completion proposals @ 2

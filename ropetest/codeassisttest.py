@@ -285,7 +285,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.project = Project(self.project_root)
         samplemod = self.project.create_module(self.project.get_root_folder(), 'samplemod')
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
-                        "\n\ndef sample_func():\n    pass\nsample_var = 10\n")
+                        "\n\ndef sample_func():\n    pass\nsample_var = 10\n" + \
+                        "\ndef _underlined_func():\n    pass\n\n" )
         self.assist = self.project.get_code_assist()
 
     def assert_proposal_in_result(self, completion, kind, result):
@@ -339,10 +340,17 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         code = 'from samplemod import *\nSample'
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('SampleClass', 'class', result)
+
+    def test_from_import_star2(self):
         code = 'from samplemod import *\nsample'
         result = self.assist.complete_code(code, len(code))
         self.assert_proposal_in_result('sample_func', 'function', result)
         self.assert_proposal_in_result('sample_var', 'global_variable', result)
+
+    def test_from_import_star_not_imporing_underlined(self):
+        code = 'from samplemod import *\n_under'
+        result = self.assist.complete_code(code, len(code))
+        self.assert_proposal_not_in_result('_underlined_func', 'function', result)
 
 
 if __name__ == '__main__':

@@ -461,6 +461,21 @@ class ProjectTest(unittest.TestCase):
         self.assertTrue(samplemod1 in found_modules and samplemod2 in found_modules and \
                         samplemod3 in found_modules)
 
+    def test_find_module_packages(self):
+        src = self.project.get_root_folder()
+        samplepkg = self.project.create_package(src, 'samplepkg')
+        found_modules = self.project.find_module('samplepkg')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplepkg, found_modules[0])
+
+    def test_find_module_when_module_and_package_with_the_same_name(self):
+        src = self.project.get_root_folder()
+        samplemod = self.project.create_module(src, 'sample')
+        samplepkg = self.project.create_package(src, 'sample')
+        found_modules = self.project.find_module('sample')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplepkg, found_modules[0])
+
 
 class FileFinderTest(unittest.TestCase):
     def setUp(self):

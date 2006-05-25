@@ -5,14 +5,19 @@
 - imports inside functions
 - from module import *
 - Add new TestCase to runtests.py
+- Reduce duplication in visitors in codeassist.py
+- from mod import * should not import names starting with an underscore
+- Project.find_module might return package
 
-* Star in functions
-* from mod import * should not import names starting with an underscore
 * from package import package
+? Directories should contain __init__.py to be packages
+* from pkg import * should not import anything
+
+? Python C extensions
 ? from name import *: loads everything without starting underscore or __all__
 ? Packages: First look in the __init__.py module for that name and if
   it did not exist, look for submodules or packages
-? Reduce the duplication in visitors in codeassist.py
+
 
 ? Better version number selection
 ? Add rope.scopes module
