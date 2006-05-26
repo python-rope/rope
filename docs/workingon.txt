@@ -1,14 +1,26 @@
 *** Proposing templates in auto-completion proposals @ 1 ***
 
-- Normal templates
-
 * Machanisms for getting and editing and setting template variables
+
+- Multiple variables
+- substitute
+- Underlined variables
+- $$
+- ${name}${age}
+- The same variable many times
+- ${cursor}
+- [^$]$[^{$] in template
+- get_cursor_location
+- What if templates does not have ${cursor}
+? Defaults for templates
+
 * Showing templates in completion dialog
-? Variabled templates; ${variable}
-? Use ${cursor} for setting the place of curser when necessary
 * Builtin templates
 
-* Showing active editor as the last entry in the change editor dialog?
+?? Ignoring string contents while indenting
+?? Next/prev word should stop consider underline and capitals as spaces
+?? Better change editor
+?? GUI testing redux
 ? Show the type of the completion in the codeassist dialog
 ? From-import might cache module global variables
 ? Directories should contain __init__.py to be packages in codeassist

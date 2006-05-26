@@ -1,6 +1,7 @@
 import compiler
 import inspect
 import __builtin__
+import re
 
 from rope.exceptions import RopeException
 
@@ -35,6 +36,42 @@ class TemplateProposal(CodeAssistProposal):
     def __init__(self, name, definition):
         super(TemplateProposal, self).__init__(name)
         self.definition = definition
+
+
+class Template(object):
+
+    def __init__(self, template):
+        self.template = template
+        self.var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>[a-zA-Z][\w]*)}')
+
+    def variables(self):
+        '''Returns the list of variables sorted by their order of occurence in the template'''
+        result = []
+        for match in self.var_pattern.finditer(self.template):
+            new_var = match.group('variable')
+            if new_var not in result and new_var != 'cursor':
+                result.append(new_var)
+        return result
+    
+    def _substitute(self, input_string, mapping):
+        import string
+        single_dollar = re.compile('((?<=[^\$])|^)\$((?=[^{\$])|$)')
+        template = single_dollar.sub('$$', input_string)
+        t = string.Template(template)
+        return t.substitute(mapping, cursor='')
+
+    def substitute(self, mapping):
+        return self._substitute(self.template, mapping)
+
+    def get_cursor_location(self, mapping):
+        cursor_index = len(self.template)
+        for match in self.var_pattern.finditer(self.template):
+            new_var = match.group('variable')
+            if new_var == 'cursor':
+                cursor_index = match.start('variable') - 2
+        new_template = self.template[0:cursor_index]
+        start = len(self._substitute(new_template, mapping))
+        return start
 
 
 class Proposals(object):
@@ -336,9 +373,23 @@ class CodeAssist(ICodeAssist):
         return indents
 
 
-    def _get_all_completions(self, global_scope, lines, lineno):
+    def _get_code_completions(self, source_code, offset, starting):
+        lines = source_code.split('\n')
+        current_pos = 0
+        lineno = 0
+        while current_pos + len(lines[lineno]) < offset:
+            current_pos += len(lines[lineno]) + 1
+            lineno += 1
+        self._comment_current_statement(lines, lineno)
+        source_code = '\n'.join(lines)
+        try:
+            code_ast = compiler.parse(source_code)
+        except SyntaxError, e:
+            raise RopeSyntaxError(e)
+        visitor = _GlobalScopeVisitor(self.project, starting)
+        compiler.walk(code_ast, visitor)
         result = {}
-        current_scope = global_scope
+        current_scope = visitor.scope
         current_indents = self._get_line_indents(lines, lineno)
         while current_scope is not None and \
               self._get_line_indents(lines, current_scope.lineno) <= current_indents:
@@ -376,27 +427,14 @@ class CodeAssist(ICodeAssist):
 
     def assist(self, source_code, offset):
         if offset > len(source_code):
-            return []
+            return Proposals([], [], 0, 0)
         starting_offset = self._find_starting_offset(source_code, offset)
         starting = source_code[starting_offset:offset]
-        lines = source_code.split('\n')
-        current_pos = 0
-        lineno = 0
-        while current_pos + len(lines[lineno]) < offset:
-            current_pos += len(lines[lineno]) + 1
-            lineno += 1
-        self._comment_current_statement(lines, lineno)
-        commented_source_code = '\n'.join(lines)
-        try:
-            code_ast = compiler.parse(commented_source_code)
-        except SyntaxError, e:
-            raise RopeSyntaxError(e)
-        visitor = _GlobalScopeVisitor(self.project, starting)
-        compiler.walk(code_ast, visitor)
-        result = self._get_all_completions(visitor.scope, lines, lineno)
+        completions = self._get_code_completions(source_code, offset, starting)
+        templates = []
         if len(starting) > 0:
-            result.update(self._get_matching_builtins(starting))
-            result.update(self._get_matching_keywords(starting))
-        template_proposals = self._get_template_proposals(starting)
-        return Proposals(result.values(), template_proposals, starting_offset, offset)
+            completions.update(self._get_matching_builtins(starting))
+            completions.update(self._get_matching_keywords(starting))
+            templates = self._get_template_proposals(starting)
+        return Proposals(completions.values(), templates, starting_offset, offset)
 
