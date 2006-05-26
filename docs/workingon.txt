@@ -1,5 +1,7 @@
 *** Proposing templates in auto-completion proposals @ 1 ***
 
+- Show the type of the completion in the codeassist dialog
+
 * Showing templates in completion dialog
 ? Defaults for templates
 * Builtin templates
@@ -8,7 +10,6 @@
 ?? Next/prev word should stop consider underline and capitals as spaces
 ?? Better change editor
 ?? GUI testing redux
-? Show the type of the completion in the codeassist dialog
 ? From-import might cache module global variables
 ? Directories should contain __init__.py to be packages in codeassist
 ? Auto-completion on relative imports

@@ -305,6 +305,11 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('param1', 'local_variable', result)
 
+    def test_code_assist_with_function_with_two_line_return(self):
+        code = 'def f(param1, param2):\n    return(param1,\n           para'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('param2', 'local_variable', result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
@@ -399,7 +404,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_in_result('nestedmod', 'unknown', result)
 
 
-class TemplateHelperTest(unittest.TestCase):
+class TemplateTest(unittest.TestCase):
 
     def test_template_get_variables(self):
         template = Template('Name = ${name}')
@@ -469,7 +474,7 @@ def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(CodeAssistTest))
     result.addTests(unittest.makeSuite(CodeAssistInProjectsTest))
-    result.addTests(unittest.makeSuite(TemplateHelperTest))
+    result.addTests(unittest.makeSuite(TemplateTest))
     return result
 
 if __name__ == '__main__':

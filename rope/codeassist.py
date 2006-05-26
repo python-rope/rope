@@ -240,12 +240,12 @@ class _GlobalScopeVisitor(_ScopeVisitor):
         
 
 class ICodeAssist(object):
-    def complete_code(self, source, offset):
+    def assist(self, source, offset):
         pass
 
 
 class NoAssist(ICodeAssist):
-    def complete_code(self, source_code, offset):
+    def assist(self, source_code, offset):
         return Proposals()
 
 
@@ -380,6 +380,7 @@ class CodeAssist(ICodeAssist):
         while current_pos + len(lines[lineno]) < offset:
             current_pos += len(lines[lineno]) + 1
             lineno += 1
+        current_indents = self._get_line_indents(lines, lineno)
         self._comment_current_statement(lines, lineno)
         source_code = '\n'.join(lines)
         try:
@@ -390,7 +391,6 @@ class CodeAssist(ICodeAssist):
         compiler.walk(code_ast, visitor)
         result = {}
         current_scope = visitor.scope
-        current_indents = self._get_line_indents(lines, lineno)
         while current_scope is not None and \
               (current_scope == visitor.scope or
                self._get_line_indents(lines, current_scope.lineno - 1) < current_indents):

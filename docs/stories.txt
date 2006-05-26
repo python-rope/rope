@@ -172,7 +172,7 @@ rope; A Python IDE
   Completions for for-loop, except, lambda and with variables
 
 
-* Auto completion type @ 3
+* Auto completion type @ 2
   * Inserting or overwriting
   * Inserting common prefixes
 
@@ -183,7 +183,7 @@ rope; A Python IDE
   * Sorting proposals
 
 
-* Auto completing and comments and strings @ 1
+* Auto completing and comments and strings @ 2
 
 
 > Public release 0.2pre2 : June 4, 2006

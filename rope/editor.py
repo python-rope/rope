@@ -8,6 +8,7 @@ import rope.highlight
 import rope.searching
 import rope.indenter
 import rope.codeassist
+from rope.uihelpers import EnhancedList
 
 
 class TextEditor(object):
@@ -242,65 +243,29 @@ class GraphicalEditor(TextEditor):
     def _show_completion_window(self):
         result = self.code_assist.assist(self.get_text(), self.get_current_offset())
         toplevel = Toplevel()
-        toplevel.title('Completion Proposals')
-        frame = Frame(toplevel)
-        label = Label(frame, text='Code Assist Proposals')
-        proposals = Listbox(frame, selectmode=SINGLE, width=23, height=7)
-        scrollbar = Scrollbar(frame, orient=VERTICAL)
-        scrollbar['command'] = proposals.yview
-        proposals.config(yscrollcommand=scrollbar.set)
-        for proposal in result.completions:
-            proposal_info = proposal.kind[0].upper() + '  ' + proposal.name
-            proposals.insert(END, proposal_info)
-        if result:
-            proposals.selection_set(0)
-        self.text.see('insert')
-        local_x, local_y, cx, cy = self.text.bbox("insert")
-        x = local_x + self.text.winfo_rootx() + 2
-        y = local_y + cy + self.text.winfo_rooty()
-        #        toplevel.wm_geometry('+%d+%d' % (x, y))
-        #        toplevel.wm_overrideredirect(1)
-        def open_selected():
-            selection = proposals.curselection()
-            if selection:
-                selected = int(selection[0])
+        toplevel.title('Code Assist Proposals')
+        def open_selected(selected):
                 self.text.delete('0.0 +%dc' % result.start_offset,
                                  '0.0 +%dc' % result.end_offset)
                 self.text.insert('0.0 +%dc' % result.start_offset,
-                                 result.completions[selected].name)
+                                 selected.name)
                 toplevel.destroy()
         def cancel():
             toplevel.destroy()
-        proposals.bind('<Return>', lambda event: open_selected())
-        proposals.bind('<Escape>', lambda event: cancel())
-        proposals.bind('<FocusOut>', lambda event: cancel())
-        def select_prev(event):
-            selection = proposals.curselection()
-            if selection:
-                active = int(selection[0])
-                if active - 1 >= 0:
-                    proposals.select_clear(0, END)
-                    proposals.selection_set(active - 1)
-                    proposals.see(active - 1)
-                    proposals.activate(active - 1)
-                    proposals.see(active - 1)
-        proposals.bind('<Control-p>', select_prev)
-        def select_next(event):
-            selection = proposals.curselection()
-            if selection:
-                active = int(selection[0])
-                if active + 1 < proposals.size():
-                    proposals.select_clear(0, END)
-                    proposals.selection_set(active + 1)
-                    proposals.see(active + 1)
-                    proposals.activate(active + 1)
-                    proposals.see(active + 1)
-        proposals.bind('<Control-n>', select_next)
-        label.grid(row=0, column=0, columnspan=2)
-        proposals.grid(row=1, column=0, sticky=N+E+W+S)
-        scrollbar.grid(row=1, column=1, sticky=N+E+W+S)
-        frame.grid(sticky=N+E+W+S)
-        proposals.focus_set()
+        def entry_to_string(proposal):
+            return proposal.kind[0].upper() + '  ' + proposal.name
+        enhanced_list = EnhancedList(toplevel, entry_to_string, open_selected, cancel, cancel)
+        for proposal in result.completions:
+            enhanced_list.add_entry(proposal)
+        if result:
+            enhanced_list.list.selection_set(0)
+        #        self.text.see('insert')
+        #        local_x, local_y, cx, cy = self.text.bbox("insert")
+        #        x = local_x + self.text.winfo_rootx() + 2
+        #        y = local_y + cy + self.text.winfo_rooty()
+        #        toplevel.wm_geometry('+%d+%d' % (x, y))
+        #        toplevel.wm_overrideredirect(1)
+        enhanced_list.list.focus_set()
         toplevel.grab_set()
 
     def get_text(self):
