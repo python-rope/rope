@@ -244,13 +244,14 @@ class GraphicalEditor(TextEditor):
         toplevel = Toplevel()
         toplevel.title('Completion Proposals')
         frame = Frame(toplevel)
-        label = Label(frame, text='Completion Proposals')
+        label = Label(frame, text='Code Assist Proposals')
         proposals = Listbox(frame, selectmode=SINGLE, width=23, height=7)
         scrollbar = Scrollbar(frame, orient=VERTICAL)
         scrollbar['command'] = proposals.yview
         proposals.config(yscrollcommand=scrollbar.set)
         for proposal in result.completions:
-            proposals.insert(END, proposal.name)
+            proposal_info = proposal.kind[0].upper() + '  ' + proposal.name
+            proposals.insert(END, proposal_info)
         if result:
             proposals.selection_set(0)
         self.text.see('insert')
@@ -266,7 +267,7 @@ class GraphicalEditor(TextEditor):
                 self.text.delete('0.0 +%dc' % result.start_offset,
                                  '0.0 +%dc' % result.end_offset)
                 self.text.insert('0.0 +%dc' % result.start_offset,
-                                 result.completions[selected].completion)
+                                 result.completions[selected].name)
                 toplevel.destroy()
         def cancel():
             toplevel.destroy()

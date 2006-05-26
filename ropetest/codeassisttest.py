@@ -300,6 +300,11 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_template_in_result('my_template', result)
 
+    def test_code_assist_when_having_a_two_line_function_header(self):
+        code = 'def f(param1,\n      param2):\n    para'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('param1', 'local_variable', result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 

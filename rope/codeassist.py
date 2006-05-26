@@ -392,28 +392,17 @@ class CodeAssist(ICodeAssist):
         current_scope = visitor.scope
         current_indents = self._get_line_indents(lines, lineno)
         while current_scope is not None and \
-              self._get_line_indents(lines, current_scope.lineno) <= current_indents:
+              (current_scope == visitor.scope or
+               self._get_line_indents(lines, current_scope.lineno - 1) < current_indents):
             result.update(current_scope.var_dict)
             new_scope = None
             for scope in current_scope.children:
-                if scope.lineno < lineno + 1:
+                if scope.lineno - 1 <= lineno:
                     new_scope = scope
                 else:
                     break
             current_scope = new_scope
         return result
-
-    def _get_line_number(self, source_code, offset):
-        return source_code[:offset].count('\n') + 1
-
-    def _count_line_indents(self, source_code, offset):
-        last_non_space = offset - 1
-        current_pos = offset - 1
-        while current_pos >= 0 and source_code[current_pos] != '\n':
-            if source_code[current_pos] != ' ':
-                last_non_space = current_pos
-            current_pos -= 1
-        return (last_non_space - current_pos - 1) / self.indentation_length
 
     def add_template(self, name, definition):
         self.templates.append(TemplateProposal(name, Template(definition)))
