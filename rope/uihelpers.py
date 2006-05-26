@@ -67,6 +67,8 @@ class EnhancedList(object):
     def add_entry(self, entry):
         self.entries.append(entry)
         self.list.insert(END, self.entry_to_string(entry))
+        if len(self.entries) == 1:
+            self.list.selection_set(0)
  
     def clear(self):
         self.entries = []

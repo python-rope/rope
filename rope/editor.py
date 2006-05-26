@@ -245,11 +245,14 @@ class GraphicalEditor(TextEditor):
         toplevel = Toplevel()
         toplevel.title('Code Assist Proposals')
         def open_selected(selected):
+            if selected.kind != 'template':
                 self.text.delete('0.0 +%dc' % result.start_offset,
                                  '0.0 +%dc' % result.end_offset)
                 self.text.insert('0.0 +%dc' % result.start_offset,
                                  selected.name)
-                toplevel.destroy()
+            else:
+                self._get_template_information(result, selected)
+            toplevel.destroy()
         def cancel():
             toplevel.destroy()
         def entry_to_string(proposal):
@@ -257,8 +260,8 @@ class GraphicalEditor(TextEditor):
         enhanced_list = EnhancedList(toplevel, entry_to_string, open_selected, cancel, cancel)
         for proposal in result.completions:
             enhanced_list.add_entry(proposal)
-        if result:
-            enhanced_list.list.selection_set(0)
+        for proposal in result.templates:
+            enhanced_list.add_entry(proposal)
         #        self.text.see('insert')
         #        local_x, local_y, cx, cy = self.text.bbox("insert")
         #        x = local_x + self.text.winfo_rootx() + 2
@@ -267,6 +270,48 @@ class GraphicalEditor(TextEditor):
         #        toplevel.wm_overrideredirect(1)
         enhanced_list.list.focus_set()
         toplevel.grab_set()
+
+    def _get_template_information(self, result, proposal):
+        template = proposal.template
+        def apply_template(mapping):
+            string = template.substitute(mapping)
+            self.text.delete('0.0 +%dc' % result.start_offset,
+                             '0.0 +%dc' % result.end_offset)
+            self.text.insert('0.0 +%dc' % result.start_offset,
+                             string)
+            offset = template.get_cursor_location(mapping)
+            self.text.mark_set(INSERT, '0.0 +%dc' % (result.start_offset + offset))
+
+        if not template.variables():
+            apply_template({})
+            return
+        toplevel = Toplevel()
+        toplevel.title(proposal.name)
+        frame = Frame(toplevel)
+        label = Label(frame, text=('Variables in template %s' % proposal.name))
+        label.grid(row=0, column=0, columnspan=2)
+        entries = {}
+        def ok(event=None):
+            mapping = {}
+            for var, entry in entries.iteritems():
+                mapping[var] = entry.get()
+            apply_template(mapping)
+            toplevel.destroy()
+        def cancel(event=None):
+            toplevel.destroy()
+
+        for (index, var) in enumerate(template.variables()):
+            label = Label(frame, text=var, width=20)
+            label.grid(row=index+1, column=0)
+            entry = Entry(frame, width=25)
+            entry.insert(INSERT, var)
+            entry.grid(row=index+1, column=1)
+            entries[var] = entry
+        ok_button = Button(frame, text='Done', command=ok)
+        cancel_button = Button(frame, text='Cancel', command=cancel)
+        ok_button.grid(row=len(template.variables()) + 1, column=0)
+        cancel_button.grid(row=len(template.variables()) + 1, column=1)
+        frame.grid()
 
     def get_text(self):
         return self.text.get('1.0', 'end-1c')

@@ -1,11 +1,11 @@
-*** Proposing templates in auto-completion proposals @ 1 ***
+*** Proposing templates in code-assist proposals @ 1 ***
 
 - Show the type of the completion in the codeassist dialog
+- Showing templates in completion dialog
+- main, test
+- Not asking for variables if there is none
 
-* Showing templates in completion dialog
-? Defaults for templates
-* Builtin templates
-
+? Builtin templates
 ?? Ignoring string contents while indenting
 ?? Next/prev word should stop consider underline and capitals as spaces
 ?? Better change editor
