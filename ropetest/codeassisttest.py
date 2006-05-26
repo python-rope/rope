@@ -453,12 +453,10 @@ class TemplateHelperTest(unittest.TestCase):
 
     def test_get_cursor_location(self):
         template = Template('My name is ${name}${cursor}.')
-        self.assertEquals('My name is Ali.', template.substitute({'name': 'Ali'}))
         self.assertEquals(14, template.get_cursor_location({'name': 'Ali'}))
 
     def test_get_cursor_location_with_no_cursor(self):
         template = Template('My name is ${name}.')
-        self.assertEquals('My name is Ali.', template.substitute({'name': 'Ali'}))
         self.assertEquals(15, template.get_cursor_location({'name': 'Ali'}))
 
 

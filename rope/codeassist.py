@@ -33,9 +33,9 @@ class CompletionProposal(CodeAssistProposal):
 class TemplateProposal(CodeAssistProposal):
     """A template proposal"""
 
-    def __init__(self, name, definition):
+    def __init__(self, name, template):
         super(TemplateProposal, self).__init__(name)
-        self.definition = definition
+        self.template = template
 
 
 class Template(object):
@@ -416,7 +416,7 @@ class CodeAssist(ICodeAssist):
         return (last_non_space - current_pos - 1) / self.indentation_length
 
     def add_template(self, name, definition):
-        self.templates.append(TemplateProposal(name, definition))
+        self.templates.append(TemplateProposal(name, Template(definition)))
 
     def _get_template_proposals(self, starting):
         result = []

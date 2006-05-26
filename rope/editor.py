@@ -266,7 +266,7 @@ class GraphicalEditor(TextEditor):
                 self.text.delete('0.0 +%dc' % result.start_offset,
                                  '0.0 +%dc' % result.end_offset)
                 self.text.insert('0.0 +%dc' % result.start_offset,
-                                 result.proposals[selected].completion)
+                                 result.completions[selected].completion)
                 toplevel.destroy()
         def cancel():
             toplevel.destroy()

@@ -1,20 +1,7 @@
 *** Proposing templates in auto-completion proposals @ 1 ***
 
-* Machanisms for getting and editing and setting template variables
-
-- Multiple variables
-- substitute
-- Underlined variables
-- $$
-- ${name}${age}
-- The same variable many times
-- ${cursor}
-- [^$]$[^{$] in template
-- get_cursor_location
-- What if templates does not have ${cursor}
-? Defaults for templates
-
 * Showing templates in completion dialog
+? Defaults for templates
 * Builtin templates
 
 ?? Ignoring string contents while indenting
