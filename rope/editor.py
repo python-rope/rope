@@ -249,7 +249,7 @@ class GraphicalEditor(TextEditor):
         scrollbar = Scrollbar(frame, orient=VERTICAL)
         scrollbar['command'] = proposals.yview
         proposals.config(yscrollcommand=scrollbar.set)
-        for proposal in result.proposals:
+        for proposal in result.completions:
             proposals.insert(END, proposal.name)
         if result:
             proposals.selection_set(0)
