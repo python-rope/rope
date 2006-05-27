@@ -76,8 +76,44 @@ class TextEditor(object):
     def undo_separator(self):
         pass
 
+    def line_editor(self):
+        pass
+
+
 class TextIndex(object):
     '''A class for pointing to a position in a text'''
+
+
+class LineEditor(object):
+    '''An interface for working line oriented with editors'''
+    
+    def get_line(self, line_number):
+        pass
+    
+    def set_line(self, line_number, string):
+        pass
+
+
+class GraphicalLineEditor(LineEditor):
+    def __init__(self, editor):
+        self.editor = editor
+
+    def get_line(self, line_number):
+        return self.editor.text.get('%d.0' % line_number, '%d.0 lineend' % line_number)
+
+    def set_line(self, line_number, contents):
+        old_contents = self.get_line(line_number)
+        if old_contents == contents:
+            return
+        if old_contents.endswith(contents):
+            self.editor.text.delete('%d.0' % line_number,
+                                    '%d.%d' % (line_number, len(old_contents) - len(contents)))
+            return
+        if contents.endswith(old_contents):
+            self.editor.text.insert('%d.0' % line_number, contents[0:len(contents) - len(old_contents)])
+            return
+        self.editor.text.delete('%d.0' % line_number, '%d.0 lineend' % line_number)
+        self.editor.text.insert('%d.0' % line_number, contents)
 
 
 class GraphicalEditor(TextEditor):
@@ -196,7 +232,11 @@ class GraphicalEditor(TextEditor):
             return 'break'
         self.text.bind('<Alt-v>', go_prev_page)
         def indent_line(event):
-            self.indenter.correct_indentation(self.get_insert())
+            lineno = self.get_current_line_number()
+            cols_from_end = len(self.text.get(INSERT, 'insert lineend'))
+            self.indenter.correct_indentation(lineno)
+            new_insert = '%d.end -%dc' % (lineno, cols_from_end)
+            self.text.mark_set(INSERT, new_insert)
             while self.text.get(INSERT) == ' ':
                 self.text.mark_set(INSERT, 'insert +1c')
             return 'break'
@@ -221,7 +261,7 @@ class GraphicalEditor(TextEditor):
             current_char = self.text.get(INSERT)
             if line_starting.isspace() and (not current_char.isspace() 
                                             or current_char == '' or current_char == '\n'):
-                self.indenter.deindent(self.get_insert())
+                self.indenter.deindent(self.get_current_line_number())
                 return 'break'
         self.text.bind('<Return>', return_handler)
         self.text.event_add('<<ForwardSearch>>', '<Control-s>')
@@ -281,6 +321,7 @@ class GraphicalEditor(TextEditor):
                              string)
             offset = template.get_cursor_location(mapping)
             self.text.mark_set(INSERT, '0.0 +%dc' % (result.start_offset + offset))
+            self.text.see(INSERT)
 
         if not template.variables():
             apply_template({})
@@ -592,6 +633,9 @@ class GraphicalEditor(TextEditor):
 
     def set_status_bar_manager(self, manager):
         self.status_bar_manager = manager
+
+    def line_editor(self):
+        return GraphicalLineEditor(self)
 
 
 class GraphicalTextIndex(TextIndex):

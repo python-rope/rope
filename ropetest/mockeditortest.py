@@ -237,6 +237,25 @@ class TextEditorTest(unittest.TestCase):
         self.assertTrue(self.editor.search('aB', self.editor.get_insert()) is None)
         self.assertTrue(self.editor.search('aB', self.editor.get_insert(), case = False) is not None)
 
+    def test_simple_line_editor(self):
+        self.editor.set_text('line1')
+        line_editor = self.editor.line_editor()
+        self.assertEquals('line1', line_editor.get_line(1))
+
+    def test_line_editor_multiline(self):
+        self.editor.set_text('line1\nline2\nline3\n')
+        line_editor = self.editor.line_editor()
+        self.assertEquals('line1', line_editor.get_line(1))
+        self.assertEquals('line3', line_editor.get_line(3))
+        self.assertEquals('', line_editor.get_line(4))
+
+    def test_line_editor_setting(self):
+        self.editor.set_text('line1\nline2\nline3\n')
+        line_editor = self.editor.line_editor()
+        line_editor.set_line(2, 'second line')
+        self.assertEquals('second line', line_editor.get_line(2))
+        self.assertEquals('line1\nsecond line\nline3\n', self.editor.get_text())
+
 
 def suite():
     result = unittest.TestSuite()

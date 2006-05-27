@@ -5,62 +5,42 @@ class TextIndenter(object):
 
     def __init__(self, editor):
         self.editor = editor
+        self.line_editor = editor.line_editor()
 
-    def correct_indentation(self, index):
-        '''Correct the indentation of the line containing the given index'''
+    def correct_indentation(self, lineno):
+        '''Correct the indentation of a line'''
 
-    def deindent(self, index):
-        '''Deindent the line containing the given index'''
-        start = self._get_line_start(index)
-        current_indents = self._count_line_indents(start)
+    def deindent(self, lineno):
+        '''Deindent the a line'''
+        current_indents = self._count_line_indents(lineno)
         new_indents = max(0, current_indents - 4)
-        self._set_line_indents(start, new_indents)
+        self._set_line_indents(lineno, new_indents)
 
-    def indent(self, index):
-        '''Indents the line containing the given index'''
-        start = self._get_line_start(index)
-        current_indents = self._count_line_indents(start)
+    def indent(self, lineno):
+        '''Indents a line'''
+        current_indents = self._count_line_indents(lineno)
         new_indents = current_indents + 4
-        self._set_line_indents(start, new_indents)
+        self._set_line_indents(lineno, new_indents)
 
     def insert_tab(self, index):
         '''Inserts a tab in the given index'''
         self.editor.insert(index, ' ' * 4)
 
-    def _get_prev_line_start(self, line_start):
-        return self._get_line_start(self.editor.get_relative(line_start, -1))
-
-    def _get_line_end(self, index):
-        while index != self.editor.get_end():
-            if self.editor.get(index) == '\n':
-                return index
-            index = self.editor.get_relative(index, +1)
-        return self.editor.get_end()
-
-    def _get_line_contents(self, line_start):
-        end = self._get_line_end(line_start)
-        return self.editor.get(line_start, end)
-
-    def _set_line_indents(self, line_start, indents):
-        old_indents = self._count_line_indents(line_start)
+    def _set_line_indents(self, lineno, indents):
+        old_indents = self._count_line_indents(lineno)
         indent_diffs = indents - old_indents
         if indent_diffs == 0:
             return
+        old_line = self.line_editor.get_line(lineno)
+        new_line = ''
         if indent_diffs > 0:
-            self.editor.insert(line_start, ' ' * indent_diffs)
+            new_line = ' ' * indent_diffs + old_line
         else:
-            self.editor.delete(line_start, 
-                               self.editor.get_relative(line_start, -indent_diffs))
+            new_line = old_line[-indent_diffs:]
+        self.line_editor.set_line(lineno, new_line)
 
-    def _get_line_start(self, index):
-        while index != self.editor.get_start():
-            index = self.editor.get_relative(index, -1)
-            if self.editor.get(index) == '\n':
-                return self.editor.get_relative(index, +1)
-        return self.editor.get_start()
-
-    def _count_line_indents(self, index):
-        contents = self._get_line_contents(index)
+    def _count_line_indents(self, lineno):
+        contents = self.line_editor.get_line(lineno)
         result = 0
         for x in contents:
             if x == ' ':
@@ -74,7 +54,7 @@ class NormalIndenter(TextIndenter):
     def __init__(self, editor):
         super(NormalIndenter, self).__init__(editor)
 
-    def correct_indentation(self, index):
+    def correct_indentation(self, lineno):
         pass
         
 
@@ -82,62 +62,62 @@ class PythonCodeIndenter(TextIndenter):
     def __init__(self, editor):
         super(PythonCodeIndenter, self).__init__(editor)
 
-    def _get_last_non_empty_line(self, line_start):
-        current_line = self._get_prev_line_start(line_start)
-        while current_line != self.editor.get_start() and \
-                  self._get_line_contents(current_line).strip() == '':
-            current_line = self._get_prev_line_start(current_line)
+    def _get_last_non_empty_line(self, lineno):
+        current_line = lineno - 1
+        while current_line != 1 and \
+                  self.line_editor.get_line(current_line).strip() == '':
+            current_line -= 1
         return current_line
 
-    def _get_starting_backslash_line(self, line_start):
-        current = line_start
-        while current != self.editor.get_start():
-            new_line = self._get_prev_line_start(current)
-            if not self._get_line_contents(new_line).rstrip().endswith('\\'):
+    def _get_starting_backslash_line(self, lineno):
+        current = lineno
+        while current != 1:
+            new_line = current - 1
+            if not self.line_editor.get_line(new_line).rstrip().endswith('\\'):
                 return current
             current = new_line
-        return self.editor.get_start()
+        return 1
 
-    def _get_correct_indentation(self, line_start):
-        if line_start == self.editor.get_start():
+    def _get_correct_indentation(self, lineno):
+        if lineno == 1:
             return 0
-        new_indent = self._get_base_indentation(line_start)
+        new_indent = self._get_base_indentation(lineno)
 
-        prev_start = self._get_last_non_empty_line(line_start)
-        prev_line = self._get_line_contents(prev_start)
-        if prev_start == line_start or prev_line.strip() == '':
+        prev_lineno = self._get_last_non_empty_line(lineno)
+        prev_line = self.line_editor.get_line(prev_lineno)
+        if prev_lineno == lineno or prev_line.strip() == '':
             new_indent = 0
         else:
             new_indent += self._get_indentation_changes_caused_by_prev_line(prev_line)
-        current_line = self._get_line_contents(line_start)
+        current_line = self.line_editor.get_line(lineno)
         new_indent += self._get_indentation_changes_caused_by_current_line(current_line)
         return new_indent
-        
-    def _get_base_indentation(self, line_start):
-        current_start = self._get_last_non_empty_line(line_start)
-        current_line = self._get_line_contents(current_start)
+
+    def _get_base_indentation(self, lineno):
+        current_line = self.line_editor.get_line(lineno)
+        current_lineno = self._get_last_non_empty_line(lineno)
 
         openings = 0
         while True:
-            current_line = self._get_line_contents(current_start)
+            current_line = self.line_editor.get_line(current_lineno)
             current = len(current_line) - 1
             while current >= 0:
-                if current_line[current] in list('([{'):
+                if current_line[current] in '([{':
                     openings += 1
-                if current_line[current] in list(')]}'):
+                if current_line[current] in ')]}':
                     openings -= 1
                 if openings > 0:
                     return current + 1
                 current -= 1
             if openings == 0:
                 break
-            if current_start == self.editor.get_start():
+            if current_lineno == 1:
                 break
-            current_start = self._get_last_non_empty_line(current_start)
+            current_lineno -= 1
 
         if current_line.rstrip().endswith('\\'):
-            real_start = self._get_starting_backslash_line(current_start)
-            if (real_start == current_start):
+            real_lineno = self._get_starting_backslash_line(current_lineno)
+            if (real_lineno == current_lineno):
                 try:
                     return current_line.index(' = ') + 3
                 except ValueError:
@@ -147,12 +127,12 @@ class PythonCodeIndenter(TextIndenter):
                     else:
                         return len(current_line) + 1
         else:
-            second_prev_start = self._get_prev_line_start(current_start)
-            if second_prev_start != current_start and \
-                   self._get_line_contents(second_prev_start).rstrip().endswith('\\'):
-                real_start = self._get_starting_backslash_line(second_prev_start)
-                return self._count_line_indents(real_start)
-        return self._count_line_indents(current_start)
+            second_prev_lineno = current_lineno - 1
+            if second_prev_lineno >= 1 and \
+               self.line_editor.get_line(second_prev_lineno).rstrip().endswith('\\'):
+                real_lineno = self._get_starting_backslash_line(second_prev_lineno)
+                return self._count_line_indents(real_lineno)
+        return self._count_line_indents(current_lineno)
 
 
     def _is_line_continued(self, line_contents):
@@ -185,7 +165,7 @@ class PythonCodeIndenter(TextIndenter):
         if prev_line.strip() == 'continue':
             new_indent -= 4
         return new_indent
-        
+
     def _get_indentation_changes_caused_by_current_line(self, current_line):
         new_indent = 0
         if current_line.strip() == 'else:':
@@ -196,8 +176,7 @@ class PythonCodeIndenter(TextIndenter):
             new_indent -= 4
         return new_indent
 
-    def correct_indentation(self, index):
+    def correct_indentation(self, lineno):
         '''Correct the indentation of the line containing the given index'''
-        start = self._get_line_start(index)
-        self._set_line_indents(start, self._get_correct_indentation(start))
+        self._set_line_indents(lineno, self._get_correct_indentation(lineno))
 

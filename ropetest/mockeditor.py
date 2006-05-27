@@ -1,4 +1,17 @@
-from rope.editor import TextEditor, TextIndex
+from rope.editor import TextEditor, TextIndex, LineEditor
+
+class MockLineEditor(LineEditor):
+    def __init__(self, editor):
+        self.editor = editor
+
+    def get_line(self, number):
+        return self.editor.get_text().split('\n')[number - 1]
+
+    def set_line(self, number, string):
+        lines = self.editor.get_text().split('\n')
+        lines[number - 1] = string
+        self.editor.set_text('\n'.join(lines))
+
 
 class MockEditor(TextEditor):
     '''A mock editor for testing editing commands'''
@@ -123,6 +136,10 @@ class MockEditor(TextEditor):
             return MockTextIndex(self, found)
         except ValueError:
             return None
+
+    def line_editor(self):
+        return MockLineEditor(self)
+
 
 class MockTextIndex(TextIndex):
     def __init__(self, editor, index):

@@ -1,15 +1,19 @@
-*** Proposing templates in code-assist proposals @ 1 ***
+*** Ignoring string contents while indenting @ 1 ***
 
-- Show the type of the completion in the codeassist dialog
-- Showing templates in completion dialog
-- main, test
-- Not asking for variables if there is none
+- Adding LineOriented to the Editor class
 
-? Builtin templates
-?? Ignoring string contents while indenting
-?? Next/prev word should stop consider underline and capitals as spaces
-?? Better change editor
-?? GUI testing redux
+
+
+--- Before 0.2 Release ---
+* Next/prev word should consider underline and capitals as spaces; make it configurable
+* GUI testing redux
+* Better editor changing dialog; use uihelpers module
+* More builtin templates
+
+
+
+--- Remaining Stories ---
+
 ? From-import might cache module global variables
 ? Directories should contain __init__.py to be packages in codeassist
 ? Auto-completion on relative imports

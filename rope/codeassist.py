@@ -31,7 +31,10 @@ class CompletionProposal(CodeAssistProposal):
 
 
 class TemplateProposal(CodeAssistProposal):
-    """A template proposal"""
+    """A template proposal
+
+    The template attribute is a Template object.
+    """
 
     def __init__(self, name, template):
         super(TemplateProposal, self).__init__(name)
@@ -40,6 +43,12 @@ class TemplateProposal(CodeAssistProposal):
 
 
 class Template(object):
+    """Templates reported by CodeAssist
+    
+    Variables in templates are in the format ${variable}. To put
+    a dollar sign in the template put $$. To set the place of the
+    cursor use ${cursor}.
+    """
 
     def __init__(self, template):
         self.template = template
@@ -241,11 +250,16 @@ class _GlobalScopeVisitor(_ScopeVisitor):
         
 
 class ICodeAssist(object):
+
     def assist(self, source, offset):
+        pass
+
+    def add_template(self, name, template):
         pass
 
 
 class NoAssist(ICodeAssist):
+
     def assist(self, source_code, offset):
         return Proposals()
 

@@ -154,15 +154,15 @@ rope; A Python IDE
 * Better multi-sequence key event handling @ 2
 
 
-* Adding TextIterator or LineOriented to the Editor class @ 1
-
-
 * Enhancing editor @ 1
   * Clearing selection if something happens
   * Unifying builtin and emacs-style selections; if selection
     is active do the builtin cut and paste
   * Edit menu: cut, paste, undo, redo, revert
   * Showing modified file status
+
+
+* Show quick outline; C-o @ 2
 
 
 * Auto-completing function parameter names when calling @ 2
@@ -191,9 +191,6 @@ rope; A Python IDE
 
 * Auto completion after "."s @ 3
   * Auto-completing "self."s
-
-
-* Proposing templates in auto-completion proposals @ 1
 
 
 --- Remaining Stories ---
