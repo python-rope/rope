@@ -1,20 +1,24 @@
 *** Ignoring string contents while indenting @ 1 ***
 
-* Ignoring comment contents
-* Ignoring string contents
-? Use StatementRangeFinder
 - Add codeanalyze module
 - Adding LineEditor to the Editor class
 
+! StatementRangeFinder reports all elements with indentation from current
+  statment
+* Add CachedLines
+* Ignoring comment contents
+* Ignoring string contents
+? Add StatementRangeFinderTest to runtests
 * Hold the list of project classes and import them automatically
   in codeassist
 
 
 --- Before 0.2 Release ---
 * Next/prev word should consider underline and capitals as spaces; make it configurable
-* GUI testing redux
+* GUI testing redux; make a ropefunctest direction; ? rename ropetest to ropeunittest
 * Better editor changing dialog; use uihelpers module
 * More builtin templates
+* Highlighting enhancement
 
 
 

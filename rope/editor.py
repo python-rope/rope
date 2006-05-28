@@ -90,7 +90,10 @@ class LineEditor(object):
     def get_line(self, line_number):
         pass
     
-    def set_line(self, line_number, string):
+    def length(self):
+        pass
+    
+    def indent_line(self, line_number, count):
         pass
 
 
@@ -101,19 +104,18 @@ class GraphicalLineEditor(LineEditor):
     def get_line(self, line_number):
         return self.editor.text.get('%d.0' % line_number, '%d.0 lineend' % line_number)
 
-    def set_line(self, line_number, contents):
-        old_contents = self.get_line(line_number)
-        if old_contents == contents:
+    def length(self):
+        result = self.editor._get_line_from_index(END) - 1
+        return result
+
+    def indent_line(self, line_number, count):
+        if count == 0:
             return
-        if old_contents.endswith(contents):
+        if count > 0:
+            self.editor.text.insert('%d.0' % line_number, count * ' ')
+        else:
             self.editor.text.delete('%d.0' % line_number,
-                                    '%d.%d' % (line_number, len(old_contents) - len(contents)))
-            return
-        if contents.endswith(old_contents):
-            self.editor.text.insert('%d.0' % line_number, contents[0:len(contents) - len(old_contents)])
-            return
-        self.editor.text.delete('%d.0' % line_number, '%d.0 lineend' % line_number)
-        self.editor.text.insert('%d.0' % line_number, contents)
+                                    '%d.%d' % (line_number, -count))
 
 
 class GraphicalEditor(TextEditor):

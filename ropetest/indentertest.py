@@ -160,13 +160,6 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.correct_indentation(3)
         self.assertEquals('def f():\n    return (2,\n            3)', self.editor.get_text())
 
-    # TODO: handle this case
-    def xxx_test_deindenting_after_implicit_continuation_after_return(self):
-        self.editor.set_text('def f():\n    return (2,\n            3)\na = 10')
-        self.indenter.correct_indentation(4)
-        self.assertEquals('def f():\n    return (2,\n            3)\na = 10',
-                          self.editor.get_text())
-
     def test_deindenting_empty_lines(self):
         self.editor.set_text('\n')
         self.indenter.deindent(2)
@@ -210,11 +203,17 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.insert_tab(self.editor.get_end())
         self.assertEquals('print "a"    ', self.editor.get_text())
 
-    # ignoring strings while correcting indentations
-    def xxx_test_ignoring_parens_in_strings(self):
+    def test_ignoring_parens_in_strings(self):
         self.editor.set_text('print "("\na = 10')
         self.indenter.correct_indentation(2)
         self.assertEquals('print "("\na = 10', self.editor.get_text())
+
+    # TODO: handle this case
+    def xxx_test_deindenting_after_implicit_continuation_after_return(self):
+        self.editor.set_text('def f():\n    return (2,\n            3)\na = 10')
+        self.indenter.correct_indentation(4)
+        self.assertEquals('def f():\n    return (2,\n            3)\na = 10',
+                          self.editor.get_text())
 
 
 if __name__ == '__main__':

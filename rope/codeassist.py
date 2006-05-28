@@ -4,7 +4,7 @@ import __builtin__
 import re
 
 from rope.exceptions import RopeException
-from rope.codeanalyze import StatementRangeFinder
+from rope.codeanalyze import StatementRangeFinder, ArrayLinesAdapter
 
 
 class RopeSyntaxError(RopeException):
@@ -295,9 +295,11 @@ class CodeAssist(ICodeAssist):
         return current_offset + 1
 
     def _comment_current_statement(self, lines, lineno):
-        range_finder = StatementRangeFinder(lines, lineno)
-        start, end = range_finder.get_range()
-        last_indents = range_finder.get_line_indents(start)
+        range_finder = StatementRangeFinder(ArrayLinesAdapter(lines), lineno + 1)
+        range_finder.analyze()
+        start = range_finder.get_statement_start() - 1
+        end = range_finder.get_scope_end() - 1
+        last_indents = self._get_line_indents(lines, start)
         lines[start] = last_indents * ' ' + 'pass'
         for line in range(start + 1, end + 1):
             lines[line] = '#' # + lines[line]

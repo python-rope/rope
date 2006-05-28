@@ -249,12 +249,25 @@ class TextEditorTest(unittest.TestCase):
         self.assertEquals('line3', line_editor.get_line(3))
         self.assertEquals('', line_editor.get_line(4))
 
-    def test_line_editor_setting(self):
+    def test_line_editor_indenting(self):
         self.editor.set_text('line1\nline2\nline3\n')
         line_editor = self.editor.line_editor()
-        line_editor.set_line(2, 'second line')
-        self.assertEquals('second line', line_editor.get_line(2))
-        self.assertEquals('line1\nsecond line\nline3\n', self.editor.get_text())
+        line_editor.indent_line(2, 2)
+        self.assertEquals('  line2', line_editor.get_line(2))
+        self.assertEquals('line1\n  line2\nline3\n', self.editor.get_text())
+
+    def test_line_editor_indenting_with_negative_indent(self):
+        self.editor.set_text('line1\nline2\nline3\n')
+        line_editor = self.editor.line_editor()
+        line_editor.indent_line(2, -2)
+        self.assertEquals('ne2', line_editor.get_line(2))
+        self.assertEquals('line1\nne2\nline3\n', self.editor.get_text())
+
+    def test_line_editor_length(self):
+        self.editor.set_text('line1')
+        line_editor = self.editor.line_editor()
+        self.assertEquals(1, line_editor.length())
+        
 
 
 def suite():

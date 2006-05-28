@@ -1,5 +1,8 @@
 import re
 
+from rope.codeanalyze import StatementRangeFinder
+
+
 class TextIndenter(object):
     '''A class for formatting texts'''
 
@@ -29,15 +32,7 @@ class TextIndenter(object):
     def _set_line_indents(self, lineno, indents):
         old_indents = self._count_line_indents(lineno)
         indent_diffs = indents - old_indents
-        if indent_diffs == 0:
-            return
-        old_line = self.line_editor.get_line(lineno)
-        new_line = ''
-        if indent_diffs > 0:
-            new_line = ' ' * indent_diffs + old_line
-        else:
-            new_line = old_line[-indent_diffs:]
-        self.line_editor.set_line(lineno, new_line)
+        self.line_editor.indent_line(lineno, indent_diffs)
 
     def _count_line_indents(self, lineno):
         contents = self.line_editor.get_line(lineno)
@@ -81,7 +76,7 @@ class PythonCodeIndenter(TextIndenter):
     def _get_correct_indentation(self, lineno):
         if lineno == 1:
             return 0
-        new_indent = self._get_base_indentation(lineno)
+        new_indent = self._get_base_indentation_old(lineno)
 
         prev_lineno = self._get_last_non_empty_line(lineno)
         prev_line = self.line_editor.get_line(prev_lineno)
@@ -93,7 +88,7 @@ class PythonCodeIndenter(TextIndenter):
         new_indent += self._get_indentation_changes_caused_by_current_line(current_line)
         return new_indent
 
-    def _get_base_indentation(self, lineno):
+    def _get_base_indentation_old(self, lineno):
         current_line = self.line_editor.get_line(lineno)
         current_lineno = self._get_last_non_empty_line(lineno)
 
@@ -133,6 +128,29 @@ class PythonCodeIndenter(TextIndenter):
                 real_lineno = self._get_starting_backslash_line(second_prev_lineno)
                 return self._count_line_indents(real_lineno)
         return self._count_line_indents(current_lineno)
+
+    def _get_base_indentation_old(self, lineno):
+        range_finder = StatementRangeFinder(self.line_editor, lineno - 1)
+        range_finder.analyze()
+        start = range_finder.get_statement_start()
+        if not range_finder.is_line_continued():
+            return self._count_line_indents(self._get_last_non_empty_line(start + 1))
+
+        if range_finder.last_open_parens():
+            return range_finder.last_open_parens()[1] + 1
+
+        start_line = self.line_editor.get_line(start)
+        if start == lineno - 1:
+            try:
+                return start_line.index(' = ') + 3
+            except ValueError:
+                match = re.search('\\b ', start_line)
+                if match:
+                    return match.start() + 1
+                else:
+                    return len(start_line) + 1
+        else:
+            return self._count_line_indents(self._get_last_non_empty_line(lineno)) 
 
 
     def _is_line_continued(self, line_contents):

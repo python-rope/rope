@@ -7,9 +7,15 @@ class MockLineEditor(LineEditor):
     def get_line(self, number):
         return self.editor.get_text().split('\n')[number - 1]
 
-    def set_line(self, number, string):
+    def length(self):
+        return len(self.editor.get_text().split('\n'))
+
+    def indent_line(self, line_number, count):
         lines = self.editor.get_text().split('\n')
-        lines[number - 1] = string
+        if count > 0:
+            lines[line_number - 1] = count * ' ' + lines[line_number - 1]
+        if count < 0:
+            lines[line_number - 1] = lines[line_number - 1][-count:]
         self.editor.set_text('\n'.join(lines))
 
 
