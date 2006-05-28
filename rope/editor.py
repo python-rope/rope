@@ -250,7 +250,7 @@ class GraphicalEditor(TextEditor):
                 self.searcher.end_searching()
                 return 'break'
             self.text.insert(INSERT, '\n')
-            self.indenter.correct_indentation(self.get_insert())
+            self.indenter.correct_indentation(self.get_current_line_number())
             self.text.see(INSERT)
             return 'break'
         def backspace(event):

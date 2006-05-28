@@ -1,7 +1,13 @@
 *** Ignoring string contents while indenting @ 1 ***
 
-- Adding LineOriented to the Editor class
+* Ignoring comment contents
+* Ignoring string contents
+? Use StatementRangeFinder
+- Add codeanalyze module
+- Adding LineEditor to the Editor class
 
+* Hold the list of project classes and import them automatically
+  in codeassist
 
 
 --- Before 0.2 Release ---
