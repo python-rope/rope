@@ -208,12 +208,23 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.correct_indentation(2)
         self.assertEquals('print "("\na = 10', self.editor.get_text())
 
-    # TODO: handle this case
-    def xxx_test_deindenting_after_implicit_continuation_after_return(self):
+    def test_ignoring_parens_in_comments(self):
+        self.editor.set_text('# hello ( \na = 10')
+        self.indenter.correct_indentation(2)
+        self.assertEquals('# hello ( \na = 10', self.editor.get_text())
+
+    def test_deindenting_after_implicit_continuation_after_return(self):
         self.editor.set_text('def f():\n    return (2,\n            3)\na = 10')
         self.indenter.correct_indentation(4)
         self.assertEquals('def f():\n    return (2,\n            3)\na = 10',
                           self.editor.get_text())
+
+
+    # TODO: handle this case
+    def xxx_test_ignoring_back_slash_in_comments(self):
+        self.editor.set_text('# hello \\\na = 10')
+        self.indenter.correct_indentation(2)
+        self.assertEquals('# hello \\\na = 10', self.editor.get_text())
 
 
 if __name__ == '__main__':

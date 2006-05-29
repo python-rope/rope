@@ -10,6 +10,7 @@ import ropetest.searchingtest
 import ropetest.indentertest
 import ropetest.codeassisttest
 import ropetest.statusbartest
+import ropetest.codeanalyzetest
 
 
 if __name__ == '__main__':
@@ -26,5 +27,6 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.indentertest.PythonCodeIndenterTest))
     result.addTests(ropetest.codeassisttest.suite())
     result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))
+    result.addTests(unittest.makeSuite(ropetest.codeanalyzetest.StatementRangeFinderTest))
     runner = unittest.TextTestRunner()
     runner.run(result)

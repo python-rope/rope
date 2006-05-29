@@ -61,7 +61,7 @@ class StatementRangeFinder(object):
 
 
     def analyze(self):
-        last_statement = 0
+        last_statement = 1
         for current_line_number in range(1, self.lineno + 1):
             if not self.explicit_continuation and self.open_parens == 0 and self.in_string == '':
                 last_statement = current_line_number

@@ -168,6 +168,14 @@ rope; A Python IDE
 * Auto-completing function parameter names when calling @ 2
 
 
+* Optimizing StatementRangeFinder @ 1
+  Add CachedLines and not starting from the start of the lines
+
+
+* Hold the list of project classes and import them automatically
+  in codeassist
+
+
 * Control blocks and auto-completion @ 1
   Completions for for-loop, except, lambda and with variables
 
