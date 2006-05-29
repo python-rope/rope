@@ -206,10 +206,10 @@ rope; A Python IDE
   ? Go toward refactoring and ... library rather than an IDE
 ? roadmap.html
 ? Migrating to sourceforge SVN before 0.3 release
-  ? SF repository; SVN or CVS? How to synchronize local SVN with SF?
+  ? SF repository; How to synchronize local SVN with SF SVN?
 ? Should workingon.txt be under version control?
 ? Functional tests
-? Separate domain and presentation everywhere
+i Separate domain and presentation everywhere
 * Logo
 * Make tests less dependant
 ? Project resource consistency; What if it is deleted after being created.

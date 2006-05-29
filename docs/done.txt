@@ -1,3 +1,6 @@
+- Ignoring string and comment contents while indenting : May 29, 2006
+
+
 - Proposing templates in code-assist proposals : May 26, 2006
 
 

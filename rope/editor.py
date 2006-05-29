@@ -422,23 +422,41 @@ class GraphicalEditor(TextEditor):
             endIndex = end._getIndex()
         self.text.delete(startIndex, endIndex)
         
-    def _get_next_word_index(self):
+    def _get_next_word_index_old(self):
         result = INSERT
         while self.text.compare(result, '!=', 'end-1c') and \
               not self.text.get(result)[0].isalnum():
             result = str(self.text.index(result + '+1c'))
         return result + ' wordend'
 
+    def _get_next_word_index(self):
+        current = str(self.text.index(INSERT))
+        while self.text.compare(current, '!=', 'end-1c') and not self.text.get(current).isalnum():
+            current = str(self.text.index(current + ' +1c'))
+        while self.text.compare(current, '!=', 'end-1c'):
+            current = str(self.text.index(current + ' +1c'))
+            if not self.text.get(current).isalnum():
+                break
+        return current
+
     def next_word(self):
         self.text.mark_set(INSERT, self._get_next_word_index())
         self.text.see(INSERT)
 
-    def _get_prev_word_index(self):
+    def _get_prev_word_index_old(self):
         result = INSERT
         while not self.text.compare(result, '==', '1.0') and \
               not self.text.get(result + '-1c')[0].isalnum():
             result = str(self.text.index(result + '-1c'))
         return result + '-1c wordstart'
+
+    def _get_prev_word_index(self):
+        current = str(self.text.index(INSERT))
+        while self.text.compare(current, '!=', '1.0') and not self.text.get(current + ' -1c').isalnum():
+            current = str(self.text.index(current + ' -1c'))
+        while self.text.compare(current, '!=', '1.0') and self.text.get(current + ' -1c').isalnum():
+            current = str(self.text.index(current + ' -1c'))
+        return current
 
     def prev_word(self):
         self.text.mark_set(INSERT, self._get_prev_word_index())

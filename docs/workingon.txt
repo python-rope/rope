@@ -1,14 +1,7 @@
-*** Ignoring string and comment contents while indenting @ 1 ***
-
-- Add codeanalyze module
-- Adding LineEditor to the Editor class
-- Ignoring string contents
-- Ignoring comment contents
-
+*** Next/prev word should stop at underlines and capitals; make it configurable ***
 
 
 --- Before 0.2 Release ---
-* Next/prev word should stop at underlines and capitals; make it configurable
 * GUI testing redux; make a ropefunctest direction; ? rename ropetest to ropeunittest
 * Better editor changing dialog; use uihelpers module
 * More builtin templates

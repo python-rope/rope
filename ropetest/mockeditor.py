@@ -80,44 +80,6 @@ class MockEditor(TextEditor):
             endIndex = end._getIndex()
         self.content = self.content[:startIndex] + self.content[endIndex:]
 
-    def _getNextWordIndex(self):
-        current = self.insertIndex._getIndex()
-        while current < len(self.content) - 1 and not self.content[current].isalnum():
-            current += 1
-        while current < len(self.content) - 1:
-            current += 1
-            if (not self.content[current].isalnum()):
-                break
-        return current
-
-    def next_word(self):
-        self.insertIndex = MockTextIndex(self, self._getNextWordIndex())
-
-    def delete_next_word(self):
-        self.content = self.content[0 : self.insertIndex._getIndex()] + \
-                       self.content[self._getNextWordIndex() :]
-
-    def _getPrevWordIndex(self):
-        current = self.insertIndex._getIndex()
-        while current > 0 and not self.content[current - 1].isalnum():
-            current -= 1
-        while current > 0 and self.content[current - 1].isalnum():
-            current -= 1
-        return current
-
-    def prev_word(self):
-        self.insertIndex = MockTextIndex(self, self._getPrevWordIndex())
-
-    def delete_prev_word(self):
-        self.content = self.content[0 : self._getPrevWordIndex()] + \
-                       self.content[self.insertIndex._getIndex() :]
-
-    def goto_start(self):
-        self.set_insert(self.get_start())
-
-    def goto_end(self):
-        self.set_insert(self.get_end())
-
     def set_highlighting(self, highlighting):
         pass
 
