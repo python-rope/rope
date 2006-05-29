@@ -433,9 +433,10 @@ class GraphicalEditor(TextEditor):
         current = str(self.text.index(INSERT))
         while self.text.compare(current, '!=', 'end-1c') and not self.text.get(current).isalnum():
             current = str(self.text.index(current + ' +1c'))
+        is_upper = self.text.get(current).isupper()
         while self.text.compare(current, '!=', 'end-1c'):
             current = str(self.text.index(current + ' +1c'))
-            if not self.text.get(current).isalnum():
+            if not self.text.get(current).isalnum() or self.text.get(current).isupper():
                 break
         return current
 
@@ -454,8 +455,11 @@ class GraphicalEditor(TextEditor):
         current = str(self.text.index(INSERT))
         while self.text.compare(current, '!=', '1.0') and not self.text.get(current + ' -1c').isalnum():
             current = str(self.text.index(current + ' -1c'))
+        is_upper = self.text.get(current + ' -1c').isupper()
         while self.text.compare(current, '!=', '1.0') and self.text.get(current + ' -1c').isalnum():
             current = str(self.text.index(current + ' -1c'))
+            if  self.text.get(current).isupper():
+                break
         return current
 
     def prev_word(self):

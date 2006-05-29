@@ -108,18 +108,49 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.next_word()
         self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
 
-    def test_next_word_stopping_at_underline_prev_word(self):
+    def test_prev_word_stopping_at_underline(self):
         self.editor.set_text('sample_text')
         self.editor.set_insert(self.editor.get_end())
         self.editor.prev_word()
         self.assertEquals(self.editor.get_index(7), self.editor.get_insert())
 
-    def testGoingToTheStart(self):
+    def test_next_word_stopping_at_capitals(self):
+        self.editor.set_text('sampleText')
+        self.editor.set_insert(self.editor.get_start())
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+
+    def test_next_word_stopping_at_capitals2(self):
+        self.editor.set_text('sampleText')
+        self.editor.set_insert(self.editor.get_index(6))
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_end(), self.editor.get_insert())
+
+    # TODO: handle this case
+    def xxx_test_next_word_stopping_at_capitals3(self):
+        self.editor.set_text('sampleMYText')
+        self.editor.set_insert(self.editor.get_index(6))
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(8), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_capitals(self):
+        self.editor.set_text('sampleText')
+        self.editor.set_insert(self.editor.get_end())
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_capitals2(self):
+        self.editor.set_text('sampleText')
+        self.editor.set_insert(self.editor.get_index(7))
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+
+    def test_going_to_the_start(self):
         self.editor.set_insert(self.editor.get_index(3))
         self.editor.goto_start()
         self.assertEquals(self.editor.get_start(), self.editor.get_insert())
 
-    def testGoingToTheEnd(self):
+    def test_going_to_the_end(self):
         self.editor.set_insert(self.editor.get_index(3))
         self.editor.goto_end()
         self.assertEquals(self.editor.get_end(), self.editor.get_insert())

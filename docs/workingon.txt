@@ -1,5 +1,6 @@
 *** Next/prev word should stop at underlines and capitals; make it configurable ***
 
+* Handle MYClass style names
 
 --- Before 0.2 Release ---
 * GUI testing redux; make a ropefunctest direction; ? rename ropetest to ropeunittest
