@@ -279,9 +279,9 @@ class CodeAssist(ICodeAssist):
     def _get_default_templates(self):
         result = []
         result.append(TemplateProposal('main', Template("if __name__ == '__main__':\n    ${cursor}\n")))
-        test_case_template = "import unittest\n\nclass ${class}Test(unittest.TestCase):\n\n" + \
-                             "    def setUp(self):\n        super(${class}Test, self).setUp()\n\n" + \
-                             "    def tearDown(self):\n        super(${class}Test, self).tearDown()\n\n" + \
+        test_case_template = "import unittest\n\nclass ${class}(unittest.TestCase):\n\n" + \
+                             "    def setUp(self):\n        super(${class}, self).setUp()\n\n" + \
+                             "    def tearDown(self):\n        super(${class}, self).tearDown()\n\n" + \
                              "    def test_${aspect1}(self):\n        pass${cursor}\n\n\n" + \
                              "if __name__ == '__main__':\n    unittest.main()\n"
         result.append(TemplateProposal('test_case', Template(test_case_template)))

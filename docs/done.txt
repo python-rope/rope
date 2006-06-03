@@ -1,3 +1,6 @@
+- Next/prev word stops at underlines and capitals : May 29, 2006
+
+
 - Ignoring string and comment contents while indenting : May 29, 2006
 
 

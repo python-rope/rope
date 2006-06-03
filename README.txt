@@ -1,4 +1,4 @@
-rope, A python IDE
+rope, A python IDE ...
 
 Overview
 --------

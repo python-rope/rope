@@ -3,14 +3,7 @@ import unittest
 
 from rope.codeassist import CodeAssist, RopeSyntaxError, CompletionProposal, Template
 from rope.project import Project
-
-def _remove_recursively(file):
-    for root, dirs, files in os.walk(file, topdown=False):
-        for name in files:
-            os.remove(os.path.join(root, name))
-        for name in dirs:
-            os.rmdir(os.path.join(root, name))
-    os.rmdir(file)
+from ropetest import testutils
 
 class CodeAssistTest(unittest.TestCase):
 
@@ -22,7 +15,7 @@ class CodeAssistTest(unittest.TestCase):
         self.assist = self.project.get_code_assist()
         
     def tearDown(self):
-        _remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         super(CodeAssistTest, self).tearDown()
 
     def test_simple_assist(self):
@@ -339,7 +332,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
                 self.fail('completion <%s> was proposed' % name)
 
     def tearDown(self):
-        _remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         super(self.__class__, self).tearDown()
 
     def test_simple_import(self):

@@ -10,6 +10,7 @@ class CoreTest(unittest.TestCase):
         unittest.TestCase.setUp(self)
         Core.get_core().close_project()
         self.projectMaker = SampleProjectMaker()
+        self.projectMaker.make_project()
         self.fileName = self.projectMaker.get_sample_file_name()
         self.fileName2 = 'samplefile2.txt'
         file_ = open(self.fileName, 'w')

@@ -16,7 +16,7 @@ class Project(object):
         self.code_assist = rope.codeassist.CodeAssist(self)
 
     def get_root_folder(self):
-        return Folder(self, '')
+        return RootFolder(self)
 
     def get_root_address(self):
         return self.root
@@ -219,8 +219,9 @@ class File(Resource):
         return self.project
 
 
-class Folder(Resource):
+class _Folder(Resource):
     '''Represents a folder in a project'''
+
     def __init__(self, project, folderName):
         self.project = project
         self.folderName = folderName
@@ -298,7 +299,7 @@ class Folder(Resource):
         return result
 
     def __eq__(self, resource):
-        if not isinstance(resource, Folder):
+        if not isinstance(resource, _Folder):
             return False
         return self.get_path() == resource.get_path()
 
@@ -310,6 +311,20 @@ class Folder(Resource):
 
     def _get_real_path(self):
         return self.project._get_resource_path(self.folderName)
+
+
+class Folder(_Folder):
+    '''Represents a folder in a project'''
+
+    def __init__(self, project, folderName):
+        super(Folder, self).__init__(project, folderName)
+
+
+class RootFolder(_Folder):
+    '''Represents a folder in a project'''
+
+    def __init__(self, project):
+        super(RootFolder, self).__init__(project, '')
 
 
 class FileFinder(object):
@@ -344,7 +359,7 @@ class PythonFileRunner(object):
         source_folders = []
         for folder in file.get_project().get_source_folders():
             source_folders.append(os.path.abspath(folder._get_real_path()))
-        env['PYTHONPATH'] = env.get('PYTHONPATH', '') + ':' + \
+        env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)
         self.process = subprocess.Popen(executable=sys.executable,
                                         args=(sys.executable, self.file.get_name()),

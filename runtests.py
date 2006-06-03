@@ -11,6 +11,7 @@ import ropetest.indentertest
 import ropetest.codeassisttest
 import ropetest.statusbartest
 import ropetest.codeanalyzetest
+import ropetest.pycoretest
 
 
 if __name__ == '__main__':
@@ -28,5 +29,6 @@ if __name__ == '__main__':
     result.addTests(ropetest.codeassisttest.suite())
     result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))
     result.addTests(unittest.makeSuite(ropetest.codeanalyzetest.StatementRangeFinderTest))
+    result.addTests(unittest.makeSuite(ropetest.pycoretest.PyElementHierarchyTest))
     runner = unittest.TextTestRunner()
     runner.run(result)

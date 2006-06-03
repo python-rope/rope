@@ -1,13 +1,42 @@
-*** Next/prev word should stop at underlines and capitals; make it configurable ***
+*** Auto-completing "self."s @ 2 ***
 
-* Handle MYClass style names
+- Add project.RootFolder
+- Using path separators when setting PYTHONPATH
+- Package
+- PyElement.get_name()
+- Variables in global scope
+- Variables in class scope
+- Finding attributes set in class.__init__
+- Accessing PyObject type
+- Builtin types: Module, Function, Type
+- Add Unknown type
+
+? PyObject.info
+    * Function types should have args, defaults, keywords attributes
+* Better attributes names in pycore classes
+* Classes inside classes
+? Classes and functions defined in functions
+? What if the element does not exist
+? Getting children only when necessary, invalidating
+? PyObject equality check; Value objects
+
+? Don't look for local variable completions
+? Add PythonHierarchy.create_element(Resource)
+* Using os.path.normpath
+? What to do for AssList and AssTuple
+? Next/Prev words should stop at start/end of the line
+* Change from-import code assist to use PyCore
+? Move Project.find_module and find_package to PyCore
+? Move Project.create_module and create_package to PyCore
+
 
 --- Before 0.2 Release ---
-* GUI testing redux; make a ropefunctest direction; ? rename ropetest to ropeunittest
+* GUI testing redux; make a ropefunctest directory; ? rename ropetest to ropeunittest
 * Better editor changing dialog; use uihelpers module
-* More builtin templates
-* Highlighting enhancement
+* More builtin templates; hash, eq
+* Enhancing highlighting
 * Profiling to find the bottlenecks
+? Ready for announcing at Cheese Shop
 
 
 
@@ -24,5 +53,4 @@
     ? Should editing tools access Editor directly? Which of them?
     ? Specifing the type of each story; UI or Core
 ? The connection between ASTs, module hierarchies and type databases
-? Key selection for new module and package
 

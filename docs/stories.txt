@@ -1,4 +1,4 @@
-rope; A Python IDE
+rope; A Python IDE ...
 
 --- Stories ---
 
@@ -23,7 +23,7 @@ rope; A Python IDE
 * Configuring fonts @ 1
 
 
-* Showing syntactical errors @ 5
+* Showing syntactical errors @ 3
 
 
 * Editor folding @ 4
@@ -128,8 +128,6 @@ rope; A Python IDE
 
 
 * Enhancing auto indentation @ 1
-  * Ignoring comment lines
-  * Implicit line joining: Indenting lines whose previous line contains a ([{'''
   * Indenting a range of file
   * Removing extra spaces
   ? Separating entering and correcting indentation
@@ -160,9 +158,13 @@ rope; A Python IDE
     is active do the builtin cut and paste
   * Edit menu: cut, paste, undo, redo, revert
   * Showing modified file status
+  * Handle MYClass style names in next/prev word
 
 
 * Show quick outline; C-o @ 2
+
+
+* Auto-completing inherited methods @ 2
 
 
 * Auto-completing function parameter names when calling @ 2
@@ -176,7 +178,7 @@ rope; A Python IDE
   in codeassist
 
 
-* Control blocks and auto-completion @ 1
+* Compound statements and auto-completion @ 1
   Completions for for-loop, except, lambda and with variables
 
 
@@ -191,14 +193,16 @@ rope; A Python IDE
   * Sorting proposals
 
 
-* Auto completing and comments and strings @ 2
+* Auto completion contexts; strings, comments, functions and ... @ 2
+
+
+* Auto completion after "."s @ 3
 
 
 > Public release 0.2pre2 : June 4, 2006
 
 
-* Auto completion after "."s @ 3
-  * Auto-completing "self."s
+* Auto-completing "self."s @ 2
 
 
 --- Remaining Stories ---
@@ -211,5 +215,4 @@ rope; A Python IDE
 ? Functional tests
 i Separate domain and presentation everywhere
 * Logo
-* Make tests less dependant
 ? Project resource consistency; What if it is deleted after being created.

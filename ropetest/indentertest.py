@@ -98,6 +98,11 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.correct_indentation(3)
         self.assertEquals('if True:\n    print "hello"\nelse:', self.editor.get_text())
 
+    def test_deindenting_when_encountering_elif(self):
+        self.editor.set_text('if True:\n    print "hello"\n    elif False:')
+        self.indenter.correct_indentation(3)
+        self.assertEquals('if True:\n    print "hello"\nelif False:', self.editor.get_text())
+
     def test_deindenting_when_encountering_except(self):
         self.editor.set_text('try:\n    print "hello"\n    except Exception:')
         self.indenter.correct_indentation(3)

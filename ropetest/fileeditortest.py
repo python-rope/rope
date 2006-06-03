@@ -12,6 +12,7 @@ class FileEditorTest(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.text = MockEditor()
         self.projectMaker = SampleProjectMaker()
+        self.projectMaker.make_project()
         self.fileName = self.projectMaker.get_sample_file_name()
         self.project = Project(self.projectMaker.get_root())
         self.editor = FileEditor(self.project, self.project.get_resource(self.fileName), self.text)
