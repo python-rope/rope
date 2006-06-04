@@ -396,6 +396,13 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('nestedmod', 'unknown', result)
 
+    # TODO: Auto completing after 'self.'
+    def xxx_test_completing_after_self_dot(self):
+        code = 'class Sample(object):\n    def method1(self):\n        pass\n    def method2(self):\n' + \
+               '        self.m'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('self.method1', 'method', result)
+
 
 class TemplateTest(unittest.TestCase):
 

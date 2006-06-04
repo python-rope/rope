@@ -10,7 +10,18 @@ written in python and uses the Tkinter library.
 Version Overview
 ----------------
 Features added in this release:
-  *
+
+* Auto-complete local variable names
+* Proposing templates in code-assist proposals
+* Auto-complete from-import imported objects
+* Not proposing variables which are not defined yet
+* Proposing function parameters in functions
+* Auto-completion ignores current statement errors
+* Next/prev word stops at underlines and capitals
+* Ignoring string and comment contents while indenting
+
+Rope is moving on. By 0.2 release, rope's auto-completion will be
+almost perfect.
 
 
 Keybinding

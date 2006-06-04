@@ -10,15 +10,15 @@
 - Accessing PyObject type
 - Builtin types: Module, Function, Type
 - Add Unknown type
+- Classes inside classes
 
+? What if the element does not exist
+* Better attributes names in pycore classes
 ? PyObject.info
     * Function types should have args, defaults, keywords attributes
-* Better attributes names in pycore classes
-* Classes inside classes
-? Classes and functions defined in functions
-? What if the element does not exist
-? Getting children only when necessary, invalidating
 ? PyObject equality check; Value objects
+? Getting children only when necessary, invalidating
+? Classes and functions defined in functions
 
 ? Don't look for local variable completions
 ? Add PythonHierarchy.create_element(Resource)

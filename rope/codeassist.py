@@ -285,6 +285,10 @@ class CodeAssist(ICodeAssist):
                              "    def test_${aspect1}(self):\n        pass${cursor}\n\n\n" + \
                              "if __name__ == '__main__':\n    unittest.main()\n"
         result.append(TemplateProposal('test_case', Template(test_case_template)))
+        result.append(TemplateProposal('hash', Template('\n    def __hash__(self):\n' + \
+                                                        '        return 1${cursor}\n')))
+        result.append(TemplateProposal('eq', Template('\n    def __eq__(self, obj):\n' + \
+                                                        '        ${cursor}return obj is self\n')))
         return result
 
     def _find_starting_offset(self, source_code, offset):

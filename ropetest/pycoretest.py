@@ -71,6 +71,13 @@ class PyElementHierarchyTest(unittest.TestCase):
         sample_class = mod_element.attributes['SampleClass']
         var = sample_class.attributes['var']
         
+    def test_classes_inside_other_classes_set_in_init(self):
+        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('class SampleClass(object):\n    class InnerClass(object):\n        pass\n\n')
+        mod_element = self.pycore.get_module('mod')
+        sample_class = mod_element.attributes['SampleClass']
+        var = sample_class.attributes['InnerClass']
+        self.assertEquals(PyType.get_type('Type'), var.type)
 
 
 if __name__ == '__main__':

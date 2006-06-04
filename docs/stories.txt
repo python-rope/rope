@@ -196,13 +196,13 @@ rope; A Python IDE ...
 * Auto completion contexts; strings, comments, functions and ... @ 2
 
 
-* Auto completion after "."s @ 3
+* Auto completion after "."s @ 2
+
+
+* Auto-completing "self."s @ 3
 
 
 > Public release 0.2pre2 : June 4, 2006
-
-
-* Auto-completing "self."s @ 2
 
 
 --- Remaining Stories ---

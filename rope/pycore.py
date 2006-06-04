@@ -28,6 +28,15 @@ class PyCore(object):
             attributes.update(visitor.result)
             return PyObject(PyType.get_type('Module'), attributes)
 
+    def create_module(self, contents):
+        attributes = {}
+        ast = compiler.parse(contents)
+        visitor = _GlobalVisitor()
+        compiler.walk(ast, visitor)
+        attributes.update(visitor.result)
+        return PyObject(PyType.get_type('Module'), attributes)
+
+
 
 class PyObject(object):
 
@@ -96,6 +105,9 @@ class _ClassVisitor(object):
 
     def visitAssName(self, node):
         self.children[node.name] = PyObject(PyType.get_type('Unknown'))
+
+    def visitClass(self, node):
+        self.children[node.name] = _ClassVisitor.make_class(node)
 
     @staticmethod
     def make_class(node):
