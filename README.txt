@@ -1,31 +1,23 @@
+======================
 rope, A python IDE ...
+======================
 
 Overview
---------
+========
   'rope' is a Python IDE. Its main goal is to provide features like
 auto-completion, refactorings, content assists and outlines. It is 
 written in python and uses the Tkinter library.
 
 
 Version Overview
-----------------
+================
 Features added in this release:
 
-* Auto-complete local variable names
-* Proposing templates in code-assist proposals
-* Auto-complete from-import imported objects
-* Not proposing variables which are not defined yet
-* Proposing function parameters in functions
-* Auto-completion ignores current statement errors
-* Next/prev word stops at underlines and capitals
-* Ignoring string and comment contents while indenting
-
-Rope is moving on. By 0.2 release, rope's auto-completion will be
-almost perfect.
+*
 
 
 Keybinding
-----------
+==========
   The keybinding will be customizable in future. 
 Some of these bindings are choosen from emacs and some from eclipse.
 
@@ -53,7 +45,7 @@ C-/            auto-complete
 
 
 Description
------------
+===========
   This program, rope, is a python IDE. It tries to give users lots of things
 that are not available in python IDEs yet.
 
@@ -103,7 +95,7 @@ unit tests and use test driven development this approach works very well.
 
 
 Project Road Map
-----------------
+================
   The main motive for starting this project was the lack of good
 refactoring tools for python language. Refactoring programs like "bicycle repair man"
 aren't reliable due to type inferencing problems discussed earlier and they
@@ -129,7 +121,7 @@ and libraries so that other projects may use them.
 
 
 Get Involved!
--------------
+=============
   Rope has just started. Right now rope's design changes rapidly and it's not
 yet ready for code contributions. I hope in soon future, somewhere about version
 0.5 or 0.6, rope would be mature enough for being extended easily.
@@ -145,12 +137,13 @@ distributions specify the version of that package.
 
 
 Bug Reports
------------
+===========
   Send your bug reports and feature requests to rope's sourceforge.net
 project page at http://sf.net/projects/rope.
 
 
 License
--------
+=======
   This program is under the terms of GPL(GNU General Public License). Have a
 look at copying file for more information.
+

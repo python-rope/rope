@@ -1,4 +1,4 @@
-Auto-completing "self."s @ 2
+Auto-completing "self."s @ 4
 ============================
 
 - Better attributes names in pycore classes
@@ -7,12 +7,13 @@ Auto-completing "self."s @ 2
 - What if the element does not exist
 - Making modules from strings
 - Imports and pycore
+- PyName.get_attributes() and PyName.get_type()
 
+* Making scopes using PyNames
 * Better names for making the distinction between PyName and PyObject
 * Add to runtests
 ? PyObject might have additional information based on their types; visitor
   * Function types should have args, defaults, keywords attributes
-* Making scopes using PyNames
 ? PyObject equality check; Value objects
 ? Getting children only when necessary, invalidating
 ? Classes and functions defined in functions
@@ -36,7 +37,7 @@ Before 0.2 Release
 * More builtin templates; hash, eq
 * Enhancing highlighting
 * Profiling to find the bottlenecks
-? Ready for announcing at Cheese Shop
+* Document features added since release 0.1
 
 
 

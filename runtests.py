@@ -29,6 +29,6 @@ if __name__ == '__main__':
     result.addTests(ropetest.codeassisttest.suite())
     result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))
     result.addTests(unittest.makeSuite(ropetest.codeanalyzetest.StatementRangeFinderTest))
-    result.addTests(unittest.makeSuite(ropetest.pycoretest.PyElementHierarchyTest))
+    result.addTests(ropetest.pycoretest.suite())
     runner = unittest.TextTestRunner()
     runner.run(result)

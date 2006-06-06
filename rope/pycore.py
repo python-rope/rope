@@ -29,6 +29,9 @@ class PyCore(object):
         result.is_package = False
         return result
 
+    def get_string_scope(self, module_content):
+        return Scope()
+
     def _create(self, resource):
         if resource.is_folder():
             attributes = {}
@@ -87,6 +90,17 @@ class PyName(object):
 
     def __init__(self, object_=None):
         self.object = object_
+
+    def get_attributes(self):
+        return self.object.attributes
+    
+    def get_type(self):
+        return self.object.type
+
+
+class Scope(object):
+    def get_names(self):
+        return {'sample_func': None}
 
 
 class _GlobalVisitor(object):
