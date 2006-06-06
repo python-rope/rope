@@ -1,6 +1,9 @@
+======================
 rope; A Python IDE ...
+======================
 
---- Stories ---
+Stories
+=======
 
 * Organize imports @ 2
 
@@ -61,9 +64,6 @@ rope; A Python IDE ...
 
 * Running unit tests @ 3
   Add a graphical view for running tests.
-
-
-* Open Type @ 2
 
 
 * Enhance open dialog @ 1
@@ -161,21 +161,19 @@ rope; A Python IDE ...
   * Handle MYClass style names in next/prev word
 
 
-* Show quick outline; C-o @ 2
-
-
 * Auto-completing inherited methods @ 2
-
-
-* Auto-completing function parameter names when calling @ 2
 
 
 * Optimizing StatementRangeFinder @ 1
   Add CachedLines and not starting from the start of the lines
 
 
-* Hold the list of project classes and import them automatically
+* Auto-importing modules @ 3
+  Hold the list of project classes and import them automatically
   in codeassist
+
+
+* Open Type; C-T @ 3
 
 
 * Compound statements and auto-completion @ 1
@@ -193,19 +191,29 @@ rope; A Python IDE ...
   * Sorting proposals
 
 
+* Auto-completing function parameter names when calling @ 2
+
+
+* Show quick outline; C-o @ 2
+
+
+> Public release 0.2 : June 18, 2006
+
+
+* Go to definition; F3 @ 2
+
+
 * Auto completion contexts; strings, comments, functions and ... @ 2
 
 
 * Auto completion after "."s @ 2
 
 
-* Auto-completing "self."s @ 3
+* Auto-completing "self."s @ 4
 
 
-> Public release 0.2pre2 : June 4, 2006
-
-
---- Remaining Stories ---
+Remaining Stories
+=================
 ? Change program goals and description; principles.html
   ? Go toward refactoring and ... library rather than an IDE
 ? roadmap.html
@@ -213,6 +221,7 @@ rope; A Python IDE ...
   ? SF repository; How to synchronize local SVN with SF SVN?
 ? Should workingon.txt be under version control?
 ? Functional tests
-i Separate domain and presentation everywhere
+? Separate domain and presentation everywhere
 * Logo
 ? Project resource consistency; What if it is deleted after being created.
+

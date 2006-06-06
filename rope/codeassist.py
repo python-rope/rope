@@ -6,7 +6,6 @@ import re
 from rope.exceptions import RopeException
 from rope.codeanalyze import StatementRangeFinder, ArrayLinesAdapter
 
-
 class RopeSyntaxError(RopeException):
     pass
 

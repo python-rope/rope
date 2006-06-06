@@ -1,3 +1,11 @@
+=========
+Done List
+=========
+
+
+> Public release 0.2pre2 : June 4, 2006
+
+
 - Next/prev word stops at underlines and capitals : May 29, 2006
 
 
@@ -98,3 +106,4 @@
 
 - Highlighting keywords : March 21, 2006
   Only python files(*.py) should be highlighted.
+

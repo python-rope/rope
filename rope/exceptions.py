@@ -4,3 +4,4 @@ class RopeException(Exception):
 
 class RopeUIException(RopeException):
     """Base exception for user interface parts of rope"""
+

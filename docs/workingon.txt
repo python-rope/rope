@@ -1,36 +1,36 @@
-*** Auto-completing "self."s @ 2 ***
+Auto-completing "self."s @ 2
+============================
 
-- Add project.RootFolder
-- Using path separators when setting PYTHONPATH
-- Package
-- PyElement.get_name()
-- Variables in global scope
-- Variables in class scope
-- Finding attributes set in class.__init__
-- Accessing PyObject type
-- Builtin types: Module, Function, Type
-- Add Unknown type
-- Classes inside classes
+- Better attributes names in pycore classes
+- Introduction of PyName
+- Nested modules
+- What if the element does not exist
+- Making modules from strings
+- Imports and pycore
 
-? What if the element does not exist
-* Better attributes names in pycore classes
-? PyObject.info
-    * Function types should have args, defaults, keywords attributes
+* Better names for making the distinction between PyName and PyObject
+* Add to runtests
+? PyObject might have additional information based on their types; visitor
+  * Function types should have args, defaults, keywords attributes
+* Making scopes using PyNames
 ? PyObject equality check; Value objects
 ? Getting children only when necessary, invalidating
 ? Classes and functions defined in functions
 
+* Project.pycore
+* Change from-import code assist to use PyCore
 ? Don't look for local variable completions
 ? Add PythonHierarchy.create_element(Resource)
 * Using os.path.normpath
-? What to do for AssList and AssTuple
+? What to do for AssList and AssTuple AST nodes
 ? Next/Prev words should stop at start/end of the line
-* Change from-import code assist to use PyCore
+? Consider using StatementRangeFinder in highlight module
 ? Move Project.find_module and find_package to PyCore
 ? Move Project.create_module and create_package to PyCore
 
 
---- Before 0.2 Release ---
+Before 0.2 Release
+==================
 * GUI testing redux; make a ropefunctest directory; ? rename ropetest to ropeunittest
 * Better editor changing dialog; use uihelpers module
 * More builtin templates; hash, eq
@@ -40,8 +40,8 @@
 
 
 
---- Remaining Stories ---
-
+Remaining Stories
+=================
 ? From-import might cache module global variables
 ? Directories should contain __init__.py to be packages in codeassist
 ? Auto-completion on relative imports
@@ -49,8 +49,8 @@
 ? Better version number selection
 ? Remote pair programming support
 ? Separating ui modules and packages
-    ? Decide which modules are the domain and which are the presentation
-    ? Should editing tools access Editor directly? Which of them?
-    ? Specifing the type of each story; UI or Core
+  ? Decide which modules are the domain and which are the presentation
+  ? Should editing tools access Editor directly? Which of them?
+  ? Specifing the type of each story; UI or Core
 ? The connection between ASTs, module hierarchies and type databases
 

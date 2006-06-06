@@ -1,12 +1,12 @@
 *** PythonSource ***
   * Formatting code
   * Basic refactorings
-  * Content assist
   * Advanced refactorings
   * Type inferencing
     * static
     * dynamic
     * ask user
+  * Code assists
   * Auto completion
 
 >>> Advanced Refactorings; Need type inferencing
