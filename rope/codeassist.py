@@ -102,153 +102,6 @@ class Proposals(object):
         self.end_offset = end_offset
 
 
-class _Scope(object):
-
-    def __init__(self, lineno, var_dict, children):
-        self.lineno = lineno
-        self.var_dict = var_dict
-        self.children = children
-
-
-def _get_global_names_in_module(module):
-    result = {}
-    class _GlobalModuleVisitor(object):
-        def visitFunction(self, node):
-            result[node.name] = 'function'
-        def visitClass(self, node):
-            result[node.name] =  'class'
-        def visitAssName(self, node):
-            result[node.name] = 'global_variable'
-    ast = compiler.parse(module.read())
-    compiler.walk(ast, _GlobalModuleVisitor())
-    return result
-
-def _get_package_children(package):
-    result = {}
-    for resource in package.get_children():
-        if resource.is_folder():
-            result[resource.get_name()] = 'module'
-        elif resource.get_name().endswith('.py'):
-            result[resource.get_name()[:-3]] = 'module'
-    return result
-
-
-class _ScopeVisitor(object):
-
-    def __init__(self, project, starting, start_line):
-        self.project = project
-        self.starting = starting
-        self.scope = _Scope(start_line, {}, [])
-
-    def visitImport(self, node):
-        for import_pair in node.names:
-            name, alias = import_pair
-            imported = name
-            if alias is not None:
-                imported = alias
-            if imported.startswith(self.starting):
-                self.scope.var_dict[imported] = CompletionProposal(imported, 'module')
-
-    def visitFrom(self, node):
-        found_modules = self.project.find_module(node.modname)
-        global_names = {}
-        is_module = True
-        if found_modules:
-            module = found_modules[0]
-            if module.is_folder():
-                global_names = _get_package_children(found_modules[0])
-                is_module = False
-            else:
-                global_names = _get_global_names_in_module(found_modules[0])
-        if node.names[0][0] == '*' and is_module:
-            for (name, kind) in global_names.iteritems():
-                if name.startswith(self.starting) and not name.startswith('_'):
-                    self.scope.var_dict[name] = CompletionProposal(name, kind)
-            return
-        for (name, alias) in node.names:
-            imported = name
-            if alias is not None:
-                imported = alias
-            if imported.startswith(self.starting):
-                if global_names.has_key(name):
-                    self.scope.var_dict[imported] = CompletionProposal(imported, global_names[name])
-                else:
-                    self.scope.var_dict[imported] = CompletionProposal(imported, 'unknown')
-
-    def visitAssName(self, node):
-        pass
-
-    def visitFunction(self, node):
-        if node.name.startswith(self.starting):
-            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'function')
-        new_visitor = _FunctionScopeVisitor.walk_function(self.project, self.starting, node)
-        self.scope.children.append(new_visitor.scope)
-
-    def visitClass(self, node):
-        if node.name.startswith(self.starting):
-            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'class')
-        new_visitor = _ClassScopeVisitor.walk_class(self.project, self.starting, node)
-        self.scope.children.append(new_visitor.scope)
-
-
-class _FunctionScopeVisitor(_ScopeVisitor):
-
-    def __init__(self, project, starting, start_line):
-        super(_FunctionScopeVisitor, self).__init__(project, starting, start_line)
-
-    def visitAssName(self, node):
-        if node.name.startswith(self.starting):
-            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'local_variable')
-        
-
-    @staticmethod
-    def walk_function(project, starting, function_node):
-        new_visitor = _FunctionScopeVisitor(project, starting, function_node.lineno)
-        for arg in function_node.argnames:
-            if arg.startswith(starting):
-                new_visitor.scope.var_dict[arg] = CompletionProposal(arg, 'local_variable')
-        for node in function_node.getChildNodes():
-            compiler.walk(node, new_visitor)
-        return new_visitor
-
-
-class _ClassScopeVisitor(_ScopeVisitor):
-
-    def __init__(self, project, starting, start_line):
-        super(_ClassScopeVisitor, self).__init__(project, starting, start_line)
-
-    def visitImport(self, node):
-        pass
-
-    def visitAssName(self, node):
-        pass
-
-    def visitFunction(self, node):
-        new_visitor = _FunctionScopeVisitor.walk_function(self.project, self.starting, node)
-        self.scope.children.append(new_visitor.scope)
-
-    def visitClass(self, node):
-        new_visitor = _ClassScopeVisitor.walk_class(self.project, self.starting, node)
-        self.scope.children.append(new_visitor.scope)
-
-    @staticmethod
-    def walk_class(project, starting, class_node):
-        new_visitor = _ClassScopeVisitor(project, starting, class_node.lineno)
-        for node in class_node.getChildNodes():
-            compiler.walk(node, new_visitor)
-        return new_visitor
-
-
-class _GlobalScopeVisitor(_ScopeVisitor):
-    
-    def __init__(self, project, starting):
-        super(_GlobalScopeVisitor, self).__init__(project, starting, 1)
-
-    def visitAssName(self, node):
-        if node.name.startswith(self.starting):
-            self.scope.var_dict[node.name] = CompletionProposal(node.name, 'global_variable')
-        
-
 class ICodeAssist(object):
 
     def assist(self, source, offset):
@@ -262,7 +115,6 @@ class NoAssist(ICodeAssist):
 
     def assist(self, source_code, offset):
         return Proposals()
-
 
 
 class CodeAssist(ICodeAssist):
@@ -385,8 +237,7 @@ class CodeAssist(ICodeAssist):
         current_indents = self._get_line_indents(lines, lineno)
         self._comment_current_statement(lines, lineno)
         source_code = '\n'.join(lines)
-        from rope.pycore import PyCore
-        pycore = PyCore(self.project)
+        pycore = self.project.get_pycore()
         try:
             current_scope = pycore.get_string_scope(source_code)
         except SyntaxError, e:

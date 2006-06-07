@@ -1,38 +1,29 @@
-Auto-completing "self."s @ 4
-============================
+Auto completion after "."s @ 4
+==============================
 
-- Better attributes names in pycore classes
-- Introduction of PyName
-- Nested modules
-- What if the element does not exist
-- Making modules from strings
-- Imports and pycore
-- PyName.get_attributes() and PyName.get_type()
-- PyName._has_block(), PyName._get_ast()
-- Classes and functions defined in functions
-- Function parameters and scopes
-- Making scopes using PyNames
-- Using PyCore in codeassist module
 
-* Change from-import code assist to use PyCore
+- Change from-import code assist to use PyCore
+- Project.pycore
+
+* Better Completion proposals kind to ease transformation
 ? Not accessing pyname.object
-? We know the type of self
-? We know the type of list and keyword args
 ? Builtins and scopes
-* find_scope(line, indents)
-* Refactor pycore
 ? Factory methods for creating Functions, Classes, Modules
 ? Should Scope.get_names return all of the visible names in a scope?
+* Getting children only when necessary, invalidating, Resource.add_change_observer
 * Handle circular imports
+* Refactor pycore
 ? not_found_module.is_package
 ? PyObject might have additional information based on their types; visitor
   * Function types should have args, defaults, keywords attributes
-* Getting children only when necessary, invalidating, Resource.add_change_observer
-? PyObject equality check; Value objects
 ? A separate module for scopes
+? PyObject equality check; Value objects
+* Removing duplications in tests in codeassist and pycore scopes
 
+? CodeAssist -> PythonCodeAssist; ICodeAssit -> CodeAssist
+? We know the type of self
+? We know the type of list and keyword args
 ? Using inspect on modules that cannot be found in the project
-* Project.pycore
 ? Don't look for local variable completions
 ? Add PythonHierarchy.create_element(Resource)
 * Using os.path.normpath

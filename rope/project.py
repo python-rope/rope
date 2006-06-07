@@ -2,8 +2,9 @@ import os
 import sys
 import subprocess
 
-from rope.exceptions import RopeException
 import rope.codeassist
+import rope.pycore
+from rope.exceptions import RopeException
 
 class Project(object):
     '''A Project containing files and folders'''
@@ -14,6 +15,7 @@ class Project(object):
         elif not os.path.isdir(self.root):
             raise RopeException('Project root exists and is not a directory')
         self.code_assist = rope.codeassist.CodeAssist(self)
+        self.pycore = rope.pycore.PyCore(self)
 
     def get_root_folder(self):
         return RootFolder(self)
@@ -139,6 +141,9 @@ class Project(object):
 
     def get_code_assist(self):
         return self.code_assist
+
+    def get_pycore(self):
+        return self.pycore
 
     @staticmethod
     def remove_recursively(file):

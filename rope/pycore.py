@@ -59,8 +59,6 @@ class PyObject(object):
     
     def get_attributes(self):
         return self.object_attributes
-    
-    attributes = property(fget=get_attributes)
 
 
 class PyType(PyObject):
@@ -94,7 +92,7 @@ class PyName(object):
         self.ast = ast
 
     def get_attributes(self):
-        return self.object.attributes
+        return self.object.get_attributes()
     
     def get_type(self):
         if self.object:
@@ -228,7 +226,7 @@ class _ScopeVisitor(object):
         if node.names[0][0] == '*':
             if module.is_package:
                 return
-            for name, pyname in module.attributes.iteritems():
+            for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):
                     self.names[name] = pyname
         else:
@@ -236,8 +234,8 @@ class _ScopeVisitor(object):
                 imported = name
                 if alias is not None:
                     imported = alias
-                if module.attributes.has_key(name):
-                    self.names[imported] = module.attributes[name]
+                if module.get_attributes().has_key(name):
+                    self.names[imported] = module.get_attributes()[name]
                 else:
                     self.names[imported] = PyName()
 

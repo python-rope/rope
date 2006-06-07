@@ -206,10 +206,10 @@ Stories
 * Auto completion contexts; strings, comments, functions and ... @ 2
 
 
-* Auto completion after "."s @ 2
+* Auto-completing "self."s @ 2
 
 
-* Auto-completing "self."s @ 4
+* Auto completion after "."s @ 4
 
 
 Remaining Stories
