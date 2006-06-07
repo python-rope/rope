@@ -30,7 +30,8 @@ class PyCore(object):
         return result
 
     def get_string_scope(self, module_content):
-        return Scope()
+        module = self.get_string_module(module_content)
+        return GlobalScope(self, module)
 
     def _create(self, resource):
         if resource.is_folder():
@@ -88,8 +89,9 @@ class PyType(PyObject):
 
 class PyName(object):
 
-    def __init__(self, object_=None):
+    def __init__(self, object_=None, ast=None):
         self.object = object_
+        self.ast = ast
 
     def get_attributes(self):
         return self.object.attributes
@@ -97,23 +99,101 @@ class PyName(object):
     def get_type(self):
         return self.object.type
 
+    def _has_block(self):
+        return self.ast is not None
+    
+    def _get_ast(self):
+        return self.ast
+
 
 class Scope(object):
+
+    def __init__(self, pycore, pyname):
+        self.pycore = pycore
+        self.pyname = pyname
+    
     def get_names(self):
-        return {'sample_func': None}
+        return self.pyname.get_attributes()
+
+    def get_scopes(self):
+        '''Returns the subscopes of this scope.
+        
+        The returned scopes should be sorted by the order they appear
+        '''
+        block_objects = [pyname for pyname in self.pyname.get_attributes().values()
+                         if pyname._has_block()]
+        def block_compare(x, y):
+            return cmp(x._get_ast().lineno, y._get_ast().lineno)
+        block_objects.sort(cmp=block_compare)
+        result = []
+        for block in block_objects:
+            if block.get_type() == PyType.get_type('Function'):
+                result.append(FunctionScope(self.pycore, block))
+            elif block.get_type() == PyType.get_type('Type'):
+                result.append(ClassScope(self.pycore, block))
+            else:
+                result.append(GlobalScope(self.pycore, block))
+        return result
+
+    def get_lineno(self):
+        return self.pyname._get_ast().lineno
+
+    def get_kind(self):
+        pass
 
 
-class _GlobalVisitor(object):
+class GlobalScope(Scope):
+
+    def __init__(self, pycore, module):
+        super(GlobalScope, self).__init__(pycore, module)
+
+    def get_lineno(self):
+        return 1
+
+    def get_kind(self):
+        return 'Module'
+
+class FunctionScope(Scope):
+    
+    def __init__(self, pycore, pyname):
+        super(FunctionScope, self).__init__(pycore, pyname)
+    
+    def get_names(self):
+        new_visitor = _FunctionVisitor(self.pycore)
+        for n in self.pyname._get_ast().getChildNodes():
+            compiler.walk(n, new_visitor)
+        return new_visitor.names
+
+    def get_scopes(self):
+        new_visitor = _FunctionVisitor(self.pycore)
+        for n in self.pyname._get_ast().getChildNodes():
+            compiler.walk(n, new_visitor)
+        return []
+
+    def get_kind(self):
+        return 'Function'
+
+
+class ClassScope(Scope):
+
+    def get_names(self):
+        return {}
+
+    def get_kind(self):
+        return 'Class'
+
+
+class _ScopeVisitor(object):
 
     def __init__(self, pycore):
         self.names = {}
         self.pycore = pycore
     
     def visitClass(self, node):
-        self.names[node.name] = PyName(_ClassVisitor.make_class(node))
+        self.names[node.name] = PyName(_ClassVisitor.make_class(self.pycore, node), node)
 
     def visitFunction(self, node):
-        self.names[node.name] = PyName(PyObject(PyType.get_type('Function')))
+        self.names[node.name] = PyName(PyObject(PyType.get_type('Function')), node)
 
     def visitAssName(self, node):
         self.names[node.name] = PyName()
@@ -153,13 +233,19 @@ class _GlobalVisitor(object):
                     self.names[imported] = PyName()
 
 
-class _ClassVisitor(object):
+class _GlobalVisitor(_ScopeVisitor):
 
-    def __init__(self):
-        self.names = {}
+    def __init__(self, pycore):
+        super(_GlobalVisitor, self).__init__(pycore)
+    
+
+class _ClassVisitor(_ScopeVisitor):
+
+    def __init__(self, pycore):
+        super(_ClassVisitor, self).__init__(pycore)
 
     def visitFunction(self, node):
-        self.names[node.name] = PyName(PyObject(PyType.get_type('Function')))
+        self.names[node.name] = PyName(PyObject(PyType.get_type('Function')), node)
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor()
             compiler.walk(node, new_visitor)
@@ -169,14 +255,20 @@ class _ClassVisitor(object):
         self.names[node.name] = PyName()
 
     def visitClass(self, node):
-        self.names[node.name] = PyName(_ClassVisitor.make_class(node))
+        self.names[node.name] = PyName(_ClassVisitor.make_class(self.pycore, node), node)
 
     @staticmethod
-    def make_class(node):
-        new_visitor = _ClassVisitor()
+    def make_class(pycore, node):
+        new_visitor = _ClassVisitor(pycore)
         for n in node.getChildNodes():
             compiler.walk(n, new_visitor)
         return PyType(new_visitor.names)
+
+
+class _FunctionVisitor(_ScopeVisitor):
+
+    def __init__(self, pycore):
+        super(_FunctionVisitor, self).__init__(pycore)
 
 
 class _ClassInitVisitor(object):

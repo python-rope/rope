@@ -178,6 +178,11 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod = self.pycore.get_string_module('from doesnotexist import nestedmod\n')
         self.assertTrue('nestedmod' in mod.attributes)
 
+    def test_from_import_function(self):
+        scope = self.pycore.get_string_scope('def f():\n    from samplemod import SampleClass\n')
+        self.assertEquals(PyType.get_type('Type'), 
+                          scope.get_scopes()[0].get_names()['SampleClass'].get_type())
+
 
 class PyCoreScopesTest(unittest.TestCase):
 
@@ -194,20 +199,49 @@ class PyCoreScopesTest(unittest.TestCase):
 
     def test_simple_scope(self):
         scope = self.pycore.get_string_scope('def sample_func():\n    pass\n')
-        self.assertTrue('sample_func' in scope.get_names())
+        sample_func = scope.get_names()['sample_func']
+        self.assertEquals(PyType.get_type('Function'), sample_func.get_type())
 
-    # TODO: These are related to scopes
-    def xxx_test_from_import_function(self):
-        code = 'from samplemod import sample_func\nsample'
-        result = self.assist.assist(code, len(code))
-        self.assert_completion_in_result('sample_func', 'function', result)
+    def test_simple_function_scope(self):
+        scope = self.pycore.get_string_scope('def sample_func():\n    a = 10\n')
+        self.assertEquals(1, len(scope.get_scopes()))
+        sample_func_scope = scope.get_scopes()[0]
+        self.assertEquals(1, len(sample_func_scope.get_names()))
+        self.assertEquals(0, len(sample_func_scope.get_scopes()))
 
-    # TODO: These are related to scopes
-    def xxx_test_from_imports_inside_functions(self):
-        code = 'def f():\n    from samplemod import SampleClass\n    Sample'
-        result = self.assist.assist(code, len(code))
-        self.assert_completion_in_result('SampleClass', 'class', result)
+    def test_classes_inside_function_scopes(self):
+        scope = self.pycore.get_string_scope('def sample_func():\n' +
+                                             '    class SampleClass(object):\n        pass\n')
+        self.assertEquals(1, len(scope.get_scopes()))
+        sample_func_scope = scope.get_scopes()[0]
+        self.assertEquals(PyType.get_type('Type'), 
+                          scope.get_scopes()[0].get_names()['SampleClass'].get_type())
 
+    def test_simple_class_scope(self):
+        scope = self.pycore.get_string_scope('class SampleClass(object):\n' +
+                                             '    def f(self):\n        var = 10\n')
+        self.assertEquals(1, len(scope.get_scopes()))
+        sample_class_scope = scope.get_scopes()[0]
+        self.assertEquals(0, len(sample_class_scope.get_names()))
+        self.assertEquals(1, len(sample_class_scope.get_scopes()))
+        f_in_class = sample_class_scope.get_scopes()[0]
+        self.assertTrue('var' in f_in_class.get_names())
+
+    def test_get_lineno(self):
+        scope = self.pycore.get_string_scope('\ndef sample_func():\n    a = 10\n')
+        self.assertEquals(1, len(scope.get_scopes()))
+        sample_func_scope = scope.get_scopes()[0]
+        self.assertEquals(1, scope.get_lineno())
+        self.assertEquals(2, sample_func_scope.get_lineno())
+
+    def test_scope_kind(self):
+        scope = self.pycore.get_string_scope('class SampleClass(object):\n    pass\n' +
+                                             'def sample_func():\n    pass\n')
+        sample_class_scope = scope.get_scopes()[0]
+        sample_func_scope = scope.get_scopes()[1]
+        self.assertEquals('Module', scope.get_kind())
+        self.assertEquals('Class', sample_class_scope.get_kind())
+        self.assertEquals('Function', sample_func_scope.get_kind())
 
 def suite():
     result = unittest.TestSuite()

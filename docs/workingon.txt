@@ -8,16 +8,25 @@ Auto-completing "self."s @ 4
 - Making modules from strings
 - Imports and pycore
 - PyName.get_attributes() and PyName.get_type()
+- PyName._has_block(), PyName._get_ast()
+- Classes and functions defined in functions
 
 * Making scopes using PyNames
-* Better names for making the distinction between PyName and PyObject
-* Add to runtests
+  * Function parameters and scopes
+  ? Builtins and scopes
+  * find_scope(line, indents)
+  * Refactor pycore
+? Factory methods for creating Functions, Classes, Modules
+? Should Scope.get_names return all of the visible names in a scope?
+* Handle circular imports
+? not_found_module.is_package
 ? PyObject might have additional information based on their types; visitor
   * Function types should have args, defaults, keywords attributes
+* Getting children only when necessary, invalidating, Resource.add_change_observer
 ? PyObject equality check; Value objects
-? Getting children only when necessary, invalidating
-? Classes and functions defined in functions
+? A separate module for scopes
 
+? Using inspect on modules that cannot be found in the project
 * Project.pycore
 * Change from-import code assist to use PyCore
 ? Don't look for local variable completions
@@ -28,6 +37,8 @@ Auto-completing "self."s @ 4
 ? Consider using StatementRangeFinder in highlight module
 ? Move Project.find_module and find_package to PyCore
 ? Move Project.create_module and create_package to PyCore
+* Correcting indentation on '\n ${cursor}   def f():\n    pass\n'; cursor changes its line
+* 'super' codeassist super(${class}, self)
 
 
 Before 0.2 Release
