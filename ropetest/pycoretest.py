@@ -253,6 +253,18 @@ class PyCoreScopesTest(unittest.TestCase):
         sample_func_scope = scope.get_scopes()[0]
         self.assertTrue('param' in sample_func_scope.get_names())
 
+    def test_get_names_contains_only_names_defined_in_a_scope(self):
+        scope = self.pycore.get_string_scope('var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
+        sample_func_scope = scope.get_scopes()[0]
+        self.assertTrue('var1' not in sample_func_scope.get_names())
+
+    def test_scope_lookup(self):
+        scope = self.pycore.get_string_scope('var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
+        self.assertTrue(scope.lookup('var2') is None)
+        self.assertEquals(PyType.get_type('Function'), scope.lookup('sample_func').get_type())
+        sample_func_scope = scope.get_scopes()[0]
+        self.assertTrue(sample_func_scope.lookup('var1') is not None)
+
 
 def suite():
     result = unittest.TestSuite()

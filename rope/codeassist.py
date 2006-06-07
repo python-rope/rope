@@ -206,59 +206,32 @@ class CodeAssist(ICodeAssist):
         current_indents = self._get_line_indents(lines, lineno)
         self._comment_current_statement(lines, lineno)
         source_code = '\n'.join(lines)
-        try:
-            code_ast = compiler.parse(source_code)
-        except SyntaxError, e:
-            raise RopeSyntaxError(e)
-        visitor = _GlobalScopeVisitor(self.project, starting)
-        compiler.walk(code_ast, visitor)
-        result = {}
-        current_scope = visitor.scope
-        while current_scope is not None and \
-              (current_scope == visitor.scope or
-               self._get_line_indents(lines, current_scope.lineno - 1) < current_indents):
-            result.update(current_scope.var_dict)
-            new_scope = None
-            for scope in current_scope.children:
-                if scope.lineno - 1 <= lineno:
-                    new_scope = scope
-                else:
-                    break
-            current_scope = new_scope
-        return result
-
-    def _get_code_completions(self, source_code, offset, starting):
-        lines = source_code.split('\n')
-        current_pos = 0
-        lineno = 0
-        while current_pos + len(lines[lineno]) < offset:
-            current_pos += len(lines[lineno]) + 1
-            lineno += 1
-        current_indents = self._get_line_indents(lines, lineno)
-        self._comment_current_statement(lines, lineno)
-        source_code = '\n'.join(lines)
         pycore = self.project.get_pycore()
         try:
             current_scope = pycore.get_string_scope(source_code)
         except SyntaxError, e:
             raise RopeSyntaxError(e)
         result = {}
+        inner_scope = current_scope
+        def add_pyname_proposal(scope, pyname, name):
+            from rope.pycore import PyType
+            kind = 'local_variable'
+            if scope.get_kind() == 'Module':
+                kind = 'global_variable'
+            if pyname.get_type() == PyType.get_type('Type'):
+                kind = 'class'
+            if pyname.get_type() == PyType.get_type('Function'):
+                kind = 'function'
+            if pyname.get_type() == PyType.get_type('Module'):
+                kind = 'module'
+            result[name] = CompletionProposal(name, kind)
         while current_scope is not None and \
               (current_scope.get_kind() == 'Module' or
                self._get_line_indents(lines, current_scope.get_lineno() - 1) < current_indents):
+            inner_scope = current_scope
             for name, pyname in current_scope.get_names().iteritems():
                 if name.startswith(starting):
-                    from rope.pycore import PyType
-                    kind = 'local_variable'
-                    if current_scope.get_kind() == 'Module':
-                        kind = 'global_variable'
-                    if pyname.get_type() == PyType.get_type('Type'):
-                        kind = 'class'
-                    if pyname.get_type() == PyType.get_type('Function'):
-                        kind = 'function'
-                    if pyname.get_type() == PyType.get_type('Module'):
-                        kind = 'module'
-                    result[name] = CompletionProposal(name, kind)
+                    add_pyname_proposal(current_scope, pyname, name)
             new_scope = None
             for scope in current_scope.get_scopes():
                 if scope.get_lineno() - 1 <= lineno:
@@ -266,6 +239,21 @@ class CodeAssist(ICodeAssist):
                 else:
                     break
             current_scope = new_scope
+        if '.' in starting:
+            tokens = starting.split('.')
+            element = inner_scope.lookup(tokens[0])
+            consistent = True
+            for token in tokens[1:-1]:
+                if token in element.attributes():
+                    element = element.attributes()[token]
+                else:
+                    consistent = False
+                    break
+            if consistent:
+                for name, pyname in element.get_attributes().iteritems():
+                    if name.startswith(tokens[-1]):
+                        complete_name = '.'.join(tokens[:-1]) + '.' + name
+                        add_pyname_proposal(inner_scope, pyname, complete_name)
         return result
 
     def add_template(self, name, definition):

@@ -4,14 +4,15 @@ Auto completion after "."s @ 4
 
 - Change from-import code assist to use PyCore
 - Project.pycore
+- Scope.lookup(name) it is recursive
+- Should Scope.get_names return all of the visible names in a scope?
+- Auto completion after dots
 
+* Handle circular imports
+* Getting children only when necessary, invalidating, Resource.add_change_observer
 * Better Completion proposals kind to ease transformation
 ? Not accessing pyname.object
-? Builtins and scopes
-? Factory methods for creating Functions, Classes, Modules
-? Should Scope.get_names return all of the visible names in a scope?
-* Getting children only when necessary, invalidating, Resource.add_change_observer
-* Handle circular imports
+* Factory methods for creating Functions, Classes, Modules
 * Refactor pycore
 ? not_found_module.is_package
 ? PyObject might have additional information based on their types; visitor
@@ -20,6 +21,7 @@ Auto completion after "."s @ 4
 ? PyObject equality check; Value objects
 * Removing duplications in tests in codeassist and pycore scopes
 
+? Builtins and scopes
 ? CodeAssist -> PythonCodeAssist; ICodeAssit -> CodeAssist
 ? We know the type of self
 ? We know the type of list and keyword args

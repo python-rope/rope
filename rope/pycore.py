@@ -92,7 +92,10 @@ class PyName(object):
         self.ast = ast
 
     def get_attributes(self):
-        return self.object.get_attributes()
+        if self.object:
+            return self.object.get_attributes()
+        else:
+            return PyType.get_type('Unknown').get_attributes()
     
     def get_type(self):
         if self.object:
@@ -109,18 +112,20 @@ class PyName(object):
 
 class Scope(object):
 
-    def __init__(self, pycore, pyname):
+    def __init__(self, pycore, pyname, parent_scope):
         self.pycore = pycore
         self.pyname = pyname
+        self.parent = parent_scope
     
     def get_names(self):
+        """Returns the names defined in this scope"""
         return self.pyname.get_attributes()
 
     def get_scopes(self):
-        '''Returns the subscopes of this scope.
+        """Returns the subscopes of this scope.
         
         The returned scopes should be sorted by the order they appear
-        '''
+        """
         block_objects = [pyname for pyname in self.pyname.get_attributes().values()
                          if pyname._has_block()]
         def block_compare(x, y):
@@ -129,11 +134,11 @@ class Scope(object):
         result = []
         for block in block_objects:
             if block.get_type() == PyType.get_type('Function'):
-                result.append(FunctionScope(self.pycore, block))
+                result.append(FunctionScope(self.pycore, block, self))
             elif block.get_type() == PyType.get_type('Type'):
-                result.append(ClassScope(self.pycore, block))
+                result.append(ClassScope(self.pycore, block, self))
             else:
-                result.append(GlobalScope(self.pycore, block))
+                result.append(GlobalScope(self.pycore, block, self))
         return result
 
     def get_lineno(self):
@@ -141,12 +146,19 @@ class Scope(object):
 
     def get_kind(self):
         pass
+    
+    def lookup(self, name):
+        if name in self.get_names():
+            return self.get_names()[name]
+        if self.parent is not None:
+            return self.parent.lookup(name)
+        return None
 
 
 class GlobalScope(Scope):
 
     def __init__(self, pycore, module):
-        super(GlobalScope, self).__init__(pycore, module)
+        super(GlobalScope, self).__init__(pycore, module, None)
 
     def get_lineno(self):
         return 1
@@ -156,8 +168,8 @@ class GlobalScope(Scope):
 
 class FunctionScope(Scope):
     
-    def __init__(self, pycore, pyname):
-        super(FunctionScope, self).__init__(pycore, pyname)
+    def __init__(self, pycore, pyname, parent):
+        super(FunctionScope, self).__init__(pycore, pyname, parent)
     
     def get_names(self):
         result = {}
@@ -181,6 +193,9 @@ class FunctionScope(Scope):
 
 class ClassScope(Scope):
 
+    def __init__(self, pycore, pyname, parent):
+        super(ClassScope, self).__init__(pycore, pyname, parent)
+    
     def get_names(self):
         return {}
 
