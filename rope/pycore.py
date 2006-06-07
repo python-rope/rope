@@ -80,6 +80,8 @@ class PyDefinedObject(PyObject):
     def _get_attributes_from_ast(self):
         pass
 
+    def _get_ast(self):
+        return self.ast_node
 
 class PyFunction(PyDefinedObject):
 
@@ -152,9 +154,8 @@ def _create_package(pycore, resource):
 
 class PyName(object):
 
-    def __init__(self, object_=None, ast=None):
+    def __init__(self, object_=None):
         self.object = object_
-        self.ast = ast
 
     def get_attributes(self):
         if self.object:
@@ -169,10 +170,10 @@ class PyName(object):
             return PyObject.get_base_type('Unknown')
 
     def _has_block(self):
-        return self.ast is not None
+        return isinstance(self.object, PyDefinedObject)
     
     def _get_ast(self):
-        return self.ast
+        return self.object._get_ast()
 
 
 class Scope(object):
@@ -203,7 +204,7 @@ class Scope(object):
             elif block.get_type() == PyObject.get_base_type('Type'):
                 result.append(ClassScope(self.pycore, block, self))
             else:
-                result.append(GlobalScope(self.pycore, block, self))
+                result.append(GlobalScope(self.pycore, block))
         return result
 
     def get_lineno(self):
@@ -276,11 +277,11 @@ class _ScopeVisitor(object):
         self.pycore = pycore
     
     def visitClass(self, node):
-        self.names[node.name] = PyName(_create_class(self.pycore, node), node)
+        self.names[node.name] = PyName(_create_class(self.pycore, node))
 
     def visitFunction(self, node):
         pyobject = _create_function(self.pycore, node)
-        self.names[node.name] = PyName(pyobject, node)
+        self.names[node.name] = PyName(pyobject)
 
     def visitAssName(self, node):
         self.names[node.name] = PyName()
@@ -333,7 +334,7 @@ class _ClassVisitor(_ScopeVisitor):
 
     def visitFunction(self, node):
         pyobject = _create_function(self.pycore, node)
-        self.names[node.name] = PyName(pyobject, node)
+        self.names[node.name] = PyName(pyobject)
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor()
             compiler.walk(node, new_visitor)
@@ -343,7 +344,7 @@ class _ClassVisitor(_ScopeVisitor):
         self.names[node.name] = PyName()
 
     def visitClass(self, node):
-        self.names[node.name] = PyName(_create_class(self.pycore, node), node)
+        self.names[node.name] = PyName(_create_class(self.pycore, node))
 
 
 class _FunctionVisitor(_ScopeVisitor):

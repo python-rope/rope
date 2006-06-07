@@ -395,6 +395,12 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('SampleClass.sample_method', 'function', result)
 
+    def test_completing_after_multiple_dots(self):
+        code = 'class Class1(object):\n    class Class2(object):\n        def sample_method(self):\n' + \
+               '            pass\nClass1.Class2.sam'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('Class1.Class2.sample_method', 'function', result)
+
     # TODO: Unknowns and variables are distinct
     def xxx_test_unknown_when_module_cannot_be_found(self):
         code = 'from doesnotexist import nestedmod\nnest'

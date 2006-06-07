@@ -244,8 +244,8 @@ class CodeAssist(ICodeAssist):
             element = inner_scope.lookup(tokens[0])
             consistent = True
             for token in tokens[1:-1]:
-                if token in element.attributes():
-                    element = element.attributes()[token]
+                if token in element.get_attributes():
+                    element = element.get_attributes()[token]
                 else:
                     consistent = False
                     break
