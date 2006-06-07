@@ -200,7 +200,7 @@ Stories
 > Public release 0.2 : June 18, 2006
 
 
-* Go to definition; F3 @ 2
+* Go to definition; F3 @ 1
 
 
 * Auto completion contexts; strings, comments, functions and ... @ 2

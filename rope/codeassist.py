@@ -214,15 +214,15 @@ class CodeAssist(ICodeAssist):
         result = {}
         inner_scope = current_scope
         def add_pyname_proposal(scope, pyname, name):
-            from rope.pycore import PyType
+            from rope.pycore import PyObject
             kind = 'local_variable'
             if scope.get_kind() == 'Module':
                 kind = 'global_variable'
-            if pyname.get_type() == PyType.get_type('Type'):
+            if pyname.get_type() == PyObject.get_base_type('Type'):
                 kind = 'class'
-            if pyname.get_type() == PyType.get_type('Function'):
+            if pyname.get_type() == PyObject.get_base_type('Function'):
                 kind = 'function'
-            if pyname.get_type() == PyType.get_type('Module'):
+            if pyname.get_type() == PyObject.get_base_type('Module'):
                 kind = 'module'
             result[name] = CompletionProposal(name, kind)
         while current_scope is not None and \

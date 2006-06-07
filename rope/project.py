@@ -182,6 +182,14 @@ class Resource(object):
     def _get_real_path(self):
         '''Returns the file system path of this resource'''
 
+    def __hash__(self):
+        return hash(self.get_path())
+
+    def __eq__(self, resource):
+        if type(resource) != type(self):
+            return False
+        return self.get_path() == resource.get_path()
+
 
 class File(Resource):
     '''Represents a file in a project'''
@@ -208,14 +216,6 @@ class File(Resource):
 
     def is_folder(self):
         return False
-
-    def __eq__(self, resource):
-        if not isinstance(resource, File):
-            return False
-        return self.get_path() == resource.get_path()
-
-    def __hash__(self, resource):
-        return hash(self.get_path())
 
     def _get_real_path(self):
         return self.project._get_resource_path(self.fileName)
@@ -302,14 +302,6 @@ class _Folder(Resource):
             if resource.is_folder():
                 result.append(resource)
         return result
-
-    def __eq__(self, resource):
-        if not isinstance(resource, _Folder):
-            return False
-        return self.get_path() == resource.get_path()
-
-    def __hash__(self, resource):
-        return hash(self.get_path())
 
     def get_project(self):
         return self.project

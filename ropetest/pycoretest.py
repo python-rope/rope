@@ -2,7 +2,7 @@ import os
 import unittest
 
 from ropetest import testutils
-from rope.pycore import PyType, ModuleNotFoundException
+from rope.pycore import PyObject, ModuleNotFoundException
 from rope.project import Project
 
 class PyElementHierarchyTest(unittest.TestCase):
@@ -21,37 +21,37 @@ class PyElementHierarchyTest(unittest.TestCase):
     def test_simple_module(self):
         self.project.create_module(self.project.get_root_folder(), 'mod')
         result = self.pycore.get_module('mod')
-        self.assertEquals(PyType.get_type('Module'), result.type)
+        self.assertEquals(PyObject.get_base_type('Module'), result.type)
         self.assertEquals(0, len(result.get_attributes()))
     
     def test_nested_modules(self):
         pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
         mod = self.project.create_module(pkg, 'mod')
         package = self.pycore.get_module('pkg')
-        self.assertEquals(PyType.get_type('Module'), package.type)
+        self.assertEquals(PyObject.get_base_type('Module'), package.type)
         self.assertEquals(1, len(package.get_attributes()))
         module = package.get_attributes()['mod']
-        self.assertEquals(PyType.get_type('Module'), module.get_type())
+        self.assertEquals(PyObject.get_base_type('Module'), module.get_type())
 
     def test_package(self):
         pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
         mod = self.project.create_module(pkg, 'mod')
         result = self.pycore.get_module('pkg')
-        self.assertEquals(PyType.get_type('Module'), result.type)
+        self.assertEquals(PyObject.get_base_type('Module'), result.type)
         
     def test_simple_class(self):
         mod = self.project.create_module(self.project.get_root_folder(), 'mod')
         mod.write('class SampleClass(object):\n    pass\n')
         mod_element = self.pycore.get_module('mod')
         result = mod_element.get_attributes()['SampleClass']
-        self.assertEquals(PyType.get_type('Type'), result.get_type())
+        self.assertEquals(PyObject.get_base_type('Type'), result.get_type())
 
     def test_simple_function(self):
         mod = self.project.create_module(self.project.get_root_folder(), 'mod')
         mod.write('def sample_function():\n    pass\n')
         mod_element = self.pycore.get_module('mod')
         result = mod_element.get_attributes()['sample_function']
-        self.assertEquals(PyType.get_type('Function'), result.get_type())
+        self.assertEquals(PyObject.get_base_type('Function'), result.get_type())
 
     def test_class_methods(self):
         mod = self.project.create_module(self.project.get_root_folder(), 'mod')
@@ -60,7 +60,7 @@ class PyElementHierarchyTest(unittest.TestCase):
         sample_class = mod_element.get_attributes()['SampleClass']
         self.assertEquals(1, len(sample_class.get_attributes()))
         method = sample_class.get_attributes()['sample_method']
-        self.assertEquals(PyType.get_type('Function'), method.get_type())
+        self.assertEquals(PyObject.get_base_type('Function'), method.get_type())
 
     def test_global_variables(self):
         mod = self.project.create_module(self.project.get_root_folder(), 'mod')
@@ -88,7 +88,7 @@ class PyElementHierarchyTest(unittest.TestCase):
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element.get_attributes()['SampleClass']
         var = sample_class.get_attributes()['InnerClass']
-        self.assertEquals(PyType.get_type('Type'), var.get_type())
+        self.assertEquals(PyObject.get_base_type('Type'), var.get_type())
 
     def test_non_existant_module(self):
         try:
@@ -103,14 +103,14 @@ class PyElementHierarchyTest(unittest.TestCase):
         mod.write('import mod1\n')
         module = self.pycore.get_module('mod2')
         imported_sys = module.get_attributes()['mod1']
-        self.assertEquals(PyType.get_type('Module'), imported_sys.get_type())
+        self.assertEquals(PyObject.get_base_type('Module'), imported_sys.get_type())
 
     def test_importing_out_of_project_names(self):
         mod = self.project.create_module(self.project.get_root_folder(), 'mod')
         mod.write('import sys\n')
         module = self.pycore.get_module('mod')
         imported_sys = module.get_attributes()['sys']
-        self.assertEquals(PyType.get_type('Module'), imported_sys.get_type())
+        self.assertEquals(PyObject.get_base_type('Module'), imported_sys.get_type())
 
     def test_imported_as_names(self):
         self.project.create_module(self.project.get_root_folder(), 'mod1')
@@ -118,12 +118,12 @@ class PyElementHierarchyTest(unittest.TestCase):
         mod.write('import mod1 as my_import\n')
         module = self.pycore.get_module('mod2')
         imported_mod = module.get_attributes()['my_import']
-        self.assertEquals(PyType.get_type('Module'), imported_mod.get_type())
+        self.assertEquals(PyObject.get_base_type('Module'), imported_mod.get_type())
 
     def test_get_string_module(self):
         mod = self.pycore.get_string_module('class Sample(object):\n    pass\n')
         sample_class = mod.get_attributes()['Sample']
-        self.assertEquals(PyType.get_type('Type'), sample_class.get_type())
+        self.assertEquals(PyObject.get_base_type('Type'), sample_class.get_type())
 
     def test_parameter_info_for_functions(self):
         mod = self.pycore.get_string_module('def sample_function(param1, param2=10,' +
@@ -153,18 +153,18 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_simple_import(self):
         mod = self.pycore.get_string_module('import samplemod\n')
         samplemod = mod.get_attributes()['samplemod']
-        self.assertEquals(PyType.get_type('Module'), samplemod.get_type())
+        self.assertEquals(PyObject.get_base_type('Module'), samplemod.get_type())
 
     def test_from_import_class(self):
         mod = self.pycore.get_string_module('from samplemod import SampleClass\n')
         result = mod.get_attributes()['SampleClass']
-        self.assertEquals(PyType.get_type('Type'), result.get_type())
+        self.assertEquals(PyObject.get_base_type('Type'), result.get_type())
         self.assertTrue('sample_func' not in mod.get_attributes())
 
     def test_from_import_star(self):
         mod = self.pycore.get_string_module('from samplemod import *\n')
-        self.assertEquals(PyType.get_type('Type'), mod.get_attributes()['SampleClass'].get_type())
-        self.assertEquals(PyType.get_type('Function'), mod.get_attributes()['sample_func'].get_type())
+        self.assertEquals(PyObject.get_base_type('Type'), mod.get_attributes()['SampleClass'].get_type())
+        self.assertEquals(PyObject.get_base_type('Function'), mod.get_attributes()['sample_func'].get_type())
         self.assertTrue(mod.get_attributes()['sample_var'] is not None)
 
     def test_from_import_star_not_imporing_underlined(self):
@@ -173,7 +173,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_package_import_mod(self):
         mod = self.pycore.get_string_module('from package import nestedmod\n')
-        self.assertEquals(PyType.get_type('Module'), mod.get_attributes()['nestedmod'].get_type())
+        self.assertEquals(PyObject.get_base_type('Module'), mod.get_attributes()['nestedmod'].get_type())
 
     def test_from_package_import_star(self):
         mod = self.pycore.get_string_module('from package import *\nnest')
@@ -185,8 +185,16 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_import_function(self):
         scope = self.pycore.get_string_scope('def f():\n    from samplemod import SampleClass\n')
-        self.assertEquals(PyType.get_type('Type'), 
+        self.assertEquals(PyObject.get_base_type('Type'), 
                           scope.get_scopes()[0].get_names()['SampleClass'].get_type())
+
+    # TODO: Handle circular imports
+    def test_circular_imports(self):
+        mod1 = self.project.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.project.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('import mod2\n')
+        mod2.write('import mod1\n')
+        module1 = self.pycore.get_module('mod1')
 
 
 class PyCoreScopesTest(unittest.TestCase):
@@ -205,7 +213,7 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_simple_scope(self):
         scope = self.pycore.get_string_scope('def sample_func():\n    pass\n')
         sample_func = scope.get_names()['sample_func']
-        self.assertEquals(PyType.get_type('Function'), sample_func.get_type())
+        self.assertEquals(PyObject.get_base_type('Function'), sample_func.get_type())
 
     def test_simple_function_scope(self):
         scope = self.pycore.get_string_scope('def sample_func():\n    a = 10\n')
@@ -219,7 +227,7 @@ class PyCoreScopesTest(unittest.TestCase):
                                              '    class SampleClass(object):\n        pass\n')
         self.assertEquals(1, len(scope.get_scopes()))
         sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(PyType.get_type('Type'), 
+        self.assertEquals(PyObject.get_base_type('Type'), 
                           scope.get_scopes()[0].get_names()['SampleClass'].get_type())
 
     def test_simple_class_scope(self):
@@ -261,7 +269,7 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_scope_lookup(self):
         scope = self.pycore.get_string_scope('var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
         self.assertTrue(scope.lookup('var2') is None)
-        self.assertEquals(PyType.get_type('Function'), scope.lookup('sample_func').get_type())
+        self.assertEquals(PyObject.get_base_type('Function'), scope.lookup('sample_func').get_type())
         sample_func_scope = scope.get_scopes()[0]
         self.assertTrue(sample_func_scope.lookup('var1') is not None)
 
