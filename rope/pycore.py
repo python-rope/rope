@@ -97,7 +97,10 @@ class PyName(object):
         return self.object.attributes
     
     def get_type(self):
-        return self.object.type
+        if self.object:
+            return self.object.type
+        else:
+            return PyType.get_type('Unknown')
 
     def _has_block(self):
         return self.ast is not None
@@ -159,10 +162,14 @@ class FunctionScope(Scope):
         super(FunctionScope, self).__init__(pycore, pyname)
     
     def get_names(self):
+        result = {}
+        for name in self.pyname.object.parameters:
+            result[name] = PyName()
         new_visitor = _FunctionVisitor(self.pycore)
         for n in self.pyname._get_ast().getChildNodes():
             compiler.walk(n, new_visitor)
-        return new_visitor.names
+        result.update(new_visitor.names)
+        return result
 
     def get_scopes(self):
         new_visitor = _FunctionVisitor(self.pycore)
@@ -193,7 +200,9 @@ class _ScopeVisitor(object):
         self.names[node.name] = PyName(_ClassVisitor.make_class(self.pycore, node), node)
 
     def visitFunction(self, node):
-        self.names[node.name] = PyName(PyObject(PyType.get_type('Function')), node)
+        pyobject = PyObject(PyType.get_type('Function'))
+        pyobject.parameters = node.argnames
+        self.names[node.name] = PyName(pyobject, node)
 
     def visitAssName(self, node):
         self.names[node.name] = PyName()
@@ -245,7 +254,9 @@ class _ClassVisitor(_ScopeVisitor):
         super(_ClassVisitor, self).__init__(pycore)
 
     def visitFunction(self, node):
-        self.names[node.name] = PyName(PyObject(PyType.get_type('Function')), node)
+        pyobject = PyObject(PyType.get_type('Function'))
+        self.names[node.name] = PyName(pyobject, node)
+        pyobject.parameters = node.argnames
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor()
             compiler.walk(node, new_visitor)

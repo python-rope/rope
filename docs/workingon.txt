@@ -10,12 +10,17 @@ Auto-completing "self."s @ 4
 - PyName.get_attributes() and PyName.get_type()
 - PyName._has_block(), PyName._get_ast()
 - Classes and functions defined in functions
+- Function parameters and scopes
+- Making scopes using PyNames
+- Using PyCore in codeassist module
 
-* Making scopes using PyNames
-  * Function parameters and scopes
-  ? Builtins and scopes
-  * find_scope(line, indents)
-  * Refactor pycore
+* Change from-import code assist to use PyCore
+? Not accessing pyname.object
+? We know the type of self
+? We know the type of list and keyword args
+? Builtins and scopes
+* find_scope(line, indents)
+* Refactor pycore
 ? Factory methods for creating Functions, Classes, Modules
 ? Should Scope.get_names return all of the visible names in a scope?
 * Handle circular imports
@@ -28,7 +33,6 @@ Auto-completing "self."s @ 4
 
 ? Using inspect on modules that cannot be found in the project
 * Project.pycore
-* Change from-import code assist to use PyCore
 ? Don't look for local variable completions
 ? Add PythonHierarchy.create_element(Resource)
 * Using os.path.normpath

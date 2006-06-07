@@ -375,6 +375,48 @@ class CodeAssist(ICodeAssist):
             current_scope = new_scope
         return result
 
+    def _get_code_completions(self, source_code, offset, starting):
+        lines = source_code.split('\n')
+        current_pos = 0
+        lineno = 0
+        while current_pos + len(lines[lineno]) < offset:
+            current_pos += len(lines[lineno]) + 1
+            lineno += 1
+        current_indents = self._get_line_indents(lines, lineno)
+        self._comment_current_statement(lines, lineno)
+        source_code = '\n'.join(lines)
+        from rope.pycore import PyCore
+        pycore = PyCore(self.project)
+        try:
+            current_scope = pycore.get_string_scope(source_code)
+        except SyntaxError, e:
+            raise RopeSyntaxError(e)
+        result = {}
+        while current_scope is not None and \
+              (current_scope.get_kind() == 'Module' or
+               self._get_line_indents(lines, current_scope.get_lineno() - 1) < current_indents):
+            for name, pyname in current_scope.get_names().iteritems():
+                if name.startswith(starting):
+                    from rope.pycore import PyType
+                    kind = 'local_variable'
+                    if current_scope.get_kind() == 'Module':
+                        kind = 'global_variable'
+                    if pyname.get_type() == PyType.get_type('Type'):
+                        kind = 'class'
+                    if pyname.get_type() == PyType.get_type('Function'):
+                        kind = 'function'
+                    if pyname.get_type() == PyType.get_type('Module'):
+                        kind = 'module'
+                    result[name] = CompletionProposal(name, kind)
+            new_scope = None
+            for scope in current_scope.get_scopes():
+                if scope.get_lineno() - 1 <= lineno:
+                    new_scope = scope
+                else:
+                    break
+            current_scope = new_scope
+        return result
+
     def add_template(self, name, definition):
         self.templates.append(TemplateProposal(name, Template(definition)))
 

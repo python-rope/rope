@@ -325,7 +325,6 @@ class CodeAssistInProjectsTest(unittest.TestCase):
                 return
         self.fail('completion <%s> not proposed' % name)
 
-
     def assert_completion_not_in_result(self, name, kind, result):
         for proposal in result.completions:
             if proposal.name == name and proposal.kind == kind:
@@ -391,7 +390,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_not_in_result('nestedmod', 'module', result)
 
-    def test_unknown_when_module_cannot_be_found(self):
+    # TODO: Unknowns and variables are distinct
+    def xxx_test_unknown_when_module_cannot_be_found(self):
         code = 'from doesnotexist import nestedmod\nnest'
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('nestedmod', 'unknown', result)

@@ -125,6 +125,11 @@ class PyElementHierarchyTest(unittest.TestCase):
         sample_class = mod.attributes['Sample']
         self.assertEquals(PyType.get_type('Type'), sample_class.get_type())
 
+    def test_parameter_info_for_functions(self):
+        mod = self.pycore.get_string_module('def sample_function(param1, param2=10,' +
+                                            ' *param3, **param4):\n    pass')
+        sample_function = mod.attributes['sample_function']
+        self.assertEquals(['param1', 'param2', 'param3', 'param4'], sample_function.object.parameters)
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
@@ -242,6 +247,12 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertEquals('Module', scope.get_kind())
         self.assertEquals('Class', sample_class_scope.get_kind())
         self.assertEquals('Function', sample_func_scope.get_kind())
+
+    def test_function_parameters_in_scope_names(self):
+        scope = self.pycore.get_string_scope('def sample_func(param):\n    a = 10\n')
+        sample_func_scope = scope.get_scopes()[0]
+        self.assertTrue('param' in sample_func_scope.get_names())
+
 
 def suite():
     result = unittest.TestSuite()
