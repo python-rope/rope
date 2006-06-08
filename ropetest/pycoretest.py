@@ -188,13 +188,44 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertEquals(PyObject.get_base_type('Type'), 
                           scope.get_scopes()[0].get_names()['SampleClass'].get_type())
 
-    # TODO: Handle circular imports
     def test_circular_imports(self):
         mod1 = self.project.create_module(self.project.get_root_folder(), 'mod1')
         mod2 = self.project.create_module(self.project.get_root_folder(), 'mod2')
         mod1.write('import mod2\n')
         mod2.write('import mod1\n')
         module1 = self.pycore.get_module('mod1')
+
+    def test_multi_dot_imports(self):
+        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
+        pkg_mod = self.project.create_module(pkg, 'mod')
+        pkg_mod.write('def sample_func():\n    pass\n')
+        mod = self.pycore.get_string_module('import pkg.mod\n')
+        self.assertTrue('pkg' in mod.get_attributes())
+        self.assertTrue('sample_func' in 
+                        mod.get_attributes()['pkg'].get_attributes()['mod'].get_attributes())
+        
+    def test_multi_dot_imports2(self):
+        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.project.create_module(pkg, 'mod1')
+        mod2 = self.project.create_module(pkg, 'mod2')
+        mod = self.pycore.get_string_module('import pkg.mod1\nimport pkg.mod2\n')
+        package = mod.get_attributes()['pkg']
+        self.assertEquals(2, len(package.get_attributes()))
+        self.assertTrue('mod1' in package.get_attributes() and
+                        'mod2' in package.get_attributes())
+        
+    def test_multi_dot_imports3(self):
+        pkg1 = self.project.create_package(self.project.get_root_folder(), 'pkg1')
+        pkg2 = self.project.create_package(pkg1, 'pkg2')
+        mod1 = self.project.create_module(pkg2, 'mod1')
+        mod2 = self.project.create_module(pkg2, 'mod2')
+        mod = self.pycore.get_string_module('import pkg1.pkg2.mod1\nimport pkg1.pkg2.mod2\n')
+        package1 = mod.get_attributes()['pkg1']
+        package2 = package1.get_attributes()['pkg2']
+        self.assertEquals(2, len(package2.get_attributes()))
+        self.assertTrue('mod1' in package2.get_attributes() and
+                        'mod2' in package2.get_attributes())
+        
 
 
 class PyCoreScopesTest(unittest.TestCase):

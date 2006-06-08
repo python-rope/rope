@@ -138,6 +138,18 @@ class PyPackage(PyObject):
             self.attributes = attributes
         return self.attributes
 
+class PyConstantPackage(PyObject):
+
+    def __init__(self):
+        super(PyConstantPackage, self).__init__(PyObject.get_base_type('Module'))
+        self.is_package = True
+        self.attributes = {}
+
+    def get_attributes(self):
+        return self.attributes
+
+    def _add_attribute(self, name, pyname):
+        self.attributes[name] = pyname
 
 
 def _create_function(pycore, ast_node):
@@ -296,7 +308,25 @@ class _ScopeVisitor(object):
                 module = self.pycore.get_module(name)
             except ModuleNotFoundException:
                 module = PyObject(PyObject.get_base_type('Module'))
-            self.names[imported] = PyName(module)
+            if alias is None and '.' in imported:
+                tokens = imported.split('.')
+                if tokens[0] in self.names and \
+                   isinstance(self.names[tokens[0]].object, PyConstantPackage):
+                    pypkg = self.names[tokens[0]].object
+                else:
+                    pypkg = PyConstantPackage()
+                    self.names[tokens[0]] = PyName(pypkg)
+                for token in tokens[1:-1]:
+                    if token in pypkg.get_attributes() and \
+                       isinstance(pypkg.get_attributes()[token].object, PyConstantPackage):
+                        newpkg = pypkg.get_attributes()[token].object
+                    else:
+                        newpkg = PyConstantPackage()
+                        pypkg._add_attribute(token, PyName(newpkg))
+                    pypkg = newpkg
+                pypkg._add_attribute(tokens[-1], PyName(module))
+            else:
+                self.names[imported] = PyName(module)
 
     def visitFrom(self, node):
         try:

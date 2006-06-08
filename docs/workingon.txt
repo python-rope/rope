@@ -11,7 +11,10 @@ Auto completion after "."s @ 4
 - Factory methods for creating Functions, Classes, Modules
 - Holding ASTs in PyObjects and creating attributes only when needed
 - Handle circular imports
+- multi dot imports
 
+* Not overwriting PyNames; updating them
+? Refactor pycore; So many different kinds for Modules
 * Inlining pycore._create_*
 * PyNames with None object
 ? PyObject might have additional information based on their types; visitor; checking types in many places
@@ -19,7 +22,7 @@ Auto completion after "."s @ 4
 * From-import non existance
 ? Refactor FunctionScope.get_scopes and get_names
 * Getting children only when necessary, invalidating, Resource.add_change_observer; File and Folder
-* Better Completion proposals kind to ease transformation
+* Better Completion proposals kind to ease transformation; Names inside classes
 ? Not accessing pyname.object
 * Refactor pycore and codeassist
 ? not_found_module.is_package

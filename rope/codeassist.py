@@ -242,18 +242,19 @@ class CodeAssist(ICodeAssist):
         if '.' in starting:
             tokens = starting.split('.')
             element = inner_scope.lookup(tokens[0])
-            consistent = True
-            for token in tokens[1:-1]:
-                if token in element.get_attributes():
-                    element = element.get_attributes()[token]
-                else:
-                    consistent = False
-                    break
-            if consistent:
-                for name, pyname in element.get_attributes().iteritems():
-                    if name.startswith(tokens[-1]):
-                        complete_name = '.'.join(tokens[:-1]) + '.' + name
-                        add_pyname_proposal(inner_scope, pyname, complete_name)
+            if element is not None:
+                consistent = True
+                for token in tokens[1:-1]:
+                    if token in element.get_attributes():
+                        element = element.get_attributes()[token]
+                    else:
+                        consistent = False
+                        break
+                if consistent:
+                    for name, pyname in element.get_attributes().iteritems():
+                        if name.startswith(tokens[-1]):
+                            complete_name = '.'.join(tokens[:-1]) + '.' + name
+                            add_pyname_proposal(inner_scope, pyname, complete_name)
         return result
 
     def add_template(self, name, definition):
