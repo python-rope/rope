@@ -6,8 +6,10 @@ import rope.codeassist
 import rope.pycore
 from rope.exceptions import RopeException
 
+
 class Project(object):
-    '''A Project containing files and folders'''
+    """A Project containing files and folders"""
+
     def __init__(self, projectRootAddress):
         self.root = projectRootAddress
         if not os.path.exists(self.root):
@@ -16,22 +18,27 @@ class Project(object):
             raise RopeException('Project root exists and is not a directory')
         self.code_assist = rope.codeassist.CodeAssist(self)
         self.pycore = rope.pycore.PyCore(self)
+        self.resources = {}
+        self.resources[''] = RootFolder(self)
 
     def get_root_folder(self):
-        return RootFolder(self)
+        return self.get_resource('')
 
     def get_root_address(self):
         return self.root
 
     def get_resource(self, resourceName):
-        path = self._get_resource_path(resourceName)
-        if not os.path.exists(path):
-            raise RopeException('resource %s does not exist' % resourceName)
-        if os.path.isfile(path):
-            return File(self, resourceName)
-        if os.path.isdir(path):
-            return Folder(self, resourceName)
-        raise RopeException('Unknown resource ' + resourceName)
+        if resourceName not in self.resources:
+            path = self._get_resource_path(resourceName)
+            if not os.path.exists(path):
+                raise RopeException('Resource %s does not exist' % resourceName)
+            elif os.path.isfile(path):
+                self.resources[resourceName] = File(self, resourceName)
+            elif os.path.isdir(path):
+                self.resources[resourceName] = Folder(self, resourceName)
+            else:
+                raise RopeException('Unknown resource ' + resourceName)
+        return self.resources[resourceName]
 
     def get_files(self):
         return self._get_files_recursively(self.get_root_folder())
@@ -159,28 +166,32 @@ class Project(object):
 
 
 class Resource(object):
-    '''Represents files and folders in a project'''
+    """Represents files and folders in a project"""
+
     def remove(self):
-        '''Removes resource from the project'''
+        """Removes resource from the project"""
 
     def get_name(self):
-        '''Returns the name of this resource'''
+        """Returns the name of this resource"""
     
     def get_path(self):
-        '''Returns the path of this resource relative to the project root
+        """Returns the path of this resource relative to the project root
         
         The path is the list of parent directories separated by '/' followed
         by the resource name.
-        '''
+        """
 
     def is_folder(self):
-        '''Returns true if the resouse is a folder'''
+        """Returns true if the resouse is a folder"""
 
     def get_project(self):
-        '''Returns the project this resource belongs to'''
+        """Returns the project this resource belongs to"""
+
+    def add_change_observer(self, observer):
+        pass
 
     def _get_real_path(self):
-        '''Returns the file system path of this resource'''
+        """Returns the file system path of this resource"""
 
     def __hash__(self):
         return hash(self.get_path())
@@ -193,9 +204,11 @@ class Resource(object):
 
 class File(Resource):
     '''Represents a file in a project'''
+
     def __init__(self, project, fileName):
         self.project = project
         self.fileName = fileName
+        self.observers = []
     
     def read(self):
         return open(self.project._get_resource_path(self.fileName)).read()
@@ -204,6 +217,8 @@ class File(Resource):
         file = open(self.project._get_resource_path(self.fileName), 'w')
         file.write(contents)
         file.close()
+        for observer in self.observers:
+            observer(self)
 
     def remove(self):
         Project.remove_recursively(self.project._get_resource_path(self.fileName))
@@ -217,6 +232,9 @@ class File(Resource):
     def is_folder(self):
         return False
 
+    def add_change_observer(self, observer):
+        self.observers.append(observer)
+
     def _get_real_path(self):
         return self.project._get_resource_path(self.fileName)
 
@@ -225,7 +243,7 @@ class File(Resource):
 
 
 class _Folder(Resource):
-    '''Represents a folder in a project'''
+    """Represents a folder in a project"""
 
     def __init__(self, project, folderName):
         self.project = project
@@ -311,27 +329,28 @@ class _Folder(Resource):
 
 
 class Folder(_Folder):
-    '''Represents a folder in a project'''
+    """Represents a non root folder in a project"""
 
     def __init__(self, project, folderName):
         super(Folder, self).__init__(project, folderName)
 
 
 class RootFolder(_Folder):
-    '''Represents a folder in a project'''
+    """Represents the root folder of a project"""
 
     def __init__(self, project):
         super(RootFolder, self).__init__(project, '')
 
 
 class FileFinder(object):
+
     def __init__(self, project):
         self.project = project
         self.last_keyword = None
         self.last_result = None
 
     def find_files_starting_with(self, starting):
-        '''Returns the Files in the project whose names starts with starting'''
+        """Returns the Files in the project whose names starts with starting"""
         files = []
         if self.last_keyword is not None and starting.startswith(self.last_keyword):
             files = self.last_result
@@ -347,7 +366,8 @@ class FileFinder(object):
 
 
 class PythonFileRunner(object):
-    '''A class for running python project files'''
+    """A class for running python project files"""
+
     def __init__(self, file, stdin=None, stdout=None):
         self.file = file
         file_path = self.file._get_real_path()
@@ -364,9 +384,9 @@ class PythonFileRunner(object):
                                         stdout=stdout, stderr=stdout, env=env)
 
     def wait_process(self):
-        '''Wait for the process to finish'''
+        """Wait for the process to finish"""
         self.process.wait()
 
     def kill_process(self):
-        '''Stop the process. This does not work on windows.'''
+        """Stop the process. This does not work on windows."""
         os.kill(self.process.pid, 9)

@@ -477,6 +477,17 @@ class ProjectTest(unittest.TestCase):
     def test_project_root_is_root_folder(self):
         self.assertTrue(isinstance(self.project.get_root_folder(), RootFolder))
 
+    def test_resource_change_observer(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        sample_file.write('a sample file version 1')
+        self.changed = False
+        def sample_change_observer(resource):
+            self.changed = True
+            self.assertEquals(sample_file, resource)
+        sample_file.add_change_observer(sample_change_observer)
+        sample_file.write('a sample file version 2')
+        self.assertTrue(self.changed)
+
 
 class FileFinderTest(unittest.TestCase):
     def setUp(self):

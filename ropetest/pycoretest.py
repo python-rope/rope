@@ -226,6 +226,14 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertTrue('mod1' in package2.get_attributes() and
                         'mod2' in package2.get_attributes())
         
+    def test_invalidating_cache_after_resource_change(self):
+        module = self.project.create_module(self.project.get_root_folder(), 'mod')
+        module.write('import sys\n')
+        mod1 = self.pycore.get_module('mod')
+        self.assertTrue('var' not in mod1.get_attributes())
+        module.write('var = 10\n')
+        mod2 = self.pycore.get_module('mod')
+        self.assertTrue('var' in mod2.get_attributes())
 
 
 class PyCoreScopesTest(unittest.TestCase):

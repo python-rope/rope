@@ -28,6 +28,10 @@ class PyCore(object):
         module = self.get_string_module(module_content)
         return GlobalScope(self, module)
 
+    def _invalidate_resource_cache(self, resource):
+        if resource in self.module_map:
+            del self.module_map[resource]
+
     def _create(self, resource):
         if resource in self.module_map:
             return self.module_map[resource]
@@ -36,6 +40,7 @@ class PyCore(object):
         else:
             result =  self.get_string_module(resource.read())
         self.module_map[resource] = result
+        resource.add_change_observer(self._invalidate_resource_cache)
         return result
 
 
@@ -66,7 +71,7 @@ class PyObject(object):
 
 class PyDefinedObject(PyObject):
 
-    def __init__(self, type_, ast_node=None, pycore=None):
+    def __init__(self, type_, ast_node, pycore):
         self.ast_node = ast_node
         self.pycore = pycore
         self.attributes = None
@@ -83,9 +88,10 @@ class PyDefinedObject(PyObject):
     def _get_ast(self):
         return self.ast_node
 
+
 class PyFunction(PyDefinedObject):
 
-    def __init__(self, ast_node=None, pycore=None):
+    def __init__(self, ast_node, pycore):
         super(PyFunction, self).__init__(PyObject.get_base_type('Function'), ast_node, pycore)
         self.parameters = self.ast_node.argnames
 
@@ -95,7 +101,7 @@ class PyFunction(PyDefinedObject):
 
 class PyClass(PyDefinedObject):
 
-    def __init__(self, ast_node=None, pycore=None):
+    def __init__(self, ast_node, pycore):
         super(PyClass, self).__init__(PyObject.get_base_type('Type'), ast_node, pycore)
 
     def _get_attributes_from_ast(self):
@@ -107,7 +113,7 @@ class PyClass(PyDefinedObject):
 
 class PyModule(PyDefinedObject):
 
-    def __init__(self, ast_node=None, pycore=None):
+    def __init__(self, ast_node, pycore):
         super(PyModule, self).__init__(PyObject.get_base_type('Module'), ast_node, pycore)
         self.is_package = False
 
@@ -119,7 +125,7 @@ class PyModule(PyDefinedObject):
 
 class PyPackage(PyObject):
 
-    def __init__(self, resource=None, pycore=None):
+    def __init__(self, resource, pycore):
         super(PyPackage, self).__init__(PyObject.get_base_type('Module'))
         self.is_package = True
         self.resource = resource
@@ -138,10 +144,10 @@ class PyPackage(PyObject):
             self.attributes = attributes
         return self.attributes
 
-class PyConstantPackage(PyObject):
+class PyFilteredPackage(PyObject):
 
     def __init__(self):
-        super(PyConstantPackage, self).__init__(PyObject.get_base_type('Module'))
+        super(PyFilteredPackage, self).__init__(PyObject.get_base_type('Module'))
         self.is_package = True
         self.attributes = {}
 
@@ -311,17 +317,17 @@ class _ScopeVisitor(object):
             if alias is None and '.' in imported:
                 tokens = imported.split('.')
                 if tokens[0] in self.names and \
-                   isinstance(self.names[tokens[0]].object, PyConstantPackage):
+                   isinstance(self.names[tokens[0]].object, PyFilteredPackage):
                     pypkg = self.names[tokens[0]].object
                 else:
-                    pypkg = PyConstantPackage()
+                    pypkg = PyFilteredPackage()
                     self.names[tokens[0]] = PyName(pypkg)
                 for token in tokens[1:-1]:
                     if token in pypkg.get_attributes() and \
-                       isinstance(pypkg.get_attributes()[token].object, PyConstantPackage):
+                       isinstance(pypkg.get_attributes()[token].object, PyFilteredPackage):
                         newpkg = pypkg.get_attributes()[token].object
                     else:
-                        newpkg = PyConstantPackage()
+                        newpkg = PyFilteredPackage()
                         pypkg._add_attribute(token, PyName(newpkg))
                     pypkg = newpkg
                 pypkg._add_attribute(tokens[-1], PyName(module))

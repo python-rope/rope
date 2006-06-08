@@ -2,17 +2,13 @@ Auto completion after "."s @ 4
 ==============================
 
 
-- Change from-import code assist to use PyCore
-- Project.pycore
-- Scope.lookup(name) it is recursive
-- Should Scope.get_names return all of the visible names in a scope?
-- Auto completion after dots
-- Resource.__hash__, Resource.__eq__
-- Factory methods for creating Functions, Classes, Modules
-- Holding ASTs in PyObjects and creating attributes only when needed
-- Handle circular imports
-- multi dot imports
+- Resources need to be reference objects; make factory methods
+- Resource.add_change_observer
+- Getting children only when necessary, invalidating, Resource.add_change_observer
 
+? Removing an observer from Resource.change_observers
+? Folders and change_observers
+? Refactor Resource hierarchy
 * Not overwriting PyNames; updating them
 ? Refactor pycore; So many different kinds for Modules
 * Inlining pycore._create_*
@@ -21,7 +17,6 @@ Auto completion after "."s @ 4
 * Handle circular from-imports
 * From-import non existance
 ? Refactor FunctionScope.get_scopes and get_names
-* Getting children only when necessary, invalidating, Resource.add_change_observer; File and Folder
 * Better Completion proposals kind to ease transformation; Names inside classes
 ? Not accessing pyname.object
 * Refactor pycore and codeassist
@@ -45,6 +40,7 @@ Auto completion after "."s @ 4
 ? Move Project.create_module and create_package to PyCore
 * Correcting indentation on '\n ${cursor}   def f():\n    pass\n'; cursor changes its line
 * 'super' codeassist super(${class}, self)
+? pyrope project for IDE part and rope for core part
 
 
 Before 0.2 Release
