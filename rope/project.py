@@ -234,6 +234,11 @@ class File(Resource):
     def add_change_observer(self, observer):
         self.observers.append(observer)
 
+    def remove(self):
+        super(File, self).remove()
+        for observer in self.observers:
+            observer(self)
+
 
 class _Folder(Resource):
     """Represents a folder in a project"""

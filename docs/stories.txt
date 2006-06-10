@@ -17,7 +17,7 @@ Stories
 * Variable indentation and tab size @ 1
 
 
-* Find occurances @ 5
+* Find occurances @ 4
 
 
 * Configuring keys @ 2

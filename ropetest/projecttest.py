@@ -5,7 +5,9 @@ from rope.project import Project, FileFinder, PythonFileRunner, RootFolder
 from rope.exceptions import RopeException
 from ropetest import testutils
 
+
 class SampleProjectMaker(object):
+
     def __init__(self):
         self.projectRoot = 'SampleProject'
         self.sampleFile = 'sample.txt'
@@ -480,13 +482,30 @@ class ProjectTest(unittest.TestCase):
     def test_resource_change_observer(self):
         sample_file = self.project.get_root_folder().create_file('my_file.txt')
         sample_file.write('a sample file version 1')
-        self.changed = False
-        def sample_change_observer(resource):
-            self.changed = True
-            self.assertEquals(sample_file, resource)
-        sample_file.add_change_observer(sample_change_observer)
+        sample_observer = SampleObserver()
+        sample_file.add_change_observer(sample_observer.changed)
         sample_file.write('a sample file version 2')
-        self.assertTrue(self.changed)
+        self.assertEquals(1, sample_observer.change_count)
+        self.assertEquals(sample_file, sample_observer.last_changed)
+
+    def test_resource_change_observer_after_removal(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        sample_file.write('a sample file version 1')
+        sample_observer = SampleObserver()
+        sample_file.add_change_observer(sample_observer.changed)
+        sample_file.remove()
+        self.assertEquals(1, sample_observer.change_count)
+        self.assertEquals(sample_file, sample_observer.last_changed)
+
+
+class SampleObserver(object):
+    def __init__(self):
+        self.change_count = 0
+        self.last_changed = None
+
+    def changed(self, resource):
+        self.last_changed = resource
+        self.change_count += 1
 
 
 class FileFinderTest(unittest.TestCase):

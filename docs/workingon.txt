@@ -1,14 +1,10 @@
 Refactoring pycore and codeassist modules @ 3
 =============================================
 
-- Refactor Resource hierarchy
-- 'super' codeassist super(${class}, self)
-- From-import non existance
-- CodeAssist -> PythonCodeAssist; ICodeAssit -> CodeAssist
-- Inlining pycore._create_*
-- Next/Prev words should stop at start/end of the line
+- Invaliding file cache after removal
 
 * Correcting indentation on '\n ${cursor}   def f():\n    pass\n'; cursor changes its line; Not without tests
+* From package import package
 ? Resource.remove_change_observer
 ? Folders and change_observers
 * PyNames with None object
