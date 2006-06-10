@@ -22,7 +22,7 @@ class PyCore(object):
 
     def get_string_module(self, module_content):
         ast = compiler.parse(module_content)
-        return _create_module(self, ast)
+        return PyModule(self, ast)
 
     def get_string_scope(self, module_content):
         module = self.get_string_module(module_content)
@@ -36,7 +36,7 @@ class PyCore(object):
         if resource in self.module_map:
             return self.module_map[resource]
         if resource.is_folder():
-            result = _create_package(self, resource)
+            result = PyPackage(self, resource)
         else:
             result =  self.get_string_module(resource.read())
         self.module_map[resource] = result
@@ -71,11 +71,11 @@ class PyObject(object):
 
 class PyDefinedObject(PyObject):
 
-    def __init__(self, type_, ast_node, pycore):
-        self.ast_node = ast_node
-        self.pycore = pycore
-        self.attributes = None
+    def __init__(self, type_, pycore, ast_node):
         super(PyDefinedObject, self).__init__(type_)
+        self.pycore = pycore
+        self.ast_node = ast_node
+        self.attributes = None
 
     def get_attributes(self):
         if self.attributes is None:
@@ -91,8 +91,8 @@ class PyDefinedObject(PyObject):
 
 class PyFunction(PyDefinedObject):
 
-    def __init__(self, ast_node, pycore):
-        super(PyFunction, self).__init__(PyObject.get_base_type('Function'), ast_node, pycore)
+    def __init__(self, pycore, ast_node):
+        super(PyFunction, self).__init__(PyObject.get_base_type('Function'), pycore, ast_node)
         self.parameters = self.ast_node.argnames
 
     def _get_attributes_from_ast(self):
@@ -101,8 +101,8 @@ class PyFunction(PyDefinedObject):
 
 class PyClass(PyDefinedObject):
 
-    def __init__(self, ast_node, pycore):
-        super(PyClass, self).__init__(PyObject.get_base_type('Type'), ast_node, pycore)
+    def __init__(self, pycore, ast_node):
+        super(PyClass, self).__init__(PyObject.get_base_type('Type'), pycore, ast_node)
 
     def _get_attributes_from_ast(self):
         new_visitor = _ClassVisitor(self.pycore)
@@ -113,8 +113,8 @@ class PyClass(PyDefinedObject):
 
 class PyModule(PyDefinedObject):
 
-    def __init__(self, ast_node, pycore):
-        super(PyModule, self).__init__(PyObject.get_base_type('Module'), ast_node, pycore)
+    def __init__(self, pycore, ast_node):
+        super(PyModule, self).__init__(PyObject.get_base_type('Module'), pycore, ast_node)
         self.is_package = False
 
     def _get_attributes_from_ast(self):
@@ -125,7 +125,7 @@ class PyModule(PyDefinedObject):
 
 class PyPackage(PyObject):
 
-    def __init__(self, resource, pycore):
+    def __init__(self, pycore, resource):
         super(PyPackage, self).__init__(PyObject.get_base_type('Module'))
         self.is_package = True
         self.resource = resource
@@ -157,18 +157,6 @@ class PyFilteredPackage(PyObject):
     def _add_attribute(self, name, pyname):
         self.attributes[name] = pyname
 
-
-def _create_function(pycore, ast_node):
-    return PyFunction(ast_node, pycore)
-
-def _create_class(pycore, ast_node):
-    return PyClass(ast_node, pycore)
-
-def _create_module(pycore, ast_node):
-    return PyModule(ast_node, pycore)
-
-def _create_package(pycore, resource):
-    return PyPackage(resource, pycore)
 
 class PyName(object):
 
@@ -295,10 +283,10 @@ class _ScopeVisitor(object):
         self.pycore = pycore
     
     def visitClass(self, node):
-        self.names[node.name] = PyName(_create_class(self.pycore, node))
+        self.names[node.name] = PyName(PyClass(self.pycore, node))
 
     def visitFunction(self, node):
-        pyobject = _create_function(self.pycore, node)
+        pyobject = PyFunction(self.pycore, node)
         self.names[node.name] = PyName(pyobject)
 
     def visitAssName(self, node):
@@ -338,7 +326,7 @@ class _ScopeVisitor(object):
         try:
             module = self.pycore.get_module(node.modname)
         except ModuleNotFoundException:
-            module = PyObject(PyObject.get_base_type('Module'))
+            module = PyFilteredPackage()
 
         if node.names[0][0] == '*':
             if module.is_package:
@@ -369,7 +357,7 @@ class _ClassVisitor(_ScopeVisitor):
         super(_ClassVisitor, self).__init__(pycore)
 
     def visitFunction(self, node):
-        pyobject = _create_function(self.pycore, node)
+        pyobject = PyFunction(self.pycore, node)
         self.names[node.name] = PyName(pyobject)
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor()
@@ -380,7 +368,7 @@ class _ClassVisitor(_ScopeVisitor):
         self.names[node.name] = PyName()
 
     def visitClass(self, node):
-        self.names[node.name] = PyName(_create_class(self.pycore, node))
+        self.names[node.name] = PyName(PyClass(self.pycore, node))
 
 
 class _FunctionVisitor(_ScopeVisitor):

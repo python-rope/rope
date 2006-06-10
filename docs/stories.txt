@@ -185,10 +185,16 @@ Stories
   * Inserting common prefixes
 
 
-* Enhancing auto-completion @ 2
-  * Complete as you type (updating proposal list while typing)
+* Enhancing auto-completion @ 1
   * What to do when the program has syntax errors
   * Sorting proposals
+
+
+* Complete as you type @ 2
+  Update proposal list while typing.
+
+
+* Handle circular from-imports @ 1
 
 
 * Auto-completing function parameter names when calling @ 2
@@ -197,31 +203,38 @@ Stories
 * Show quick outline; C-o @ 2
 
 
-> Public release 0.2 : June 18, 2006
-
-
-* Go to definition; F3 @ 1
+* Out of project modules @ 2
+  Using inspect on modules that cannot be found in the project
 
 
 * Auto completion contexts; strings, comments, functions and ... @ 2
 
 
+> Public release 0.2pre3 : June 18, 2006
+
+
+* AssList and AssTuple assignments @ 1
+
+
+* Go to definition; F3 @ 1
+  Not overwriting PyNames in pycore; Updating them.
+
+
 * Auto-completing "self."s @ 2
 
 
-* Auto completion after "."s @ 4
+* Proposing base class attributes @ 2
+  Inheriting the attributes of the base classes.
 
 
 Remaining Stories
 =================
 ? Change program goals and description; principles.html
   ? Go toward refactoring and ... library rather than an IDE
-? roadmap.html
 ? Migrating to sourceforge SVN before 0.3 release
   ? SF repository; How to synchronize local SVN with SF SVN?
 ? Should workingon.txt be under version control?
 ? Functional tests
-? Separate domain and presentation everywhere
 * Logo
 ? Project resource consistency; What if it is deleted after being created.
 

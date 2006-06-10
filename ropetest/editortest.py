@@ -145,6 +145,30 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.prev_word()
         self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
 
+    def test_next_word_stopping_at_end_of_line(self):
+        self.editor.set_text('sample \n   text')
+        self.editor.set_insert(self.editor.get_index(6))
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(7), self.editor.get_insert())
+
+    def test_next_word_stopping_at_start_of_line(self):
+        self.editor.set_text('sample \n   text')
+        self.editor.set_insert(self.editor.get_index(7))
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(8), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_end_of_line(self):
+        self.editor.set_text('sample \n   text')
+        self.editor.set_insert(self.editor.get_index(9))
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(8), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_start_of_line(self):
+        self.editor.set_text('sample \n   text')
+        self.editor.set_insert(self.editor.get_index(8))
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(7), self.editor.get_insert())
+
     def test_going_to_the_start(self):
         self.editor.set_insert(self.editor.get_index(3))
         self.editor.goto_start()
@@ -277,6 +301,7 @@ class GraphicalEditorTest(unittest.TestCase):
         self.assertEquals(30, self.editor.get_current_offset())
         self.editor.set_insert(self.editor.get_index(40))
         self.assertEquals(40, self.editor.get_current_offset())
+
 
 if __name__ == '__main__':
     unittest.main()

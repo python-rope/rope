@@ -235,6 +235,18 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2 = self.pycore.get_module('mod')
         self.assertTrue('var' in mod2.get_attributes())
 
+    def test_from_import_nonexistant_module(self):
+        mod = self.pycore.get_string_module('from doesnotexistmod import DoesNotExistClass\n')
+        self.assertTrue('DoesNotExistClass' in mod.get_attributes())
+        self.assertEquals(PyObject.get_base_type('Unknown'),
+                          mod.get_attributes()['DoesNotExistClass'].get_type())
+
+    def test_from_import_nonexistant_name(self):
+        mod = self.pycore.get_string_module('from samplemod import DoesNotExistClass\n')
+        self.assertTrue('DoesNotExistClass' in mod.get_attributes())
+        self.assertEquals(PyObject.get_base_type('Unknown'),
+                          mod.get_attributes()['DoesNotExistClass'].get_type())
+
 
 class PyCoreScopesTest(unittest.TestCase):
 

@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from rope.codeassist import CodeAssist, RopeSyntaxError, CompletionProposal, Template
+from rope.codeassist import RopeSyntaxError, Template
 from rope.project import Project
 from ropetest import testutils
 

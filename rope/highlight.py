@@ -70,3 +70,4 @@ class NoHighlighting(Highlighting):
     def highlights(self, startIndex, endIndex):
         if False:
             yield None
+

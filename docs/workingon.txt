@@ -1,53 +1,36 @@
-Auto completion after "."s @ 4
-==============================
+Refactoring pycore and codeassist modules @ 3
+=============================================
 
+- Refactor Resource hierarchy
+- 'super' codeassist super(${class}, self)
+- From-import non existance
+- CodeAssist -> PythonCodeAssist; ICodeAssit -> CodeAssist
+- Inlining pycore._create_*
+- Next/Prev words should stop at start/end of the line
 
-- Resources need to be reference objects; make factory methods
-- Resource.add_change_observer
-- Getting children only when necessary, invalidating, Resource.add_change_observer
-
-? Removing an observer from Resource.change_observers
+* Correcting indentation on '\n ${cursor}   def f():\n    pass\n'; cursor changes its line; Not without tests
+? Resource.remove_change_observer
 ? Folders and change_observers
-? Refactor Resource hierarchy
-* Not overwriting PyNames; updating them
-? Refactor pycore; So many different kinds for Modules
-* Inlining pycore._create_*
 * PyNames with None object
 ? PyObject might have additional information based on their types; visitor; checking types in many places
-* Handle circular from-imports
-* From-import non existance
-? Refactor FunctionScope.get_scopes and get_names
+? Refactor pycore; So many kinds for Modules; not_found_module.is_package?
 * Better Completion proposals kind to ease transformation; Names inside classes
-? Not accessing pyname.object
-* Refactor pycore and codeassist
-? not_found_module.is_package
-? A separate module for scopes
+? Not accessing pyname.object in codeassist
 ? PyObject equality check; Value objects
 * Removing duplications in tests in codeassist and pycore scopes
 
+* Move Project.find_module and find_package and get_source_folders to PyCore
+* Move Project.create_module and create_package to PyCore
 ? Builtins and scopes
-? CodeAssist -> PythonCodeAssist; ICodeAssit -> CodeAssist
 ? We know the type of self
 ? We know the type of list and keyword args
-? Using inspect on modules that cannot be found in the project
-? Don't look for local variable completions
-? Add PythonHierarchy.create_element(Resource)
-* Using os.path.normpath
-? What to do for AssList and AssTuple AST nodes
-? Next/Prev words should stop at start/end of the line
 ? Consider using StatementRangeFinder in highlight module
-? Move Project.find_module and find_package to PyCore
-? Move Project.create_module and create_package to PyCore
-* Correcting indentation on '\n ${cursor}   def f():\n    pass\n'; cursor changes its line
-* 'super' codeassist super(${class}, self)
-? pyrope project for IDE part and rope for core part
 
 
 Before 0.2 Release
 ==================
 * GUI testing redux; make a ropefunctest directory; ? rename ropetest to ropeunittest
 * Better editor changing dialog; use uihelpers module
-* More builtin templates; hash, eq
 * Enhancing highlighting
 * Profiling to find the bottlenecks
 * Document features added since release 0.1

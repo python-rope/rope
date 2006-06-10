@@ -102,7 +102,7 @@ class Proposals(object):
         self.end_offset = end_offset
 
 
-class ICodeAssist(object):
+class CodeAssist(object):
 
     def assist(self, source, offset):
         pass
@@ -111,13 +111,13 @@ class ICodeAssist(object):
         pass
 
 
-class NoAssist(ICodeAssist):
+class NoAssist(CodeAssist):
 
     def assist(self, source_code, offset):
         return Proposals()
 
 
-class CodeAssist(ICodeAssist):
+class PythonCodeAssist(CodeAssist):
     def __init__(self, project):
         self.project = project
         self.builtins = [str(name) for name in dir(__builtin__)
@@ -140,6 +140,7 @@ class CodeAssist(ICodeAssist):
                                                         '        return 1${cursor}\n')))
         result.append(TemplateProposal('eq', Template('\n    def __eq__(self, obj):\n' + \
                                                         '        ${cursor}return obj is self\n')))
+        result.append(TemplateProposal('super', Template('super(${class}, self)')))
         return result
 
     def _find_starting_offset(self, source_code, offset):

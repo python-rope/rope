@@ -431,8 +431,12 @@ class GraphicalEditor(TextEditor):
 
     def _get_next_word_index(self):
         current = str(self.text.index(INSERT))
+        if self.text.get(current) == '\n':
+            return current + '+1c'
         while self.text.compare(current, '!=', 'end-1c') and not self.text.get(current).isalnum():
             current = str(self.text.index(current + ' +1c'))
+            if self.text.get(current) == '\n':
+                return current
         is_upper = self.text.get(current).isupper()
         while self.text.compare(current, '!=', 'end-1c'):
             current = str(self.text.index(current + ' +1c'))
@@ -453,8 +457,12 @@ class GraphicalEditor(TextEditor):
 
     def _get_prev_word_index(self):
         current = str(self.text.index(INSERT))
+        if self.text.get(current + '-1c') == '\n':
+            return current + '-1c'
         while self.text.compare(current, '!=', '1.0') and not self.text.get(current + ' -1c').isalnum():
             current = str(self.text.index(current + ' -1c'))
+            if self.text.get(current + '-1c') == '\n':
+                return current
         is_upper = self.text.get(current + ' -1c').isupper()
         while self.text.compare(current, '!=', '1.0') and self.text.get(current + ' -1c').isalnum():
             current = str(self.text.index(current + ' -1c'))
@@ -664,6 +672,7 @@ class GraphicalEditor(TextEditor):
 
 class GraphicalTextIndex(TextIndex):
     '''An immutable class for pointing to a position in a text'''
+
     def __init__(self, editor, index):
         self.index = index
         self.editor = editor

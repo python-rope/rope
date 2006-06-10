@@ -16,7 +16,7 @@ class Project(object):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise RopeException('Project root exists and is not a directory')
-        self.code_assist = rope.codeassist.CodeAssist(self)
+        self.code_assist = rope.codeassist.PythonCodeAssist(self)
         self.pycore = rope.pycore.PyCore(self)
         self.resources = {}
         self.resources[''] = RootFolder(self)
@@ -168,30 +168,39 @@ class Project(object):
 class Resource(object):
     """Represents files and folders in a project"""
 
-    def remove(self):
-        """Removes resource from the project"""
+    def __init__(self, project, name):
+        self.project = project
+        self.name = name
 
-    def get_name(self):
-        """Returns the name of this resource"""
-    
     def get_path(self):
         """Returns the path of this resource relative to the project root
         
         The path is the list of parent directories separated by '/' followed
         by the resource name.
         """
+        return self.name
+
+    def get_name(self):
+        """Returns the name of this resource"""
+        return self.name.split('/')[-1]
+    
+    def remove(self):
+        """Removes resource from the project"""
+        Project.remove_recursively(self.project._get_resource_path(self.name))
 
     def is_folder(self):
         """Returns true if the resouse is a folder"""
 
     def get_project(self):
         """Returns the project this resource belongs to"""
+        return self.project
 
     def add_change_observer(self, observer):
         pass
 
     def _get_real_path(self):
         """Returns the file system path of this resource"""
+        return self.project._get_resource_path(self.name)
 
     def __hash__(self):
         return hash(self.get_path())
@@ -205,29 +214,19 @@ class Resource(object):
 class File(Resource):
     '''Represents a file in a project'''
 
-    def __init__(self, project, fileName):
-        self.project = project
-        self.fileName = fileName
+    def __init__(self, project, name):
+        super(File, self).__init__(project, name)
         self.observers = []
     
     def read(self):
-        return open(self.project._get_resource_path(self.fileName)).read()
+        return open(self.project._get_resource_path(self.name)).read()
 
     def write(self, contents):
-        file = open(self.project._get_resource_path(self.fileName), 'w')
+        file = open(self.project._get_resource_path(self.name), 'w')
         file.write(contents)
         file.close()
         for observer in self.observers:
             observer(self)
-
-    def remove(self):
-        Project.remove_recursively(self.project._get_resource_path(self.fileName))
-
-    def get_name(self):
-        return self.fileName.split('/')[-1]
-
-    def get_path(self):
-        return self.fileName
 
     def is_folder(self):
         return False
@@ -235,31 +234,13 @@ class File(Resource):
     def add_change_observer(self, observer):
         self.observers.append(observer)
 
-    def _get_real_path(self):
-        return self.project._get_resource_path(self.fileName)
-
-    def get_project(self):
-        return self.project
-
 
 class _Folder(Resource):
     """Represents a folder in a project"""
 
-    def __init__(self, project, folderName):
-        self.project = project
-        self.folderName = folderName
+    def __init__(self, project, name):
+        super(_Folder, self).__init__(project, name)
 
-    def _get_real_path(self):
-        return self.project._get_resource_path(self.folderName)
-    
-    def remove(self):
-        Project.remove_recursively(self.project._get_resource_path(self.folderName))
-
-    def get_name(self):
-        return self.folderName.split('/')[-1]
-
-    def get_path(self):
-        return self.folderName
 
     def is_folder(self):
         return True
@@ -321,11 +302,6 @@ class _Folder(Resource):
                 result.append(resource)
         return result
 
-    def get_project(self):
-        return self.project
-
-    def _get_real_path(self):
-        return self.project._get_resource_path(self.folderName)
 
 
 class Folder(_Folder):

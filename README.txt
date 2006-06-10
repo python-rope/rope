@@ -4,6 +4,7 @@ rope, A python IDE ...
 
 Overview
 ========
+
   'rope' is a Python IDE. Its main goal is to provide features like
 auto-completion, refactorings, content assists and outlines. It is 
 written in python and uses the Tkinter library.
@@ -11,6 +12,7 @@ written in python and uses the Tkinter library.
 
 Version Overview
 ================
+
 Features added in this release:
 
 *
@@ -18,9 +20,9 @@ Features added in this release:
 
 Keybinding
 ==========
+
   The keybinding will be customizable in future. 
 Some of these bindings are choosen from emacs and some from eclipse.
-
 
 C-x C-p        open/new project
 C-x C-n        new file
@@ -46,10 +48,12 @@ C-/            auto-complete
 
 Description
 ===========
+
   This program, rope, is a python IDE. It tries to give users lots of things
 that are not available in python IDEs yet.
 
-* Refactoring:
+Refactoring
+-----------
   In recent years refactoring has become a basic task of everyday programing,
 specially in java community. In the agile programing methodologies, like
 Extreme Programing, Refactoring is one of the core practices.
@@ -61,7 +65,8 @@ source code (specially for relatively large projects). rope tries to provide a
 rich set of refactorings. Some of the refactorings require type
 inferencing which is described later.
 
-* Auto Completion:
+Auto Completion
+---------------
   One of the basic features of modern IDEs is the availability of auto-completion.
 Some Python IDEs have auto-completion support but in a limited form. Since
 the type of many variables cannot be deduced from simple analysis of the source code.
@@ -71,7 +76,8 @@ attributes of an object is hard. Because the IDE needs to know the type of
 the object that cannot be achieved easily most of the time in dynamic languages.
 rope uses Type Inferencing algorithms to solve this problem.
 
-* Type Inferencing:
+Type Inferencing
+----------------
   One disadvantage of dynamic languages like python is that you cannot
 know the type of variables by a simple analysis of program source code
 most of the time. Knowing the type of variables is very essential for
@@ -96,6 +102,7 @@ unit tests and use test driven development this approach works very well.
 
 Project Road Map
 ================
+
   The main motive for starting this project was the lack of good
 refactoring tools for python language. Refactoring programs like "bicycle repair man"
 aren't reliable due to type inferencing problems discussed earlier and they
@@ -122,6 +129,7 @@ and libraries so that other projects may use them.
 
 Get Involved!
 =============
+
   Rope has just started. Right now rope's design changes rapidly and it's not
 yet ready for code contributions. I hope in soon future, somewhere about version
 0.5 or 0.6, rope would be mature enough for being extended easily.
@@ -138,12 +146,14 @@ distributions specify the version of that package.
 
 Bug Reports
 ===========
+
   Send your bug reports and feature requests to rope's sourceforge.net
 project page at http://sf.net/projects/rope.
 
 
 License
 =======
+
   This program is under the terms of GPL(GNU General Public License). Have a
 look at copying file for more information.
 
