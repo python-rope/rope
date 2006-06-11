@@ -2,8 +2,9 @@ Refactoring pycore and codeassist modules @ 3
 =============================================
 
 - Invaliding file cache after removal
+- Imported modules should not be considered defined
+- Correcting indentation on '\n ${cursor}   def f():\n    pass\n';
 
-* Correcting indentation on '\n ${cursor}   def f():\n    pass\n'; cursor changes its line; Not without tests
 * From package import package
 ? Resource.remove_change_observer
 ? Folders and change_observers

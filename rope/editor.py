@@ -234,13 +234,7 @@ class GraphicalEditor(TextEditor):
             return 'break'
         self.text.bind('<Alt-v>', go_prev_page)
         def indent_line(event):
-            lineno = self.get_current_line_number()
-            cols_from_end = len(self.text.get(INSERT, 'insert lineend'))
-            self.indenter.correct_indentation(lineno)
-            new_insert = '%d.end -%dc' % (lineno, cols_from_end)
-            self.text.mark_set(INSERT, new_insert)
-            while self.text.get(INSERT) == ' ':
-                self.text.mark_set(INSERT, 'insert +1c')
+            self.correct_line_indentation()
             return 'break'
         def do_insert_tab(event):
             self.insert_tab()
@@ -281,6 +275,19 @@ class GraphicalEditor(TextEditor):
     def _focus_went_out(self):
         if self.searcher.is_searching():
             self.searcher.end_searching()
+
+    def correct_line_indentation(self):
+        lineno = self.get_current_line_number()
+        cols_from_end = len(self.text.get(INSERT, 'insert lineend'))
+        self.indenter.correct_indentation(lineno)
+        from_end = '%d.end -%dc' % (lineno, cols_from_end)
+        first_non_space = 0
+        while self.text.get('%d.%d' % (lineno, first_non_space)) == ' ':
+            first_non_space += 1
+        new_insert = '%d.%d' % (lineno, first_non_space)
+        if self.text.compare(new_insert, '<', from_end):
+            new_insert = from_end
+        self.text.mark_set(INSERT, new_insert)
 
     def _show_completion_window(self):
         result = self.code_assist.assist(self.get_text(), self.get_current_offset())

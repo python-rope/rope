@@ -247,6 +247,14 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertEquals(PyObject.get_base_type('Unknown'),
                           mod.get_attributes()['DoesNotExistClass'].get_type())
 
+    def test_not_considering_imported_names_as_sub_scopes(self):
+        scope = self.pycore.get_string_scope('from samplemod import SampleClass\n')
+        self.assertEquals(0, len(scope.get_scopes()))
+
+    def test_not_considering_imported_modules_as_sub_scopes(self):
+        scope = self.pycore.get_string_scope('import samplemod\n')
+        self.assertEquals(0, len(scope.get_scopes()))
+
 
 class PyCoreScopesTest(unittest.TestCase):
 

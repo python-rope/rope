@@ -302,6 +302,27 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.set_insert(self.editor.get_index(40))
         self.assertEquals(40, self.editor.get_current_offset())
 
+    def test_after_indenting_insert_position(self):
+        self.editor.set_indenter(PythonCodeIndenter(self.editor))
+        self.editor.set_text("print 'hello'\n        print 'hello'\n")
+        self.editor.set_insert(self.editor.get_index(15))
+        self.editor.correct_line_indentation()
+        self.assertEquals(self.editor.get_index(14), self.editor.get_insert())
+
+    def test_after_indenting_insert_position2(self):
+        self.editor.set_indenter(PythonCodeIndenter(self.editor))
+        self.editor.set_text("def f():\n        print 'hello'\n")
+        self.editor.set_insert(self.editor.get_index(9))
+        self.editor.correct_line_indentation()
+        self.assertEquals(self.editor.get_index(13), self.editor.get_insert())
+
+    def test_after_indenting_insert_position3(self):
+        self.editor.set_indenter(PythonCodeIndenter(self.editor))
+        self.editor.set_text("def f():\n        print 'hello'\n")
+        self.editor.set_insert(self.editor.get_index(22))
+        self.editor.correct_line_indentation()
+        self.assertEquals(self.editor.get_index(18), self.editor.get_insert())
+
 
 if __name__ == '__main__':
     unittest.main()

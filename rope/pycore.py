@@ -160,8 +160,9 @@ class PyFilteredPackage(PyObject):
 
 class PyName(object):
 
-    def __init__(self, object_=None):
+    def __init__(self, object_=None, is_defined_here=False):
         self.object = object_
+        self.is_defined_here = is_defined_here
 
     def get_attributes(self):
         if self.object:
@@ -176,7 +177,7 @@ class PyName(object):
             return PyObject.get_base_type('Unknown')
 
     def _has_block(self):
-        return isinstance(self.object, PyDefinedObject)
+        return self.is_defined_here and isinstance(self.object, PyDefinedObject)
     
     def _get_ast(self):
         return self.object._get_ast()
@@ -283,11 +284,11 @@ class _ScopeVisitor(object):
         self.pycore = pycore
     
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore, node))
+        self.names[node.name] = PyName(PyClass(self.pycore, node), True)
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node)
-        self.names[node.name] = PyName(pyobject)
+        self.names[node.name] = PyName(pyobject, True)
 
     def visitAssName(self, node):
         self.names[node.name] = PyName()
@@ -318,9 +319,9 @@ class _ScopeVisitor(object):
                         newpkg = PyFilteredPackage()
                         pypkg._add_attribute(token, PyName(newpkg))
                     pypkg = newpkg
-                pypkg._add_attribute(tokens[-1], PyName(module))
+                pypkg._add_attribute(tokens[-1], PyName(module, False))
             else:
-                self.names[imported] = PyName(module)
+                self.names[imported] = PyName(module, False)
 
     def visitFrom(self, node):
         try:
@@ -333,14 +334,14 @@ class _ScopeVisitor(object):
                 return
             for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):
-                    self.names[name] = pyname
+                    self.names[name] = PyName(pyname.object, False)
         else:
             for (name, alias) in node.names:
                 imported = name
                 if alias is not None:
                     imported = alias
                 if module.get_attributes().has_key(name):
-                    self.names[imported] = module.get_attributes()[name]
+                    self.names[imported] = PyName(module.get_attributes()[name].object, False)
                 else:
                     self.names[imported] = PyName()
 
@@ -358,7 +359,7 @@ class _ClassVisitor(_ScopeVisitor):
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node)
-        self.names[node.name] = PyName(pyobject)
+        self.names[node.name] = PyName(pyobject, True)
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor()
             compiler.walk(node, new_visitor)
@@ -368,7 +369,7 @@ class _ClassVisitor(_ScopeVisitor):
         self.names[node.name] = PyName()
 
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore, node))
+        self.names[node.name] = PyName(PyClass(self.pycore, node), True)
 
 
 class _FunctionVisitor(_ScopeVisitor):
