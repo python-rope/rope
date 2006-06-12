@@ -131,6 +131,37 @@ class PyElementHierarchyTest(unittest.TestCase):
         sample_function = mod.get_attributes()['sample_function']
         self.assertEquals(['param1', 'param2', 'param3', 'param4'], sample_function.object.parameters)
 
+    def test_not_found_module_is_package(self):
+        mod = self.pycore.get_string_module('import doesnotexist\n')
+        self.assertFalse(mod.get_attributes()['doesnotexist'].object.is_package)
+
+    def test_mixing_scopes_and_objects_hierarchy(self):
+        mod = self.pycore.get_string_module('var = 200\n')
+        scope = mod.get_scope()
+        self.assertTrue('var' in scope.get_names())
+    
+    def test_function_scopes(self):
+        scope = self.pycore.get_string_scope('def func():    var = 10\n')
+        func_scope = scope.get_scopes()[0]
+        self.assertTrue('var' in func_scope.get_names())
+
+    def test_function_scopes_classes(self):
+        scope = self.pycore.get_string_scope('def func():\n    class Sample(object):\n        pass\n')
+        func_scope = scope.get_scopes()[0]
+        self.assertTrue('Sample' in func_scope.get_names())
+
+    def test_function_getting_scope(self):
+        mod = self.pycore.get_string_module('def func():    var = 10\n')
+        func_scope = mod.get_attributes()['func'].object.get_scope()
+        self.assertTrue('var' in func_scope.get_names())
+
+    def test_scopes_in_function_scopes(self):
+        scope = self.pycore.get_string_scope('def func():\n    def inner():\n        var = 10\n')
+        func_scope = scope.get_scopes()[0]
+        inner_scope = func_scope.get_scopes()[0]
+        self.assertTrue('var' in inner_scope.get_names())
+
+
 class PyCoreInProjectsTest(unittest.TestCase):
 
     def setUp(self):
@@ -163,8 +194,10 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_import_star(self):
         mod = self.pycore.get_string_module('from samplemod import *\n')
-        self.assertEquals(PyObject.get_base_type('Type'), mod.get_attributes()['SampleClass'].get_type())
-        self.assertEquals(PyObject.get_base_type('Function'), mod.get_attributes()['sample_func'].get_type())
+        self.assertEquals(PyObject.get_base_type('Type'),
+                          mod.get_attributes()['SampleClass'].get_type())
+        self.assertEquals(PyObject.get_base_type('Function'),
+                          mod.get_attributes()['sample_func'].get_type())
         self.assertTrue(mod.get_attributes()['sample_var'] is not None)
 
     def test_from_import_star_not_imporing_underlined(self):
@@ -173,7 +206,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_package_import_mod(self):
         mod = self.pycore.get_string_module('from package import nestedmod\n')
-        self.assertEquals(PyObject.get_base_type('Module'), mod.get_attributes()['nestedmod'].get_type())
+        self.assertEquals(PyObject.get_base_type('Module'),
+                          mod.get_attributes()['nestedmod'].get_type())
 
     def test_from_package_import_star(self):
         mod = self.pycore.get_string_module('from package import *\nnest')
@@ -226,6 +260,22 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertTrue('mod1' in package2.get_attributes() and
                         'mod2' in package2.get_attributes())
         
+    def test_multi_dot_imports_as(self):
+        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.project.create_module(pkg, 'mod1')
+        mod1.write('def f():\n    pass\n')
+        mod = self.pycore.get_string_module('import pkg.mod1 as mod1\n')
+        module = mod.get_attributes()['mod1']
+        self.assertTrue('f' in module.get_attributes())
+        
+    def test_from_package_import_package(self):
+        pkg1 = self.project.create_package(self.project.get_root_folder(), 'pkg1')
+        pkg2 = self.project.create_package(pkg1, 'pkg2')
+        module = self.project.create_module(pkg2, 'mod')
+        mod = self.pycore.get_string_module('from pkg1 import pkg2\n')
+        package = mod.get_attributes()['pkg2']
+        self.assertEquals(0, len(package.get_attributes()))
+
     def test_invalidating_cache_after_resource_change(self):
         module = self.project.create_module(self.project.get_root_folder(), 'mod')
         module.write('import sys\n')
@@ -342,3 +392,4 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main()
+

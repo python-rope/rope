@@ -25,8 +25,7 @@ class PyCore(object):
         return PyModule(self, ast)
 
     def get_string_scope(self, module_content):
-        module = self.get_string_module(module_content)
-        return GlobalScope(self, module)
+        return self.get_string_module(module_content).get_scope()
 
     def _invalidate_resource_cache(self, resource):
         if resource in self.module_map:
@@ -71,56 +70,79 @@ class PyObject(object):
 
 class PyDefinedObject(PyObject):
 
-    def __init__(self, type_, pycore, ast_node):
+    def __init__(self, type_, pycore, ast_node, parent):
         super(PyDefinedObject, self).__init__(type_)
         self.pycore = pycore
         self.ast_node = ast_node
         self.attributes = None
+        self.scope = None
+        self.parent = parent
 
     def get_attributes(self):
         if self.attributes is None:
             self.attributes = self._get_attributes_from_ast()
         return self.attributes
 
+    def get_scope(self):
+        if self.scope == None:
+            self.scope = self._create_scope()
+        return self.scope
+
     def _get_attributes_from_ast(self):
         pass
 
     def _get_ast(self):
         return self.ast_node
+    
+    def _create_scope(self):
+        pass
 
 
 class PyFunction(PyDefinedObject):
 
-    def __init__(self, pycore, ast_node):
-        super(PyFunction, self).__init__(PyObject.get_base_type('Function'), pycore, ast_node)
+    def __init__(self, pycore, ast_node, parent):
+        super(PyFunction, self).__init__(PyObject.get_base_type('Function'),
+                                         pycore, ast_node, parent)
         self.parameters = self.ast_node.argnames
 
     def _get_attributes_from_ast(self):
         return {}
+    
+    def _create_scope(self):
+        return FunctionScope(self.pycore, self)
 
 
 class PyClass(PyDefinedObject):
 
-    def __init__(self, pycore, ast_node):
-        super(PyClass, self).__init__(PyObject.get_base_type('Type'), pycore, ast_node)
+    def __init__(self, pycore, ast_node, parent):
+        super(PyClass, self).__init__(PyObject.get_base_type('Type'),
+                                      pycore, ast_node, parent)
+        self.parent = parent
 
     def _get_attributes_from_ast(self):
-        new_visitor = _ClassVisitor(self.pycore)
+        new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():
             compiler.walk(n, new_visitor)
         return new_visitor.names
+
+    def _create_scope(self):
+        return ClassScope(self.pycore, self)
 
 
 class PyModule(PyDefinedObject):
 
     def __init__(self, pycore, ast_node):
-        super(PyModule, self).__init__(PyObject.get_base_type('Module'), pycore, ast_node)
+        super(PyModule, self).__init__(PyObject.get_base_type('Module'),
+                                       pycore, ast_node, None)
         self.is_package = False
 
     def _get_attributes_from_ast(self):
-        visitor = _GlobalVisitor(self.pycore)
+        visitor = _GlobalVisitor(self.pycore, self)
         compiler.walk(self.ast_node, visitor)
         return visitor.names
+
+    def _create_scope(self):
+        return GlobalScope(self.pycore, self)
 
 
 class PyPackage(PyObject):
@@ -143,6 +165,7 @@ class PyPackage(PyObject):
                     attributes[name] = PyName(self.pycore._create(child))
             self.attributes = attributes
         return self.attributes
+
 
 class PyFilteredPackage(PyObject):
 
@@ -185,37 +208,36 @@ class PyName(object):
 
 class Scope(object):
 
-    def __init__(self, pycore, pyname, parent_scope):
+    def __init__(self, pycore, pyobject, parent_scope):
         self.pycore = pycore
-        self.pyname = pyname
+        self.pyobject = pyobject
         self.parent = parent_scope
+        self.scopes = None
     
     def get_names(self):
         """Returns the names defined in this scope"""
-        return self.pyname.get_attributes()
+        return self.pyobject.get_attributes()
 
     def get_scopes(self):
         """Returns the subscopes of this scope.
         
         The returned scopes should be sorted by the order they appear
         """
-        block_objects = [pyname for pyname in self.pyname.get_attributes().values()
+        if self.scopes == None:
+            self.scopes = self._create_scopes()
+        return self.scopes
+
+    def _create_scopes(self):
+        block_objects = [pyname.object for pyname in self.pyobject.get_attributes().values()
                          if pyname._has_block()]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
         block_objects.sort(cmp=block_compare)
-        result = []
-        for block in block_objects:
-            if block.get_type() == PyObject.get_base_type('Function'):
-                result.append(FunctionScope(self.pycore, block, self))
-            elif block.get_type() == PyObject.get_base_type('Type'):
-                result.append(ClassScope(self.pycore, block, self))
-            else:
-                result.append(GlobalScope(self.pycore, block))
+        result = [block.get_scope() for block in block_objects]
         return result
 
     def get_lineno(self):
-        return self.pyname._get_ast().lineno
+        return self.pyobject._get_ast().lineno
 
     def get_kind(self):
         pass
@@ -242,24 +264,33 @@ class GlobalScope(Scope):
 
 class FunctionScope(Scope):
     
-    def __init__(self, pycore, pyname, parent):
-        super(FunctionScope, self).__init__(pycore, pyname, parent)
+    def __init__(self, pycore, pyobject):
+        super(FunctionScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
+        self.names = None
+    
+    def _get_names(self):
+        if self.names == None:
+            new_visitor = _FunctionVisitor(self.pycore, self.pyobject)
+            for n in self.pyobject._get_ast().getChildNodes():
+                compiler.walk(n, new_visitor)
+            self.names = new_visitor.names
+        return self.names
     
     def get_names(self):
         result = {}
-        for name in self.pyname.object.parameters:
+        for name in self.pyobject.parameters:
             result[name] = PyName()
-        new_visitor = _FunctionVisitor(self.pycore)
-        for n in self.pyname._get_ast().getChildNodes():
-            compiler.walk(n, new_visitor)
-        result.update(new_visitor.names)
+        result.update(self._get_names())
         return result
 
-    def get_scopes(self):
-        new_visitor = _FunctionVisitor(self.pycore)
-        for n in self.pyname._get_ast().getChildNodes():
-            compiler.walk(n, new_visitor)
-        return []
+    def _create_scopes(self):
+        block_objects = [pyname.object for pyname in self._get_names().values()
+                         if pyname._has_block()]
+        def block_compare(x, y):
+            return cmp(x._get_ast().lineno, y._get_ast().lineno)
+        block_objects.sort(cmp=block_compare)
+        result = [block.get_scope() for block in block_objects]
+        return result
 
     def get_kind(self):
         return 'Function'
@@ -267,8 +298,8 @@ class FunctionScope(Scope):
 
 class ClassScope(Scope):
 
-    def __init__(self, pycore, pyname, parent):
-        super(ClassScope, self).__init__(pycore, pyname, parent)
+    def __init__(self, pycore, pyobject):
+        super(ClassScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
     
     def get_names(self):
         return {}
@@ -279,15 +310,16 @@ class ClassScope(Scope):
 
 class _ScopeVisitor(object):
 
-    def __init__(self, pycore):
+    def __init__(self, pycore, owner_object):
         self.names = {}
         self.pycore = pycore
+        self.owner_object = owner_object
     
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore, node), True)
+        self.names[node.name] = PyName(PyClass(self.pycore, node, self.owner_object), True)
 
     def visitFunction(self, node):
-        pyobject = PyFunction(self.pycore, node)
+        pyobject = PyFunction(self.pycore, node, self.owner_object)
         self.names[node.name] = PyName(pyobject, True)
 
     def visitAssName(self, node):
@@ -303,6 +335,7 @@ class _ScopeVisitor(object):
                 module = self.pycore.get_module(name)
             except ModuleNotFoundException:
                 module = PyObject(PyObject.get_base_type('Module'))
+                module.is_package = False
             if alias is None and '.' in imported:
                 tokens = imported.split('.')
                 if tokens[0] in self.names and \
@@ -341,24 +374,28 @@ class _ScopeVisitor(object):
                 if alias is not None:
                     imported = alias
                 if module.get_attributes().has_key(name):
-                    self.names[imported] = PyName(module.get_attributes()[name].object, False)
+                    imported_object = module.get_attributes()[name].object
+                    if isinstance(imported_object, PyPackage):
+                        self.names[imported] = PyFilteredPackage()
+                    else:
+                        self.names[imported] = PyName(imported_object, False)
                 else:
                     self.names[imported] = PyName()
 
 
 class _GlobalVisitor(_ScopeVisitor):
 
-    def __init__(self, pycore):
-        super(_GlobalVisitor, self).__init__(pycore)
+    def __init__(self, pycore, owner_object):
+        super(_GlobalVisitor, self).__init__(pycore, owner_object)
     
 
 class _ClassVisitor(_ScopeVisitor):
 
-    def __init__(self, pycore):
-        super(_ClassVisitor, self).__init__(pycore)
+    def __init__(self, pycore, owner_object):
+        super(_ClassVisitor, self).__init__(pycore, owner_object)
 
     def visitFunction(self, node):
-        pyobject = PyFunction(self.pycore, node)
+        pyobject = PyFunction(self.pycore, node, self.owner_object)
         self.names[node.name] = PyName(pyobject, True)
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor()
@@ -369,13 +406,13 @@ class _ClassVisitor(_ScopeVisitor):
         self.names[node.name] = PyName()
 
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore, node), True)
+        self.names[node.name] = PyName(PyClass(self.pycore, node, self.owner_object), True)
 
 
 class _FunctionVisitor(_ScopeVisitor):
 
-    def __init__(self, pycore):
-        super(_FunctionVisitor, self).__init__(pycore)
+    def __init__(self, pycore, owner_object):
+        super(_FunctionVisitor, self).__init__(pycore, owner_object)
 
 
 class _ClassInitVisitor(object):

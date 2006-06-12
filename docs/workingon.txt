@@ -1,16 +1,18 @@
-Refactoring pycore and codeassist modules @ 3
-=============================================
+Proposing base class attributes @ 2
+===================================
 
-- Invaliding file cache after removal
-- Imported modules should not be considered defined
-- Correcting indentation on '\n ${cursor}   def f():\n    pass\n';
 
-* From package import package
+- From package import package
+- not_found_module.is_package
+- Caching get_scopes
+- Test function in function scope
+- Test function scopes
+
 ? Resource.remove_change_observer
 ? Folders and change_observers
 * PyNames with None object
 ? PyObject might have additional information based on their types; visitor; checking types in many places
-? Refactor pycore; So many kinds for Modules; not_found_module.is_package?
+? Refactor pycore; So many kinds for Modules; eliminate checking module.is_package
 * Better Completion proposals kind to ease transformation; Names inside classes
 ? Not accessing pyname.object in codeassist
 ? PyObject equality check; Value objects
@@ -33,10 +35,8 @@ Before 0.2 Release
 * Document features added since release 0.1
 
 
-
 Remaining Stories
 =================
-? From-import might cache module global variables
 ? Directories should contain __init__.py to be packages in codeassist
 ? Auto-completion on relative imports
 ? Python C extensions
@@ -46,5 +46,4 @@ Remaining Stories
   ? Decide which modules are the domain and which are the presentation
   ? Should editing tools access Editor directly? Which of them?
   ? Specifing the type of each story; UI or Core
-? The connection between ASTs, module hierarchies and type databases
 

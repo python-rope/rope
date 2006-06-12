@@ -113,16 +113,16 @@ support a limited number of refactorings.
 
   As Don Roberts one of the writers of the "Refactoring Browser" for
 smalltalk writes in his doctoral thesis:
-  "An early implementation of the Refactoring Browser for Smalltalk was a separate
-tool from the standard Smalltalk development tools. What we found was that no
-one used it. We did not even use it ourselves. Once we integrated the refactorings
-directly into the Smalltalk Browser, we used them extensively."
+  "An early implementation of the Refactoring Browser for Smalltalk was a
+separate tool from the standard Smalltalk development tools. What we found
+was that no one used it. We did not even use it ourselves. Once we integrated
+the refactorings directly into the Smalltalk Browser, we used them extensively."
 
   The main goal of rope is to concentrate on type inferencing, auto-completion
 and refactoring of python programs and not a state of art IDE (At least not in
 the first phase).
 
-  The type inferencing and refactoring parts of the rope will not
+  The type inferencing and refactoring parts of the rope will not be
 dependent on rope and if successful, will be released as standalone programs
 and libraries so that other projects may use them.
 
@@ -147,7 +147,7 @@ distributions specify the version of that package.
 Bug Reports
 ===========
 
-  Send your bug reports and feature requests to rope's sourceforge.net
+  Send your bug reports and feature requests in rope's sourceforge.net
 project page at http://sf.net/projects/rope.
 
 
