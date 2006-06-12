@@ -111,6 +111,32 @@ class PyFunction(PyDefinedObject):
     def _create_scope(self):
         return FunctionScope(self.pycore, self)
 
+class _AttributeListFinder(object):
+
+    def __init__(self):
+        self.name_list = []
+        
+    def visitName(self, node):
+        self.name_list.append(node.name)
+    
+    def visitGetattr(self, node):
+        compiler.walk(node.expr, self)
+        self.name_list.append(node.attrname)
+        
+    @staticmethod
+    def get_attribute(node, scope):
+        finder = _AttributeListFinder()
+        compiler.walk(node, finder)
+        pyobject = scope.lookup(finder.name_list[0])
+        if pyobject != None and len(finder.name_list) > 1:
+            for name in finder.name_list[1:]:
+                if name in pyobject.get_attributes():
+                    pyobject = pyobject.get_attributes()[name].object
+                else:
+                    pyobject = None
+                    break
+        return pyobject
+
 
 class PyClass(PyDefinedObject):
 
@@ -120,10 +146,16 @@ class PyClass(PyDefinedObject):
         self.parent = parent
 
     def _get_attributes_from_ast(self):
+        result = {}
+        for base_name in self.ast_node.bases:
+            base = _AttributeListFinder.get_attribute(base_name, self.parent.get_scope())
+            if base:
+                result.update(base.get_attributes())
         new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():
             compiler.walk(n, new_visitor)
-        return new_visitor.names
+        result.update(new_visitor.names)
+        return result
 
     def _create_scope(self):
         return ClassScope(self.pycore, self)

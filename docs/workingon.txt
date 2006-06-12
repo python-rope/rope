@@ -1,12 +1,10 @@
 Proposing base class attributes @ 2
 ===================================
 
-
-- From package import package
-- not_found_module.is_package
-- Caching get_scopes
-- Test function in function scope
-- Test function scopes
+- Normal base classes
+- Unknown base class
+- Multiple-bases
+- Dotted base class
 
 ? Resource.remove_change_observer
 ? Folders and change_observers
@@ -17,7 +15,6 @@ Proposing base class attributes @ 2
 ? Not accessing pyname.object in codeassist
 ? PyObject equality check; Value objects
 * Removing duplications in tests in codeassist and pycore scopes
-
 * Move Project.find_module and find_package and get_source_folders to PyCore
 * Move Project.create_module and create_package to PyCore
 ? Builtins and scopes

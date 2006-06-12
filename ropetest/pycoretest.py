@@ -161,6 +161,26 @@ class PyElementHierarchyTest(unittest.TestCase):
         inner_scope = func_scope.get_scopes()[0]
         self.assertTrue('var' in inner_scope.get_names())
 
+    def test_inheriting_base_class_attributes(self):
+        mod = self.pycore.get_string_module('class Base(object):\n    def method(self):\n        pass\n' +
+                                             'class Derived(Base):\n    pass\n')
+        derived = mod.get_attributes()['Derived']
+        self.assertTrue('method' in derived.get_attributes())
+        self.assertEquals(PyObject.get_base_type('Function'), derived.get_attributes()['method'].get_type())
+
+    def test_inheriting_multiple_base_class_attributes(self):
+        mod = self.pycore.get_string_module('class Base1(object):\n    def method1(self):\n        pass\n' +
+                                            'class Base2(object):\n    def method2(self):\n        pass\n' +
+                                             'class Derived(Base1, Base2):\n    pass\n')
+        derived = mod.get_attributes()['Derived']
+        self.assertTrue('method1' in derived.get_attributes())
+        self.assertTrue('method2' in derived.get_attributes())
+
+    def test_inheriting_unknown_base_class(self):
+        mod = self.pycore.get_string_module('class Derived(NotFound):\n    def f(self):\n        pass\n')
+        derived = mod.get_attributes()['Derived']
+        self.assertTrue('f' in derived.get_attributes())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
@@ -304,6 +324,13 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_not_considering_imported_modules_as_sub_scopes(self):
         scope = self.pycore.get_string_scope('import samplemod\n')
         self.assertEquals(0, len(scope.get_scopes()))
+
+    # TODO: Getattr base classes
+    def test_inheriting_dotted_base_class(self):
+        mod = self.pycore.get_string_module('import samplemod\n' + 
+                                            'class Derived(samplemod.SampleClass):\n    pass\n')
+        derived = mod.get_attributes()['Derived']
+        self.assertTrue('sample_method' in derived.get_attributes())
 
 
 class PyCoreScopesTest(unittest.TestCase):

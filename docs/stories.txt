@@ -11,9 +11,6 @@ Stories
 * Add import @ 2
 
 
-* Show PyDoc @ 2
-
-
 * Variable indentation and tab size @ 1
 
 
@@ -203,17 +200,20 @@ Stories
 * Show quick outline; C-o @ 2
 
 
+* Show PyDoc @ 2
+
+
 * Out of project modules @ 2
   Using inspect on modules that cannot be found in the project
+
+
+* AssList and AssTuple assignments @ 1
 
 
 * Auto completion contexts; strings, comments, functions and ... @ 2
 
 
 > Public release 0.2pre3 : June 18, 2006
-
-
-* AssList and AssTuple assignments @ 1
 
 
 * Go to definition; F3 @ 1
