@@ -220,13 +220,6 @@ Stories
   Not overwriting PyNames in pycore; Updating them.
 
 
-* Auto-completing "self."s @ 2
-
-
-* Proposing base class attributes @ 2
-  Inheriting the attributes of the base classes.
-
-
 Remaining Stories
 =================
 ? Change program goals and description; principles.html

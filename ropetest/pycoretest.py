@@ -325,12 +325,25 @@ class PyCoreInProjectsTest(unittest.TestCase):
         scope = self.pycore.get_string_scope('import samplemod\n')
         self.assertEquals(0, len(scope.get_scopes()))
 
-    # TODO: Getattr base classes
     def test_inheriting_dotted_base_class(self):
         mod = self.pycore.get_string_module('import samplemod\n' + 
                                             'class Derived(samplemod.SampleClass):\n    pass\n')
         derived = mod.get_attributes()['Derived']
         self.assertTrue('sample_method' in derived.get_attributes())
+
+    def test_self_in_methods(self):
+        scope = self.pycore.get_string_scope('class Sample(object):\n    def func(self):\n        pass\n')
+        sample_class = scope.get_names()['Sample'].object
+        func_scope = scope.get_scopes()[0].get_scopes()[0]
+        self.assertEquals(sample_class, func_scope.get_names()['self'].get_type())
+        self.assertTrue('func' in func_scope.get_names()['self'].get_attributes())
+
+    def test_self_in_methods_with_decorators(self):
+        scope = self.pycore.get_string_scope('class Sample(object):\n    @staticmethod\n' +
+                                             '    def func(self):\n        pass\n')
+        sample_class = scope.get_names()['Sample'].object
+        func_scope = scope.get_scopes()[0].get_scopes()[0]
+        self.assertNotEquals(sample_class, func_scope.get_names()['self'].get_type())
 
 
 class PyCoreScopesTest(unittest.TestCase):

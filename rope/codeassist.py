@@ -253,7 +253,7 @@ class PythonCodeAssist(CodeAssist):
                         break
                 if consistent:
                     for name, pyname in element.get_attributes().iteritems():
-                        if name.startswith(tokens[-1]):
+                        if name.startswith(tokens[-1]) or tokens[-1] == '':
                             complete_name = '.'.join(tokens[:-1]) + '.' + name
                             add_pyname_proposal(inner_scope, pyname, complete_name)
         return result

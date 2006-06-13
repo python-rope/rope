@@ -152,3 +152,4 @@ class Searcher(object):
 
     def get_match(self):
         return self.current_match
+

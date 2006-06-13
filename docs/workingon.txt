@@ -1,11 +1,9 @@
-Proposing base class attributes @ 2
-===================================
+* Auto-completing "self."s @ 2
+==============================
 
-- Normal base classes
-- Unknown base class
-- Multiple-bases
-- Dotted base class
+- Function decorators
 
+? PyFunction.decorators and bases should be pyobjects
 ? Resource.remove_change_observer
 ? Folders and change_observers
 * PyNames with None object

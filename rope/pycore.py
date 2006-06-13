@@ -51,7 +51,9 @@ class PyObject(object):
         self.type = type_
     
     def get_attributes(self):
-        return {}
+        if self.type is self:
+            return {}
+        return self.type.get_attributes()
 
     def get_type(self):
         return self.type
@@ -104,12 +106,14 @@ class PyFunction(PyDefinedObject):
         super(PyFunction, self).__init__(PyObject.get_base_type('Function'),
                                          pycore, ast_node, parent)
         self.parameters = self.ast_node.argnames
+        self.decorators = self.ast_node.decorators
 
     def _get_attributes_from_ast(self):
         return {}
     
     def _create_scope(self):
         return FunctionScope(self.pycore, self)
+
 
 class _AttributeListFinder(object):
 
@@ -310,8 +314,15 @@ class FunctionScope(Scope):
     
     def get_names(self):
         result = {}
-        for name in self.pyobject.parameters:
-            result[name] = PyName()
+        if len(self.pyobject.parameters) > 0:
+            if self.pyobject.parent.get_type() == PyObject.get_base_type('Type') and \
+               not self.pyobject.decorators:
+                result[self.pyobject.parameters[0]] = PyName(PyObject(self.pyobject.parent))
+            else:
+                result[self.pyobject.parameters[0]] = PyName()
+        if len(self.pyobject.parameters) > 1:
+            for name in self.pyobject.parameters[1:]:
+                result[name] = PyName()
         result.update(self._get_names())
         return result
 
