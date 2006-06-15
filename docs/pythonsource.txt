@@ -1,15 +1,18 @@
-*** PythonSource ***
-  * Formatting code
-  * Basic refactorings
-  * Advanced refactorings
-  * Type inferencing
-    * static
-    * dynamic
-    * ask user
-  * Code assists
-  * Auto completion
+============
+PythonSource
+============
 
->>> Advanced Refactorings; Need type inferencing
+* Formatting code
+* Basic refactorings
+* Advanced refactorings
+* Type inferencing
+  * static
+  * dynamic
+  * ask user
+* Code assists
+* Auto completion
+
+Advanced Refactorings; Need type inferencing
 * Rename method
 * Remove method
 * Move method
@@ -23,18 +26,18 @@
 * Inline method
 * Change method signature
 
->>> Advanced Algorithms
+Advanced Algorithms
 * Finding similar pieces of code while extracting methods
 * Finding similar statements while extracting local variables
 
->>> Help coding
+Help coding
 * Override/implement methods
 * Make getters and setters
 * Organize imports
 * Add import
 * Format source
 
->>> Code Assists
+Code Assists
 * Make module/class/function/method
 * Surround with try statement
 * Remove try statement
@@ -45,13 +48,13 @@
 * Go to definition
 * Show pydoc
 
->>> Auto Completion
+Auto Completion
 * Complete variable name
 * Complete method name by using type inferencing
 * Complete function keyword argument
 * Complete module and class name
 
->>> Basic Refactorings
+Basic Refactorings
 * Rename module
 * Move class to another module
 * Move class to a new module

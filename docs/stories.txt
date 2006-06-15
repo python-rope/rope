@@ -101,7 +101,7 @@ Stories
 
 
 * User specified source folders @ 2
-    You should save this project specific information somewhere. How should
+  You should save this project specific information somewhere. How should
   guessed source folders be used.
 
 
@@ -197,6 +197,9 @@ Stories
 * Auto-completing function parameter names when calling @ 2
 
 
+* Auto completion contexts; strings, comments, functions and ... @ 2
+
+
 * Show quick outline; C-o @ 2
 
 
@@ -210,14 +213,11 @@ Stories
 * AssList and AssTuple assignments @ 1
 
 
-* Auto completion contexts; strings, comments, functions and ... @ 2
+* Go to definition; F3 @ 1
+  Not overwriting PyNames in pycore; Updating them.
 
 
 > Public release 0.2pre3 : June 18, 2006
-
-
-* Go to definition; F3 @ 1
-  Not overwriting PyNames in pycore; Updating them.
 
 
 Remaining Stories

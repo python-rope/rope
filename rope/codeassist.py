@@ -165,19 +165,7 @@ class PythonCodeAssist(CodeAssist):
         result = {}
         for builtin in self.builtins:
             if builtin.startswith(starting):
-                obj = getattr(__builtin__, builtin)
-                kind = 'unknown'
-                if inspect.isclass(obj):
-                    kind = 'class'
-                if inspect.isbuiltin(obj):
-                    kind = 'builtin_function'
-                if inspect.ismodule(obj):
-                    kind = 'module'
-                if inspect.ismethod(obj):
-                    kind = 'method'
-                if inspect.isfunction(obj):
-                    kind = 'function'
-                result[builtin] = CompletionProposal(builtin, kind)
+                result[builtin] = CompletionProposal(builtin, 'builtin')
         return result
 
     def _get_matching_keywords(self, starting):
@@ -216,15 +204,9 @@ class PythonCodeAssist(CodeAssist):
         inner_scope = current_scope
         def add_pyname_proposal(scope, pyname, name):
             from rope.pycore import PyObject
-            kind = 'local_variable'
+            kind = 'local'
             if scope.get_kind() == 'Module':
-                kind = 'global_variable'
-            if pyname.get_type() == PyObject.get_base_type('Type'):
-                kind = 'class'
-            if pyname.get_type() == PyObject.get_base_type('Function'):
-                kind = 'function'
-            if pyname.get_type() == PyObject.get_base_type('Module'):
-                kind = 'module'
+                kind = 'global'
             result[name] = CompletionProposal(name, kind)
         while current_scope is not None and \
               (current_scope.get_kind() == 'Module' or
@@ -255,7 +237,7 @@ class PythonCodeAssist(CodeAssist):
                     for name, pyname in element.get_attributes().iteritems():
                         if name.startswith(tokens[-1]) or tokens[-1] == '':
                             complete_name = '.'.join(tokens[:-1]) + '.' + name
-                            add_pyname_proposal(inner_scope, pyname, complete_name)
+                            result[complete_name] = CompletionProposal(complete_name, 'attribute')
         return result
 
     def add_template(self, name, definition):

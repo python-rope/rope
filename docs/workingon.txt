@@ -1,7 +1,10 @@
-* Auto-completing "self."s @ 2
-==============================
+Refactor CodeAssist @ 2
+=======================
 
-- Function decorators
+- Only report scope in which the var is reported global, local, attribute
+
+* Code-assist proposal name should not be so long
+? Compeletion type reflects the structural or dynamic types
 
 ? PyFunction.decorators and bases should be pyobjects
 ? Resource.remove_change_observer
@@ -9,7 +12,6 @@
 * PyNames with None object
 ? PyObject might have additional information based on their types; visitor; checking types in many places
 ? Refactor pycore; So many kinds for Modules; eliminate checking module.is_package
-* Better Completion proposals kind to ease transformation; Names inside classes
 ? Not accessing pyname.object in codeassist
 ? PyObject equality check; Value objects
 * Removing duplications in tests in codeassist and pycore scopes
