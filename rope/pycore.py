@@ -30,6 +30,7 @@ class PyCore(object):
     def _invalidate_resource_cache(self, resource):
         if resource in self.module_map:
             del self.module_map[resource]
+            resource.remove_change_observer(self._invalidate_resource_cache)
 
     def _create(self, resource):
         if resource in self.module_map:
@@ -114,6 +115,19 @@ class PyFunction(PyDefinedObject):
     def _create_scope(self):
         return FunctionScope(self.pycore, self)
 
+    def _get_parameters(self):
+        result = {}
+        if len(self.parameters) > 0:
+            if self.parent.get_type() == PyObject.get_base_type('Type') and \
+               not self.decorators:
+                result[self.parameters[0]] = PyName(PyObject(self.parent))
+            else:
+                result[self.parameters[0]] = PyName()
+        if len(self.parameters) > 1:
+            for parameter in self.parameters[1:]:
+                result[parameter] = PyName()            
+        return result
+
 
 class _AttributeListFinder(object):
 
@@ -151,14 +165,20 @@ class PyClass(PyDefinedObject):
 
     def _get_attributes_from_ast(self):
         result = {}
-        for base_name in self.ast_node.bases:
-            base = _AttributeListFinder.get_attribute(base_name, self.parent.get_scope())
-            if base:
-                result.update(base.get_attributes())
+        for base in self._get_bases():
+            result.update(base.get_attributes())
         new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():
             compiler.walk(n, new_visitor)
         result.update(new_visitor.names)
+        return result
+
+    def _get_bases(self):
+        result = []
+        for base_name in self.ast_node.bases:
+            base = _AttributeListFinder.get_attribute(base_name, self.parent.get_scope())
+            if base:
+                result.append(base)
         return result
 
     def _create_scope(self):
@@ -313,16 +333,7 @@ class FunctionScope(Scope):
         return self.names
     
     def get_names(self):
-        result = {}
-        if len(self.pyobject.parameters) > 0:
-            if self.pyobject.parent.get_type() == PyObject.get_base_type('Type') and \
-               not self.pyobject.decorators:
-                result[self.pyobject.parameters[0]] = PyName(PyObject(self.pyobject.parent))
-            else:
-                result[self.pyobject.parameters[0]] = PyName()
-        if len(self.pyobject.parameters) > 1:
-            for name in self.pyobject.parameters[1:]:
-                result[name] = PyName()
+        result = self.pyobject._get_parameters()
         result.update(self._get_names())
         return result
 

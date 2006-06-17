@@ -198,6 +198,9 @@ class Resource(object):
     def add_change_observer(self, observer):
         pass
 
+    def remove_change_observer(self, observer):
+        pass
+
     def _get_real_path(self):
         """Returns the file system path of this resource"""
         return self.project._get_resource_path(self.name)
@@ -233,6 +236,10 @@ class File(Resource):
 
     def add_change_observer(self, observer):
         self.observers.append(observer)
+
+    def remove_change_observer(self, observer):
+        if observer in self.observers:
+            self.observers.remove(observer)
 
     def remove(self):
         super(File, self).remove()

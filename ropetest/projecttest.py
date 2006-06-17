@@ -497,6 +497,14 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(1, sample_observer.change_count)
         self.assertEquals(sample_file, sample_observer.last_changed)
 
+    def test_resource_change_observer(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        sample_observer = SampleObserver()
+        sample_file.add_change_observer(sample_observer.changed)
+        sample_file.remove_change_observer(sample_observer.changed)
+        sample_file.write('a sample file version 2')
+        self.assertEquals(0, sample_observer.change_count)
+
 
 class SampleObserver(object):
     def __init__(self):

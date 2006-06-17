@@ -1,10 +1,14 @@
 Refactor CodeAssist @ 2
 =======================
 
-- Only report scope in which the var is reported global, local, attribute;
+- PyFunction.get_parameters() and PyClass._get_bases() should be pyobjects
 
-* PyFunction.decorators and bases should be pyobjects
 * Resource.remove_change_observer
+* Move Project.find_module and find_package and get_source_folders to PyCore
+* Move Project.create_module and create_package to PyCore
+* Refactor codeassist._get_code_completions
+* Refactor _ScopeVisitor.visitFrom and visitImport
+
 ? Folders and change_observers
 ? Code-assist proposal name should not be so long
 * PyNames with None object
@@ -13,8 +17,6 @@ Refactor CodeAssist @ 2
 ? Not accessing pyname.object in codeassist
 ? PyObject equality check; Value objects
 * Removing duplications in tests in codeassist and pycore scopes
-* Move Project.find_module and find_package and get_source_folders to PyCore
-* Move Project.create_module and create_package to PyCore
 ? Builtins and scopes
 ? We know the type of list and keyword args
 ? Consider using StatementRangeFinder in highlight module

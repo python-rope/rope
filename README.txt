@@ -1,6 +1,6 @@
-======================
-rope, A python IDE ...
-======================
+========================
+ rope, a python IDE ...
+========================
 
 Overview
 ========
@@ -35,7 +35,11 @@ Keybinding
 
 The keybinding will be customizable in future. 
 Some of these bindings are choosen from emacs and some from eclipse.
+('C' stands for Control key and 'M' for Meta(Alt) key.)
 
+=============  ==========================
+key            binding
+=============  ==========================
 C-x C-p        open/new project
 C-x C-n        new file
 C-x C-f        find file
@@ -54,13 +58,14 @@ C-x C-x        swap mark and insert
 C-y            paste
 C-x C-s        save
 C-i            correct line indentation
-M-/            auto-complete
+M-/            code-assist
+=============  ==========================
 
 
 Description
 ===========
 
-This program, rope, is a python IDE. It tries to give users lots of things
+*rope* is a python IDE. It tries to give users lots of things
 that are not available in python IDEs yet.
 
 Refactoring
@@ -147,9 +152,9 @@ yet ready for code contributions in its central parts. I hope in soon future,
 somewhere about version 0.5 or 0.6, rope would be mature enough for being
 extended easily in those parts.
 
-Anyway right now contributions are really needed in many places. For example
+Right now contributions are really needed in UI part and
 patches and extensions in the UI part are extremely welcome. Have a look at the
-UI enhancement stories(docs/stories.txt). Send your patches in sourceforge.net
+UI enhancement stories (docs/stories.txt). Send your patches in sourceforge.net
 project page, http://sf.net/projects/rope. Patches should use python coding
 style, PEP 8, and should have good unit tests. rope uses a local repository
 right now, but it will be moved to SVN repository on sourceforge.net some time
