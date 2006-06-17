@@ -1,14 +1,12 @@
 Refactor CodeAssist @ 2
 =======================
 
-- Only report scope in which the var is reported global, local, attribute
+- Only report scope in which the var is reported global, local, attribute;
 
-* Code-assist proposal name should not be so long
-? Compeletion type reflects the structural or dynamic types
-
-? PyFunction.decorators and bases should be pyobjects
-? Resource.remove_change_observer
+* PyFunction.decorators and bases should be pyobjects
+* Resource.remove_change_observer
 ? Folders and change_observers
+? Code-assist proposal name should not be so long
 * PyNames with None object
 ? PyObject might have additional information based on their types; visitor; checking types in many places
 ? Refactor pycore; So many kinds for Modules; eliminate checking module.is_package
@@ -18,7 +16,6 @@ Refactor CodeAssist @ 2
 * Move Project.find_module and find_package and get_source_folders to PyCore
 * Move Project.create_module and create_package to PyCore
 ? Builtins and scopes
-? We know the type of self
 ? We know the type of list and keyword args
 ? Consider using StatementRangeFinder in highlight module
 
@@ -30,6 +27,7 @@ Before 0.2 Release
 * Enhancing highlighting
 * Profiling to find the bottlenecks
 * Document features added since release 0.1
+* Better homepage
 
 
 Remaining Stories

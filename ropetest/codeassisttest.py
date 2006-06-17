@@ -403,16 +403,10 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_in_result('Class1.Class2.sample_method', 'attribute', result)
 
     def test_completing_after_self_dot(self):
-        code = 'class Sample(object):\n    def method1(self):\n        pass\n    def method2(self):\n' + \
-               '        self.m'
+        code = 'class Sample(object):\n    def method1(self):\n        pass\n' + \
+               '    def method2(self):\n        self.m'
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('self.method1', 'attribute', result)
-
-    # TODO: Unknowns and variables are distinct
-    def xxx_test_unknown_when_module_cannot_be_found(self):
-        code = 'from doesnotexist import nestedmod\nnest'
-        result = self.assist.assist(code, len(code))
-        self.assert_completion_in_result('nestedmod', 'global', result)
 
 
 class TemplateTest(unittest.TestCase):

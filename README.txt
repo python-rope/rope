@@ -15,7 +15,19 @@ Version Overview
 
 Features added in this release:
 
-*
+* Proposing base class attributes
+* Auto-completing "self."s
+* Auto completion after "."s for modules and classes
+
+You can use <Alt-/> for auto-completion. The letter before the actual
+proposal in the code assist proposals dialog indicates the type of
+the proposal; G: global, L: local, A: attribute, K: keyword, B: builtin and
+T: template.
+
+Right now, you can't complete as you type but that will be probably
+implemented before 0.2 release. Lots of interesting features are
+planned to be added before 0.3 release like quick outline, show pydoc,
+goto definition and a bit of type inferencing. Keep waiting!
 
 
 Keybinding
@@ -26,10 +38,9 @@ Some of these bindings are choosen from emacs and some from eclipse.
 
 C-x C-p        open/new project
 C-x C-n        new file
-C-Shift-r      find file
+C-x C-f        find file
 C-x b          change active editor
 C-x k          close active editor
-C-F6           switch active editor
 C-x C-c        exit
 C-F11          run active editor
 
@@ -43,7 +54,7 @@ C-x C-x        swap mark and insert
 C-y            paste
 C-x C-s        save
 C-i            correct line indentation
-C-/            auto-complete
+M-/            auto-complete
 
 
 Description
@@ -132,8 +143,9 @@ Get Involved!
 =============
 
 Rope has just started. Right now rope's design changes rapidly and it's not
-yet ready for code contributions. I hope in soon future, somewhere about version
-0.5 or 0.6, rope would be mature enough for being extended easily.
+yet ready for code contributions in its central parts. I hope in soon future,
+somewhere about version 0.5 or 0.6, rope would be mature enough for being
+extended easily in those parts.
 
 Anyway right now contributions are really needed in many places. For example
 patches and extensions in the UI part are extremely welcome. Have a look at the

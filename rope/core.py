@@ -111,7 +111,6 @@ class Core(object):
         fileMenu.add_command(label='Exit', command=self.exit, underline=1)
 
     def _set_key_binding(self, widget):
-        widget.bind('<Control-x><Control-f>', self._open_file_dialog)
         widget.bind('<Control-x><Control-n>', self._create_new_file_dialog)
         def _save_active_editor(event):
             self.save_file()
@@ -124,6 +123,7 @@ class Core(object):
         widget.bind('<Control-x><Control-c>', _exit)
         widget.bind('<Control-x><Control-d>', self._create_new_folder_dialog)
         widget.bind('<Control-R>', self._find_file_dialog)
+        widget.bind('<Control-x><Control-f>', self._find_file_dialog)
         widget.bind('<Control-F11>', self._run_active_editor)
         def _close_active_editor(event):
             self.close_active_editor()

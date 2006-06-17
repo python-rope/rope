@@ -12,7 +12,7 @@ Done List
 - Auto completion after "."s : June 8, 2006
 
 
-> Public release 0.2pre2 : June 4, 2006
+> Public Release 0.2pre2 : June 4, 2006
 
 
 - Next/prev word stops at underlines and capitals : May 29, 2006
@@ -39,7 +39,7 @@ Done List
 - Auto-complete local variable names : May 22, 2006
 
 
-> Public release 0.2pre : May 20, 2006
+> Public Release 0.2pre : May 20, 2006
 
 
 - Auto completing keywords and builtins : May 19, 2006
@@ -57,7 +57,7 @@ Done List
 - Auto-complete global variables : May 14, 2006
 
 
-> Public release 0.1 : May 8, 2006
+> Public Release 0.1 : May 8, 2006
 
 
 - Separating indenting and correcting indentation : May 7, 2006
@@ -80,7 +80,7 @@ Done List
 - Make new module dialog : April 25, 2006
 
 
-> Public release 0.1pre : April 22, 2006
+> Public Release 0.1pre : April 22, 2006
 
 
 - Extending syntax highlighted elements : April 22, 2006

@@ -202,19 +202,17 @@ class PythonCodeAssist(CodeAssist):
             raise RopeSyntaxError(e)
         result = {}
         inner_scope = current_scope
-        def add_pyname_proposal(scope, pyname, name):
-            from rope.pycore import PyObject
-            kind = 'local'
-            if scope.get_kind() == 'Module':
-                kind = 'global'
-            result[name] = CompletionProposal(name, kind)
         while current_scope is not None and \
               (current_scope.get_kind() == 'Module' or
                self._get_line_indents(lines, current_scope.get_lineno() - 1) < current_indents):
             inner_scope = current_scope
             for name, pyname in current_scope.get_names().iteritems():
                 if name.startswith(starting):
-                    add_pyname_proposal(current_scope, pyname, name)
+                    from rope.pycore import PyObject
+                    kind = 'local'
+                    if current_scope.get_kind() == 'Module':
+                        kind = 'global'
+                    result[name] = CompletionProposal(name, kind)
             new_scope = None
             for scope in current_scope.get_scopes():
                 if scope.get_lineno() - 1 <= lineno:

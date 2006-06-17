@@ -200,6 +200,9 @@ Stories
 * Auto completion contexts; strings, comments, functions and ... @ 2
 
 
+> Public Release 0.2pre4 : July 2, 2006
+
+
 * Show quick outline; C-o @ 2
 
 
