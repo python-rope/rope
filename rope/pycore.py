@@ -1,6 +1,10 @@
 import compiler
+import os
+import subprocess
+import sys
 
 import rope.exceptions
+from rope.exceptions import RopeException
 
 
 class ModuleNotFoundException(rope.exceptions.RopeException):
@@ -14,7 +18,7 @@ class PyCore(object):
         self.module_map = {}
 
     def get_module(self, name):
-        results = self.project.find_module(name)
+        results = self.find_module(name)
         if not results:
             raise ModuleNotFoundException('Module %s not found' % name)
         result = results[0]
@@ -42,6 +46,73 @@ class PyCore(object):
         self.module_map[resource] = result
         resource.add_change_observer(self._invalidate_resource_cache)
         return result
+
+    def create_module(self, src_folder, new_module):
+        packages = new_module.split('.')
+        parent = src_folder
+        for package in packages[:-1]:
+            parent = parent.get_child(package)
+        return parent.create_file(packages[-1] + '.py')
+
+    def create_package(self, src_folder, new_package):
+        packages = new_package.split('.')
+        parent = src_folder
+        for package in packages[:-1]:
+            parent = parent.get_child(package)
+        created_package = parent.create_folder(packages[-1])
+        created_package.create_file('__init__.py')
+        return created_package
+
+    def find_module(self, module_name):
+        source_folders = self.get_source_folders()
+        packages = module_name.split('.')
+        result = []
+        for src in source_folders:
+            module = src
+            found = True
+            for pkg in packages[:-1]:
+                if  module.is_folder() and module.has_child(pkg):
+                    module = module.get_child(pkg)
+                else:
+                    found = False
+                    break
+
+            if module.is_folder() and module.has_child(packages[-1]) and\
+               module.get_child(packages[-1]).is_folder():
+                module = module.get_child(packages[-1])
+            elif module.is_folder() and module.has_child(packages[-1] + '.py') and\
+               not module.get_child(packages[-1] + '.py').is_folder():
+                module = module.get_child(packages[-1] + '.py')
+            else:
+                found = False
+            if found:
+                result.append(module)
+        return result
+
+    def _is_package(self, folder):
+        init_dot_py = folder.get_path() + '/__init__.py'
+        try:
+            init_dot_py_file = self.project.get_resource(init_dot_py)
+            if not init_dot_py_file.is_folder():
+                return True
+        except RopeException:
+            pass
+        return False
+
+    def _find_source_folders(self, folder):
+        for resource in folder.get_folders():
+            if self._is_package(resource):
+                return [folder]
+        result = []
+        for resource in folder.get_files():
+            if resource.get_name().endswith('.py'):
+                result.append(folder)
+        for resource in folder.get_folders():
+            result.extend(self._find_source_folders(resource))
+        return result
+
+    def get_source_folders(self):
+        return self._find_source_folders(self.project.get_root_folder())
 
 
 class PyObject(object):
@@ -477,4 +548,31 @@ class _ClassInitVisitor(object):
     def visitAssAttr(self, node):
         if node.expr.name == 'self':
             self.names[node.attrname] = PyName()
+
+class PythonFileRunner(object):
+    """A class for running python project files"""
+
+    def __init__(self, file, stdin=None, stdout=None):
+        self.file = file
+        file_path = self.file._get_real_path()
+        env = {}
+        env.update(os.environ)
+        source_folders = []
+        for folder in file.get_project().get_pycore().get_source_folders():
+            source_folders.append(os.path.abspath(folder._get_real_path()))
+        env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
+                            os.pathsep.join(source_folders)
+        self.process = subprocess.Popen(executable=sys.executable,
+                                        args=(sys.executable, self.file.get_name()),
+                                        cwd=os.path.split(file_path)[0], stdin=stdin,
+                                        stdout=stdout, stderr=stdout, env=env)
+
+    def wait_process(self):
+        """Wait for the process to finish"""
+        self.process.wait()
+
+    def kill_process(self):
+        """Stop the process. This does not work on windows."""
+        os.kill(self.process.pid, 9)
+
 

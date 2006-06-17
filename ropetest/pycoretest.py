@@ -2,7 +2,7 @@ import os
 import unittest
 
 from ropetest import testutils
-from rope.pycore import PyObject, ModuleNotFoundException
+from rope.pycore import PyObject, ModuleNotFoundException, PythonFileRunner
 from rope.project import Project
 
 class PyElementHierarchyTest(unittest.TestCase):
@@ -19,14 +19,14 @@ class PyElementHierarchyTest(unittest.TestCase):
         super(PyElementHierarchyTest, self).tearDown()
 
     def test_simple_module(self):
-        self.project.create_module(self.project.get_root_folder(), 'mod')
+        self.pycore.create_module(self.project.get_root_folder(), 'mod')
         result = self.pycore.get_module('mod')
         self.assertEquals(PyObject.get_base_type('Module'), result.type)
         self.assertEquals(0, len(result.get_attributes()))
     
     def test_nested_modules(self):
-        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
-        mod = self.project.create_module(pkg, 'mod')
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod = self.pycore.create_module(pkg, 'mod')
         package = self.pycore.get_module('pkg')
         self.assertEquals(PyObject.get_base_type('Module'), package.type)
         self.assertEquals(1, len(package.get_attributes()))
@@ -34,27 +34,27 @@ class PyElementHierarchyTest(unittest.TestCase):
         self.assertEquals(PyObject.get_base_type('Module'), module.get_type())
 
     def test_package(self):
-        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
-        mod = self.project.create_module(pkg, 'mod')
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod = self.pycore.create_module(pkg, 'mod')
         result = self.pycore.get_module('pkg')
         self.assertEquals(PyObject.get_base_type('Module'), result.type)
         
     def test_simple_class(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('class SampleClass(object):\n    pass\n')
         mod_element = self.pycore.get_module('mod')
         result = mod_element.get_attributes()['SampleClass']
         self.assertEquals(PyObject.get_base_type('Type'), result.get_type())
 
     def test_simple_function(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('def sample_function():\n    pass\n')
         mod_element = self.pycore.get_module('mod')
         result = mod_element.get_attributes()['sample_function']
         self.assertEquals(PyObject.get_base_type('Function'), result.get_type())
 
     def test_class_methods(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('class SampleClass(object):\n    def sample_method(self):\n        pass\n')
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element.get_attributes()['SampleClass']
@@ -63,27 +63,27 @@ class PyElementHierarchyTest(unittest.TestCase):
         self.assertEquals(PyObject.get_base_type('Function'), method.get_type())
 
     def test_global_variables(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('var = 10')
         mod_element = self.pycore.get_module('mod')
         result = mod_element.get_attributes()['var']
         
     def test_class_variables(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('class SampleClass(object):\n    var = 10\n')
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element.get_attributes()['SampleClass']
         var = sample_class.get_attributes()['var']
         
     def test_class_attributes_set_in_init(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('class SampleClass(object):\n    def __init__(self):\n        self.var = 20\n')
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element.get_attributes()['SampleClass']
         var = sample_class.get_attributes()['var']
         
     def test_classes_inside_other_classes(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('class SampleClass(object):\n    class InnerClass(object):\n        pass\n\n')
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element.get_attributes()['SampleClass']
@@ -98,23 +98,23 @@ class PyElementHierarchyTest(unittest.TestCase):
             pass
 
     def test_imported_names(self):
-        self.project.create_module(self.project.get_root_folder(), 'mod1')
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod2')
+        self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
         mod.write('import mod1\n')
         module = self.pycore.get_module('mod2')
         imported_sys = module.get_attributes()['mod1']
         self.assertEquals(PyObject.get_base_type('Module'), imported_sys.get_type())
 
     def test_importing_out_of_project_names(self):
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('import sys\n')
         module = self.pycore.get_module('mod')
         imported_sys = module.get_attributes()['sys']
         self.assertEquals(PyObject.get_base_type('Module'), imported_sys.get_type())
 
     def test_imported_as_names(self):
-        self.project.create_module(self.project.get_root_folder(), 'mod1')
-        mod = self.project.create_module(self.project.get_root_folder(), 'mod2')
+        self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
         mod.write('import mod1 as my_import\n')
         module = self.pycore.get_module('mod2')
         imported_mod = module.get_attributes()['my_import']
@@ -181,21 +181,142 @@ class PyElementHierarchyTest(unittest.TestCase):
         derived = mod.get_attributes()['Derived']
         self.assertTrue('f' in derived.get_attributes())
 
+    def test_module_creation(self):
+        new_module = self.pycore.create_module(self.project.get_root_folder(), 'module')
+        self.assertFalse(new_module.is_folder())
+        self.assertEquals(self.project.get_resource('module.py'), new_module)
+
+    def test_packaged_module_creation(self):
+        package = self.project.get_root_folder().create_folder('package')
+        new_module = self.pycore.create_module(self.project.get_root_folder(), 'package.module')
+        self.assertEquals(self.project.get_resource('package/module.py'), new_module)
+
+    def test_packaged_module_creation_with_nested_src(self):
+        src = self.project.get_root_folder().create_folder('src')
+        package = src.create_folder('pkg')
+        new_module = self.pycore.create_module(src, 'pkg.mod')
+        self.assertEquals(self.project.get_resource('src/pkg/mod.py'), new_module)
+
+    def test_package_creation(self):
+        new_package = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        self.assertTrue(new_package.is_folder())
+        self.assertEquals(self.project.get_resource('pkg'), new_package)
+        self.assertEquals(self.project.get_resource('pkg/__init__.py'), 
+                          new_package.get_child('__init__.py'));
+
+    def test_nested_package_creation(self):
+        package = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')
+        nested_package = self.pycore.create_package(self.project.get_root_folder(), 'pkg1.pkg2')
+        self.assertEquals(self.project.get_resource('pkg1/pkg2'), nested_package)
+
+    def test_packaged_package_creation_with_nested_src(self):
+        src = self.project.get_root_folder().create_folder('src')
+        package = self.pycore.create_package(src, 'pkg1')
+        nested_package = self.pycore.create_package(src, 'pkg1.pkg2')
+        self.assertEquals(self.project.get_resource('src/pkg1/pkg2'), nested_package)
+
+    def test_find_module(self):
+        src = self.project.get_root_folder().create_folder('src')
+        samplemod = self.pycore.create_module(src, 'samplemod')
+        found_modules = self.pycore.find_module('samplemod')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplemod, found_modules[0])
+
+    def test_find_nested_module(self):
+        src = self.project.get_root_folder().create_folder('src')
+        samplepkg = self.pycore.create_package(src, 'samplepkg')
+        samplemod = self.pycore.create_module(samplepkg, 'samplemod')
+        found_modules = self.pycore.find_module('samplepkg.samplemod')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplemod, found_modules[0])
+
+    def test_find_multiple_module(self):
+        src = self.project.get_root_folder().create_folder('src')
+        samplemod1 = self.pycore.create_module(src, 'samplemod')
+        samplemod2 = self.pycore.create_module(self.project.get_root_folder(), 'samplemod')
+        test = self.project.get_root_folder().create_folder('test')
+        samplemod3 = self.pycore.create_module(test, 'samplemod')
+        found_modules = self.pycore.find_module('samplemod')
+        self.assertEquals(3, len(found_modules))
+        self.assertTrue(samplemod1 in found_modules and samplemod2 in found_modules and \
+                        samplemod3 in found_modules)
+
+    def test_find_module_packages(self):
+        src = self.project.get_root_folder()
+        samplepkg = self.pycore.create_package(src, 'samplepkg')
+        found_modules = self.pycore.find_module('samplepkg')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplepkg, found_modules[0])
+
+    def test_find_module_when_module_and_package_with_the_same_name(self):
+        src = self.project.get_root_folder()
+        samplemod = self.pycore.create_module(src, 'sample')
+        samplepkg = self.pycore.create_package(src, 'sample')
+        found_modules = self.pycore.find_module('sample')
+        self.assertEquals(1, len(found_modules))
+        self.assertEquals(samplepkg, found_modules[0])
+
+    def test_getting_empty_source_folders(self):
+        self.assertEquals([], self.pycore.get_source_folders())
+
+    def test_root_source_folder(self):
+        self.project.get_root_folder().create_file('sample.py')
+        source_folders = self.pycore.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(self.project.get_root_folder() in source_folders)
+
+    def test_src_source_folder(self):
+        src = self.project.get_root_folder().create_folder('src')
+        src.create_file('sample.py')
+        source_folders = self.pycore.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(self.project.get_resource('src') in source_folders)
+
+    def test_packages(self):
+        src = self.project.get_root_folder().create_folder('src')
+        pkg = src.create_folder('package')
+        pkg.create_file('__init__.py')
+        source_folders = self.pycore.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(src in source_folders)
+
+    def test_multi_source_folders(self):
+        src = self.project.get_root_folder().create_folder('src')
+        package = src.create_folder('package')
+        package.create_file('__init__.py')
+        test = self.project.get_root_folder().create_folder('test')
+        test.create_file('alltests.py')
+        source_folders = self.pycore.get_source_folders()
+        self.assertEquals(2, len(source_folders))
+        self.assertTrue(src in source_folders)
+        self.assertTrue(test in source_folders)
+
+    def test_multi_source_folders2(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        src = self.project.get_root_folder().create_folder('src')
+        package = self.pycore.create_package(src, 'package')
+        mod2 = self.pycore.create_module(package, 'mod2')
+        source_folders = self.pycore.get_source_folders()
+        self.assertEquals(2, len(source_folders))
+        self.assertTrue(self.project.get_root_folder() in source_folders and \
+                        src in source_folders)
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
     def setUp(self):
         super(self.__class__, self).setUp()
         self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
         os.mkdir(self.project_root)
         self.project = Project(self.project_root)
-        samplemod = self.project.create_module(self.project.get_root_folder(), 'samplemod')
+        self.pycore = self.project.get_pycore()
+        samplemod = self.pycore.create_module(self.project.get_root_folder(), 'samplemod')
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
                         "\n\ndef sample_func():\n    pass\nsample_var = 10\n" + \
                         "\ndef _underlined_func():\n    pass\n\n" )
-        package = self.project.create_package(self.project.get_root_folder(), 'package')
-        nestedmod = self.project.create_module(package, 'nestedmod')
-        self.pycore = self.project.get_pycore()
+        package = self.pycore.create_package(self.project.get_root_folder(), 'package')
+        nestedmod = self.pycore.create_module(package, 'nestedmod')
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
@@ -243,15 +364,15 @@ class PyCoreInProjectsTest(unittest.TestCase):
                           scope.get_scopes()[0].get_names()['SampleClass'].get_type())
 
     def test_circular_imports(self):
-        mod1 = self.project.create_module(self.project.get_root_folder(), 'mod1')
-        mod2 = self.project.create_module(self.project.get_root_folder(), 'mod2')
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
         mod1.write('import mod2\n')
         mod2.write('import mod1\n')
         module1 = self.pycore.get_module('mod1')
 
     def test_multi_dot_imports(self):
-        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
-        pkg_mod = self.project.create_module(pkg, 'mod')
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        pkg_mod = self.pycore.create_module(pkg, 'mod')
         pkg_mod.write('def sample_func():\n    pass\n')
         mod = self.pycore.get_string_module('import pkg.mod\n')
         self.assertTrue('pkg' in mod.get_attributes())
@@ -259,9 +380,9 @@ class PyCoreInProjectsTest(unittest.TestCase):
                         mod.get_attributes()['pkg'].get_attributes()['mod'].get_attributes())
         
     def test_multi_dot_imports2(self):
-        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
-        mod1 = self.project.create_module(pkg, 'mod1')
-        mod2 = self.project.create_module(pkg, 'mod2')
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
         mod = self.pycore.get_string_module('import pkg.mod1\nimport pkg.mod2\n')
         package = mod.get_attributes()['pkg']
         self.assertEquals(2, len(package.get_attributes()))
@@ -269,10 +390,10 @@ class PyCoreInProjectsTest(unittest.TestCase):
                         'mod2' in package.get_attributes())
         
     def test_multi_dot_imports3(self):
-        pkg1 = self.project.create_package(self.project.get_root_folder(), 'pkg1')
-        pkg2 = self.project.create_package(pkg1, 'pkg2')
-        mod1 = self.project.create_module(pkg2, 'mod1')
-        mod2 = self.project.create_module(pkg2, 'mod2')
+        pkg1 = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')
+        pkg2 = self.pycore.create_package(pkg1, 'pkg2')
+        mod1 = self.pycore.create_module(pkg2, 'mod1')
+        mod2 = self.pycore.create_module(pkg2, 'mod2')
         mod = self.pycore.get_string_module('import pkg1.pkg2.mod1\nimport pkg1.pkg2.mod2\n')
         package1 = mod.get_attributes()['pkg1']
         package2 = package1.get_attributes()['pkg2']
@@ -281,23 +402,23 @@ class PyCoreInProjectsTest(unittest.TestCase):
                         'mod2' in package2.get_attributes())
         
     def test_multi_dot_imports_as(self):
-        pkg = self.project.create_package(self.project.get_root_folder(), 'pkg')
-        mod1 = self.project.create_module(pkg, 'mod1')
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
         mod1.write('def f():\n    pass\n')
         mod = self.pycore.get_string_module('import pkg.mod1 as mod1\n')
         module = mod.get_attributes()['mod1']
         self.assertTrue('f' in module.get_attributes())
         
     def test_from_package_import_package(self):
-        pkg1 = self.project.create_package(self.project.get_root_folder(), 'pkg1')
-        pkg2 = self.project.create_package(pkg1, 'pkg2')
-        module = self.project.create_module(pkg2, 'mod')
+        pkg1 = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')
+        pkg2 = self.pycore.create_package(pkg1, 'pkg2')
+        module = self.pycore.create_module(pkg2, 'mod')
         mod = self.pycore.get_string_module('from pkg1 import pkg2\n')
         package = mod.get_attributes()['pkg2']
         self.assertEquals(0, len(package.get_attributes()))
 
     def test_invalidating_cache_after_resource_change(self):
-        module = self.project.create_module(self.project.get_root_folder(), 'mod')
+        module = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         module.write('import sys\n')
         mod1 = self.pycore.get_module('mod')
         self.assertTrue('var' not in mod1.get_attributes())
@@ -423,11 +544,125 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertTrue(sample_func_scope.lookup('var1') is not None)
 
 
+class PythonFileRunnerTest(unittest.TestCase):
+
+    def setUp(self):
+        super(PythonFileRunnerTest, self).setUp()
+        self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(PythonFileRunnerTest, self).tearDown()
+
+    def make_sample_python_file(self, file_path, get_text_function_source=None):
+        self.project.get_root_folder().create_file(file_path)
+        file = self.project.get_resource(file_path)
+        if not get_text_function_source:
+            get_text_function_source = "def get_text():\n    return 'run'\n\n"
+        file_content = get_text_function_source + \
+                       "output = open('output.txt', 'w')\noutput.write(get_text())\noutput.close()\n"
+        file.write(file_content)
+        
+    def get_output_file_content(self, file_path):
+        try:
+            output_path = ''
+            last_slash = file_path.rfind('/')
+            if last_slash != -1:
+                output_path = file_path[0:last_slash + 1]
+            file = self.project.get_resource(output_path + 'output.txt')
+            return file.read()
+        except RopeException:
+            return ''
+
+    def test_making_runner(self):
+        file_path = 'sample.py'
+        self.make_sample_python_file(file_path)
+        file_resource = self.project.get_resource(file_path)
+        runner = PythonFileRunner(file_resource)
+        runner.wait_process()
+        self.assertEquals('run', self.get_output_file_content(file_path))
+
+    # FIXME: this does not work on windows
+    def xxx_test_killing_runner(self):
+        file_path = 'sample.py'
+        self.make_sample_python_file(file_path,
+                                     "def get_text():" +
+                                     "\n    import time\n    time.sleep(1)\n    return 'run'\n")
+        file_resource = self.project.get_resource(file_path)
+        runner = PythonFileRunner(file_resource)
+        runner.kill_process()
+        self.assertEquals('', self.get_output_file_content(file_path))
+
+    def test_running_nested_files(self):
+        self.project.get_root_folder().create_folder('src')
+        file_path = 'src/sample.py'
+        self.make_sample_python_file(file_path)
+        file_resource = self.project.get_resource(file_path)
+        runner = PythonFileRunner(file_resource)
+        runner.wait_process()
+        self.assertEquals('run', self.get_output_file_content(file_path))
+
+    def test_setting_process_input(self):
+        file_path = 'sample.py'
+        self.make_sample_python_file(file_path,
+                                     "def get_text():" +
+                                     "\n    import sys\n    return sys.stdin.readline()\n")
+        temp_file_name = 'processtest.tmp'
+        try:
+            temp_file = open(temp_file_name, 'w')
+            temp_file.write('input text\n')
+            temp_file.close()
+            file_resource = self.project.get_resource(file_path)
+            stdin = open(temp_file_name)
+            runner = PythonFileRunner(file_resource, stdin=stdin)
+            runner.wait_process()
+            stdin.close()
+            self.assertEquals('input text\n', self.get_output_file_content(file_path))
+        finally:
+            os.remove(temp_file_name)
+        
+    def test_setting_process_output(self):
+        file_path = 'sample.py'
+        self.make_sample_python_file(file_path,
+                                     "def get_text():" +
+                                     "\n    print 'output text'\n    return 'run'\n")
+        temp_file_name = 'processtest.tmp'
+        try:
+            file_resource = self.project.get_resource(file_path)
+            stdout = open(temp_file_name, 'w')
+            runner = PythonFileRunner(file_resource, stdout=stdout)
+            runner.wait_process()
+            stdout.close()
+            temp_file = open(temp_file_name, 'r')
+            self.assertEquals('output text\n', temp_file.read())
+            temp_file.close()
+        finally:
+            os.remove(temp_file_name)
+
+    def test_setting_pythonpath(self):
+        src = self.project.get_root_folder().create_folder('src')
+        src.create_file('sample.py')
+        src.get_child('sample.py').write('def f():\n    pass\n')
+        self.project.get_root_folder().create_folder('test')
+        file_path = 'test/test.py'
+        self.make_sample_python_file(file_path,
+                                     "def get_text():" +
+                                     "\n    import sample\n    sample.f()\n    return'run'\n")
+        file_resource = self.project.get_resource(file_path)
+        runner = PythonFileRunner(file_resource)
+        runner.wait_process()
+        self.assertEquals('run', self.get_output_file_content(file_path))
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(PyElementHierarchyTest))
     result.addTests(unittest.makeSuite(PyCoreInProjectsTest))
     result.addTests(unittest.makeSuite(PyCoreScopesTest))
+    result.addTests(unittest.makeSuite(PythonFileRunnerTest))
     return result
 
 if __name__ == '__main__':

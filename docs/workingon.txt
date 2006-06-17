@@ -1,11 +1,16 @@
 Refactor CodeAssist @ 2
 =======================
 
-- PyFunction.get_parameters() and PyClass._get_bases() should be pyobjects
+- Move from Project to PyCore
+  - find_module
+  - find_package
+  - get_source_folders
+  - create_module
+  - create_package
+  - PythonFileRunner
 
-* Resource.remove_change_observer
-* Move Project.find_module and find_package and get_source_folders to PyCore
-* Move Project.create_module and create_package to PyCore
+! UI depends on those
+* Correct indentation
 * Refactor codeassist._get_code_completions
 * Refactor _ScopeVisitor.visitFrom and visitImport
 

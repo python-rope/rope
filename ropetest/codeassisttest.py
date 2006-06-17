@@ -310,15 +310,17 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def setUp(self):
         super(CodeAssistInProjectsTest, self).setUp()
         self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
         os.mkdir(self.project_root)
         self.project = Project(self.project_root)
-        samplemod = self.project.create_module(self.project.get_root_folder(), 'samplemod')
+        self.assist = self.project.get_code_assist()
+        self.pycore = self.project.get_pycore()
+        samplemod = self.pycore.create_module(self.project.get_root_folder(), 'samplemod')
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
                         "\n\ndef sample_func():\n    pass\nsample_var = 10\n" + \
                         "\ndef _underlined_func():\n    pass\n\n" )
-        package = self.project.create_package(self.project.get_root_folder(), 'package')
-        nestedmod = self.project.create_module(package, 'nestedmod')
-        self.assist = self.project.get_code_assist()
+        package = self.pycore.create_package(self.project.get_root_folder(), 'package')
+        nestedmod = self.pycore.create_module(package, 'nestedmod')
 
     def assert_completion_in_result(self, name, kind, result):
         for proposal in result.completions:

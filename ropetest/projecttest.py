@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from rope.project import Project, FileFinder, PythonFileRunner, RootFolder
+from rope.project import Project, FileFinder, RootFolder
 from rope.exceptions import RopeException
 from ropetest import testutils
 
@@ -291,51 +291,6 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(2, len(files))
         self.assertTrue(fileName == files[0].get_name() or fileName == files[1].get_name())
 
-    def test_getting_empty_source_folders(self):
-        self.assertEquals([], self.project.get_source_folders())
-
-    def test_root_source_folder(self):
-        self.project.get_root_folder().create_file('sample.py')
-        source_folders = self.project.get_source_folders()
-        self.assertEquals(1, len(source_folders))
-        self.assertTrue(self.project.get_root_folder() in source_folders)
-
-    def test_src_source_folder(self):
-        src = self.project.get_root_folder().create_folder('src')
-        src.create_file('sample.py')
-        source_folders = self.project.get_source_folders()
-        self.assertEquals(1, len(source_folders))
-        self.assertTrue(self.project.get_resource('src') in source_folders)
-
-    def test_packages(self):
-        src = self.project.get_root_folder().create_folder('src')
-        pkg = src.create_folder('package')
-        pkg.create_file('__init__.py')
-        source_folders = self.project.get_source_folders()
-        self.assertEquals(1, len(source_folders))
-        self.assertTrue(src in source_folders)
-
-    def test_multi_source_folders(self):
-        src = self.project.get_root_folder().create_folder('src')
-        package = src.create_folder('package')
-        package.create_file('__init__.py')
-        test = self.project.get_root_folder().create_folder('test')
-        test.create_file('alltests.py')
-        source_folders = self.project.get_source_folders()
-        self.assertEquals(2, len(source_folders))
-        self.assertTrue(src in source_folders)
-        self.assertTrue(test in source_folders)
-
-    def test_multi_source_folders2(self):
-        mod1 = self.project.create_module(self.project.get_root_folder(), 'mod1')
-        src = self.project.get_root_folder().create_folder('src')
-        package = self.project.create_package(src, 'package')
-        mod2 = self.project.create_module(package, 'mod2')
-        source_folders = self.project.get_source_folders()
-        self.assertEquals(2, len(source_folders))
-        self.assertTrue(self.project.get_root_folder() in source_folders and \
-                        src in source_folders)
-
     def test_ignoring_dot_star_folders_in_get_files(self):
         root = self.project.get_root_address()
         dot_test = os.path.join(root, '.test')
@@ -400,81 +355,6 @@ class ProjectTest(unittest.TestCase):
                           folder.get_child('myfile.txt'))
         self.assertEquals(self.project.get_resource('myfolder/myfolder'),
                           folder.get_child('myfolder'))
-
-    def test_module_creation(self):
-        new_module = self.project.create_module(self.project.get_root_folder(), 'module')
-        self.assertFalse(new_module.is_folder())
-        self.assertEquals(self.project.get_resource('module.py'), new_module)
-
-    def test_packaged_module_creation(self):
-        package = self.project.get_root_folder().create_folder('package')
-        new_module = self.project.create_module(self.project.get_root_folder(), 'package.module')
-        self.assertEquals(self.project.get_resource('package/module.py'), new_module)
-
-    def test_packaged_module_creation_with_nested_src(self):
-        src = self.project.get_root_folder().create_folder('src')
-        package = src.create_folder('pkg')
-        new_module = self.project.create_module(src, 'pkg.mod')
-        self.assertEquals(self.project.get_resource('src/pkg/mod.py'), new_module)
-
-    def test_package_creation(self):
-        new_package = self.project.create_package(self.project.get_root_folder(), 'pkg')
-        self.assertTrue(new_package.is_folder())
-        self.assertEquals(self.project.get_resource('pkg'), new_package)
-        self.assertEquals(self.project.get_resource('pkg/__init__.py'), 
-                          new_package.get_child('__init__.py'));
-
-    def test_nested_package_creation(self):
-        package = self.project.create_package(self.project.get_root_folder(), 'pkg1')
-        nested_package = self.project.create_package(self.project.get_root_folder(), 'pkg1.pkg2')
-        self.assertEquals(self.project.get_resource('pkg1/pkg2'), nested_package)
-
-    def test_packaged_package_creation_with_nested_src(self):
-        src = self.project.get_root_folder().create_folder('src')
-        package = self.project.create_package(src, 'pkg1')
-        nested_package = self.project.create_package(src, 'pkg1.pkg2')
-        self.assertEquals(self.project.get_resource('src/pkg1/pkg2'), nested_package)
-
-    def test_find_module(self):
-        src = self.project.get_root_folder().create_folder('src')
-        samplemod = self.project.create_module(src, 'samplemod')
-        found_modules = self.project.find_module('samplemod')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplemod, found_modules[0])
-
-    def test_find_nested_module(self):
-        src = self.project.get_root_folder().create_folder('src')
-        samplepkg = self.project.create_package(src, 'samplepkg')
-        samplemod = self.project.create_module(samplepkg, 'samplemod')
-        found_modules = self.project.find_module('samplepkg.samplemod')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplemod, found_modules[0])
-
-    def test_find_multiple_module(self):
-        src = self.project.get_root_folder().create_folder('src')
-        samplemod1 = self.project.create_module(src, 'samplemod')
-        samplemod2 = self.project.create_module(self.project.get_root_folder(), 'samplemod')
-        test = self.project.get_root_folder().create_folder('test')
-        samplemod3 = self.project.create_module(test, 'samplemod')
-        found_modules = self.project.find_module('samplemod')
-        self.assertEquals(3, len(found_modules))
-        self.assertTrue(samplemod1 in found_modules and samplemod2 in found_modules and \
-                        samplemod3 in found_modules)
-
-    def test_find_module_packages(self):
-        src = self.project.get_root_folder()
-        samplepkg = self.project.create_package(src, 'samplepkg')
-        found_modules = self.project.find_module('samplepkg')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplepkg, found_modules[0])
-
-    def test_find_module_when_module_and_package_with_the_same_name(self):
-        src = self.project.get_root_folder()
-        samplemod = self.project.create_module(src, 'sample')
-        samplepkg = self.project.create_package(src, 'sample')
-        found_modules = self.project.find_module('sample')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplepkg, found_modules[0])
 
     def test_project_root_is_root_folder(self):
         self.assertTrue(isinstance(self.project.get_root_folder(), RootFolder))
@@ -568,116 +448,12 @@ class FileFinderTest(unittest.TestCase):
         self.assertEquals(3, len(result4))
 
 
-class TestPythonFileRunner(unittest.TestCase):
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-        self.projectMaker = SampleProjectMaker()
-        self.projectMaker.make_project()
-        self.project = Project(self.projectMaker.get_root())
-
-    def tearDown(self):
-        self.projectMaker.remove_all()
-        unittest.TestCase.tearDown(self)
-
-    def make_sample_python_file(self, file_path, get_text_function_source=None):
-        self.project.get_root_folder().create_file(file_path)
-        file = self.project.get_resource(file_path)
-        if not get_text_function_source:
-            get_text_function_source = "def get_text():\n    return 'run'\n\n"
-        file_content = get_text_function_source + \
-                       "output = open('output.txt', 'w')\noutput.write(get_text())\noutput.close()\n"
-        file.write(file_content)
-        
-    def get_output_file_content(self, file_path):
-        try:
-            output_path = ''
-            last_slash = file_path.rfind('/')
-            if last_slash != -1:
-                output_path = file_path[0:last_slash + 1]
-            file = self.project.get_resource(output_path + 'output.txt')
-            return file.read()
-        except RopeException:
-            return ''
-
-    def test_making_runner(self):
-        file_path = 'sample.py'
-        self.make_sample_python_file(file_path)
-        file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
-        runner.wait_process()
-        self.assertEquals('run', self.get_output_file_content(file_path))
-
-    # FIXME: this does not work on windows
-    def xxx_test_killing_runner(self):
-        file_path = 'sample.py'
-        self.make_sample_python_file(file_path,
-                                     "def get_text():" +
-                                     "\n    import time\n    time.sleep(1)\n    return 'run'\n")
-        file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
-        runner.kill_process()
-        self.assertEquals('', self.get_output_file_content(file_path))
-
-    def test_running_nested_files(self):
-        self.project.get_root_folder().create_folder('src')
-        file_path = 'src/sample.py'
-        self.make_sample_python_file(file_path)
-        file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
-        runner.wait_process()
-        self.assertEquals('run', self.get_output_file_content(file_path))
-
-    def test_setting_process_input(self):
-        file_path = 'sample.py'
-        self.make_sample_python_file(file_path,
-                                     "def get_text():" +
-                                     "\n    import sys\n    return sys.stdin.readline()\n")
-        temp_file_name = 'processtest.tmp'
-        try:
-            temp_file = open(temp_file_name, 'w')
-            temp_file.write('input text\n')
-            temp_file.close()
-            file_resource = self.project.get_resource(file_path)
-            stdin = open(temp_file_name)
-            runner = PythonFileRunner(file_resource, stdin=stdin)
-            runner.wait_process()
-            stdin.close()
-            self.assertEquals('input text\n', self.get_output_file_content(file_path))
-        finally:
-            os.remove(temp_file_name)
-        
-    def test_setting_process_output(self):
-        file_path = 'sample.py'
-        self.make_sample_python_file(file_path,
-                                     "def get_text():" +
-                                     "\n    print 'output text'\n    return 'run'\n")
-        temp_file_name = 'processtest.tmp'
-        try:
-            file_resource = self.project.get_resource(file_path)
-            stdout = open(temp_file_name, 'w')
-            runner = PythonFileRunner(file_resource, stdout=stdout)
-            runner.wait_process()
-            stdout.close()
-            temp_file = open(temp_file_name, 'r')
-            self.assertEquals('output text\n', temp_file.read())
-            temp_file.close()
-        finally:
-            os.remove(temp_file_name)
-
-    def test_setting_pythonpath(self):
-        src = self.project.get_root_folder().create_folder('src')
-        src.create_file('sample.py')
-        src.get_child('sample.py').write('def f():\n    pass\n')
-        self.project.get_root_folder().create_folder('test')
-        file_path = 'test/test.py'
-        self.make_sample_python_file(file_path,
-                                     "def get_text():" +
-                                     "\n    import sample\n    sample.f()\n    return'run'\n")
-        file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
-        runner.wait_process()
-        self.assertEquals('run', self.get_output_file_content(file_path))
-
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(ProjectTest))
+    result.addTests(unittest.makeSuite(FileFinderTest))
+    return result
 
 if __name__ == '__main__':
     unittest.main()
+

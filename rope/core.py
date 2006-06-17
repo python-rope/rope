@@ -8,7 +8,8 @@ import rope.editor
 import rope.fileeditor
 import rope.statusbar
 from rope.exceptions import RopeException
-from rope.project import Project, FileFinder, PythonFileRunner
+from rope.project import Project, FileFinder
+from rope.pycore import PythonFileRunner
 
 
 class EditorManager(object):
@@ -314,8 +315,8 @@ class Core(object):
 
     def _create_module_dialog(self, event=None):
         def do_create_module(source_folder, module_name):
-            new_module = self.project.create_module(source_folder,
-                                                    module_name)
+            new_module = self.project.get_pycore().create_module(source_folder,
+                                                                 module_name)
             self.editor_manager.get_resource_editor(new_module)
         self._create_resource_dialog(do_create_module, 'Module', 'Source Folder')
         if event:
@@ -323,8 +324,8 @@ class Core(object):
 
     def _create_package_dialog(self, event=None):
         def do_create_package(source_folder, package_name):
-            new_package = self.project.create_package(source_folder,
-                                                      package_name)
+            new_package = self.project.get_pycore().create_package(source_folder,
+                                                                   package_name)
             self.editor_manager.get_resource_editor(new_module)
         self._create_resource_dialog(do_create_package, 'Package', 'Source Folder')
         if event:
