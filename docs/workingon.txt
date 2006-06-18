@@ -1,17 +1,8 @@
 Refactor CodeAssist @ 2
 =======================
 
-- Move from Project to PyCore
-  - find_module
-  - find_package
-  - get_source_folders
-  - create_module
-  - create_package
-  - PythonFileRunner
+- Refactor codeassist._get_code_completions
 
-! UI depends on those
-* Correct indentation
-* Refactor codeassist._get_code_completions
 * Refactor _ScopeVisitor.visitFrom and visitImport
 
 ? Folders and change_observers

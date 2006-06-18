@@ -95,7 +95,8 @@ class Proposals(object):
     
     """
 
-    def __init__(self, completions=[], templates=[], start_offset=0, end_offset=0):
+    def __init__(self, completions=[], templates=[], start_offset=0,
+                 end_offset=0):
         self.completions = completions
         self.templates = templates
         self.start_offset = start_offset
@@ -117,7 +118,106 @@ class NoAssist(CodeAssist):
         return Proposals()
 
 
+class _CodeCompletionCollector(object):
+
+    def __init__(self, project, source_code, offset, starting):
+        self.project = project
+        self.starting = starting
+        self.pycore = self.project.get_pycore()
+        self.lines = source_code.split('\n')
+        current_pos = 0
+        lineno = 0
+        while current_pos + len(self.lines[lineno]) < offset:
+            current_pos += len(self.lines[lineno]) + 1
+            lineno += 1
+        self.lineno = lineno
+        self.current_indents = self._get_line_indents(lineno)
+        self._comment_current_statement()
+
+    def _get_line_indents(self, line_number):
+        indents = 0
+        for char in self.lines[line_number]:
+            if char == ' ':
+                indents += 1
+            else:
+                break
+        return indents
+
+    def _comment_current_statement(self):
+        range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines), self.lineno + 1)
+        range_finder.analyze()
+        start = range_finder.get_statement_start() - 1
+        end = range_finder.get_scope_end() - 1
+        last_indents = self._get_line_indents(start)
+        self.lines[start] = last_indents * ' ' + 'pass'
+        for line in range(start + 1, end + 1):
+            self.lines[line] = '#' # + lines[line]
+        self.lines.append('\n')
+
+    def _find_inner_holding_scope(self, base_scope):
+        current_scope = base_scope
+        inner_scope = current_scope
+        while current_scope is not None and \
+              (current_scope.get_kind() == 'Module' or
+               self._get_line_indents(current_scope.get_lineno() - 1) < self.current_indents):
+            inner_scope = current_scope
+            new_scope = None
+            for scope in current_scope.get_scopes():
+                if scope.get_lineno() - 1 <= self.lineno:
+                    new_scope = scope
+                else:
+                    break
+            current_scope = new_scope
+        return inner_scope
+
+    def _get_dotted_completions(self, scope):
+        result = {}
+        if '.' in self.starting:
+            tokens = self.starting.split('.')
+            element = scope.lookup(tokens[0])
+            if element is not None:
+                consistent = True
+                for token in tokens[1:-1]:
+                    if token in element.get_attributes():
+                        element = element.get_attributes()[token]
+                    else:
+                        consistent = False
+                        break
+                if consistent:
+                    for name, pyname in element.get_attributes().iteritems():
+                        if name.startswith(tokens[-1]) or tokens[-1] == '':
+                            complete_name = '.'.join(tokens[:-1]) + '.' + name
+                            result[complete_name] = CompletionProposal(complete_name, 'attribute')
+        return result
+
+    def _get_undotted_completions(self, scope, result):
+        if scope.parent != None:
+            self._get_undotted_completions(scope.parent, result)
+        for name, pyname in scope.get_names().iteritems():
+            if name.startswith(self.starting):
+                from rope.pycore import PyObject
+                kind = 'local'
+                if scope.get_kind() == 'Module':
+                    kind = 'global'
+                result[name] = CompletionProposal(name, kind)
+
+    def get_code_completions(self):
+        try:
+            module_scope = self.pycore.get_string_scope('\n'.join(self.lines))
+        except SyntaxError, e:
+            raise RopeSyntaxError(e)
+        current_scope = module_scope
+        result = {}
+        inner_scope = self._find_inner_holding_scope(module_scope)
+        if '.' in self.starting:
+            result.update(self._get_dotted_completions(inner_scope))
+        else:
+            self._get_undotted_completions(inner_scope, result)
+        return result
+
+
 class PythonCodeAssist(CodeAssist):
+
     def __init__(self, project):
         self.project = project
         self.builtins = [str(name) for name in dir(__builtin__)
@@ -150,17 +250,6 @@ class PythonCodeAssist(CodeAssist):
             current_offset -= 1;
         return current_offset + 1
 
-    def _comment_current_statement(self, lines, lineno):
-        range_finder = StatementRangeFinder(ArrayLinesAdapter(lines), lineno + 1)
-        range_finder.analyze()
-        start = range_finder.get_statement_start() - 1
-        end = range_finder.get_scope_end() - 1
-        last_indents = self._get_line_indents(lines, start)
-        lines[start] = last_indents * ' ' + 'pass'
-        for line in range(start + 1, end + 1):
-            lines[line] = '#' # + lines[line]
-        lines.append('\n')
-
     def _get_matching_builtins(self, starting):
         result = {}
         for builtin in self.builtins:
@@ -175,69 +264,6 @@ class PythonCodeAssist(CodeAssist):
                 result[kw] = CompletionProposal(kw, 'keyword')
         return result
 
-    def _get_line_indents(self, lines, line_number):
-        indents = 0
-        for char in lines[line_number]:
-            if char == ' ':
-                indents += 1
-            else:
-                break
-        return indents
-
-
-    def _get_code_completions(self, source_code, offset, starting):
-        lines = source_code.split('\n')
-        current_pos = 0
-        lineno = 0
-        while current_pos + len(lines[lineno]) < offset:
-            current_pos += len(lines[lineno]) + 1
-            lineno += 1
-        current_indents = self._get_line_indents(lines, lineno)
-        self._comment_current_statement(lines, lineno)
-        source_code = '\n'.join(lines)
-        pycore = self.project.get_pycore()
-        try:
-            current_scope = pycore.get_string_scope(source_code)
-        except SyntaxError, e:
-            raise RopeSyntaxError(e)
-        result = {}
-        inner_scope = current_scope
-        while current_scope is not None and \
-              (current_scope.get_kind() == 'Module' or
-               self._get_line_indents(lines, current_scope.get_lineno() - 1) < current_indents):
-            inner_scope = current_scope
-            for name, pyname in current_scope.get_names().iteritems():
-                if name.startswith(starting):
-                    from rope.pycore import PyObject
-                    kind = 'local'
-                    if current_scope.get_kind() == 'Module':
-                        kind = 'global'
-                    result[name] = CompletionProposal(name, kind)
-            new_scope = None
-            for scope in current_scope.get_scopes():
-                if scope.get_lineno() - 1 <= lineno:
-                    new_scope = scope
-                else:
-                    break
-            current_scope = new_scope
-        if '.' in starting:
-            tokens = starting.split('.')
-            element = inner_scope.lookup(tokens[0])
-            if element is not None:
-                consistent = True
-                for token in tokens[1:-1]:
-                    if token in element.get_attributes():
-                        element = element.get_attributes()[token]
-                    else:
-                        consistent = False
-                        break
-                if consistent:
-                    for name, pyname in element.get_attributes().iteritems():
-                        if name.startswith(tokens[-1]) or tokens[-1] == '':
-                            complete_name = '.'.join(tokens[:-1]) + '.' + name
-                            result[complete_name] = CompletionProposal(complete_name, 'attribute')
-        return result
-
     def add_template(self, name, definition):
         self.templates.append(TemplateProposal(name, Template(definition)))
 
@@ -247,6 +273,10 @@ class PythonCodeAssist(CodeAssist):
             if template.name.startswith(starting):
                 result.append(template)
         return result
+
+    def _get_code_completions(self, source_code, offset, starting):
+        collector = _CodeCompletionCollector(self.project, source_code, offset, starting)
+        return collector.get_code_completions()
 
     def assist(self, source_code, offset):
         if offset > len(source_code):
@@ -259,5 +289,6 @@ class PythonCodeAssist(CodeAssist):
             completions.update(self._get_matching_builtins(starting))
             completions.update(self._get_matching_keywords(starting))
             templates = self._get_template_proposals(starting)
-        return Proposals(completions.values(), templates, starting_offset, offset)
+        return Proposals(completions.values(), templates,
+                         starting_offset, offset)
 

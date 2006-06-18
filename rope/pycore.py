@@ -80,8 +80,9 @@ class PyCore(object):
             if module.is_folder() and module.has_child(packages[-1]) and\
                module.get_child(packages[-1]).is_folder():
                 module = module.get_child(packages[-1])
-            elif module.is_folder() and module.has_child(packages[-1] + '.py') and\
-               not module.get_child(packages[-1] + '.py').is_folder():
+            elif module.is_folder() and \
+                 module.has_child(packages[-1] + '.py') and \
+                 not module.get_child(packages[-1] + '.py').is_folder():
                 module = module.get_child(packages[-1] + '.py')
             else:
                 found = False
@@ -196,7 +197,7 @@ class PyFunction(PyDefinedObject):
                 result[self.parameters[0]] = PyName()
         if len(self.parameters) > 1:
             for parameter in self.parameters[1:]:
-                result[parameter] = PyName()            
+                result[parameter] = PyName()
         return result
 
 
@@ -247,7 +248,8 @@ class PyClass(PyDefinedObject):
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
-            base = _AttributeListFinder.get_attribute(base_name, self.parent.get_scope())
+            base = _AttributeListFinder.get_attribute(base_name,
+                                                      self.parent.get_scope())
             if base:
                 result.append(base)
         return result
@@ -287,7 +289,8 @@ class PyPackage(PyObject):
             for child in self.resource.get_children():
                 if child.is_folder():
                     attributes[child.get_name()] = PyName(self.pycore._create(child))
-                elif child.get_name().endswith('.py') and child.get_name() != '__init__.py':
+                elif child.get_name().endswith('.py') and \
+                     child.get_name() != '__init__.py':
                     name = child.get_name()[:-3]
                     attributes[name] = PyName(self.pycore._create(child))
             self.attributes = attributes
@@ -327,7 +330,8 @@ class PyName(object):
             return PyObject.get_base_type('Unknown')
 
     def _has_block(self):
-        return self.is_defined_here and isinstance(self.object, PyDefinedObject)
+        return self.is_defined_here and isinstance(self.object,
+                                                   PyDefinedObject)
     
     def _get_ast(self):
         return self.object._get_ast()
@@ -355,7 +359,8 @@ class Scope(object):
         return self.scopes
 
     def _create_scopes(self):
-        block_objects = [pyname.object for pyname in self.pyobject.get_attributes().values()
+        block_objects = [pyname.object for pyname in
+                         self.pyobject.get_attributes().values()
                          if pyname._has_block()]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
@@ -392,7 +397,8 @@ class GlobalScope(Scope):
 class FunctionScope(Scope):
     
     def __init__(self, pycore, pyobject):
-        super(FunctionScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
+        super(FunctionScope, self).__init__(pycore, pyobject,
+                                            pyobject.parent.get_scope())
         self.names = None
     
     def _get_names(self):
@@ -424,7 +430,8 @@ class FunctionScope(Scope):
 class ClassScope(Scope):
 
     def __init__(self, pycore, pyobject):
-        super(ClassScope, self).__init__(pycore, pyobject, pyobject.parent.get_scope())
+        super(ClassScope, self).__init__(pycore, pyobject,
+                                         pyobject.parent.get_scope())
     
     def get_names(self):
         return {}
@@ -441,7 +448,8 @@ class _ScopeVisitor(object):
         self.owner_object = owner_object
     
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore, node, self.owner_object), True)
+        self.names[node.name] = PyName(PyClass(self.pycore,
+                                               node, self.owner_object), True)
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
@@ -471,7 +479,8 @@ class _ScopeVisitor(object):
                     self.names[tokens[0]] = PyName(pypkg)
                 for token in tokens[1:-1]:
                     if token in pypkg.get_attributes() and \
-                       isinstance(pypkg.get_attributes()[token].object, PyFilteredPackage):
+                       isinstance(pypkg.get_attributes()[token].object,
+                                  PyFilteredPackage):
                         newpkg = pypkg.get_attributes()[token].object
                     else:
                         newpkg = PyFilteredPackage()
@@ -531,7 +540,8 @@ class _ClassVisitor(_ScopeVisitor):
         self.names[node.name] = PyName()
 
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore, node, self.owner_object), True)
+        self.names[node.name] = PyName(PyClass(self.pycore, node,
+                                               self.owner_object), True)
 
 
 class _FunctionVisitor(_ScopeVisitor):

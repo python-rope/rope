@@ -326,7 +326,7 @@ class Core(object):
         def do_create_package(source_folder, package_name):
             new_package = self.project.get_pycore().create_package(source_folder,
                                                                    package_name)
-            self.editor_manager.get_resource_editor(new_module)
+            self.editor_manager.get_resource_editor(new_package.get_child('__init__.py'))
         self._create_resource_dialog(do_create_package, 'Package', 'Source Folder')
         if event:
             return 'break'

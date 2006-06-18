@@ -5,8 +5,8 @@
 Overview
 ========
 
-'rope' is a Python IDE. Its main goal is to provide features like
-auto-completion, refactorings, content assists and outlines. It is 
+*rope* is a Python IDE.  Its main goal is to provide features like
+auto-completion, refactorings, content assists and outlines.  It is
 written in python and uses the Tkinter library.
 
 
@@ -19,15 +19,15 @@ Features added in this release:
 * Auto-completing "self."s
 * Auto completion after "."s for modules and classes
 
-You can use <Alt-/> for auto-completion. The letter before the actual
+You can use <Alt-/> for auto-completion.  The letter before the actual
 proposal in the code assist proposals dialog indicates the type of
 the proposal; G: global, L: local, A: attribute, K: keyword, B: builtin and
 T: template.
 
 Right now, you can't complete as you type but that will be probably
-implemented before 0.2 release. Lots of interesting features are
+implemented before 0.2 release.  Lots of interesting features are
 planned to be added before 0.3 release like quick outline, show pydoc,
-goto definition and a bit of type inferencing. Keep waiting!
+goto definition and a bit of type inferencing.  Keep waiting!
 
 
 Keybinding
@@ -65,30 +65,30 @@ M-/            code-assist
 Description
 ===========
 
-*rope* is a python IDE. It tries to give users lots of things
+*rope* is a python IDE.  It tries to give users lots of things
 that are not available in python IDEs yet.
 
 Refactoring
 -----------
 In recent years refactoring has become a basic task of everyday programing,
-specially in java community. In the agile programing methodologies, like
+specially in java community.  In the agile programing methodologies, like
 Extreme Programing, Refactoring is one of the core practices.
 
 Some IDEs support some basic refactorings like 'PyDev' (which uses bicycle
-repair man). These IDEs have a limited set of refactorings and fail
+repair man).  These IDEs have a limited set of refactorings and fail
 when doing refactorings that need to know the type of objects in the
-source code (specially for relatively large projects). rope tries to provide a
-rich set of refactorings. Some of the refactorings require type
+source code (specially for relatively large projects).  rope tries to provide a
+rich set of refactorings.  Some of the refactorings require type
 inferencing which is described later.
 
 Auto Completion
 ---------------
 One of the basic features of modern IDEs is the availability of auto-completion.
-Some Python IDEs have auto-completion support but in a limited form. Since
+Some Python IDEs have auto-completion support but in a limited form.  Since
 the type of many variables cannot be deduced from simple analysis of the source code.
 Auto-completing modules names, class names, static methods, class methods,
-function names and variable names are easy. But auto-completing the methods and
-attributes of an object is hard. Because the IDE needs to know the type of
+function names and variable names are easy.  But auto-completing the methods and
+attributes of an object is hard.  Because the IDE needs to know the type of
 the object that cannot be achieved easily most of the time in dynamic languages.
 rope uses Type Inferencing algorithms to solve this problem.
 
@@ -96,23 +96,23 @@ Type Inferencing
 ----------------
 One disadvantage of dynamic languages like python is that you cannot
 know the type of variables by a simple analysis of program source code
-most of the time. Knowing the type of variables is very essential for
-providing many of the refactorings and auto-completions. rope will use
+most of the time.  Knowing the type of variables is very essential for
+providing many of the refactorings and auto-completions.  rope will use
 type inferencing to overcome this problem.
 
 Static type inferencing uses program source code to guess the type
-of objects. But type inferencing python programs is very hard.
+of objects.  But type inferencing python programs is very hard.
 There have been some attempts though not very successful (examples:
 psycho: only str and int types, StarKiller: wasn't released and
-ShedSkin: good but limited). They where mostly directed at speeding up
+ShedSkin: good but limited).  They where mostly directed at speeding up
 python programs by transforming its code to other typed languages 
-rather than building IDEs. Such algorithms might be helpful.
+rather than building IDEs.  Such algorithms might be helpful.
 
-There is another approach toward type inferencing. That is the analysis
-of running programs. This dynamic approach records the types variables are
-assigned to during the program execution. Although this approach is
-a lot easier to implement than the alternative, it is limited. Only the
-parts of the program that are executed are analyzed. If developers write
+There is another approach toward type inferencing.  That is the analysis
+of running programs.  This dynamic approach records the types variables are
+assigned to during the program execution.  Although this approach is
+a lot easier to implement than the alternative, it is limited.  Only the
+parts of the program that are executed are analyzed.  If developers write
 unit tests and use test driven development this approach works very well.
 
 
@@ -120,7 +120,7 @@ Project Road Map
 ================
 
 The main motive for starting this project was the lack of good
-refactoring tools for python language. Refactoring programs like "bicycle repair man"
+refactoring tools for python language.  Refactoring programs like "bicycle repair man"
 aren't reliable due to type inferencing problems discussed earlier and they
 support a limited number of refactorings.
 
@@ -131,8 +131,8 @@ As Don Roberts one of the writers of the "Refactoring Browser" for
 smalltalk writes in his doctoral thesis:
 
   "An early implementation of the Refactoring Browser for Smalltalk was a
-  separate tool from the standard Smalltalk development tools. What we found
-  was that no one used it. We did not even use it ourselves. Once we integrated
+  separate tool from the standard Smalltalk development tools.  What we found
+  was that no one used it.  We did not even use it ourselves.  Once we integrated
   the refactorings directly into the Smalltalk Browser, we used them extensively."
 
 The main goal of rope is to concentrate on type inferencing, auto-completion
@@ -147,18 +147,18 @@ and libraries so that other projects may use them.
 Get Involved!
 =============
 
-Rope has just started. Right now rope's design changes rapidly and it's not
-yet ready for code contributions in its central parts. I hope in soon future,
+Rope has just started.  Right now rope's design changes rapidly and it's not
+yet ready for code contributions in its central parts.  I hope in soon future,
 somewhere about version 0.5 or 0.6, rope would be mature enough for being
 extended easily in those parts.
 
 Right now contributions are really needed in UI part and
-patches and extensions in the UI part are extremely welcome. Have a look at the
-UI enhancement stories (docs/stories.txt). Send your patches in sourceforge.net
-project page, http://sf.net/projects/rope. Patches should use python coding
-style, PEP 8, and should have good unit tests. rope uses a local repository
+patches and extensions in the UI part are extremely welcome.  Have a look at the
+UI enhancement stories (docs/stories.txt).  Send your patches in sourceforge.net
+project page, http://sf.net/projects/rope.  Patches should use python coding
+style, PEP 8, and should have good unit tests.  rope uses a local repository
 right now, but it will be moved to SVN repository on sourceforge.net some time
-before the 0.3 release. If you're making your patches using source package
+before the 0.3 release.  If you're making your patches using source package
 distributions specify the version of that package.
 
 
@@ -172,6 +172,6 @@ project page at http://sf.net/projects/rope.
 License
 =======
 
-This program is under the terms of GPL(GNU General Public License). Have a
+This program is under the terms of GPL(GNU General Public License).  Have a
 look at copying file for more information.
 
