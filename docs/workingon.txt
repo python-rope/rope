@@ -1,14 +1,10 @@
-Refactor CodeAssist @ 2
-=======================
-
-- Refactor codeassist._get_code_completions
+Refactor CodeAssist and PyCore @ 2
+==================================
 
 * Refactor _ScopeVisitor.visitFrom and visitImport
-
 ? Folders and change_observers
 ? Code-assist proposal name should not be so long
 * PyNames with None object
-? PyObject might have additional information based on their types; visitor; checking types in many places
 ? Refactor pycore; So many kinds for Modules; eliminate checking module.is_package
 ? Not accessing pyname.object in codeassist
 ? PyObject equality check; Value objects
@@ -35,7 +31,7 @@ Remaining Stories
 ? Python C extensions
 ? Better version number selection
 ? Remote pair programming support
-? Separating ui modules and packages
+? Separating ui and core modules and packages
   ? Decide which modules are the domain and which are the presentation
   ? Should editing tools access Editor directly? Which of them?
   ? Specifing the type of each story; UI or Core

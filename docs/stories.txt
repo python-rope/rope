@@ -194,19 +194,17 @@ Stories
 * Handle circular from-imports @ 1
 
 
-* Auto-completing function parameter names when calling @ 2
+* Show PyDoc @ 2
 
 
-* Auto completion contexts; strings, comments, functions and ... @ 2
+* Go to definition; F3 @ 1
+  Not overwriting PyNames in pycore; Updating them.
 
 
 > Public Release 0.2pre4 : July 2, 2006
 
 
 * Show quick outline; C-o @ 2
-
-
-* Show PyDoc @ 2
 
 
 * Out of project modules @ 2
@@ -216,8 +214,10 @@ Stories
 * AssList and AssTuple assignments @ 1
 
 
-* Go to definition; F3 @ 1
-  Not overwriting PyNames in pycore; Updating them.
+* Auto-completing function parameter names when calling @ 2
+
+
+* Auto completion contexts; strings, comments, functions and ... @ 2
 
 
 > Public release 0.2pre3 : June 18, 2006

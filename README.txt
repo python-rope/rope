@@ -22,7 +22,8 @@ Features added in this release:
 You can use <Alt-/> for auto-completion.  The letter before the actual
 proposal in the code assist proposals dialog indicates the type of
 the proposal; G: global, L: local, A: attribute, K: keyword, B: builtin and
-T: template.
+T: template. Some basic templates are added. You can use 'main', 'test_case',
+'hash', 'eq' and 'super' templates while coding.
 
 Right now, you can't complete as you type but that will be probably
 implemented before 0.2 release.  Lots of interesting features are
