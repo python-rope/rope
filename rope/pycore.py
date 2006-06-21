@@ -313,21 +313,27 @@ class PyFilteredPackage(PyObject):
 
 class PyName(object):
 
-    def __init__(self, object_=None, is_defined_here=False):
+    def __init__(self, object_=None, is_defined_here=False, lineno=None):
         self.object = object_
         self.is_defined_here = is_defined_here
+        self.lineno = lineno
+        if self._has_block():
+            self.lineno = self._get_ast().lineno
 
     def get_attributes(self):
         if self.object:
             return self.object.get_attributes()
         else:
             return PyObject.get_base_type('Unknown').get_attributes()
-    
+
     def get_type(self):
         if self.object:
             return self.object.get_type()
         else:
             return PyObject.get_base_type('Unknown')
+
+    def get_definition_location(self):
+        return self.lineno
 
     def _has_block(self):
         return self.is_defined_here and isinstance(self.object,
@@ -456,7 +462,7 @@ class _ScopeVisitor(object):
         self.names[node.name] = PyName(pyobject, True)
 
     def visitAssName(self, node):
-        self.names[node.name] = PyName()
+        self.names[node.name] = PyName(lineno=node.lineno)
 
     def visitImport(self, node):
         for import_pair in node.names:

@@ -1,17 +1,20 @@
-Refactor CodeAssist and PyCore @ 2
-==================================
+Go to definition; F3 @ 1
+========================
+
+- What should be the value of lineno for unknowns; None
+
+* Imported names
+* Not overwriting PyNames in pycore; Updating them
 
 * Refactor _ScopeVisitor.visitFrom and visitImport
 ? Folders and change_observers
 ? Code-assist proposal name should not be so long
 * PyNames with None object
 ? Refactor pycore; So many kinds for Modules; eliminate checking module.is_package
-? Not accessing pyname.object in codeassist
 ? PyObject equality check; Value objects
 * Removing duplications in tests in codeassist and pycore scopes
-? Builtins and scopes
-? We know the type of list and keyword args
 ? Consider using StatementRangeFinder in highlight module
+? Updating editor when file changes at disk
 
 
 Before 0.2 Release

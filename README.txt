@@ -15,20 +15,13 @@ Version Overview
 
 Features added in this release:
 
-* Proposing base class attributes
-* Auto-completing "self."s
-* Auto completion after "."s for modules and classes
+* 
 
 You can use <Alt-/> for auto-completion.  The letter before the actual
 proposal in the code assist proposals dialog indicates the type of
 the proposal; G: global, L: local, A: attribute, K: keyword, B: builtin and
 T: template. Some basic templates are added. You can use 'main', 'test_case',
 'hash', 'eq' and 'super' templates while coding.
-
-Right now, you can't complete as you type but that will be probably
-implemented before 0.2 release.  Lots of interesting features are
-planned to be added before 0.3 release like quick outline, show pydoc,
-goto definition and a bit of type inferencing.  Keep waiting!
 
 
 Keybinding
@@ -48,7 +41,15 @@ C-x b          change active editor
 C-x k          close active editor
 C-x C-c        exit
 C-F11          run active editor
-
+-------------  --------------------------
+C-f            forward character
+C-b            backward character
+C-n            next line
+C-p            previous line
+M-f            next word
+M-b            previous word
+C-v            next page
+M-v            previous page
 C-s            start searching
 C-x C-u        undo
 C-x C-r        redo
@@ -86,8 +87,8 @@ Auto Completion
 ---------------
 One of the basic features of modern IDEs is the availability of auto-completion.
 Some Python IDEs have auto-completion support but in a limited form.  Since
-the type of many variables cannot be deduced from simple analysis of the source code.
-Auto-completing modules names, class names, static methods, class methods,
+the type of many variables cannot be deduced from simple analysis of the source
+code. Auto-completing modules names, class names, static methods, class methods,
 function names and variable names are easy.  But auto-completing the methods and
 attributes of an object is hard.  Because the IDE needs to know the type of
 the object that cannot be achieved easily most of the time in dynamic languages.
@@ -121,8 +122,8 @@ Project Road Map
 ================
 
 The main motive for starting this project was the lack of good
-refactoring tools for python language.  Refactoring programs like "bicycle repair man"
-aren't reliable due to type inferencing problems discussed earlier and they
+refactoring tools for python language.  Refactoring programs like "bicycle repair
+man" aren't reliable due to type inferencing problems discussed earlier and they
 support a limited number of refactorings.
 
 

@@ -44,13 +44,7 @@ Stories
 * Rename function @ 2
 
 
-* Rename class @ 3
-
-
 * Move a class to another module @ 3
-
-
-* Local history @ 4
 
 
 * Find matching parens @ 1
@@ -124,6 +118,9 @@ Stories
   * Fixed places for StatusTexts
 
 
+* Having different strategies for selecting next/prev words @ 1
+
+
 * Enhancing auto indentation @ 1
   * Indenting a range of file
   * Removing extra spaces
@@ -133,20 +130,10 @@ Stories
 * Dynamic type inference @ 3
 
 
-* Rename local variable @ 2
-
-
 * Changing next/prev word to stop on underline and capital letters @ 1
 
 
 * Rename module refactoring @ 2
-
-
-* Formating Code @ 5
-  * Writing ASTs
-
-
-* Better multi-sequence key event handling @ 2
 
 
 * Enhancing editor @ 1
@@ -161,6 +148,9 @@ Stories
 * Auto-completing inherited methods @ 2
 
 
+* Better multi-sequence key event handling @ 2
+
+
 * Optimizing StatementRangeFinder @ 1
   Add CachedLines and not starting from the start of the lines
 
@@ -168,6 +158,9 @@ Stories
 * Auto-importing modules @ 3
   Hold the list of project classes and import them automatically
   in codeassist
+
+
+* Local history @ 4
 
 
 * Open Type; C-T @ 3
@@ -187,6 +180,9 @@ Stories
   * Sorting proposals
 
 
+* We know the type of list and keyword args @ 1
+
+
 * Complete as you type @ 2
   Update proposal list while typing.
 
@@ -197,30 +193,37 @@ Stories
 * Show PyDoc @ 2
 
 
-* Go to definition; F3 @ 1
-  Not overwriting PyNames in pycore; Updating them.
-
-
-> Public Release 0.2pre4 : July 2, 2006
-
-
-* Show quick outline; C-o @ 2
-
-
 * Out of project modules @ 2
-  Using inspect on modules that cannot be found in the project
+  Using inspect on modules that cannot be found in the project and builtins
 
 
 * AssList and AssTuple assignments @ 1
 
 
-* Auto-completing function parameter names when calling @ 2
-
-
 * Auto completion contexts; strings, comments, functions and ... @ 2
 
 
-> Public release 0.2pre3 : June 18, 2006
+* Rename class @ 3
+
+
+* Rename local variable @ 2
+
+
+> Public Release 0.2pre4 : July 2, 2006
+
+
+* Formating Code @ 4
+  * Writing ASTs
+
+
+* Auto-completing function parameter names when calling @ 2
+
+
+* Show quick outline; C-o @ 2
+
+
+* Go to definition; F3 @ 1
+  Not overwriting PyNames in pycore; Updating them.
 
 
 Remaining Stories

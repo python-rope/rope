@@ -5,10 +5,10 @@ from ropetest import testutils
 from rope.pycore import PyObject, ModuleNotFoundException, PythonFileRunner
 from rope.project import Project
 
-class PyElementHierarchyTest(unittest.TestCase):
+class PyCoreTest(unittest.TestCase):
 
     def setUp(self):
-        super(PyElementHierarchyTest, self).setUp()
+        super(PyCoreTest, self).setUp()
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
@@ -16,7 +16,7 @@ class PyElementHierarchyTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
-        super(PyElementHierarchyTest, self).tearDown()
+        super(PyCoreTest, self).tearDown()
 
     def test_simple_module(self):
         self.pycore.create_module(self.project.get_root_folder(), 'mod')
@@ -300,6 +300,27 @@ class PyElementHierarchyTest(unittest.TestCase):
         self.assertEquals(2, len(source_folders))
         self.assertTrue(self.project.get_root_folder() in source_folders and \
                         src in source_folders)
+
+    def test_get_pyname_definition_location(self):
+        mod = self.pycore.get_string_module('a_var = 20\n')
+        a_var = mod.get_attributes()['a_var']
+        self.assertEquals(1, a_var.get_definition_location())
+
+    def test_get_pyname_definition_location_functions(self):
+        mod = self.pycore.get_string_module('def a_func():\n    pass\n')
+        a_func = mod.get_attributes()['a_func']
+        self.assertEquals(1, a_func.get_definition_location())
+
+    def test_get_pyname_definition_location_class(self):
+        mod = self.pycore.get_string_module('class AClass(object):\n    pass\n\n')
+        a_class = mod.get_attributes()['AClass']
+        self.assertEquals(1, a_class.get_definition_location())
+
+    def test_get_pyname_definition_location_local_variables(self):
+        mod = self.pycore.get_string_module('def a_func():\n    a_var = 10\n')
+        a_func_scope = mod.get_scope().get_scopes()[0]
+        a_var = a_func_scope.get_names()['a_var']
+        self.assertEquals(2, a_var.get_definition_location())
 
 
 class PyCoreInProjectsTest(unittest.TestCase):
@@ -659,7 +680,7 @@ class PythonFileRunnerTest(unittest.TestCase):
 
 def suite():
     result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(PyElementHierarchyTest))
+    result.addTests(unittest.makeSuite(PyCoreTest))
     result.addTests(unittest.makeSuite(PyCoreInProjectsTest))
     result.addTests(unittest.makeSuite(PyCoreScopesTest))
     result.addTests(unittest.makeSuite(PythonFileRunnerTest))
