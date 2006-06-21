@@ -92,7 +92,7 @@ code. Auto-completing modules names, class names, static methods, class methods,
 function names and variable names are easy.  But auto-completing the methods and
 attributes of an object is hard.  Because the IDE needs to know the type of
 the object that cannot be achieved easily most of the time in dynamic languages.
-rope uses Type Inferencing algorithms to solve this problem.
+rope will use Type Inferencing algorithms to solve this problem.
 
 Type Inferencing
 ----------------

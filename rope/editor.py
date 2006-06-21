@@ -85,7 +85,7 @@ class TextIndex(object):
 
 
 class LineEditor(object):
-    '''An interface for working line oriented with editors'''
+    """An interface for line oriented editors"""
     
     def get_line(self, line_number):
         pass

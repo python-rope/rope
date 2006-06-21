@@ -304,6 +304,17 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('param2', 'local', result)
 
+    def test_get_definition_location(self):
+        code = 'def a_func():\n    pass\na_func()'
+        result = self.assist.get_definition_location(code, len(code) - 3)
+        self.assertEquals((None, 1), result)
+
+    def test_get_definition_location_dotted_names(self):
+        code = 'class AClass(object):\n    ' + \
+               '@staticmethod\n    def a_method():\n        pass\nAClass.a_method()'
+        result = self.assist.get_definition_location(code, len(code) - 3)
+        self.assertEquals((None, 3), result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 

@@ -5,18 +5,21 @@ Go to definition; F3 @ 1
 - Not overwriting PyNames in pycore; Updating them if they already exist
 - Imported names
 - Module.get_resource
+- Add get_definition_location to CodeAssist?
 
+* Refactor CodeAssist.get_definition_location
 * Add go to definition to the GUI
 
+* Caching a few recent pycore.get_string_modules in codeassist or pycore
 * Refactor _ScopeVisitor.visitFrom and visitImport
-? Folders and change_observers
-? Code-assist proposal name should not be so long
+* Folders and change_observers?
+* Code-assist proposal name should not be so long?
 * PyNames with None object
-? Refactor pycore; So many kinds for Modules; eliminate checking module.is_package
-? PyObject equality check; Value objects
+* Refactor pycore; So many kinds for Modules; eliminate checking module.is_package?
+* PyObject equality check; Value objects?
 * Removing duplications in tests in codeassist and pycore scopes
-? Consider using StatementRangeFinder in highlight module
-? Updating editor when file changes at disk
+* Consider using StatementRangeFinder in highlight module?
+* Updating editor when file changes at disk?
 
 
 Before 0.2 Release

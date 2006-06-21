@@ -223,7 +223,6 @@ Stories
 
 
 * Go to definition; F3 @ 1
-  Not overwriting PyNames in pycore; Updating them.
 
 
 Remaining Stories

@@ -110,12 +110,18 @@ class CodeAssist(object):
 
     def add_template(self, name, template):
         pass
+    
+    def get_definition_location(self, source_code, offset):
+        pass
 
 
 class NoAssist(CodeAssist):
 
     def assist(self, source_code, offset):
         return Proposals()
+
+    def get_definition_location(self, source_code, offset):
+        return (None, None)
 
 
 class _CodeCompletionCollector(object):
@@ -291,4 +297,65 @@ class PythonCodeAssist(CodeAssist):
             templates = self._get_template_proposals(starting)
         return Proposals(completions.values(), templates,
                          starting_offset, offset)
+
+    def get_definition_location(self, source_code, offset):
+        starting_offset = self._find_starting_offset(source_code, offset)
+        ending_offset = offset
+        while source_code[ending_offset].isalnum():
+            ending_offset += 1
+        name = source_code[starting_offset:ending_offset]
+        module_scope = self.project.pycore.get_string_scope(source_code)
+        lines, lineno = _transfer_to_lines(source_code, offset)
+        holding_scope = _get_holding_scope(module_scope, lines, lineno)
+        result = _find_dotted_name(holding_scope, name)
+        return result.get_definition_location()
+
+
+def _transfer_to_lines(source_code, offset):
+    lines = source_code.split('\n')
+    current_pos = 0
+    lineno = 0
+    while current_pos + len(lines[lineno]) < offset:
+        current_pos += len(lines[lineno]) + 1
+        lineno += 1
+    lineno = lineno
+    return lines, lineno
+
+def _get_holding_scope(module_scope, lines, lineno):
+    def get_line_indents(lineno):
+        indents = 0
+        for char in lines[lineno]:
+            if char == ' ':
+                indents += 1
+            else:
+                break
+        return indents
+    current_scope = module_scope
+    inner_scope = current_scope
+    current_indents = get_line_indents(lineno)
+    while current_scope is not None and \
+          (current_scope.get_kind() == 'Module' or
+           get_line_indents(current_scope.get_lineno() - 1) < current_indents):
+        inner_scope = current_scope
+        new_scope = None
+        for scope in current_scope.get_scopes():
+            if scope.get_lineno() - 1 <= lineno:
+                new_scope = scope
+            else:
+                break
+        current_scope = new_scope
+    return inner_scope
+
+def _find_dotted_name(holding_scope, name):
+    tokens = name.split('.')
+    element = holding_scope.lookup(tokens[0])
+    if element is not None and len(tokens) > 1:
+        for token in tokens[1:]:
+            if token in element.get_attributes():
+                element = element.get_attributes()[token]
+            else:
+                element = None
+                break
+    return element
+
 

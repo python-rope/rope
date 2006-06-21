@@ -341,6 +341,7 @@ class PyName(object):
             return PyObject.get_base_type('Unknown')
 
     def get_definition_location(self):
+        """Returns a (module, lineno) tuple"""
         return (self.module, self.lineno)
 
     def _has_block(self):
