@@ -42,7 +42,8 @@ class PyCore(object):
         if resource.is_folder():
             result = PyPackage(self, resource)
         else:
-            result =  self.get_string_module(resource.read())
+            ast = compiler.parse(resource.read())
+            result = PyModule(self, ast, resource=resource)
         self.module_map[resource] = result
         resource.add_change_observer(self._invalidate_resource_cache)
         return result
@@ -260,9 +261,10 @@ class PyClass(PyDefinedObject):
 
 class PyModule(PyDefinedObject):
 
-    def __init__(self, pycore, ast_node):
+    def __init__(self, pycore, ast_node, resource=None):
         super(PyModule, self).__init__(PyObject.get_base_type('Module'),
                                        pycore, ast_node, None)
+        self.resource = resource
         self.is_package = False
 
     def _get_attributes_from_ast(self):
@@ -273,6 +275,8 @@ class PyModule(PyDefinedObject):
     def _create_scope(self):
         return GlobalScope(self.pycore, self)
 
+    def get_resource(self):
+        return self.resource
 
 class PyPackage(PyObject):
 
@@ -313,15 +317,16 @@ class PyFilteredPackage(PyObject):
 
 class PyName(object):
 
-    def __init__(self, object_=None, is_defined_here=False, lineno=None):
+    def __init__(self, object_=None, is_defined_here=False, lineno=None, module=None):
         self.object = object_
         self.is_defined_here = is_defined_here
         self.lineno = lineno
+        self.module = module
         if self._has_block():
             self.lineno = self._get_ast().lineno
 
-    def update_object(self, object_=None, is_defined_here=False, lineno=None):
-        self.__init__(object_, is_defined_here, self.lineno)
+    def update_object(self, object_=None, is_defined_here=False, lineno=None, module=None):
+        self.__init__(object_, is_defined_here, self.lineno, module=None)
 
     def get_attributes(self):
         if self.object:
@@ -336,7 +341,7 @@ class PyName(object):
             return PyObject.get_base_type('Unknown')
 
     def get_definition_location(self):
-        return self.lineno
+        return (self.module, self.lineno)
 
     def _has_block(self):
         return self.is_defined_here and isinstance(self.object,
@@ -498,9 +503,9 @@ class _ScopeVisitor(object):
                         newpkg = PyFilteredPackage()
                         pypkg._add_attribute(token, PyName(newpkg))
                     pypkg = newpkg
-                pypkg._add_attribute(tokens[-1], PyName(module, False))
+                pypkg._add_attribute(tokens[-1], PyName(module, False, module=module, lineno=1))
             else:
-                self.names[imported] = PyName(module, False)
+                self.names[imported] = PyName(module, False, module=module, lineno=1)
 
     def visitFrom(self, node):
         try:
@@ -513,18 +518,21 @@ class _ScopeVisitor(object):
                 return
             for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):
-                    self.names[name] = PyName(pyname.object, False)
+                    self.names[name] = PyName(pyname.object, False, module=module,
+                                              lineno=pyname.get_definition_location()[1])
         else:
             for (name, alias) in node.names:
                 imported = name
                 if alias is not None:
                     imported = alias
                 if module.get_attributes().has_key(name):
-                    imported_object = module.get_attributes()[name].object
+                    imported_pyname = module.get_attributes()[name]
+                    imported_object = imported_pyname.object
                     if isinstance(imported_object, PyPackage):
                         self.names[imported] = PyFilteredPackage()
                     else:
-                        self.names[imported] = PyName(imported_object, False)
+                        self.names[imported] = PyName(imported_object, False, module=module,
+                                                      lineno=imported_pyname.get_definition_location()[1])
                 else:
                     self.names[imported] = PyName()
 

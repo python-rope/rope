@@ -304,29 +304,51 @@ class PyCoreTest(unittest.TestCase):
     def test_get_pyname_definition_location(self):
         mod = self.pycore.get_string_module('a_var = 20\n')
         a_var = mod.get_attributes()['a_var']
-        self.assertEquals(1, a_var.get_definition_location())
+        self.assertEquals((None, 1), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_functions(self):
         mod = self.pycore.get_string_module('def a_func():\n    pass\n')
         a_func = mod.get_attributes()['a_func']
-        self.assertEquals(1, a_func.get_definition_location())
+        self.assertEquals((None, 1), a_func.get_definition_location())
 
     def test_get_pyname_definition_location_class(self):
         mod = self.pycore.get_string_module('class AClass(object):\n    pass\n\n')
         a_class = mod.get_attributes()['AClass']
-        self.assertEquals(1, a_class.get_definition_location())
+        self.assertEquals((None, 1), a_class.get_definition_location())
 
     def test_get_pyname_definition_location_local_variables(self):
         mod = self.pycore.get_string_module('def a_func():\n    a_var = 10\n')
         a_func_scope = mod.get_scope().get_scopes()[0]
         a_var = a_func_scope.get_names()['a_var']
-        self.assertEquals(2, a_var.get_definition_location())
+        self.assertEquals((None, 2), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_reassigning(self):
         mod = self.pycore.get_string_module('a_var = 20\na_var=30\n')
         a_var = mod.get_attributes()['a_var']
-        self.assertEquals(1, a_var.get_definition_location())
+        self.assertEquals((None, 1), a_var.get_definition_location())
 
+    def test_get_pyname_definition_location_importes(self):
+        self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        module = self.pycore.get_module('mod')
+        mod = self.pycore.get_string_module('import mod\n')
+        module_pyname = mod.get_attributes()['mod']
+        self.assertEquals((module, 1), module_pyname.get_definition_location())
+
+    def test_get_pyname_definition_location_importes(self):
+        module_resource = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        module_resource.write('\ndef a_func():\n    pass\n')
+        module = self.pycore.get_module('mod')
+        mod = self.pycore.get_string_module('from mod import a_func\n')
+        a_func = mod.get_attributes()['a_func']
+        self.assertEquals((module, 2), a_func.get_definition_location())
+
+    def test_module_get_resource(self):
+        module_resource = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        module = self.pycore.get_module('mod')
+        self.assertEquals(module_resource, module.get_resource())
+        string_module = self.pycore.get_string_module('from mod import a_func\n')
+        self.assertEquals(None, string_module.get_resource())
+        
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
