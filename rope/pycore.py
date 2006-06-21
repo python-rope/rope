@@ -320,6 +320,9 @@ class PyName(object):
         if self._has_block():
             self.lineno = self._get_ast().lineno
 
+    def update_object(self, object_=None, is_defined_here=False, lineno=None):
+        self.__init__(object_, is_defined_here, self.lineno)
+
     def get_attributes(self):
         if self.object:
             return self.object.get_attributes()
@@ -462,7 +465,10 @@ class _ScopeVisitor(object):
         self.names[node.name] = PyName(pyobject, True)
 
     def visitAssName(self, node):
-        self.names[node.name] = PyName(lineno=node.lineno)
+        if node.name in self.names:
+            self.names[node.name].update_object(lineno=node.lineno)
+        else:
+            self.names[node.name] = PyName(lineno=node.lineno)
 
     def visitImport(self, node):
         for import_pair in node.names:

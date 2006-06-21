@@ -322,6 +322,11 @@ class PyCoreTest(unittest.TestCase):
         a_var = a_func_scope.get_names()['a_var']
         self.assertEquals(2, a_var.get_definition_location())
 
+    def test_get_pyname_definition_location_reassigning(self):
+        mod = self.pycore.get_string_module('a_var = 20\na_var=30\n')
+        a_var = mod.get_attributes()['a_var']
+        self.assertEquals(1, a_var.get_definition_location())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
