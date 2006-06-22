@@ -8,7 +8,8 @@ import rope.highlight
 import rope.searching
 import rope.indenter
 import rope.codeassist
-from rope.uihelpers import EnhancedList
+import rope.editingtools
+from rope.uihelpers import EnhancedList, EnhancedListHandle
 
 
 class TextEditor(object):
@@ -98,6 +99,7 @@ class LineEditor(object):
 
 
 class GraphicalLineEditor(LineEditor):
+
     def __init__(self, editor):
         self.editor = editor
 
@@ -118,6 +120,33 @@ class GraphicalLineEditor(LineEditor):
                                     '%d.%d' % (line_number, -count))
 
 
+class _CompletionListHandle(EnhancedListHandle):
+
+    def __init__(self, editor, toplevel, code_assist_result):
+        self.editor = editor
+        self.toplevel = toplevel
+        self.result = code_assist_result
+
+    def entry_to_string(self, proposal):
+        return proposal.kind[0].upper() + '  ' + proposal.name
+
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def selected(self, selected):
+        if selected.kind != 'template':
+            self.editor.text.delete('0.0 +%dc' % self.result.start_offset,
+                                    '0.0 +%dc' % self.result.end_offset)
+            self.editor.text.insert('0.0 +%dc' % self.result.start_offset,
+                                    selected.name)
+        else:
+            self.editor._get_template_information(self.result, selected)
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        self.cancel()
+
+
 class GraphicalEditor(TextEditor):
     def __init__(self, parent):
         font = None
@@ -129,11 +158,9 @@ class GraphicalEditor(TextEditor):
                          font=font,
                          undo=True, maxundo=20, highlightcolor='#99A')
         self.searcher = rope.searching.Searcher(self)
+        self.set_editing_tools(rope.editingtools.NormalEditingTools(self))
         self._bind_keys()
         self._initialize_highlighting()
-        self.highlighting = rope.highlight.NoHighlighting()
-        self.indenter = rope.indenter.NormalIndenter(self)
-        self.code_assist = rope.codeassist.NoAssist()
         self.status_bar_manager = None
 
     def _initialize_highlighting(self):
@@ -169,7 +196,7 @@ class GraphicalEditor(TextEditor):
         self.text.edit_modified(False)
 
     def _highlight_range(self, startIndex, endIndex):
-        for style in self.highlighting.getStyles().keys():
+        for style in self.highlighting.get_styles().keys():
             self.text.tag_remove(style, startIndex, endIndex)
         for start, end, kind in self.highlighting.highlights(GraphicalTextIndex(self, startIndex),
                                                              GraphicalTextIndex(self, endIndex)):
@@ -308,30 +335,11 @@ class GraphicalEditor(TextEditor):
         result = self.code_assist.assist(self.get_text(), self.get_current_offset())
         toplevel = Toplevel()
         toplevel.title('Code Assist Proposals')
-        def open_selected(selected):
-            if selected.kind != 'template':
-                self.text.delete('0.0 +%dc' % result.start_offset,
-                                 '0.0 +%dc' % result.end_offset)
-                self.text.insert('0.0 +%dc' % result.start_offset,
-                                 selected.name)
-            else:
-                self._get_template_information(result, selected)
-            toplevel.destroy()
-        def cancel():
-            toplevel.destroy()
-        def entry_to_string(proposal):
-            return proposal.kind[0].upper() + '  ' + proposal.name
-        enhanced_list = EnhancedList(toplevel, entry_to_string, open_selected, cancel, cancel)
+        enhanced_list = EnhancedList(toplevel, _CompletionListHandle(self, toplevel, result))
         for proposal in result.completions:
             enhanced_list.add_entry(proposal)
         for proposal in result.templates:
             enhanced_list.add_entry(proposal)
-        #        self.text.see('insert')
-        #        local_x, local_y, cx, cy = self.text.bbox("insert")
-        #        x = local_x + self.text.winfo_rootx() + 2
-        #        y = local_y + cy + self.text.winfo_rooty()
-        #        toplevel.wm_geometry('+%d+%d' % (x, y))
-        #        toplevel.wm_overrideredirect(1)
         enhanced_list.list.focus_set()
         toplevel.grab_set()
 
@@ -584,7 +592,7 @@ class GraphicalEditor(TextEditor):
 
     def set_highlighting(self, highlighting):
         self.highlighting = highlighting
-        for name, style in self.highlighting.getStyles().iteritems():
+        for name, style in self.highlighting.get_styles().iteritems():
             fontKWs = {}
             if style.italic is not None:
                 if style.italic:
@@ -688,12 +696,18 @@ class GraphicalEditor(TextEditor):
     def set_status_bar_manager(self, manager):
         self.status_bar_manager = manager
 
+    def set_editing_tools(self, editing_tools):
+        self.editing_tools = editing_tools
+        self.indenter = editing_tools.get_indenter()
+        self.code_assist = editing_tools.get_code_assist()
+        self.highlighting = editing_tools.get_highlighting()
+
     def line_editor(self):
         return GraphicalLineEditor(self)
 
 
 class GraphicalTextIndex(TextIndex):
-    '''An immutable class for pointing to a position in a text'''
+    """An immutable class for pointing to a position in a text"""
 
     def __init__(self, editor, index):
         self.index = index

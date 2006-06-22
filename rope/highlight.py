@@ -3,14 +3,16 @@ import keyword
 
 
 class Highlighting(object):
-    def getStyles(self):
-        '''Returns the dictionary of styles used in highlighting texts by this highlighting'''
+
+    def get_styles(self):
+        """Returns the dictionary of styles used in highlighting texts by this highlighting"""
 
     def highlights(self, startIndex, endIndex):
-        '''Generates highlighted ranges as (start, end, style) tuples'''
+        """Generates highlighted ranges as (start, end, style) tuples"""
 
 
 class HighlightingStyle(object):
+
     def __init__(self, color=None, bold=None, italic=None, strikethrough=None, underline=None):
         self.color = color
         self.bold = bold
@@ -20,6 +22,7 @@ class HighlightingStyle(object):
 
 
 class PythonHighlighting(Highlighting):
+
     def __init__(self, editor):
         self.editor = editor
         kw = r"\b" + PythonHighlighting.any("keyword", keyword.kwlist) + r"\b"
@@ -39,7 +42,7 @@ class PythonHighlighting(Highlighting):
     def any(name, list):
         return "(?P<%s>" % name + "|".join(list) + ")"
 
-    def getStyles(self):
+    def get_styles(self):
         return {'keyword': HighlightingStyle(color='blue', bold=True),
                 'string' : HighlightingStyle(color='#004080'),
                 'comment' : HighlightingStyle(color='#008000', italic=True),
@@ -64,10 +67,12 @@ class PythonHighlighting(Highlighting):
 
 
 class NoHighlighting(Highlighting):
-    def getStyles(self):
+
+    def get_styles(self):
         return {}
 
     def highlights(self, startIndex, endIndex):
         if False:
             yield None
+
 

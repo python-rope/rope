@@ -15,13 +15,13 @@ Version Overview
 
 Features added in this release:
 
-* 
+* Go to definition; F3
 
 You can use <Alt-/> for auto-completion.  The letter before the actual
 proposal in the code assist proposals dialog indicates the type of
 the proposal; G: global, L: local, A: attribute, K: keyword, B: builtin and
-T: template. Some basic templates are added. You can use 'main', 'test_case',
-'hash', 'eq' and 'super' templates while coding.
+T: template.  Some basic templates are added.  You can use 'main',
+'test_case', 'hash', 'eq' and 'super' templates while coding.
 
 
 Keybinding
@@ -80,20 +80,22 @@ Extreme Programing, Refactoring is one of the core practices.
 Some IDEs support some basic refactorings like 'PyDev' (which uses bicycle
 repair man).  These IDEs have a limited set of refactorings and fail
 when doing refactorings that need to know the type of objects in the
-source code (specially for relatively large projects).  rope tries to provide a
-rich set of refactorings.  Some of the refactorings require type
-inferencing which is described later.
+source code (specially for relatively large projects).  rope tries to
+provide a rich set of refactorings.  Some of the refactorings require
+type inferencing which is described later.
 
 Auto Completion
 ---------------
-One of the basic features of modern IDEs is the availability of auto-completion.
-Some Python IDEs have auto-completion support but in a limited form.  Since
-the type of many variables cannot be deduced from simple analysis of the source
-code. Auto-completing modules names, class names, static methods, class methods,
-function names and variable names are easy.  But auto-completing the methods and
-attributes of an object is hard.  Because the IDE needs to know the type of
-the object that cannot be achieved easily most of the time in dynamic languages.
-rope will use Type Inferencing algorithms to solve this problem.
+One of the basic features of modern IDEs is the availability of
+auto-completion. Some Python IDEs have auto-completion support but
+in a limited form.  Since the type of many variables cannot be
+deduced from simple analysis of the source code. Auto-completing
+modules names, class names, static methods, class methods, function
+names and variable names are easy.  But auto-completing the methods
+and attributes of an object is hard.  Because the IDE needs to know
+the type of the object that cannot be achieved easily most of the
+time in dynamic languages.  rope will use Type Inferencing algorithms
+to solve this problem.
 
 Type Inferencing
 ----------------
@@ -123,9 +125,9 @@ Project Road Map
 ================
 
 The main motive for starting this project was the lack of good
-refactoring tools for python language.  Refactoring programs like "bicycle repair
-man" aren't reliable due to type inferencing problems discussed earlier and they
-support a limited number of refactorings.
+refactoring tools for python language.  Refactoring programs like
+"bicycle repair man" aren't reliable due to type inferencing problems
+discussed earlier and they support a limited number of refactorings.
 
 
 * Why an IDE and not a standalone library or program?
@@ -135,8 +137,9 @@ smalltalk writes in his doctoral thesis:
 
   "An early implementation of the Refactoring Browser for Smalltalk was a
   separate tool from the standard Smalltalk development tools.  What we found
-  was that no one used it.  We did not even use it ourselves.  Once we integrated
-  the refactorings directly into the Smalltalk Browser, we used them extensively."
+  was that no one used it.  We did not even use it ourselves.  Once we
+  integrated the refactorings directly into the Smalltalk Browser, we used
+  them extensively."
 
 The main goal of rope is to concentrate on type inferencing, auto-completion
 and refactoring of python programs and not a state of art IDE (At least not in
@@ -156,13 +159,14 @@ somewhere about version 0.5 or 0.6, rope would be mature enough for being
 extended easily in those parts.
 
 Right now contributions are really needed in UI part and
-patches and extensions in the UI part are extremely welcome.  Have a look at the
-UI enhancement stories (docs/stories.txt).  Send your patches in sourceforge.net
-project page, http://sf.net/projects/rope.  Patches should use python coding
-style, PEP 8, and should have good unit tests.  rope uses a local repository
-right now, but it will be moved to SVN repository on sourceforge.net some time
-before the 0.3 release.  If you're making your patches using source package
-distributions specify the version of that package.
+patches and extensions in the UI part are extremely welcome.  Have a look
+at the UI enhancement stories (docs/stories.txt).  Send your patches in
+sourceforge.net project page, http://sf.net/projects/rope.  Patches should
+use python coding style, PEP 8, and should have good unit tests.  rope
+uses a local repository right now, but it will be moved to SVN repository
+on sourceforge.net some time before the 0.3 release.  If you're making
+your patches using source package distributions specify the version of
+that package.
 
 
 Bug Reports

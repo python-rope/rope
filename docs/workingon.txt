@@ -1,16 +1,13 @@
-Go to definition; F3 @ 1
-========================
+Show quick outline; C-o @ 2
+===========================
 
-- The definition location of parameters and attributes
-- Go to definition with other resource targets
-- Editor.goto_line
-- Add go to definition to the GUI
-- Testing go to definition for the GUI
+- Go to definition for imported_module.Name
 
-* Refactor editor._goto_definition; not using Core.get_core()
-* Refactor Core; Only use EditorManager when working with the Editors
+* Adding EditingTools which holds the indenter, highlighting and codeassist
+* There is only one PyCore per project
+* There is one Indenter, Highlighting and CodeAssist per editor
+* Add a TreeViewer to uihelpers module
 
-* Caching a few recent pycore.get_string_modules in codeassist or pycore
 * Refactor _ScopeVisitor.visitFrom and visitImport
 * Folders and change_observers?
 * Code-assist proposal name should not be so long?
@@ -20,11 +17,12 @@ Go to definition; F3 @ 1
 * Removing duplications in tests in codeassist and pycore scopes
 * Consider using StatementRangeFinder in highlight module?
 * Updating editor when file changes at disk?
+* Caching a few recent pycore.get_string_modules in codeassist or pycore?
 
 
 Before 0.2 Release
 ==================
-* GUI testing redux; make a ropefunctest directory; ? rename ropetest to ropeunittest
+* GUI testing redux; make a ropefunctest directory?; rename ropetest to ropeunittest?
 * Better editor changing dialog; use uihelpers module
 * Enhancing highlighting
 * Profiling to find the bottlenecks
@@ -34,13 +32,14 @@ Before 0.2 Release
 
 Remaining Stories
 =================
-? Directories should contain __init__.py to be packages in codeassist
-? Auto-completion on relative imports
-? Python C extensions
-? Better version number selection
-? Remote pair programming support
-? Separating ui and core modules and packages
-  ? Decide which modules are the domain and which are the presentation
-  ? Should editing tools access Editor directly? Which of them?
-  ? Specifing the type of each story; UI or Core
+* Directories should contain __init__.py to be packages in codeassist?
+* Code assists on relative imports?
+* Python C extensions?
+* Remote pair programming support?
+* Separating ui and core modules and packages?
+
+  * Decide which modules are the domain and which are the presentation
+  * Should editing tools access Editor directly? Which of them?
+  * Specifing the type of each story; UI or Core
+  * Dividing week time; 5/7 for core and 2/7 for UI
 

@@ -4,29 +4,29 @@ from rope.codeanalyze import StatementRangeFinder
 
 
 class TextIndenter(object):
-    '''A class for formatting texts'''
+    """A class for formatting texts"""
 
     def __init__(self, editor):
         self.editor = editor
         self.line_editor = editor.line_editor()
 
     def correct_indentation(self, lineno):
-        '''Correct the indentation of a line'''
+        """Correct the indentation of a line"""
 
     def deindent(self, lineno):
-        '''Deindent the a line'''
+        """Deindent the a line"""
         current_indents = self._count_line_indents(lineno)
         new_indents = max(0, current_indents - 4)
         self._set_line_indents(lineno, new_indents)
 
     def indent(self, lineno):
-        '''Indents a line'''
+        """Indents a line"""
         current_indents = self._count_line_indents(lineno)
         new_indents = current_indents + 4
         self._set_line_indents(lineno, new_indents)
 
     def insert_tab(self, index):
-        '''Inserts a tab in the given index'''
+        """Inserts a tab in the given index"""
         self.editor.insert(index, ' ' * 4)
 
     def _set_line_indents(self, lineno, indents):
@@ -142,6 +142,6 @@ class PythonCodeIndenter(TextIndenter):
         return new_indent
 
     def correct_indentation(self, lineno):
-        '''Correct the indentation of the line containing the given index'''
+        """Correct the indentation of the line containing the given index"""
         self._set_line_indents(lineno, self._get_correct_indentation(lineno))
 

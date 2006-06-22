@@ -3,6 +3,9 @@
 ===========
 
 
+- Go to definition; F3 : June 22, 2006
+
+
 > Public release 0.2pre3 : June 18, 2006
 
 

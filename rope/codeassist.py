@@ -311,24 +311,26 @@ class _GetDefinitionLocation(object):
             lineno += 1
         return lines, lineno
 
-    def _find_dotted_name(self, holding_scope, name):
-        tokens = name.split('.')
+    def get_definition_location(self):
+        module_scope = self.project.pycore.get_string_scope(self.source_code)
+        holding_scope = _get_holding_scope(module_scope, self.lines, self.lineno)
+        tokens = self.name.split('.')
         element = holding_scope.lookup(tokens[0])
+        element_resource = None
+        if element.get_definition_location()[0] is not None:
+            element_resource = element.get_definition_location()[0].get_resource()
         if element is not None and len(tokens) > 1:
             for token in tokens[1:]:
                 if token in element.get_attributes():
                     element = element.get_attributes()[token]
+                    if element.get_definition_location()[0] is not None:
+                        element_resource = element.get_definition_location()[0].get_resource()
                 else:
                     element = None
                     break
-        return element
 
-    def get_definition_location(self):
-        module_scope = self.project.pycore.get_string_scope(self.source_code)
-        holding_scope = _get_holding_scope(module_scope, self.lines, self.lineno)
-        result = self._find_dotted_name(holding_scope, self.name)
-        if result is not None:
-            return result.get_definition_location()
+        if element is not None:
+            return (element_resource, element.get_definition_location()[1])
         else:
             return (None, None)
 

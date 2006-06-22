@@ -79,6 +79,7 @@ Stories
 
 
 * Enhancing searching @ 1
+
   * End the search when some other key sequence is typed
   * C-s C-s should start the last search
   * Search history; BackSpace should go back to the matches found before
@@ -87,6 +88,7 @@ Stories
 
 
 * Enhancing module running @ 2
+
   * Showing running status in the GUI
   * Printing output somewhere
   * Getting input from somewhere
@@ -100,6 +102,7 @@ Stories
 
 
 * Enhancing syntax highlighting @ 1
+
   * Only highlighting the changed region
   * Extend highlighting region while highlighting if necessay
   * Highlighting after cut, paste, undo and redo
@@ -107,11 +110,13 @@ Stories
 
 
 * Enhancing menu @ 1
+
   * Disable inaccessable items
   * Showing keyboard short-cuts in front of menu items
 
 
 * Enhancing editor @ 1
+
   * Kill line; C-k
   * Select all; C-x h
   * Go to line
@@ -122,9 +127,10 @@ Stories
 
 
 * Enhancing auto indentation @ 1
+
   * Indenting a range of file
   * Removing extra spaces
-  ? Separating entering and correcting indentation
+  * Separating entering and correcting indentation?
 
 
 * Dynamic type inference @ 3
@@ -136,7 +142,18 @@ Stories
 * Rename module refactoring @ 2
 
 
-* Enhancing editor @ 1
+* Better New ... Dialogs @ 2
+  Better folder and module selection. Completing or selecting from a list.
+
+
+* Refactoring Core @ 1
+
+  * Refactor editor._goto_definition; not using Core.get_core()
+  * Refactor Core; Only use EditorManager when working with the Editors
+
+
+* Enhancing editor @ 2
+
   * Clearing selection if something happens
   * Unifying builtin and emacs-style selections; if selection
     is active do the builtin cut and paste
@@ -171,11 +188,13 @@ Stories
 
 
 * Auto completion type @ 2
+
   * Inserting or overwriting
   * Inserting common prefixes
 
 
 * Enhancing auto-completion @ 1
+
   * What to do when the program has syntax errors
   * Sorting proposals
 
@@ -190,6 +209,9 @@ Stories
 * Handle circular from-imports @ 1
 
 
+* Showing function signature when calling @ 1
+
+
 * Show PyDoc @ 2
 
 
@@ -200,13 +222,16 @@ Stories
 * AssList and AssTuple assignments @ 1
 
 
-* Auto completion contexts; strings, comments, functions and ... @ 2
-
-
 * Rename class @ 3
 
 
 * Rename local variable @ 2
+
+
+* Auto completion contexts; strings, comments, functions and ... @ 2
+
+
+* Auto-completing function parameter names when calling @ 2
 
 
 > Public Release 0.2pre4 : July 2, 2006
@@ -216,23 +241,17 @@ Stories
   * Writing ASTs
 
 
-* Auto-completing function parameter names when calling @ 2
-
-
 * Show quick outline; C-o @ 2
-
-
-* Go to definition; F3 @ 1
 
 
 Remaining Stories
 =================
-? Change program goals and description; principles.html
-  ? Go toward refactoring and ... library rather than an IDE
-? Migrating to sourceforge SVN before 0.3 release
-  ? SF repository; How to synchronize local SVN with SF SVN?
-? Should workingon.txt be under version control?
-? Functional tests
+* Change program goals and description; principles.html
+  Go toward refactoring and ... library rather than an IDE?
+* Migrating to sourceforge SVN before 0.3 release
+  SF repository; How to synchronize local SVN with SF SVN?
+* Should workingon.txt be under version control?
+* Functional tests
 * Logo
-? Project resource consistency; What if it is deleted after being created.
+* Project resource consistency; What if it is deleted after being created?
 

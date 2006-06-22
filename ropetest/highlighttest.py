@@ -72,8 +72,8 @@ class HighlightTest(unittest.TestCase):
         self.assertFalse(expected)
 
     def test_get_styles(self):
-        self.assertEquals(True, self.highlighting.getStyles().has_key('keyword'))
-        self.assertTrue(isinstance(self.highlighting.getStyles()['keyword'], HighlightingStyle))
+        self.assertEquals(True, self.highlighting.get_styles().has_key('keyword'))
+        self.assertTrue(isinstance(self.highlighting.get_styles()['keyword'], HighlightingStyle))
 
     def test_following_keywords(self):
         text = 'if not'
@@ -91,19 +91,19 @@ class HighlightTest(unittest.TestCase):
         self._assertOutcomesEquals(text, highs)
         
     def test_class_definition(self):
-        self.assertTrue('definition' in self.highlighting.getStyles())
+        self.assertTrue('definition' in self.highlighting.get_styles())
         text = 'class Sample(object):'
         highs = [(0, 5, 'keyword'), (6, 12, 'definition')]
         self._assertOutcomesEquals(text, highs)
 
     def test_comments(self):
-        self.assertTrue('comment' in self.highlighting.getStyles())
+        self.assertTrue('comment' in self.highlighting.get_styles())
         text = 'a = 2 # Hello world\ntest = 12'
         highs = [(6, 19, 'comment')]
         self._assertOutcomesEquals(text, highs)
 
     def test_long_strings(self):
-        self.assertTrue('string' in self.highlighting.getStyles())
+        self.assertTrue('string' in self.highlighting.get_styles())
         text = "a = '''2 # multiline \n comments'''\nb = 2"
         highs = [(4, 34, 'string')]
         self._assertOutcomesEquals(text, highs)
@@ -115,7 +115,7 @@ class HighlightTest(unittest.TestCase):
         self._assertOutcomesEquals(text, highs, not_highs, start=8, end=15)
         
     def test_highlighting_builtins(self):
-        self.assertTrue('builtin' in self.highlighting.getStyles())
+        self.assertTrue('builtin' in self.highlighting.get_styles())
         text = 'a = None'
         highs = [(4, 8, 'builtin')]
         self._assertOutcomesEquals(text, highs)

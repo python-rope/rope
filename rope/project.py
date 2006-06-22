@@ -1,6 +1,5 @@
 import os
 
-import rope.codeassist
 import rope.pycore
 from rope.exceptions import RopeException
 
@@ -14,7 +13,6 @@ class Project(object):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise RopeException('Project root exists and is not a directory')
-        self.code_assist = rope.codeassist.PythonCodeAssist(self)
         self.pycore = rope.pycore.PyCore(self)
         self.resources = {}
         self.resources[''] = RootFolder(self)
@@ -75,9 +73,6 @@ class Project(object):
             if not folder.get_name().startswith('.'):
                 result.extend(self._get_files_recursively(folder))
         return result
-
-    def get_code_assist(self):
-        return self.code_assist
 
     def get_pycore(self):
         return self.pycore
@@ -281,5 +276,4 @@ class FileFinder(object):
         self.last_keyword = starting
         self.last_result = result
         return result
-
 

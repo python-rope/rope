@@ -1,9 +1,10 @@
 import os
 import unittest
 
-from rope.codeassist import RopeSyntaxError, Template
+from rope.codeassist import PythonCodeAssist, RopeSyntaxError, Template
 from rope.project import Project
 from ropetest import testutils
+
 
 class CodeAssistTest(unittest.TestCase):
 
@@ -12,7 +13,7 @@ class CodeAssistTest(unittest.TestCase):
         self.project_root = 'sample_project'
         os.mkdir(self.project_root)
         self.project = Project(self.project_root)
-        self.assist = self.project.get_code_assist()
+        self.assist = PythonCodeAssist(self.project)
         
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
@@ -320,6 +321,14 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((None, 3), result)
 
+    def test_get_definition_location_dotted_module_names(self):
+        module_resource = self.project.get_pycore().create_module(self.project.get_root_folder(),
+                                                                  'mod')
+        module_resource.write('def a_func():\n    pass\n')
+        code = 'import mod\nmod.a_func()'
+        result = self.assist.get_definition_location(code, len(code) - 3)
+        self.assertEquals((module_resource, 1), result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
@@ -329,7 +338,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         os.mkdir(self.project_root)
         self.project = Project(self.project_root)
-        self.assist = self.project.get_code_assist()
+        self.assist = PythonCodeAssist(self.project)
         self.pycore = self.project.get_pycore()
         samplemod = self.pycore.create_module(self.project.get_root_folder(), 'samplemod')
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
