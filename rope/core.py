@@ -13,6 +13,7 @@ from rope.pycore import PythonFileRunner
 
 
 class EditorManager(object):
+
     def __init__(self, editor_panel, core):
         self.core = core
         self.editor_list = Frame(editor_panel, borderwidth=0)
@@ -71,9 +72,9 @@ class EditorManager(object):
         if self.editors:
             self.buttons[self.editors[0]].invoke()
 
-
 class Core(object):
-    """The main class for the IDE"""
+    """The Core of the IDE"""
+
     def __init__(self):
         self.root = Tk()
         self.root.title('Rope')
@@ -98,18 +99,27 @@ class Core(object):
     def _create_menu(self):
         fileMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='File', menu=fileMenu, underline=1)
-        fileMenu.add_command(label='Open Project ...', command=self._open_project_dialog, underline=6)
-        fileMenu.add_command(label='Close Project', command=self.close_project, underline=3)
+        fileMenu.add_command(label='Open Project ...',
+                             command=self._open_project_dialog, underline=6)
+        fileMenu.add_command(label='Close Project',
+                             command=self.close_project, underline=3)
         fileMenu.add_separator()
-        fileMenu.add_command(label='New File ...', command=self._create_new_file_dialog, underline=0)
-        fileMenu.add_command(label='New Folder ...', command=self._create_new_folder_dialog, underline=1)
-        fileMenu.add_command(label='New Module ...', command=self._create_module_dialog, underline=4)
-        fileMenu.add_command(label='New Package ...', command=self._create_package_dialog, underline=4)
+        fileMenu.add_command(label='New File ...',
+                             command=self._create_new_file_dialog, underline=0)
+        fileMenu.add_command(label='New Folder ...',
+                             command=self._create_new_folder_dialog, underline=1)
+        fileMenu.add_command(label='New Module ...',
+                             command=self._create_module_dialog, underline=4)
+        fileMenu.add_command(label='New Package ...',
+                             command=self._create_package_dialog, underline=4)
         fileMenu.add_separator()
-        fileMenu.add_command(label='Find File ...', command=self._find_file_dialog, underline=0)
-        fileMenu.add_command(label='Open File ...', command=self._open_file_dialog, underline=0)
+        fileMenu.add_command(label='Find File ...',
+                             command=self._find_file_dialog, underline=0)
+        fileMenu.add_command(label='Open File ...',
+                             command=self._open_file_dialog, underline=0)
         fileMenu.add_separator()
-        fileMenu.add_command(label='Exit', command=self.exit, underline=1)
+        fileMenu.add_command(label='Exit',
+                             command=self.exit, underline=1)
 
     def _set_key_binding(self, widget):
         widget.bind('<Control-x><Control-n>', self._create_new_file_dialog)
@@ -460,6 +470,9 @@ class Core(object):
 
     def get_active_editor(self):
         return self.editor_manager.active_editor
+
+    def get_editor_manager(self):
+        return self.editor_manager
 
     @staticmethod
     def get_core():

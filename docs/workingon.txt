@@ -2,11 +2,13 @@ Go to definition; F3 @ 1
 ========================
 
 - The definition location of parameters and attributes
+- Go to definition with other resource targets
+- Editor.goto_line
+- Add go to definition to the GUI
+- Testing go to definition for the GUI
 
-* Go to definition with other resource targets
-* Add go to definition to the GUI
-* Testing go to definition for the GUI
-* Refactor CodeAssist.get_definition_location
+* Refactor editor._goto_definition; not using Core.get_core()
+* Refactor Core; Only use EditorManager when working with the Editors
 
 * Caching a few recent pycore.get_string_modules in codeassist or pycore
 * Refactor _ScopeVisitor.visitFrom and visitImport

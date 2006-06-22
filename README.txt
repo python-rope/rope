@@ -61,6 +61,7 @@ C-y            paste
 C-x C-s        save
 C-i            correct line indentation
 M-/            code-assist
+F3             go to definition location
 =============  ==========================
 
 

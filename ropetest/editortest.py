@@ -4,6 +4,7 @@ from rope.core import Core
 from rope.searching import Searcher
 from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.indenter import PythonCodeIndenter
+from rope.codeassist import CodeAssist
 
 class GraphicalEditorTest(unittest.TestCase):
     '''This class only tests features that are specific to GraphicalEditor; see mockeditortest'''
@@ -322,6 +323,17 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.set_insert(self.editor.get_index(22))
         self.editor.correct_line_indentation()
         self.assertEquals(self.editor.get_index(18), self.editor.get_insert())
+
+    def test_goto_definition(self):
+        class GotoDefinitionCodeAssist(CodeAssist):
+            def get_definition_location(self, *arg):
+                return (None, 2)
+        code_assist = GotoDefinitionCodeAssist()
+        self.editor.set_code_assist(code_assist)
+        self.editor.set_text('\ndef a_func():\n    pass\na_func()\n')
+        self.editor.set_insert(self.editor.get_index(26))
+        self.editor.goto_definition()
+        self.assertEquals(2, self.editor.get_current_line_number())
 
 
 if __name__ == '__main__':

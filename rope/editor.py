@@ -270,18 +270,26 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<Alt-slash>', lambda event: self._show_completion_window());
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
-        self.text.bind('<F3>', lambda event: self._go_to_definition())
+        self.text.bind('<F3>', lambda event: self.goto_definition())
 
-    def _go_to_definition(self):
+    def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
                                                           self.get_current_offset())
+        editor = self
+        if result[0] is not None:
+            import rope.core
+            editor = rope.core.Core.get_core().get_editor_manager().\
+                     get_resource_editor(result[0].get_resource()).get_editor()
         if result[1] is not None:
-            self.text.mark_set(INSERT, str(result[1]) + '.0')
-            self.text.see(INSERT)
+            editor.goto_line(result[1])
 
     def _focus_went_out(self):
         if self.searcher.is_searching():
             self.searcher.end_searching()
+
+    def goto_line(self, lineno, colno=0):
+        self.text.mark_set(INSERT, '%d.%d' % (lineno, colno))
+        self.text.see(INSERT)
 
     def correct_line_indentation(self):
         lineno = self.get_current_line_number()
