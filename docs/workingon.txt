@@ -1,14 +1,9 @@
 Go to definition; F3 @ 1
 ========================
 
-- What should be the value of lineno for unknowns; None
-- Not overwriting PyNames in pycore; Updating them if they already exist
-- Imported names
-- Module.get_resource
-- Add get_definition_location to CodeAssist?
+- The definition location of parameters and attributes
 
 * Go to definition with other resource targets
-* The definition location of parameters and attributes
 * Add go to definition to the GUI
 * Testing go to definition for the GUI
 * Refactor CodeAssist.get_definition_location

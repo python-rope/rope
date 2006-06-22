@@ -193,12 +193,13 @@ class PyFunction(PyDefinedObject):
         if len(self.parameters) > 0:
             if self.parent.get_type() == PyObject.get_base_type('Type') and \
                not self.decorators:
-                result[self.parameters[0]] = PyName(PyObject(self.parent))
+                result[self.parameters[0]] = PyName(PyObject(self.parent),
+                                                    lineno=self.ast_node.lineno)
             else:
-                result[self.parameters[0]] = PyName()
+                result[self.parameters[0]] = PyName(lineno=self.ast_node.lineno)
         if len(self.parameters) > 1:
             for parameter in self.parameters[1:]:
-                result[parameter] = PyName()
+                result[parameter] = PyName(lineno=self.ast_node.lineno)
         return result
 
 
@@ -578,7 +579,8 @@ class _ClassInitVisitor(object):
     
     def visitAssAttr(self, node):
         if node.expr.name == 'self':
-            self.names[node.attrname] = PyName()
+            self.names[node.attrname] = PyName(lineno=node.lineno)
+
 
 class PythonFileRunner(object):
     """A class for running python project files"""

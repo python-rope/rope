@@ -342,6 +342,14 @@ class PyCoreTest(unittest.TestCase):
         a_func = mod.get_attributes()['a_func']
         self.assertEquals((module, 2), a_func.get_definition_location())
 
+    def test_get_pyname_definition_location_parameters(self):
+        mod = self.pycore.get_string_module('def a_func(param1, param2):\n    a_var = param\n')
+        a_func_scope = mod.get_scope().get_scopes()[0]
+        param1 = a_func_scope.get_names()['param1']
+        self.assertEquals((None, 1), param1.get_definition_location())
+        param2 = a_func_scope.get_names()['param2']
+        self.assertEquals((None, 1), param2.get_definition_location())
+
     def test_module_get_resource(self):
         module_resource = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         module = self.pycore.get_module('mod')
@@ -349,6 +357,13 @@ class PyCoreTest(unittest.TestCase):
         string_module = self.pycore.get_string_module('from mod import a_func\n')
         self.assertEquals(None, string_module.get_resource())
         
+    def test_get_pyname_definition_location_class(self):
+        mod = self.pycore.get_string_module('class AClass(object):\n    def __init__(self):\n' + \
+                                            '        self.an_attr = 10\n')
+        a_class = mod.get_attributes()['AClass']
+        an_attr = a_class.get_attributes()['an_attr']
+        self.assertEquals((None, 3), an_attr.get_definition_location())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
