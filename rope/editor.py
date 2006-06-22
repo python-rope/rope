@@ -270,7 +270,14 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<Alt-slash>', lambda event: self._show_completion_window());
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
+        self.text.bind('<F3>', lambda event: self._go_to_definition())
 
+    def _go_to_definition(self):
+        result = self.code_assist.get_definition_location(self.get_text(),
+                                                          self.get_current_offset())
+        if result[1] is not None:
+            self.text.mark_set(INSERT, str(result[1]) + '.0')
+            self.text.see(INSERT)
 
     def _focus_went_out(self):
         if self.searcher.is_searching():

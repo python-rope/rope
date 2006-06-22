@@ -309,6 +309,11 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((None, 1), result)
 
+    def test_get_definition_location_underlined_names(self):
+        code = 'def a_sample_func():\n    pass\na_sample_func()'
+        result = self.assist.get_definition_location(code, len(code) - 11)
+        self.assertEquals((None, 1), result)
+
     def test_get_definition_location_dotted_names(self):
         code = 'class AClass(object):\n    ' + \
                '@staticmethod\n    def a_method():\n        pass\nAClass.a_method()'

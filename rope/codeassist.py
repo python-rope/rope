@@ -301,14 +301,17 @@ class PythonCodeAssist(CodeAssist):
     def get_definition_location(self, source_code, offset):
         starting_offset = self._find_starting_offset(source_code, offset)
         ending_offset = offset
-        while source_code[ending_offset].isalnum():
+        while source_code[ending_offset].isalnum() or source_code[ending_offset] == '_':
             ending_offset += 1
         name = source_code[starting_offset:ending_offset]
         module_scope = self.project.pycore.get_string_scope(source_code)
         lines, lineno = _transfer_to_lines(source_code, offset)
         holding_scope = _get_holding_scope(module_scope, lines, lineno)
         result = _find_dotted_name(holding_scope, name)
-        return result.get_definition_location()
+        if result is not None:
+            return result.get_definition_location()
+        else:
+            return (None, None)
 
 
 def _transfer_to_lines(source_code, offset):

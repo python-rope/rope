@@ -7,8 +7,11 @@ Go to definition; F3 @ 1
 - Module.get_resource
 - Add get_definition_location to CodeAssist?
 
-* Refactor CodeAssist.get_definition_location
+* Go to definition with other resource targets
+* The definition location of parameters and attributes
 * Add go to definition to the GUI
+* Testing go to definition for the GUI
+* Refactor CodeAssist.get_definition_location
 
 * Caching a few recent pycore.get_string_modules in codeassist or pycore
 * Refactor _ScopeVisitor.visitFrom and visitImport
