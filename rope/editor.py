@@ -698,9 +698,9 @@ class GraphicalEditor(TextEditor):
 
     def set_editing_tools(self, editing_tools):
         self.editing_tools = editing_tools
-        self.indenter = editing_tools.get_indenter()
-        self.code_assist = editing_tools.get_code_assist()
-        self.highlighting = editing_tools.get_highlighting()
+        self.set_indenter(editing_tools.get_indenter())
+        self.set_code_assist(editing_tools.get_code_assist())
+        self.set_highlighting(editing_tools.get_highlighting())
 
     def line_editor(self):
         return GraphicalLineEditor(self)
