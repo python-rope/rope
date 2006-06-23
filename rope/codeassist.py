@@ -317,7 +317,8 @@ class _GetDefinitionLocation(object):
         tokens = self.name.split('.')
         element = holding_scope.lookup(tokens[0])
         element_resource = None
-        if element.get_definition_location()[0] is not None:
+        if element is not None and \
+           element.get_definition_location()[0] is not None:
             element_resource = element.get_definition_location()[0].get_resource()
         if element is not None and len(tokens) > 1:
             for token in tokens[1:]:

@@ -177,6 +177,10 @@ Stories
   in codeassist
 
 
+* Better list and tree navigation @ 1
+  Add filter texts and selection texts to trees and lists.
+
+
 * Local history @ 4
 
 

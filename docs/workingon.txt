@@ -1,16 +1,11 @@
 Show quick outline; C-o @ 2
 ===========================
 
+- Enhance uihelper.TreeViewer
 
-- Adding EditingTools which holds the indenter, highlighting and codeassist
-- Sorting outline elements by their line number
-- EditingTool: should be used for construction
-- Add a basic TreeViewer to uihelpers module
-- Add EditingTools.get_outline
-- Add outlinetest to runtests
-- Add uihelperstest to runtests
+  - '+' to expand nodes
+  - '-' to shrink nodes
 
-* Enhance uihelper.TreeViewer
 * PyCore._has_block to PyCore.has_block
 
 * Refactorings
@@ -23,7 +18,9 @@ Show quick outline; C-o @ 2
   * Adding StatusBarManager to HighlightinTools?
   * More thinking about editing tools; Which of them need the editor directly.
 
-* PyCore's getting fat
+* Better definition locations; hold the range
+* pycore's getting fat
+* editor's getting fat
 * Refactor _ScopeVisitor.visitFrom and visitImport
 * Folders and change_observers?
 * Code-assist proposal name should not be so long?

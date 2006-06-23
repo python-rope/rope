@@ -142,7 +142,7 @@ class _CompletionListHandle(EnhancedListHandle):
         self.toplevel.destroy()
 
     def focus_went_out(self):
-        self.cancel()
+        self.canceled()
 
 
 class _OutlineViewHandle(TreeViewerHandle):
@@ -162,9 +162,12 @@ class _OutlineViewHandle(TreeViewerHandle):
         self.toplevel.destroy()
 
     def focus_went_out(self):
-        self.cancel()
+        self.canceled()
 
-
+    def get_children(self, outline_node):
+        return outline_node.get_children()
+        
+        
 class GraphicalEditor(TextEditor):
 
     def __init__(self, parent):

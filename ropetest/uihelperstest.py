@@ -18,11 +18,13 @@ class SampleTreeHandle(TreeViewerHandle):
     def __init__(self):
         pass
 
-    def entry_to_string(self, integer_obj):
-        return 'element ' + str(integer_obj)
+    def entry_to_string(self, string_obj):
+        return 'element ' + str(string_obj)
 
-    def get_children(self, integer_obj):
-        return range(integer_obj)
+    def get_children(self, string_obj):
+        if len(string_obj) > 2:
+            return []
+        return [string_obj + str(i) for i in range(3)]
 
 
 class UIHelpersTest(unittest.TestCase):
@@ -53,10 +55,38 @@ class UIHelpersTest(unittest.TestCase):
     def test_tree_view(self):
         handle = SampleTreeHandle()
         tree_viewer = TreeViewer(self.parent, handle)
-        tree_viewer.add_entry(1)
-        tree_viewer.add_entry(1)
-        self.assertEquals('element 1', tree_viewer.list.get(0, 1)[0])
+        tree_viewer.add_entry('a')
+        self.assertEquals('element a', tree_viewer.list.get(0, 1)[0])
 
+    def test_tree_view_expanding(self):
+        handle = SampleTreeHandle()
+        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer.add_entry('a')
+        tree_viewer.expand(0)
+        self.assertEquals(4, tree_viewer.list.size())
+        self.assertEquals('element a', tree_viewer.list.get(0, 1)[0])
+        self.assertTrue(tree_viewer.list.get(1, 4)[0].endswith('element a0'))
+        self.assertTrue(tree_viewer.list.get(1, 4)[1].endswith('element a1'))
+        self.assertTrue(tree_viewer.list.get(1, 4)[2].endswith('element a2'))
+
+    def test_tree_view_multi_expanding(self):
+        handle = SampleTreeHandle()
+        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer.add_entry('a')
+        tree_viewer.expand(0)
+        tree_viewer.expand(0)
+        self.assertEquals(4, tree_viewer.list.size())
+
+    def test_tree_view_shrinking(self):
+        handle = SampleTreeHandle()
+        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer.add_entry('a')
+        tree_viewer.expand(0)
+        self.assertEquals(4, tree_viewer.list.size())
+        tree_viewer.collapse(0)
+        self.assertEquals(1, tree_viewer.list.size())
+        self.assertEquals('element a', tree_viewer.list.get(0, 1)[0])
 
 if __name__ == '__main__':
     unittest.main()
+

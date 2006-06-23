@@ -330,6 +330,11 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((module_resource, 1), result)
 
+    def test_get_definition_location_unknown(self):
+        code = 'a_func()\n'
+        result = self.assist.get_definition_location(code, len(code) - 3)
+        self.assertEquals((None, None), result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
