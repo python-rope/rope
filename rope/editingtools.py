@@ -1,6 +1,7 @@
 import rope.indenter
 import rope.highlight
 import rope.codeassist
+import rope.outline
 
 
 class EditingTools(object):
@@ -12,6 +13,9 @@ class EditingTools(object):
         pass
     
     def create_code_assist(self):
+        pass
+
+    def create_outline(self):
         pass
 
 
@@ -26,8 +30,11 @@ class PythonEditingTools(EditingTools):
     def create_highlighting(self):
         return rope.highlight.PythonHighlighting()
     
-    def get_code_assist(self):
+    def create_code_assist(self):
         return rope.codeassist.PythonCodeAssist(self.project)
+
+    def create_outline(self):
+        return rope.outline.PythonOutline(self.project)
 
 
 class NormalEditingTools(EditingTools):
@@ -43,4 +50,8 @@ class NormalEditingTools(EditingTools):
     
     def create_code_assist(self):
         return rope.codeassist.NoAssist()
+
+    def create_outline(self):
+        return rope.outline.NoOutline()
+
 

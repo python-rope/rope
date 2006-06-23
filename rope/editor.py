@@ -10,6 +10,7 @@ import rope.indenter
 import rope.codeassist
 import rope.editingtools
 from rope.uihelpers import EnhancedList, EnhancedListHandle
+from rope.uihelpers import TreeViewer, TreeViewerHandle
 
 
 class TextEditor(object):
@@ -138,6 +139,26 @@ class _CompletionListHandle(EnhancedListHandle):
                                     selected.name)
         else:
             self.editor._get_template_information(self.result, selected)
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        self.cancel()
+
+
+class _OutlineViewHandle(TreeViewerHandle):
+    
+    def __init__(self, editor, toplevel):
+        self.editor = editor
+        self.toplevel = toplevel
+
+    def entry_to_string(self, outline_node):
+        return outline_node.get_name()
+
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def selected(self, selected):
+        self.editor.goto_line(selected.get_line_number())
         self.toplevel.destroy()
 
     def focus_went_out(self):
@@ -296,6 +317,10 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<Alt-slash>', lambda event: self._show_completion_window());
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
         self.text.bind('<F3>', lambda event: self.goto_definition())
+        def show_quick_outline(event):
+            self._show_outline_window()
+            return 'break'
+        self.text.bind('<Control-o>', show_quick_outline)
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
@@ -330,7 +355,8 @@ class GraphicalEditor(TextEditor):
         self.text.mark_set(INSERT, new_insert)
 
     def _show_completion_window(self):
-        result = self.code_assist.assist(self.get_text(), self.get_current_offset())
+        result = self.code_assist.assist(self.get_text(), self.get_current_offset(),
+                                         title='Code Assist Proposals')
         toplevel = Toplevel()
         toplevel.title('Code Assist Proposals')
         enhanced_list = EnhancedList(toplevel, _CompletionListHandle(self, toplevel, result))
@@ -339,6 +365,16 @@ class GraphicalEditor(TextEditor):
         for proposal in result.templates:
             enhanced_list.add_entry(proposal)
         enhanced_list.list.focus_set()
+        toplevel.grab_set()
+
+    def _show_outline_window(self):
+        toplevel = Toplevel()
+        toplevel.title('Quick Outline')
+        tree_view = TreeViewer(toplevel, _OutlineViewHandle(self, toplevel),
+                               title='Quick Outline')
+        for node in self.outline.get_root_nodes(self.get_text()):
+            tree_view.add_entry(node)
+        tree_view.list.focus_set()
         toplevel.grab_set()
 
     def _get_template_information(self, result, proposal):
@@ -699,6 +735,7 @@ class GraphicalEditor(TextEditor):
         self.set_indenter(editing_tools.create_indenter(self))
         self.set_code_assist(editing_tools.create_code_assist())
         self.set_highlighting(editing_tools.create_highlighting())
+        self.outline = editing_tools.create_outline()
 
     def line_editor(self):
         return GraphicalLineEditor(self)

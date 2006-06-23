@@ -53,7 +53,9 @@ class UIHelpersTest(unittest.TestCase):
     def test_tree_view(self):
         handle = SampleTreeHandle()
         tree_viewer = TreeViewer(self.parent, handle)
-
+        tree_viewer.add_entry(1)
+        tree_viewer.add_entry(1)
+        self.assertEquals('element 1', tree_viewer.list.get(0, 1)[0])
 
 
 if __name__ == '__main__':

@@ -21,11 +21,11 @@ class EnhancedListHandle(object):
 
 class EnhancedList(object):
 
-    def __init__(self, parent, handle):
+    def __init__(self, parent, handle, title="List"):
         self.handle = handle
         self.entries = []
         self.frame = Frame(parent)
-        label = Label(self.frame, text='Code Assist Proposals')
+        label = Label(self.frame, text=title)
         self.list = Listbox(self.frame, selectmode=SINGLE)
         scrollbar = Scrollbar(self.frame, orient=VERTICAL)
         scrollbar['command'] = self.list.yview
@@ -106,11 +106,11 @@ class TreeViewerHandle(object):
 
 class TreeViewer(object):
 
-    def __init__(self, parent, handle):
+    def __init__(self, parent, handle, title='Tree'):
         self.handle = handle
         self.entries = []
         self.frame = Frame(parent)
-        label = Label(self.frame, text='Code Assist Proposals')
+        label = Label(self.frame, text=title)
         self.list = Listbox(self.frame, selectmode=SINGLE)
         scrollbar = Scrollbar(self.frame, orient=VERTICAL)
         scrollbar['command'] = self.list.yview

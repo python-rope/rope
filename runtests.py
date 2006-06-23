@@ -12,6 +12,8 @@ import ropetest.codeassisttest
 import ropetest.statusbartest
 import ropetest.codeanalyzetest
 import ropetest.pycoretest
+import ropetest.uihelperstest
+import ropetest.outlinetest
 
 
 if __name__ == '__main__':
@@ -28,5 +30,7 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))
     result.addTests(unittest.makeSuite(ropetest.codeanalyzetest.StatementRangeFinderTest))
     result.addTests(ropetest.pycoretest.suite())
+    result.addTests(unittest.makeSuite(ropetest.uihelperstest.UIHelpersTest))
+    result.addTests(unittest.makeSuite(ropetest.outlinetest.OutlineTest))
     runner = unittest.TextTestRunner()
     runner.run(result)
