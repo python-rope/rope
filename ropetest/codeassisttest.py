@@ -11,6 +11,7 @@ class CodeAssistTest(unittest.TestCase):
     def setUp(self):
         super(CodeAssistTest, self).setUp()
         self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
         os.mkdir(self.project_root)
         self.project = Project(self.project_root)
         self.assist = PythonCodeAssist(self.project)

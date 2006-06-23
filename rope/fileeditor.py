@@ -9,7 +9,7 @@ class FileEditor(object):
         self.editor = editor
         self.project = project
         if self.file.get_name().endswith('.py'):
-            self.editor.set_editing_tools(rope.editingtools.PythonEditingTools(project, editor))
+            self.editor.set_editing_tools(rope.editingtools.PythonEditingTools(project))
         self.editor.set_text(self.file.read())
 
     def save(self):

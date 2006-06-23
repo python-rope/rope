@@ -7,7 +7,7 @@ class Highlighting(object):
     def get_styles(self):
         """Returns the dictionary of styles used in highlighting texts by this highlighting"""
 
-    def highlights(self, startIndex, endIndex):
+    def highlights(self, editor, startIndex, endIndex):
         """Generates highlighted ranges as (start, end, style) tuples"""
 
 
@@ -23,8 +23,7 @@ class HighlightingStyle(object):
 
 class PythonHighlighting(Highlighting):
 
-    def __init__(self, editor):
-        self.editor = editor
+    def __init__(self):
         kw = r"\b" + PythonHighlighting.any("keyword", keyword.kwlist) + r"\b"
         import __builtin__
         builtinlist = [str(name) for name in dir(__builtin__)
@@ -49,21 +48,21 @@ class PythonHighlighting(Highlighting):
                 'builtin' : HighlightingStyle(color='#908080'),
                 'definition' : HighlightingStyle(color='purple', bold=True)}
 
-    def highlights(self, start, end):
-        text = self.editor.get(start, end)
+    def highlights(self, editor, start, end):
+        text = editor.get(start, end)
         for match in self.pattern.finditer(text):
             for key, value in match.groupdict().items():
                 if value:
                     a, b = match.span(key)
-                    yield (self.editor.get_relative(start, a),
-                           self.editor.get_relative(start, b), key)
+                    yield (editor.get_relative(start, a),
+                           editor.get_relative(start, b), key)
                     if value in ("def", "class"):
                         idprog = re.compile(r"\s+(\w+)", re.S)
                         m1 = idprog.match(text, b)
                         if m1:
                             a, b = m1.span(1)
-                            yield (self.editor.get_relative(start, a),
-                                   self.editor.get_relative(start, b), 'definition')
+                            yield (editor.get_relative(start, a),
+                                   editor.get_relative(start, b), 'definition')
 
 
 class NoHighlighting(Highlighting):
@@ -71,7 +70,7 @@ class NoHighlighting(Highlighting):
     def get_styles(self):
         return {}
 
-    def highlights(self, startIndex, endIndex):
+    def highlights(self, editor, startIndex, endIndex):
         if False:
             yield None
 

@@ -65,9 +65,6 @@ class TextEditor(object):
     def goto_end(self):
         pass
 
-    def set_highlighting(self, highlighting):
-        pass
-
     def highlight_match(self, match):
         pass
 
@@ -148,17 +145,17 @@ class _CompletionListHandle(EnhancedListHandle):
 
 
 class GraphicalEditor(TextEditor):
+
     def __init__(self, parent):
         font = None
         if os.name == 'posix':
             font = Font(family='Typewriter', size=14)
         else:
             font = Font(family='Courier', size=13)
-        self.text = ScrolledText(parent, bg='white',
-                         font=font,
-                         undo=True, maxundo=20, highlightcolor='#99A')
+        self.text = ScrolledText(parent, bg='white', font=font,
+                                 undo=True, maxundo=20, highlightcolor='#99A')
         self.searcher = rope.searching.Searcher(self)
-        self.set_editing_tools(rope.editingtools.NormalEditingTools(self))
+        self.set_editing_tools(rope.editingtools.NormalEditingTools())
         self._bind_keys()
         self._initialize_highlighting()
         self.status_bar_manager = None
@@ -198,7 +195,8 @@ class GraphicalEditor(TextEditor):
     def _highlight_range(self, startIndex, endIndex):
         for style in self.highlighting.get_styles().keys():
             self.text.tag_remove(style, startIndex, endIndex)
-        for start, end, kind in self.highlighting.highlights(GraphicalTextIndex(self, startIndex),
+        for start, end, kind in self.highlighting.highlights(self, 
+                                                             GraphicalTextIndex(self, startIndex),
                                                              GraphicalTextIndex(self, endIndex)):
             self.text.tag_add(kind, start._getIndex(), end._getIndex())
 
@@ -698,9 +696,9 @@ class GraphicalEditor(TextEditor):
 
     def set_editing_tools(self, editing_tools):
         self.editing_tools = editing_tools
-        self.set_indenter(editing_tools.get_indenter())
-        self.set_code_assist(editing_tools.get_code_assist())
-        self.set_highlighting(editing_tools.get_highlighting())
+        self.set_indenter(editing_tools.create_indenter(self))
+        self.set_code_assist(editing_tools.create_code_assist())
+        self.set_highlighting(editing_tools.create_highlighting())
 
     def line_editor(self):
         return GraphicalLineEditor(self)

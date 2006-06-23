@@ -1,13 +1,28 @@
 Show quick outline; C-o @ 2
 ===========================
 
-- Go to definition for imported_module.Name
 
-* Adding EditingTools which holds the indenter, highlighting and codeassist
-* There is only one PyCore per project
-* There is one Indenter, Highlighting and CodeAssist per editor
+- Adding EditingTools which holds the indenter, highlighting and codeassist
+- Sorting outline elements by their line number
+
+* EditingTool: should be used for construction or using
+* Add EditingTools.get_outline
 * Add a TreeViewer to uihelpers module
+* Add outlinetest to runtests
+* Add uihelperstest to runtests
+* PyCore._has_block to PyCore.has_block
 
+* Refactorings
+
+  * EditingTools should have a common construction location
+  * Removing GraphicalEditor.set_indenter, .set_code_assist and .set_highlighting
+  * Not using self.indenter, self.code_assist and self.highlighting in GraphicalEditor
+  * Using codeassist instead of code_assist and statusbar instead of status_bar?
+  * Is editor in Highlighting constructor necessary?
+  * Adding StatusBarManager to HighlightinTools?
+  * More thinking about editing tools; Which of them need the editor directly.
+
+* PyCore's getting fat
 * Refactor _ScopeVisitor.visitFrom and visitImport
 * Folders and change_observers?
 * Code-assist proposal name should not be so long?

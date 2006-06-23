@@ -80,9 +80,6 @@ class MockEditor(TextEditor):
             endIndex = end._getIndex()
         self.content = self.content[:startIndex] + self.content[endIndex:]
 
-    def set_highlighting(self, highlighting):
-        pass
-
     def highlight_match(self, match):
         if not match:
             return

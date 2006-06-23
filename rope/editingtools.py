@@ -5,49 +5,42 @@ import rope.codeassist
 
 class EditingTools(object):
 
-    def get_indenter(self):
+    def create_indenter(self, editor):
         pass
 
-    def get_highlighting(self):
+    def create_highlighting(self):
         pass
     
-    def get_code_assist(self):
+    def create_code_assist(self):
         pass
 
 
 class PythonEditingTools(EditingTools):
 
-    def __init__(self, project, editor):
+    def __init__(self, project):
         self.project = project
-        self.editor = editor
-        self.indenter = rope.indenter.PythonCodeIndenter(self.editor)
-        self.highlighting = rope.highlight.PythonHighlighting(self.editor)
-        self.codeassist = rope.codeassist.PythonCodeAssist(self.project)
 
-    def get_indenter(self):
-        return self.indenter
+    def create_indenter(self, editor):
+        return rope.indenter.PythonCodeIndenter(editor)
 
-    def get_highlighting(self):
-        return self.highlighting
+    def create_highlighting(self):
+        return rope.highlight.PythonHighlighting()
     
     def get_code_assist(self):
-        return self.codeassist
+        return rope.codeassist.PythonCodeAssist(self.project)
 
 
 class NormalEditingTools(EditingTools):
 
-    def __init__(self, editor):
-        self.editor = editor
-        self.indenter = rope.indenter.NormalIndenter(self.editor)
-        self.highlighting = rope.highlight.NoHighlighting()
-        self.codeassist = rope.codeassist.NoAssist()
+    def __init__(self):
+        pass
 
-    def get_indenter(self):
-        return self.indenter
+    def create_indenter(self, editor):
+        return rope.indenter.NormalIndenter(editor)
 
-    def get_highlighting(self):
-        return self.highlighting
+    def create_highlighting(self):
+        return rope.highlight.NoHighlighting()
     
-    def get_code_assist(self):
-        return self.codeassist
+    def create_code_assist(self):
+        return rope.codeassist.NoAssist()
 

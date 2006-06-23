@@ -137,7 +137,8 @@ class PythonCodeIndenter(TextIndenter):
             new_indent -= 4
         if current_line.strip().startswith('elif '):
             new_indent -= 4
-        if current_line.lstrip().startswith('except ') and current_line.rstrip().endswith(':'):
+        if current_line.lstrip().startswith('except ') and \
+           current_line.rstrip().endswith(':'):
             new_indent -= 4
         return new_indent
 

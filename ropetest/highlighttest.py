@@ -7,7 +7,7 @@ class HighlightTest(unittest.TestCase):
     __factory = MockEditorFactory()
     def setUp(self):
         self.editor = self.__factory.create()
-        self.highlighting = PythonHighlighting(self.editor)
+        self.highlighting = PythonHighlighting()
         unittest.TestCase.setUp(self)
     
     def tearDown(self):
@@ -22,7 +22,7 @@ class HighlightTest(unittest.TestCase):
         if end is not None:
             endIndex = self.editor.get_index(end)
         highlights = []
-        for result in self.highlighting.highlights(startIndex, endIndex):
+        for result in self.highlighting.highlights(self.editor, startIndex, endIndex):
             highlights.append(result)
         for highlight in expected:
             current = (self.editor.get_index(highlight[0]),
@@ -66,7 +66,7 @@ class HighlightTest(unittest.TestCase):
         noHigh = NoHighlighting()
         text = 'def sample_function():\n    pass\n'
         expected = []
-        for result in noHigh.highlights(None, None):
+        for result in noHigh.highlights(self.editor, None, None):
             self.assertEquals(expected[0], result)
             del expected[0]
         self.assertFalse(expected)
