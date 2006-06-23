@@ -4,12 +4,15 @@ import rope.editingtools
 
 class FileEditor(object):
 
-    def __init__(self, project, file, editor):
+    def __init__(self, project, file, editor_factory):
         self.file = file
-        self.editor = editor
         self.project = project
+        editing_tools = None
         if self.file.get_name().endswith('.py'):
-            self.editor.set_editing_tools(rope.editingtools.PythonEditingTools(project))
+            editing_tools = rope.editingtools.PythonEditingTools(project)
+        else:
+            editing_tools = rope.editingtools.NormalEditingTools()
+        self.editor = editor_factory.create(editing_tools)
         self.editor.set_text(self.file.read())
 
     def save(self):

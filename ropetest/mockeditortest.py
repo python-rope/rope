@@ -1,33 +1,19 @@
 import unittest
 
+import rope.editingtools
 from ropetest.mockeditor import *
 from rope.editor import *
 
-class EditorFactory(object):
-    def create(self):
-        pass
-
-class GraphicalEditorFactory(EditorFactory):
-    _frame = None
-    def create(self):
-        if not GraphicalEditorFactory._frame:
-            GraphicalEditorFactory._frame = Frame()
-        return GraphicalEditor(GraphicalEditorFactory._frame)
-
-class MockEditorFactory(EditorFactory):
-    def create(self):
-        return MockEditor()
-
 class TextEditorTest(unittest.TestCase):
 
-    _editorFactory = GraphicalEditorFactory()
+    _editorFactory = None
     def __init__(self, *args, **kws):
         self.__factory = self.__class__._editorFactory
         unittest.TestCase.__init__(self, *args, **kws)
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.editor = self.__factory.create()
+        self.editor = self.__factory.create(rope.editingtools.NormalEditingTools())
         self.editor.set_text('sample text')
 
     def tearDown(self):
@@ -176,7 +162,8 @@ class TextEditorTest(unittest.TestCase):
 
 def suite():
     result = unittest.TestSuite()
-    TextEditorTest._editorFactory = GraphicalEditorFactory()
+    import Tkinter
+    TextEditorTest._editorFactory = GraphicalEditorFactory(Tkinter.Frame())
     result.addTests(unittest.makeSuite(TextEditorTest))
     TextEditorTest._editorFactory = MockEditorFactory()
     result.addTests(unittest.makeSuite(TextEditorTest))
@@ -186,3 +173,4 @@ def suite():
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
     runner.run(suite())
+

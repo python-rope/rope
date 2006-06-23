@@ -1,4 +1,9 @@
-from rope.editor import TextEditor, TextIndex, LineEditor
+from rope.editor import TextEditor, TextIndex, LineEditor, EditorFactory
+
+class MockEditorFactory(EditorFactory):
+
+    def create(self, *args, **kws):
+        return MockEditor()
 
 class MockLineEditor(LineEditor):
     def __init__(self, editor):

@@ -96,6 +96,20 @@ class LineEditor(object):
         pass
 
 
+class EditorFactory(object):
+
+    def create(self):
+        pass
+
+class GraphicalEditorFactory(EditorFactory):
+
+    def __init__(self, frame):
+        self.frame = frame
+
+    def create(self, *args, **kws):
+        return GraphicalEditor(self.frame, *args, **kws)
+
+
 class GraphicalLineEditor(LineEditor):
 
     def __init__(self, editor):
@@ -170,7 +184,7 @@ class _OutlineViewHandle(TreeViewerHandle):
         
 class GraphicalEditor(TextEditor):
 
-    def __init__(self, parent):
+    def __init__(self, parent, editor_tools):
         font = None
         if os.name == 'posix':
             font = Font(family='Typewriter', size=14)
@@ -179,7 +193,7 @@ class GraphicalEditor(TextEditor):
         self.text = ScrolledText(parent, bg='white', font=font,
                                  undo=True, maxundo=20, highlightcolor='#99A')
         self.searcher = rope.searching.Searcher(self)
-        self.set_editing_tools(rope.editingtools.NormalEditingTools())
+        self._set_editing_tools(editor_tools)
         self._bind_keys()
         self._initialize_highlighting()
         self.status_bar_manager = None
@@ -733,7 +747,7 @@ class GraphicalEditor(TextEditor):
     def set_status_bar_manager(self, manager):
         self.status_bar_manager = manager
 
-    def set_editing_tools(self, editing_tools):
+    def _set_editing_tools(self, editing_tools):
         self.editing_tools = editing_tools
         self.set_indenter(editing_tools.create_indenter(self))
         self.set_code_assist(editing_tools.create_code_assist())

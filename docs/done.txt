@@ -48,7 +48,7 @@
 - Auto-complete local variable names : May 22, 2006
 
 
-> Public Release 0.2pre : May 20, 2006
+> Public Release 0.2pre1 : May 20, 2006
 
 
 - Auto completing keywords and builtins : May 19, 2006
@@ -73,6 +73,7 @@
 
 
 - Enhancing editor and indentation : May 4, 2006
+
   - Pressing backspace should deindent
   - Clearing undo list when opening a file; undoSeparator when saving
 

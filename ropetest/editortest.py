@@ -1,5 +1,7 @@
 import unittest
+import Tkinter
 
+import rope.editingtools
 from rope.core import Core
 from rope.searching import Searcher
 from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
@@ -8,10 +10,10 @@ from rope.codeassist import CodeAssist
 
 class GraphicalEditorTest(unittest.TestCase):
     '''This class only tests features that are specific to GraphicalEditor; see mockeditortest'''
-    __factory = GraphicalEditorFactory()
+    __factory = GraphicalEditorFactory(Tkinter.Frame())
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.editor = self.__factory.create()
+        self.editor = self.__factory.create(rope.editingtools.NormalEditingTools())
         self.editor.set_text('sample text')
     
     def tearDown(self):

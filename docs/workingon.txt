@@ -1,17 +1,9 @@
 Refactoring
 ===========
 
-- PyCore._has_block to PyCore.has_block
-
-* Refactorings
-
-  * EditingTools should have a common construction location
-  * Removing GraphicalEditor.set_indenter, .set_code_assist and .set_highlighting
-  * Not using self.indenter, self.code_assist and self.highlighting in GraphicalEditor
-  * Using codeassist instead of code_assist and statusbar instead of status_bar?
-  * Is editor in Highlighting constructor necessary?
-  * Adding StatusBarManager to HighlightinTools?
-  * More thinking about editing tools; Which of them need the editor directly.
+- EditingTools should have a common construction location
+- Removing GraphicalEditor.set_indenter, .set_code_assist
+- More thinking about editing tools; Which of them need the editor directly.
 
 * Better definition locations; hold the range
 * pycore's getting fat

@@ -42,7 +42,7 @@ class EditorManager(object):
                 self.buttons[editor].invoke()
                 return editor
         editor = rope.fileeditor.FileEditor(Core.get_core().get_open_project(), file_,
-                                            rope.editor.GraphicalEditor(self.editor_frame))
+                                            rope.editor.GraphicalEditorFactory(self.editor_frame))
         editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),

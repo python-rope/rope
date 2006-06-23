@@ -16,6 +16,7 @@ Version Overview
 Features added in this release:
 
 * Go to definition; F3
+* Show quick outline; C-o
 
 You can use <Alt-/> for auto-completion.  The letter before the actual
 proposal in the code assist proposals dialog indicates the type of
@@ -62,6 +63,7 @@ C-x C-s        save
 C-i            correct line indentation
 M-/            code-assist
 F3             go to definition location
+C-o            show quick outline
 =============  ==========================
 
 
