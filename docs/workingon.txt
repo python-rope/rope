@@ -5,12 +5,12 @@ Show quick outline; C-o @ 2
 - Adding EditingTools which holds the indenter, highlighting and codeassist
 - Sorting outline elements by their line number
 - EditingTool: should be used for construction
+- Add a basic TreeViewer to uihelpers module
+- Add EditingTools.get_outline
+- Add outlinetest to runtests
+- Add uihelperstest to runtests
 
-* Add a basic TreeViewer to uihelpers module
-* Add EditingTools.get_outline
 * Enhance uihelper.TreeViewer
-* Add outlinetest to runtests
-* Add uihelperstest to runtests
 * PyCore._has_block to PyCore.has_block
 
 * Refactorings

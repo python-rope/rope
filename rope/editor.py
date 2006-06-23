@@ -355,11 +355,11 @@ class GraphicalEditor(TextEditor):
         self.text.mark_set(INSERT, new_insert)
 
     def _show_completion_window(self):
-        result = self.code_assist.assist(self.get_text(), self.get_current_offset(),
-                                         title='Code Assist Proposals')
+        result = self.code_assist.assist(self.get_text(), self.get_current_offset())
         toplevel = Toplevel()
         toplevel.title('Code Assist Proposals')
-        enhanced_list = EnhancedList(toplevel, _CompletionListHandle(self, toplevel, result))
+        enhanced_list = EnhancedList(toplevel, _CompletionListHandle(self, toplevel, result),
+                                     title='Code Assist Proposals')
         for proposal in result.completions:
             enhanced_list.add_entry(proposal)
         for proposal in result.templates:
