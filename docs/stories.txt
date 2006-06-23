@@ -245,9 +245,6 @@ Stories
   * Writing ASTs
 
 
-* Show quick outline; C-o @ 2
-
-
 Remaining Stories
 =================
 * Change program goals and description; principles.html

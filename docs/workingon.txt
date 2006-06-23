@@ -1,12 +1,7 @@
-Show quick outline; C-o @ 2
-===========================
+Refactoring
+===========
 
-- Enhance uihelper.TreeViewer
-
-  - '+' to expand nodes
-  - '-' to shrink nodes
-
-* PyCore._has_block to PyCore.has_block
+- PyCore._has_block to PyCore.has_block
 
 * Refactorings
 

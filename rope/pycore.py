@@ -323,7 +323,7 @@ class PyName(object):
         self.is_defined_here = is_defined_here
         self.lineno = lineno
         self.module = module
-        if self._has_block():
+        if self.has_block():
             self.lineno = self._get_ast().lineno
 
     def update_object(self, object_=None, is_defined_here=False, lineno=None, module=None):
@@ -345,7 +345,7 @@ class PyName(object):
         """Returns a (module, lineno) tuple"""
         return (self.module, self.lineno)
 
-    def _has_block(self):
+    def has_block(self):
         return self.is_defined_here and isinstance(self.object,
                                                    PyDefinedObject)
     
@@ -377,7 +377,7 @@ class Scope(object):
     def _create_scopes(self):
         block_objects = [pyname.object for pyname in
                          self.pyobject.get_attributes().values()
-                         if pyname._has_block()]
+                         if pyname.has_block()]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
         block_objects.sort(cmp=block_compare)
@@ -432,7 +432,7 @@ class FunctionScope(Scope):
 
     def _create_scopes(self):
         block_objects = [pyname.object for pyname in self._get_names().values()
-                         if pyname._has_block()]
+                         if pyname.has_block()]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
         block_objects.sort(cmp=block_compare)

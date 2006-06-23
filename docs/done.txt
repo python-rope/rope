@@ -3,6 +3,9 @@
 ===========
 
 
+- Show quick outline; C-o : June 23, 2006
+
+
 - Go to definition; F3 : June 22, 2006
 
 

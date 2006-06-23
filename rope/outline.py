@@ -44,7 +44,7 @@ class PythonOutlineNode(OutlineNode):
 def _get_pyname_children(pyname):
     result = []
     for name, pyname in pyname.get_attributes().iteritems():
-        if pyname._has_block():
+        if pyname.has_block():
             result.append(PythonOutlineNode(name, pyname))
     result.sort()
     return result
