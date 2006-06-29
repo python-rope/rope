@@ -14,6 +14,7 @@ import ropetest.codeanalyzetest
 import ropetest.pycoretest
 import ropetest.uihelperstest
 import ropetest.outlinetest
+import ropetest.formattertest
 
 
 if __name__ == '__main__':
@@ -32,5 +33,6 @@ if __name__ == '__main__':
     result.addTests(ropetest.pycoretest.suite())
     result.addTests(unittest.makeSuite(ropetest.uihelperstest.UIHelpersTest))
     result.addTests(unittest.makeSuite(ropetest.outlinetest.OutlineTest))
+    result.addTests(unittest.makeSuite(ropetest.formattertest.FormatterTest))
     runner = unittest.TextTestRunner()
     runner.run(result)

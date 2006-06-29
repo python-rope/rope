@@ -34,7 +34,9 @@ class EnhancedList(object):
         self.list.bind('<Escape>', self._cancel)
         self.list.bind('<FocusOut>', self._focus_out)
         self.list.bind('<Control-p>', self._select_prev)
+        self.list.bind('<Up>', self._select_prev)
         self.list.bind('<Control-n>', self._select_next)
+        self.list.bind('<Down>', self._select_next)
         label.grid(row=0, column=0, columnspan=2)
         self.list.grid(row=1, column=0, sticky=N+E+W+S)
         scrollbar.grid(row=1, column=1, sticky=N+E+W+S)
@@ -63,6 +65,7 @@ class EnhancedList(object):
                 self.list.see(active - 1)
                 self.list.activate(active - 1)
                 self.list.see(active - 1)
+        return 'break'
 
     def _select_next(self, event):
         selection = self.list.curselection()
@@ -74,6 +77,7 @@ class EnhancedList(object):
                 self.list.see(active + 1)
                 self.list.activate(active + 1)
                 self.list.see(active + 1)
+        return 'break'
 
     def add_entry(self, entry):
         self.entries.append(entry)
@@ -128,7 +132,9 @@ class TreeViewer(object):
         self.list.bind('<Escape>', self._cancel)
         self.list.bind('<FocusOut>', self._focus_out)
         self.list.bind('<Control-p>', self._select_prev)
+        self.list.bind('<Up>', self._select_prev)
         self.list.bind('<Control-n>', self._select_next)
+        self.list.bind('<Down>', self._select_next)
         self.list.bind('<e>', self._expand_item)
         self.list.bind('<plus>', self._expand_item)
         self.list.bind('<c>', self._collapse_item)
@@ -160,6 +166,7 @@ class TreeViewer(object):
                 self.list.see(active - 1)
                 self.list.activate(active - 1)
                 self.list.see(active - 1)
+        return 'break'
 
     def _select_next(self, event):
         selection = self.list.curselection()
@@ -171,6 +178,7 @@ class TreeViewer(object):
                 self.list.see(active + 1)
                 self.list.activate(active + 1)
                 self.list.see(active + 1)
+        return 'break'
 
     def _expand_item(self, event):
         selection = self.list.curselection()

@@ -87,6 +87,9 @@ Stories
   * Showing failed searches
 
 
+* Go to matching parents @ 1
+
+
 * Enhancing module running @ 2
 
   * Showing running status in the GUI
@@ -219,17 +222,13 @@ Stories
 * Show PyDoc @ 2
 
 
-* Out of project modules @ 2
-  Using inspect on modules that cannot be found in the project and builtins
-
-
 * AssList and AssTuple assignments @ 1
 
 
-* Rename class @ 3
+* 'global' keyword issues for pycore @ 1
 
 
-* Rename local variable @ 2
+* Read __init__.py of packages @ 2
 
 
 * Auto completion contexts; strings, comments, functions and ... @ 2
@@ -238,11 +237,21 @@ Stories
 * Auto-completing function parameter names when calling @ 2
 
 
-> Public Release 0.2pre4 : July 2, 2006
+* Out of project modules @ 2
+  Modules that cannot be found in the project and builtins
 
 
 * Formating Code @ 4
-  * Writing ASTs
+  Writing ASTs
+
+
+* Rename class @ 3
+
+
+> Public Release 0.2pre4 : July 2, 2006
+
+
+* Rename local variable @ 2
 
 
 Remaining Stories

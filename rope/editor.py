@@ -346,7 +346,7 @@ class GraphicalEditor(TextEditor):
         if result[0] is not None:
             import rope.core
             editor = rope.core.Core.get_core().get_editor_manager().\
-                     get_resource_editor(result[0].get_resource()).get_editor()
+                     get_resource_editor(result[0]).get_editor()
         if result[1] is not None:
             editor.goto_line(result[1])
 

@@ -1,19 +1,18 @@
-Refactoring
-===========
+Rename local variable @ 2
+=========================
 
-- EditingTools should have a common construction location
-- Removing GraphicalEditor.set_indenter, .set_code_assist
-- More thinking about editing tools; Which of them need the editor directly.
+* Use search and replace
+* PyObject equality check; Value objects?
+* PyName equality check; Value objects?
 
-* Better definition locations; hold the range
-* pycore's getting fat
-* editor's getting fat
+* Remove formatter and formattertest?
+* The same pattern for module names; ~ing or ~ or ~er
 * Refactor _ScopeVisitor.visitFrom and visitImport
+* A TreeViewer is an EnhancedList
 * Folders and change_observers?
 * Code-assist proposal name should not be so long?
 * PyNames with None object
 * Refactor pycore; So many kinds for Modules; eliminate checking module.is_package?
-* PyObject equality check; Value objects?
 * Removing duplications in tests in codeassist and pycore scopes
 * Consider using StatementRangeFinder in highlight module?
 * Updating editor when file changes at disk?
