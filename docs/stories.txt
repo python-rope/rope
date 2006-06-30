@@ -237,6 +237,9 @@ Stories
 * Auto-completing function parameter names when calling @ 2
 
 
+* We know the type of ``var = AClass()`` @ 2
+
+
 * Out of project modules @ 2
   Modules that cannot be found in the project and builtins
 

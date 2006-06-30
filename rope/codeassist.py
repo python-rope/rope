@@ -4,7 +4,8 @@ import __builtin__
 import re
 
 from rope.exceptions import RopeException
-from rope.codeanalyze import StatementRangeFinder, ArrayLinesAdapter
+from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
+                              LineOrientedSourceTools)
 
 class RopeSyntaxError(RopeException):
     pass
@@ -131,13 +132,9 @@ class _CodeCompletionCollector(object):
         self.starting = starting
         self.pycore = self.project.get_pycore()
         self.lines = source_code.split('\n')
-        current_pos = 0
-        lineno = 0
-        while current_pos + len(self.lines[lineno]) < offset:
-            current_pos += len(self.lines[lineno]) + 1
-            lineno += 1
-        self.lineno = lineno
-        self.current_indents = self._get_line_indents(lineno)
+        line_tools = LineOrientedSourceTools(self.lines)
+        self.lineno = line_tools.get_location(offset)[0]
+        self.current_indents = line_tools.get_indents(self.lineno)
         self._comment_current_statement()
 
     def _get_line_indents(self, line_number):
@@ -150,7 +147,7 @@ class _CodeCompletionCollector(object):
         return indents
 
     def _comment_current_statement(self):
-        range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines), self.lineno + 1)
+        range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines), self.lineno)
         range_finder.analyze()
         start = range_finder.get_statement_start() - 1
         end = range_finder.get_scope_end() - 1
@@ -161,7 +158,8 @@ class _CodeCompletionCollector(object):
         self.lines.append('\n')
 
     def _find_inner_holding_scope(self, base_scope):
-        return _get_holding_scope(base_scope, self.lines, self.lineno, self.current_indents)
+        line_tools = LineOrientedSourceTools(self.lines)
+        return line_tools.get_holding_scope(base_scope, self.lineno, self.current_indents)
 
     def _get_dotted_completions(self, scope):
         result = {}
@@ -180,7 +178,8 @@ class _CodeCompletionCollector(object):
                     for name, pyname in element.get_attributes().iteritems():
                         if name.startswith(tokens[-1]) or tokens[-1] == '':
                             complete_name = '.'.join(tokens[:-1]) + '.' + name
-                            result[complete_name] = CompletionProposal(complete_name, 'attribute')
+                            result[complete_name] = CompletionProposal(complete_name,
+                                                                       'attribute')
         return result
 
     def _get_undotted_completions(self, scope, result):
@@ -286,34 +285,22 @@ class PythonCodeAssist(CodeAssist):
                          starting_offset, offset)
 
     def get_definition_location(self, source_code, offset):
-        starting_offset = self._find_starting_offset(source_code, offset)
-        ending_offset = offset
-        while source_code[ending_offset].isalnum() or source_code[ending_offset] == '_':
-            ending_offset += 1
-        name = source_code[starting_offset:ending_offset]
-        return _GetDefinitionLocation(self.project, source_code, offset, name).get_definition_location()
+        return _GetDefinitionLocation(self.project, source_code,
+                                      offset).get_definition_location()
 
 
 class _GetDefinitionLocation(object):
 
-    def __init__(self, project, source_code, offset, name):
+    def __init__(self, project, source_code, offset):
         self.project = project
-        self.lines, self.lineno = self._transfer_to_lines(source_code, offset)
-        self.name = name
+        self.line_tools = LineOrientedSourceTools(source_code.split('\n'))
+        self.lineno = self.line_tools.get_location(offset)[0]
+        self.name = self.line_tools.get_name_at(*self.line_tools.get_location(offset))
         self.source_code = source_code
-
-    def _transfer_to_lines(self, source_code, offset):
-        lines = source_code.split('\n')
-        current_pos = 0
-        lineno = 0
-        while current_pos + len(lines[lineno]) < offset:
-            current_pos += len(lines[lineno]) + 1
-            lineno += 1
-        return lines, lineno
 
     def get_definition_location(self):
         module_scope = self.project.pycore.get_string_scope(self.source_code)
-        holding_scope = _get_holding_scope(module_scope, self.lines, self.lineno)
+        holding_scope = self.line_tools.get_holding_scope(module_scope, self.lineno)
         tokens = self.name.split('.')
         element = holding_scope.lookup(tokens[0])
         element_resource = None
@@ -334,31 +321,4 @@ class _GetDefinitionLocation(object):
             return (element_resource, element.get_definition_location()[1])
         else:
             return (None, None)
-
-
-def _get_holding_scope(module_scope, lines, lineno, current_indents=None):
-    def get_line_indents(lineno):
-        indents = 0
-        for char in lines[lineno]:
-            if char == ' ':
-                indents += 1
-            else:
-                break
-        return indents
-    if current_indents is None:
-        current_indents = get_line_indents(lineno)
-    current_scope = module_scope
-    inner_scope = current_scope
-    while current_scope is not None and \
-          (current_scope.get_kind() == 'Module' or
-           get_line_indents(current_scope.get_lineno() - 1) < current_indents):
-        inner_scope = current_scope
-        new_scope = None
-        for scope in current_scope.get_scopes():
-            if scope.get_lineno() - 1 <= lineno:
-                new_scope = scope
-            else:
-                break
-        current_scope = new_scope
-    return inner_scope
 

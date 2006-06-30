@@ -1,22 +1,27 @@
 Rename local variable @ 2
 =========================
 
+- LineOrientedSourceTools
+- Lines should start from 1
+
+* `CodeLineTools` needs to be in codeanalyze?
 * Use search and replace
 * PyObject equality check; Value objects?
 * PyName equality check; Value objects?
+* Renaming functions
 
 * Remove formatter and formattertest?
 * The same pattern for module names; ~ing or ~ or ~er
-* Refactor _ScopeVisitor.visitFrom and visitImport
+* Refactor `_ScopeVisitor.visitFrom` and visitImport
 * A TreeViewer is an EnhancedList
 * Folders and change_observers?
 * Code-assist proposal name should not be so long?
 * PyNames with None object
 * Refactor pycore; So many kinds for Modules; eliminate checking module.is_package?
 * Removing duplications in tests in codeassist and pycore scopes
-* Consider using StatementRangeFinder in highlight module?
+* Consider using `StatementRangeFinder` in highlight module?
 * Updating editor when file changes at disk?
-* Caching a few recent pycore.get_string_modules in codeassist or pycore?
+* Caching a few recent `PyCore.get_string_modules` in codeassist or pycore?
 
 
 Before 0.2 Release
@@ -41,4 +46,7 @@ Remaining Stories
   * Should editing tools access Editor directly? Which of them?
   * Specifing the type of each story; UI or Core
   * Dividing week time; 5/7 for core and 2/7 for UI
+
+* reST support for text files; It can have outlines, codeassists and ...
+* reST support inside pydocs
 

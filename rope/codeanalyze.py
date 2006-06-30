@@ -1,4 +1,60 @@
 
+class LineOrientedSourceTools(object):
+
+    def __init__(self, lines):
+        self.lines = lines
+    
+    def get_indents(self, lineno):
+        indents = 0
+        for char in self.lines[lineno - 1]:
+            if char == ' ':
+                indents += 1
+            else:
+                break
+        return indents
+    
+    def get_location(self, offset):
+        current_pos = 0
+        lineno = 1
+        while current_pos + len(self.lines[lineno - 1]) < offset:
+            current_pos += len(self.lines[lineno - 1]) + 1
+            lineno += 1
+        return (lineno, offset - current_pos)
+
+    def get_name_at(self, lineno, colno):
+        postfix = ''
+        for c in self.lines[lineno - 1][colno:]:
+            if c.isalnum() or c == '_':
+                postfix += c
+            else:
+                break
+        prefix = ''
+        for c in reversed(self.lines[lineno - 1][0:colno]):
+            if c.isalnum() or c in '._':
+                prefix = c + prefix
+            else:
+                break
+        return prefix + postfix
+    
+    def get_holding_scope(self, module_scope, lineno, line_indents=None):
+        line_indents = line_indents
+        if line_indents is None:
+            line_indents = self.get_indents(lineno)
+        current_scope = module_scope
+        inner_scope = current_scope
+        while current_scope is not None and \
+              (current_scope.get_kind() == 'Module' or
+               self.get_indents(current_scope.get_lineno()) < line_indents):
+            inner_scope = current_scope
+            new_scope = None
+            for scope in current_scope.get_scopes():
+                if scope.get_lineno() <= lineno:
+                    new_scope = scope
+                else:
+                    break
+            current_scope = new_scope
+        return inner_scope
+
 
 class Lines(object):
 
@@ -8,7 +64,9 @@ class Lines(object):
     def length(self):
         pass
 
+
 class ArrayLinesAdapter(object):
+
     def __init__(self, lines):
         self.lines = lines
     
