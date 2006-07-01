@@ -3,14 +3,23 @@ Rename local variable @ 2
 
 - LineOrientedSourceTools
 - Lines should start from 1
+- `CodeLineTools` needs to be in codeanalyze?
+- Use search and replace
+- Use real implementation; Check PyNames for equality
+- not renaming some_object.old_name in old_name -> new_name
+- Multiple occurances in the same line
 
-* `CodeLineTools` needs to be in codeanalyze?
-* Use search and replace
+* names in strings or comments
+* Only looking in the holding scope range
 * PyObject equality check; Value objects?
 * PyName equality check; Value objects?
 * Renaming functions
+* Adding to GUI
 
-* Remove formatter and formattertest?
+  * Reloading changed editors after refactorings
+  * Using LineOrientedSourceTools in GUI; requires it to use Lines
+
+* Elimination of source_code.split('\n')
 * The same pattern for module names; ~ing or ~ or ~er
 * Refactor `_ScopeVisitor.visitFrom` and visitImport
 * A TreeViewer is an EnhancedList

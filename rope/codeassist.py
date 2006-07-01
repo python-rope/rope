@@ -295,7 +295,7 @@ class _GetDefinitionLocation(object):
         self.project = project
         self.line_tools = LineOrientedSourceTools(source_code.split('\n'))
         self.lineno = self.line_tools.get_location(offset)[0]
-        self.name = self.line_tools.get_name_at(*self.line_tools.get_location(offset))
+        self.name = self.line_tools.get_name_at(offset)
         self.source_code = source_code
 
     def get_definition_location(self):

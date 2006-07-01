@@ -21,7 +21,8 @@ class LineOrientedSourceTools(object):
             lineno += 1
         return (lineno, offset - current_pos)
 
-    def get_name_at(self, lineno, colno):
+    def get_name_at(self, offset):
+        lineno, colno = self.get_location(offset)
         postfix = ''
         for c in self.lines[lineno - 1][colno:]:
             if c.isalnum() or c == '_':
