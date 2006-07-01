@@ -231,7 +231,7 @@ Stories
 * Read __init__.py of packages @ 2
 
 
-* Auto completion contexts; strings, comments, functions and ... @ 2
+* Auto completion contexts; strings, comments, imports, functions and ... @ 2
 
 
 * Auto-completing function parameter names when calling @ 2

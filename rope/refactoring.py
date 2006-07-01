@@ -4,6 +4,12 @@ from rope.codeanalyze import LineOrientedSourceTools
 
 class Refactoring(object):
 
+    def rename(self, source_code, offset, new_name):
+        pass
+
+
+class PythonRefactoring(Refactoring):
+
     def __init__(self, pycore):
         self.pycore = pycore
     
@@ -35,3 +41,5 @@ class Refactoring(object):
     def _get_pyname(self, holding_scope, name):
         return holding_scope.lookup(name)
 
+class NoRefactoring(Refactoring):
+    pass

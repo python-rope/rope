@@ -2,6 +2,7 @@ import rope.indenter
 import rope.highlight
 import rope.codeassist
 import rope.outline
+import rope.refactoring
 
 
 class EditingTools(object):
@@ -16,6 +17,9 @@ class EditingTools(object):
         pass
 
     def create_outline(self):
+        pass
+
+    def create_refactoring(self):
         pass
 
 
@@ -36,6 +40,9 @@ class PythonEditingTools(EditingTools):
     def create_outline(self):
         return rope.outline.PythonOutline(self.project)
 
+    def create_refactoring(self):
+        return rope.refactoring.PythonRefactoring(self.project.get_pycore())
+
 
 class NormalEditingTools(EditingTools):
 
@@ -53,5 +60,9 @@ class NormalEditingTools(EditingTools):
 
     def create_outline(self):
         return rope.outline.NoOutline()
+
+    def create_refactoring(self):
+        return rope.refactoring.NoRefactoring()
+
 
 

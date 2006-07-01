@@ -91,6 +91,9 @@ class PyCore(object):
                 result.append(module)
         return result
 
+    def get_source_folders(self):
+        return self._find_source_folders(self.project.get_root_folder())
+
     def _is_package(self, folder):
         init_dot_py = folder.get_path() + '/__init__.py'
         try:
@@ -112,9 +115,6 @@ class PyCore(object):
         for resource in folder.get_folders():
             result.extend(self._find_source_folders(resource))
         return result
-
-    def get_source_folders(self):
-        return self._find_source_folders(self.project.get_root_folder())
 
 
 class PyObject(object):

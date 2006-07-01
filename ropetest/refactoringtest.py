@@ -1,6 +1,6 @@
 import unittest
 
-from rope.refactoring import Refactoring
+from rope.refactoring import PythonRefactoring
 from rope.project import Project
 from ropetest import testutils
 
@@ -11,7 +11,7 @@ class RefactoringTest(unittest.TestCase):
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
-        self.refactoring = Refactoring(self.project.get_pycore())
+        self.refactoring = PythonRefactoring(self.project.get_pycore())
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)

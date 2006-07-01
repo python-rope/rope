@@ -338,6 +338,7 @@ class GraphicalEditor(TextEditor):
             self._show_outline_window()
             return 'break'
         self.text.bind('<Control-o>', show_quick_outline)
+        self.text.bind('<Alt-R>', self._rename_refactoring_dialog)
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
@@ -349,6 +350,35 @@ class GraphicalEditor(TextEditor):
                      get_resource_editor(result[0]).get_editor()
         if result[1] is not None:
             editor.goto_line(result[1])
+            
+    def _rename_refactoring_dialog(self, event):
+        toplevel = Toplevel()
+        toplevel.title('Rename Refactoring')
+        frame = Frame(toplevel)
+        label = Label(frame, text='New Name :')
+        label.grid(row=0, column=0)
+        new_name_entry = Entry(frame)
+        new_name_entry.grid(row=0, column=1)
+
+        def ok(event=None):
+            self.rename_refactoring(new_name_entry.get())
+            toplevel.destroy()
+        def cancel(event=None):
+            toplevel.destroy()
+
+        ok_button = Button(frame, text='Done', command=ok)
+        cancel_button = Button(frame, text='Cancel', command=cancel)
+        ok_button.grid(row=1, column=0)
+        cancel_button.grid(row=1, column=1)
+        frame.grid()
+
+    def rename_refactoring(self, new_name):
+        initial_position = self.text.index(INSERT)
+        refactored = self.refactoring.rename(self.get_text(),
+                                             self.get_current_offset(), new_name)
+        self.set_text(refactored, False)
+        self.text.mark_set(INSERT, initial_position)
+        self.text.see(INSERT)
 
     def _focus_went_out(self):
         if self.searcher.is_searching():
@@ -440,13 +470,14 @@ class GraphicalEditor(TextEditor):
     def get_text(self):
         return self.text.get('1.0', 'end-1c')
 
-    def set_text(self, text):
+    def set_text(self, text, reset_editor=True):
         self.text.delete('1.0', END)
         self.text.insert('1.0', text)
         self.text.mark_set(INSERT, '1.0')
         self._highlight_range('0.0', 'end')
-        self.text.edit_reset()
-        self.text.edit_modified(False)
+        if reset_editor:
+            self.text.edit_reset()
+            self.text.edit_modified(False)
 
     def get_start(self):
         return GraphicalTextIndex(self, '1.0')
@@ -753,6 +784,7 @@ class GraphicalEditor(TextEditor):
         self.set_code_assist(editing_tools.create_code_assist())
         self.set_highlighting(editing_tools.create_highlighting())
         self.outline = editing_tools.create_outline()
+        self.refactoring = editing_tools.create_refactoring()
 
     def line_editor(self):
         return GraphicalLineEditor(self)
