@@ -422,13 +422,12 @@ class FunctionScope(Scope):
             new_visitor = _FunctionVisitor(self.pycore, self.pyobject)
             for n in self.pyobject._get_ast().getChildNodes():
                 compiler.walk(n, new_visitor)
-            self.names = new_visitor.names
+            self.names = self.pyobject._get_parameters()
+            self.names.update(new_visitor.names)
         return self.names
     
     def get_names(self):
-        result = self.pyobject._get_parameters()
-        result.update(self._get_names())
-        return result
+        return self._get_names()
 
     def _create_scopes(self):
         block_objects = [pyname.object for pyname in self._get_names().values()

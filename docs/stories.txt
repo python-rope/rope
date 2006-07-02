@@ -209,10 +209,6 @@ Stories
 * We know the type of list and keyword args @ 1
 
 
-* Complete as you type @ 2
-  Update proposal list while typing.
-
-
 * Handle circular from-imports @ 1
 
 
@@ -237,9 +233,6 @@ Stories
 * Auto-completing function parameter names when calling @ 2
 
 
-* We know the type of ``var = AClass()`` @ 2
-
-
 * Out of project modules @ 2
   Modules that cannot be found in the project and builtins
 
@@ -248,13 +241,23 @@ Stories
   Writing ASTs
 
 
+* We know the type of ``var = AClass()`` @ 2
+
+
 * Rename class @ 3
+
+
+* Rename function parameter @ 1
 
 
 > Public Release 0.2pre4 : July 2, 2006
 
 
 * Rename local variable @ 2
+
+
+* Complete as you type @ 2
+  Update proposal list while typing.
 
 
 Remaining Stories

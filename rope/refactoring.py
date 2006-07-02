@@ -22,6 +22,8 @@ class PythonRefactoring(Refactoring):
                                                      line_tools.get_location(offset)[0])
         old_name = line_tools.get_name_at(offset)
         old_pyname = self._get_pyname(holding_scope, old_name)
+        if old_pyname is None:
+            return source_code
         pattern = re.compile('\\b' + old_name + '\\b')
         for lineno, line in enumerate(lines):
             line_scope = line_tools.get_holding_scope(module_scope, lineno + 1)
@@ -42,4 +44,7 @@ class PythonRefactoring(Refactoring):
         return holding_scope.lookup(name)
 
 class NoRefactoring(Refactoring):
-    pass
+
+    def rename(self, source_code, offset, new_name):
+        return source_code
+

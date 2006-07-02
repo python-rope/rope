@@ -33,6 +33,24 @@ class RefactoringTest(unittest.TestCase):
         refactored = self.refactoring.rename('a_var = 10\na_var = 10 + a_var / 2\n', 2, 'new_var')
         self.assertEquals('new_var = 10\nnew_var = 10 + new_var / 2\n', refactored)
 
+    def test_renaming_names_when_getting_some_attribute(self):
+        refactored = self.refactoring.rename("a_var = 'a b c'\na_var.split('\\n')\n", 2, 'new_var')
+        self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n", refactored)
+
+    def test_renaming_names_when_getting_some_attribute2(self):
+        refactored = self.refactoring.rename("a_var = 'a b c'\na_var.split('\\n')\n", 20, 'new_var')
+        self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n", refactored)
+
+    # TODO: Renaming function paramters
+    def xxx_test_renaming_function_parameters1(self):
+        refactored = self.refactoring.rename("def f(a_param):\n    print a_param\n", 8, 'new_param')
+        self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
+
+    # TODO: Renaming function paramters
+    def xxx_test_renaming_function_parameters2(self):
+        refactored = self.refactoring.rename("def f(a_param):\n    print a_param\n", 30, 'new_param')
+        self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

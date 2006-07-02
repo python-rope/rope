@@ -147,8 +147,7 @@ class _CompletionListHandle(EnhancedListHandle):
 
     def selected(self, selected):
         if selected.kind != 'template':
-            self.editor.text.delete('0.0 +%dc' % self.result.start_offset,
-                                    '0.0 +%dc' % self.result.end_offset)
+            self.editor.text.delete('0.0 +%dc' % self.result.start_offset, INSERT)
             self.editor.text.insert('0.0 +%dc' % self.result.start_offset,
                                     selected.name)
         else:
@@ -359,7 +358,6 @@ class GraphicalEditor(TextEditor):
         label.grid(row=0, column=0)
         new_name_entry = Entry(frame)
         new_name_entry.grid(row=0, column=1)
-
         def ok(event=None):
             self.rename_refactoring(new_name_entry.get())
             toplevel.destroy()
@@ -369,8 +367,11 @@ class GraphicalEditor(TextEditor):
         ok_button = Button(frame, text='Done', command=ok)
         cancel_button = Button(frame, text='Cancel', command=cancel)
         ok_button.grid(row=1, column=0)
+        new_name_entry.bind('<Return>', lambda event: ok())
+        new_name_entry.bind('<Escape>', lambda event: cancel())
         cancel_button.grid(row=1, column=1)
         frame.grid()
+        new_name_entry.focus_set()
 
     def rename_refactoring(self, new_name):
         initial_position = self.text.index(INSERT)
@@ -411,7 +412,30 @@ class GraphicalEditor(TextEditor):
             enhanced_list.add_entry(proposal)
         for proposal in result.templates:
             enhanced_list.add_entry(proposal)
+        start_index = self.text.index('0.0 +%dc' % result.start_offset)
+        initial_cursor_position = str(self.text.index(INSERT))
+        def key_pressed(event):
+            import string
+            if len(event.char) == 1 and (event.char.isalnum() or
+                                         event.char in string.punctuation):
+                self.text.insert(INSERT, event.char)
+            if event.keysym == 'space':
+                self.text.insert(INSERT, ' ')
+            if event.keysym == 'BackSpace':
+                self.text.delete(INSERT + '-1c')
+            if self.text.compare(initial_cursor_position, '>', INSERT):
+                toplevel.destroy()
+                return
+            new_name = self.text.get(start_index, INSERT)
+            enhanced_list.clear()
+            for proposal in result.completions:
+                if proposal.name.startswith(new_name):
+                    enhanced_list.add_entry(proposal)
+            for proposal in result.templates:
+                if proposal.name.startswith(new_name):
+                    enhanced_list.add_entry(proposal)
         enhanced_list.list.focus_set()
+        enhanced_list.list.bind('<Any-KeyPress>', key_pressed)
         toplevel.grab_set()
 
     def _show_outline_window(self):
@@ -428,8 +452,7 @@ class GraphicalEditor(TextEditor):
         template = proposal.template
         def apply_template(mapping):
             string = template.substitute(mapping)
-            self.text.delete('0.0 +%dc' % result.start_offset,
-                             '0.0 +%dc' % result.end_offset)
+            self.text.delete('0.0 +%dc' % result.start_offset, INSERT)
             self.text.insert('0.0 +%dc' % result.start_offset,
                              string)
             offset = template.get_cursor_location(mapping)
