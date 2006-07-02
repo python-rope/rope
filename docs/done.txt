@@ -3,6 +3,12 @@
 ===========
 
 
+- Rename local variable : July 2, 2006
+
+
+- Complete as you type : July 2, 2006
+
+
 - Show quick outline; C-o : June 23, 2006
 
 

@@ -253,13 +253,6 @@ Stories
 > Public Release 0.2pre4 : July 2, 2006
 
 
-* Rename local variable @ 2
-
-
-* Complete as you type @ 2
-  Update proposal list while typing.
-
-
 Remaining Stories
 =================
 * Change program goals and description; principles.html
