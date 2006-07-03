@@ -18,21 +18,19 @@ class PythonRefactoring(Refactoring):
         result = []
         line_tools = LineOrientedSourceTools(lines)
         module_scope = self.pycore.get_string_scope(source_code)
-        holding_scope = line_tools.get_holding_scope(module_scope,
-                                                     line_tools.get_location(offset)[0])
         old_name = line_tools.get_name_at(offset)
-        old_pyname = self._get_pyname(holding_scope, old_name)
+        old_pyname = self._get_pyname(module_scope, line_tools, old_name,
+                                      line_tools.get_location(offset)[0])
         if old_pyname is None:
             return source_code
         pattern = re.compile('\\b' + old_name + '\\b')
         for lineno, line in enumerate(lines):
-            line_scope = line_tools.get_holding_scope(module_scope, lineno + 1)
             new_line = ''
             last_modified_char = 0
             for match in pattern.finditer(line):
                 if match.start() != 0 and line[match.start() - 1] == '.':
                     continue
-                if self._get_pyname(line_scope, old_name) == old_pyname:
+                if self._get_pyname(module_scope, line_tools, old_name, lineno + 1) == old_pyname:
                     new_line += line[last_modified_char:match.start()] + new_name
                     last_modified_char = match.end()
             new_line += line[last_modified_char:]
@@ -42,6 +40,17 @@ class PythonRefactoring(Refactoring):
 
     def _get_pyname(self, holding_scope, name):
         return holding_scope.lookup(name)
+
+    def _get_pyname(self, module_scope, line_tools, name, lineno):
+        holding_scope = line_tools.get_holding_scope(module_scope, lineno)
+        result = holding_scope.lookup(name)
+        # This occurs if renaming a function parameter
+        if result is None:
+            next_scope = line_tools.get_holding_scope(module_scope,
+                                                      lineno + 1)
+            result = next_scope.lookup(name)            
+        return result
+
 
 class NoRefactoring(Refactoring):
 

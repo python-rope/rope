@@ -42,7 +42,7 @@ class Project(object):
     def _create_file(self, fileName):
         filePath = self._get_resource_path(fileName)
         if os.path.exists(filePath):
-            if not os.path.isfile(filePath):
+            if os.path.isfile(filePath):
                 raise RopeException('File already exists')
             else:
                 raise RopeException('A folder with the same name as this file already exists')

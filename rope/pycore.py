@@ -335,6 +335,12 @@ class PyName(object):
         else:
             return PyObject.get_base_type('Unknown').get_attributes()
 
+    def get_object(self):
+        if self.object:
+            return self.object
+        else:
+            return PyObject.get_base_type('Unknown')
+        
     def get_type(self):
         if self.object:
             return self.object.get_type()

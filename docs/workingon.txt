@@ -1,20 +1,5 @@
-============
- Working On
-============
-
-
-Before 0.2 Release
-==================
-* GUI testing redux; make a ropefunctest directory?; rename ropetest to ropeunittest?
-* Better editor changing dialog; use uihelpers module
-* Enhancing highlighting
-* Profiling to find the bottlenecks
-* Document features added since release 0.1
-* Better homepage
-
-
-Remaining Stories
-=================
+Refactoring
+===========
 
 * Only looking in the holding scope range
 * Using LineOrientedSourceTools in GUI; requires it to use Lines
@@ -37,6 +22,20 @@ Remaining Stories
 * Updating editor when file changes at disk?
 * Caching a few recent `PyCore.get_string_modules` in codeassist or pycore?
 
+
+
+Before 0.2 Release
+==================
+* GUI testing redux; make a ropefunctest directory?; rename ropetest to ropeunittest?
+* Better editor changing dialog; use uihelpers module
+* Enhancing highlighting
+* Profiling to find the bottlenecks
+* Document features added since release 0.1
+* Better homepage
+
+
+Remaining Stories
+=================
 * Directories should contain __init__.py to be packages in codeassist?
 * Code assists on relative imports?
 * Python C extensions?

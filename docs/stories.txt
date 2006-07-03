@@ -41,15 +41,6 @@ Stories
 * Subversion support using pysvn @ 3
 
 
-* Rename function @ 2
-
-
-* Move a class to another module @ 3
-
-
-* Find matching parens @ 1
-
-
 * Last edit location; C-q @ 2
 
 
@@ -139,12 +130,6 @@ Stories
 * Dynamic type inference @ 3
 
 
-* Changing next/prev word to stop on underline and capital letters @ 1
-
-
-* Rename module refactoring @ 2
-
-
 * Better New ... Dialogs @ 2
   Better folder and module selection. Completing or selecting from a list.
 
@@ -163,9 +148,6 @@ Stories
   * Edit menu: cut, paste, undo, redo, revert
   * Showing modified file status
   * Handle MYClass style names in next/prev word
-
-
-* Auto-completing inherited methods @ 2
 
 
 * Better multi-sequence key event handling @ 2
@@ -212,10 +194,19 @@ Stories
 * Handle circular from-imports @ 1
 
 
+* Introcude factory method @ 2
+
+
 * Showing function signature when calling @ 1
 
 
-* Show PyDoc @ 2
+* Introduce temporary variable @ 3
+
+
+* Inline function @ 3
+
+
+* Extract function @ 3
 
 
 * AssList and AssTuple assignments @ 1
@@ -230,7 +221,22 @@ Stories
 * Auto completion contexts; strings, comments, imports, functions and ... @ 2
 
 
+* Show PyDoc @ 2
+
+
+* Rename module refactoring @ 2
+
+
+* Rename function @ 2
+
+
+* Move a class to another module @ 3
+
+
 * Auto-completing function parameter names when calling @ 2
+
+
+> Public Release 0.2pre5 : July 16, 2006
 
 
 * Out of project modules @ 2
@@ -245,12 +251,6 @@ Stories
 
 
 * Rename class @ 3
-
-
-* Rename function parameter @ 1
-
-
-> Public Release 0.2pre4 : July 2, 2006
 
 
 Remaining Stories

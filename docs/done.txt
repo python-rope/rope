@@ -3,6 +3,12 @@
 ===========
 
 
+- Rename function parameter : July 3, 2006
+
+
+> Public Release 0.2pre4 : July 2, 2006
+
+
 - Rename local variable : July 2, 2006
 
 
