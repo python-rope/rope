@@ -32,6 +32,18 @@ Stories
 * Having multiple clipboards @ 2
 
 
+* reST support inside pydocs @ 1
+
+
+* reST highlighting @ 2
+
+
+* reST outlines @ 3
+
+
+* reSt codeassists @ 3
+
+
 * Adding tool bar @ 1
 
 
@@ -247,10 +259,10 @@ Stories
   Writing ASTs
 
 
-* We know the type of ``var = AClass()`` @ 2
-
-
 * Rename class @ 3
+
+
+* We know the type of ``var = AClass()`` @ 2
 
 
 Remaining Stories

@@ -214,6 +214,12 @@ class _AttributeListFinder(object):
     def visitGetattr(self, node):
         compiler.walk(node.expr, self)
         self.name_list.append(node.attrname)
+
+    @staticmethod
+    def get_attribute_list(node):
+        finder = _AttributeListFinder()
+        compiler.walk(node, finder)
+        return finder.name_list        
         
     @staticmethod
     def get_attribute(node, scope):
@@ -476,11 +482,36 @@ class _ScopeVisitor(object):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
         self.names[node.name] = PyName(pyobject, True)
 
-    def visitAssName(self, node):
-        if node.name in self.names:
-            self.names[node.name].update_object(lineno=node.lineno)
-        else:
-            self.names[node.name] = PyName(lineno=node.lineno)
+    def _search_in_dictionary_for_attribute_list(self, names, attribute_list):
+        pyobject = names.get(attribute_list[0], None)
+        if pyobject != None and len(attribute_list) > 1:
+            for name in attribute_list[1:]:
+                if name in pyobject.get_attributes():
+                    pyobject = pyobject.get_attributes()[name].object
+                else:
+                    pyobject = None
+                    break
+        return pyobject
+        
+    def visitAssign(self, node):
+        type_ = None
+        if isinstance(node.expr, compiler.ast.CallFunc):
+            function_name = _AttributeListFinder.get_attribute_list(node.expr.node)
+            function_object = self._search_in_dictionary_for_attribute_list(self.names, function_name)
+            if type_ is None and self.owner_object.parent is not None:
+                function_object = self._search_in_dictionary_for_attribute_list(self.owner_object.parent.\
+                                                                                get_scope().get_names(), 
+                                                                                function_name)
+            if function_object is not None:
+                if function_object.get_type() == PyObject.get_base_type('Type'):
+                    type_ = function_object.get_object()
+        object_ = PyObject(type_=type_)
+        for ass_name in node.nodes:
+            if ass_name.name in self.names:
+                self.names[ass_name.name].update_object(object_=object_, lineno=node.lineno)
+            else:
+                self.names[ass_name.name] = PyName(object_=object_, lineno=node.lineno)
+
 
     def visitImport(self, node):
         for import_pair in node.names:

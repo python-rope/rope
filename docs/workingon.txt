@@ -1,5 +1,10 @@
-Refactoring
-===========
+We know the type of ``var = AClass()`` @ 2
+==========================================
+
+- Classes defined in a bigger scope
+
+* Assigns in the class bodies
+* Equality of two objects of the same type?
 
 * Only looking in the holding scope range
 * Using LineOrientedSourceTools in GUI; requires it to use Lines
@@ -9,8 +14,8 @@ Refactoring
 * PyObject equality check; Value objects?
 * PyName equality check; Value objects?
 
+* Optimizing holding scope search ?
 * Elimination of source_code.split('\n')
-* The same pattern for module names; ~ing or ~ or ~er
 * Refactor `_ScopeVisitor.visitFrom` and visitImport
 * A TreeViewer is an EnhancedList
 * Folders and change_observers?
@@ -47,6 +52,5 @@ Remaining Stories
   * Specifing the type of each story; UI or Core
   * Dividing week time; 5/7 for core and 2/7 for UI
 
-* reST support for text files; It can have outlines, codeassists and ...
-* reST support inside pydocs
+* The same pattern for module names; ~ing or ~ or ~er
 

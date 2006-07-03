@@ -364,6 +364,21 @@ class PyCoreTest(unittest.TestCase):
         an_attr = a_class.get_attributes()['an_attr']
         self.assertEquals((None, 3), an_attr.get_definition_location())
 
+    def test_simple_type_inferencing(self):
+        pycore = self.project.get_pycore()
+        scope = pycore.get_string_scope('class Sample(object):\n    pass\na_var = Sample()\n')
+        sample_class = scope.get_names()['Sample'].get_object()
+        a_var = scope.get_names()['a_var']
+        self.assertEquals(sample_class, a_var.get_type())
+        
+    def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
+        pycore = self.project.get_pycore()
+        scope = pycore.get_string_scope('class Sample(object):\n    pass\n' +
+                                        'def a_func():\n    a_var = Sample()\n')
+        sample_class = scope.get_names()['Sample'].get_object()
+        a_var = scope.get_names()['a_func'].get_object().get_scope().get_names()['a_var']
+        self.assertEquals(sample_class, a_var.get_type())
+        
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
@@ -718,7 +733,6 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner = PythonFileRunner(file_resource)
         runner.wait_process()
         self.assertEquals('run', self.get_output_file_content(file_path))
-
 
 def suite():
     result = unittest.TestSuite()
