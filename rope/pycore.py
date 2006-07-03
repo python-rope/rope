@@ -220,20 +220,24 @@ class _AttributeListFinder(object):
         finder = _AttributeListFinder()
         compiler.walk(node, finder)
         return finder.name_list        
-        
+
     @staticmethod
-    def get_attribute(node, scope):
-        finder = _AttributeListFinder()
-        compiler.walk(node, finder)
-        pyobject = scope.lookup(finder.name_list[0])
-        if pyobject != None and len(finder.name_list) > 1:
-            for name in finder.name_list[1:]:
+    def get_pyname_from_scope(attribute_list, scope):
+        pyobject = scope.lookup(attribute_list[0])
+        if pyobject != None and len(attribute_list) > 1:
+            for name in attribute_list[1:]:
                 if name in pyobject.get_attributes():
                     pyobject = pyobject.get_attributes()[name].object
                 else:
                     pyobject = None
                     break
         return pyobject
+    
+    @staticmethod
+    def get_attribute(node, scope):
+        finder = _AttributeListFinder()
+        compiler.walk(node, finder)
+        return _AttributeListFinder.get_pyname_from_scope(finder.name_list, scope)
 
 
 class PyClass(PyDefinedObject):
@@ -498,10 +502,9 @@ class _ScopeVisitor(object):
         if isinstance(node.expr, compiler.ast.CallFunc):
             function_name = _AttributeListFinder.get_attribute_list(node.expr.node)
             function_object = self._search_in_dictionary_for_attribute_list(self.names, function_name)
-            if type_ is None and self.owner_object.parent is not None:
-                function_object = self._search_in_dictionary_for_attribute_list(self.owner_object.parent.\
-                                                                                get_scope().get_names(), 
-                                                                                function_name)
+            if function_object is None and self.owner_object.parent is not None:
+                function_object = _AttributeListFinder.get_pyname_from_scope(function_name,
+                                                                             self.owner_object.parent.get_scope())
             if function_object is not None:
                 if function_object.get_type() == PyObject.get_base_type('Type'):
                     type_ = function_object.get_object()

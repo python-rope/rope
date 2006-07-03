@@ -4,8 +4,8 @@ We know the type of ``var = AClass()`` @ 2
 - Classes defined in a bigger scope
 
 * Assigns in the class bodies
+* Not renaming function keyword names
 * Equality of two objects of the same type?
-
 * Only looking in the holding scope range
 * Using LineOrientedSourceTools in GUI; requires it to use Lines
 * Reloading changed editors after refactorings; fileeditor should be a resource visitor

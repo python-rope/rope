@@ -365,18 +365,25 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals((None, 3), an_attr.get_definition_location())
 
     def test_simple_type_inferencing(self):
-        pycore = self.project.get_pycore()
-        scope = pycore.get_string_scope('class Sample(object):\n    pass\na_var = Sample()\n')
+        scope = self.pycore.get_string_scope('class Sample(object):\n    pass\na_var = Sample()\n')
         sample_class = scope.get_names()['Sample'].get_object()
         a_var = scope.get_names()['a_var']
         self.assertEquals(sample_class, a_var.get_type())
         
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
-        pycore = self.project.get_pycore()
-        scope = pycore.get_string_scope('class Sample(object):\n    pass\n' +
+        scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
                                         'def a_func():\n    a_var = Sample()\n')
         sample_class = scope.get_names()['Sample'].get_object()
         a_var = scope.get_names()['a_func'].get_object().get_scope().get_names()['a_var']
+        self.assertEquals(sample_class, a_var.get_type())
+        
+    def test_simple_type_inferencing_classes_in_class_methods(self):
+        scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
+                                             'class Another(object):\n' + 
+                                             '    def a_method():\n        a_var = Sample()\n')
+        sample_class = scope.get_names()['Sample'].get_object()
+        another_class = scope.get_names()['Another']
+        a_var = another_class.get_attributes()['a_method'].get_object().get_scope().get_names()['a_var']
         self.assertEquals(sample_class, a_var.get_type())
         
 
