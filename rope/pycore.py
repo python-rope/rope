@@ -471,21 +471,12 @@ class ClassScope(Scope):
         return 'Class'
 
 
-class _ScopeVisitor(object):
+class _AssignVisitor(object):
 
-    def __init__(self, pycore, owner_object):
-        self.names = {}
-        self.pycore = pycore
-        self.owner_object = owner_object
+    def __init__(self, scope_visitor):
+        self.scope_visitor = scope_visitor
+        self.assigned_object = None
     
-    def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore,
-                                               node, self.owner_object), True)
-
-    def visitFunction(self, node):
-        pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = PyName(pyobject, True)
-
     def _search_in_dictionary_for_attribute_list(self, names, attribute_list):
         pyobject = names.get(attribute_list[0], None)
         if pyobject != None and len(attribute_list) > 1:
@@ -501,20 +492,45 @@ class _ScopeVisitor(object):
         type_ = None
         if isinstance(node.expr, compiler.ast.CallFunc):
             function_name = _AttributeListFinder.get_attribute_list(node.expr.node)
-            function_object = self._search_in_dictionary_for_attribute_list(self.names, function_name)
-            if function_object is None and self.owner_object.parent is not None:
-                function_object = _AttributeListFinder.get_pyname_from_scope(function_name,
-                                                                             self.owner_object.parent.get_scope())
+            function_object = self._search_in_dictionary_for_attribute_list(self.scope_visitor.names,
+                                                                            function_name)
+            if function_object is None and self.scope_visitor.owner_object.parent is not None:
+                function_object = _AttributeListFinder.\
+                                  get_pyname_from_scope(function_name,
+                                                        self.scope_visitor.owner_object.parent.get_scope())
             if function_object is not None:
                 if function_object.get_type() == PyObject.get_base_type('Type'):
                     type_ = function_object.get_object()
-        object_ = PyObject(type_=type_)
-        for ass_name in node.nodes:
-            if ass_name.name in self.names:
-                self.names[ass_name.name].update_object(object_=object_, lineno=node.lineno)
-            else:
-                self.names[ass_name.name] = PyName(object_=object_, lineno=node.lineno)
+        self.assigned_object = PyObject(type_=type_)
+        for child_node in node.nodes:
+            compiler.walk(child_node, self)
 
+    def visitAssName(self, node):
+        if node.name in self.scope_visitor.names:
+            self.scope_visitor.names[node.name].update_object(object_=self.assigned_object,
+                                                              lineno=node.lineno)
+        else:
+            self.scope_visitor.names[node.name] = PyName(object_=self.assigned_object,
+                                                         lineno=node.lineno)
+
+
+class _ScopeVisitor(object):
+
+    def __init__(self, pycore, owner_object):
+        self.names = {}
+        self.pycore = pycore
+        self.owner_object = owner_object
+    
+    def visitClass(self, node):
+        self.names[node.name] = PyName(PyClass(self.pycore,
+                                               node, self.owner_object), True)
+
+    def visitFunction(self, node):
+        pyobject = PyFunction(self.pycore, node, self.owner_object)
+        self.names[node.name] = PyName(pyobject, True)
+
+    def visitAssign(self, node):
+        compiler.walk(node, _AssignVisitor(self))
 
     def visitImport(self, node):
         for import_pair in node.names:
@@ -593,9 +609,8 @@ class _ClassVisitor(_ScopeVisitor):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
         self.names[node.name] = PyName(pyobject, True)
         if node.name == '__init__':
-            new_visitor = _ClassInitVisitor()
+            new_visitor = _ClassInitVisitor(self)
             compiler.walk(node, new_visitor)
-            self.names.update(new_visitor.names)
 
     def visitAssName(self, node):
         self.names[node.name] = PyName()
@@ -611,14 +626,18 @@ class _FunctionVisitor(_ScopeVisitor):
         super(_FunctionVisitor, self).__init__(pycore, owner_object)
 
 
-class _ClassInitVisitor(object):
+class _ClassInitVisitor(_AssignVisitor):
 
-    def __init__(self):
-        self.names = {}
+    def __init__(self, scope_visitor):
+        super(_ClassInitVisitor, self).__init__(scope_visitor)
     
     def visitAssAttr(self, node):
         if node.expr.name == 'self':
-            self.names[node.attrname] = PyName(lineno=node.lineno)
+            self.scope_visitor.names[node.attrname] = PyName(object_=self.assigned_object,
+                                                             lineno=node.lineno)
+    
+    def visitAssName(self, node):
+        pass
 
 
 class PythonFileRunner(object):

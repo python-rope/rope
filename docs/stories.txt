@@ -236,6 +236,9 @@ Stories
 * Show PyDoc @ 2
 
 
+* Rename function parameters @ 2
+
+
 * Rename module refactoring @ 2
 
 
