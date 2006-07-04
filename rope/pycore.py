@@ -227,7 +227,7 @@ class _AttributeListFinder(object):
         if pyobject != None and len(attribute_list) > 1:
             for name in attribute_list[1:]:
                 if name in pyobject.get_attributes():
-                    pyobject = pyobject.get_attributes()[name].object
+                    pyobject = pyobject.get_attributes()[name]
                 else:
                     pyobject = None
                     break
@@ -482,7 +482,7 @@ class _AssignVisitor(object):
         if pyobject != None and len(attribute_list) > 1:
             for name in attribute_list[1:]:
                 if name in pyobject.get_attributes():
-                    pyobject = pyobject.get_attributes()[name].object
+                    pyobject = pyobject.get_attributes()[name].get_object()
                 else:
                     pyobject = None
                     break
@@ -611,9 +611,6 @@ class _ClassVisitor(_ScopeVisitor):
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor(self)
             compiler.walk(node, new_visitor)
-
-    def visitAssName(self, node):
-        self.names[node.name] = PyName()
 
     def visitClass(self, node):
         self.names[node.name] = PyName(PyClass(self.pycore, node,

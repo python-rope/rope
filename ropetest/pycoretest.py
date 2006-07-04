@@ -395,6 +395,14 @@ class PyCoreTest(unittest.TestCase):
         a_var = another_class.get_attributes()['a_var']
         self.assertEquals(sample_class, a_var.get_type())
 
+    def test_simple_type_inferencing_for_in_class_assignments(self):
+        scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
+                                             'class Another(object):\n    an_attr = Sample()\n')
+        sample_class = scope.get_names()['Sample'].get_object()
+        another_class = scope.get_names()['Another'].get_object()
+        an_attr = another_class.get_attributes()['an_attr']
+        self.assertEquals(sample_class, an_attr.get_type())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
