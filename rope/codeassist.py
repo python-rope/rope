@@ -264,12 +264,48 @@ class PythonCodeAssist(CodeAssist):
         collector = _CodeCompletionCollector(self.project, source_code, offset, starting)
         return collector.get_code_completions()
 
-    def _get_starting(self, source_code, offset):
+    def __find_variable_name_start(self, source_code, offset):
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
-                                       source_code[current_offset] in '_.'):
+                                       source_code[current_offset] in '_'):
             current_offset -= 1;
-        return source_code[current_offset + 1:offset].split('.')
+        return current_offset + 1
+    
+    def __find_last_non_space_char(self, source_code, offset):
+        current_offset = offset
+        while current_offset >= 0 and source_code[current_offset] in ' \t\n':
+            while current_offset >= 0 and source_code[current_offset] in ' \t':
+                current_offset -= 1
+            if current_offset >= 0 and source_code[current_offset] == '\n':
+                current_offset -= 1
+                if current_offset >= 0 and source_code[current_offset] == '\\':
+                    current_offset -= 1
+        return current_offset
+    
+    def _get_starting(self, source_code, offset):
+        result = []
+        current_offset = offset - 1
+        if current_offset < 0 or source_code[current_offset] in ' \t\n.':
+            result.append('')
+            current_offset = self.__find_last_non_space_char(source_code, current_offset)
+            if current_offset >= 0 and source_code[current_offset] == '.':
+                current_offset -= 1
+            else:
+                return result
+        while current_offset >= 0:
+            current_offset = self.__find_last_non_space_char(source_code, current_offset)
+            if current_offset >= 0 and source_code[current_offset].isalnum() or \
+               source_code[current_offset] == '_':
+                word_start = self.__find_variable_name_start(source_code, current_offset)
+                result.append(source_code[word_start:current_offset + 1])
+                current_offset = word_start - 1
+            current_offset = self.__find_last_non_space_char(source_code, current_offset)
+            if current_offset >= 0 and source_code[current_offset] == '.':
+                current_offset -= 1
+            else:
+                break
+        result.reverse()
+        return result
     
     def assist(self, source_code, offset):
         if offset > len(source_code):

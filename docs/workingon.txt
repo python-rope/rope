@@ -8,9 +8,10 @@ Refactoring
 * ``a_var.\\\n     attribute``
 
   - In rename local variable refactoring
+  - In code completions
   * In go to the definition
-  * In code completions
 
+* Dots and new imports ..string
 * Forcing CodeAssist to use LineOrientedSourceTools
 * LineOrientedSourceTools should be more powerful; Elimination of source_code.split('\n')
 * Change refactoring to use line_tools for source jobs

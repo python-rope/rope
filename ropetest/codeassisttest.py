@@ -446,6 +446,18 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assertEquals(len(code) - 2, result.start_offset)
 
+    def test_backslash_after_dots(self):
+        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' + \
+               'Sample.\\\n       a_m'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_method', 'attribute', result)
+
+    def test_not_proposing_global_names_after_dot(self):
+        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' + \
+               'Sample.'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_not_in_result('Sample', 'global', result)
+
 
 class TemplateTest(unittest.TestCase):
 
