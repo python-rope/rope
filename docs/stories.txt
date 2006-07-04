@@ -265,9 +265,6 @@ Stories
 * Rename class @ 3
 
 
-* We know the type of ``var = AClass()`` @ 2
-
-
 Remaining Stories
 =================
 * Change program goals and description; principles.html

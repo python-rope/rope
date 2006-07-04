@@ -49,6 +49,10 @@ class RefactoringTest(unittest.TestCase):
         refactored = self.refactoring.rename("def f(a_param):\n    print a_param\n", 30, 'new_param')
         self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
 
+    def test_renaming_with_backslash_continued_names(self):
+        refactored = self.refactoring.rename("replace = True\n'ali'.\\\nreplace\n", 2, 'is_replace')
+        self.assertEquals("is_replace = True\n'ali'.\\\nreplace\n", refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,9 +1,11 @@
-We know the type of ``var = AClass()`` @ 2
-==========================================
+Refactoring
+===========
 
-- Classes defined in a bigger scope
-- self.var = AClass()
-- Assigns in the class bodies
+* ``a_var.\\\n     attribute``
+
+  * In rename local variable refactoring
+  * In go to definition
+  * In code assist
 
 * Not renaming function keyword names
 * Equality of two objects of the same type?

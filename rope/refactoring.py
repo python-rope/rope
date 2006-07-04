@@ -13,6 +13,22 @@ class PythonRefactoring(Refactoring):
     def __init__(self, pycore):
         self.pycore = pycore
     
+    def _get_previous_char(self, lines, lineno, colno):
+        colno -= 1
+        while lineno >= 0 and (colno < 0 or lines[lineno][colno].isspace()):
+            colno -= 1
+            if colno < 0:
+                lineno -= 1
+                if lineno < 0:
+                    break
+                colno = len(lines[lineno]) - 1
+                if lines[lineno][colno] == '\\':
+                    colno -= 1
+        if lineno > 0:
+            return lines[lineno][colno]
+        else:
+            return ''
+        
     def rename(self, source_code, offset, new_name):
         lines = source_code.split('\n')
         result = []
@@ -28,9 +44,10 @@ class PythonRefactoring(Refactoring):
             new_line = ''
             last_modified_char = 0
             for match in pattern.finditer(line):
-                if match.start() != 0 and line[match.start() - 1] == '.':
+                if self._get_previous_char(lines, lineno, match.start()) == '.':
                     continue
-                if self._get_pyname(module_scope, line_tools, old_name, lineno + 1) == old_pyname:
+                if self._get_pyname(module_scope, line_tools,
+                                    old_name, lineno + 1) == old_pyname:
                     new_line += line[last_modified_char:match.start()] + new_name
                     last_modified_char = match.end()
             new_line += line[last_modified_char:]

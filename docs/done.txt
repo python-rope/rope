@@ -3,6 +3,9 @@
 ===========
 
 
+- We know the type of ``var = AClass()`` : July 4, 2006
+
+
 - Rename function parameter in the function : July 3, 2006
 
 
