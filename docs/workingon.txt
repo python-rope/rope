@@ -1,11 +1,19 @@
 Refactoring
 ===========
 
+- Remove Proposals.end_offset
+
 * ``a_var.\\\n     attribute``
 
-  * In rename local variable refactoring
-  * In go to definition
-  * In code assist
+  - In rename local variable refactoring
+  * In go to the definition
+  * In code completions
+
+* Check CodeAssist for separating normal and attribute completions
+* Forcing CodeAssist to use LineOrientedSourceTools
+* LineOrientedSourceTools should be more powerful; Elimination of source_code.split('\n')
+* Change refactoring to use line_tools for source jobs
+* Should get_name_at return a list?
 
 * Not renaming function keyword names
 * Equality of two objects of the same type?
@@ -18,7 +26,6 @@ Refactoring
 * PyName equality check; Value objects?
 
 * Optimizing holding scope search ?
-* Elimination of source_code.split('\n')
 * Refactor `_ScopeVisitor.visitFrom` and visitImport
 * A TreeViewer is an EnhancedList
 * Folders and change_observers?

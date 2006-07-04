@@ -90,7 +90,6 @@ class CodeAssistTest(unittest.TestCase):
         code = 'my_global = 10\nt = my'
         result = self.assist.assist(code, len(code))
         self.assertEquals(len(code) - 2, result.start_offset)
-        self.assertEquals(len(code), result.end_offset)
 
     def test_completing_imported_names(self):
         code = 'import sys\na = sy'

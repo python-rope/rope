@@ -92,16 +92,13 @@ class Proposals(object):
     completions -- A list of CompletionProposals
     templates -- A list of TemplateProposals
     start_offset -- completion start offset
-    end_offset -- completion end offset
     
     """
 
-    def __init__(self, completions=[], templates=[], start_offset=0,
-                 end_offset=0):
+    def __init__(self, completions=[], templates=[], start_offset=0):
         self.completions = completions
         self.templates = templates
         self.start_offset = start_offset
-        self.end_offset = end_offset
 
 
 class CodeAssist(object):
@@ -272,7 +269,7 @@ class PythonCodeAssist(CodeAssist):
 
     def assist(self, source_code, offset):
         if offset > len(source_code):
-            return Proposals([], [], 0, 0)
+            return Proposals()
         starting_offset = self._find_starting_offset(source_code, offset)
         starting = source_code[starting_offset:offset]
         completions = self._get_code_completions(source_code, offset, starting)
@@ -282,7 +279,7 @@ class PythonCodeAssist(CodeAssist):
             completions.update(self._get_matching_keywords(starting))
             templates = self._get_template_proposals(starting)
         return Proposals(completions.values(), templates,
-                         starting_offset, offset)
+                         starting_offset)
 
     def get_definition_location(self, source_code, offset):
         return _GetDefinitionLocation(self.project, source_code,
