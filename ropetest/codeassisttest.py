@@ -426,19 +426,25 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def test_completing_after_dot(self):
         code = 'class SampleClass(object):\n    def sample_method(self):\n        pass\nSampleClass.sam'
         result = self.assist.assist(code, len(code))
-        self.assert_completion_in_result('SampleClass.sample_method', 'attribute', result)
+        self.assert_completion_in_result('sample_method', 'attribute', result)
 
     def test_completing_after_multiple_dots(self):
         code = 'class Class1(object):\n    class Class2(object):\n        def sample_method(self):\n' + \
                '            pass\nClass1.Class2.sam'
         result = self.assist.assist(code, len(code))
-        self.assert_completion_in_result('Class1.Class2.sample_method', 'attribute', result)
+        self.assert_completion_in_result('sample_method', 'attribute', result)
 
     def test_completing_after_self_dot(self):
         code = 'class Sample(object):\n    def method1(self):\n        pass\n' + \
                '    def method2(self):\n        self.m'
         result = self.assist.assist(code, len(code))
-        self.assert_completion_in_result('self.method1', 'attribute', result)
+        self.assert_completion_in_result('method1', 'attribute', result)
+
+    def test_result_start_offset_for_dotted_completions(self):
+        code = 'class Sample(object):\n    def method1(self):\n        pass\n' + \
+               'Sample.me'
+        result = self.assist.assist(code, len(code))
+        self.assertEquals(len(code) - 2, result.start_offset)
 
 
 class TemplateTest(unittest.TestCase):

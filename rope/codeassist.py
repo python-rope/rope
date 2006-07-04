@@ -160,12 +160,11 @@ class _CodeCompletionCollector(object):
 
     def _get_dotted_completions(self, scope):
         result = {}
-        if '.' in self.starting:
-            tokens = self.starting.split('.')
-            element = scope.lookup(tokens[0])
+        if len(self.starting) > 1:
+            element = scope.lookup(self.starting[0])
             if element is not None:
                 consistent = True
-                for token in tokens[1:-1]:
+                for token in self.starting[1:-1]:
                     if token in element.get_attributes():
                         element = element.get_attributes()[token]
                     else:
@@ -173,17 +172,15 @@ class _CodeCompletionCollector(object):
                         break
                 if consistent:
                     for name, pyname in element.get_attributes().iteritems():
-                        if name.startswith(tokens[-1]) or tokens[-1] == '':
-                            complete_name = '.'.join(tokens[:-1]) + '.' + name
-                            result[complete_name] = CompletionProposal(complete_name,
-                                                                       'attribute')
+                        if name.startswith(self.starting[-1]) or self.starting[-1] == '':
+                            result[name] = CompletionProposal(name, 'attribute')
         return result
 
     def _get_undotted_completions(self, scope, result):
         if scope.parent != None:
             self._get_undotted_completions(scope.parent, result)
         for name, pyname in scope.get_names().iteritems():
-            if name.startswith(self.starting):
+            if name.startswith(self.starting[0]):
                 from rope.pycore import PyObject
                 kind = 'local'
                 if scope.get_kind() == 'Module':
@@ -198,7 +195,7 @@ class _CodeCompletionCollector(object):
         current_scope = module_scope
         result = {}
         inner_scope = self._find_inner_holding_scope(module_scope)
-        if '.' in self.starting:
+        if len(self.starting) > 1:
             result.update(self._get_dotted_completions(inner_scope))
         else:
             self._get_undotted_completions(inner_scope, result)
@@ -235,7 +232,7 @@ class PythonCodeAssist(CodeAssist):
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
-                                       source_code[current_offset] in '_.'):
+                                       source_code[current_offset] in '_'):
             current_offset -= 1;
         return current_offset + 1
 
@@ -267,17 +264,24 @@ class PythonCodeAssist(CodeAssist):
         collector = _CodeCompletionCollector(self.project, source_code, offset, starting)
         return collector.get_code_completions()
 
+    def _get_starting(self, source_code, offset):
+        current_offset = offset - 1
+        while current_offset >= 0 and (source_code[current_offset].isalnum() or
+                                       source_code[current_offset] in '_.'):
+            current_offset -= 1;
+        return source_code[current_offset + 1:offset].split('.')
+    
     def assist(self, source_code, offset):
         if offset > len(source_code):
             return Proposals()
         starting_offset = self._find_starting_offset(source_code, offset)
-        starting = source_code[starting_offset:offset]
+        starting = self._get_starting(source_code, offset)
         completions = self._get_code_completions(source_code, offset, starting)
         templates = []
-        if len(starting) > 0:
-            completions.update(self._get_matching_builtins(starting))
-            completions.update(self._get_matching_keywords(starting))
-            templates = self._get_template_proposals(starting)
+        if len(starting) == 1 and len(starting[0]) > 0:
+            completions.update(self._get_matching_builtins(starting[0]))
+            completions.update(self._get_matching_keywords(starting[0]))
+            templates = self._get_template_proposals(starting[0])
         return Proposals(completions.values(), templates,
                          starting_offset)
 

@@ -2,6 +2,8 @@ Refactoring
 ===========
 
 - Remove Proposals.end_offset
+- Check CodeAssist for separating normal and attribute completions
+- Code-assist proposal names should not be so long?
 
 * ``a_var.\\\n     attribute``
 
@@ -9,7 +11,6 @@ Refactoring
   * In go to the definition
   * In code completions
 
-* Check CodeAssist for separating normal and attribute completions
 * Forcing CodeAssist to use LineOrientedSourceTools
 * LineOrientedSourceTools should be more powerful; Elimination of source_code.split('\n')
 * Change refactoring to use line_tools for source jobs
@@ -29,7 +30,6 @@ Refactoring
 * Refactor `_ScopeVisitor.visitFrom` and visitImport
 * A TreeViewer is an EnhancedList
 * Folders and change_observers?
-* Code-assist proposal names should not be so long?
 * PyNames with None object
 * Refactor pycore; So many kinds for Modules; eliminate checking module.is_package?
 * Removing duplications in tests in codeassist and pycore scopes
