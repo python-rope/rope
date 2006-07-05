@@ -11,8 +11,9 @@ Refactoring
   - In code completions
   * In go to the definition
 
-* Dots and new imports ..string
+* Add source_code to lines class to codeanalyze
 * Forcing CodeAssist to use LineOrientedSourceTools
+* Dots and new imports ..string
 * LineOrientedSourceTools should be more powerful; Elimination of source_code.split('\n')
 * Change refactoring to use line_tools for source jobs
 * Should get_name_at return a list?

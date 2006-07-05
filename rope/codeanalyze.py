@@ -1,3 +1,54 @@
+class WordRangeFinder(object):
+
+    def __init__(self, source_code):
+        self.source_code = source_code
+    
+    def find_word_start(self, offset):
+        current_offset = offset - 1
+        while current_offset >= 0 and (self.source_code[current_offset].isalnum() or
+                                       self.source_code[current_offset] in '_'):
+            current_offset -= 1;
+        return current_offset + 1
+    
+    def _find_last_non_space_char(self, offset):
+        current_offset = offset
+        while current_offset >= 0 and self.source_code[current_offset] in ' \t\n':
+            while current_offset >= 0 and self.source_code[current_offset] in ' \t':
+                current_offset -= 1
+            if current_offset >= 0 and self.source_code[current_offset] == '\n':
+                current_offset -= 1
+                if current_offset >= 0 and self.source_code[current_offset] == '\\':
+                    current_offset -= 1
+        return current_offset
+    
+    def get_word_at(self, offset):
+        return self.source_code[self.find_word_start(offset):offset]
+    
+    def get_name_list_at(self, offset):
+        result = []
+        current_offset = offset - 1
+        if current_offset < 0 or self.source_code[current_offset] in ' \t\n.':
+            result.append('')
+            current_offset = self._find_last_non_space_char(current_offset)
+            if current_offset >= 0 and self.source_code[current_offset] == '.':
+                current_offset -= 1
+            else:
+                return result
+        while current_offset >= 0:
+            current_offset = self._find_last_non_space_char(current_offset)
+            if current_offset >= 0 and self.source_code[current_offset].isalnum() or \
+               self.source_code[current_offset] == '_':
+                word_start = self.find_word_start(current_offset)
+                result.append(self.source_code[word_start:current_offset + 1])
+                current_offset = word_start - 1
+            current_offset = self._find_last_non_space_char(current_offset)
+            if current_offset >= 0 and self.source_code[current_offset] == '.':
+                current_offset -= 1
+            else:
+                break
+        result.reverse()
+        return result
+        
 
 class LineOrientedSourceTools(object):
 
