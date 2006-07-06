@@ -1,24 +1,24 @@
 Refactoring
 ===========
 
-- Remove Proposals.end_offset
-- Check CodeAssist for separating normal and attribute completions
-- Code-assist proposal names should not be so long?
+- Add rope.codeanalyze.ScopeNameFinder
 
-* ``a_var.\\\n     attribute``
+* Each PyName should hold his PyModule
 
-  - In rename local variable refactoring
-  - In code completions
-  * In go to the definition
+  - Add PyDefinedObject.get_module()
+  * Holding a module for each PyName
 
-* Add source_code to lines class to codeanalyze
-* Forcing CodeAssist to use LineOrientedSourceTools
-* Dots and new imports ..string
+* Using ScopeNameFinder in CodeAssist.goto_definition
+* Attributes accesses are two kinds: Calls and non-calls
+* Changing HoldingScopeFinder to get source_code instead of lines
+* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
+* handle ``File('text.txt').he`` in code-assists
+* Using SourceLinesAdapter in LineOrientedSourceTools
+* Optimize SourceLinesAdapter methods
 * LineOrientedSourceTools should be more powerful; Elimination of source_code.split('\n')
-* Change refactoring to use line_tools for source jobs
-* Should get_name_at return a list?
+* Dots and new imports ..string?
 
-* Not renaming function keyword names
+* Not renaming function keyword default names
 * Equality of two objects of the same type?
 * Only looking in the holding scope range
 * Using LineOrientedSourceTools in GUI; requires it to use Lines

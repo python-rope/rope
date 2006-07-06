@@ -364,6 +364,11 @@ class PyCoreTest(unittest.TestCase):
         an_attr = a_class.get_attributes()['an_attr']
         self.assertEquals((None, 3), an_attr.get_definition_location())
 
+    def test_get_module_for_defined_pyobjects(self):
+        mod = self.pycore.get_string_module('class AClass(object):\n    pass\n')
+        a_class = mod.get_attributes()['AClass'].get_object()
+        self.assertEquals(mod, a_class.get_module())
+        
     def test_simple_type_inferencing(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    pass\na_var = Sample()\n')
         sample_class = scope.get_names()['Sample'].get_object()

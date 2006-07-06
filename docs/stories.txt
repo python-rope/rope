@@ -242,9 +242,6 @@ Stories
 * Rename module refactoring @ 2
 
 
-* Rename function @ 2
-
-
 * Move a class to another module @ 3
 
 
@@ -260,6 +257,9 @@ Stories
 
 * Formating Code @ 4
   Writing ASTs
+
+
+* Rename function @ 2
 
 
 * Rename class @ 3

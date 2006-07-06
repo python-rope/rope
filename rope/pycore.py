@@ -163,6 +163,12 @@ class PyDefinedObject(PyObject):
         if self.scope == None:
             self.scope = self._create_scope()
         return self.scope
+    
+    def get_module(self):
+        current_object = self
+        while current_object.parent is not None:
+            current_object = current_object.parent
+        return current_object
 
     def _get_attributes_from_ast(self):
         pass

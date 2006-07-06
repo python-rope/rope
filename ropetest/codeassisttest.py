@@ -334,6 +334,12 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((None, None), result)
 
+    def test_get_definition_location_dot_spaces(self):
+        code = 'class AClass(object):\n    ' + \
+               '@staticmethod\n    def a_method():\n        pass\nAClass.\\\n     a_method()'
+        result = self.assist.get_definition_location(code, len(code) - 3)
+        self.assertEquals((None, 3), result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 

@@ -5,7 +5,7 @@ import re
 
 from rope.exceptions import RopeException
 from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                              LineOrientedSourceTools, WordRangeFinder)
+                              HoldingScopeFinder, WordRangeFinder, ScopeNameFinder)
 
 class RopeSyntaxError(RopeException):
     pass
@@ -129,9 +129,9 @@ class _CodeCompletionCollector(object):
         self.starting = starting
         self.pycore = self.project.get_pycore()
         self.lines = source_code.split('\n')
-        line_tools = LineOrientedSourceTools(self.lines)
-        self.lineno = line_tools.get_location(offset)[0]
-        self.current_indents = line_tools.get_indents(self.lineno)
+        scope_finder = HoldingScopeFinder(self.lines)
+        self.lineno = scope_finder.get_location(offset)[0]
+        self.current_indents = scope_finder.get_indents(self.lineno)
         self._comment_current_statement()
 
     def _get_line_indents(self, line_number):
@@ -155,8 +155,8 @@ class _CodeCompletionCollector(object):
         self.lines.append('\n')
 
     def _find_inner_holding_scope(self, base_scope):
-        line_tools = LineOrientedSourceTools(self.lines)
-        return line_tools.get_holding_scope(base_scope, self.lineno, self.current_indents)
+        scope_finder = HoldingScopeFinder(self.lines)
+        return scope_finder.get_holding_scope(base_scope, self.lineno, self.current_indents)
 
     def _get_dotted_completions(self, scope):
         result = {}
@@ -269,7 +269,7 @@ class PythonCodeAssist(CodeAssist):
             return Proposals()
         word_finder = WordRangeFinder(source_code)
         starting_offset = word_finder.find_word_start(offset)
-        starting = word_finder.get_name_list_at(offset)
+        starting = word_finder.get_name_list_before(offset)
         completions = self._get_code_completions(source_code, offset, starting)
         templates = []
         if len(starting) == 1 and len(starting[0]) > 0:
@@ -288,22 +288,38 @@ class _GetDefinitionLocation(object):
 
     def __init__(self, project, source_code, offset):
         self.project = project
-        self.line_tools = LineOrientedSourceTools(source_code.split('\n'))
-        self.lineno = self.line_tools.get_location(offset)[0]
-        self.name = self.line_tools.get_name_at(offset)
+        self.offset = offset
+        self.scope_finder = HoldingScopeFinder(source_code.split('\n'))
+        self.lineno = self.scope_finder.get_location(offset)[0]
+        word_finder = WordRangeFinder(source_code)
+        self.name_list = word_finder.get_name_list_at(offset)
         self.source_code = source_code
 
     def get_definition_location(self):
         module_scope = self.project.pycore.get_string_scope(self.source_code)
-        holding_scope = self.line_tools.get_holding_scope(module_scope, self.lineno)
-        tokens = self.name.split('.')
-        element = holding_scope.lookup(tokens[0])
+#        scope_finder = ScopeNameFinder(self.source_code, module_scope)
+#        element = scope_finder.get_pyname_at(self.offset)
+#        element_resource = None
+#        if element != None:
+#            current_element = element
+#            while current_element != None:
+#                if current_element.get_definition_location()[0] is not None:
+#                    element_resource = current_element.get_definition_location()[0].get_resource()
+#                    break
+#                current_element = current_element.get_object().parent
+#        if element is not None:
+#            return (element_resource, element.get_definition_location()[1])
+#        else:
+#            return (None, None)
+
+        holding_scope = self.scope_finder.get_holding_scope(module_scope, self.lineno)
+        element = holding_scope.lookup(self.name_list[0])
         element_resource = None
         if element is not None and \
            element.get_definition_location()[0] is not None:
             element_resource = element.get_definition_location()[0].get_resource()
-        if element is not None and len(tokens) > 1:
-            for token in tokens[1:]:
+        if element is not None and len(self.name_list) > 1:
+            for token in self.name_list[1:]:
                 if token in element.get_attributes():
                     element = element.get_attributes()[token]
                     if element.get_definition_location()[0] is not None:

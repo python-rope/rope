@@ -1,6 +1,7 @@
 import unittest
 
-from rope.codeanalyze import StatementRangeFinder, ArrayLinesAdapter
+from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
+                              SourceLinesAdapter)
 
 class StatementRangeFinderTest(unittest.TestCase):
 
@@ -43,6 +44,17 @@ class StatementRangeFinderTest(unittest.TestCase):
         finder = self.get_range_finder('a = (10 +', 1)
         self.assertTrue(finder.is_line_continued())
         
+    def test_source_lines_simple(self):
+        to_lines = SourceLinesAdapter('line1\nline2\n')
+        self.assertEquals('line1', to_lines.get_line(1))
+        self.assertEquals('line2', to_lines.get_line(2))
+        self.assertEquals('', to_lines.get_line(3))
+        self.assertEquals(3, to_lines.length())
+
+    def test_source_lines_get_line_number(self):
+        to_lines = SourceLinesAdapter('line1\nline2\n')
+        self.assertEquals(1, to_lines.get_line_number(0))
+        self.assertEquals(2, to_lines.get_line_number(7))
 
 
 if __name__ == '__main__':

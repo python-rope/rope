@@ -10,6 +10,21 @@ class WordRangeFinder(object):
             current_offset -= 1;
         return current_offset + 1
     
+    def find_word_end(self, offset):
+        current_offset = offset
+        while current_offset < len(self.source_code) and \
+              (self.source_code[current_offset].isalnum() or
+               self.source_code[current_offset] in '_'):
+            current_offset += 1;
+        return current_offset
+
+    def _find_statement_start(self, offset):
+        current_offset = offset - 1
+        while current_offset >= 0 and (self.source_code[current_offset].isalnum() or
+                                       self.source_code[current_offset] in '_()\'"'):
+            current_offset -= 1;
+        return current_offset + 1
+    
     def _find_last_non_space_char(self, offset):
         current_offset = offset
         while current_offset >= 0 and self.source_code[current_offset] in ' \t\n':
@@ -21,10 +36,13 @@ class WordRangeFinder(object):
                     current_offset -= 1
         return current_offset
     
-    def get_word_at(self, offset):
+    def get_word_before(self, offset):
         return self.source_code[self.find_word_start(offset):offset]
     
-    def get_name_list_at(self, offset):
+    def get_word_at(self, offset):
+        return self.source_code[self.find_word_start(offset):self.find_word_end(offset)]
+    
+    def get_name_list_before(self, offset):
         result = []
         current_offset = offset - 1
         if current_offset < 0 or self.source_code[current_offset] in ' \t\n.':
@@ -36,9 +54,8 @@ class WordRangeFinder(object):
                 return result
         while current_offset >= 0:
             current_offset = self._find_last_non_space_char(current_offset)
-            if current_offset >= 0 and self.source_code[current_offset].isalnum() or \
-               self.source_code[current_offset] == '_':
-                word_start = self.find_word_start(current_offset)
+            if current_offset >= 0:
+                word_start = self._find_statement_start(current_offset)
                 result.append(self.source_code[word_start:current_offset + 1])
                 current_offset = word_start - 1
             current_offset = self._find_last_non_space_char(current_offset)
@@ -48,9 +65,13 @@ class WordRangeFinder(object):
                 break
         result.reverse()
         return result
-        
 
-class LineOrientedSourceTools(object):
+    def get_name_list_at(self, offset):
+        result = self.get_name_list_before(offset)
+        result[-1] = self.get_word_at(offset)
+        return result
+
+class HoldingScopeFinder(object):
 
     def __init__(self, lines):
         self.lines = lines
@@ -72,22 +93,6 @@ class LineOrientedSourceTools(object):
             lineno += 1
         return (lineno, offset - current_pos)
 
-    def get_name_at(self, offset):
-        lineno, colno = self.get_location(offset)
-        postfix = ''
-        for c in self.lines[lineno - 1][colno:]:
-            if c.isalnum() or c == '_':
-                postfix += c
-            else:
-                break
-        prefix = ''
-        for c in reversed(self.lines[lineno - 1][0:colno]):
-            if c.isalnum() or c in '._':
-                prefix = c + prefix
-            else:
-                break
-        return prefix + postfix
-    
     def get_holding_scope(self, module_scope, lineno, line_indents=None):
         line_indents = line_indents
         if line_indents is None:
@@ -108,6 +113,31 @@ class LineOrientedSourceTools(object):
         return inner_scope
 
 
+class ScopeNameFinder(object):
+    
+    def __init__(self, source_code, module_scope):
+        self.source_code = source_code
+        self.module_scope = module_scope
+        self.scope_finder = HoldingScopeFinder(source_code.split('\n'))
+        self.word_finder = WordRangeFinder(source_code)
+    
+    def get_pyname_at(self, offset):
+        name_list = self.word_finder.get_name_list_at(offset)
+        lineno = self.scope_finder.get_location(offset)[0]
+        holding_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno)
+        result = self.get_pyname_in_scope(holding_scope, name_list)
+        # This occurs if renaming a function parameter
+        if result is None:
+            next_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno + 1)
+            result = self.get_pyname_in_scope(next_scope, name_list)
+        return result
+    
+    def get_pyname_in_scope(self, holding_scope, name_list):
+        result = holding_scope.lookup('.'.join(name_list))
+        return result
+
+
+
 class Lines(object):
 
     def get_line(self, line_number):
@@ -117,7 +147,22 @@ class Lines(object):
         pass
 
 
-class ArrayLinesAdapter(object):
+class SourceLinesAdapter(Lines):
+    
+    def __init__(self, source_code):
+        self.source_code = source_code
+    
+    def get_line(self, line_number):
+        return self.source_code.split('\n')[line_number - 1]
+    
+    def length(self):
+        return len(self.source_code.split('\n'))
+
+    def get_line_number(self, offset):
+        return len(self.source_code[:offset].split('\n'))
+
+    
+class ArrayLinesAdapter(Lines):
 
     def __init__(self, lines):
         self.lines = lines
