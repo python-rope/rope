@@ -200,12 +200,15 @@ class PyFunction(PyDefinedObject):
             if self.parent.get_type() == PyObject.get_base_type('Type') and \
                not self.decorators:
                 result[self.parameters[0]] = PyName(PyObject(self.parent),
-                                                    lineno=self.ast_node.lineno)
+                                                    lineno=self.ast_node.lineno,
+                                                    module=self.get_module())
             else:
-                result[self.parameters[0]] = PyName(lineno=self.ast_node.lineno)
+                result[self.parameters[0]] = PyName(lineno=self.ast_node.lineno,
+                                                    module=self.get_module())
         if len(self.parameters) > 1:
             for parameter in self.parameters[1:]:
-                result[parameter] = PyName(lineno=self.ast_node.lineno)
+                result[parameter] = PyName(lineno=self.ast_node.lineno,
+                                           module=self.get_module())
         return result
 
 
@@ -343,7 +346,7 @@ class PyName(object):
             self.lineno = self._get_ast().lineno
 
     def update_object(self, object_=None, is_defined_here=False, lineno=None, module=None):
-        self.__init__(object_, is_defined_here, self.lineno, module=None)
+        self.__init__(object_, is_defined_here, self.lineno, module=module)
 
     def get_attributes(self):
         if self.object:
@@ -514,10 +517,11 @@ class _AssignVisitor(object):
     def visitAssName(self, node):
         if node.name in self.scope_visitor.names:
             self.scope_visitor.names[node.name].update_object(object_=self.assigned_object,
-                                                              lineno=node.lineno)
+                                                              lineno=node.lineno, module=self.scope_visitor.owner_object.get_module())
         else:
             self.scope_visitor.names[node.name] = PyName(object_=self.assigned_object,
-                                                         lineno=node.lineno)
+                                                         lineno=node.lineno,
+                                                         module=self.scope_visitor.owner_object.get_module())
 
 
 class _ScopeVisitor(object):
@@ -529,11 +533,12 @@ class _ScopeVisitor(object):
     
     def visitClass(self, node):
         self.names[node.name] = PyName(PyClass(self.pycore,
-                                               node, self.owner_object), True)
+                                               node, self.owner_object), True,
+                                       module=self.owner_object.get_module())
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = PyName(pyobject, True)
+        self.names[node.name] = PyName(pyobject, True, module=self.owner_object.get_module())
 
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
@@ -613,14 +618,15 @@ class _ClassVisitor(_ScopeVisitor):
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = PyName(pyobject, True)
+        self.names[node.name] = PyName(pyobject, True, module=self.owner_object.get_module())
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor(self)
             compiler.walk(node, new_visitor)
 
     def visitClass(self, node):
         self.names[node.name] = PyName(PyClass(self.pycore, node,
-                                               self.owner_object), True)
+                                               self.owner_object), True, 
+                                       module=self.owner_object.get_module())
 
 
 class _FunctionVisitor(_ScopeVisitor):
@@ -637,7 +643,8 @@ class _ClassInitVisitor(_AssignVisitor):
     def visitAssAttr(self, node):
         if node.expr.name == 'self':
             self.scope_visitor.names[node.attrname] = PyName(object_=self.assigned_object,
-                                                             lineno=node.lineno)
+                                                             lineno=node.lineno, 
+                                                             module=self.scope_visitor.owner_object.get_module())
     
     def visitAssName(self, node):
         pass
