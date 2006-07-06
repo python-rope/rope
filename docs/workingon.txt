@@ -1,14 +1,8 @@
 Refactoring
 ===========
 
-- Add rope.codeanalyze.ScopeNameFinder
 
-- Each PyName should hold his PyModule
-
-  - Add PyDefinedObject.get_module()
-  - Holding a module for each PyName
-  - Fixing PyName.update
-
+* Testing PyName.get_location() for PyCore.get_module('mod')
 * Using ScopeNameFinder in CodeAssist.goto_definition
 * Attributes accesses are two kinds: Calls and non-calls
 * Changing HoldingScopeFinder to get source_code instead of lines

@@ -118,7 +118,8 @@ class ScopeNameFinder(object):
     def __init__(self, source_code, module_scope):
         self.source_code = source_code
         self.module_scope = module_scope
-        self.scope_finder = HoldingScopeFinder(source_code.split('\n'))
+        self.lines = source_code.split('\n')
+        self.scope_finder = HoldingScopeFinder(self.lines)
         self.word_finder = WordRangeFinder(source_code)
     
     def get_pyname_at(self, offset):
@@ -127,14 +128,21 @@ class ScopeNameFinder(object):
         holding_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno)
         result = self.get_pyname_in_scope(holding_scope, name_list)
         # This occurs if renaming a function parameter
-        if result is None:
+        if result is None and lineno < len(self.lines):
             next_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno + 1)
             result = self.get_pyname_in_scope(next_scope, name_list)
         return result
     
     def get_pyname_in_scope(self, holding_scope, name_list):
-        result = holding_scope.lookup('.'.join(name_list))
-        return result
+        pyname = holding_scope.lookup(name_list[0])
+        if pyname is not None and len(name_list) > 1:
+            for name in name_list[1:]:
+                if name in pyname.get_attributes():
+                    pyname = pyname.get_attributes()[name]
+                else:
+                    pyname = None
+                    break
+        return pyname
 
 
 

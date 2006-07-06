@@ -289,47 +289,14 @@ class _GetDefinitionLocation(object):
     def __init__(self, project, source_code, offset):
         self.project = project
         self.offset = offset
-        self.scope_finder = HoldingScopeFinder(source_code.split('\n'))
-        self.lineno = self.scope_finder.get_location(offset)[0]
-        word_finder = WordRangeFinder(source_code)
-        self.name_list = word_finder.get_name_list_at(offset)
         self.source_code = source_code
 
     def get_definition_location(self):
         module_scope = self.project.pycore.get_string_scope(self.source_code)
-#        scope_finder = ScopeNameFinder(self.source_code, module_scope)
-#        element = scope_finder.get_pyname_at(self.offset)
-#        element_resource = None
-#        if element != None:
-#            current_element = element
-#            while current_element != None:
-#                if current_element.get_definition_location()[0] is not None:
-#                    element_resource = current_element.get_definition_location()[0].get_resource()
-#                    break
-#                current_element = current_element.get_object().parent
-#        if element is not None:
-#            return (element_resource, element.get_definition_location()[1])
-#        else:
-#            return (None, None)
-
-        holding_scope = self.scope_finder.get_holding_scope(module_scope, self.lineno)
-        element = holding_scope.lookup(self.name_list[0])
-        element_resource = None
-        if element is not None and \
-           element.get_definition_location()[0] is not None:
-            element_resource = element.get_definition_location()[0].get_resource()
-        if element is not None and len(self.name_list) > 1:
-            for token in self.name_list[1:]:
-                if token in element.get_attributes():
-                    element = element.get_attributes()[token]
-                    if element.get_definition_location()[0] is not None:
-                        element_resource = element.get_definition_location()[0].get_resource()
-                else:
-                    element = None
-                    break
-
+        scope_finder = ScopeNameFinder(self.source_code, module_scope)
+        element = scope_finder.get_pyname_at(self.offset)
         if element is not None:
-            return (element_resource, element.get_definition_location()[1])
+            return element.get_definition_location()
         else:
             return (None, None)
 
