@@ -337,7 +337,7 @@ class PyCoreTest(unittest.TestCase):
     def test_get_pyname_definition_location_importes(self):
         module_resource = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         module_resource.write('\ndef a_func():\n    pass\n')
-        module = self.pycore.get_module('mod')
+        module = self.pycore.get_module('mod').get_resource()
         mod = self.pycore.get_string_module('from mod import a_func\n')
         a_func = mod.get_attributes()['a_func']
         self.assertEquals((module, 2), a_func.get_definition_location())
@@ -573,6 +573,14 @@ class PyCoreInProjectsTest(unittest.TestCase):
         func_scope = scope.get_scopes()[0].get_scopes()[0]
         self.assertNotEquals(sample_class, func_scope.get_names()['self'].get_type())
 
+    def test_location_of_imports_when_importing(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('from samplemod import SampleClass\n')
+        scope = self.pycore.get_string_scope('from mod import SampleClass\n')
+        sample_class = scope.get_names()['SampleClass']
+        samplemod = self.pycore.get_module('samplemod').get_resource()
+        self.assertEquals((samplemod, 1), sample_class.get_definition_location())
+        
 
 class PyCoreScopesTest(unittest.TestCase):
 

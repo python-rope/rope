@@ -16,10 +16,7 @@ Version Overview
 
 Features added in this release:
 
-* Showing quick outline; ``Ctrl-o``
-* Going to the definition; ``F3``
-* Rename local variable refactoring; ``Alt-Shift-r``
-* Updating completion list as you type
+* 
 
 In the quick outline window you can use ``+`` and ``-`` to expand
 and collapse entries. Pressing ``Enter`` on an entry causes

@@ -349,7 +349,12 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((None, 3), result)
 
-
+    def test_if_scopes_in_other_scopes_for_get_definition_location(self):
+        code = 'def f(a_var):\n    pass\na_var = 10\nif True:\n    print a_var\n'
+        result = self.assist.get_definition_location(code, len(code) - 3)
+        self.assertEquals((None, 3), result)
+        
+        
 class CodeAssistInProjectsTest(unittest.TestCase):
 
     def setUp(self):

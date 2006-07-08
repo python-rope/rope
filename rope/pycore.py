@@ -601,7 +601,10 @@ class _ScopeVisitor(object):
                 return
             for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):
-                    self.names[name] = PyName(pyname.object, False, module=module,
+                    pyname_module = module
+                    if pyname.module is not None:
+                        pyname_module = pyname.module
+                    self.names[name] = PyName(pyname.object, False, module=pyname_module,
                                               lineno=pyname.get_definition_location()[1])
         else:
             for (name, alias) in node.names:
@@ -614,7 +617,10 @@ class _ScopeVisitor(object):
                     if isinstance(imported_object, PyPackage):
                         self.names[imported] = PyFilteredPackage()
                     else:
-                        self.names[imported] = PyName(imported_object, False, module=module,
+                        pyname_module = module
+                        if imported_pyname.module is not None:
+                            pyname_module = imported_pyname.module
+                        self.names[imported] = PyName(imported_object, False, module=pyname_module,
                                                       lineno=imported_pyname.get_definition_location()[1])
                 else:
                     self.names[imported] = PyName()

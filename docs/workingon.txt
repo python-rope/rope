@@ -2,12 +2,11 @@ Refactoring
 ===========
 
 
-* Testing PyName.get_location() for PyCore.get_module('mod')
-* Using ScopeNameFinder in CodeAssist.goto_definition
+* Using ScopeNameFinder in _CodeCompletionCollector
 * Attributes accesses are two kinds: Calls and non-calls
 * Changing HoldingScopeFinder to get source_code instead of lines
 * More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
-* handle ``File('text.txt').he`` in code-assists
+* Handle ``File('text.txt').he`` in code-assists
 * Using SourceLinesAdapter in LineOrientedSourceTools
 * Optimize SourceLinesAdapter methods
 * LineOrientedSourceTools should be more powerful; Elimination of source_code.split('\n')
@@ -23,11 +22,11 @@ Refactoring
 * PyObject equality check; Value objects?
 * PyName equality check; Value objects?
 
-* Optimizing holding scope search ?
+* Optimizing rope.codeanalyze.HoldingScopeFinder
 * Refactor `_ScopeVisitor.visitFrom` and visitImport
 * A TreeViewer is an EnhancedList
 * Folders and change_observers?
-* PyNames with None object
+* PyNames with None objects
 * Refactor pycore; So many kinds for Modules; eliminate checking module.is_package?
 * Removing duplications in tests in codeassist and pycore scopes
 * Consider using `StatementRangeFinder` in highlight module?
@@ -43,6 +42,7 @@ Before 0.2 Release
 * Enhancing highlighting
 * Profiling to find the bottlenecks
 * Document features added since release 0.1
+* Add a simple tutorial
 * Better homepage
 
 

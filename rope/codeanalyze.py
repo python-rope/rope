@@ -97,12 +97,14 @@ class HoldingScopeFinder(object):
         line_indents = line_indents
         if line_indents is None:
             line_indents = self.get_indents(lineno)
+        scopes = [(module_scope, 0)]
         current_scope = module_scope
-        inner_scope = current_scope
         while current_scope is not None and \
               (current_scope.get_kind() == 'Module' or
                self.get_indents(current_scope.get_lineno()) < line_indents):
-            inner_scope = current_scope
+            while len(scopes) > 1 and scopes[-1][1] >= self.get_indents(current_scope.get_lineno()):
+                scopes.pop()
+            scopes.append((current_scope, self.get_indents(current_scope.get_lineno())))
             new_scope = None
             for scope in current_scope.get_scopes():
                 if scope.get_lineno() <= lineno:
@@ -110,7 +112,14 @@ class HoldingScopeFinder(object):
                 else:
                     break
             current_scope = new_scope
-        return inner_scope
+        min_indents = line_indents
+        for l in range(scopes[-1][0].get_lineno() + 1, lineno):
+            if self.lines[l - 1].strip() != '' and \
+               not self.lines[l - 1].strip().startswith('#'):
+                min_indents = min(min_indents, self.get_indents(l))
+        while len(scopes) > 1 and min_indents <= scopes[-1][1]:
+            scopes.pop()
+        return scopes[-1][0]
 
 
 class ScopeNameFinder(object):

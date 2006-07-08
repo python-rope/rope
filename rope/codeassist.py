@@ -129,6 +129,7 @@ class _CodeCompletionCollector(object):
         self.starting = starting
         self.pycore = self.project.get_pycore()
         self.lines = source_code.split('\n')
+        self.source_code = source_code
         scope_finder = HoldingScopeFinder(self.lines)
         self.lineno = scope_finder.get_location(offset)[0]
         self.current_indents = scope_finder.get_indents(self.lineno)
