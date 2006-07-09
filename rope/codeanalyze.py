@@ -1,3 +1,4 @@
+
 class WordRangeFinder(object):
 
     def __init__(self, source_code):
@@ -56,6 +57,7 @@ class WordRangeFinder(object):
             current_offset = self._find_last_non_space_char(current_offset)
             if current_offset >= 0:
                 word_start = self._find_statement_start(current_offset)
+                word_start = self.find_word_start(current_offset)
                 result.append(self.source_code[word_start:current_offset + 1])
                 current_offset = word_start - 1
             current_offset = self._find_last_non_space_char(current_offset)

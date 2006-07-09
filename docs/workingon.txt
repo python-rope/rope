@@ -1,8 +1,6 @@
 Refactoring
 ===========
 
-- PyNames with None objects
-
 * Names in strings or comments
 * Using ScopeNameFinder in _CodeCompletionCollector
 * Changing HoldingScopeFinder to get source_code instead of lines

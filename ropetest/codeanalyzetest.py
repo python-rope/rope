@@ -1,7 +1,7 @@
 import unittest
 
 from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                              SourceLinesAdapter)
+                              SourceLinesAdapter, WordRangeFinder)
 
 class StatementRangeFinderTest(unittest.TestCase):
 
@@ -56,7 +56,27 @@ class StatementRangeFinderTest(unittest.TestCase):
         self.assertEquals(1, to_lines.get_line_number(0))
         self.assertEquals(2, to_lines.get_line_number(7))
 
+        
+class WordRangeFinderTest(unittest.TestCase):
+
+    def setUp(self):
+        super(WordRangeFinderTest, self).setUp()
+
+    def tearDown(self):
+        super(WordRangeFinderTest, self).tearDown()
+
+    def test_inside_parans(self):
+        word_finder = WordRangeFinder('a_func(a_var)')
+        self.assertEquals(['a_v'], word_finder.get_name_list_before(10))
+
+
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(StatementRangeFinderTest))
+    result.addTests(unittest.makeSuite(WordRangeFinderTest))
+    return result
 
 if __name__ == '__main__':
     unittest.main()
-    
+
+

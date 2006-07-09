@@ -30,7 +30,7 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.indentertest.PythonCodeIndenterTest))
     result.addTests(ropetest.codeassisttest.suite())
     result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))
-    result.addTests(unittest.makeSuite(ropetest.codeanalyzetest.StatementRangeFinderTest))
+    result.addTests(ropetest.codeanalyzetest.suite())
     result.addTests(ropetest.pycoretest.suite())
     result.addTests(unittest.makeSuite(ropetest.uihelperstest.UIHelpersTest))
     result.addTests(unittest.makeSuite(ropetest.outlinetest.OutlineTest))

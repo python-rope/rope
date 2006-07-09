@@ -354,7 +354,12 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((None, 3), result)
         
-        
+    def test_code_assists_in_parens(self):
+        code = 'def a_func(a_var):\n    pass\na_var = 10\na_func(a_'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_var', 'global', result)
+
+
 class CodeAssistInProjectsTest(unittest.TestCase):
 
     def setUp(self):

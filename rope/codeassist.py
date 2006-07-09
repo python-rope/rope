@@ -5,7 +5,8 @@ import re
 
 from rope.exceptions import RopeException
 from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                              HoldingScopeFinder, WordRangeFinder, ScopeNameFinder)
+                              HoldingScopeFinder, WordRangeFinder, ScopeNameFinder,
+                              SourceLinesAdapter)
 
 class RopeSyntaxError(RopeException):
     pass
@@ -130,14 +131,15 @@ class _CodeCompletionCollector(object):
         self.pycore = self.project.get_pycore()
         self.lines = source_code.split('\n')
         self.source_code = source_code
-        scope_finder = HoldingScopeFinder(self.lines)
-        self.lineno = scope_finder.get_location(offset)[0]
-        self.current_indents = scope_finder.get_indents(self.lineno)
+        source_lines = SourceLinesAdapter(source_code)
+        self.lineno = source_lines.get_line_number(offset)
+        self.current_indents = self._get_line_indents(source_lines.get_line(self.lineno))
         self._comment_current_statement()
+        self.source_code = '\n'.join(self.lines)
 
-    def _get_line_indents(self, line_number):
+    def _get_line_indents(self, line):
         indents = 0
-        for char in self.lines[line_number]:
+        for char in line:
             if char == ' ':
                 indents += 1
             else:
@@ -149,7 +151,7 @@ class _CodeCompletionCollector(object):
         range_finder.analyze()
         start = range_finder.get_statement_start() - 1
         end = range_finder.get_scope_end() - 1
-        last_indents = self._get_line_indents(start)
+        last_indents = self._get_line_indents(self.lines[start])
         self.lines[start] = last_indents * ' ' + 'pass'
         for line in range(start + 1, end + 1):
             self.lines[line] = '#' # + lines[line]
@@ -159,22 +161,14 @@ class _CodeCompletionCollector(object):
         scope_finder = HoldingScopeFinder(self.lines)
         return scope_finder.get_holding_scope(base_scope, self.lineno, self.current_indents)
 
-    def _get_dotted_completions(self, scope):
+    def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}
-        if len(self.starting) > 1:
-            element = scope.lookup(self.starting[0])
-            if element is not None:
-                consistent = True
-                for token in self.starting[1:-1]:
-                    if token in element.get_attributes():
-                        element = element.get_attributes()[token]
-                    else:
-                        consistent = False
-                        break
-                if consistent:
-                    for name, pyname in element.get_attributes().iteritems():
-                        if name.startswith(self.starting[-1]) or self.starting[-1] == '':
-                            result[name] = CompletionProposal(name, 'attribute')
+        pyname_finder = ScopeNameFinder(self.source_code, module_scope)
+        element = pyname_finder.get_pyname_in_scope(holding_scope, self.starting[:-1])
+        if element is not None:
+            for name, pyname in element.get_attributes().iteritems():
+                if name.startswith(self.starting[-1]) or self.starting[-1] == '':
+                    result[name] = CompletionProposal(name, 'attribute')
         return result
 
     def _get_undotted_completions(self, scope, result):
@@ -190,14 +184,14 @@ class _CodeCompletionCollector(object):
 
     def get_code_completions(self):
         try:
-            module_scope = self.pycore.get_string_scope('\n'.join(self.lines))
+            module_scope = self.pycore.get_string_scope(self.source_code)
         except SyntaxError, e:
             raise RopeSyntaxError(e)
         current_scope = module_scope
         result = {}
         inner_scope = self._find_inner_holding_scope(module_scope)
         if len(self.starting) > 1:
-            result.update(self._get_dotted_completions(inner_scope))
+            result.update(self._get_dotted_completions(module_scope, inner_scope))
         else:
             self._get_undotted_completions(inner_scope, result)
         return result
