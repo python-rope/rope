@@ -1,0 +1,127 @@
+===============
+ Rope Tutorial
+===============
+
+.. contents::
+
+Overview
+========
+
+Right now most of rope's development efforts are toward developing the
+core parts and not the UI. Because of this UI parts don't look very
+user friendly and there is no documentation or help for the UI
+parts. This does not mean that rope does not allow you to use the
+developed features in the core parts. We highly believe and value fast
+feedback. And developed features are added to the UI before marking
+them as complete.
+
+This tutorial tries to demonstrate how to use rope for basic programming
+tasks. This tutorial attempts to give a fast overview of rope and some
+of its features.
+
+
+
+Starting Rope
+=============
+
+Simply run the rope.py included in the root of the package.
+
+
+Creating And Opening Projects
+=============================
+
+To create or open a project select the ``Open Project`` from the file
+menu. You will be asked about the location of the root(toplevel)
+folder of your project.
+
+
+Making Files And Folders
+========================
+
+Consider we want to make a hierarchy like this::
+
+  project/
+    file1.txt
+    folder1/
+      file2.txt
+      folder2/
+        file3.txt
+
+In order to make this project tree, after opening the project you
+can use the following table.
+
+====================  ==================  =================
+Selected Menu Item    Parent Folder       File/Folder Name
+====================  ==================  =================
+File.New File                             file1.txt
+File.New Folder                           folder1
+File.New File         folder1             file2.txt
+File.New Folder       folder1             folder2
+File.New File         folder1/folder2     file3.txt
+====================  ==================  =================
+
+Note that for making ``file3.txt`` we've used ``/`` as a directory
+separator. You should always use ``/`` as directory separator
+regardless of the operating system you are running rope on.
+
+
+Making Modules and Packages
+===========================
+
+Consider we want to make a hierarchy like this::
+
+  project/
+    mod1.py
+    pkg1/
+      __init__.py
+      mod2.py
+      pkg2/
+        __init__.py
+        mod3.py
+    src/
+       mod4.py
+
+
+In order to make this project tree, after opening the project you
+can use the following table.
+
+====================  ==================  ====================
+Selected Menu Item    Source Folder       Module/Package Name
+====================  ==================  ====================
+File.New Module                           mod1
+File.New Package                          pkg1
+File.New Module                           pkg1.mod2
+File.New package                          pkg1.pkg2
+File.New Module                           pkg1.pkg2.mod3
+File.New Folder                           src
+File.New Module       src                 mod4
+====================  ==================  ====================
+
+
+Opening Files
+=============
+
+You can select the ``Find File`` item from the ``File`` menu or use
+``C-x C-f``. In the `Find File` dialog use the name of the file or
+module to find it. The dialog shows all files that start with the
+given name. Press enter to open the file.
+
+
+Saving A File
+=============
+
+Use ``C-x C-s`` to save the contents of the active editor.
+
+
+Changing Editor
+===============
+
+With rope you can open and edit many files at the same time. To switch
+between open editors you can use ``C-x b``.
+
+
+Closing An Editor
+=================
+
+Use ``C-x C-k`` to close the active editor.
+

@@ -347,6 +347,8 @@ class PyName(object):
 
     def __init__(self, object_=None, is_defined_here=False, lineno=None, module=None):
         self.object = object_
+        if self.object is None:
+            self.object = PyObject(PyObject.get_base_type('Unknown'))
         self.is_defined_here = is_defined_here
         self.lineno = lineno
         self.module = module
@@ -357,22 +359,13 @@ class PyName(object):
         self.__init__(object_, is_defined_here, self.lineno, module=module)
 
     def get_attributes(self):
-        if self.object:
-            return self.object.get_attributes()
-        else:
-            return PyObject.get_base_type('Unknown').get_attributes()
+        return self.object.get_attributes()
 
     def get_object(self):
-        if self.object:
-            return self.object
-        else:
-            return PyObject.get_base_type('Unknown')
+        return self.object
         
     def get_type(self):
-        if self.object:
-            return self.object.get_type()
-        else:
-            return PyObject.get_base_type('Unknown')
+        return self.object.get_type()
 
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""

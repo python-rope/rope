@@ -1,4 +1,10 @@
-============
+=====================
+ Rope Future Stories
+=====================
+
+.. contents::
+
+
 PythonSource
 ============
 
@@ -6,13 +12,18 @@ PythonSource
 * Basic refactorings
 * Advanced refactorings
 * Type inferencing
+
   * static
   * dynamic
   * ask user
+
 * Code assists
 * Auto completion
 
-Advanced Refactorings; Need type inferencing
+Advanced Refactorings
+---------------------
+These refactorings need type inferencing.
+
 * Rename method
 * Remove method
 * Move method
@@ -27,10 +38,12 @@ Advanced Refactorings; Need type inferencing
 * Change method signature
 
 Advanced Algorithms
+-------------------
 * Finding similar pieces of code while extracting methods
 * Finding similar statements while extracting local variables
 
 Help coding
+-----------
 * Override/implement methods
 * Make getters and setters
 * Organize imports
@@ -38,6 +51,7 @@ Help coding
 * Format source
 
 Code Assists
+------------
 * Make module/class/function/method
 * Surround with try statement
 * Remove try statement
@@ -49,12 +63,12 @@ Code Assists
 * Show pydoc
 
 Auto Completion
-* Complete variable name
+---------------
 * Complete method name by using type inferencing
 * Complete function keyword argument
-* Complete module and class name
 
 Basic Refactorings
+------------------
 * Rename module
 * Move class to another module
 * Move class to a new module
@@ -79,5 +93,25 @@ Basic Refactorings
 * Convert local variable to attribute
 * Introduce factory
 
-* Writing ASTs
-* Building ASTs
+Platform
+========
+
+* File local history
+* Commanding buffer
+* Plugin support and extensibility
+* Team Support
+* Global and project specific preferences
+* Saving states between sessions
+* Acceleration keys
+* Profiling
+* Debugging
+
+
+PlatformUI
+==========
+
+* Advanced search
+* Different views
+* Configuration editor
+* Having multiple clipboards
+
