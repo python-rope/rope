@@ -69,6 +69,29 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder('a_func(a_var)')
         self.assertEquals(['a_v'], word_finder.get_name_list_before(10))
 
+    def test_simple_names(self):
+        word_finder = WordRangeFinder('a_var = 10')
+        self.assertEquals('a_var', word_finder.get_name_at(3))
+
+    def test_function_calls(self):
+        word_finder = WordRangeFinder('sample_function()')
+        self.assertEquals('sample_function', word_finder.get_name_at(10))
+    
+    # TODO: make it pass
+    def xxx_test_attribute_accesses(self):
+        word_finder = WordRangeFinder('a_var.an_attr')
+        self.assertEquals('a_var.an_attr', word_finder.get_name_at(10))
+    
+    # TODO: make it pass
+    def xxx_test_strings(self):
+        word_finder = WordRangeFinder('"a string".split()')
+        self.assertEquals(['"a string"', 'split'], word_finder.get_name_list_at(14))
+
+    # TODO: make it pass
+    def xxx_test_function_calls(self):
+        word_finder = WordRangeFinder('file("test.txt").read()')
+        self.assertEquals(['file("afile.txt")', 'read'], word_finder.get_name_list_at(18))
+
 
 def suite():
     result = unittest.TestSuite()

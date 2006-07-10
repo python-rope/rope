@@ -40,7 +40,12 @@ class PythonRefactoring(Refactoring):
         for match in pattern.finditer(source_code):
             if self._get_previous_char(source_code, match.start()) == '.':
                 continue
-            if pyname_finder.get_pyname_at(match.start() + 1) == old_pyname:
+            new_pyname = None
+            try:
+                new_pyname = pyname_finder.get_pyname_at(match.start() + 1)
+            except SyntaxError:
+                pass
+            if new_pyname == old_pyname:
                 result.append(source_code[last_modified_char:match.start()] + new_name)
                 last_modified_char = match.end()
         result.append(source_code[last_modified_char:])

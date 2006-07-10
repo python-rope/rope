@@ -158,7 +158,7 @@ class _CodeCompletionCollector(object):
         self.lines.append('\n')
 
     def _find_inner_holding_scope(self, base_scope):
-        scope_finder = HoldingScopeFinder(self.lines)
+        scope_finder = HoldingScopeFinder(self.source_code)
         return scope_finder.get_holding_scope(base_scope, self.lineno, self.current_indents)
 
     def _get_dotted_completions(self, module_scope, holding_scope):

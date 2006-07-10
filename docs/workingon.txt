@@ -1,5 +1,17 @@
-Refactoring
-===========
+Complete ``AClass(param).a_``
+=============================
+
+1. Find the statement
+2. Parse the statement
+3. Walk the statement
+
+Statements are: 
+1. Atoms
+2. Primaries and operators
+3. Simple statements
+4. Compound statements
+
+* WorkRangeFinder should return one string?
 
 * Names in strings or comments
 * Using ScopeNameFinder in _CodeCompletionCollector
@@ -23,7 +35,7 @@ Before 0.2 Release
 * Better editor changing dialog; use uihelpers module
 * Enhancing highlighting
 * Profiling to find the bottlenecks
-* Document features added since release 0.1
+* Document features added since 0.1 release
 * Add a simple tutorial
 * Better homepage
 

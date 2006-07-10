@@ -1,3 +1,4 @@
+import compiler
 
 class WordRangeFinder(object):
 
@@ -56,7 +57,6 @@ class WordRangeFinder(object):
         while current_offset >= 0:
             current_offset = self._find_last_non_space_char(current_offset)
             if current_offset >= 0:
-                word_start = self._find_statement_start(current_offset)
                 word_start = self.find_word_start(current_offset)
                 result.append(self.source_code[word_start:current_offset + 1])
                 current_offset = word_start - 1
@@ -73,14 +73,19 @@ class WordRangeFinder(object):
         result[-1] = self.get_word_at(offset)
         return result
 
+    def get_name_at(self, offset):
+        return self.source_code[self.find_word_start(offset):self.find_word_end(offset)]
+
+
 class HoldingScopeFinder(object):
 
-    def __init__(self, lines):
-        self.lines = lines
+    def __init__(self, source_code):
+        self.source_code = source_code
+        self.lines = SourceLinesAdapter(source_code)
     
     def get_indents(self, lineno):
         indents = 0
-        for char in self.lines[lineno - 1]:
+        for char in self.lines.get_line(lineno):
             if char == ' ':
                 indents += 1
             else:
@@ -90,8 +95,8 @@ class HoldingScopeFinder(object):
     def get_location(self, offset):
         current_pos = 0
         lineno = 1
-        while current_pos + len(self.lines[lineno - 1]) < offset:
-            current_pos += len(self.lines[lineno - 1]) + 1
+        while current_pos + len(self.lines.get_line(lineno)) < offset:
+            current_pos += len(self.lines.get_line(lineno)) + 1
             lineno += 1
         return (lineno, offset - current_pos)
 
@@ -116,12 +121,33 @@ class HoldingScopeFinder(object):
             current_scope = new_scope
         min_indents = line_indents
         for l in range(scopes[-1][0].get_lineno() + 1, lineno):
-            if self.lines[l - 1].strip() != '' and \
-               not self.lines[l - 1].strip().startswith('#'):
+            if self.lines.get_line(l).strip() != '' and \
+               not self.lines.get_line(l).strip().startswith('#'):
                 min_indents = min(min_indents, self.get_indents(l))
         while len(scopes) > 1 and min_indents <= scopes[-1][1]:
             scopes.pop()
         return scopes[-1][0]
+
+
+class _StatementEvaluator(object):
+
+    def __init__(self, scope):
+        self.scope = scope
+        self.result = None
+
+    def visitName(self, node):
+        self.result = self.scope.lookup(node.name)
+    
+    def visitGetattr(self, node):
+        pyname = _StatementEvaluator.get_statement_result(self.scope, node.expr)
+        if pyname is not None:
+            self.result = pyname.get_attributes().get(node.attrname, None)
+
+    @staticmethod
+    def get_statement_result(scope, node):
+        evaluator = _StatementEvaluator(scope)
+        compiler.walk(node, evaluator)
+        return evaluator.result
 
 
 class ScopeNameFinder(object):
@@ -130,7 +156,7 @@ class ScopeNameFinder(object):
         self.source_code = source_code
         self.module_scope = module_scope
         self.lines = source_code.split('\n')
-        self.scope_finder = HoldingScopeFinder(self.lines)
+        self.scope_finder = HoldingScopeFinder(source_code)
         self.word_finder = WordRangeFinder(source_code)
     
     def get_pyname_at(self, offset):
@@ -145,15 +171,9 @@ class ScopeNameFinder(object):
         return result
     
     def get_pyname_in_scope(self, holding_scope, name_list):
-        pyname = holding_scope.lookup(name_list[0])
-        if pyname is not None and len(name_list) > 1:
-            for name in name_list[1:]:
-                if name in pyname.get_attributes():
-                    pyname = pyname.get_attributes()[name]
-                else:
-                    pyname = None
-                    break
-        return pyname
+        ast = compiler.parse('.'.join(name_list))
+        result = _StatementEvaluator.get_statement_result(holding_scope, ast)
+        return result
 
 
 
