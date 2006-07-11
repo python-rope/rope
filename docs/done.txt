@@ -3,6 +3,9 @@
 ===========
 
 
+- Completeing ``AClass(param).a_`` : July 11, 2006
+
+
 - We know the type of ``var = AClass()`` : July 4, 2006
 
 

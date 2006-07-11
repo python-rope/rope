@@ -269,9 +269,6 @@ Stories
 * Rename class @ 3d
 
 
-* Complete ``AClass(param).a_`` @ 2d
-
-
 Remaining Stories
 =================
 * Change program goals and description; principles.html
