@@ -125,8 +125,9 @@ class NoAssist(CodeAssist):
 
 class _CodeCompletionCollector(object):
 
-    def __init__(self, project, source_code, offset, starting):
+    def __init__(self, project, source_code, offset, expression, starting):
         self.project = project
+        self.expression = expression
         self.starting = starting
         self.pycore = self.project.get_pycore()
         self.lines = source_code.split('\n')
@@ -164,10 +165,10 @@ class _CodeCompletionCollector(object):
     def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}
         pyname_finder = ScopeNameFinder(self.source_code, module_scope)
-        element = pyname_finder.get_pyname_in_scope(holding_scope, self.starting[:-1])
+        element = pyname_finder.get_pyname_in_scope(holding_scope, self.expression)
         if element is not None:
             for name, pyname in element.get_attributes().iteritems():
-                if name.startswith(self.starting[-1]) or self.starting[-1] == '':
+                if name.startswith(self.starting) or self.starting == '':
                     result[name] = CompletionProposal(name, 'attribute')
         return result
 
@@ -175,7 +176,7 @@ class _CodeCompletionCollector(object):
         if scope.parent != None:
             self._get_undotted_completions(scope.parent, result)
         for name, pyname in scope.get_names().iteritems():
-            if name.startswith(self.starting[0]):
+            if name.startswith(self.starting):
                 from rope.pycore import PyObject
                 kind = 'local'
                 if scope.get_kind() == 'Module':
@@ -190,7 +191,7 @@ class _CodeCompletionCollector(object):
         current_scope = module_scope
         result = {}
         inner_scope = self._find_inner_holding_scope(module_scope)
-        if len(self.starting) > 1:
+        if self.expression.strip() != '':
             result.update(self._get_dotted_completions(module_scope, inner_scope))
         else:
             self._get_undotted_completions(inner_scope, result)
@@ -255,22 +256,22 @@ class PythonCodeAssist(CodeAssist):
                 result.append(template)
         return result
 
-    def _get_code_completions(self, source_code, offset, starting):
-        collector = _CodeCompletionCollector(self.project, source_code, offset, starting)
+    def _get_code_completions(self, source_code, offset, expression, starting):
+        collector = _CodeCompletionCollector(self.project, source_code,
+                                             offset, expression, starting)
         return collector.get_code_completions()
 
     def assist(self, source_code, offset):
         if offset > len(source_code):
             return Proposals()
         word_finder = WordRangeFinder(source_code)
-        starting_offset = word_finder.find_word_start(offset)
-        starting = word_finder.get_name_list_before(offset)
-        completions = self._get_code_completions(source_code, offset, starting)
+        expression, starting, starting_offset = word_finder.get_splitted_name_before(offset)
+        completions = self._get_code_completions(source_code, offset, expression, starting)
         templates = []
-        if len(starting) == 1 and len(starting[0]) > 0:
-            completions.update(self._get_matching_builtins(starting[0]))
-            completions.update(self._get_matching_keywords(starting[0]))
-            templates = self._get_template_proposals(starting[0])
+        if expression.strip() == '' and starting.strip() != '':
+            completions.update(self._get_matching_builtins(starting))
+            completions.update(self._get_matching_keywords(starting))
+            templates = self._get_template_proposals(starting)
         return Proposals(completions.values(), templates,
                          starting_offset)
 

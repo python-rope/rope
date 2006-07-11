@@ -1,17 +1,13 @@
 Complete ``AClass(param).a_``
 =============================
 
-1. Find the statement
-2. Parse the statement
-3. Walk the statement
-
-Statements are: 
-1. Atoms
-2. Primaries and operators
-3. Simple statements
-4. Compound statements
-
-* WorkRangeFinder should return one string?
+* Deploying WordRangeFinder.get_name_at
+* WordRangeFinder.get_name_at to WordRangeFinder.get_expression_at
+* (a_statment + another_statment).an_attr
+* dictionaries
+* Triples
+* " some string
+* Comments
 
 * Names in strings or comments
 * Using ScopeNameFinder in _CodeCompletionCollector
@@ -54,4 +50,11 @@ Remaining Stories
   * Dividing week time; 5/7 for core and 2/7 for UI
 
 * The same pattern for module names; ~ing or ~ or ~er
+* New package structure
+  ::
+    rope/
+      core/
+        ...
+      ui/
+        ...
 

@@ -5,28 +5,21 @@ class WordRangeFinder(object):
     def __init__(self, source_code):
         self.source_code = source_code
     
-    def find_word_start(self, offset):
-        current_offset = offset - 1
+    def _find_word_start(self, offset):
+        current_offset = offset
         while current_offset >= 0 and (self.source_code[current_offset].isalnum() or
                                        self.source_code[current_offset] in '_'):
             current_offset -= 1;
         return current_offset + 1
     
-    def find_word_end(self, offset):
-        current_offset = offset
+    def _find_word_end(self, offset):
+        current_offset = offset + 1
         while current_offset < len(self.source_code) and \
               (self.source_code[current_offset].isalnum() or
                self.source_code[current_offset] in '_'):
             current_offset += 1;
-        return current_offset
+        return current_offset - 1
 
-    def _find_statement_start(self, offset):
-        current_offset = offset - 1
-        while current_offset >= 0 and (self.source_code[current_offset].isalnum() or
-                                       self.source_code[current_offset] in '_()\'"'):
-            current_offset -= 1;
-        return current_offset + 1
-    
     def _find_last_non_space_char(self, offset):
         current_offset = offset
         while current_offset >= 0 and self.source_code[current_offset] in ' \t\n':
@@ -39,42 +32,90 @@ class WordRangeFinder(object):
         return current_offset
     
     def get_word_before(self, offset):
-        return self.source_code[self.find_word_start(offset):offset]
+        return self.source_code[self._find_word_start(offset - 1):offset]
     
     def get_word_at(self, offset):
-        return self.source_code[self.find_word_start(offset):self.find_word_end(offset)]
+        return self.source_code[self._find_word_start(offset - 1):self._find_word_end(offset - 1) + 1]
     
-    def get_name_list_before(self, offset):
-        result = []
+    def _find_string_start(self, offset):
+        kind = self.source_code[offset]
         current_offset = offset - 1
-        if current_offset < 0 or self.source_code[current_offset] in ' \t\n.':
-            result.append('')
-            current_offset = self._find_last_non_space_char(current_offset)
-            if current_offset >= 0 and self.source_code[current_offset] == '.':
-                current_offset -= 1
+        while self.source_code[current_offset] != kind:
+            current_offset -= 1
+        return current_offset
+    
+    def _find_parens_start(self, offset):
+        current_offset = self._find_last_non_space_char(offset - 1)
+        while current_offset >= 0 and self.source_code[current_offset] not in '[(':
+            if self.source_code[current_offset] in ':,':
+                pass
             else:
-                return result
-        while current_offset >= 0:
-            current_offset = self._find_last_non_space_char(current_offset)
-            if current_offset >= 0:
-                word_start = self.find_word_start(current_offset)
-                result.append(self.source_code[word_start:current_offset + 1])
-                current_offset = word_start - 1
-            current_offset = self._find_last_non_space_char(current_offset)
-            if current_offset >= 0 and self.source_code[current_offset] == '.':
-                current_offset -= 1
-            else:
-                break
-        result.reverse()
-        return result
+                current_offset = self._find_name_start(current_offset)
+            current_offset = self._find_last_non_space_char(current_offset - 1)
+        return current_offset
 
-    def get_name_list_at(self, offset):
-        result = self.get_name_list_before(offset)
-        result[-1] = self.get_word_at(offset)
-        return result
+    def _find_atom_start(self, offset):
+        old_offset = offset
+        if self.source_code[offset] in '\n\t ':
+            offset = self._find_last_non_space_char(offset)
+        if self.source_code[offset] in '\'"':
+            return self._find_string_start(offset)
+        if self.source_code[offset] in ')]':
+            return self._find_parens_start(offset)
+        if self.source_code[offset].isalnum() or self.source_code[offset] == '_':
+            return self._find_word_start(offset)
+        return old_offset
 
+    def _find_name_start(self, offset):
+        current_offset = offset + 1
+        if self.source_code[offset] != '.':
+            current_offset = self._find_atom_start(offset)
+        while current_offset > 0 and \
+              self.source_code[self._find_last_non_space_char(current_offset - 1)] == '.':
+            current_offset = self._find_last_non_space_char(current_offset - 1)
+            current_offset = self._find_last_non_space_char(current_offset - 1)
+            if self.source_code[current_offset].isalnum() or self.source_code[current_offset] == '_':
+                current_offset = self._find_word_start(current_offset)
+            elif self.source_code[current_offset] in '\'"':
+                current_offset = self._find_string_start(current_offset)
+            elif self.source_code[current_offset] in ')]':
+                current_offset = self._find_parens_start(current_offset)
+                if current_offset == 0:
+                    break
+                current_offset = self._find_last_non_space_char(current_offset - 1)
+                if self.source_code[current_offset].isalnum() or \
+                   self.source_code[current_offset] == '_':
+                    current_offset = self._find_word_start(current_offset)
+                else:
+                    break
+        return current_offset
+    
     def get_name_at(self, offset):
-        return self.source_code[self.find_word_start(offset):self.find_word_end(offset)]
+        return self.source_code[self._find_name_start(offset - 1):
+                                self._find_word_end(offset - 1) + 1].strip()
+
+    def get_splitted_name_before(self, offset):
+        """returns expression, starting, starting_offset"""
+        if offset == 0:
+            return ('', '', 0)
+        word_start = self._find_atom_start(offset - 1)
+        real_start = self._find_name_start(offset - 1)
+        if self.source_code[word_start:offset].strip() == '':
+            word_start = offset
+        if self.source_code[real_start:offset].strip() == '':
+            real_start = offset
+        if real_start == word_start:
+            return ('', self.source_code[word_start:offset], word_start)
+        else:
+            if self.source_code[offset - 1] == '.':
+                return (self.source_code[real_start:offset - 1], '', offset)
+            last_dot_position = word_start
+            if self.source_code[word_start] != '.':
+                last_dot_position = self._find_last_non_space_char(word_start - 1)
+            last_char_position = self._find_last_non_space_char(last_dot_position - 1)
+            return (self.source_code[real_start:last_char_position + 1],
+                    self.source_code[word_start:offset], word_start)
+        
 
 
 class HoldingScopeFinder(object):
@@ -160,18 +201,18 @@ class ScopeNameFinder(object):
         self.word_finder = WordRangeFinder(source_code)
     
     def get_pyname_at(self, offset):
-        name_list = self.word_finder.get_name_list_at(offset)
+        name = self.word_finder.get_name_at(offset)
         lineno = self.scope_finder.get_location(offset)[0]
         holding_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno)
-        result = self.get_pyname_in_scope(holding_scope, name_list)
+        result = self.get_pyname_in_scope(holding_scope, name)
         # This occurs if renaming a function parameter
         if result is None and lineno < len(self.lines):
             next_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno + 1)
-            result = self.get_pyname_in_scope(next_scope, name_list)
+            result = self.get_pyname_in_scope(next_scope, name)
         return result
     
-    def get_pyname_in_scope(self, holding_scope, name_list):
-        ast = compiler.parse('.'.join(name_list))
+    def get_pyname_in_scope(self, holding_scope, name):
+        ast = compiler.parse(name)
         result = _StatementEvaluator.get_statement_result(holding_scope, ast)
         return result
 

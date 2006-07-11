@@ -77,7 +77,7 @@ class CodeAssistTest(unittest.TestCase):
                           lambda: self.assist.assist(code, len(code)))
     
     def test_ignoring_errors_in_current_line(self):
-        code = 'def my_func():    return 2\nt = '
+        code = 'def my_func():\n    return 2\nt = '
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('my_func', 'global', result)
 
