@@ -1,5 +1,7 @@
 import compiler
 
+from pycore import PyObject, PyName
+
 class WordRangeFinder(object):
 
     def __init__(self, source_code):
@@ -115,8 +117,6 @@ class WordRangeFinder(object):
             last_char_position = self._find_last_non_space_char(last_dot_position - 1)
             return (self.source_code[real_start:last_char_position + 1],
                     self.source_code[word_start:offset], word_start)
-        
-
 
 class HoldingScopeFinder(object):
 
@@ -183,6 +183,11 @@ class _StatementEvaluator(object):
         pyname = _StatementEvaluator.get_statement_result(self.scope, node.expr)
         if pyname is not None:
             self.result = pyname.get_attributes().get(node.attrname, None)
+
+    def visitCallFunc(self, node):
+        pyname = _StatementEvaluator.get_statement_result(self.scope, node.node)
+        if pyname.get_type() == PyObject.get_base_type('Type'):
+            self.result = PyName(object_=PyObject(type_=pyname.get_object()))
 
     @staticmethod
     def get_statement_result(scope, node):

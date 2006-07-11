@@ -1,7 +1,6 @@
 Complete ``AClass(param).a_``
 =============================
 
-* Deploying WordRangeFinder.get_name_at
 * WordRangeFinder.get_name_at to WordRangeFinder.get_expression_at
 * (a_statment + another_statment).an_attr
 * dictionaries

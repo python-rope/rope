@@ -359,6 +359,13 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('a_var', 'global', result)
 
+    def test_simple_type_inferencing(self):
+        code = 'class Sample(object):\n    def __init__(self, a_param):\n        pass\n' + \
+               '    def a_method(self):\n        pass\n' + \
+               'Sample("hey").a_'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_method', 'attribute', result)
+    
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
