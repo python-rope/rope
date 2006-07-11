@@ -148,7 +148,8 @@ class _CodeCompletionCollector(object):
         return indents
 
     def _comment_current_statement(self):
-        range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines), self.lineno)
+        range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines),
+                                            self.lineno)
         range_finder.analyze()
         start = range_finder.get_statement_start() - 1
         end = range_finder.get_scope_end() - 1
@@ -160,7 +161,8 @@ class _CodeCompletionCollector(object):
 
     def _find_inner_holding_scope(self, base_scope):
         scope_finder = HoldingScopeFinder(self.source_code)
-        return scope_finder.get_holding_scope(base_scope, self.lineno, self.current_indents)
+        return scope_finder.get_holding_scope(base_scope, self.lineno,
+                                              self.current_indents)
 
     def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}
@@ -265,7 +267,7 @@ class PythonCodeAssist(CodeAssist):
         if offset > len(source_code):
             return Proposals()
         word_finder = WordRangeFinder(source_code)
-        expression, starting, starting_offset = word_finder.get_splitted_name_before(offset)
+        expression, starting, starting_offset = word_finder.get_splitted_statement_before(offset)
         completions = self._get_code_completions(source_code, offset, expression, starting)
         templates = []
         if expression.strip() == '' and starting.strip() != '':

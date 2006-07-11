@@ -67,72 +67,82 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_inside_parans(self):
         word_finder = WordRangeFinder('a_func(a_var)')
-        self.assertEquals('a_var', word_finder.get_name_at(10))
+        self.assertEquals('a_var', word_finder.get_statement_at(10))
 
     def test_simple_names(self):
         word_finder = WordRangeFinder('a_var = 10')
-        self.assertEquals('a_var', word_finder.get_name_at(3))
+        self.assertEquals('a_var', word_finder.get_statement_at(3))
 
     def test_function_calls(self):
         word_finder = WordRangeFinder('sample_function()')
-        self.assertEquals('sample_function', word_finder.get_name_at(10))
+        self.assertEquals('sample_function', word_finder.get_statement_at(10))
     
     def test_attribute_accesses(self):
         word_finder = WordRangeFinder('a_var.an_attr')
-        self.assertEquals('a_var.an_attr', word_finder.get_name_at(10))
+        self.assertEquals('a_var.an_attr', word_finder.get_statement_at(10))
     
     def test_strings(self):
         word_finder = WordRangeFinder('"a string".split()')
-        self.assertEquals('"a string".split', word_finder.get_name_at(14))
+        self.assertEquals('"a string".split', word_finder.get_statement_at(14))
 
     def test_function_calls(self):
         word_finder = WordRangeFinder('file("afile.txt").read()')
-        self.assertEquals('file("afile.txt").read', word_finder.get_name_at(18))
+        self.assertEquals('file("afile.txt").read',
+                          word_finder.get_statement_at(18))
 
     def test_parens(self):
         word_finder = WordRangeFinder('("afile.txt").split()')
-        self.assertEquals('("afile.txt").split', word_finder.get_name_at(18))
+        self.assertEquals('("afile.txt").split',
+                          word_finder.get_statement_at(18))
 
     def test_function_with_no_param(self):
         word_finder = WordRangeFinder('AClass().a_func()')
-        self.assertEquals('AClass().a_func', word_finder.get_name_at(12))
+        self.assertEquals('AClass().a_func', word_finder.get_statement_at(12))
 
     def test_function_with_multiple_param(self):
         word_finder = WordRangeFinder('AClass(a_param, another_param, "a string").a_func()')
         self.assertEquals('AClass(a_param, another_param, "a string").a_func',
-                          word_finder.get_name_at(44))
+                          word_finder.get_statement_at(44))
     
     def test_param_expressions(self):
         word_finder = WordRangeFinder('AClass(an_object.an_attr).a_func()')
-        self.assertEquals('an_object.an_attr', word_finder.get_name_at(20))
+        self.assertEquals('an_object.an_attr',
+                          word_finder.get_statement_at(20))
 
     def test_string_parens(self):
         word_finder = WordRangeFinder('a_func("(").an_attr')
-        self.assertEquals('a_func("(").an_attr', word_finder.get_name_at(16))
+        self.assertEquals('a_func("(").an_attr',
+                          word_finder.get_statement_at(16))
 
     def test_extra_spaces(self):
         word_finder = WordRangeFinder('a_func  (  "(" ) .   an_attr')
-        self.assertEquals('a_func  (  "(" ) .   an_attr', word_finder.get_name_at(26))
+        self.assertEquals('a_func  (  "(" ) .   an_attr',
+                          word_finder.get_statement_at(26))
 
-    def test_splitted_name(self):
+    def test_splitted_statement(self):
         word_finder = WordRangeFinder('an_object.an_attr')
-        self.assertEquals(('an_object', 'an_at', 10), word_finder.get_splitted_name_before(15))
+        self.assertEquals(('an_object', 'an_at', 10),
+                          word_finder.get_splitted_statement_before(15))
 
-    def test_empty_splitted_name(self):
+    def test_empty_splitted_statement(self):
         word_finder = WordRangeFinder('an_attr')
-        self.assertEquals(('', 'an_at', 0), word_finder.get_splitted_name_before(5))
+        self.assertEquals(('', 'an_at', 0),
+                          word_finder.get_splitted_statement_before(5))
 
-    def test_empty_splitted_name2(self):
+    def test_empty_splitted_statement2(self):
         word_finder = WordRangeFinder('an_object.')
-        self.assertEquals(('an_object', '', 10), word_finder.get_splitted_name_before(10))
+        self.assertEquals(('an_object', '', 10),
+                          word_finder.get_splitted_statement_before(10))
 
-    def test_empty_splitted_name3(self):
+    def test_empty_splitted_statement3(self):
         word_finder = WordRangeFinder('')
-        self.assertEquals(('', '', 0), word_finder.get_splitted_name_before(0))
+        self.assertEquals(('', '', 0),
+                          word_finder.get_splitted_statement_before(0))
 
-    def test_empty_splitted_name4(self):
+    def test_empty_splitted_statement4(self):
         word_finder = WordRangeFinder('a_var = ')
-        self.assertEquals(('', '', 8), word_finder.get_splitted_name_before(8))
+        self.assertEquals(('', '', 8),
+                          word_finder.get_splitted_statement_before(8))
 
 
 def suite():

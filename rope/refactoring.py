@@ -30,7 +30,7 @@ class PythonRefactoring(Refactoring):
         result = []
         module_scope = self.pycore.get_string_scope(source_code)
         word_finder = WordRangeFinder(source_code)
-        old_name = word_finder.get_name_at(offset)
+        old_name = word_finder.get_statement_at(offset)
         pyname_finder = ScopeNameFinder(source_code, module_scope)
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:

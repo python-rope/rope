@@ -74,9 +74,11 @@ class WordRangeFinder(object):
             current_offset = self._find_atom_start(offset)
         while current_offset > 0 and \
               self.source_code[self._find_last_non_space_char(current_offset - 1)] == '.':
-            current_offset = self._find_last_non_space_char(current_offset - 1)
-            current_offset = self._find_last_non_space_char(current_offset - 1)
-            if self.source_code[current_offset].isalnum() or self.source_code[current_offset] == '_':
+            dot_position = self._find_last_non_space_char(current_offset - 1)
+            current_offset = self._find_last_non_space_char(dot_position - 1)
+
+            if self.source_code[current_offset].isalnum() or \
+               self.source_code[current_offset] == '_':
                 current_offset = self._find_word_start(current_offset)
             elif self.source_code[current_offset] in '\'"':
                 current_offset = self._find_string_start(current_offset)
@@ -92,12 +94,15 @@ class WordRangeFinder(object):
                     break
         return current_offset
     
-    def get_name_at(self, offset):
+    def get_statement_at(self, offset):
         return self.source_code[self._find_name_start(offset - 1):
                                 self._find_word_end(offset - 1) + 1].strip()
 
-    def get_splitted_name_before(self, offset):
-        """returns expression, starting, starting_offset"""
+    def get_splitted_statement_before(self, offset):
+        """returns expression, starting, starting_offset
+        
+        This function is used in `rope.codeassist.assist` function.
+        """
         if offset == 0:
             return ('', '', 0)
         word_start = self._find_atom_start(offset - 1)
@@ -206,7 +211,7 @@ class ScopeNameFinder(object):
         self.word_finder = WordRangeFinder(source_code)
     
     def get_pyname_at(self, offset):
-        name = self.word_finder.get_name_at(offset)
+        name = self.word_finder.get_statement_at(offset)
         lineno = self.scope_finder.get_location(offset)[0]
         holding_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno)
         result = self.get_pyname_in_scope(holding_scope, name)
