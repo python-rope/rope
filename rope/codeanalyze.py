@@ -48,7 +48,7 @@ class WordRangeFinder(object):
     
     def _find_parens_start(self, offset):
         current_offset = self._find_last_non_space_char(offset - 1)
-        while current_offset >= 0 and self.source_code[current_offset] not in '[(':
+        while current_offset >= 0 and self.source_code[current_offset] not in '[({':
             if self.source_code[current_offset] in ':,':
                 pass
             else:
@@ -62,7 +62,7 @@ class WordRangeFinder(object):
             offset = self._find_last_non_space_char(offset)
         if self.source_code[offset] in '\'"':
             return self._find_string_start(offset)
-        if self.source_code[offset] in ')]':
+        if self.source_code[offset] in ')]}':
             return self._find_parens_start(offset)
         if self.source_code[offset].isalnum() or self.source_code[offset] == '_':
             return self._find_word_start(offset)
@@ -82,7 +82,7 @@ class WordRangeFinder(object):
                 current_offset = self._find_word_start(current_offset)
             elif self.source_code[current_offset] in '\'"':
                 current_offset = self._find_string_start(current_offset)
-            elif self.source_code[current_offset] in ')]':
+            elif self.source_code[current_offset] in ')]}':
                 current_offset = self._find_parens_start(current_offset)
                 if current_offset == 0:
                     break
@@ -155,7 +155,8 @@ class HoldingScopeFinder(object):
         while current_scope is not None and \
               (current_scope.get_kind() == 'Module' or
                self.get_indents(current_scope.get_lineno()) < line_indents):
-            while len(scopes) > 1 and scopes[-1][1] >= self.get_indents(current_scope.get_lineno()):
+            while len(scopes) > 1 and \
+                  scopes[-1][1] >= self.get_indents(current_scope.get_lineno()):
                 scopes.pop()
             scopes.append((current_scope, self.get_indents(current_scope.get_lineno())))
             new_scope = None

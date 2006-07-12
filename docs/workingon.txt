@@ -1,8 +1,9 @@
+Refactoring
+===========
 
-- WordRangeFinder.get_name_at to WordRangeFinder.get_expression_at
+- (a_statment + another_statment).an_attr
+- dictionaries
 
-* (a_statment + another_statment).an_attr
-* dictionaries
 * Triples
 * " some string
 * Comments

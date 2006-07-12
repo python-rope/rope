@@ -144,6 +144,16 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals(('', '', 8),
                           word_finder.get_splitted_statement_before(8))
 
+    def test_operators_inside_parens(self):
+        word_finder = WordRangeFinder('(a_var + another_var).reverse()')
+        self.assertEquals('(a_var + another_var).reverse',
+                          word_finder.get_statement_at(25))
+
+    def test_dictionaries(self):
+        word_finder = WordRangeFinder('print {1: "one", 2, "two"}.keys()')
+        self.assertEquals('print {1: "one", 2, "two"}.keys',
+                          word_finder.get_statement_at(29))
+
 
 def suite():
     result = unittest.TestSuite()
