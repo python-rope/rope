@@ -408,6 +408,11 @@ class PyCoreTest(unittest.TestCase):
         an_attr = another_class.get_attributes()['an_attr']
         self.assertEquals(sample_class, an_attr.get_type())
 
+    def test_out_of_project_modules(self):
+        scope = self.pycore.get_string_scope('import re\n')
+        re_module = scope.get_names()['re']
+        self.assertTrue('match' in re_module.get_attributes())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 

@@ -64,30 +64,46 @@ class PyCore(object):
         created_package.create_file('__init__.py')
         return created_package
 
-    def find_module(self, module_name):
-        source_folders = self.get_source_folders()
+    def _find_module_in_source_folder(self, source_folder, module_name):
+        module = source_folder
         packages = module_name.split('.')
-        result = []
-        for src in source_folders:
-            module = src
-            found = True
-            for pkg in packages[:-1]:
-                if  module.is_folder() and module.has_child(pkg):
-                    module = module.get_child(pkg)
-                else:
-                    found = False
-                    break
-
-            if module.is_folder() and module.has_child(packages[-1]) and\
-               module.get_child(packages[-1]).is_folder():
-                module = module.get_child(packages[-1])
-            elif module.is_folder() and \
-                 module.has_child(packages[-1] + '.py') and \
-                 not module.get_child(packages[-1] + '.py').is_folder():
-                module = module.get_child(packages[-1] + '.py')
+        for pkg in packages[:-1]:
+            if  module.is_folder() and module.has_child(pkg):
+                module = module.get_child(pkg)
             else:
-                found = False
-            if found:
+                return None
+        if not module.is_folder():
+            return None
+
+        if module.has_child(packages[-1]) and \
+           module.get_child(packages[-1]).is_folder():
+            return module.get_child(packages[-1])
+        elif module.has_child(packages[-1] + '.py') and \
+             not module.get_child(packages[-1] + '.py').is_folder():
+            return module.get_child(packages[-1] + '.py')
+        return None
+
+    def _get_python_path_folders(self):
+        result = []
+        for src in sys.path:
+            try:
+                src_folder = self.project.get_out_of_project_resource(src)
+                result.append(src_folder)
+            except rope.exceptions.RopeException:
+                pass
+        return result
+    
+    def find_module(self, module_name):
+        result = []
+        for src in self.get_source_folders():
+            module = self._find_module_in_source_folder(src, module_name)
+            if module is not None:
+                result.append(module)
+        if result:
+            return result
+        for src in self._get_python_path_folders():
+            module = self._find_module_in_source_folder(src, module_name)
+            if module is not None:
                 result.append(module)
         return result
 

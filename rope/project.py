@@ -16,6 +16,7 @@ class Project(object):
         self.pycore = rope.pycore.PyCore(self)
         self.resources = {}
         self.resources[''] = RootFolder(self)
+        self.out_of_project_resources = {}
 
     def get_root_folder(self):
         return self.get_resource('')
@@ -77,6 +78,19 @@ class Project(object):
     def get_pycore(self):
         return self.pycore
 
+    def get_out_of_project_resource(self, path):
+        path = os.path.abspath(path)
+        if path not in self.out_of_project_resources:
+            if not os.path.exists(path):
+                raise RopeException('Resource %s does not exist' % path)
+            elif os.path.isfile(path):
+                self.out_of_project_resources[path] = OutOfProjectFile(self, path)
+            elif os.path.isdir(path):
+                self.out_of_project_resources[path] = OutOfProjectFolder(self, path)
+            else:
+                raise RopeException('Unknown resource ' + path)
+        return self.out_of_project_resources[path]
+
     @staticmethod
     def remove_recursively(file):
         for root, dirs, files in os.walk(file, topdown=False):
@@ -114,7 +128,7 @@ class Resource(object):
         Project.remove_recursively(self.project._get_resource_path(self.name))
 
     def is_folder(self):
-        """Returns true if the resouse is a folder"""
+        """Returns true if the resource is a folder"""
 
     def get_project(self):
         """Returns the project this resource belongs to"""
@@ -139,11 +153,11 @@ class Resource(object):
         return self.get_path() == resource.get_path()
 
 
-class File(Resource):
-    '''Represents a file in a project'''
+class _File(Resource):
+    """Represents a file in a project"""
 
     def __init__(self, project, name):
-        super(File, self).__init__(project, name)
+        super(_File, self).__init__(project, name)
         self.observers = []
     
     def read(self):
@@ -167,9 +181,23 @@ class File(Resource):
             self.observers.remove(observer)
 
     def remove(self):
-        super(File, self).remove()
+        super(_File, self).remove()
         for observer in self.observers:
             observer(self)
+
+class File(_File):
+    """Represents a file in a project"""
+
+
+class OutOfProjectFile(_File):
+    """Represents a file outside a project"""
+
+    def __init__(self, project, path):
+        super(OutOfProjectFile, self).__init__(project, path)
+        self.path = path
+        
+    def read(self):
+        return open(self.path).read()
 
 
 class _Folder(Resource):
@@ -254,6 +282,25 @@ class RootFolder(_Folder):
     def __init__(self, project):
         super(RootFolder, self).__init__(project, '')
 
+class OutOfProjectFolder(_Folder):
+    """Represents a folder outside the project"""
+
+    def __init__(self, project, path):
+        super(OutOfProjectFolder, self).__init__(project, path)
+        self.path = path
+    
+    def get_children(self):
+        result = []
+        content = os.listdir(self.path)
+        for name in content:
+            resource_path = os.path.join(self.path, name)
+            result.append(self.project.get_out_of_project_resource(resource_path))
+        return result
+
+    def get_child(self, name):
+        child_path = os.path.join(self.path, name)
+        return self.project.get_out_of_project_resource(child_path)
+    
 
 class FileFinder(object):
 

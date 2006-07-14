@@ -1,26 +1,27 @@
-Refactoring
-===========
+Out of project modules @ 28h
+============================
 
-- (a_statment + another_statment).an_attr
-- dictionaries
+- Using absolute paths
+- Adding OutOfProjectTest to suite()
+- Test get_child, has_child
+- Out of project resources should be reference objects
+* zip imports
 
-* Triples
-* " some string
-* Comments
+Out Of Project Resources
+------------------------
 
-* Names in strings or comments
-* Using ScopeNameFinder in _CodeCompletionCollector
-* Changing HoldingScopeFinder to get source_code instead of lines
-* Using SourceLinesAdapter in LineOrientedSourceTools
-* LineOrientedSourceTools should be more powerful; Elimination of source_code.split('\n')
-* Optimize SourceLinesAdapter methods
-* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
+1. Special resource for out of project files
+2. Finding the wanted module
+3. Read only files and buffers
 
-* Only looking in the holding scope range for renaming
-* Having only one Refactoring instance for a project?
-* PyObject and PyName equality checks; Value objects?
-* Refactor pycore; So many kinds for Modules; eliminate checking module.is_package?
-* Consider using `StatementRangeFinder` in highlight module?
+There seems to be many obstacles for supporting out of project resources.
+Possible approaches:
+
+1. Reimplement `Resource`s so that they know nothing about whether the file
+   is in the project or not. They should only hold real address.
+
+2. Derive new subclasses from `Resource` class.
+
 
 
 
@@ -37,6 +38,13 @@ Before 0.2 Release
 
 Remaining Stories
 =================
+* Optimize SourceLinesAdapter methods
+* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
+* Only looking in the holding scope range for renaming
+* Having only one Refactoring instance for a project?
+* PyObject and PyName equality checks; Value objects?
+* Refactor pycore; So many kinds for Modules; eliminate checking module.is_package?
+* Consider using `StatementRangeFinder` in highlight module?
 * Directories should contain __init__.py to be packages in codeassist?
 * Code assists on relative imports?
 * Python C extensions?
@@ -49,11 +57,4 @@ Remaining Stories
   * Dividing week time; 5/7 for core and 2/7 for UI
 
 * The same pattern for module names; ~ing or ~ or ~er
-* New package structure
-  ::
-    rope/
-      core/
-        ...
-      ui/
-        ...
 

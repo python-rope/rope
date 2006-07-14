@@ -396,6 +396,62 @@ class SampleObserver(object):
         self.change_count += 1
 
 
+class OutOfProjectTest(unittest.TestCase):
+
+    def setUp(self):
+        super(OutOfProjectTest, self).setUp()
+        self.project_root = 'sample_project'
+        self.test_directory = 'temp_test_directory'
+        testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.test_directory)
+        os.mkdir(self.test_directory)
+        self.project = Project(self.project_root)
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.test_directory)
+        super(OutOfProjectTest, self).tearDown()
+
+    def test_simple_out_of_project_file(self):
+        sample_file_path = os.path.join(self.test_directory, 'sample.txt')
+        sample_file = file(sample_file_path, 'w')
+        sample_file.write('sample content\n')
+        sample_file.close()
+        sample_resource = self.project.get_out_of_project_resource(sample_file_path)
+        self.assertEquals('sample content\n', sample_resource.read())
+
+    def test_simple_out_of_project_folder(self):
+        sample_folder_path = os.path.join(self.test_directory, 'sample_folder')
+        os.mkdir(sample_folder_path)
+        sample_folder = self.project.get_out_of_project_resource(sample_folder_path)
+        self.assertEquals([], sample_folder.get_children())
+        
+        sample_file_path = os.path.join(sample_folder_path, 'sample.txt')
+        file(sample_file_path, 'w').close()
+        sample_resource = self.project.get_out_of_project_resource(sample_file_path)
+        self.assertEquals(sample_resource, sample_folder.get_children()[0])
+
+    def test_using_absolute_path(self):
+        sample_file_path = os.path.join(self.test_directory, 'sample.txt')
+        file(sample_file_path, 'w').close()
+        normal_sample_resource = self.project.get_out_of_project_resource(sample_file_path)
+        absolute_sample_resource = self.project.get_out_of_project_resource(os.path.abspath(sample_file_path))
+        self.assertEquals(normal_sample_resource, absolute_sample_resource)
+
+    def test_folder_get_child(self):
+        sample_folder_path = os.path.join(self.test_directory, 'sample_folder')
+        os.mkdir(sample_folder_path)
+        sample_folder = self.project.get_out_of_project_resource(sample_folder_path)
+        self.assertEquals([], sample_folder.get_children())
+        
+        sample_file_path = os.path.join(sample_folder_path, 'sample.txt')
+        file(sample_file_path, 'w').close()
+        sample_resource = self.project.get_out_of_project_resource(sample_file_path)
+        self.assertTrue(sample_folder.has_child('sample.txt'))
+        self.assertFalse(sample_folder.has_child('doesnothave.txt'))
+        self.assertEquals(sample_resource, sample_folder.get_child('sample.txt'))
+
+
 class FileFinderTest(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
@@ -451,6 +507,7 @@ class FileFinderTest(unittest.TestCase):
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ProjectTest))
+    result.addTests(unittest.makeSuite(OutOfProjectTest))
     result.addTests(unittest.makeSuite(FileFinderTest))
     return result
 

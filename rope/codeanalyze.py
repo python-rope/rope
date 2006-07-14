@@ -37,7 +37,8 @@ class WordRangeFinder(object):
         return self.source_code[self._find_word_start(offset - 1):offset]
     
     def get_word_at(self, offset):
-        return self.source_code[self._find_word_start(offset - 1):self._find_word_end(offset - 1) + 1]
+        return self.source_code[self._find_word_start(offset - 1):
+                                self._find_word_end(offset - 1) + 1]
     
     def _find_string_start(self, offset):
         kind = self.source_code[offset]
@@ -146,19 +147,22 @@ class HoldingScopeFinder(object):
             lineno += 1
         return (lineno, offset - current_pos)
 
+    def _get_scope_indents(self, scope):
+        return self.get_indents(scope.get_lineno())
+    
     def get_holding_scope(self, module_scope, lineno, line_indents=None):
         line_indents = line_indents
         if line_indents is None:
             line_indents = self.get_indents(lineno)
-        scopes = [(module_scope, 0)]
+        scopes = [module_scope]
         current_scope = module_scope
         while current_scope is not None and \
               (current_scope.get_kind() == 'Module' or
-               self.get_indents(current_scope.get_lineno()) < line_indents):
+               self._get_scope_indents(current_scope) < line_indents):
             while len(scopes) > 1 and \
-                  scopes[-1][1] >= self.get_indents(current_scope.get_lineno()):
+                  self._get_scope_indents(scopes[-1]) >= self._get_scope_indents(current_scope):
                 scopes.pop()
-            scopes.append((current_scope, self.get_indents(current_scope.get_lineno())))
+            scopes.append(current_scope)
             new_scope = None
             for scope in current_scope.get_scopes():
                 if scope.get_lineno() <= lineno:
@@ -167,13 +171,13 @@ class HoldingScopeFinder(object):
                     break
             current_scope = new_scope
         min_indents = line_indents
-        for l in range(scopes[-1][0].get_lineno() + 1, lineno):
+        for l in range(scopes[-1].get_lineno() + 1, lineno):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):
                 min_indents = min(min_indents, self.get_indents(l))
-        while len(scopes) > 1 and min_indents <= scopes[-1][1]:
+        while len(scopes) > 1 and min_indents <= self._get_scope_indents(scopes[-1]):
             scopes.pop()
-        return scopes[-1][0]
+        return scopes[-1]
 
 
 class _StatementEvaluator(object):

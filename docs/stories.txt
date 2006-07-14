@@ -5,83 +5,77 @@
 Stories
 =======
 
-* Organize imports @ 2
+* Organize imports
 
 
-* Add import @ 2
+* Add import
 
 
-* Variable indentation and tab size @ 1
+* Variable indentation and tab size @ 4h
 
 
-* Find occurances @ 4
+* Find occurances
 
 
-* Configuring keys @ 2
+* Configuring keys
 
 
-* Configuring fonts @ 1
+* Configuring fonts
 
 
-* Showing syntactical errors @ 3
+* Showing syntactical errors
 
 
-* Editor folding @ 4
+* Editor folding
 
 
-* Having multiple clipboards @ 2
+* Having multiple clipboards
 
 
-* reST support inside pydocs @ 1
+* reST support inside pydocs
 
 
-* reST highlighting @ 2
+* reST outlines
 
 
-* reST outlines @ 3
+* reST codeassists
 
 
-* reSt codeassists @ 3
+* Adding tool bar
 
 
-* Adding tool bar @ 1
+* Commanding buffer
 
 
-* Commanding buffer @ 4
+* Subversion support using pysvn
 
 
-* Subversion support using pysvn @ 3
+* Last edit location; C-q
 
 
-* Last edit location; C-q @ 2
-
-
-* Running unit tests @ 3
+* Running unit tests
   Add a graphical view for running tests.
 
 
-* Enhance open dialog @ 1
+* Replacement; M-% @ 12h
 
 
-* Replacement; M-% @ 1
+* Save as and save all; C-x C-w, C-x s @ 4h
 
 
-* Save as and save all; C-x C-w, C-x s @ 1
+* Remembering last open project
 
 
-* Remembering last open project @ 1
+* File Encodings
 
 
-* File Encodings @ 2
+* Static type inference
 
 
-* Static type inference @ 6
+* Commenting and uncommenting lines @ 2h
 
 
-* Commenting and uncommenting lines @ 1
-
-
-* Enhancing searching @ 1
+* Enhancing searching @ 16h
 
   * End the search when some other key sequence is typed
   * C-s C-s should start the last search
@@ -90,10 +84,10 @@ Stories
   * Showing failed searches
 
 
-* Go to matching parents @ 1
+* Go to matching parenthesis @ 12h
 
 
-* Enhancing module running @ 2
+* Enhancing module running @ 20h
 
   * Showing running status in the GUI
   * Printing output somewhere
@@ -102,12 +96,12 @@ Stories
   * Running last run
 
 
-* User specified source folders @ 2
+* User specified source folders
   You should save this project specific information somewhere. How should
   guessed source folders be used.
 
 
-* Enhancing syntax highlighting @ 1
+* Enhancing syntax highlighting @ 16h
 
   * Only highlighting the changed region
   * Extend highlighting region while highlighting if necessay
@@ -115,13 +109,13 @@ Stories
   * Use Modified event for updating highlighting only when necessary
 
 
-* Enhancing menu @ 1
+* Enhancing menu @ 16h
 
   * Disable inaccessable items
   * Showing keyboard short-cuts in front of menu items
 
 
-* Enhancing editor @ 1
+* Enhancing editor @ 8h
 
   * Kill line; C-k
   * Select all; C-x h
@@ -129,147 +123,152 @@ Stories
   * Fixed places for StatusTexts
 
 
-* Having different strategies for selecting next/prev words @ 1
+* Having different strategies for selecting next/prev words @ 8h
 
 
-* Enhancing auto indentation @ 1
+* Enhancing auto indentation @ 12h
 
   * Indenting a range of file
-  * Removing extra spaces
   * Separating entering and correcting indentation?
 
 
-* Dynamic type inference @ 3
+* Dynamic type inference
 
 
-* Better New ... Dialogs @ 2
+* Better New ... Dialogs
   Better folder and module selection. Completing or selecting from a list.
 
 
-* Refactoring Core @ 1
+* Refactoring Core
 
   * Refactor editor._goto_definition; not using Core.get_core()
   * Refactor Core; Only use EditorManager when working with the Editors
 
 
-* Enhancing editor @ 2
+* Enhancing editor @ 16h
 
   * Clearing selection if something happens
   * Unifying builtin and emacs-style selections; if selection
     is active do the builtin cut and paste
   * Edit menu: cut, paste, undo, redo, revert
   * Showing modified file status
-  * Handle MYClass style names in next/prev word
 
 
-* Better multi-sequence key event handling @ 2
+* Handle 'HTTPClient' style names in next/prev word @ 4h
 
 
-* Optimizing StatementRangeFinder @ 1
+* Better multi-sequence key event handling
+
+
+* Optimizing StatementRangeFinder
   Add CachedLines and not starting from the start of the lines
 
 
-* Auto-importing modules @ 3
+* Auto-importing modules
   Hold the list of project classes and import them automatically
   in codeassist
 
 
-* Better list and tree navigation @ 1
+* Better list and tree navigation @ 12h
   Add filter texts and selection texts to trees and lists.
 
 
-* Local history @ 4
+* Local history
 
 
-* Open Type; C-T @ 3
+* Open Type; C-T @ 32h
 
 
-* Compound statements and auto-completion @ 1
+* Compound statements and auto-completion @ 12h
   Completions for for-loop, except, lambda and with variables
 
 
-* Auto completion type @ 2
+* Auto completion type @ 16h
 
   * Inserting or overwriting
   * Inserting common prefixes
 
 
-* Enhancing auto-completion @ 1
+* Enhancing auto-completion @ 8h
 
   * What to do when the program has syntax errors
   * Sorting proposals
 
 
-* We know the type of list and keyword args @ 1
+* We know the type of list and keyword args
 
 
-* Handle circular from-imports @ 1
+* Handle circular from-imports
 
 
-* Introcude factory method @ 2
+* Introduce factory method
 
 
-* Showing function signature when calling @ 1
+* Showing function signature when calling
 
 
-* Introduce temporary variable @ 3
+* Introduce temporary variable
 
 
-* Inline function @ 3
+* Inline function
 
 
-* Extract function @ 3
+* Extract function
 
 
-* AssList and AssTuple assignments @ 1
+* AssList and AssTuple assignments
 
 
-* 'global' keyword issues for pycore @ 1
+* 'global' keyword issues for pycore
 
 
-* Read __init__.py of packages @ 2
+* Read __init__.py of packages
 
 
-* Auto completion contexts; strings, comments, imports, functions and ... @ 2
+* Auto completion contexts; strings, comments, imports, functions and ...
 
 
-* Show PyDoc @ 2
+* Show PyDoc
 
 
-* Rename function parameters @ 2
+* Rename function parameters
 
 
-* Rename module refactoring @ 2
+* Rename module refactoring
 
 
-* Move a class to another module @ 3
+* Move a class to another module
 
 
-* Auto-completing function parameter names when calling @ 2
+* Auto-completing function parameter names when calling
+
+
+* Rename function
+
+
+* Rename class
+
+
+* Reloading changed editors after refactorings @ 8h
+  `FileEditor` should be a resource visitor. What to do when buffer
+  has been changed.
+
+
+* reST highlighting
+
+
+* Not renaming names in strings and comments in refactorings
+
+
+* Formating Code
+  Writing ASTs
 
 
 > Public Release 0.2pre5 : July 16, 2006
 
 
-* Out of project modules @ 2d
+* Out of project modules @ 28h
   Modules that cannot be found in the project and builtins
-
-
-* Formating Code @ 4d
-  Writing ASTs
-
-
-* Reloading changed editors after refactorings @ 1d
-  `FileEditor` should be a resource visitor
-
-
-* Not renaming names in strings and comments in refactorings @ 2d
-
-
-* Rename function @ 2d
-
-
-* Rename class @ 3d
 
 
 Remaining Stories

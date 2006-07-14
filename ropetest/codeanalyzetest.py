@@ -154,6 +154,17 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals('print {1: "one", 2, "two"}.keys',
                           word_finder.get_statement_at(29))
 
+    # TODO: eliminating comments
+    def xxx_test_comments_for_finding_statements(self):
+        word_finder = WordRangeFinder('var1 . # var2 . \n  var3')
+        self.assertEquals('var1 . # var2 . \n  var3',
+                          word_finder.get_statement_at(21))
+
+    def test_comments_for_finding_statements2(self):
+        word_finder = WordRangeFinder('var1 + "# var2".\n  var3')
+        self.assertEquals('"# var2".\n  var3',
+                          word_finder.get_statement_at(21))
+
 
 def suite():
     result = unittest.TestSuite()
