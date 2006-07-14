@@ -3,6 +3,9 @@
 ===========
 
 
+- Handle circular from-imports : July 14, 2006
+
+
 - Completeing ``AClass(param).a_`` : July 11, 2006
 
 

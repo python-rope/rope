@@ -1,10 +1,6 @@
 Out of project modules @ 28h
 ============================
 
-- Using absolute paths
-- Adding OutOfProjectTest to suite()
-- Test get_child, has_child
-- Out of project resources should be reference objects
 * zip imports
 
 Out Of Project Resources

@@ -172,7 +172,8 @@ class PyDefinedObject(PyObject):
 
     def get_attributes(self):
         if self.attributes is None:
-            self.attributes = self._get_attributes_from_ast()
+            self.attributes = {}
+            self._update_attributes_from_ast(self.attributes)
         return self.attributes
 
     def get_scope(self):
@@ -186,7 +187,7 @@ class PyDefinedObject(PyObject):
             current_object = current_object.parent
         return current_object
 
-    def _get_attributes_from_ast(self):
+    def _update_attributes_from_ast(self, attributes):
         pass
 
     def _get_ast(self):
@@ -204,8 +205,8 @@ class PyFunction(PyDefinedObject):
         self.parameters = self.ast_node.argnames
         self.decorators = self.ast_node.decorators
 
-    def _get_attributes_from_ast(self):
-        return {}
+    def _update_attributes_from_ast(self, attributes):
+        pass
     
     def _create_scope(self):
         return FunctionScope(self.pycore, self)
@@ -280,15 +281,13 @@ class PyClass(PyDefinedObject):
                                       pycore, ast_node, parent)
         self.parent = parent
 
-    def _get_attributes_from_ast(self):
-        result = {}
+    def _update_attributes_from_ast(self, attributes):
         for base in self._get_bases():
-            result.update(base.get_attributes())
+            attributes.update(base.get_attributes())
         new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():
             compiler.walk(n, new_visitor)
-        result.update(new_visitor.names)
-        return result
+        attributes.update(new_visitor.names)
 
     def _get_bases(self):
         result = []
@@ -311,10 +310,10 @@ class PyModule(PyDefinedObject):
         self.resource = resource
         self.is_package = False
 
-    def _get_attributes_from_ast(self):
+    def _update_attributes_from_ast(self, attributes):
         visitor = _GlobalVisitor(self.pycore, self)
         compiler.walk(self.ast_node, visitor)
-        return visitor.names
+        attributes.update(visitor.names)
 
     def _create_scope(self):
         return GlobalScope(self.pycore, self)

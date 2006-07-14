@@ -482,6 +482,13 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2.write('import mod1\n')
         module1 = self.pycore.get_module('mod1')
 
+    def test_circular_imports2(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('from mod2 import Sample2\nclass Sample1(object):\n    pass\n')
+        mod2.write('from mod1 import Sample1\nclass Sample2(object):\n    pass\n')
+        module1 = self.pycore.get_module('mod1').get_attributes()
+
     def test_multi_dot_imports(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         pkg_mod = self.pycore.create_module(pkg, 'mod')

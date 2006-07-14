@@ -198,9 +198,6 @@ Stories
 * We know the type of list and keyword args
 
 
-* Handle circular from-imports
-
-
 * Introduce factory method
 
 
