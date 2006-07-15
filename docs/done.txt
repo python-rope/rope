@@ -3,6 +3,9 @@
 ===========
 
 
+- Out of project modules : July 15, 2006
+
+
 - Handle circular from-imports : July 14, 2006
 
 

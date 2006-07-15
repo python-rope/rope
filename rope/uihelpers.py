@@ -196,7 +196,7 @@ class TreeViewer(object):
         if index == None:
             index = self.list.size()
         self.nodes.insert(index, _TreeNodeInformation(entry, level=level))
-        self.list.insert(index, 4 * level * ' ' +self.handle.entry_to_string(entry))
+        self.list.insert(index, 4 * level * ' ' + self.handle.entry_to_string(entry))
         if len(self.nodes) == 1:
             self.list.selection_set(0)
  

@@ -185,6 +185,7 @@ class _File(Resource):
         for observer in self.observers:
             observer(self)
 
+
 class File(_File):
     """Represents a file in a project"""
 
@@ -198,6 +199,10 @@ class OutOfProjectFile(_File):
         
     def read(self):
         return open(self.path).read()
+
+    def _get_real_path(self):
+        """Returns the file system path of this resource"""
+        return self.path
 
 
 class _Folder(Resource):
@@ -282,6 +287,7 @@ class RootFolder(_Folder):
     def __init__(self, project):
         super(RootFolder, self).__init__(project, '')
 
+
 class OutOfProjectFolder(_Folder):
     """Represents a folder outside the project"""
 
@@ -301,6 +307,10 @@ class OutOfProjectFolder(_Folder):
         child_path = os.path.join(self.path, name)
         return self.project.get_out_of_project_resource(child_path)
     
+    def _get_real_path(self):
+        """Returns the file system path of this resource"""
+        return self.path
+
 
 class FileFinder(object):
 

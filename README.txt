@@ -93,7 +93,7 @@ bicycle repair man).  These IDEs have a limited set of refactorings
 and fail when doing refactorings that need to know the type of objects
 in the source code (specially for relatively large projects).  rope
 tries to provide a rich set of refactorings.  Some of the refactorings
-require type inferencing which is described later.
+require type inference which is described later.
 
 Auto Completion
 ---------------
@@ -105,26 +105,26 @@ names, class names, static methods, class methods, function names and
 variable names are easy.  But auto-completing the methods and
 attributes of an object is hard.  Because the IDE needs to know the
 type of the object that cannot be achieved easily most of the time in
-dynamic languages.  rope will use Type Inferencing algorithms to solve
+dynamic languages.  rope will use Type Inference algorithms to solve
 this problem.
 
-Type Inferencing
-----------------
+Type Inference
+--------------
 One disadvantage of dynamic languages like python is that you cannot
 know the type of variables by a simple analysis of program source code
 most of the time.  Knowing the type of variables is very essential for
 providing many of the refactorings and auto-completions.  rope will
-use type inferencing to overcome this problem.
+use type inference to overcome this problem.
 
-Static type inferencing uses program source code to guess the type of
-objects.  But type inferencing python programs is very hard.  There
+Static type inference uses program source code to guess the type of
+objects.  But type inference python programs is very hard.  There
 have been some attempts though not very successful (examples: psycho:
 only str and int types, StarKiller: wasn't released and ShedSkin: good
 but limited).  They where mostly directed at speeding up python
 programs by transforming its code to other typed languages rather than
 building IDEs.  Such algorithms might be helpful.
 
-There is another approach toward type inferencing.  That is the
+There is another approach toward type inference.  That is the
 analysis of running programs.  This dynamic approach records the types
 variables are assigned to during the program execution.  Although this
 approach is a lot easier to implement than the alternative, it is
@@ -138,7 +138,7 @@ Project Road Map
 
 The main motive for starting this project was the lack of good
 refactoring tools for python language.  Refactoring programs like
-"bicycle repair man" aren't reliable due to type inferencing problems
+"bicycle repair man" aren't reliable due to type inference problems
 discussed earlier and they support a limited number of refactorings.
 
 
@@ -153,11 +153,11 @@ smalltalk writes in his doctoral thesis:
   ourselves.  Once we integrated the refactorings directly into the
   Smalltalk Browser, we used them extensively."
 
-The main goal of rope is to concentrate on type inferencing,
+The main goal of rope is to concentrate on type inference,
 auto-completion and refactoring of python programs and not a state of
 art IDE (At least not in the first phase).
 
-The type inferencing and refactoring parts of the rope will not be
+The type inference and refactoring parts of the rope will not be
 dependent on rope and if successful, will be released as standalone
 programs and libraries so that other projects may use them.
 

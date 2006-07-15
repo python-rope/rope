@@ -328,19 +328,17 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals((None, 1), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_importes(self):
-        self.pycore.create_module(self.project.get_root_folder(), 'mod')
-        module = self.pycore.get_module('mod')
+        module = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod = self.pycore.get_string_module('import mod\n')
         module_pyname = mod.get_attributes()['mod']
         self.assertEquals((module, 1), module_pyname.get_definition_location())
 
-    def test_get_pyname_definition_location_importes(self):
+    def test_get_pyname_definition_location_imports(self):
         module_resource = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         module_resource.write('\ndef a_func():\n    pass\n')
-        module = self.pycore.get_module('mod').get_resource()
         mod = self.pycore.get_string_module('from mod import a_func\n')
         a_func = mod.get_attributes()['a_func']
-        self.assertEquals((module, 2), a_func.get_definition_location())
+        self.assertEquals((module_resource, 2), a_func.get_definition_location())
 
     def test_get_pyname_definition_location_parameters(self):
         mod = self.pycore.get_string_module('def a_func(param1, param2):\n    a_var = param\n')
@@ -364,10 +362,36 @@ class PyCoreTest(unittest.TestCase):
         an_attr = a_class.get_attributes()['an_attr']
         self.assertEquals((None, 3), an_attr.get_definition_location())
 
+    def test_import_not_found_module_get_definition_location(self):
+        mod = self.pycore.get_string_module('import doesnotexist\n')
+        does_not_exist = mod.get_attributes()['doesnotexist']
+        self.assertEquals((None, None), does_not_exist.get_definition_location())
+
+    def test_from_not_found_module_get_definition_location(self):
+        mod = self.pycore.get_string_module('from doesnotexist import Sample\n')
+        sample = mod.get_attributes()['Sample']
+        self.assertEquals((None, None), sample.get_definition_location())
+
     def test_get_module_for_defined_pyobjects(self):
         mod = self.pycore.get_string_module('class AClass(object):\n    pass\n')
         a_class = mod.get_attributes()['AClass'].get_object()
         self.assertEquals(mod, a_class.get_module())
+        
+    def test_get_definition_location_for_packages(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        init_dot_py = pkg.get_child('__init__.py')
+        mod = self.pycore.get_string_module('import pkg')
+        pkg_pyname = mod.get_attributes()['pkg']
+        self.assertEquals((init_dot_py, 1), pkg_pyname.get_definition_location())
+        
+    # TODO: Eliminate PyFilteredPackage
+    def xxx_test_get_definition_location_for_filtered_packages(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        self.pycore.create_module(pkg, 'mod')
+        init_dot_py = pkg.get_child('__init__.py')
+        mod = self.pycore.get_string_module('import pkg.mod')
+        pkg_pyname = mod.get_attributes()['pkg']
+        self.assertEquals((init_dot_py, 1), pkg_pyname.get_definition_location())
         
     def test_simple_type_inferencing(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    pass\na_var = Sample()\n')
@@ -409,9 +433,9 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(sample_class, an_attr.get_type())
 
     def test_out_of_project_modules(self):
-        scope = self.pycore.get_string_scope('import re\n')
-        re_module = scope.get_names()['re']
-        self.assertTrue('match' in re_module.get_attributes())
+        scope = self.pycore.get_string_scope('import rope.outline as outline\n')
+        imported_module = scope.get_names()['outline']
+        self.assertTrue('Outline' in imported_module.get_attributes())
 
 
 class PyCoreInProjectsTest(unittest.TestCase):
