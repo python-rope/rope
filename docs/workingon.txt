@@ -1,10 +1,8 @@
 Pre-Release Refactorings
 ========================
 
-- A faster test for out of project modules in rope.pycoretest
+- Putting a plus for nodes with children in outline view;
 
-* Putting a plus for nodes with children in outline view;
-  Needs OutlineViewNode.has_child()
 * Go to definition for packages should go to __init__.py; for FilteredPackages also
 * Eliminate FilteredPackage
 * Each PyPackage should have

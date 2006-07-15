@@ -156,16 +156,19 @@ class TreeViewer(object):
     def _cancel(self, event):
         self.handle.canceled()
 
+    def _select_entry(self, index):
+        self.list.select_clear(0, END)
+        self.list.selection_set(index)
+        self.list.see(index)
+        self.list.activate(index)
+        self.list.see(index)
+        
     def _select_prev(self, event):
         selection = self.list.curselection()
         if selection:
             active = int(selection[0])
             if active - 1 >= 0:
-                self.list.select_clear(0, END)
-                self.list.selection_set(active - 1)
-                self.list.see(active - 1)
-                self.list.activate(active - 1)
-                self.list.see(active - 1)
+                self._select_entry(active - 1)
         return 'break'
 
     def _select_next(self, event):
@@ -173,11 +176,7 @@ class TreeViewer(object):
         if selection:
             active = int(selection[0])
             if active + 1 < self.list.size():
-                self.list.select_clear(0, END)
-                self.list.selection_set(active + 1)
-                self.list.see(active + 1)
-                self.list.activate(active + 1)
-                self.list.see(active + 1)
+                self._select_entry(active + 1)
         return 'break'
 
     def _expand_item(self, event):
@@ -192,13 +191,38 @@ class TreeViewer(object):
             active = int(selection[0])
             self.collapse(active)
 
+    def _update_entry_text(self, index):
+        node = self.nodes[index]
+        entry = node.entry
+        if len(self.handle.get_children(entry)) > 0:
+            if node.expanded:
+                expansion_sign = '-'
+            else:
+                expansion_sign = '+'
+        else:
+            expansion_sign = ' '
+        level = node.level
+        new_text = 4 * level * ' ' + expansion_sign + \
+                   ' ' + self.handle.entry_to_string(entry)
+        old_text = self.list.get(index)
+        if old_text != new_text:
+            old_selection = 1
+            selection = self.list.curselection()
+            if selection:
+                old_selection = int(selection[0])
+            self.list.delete(index)
+            self.list.insert(index, new_text)
+            self._select_entry(old_selection)
+            
     def add_entry(self, entry, index=None, level=0):
         if index == None:
             index = self.list.size()
         self.nodes.insert(index, _TreeNodeInformation(entry, level=level))
-        self.list.insert(index, 4 * level * ' ' + self.handle.entry_to_string(entry))
+        self.list.insert(index, 4 * level * '  ' +
+                         self.handle.entry_to_string(entry))
         if len(self.nodes) == 1:
-            self.list.selection_set(0)
+            self._select_entry(1)
+        self._update_entry_text(index)
  
     def remove(self, entry_number):
         self.collapse(entry_number)
@@ -209,7 +233,6 @@ class TreeViewer(object):
         self.nodes = []
         self.list.delete(0, END)
 
-
     def expand(self, entry_number):
         node = self.nodes[entry_number]
         if node.expanded:
@@ -219,6 +242,7 @@ class TreeViewer(object):
         node.expanded = True
         for index, child in enumerate(new_children):
             self.add_entry(child, entry_number + index + 1, node.level + 1)
+        self._update_entry_text(entry_number)
 
     def collapse(self, entry_number):
         node = self.nodes[entry_number]
@@ -227,5 +251,6 @@ class TreeViewer(object):
         node.expanded = False
         for i in range(node.children_count):
             self.remove(entry_number + 1)
+        self._update_entry_text(entry_number)
 
 
