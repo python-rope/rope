@@ -206,7 +206,7 @@ class TreeViewer(object):
                    ' ' + self.handle.entry_to_string(entry)
         old_text = self.list.get(index)
         if old_text != new_text:
-            old_selection = 1
+            old_selection = 0
             selection = self.list.curselection()
             if selection:
                 old_selection = int(selection[0])

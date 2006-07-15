@@ -342,13 +342,16 @@ class GraphicalEditor(TextEditor):
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
                                                           self.get_current_offset())
+        self._goto_editor_location(result[0], result[1])
+            
+    def _goto_editor_location(self, resource, lineno):
         editor = self
-        if result[0] is not None:
+        if resource is not None:
             import rope.core
             editor = rope.core.Core.get_core().get_editor_manager().\
-                     get_resource_editor(result[0]).get_editor()
-        if result[1] is not None:
-            editor.goto_line(result[1])
+                     get_resource_editor(resource).get_editor()
+        if lineno is not None:
+            editor.goto_line(lineno)
             
     def _rename_refactoring_dialog(self, event):
         toplevel = Toplevel()

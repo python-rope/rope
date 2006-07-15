@@ -56,6 +56,18 @@ class StatementRangeFinderTest(unittest.TestCase):
         self.assertEquals(1, to_lines.get_line_number(0))
         self.assertEquals(2, to_lines.get_line_number(7))
 
+    def test_source_lines_get_line_start(self):
+        to_lines = SourceLinesAdapter('line1\nline2\n')
+        self.assertEquals(0, to_lines.get_line_start(1))
+        self.assertEquals(6, to_lines.get_line_start(2))
+        self.assertEquals(12, to_lines.get_line_start(3))
+
+    def test_source_lines_get_line_end(self):
+        to_lines = SourceLinesAdapter('line1\nline2\n')
+        self.assertEquals(5, to_lines.get_line_end(1))
+        self.assertEquals(11, to_lines.get_line_end(2))
+        self.assertEquals(12, to_lines.get_line_end(3))
+
         
 class WordRangeFinderTest(unittest.TestCase):
 

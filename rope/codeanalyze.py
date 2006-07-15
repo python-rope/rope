@@ -256,6 +256,29 @@ class SourceLinesAdapter(Lines):
     def get_line_number(self, offset):
         return len(self.source_code[:offset].split('\n'))
 
+    def get_line_start(self, line_number):
+        if line_number == 1:
+            return 0
+        current_line = 1
+        current_pos = 0
+        for c in self.source_code:
+            current_pos += 1
+            if c == '\n':
+                current_line += 1
+                if current_line == line_number:
+                    return current_pos
+        return current_pos
+    
+    def get_line_end(self, line_number):
+        current_line = 0
+        current_pos = 0
+        for c in self.source_code:
+            current_pos += 1
+            if c == '\n':
+                current_line += 1
+                if current_line == line_number:
+                    return current_pos - 1
+        return current_pos
     
 class ArrayLinesAdapter(Lines):
 
