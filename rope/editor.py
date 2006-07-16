@@ -14,7 +14,7 @@ from rope.uihelpers import TreeViewer, TreeViewerHandle
 
 
 class TextEditor(object):
-    '''The base class for all text editor'''
+    """The base class for all text editor"""
     def get_text(self):
         pass
     
@@ -80,7 +80,7 @@ class TextEditor(object):
 
 
 class TextIndex(object):
-    '''A class for pointing to a position in a text'''
+    """A class for pointing to a position in a text"""
 
 
 class LineEditor(object):
@@ -597,12 +597,14 @@ class GraphicalEditor(TextEditor):
         current = str(self.text.index(INSERT))
         if self.text.get(current + '-1c') == '\n':
             return current + '-1c'
-        while self.text.compare(current, '!=', '1.0') and not self.text.get(current + ' -1c').isalnum():
+        while self.text.compare(current, '!=', '1.0') and \
+              not self.text.get(current + ' -1c').isalnum():
             current = str(self.text.index(current + ' -1c'))
             if self.text.get(current + '-1c') == '\n':
                 return current
         is_upper = self.text.get(current + ' -1c').isupper()
-        while self.text.compare(current, '!=', '1.0') and self.text.get(current + ' -1c').isalnum():
+        while self.text.compare(current, '!=', '1.0') and \
+              self.text.get(current + ' -1c').isalnum():
             current = str(self.text.index(current + ' -1c'))
             if  self.text.get(current).isupper():
                 break

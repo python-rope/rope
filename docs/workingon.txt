@@ -1,17 +1,12 @@
 Pre-Release Refactorings
 ========================
 
-- Only looking in the holding scope range for renaming
-
 * Go to definition for packages should go to __init__.py; for FilteredPackages also
 * Eliminate FilteredPackage
 * Each PyPackage should have
 
   * The list of available children; derived from `__init__.py` or imports/froms
   * An import_name function that throws exception if the name cannot be found
-
-* Testing all in windows
-* Not viewing inherited names in outlines
 
 
 Before 0.2 Release
@@ -27,6 +22,7 @@ Before 0.2 Release
 
 Remaining Stories
 =================
+* Not viewing inherited names in outlines
 * Optimize SourceLinesAdapter methods
 * Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
 * More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?

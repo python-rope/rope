@@ -20,7 +20,6 @@ tasks. This tutorial attempts to give a fast overview of rope and some
 of its features.
 
 
-
 Starting Rope
 =============
 
@@ -124,4 +123,23 @@ Closing An Editor
 =================
 
 Use ``C-x C-k`` to close the active editor.
+
+
+Emacs Keybindings
+=================
+
+*rope* uses emacs keybindings most of the time. For example in most of
+the dialogs like ``code assist`` or ``outline`` you can use ``C-n``
+and ``C-p`` to move throw the items.
+
+Copying And Cutting
+-------------------
+
+Select the beginning of the region you want to copy or cut by moving
+the cursor on it and pressing ``Ctrl-space``.  Then move the cursor to
+the end of that region and use ``Alt-w`` or ``Ctrl-w`` for copying or
+cutting.
+
+For pasting move the cursor to the place you want to paste and press
+``Ctrl-y``.
 

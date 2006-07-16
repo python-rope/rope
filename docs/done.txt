@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.2pre5 : July 16, 2006
+
+
 - Out of project modules : July 15, 2006
 
 

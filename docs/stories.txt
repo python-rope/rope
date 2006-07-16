@@ -264,9 +264,6 @@ Stories
   Writing ASTs
 
 
-> Public Release 0.2pre5 : July 16, 2006
-
-
 Remaining Stories
 -----------------
 * Change program goals and description; principles.txt
