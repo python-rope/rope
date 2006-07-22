@@ -511,7 +511,9 @@ class _AssignVisitor(object):
         self.assigned_object = None
     
     def _search_in_dictionary_for_attribute_list(self, names, attribute_list):
-        pyobject = names.get(attribute_list[0], None)
+        pyobject = None
+        if attribute_list[0] in names:
+            pyobject = names.get(attribute_list[0]).get_object()
         if pyobject != None and len(attribute_list) > 1:
             for name in attribute_list[1:]:
                 if name in pyobject.get_attributes():
@@ -530,10 +532,11 @@ class _AssignVisitor(object):
             if function_object is None and self.scope_visitor.owner_object.parent is not None:
                 function_object = _AttributeListFinder.\
                                   get_pyname_from_scope(function_name,
-                                                        self.scope_visitor.owner_object.parent.get_scope())
+                                                        self.scope_visitor.owner_object.
+                                                        parent.get_scope()).get_object()
             if function_object is not None:
                 if function_object.get_type() == PyObject.get_base_type('Type'):
-                    type_ = function_object.get_object()
+                    type_ = function_object
         self.assigned_object = PyObject(type_=type_)
         for child_node in node.nodes:
             compiler.walk(child_node, self)

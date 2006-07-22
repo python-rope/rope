@@ -64,5 +64,3 @@ class NormalEditingTools(EditingTools):
     def create_refactoring(self):
         return rope.refactoring.NoRefactoring()
 
-
-
