@@ -228,6 +228,9 @@ Stories
 * reST highlighting
 
 
+* What to do when the program has syntax errors for code assists @ 2
+
+
 * Show PyDoc
 
 
@@ -255,10 +258,7 @@ Stories
   * Showing modified file status
 
 
-* Enhancing auto-completion @ 6h
-
-  * What to do when the program has syntax errors
-  * Sorting proposals
+* Sorting code assist proposals @ 5h
 
 
 Remaining Stories

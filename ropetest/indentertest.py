@@ -246,7 +246,19 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.entering_new_line(4)
         self.assertEquals('def f():\n    print "hey"\n\n', self.editor.get_text())
 
-        
+    def test_indenting_a_line_like_the_previous_line(self):
+        self.editor.set_text('    line1\nline2')
+        indenter = NormalIndenter(self.editor)
+        indenter.correct_indentation(2)
+        self.assertEquals('    line1\n    line2', self.editor.get_text())
+
+    def test_indenting_the_first_line(self):
+        self.editor.set_text('    line1\n')
+        indenter = NormalIndenter(self.editor)
+        indenter.correct_indentation(1)
+        self.assertEquals('line1\n', self.editor.get_text())
+
+
 if __name__ == '__main__':
     unittest.main()
 

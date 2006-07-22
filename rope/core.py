@@ -265,12 +265,16 @@ class Core(object):
         def select_prev(event):
             active = found.index(ACTIVE)
             if active - 1 >= 0:
+                found.select_clear(0, END)
+                found.selection_set(active - 1)
                 found.activate(active - 1)
                 found.see(active - 1)
         found.bind('<Control-p>', select_prev)
         def select_next(event):
             active = found.index(ACTIVE)
             if active + 1 < found.size():
+                found.select_clear(0, END)
+                found.selection_set(active + 1)
                 found.activate(active + 1)
                 found.see(active + 1)
         found.bind('<Control-n>', select_next)

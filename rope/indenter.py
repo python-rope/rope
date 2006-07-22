@@ -61,11 +61,11 @@ class NormalIndenter(TextIndenter):
         super(NormalIndenter, self).__init__(editor)
 
     def correct_indentation(self, lineno):
-        pass
+        prev_indents = 0
+        if lineno > 1:
+            prev_indents = self._count_line_indents(lineno - 1)
+        self._set_line_indents(lineno, prev_indents)
         
-    def entering_new_line(self, lineno):
-        pass
-
 
 class PythonCodeIndenter(TextIndenter):
     def __init__(self, editor):
