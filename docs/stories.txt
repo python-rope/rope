@@ -258,9 +258,6 @@ Stories
   * Showing modified file status
 
 
-* Sorting code assist proposals @ 5h
-
-
 Remaining Stories
 -----------------
 * Change program goals and description; principles.txt

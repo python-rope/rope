@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from rope.codeassist import PythonCodeAssist, RopeSyntaxError, Template
+from rope.codeassist import PythonCodeAssist, RopeSyntaxError, Template, ProposalSorter
 from rope.project import Project
 from ropetest import testutils
 
@@ -365,7 +365,18 @@ class CodeAssistTest(unittest.TestCase):
                'Sample("hey").a_'
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('a_method', 'attribute', result)
-    
+
+    def test_proposals_sorter(self):
+        self.assist.add_template('my_sample_template', '')
+        code = 'def my_sample_function(self):\n' + \
+               '    my_sample_var = 20\n' + \
+               '    my_sample_'
+        result = self.assist.assist(code, len(code))
+        sorted_proposals = ProposalSorter(result).get_sorted_proposal_list()
+        self.assertEquals('my_sample_var', sorted_proposals[0].name)
+        self.assertEquals('my_sample_function', sorted_proposals[1].name)
+        self.assertEquals('my_sample_template', sorted_proposals[2].name)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 

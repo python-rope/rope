@@ -420,9 +420,8 @@ class GraphicalEditor(TextEditor):
         toplevel.title('Code Assist Proposals')
         enhanced_list = EnhancedList(toplevel, _CompletionListHandle(self, toplevel, result),
                                      title='Code Assist Proposals')
-        for proposal in result.completions:
-            enhanced_list.add_entry(proposal)
-        for proposal in result.templates:
+        proposals = rope.codeassist.ProposalSorter(result).get_sorted_proposal_list()
+        for proposal in proposals:
             enhanced_list.add_entry(proposal)
         start_index = self.text.index('0.0 +%dc' % result.start_offset)
         initial_cursor_position = str(self.text.index(INSERT))
@@ -431,19 +430,18 @@ class GraphicalEditor(TextEditor):
             if len(event.char) == 1 and (event.char.isalnum() or
                                          event.char in string.punctuation):
                 self.text.insert(INSERT, event.char)
-            if event.keysym == 'space':
+            elif event.keysym == 'space':
                 self.text.insert(INSERT, ' ')
-            if event.keysym == 'BackSpace':
+            elif event.keysym == 'BackSpace':
                 self.text.delete(INSERT + '-1c')
-            if self.text.compare(initial_cursor_position, '>', INSERT):
+            elif self.text.compare(initial_cursor_position, '>', INSERT):
                 toplevel.destroy()
+                return
+            else:
                 return
             new_name = self.text.get(start_index, INSERT)
             enhanced_list.clear()
-            for proposal in result.completions:
-                if proposal.name.startswith(new_name):
-                    enhanced_list.add_entry(proposal)
-            for proposal in result.templates:
+            for proposal in proposals:
                 if proposal.name.startswith(new_name):
                     enhanced_list.add_entry(proposal)
         enhanced_list.list.focus_set()

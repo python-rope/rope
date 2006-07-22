@@ -1,7 +1,3 @@
-Sorting code assist proposals @ 5h
-==================================
-
-
 Pre-Release Refactorings
 ========================
 

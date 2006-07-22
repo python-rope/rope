@@ -3,6 +3,9 @@
 ===========
 
 
+- Sorting code assist proposals : July 22, 2006
+
+
 - Not renaming names in strings and comments in refactorings : July 22, 2006
 
 

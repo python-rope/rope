@@ -298,3 +298,28 @@ class _GetDefinitionLocation(object):
         else:
             return (None, None)
 
+
+class ProposalSorter(object):
+
+    def __init__(self, code_assist_proposals):
+        self.proposals = code_assist_proposals
+    
+    def get_sorted_proposal_list(self):
+        local_proposals = []
+        global_proposals = []
+        others = []
+        for proposal in self.proposals.completions:
+            if proposal.kind == 'global':
+                global_proposals.append(proposal)
+            elif proposal.kind == 'local':
+                local_proposals.append(proposal)
+            else:
+                others.append(proposal)
+        template_proposals = self.proposals.templates
+        result = []
+        result.extend(local_proposals)
+        result.extend(global_proposals)
+        result.extend(template_proposals)
+        result.extend(others)
+        return result
+
