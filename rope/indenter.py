@@ -63,6 +63,9 @@ class NormalIndenter(TextIndenter):
     def correct_indentation(self, lineno):
         pass
         
+    def entering_new_line(self, lineno):
+        pass
+
 
 class PythonCodeIndenter(TextIndenter):
     def __init__(self, editor):

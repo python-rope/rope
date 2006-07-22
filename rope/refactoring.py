@@ -14,7 +14,18 @@ class PythonRefactoring(Refactoring):
 
     def __init__(self, pycore):
         self.pycore = pycore
-    
+        self.comment_pattern = PythonRefactoring.any("comment", [r"#[^\n]*"])
+        sqstring = r"(\b[rR])?'[^'\\\n]*(\\.[^'\\\n]*)*'?"
+        dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
+        sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
+        dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
+        self.string_pattern = PythonRefactoring.any("string",
+                                                    [sq3string, dq3string, sqstring, dqstring])
+
+    @staticmethod
+    def any(name, list):
+        return "(?P<%s>" % name + "|".join(list) + ")"
+
     def rename(self, source_code, offset, new_name):
         result = []
         module_scope = self.pycore.get_string_scope(source_code)
@@ -24,21 +35,25 @@ class PythonRefactoring(Refactoring):
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:
             return source_code
-        pattern = re.compile('\\b' + old_name + '\\b')
+        occurance_pattern = PythonRefactoring.any('occurance', ['\\b' + old_name + '\\b'])
+        pattern = re.compile(occurance_pattern + "|" + \
+                             self.comment_pattern + "|" + self.string_pattern)
         last_modified_char = 0
         scope_start, scope_end = self._get_scope_range(source_code, offset, module_scope,
                                                        old_pyname.get_definition_location()[1])
         for match in pattern.finditer(source_code[scope_start:scope_end]):
-            match_start = scope_start + match.start()
-            match_end = scope_start + match.end()
-            new_pyname = None
-            try:
-                new_pyname = pyname_finder.get_pyname_at(match_start + 1)
-            except SyntaxError:
-                pass
-            if new_pyname == old_pyname:
-                result.append(source_code[last_modified_char:match_start] + new_name)
-                last_modified_char = match_end
+            for key, value in match.groupdict().items():
+                if value and key == "occurance":
+                    match_start = scope_start + match.start(key)
+                    match_end = scope_start + match.end(key)
+                    new_pyname = None
+                    try:
+                        new_pyname = pyname_finder.get_pyname_at(match_start + 1)
+                    except SyntaxError:
+                        pass
+                    if new_pyname == old_pyname:
+                        result.append(source_code[last_modified_char:match_start] + new_name)
+                        last_modified_char = match_end
         result.append(source_code[last_modified_char:])
         return ''.join(result)
 

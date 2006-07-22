@@ -5,6 +5,7 @@ Pre-Release Refactorings
 * Eliminate FilteredPackage
 * Each PyPackage should have
 
+
   * The list of available children; derived from `__init__.py` or imports/froms
   * An import_name function that throws exception if the name cannot be found
 

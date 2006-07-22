@@ -261,9 +261,6 @@ Stories
   * Sorting proposals
 
 
-* Not renaming names in strings and comments in refactorings @ 4h
-
-
 Remaining Stories
 -----------------
 * Change program goals and description; principles.txt

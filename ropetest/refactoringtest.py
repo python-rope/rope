@@ -53,13 +53,11 @@ class RefactoringTest(unittest.TestCase):
         refactored = self.refactoring.rename("replace = True\n'ali'.\\\nreplace\n", 2, 'is_replace')
         self.assertEquals("is_replace = True\n'ali'.\\\nreplace\n", refactored)
 
-    # TODO: Not renaming names in strings
-    def xxx_test_not_renaming_string_contents(self):
+    def test_not_renaming_string_contents(self):
         refactored = self.refactoring.rename("a_var = 20\na_string='a_var'\n", 2, 'new_var')
         self.assertEquals("new_var = 20\na_string='a_var'\n", refactored)
 
-    # TODO: Not renaming names in comments
-    def xxx_test_not_renaming_comment_contents(self):
+    def test_not_renaming_comment_contents(self):
         refactored = self.refactoring.rename("a_var = 20\n# a_var\n", 2, 'new_var')
         self.assertEquals("new_var = 20\n# a_var\n", refactored)
 
