@@ -530,10 +530,12 @@ class _AssignVisitor(object):
             function_object = self._search_in_dictionary_for_attribute_list(self.scope_visitor.names,
                                                                             function_name)
             if function_object is None and self.scope_visitor.owner_object.parent is not None:
-                function_object = _AttributeListFinder.\
+                function_pyname = _AttributeListFinder.\
                                   get_pyname_from_scope(function_name,
                                                         self.scope_visitor.owner_object.
-                                                        parent.get_scope()).get_object()
+                                                        parent.get_scope())
+                if function_pyname is not None:
+                    function_object = function_pyname.get_object()
             if function_object is not None:
                 if function_object.get_type() == PyObject.get_base_type('Type'):
                     type_ = function_object
