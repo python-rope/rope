@@ -224,7 +224,6 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.assertEquals('def f():\n    return (2,\n            3)\na = 10',
                           self.editor.get_text())
 
-
     # TODO: handle this case
     def xxx_test_ignoring_back_slash_in_comments(self):
         self.editor.set_text('# hello \\\na = 10')
@@ -232,6 +231,22 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.assertEquals('# hello \\\na = 10', self.editor.get_text())
 
 
+    def test_entering_a_new_line(self):
+        self.editor.set_text('\n')
+        self.indenter.entering_new_line(0)
+        self.assertEquals('\n', self.editor.get_text())
+
+    def test_entering_a_new_line(self):
+        self.editor.set_text('def f():\n')
+        self.indenter.entering_new_line(2)
+        self.assertEquals('def f():\n    ', self.editor.get_text())
+
+    def test_entering_a_new_line2(self):
+        self.editor.set_text('def f():\n    print "hey"\n\n')
+        self.indenter.entering_new_line(4)
+        self.assertEquals('def f():\n    print "hey"\n\n', self.editor.get_text())
+
+        
 if __name__ == '__main__':
     unittest.main()
 

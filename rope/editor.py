@@ -241,10 +241,10 @@ class GraphicalEditor(TextEditor):
         self.text.bind('<Alt-f>', lambda event: self.next_word())
         self.text.bind('<Alt-b>', lambda event: self.prev_word())
         self.text.bind('<Alt-d>', lambda event: self.delete_next_word())
-        def delete_prev_wordListener(event):
+        def delete_prev_word_listener(event):
             self.delete_prev_word()
             return 'break'
-        self.text.bind('<Alt-BackSpace>', delete_prev_wordListener)
+        self.text.bind('<Alt-BackSpace>', delete_prev_word_listener)
         def do_undo(event):
             self.undo()
             return 'break'
@@ -307,9 +307,7 @@ class GraphicalEditor(TextEditor):
             if self.searcher.is_searching():
                 self.searcher.end_searching()
                 return 'break'
-            self.text.insert(INSERT, '\n')
-            self.correct_line_indentation()
-            self.text.see(INSERT)
+            self._insert_new_line()
             return 'break'
         def backspace(event):
             if self.searcher.is_searching():
@@ -392,6 +390,16 @@ class GraphicalEditor(TextEditor):
         self.text.mark_set(INSERT, '%d.%d' % (lineno, colno))
         self.text.see(INSERT)
 
+    def _insert_new_line(self):
+        self.text.insert(INSERT, '\n')
+        lineno = self.get_current_line_number()
+        self.indenter.entering_new_line(lineno)
+        first_non_space = 0
+        while self.text.get('%d.%d' % (lineno, first_non_space)) == ' ':
+            first_non_space += 1
+        self.text.mark_set(INSERT, '%d.%d' % (lineno, first_non_space))
+        self.text.see(INSERT)
+
     def correct_line_indentation(self):
         lineno = self.get_current_line_number()
         cols_from_end = len(self.text.get(INSERT, 'insert lineend'))
@@ -404,6 +412,7 @@ class GraphicalEditor(TextEditor):
         if self.text.compare(new_insert, '<', from_end):
             new_insert = from_end
         self.text.mark_set(INSERT, new_insert)
+        self.text.see(INSERT)
 
     def _show_completion_window(self):
         result = self.code_assist.assist(self.get_text(), self.get_current_offset())

@@ -261,15 +261,15 @@ class _AttributeListFinder(object):
 
     @staticmethod
     def get_pyname_from_scope(attribute_list, scope):
-        pyobject = scope.lookup(attribute_list[0])
-        if pyobject != None and len(attribute_list) > 1:
+        pyname = scope.lookup(attribute_list[0])
+        if pyname != None and len(attribute_list) > 1:
             for name in attribute_list[1:]:
-                if name in pyobject.get_attributes():
-                    pyobject = pyobject.get_attributes()[name]
+                if name in pyname.get_attributes():
+                    pyname = pyname.get_attributes()[name]
                 else:
-                    pyobject = None
+                    pyname = None
                     break
-        return pyobject
+        return pyname
     
     @staticmethod
     def get_attribute(node, scope):
@@ -639,10 +639,15 @@ class _ScopeVisitor(object):
                         self.names[imported] = PyFilteredPackage()
                     else:
                         pyname_module = module
+                        lineno = None
                         if imported_pyname.module is not None:
                             pyname_module = imported_pyname.module
+                            lineno = imported_pyname.get_definition_location()[1]
+                        if imported_pyname.get_type() == PyObject.get_base_type('Module'):
+                            pyname_module = imported_pyname.get_object().get_resource()
+                            lineno = 1                            
                         self.names[imported] = PyName(imported_object, False, module=pyname_module,
-                                                      lineno=imported_pyname.get_definition_location()[1])
+                                                      lineno=lineno)
                 else:
                     self.names[imported] = PyName()
 

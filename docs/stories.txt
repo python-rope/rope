@@ -101,14 +101,6 @@ Stories
   guessed source folders be used.
 
 
-* Enhancing syntax highlighting @ 16h
-
-  * Only highlighting the changed region
-  * Extend highlighting region while highlighting if necessay
-  * Highlighting after cut, paste, undo and redo
-  * Use Modified event for updating highlighting only when necessary
-
-
 * Enhancing menu @ 16h
 
   * Disable inaccessable items
@@ -126,10 +118,7 @@ Stories
 * Having different strategies for selecting next/prev words @ 8h
 
 
-* Enhancing auto indentation @ 12h
-
-  * Indenting a range of file
-  * Separating entering and correcting indentation?
+* Indenting a range of file
 
 
 * Dynamic type inference
@@ -145,15 +134,6 @@ Stories
   * Refactor Core; Only use EditorManager when working with the Editors
 
 
-* Enhancing editor @ 16h
-
-  * Clearing selection if something happens
-  * Unifying builtin and emacs-style selections; if selection
-    is active do the builtin cut and paste
-  * Edit menu: cut, paste, undo, redo, revert
-  * Showing modified file status
-
-
 * Handle 'HTTPClient' style names in next/prev word @ 4h
 
 
@@ -167,10 +147,6 @@ Stories
 * Auto-importing modules
   Hold the list of project classes and import them automatically
   in codeassist
-
-
-* Better list and tree navigation @ 12h
-  Add filter texts and selection texts to trees and lists.
 
 
 * Local history
@@ -190,12 +166,6 @@ Stories
 
   * Inserting or overwriting
   * Inserting common prefixes
-
-
-* Enhancing auto-completion @ 8h
-
-  * What to do when the program has syntax errors
-  * Sorting proposals
 
 
 * We know the type of list and keyword args
@@ -228,9 +198,6 @@ Stories
 * Auto completion contexts; strings, comments, imports, functions and ...
 
 
-* Show PyDoc
-
-
 * Rename function parameters
 
 
@@ -254,14 +221,47 @@ Stories
   has been changed.
 
 
+* Formating Code
+  Writing ASTs
+
+
 * reST highlighting
 
 
-* Not renaming names in strings and comments in refactorings
+* Show PyDoc
 
 
-* Formating Code
-  Writing ASTs
+* Better list and tree navigation
+  Add filter texts and selection texts to trees and lists.
+
+
+> Public Release 0.2 : July 30, 2006
+
+
+* Enhancing syntax highlighting @ 16h
+
+  * Only highlighting the changed region
+  * Extend highlighting region while highlighting if necessay
+  * Highlighting after cut, paste, undo and redo
+  * Use Modified event for updating highlighting only when necessary
+
+
+* Enhancing editor @ 16h
+
+  * Clearing selection if something happens
+  * Unifying builtin and emacs-style selections; if selection
+    is active do the builtin cut and paste
+  * Edit menu: cut, paste, undo, redo, revert
+  * Showing modified file status
+
+
+* Enhancing auto-completion @ 6h
+
+  * What to do when the program has syntax errors
+  * Sorting proposals
+
+
+* Not renaming names in strings and comments in refactorings @ 4h
 
 
 Remaining Stories

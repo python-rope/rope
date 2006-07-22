@@ -372,6 +372,13 @@ class PyCoreTest(unittest.TestCase):
         sample = mod.get_attributes()['Sample']
         self.assertEquals((None, None), sample.get_definition_location())
 
+    def test_from_package_import_module_get_definition_location(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod = self.pycore.create_module(pkg, 'mod')
+        pymod = self.pycore.get_string_module('from pkg import mod\n')
+        imported_module = pymod.get_attributes()['mod']
+        self.assertEquals((mod, 1), imported_module.get_definition_location())
+
     def test_get_module_for_defined_pyobjects(self):
         mod = self.pycore.get_string_module('class AClass(object):\n    pass\n')
         a_class = mod.get_attributes()['AClass'].get_object()

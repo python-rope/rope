@@ -3,6 +3,9 @@
 ===========
 
 
+- Separating entering and correcting indentation : July 22, 2006
+
+
 > Public Release 0.2pre5 : July 16, 2006
 
 
