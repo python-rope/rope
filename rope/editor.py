@@ -72,9 +72,6 @@ class TextEditor(object):
     def search(self, keyword, start, case=True, forwards=True):
         pass
 
-    def undo_separator(self):
-        pass
-
     def line_editor(self):
         pass
 
@@ -637,8 +634,9 @@ class GraphicalEditor(TextEditor):
     def getWidget(self):
         return self.text
 
-    def undo_separator(self):
+    def saving_editor(self):
         self.text.edit_separator()
+        self.text.edit_modified(False)
 
     def undo(self):
         try:

@@ -8,6 +8,7 @@ from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.indenter import PythonCodeIndenter
 from rope.codeassist import CodeAssist
 
+
 class GraphicalEditorTest(unittest.TestCase):
     '''This class only tests features that are specific to GraphicalEditor; see mockeditortest'''
     __factory = GraphicalEditorFactory(Tkinter.Frame())
@@ -183,14 +184,14 @@ class GraphicalEditorTest(unittest.TestCase):
         self.assertEquals(self.editor.get_end(), self.editor.get_insert())
 
     def test_undo(self):
-        self.editor.undo_separator()
+        self.editor.saving_editor()
         self.editor.insert(self.editor.get_end(), '.')
         self.assertEquals('sample text.', self.editor.get_text())
         self.editor.undo()
         self.assertEquals('sample text', self.editor.get_text(),self.editor.get_text())
 
     def test_redo(self):
-        self.editor.undo_separator()
+        self.editor.saving_editor()
         self.editor.insert(self.editor.get_end(), '.')
         self.editor.undo()
         self.editor.redo()

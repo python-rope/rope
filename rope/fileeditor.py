@@ -26,7 +26,7 @@ class FileEditor(object):
 
     def save(self):
         self.file.write(self.editor.get_text())
-        self.editor.undo_separator()
+        self.editor.saving_editor()
 
     def get_editor(self):
         return self.editor
