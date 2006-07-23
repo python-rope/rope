@@ -257,6 +257,9 @@ Stories
   * Edit menu: cut, paste, undo, redo, revert
 
 
+* Asking whether to save buffer when exiting @ 4h
+
+
 * Showing modified file status @ 8h
 
 

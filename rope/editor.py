@@ -196,6 +196,7 @@ class GraphicalEditor(TextEditor):
         self._bind_keys()
         self._initialize_highlighting()
         self.status_bar_manager = None
+        self.modification_observers = []
 
     def _initialize_highlighting(self):
         def colorize(event=None):
@@ -216,18 +217,21 @@ class GraphicalEditor(TextEditor):
                 if self.text.compare(range_[1], '>', end):
                     end = range_[1]
             self._highlight_range(start, end)
-        def modified(event):
-            if not self.modified_flag:
-                print 'start modified', event
-                self.modified_flag = True
-                colorize()
-                self.text.edit_modified(False)
-                self.modified_flag = False
-                print 'end modified', event
         self.modified_flag = False
         self.text.bind('<Any-KeyRelease>', colorize, '+')
-        #        self.text.bind('<<Modified>>', modified)
+        self.text.bind('<<Modified>>', self._editor_modified)
         self.text.edit_modified(False)
+    
+    def _editor_modified(self, event):
+        if self.modified_flag:
+            self.modified_flag = False
+        else:
+            self.modified_flag = True
+        for observer in self.modification_observers:
+            observer()
+
+    def add_modification_observer(self, observer):
+        self.modification_observers.append(observer)
 
     def _highlight_range(self, startIndex, endIndex):
         for style in self.highlighting.get_styles().keys():
@@ -399,6 +403,9 @@ class GraphicalEditor(TextEditor):
             first_non_space += 1
         self.text.mark_set(INSERT, '%d.%d' % (lineno, first_non_space))
         self.text.see(INSERT)
+    
+    def is_modified(self):
+        return self.modified_flag
 
     def correct_line_indentation(self):
         lineno = self.get_current_line_number()

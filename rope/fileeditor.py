@@ -14,6 +14,15 @@ class FileEditor(object):
             editing_tools = rope.editingtools.NormalEditingTools()
         self.editor = editor_factory.create(editing_tools)
         self.editor.set_text(self.file.read())
+        self.modification_observers = []
+        self.editor.add_modification_observer(self._editor_was_modified)
+    
+    def _editor_was_modified(self):
+        for observer in self.modification_observers:
+            observer(self)
+    
+    def add_modification_observer(self, observer):
+        self.modification_observers.append(observer)
 
     def save(self):
         self.file.write(self.editor.get_text())

@@ -26,6 +26,12 @@ class EditorManager(object):
         self.active_file_path = StringVar('')
         self.active_editor = None
 
+    def _editor_was_modified(self, editor):
+        new_title = editor.get_file().get_name()
+        if editor.get_editor().is_modified():
+            new_title = '*' + new_title
+        self.buttons[editor]['text'] = new_title
+
     def activate_editor(self, editor):
         if self.active_editor:
             self.active_editor.get_editor().getWidget().forget()
@@ -55,6 +61,7 @@ class EditorManager(object):
         title.pack(fill=BOTH, side=LEFT)
         self.activate_editor(editor)
         self.core._set_key_binding(editor.get_editor().getWidget())
+        editor.add_modification_observer(self._editor_was_modified)
         return editor
 
     def switch_active_editor(self):
@@ -120,6 +127,15 @@ class Core(object):
         fileMenu.add_separator()
         fileMenu.add_command(label='Exit',
                              command=self.exit, underline=1)
+        
+        editMenu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='Edit', menu=editMenu, underline=3)
+
+        codeMenu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='Code', menu=editMenu, underline=1)
+
+        helpMenu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='Help', menu=helpMenu, underline=3)
 
     def _set_key_binding(self, widget):
         widget.bind('<Control-x><Control-n>', self._create_new_file_dialog)

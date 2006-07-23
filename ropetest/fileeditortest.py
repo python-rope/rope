@@ -1,4 +1,5 @@
 import unittest
+import Tkinter
 
 from rope.editor import *
 from rope.fileeditor import *
@@ -15,7 +16,7 @@ class FileEditorTest(unittest.TestCase):
         self.fileName = self.projectMaker.get_sample_file_name()
         self.project = Project(self.projectMaker.get_root())
         self.editor = FileEditor(self.project, self.project.get_resource(self.fileName),
-                                 MockEditorFactory())
+                                 GraphicalEditorFactory(Tkinter.Frame()))
     
     def tearDown(self):
         self.projectMaker.remove_all()
