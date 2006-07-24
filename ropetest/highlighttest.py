@@ -135,7 +135,7 @@ class ReSTHighlightTest(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
     
-    def assert_in_highlights(self, text, expected):
+    def in_highlights(self, text, expected):
         self.editor.set_text(text)
         start = self.editor.get_start()
         end = self.editor.get_end()
@@ -144,64 +144,91 @@ class ReSTHighlightTest(unittest.TestCase):
             highlights.append(result)
         expected = (self.editor.get_index(expected[0]), self.editor.get_index(expected[1]),
                     expected[2])
-        self.assertTrue(expected in highlights)
+        return expected in highlights
     
     def test_highlighting_section_titles(self):
         self.assertTrue('title' in self.highlighting.get_styles())
-        self.assert_in_highlights('My Title\n========\n', (0, 8, 'title'))
+        self.assertTrue(self.in_highlights('My Title\n========\n', (0, 8, 'title')))
 
     def test_highlighting_section_titles2(self):
-        self.assert_in_highlights('========\nMy Title\n========\n', (9, 17, 'title'))
+        self.assertTrue(self.in_highlights('========\nMy Title\n========\n', (9, 17, 'title')))
 
     def test_highlighting_section_titles3(self):
-        self.assert_in_highlights('\nMy Title\n========\n', (1, 9, 'title'))
+        self.assertTrue(self.in_highlights('\nMy Title\n========\n', (1, 9, 'title')))
 
     def test_list_signs(self):
         self.assertTrue('listsign' in self.highlighting.get_styles())
-        self.assert_in_highlights('* item # 1\n', (0, 1, 'listsign'))
+        self.assertTrue(self.in_highlights('* item # 1\n', (0, 1, 'listsign')))
 
     def test_list_signs2(self):
-        self.assertTrue('listsign' in self.highlighting.get_styles())
-        self.assert_in_highlights('- item # 1\n', (0, 1, 'listsign'))
+        self.assertTrue(self.in_highlights('- item # 1\n', (0, 1, 'listsign')))
+
+    def test_ordered_lists(self):
+        self.assertTrue(self.in_highlights('1. item # 1\n', (0, 2, 'listsign')))
 
     def test_directives(self):
         self.assertTrue('directive' in self.highlighting.get_styles())
-        self.assert_in_highlights('.. note:: This is a note\n', (0, 9, 'directive'))
+        self.assertTrue(self.in_highlights('.. note:: This is a note\n', (0, 9, 'directive')))
 
     def test_emphasis(self):
         self.assertTrue('emphasis' in self.highlighting.get_styles())
-        self.assert_in_highlights('*important*', (0, 11, 'emphasis'))
+        self.assertTrue(self.in_highlights('*important*', (0, 11, 'emphasis')))
 
     def test_strong_emphasis(self):
         self.assertTrue('strongemphasis' in self.highlighting.get_styles())
-        self.assert_in_highlights('**important**', (0, 13, 'strongemphasis'))
+        self.assertTrue(self.in_highlights('**important**', (0, 13, 'strongemphasis')))
 
     def test_strong_emphasis(self):
         self.assertTrue('literal' in self.highlighting.get_styles())
-        self.assert_in_highlights('``rope``', (0, 8, 'literal'))
+        self.assertTrue(self.in_highlights('``rope``', (0, 8, 'literal')))
 
     def test_interpreted(self):
         self.assertTrue('interpreted' in self.highlighting.get_styles())
-        self.assert_in_highlights('`rope`', (0, 6, 'interpreted'))
+        self.assertTrue(self.in_highlights('`rope`', (0, 6, 'interpreted')))
 
     def test_role(self):
         self.assertTrue('role' in self.highlighting.get_styles())
-        self.assert_in_highlights('`rope`:emphasis:', (6, 16, 'role'))
+        self.assertTrue(self.in_highlights('`rope`:emphasis:', (6, 16, 'role')))
 
     def test_hyperlink_target(self):
         self.assertTrue('hyperlink_target' in self.highlighting.get_styles())
-        self.assert_in_highlights('http://rope.sf.net/index.html', (0, 29, 'hyperlink_target'))
+        self.assertTrue(self.in_highlights('http://rope.sf.net/index.html',
+                                           (0, 29, 'hyperlink_target')))
 
     def test_hyperlink(self):
         self.assertTrue('hyperlink' in self.highlighting.get_styles())
-        self.assert_in_highlights('rope_', (0, 5, 'hyperlink'))
+        self.assertTrue(self.in_highlights('rope_', (0, 5, 'hyperlink')))
 
     def test_hyperlink2(self):
-        self.assert_in_highlights('`rope homepage`_', (0, 16, 'hyperlink'))
+        self.assertTrue(self.in_highlights('`rope homepage`_', (0, 16, 'hyperlink')))
+
+    def test_hyperlink3(self):
+        self.assertFalse(self.in_highlights('rope_homepage', (0, 5, 'hyperlink')))
+
+    def test_hyperlink_in_multilines(self):
+        self.assertTrue(self.in_highlights('`rope\nhomepage`_', (0, 16, 'hyperlink')))
 
     def test_hyperlink_definition(self):
         self.assertTrue('hyperlink_definition' in self.highlighting.get_styles())
-        self.assert_in_highlights('.. _rope: http://rope.sf.net\n', (0, 9, 'hyperlink_definition'))
+        self.assertTrue(self.in_highlights('.. _rope: http://rope.sf.net\n',
+                                           (0, 9, 'hyperlink_definition')))
+
+    def test_hyperlink_definition2(self):
+        self.assertTrue(self.in_highlights('.. _rope homepage: http://rope.sf.net\n', 
+                                           (0, 18, 'hyperlink_definition')))
+
+    def test_highlights_in_lists(self):
+        self.assertTrue(self.in_highlights('* rope_\n', (2, 7, 'hyperlink')))
+
+    def test_highlights_in_lists2(self):
+        self.assertTrue(self.in_highlights('- `rope homepage`_::\n', (2, 18, 'hyperlink')))
+
+    def test_not_highlighting_hyperlinks_in_inline_literals(self):
+        self.assertFalse(self.in_highlights('``rope_``', (2, 7, 'hyperlink')))
+
+    def test_highlighting_fields(self):
+        self.assertTrue('field' in self.highlighting.get_styles())
+        self.assertTrue(self.in_highlights(':Age: 3 months', (0, 5, 'field')))
 
 
 def suite():

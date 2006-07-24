@@ -88,20 +88,23 @@ class ReSTHighlighting(Highlighting):
         title_pattern = '(?P<overline>^(([^\\w\\s\\d]+)\n))?' + \
                         '(?P<title>.+)\n' + \
                         '(?P<underline>(\\1|[^\\w\\s\\d])+)$'
-        listsign_pattern = '^\\s*(?P<listsign>[*+-])\\s+.+$'
-        directive_pattern = '(?P<directive>\\.\\. \\w+.+::)(\\s+.+)?'
+        listsign_pattern = '^\\s*(?P<listsign>[*+-]|\\d*\\.)(?=\\s+.+$)'
+        directive_pattern = '(?P<directive>\\.\\. \\w+.+::)'
         emphasis_pattern = '(?P<emphasis>\\*[^*\n]+\\*)'
         strongemphasis_pattern = '(?P<strongemphasis>\\*\\*[^*\n]+\\*\\*)'
         literal_pattern = '(?P<literal>``[^`]+``)'
-        interpreted_pattern = '(?P<interpreted>`[^`]+`)(?P<role>:\\w+:)?'
+        interpreted_pattern = '(?P<interpreted>`.+`)(?P<role>:\\w+:)?'
         hyperlink_target_pattern = '(?P<hyperlink_target>\\w+://[^\\s]+)'
-        hyperlink_pattern = '(?P<hyperlink>[^\\s]+_|`.+`_)'
-        hyperlink_definition_pattern = '(?P<hyperlink_definition>\\.\\. _[^\\s:]+:)'
-        all_patterns = title_pattern + '|' + listsign_pattern + '|' + \
-                       directive_pattern + '|' + emphasis_pattern + '|' +\
-                       strongemphasis_pattern + '|' + literal_pattern + '|' + \
-                       hyperlink_pattern + '|' + hyperlink_target_pattern + '|' + \
-                       interpreted_pattern + '|' + hyperlink_definition_pattern
+        hyperlink_pattern = '(?P<hyperlink>[\\w]+_|`[^`]+`_)\\b'
+        hyperlink_definition_pattern = '(?P<hyperlink_definition>\\.\\. _[^\n:]+:)'
+        field_pattern = '^\\s*(?P<field>:[^\n:]+:)'
+        all_patterns = literal_pattern + '|' + hyperlink_pattern + '|' + \
+                       interpreted_pattern + '|' + \
+                       title_pattern + '|' + listsign_pattern + '|' + \
+                       directive_pattern + '|' + emphasis_pattern + '|' + \
+                       strongemphasis_pattern + '|' + \
+                       hyperlink_target_pattern + '|' + field_pattern + '|' + \
+                       hyperlink_definition_pattern
         return re.compile(all_patterns, re.M)
     
     def get_styles(self):
@@ -113,11 +116,12 @@ class ReSTHighlighting(Highlighting):
                 'emphasis' : HighlightingStyle(italic=True),
                 'strongemphasis' : HighlightingStyle(bold=True),
                 'literal' : HighlightingStyle(color='#908080'),
-                'interpreted' : HighlightingStyle(color='#008000'),
+                'interpreted' : HighlightingStyle(color='green'),
                 'role' : HighlightingStyle(color='blue'),
                 'hyperlink_target' : HighlightingStyle(color='blue'),
                 'hyperlink' : HighlightingStyle(color='blue'),
-                'hyperlink_definition' : HighlightingStyle(color='blue')}
+                'hyperlink_definition' : HighlightingStyle(color='blue'),
+                'field' : HighlightingStyle(color='purple')}
 
     def highlights(self, editor, start, end):
         text = editor.get(start, end)
@@ -125,6 +129,7 @@ class ReSTHighlighting(Highlighting):
             for key, value in match.groupdict().items():
                 if value:
                     a, b = match.span(key)
+#                    print a, b, key
                     yield (editor.get_relative(start, a),
                            editor.get_relative(start, b), key)
 

@@ -3,6 +3,9 @@
 ===========
 
 
+- ReST highlighting : July 24, 2006
+
+
 - Showing editor modified status : July 23, 2006
 
 

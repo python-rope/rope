@@ -1,29 +1,33 @@
-Basic reST Highlighting
-=======================
+Enhancing syntax highlighting @ 16h
+===================================
 
-- Section titles
-- Lists
-- Directives
-- Literal blocks
-* Inline markups
+* Only highlighting the changed region
+* Extend highlighting region while highlighting if necessay
+* Highlighting after cut, paste, undo and redo
+* Use Modified event for updating highlighting only when necessary
 
-  - *emphasis*
-  - **strong emphasis**
-  - ``inline literal``
-  - inline hyperlinks
+Possible solutions
+* Making Highlighting independent of the editor
+* Adding Highlighting.get_highlighting_region(text, index)
+* Pushing up Highlighting.highlights()
+  
 
-- hyperlink definitions
-
-- Adding to runtests
 
 Pre-Release Refactorings
 ========================
 
 Goals:
 
-- Go to definition for packages should go to __init__.py; for FilteredPackages also
 * Do something for modules that can not be found
 * Dotted not found modules
+
+
+Small Features For 0.2 Release
+==============================
+- Numerical lists
+- Fields
+* Better color selection for reST highlighting
+
 
 
 

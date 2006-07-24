@@ -231,9 +231,6 @@ Stories
   Writing ASTs
 
 
-* reST highlighting
-
-
 * What to do when the program has syntax errors for code assists @ 2
 
 
@@ -249,14 +246,6 @@ Stories
 
 
 > Public Release 0.2RC : July 30, 2006
-
-
-* Enhancing syntax highlighting @ 16h
-
-  * Only highlighting the changed region
-  * Extend highlighting region while highlighting if necessay
-  * Highlighting after cut, paste, undo and redo
-  * Use Modified event for updating highlighting only when necessary
 
 
 * Enhancing editor
