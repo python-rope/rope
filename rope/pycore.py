@@ -331,7 +331,6 @@ class PyModule(PyDefinedObject):
         super(PyModule, self).__init__(PyObject.get_base_type('Module'),
                                        pycore, ast_node, None)
         self.resource = resource
-        self.is_package = False
 
     def _update_attributes_from_ast(self, attributes):
         visitor = _GlobalVisitor(self.pycore, self)
@@ -349,7 +348,6 @@ class PyPackage(PyDefinedObject):
 
     def __init__(self, pycore, resource=None):
         self.resource = resource
-        self.is_package = True
         if resource is not None and resource.has_child('__init__.py'):
             ast_node = compiler.parse(resource.get_child('__init__.py').read())
         else:
@@ -603,7 +601,6 @@ class _ScopeVisitor(object):
                 lineno = 1
             except ModuleNotFoundException:
                 module = PyObject(PyObject.get_base_type('Module'))
-                module.is_package = False
                 module_resource = None
                 lineno = None
             if alias is None and '.' in imported:
@@ -628,7 +625,7 @@ class _ScopeVisitor(object):
             module = PyPackage(self.pycore)
 
         if node.names[0][0] == '*':
-            if module.is_package:
+            if isinstance(module, PyPackage):
                 return
             for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):

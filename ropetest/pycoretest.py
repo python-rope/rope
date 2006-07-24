@@ -131,9 +131,10 @@ class PyCoreTest(unittest.TestCase):
         sample_function = mod.get_attributes()['sample_function']
         self.assertEquals(['param1', 'param2', 'param3', 'param4'], sample_function.object.parameters)
 
-    def test_not_found_module_is_package(self):
+    def test_not_found_module_is_module(self):
         mod = self.pycore.get_string_module('import doesnotexist\n')
-        self.assertFalse(mod.get_attributes()['doesnotexist'].object.is_package)
+        self.assertEquals(PyObject.get_base_type('Module'), 
+                          mod.get_attributes()['doesnotexist'].get_type())
 
     def test_mixing_scopes_and_objects_hierarchy(self):
         mod = self.pycore.get_string_module('var = 200\n')

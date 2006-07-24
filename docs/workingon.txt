@@ -3,19 +3,19 @@ Pre-Release Refactorings
 
 Goals:
 
-* Go to definition for packages should go to __init__.py; for FilteredPackages also
+- Go to definition for packages should go to __init__.py; for FilteredPackages also
 * Do something for modules that can not be found
 * Dotted not found modules
 
 Problems with what we have right now:
 
-* PyFilteredPackages should have the __init__.py resource
+- PyFilteredPackages should have the __init__.py resource
+- module.is_package is scattered everywhere; replace it with isinstance
 * PyPackages should not expose all of their submodules
-* module.is_package is scattered everywhere; replace it with isinstance
 
 Possible solutions:
 
-* Eliminate PyFilteredPackage all together
+- Eliminate PyFilteredPackage all together
 * PyPackage should be filtered by itself
 
 
