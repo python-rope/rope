@@ -87,6 +87,12 @@ Stories
 * Go to matching parenthesis @ 12h
 
 
+* Python C extensions
+
+
+* Relative imports
+
+
 * Enhancing module running @ 20h
 
   * Showing running status in the GUI
@@ -238,7 +244,11 @@ Stories
   Add filter texts and selection texts to trees and lists.
 
 
-> Public Release 0.2 : July 30, 2006
+* Packages should be filtered @ 4h
+  Do not show unimported submodules and subpackages as attributes.
+
+
+> Public Release 0.2RC : July 30, 2006
 
 
 * Enhancing syntax highlighting @ 16h
@@ -254,7 +264,10 @@ Stories
   * Clearing selection if something happens
   * Unifying builtin and emacs-style selections; if selection
     is active do the builtin cut and paste
-  * Edit menu: cut, paste, undo, redo, revert
+  * File : save, close
+  * Edit : set mark, copy, cut, paste, undo, redo, search, backward
+  * Code : code assist, quick outline, rename, correct indentation
+  * Help : about
 
 
 * Asking whether to save modified buffers when exiting @ 4h

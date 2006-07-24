@@ -35,7 +35,7 @@ class PythonHighlighting(Highlighting):
         sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
         dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
         string = PythonHighlighting.any("string", [sq3string, dq3string, sqstring, dqstring])
-        self.pattern = re.compile(kw + "|" + builtin + '|' + comment + "|" + string)
+        self.pattern = re.compile(kw + "|" + builtin + '|' + comment + "|" + string, re.S)
 
     @staticmethod
     def any(name, list):
@@ -74,4 +74,57 @@ class NoHighlighting(Highlighting):
         if False:
             yield None
 
+class ReSTHighlighting(Highlighting):
+    
+    def __init__(self):
+        self.pattern = None
+        
+    def _get_pattern(self):
+        if not self.pattern:
+            self.pattern = self._make_pattern()
+        return self.pattern
+    
+    def _make_pattern(self):
+        title_pattern = '(?P<overline>^(([^\\w\\s\\d]+)\n))?' + \
+                        '(?P<title>.+)\n' + \
+                        '(?P<underline>(\\1|[^\\w\\s\\d])+)$'
+        listsign_pattern = '^\\s*(?P<listsign>[*+-])\\s+.+$'
+        directive_pattern = '(?P<directive>\\.\\. \\w+.+::)(\\s+.+)?'
+        emphasis_pattern = '(?P<emphasis>\\*[^*\n]+\\*)'
+        strongemphasis_pattern = '(?P<strongemphasis>\\*\\*[^*\n]+\\*\\*)'
+        literal_pattern = '(?P<literal>``[^`]+``)'
+        interpreted_pattern = '(?P<interpreted>`[^`]+`)(?P<role>:\\w+:)?'
+        hyperlink_target_pattern = '(?P<hyperlink_target>\\w+://[^\\s]+)'
+        hyperlink_pattern = '(?P<hyperlink>[^\\s]+_|`.+`_)'
+        hyperlink_definition_pattern = '(?P<hyperlink_definition>\\.\\. _[^\\s:]+:)'
+        all_patterns = title_pattern + '|' + listsign_pattern + '|' + \
+                       directive_pattern + '|' + emphasis_pattern + '|' +\
+                       strongemphasis_pattern + '|' + literal_pattern + '|' + \
+                       hyperlink_pattern + '|' + hyperlink_target_pattern + '|' + \
+                       interpreted_pattern + '|' + hyperlink_definition_pattern
+        return re.compile(all_patterns, re.M)
+    
+    def get_styles(self):
+        return {'title' : HighlightingStyle(color='purple', bold=True),
+                'underline' : HighlightingStyle(color='green', bold=True),
+                'overline' : HighlightingStyle(color='green', bold=True),
+                'listsign' : HighlightingStyle(color='blue', bold=True),
+                'directive' : HighlightingStyle(color='blue', bold=True),
+                'emphasis' : HighlightingStyle(italic=True),
+                'strongemphasis' : HighlightingStyle(bold=True),
+                'literal' : HighlightingStyle(color='#908080'),
+                'interpreted' : HighlightingStyle(color='#008000'),
+                'role' : HighlightingStyle(color='blue'),
+                'hyperlink_target' : HighlightingStyle(color='blue'),
+                'hyperlink' : HighlightingStyle(color='blue'),
+                'hyperlink_definition' : HighlightingStyle(color='blue')}
+
+    def highlights(self, editor, start, end):
+        text = editor.get(start, end)
+        for match in self._get_pattern().finditer(text):
+            for key, value in match.groupdict().items():
+                if value:
+                    a, b = match.span(key)
+                    yield (editor.get_relative(start, a),
+                           editor.get_relative(start, b), key)
 

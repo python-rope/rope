@@ -26,7 +26,7 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.coretest.CoreTest))
     result.addTests(unittest.makeSuite(ropetest.editortest.GraphicalEditorTest))
     result.addTests(ropetest.projecttest.suite())
-    result.addTests(unittest.makeSuite(ropetest.highlighttest.HighlightTest))
+    result.addTests(ropetest.highlighttest.suite())
     result.addTests(unittest.makeSuite(ropetest.indentertest.PythonCodeIndenterTest))
     result.addTests(ropetest.codeassisttest.suite())
     result.addTests(unittest.makeSuite(ropetest.statusbartest.StatusBarTest))

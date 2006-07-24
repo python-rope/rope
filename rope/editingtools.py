@@ -64,3 +64,23 @@ class NormalEditingTools(EditingTools):
     def create_refactoring(self):
         return rope.refactoring.NoRefactoring()
 
+class ReSTEditingTools(EditingTools):
+
+    def __init__(self):
+        pass
+
+    def create_indenter(self, editor):
+        return rope.indenter.NormalIndenter(editor)
+
+    def create_highlighting(self):
+        return rope.highlight.ReSTHighlighting()
+    
+    def create_code_assist(self):
+        return rope.codeassist.NoAssist()
+
+    def create_outline(self):
+        return rope.outline.NoOutline()
+
+    def create_refactoring(self):
+        return rope.refactoring.NoRefactoring()
+

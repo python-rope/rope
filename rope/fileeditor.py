@@ -10,6 +10,8 @@ class FileEditor(object):
         editing_tools = None
         if self.file.get_name().endswith('.py'):
             editing_tools = rope.editingtools.PythonEditingTools(project)
+        elif self.file.get_name().endswith('.txt'):
+            editing_tools = rope.editingtools.ReSTEditingTools()
         else:
             editing_tools = rope.editingtools.NormalEditingTools()
         self.editor = editor_factory.create(editing_tools)

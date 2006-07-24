@@ -1,3 +1,21 @@
+Basic reST Highlighting
+=======================
+
+- Section titles
+- Lists
+- Directives
+- Literal blocks
+* Inline markups
+
+  - *emphasis*
+  - **strong emphasis**
+  - ``inline literal``
+  - inline hyperlinks
+
+- hyperlink definitions
+
+- Adding to runtests
+
 Pre-Release Refactorings
 ========================
 
@@ -6,17 +24,6 @@ Goals:
 - Go to definition for packages should go to __init__.py; for FilteredPackages also
 * Do something for modules that can not be found
 * Dotted not found modules
-
-Problems with what we have right now:
-
-- PyFilteredPackages should have the __init__.py resource
-- module.is_package is scattered everywhere; replace it with isinstance
-* PyPackages should not expose all of their submodules
-
-Possible solutions:
-
-- Eliminate PyFilteredPackage all together
-* PyPackage should be filtered by itself
 
 
 
@@ -41,9 +48,6 @@ Remaining Stories
 * PyObject and PyName equality checks; Value objects?
 * Consider using `StatementRangeFinder` in highlight module?
 * Directories should contain __init__.py to be packages in codeassist?
-* Code assists on relative imports?
-* Python C extensions?
-* Remote pair programming support?
 * Separating ui and core modules and packages?
 
   * Decide which modules are the domain and which are the presentation

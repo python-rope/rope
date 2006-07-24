@@ -1,10 +1,12 @@
 import unittest
 
 from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
-from rope.highlight import PythonHighlighting, HighlightingStyle
+from rope.highlight import PythonHighlighting, HighlightingStyle, ReSTHighlighting
 
 class HighlightTest(unittest.TestCase):
+
     __factory = MockEditorFactory()
+    
     def setUp(self):
         self.editor = self.__factory.create()
         self.highlighting = PythonHighlighting()
@@ -121,5 +123,93 @@ class HighlightTest(unittest.TestCase):
         self._assertOutcomesEquals(text, highs)
         
 
+class ReSTHighlightTest(unittest.TestCase):
+
+    __factory = MockEditorFactory()
+    
+    def setUp(self):
+        self.editor = self.__factory.create()
+        self.highlighting = ReSTHighlighting()
+        unittest.TestCase.setUp(self)
+    
+    def tearDown(self):
+        unittest.TestCase.tearDown(self)
+    
+    def assert_in_highlights(self, text, expected):
+        self.editor.set_text(text)
+        start = self.editor.get_start()
+        end = self.editor.get_end()
+        highlights = []
+        for result in self.highlighting.highlights(self.editor, start, end):
+            highlights.append(result)
+        expected = (self.editor.get_index(expected[0]), self.editor.get_index(expected[1]),
+                    expected[2])
+        self.assertTrue(expected in highlights)
+    
+    def test_highlighting_section_titles(self):
+        self.assertTrue('title' in self.highlighting.get_styles())
+        self.assert_in_highlights('My Title\n========\n', (0, 8, 'title'))
+
+    def test_highlighting_section_titles2(self):
+        self.assert_in_highlights('========\nMy Title\n========\n', (9, 17, 'title'))
+
+    def test_highlighting_section_titles3(self):
+        self.assert_in_highlights('\nMy Title\n========\n', (1, 9, 'title'))
+
+    def test_list_signs(self):
+        self.assertTrue('listsign' in self.highlighting.get_styles())
+        self.assert_in_highlights('* item # 1\n', (0, 1, 'listsign'))
+
+    def test_list_signs2(self):
+        self.assertTrue('listsign' in self.highlighting.get_styles())
+        self.assert_in_highlights('- item # 1\n', (0, 1, 'listsign'))
+
+    def test_directives(self):
+        self.assertTrue('directive' in self.highlighting.get_styles())
+        self.assert_in_highlights('.. note:: This is a note\n', (0, 9, 'directive'))
+
+    def test_emphasis(self):
+        self.assertTrue('emphasis' in self.highlighting.get_styles())
+        self.assert_in_highlights('*important*', (0, 11, 'emphasis'))
+
+    def test_strong_emphasis(self):
+        self.assertTrue('strongemphasis' in self.highlighting.get_styles())
+        self.assert_in_highlights('**important**', (0, 13, 'strongemphasis'))
+
+    def test_strong_emphasis(self):
+        self.assertTrue('literal' in self.highlighting.get_styles())
+        self.assert_in_highlights('``rope``', (0, 8, 'literal'))
+
+    def test_interpreted(self):
+        self.assertTrue('interpreted' in self.highlighting.get_styles())
+        self.assert_in_highlights('`rope`', (0, 6, 'interpreted'))
+
+    def test_role(self):
+        self.assertTrue('role' in self.highlighting.get_styles())
+        self.assert_in_highlights('`rope`:emphasis:', (6, 16, 'role'))
+
+    def test_hyperlink_target(self):
+        self.assertTrue('hyperlink_target' in self.highlighting.get_styles())
+        self.assert_in_highlights('http://rope.sf.net/index.html', (0, 29, 'hyperlink_target'))
+
+    def test_hyperlink(self):
+        self.assertTrue('hyperlink' in self.highlighting.get_styles())
+        self.assert_in_highlights('rope_', (0, 5, 'hyperlink'))
+
+    def test_hyperlink2(self):
+        self.assert_in_highlights('`rope homepage`_', (0, 16, 'hyperlink'))
+
+    def test_hyperlink_definition(self):
+        self.assertTrue('hyperlink_definition' in self.highlighting.get_styles())
+        self.assert_in_highlights('.. _rope: http://rope.sf.net\n', (0, 9, 'hyperlink_definition'))
+
+
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(HighlightTest))
+    result.addTests(unittest.makeSuite(ReSTHighlightTest))
+    return result
+
 if __name__ == '__main__':
     unittest.main()
+
