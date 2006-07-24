@@ -3,6 +3,9 @@
 ===========
 
 
+- Showing editor modified status : July 23, 2006
+
+
 - Sorting code assist proposals : July 22, 2006
 
 

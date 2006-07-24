@@ -23,7 +23,7 @@ class PyCore(object):
         if not results:
             raise ModuleNotFoundException('Module %s not found' % name)
         result = results[0]
-        return self._create(results[0])
+        return self.resource_to_pyobject(results[0])
 
     def get_string_module(self, module_content):
         """Returns a `PyObject` object for the given module_content"""
@@ -39,20 +39,8 @@ class PyCore(object):
             del self.module_map[resource]
             resource.remove_change_observer(self._invalidate_resource_cache)
 
-    def _create(self, resource):
-        if resource in self.module_map:
-            return self.module_map[resource]
-        if resource.is_folder():
-            result = PyPackage(self, resource)
-        else:
-            ast = compiler.parse(resource.read())
-            result = PyModule(self, ast, resource=resource)
-        self.module_map[resource] = result
-        resource.add_change_observer(self._invalidate_resource_cache)
-        return result
-
     def create_module(self, src_folder, new_module):
-        """Creates a module"""
+        """Creates a module and returns a `rope.project.File`"""
         packages = new_module.split('.')
         parent = src_folder
         for package in packages[:-1]:
@@ -60,7 +48,7 @@ class PyCore(object):
         return parent.create_file(packages[-1] + '.py')
 
     def create_package(self, src_folder, new_package):
-        """Creates a package"""
+        """Creates a package and returns a `rope.project.Folder`"""
         packages = new_package.split('.')
         parent = src_folder
         for package in packages[:-1]:
@@ -70,11 +58,13 @@ class PyCore(object):
         return created_package
 
     def _find_module_in_source_folder(self, source_folder, module_name):
+        result = []
         module = source_folder
         packages = module_name.split('.')
         for pkg in packages[:-1]:
             if  module.is_folder() and module.has_child(pkg):
                 module = module.get_child(pkg)
+                result.append(module)
             else:
                 return None
         if not module.is_folder():
@@ -82,12 +72,14 @@ class PyCore(object):
 
         if module.has_child(packages[-1]) and \
            module.get_child(packages[-1]).is_folder():
-            return module.get_child(packages[-1])
+            result.append(module.get_child(packages[-1]))
+            return result
         elif module.has_child(packages[-1] + '.py') and \
              not module.get_child(packages[-1] + '.py').is_folder():
-            return module.get_child(packages[-1] + '.py')
+            result.append(module.get_child(packages[-1] + '.py'))
+            return result
         return None
-
+    
     def _get_python_path_folders(self):
         result = []
         for src in sys.path:
@@ -104,6 +96,21 @@ class PyCore(object):
         for src in self.get_source_folders():
             module = self._find_module_in_source_folder(src, module_name)
             if module is not None:
+                result.append(module[-1])
+        if result:
+            return result
+        for src in self._get_python_path_folders():
+            module = self._find_module_in_source_folder(src, module_name)
+            if module is not None:
+                result.append(module[-1])
+        return result
+    
+    def _find_module_resource_list(self, module_name):
+        """Returns a list of lists of `Folder`s and `File`s for the given module"""
+        result = []
+        for src in self.get_source_folders():
+            module = self._find_module_in_source_folder(src, module_name)
+            if module is not None:
                 result.append(module)
         if result:
             return result
@@ -116,6 +123,18 @@ class PyCore(object):
     def get_source_folders(self):
         """Returns project source folders"""
         return self._find_source_folders(self.project.get_root_folder())
+    
+    def resource_to_pyobject(self, resource):
+        if resource in self.module_map:
+            return self.module_map[resource]
+        if resource.is_folder():
+            result = PyPackage(self, resource)
+        else:
+            ast = compiler.parse(resource.read())
+            result = PyModule(self, ast, resource=resource)
+        self.module_map[resource] = result
+        resource.add_change_observer(self._invalidate_resource_cache)
+        return result
 
     def _is_package(self, folder):
         if folder.has_child('__init__.py') and \
@@ -325,45 +344,38 @@ class PyModule(PyDefinedObject):
     def get_resource(self):
         return self.resource
 
+
 class PyPackage(PyDefinedObject):
 
-    def __init__(self, pycore, resource):
-        if resource.has_child('__init__.py'):
+    def __init__(self, pycore, resource=None):
+        self.resource = resource
+        self.is_package = True
+        if resource is not None and resource.has_child('__init__.py'):
             ast_node = compiler.parse(resource.get_child('__init__.py').read())
         else:
             ast_node = compiler.parse('\n')
         super(PyPackage, self).__init__(PyObject.get_base_type('Module'), pycore, ast_node, None)
-        self.is_package = True
-        self.resource = resource
 
     def _update_attributes_from_ast(self, attributes):
+        if self.resource is None:
+            return
         for child in self.resource.get_children():
             if child.is_folder():
-                attributes[child.get_name()] = PyName(self.pycore._create(child))
+                child_pyobject = self.pycore.resource_to_pyobject(child)
+                attributes[child.get_name()] = PyName(child_pyobject, False, 1,
+                                                      child_pyobject.get_resource())
             elif child.get_name().endswith('.py') and \
                  child.get_name() != '__init__.py':
                 name = child.get_name()[:-3]
-                attributes[name] = PyName(self.pycore._create(child))
+                child_pyobject = self.pycore.resource_to_pyobject(child)
+                attributes[name] = PyName(child_pyobject, False, 1,
+                                                      child_pyobject.get_resource())
 
     def get_resource(self):
-        if self.resource.has_child('__init__.py'):
+        if self.resource is not None and self.resource.has_child('__init__.py'):
             return self.resource.get_child('__init__.py')
         else:
             return None
-            
-
-class PyFilteredPackage(PyObject):
-
-    def __init__(self):
-        super(PyFilteredPackage, self).__init__(PyObject.get_base_type('Module'))
-        self.is_package = True
-        self.attributes = {}
-
-    def get_attributes(self):
-        return self.attributes
-
-    def _add_attribute(self, name, pyname):
-        self.attributes[name] = pyname
 
 
 class PyName(object):
@@ -596,31 +608,24 @@ class _ScopeVisitor(object):
                 lineno = None
             if alias is None and '.' in imported:
                 tokens = imported.split('.')
-                if tokens[0] in self.names and \
-                   isinstance(self.names[tokens[0]].object, PyFilteredPackage):
-                    pypkg = self.names[tokens[0]].object
-                else:
-                    pypkg = PyFilteredPackage()
-                    self.names[tokens[0]] = PyName(pypkg)
-                for token in tokens[1:-1]:
-                    if token in pypkg.get_attributes() and \
-                       isinstance(pypkg.get_attributes()[token].object,
-                                  PyFilteredPackage):
-                        newpkg = pypkg.get_attributes()[token].object
-                    else:
-                        newpkg = PyFilteredPackage()
-                        pypkg._add_attribute(token, PyName(newpkg))
-                    pypkg = newpkg
-                pypkg._add_attribute(tokens[-1], PyName(module, False, 
-                                                        module=module_resource, lineno=lineno))
+                toplevel_module = self._get_module_with_packages(name)
+                self.names[tokens[0]] = PyName(toplevel_module, False, 
+                                               module=toplevel_module.get_resource(), lineno=lineno)
             else:
                 self.names[imported] = PyName(module, False, module=module_resource, lineno=lineno)
+
+    def _get_module_with_packages(self, module_name):
+        found_modules = self.pycore._find_module_resource_list(module_name)
+        if len(found_modules) == 0:
+            return None
+        module_list = found_modules[0]
+        return self.pycore.resource_to_pyobject(module_list[0])
 
     def visitFrom(self, node):
         try:
             module = self.pycore.get_module(node.modname)
         except ModuleNotFoundException:
-            module = PyFilteredPackage()
+            module = PyPackage(self.pycore)
 
         if node.names[0][0] == '*':
             if module.is_package:
@@ -640,19 +645,16 @@ class _ScopeVisitor(object):
                 if module.get_attributes().has_key(name):
                     imported_pyname = module.get_attributes()[name]
                     imported_object = imported_pyname.object
-                    if isinstance(imported_object, PyPackage):
-                        self.names[imported] = PyFilteredPackage()
-                    else:
-                        pyname_module = module
-                        lineno = None
-                        if imported_pyname.module is not None:
-                            pyname_module = imported_pyname.module
-                            lineno = imported_pyname.get_definition_location()[1]
-                        if imported_pyname.get_type() == PyObject.get_base_type('Module'):
-                            pyname_module = imported_pyname.get_object().get_resource()
-                            lineno = 1                            
-                        self.names[imported] = PyName(imported_object, False, module=pyname_module,
-                                                      lineno=lineno)
+                    pyname_module = module
+                    lineno = None
+                    if imported_pyname.module is not None:
+                        pyname_module = imported_pyname.module
+                        lineno = imported_pyname.get_definition_location()[1]
+                    if imported_pyname.get_type() == PyObject.get_base_type('Module'):
+                        pyname_module = imported_pyname.get_object().get_resource()
+                        lineno = 1                            
+                    self.names[imported] = PyName(imported_object, False, module=pyname_module,
+                                                  lineno=lineno)
                 else:
                     self.names[imported] = PyName()
 

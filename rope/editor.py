@@ -636,7 +636,8 @@ class GraphicalEditor(TextEditor):
 
     def saving_editor(self):
         self.text.edit_separator()
-        self.text.edit_modified(False)
+        if self.is_modified():
+            self.text.edit_modified(False)
 
     def undo(self):
         try:

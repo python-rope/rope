@@ -28,7 +28,7 @@ class PyCoreTest(unittest.TestCase):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         mod = self.pycore.create_module(pkg, 'mod')
         package = self.pycore.get_module('pkg')
-        self.assertEquals(PyObject.get_base_type('Module'), package.type)
+        self.assertEquals(PyObject.get_base_type('Module'), package.get_type())
         self.assertEquals(1, len(package.get_attributes()))
         module = package.get_attributes()['mod']
         self.assertEquals(PyObject.get_base_type('Module'), module.get_type())
@@ -391,8 +391,7 @@ class PyCoreTest(unittest.TestCase):
         pkg_pyname = mod.get_attributes()['pkg']
         self.assertEquals((init_dot_py, 1), pkg_pyname.get_definition_location())
         
-    # TODO: Eliminate PyFilteredPackage
-    def xxx_test_get_definition_location_for_filtered_packages(self):
+    def test_get_definition_location_for_filtered_packages(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         self.pycore.create_module(pkg, 'mod')
         init_dot_py = pkg.get_child('__init__.py')
@@ -559,7 +558,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         module = mod.get_attributes()['mod1']
         self.assertTrue('f' in module.get_attributes())
         
-    def test_from_package_import_package(self):
+    # TODO: not showing unimported names as attributes of packages
+    def xxx_test_from_package_import_package(self):
         pkg1 = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')
         pkg2 = self.pycore.create_package(pkg1, 'pkg2')
         module = self.pycore.create_module(pkg2, 'mod')
@@ -624,6 +624,13 @@ class PyCoreInProjectsTest(unittest.TestCase):
         samplemod = self.pycore.get_module('samplemod').get_resource()
         self.assertEquals((samplemod, 1), sample_class.get_definition_location())
         
+    def test_nested_modules(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod = self.pycore.create_module(pkg, 'mod')
+        scope = self.pycore.get_string_scope('import pkg.mod\n')
+        mod_pyobject = scope.get_names()['pkg'].get_attributes()['mod']
+        self.assertEquals((mod, 1), mod_pyobject.get_definition_location())
+
 
 class PyCoreScopesTest(unittest.TestCase):
 
