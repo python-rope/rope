@@ -230,13 +230,17 @@ class GraphicalEditor(TextEditor):
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)
 
-    def _highlight_range(self, startIndex, endIndex):
+    def _highlight_range(self, start_index, end_index):
         for style in self.highlighting.get_styles().keys():
-            self.text.tag_remove(style, startIndex, endIndex)
-        for start, end, kind in self.highlighting.highlights(self, 
-                                                             GraphicalTextIndex(self, startIndex),
-                                                             GraphicalTextIndex(self, endIndex)):
-            self.text.tag_add(kind, start._getIndex(), end._getIndex())
+            self.text.tag_remove(style, start_index, end_index)
+        start_offset = self._get_offset(start_index)
+        end_offset = self._get_offset(end_index)
+        for start, end, kind in self.highlighting.highlights(self.get_text(),
+                                                             start_offset,
+                                                             end_offset):
+            tag_start = '1.0 +%dc' % start
+            tag_end = '1.0 +%dc' % end
+            self.text.tag_add(kind, tag_start, tag_end)
 
     def _bind_keys(self):
         self.text.bind('<Alt-f>', lambda event: self.next_word())
@@ -808,14 +812,17 @@ class GraphicalEditor(TextEditor):
         return self._get_line_from_index(INSERT)
 
     def get_current_offset(self):
-        result = self._get_column_from_index(INSERT)
-        current_line = self._get_line_from_index(INSERT)
+        return self._get_offset(INSERT)
+    
+    def _get_offset(self, index):
+        result = self._get_column_from_index(index)
+        current_line = self._get_line_from_index(index)
         current_pos = '1.0 lineend'
         for x in range(current_line - 1):
             result += self._get_column_from_index(current_pos) + 1
             current_pos = str(self.text.index(current_pos + ' +1l lineend'))
         return result
-
+    
     def set_status_bar_manager(self, manager):
         self.status_bar_manager = manager
 

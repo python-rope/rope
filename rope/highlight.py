@@ -10,15 +10,17 @@ class Highlighting(object):
     def get_styles(self):
         """Returns the dictionary of styles used in highlighting texts by this highlighting"""
 
-    def highlights(self, editor, start, end):
+    def highlights(self, text, start, end):
         """Generates highlighted ranges as (start, end, style) tuples"""
-        text = editor.get(start, end)
-        for match in self._get_pattern().finditer(text):
+        if end == None:
+            end = len(text)
+        for match in self._get_pattern().finditer(text[start:end]):
             for key, value in match.groupdict().items():
                 if value:
                     a, b = match.span(key)
-                    yield (editor.get_relative(start, a),
-                           editor.get_relative(start, b), key)
+#                    print a, b, key
+                    yield (start + a,
+                           start + b, key)
     
     def _get_pattern(self):
         if not self.pattern:
@@ -96,9 +98,10 @@ class ReSTHighlighting(Highlighting):
         interpreted_pattern = '(?P<interpreted>`[^`]+`)(?P<role>:\\w+:)?'
         hyperlink_target_pattern = '(?P<hyperlink_target>\\w+://[^\\s]+)'
         hyperlink_pattern = '(?P<hyperlink>[\\w]+_|`[^`]+`_)\\b'
-        hyperlink_definition_pattern = '(?P<hyperlink_definition>\\.\\. _[^\n:]+:)'
+        hyperlink_definition_pattern = '(?P<hyperlink_definition>\\.\\. _([^`\n:]|`.+`)+:)'
         field_pattern = '^\\s*(?P<field>:[^\n:]+:)'
-        all_patterns = literal_pattern + '|' + hyperlink_pattern + '|' + \
+        escaped_pattern = '(?P<escaped>\\\\.)'
+        all_patterns = literal_pattern + '|' + escaped_pattern + '|' + hyperlink_pattern + '|' + \
                        interpreted_pattern + '|' + \
                        title_pattern + '|' + listsign_pattern + '|' + \
                        directive_pattern + '|' + emphasis_pattern + '|' + \
@@ -121,5 +124,6 @@ class ReSTHighlighting(Highlighting):
                 'hyperlink_target' : HighlightingStyle(color='blue'),
                 'hyperlink' : HighlightingStyle(color='blue'),
                 'hyperlink_definition' : HighlightingStyle(color='blue'),
-                'field' : HighlightingStyle(color='purple')}
+                'field' : HighlightingStyle(color='purple'),
+                'escaped' : HighlightingStyle()}
 

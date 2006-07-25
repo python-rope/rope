@@ -1,14 +1,10 @@
 import unittest
 
-from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.highlight import PythonHighlighting, HighlightingStyle, ReSTHighlighting
 
 class HighlightTest(unittest.TestCase):
 
-    __factory = MockEditorFactory()
-    
     def setUp(self):
-        self.editor = self.__factory.create()
         self.highlighting = PythonHighlighting()
         unittest.TestCase.setUp(self)
     
@@ -16,24 +12,17 @@ class HighlightTest(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def _assertOutcomesEquals(self, text, expected, not_expected=[], start=None, end=None):
-        self.editor.set_text(text)
-        startIndex = self.editor.get_start()
-        if start is not None:
-            startIndex = self.editor.get_index(start)
-        endIndex = self.editor.get_end()
-        if end is not None:
-            endIndex = self.editor.get_index(end)
+        if start is None:
+            start = 0
+        if end is None:
+            end = len(text)
         highlights = []
-        for result in self.highlighting.highlights(self.editor, startIndex, endIndex):
+        for result in self.highlighting.highlights(text, start, end):
             highlights.append(result)
         for highlight in expected:
-            current = (self.editor.get_index(highlight[0]),
-                       self.editor.get_index(highlight[1]), highlight[2])
-            self.assertTrue(current in highlights)
+            self.assertTrue(highlight in highlights)
         for highlight in not_expected:
-            current = (self.editor.get_index(highlight[0]),
-                       self.editor.get_index(highlight[1]), highlight[2])
-            self.assertTrue(current not in highlights)
+            self.assertTrue(highlight not in highlights)
 
     def testKeywordHighlighting(self):
         text = 'def sample_function():\n    pass\n'
@@ -68,7 +57,7 @@ class HighlightTest(unittest.TestCase):
         noHigh = NoHighlighting()
         text = 'def sample_function():\n    pass\n'
         expected = []
-        for result in noHigh.highlights(self.editor, None, None):
+        for result in noHigh.highlights(text, None, None):
             self.assertEquals(expected[0], result)
             del expected[0]
         self.assertFalse(expected)
@@ -125,10 +114,7 @@ class HighlightTest(unittest.TestCase):
 
 class ReSTHighlightTest(unittest.TestCase):
 
-    __factory = MockEditorFactory()
-    
     def setUp(self):
-        self.editor = self.__factory.create()
         self.highlighting = ReSTHighlighting()
         unittest.TestCase.setUp(self)
     
@@ -136,14 +122,9 @@ class ReSTHighlightTest(unittest.TestCase):
         unittest.TestCase.tearDown(self)
     
     def in_highlights(self, text, expected):
-        self.editor.set_text(text)
-        start = self.editor.get_start()
-        end = self.editor.get_end()
         highlights = []
-        for result in self.highlighting.highlights(self.editor, start, end):
+        for result in self.highlighting.highlights(text, 0, len(text)):
             highlights.append(result)
-        expected = (self.editor.get_index(expected[0]), self.editor.get_index(expected[1]),
-                    expected[2])
         return expected in highlights
     
     def test_highlighting_section_titles(self):
@@ -229,6 +210,9 @@ class ReSTHighlightTest(unittest.TestCase):
     def test_highlighting_fields(self):
         self.assertTrue('field' in self.highlighting.get_styles())
         self.assertTrue(self.in_highlights(':Age: 3 months', (0, 5, 'field')))
+
+    def test_escaping(self):
+        self.assertFalse(self.in_highlights('\\`Age\\` 3 months', (1, 7, 'interpreted')))
 
 
 def suite():
