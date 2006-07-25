@@ -352,7 +352,7 @@ class GraphicalEditor(TextEditor):
         if lineno is not None:
             editor.goto_line(lineno)
             
-    def _rename_refactoring_dialog(self, event):
+    def _rename_refactoring_dialog(self, event=None):
         toplevel = Toplevel()
         toplevel.title('Rename Refactoring')
         frame = Frame(toplevel)

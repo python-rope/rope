@@ -189,8 +189,66 @@ class Core(object):
         codeMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Code', menu=codeMenu, underline=1)
 
+        def correct_line_indentation():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().correct_line_indentation()
+
+        codeMenu.add_command(label='Correct Line Indentation', 
+                             command=correct_line_indentation, underline=13)
+        def quick_outline():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._show_outline_window()
+
+        codeMenu.add_command(label='Quick Outline', 
+                             command=quick_outline, underline=0)
+        def code_assist():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._show_completion_window()
+
+        codeMenu.add_command(label='Code Assist', 
+                             command=code_assist, underline=0)
+        def rename():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._rename_refactoring_dialog()
+
+        codeMenu.add_command(label='Rename Refactoring', 
+                             command=rename, underline=0)
+        def goto_definition():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().goto_definition()
+
+        codeMenu.add_command(label='Goto Defenition', 
+                             command=goto_definition, underline=0)
         helpMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Help', menu=helpMenu, underline=3)
+        helpMenu.add_command(label='About', 
+                             command=self._show_about_dialog, underline=0)
+
+    def _show_about_dialog(self):
+        toplevel = Toplevel()
+        toplevel.title('About Rope')
+        text = 'rope, A python IDE\n\n' + \
+               'Copyright (C) 2006 Ali Gholami Rudi\n\n' + \
+               'This program is free software; you can redistribute it and/or modify it\n' + \
+               'under the terms of GNU General Public License as published by the \n' + \
+               'Free Software Foundation; either version 2 of the license, or (at your \n' + \
+               'opinion any later version.\n\n' + \
+               'This program is distributed in the hope that it will be useful,\n' + \
+               'but WITHOUT ANY WARRANTY; without even the implied warranty of\n' + \
+               'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n' + \
+               'GNU General Public License for more details.\n'
+        label = Label(toplevel, text=text, height=15, width=70, justify=LEFT)
+        def ok():
+            toplevel.destroy()
+        ok_button = Button(toplevel, text='OK', command=ok)
+        label.grid()
+        ok_button.grid()
+        toplevel.focus_set()
 
     def _set_key_binding(self, widget):
         widget.bind('<Control-x><Control-n>', self._create_new_file_dialog)
