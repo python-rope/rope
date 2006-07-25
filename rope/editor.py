@@ -324,9 +324,9 @@ class GraphicalEditor(TextEditor):
         self.text.event_add('<<ForwardSearch>>', '<Control-s>')
         self.text.event_add('<<BackwardSearch>>', '<Control-r>')
         self.text.bind('<<ForwardSearch>>',
-                       lambda event: self._search_event(True), '+')
+                       lambda event: self.start_searching(True), '+')
         self.text.bind('<<BackwardSearch>>',
-                       lambda event: self._search_event(False))
+                       lambda event: self.start_searching(False))
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<Alt-slash>', lambda event: self._show_completion_window());
@@ -761,7 +761,7 @@ class GraphicalEditor(TextEditor):
         self.text.see(INSERT)
 
 
-    def _search_event(self, forward):
+    def start_searching(self, forward):
         if self.searcher.is_searching():
             self.searcher.configure_search(forward)
             self.searcher.next_match()

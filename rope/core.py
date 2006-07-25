@@ -125,6 +125,8 @@ class Core(object):
         fileMenu.add_command(label='Open File ...',
                              command=self._open_file_dialog, underline=0)
         fileMenu.add_separator()
+        fileMenu.add_command(label='Change Editor',
+                             command=self._change_editor_dialog, underline=0)
         fileMenu.add_command(label='Save Editor',
                              command=self.save_file, underline=0)
         fileMenu.add_command(label='Close Editor',
@@ -135,9 +137,57 @@ class Core(object):
         
         editMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Edit', menu=editMenu, underline=3)
+        def set_mark():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().set_mark()
+        editMenu.add_command(label='Emacs Set Mark',
+                             command=set_mark, underline=6)
+        def copy():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().copy_region()
+        editMenu.add_command(label='Emacs Copy', command=copy, underline=6)
+        def cut():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().cut_region()
+        editMenu.add_command(label='Emacs Cut', command=cut, underline=8)
+        def paste():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().paste()
+        editMenu.add_command(label='Paste', command=paste, underline=0)
+
+        editMenu.add_separator()
+        def undo():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().undo()
+        editMenu.add_command(label='Undo', command=undo, underline=0)
+        def redo():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().redo()
+        editMenu.add_command(label='Redo', command=redo, underline=0)
+        editMenu.add_separator()
+        def forward_search():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().start_searching(True)
+
+        editMenu.add_command(label='Forward Search', command=forward_search, underline=0)
+
+        def backward_search():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor().start_searching(False)
+
+        editMenu.add_command(label='Backward Search', 
+                             command=backward_search, underline=0)
 
         codeMenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Code', menu=editMenu, underline=1)
+        self.menubar.add_cascade(label='Code', menu=codeMenu, underline=1)
 
         helpMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Help', menu=helpMenu, underline=3)
