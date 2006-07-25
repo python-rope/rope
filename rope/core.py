@@ -208,7 +208,7 @@ class Core(object):
             if activeEditor:
                 activeEditor.get_editor()._show_completion_window()
 
-        codeMenu.add_command(label='Code Assist', 
+        codeMenu.add_command(label='Code Assist',
                              command=code_assist, underline=0)
         def rename():
             activeEditor = self.editor_manager.active_editor
@@ -242,7 +242,8 @@ class Core(object):
                'but WITHOUT ANY WARRANTY; without even the implied warranty of\n' + \
                'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n' + \
                'GNU General Public License for more details.\n'
-        label = Label(toplevel, text=text, height=15, width=70, justify=LEFT)
+        label = Label(toplevel, text=text, height=15, width=70, 
+                      justify=LEFT, relief=GROOVE)
         def ok():
             toplevel.destroy()
         ok_button = Button(toplevel, text='OK', command=ok)

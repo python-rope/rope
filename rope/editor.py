@@ -11,74 +11,7 @@ import rope.codeassist
 import rope.editingtools
 from rope.uihelpers import EnhancedList, EnhancedListHandle
 from rope.uihelpers import TreeViewer, TreeViewerHandle
-
-
-class TextEditor(object):
-    """The base class for all text editor"""
-    def get_text(self):
-        pass
-    
-    def set_text(self, text):
-        pass
-
-    def get_start(self):
-        pass
-
-    def get_insert(self):
-        pass
-
-    def get_end(self):
-        pass
-
-    def get_relative(self, base_index, offset):
-        pass
-
-    def get_index(self, offset):
-        pass
-
-    def set_insert(self, index):
-        pass
-
-    def get(self, start=None, end=None):
-        pass
-
-    def insert(self, index, text):
-        pass
-
-    def delete(self, start=None, end=None):
-        pass
-
-    def next_word(self):
-        pass
-
-    def prev_word(self):
-        pass
-
-    def delete_next_word(self):
-        pass
-
-    def delete_prev_word(self):
-        pass
-
-    def goto_start(self):
-        pass
-
-    def goto_end(self):
-        pass
-
-    def highlight_match(self, match):
-        pass
-
-    def search(self, keyword, start, case=True, forwards=True):
-        pass
-
-    def line_editor(self):
-        pass
-
-
-class TextIndex(object):
-    """A class for pointing to a position in a text"""
-
+from rope.tkhelpers import WidgetRedirector
 
 class LineEditor(object):
     """An interface for line oriented editors"""
@@ -177,8 +110,22 @@ class _OutlineViewHandle(TreeViewerHandle):
     def get_children(self, outline_node):
         return outline_node.get_children()
         
-        
-class GraphicalEditor(TextEditor):
+
+class _TextChangeInspector(object):
+
+    def __init__(self, text_widget):
+        self.redirector = WidgetRedirector(text_widget)
+        self.old_insert = self.redirector.register('insert', self._insert)
+        self.old_delete = self.redirector.register('delete', self._delete)
+    
+    def _insert(self, *args):
+        self.old_insert(*args)
+    
+    def _delete(self, *args):
+        self.old_delete(*args)
+
+
+class GraphicalEditor(object):
 
     def __init__(self, parent, editor_tools):
         font = None
@@ -194,6 +141,7 @@ class GraphicalEditor(TextEditor):
         self._initialize_highlighting()
         self.status_bar_manager = None
         self.modification_observers = []
+        self.change_inspector = _TextChangeInspector(self.text)
 
     def _initialize_highlighting(self):
         def colorize(event=None):
@@ -203,15 +151,15 @@ class GraphicalEditor(TextEditor):
             if start_tags:
                 tag = start_tags[0]
                 range_ = self.text.tag_prevrange(tag, start + '+1c')
-                if self.text.compare(range_[0], '<', start):
+                if range_ and self.text.compare(range_[0], '<', start):
                     start = range_[0]
-                if self.text.compare(range_[1], '>', end):
+                if range_ and self.text.compare(range_[1], '>', end):
                     end = range_[1]
             end_tags = self.text.tag_names(end)
             if end_tags:
                 tag = end_tags[0]
                 range_ = self.text.tag_prevrange(tag, end + '+1c')
-                if self.text.compare(range_[1], '>', end):
+                if range_ and self.text.compare(range_[1], '>', end):
                     end = range_[1]
             self._highlight_range(start, end)
         self.modified_flag = False
@@ -838,7 +786,7 @@ class GraphicalEditor(TextEditor):
         return GraphicalLineEditor(self)
 
 
-class GraphicalTextIndex(TextIndex):
+class GraphicalTextIndex(object):
     """An immutable class for pointing to a position in a text"""
 
     def __init__(self, editor, index):

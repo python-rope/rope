@@ -19,8 +19,7 @@ class Highlighting(object):
                 if value:
                     a, b = match.span(key)
 #                    print a, b, key
-                    yield (start + a,
-                           start + b, key)
+                    yield (start + a, start + b, key)
     
     def _get_pattern(self):
         if not self.pattern:
@@ -68,10 +67,10 @@ class PythonHighlighting(Highlighting):
     def get_styles(self):
         return {'keyword': HighlightingStyle(color='blue', bold=True),
                 'defkeyword': HighlightingStyle(color='blue', bold=True),
-                'string' : HighlightingStyle(color='#004080'),
-                'comment' : HighlightingStyle(color='#008000', italic=True),
-                'builtin' : HighlightingStyle(color='#908080'),
-                'definition' : HighlightingStyle(color='purple', bold=True)}
+                'string': HighlightingStyle(color='#004080'),
+                'comment': HighlightingStyle(color='#008000', italic=True),
+                'builtin': HighlightingStyle(color='#908080'),
+                'definition': HighlightingStyle(color='purple', bold=True)}
 
 
 class NoHighlighting(Highlighting):
@@ -94,7 +93,7 @@ class ReSTHighlighting(Highlighting):
         directive_pattern = '(?P<directive>\\.\\. \\w+.+::)'
         emphasis_pattern = '(?P<emphasis>\\*[^*\n]+\\*)'
         strongemphasis_pattern = '(?P<strongemphasis>\\*\\*[^*\n]+\\*\\*)'
-        literal_pattern = '(?P<literal>``[^`]+``)'
+        literal_pattern = '(?P<literal>``([^`]|`[^`])+``)'
         interpreted_pattern = '(?P<interpreted>`[^`]+`)(?P<role>:\\w+:)?'
         hyperlink_target_pattern = '(?P<hyperlink_target>\\w+://[^\\s]+)'
         hyperlink_pattern = '(?P<hyperlink>[\\w]+_|`[^`]+`_)\\b'

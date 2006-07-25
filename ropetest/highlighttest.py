@@ -214,6 +214,13 @@ class ReSTHighlightTest(unittest.TestCase):
     def test_escaping(self):
         self.assertFalse(self.in_highlights('\\`Age\\` 3 months', (1, 7, 'interpreted')))
 
+    def test_back_quotes_inside_literals(self):
+        self.assertTrue(self.in_highlights('``a`b``', (0, 7, 'literal')))
+
+    def test_following_literals(self):
+        self.assertTrue(self.in_highlights('``a````b``', (0, 5, 'literal')))
+        self.assertTrue(self.in_highlights('``a````b``', (5, 10, 'literal')))
+
 
 def suite():
     result = unittest.TestSuite()

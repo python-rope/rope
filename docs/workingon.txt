@@ -8,10 +8,8 @@ Enhancing syntax highlighting @ 16h
 
 Possible solutions
 * Adding Highlighting.get_highlighting_region(text, index)
-- Making Highlighting independent of the editor
-- Pushing up Highlighting.highlights()
-- Experiment about memory usage of Text.get(START, END)
-  
+* `Text.after_idle`
+* `WidgetRedirector`
 
 
 Pre-Release Refactorings
@@ -27,8 +25,8 @@ Small Features For 0.2 Release
 ==============================
 * Better color selection for reST highlighting
 * Better change editor dialog
-
-
+* Better next/prev
+* Goto definition for ``# comment.\na_var``
 
 
 Before 0.2 Release
@@ -51,7 +49,7 @@ Remaining Stories
 * Having only one Refactoring instance for a project?
 * PyObject and PyName equality checks; Value objects?
 * Consider using `StatementRangeFinder` in highlight module?
-* Directories should contain __init__.py to be packages in codeassist?
+* Directories should contain ``__init__.py`` to be packages in codeassist?
 * Separating ui and core modules and packages?
 
   * Decide which modules are the domain and which are the presentation

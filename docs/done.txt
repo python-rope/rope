@@ -3,6 +3,9 @@
 ===========
 
 
+- Extending menus : July 25, 2006
+
+
 - ReST highlighting : July 24, 2006
 
 

@@ -198,7 +198,7 @@ Stories
 * 'global' keyword issues for pycore
 
 
-* Read __init__.py of packages
+* Read ``__init__.py`` of packages
 
 
 * Auto completion contexts; strings, comments, imports, functions and ...
@@ -253,10 +253,6 @@ Stories
   * Clearing selection if something happens
   * Unifying builtin and emacs-style selections; if selection
     is active do the builtin cut and paste
-  * File : save, close
-  * Edit : set mark, copy, cut, paste, undo, redo, search, backward
-  * Code : code assist, quick outline, rename, correct indentation
-  * Help : about
 
 
 * Asking whether to save modified buffers when exiting @ 4h

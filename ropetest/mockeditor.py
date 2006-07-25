@@ -1,4 +1,4 @@
-from rope.editor import TextEditor, TextIndex, LineEditor, EditorFactory
+from rope.editor import LineEditor, EditorFactory
 
 class MockEditorFactory(EditorFactory):
 
@@ -24,7 +24,7 @@ class MockLineEditor(LineEditor):
         self.editor.set_text('\n'.join(lines))
 
 
-class MockEditor(TextEditor):
+class MockEditor(object):
     '''A mock editor for testing editing commands'''
     def __init__(self):
         self.content = ''
@@ -111,7 +111,7 @@ class MockEditor(TextEditor):
         return MockLineEditor(self)
 
 
-class MockTextIndex(TextIndex):
+class MockTextIndex(object):
     def __init__(self, editor, index):
         self.editor = editor
         self.index = index
