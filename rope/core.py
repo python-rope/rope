@@ -109,7 +109,7 @@ class Core(object):
         fileMenu.add_command(label='Open Project ...',
                              command=self._open_project_dialog, underline=6)
         fileMenu.add_command(label='Close Project',
-                             command=self.close_project, underline=3)
+                             command=self.close_project, underline=1)
         fileMenu.add_separator()
         fileMenu.add_command(label='New File ...',
                              command=self._create_new_file_dialog, underline=0)
@@ -124,6 +124,11 @@ class Core(object):
                              command=self._find_file_dialog, underline=0)
         fileMenu.add_command(label='Open File ...',
                              command=self._open_file_dialog, underline=0)
+        fileMenu.add_separator()
+        fileMenu.add_command(label='Save Editor',
+                             command=self.save_file, underline=0)
+        fileMenu.add_command(label='Close Editor',
+                             command=self.close_active_editor, underline=0)
         fileMenu.add_separator()
         fileMenu.add_command(label='Exit',
                              command=self.exit, underline=1)

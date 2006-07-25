@@ -37,13 +37,13 @@ class HighlightTest(unittest.TestCase):
 
     def testKeywordHighlighting(self):
         text = 'def sample_function():\n    pass\n'
-        highs = [(0, 3, 'keyword'), (27, 31, 'keyword')]
+        highs = [(0, 3, 'defkeyword'), (27, 31, 'keyword')]
         self._assertOutcomesEquals(text, highs)
 
     def testKeywordHighlighting2(self):
-        text = 'import re\nclass Test(object):    def f(self):\npass\n'
-        highs = [(0, 6, 'keyword'), (10, 15, 'keyword'),
-                 (33, 36, 'keyword'), (46, 50, 'keyword')]
+        text = 'import re\nclass Test(object):\n    def f(self):\npass\n'
+        highs = [(0, 6, 'keyword'), (10, 15, 'defkeyword'),
+                 (34, 37, 'defkeyword'), (47, 51, 'keyword')]
         self._assertOutcomesEquals(text, highs)
 
     def testKeywordHighlighting3(self):
@@ -89,13 +89,13 @@ class HighlightTest(unittest.TestCase):
 
     def test_function_definition(self):
         text = 'def func(args):'
-        highs = [(0, 3, 'keyword'), (4, 8, 'definition')]
+        highs = [(0, 3, 'defkeyword'), (4, 8, 'definition')]
         self._assertOutcomesEquals(text, highs)
         
     def test_class_definition(self):
         self.assertTrue('definition' in self.highlighting.get_styles())
         text = 'class Sample(object):'
-        highs = [(0, 5, 'keyword'), (6, 12, 'definition')]
+        highs = [(0, 5, 'defkeyword'), (6, 12, 'definition')]
         self._assertOutcomesEquals(text, highs)
 
     def test_comments(self):

@@ -10,6 +10,7 @@ Possible solutions
 * Making Highlighting independent of the editor
 * Adding Highlighting.get_highlighting_region(text, index)
 * Pushing up Highlighting.highlights()
+* Experiment about memory usage of Text.get(START, END)
   
 
 
@@ -24,9 +25,8 @@ Goals:
 
 Small Features For 0.2 Release
 ==============================
-- Numerical lists
-- Fields
 * Better color selection for reST highlighting
+* Better change editor dialog
 
 
 
