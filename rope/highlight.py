@@ -118,7 +118,7 @@ class ReSTHighlighting(Highlighting):
                 'emphasis' : HighlightingStyle(italic=True),
                 'strongemphasis' : HighlightingStyle(bold=True),
                 'literal' : HighlightingStyle(color='#908080'),
-                'interpreted' : HighlightingStyle(color='green'),
+                'interpreted' : HighlightingStyle(color='#208020'),
                 'role' : HighlightingStyle(color='blue'),
                 'hyperlink_target' : HighlightingStyle(color='blue'),
                 'hyperlink' : HighlightingStyle(color='blue'),

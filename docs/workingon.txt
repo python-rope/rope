@@ -10,6 +10,10 @@ Possible solutions
 * Adding Highlighting.get_highlighting_region(text, index)
 * `Text.after_idle`
 * `WidgetRedirector`
+  * Some problems are caused by using it; see whether that can be
+    prevented by not saving the original widget
+  * `TclError`s encountered in `WidgetRedirector.dispatch`
+  * Fixing page up/down problems with bbox
 
 
 Pre-Release Refactorings

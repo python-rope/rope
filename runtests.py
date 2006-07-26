@@ -24,7 +24,7 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.fileeditortest.FileEditorTest))
     result.addTests(unittest.makeSuite(ropetest.searchingtest.SearchingTest))
     result.addTests(unittest.makeSuite(ropetest.coretest.CoreTest))
-    result.addTests(unittest.makeSuite(ropetest.editortest.GraphicalEditorTest))
+    result.addTests(ropetest.editortest.suite())
     result.addTests(ropetest.projecttest.suite())
     result.addTests(ropetest.highlighttest.suite())
     result.addTests(unittest.makeSuite(ropetest.indentertest.PythonCodeIndenterTest))

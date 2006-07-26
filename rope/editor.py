@@ -113,17 +113,69 @@ class _OutlineViewHandle(TreeViewerHandle):
 
 class _TextChangeInspector(object):
 
-    def __init__(self, text_widget):
+    def __init__(self, text_widget, change_observer=None):
+        self.text = text_widget
         self.redirector = WidgetRedirector(text_widget)
         self.old_insert = self.redirector.register('insert', self._insert)
         self.old_delete = self.redirector.register('delete', self._delete)
+        self.change_observer = change_observer
+        self.changed_region = None
     
     def _insert(self, *args):
-        self.old_insert(*args)
+        start = self.text.index(args[0])
+        end = self.text.index(args[0] + ' +%dc' % len(args[1]))
+        if self.changed_region is not None:
+            if self.text.compare(start, '<', self.changed_region[1]):
+                end = self.text.index(self.changed_region[1] + ' +%dc' % len(args[1]))
+            if self.text.compare(self.changed_region[0], '<', start):
+                start = self.changed_region[0]
+        else:
+            if self.change_observer:
+                self.text.after_idle(self.change_observer)
+        self.changed_region = (start, end)
+        return self.old_insert(*args)
     
     def _delete(self, *args):
-        self.old_delete(*args)
+        start = self.text.index(args[0])
+        end = start
+        if self.changed_region is not None:
+            if self.text.compare(end, '<', self.changed_region[1]):
+                delete_len = 1
+                if len(args) > 1 and args[1] is not None:
+                    delete_len = self._get_offset(str(self.text.index(args[1]))) - \
+                                 self._get_offset(start)
+                end = self.text.index(self.changed_region[1] + ' -%dc' % delete_len)
+            if self.text.compare(self.changed_region[0], '<', start):
+                start = self.changed_region[0]
+        else:
+            if self.change_observer:
+                self.text.after_idle(self.change_observer)
+        self.changed_region = (start, end)
+        return self.old_delete(*args)
 
+    def _get_line_from_index(self, index):
+        return int(str(self.text.index(index)).split('.')[0])
+
+    def _get_column_from_index(self, index):
+        return int(str(self.text.index(index)).split('.')[1])
+
+    def _get_offset(self, index):
+        result = self._get_column_from_index(index)
+        current_line = self._get_line_from_index(index)
+        current_pos = '1.0 lineend'
+        for x in range(current_line - 1):
+            result += self._get_column_from_index(current_pos) + 1
+            current_pos = str(self.text.index(current_pos + ' +1l lineend'))
+        return result
+    
+    def get_changed_region(self):
+        return self.changed_region
+    
+    def is_changed(self):
+        return self.changed_region is not None
+
+    def clear_changed(self):
+        self.changed_region = None
 
 class GraphicalEditor(object):
 
@@ -135,13 +187,13 @@ class GraphicalEditor(object):
             font = Font(family='Courier', size=13)
         self.text = ScrolledText(parent, bg='white', font=font,
                                  undo=True, maxundo=20, highlightcolor='#99A')
+        self.change_inspector = _TextChangeInspector(self.text, self._text_changed)
         self.searcher = rope.searching.Searcher(self)
         self._set_editing_tools(editor_tools)
         self._bind_keys()
         self._initialize_highlighting()
         self.status_bar_manager = None
         self.modification_observers = []
-        self.change_inspector = _TextChangeInspector(self.text)
 
     def _initialize_highlighting(self):
         def colorize(event=None):
@@ -174,6 +226,9 @@ class GraphicalEditor(object):
             self.modified_flag = True
         for observer in self.modification_observers:
             observer()
+    
+    def _text_changed(self):
+        self.change_inspector.clear_changed()
 
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)

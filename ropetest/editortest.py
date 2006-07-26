@@ -7,11 +7,14 @@ from rope.searching import Searcher
 from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.indenter import PythonCodeIndenter
 from rope.codeassist import CodeAssist
+from rope.editor import _TextChangeInspector
 
 
 class GraphicalEditorTest(unittest.TestCase):
     '''This class only tests features that are specific to GraphicalEditor; see mockeditortest'''
+    
     __factory = GraphicalEditorFactory(Tkinter.Frame())
+    
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.editor = self.__factory.create(rope.editingtools.NormalEditingTools())
@@ -337,6 +340,60 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.set_insert(self.editor.get_index(26))
         self.editor.goto_definition()
         self.assertEquals(2, self.editor.get_current_line_number())
+
+class TextChangeInspecterTest(unittest.TestCase):
+
+    def setUp(self):
+        super(TextChangeInspecterTest, self).setUp()
+        frame = Tkinter.Frame()
+        self.text = Tkinter.Text(frame)
+        self.change_inspector = _TextChangeInspector(self.text)
+
+    def tearDown(self):
+        super(TextChangeInspecterTest, self).tearDown()
+
+    def test_is_changed(self):
+        self.text.insert('insert', 'sample text')
+        self.assertTrue(self.change_inspector.is_changed())
+        self.change_inspector.clear_changed()
+        self.assertFalse(self.change_inspector.is_changed())
+
+    def test_get_changed_region_after_inserts(self):
+        self.text.insert('insert', 'sample text')
+        self.change_inspector.clear_changed()
+        self.text.insert('1.3', 'a')
+        self.assertEquals(('1.3', '1.4'), self.change_inspector.get_changed_region())
+        self.text.insert('1.6', 'a')
+        self.assertEquals(('1.3', '1.7'), self.change_inspector.get_changed_region())
+
+    def test_get_changed_region_after_inserts2(self):
+        self.text.insert('insert', 'sample text')
+        self.change_inspector.clear_changed()
+        self.text.insert('1.3', 'a')
+        self.text.insert('1.2', 'aa')
+        self.assertEquals(('1.2', '1.6'), self.change_inspector.get_changed_region())
+
+    def test_get_changed_region_after_deletes(self):
+        self.text.insert('insert', 'sample text')
+        self.change_inspector.clear_changed()
+        self.text.delete('1.3', '1.4')
+        self.assertEquals(('1.3', '1.3'), self.change_inspector.get_changed_region())
+        self.text.delete('1.5', '1.6')
+        self.assertEquals(('1.3', '1.5'), self.change_inspector.get_changed_region())
+
+    def test_get_changed_region_after_deletes2(self):
+        self.text.insert('insert', 'sample text')
+        self.change_inspector.clear_changed()
+        self.text.delete('1.5', '1.6')
+        self.text.delete('1.1', '1.2')
+        self.assertEquals(('1.1', '1.4'), self.change_inspector.get_changed_region())
+
+
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(GraphicalEditorTest))
+    result.addTests(unittest.makeSuite(TextChangeInspecterTest))
+    return result
 
 
 if __name__ == '__main__':
