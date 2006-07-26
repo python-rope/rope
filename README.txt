@@ -16,17 +16,6 @@ Version Overview
 
 Features added in this release:
 
-* Support for out of project modules for code completions and go to
-  definitions
-* Type inference of ``var = AClass()``
-* Renaming function parameters inside functions
-* Handling circular imports inside source files
-* Completeing ``AClass(params).a_``
-* Better quick outline view
-
-
-If an imported module can not found inside the project, the `sys.path`
-entries will be searched for it.
 
 If it is the first time you use rope, it might be helpful to try
 these:

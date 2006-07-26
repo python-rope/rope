@@ -198,24 +198,17 @@ class GraphicalEditor(object):
         self.searcher = rope.searching.Searcher(self)
         self._set_editing_tools(editor_tools)
         self._bind_keys()
-        self._initialize_highlighting()
         self.status_bar_manager = None
         self.modification_observers = []
         self.modified_flag = False
         self.text.bind('<<Modified>>', self._editor_modified)
         self.text.edit_modified(False)
 
-    def _initialize_highlighting(self):
-        pass
-    
-    def _editor_modified(self, event):
-        if self.modified_flag:
-            self.modified_flag = False
-        else:
-            self.modified_flag = True
-        for observer in self.modification_observers:
-            observer()
-    
+    def _text_changed(self):
+        start, end = self.change_inspector.get_changed_region()
+        self._colorize(start, end)
+        self.change_inspector.clear_changed()
+
     def _colorize(self, start, end):
         start = self.text.index(start + ' linestart-2c')
         end = self.text.index(end + ' lineend')
@@ -223,6 +216,7 @@ class GraphicalEditor(object):
         if start_tags:
             tag = start_tags[0]
             range_ = self.text.tag_prevrange(tag, start + '+1c')
+            print tag, range_
             if range_ and self.text.compare(range_[0], '<', start):
                 start = range_[0]
             if range_ and self.text.compare(range_[1], '>', end):
@@ -234,14 +228,6 @@ class GraphicalEditor(object):
             if range_ and self.text.compare(range_[1], '>', end):
                 end = range_[1]
         self._highlight_range(start, end)
-
-    def _text_changed(self):
-        start, end = self.change_inspector.get_changed_region()
-        self._colorize(start, end)
-        self.change_inspector.clear_changed()
-
-    def add_modification_observer(self, observer):
-        self.modification_observers.append(observer)
 
     def _highlight_range(self, start_index, end_index):
         for style in self.highlighting.get_styles().keys():
@@ -418,6 +404,17 @@ class GraphicalEditor(object):
         self.text.mark_set(INSERT, '%d.%d' % (lineno, first_non_space))
         self.text.see(INSERT)
     
+    def _editor_modified(self, event):
+        if self.modified_flag:
+            self.modified_flag = False
+        else:
+            self.modified_flag = True
+        for observer in self.modification_observers:
+            observer()
+    
+    def add_modification_observer(self, observer):
+        self.modification_observers.append(observer)
+
     def is_modified(self):
         return self.modified_flag
 

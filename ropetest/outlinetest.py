@@ -46,6 +46,12 @@ class OutlineTest(unittest.TestCase):
         self.assertEquals('a_func2', nodes[0].get_name())
         self.assertEquals('a_func1', nodes[1].get_name())
 
+    def test_not_showing_inherited_names(self):
+        src = 'class Base(object):\n    def a_method(self):\n        pass\n\n' + \
+              'class Derived(Base):\n    pass\n'
+        nodes = self.outline.get_root_nodes(src)
+        self.assertEquals(0, len(nodes[1].get_children()))
+
 
 if __name__ == '__main__':
     unittest.main()

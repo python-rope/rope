@@ -1,25 +1,16 @@
+- Not viewing inherited members in outline view
+
 Enhancing syntax highlighting @ 16h
 ===================================
 
-* Only highlighting the changed region
 * Extend highlighting region while highlighting if necessay
-* Highlighting after cut, paste, undo and redo
-* Use Modified event for updating highlighting only when necessary
-
-Possible solutions
 * Adding Highlighting.get_highlighting_region(text, index)
-* `Text.after_idle`
 * `WidgetRedirector`
-  * Some problems are caused by using it; see whether that can be
-    prevented by not saving the original widget
-  * `TclError`s encountered in `WidgetRedirector.dispatch`
   * Fixing page up/down problems with bbox
 
 
 Pre-Release Refactorings
 ========================
-
-Goals:
 
 * Do something for modules that can not be found
 * Dotted not found modules
@@ -27,7 +18,6 @@ Goals:
 
 Small Features For 0.2 Release
 ==============================
-* Better color selection for reST highlighting
 * Better change editor dialog
 * Better next/prev
 * Goto definition for ``# comment.\na_var``
@@ -46,7 +36,6 @@ Before 0.2 Release
 
 Remaining Stories
 =================
-* Not viewing inherited names in outlines
 * Optimize SourceLinesAdapter methods
 * Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
 * More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?

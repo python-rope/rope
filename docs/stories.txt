@@ -231,6 +231,13 @@ Stories
   Writing ASTs
 
 
+* Enhancing editor
+
+  * Clearing selection if something happens
+  * Unifying builtin and emacs-style selections; if selection
+    is active do the builtin cut and paste
+
+
 * What to do when the program has syntax errors for code assists @ 2
 
 
@@ -246,13 +253,6 @@ Stories
 
 
 > Public Release 0.2RC : July 30, 2006
-
-
-* Enhancing editor
-
-  * Clearing selection if something happens
-  * Unifying builtin and emacs-style selections; if selection
-    is active do the builtin cut and paste
 
 
 * Asking whether to save modified buffers when exiting @ 4h
