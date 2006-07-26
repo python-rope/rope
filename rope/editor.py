@@ -123,7 +123,10 @@ class _TextChangeInspector(object):
     
     def _insert(self, *args):
         start = self.text.index(args[0])
-        end = self.text.index(args[0] + ' +%dc' % len(args[1]))
+        result = self.old_insert(*args)
+        end = self.text.index(start + ' +%dc' % len(args[1]))
+        if not start or not end:
+            return
         if self.changed_region is not None:
             if self.text.compare(start, '<', self.changed_region[1]):
                 end = self.text.index(self.changed_region[1] + ' +%dc' % len(args[1]))
@@ -133,11 +136,14 @@ class _TextChangeInspector(object):
             if self.change_observer:
                 self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
-        return self.old_insert(*args)
+        return result
     
     def _delete(self, *args):
         start = self.text.index(args[0])
+        result = self.old_delete(*args)
         end = start
+        if not start:
+            return
         if self.changed_region is not None:
             if self.text.compare(end, '<', self.changed_region[1]):
                 delete_len = 1
@@ -151,7 +157,7 @@ class _TextChangeInspector(object):
             if self.change_observer:
                 self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
-        return self.old_delete(*args)
+        return result
 
     def _get_line_from_index(self, index):
         return int(str(self.text.index(index)).split('.')[0])
@@ -177,6 +183,7 @@ class _TextChangeInspector(object):
     def clear_changed(self):
         self.changed_region = None
 
+
 class GraphicalEditor(object):
 
     def __init__(self, parent, editor_tools):
@@ -194,30 +201,12 @@ class GraphicalEditor(object):
         self._initialize_highlighting()
         self.status_bar_manager = None
         self.modification_observers = []
-
-    def _initialize_highlighting(self):
-        def colorize(event=None):
-            start = 'insert linestart-2c'
-            end = 'insert lineend'
-            start_tags = self.text.tag_names(start)
-            if start_tags:
-                tag = start_tags[0]
-                range_ = self.text.tag_prevrange(tag, start + '+1c')
-                if range_ and self.text.compare(range_[0], '<', start):
-                    start = range_[0]
-                if range_ and self.text.compare(range_[1], '>', end):
-                    end = range_[1]
-            end_tags = self.text.tag_names(end)
-            if end_tags:
-                tag = end_tags[0]
-                range_ = self.text.tag_prevrange(tag, end + '+1c')
-                if range_ and self.text.compare(range_[1], '>', end):
-                    end = range_[1]
-            self._highlight_range(start, end)
         self.modified_flag = False
-        self.text.bind('<Any-KeyRelease>', colorize, '+')
         self.text.bind('<<Modified>>', self._editor_modified)
         self.text.edit_modified(False)
+
+    def _initialize_highlighting(self):
+        pass
     
     def _editor_modified(self, event):
         if self.modified_flag:
@@ -227,7 +216,28 @@ class GraphicalEditor(object):
         for observer in self.modification_observers:
             observer()
     
+    def _colorize(self, start, end):
+        start = self.text.index(start + ' linestart-2c')
+        end = self.text.index(end + ' lineend')
+        start_tags = self.text.tag_names(start)
+        if start_tags:
+            tag = start_tags[0]
+            range_ = self.text.tag_prevrange(tag, start + '+1c')
+            if range_ and self.text.compare(range_[0], '<', start):
+                start = range_[0]
+            if range_ and self.text.compare(range_[1], '>', end):
+                end = range_[1]
+        end_tags = self.text.tag_names(end)
+        if end_tags:
+            tag = end_tags[0]
+            range_ = self.text.tag_prevrange(tag, end + '+1c')
+            if range_ and self.text.compare(range_[1], '>', end):
+                end = range_[1]
+        self._highlight_range(start, end)
+
     def _text_changed(self):
+        start, end = self.change_inspector.get_changed_region()
+        self._colorize(start, end)
         self.change_inspector.clear_changed()
 
     def add_modification_observer(self, observer):
@@ -518,7 +528,6 @@ class GraphicalEditor(object):
         self.text.delete('1.0', END)
         self.text.insert('1.0', text)
         self.text.mark_set(INSERT, '1.0')
-        self._highlight_range('0.0', 'end')
         if reset_editor:
             self.text.edit_reset()
             self.text.edit_modified(False)
