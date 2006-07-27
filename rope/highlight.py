@@ -1,5 +1,6 @@
 import re
 import keyword
+import rope.codeanalyze
 
 
 class Highlighting(object):
@@ -20,7 +21,18 @@ class Highlighting(object):
                     a, b = match.span(key)
 #                    print a, b, key
                     yield (start + a, start + b, key)
-    
+
+    def get_suspected_range_after_change(self, text, change_start, change_end):
+        """Returns the range that needs to be updated after a change"""
+        lines = rope.codeanalyze.SourceLinesAdapter(text)
+        start_line = lines.get_line_number(change_start)
+        start = lines.get_line_start(start_line) - 2
+        if start < 0:
+            start = 0
+        end_line = lines.get_line_number(change_end)
+        end = lines.get_line_end(end_line)
+        return (start, end)
+
     def _get_pattern(self):
         if not self.pattern:
             self.pattern = self._make_pattern()

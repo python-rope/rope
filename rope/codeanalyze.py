@@ -280,6 +280,7 @@ class SourceLinesAdapter(Lines):
                     return current_pos - 1
         return current_pos
     
+
 class ArrayLinesAdapter(Lines):
 
     def __init__(self, lines):

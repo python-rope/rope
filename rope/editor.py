@@ -120,7 +120,7 @@ class _TextChangeInspector(object):
         self.old_delete = self.redirector.register('delete', self._delete)
         self.change_observer = change_observer
         self.changed_region = None
-    
+
     def _insert(self, *args):
         start = self.text.index(args[0])
         result = self.old_insert(*args)
@@ -158,7 +158,7 @@ class _TextChangeInspector(object):
                 self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
         return result
-
+    
     def _get_line_from_index(self, index):
         return int(str(self.text.index(index)).split('.')[0])
 
@@ -210,13 +210,16 @@ class GraphicalEditor(object):
         self.change_inspector.clear_changed()
 
     def _colorize(self, start, end):
-        start = self.text.index(start + ' linestart-2c')
-        end = self.text.index(end + ' lineend')
+        start_offset, end_offset = self.highlighting.\
+                                   get_suspected_range_after_change(self.get_text(),
+                                                                    self._get_offset(start),
+                                                                    self._get_offset(end))
+        start = self.text.index('1.0 +%dc' % start_offset)
+        end = self.text.index('1.0 +%dc' % end_offset)
         start_tags = self.text.tag_names(start)
         if start_tags:
             tag = start_tags[0]
             range_ = self.text.tag_prevrange(tag, start + '+1c')
-            print tag, range_
             if range_ and self.text.compare(range_[0], '<', start):
                 start = range_[0]
             if range_ and self.text.compare(range_[1], '>', end):
@@ -340,6 +343,9 @@ class GraphicalEditor(object):
             return 'break'
         self.text.bind('<Control-o>', show_quick_outline)
         self.text.bind('<Alt-R>', self._rename_refactoring_dialog)
+        def ignore(event):
+            return 'break'
+        self.text.bind('<Control-x>', ignore)
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),

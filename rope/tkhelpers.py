@@ -49,7 +49,8 @@ class WidgetRedirector(object):
                 return m(*args)
             else:
                 return self.tk.call((self.orig, cmd) + args)
-        except TclError:
+        except TclError, e:
+#            print e
             return ""
 
 

@@ -1,12 +1,8 @@
-- Not viewing inherited members in outline view
-
 Enhancing syntax highlighting @ 16h
 ===================================
 
-* Extend highlighting region while highlighting if necessay
-* Adding Highlighting.get_highlighting_region(text, index)
-* `WidgetRedirector`
-  * Fixing page up/down problems with bbox
+* Handling undo/redos
+* Adding Highlighting.get_highlighting_region(text, start, end)
 
 
 Pre-Release Refactorings
