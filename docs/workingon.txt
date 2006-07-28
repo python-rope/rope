@@ -1,22 +1,26 @@
+* Asking whether to save modified buffers when exiting @ 4h
+===========================================================
+
 Enhancing syntax highlighting @ 16h
 ===================================
 
+* Work on `Highlighting.get_suspected_region_after_change`
 * Handling undo/redos
-* Adding Highlighting.get_highlighting_region(text, start, end)
-
-
-Pre-Release Refactorings
-========================
-
-* Do something for modules that can not be found
-* Dotted not found modules
+* Slow editor._get_offset
 
 
 Small Features For 0.2 Release
 ==============================
+* Optimize SourceLinesAdapter methods
+* Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
+* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
+* Having only one Refactoring instance for a project?
+* PyObject and PyName equality checks; Value objects?
+* Consider using `StatementRangeFinder` in highlight module?
 * Better change editor dialog
 * Better next/prev
 * Goto definition for ``# comment.\na_var``
+* Showing version in about dialog
 
 
 Before 0.2 Release
@@ -32,13 +36,8 @@ Before 0.2 Release
 
 Remaining Stories
 =================
-* Optimize SourceLinesAdapter methods
-* Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
-* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
-* Having only one Refactoring instance for a project?
-* PyObject and PyName equality checks; Value objects?
-* Consider using `StatementRangeFinder` in highlight module?
-* Directories should contain ``__init__.py`` to be packages in codeassist?
+* Do something for modules that can not be found
+* Dotted not found modules
 * Separating ui and core modules and packages?
 
   * Decide which modules are the domain and which are the presentation

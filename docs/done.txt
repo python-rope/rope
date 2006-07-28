@@ -169,5 +169,5 @@
 
 
 - Highlighting keywords : March 21, 2006
-  Only python files(*.py) should be highlighted.
+  Only python files(``*.py``) should be highlighted.
 

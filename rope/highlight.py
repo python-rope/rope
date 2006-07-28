@@ -83,7 +83,13 @@ class PythonHighlighting(Highlighting):
                 'comment': HighlightingStyle(color='#008000', italic=True),
                 'builtin': HighlightingStyle(color='#908080'),
                 'definition': HighlightingStyle(color='purple', bold=True)}
-
+    
+    def get_suspected_range_after_change(self, text, change_start, change_end):
+        start = change_start
+        end = change_end
+        return super(PythonHighlighting, self).\
+               get_suspected_range_after_change(text, change_start, change_end)
+    
 
 class NoHighlighting(Highlighting):
 

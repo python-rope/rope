@@ -8,17 +8,17 @@
 PythonSource
 ============
 
-* Formatting code
+* Code assists
+* Auto completion
 * Basic refactorings
 * Advanced refactorings
+* Formatting code
 * Type inferencing
 
   * static
   * dynamic
   * ask user
 
-* Code assists
-* Auto completion
 
 Advanced Refactorings
 ---------------------

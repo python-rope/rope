@@ -2,6 +2,11 @@
  rope, a Python IDE ...
 ========================
 
+For an overview of future goals of rope have a look at `future.txt`_ file.
+
+.. _future.txt: future.html
+
+
 Stories
 =======
 
@@ -33,9 +38,6 @@ Stories
 
 
 * reST support inside pydocs
-
-
-* reST outlines
 
 
 * reST codeassists
@@ -127,9 +129,6 @@ Stories
 * Indenting a range of file
 
 
-* Dynamic type inference
-
-
 * Better New ... Dialogs
   Better folder and module selection. Completing or selecting from a list.
 
@@ -195,13 +194,21 @@ Stories
 * AssList and AssTuple assignments
 
 
-* 'global' keyword issues for pycore
+* *global* keyword issues for pycore
 
 
 * Read ``__init__.py`` of packages
+  Should folders contain ``__init__.py`` to be considered packages.
 
 
-* Auto completion contexts; strings, comments, imports, functions and ...
+* reST goto definition
+
+
+* reST outlines
+
+
+* Code contexts; context_finder.get_context(text, offset)
+  This can be used when proposing code assists.
 
 
 * Rename function parameters
@@ -250,6 +257,9 @@ Stories
 
 * Packages should be filtered @ 4h
   Do not show unimported submodules and subpackages as attributes.
+
+
+* Dynamic type inference
 
 
 > Public Release 0.2RC : July 30, 2006

@@ -113,9 +113,10 @@ class _OutlineViewHandle(TreeViewerHandle):
 
 class _TextChangeInspector(object):
 
-    def __init__(self, text_widget, change_observer=None):
-        self.text = text_widget
-        self.redirector = WidgetRedirector(text_widget)
+    def __init__(self, editor, change_observer=None):
+        self.editor = editor
+        self.text = editor.text
+        self.redirector = WidgetRedirector(self.text)
         self.old_insert = self.redirector.register('insert', self._insert)
         self.old_delete = self.redirector.register('delete', self._delete)
         self.change_observer = change_observer
@@ -148,8 +149,8 @@ class _TextChangeInspector(object):
             if self.text.compare(end, '<', self.changed_region[1]):
                 delete_len = 1
                 if len(args) > 1 and args[1] is not None:
-                    delete_len = self._get_offset(str(self.text.index(args[1]))) - \
-                                 self._get_offset(start)
+                    delete_len = self.editor._get_offset(str(self.text.index(args[1]))) - \
+                                 self.editor._get_offset(start)
                 end = self.text.index(self.changed_region[1] + ' -%dc' % delete_len)
             if self.text.compare(self.changed_region[0], '<', start):
                 start = self.changed_region[0]
@@ -157,21 +158,6 @@ class _TextChangeInspector(object):
             if self.change_observer:
                 self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
-        return result
-    
-    def _get_line_from_index(self, index):
-        return int(str(self.text.index(index)).split('.')[0])
-
-    def _get_column_from_index(self, index):
-        return int(str(self.text.index(index)).split('.')[1])
-
-    def _get_offset(self, index):
-        result = self._get_column_from_index(index)
-        current_line = self._get_line_from_index(index)
-        current_pos = '1.0 lineend'
-        for x in range(current_line - 1):
-            result += self._get_column_from_index(current_pos) + 1
-            current_pos = str(self.text.index(current_pos + ' +1l lineend'))
         return result
     
     def get_changed_region(self):
@@ -194,7 +180,7 @@ class GraphicalEditor(object):
             font = Font(family='Courier', size=13)
         self.text = ScrolledText(parent, bg='white', font=font,
                                  undo=True, maxundo=20, highlightcolor='#99A')
-        self.change_inspector = _TextChangeInspector(self.text, self._text_changed)
+        self.change_inspector = _TextChangeInspector(self, self._text_changed)
         self.searcher = rope.searching.Searcher(self)
         self._set_editing_tools(editor_tools)
         self._bind_keys()
@@ -215,7 +201,7 @@ class GraphicalEditor(object):
                                                                     self._get_offset(start),
                                                                     self._get_offset(end))
         start = self.text.index('1.0 +%dc' % start_offset)
-        end = self.text.index('1.0 +%dc' % end_offset)
+        end = self.text.index(start + ' +%dc' % (end_offset - start_offset))
         start_tags = self.text.tag_names(start)
         if start_tags:
             tag = start_tags[0]
@@ -240,8 +226,8 @@ class GraphicalEditor(object):
         for start, end, kind in self.highlighting.highlights(self.get_text(),
                                                              start_offset,
                                                              end_offset):
-            tag_start = '1.0 +%dc' % start
-            tag_end = '1.0 +%dc' % end
+            tag_start = start_index + ' +%dc' % (start - start_offset)
+            tag_end = start_index + ' +%dc' % (end - start_offset)
             self.text.tag_add(kind, tag_start, tag_end)
 
     def _bind_keys(self):
@@ -829,7 +815,7 @@ class GraphicalEditor(object):
     def get_current_offset(self):
         return self._get_offset(INSERT)
     
-    def _get_offset(self, index):
+    def _get_offset1(self, index):
         result = self._get_column_from_index(index)
         current_line = self._get_line_from_index(index)
         current_pos = '1.0 lineend'
@@ -837,6 +823,42 @@ class GraphicalEditor(object):
             result += self._get_column_from_index(current_pos) + 1
             current_pos = str(self.text.index(current_pos + ' +1l lineend'))
         return result
+    
+    def _get_offset2(self, index):
+        text = self.get_text()
+        column = self._get_column_from_index(index)
+        line = self._get_line_from_index(index)
+        current_pos = 0
+        current_line = 1
+        while current_line < line and current_pos < len(text):
+            if text[current_pos] == '\n':
+                current_line += 1
+            current_pos += 1
+        for i in range(column):
+            if not current_pos < len(text) and text[current_pos] != '\n':
+                break
+            current_pos += 1
+        return current_pos
+    
+    def _get_offset3(self, index):
+        text = self.get_text()
+        start = 0
+        end = len(text)
+        start_index = '1.0'
+        while start < end:
+            mid = (start + end) / 2
+            mid_index = self.text.index(start_index + '+%dc' % (mid - start))
+            if self.text.compare(mid_index, '>', index):
+                end = mid - 1
+            elif self.text.compare(mid_index, '==', index):
+                return mid
+            else:
+                start = mid + 1
+                start_index = mid_index + '+1c'
+        return start
+    
+    def _get_offset(self, index):
+        return self._get_offset3(index)
     
     def set_status_bar_manager(self, manager):
         self.status_bar_manager = manager

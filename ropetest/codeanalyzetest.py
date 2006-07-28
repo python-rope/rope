@@ -162,8 +162,8 @@ class WordRangeFinderTest(unittest.TestCase):
                           word_finder.get_statement_at(25))
 
     def test_dictionaries(self):
-        word_finder = WordRangeFinder('print {1: "one", 2, "two"}.keys()')
-        self.assertEquals('print {1: "one", 2, "two"}.keys',
+        word_finder = WordRangeFinder('print {1: "one", 2: "two"}.keys()')
+        self.assertEquals('print {1: "one", 2: "two"}.keys',
                           word_finder.get_statement_at(29))
 
     # TODO: eliminating comments

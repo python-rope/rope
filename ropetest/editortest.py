@@ -341,16 +341,18 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.goto_definition()
         self.assertEquals(2, self.editor.get_current_line_number())
 
-class TextChangeInspecterTest(unittest.TestCase):
+class TextChangeInspectorTest(unittest.TestCase):
+
+    __factory = GraphicalEditorFactory(Tkinter.Frame())
 
     def setUp(self):
-        super(TextChangeInspecterTest, self).setUp()
-        frame = Tkinter.Frame()
-        self.text = Tkinter.Text(frame)
-        self.change_inspector = _TextChangeInspector(self.text)
+        super(TextChangeInspectorTest, self).setUp()
+        editor = TextChangeInspectorTest.__factory.create(rope.editingtools.NormalEditingTools())
+        self.text = editor.text
+        self.change_inspector = editor.change_inspector
 
     def tearDown(self):
-        super(TextChangeInspecterTest, self).tearDown()
+        super(TextChangeInspectorTest, self).tearDown()
 
     def test_is_changed(self):
         self.text.insert('insert', 'sample text')
@@ -392,7 +394,7 @@ class TextChangeInspecterTest(unittest.TestCase):
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(GraphicalEditorTest))
-    result.addTests(unittest.makeSuite(TextChangeInspecterTest))
+    result.addTests(unittest.makeSuite(TextChangeInspectorTest))
     return result
 
 
