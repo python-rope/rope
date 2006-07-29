@@ -25,6 +25,7 @@ class Highlighting(object):
     def get_suspected_range_after_change(self, text, change_start, change_end):
         """Returns the range that needs to be updated after a change"""
         start = change_start
+        start = min(start, len(text) - 1)
         new_line_count = 0
         while start > 0:
             if text[start] == '\n':

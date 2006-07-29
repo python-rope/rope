@@ -109,7 +109,7 @@ class Core(object):
         fileMenu.add_command(label='Open Project ...',
                              command=self._open_project_dialog, underline=6)
         fileMenu.add_command(label='Close Project',
-                             command=self.close_project, underline=1)
+                             command=self._close_project_dialog, underline=1)
         fileMenu.add_separator()
         fileMenu.add_command(label='New File ...',
                              command=self._create_new_file_dialog, underline=0)
@@ -128,9 +128,9 @@ class Core(object):
         fileMenu.add_command(label='Change Editor',
                              command=self._change_editor_dialog, underline=0)
         fileMenu.add_command(label='Save Editor',
-                             command=self.save_file, underline=0)
+                             command=self.save_active_editor, underline=0)
         fileMenu.add_command(label='Close Editor',
-                             command=self.close_active_editor, underline=0)
+                             command=self._close_active_editor_dialog, underline=0)
         fileMenu.add_separator()
         fileMenu.add_command(label='Exit',
                              command=self.exit, underline=1)
@@ -254,7 +254,7 @@ class Core(object):
     def _set_key_binding(self, widget):
         widget.bind('<Control-x><Control-n>', self._create_new_file_dialog)
         def _save_active_editor(event):
-            self.save_file()
+            self.save_active_editor()
             return 'break'
         widget.bind('<Control-x><Control-s>', _save_active_editor)
         widget.bind('<Control-x><Control-p>', self._open_project_dialog)
@@ -267,7 +267,7 @@ class Core(object):
         widget.bind('<Control-x><Control-f>', self._find_file_dialog)
         widget.bind('<Control-F11>', self._run_active_editor)
         def _close_active_editor(event):
-            self.close_active_editor()
+            self._close_active_editor_dialog()
             return 'break'
         widget.bind('<Control-x><k>', _close_active_editor)
         widget.bind('<Control-x><b>', self._change_editor_dialog)
@@ -524,6 +524,34 @@ class Core(object):
             except Exception, e:
                 tkMessageBox.showerror(parent=self.root, title='Failed',
                                        message=str(e))
+    
+    def _close_active_editor_dialog(self):
+        active_editor = self.editor_manager.active_editor
+        if not active_editor:
+            return
+        if not active_editor.get_editor().is_modified():
+            return self.close_active_editor()
+        toplevel = Toplevel()
+        toplevel.title('Closing Unsaved Editor')
+        label = Label(toplevel, text='Closing Unsaved Editor for <%s>' % 
+                      active_editor.get_file().get_path())
+        def save():
+            active_editor.save()
+            self.close_active_editor()
+            toplevel.destroy()
+        def dont_save():
+            self.close_active_editor()
+            toplevel.destroy()
+        def cancel():
+            toplevel.destroy()
+        save_button = Button(toplevel, text='Save', command=save)
+        dont_save_button = Button(toplevel, text="Don't Save", command=dont_save)
+        cancel_button = Button(toplevel, text='Cancel', command=cancel)
+        label.grid(row=0, column=0, columnspan=3)
+        save_button.grid(row=1, column=0)
+        dont_save_button.grid(row=1, column=1)
+        cancel_button.grid(row=1, column=2)
+        save_button.focus_set()
 
     def start(self):
         self.runningThread.start()
@@ -551,7 +579,7 @@ class Core(object):
     def close_active_editor(self):
         self.editor_manager.close_active_editor()
 
-    def save_file(self):
+    def save_active_editor(self):
         activeEditor = self.editor_manager.active_editor
         if activeEditor:
             activeEditor.save()
@@ -572,6 +600,35 @@ class Core(object):
         if self.project:
             self.close_project()
         self.project = Project(projectRoot)
+
+    def _close_project_dialog(self):
+        modified_editors = [editor for editor in self.editor_manager.editors 
+                           if editor.get_editor().is_modified()]
+        if not modified_editors:
+            return self.close_project()
+        toplevel = Toplevel()
+        toplevel.title('Closing Project')
+        label = Label(toplevel, text='Which modified editors to save')
+        label.grid(row=0, columnspan=2)
+        int_vars = []
+        for i, editor in enumerate(modified_editors):
+            int_var = IntVar()
+            button = Checkbutton(toplevel, text=editor.get_file().get_path(),
+                                 variable=int_var, onvalue=1, offvalue=0)
+            int_vars.append(int_var)
+            button.grid(row=i+1, columnspan=2)
+        def done():
+            for editor, int_var in zip(modified_editors, int_vars):
+                if int_var.get() == 1:
+                    editor.save()
+            self.close_project()
+            toplevel.destroy()
+        def cancel():
+            toplevel.destroy()
+        done_button = Button(toplevel, text='Done', command=done)
+        done_button.grid(row=len(int_vars) + 1, column=0)
+        done_button = Button(toplevel, text='Cancel', command=done)
+        done_button.grid(row=len(int_vars) + 1, column=1)
 
     def close_project(self):
         while self.editor_manager.active_editor is not None:

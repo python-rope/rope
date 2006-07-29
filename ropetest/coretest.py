@@ -38,7 +38,7 @@ class CoreTest(unittest.TestCase):
 
     def test_saving(self):
         self.textEditor.get_editor().set_text('another text')
-        Core.get_core().save_file()
+        Core.get_core().save_active_editor()
 
     def test_error_when_opening_a_non_existent_file(self):
         try:
