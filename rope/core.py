@@ -215,7 +215,7 @@ class Core(object):
             if activeEditor:
                 activeEditor.get_editor()._rename_refactoring_dialog()
 
-        codeMenu.add_command(label='Rename Refactoring', 
+        codeMenu.add_command(label='Rename Local Variable', 
                              command=rename, underline=0)
         def goto_definition():
             activeEditor = self.editor_manager.active_editor
@@ -237,7 +237,7 @@ class Core(object):
                'This program is free software; you can redistribute it and/or modify it\n' + \
                'under the terms of GNU General Public License as published by the \n' + \
                'Free Software Foundation; either version 2 of the license, or (at your \n' + \
-               'opinion any later version.\n\n' + \
+               'opinion) any later version.\n\n' + \
                'This program is distributed in the hope that it will be useful,\n' + \
                'but WITHOUT ANY WARRANTY; without even the implied warranty of\n' + \
                'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n' + \

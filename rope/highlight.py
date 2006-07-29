@@ -24,13 +24,20 @@ class Highlighting(object):
 
     def get_suspected_range_after_change(self, text, change_start, change_end):
         """Returns the range that needs to be updated after a change"""
-        lines = rope.codeanalyze.SourceLinesAdapter(text)
-        start_line = lines.get_line_number(change_start)
-        start = lines.get_line_start(start_line) - 2
-        if start < 0:
-            start = 0
-        end_line = lines.get_line_number(change_end)
-        end = lines.get_line_end(end_line)
+        start = change_start
+        new_line_count = 0
+        while start > 0:
+            if text[start] == '\n':
+                new_line_count += 1
+                if new_line_count == 2:
+                    break
+            start -= 1
+        start = max(0, start - 2)
+        end = change_end
+        while end < len(text):
+            if text[end] == '\n':
+                break
+            end += 1
         return (start, end)
 
     def _get_pattern(self):

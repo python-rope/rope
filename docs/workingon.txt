@@ -8,6 +8,14 @@ Enhancing syntax highlighting @ 16h
 * Handling undo/redos
 * Slow editor._get_offset
 
+  * Caching editor._get_offset
+  * Faster implementation
+  * Eliminating _get_offset usage
+
+* Slow `StatementRangeFinder`
+
+  * get_block_starting can be used in analyze and get_suspected_range_after_change
+
 
 Small Features For 0.2 Release
 ==============================
@@ -25,19 +33,17 @@ Small Features For 0.2 Release
 
 Before 0.2 Release
 ==================
-* GUI testing redux; make a functests directory?; rename ropetest to unittests?
 * Better editor changing dialog; use uihelpers module
-* Enhancing highlighting
 * Profiling to find the bottlenecks
 * Document features added since 0.1 release
 * Add a simple tutorial
-* Better homepage
 
 
 Remaining Stories
 =================
 * Do something for modules that can not be found
 * Dotted not found modules
+* GUI testing redux; make a functests directory?; rename ropetest to unittests?
 * Separating ui and core modules and packages?
 
   * Decide which modules are the domain and which are the presentation

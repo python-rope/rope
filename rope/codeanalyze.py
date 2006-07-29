@@ -306,8 +306,7 @@ class StatementRangeFinder(object):
 
     def _analyze_line(self, current_line_number):
         current_line = self.lines.get_line(current_line_number)
-        for i in range(len(current_line)):
-            char = current_line[i]
+        for i, char in enumerate(current_line):
             if char in '\'"':
                 if self.in_string == '':
                     self.in_string = char

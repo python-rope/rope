@@ -816,6 +816,7 @@ class GraphicalEditor(object):
         return self._get_offset(INSERT)
     
     def _get_offset1(self, index):
+        # adding up line lengths
         result = self._get_column_from_index(index)
         current_line = self._get_line_from_index(index)
         current_pos = '1.0 lineend'
@@ -825,6 +826,7 @@ class GraphicalEditor(object):
         return result
     
     def _get_offset2(self, index):
+        # walking the whole text
         text = self.get_text()
         column = self._get_column_from_index(index)
         line = self._get_line_from_index(index)
@@ -841,6 +843,7 @@ class GraphicalEditor(object):
         return current_pos
     
     def _get_offset3(self, index):
+        # using binary search
         text = self.get_text()
         start = 0
         end = len(text)

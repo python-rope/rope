@@ -16,6 +16,12 @@ Version Overview
 
 Features added in this release:
 
+* reST highlighting
+* Showing editor modified status
+* Sorting code assist proposals
+* Not renaming names in strings and comments in refactorings
+* Extending menus
+* Separating entering and correcting indentation
 
 If it is the first time you use rope, it might be helpful to try
 these:
