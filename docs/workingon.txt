@@ -17,8 +17,8 @@ Enhancing syntax highlighting @ 16h
   * get_block_starting can be used in analyze and get_suspected_range_after_change
 
 
-Small Features For 0.2 Release
-==============================
+Small Stories For 0.2 Release
+=============================
 * Optimize SourceLinesAdapter methods
 * Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
 * More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?

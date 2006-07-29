@@ -332,10 +332,19 @@ class StatementRangeFinder(object):
         else:
             self.explicit_continuation = False
 
+    def _get_block_start(self):
+        for i in reversed(range(1, self.lineno + 1)):
+            line = self.lines.get_line(i).strip()
+            if line.startswith('def'):
+                return i
+            elif line.startswith('class'):
+                return i
+#            elif line
+        return 1
 
     def analyze(self):
         last_statement = 1
-        for current_line_number in range(1, self.lineno + 1):
+        for current_line_number in range(self._get_block_start(), self.lineno + 1):
             if not self.explicit_continuation and self.open_parens == 0 and self.in_string == '':
                 last_statement = current_line_number
             self._analyze_line(current_line_number)

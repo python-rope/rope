@@ -32,7 +32,7 @@ class Highlighting(object):
                 if new_line_count == 2:
                     break
             start -= 1
-        start = max(0, start - 2)
+        start = max(0, start - 1)
         end = change_end
         while end < len(text):
             if text[end] == '\n':
