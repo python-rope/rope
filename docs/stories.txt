@@ -265,9 +265,6 @@ Stories
 > Public Release 0.2RC : July 30, 2006
 
 
-* Asking whether to save modified buffers when exiting @ 4h
-
-
 Remaining Stories
 -----------------
 * Change program goals and description; principles.txt

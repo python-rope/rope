@@ -1,6 +1,3 @@
-* Asking whether to save modified buffers when exiting @ 4h
-===========================================================
-
 Enhancing syntax highlighting @ 16h
 ===================================
 

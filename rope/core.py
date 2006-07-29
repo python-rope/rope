@@ -99,7 +99,7 @@ class Core(object):
         line_status.set_width(12)
 
         self._set_key_binding(self.root)
-        self.root.protocol('WM_DELETE_WINDOW', self.exit)
+        self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
         self.runningThread = Thread(target=self.run)
         self.project = None
 
@@ -133,7 +133,7 @@ class Core(object):
                              command=self._close_active_editor_dialog, underline=0)
         fileMenu.add_separator()
         fileMenu.add_command(label='Exit',
-                             command=self.exit, underline=1)
+                             command=self._close_project_and_exit, underline=1)
         
         editMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Edit', menu=editMenu, underline=3)
@@ -229,6 +229,9 @@ class Core(object):
         helpMenu.add_command(label='About', 
                              command=self._show_about_dialog, underline=0)
 
+    def _close_project_and_exit(self):
+        self._close_project_dialog(exit_=True)
+
     def _show_about_dialog(self):
         toplevel = Toplevel()
         toplevel.title('About Rope')
@@ -259,7 +262,7 @@ class Core(object):
         widget.bind('<Control-x><Control-s>', _save_active_editor)
         widget.bind('<Control-x><Control-p>', self._open_project_dialog)
         def _exit(event):
-            self.exit()
+            self._close_project_and_exit()
             return 'break'
         widget.bind('<Control-x><Control-c>', _exit)
         widget.bind('<Control-x><Control-d>', self._create_new_folder_dialog)
@@ -422,10 +425,10 @@ class Core(object):
 
     def _create_resource_dialog(self, creation_callback,
                                 resource_name='File', parent_name='Parent Folder'):
-        '''Ask user about the parent folder and the name of the resource to be created
+        """Ask user about the parent folder and the name of the resource to be created
         
         creation_callback is a function accepting the parent and the name
-        '''
+        """
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
                                    message='No project is open')
@@ -601,11 +604,14 @@ class Core(object):
             self.close_project()
         self.project = Project(projectRoot)
 
-    def _close_project_dialog(self):
+    def _close_project_dialog(self, exit_=False):
         modified_editors = [editor for editor in self.editor_manager.editors 
                            if editor.get_editor().is_modified()]
         if not modified_editors:
-            return self.close_project()
+            self.close_project()
+            if exit_:
+                self.exit()
+            return
         toplevel = Toplevel()
         toplevel.title('Closing Project')
         label = Label(toplevel, text='Which modified editors to save')
@@ -623,12 +629,14 @@ class Core(object):
                     editor.save()
             self.close_project()
             toplevel.destroy()
+            if exit_:
+                self.exit()
         def cancel():
             toplevel.destroy()
         done_button = Button(toplevel, text='Done', command=done)
         done_button.grid(row=len(int_vars) + 1, column=0)
-        done_button = Button(toplevel, text='Cancel', command=done)
-        done_button.grid(row=len(int_vars) + 1, column=1)
+        cancel_button = Button(toplevel, text='Cancel', command=cancel)
+        cancel_button.grid(row=len(int_vars) + 1, column=1)
 
     def close_project(self):
         while self.editor_manager.active_editor is not None:

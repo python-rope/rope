@@ -20,6 +20,7 @@ Features added in this release:
 * Showing editor modified status
 * Sorting code assist proposals
 * Not renaming names in strings and comments in refactorings
+* Asking whether to save modified buffers when exiting
 * Extending menus
 * Separating entering and correcting indentation
 
