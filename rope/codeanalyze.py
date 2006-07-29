@@ -333,11 +333,26 @@ class StatementRangeFinder(object):
             self.explicit_continuation = False
 
     def _get_block_start(self):
+        """Aproximating block start for `analyze` method"""
         for i in reversed(range(1, self.lineno + 1)):
             line = self.lines.get_line(i).strip()
-            if line.startswith('def'):
+            if line.startswith('def '):
                 return i
-            elif line.startswith('class'):
+            elif line.startswith('class '):
+                return i
+            elif line.startswith('if '):
+                return i
+            elif line.startswith('else '):
+                return i
+            elif line.startswith('except '):
+                return i
+            elif line.startswith('try '):
+                return i
+            elif line.startswith('for '):
+                return i
+            elif line.startswith('while '):
+                return i
+            elif line.startswith('with '):
                 return i
 #            elif line
         return 1

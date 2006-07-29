@@ -12,10 +12,6 @@ Enhancing syntax highlighting @ 16h
   * Faster implementation
   * Eliminating _get_offset usage
 
-* Slow `StatementRangeFinder`
-
-  * get_block_starting can be used in analyze and get_suspected_range_after_change
-
 
 Small Stories For 0.2 Release
 =============================

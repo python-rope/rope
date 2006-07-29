@@ -119,6 +119,7 @@ class _TextChangeInspector(object):
         self.redirector = WidgetRedirector(self.text)
         self.old_insert = self.redirector.register('insert', self._insert)
         self.old_delete = self.redirector.register('delete', self._delete)
+        self.old_edit = self.redirector.register('edit', self._edit)
         self.change_observer = change_observer
         self.changed_region = None
 
@@ -133,9 +134,8 @@ class _TextChangeInspector(object):
                 end = self.text.index(self.changed_region[1] + ' +%dc' % len(args[1]))
             if self.text.compare(self.changed_region[0], '<', start):
                 start = self.changed_region[0]
-        else:
-            if self.change_observer:
-                self.text.after_idle(self.change_observer)
+        if self.changed_region is None and self.change_observer:
+            self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
         return result
     
@@ -154,9 +154,26 @@ class _TextChangeInspector(object):
                 end = self.text.index(self.changed_region[1] + ' -%dc' % delete_len)
             if self.text.compare(self.changed_region[0], '<', start):
                 start = self.changed_region[0]
-        else:
-            if self.change_observer:
-                self.text.after_idle(self.change_observer)
+        if self.changed_region is None and self.change_observer:
+            self.text.after_idle(self.change_observer)
+        self.changed_region = (start, end)
+        return result
+    
+    def _edit(self, *args):
+        if len(args) < 1 or args[0] not in ['undo', 'redo']:
+            return self.old_edit(*args)
+        start = self.text.index(INSERT)
+        result = self.old_edit(*args)
+        end = self.text.index(INSERT)
+        if self.text.compare(end, '<', start):
+            start, end = end, start
+        if self.changed_region is not None:
+            if self.text.compare(self.changed_region[0], '<', start):
+                start = self.changed_region[0]
+            if self.text.compare(self.changed_region[1], '>', end):
+                end = self.changed_region[1]
+        if self.changed_region is None and self.change_observer:
+            self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
         return result
     
