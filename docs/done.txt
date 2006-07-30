@@ -3,7 +3,7 @@
 ===========
 
 
-- Asking whether to save modified buffers when exiting: July 29, 2006
+- Asking whether to save modified buffers when exiting : July 29, 2006
 
 
 - Extending menus : July 25, 2006

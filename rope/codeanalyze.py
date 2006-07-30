@@ -1,3 +1,4 @@
+import re
 import compiler
 
 from pycore import PyObject, PyName
@@ -334,27 +335,10 @@ class StatementRangeFinder(object):
 
     def _get_block_start(self):
         """Aproximating block start for `analyze` method"""
+        pattern = StatementRangeFinder.get_block_start_patterns()
         for i in reversed(range(1, self.lineno + 1)):
-            line = self.lines.get_line(i).strip()
-            if line.startswith('def '):
+            if pattern.search(self.lines.get_line(i)) is not None:
                 return i
-            elif line.startswith('class '):
-                return i
-            elif line.startswith('if '):
-                return i
-            elif line.startswith('else '):
-                return i
-            elif line.startswith('except '):
-                return i
-            elif line.startswith('try '):
-                return i
-            elif line.startswith('for '):
-                return i
-            elif line.startswith('while '):
-                return i
-            elif line.startswith('with '):
-                return i
-#            elif line
         return 1
 
     def analyze(self):
@@ -396,4 +380,10 @@ class StatementRangeFinder(object):
             else:
                 break
         return indents
-
+    
+    @classmethod
+    def get_block_start_patterns(cls):
+        if not hasattr(cls, '__block_start_pattern'):
+            pattern = '^\\s*(def|class|if|else|elif|try|except|for|while|with)\\s'
+            cls.__block_start_pattern = re.compile(pattern, re.M)
+        return cls.__block_start_pattern

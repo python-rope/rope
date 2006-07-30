@@ -110,7 +110,19 @@ class HighlightTest(unittest.TestCase):
         text = 'a = None'
         highs = [(4, 8, 'builtin')]
         self._assertOutcomesEquals(text, highs)
-        
+    
+    # TODO: Enhancing Highlighting.get_suspected_range_after_change
+    def xxx_test_suspected_region_for_triples(self):
+        text = '"""\nhello\n"""'
+        suspected = self.highlighting.get_suspected_region_after_change(text, 12, 13)
+        self.assertEquals((0, len(text) - 1), suspected)
+
+    # TODO: Enhancing Highlighting.get_suspected_range_after_change
+    def xxx_test_suspected_region_for_triples2(self):
+        text = '"""\nhello\n"""'
+        suspected = self.highlighting.get_suspected_region_after_change(text, 2, 3)
+        self.assertEquals((0, len(text) - 1), suspected)
+
 
 class ReSTHighlightTest(unittest.TestCase):
 

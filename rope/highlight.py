@@ -1,5 +1,7 @@
 import re
 import keyword
+
+import rope.codeanalyze
 import rope.codeanalyze
 
 
@@ -22,33 +24,39 @@ class Highlighting(object):
 #                    print a, b, key
                     yield (start + a, start + b, key)
 
-    def get_suspected_range_after_change(self, text, change_start, change_end):
+    def get_suspected_region_after_change(self, text, change_start, change_end):
         """Returns the range that needs to be updated after a change"""
-        start = change_start
-        start = min(start, len(text) - 1)
-        new_line_count = 0
-        while start > 0:
-            if text[start] == '\n':
-                new_line_count += 1
-                if new_line_count == 2:
-                    break
-            start -= 1
-        start = max(0, start - 1)
-        end = change_end
-        while end < len(text):
-            if text[end] == '\n':
-                break
-            end += 1
+        start = min(change_start, len(text) - 1)
+        start = self._get_line_start(text, start)
+        start = max(0, start - 2)
+        end = self._get_line_end(text, change_end)
+        end = min(len(text) - 1, end)
         return (start, end)
 
+    def _make_pattern(self):
+        """Returns highlighting patterns"""
+
+    def _get_line_start(self, text, index):
+        current = index - 1
+        while current > 0:
+            if text[current] == '\n':
+                return current + 1
+            current -= 1
+        return 0
+    
+    def _get_line_end(self, text, index):
+        current = index
+        while current < len(text):
+            if text[current] == '\n':
+                return current
+            current -= 1
+        return len(text)
+    
     def _get_pattern(self):
         if not self.pattern:
             self.pattern = self._make_pattern()
         return self.pattern
     
-    def _make_pattern(self):
-        """Returns highlighting patterns"""
-
 
 class HighlightingStyle(object):
 
@@ -93,10 +101,22 @@ class PythonHighlighting(Highlighting):
                 'definition': HighlightingStyle(color='purple', bold=True)}
     
     def get_suspected_range_after_change(self, text, change_start, change_end):
-        start = change_start
-        end = change_end
-        return super(PythonHighlighting, self).\
-               get_suspected_range_after_change(text, change_start, change_end)
+        start, end = super(PythonHighlighting, self).\
+                     get_suspected_range_after_change(text, change_start, change_end)
+        line = text[start:end]
+        if '"""' in line or "'''" in line:
+            block_start = self._find_block_start(start)
+        return (start, end)
+    
+    def _find_block_start(self, text, index):
+        block_start_pattern = rope.codeanalyze.StatementRangeFinder.get_block_start_patterns()
+        while index > 0:
+            new_index = self._get_line_start(index - 1)
+            line = text[index:new_index]
+            if block_start_pattern.search(line) is not None:
+                return new_index
+            index = new_index
+        return 0
     
 
 class NoHighlighting(Highlighting):

@@ -1,9 +1,9 @@
-Enhancing syntax highlighting @ 16h
+Enhancing Syntax Highlighting @ 16h
 ===================================
 
 - Handling undo/redos
 * Work on `Highlighting.get_suspected_region_after_change`
-* Slow editor._get_offset
+* Slow `GraphicalEditor._get_offset`
 
   * Caching editor._get_offset
   * Faster implementation

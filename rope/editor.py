@@ -214,9 +214,9 @@ class GraphicalEditor(object):
 
     def _colorize(self, start, end):
         start_offset, end_offset = self.highlighting.\
-                                   get_suspected_range_after_change(self.get_text(),
-                                                                    self._get_offset(start),
-                                                                    self._get_offset(end))
+                                   get_suspected_region_after_change(self.get_text(),
+                                                                     self._get_offset(start),
+                                                                     self._get_offset(end))
         start = self.text.index('1.0 +%dc' % start_offset)
         end = self.text.index(start + ' +%dc' % (end_offset - start_offset))
         start_tags = self.text.tag_names(start)
