@@ -23,6 +23,7 @@ Features added in this release:
 * Asking whether to save modified buffers when exiting
 * Extending menus
 * Separating entering and correcting indentation
+* Better highlighting
 
 If it is the first time you use rope, it might be helpful to try
 these:
