@@ -111,17 +111,15 @@ class HighlightTest(unittest.TestCase):
         highs = [(4, 8, 'builtin')]
         self._assertOutcomesEquals(text, highs)
     
-    # TODO: Enhancing Highlighting.get_suspected_range_after_change
-    def xxx_test_suspected_region_for_triples(self):
+    def test_suspected_region_for_triples(self):
         text = '"""\nhello\n"""'
-        suspected = self.highlighting.get_suspected_region_after_change(text, 12, 13)
-        self.assertEquals((0, len(text) - 1), suspected)
+        suspected = self.highlighting.get_suspected_region_after_change(text, 11, 12)
+        self.assertEquals((0, len(text)), suspected)
 
-    # TODO: Enhancing Highlighting.get_suspected_range_after_change
-    def xxx_test_suspected_region_for_triples2(self):
+    def test_suspected_region_for_triples2(self):
         text = '"""\nhello\n"""'
         suspected = self.highlighting.get_suspected_region_after_change(text, 2, 3)
-        self.assertEquals((0, len(text) - 1), suspected)
+        self.assertEquals((0, len(text)), suspected)
 
 
 class ReSTHighlightTest(unittest.TestCase):
@@ -232,6 +230,11 @@ class ReSTHighlightTest(unittest.TestCase):
     def test_following_literals(self):
         self.assertTrue(self.in_highlights('``a````b``', (0, 5, 'literal')))
         self.assertTrue(self.in_highlights('``a````b``', (5, 10, 'literal')))
+
+    def test_suspected_region_for_quotes(self):
+        text = '=====\ntitle\n====='
+        suspected = self.highlighting.get_suspected_region_after_change(text, 15, 16)
+        self.assertEquals((0, len(text)), suspected)
 
 
 def suite():

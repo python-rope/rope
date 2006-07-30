@@ -223,10 +223,7 @@ Stories
 * Auto-completing function parameter names when calling
 
 
-* Rename function
-
-
-* Rename class
+* Rename class/function
 
 
 * Reloading changed editors after refactorings @ 8h
@@ -235,7 +232,6 @@ Stories
 
 
 * Formating Code
-  Writing ASTs
 
 
 * Enhancing editor

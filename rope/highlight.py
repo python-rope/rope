@@ -30,7 +30,6 @@ class Highlighting(object):
         start = self._get_line_start(text, start)
         start = max(0, start - 2)
         end = self._get_line_end(text, change_end)
-        end = min(len(text) - 1, end)
         return (start, end)
 
     def _make_pattern(self):
@@ -49,7 +48,7 @@ class Highlighting(object):
         while current < len(text):
             if text[current] == '\n':
                 return current
-            current -= 1
+            current += 1
         return len(text)
     
     def _get_pattern(self):
@@ -100,24 +99,38 @@ class PythonHighlighting(Highlighting):
                 'builtin': HighlightingStyle(color='#908080'),
                 'definition': HighlightingStyle(color='purple', bold=True)}
     
-    def get_suspected_range_after_change(self, text, change_start, change_end):
+    def get_suspected_region_after_change(self, text, change_start, change_end):
         start, end = super(PythonHighlighting, self).\
-                     get_suspected_range_after_change(text, change_start, change_end)
+                     get_suspected_region_after_change(text, change_start, change_end)
         line = text[start:end]
         if '"""' in line or "'''" in line:
-            block_start = self._find_block_start(start)
+            block_start = self._find_block_start(text, change_start)
+            block_end = self._find_block_end(text, change_end)
+            return (block_start, block_end)
         return (start, end)
     
     def _find_block_start(self, text, index):
         block_start_pattern = rope.codeanalyze.StatementRangeFinder.get_block_start_patterns()
+        index = self._get_line_start(text, index)
         while index > 0:
-            new_index = self._get_line_start(index - 1)
-            line = text[index:new_index]
+            new_index = self._get_line_start(text, index - 1)
+            line = text[new_index:index]
             if block_start_pattern.search(line) is not None:
                 return new_index
             index = new_index
         return 0
-    
+
+    def _find_block_end(self, text, index):
+        block_start_pattern = rope.codeanalyze.StatementRangeFinder.get_block_start_patterns()
+        index = self._get_line_end(text, index)
+        while index < len(text) - 1:
+            new_index = self._get_line_end(text, index + 1)
+            line = text[index:new_index]
+            if block_start_pattern.search(line) is not None:
+                return index
+            index = new_index
+        return len(text)
+
 
 class NoHighlighting(Highlighting):
 
@@ -172,3 +185,27 @@ class ReSTHighlighting(Highlighting):
                 'field' : HighlightingStyle(color='#005555'),
                 'escaped' : HighlightingStyle()}
 
+    def get_suspected_region_after_change(self, text, change_start, change_end):
+        start = self._find_paragraph_start(text, change_start)
+        end = self._find_paragraph_end(text, change_end)
+        return (start, end)
+    
+    def _find_paragraph_start(self, text, index):
+        index = self._get_line_start(text, index)
+        while index > 0:
+            new_index = self._get_line_start(text, index - 1)
+            line = text[new_index:index]
+            if line.strip() == '':
+                return new_index
+            index = new_index
+        return 0
+
+    def _find_paragraph_end(self, text, index):
+        index = self._get_line_end(text, index)
+        while index < len(text) - 1:
+            new_index = self._get_line_end(text, index + 1)
+            line = text[index:new_index]
+            if line.strip() == '':
+                return new_index
+            index = new_index
+        return len(text)
