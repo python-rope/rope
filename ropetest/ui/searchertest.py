@@ -1,7 +1,7 @@
 import unittest
 
 from rope.ui.statusbar import StatusBarException
-from rope.ui.searching import Searcher
+from rope.ui.searcher import Searcher
 from ropetest.ui.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 
 class SearchingTest(unittest.TestCase):

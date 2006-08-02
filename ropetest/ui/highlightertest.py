@@ -1,6 +1,6 @@
 import unittest
 
-from rope.ui.highlight import (PythonHighlighting, HighlightingStyle,
+from rope.ui.highlighter import (PythonHighlighting, HighlightingStyle,
                                ReSTHighlighting, NoHighlighting)
 
 class HighlightTest(unittest.TestCase):

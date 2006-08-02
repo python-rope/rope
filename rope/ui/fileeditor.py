@@ -1,5 +1,3 @@
-import rope.ui.highlight
-import rope.ui.indenter
 import rope.ui.editingtools
 
 class FileEditor(object):

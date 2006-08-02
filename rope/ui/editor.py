@@ -4,11 +4,9 @@ from Tkinter import *
 from tkFont import *
 from ScrolledText import ScrolledText
 
-import rope.ui.highlight
-import rope.ui.searching
-import rope.ui.indenter
-import rope.ui.editingtools
 import rope.codeassist
+import rope.ui.editingtools
+import rope.ui.searcher
 from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
 from rope.ui.uihelpers import TreeViewer, TreeViewerHandle
 from rope.ui.tkhelpers import WidgetRedirector
@@ -198,7 +196,7 @@ class GraphicalEditor(object):
         self.text = ScrolledText(parent, bg='white', font=font,
                                  undo=True, maxundo=20, highlightcolor='#99A')
         self.change_inspector = _TextChangeInspector(self, self._text_changed)
-        self.searcher = rope.ui.searching.Searcher(self)
+        self.searcher = rope.ui.searcher.Searcher(self)
         self._set_editing_tools(editor_tools)
         self._bind_keys()
         self.status_bar_manager = None

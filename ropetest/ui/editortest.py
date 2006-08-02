@@ -3,7 +3,6 @@ import Tkinter
 
 import rope.ui.editingtools
 from rope.ui.core import Core
-from rope.ui.searching import Searcher
 from ropetest.ui.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.ui.indenter import PythonCodeIndenter
 from rope.ui.editor import _TextChangeInspector

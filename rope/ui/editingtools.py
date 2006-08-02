@@ -1,5 +1,5 @@
 import rope.ui.indenter
-import rope.ui.highlight
+import rope.ui.highlighter
 import rope.codeassist
 import rope.outline
 import rope.refactoring
@@ -32,7 +32,7 @@ class PythonEditingTools(EditingTools):
         return rope.ui.indenter.PythonCodeIndenter(editor)
 
     def create_highlighting(self):
-        return rope.ui.highlight.PythonHighlighting()
+        return rope.ui.highlighter.PythonHighlighting()
     
     def create_code_assist(self):
         return rope.codeassist.PythonCodeAssist(self.project)
@@ -53,7 +53,7 @@ class NormalEditingTools(EditingTools):
         return rope.ui.indenter.NormalIndenter(editor)
 
     def create_highlighting(self):
-        return rope.ui.highlight.NoHighlighting()
+        return rope.ui.highlighter.NoHighlighting()
     
     def create_code_assist(self):
         return rope.codeassist.NoAssist()
@@ -73,7 +73,7 @@ class ReSTEditingTools(EditingTools):
         return rope.ui.indenter.NormalIndenter(editor)
 
     def create_highlighting(self):
-        return rope.ui.highlight.ReSTHighlighting()
+        return rope.ui.highlighter.ReSTHighlighting()
     
     def create_code_assist(self):
         return rope.codeassist.NoAssist()
