@@ -601,19 +601,24 @@ class GraphicalEditor(object):
         return result + ' wordend'
 
     def _get_next_word_index(self):
-        current = str(self.text.index(INSERT))
-        if self.text.get(current) == '\n':
-            return current + '+1c'
-        while self.text.compare(current, '!=', 'end-1c') and not self.text.get(current).isalnum():
-            current = str(self.text.index(current + ' +1c'))
-            if self.text.get(current) == '\n':
-                return current
-        is_upper = self.text.get(current).isupper()
-        while self.text.compare(current, '!=', 'end-1c'):
-            current = str(self.text.index(current + ' +1c'))
-            if not self.text.get(current).isalnum() or self.text.get(current).isupper():
+        line = self.text.get('insert', 'insert lineend')
+        if line == '':
+            return 'insert +1l linestart'
+        offset = 0
+        while offset < len(line) and not line[offset].isalnum():
+            offset += 1
+        if offset == 0:
+            offset = 1
+        while offset < len(line) and line[offset].isalnum():
+            if offset > 0 and line[offset - 1].isalnum() and \
+               line[offset].isupper() and offset + 1 < len(line) and \
+               line[offset + 1].islower():
                 break
-        return current
+            if offset > 0 and line[offset - 1].islower() and \
+               line[offset].isupper():
+                break
+            offset += 1
+        return 'insert +%dc' % offset
 
     def next_word(self):
         self.text.mark_set(INSERT, self._get_next_word_index())
@@ -627,21 +632,27 @@ class GraphicalEditor(object):
         return result + '-1c wordstart'
 
     def _get_prev_word_index(self):
-        current = str(self.text.index(INSERT))
-        if self.text.get(current + '-1c') == '\n':
-            return current + '-1c'
-        while self.text.compare(current, '!=', '1.0') and \
-              not self.text.get(current + ' -1c').isalnum():
-            current = str(self.text.index(current + ' -1c'))
-            if self.text.get(current + '-1c') == '\n':
-                return current
-        is_upper = self.text.get(current + ' -1c').isupper()
-        while self.text.compare(current, '!=', '1.0') and \
-              self.text.get(current + ' -1c').isalnum():
-            current = str(self.text.index(current + ' -1c'))
-            if  self.text.get(current).isupper():
+        column = self._get_column_from_index('insert')
+        if column == 0:
+            if self._get_line_from_index('insert') != 1:
+                return 'insert -1l lineend'
+            else:
+                return 'insert'
+        offset = column
+        line = self.text.get('insert linestart', 'insert +1c')
+        while offset > 0 and not line[offset - 1].isalnum():
+            offset -= 1
+        if offset == column:
+            offset -= 1
+        while offset > 0 and line[offset - 1].isalnum():
+            if offset < len(line) - 1 and line[offset].isupper() and \
+               line[offset + 1].islower():
                 break
-        return current
+            if offset > 0 and line[offset - 1].islower() and \
+               line[offset].isupper():
+                break
+            offset -= 1
+        return 'insert linestart +%dc' % offset
 
     def prev_word(self):
         self.text.mark_set(INSERT, self._get_prev_word_index())

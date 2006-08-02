@@ -125,7 +125,7 @@ class Core(object):
         fileMenu.add_command(label='Open File ...',
                              command=self._open_file_dialog, underline=0)
         fileMenu.add_separator()
-        fileMenu.add_command(label='Change Editor',
+        fileMenu.add_command(label='Change Editor ...',
                              command=self._change_editor_dialog, underline=0)
         fileMenu.add_command(label='Save Editor',
                              command=self.save_active_editor, underline=0)
@@ -675,7 +675,7 @@ class Core(object):
 
     @staticmethod
     def get_core():
-        '''Get the singleton instance of Core'''
+        """Get the singleton instance of Core"""
         if not hasattr(Core, '_core'):
             Core._core = Core()
         return Core._core

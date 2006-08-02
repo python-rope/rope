@@ -1,32 +1,34 @@
-Enhancing Syntax Highlighting @ 16h
-===================================
-
-- Handling undo/redos
-- Work on `Highlighting.get_suspected_region_after_change`
-* Slow `GraphicalEditor._get_offset`
-
-  * Caching editor._get_offset
-  * Faster implementation
-  * Eliminating _get_offset usage
-
-
 Small Stories For 0.2 Release
 =============================
-* Optimize SourceLinesAdapter methods
-* Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
-* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
-* Having only one Refactoring instance for a project?
-* PyObject and PyName equality checks; Value objects?
-* Consider using `StatementRangeFinder` in highlight module?
-* Better change editor dialog
+- Test ``__add__`` for typeanalyze.py
+
 * Better next/prev
 * Goto definition for ``# comment.\na_var``
 * Showing version in about dialog
+* Better editor changing dialog; use uihelpers module
+* Having only one Refactoring instance for a project?
+* Handle ``something__``, ``__init__.py`` and ``__init__`` for reST highlighting
+
+* Optimize SourceLinesAdapter methods
+* Slow `GraphicalEditor._get_offset`
+* Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
+* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
+* PyObject and PyName equality checks; Value objects?
+
+Next/Prev Word issues
+=====================
+
+Stop before the upper-case letter that precedes a lower-case letter.
+
+HTTPClient
+ASample
+MyHTTPClient
+SomeClass
+INSERT
 
 
 Before 0.2 Release
 ==================
-* Better editor changing dialog; use uihelpers module
 * Profiling to find the bottlenecks
 * Document features added since 0.1 release
 * Add a simple tutorial

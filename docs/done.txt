@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.2RC : July 30, 2006
+
+
 - Asking whether to save modified buffers when exiting : July 29, 2006
 
 

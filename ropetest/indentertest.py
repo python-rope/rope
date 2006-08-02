@@ -4,7 +4,9 @@ from ropetest.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.indenter import PythonCodeIndenter, NormalIndenter
 
 class PythonCodeIndenterTest(unittest.TestCase):
+
     __factory = MockEditorFactory()
+    
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.editor = self.__factory.create()
@@ -257,7 +259,20 @@ class PythonCodeIndenterTest(unittest.TestCase):
         indenter = NormalIndenter(self.editor)
         indenter.correct_indentation(1)
         self.assertEquals('line1\n', self.editor.get_text())
-
+    
+    # TODO: More work on the effects of current and previous lines
+    def xxx_test_else_after_break(self):
+        self.editor.set_text('for i in range(1):\n' +
+                             '    if True:\n' +
+                             '        break\n' +
+                             '    else:\n')
+        self.indenter.correct_indentation(4)
+        self.assertEquals('for i in range(1):\n' +
+                          '    if True:\n' +
+                          '        break\n' +
+                          '    else:\n',
+                          self.editor.get_text())
+            
 
 if __name__ == '__main__':
     unittest.main()

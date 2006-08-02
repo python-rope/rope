@@ -23,11 +23,11 @@ class GraphicalEditorTest(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-    def testMoveNextWord(self):
+    def test_move_next_word(self):
         self.editor.next_word()
         self.assertEquals(' ', self.editor.get(), 'Expected <%c> but was <%c>' % (' ', self.editor.get()))
 
-    def testMoveNextWordOnSpaces(self):
+    def test_move_next_word_on_spaces(self):
         self.editor.next_word()
         self.editor.insert(self.editor.get_end(), ' and\n')
         self.editor.next_word()
@@ -35,47 +35,47 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.next_word()
         self.assertEquals('\n', self.editor.get())
 
-    def testNextWordOnEnd(self):
+    def test_next_word_on_end(self):
         self.editor.set_insert(self.editor.get_end())
         self.editor.next_word()
         self.assertEquals(self.editor.get_end(), self.editor.get_insert())
 
-    def testNextWordOnNewLine(self):
+    def test_next_word_on_new_line(self):
         self.editor.set_insert(self.editor.get_relative(self.editor.get_end(), -1))
         self.editor.insert(self.editor.get_end(), '\non a new line')
         self.editor.next_word()
         self.assertEquals('\n', self.editor.get())
 
-    def testNextWordOnNewLine(self):
+    def test_next_word_on_new_line(self):
         self.editor.set_text('hello \n world\n')
         self.editor.next_word()
         self.editor.next_word()
         self.assertEquals('\n', self.editor.get(), self.editor.get())
 
-    def testNextOneCharacterWord(self):
+    def test_next_one_character_word(self):
         self.editor.set_text('1 2\n')
         self.editor.next_word()
         self.assertEquals(' ', self.editor.get())
         self.editor.next_word()
         self.assertEquals('\n', self.editor.get())
 
-    def testPrevWordOnTheBegining(self):
+    def test_prev_word_on_the_begining(self):
         self.editor.prev_word()
         self.assertEquals('s', self.editor.get())
 
-    def testPrevWord(self):
+    def test_prev_word(self):
         self.editor.set_insert(self.editor.get_end())
         self.editor.prev_word()
         self.assertEquals('t', self.editor.get())
         self.editor.prev_word()
         self.assertEquals('s', self.editor.get())
 
-    def testPrevWordOnTheMiddleOfAWord(self):
+    def test_prev_word_on_the_middle_of_a_word(self):
         self.editor.set_insert(self.editor.get_relative(self.editor.get_end(), -2))
         self.editor.prev_word()
         self.assertEquals('t', self.editor.get())
 
-    def testPrevOneCharacterWord(self):
+    def test_prev_one_character_word(self):
         self.editor.set_text('1 2 3')
         self.editor.set_insert(self.editor.get_end())
         self.editor.prev_word()
@@ -85,26 +85,26 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.prev_word()
         self.assertEquals('1', self.editor.get())
 
-    def testDeletingNextWord(self):
+    def test_deleting_next_word(self):
         self.editor.delete_next_word()
         self.assertEquals(' text', self.editor.get_text())
 
-    def testDeletingNextWordInTheMiddle(self):
+    def test_deleting_next_word_in_the_middle(self):
         self.editor.set_insert(self.editor.get_index(2))
         self.editor.delete_next_word()
         self.assertEquals('sa text', self.editor.get_text())
 
-    def testDeletingPrevWord(self):
+    def test_deleting_prev_word(self):
         self.editor.set_insert(self.editor.get_end())
         self.editor.delete_prev_word()
         self.assertEquals('sample ', self.editor.get_text(), self.editor.get_text())
 
-    def testDeletingPrevWordInTheMiddle(self):
+    def test_deleting_prev_word_in_the_middle(self):
         self.editor.set_insert(self.editor.get_relative(self.editor.get_end(), -2))
         self.editor.delete_prev_word()
         self.assertEquals('sample xt', self.editor.get_text(), self.editor.get_text())
 
-    def testDeletingPrevWordAtTheBeginning(self):
+    def test_deleting_prev_word_at_the_beginning(self):
         self.editor.set_insert(self.editor.get_index(3))
         self.editor.delete_prev_word()
         self.assertEquals('ple text', self.editor.get_text(), self.editor.get_text())
@@ -121,7 +121,15 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.prev_word()
         self.assertEquals(self.editor.get_index(7), self.editor.get_insert())
 
-    def test_next_word_stopping_at_capitals(self):
+    def test_next_word_stopping_at_end_of_line_preceded_by_a_space(self):
+        self.editor.set_text('sampleText ')
+        self.editor.set_insert(self.editor.get_index(6))
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(10), self.editor.get_insert())
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(11), self.editor.get_insert())
+
+    def test_next_word_stopping_at_capitals1(self):
         self.editor.set_text('sampleText')
         self.editor.set_insert(self.editor.get_start())
         self.editor.next_word()
@@ -133,12 +141,27 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.next_word()
         self.assertEquals(self.editor.get_end(), self.editor.get_insert())
 
-    # TODO: handle this case
-    def xxx_test_next_word_stopping_at_capitals3(self):
-        self.editor.set_text('sampleMYText')
-        self.editor.set_insert(self.editor.get_index(6))
+    def test_next_word_stopping_at_capitals3(self):
+        self.editor.set_text('MyHTTPClient')
         self.editor.next_word()
-        self.assertEquals(self.editor.get_index(8), self.editor.get_insert())
+        self.assertEquals(self.editor.get_index(2), self.editor.get_insert())
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+
+    def test_next_word_stopping_at_capitals4(self):
+        self.editor.set_text('INSERT')
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_end(), self.editor.get_insert())
+
+    def test_next_word_stopping_at_capitals5(self):
+        self.editor.set_text('INSERT ')
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+
+    def test_next_word_stopping_at_capitals6(self):
+        self.editor.set_text(' Hello')
+        self.editor.next_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
 
     def test_prev_word_stopping_at_capitals(self):
         self.editor.set_text('sampleText')
@@ -151,6 +174,36 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.set_insert(self.editor.get_index(7))
         self.editor.prev_word()
         self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_capitals3(self):
+        self.editor.set_text('MyHTTPText')
+        self.editor.set_insert(self.editor.get_index(6))
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(2), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_capitals4(self):
+        self.editor.set_text('INSERT')
+        self.editor.set_insert(self.editor.get_end())
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_start(), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_capitals5(self):
+        self.editor.set_text(' INSERT')
+        self.editor.set_insert(self.editor.get_index(4))
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(1), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_capitals6(self):
+        self.editor.set_text('AClass')
+        self.editor.set_insert(self.editor.get_index(4))
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(1), self.editor.get_insert())
+
+    def test_prev_word_stopping_at_capitals7(self):
+        self.editor.set_text('MyClass')
+        self.editor.set_insert(self.editor.get_index(2))
+        self.editor.prev_word()
+        self.assertEquals(self.editor.get_index(0), self.editor.get_insert())
 
     def test_next_word_stopping_at_end_of_line(self):
         self.editor.set_text('sample \n   text')

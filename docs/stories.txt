@@ -258,7 +258,7 @@ Stories
 * Dynamic type inference
 
 
-> Public Release 0.2RC : July 30, 2006
+> Public Release 0.2 : August 6, 2006
 
 
 Remaining Stories
