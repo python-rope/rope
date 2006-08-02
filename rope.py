@@ -1,6 +1,6 @@
 #! /usr/bin/python
-import rope.core
+import rope.ui.core
 
 if __name__ == '__main__':
-    rope.core.Core.get_core().run()
+    rope.ui.core.Core.get_core().run()
 

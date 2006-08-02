@@ -4,9 +4,9 @@ import tkSimpleDialog
 from threading import Thread
 from Tkinter import *
 
-import rope.editor
-import rope.fileeditor
-import rope.statusbar
+import rope.ui.editor
+import rope.ui.fileeditor
+import rope.ui.statusbar
 from rope.exceptions import RopeException
 from rope.project import Project, FileFinder
 from rope.pycore import PythonFileRunner
@@ -47,8 +47,8 @@ class EditorManager(object):
             if editor.get_file() == file_:
                 self.buttons[editor].invoke()
                 return editor
-        editor = rope.fileeditor.FileEditor(Core.get_core().get_open_project(), file_,
-                                            rope.editor.GraphicalEditorFactory(self.editor_frame))
+        editor = rope.ui.fileeditor.FileEditor(Core.get_core().get_open_project(), file_,
+                                            rope.ui.editor.GraphicalEditorFactory(self.editor_frame))
         editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),
@@ -94,7 +94,7 @@ class Core(object):
         self.editor_manager = EditorManager(self.editor_panel, self)
 
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
-        self.status_bar_manager = rope.statusbar.StatusBarManager(self.status_bar)
+        self.status_bar_manager = rope.ui.statusbar.StatusBarManager(self.status_bar)
         line_status = self.status_bar_manager.create_status('line')
         line_status.set_width(12)
 

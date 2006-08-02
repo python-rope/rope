@@ -1,4 +1,4 @@
-from rope.editor import LineEditor, EditorFactory
+from rope.ui.editor import LineEditor, EditorFactory
 
 class MockEditorFactory(EditorFactory):
 

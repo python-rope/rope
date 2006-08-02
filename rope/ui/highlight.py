@@ -2,7 +2,6 @@ import re
 import keyword
 
 import rope.codeanalyze
-import rope.codeanalyze
 
 
 class Highlighting(object):

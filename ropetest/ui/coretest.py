@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from rope.core import Core, RopeException
+from rope.ui.core import Core, RopeException
 from ropetest.projecttest import SampleProjectMaker
 
 class CoreTest(unittest.TestCase):

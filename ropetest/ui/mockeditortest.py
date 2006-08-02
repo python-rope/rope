@@ -1,8 +1,8 @@
 import unittest
 
-import rope.editingtools
-from ropetest.mockeditor import *
-from rope.editor import *
+import rope.ui.editingtools
+from ropetest.ui.mockeditor import *
+from rope.ui.editor import *
 
 class TextEditorTest(unittest.TestCase):
 
@@ -13,7 +13,7 @@ class TextEditorTest(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.editor = self.__factory.create(rope.editingtools.NormalEditingTools())
+        self.editor = self.__factory.create(rope.ui.editingtools.NormalEditingTools())
         self.editor.set_text('sample text')
 
     def tearDown(self):

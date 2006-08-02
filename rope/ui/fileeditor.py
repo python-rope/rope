@@ -1,6 +1,6 @@
-import rope.highlight
-import rope.indenter
-import rope.editingtools
+import rope.ui.highlight
+import rope.ui.indenter
+import rope.ui.editingtools
 
 class FileEditor(object):
 
@@ -9,11 +9,11 @@ class FileEditor(object):
         self.project = project
         editing_tools = None
         if self.file.get_name().endswith('.py'):
-            editing_tools = rope.editingtools.PythonEditingTools(project)
+            editing_tools = rope.ui.editingtools.PythonEditingTools(project)
         elif self.file.get_name().endswith('.txt'):
-            editing_tools = rope.editingtools.ReSTEditingTools()
+            editing_tools = rope.ui.editingtools.ReSTEditingTools()
         else:
-            editing_tools = rope.editingtools.NormalEditingTools()
+            editing_tools = rope.ui.editingtools.NormalEditingTools()
         self.editor = editor_factory.create(editing_tools)
         self.editor.set_text(self.file.read())
         self.modification_observers = []

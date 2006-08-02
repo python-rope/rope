@@ -1,7 +1,7 @@
 import unittest
 import Tkinter
 
-from rope.statusbar import StatusBarManager, StatusBarException
+from rope.ui.statusbar import StatusBarManager, StatusBarException
 
 class StatusBarTest(unittest.TestCase):
 

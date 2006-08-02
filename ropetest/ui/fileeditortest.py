@@ -1,11 +1,11 @@
 import unittest
 import Tkinter
 
-from rope.editor import *
-from rope.fileeditor import *
 from rope.project import Project
-from ropetest.mockeditor import MockEditor, MockEditorFactory
+from rope.ui.editor import *
+from rope.ui.fileeditor import *
 from ropetest.projecttest import SampleProjectMaker
+from ropetest.ui.mockeditor import MockEditor, MockEditorFactory
 
 class FileEditorTest(unittest.TestCase):
     

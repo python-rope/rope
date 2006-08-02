@@ -4,14 +4,14 @@ from Tkinter import *
 from tkFont import *
 from ScrolledText import ScrolledText
 
-import rope.highlight
-import rope.searching
-import rope.indenter
+import rope.ui.highlight
+import rope.ui.searching
+import rope.ui.indenter
+import rope.ui.editingtools
 import rope.codeassist
-import rope.editingtools
-from rope.uihelpers import EnhancedList, EnhancedListHandle
-from rope.uihelpers import TreeViewer, TreeViewerHandle
-from rope.tkhelpers import WidgetRedirector
+from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
+from rope.ui.uihelpers import TreeViewer, TreeViewerHandle
+from rope.ui.tkhelpers import WidgetRedirector
 
 class LineEditor(object):
     """An interface for line oriented editors"""
@@ -198,7 +198,7 @@ class GraphicalEditor(object):
         self.text = ScrolledText(parent, bg='white', font=font,
                                  undo=True, maxundo=20, highlightcolor='#99A')
         self.change_inspector = _TextChangeInspector(self, self._text_changed)
-        self.searcher = rope.searching.Searcher(self)
+        self.searcher = rope.ui.searching.Searcher(self)
         self._set_editing_tools(editor_tools)
         self._bind_keys()
         self.status_bar_manager = None
@@ -358,8 +358,8 @@ class GraphicalEditor(object):
     def _goto_editor_location(self, resource, lineno):
         editor = self
         if resource is not None:
-            import rope.core
-            editor = rope.core.Core.get_core().get_editor_manager().\
+            import rope.ui.core
+            editor = rope.ui.core.Core.get_core().get_editor_manager().\
                      get_resource_editor(resource).get_editor()
         if lineno is not None:
             editor.goto_line(lineno)

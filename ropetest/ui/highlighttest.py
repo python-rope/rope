@@ -1,6 +1,7 @@
 import unittest
 
-from rope.highlight import PythonHighlighting, HighlightingStyle, ReSTHighlighting
+from rope.ui.highlight import (PythonHighlighting, HighlightingStyle,
+                               ReSTHighlighting, NoHighlighting)
 
 class HighlightTest(unittest.TestCase):
 
@@ -53,7 +54,6 @@ class HighlightTest(unittest.TestCase):
         self._assertOutcomesEquals(text, [], not_highs)
 
     def test_no_highlighting(self):
-        from rope.highlight import NoHighlighting
         noHigh = NoHighlighting()
         text = 'def sample_function():\n    pass\n'
         expected = []
