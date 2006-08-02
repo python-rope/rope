@@ -236,6 +236,11 @@ class ReSTHighlightTest(unittest.TestCase):
         suspected = self.highlighting.get_suspected_region_after_change(text, 15, 16)
         self.assertEquals((0, len(text)), suspected)
 
+    def test_anonymous_hyperlinks(self):
+        self.assertTrue('anonymous_hyperlink' in self.highlighting.get_styles())
+        self.assertFalse(self.in_highlights('rope__', (0, 6, 'hyperlink')))
+        self.assertTrue(self.in_highlights('rope__', (0, 6, 'anonymous_hyperlink')))
+
 
 def suite():
     result = unittest.TestSuite()

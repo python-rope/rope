@@ -155,11 +155,13 @@ class ReSTHighlighting(Highlighting):
         literal_pattern = '(?P<literal>``([^`]|`[^`])+``)'
         interpreted_pattern = '(?P<interpreted>`[^`]+`)(?P<role>:\\w+:)?'
         hyperlink_target_pattern = '(?P<hyperlink_target>\\w+://[^\\s]+)'
-        hyperlink_pattern = '(?P<hyperlink>[\\w]+_|`[^`]+`_)\\b'
+        hyperlink_pattern = '(?P<hyperlink>\\b[a-zA-Z0-9]+_|`[^`]+`_)\\b'
+        anonymous_hyperlink_pattern = '(?P<anonymous_hyperlink>\\b[a-zA-Z0-9]+__|`[^`]+`__)\\b'
         hyperlink_definition_pattern = '(?P<hyperlink_definition>\\.\\. _([^`\n:]|`.+`)+:)'
         field_pattern = '^\\s*(?P<field>:[^\n:]+:)'
         escaped_pattern = '(?P<escaped>\\\\.)'
-        all_patterns = literal_pattern + '|' + escaped_pattern + '|' + hyperlink_pattern + '|' + \
+        all_patterns = literal_pattern + '|' + escaped_pattern + '|' + \
+                       anonymous_hyperlink_pattern + '|' + hyperlink_pattern + '|' + \
                        interpreted_pattern + '|' + \
                        title_pattern + '|' + listsign_pattern + '|' + \
                        directive_pattern + '|' + emphasis_pattern + '|' + \
@@ -183,6 +185,7 @@ class ReSTHighlighting(Highlighting):
                 'hyperlink' : HighlightingStyle(color='#2200FF'),
                 'hyperlink_definition' : HighlightingStyle(color='#2222FF'),
                 'field' : HighlightingStyle(color='#005555'),
+                'anonymous_hyperlink' : HighlightingStyle(color='#003355'),
                 'escaped' : HighlightingStyle()}
 
     def get_suspected_region_after_change(self, text, change_start, change_end):

@@ -1,31 +1,18 @@
 Small Stories For 0.2 Release
 =============================
-- Test ``__add__`` for typeanalyze.py
+- Better next/prev
+- Handle ``something__``, ``__init__.py`` and ``__init__`` for reST highlighting
 
-* Better next/prev
 * Goto definition for ``# comment.\na_var``
 * Showing version in about dialog
 * Better editor changing dialog; use uihelpers module
 * Having only one Refactoring instance for a project?
-* Handle ``something__``, ``__init__.py`` and ``__init__`` for reST highlighting
 
 * Optimize SourceLinesAdapter methods
 * Slow `GraphicalEditor._get_offset`
 * Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
 * More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
 * PyObject and PyName equality checks; Value objects?
-
-Next/Prev Word issues
-=====================
-
-Stop before the upper-case letter that precedes a lower-case letter.
-
-HTTPClient
-ASample
-MyHTTPClient
-SomeClass
-INSERT
-
 
 Before 0.2 Release
 ==================

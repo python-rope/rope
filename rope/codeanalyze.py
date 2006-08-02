@@ -387,3 +387,4 @@ class StatementRangeFinder(object):
             pattern = '^\\s*(def|class|if|else|elif|try|except|for|while|with)\\s'
             cls.__block_start_pattern = re.compile(pattern, re.M)
         return cls.__block_start_pattern
+

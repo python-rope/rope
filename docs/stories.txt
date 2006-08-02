@@ -16,7 +16,7 @@ Stories
 * Add import
 
 
-* Variable indentation and tab size @ 4h
+* Variable indentation and tab size
 
 
 * Find occurances
@@ -59,10 +59,10 @@ Stories
   Add a graphical view for running tests.
 
 
-* Replacement; M-% @ 12h
+* Replacement; M-%
 
 
-* Save as and save all; C-x C-w, C-x s @ 4h
+* Save as and save all; C-x C-w, C-x s
 
 
 * Remembering last open project
@@ -74,10 +74,10 @@ Stories
 * Static type inference
 
 
-* Commenting and uncommenting lines @ 2h
+* Commenting and uncommenting lines
 
 
-* Enhancing searching @ 16h
+* Enhancing searching
 
   * End the search when some other key sequence is typed
   * C-s C-s should start the last search
@@ -86,22 +86,13 @@ Stories
   * Showing failed searches
 
 
-* Go to matching parenthesis @ 12h
+* Go to matching parenthesis
 
 
 * Python C extensions
 
 
 * Relative imports
-
-
-* Enhancing module running @ 20h
-
-  * Showing running status in the GUI
-  * Printing output somewhere
-  * Getting input from somewhere
-  * Customizing CWD and parameters
-  * Running last run
 
 
 * User specified source folders
@@ -139,9 +130,6 @@ Stories
   * Refactor Core; Only use EditorManager when working with the Editors
 
 
-* Handle 'HTTPClient' style names in next/prev word @ 4h
-
-
 * Better multi-sequence key event handling
 
 
@@ -157,17 +145,17 @@ Stories
 * Local history
 
 
-* Open Type; C-T @ 32h
+* Open Type; C-T
 
 
-* Compound statements and auto-completion @ 12h
+* Compound statements and auto-completion
   Completions for for-loop, except, lambda and with variables
 
 
 * Zip imports
 
 
-* Auto completion type @ 16h
+* Auto completion type
 
   * Inserting or overwriting
   * Inserting common prefixes
@@ -226,6 +214,15 @@ Stories
 * Rename class/function
 
 
+* Enhancing module running @ 20h
+
+  * Showing running status in the GUI
+  * Printing output somewhere
+  * Getting input from somewhere
+  * Customizing CWD and parameters
+  * Running last run
+
+
 * Reloading changed editors after refactorings @ 8h
   `FileEditor` should be a resource visitor. What to do when buffer
   has been changed.
@@ -252,7 +249,7 @@ Stories
 
 
 * Packages should be filtered @ 4h
-  Do not show unimported submodules and subpackages as attributes.
+  Do not show the submodules and subpackages that are not imported yet as attributes.
 
 
 * Dynamic type inference
