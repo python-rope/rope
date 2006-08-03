@@ -15,21 +15,6 @@ Small Stories For 0.2 Release
 * PyObject and PyName equality checks; Value objects?
 
 
-Changing Package Structures
-===========================
-* The same pattern for module names; ~ing or ~ or ~er
-
-UI Modules:
-  core, editor, fileeditor, indenter, highlight, searching, statusbar, tkhelpers
-  uihelpers, editingtools
-
-Core Modules:
-  codeassist, codeanalyze, exceptions, project, formatter, refactoring, pycore, outline
-
-highlight -> highlighter
-searching -> searcher
-
-
 Before 0.2 Release
 ==================
 * Document features added since 0.1 release
@@ -42,7 +27,6 @@ Remaining Stories
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?
 * Separating ui and core modules and packages?
 
-  * Decide which modules are the domain and which are the presentation
   * Should editing tools access Editor directly? Which of them?
   * Specifing the type of each story; UI or Core
   * Dividing week time; 5/7 for core and 2/7 for UI
