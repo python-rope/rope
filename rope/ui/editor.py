@@ -8,7 +8,7 @@ import rope.codeassist
 import rope.ui.editingtools
 import rope.ui.searcher
 from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
-from rope.ui.uihelpers import TreeViewer, TreeViewerHandle
+from rope.ui.uihelpers import TreeView, TreeViewHandle
 from rope.ui.tkhelpers import WidgetRedirector
 
 class LineEditor(object):
@@ -86,7 +86,7 @@ class _CompletionListHandle(EnhancedListHandle):
         self.canceled()
 
 
-class _OutlineViewHandle(TreeViewerHandle):
+class _OutlineViewHandle(TreeViewHandle):
     
     def __init__(self, editor, toplevel):
         self.editor = editor
@@ -476,8 +476,8 @@ class GraphicalEditor(object):
     def _show_outline_window(self):
         toplevel = Toplevel()
         toplevel.title('Quick Outline')
-        tree_view = TreeViewer(toplevel, _OutlineViewHandle(self, toplevel),
-                               title='Quick Outline')
+        tree_view = TreeView(toplevel, _OutlineViewHandle(self, toplevel),
+                             title='Quick Outline')
         for node in self.outline.get_root_nodes(self.get_text()):
             tree_view.add_entry(node)
         tree_view.list.focus_set()

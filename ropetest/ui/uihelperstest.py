@@ -2,7 +2,7 @@ import unittest
 import Tkinter
 
 from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
-from rope.ui.uihelpers import TreeViewer, TreeViewerHandle
+from rope.ui.uihelpers import TreeView, TreeViewHandle
 
 
 class SampleListHandle(EnhancedListHandle):
@@ -13,7 +13,7 @@ class SampleListHandle(EnhancedListHandle):
     def entry_to_string(self, integer_obj):
         return 'element ' + str(integer_obj)
 
-class SampleTreeHandle(TreeViewerHandle):
+class SampleTreeHandle(TreeViewHandle):
 
     def __init__(self):
         pass
@@ -54,13 +54,13 @@ class UIHelpersTest(unittest.TestCase):
 
     def test_tree_view(self):
         handle = SampleTreeHandle()
-        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
         self.assertTrue(tree_viewer.list.get(0, 1)[0].endswith('element a'))
 
     def test_tree_view_expanding(self):
         handle = SampleTreeHandle()
-        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
         tree_viewer.expand(0)
         self.assertEquals(4, tree_viewer.list.size())
@@ -71,7 +71,7 @@ class UIHelpersTest(unittest.TestCase):
 
     def test_tree_view_multi_expanding(self):
         handle = SampleTreeHandle()
-        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
         tree_viewer.expand(0)
         tree_viewer.expand(0)
@@ -79,7 +79,7 @@ class UIHelpersTest(unittest.TestCase):
 
     def test_tree_view_shrinking(self):
         handle = SampleTreeHandle()
-        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
         tree_viewer.expand(0)
         self.assertEquals(4, tree_viewer.list.size())
@@ -89,7 +89,7 @@ class UIHelpersTest(unittest.TestCase):
 
     def test_expansion_signs(self):
         handle = SampleTreeHandle()
-        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
         self.assertEquals('+ element a', tree_viewer.list.get(0, 1)[0])
         tree_viewer.expand(0)
@@ -99,7 +99,7 @@ class UIHelpersTest(unittest.TestCase):
 
     def test_expansion_signs_for_leaves(self):
         handle = SampleTreeHandle()
-        tree_viewer = TreeViewer(self.parent, handle)
+        tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a00')
         self.assertEquals('  element a00', tree_viewer.list.get(0, 1)[0])
         tree_viewer.expand(0)

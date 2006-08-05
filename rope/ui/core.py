@@ -7,6 +7,7 @@ from Tkinter import *
 import rope.ui.editor
 import rope.ui.fileeditor
 import rope.ui.statusbar
+from rope.ui.uihelpers import TreeViewHandle, TreeView
 from rope.exceptions import RopeException
 from rope.project import Project, FileFinder
 from rope.pycore import PythonFileRunner
@@ -78,6 +79,36 @@ class EditorManager(object):
         self.active_editor = None
         if self.editors:
             self.buttons[self.editors[0]].invoke()
+            
+
+class _ResourceViewHandle(TreeViewHandle):
+    
+    def __init__(self, core, toplevel):
+        self.core = core
+        self.toplevel = toplevel
+
+    def entry_to_string(self, resource):
+        return resource.get_name()
+    
+    def get_children(self, resource):
+        if resource.is_folder():
+            return [child for child in resource.get_children()
+                    if not child.get_name().startswith('.') and 
+                    not child.get_name().endswith('.pyc')]
+        else:
+            return []
+
+    def selected(self, resource):
+        if not resource.is_folder():
+            self.core.editor_manager.get_resource_editor(resource)
+            self.toplevel.destroy()
+    
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        self.canceled()
+
 
 class Core(object):
     """The Core of the IDE"""
@@ -107,7 +138,7 @@ class Core(object):
         fileMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='File', menu=fileMenu, underline=1)
         fileMenu.add_command(label='Open Project ...',
-                             command=self._open_project_dialog, underline=6)
+                             command=self._open_project_dialog, underline=0)
         fileMenu.add_command(label='Close Project',
                              command=self._close_project_dialog, underline=1)
         fileMenu.add_separator()
@@ -122,8 +153,10 @@ class Core(object):
         fileMenu.add_separator()
         fileMenu.add_command(label='Find File ...',
                              command=self._find_file_dialog, underline=0)
+        fileMenu.add_command(label='Resource View ...',
+                             command=self._show_resource_view, underline=0)
         fileMenu.add_command(label='Open File ...',
-                             command=self._open_file_dialog, underline=0)
+                             command=self._open_file_dialog)
         fileMenu.add_separator()
         fileMenu.add_command(label='Change Editor ...',
                              command=self._change_editor_dialog, underline=0)
@@ -423,6 +456,20 @@ class Core(object):
         self.root.wait_window(toplevel)
         if event:
             return 'break'
+
+    def _show_resource_view(self):
+        if not self.project:
+            tkMessageBox.showerror(parent=self.root, title='No Open Project',
+                                   message='No project is open')
+            return
+        toplevel = Toplevel()
+        toplevel.title('Resources')
+        tree_handle = _ResourceViewHandle(self, toplevel)
+        tree_view = TreeView(toplevel, tree_handle, title='Resources')
+        for child in tree_handle.get_children(self.project.get_root_folder()):
+            tree_view.add_entry(child)
+        tree_view.list.focus_set()
+        toplevel.grab_set()
 
     def _create_resource_dialog(self, creation_callback,
                                 resource_name='File', parent_name='Parent Folder'):

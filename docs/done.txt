@@ -3,6 +3,9 @@
 ===========
 
 
+- Resource tree view : August 5, 2006
+
+
 - Handle 'HTTPClient' style names in next/prev word : August 2, 2006
 
 

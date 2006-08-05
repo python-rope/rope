@@ -1,8 +1,6 @@
 Small Stories For 0.2 Release
 =============================
 
-- Showing version in about dialog
-
 * Goto definition for ``# comment.\na_var``
 * Better editor changing dialog; use uihelpers module
 * Having only one Refactoring instance for a project?

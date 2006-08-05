@@ -90,10 +90,10 @@ class EnhancedList(object):
         self.list.delete(0, END)
 
 
-class TreeViewerHandle(object):
+class TreeViewHandle(object):
 
     def entry_to_string(self, obj):
-        return str(object)
+        return str(obj)
     
     def get_children(self, obj):
         return []
@@ -117,7 +117,7 @@ class _TreeNodeInformation(object):
         self.level = level
 
 
-class TreeViewer(object):
+class TreeView(object):
 
     def __init__(self, parent, handle, title='Tree'):
         self.handle = handle
