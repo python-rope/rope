@@ -14,11 +14,21 @@ written in python and uses the Tkinter library.
 Version Overview
 ================
 
-Features added in this release:
+Some of the features added since 0.1 release:
 
-* 
+* reST highlighting
+* renaming local variable
+* Auto-completing names
+* Auto-completing attributes of an object with known type
+* Go to definition
+* Quick outline
+* Proposing templates in code assists
 
-If it is the first time you use rope, it might be helpful to try
+
+Getting Started
+===============
+
+If it is the first time you use *rope*, it might be helpful to try
 these:
 
 =============  ======================
@@ -28,8 +38,21 @@ F3             Go to definition
 Alt-Shift-r    Rename local variable
 =============  ======================
 
+You can complete names as you type by using code assist (``M-/``). The
+capital letter in the left shows the type of the proposal. `L` for
+local variables, `G` for global variables, `A` for attributes, `T` for
+templates, `K` for keywords `B` for built-ins.
+
+You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
+templates.  If you want to add more or edit these you can edit
+`rope.codeassist.PythonCodeAssist._get_default_templates` method.
+
+In the outline window you can use ``C-n`` and ``C-p`` to navigate and
+``+`` and ``-`` to expand and collapse items.
+
 If you want to change the font or keybindings edit
-`rope.editor.GraphicalEditor` class.
+`rope.ui.editor.GraphicalEditor` class.
+
 
 
 Keybinding
@@ -78,8 +101,8 @@ M-R            rename refactoring
 Description
 ===========
 
-*rope* is a python IDE. It tries to give users lots of things that
-are not available in python IDEs yet.
+*rope* is a python IDE. It tries to give users lots of things that are
+not available in python IDEs yet.
 
 Refactoring
 -----------
@@ -92,8 +115,8 @@ practices.
 Some IDEs support some basic refactorings like 'PyDev' (which uses
 bicycle repair man). These IDEs have a limited set of refactorings and
 fail when doing refactorings that need to know the type of objects in
-the source code (specially for relatively large projects). rope tries
-to provide a rich set of refactorings. Some of the refactorings
+the source code (specially for relatively large projects). *rope*
+tries to provide a rich set of refactorings. Some of the refactorings
 require type inference which is described later.
 
 Auto Completion
@@ -107,7 +130,7 @@ class names, static methods, class methods, function names and
 variable names are easy. But auto- completing the methods and
 attributes of an object is hard. Because the IDE needs to know the
 type of the object that cannot be achieved easily most of the time in
-dynamic languages. rope uses Type Inference algorithms to solve this
+dynamic languages. *rope* uses Type Inference algorithms to solve this
 problem.
 
 Type Inference
@@ -116,8 +139,8 @@ Type Inference
 One disadvantage of dynamic languages like python is that you cannot
 know the type of variables by a simple analysis of program source code
 most of the time. Knowing the type of variables is very essential for
-providing many of the refactorings and auto-completions. rope will use
-type inference to overcome this problem.
+providing many of the refactorings and auto-completions. *rope* will
+use type inference to overcome this problem.
 
 Static type inference uses program source code to guess the type of
 objects. But it is is very hard. There have been some attempts though
@@ -155,19 +178,19 @@ smalltalk writes in his doctoral thesis:
   ourselves. Once we integrated the refactorings directly into the
   Smalltalk Browser, we used them extensively."
 
-The main goal of rope is to concentrate on the type inference and
+The main goal of *rope* is to concentrate on the type inference and
 refactoring of python programs and not a state of art IDE (At least
 not in the first phase). The type inference and refactoring parts will
-not be dependent on rope and if successful, will be released as
+not be dependent on *rope* and if successful, will be released as
 standalone programs and libraries so that other projects may use them.
 
 
 Get Involved!
 =============
 
-Rope has just started.  Right now rope's design changes rapidly and
-it's not yet ready for code contributions in its central parts.  I
-hope in soon future, somewhere about version 0.5, rope would be
+*rope* has just started.  Right now *rope*'s design changes rapidly
+and it's not yet ready for code contributions in its central parts.  I
+hope in soon future, somewhere about version 0.5, *rope* would be
 mature enough for being extended easily in those parts.
 
 Right now contributions are really needed in UI part and patches and
@@ -175,7 +198,7 @@ extensions in the UI part are extremely welcome.  Have a look at the
 UI enhancement stories (docs/stories.txt).  Send your patches in
 sourceforge.net project page, http://sf.net/projects/rope.  Patches
 should use python coding style, `8`:PEP:, and should have good unit
-tests.  rope uses a local repository right now, but it will be moved
+tests.  *rope* uses a local repository right now, but it will be moved
 to SVN repository on sourceforge.net some time before the 0.3 release.
 If you're making your patches using source package distributions
 specify the version of that package.
@@ -184,7 +207,7 @@ specify the version of that package.
 Bug Reports
 ===========
 
-Send your bug reports and feature requests in rope's sourceforge.net
+Send your bug reports and feature requests in *rope*'s sourceforge.net
 project page at http://sf.net/projects/rope.
 
 

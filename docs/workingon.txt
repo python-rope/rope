@@ -1,10 +1,9 @@
 Small Stories For 0.2 Release
 =============================
-- Better next/prev
-- Handle ``something__``, ``__init__.py`` and ``__init__`` for reST highlighting
+
+- Showing version in about dialog
 
 * Goto definition for ``# comment.\na_var``
-* Showing version in about dialog
 * Better editor changing dialog; use uihelpers module
 * Having only one Refactoring instance for a project?
 
@@ -25,9 +24,4 @@ Remaining Stories
 * Do something for modules that can not be found
 * Dotted not found modules
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?
-* Separating ui and core modules and packages?
-
-  * Should editing tools access Editor directly? Which of them?
-  * Specifing the type of each story; UI or Core
-  * Dividing week time; 5/7 for core and 2/7 for UI
 

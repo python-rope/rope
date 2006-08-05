@@ -1,18 +1,20 @@
 import os
+import shutil
 from distutils.core import setup
+
+import rope
+
 
 def make_scripts():
     if not os.path.exists('scripts'):
         os.mkdir('scripts')
-    rope_py_text = file('rope.py').read()
-    rope_script_file = file('scripts/rope', 'w')
-    rope_script_file.write(rope_py_text)
-    rope_script_file.close()
+    shutil.copy('rope.py', 'scripts/rope')
+
 
 make_scripts()
 
 setup(name='rope',
-      version='0.2',
+      version=rope.VERSION,
       description='A Python IDE ...',
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',

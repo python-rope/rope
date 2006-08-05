@@ -235,7 +235,8 @@ class Core(object):
     def _show_about_dialog(self):
         toplevel = Toplevel()
         toplevel.title('About Rope')
-        text = 'rope, A python IDE\n\n' + \
+        text = 'rope, A python IDE ...\n' + \
+               'version 0.2\n\n' + \
                'Copyright (C) 2006 Ali Gholami Rudi\n\n' + \
                'This program is free software; you can redistribute it and/or modify it\n' + \
                'under the terms of GNU General Public License as published by the \n' + \
@@ -245,7 +246,7 @@ class Core(object):
                'but WITHOUT ANY WARRANTY; without even the implied warranty of\n' + \
                'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n' + \
                'GNU General Public License for more details.\n'
-        label = Label(toplevel, text=text, height=15, width=70, 
+        label = Label(toplevel, text=text, height=16, width=70, 
                       justify=LEFT, relief=GROOVE)
         def ok():
             toplevel.destroy()
