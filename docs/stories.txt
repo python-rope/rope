@@ -249,7 +249,7 @@ Stories
 
 
 * Packages should be filtered @ 4h
-  Do not show the submodules and subpackages that are not imported yet as attributes.
+  Do not show submodules that are not imported yet as attributes.
 
 
 * Dynamic type inference
@@ -260,12 +260,8 @@ Stories
 
 Remaining Stories
 -----------------
-* Change program goals and description; principles.txt
-  Go toward refactoring and ... library rather than an IDE?
 * Migrating to sourceforge SVN before 0.3 release
   SF repository; How to synchronize local SVN with SF SVN?
-* Should workingon.txt be under version control?
-* Functional tests
+* Change program goals and description; principles.txt
+  Go toward refactoring and ... library rather than an IDE?
 * Logo
-* Project resource consistency; What if it is deleted after being created?
-

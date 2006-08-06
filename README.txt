@@ -39,9 +39,9 @@ Alt-Shift-r    Rename local variable
 =============  ======================
 
 You can complete names as you type by using code assist (``M-/``). The
-capital letter in the left shows the type of the proposal. `L` for
-local variables, `G` for global variables, `A` for attributes, `T` for
-templates, `K` for keywords `B` for built-ins.
+capital letter in the left shows the type of the proposal. `L` indicates
+local variables, `G` global variables, `A` attributes, `T`
+templates, `K` keywords and `B` built-ins.
 
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit
@@ -72,6 +72,7 @@ C-x b          change active editor
 C-x k          close active editor
 C-x C-c        exit
 C-F11          run active editor
+M-Q r          show project tree
 -------------  --------------------------
 C-f            forward character
 C-b            backward character

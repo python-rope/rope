@@ -107,7 +107,7 @@ class _ResourceViewHandle(TreeViewHandle):
         self.toplevel.destroy()
 
     def focus_went_out(self):
-        self.canceled()
+        pass
 
 
 class Core(object):
@@ -153,7 +153,7 @@ class Core(object):
         fileMenu.add_separator()
         fileMenu.add_command(label='Find File ...',
                              command=self._find_file_dialog, underline=0)
-        fileMenu.add_command(label='Resource View ...',
+        fileMenu.add_command(label='Project Tree',
                              command=self._show_resource_view, underline=0)
         fileMenu.add_command(label='Open File ...',
                              command=self._open_file_dialog)
@@ -319,14 +319,16 @@ class Core(object):
                 line_text = 'line : %d' % \
                               self.editor_manager.active_editor.get_editor().get_current_line_number()
             line_status.set_text(line_text)
+        def show_resource_tree(event):
+            self._show_resource_view()
+            return 'break'
+        widget.bind('<Alt-Q><r>', show_resource_tree)
         widget.bind('<Any-KeyRelease>', show_current_line_number, '+')
         widget.bind('<Any-Button>', show_current_line_number)
         widget.bind('<FocusIn>', show_current_line_number)
 
     def _find_file_dialog(self, event=None):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
+        if not self._check_if_project_is_open():
             return
         toplevel = Toplevel()
         toplevel.title('Find Project File')
@@ -387,10 +389,6 @@ class Core(object):
             return 'break'
 
     def _change_editor_dialog(self, event=None):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
-            return
         toplevel = Toplevel()
         toplevel.title('Change Editor')
         find_dialog = Frame(toplevel)
@@ -458,9 +456,7 @@ class Core(object):
             return 'break'
 
     def _show_resource_view(self):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
+        if not self._check_if_project_is_open():
             return
         toplevel = Toplevel()
         toplevel.title('Resources')
@@ -471,15 +467,21 @@ class Core(object):
         tree_view.list.focus_set()
         toplevel.grab_set()
 
+    
+    def _check_if_project_is_open(self):
+        if not self.project:
+            tkMessageBox.showerror(parent=self.root, title='No Open Project',
+                                   message='No project is open')
+            return False
+        return True
+    
     def _create_resource_dialog(self, creation_callback,
                                 resource_name='File', parent_name='Parent Folder'):
         """Ask user about the parent folder and the name of the resource to be created
         
         creation_callback is a function accepting the parent and the name
         """
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
+        if not self._check_if_project_is_open():
             return
         toplevel = Toplevel()
         toplevel.title('New ' + resource_name)
@@ -527,17 +529,13 @@ class Core(object):
             return 'break'
 
     def _run_active_editor(self, event=None):
-        if not self.editor_manager.active_editor:
-            tkMessageBox.showerror(parent=self.root, title='No Open Editor',
-                                   message='No Editor is open.')
+        if not self._check_if_project_is_open():
             return
         self.run_active_editor()
         return 'break'
 
     def _open_file_dialog(self, event=None):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
+        if not self._check_if_project_is_open():
             return 'break'
         def doOpen(fileName):
                 self.open_file(fileName)

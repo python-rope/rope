@@ -12,13 +12,9 @@ Small Stories For 0.2 Release
 * PyObject and PyName equality checks; Value objects?
 
 
-Before 0.2 Release
-==================
-* Document features added since 0.1 release
-
-
 Remaining Stories
 =================
+
 * Do something for modules that can not be found
 * Dotted not found modules
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?
