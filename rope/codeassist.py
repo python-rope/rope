@@ -152,7 +152,7 @@ class _CodeCompletionCollector(object):
                                             self.lineno)
         range_finder.analyze()
         start = range_finder.get_statement_start() - 1
-        end = range_finder.get_scope_end() - 1
+        end = range_finder.get_block_end() - 1
         last_indents = self._get_line_indents(self.lines[start])
         self.lines[start] = last_indents * ' ' + 'pass'
         for line in range(start + 1, end + 1):

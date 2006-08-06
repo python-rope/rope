@@ -179,6 +179,17 @@ class HoldingScopeFinder(object):
         while len(scopes) > 1 and min_indents <= self._get_scope_indents(scopes[-1]):
             scopes.pop()
         return scopes[-1]
+    
+    def find_scope_end(self, scope):
+        if not scope.parent:
+            return self.lines.length()
+        for l in range(scope.get_lineno() + 1, self.lines.length()):
+            if self.lines.get_line(l).strip() != '' and \
+               not self.lines.get_line(l).strip().startswith('#'):
+                if self.get_indents(l) < self._get_scope_indents(scope):
+                    return l
+        return self.lines.length()
+        
 
 
 class _StatementEvaluator(object):
@@ -221,7 +232,7 @@ class ScopeNameFinder(object):
         lineno = self.scope_finder.get_location(offset)[0]
         holding_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno)
         result = self.get_pyname_in_scope(holding_scope, name)
-        # This occurs if renaming a function parameter
+        # This occurs when renaming a function parameter
         if result is None and lineno < len(self.lines):
             next_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno + 1)
             result = self.get_pyname_in_scope(next_scope, name)
@@ -349,20 +360,19 @@ class StatementRangeFinder(object):
             self._analyze_line(current_line_number)
         last_indents = self.get_line_indents(last_statement)
         end_line = self.lineno
-        if True or self.lines.get_line(self.lineno).rstrip().endswith(':'):
-            for i in range(self.lineno + 1, self.lines.length() + 1):
-                if self.get_line_indents(i) >= last_indents:
-                    end_line = i
-                else:
-                    break
-        self.scope_end = end_line
+        for i in range(self.lineno + 1, self.lines.length() + 1):
+            if self.get_line_indents(i) >= last_indents:
+                end_line = i
+            else:
+                break
+        self.block_end = end_line
         self.statement_start = last_statement
 
     def get_statement_start(self):
         return self.statement_start
 
-    def get_scope_end(self):
-        return self.scope_end
+    def get_block_end(self):
+        return self.block_end
 
     def last_open_parens(self):
         if not self.parens_openings:

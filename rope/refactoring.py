@@ -64,8 +64,9 @@ class PythonRefactoring(Refactoring):
         range_finder = StatementRangeFinder(lines, lineno)
         range_finder.analyze()
         start = lines.get_line_start(holding_scope.get_lineno())
-        end = lines.get_line_end(range_finder.get_scope_end()) + 1
+        end = lines.get_line_end(scope_finder.find_scope_end(holding_scope)) + 1
         return (start, end)
+
 
 class NoRefactoring(Refactoring):
 

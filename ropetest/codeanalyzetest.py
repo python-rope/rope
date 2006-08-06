@@ -24,9 +24,9 @@ class StatementRangeFinderTest(unittest.TestCase):
         finder = self.get_range_finder('a = 10\nb = 12\nc = 14', 1)
         self.assertEquals(1,  finder.get_statement_start())
 
-    def test_get_scope_end(self):
+    def test_get_block_end(self):
         finder = self.get_range_finder('a = 10\nb = 12\nc = 14', 1)
-        self.assertEquals(3,  finder.get_scope_end())
+        self.assertEquals(3,  finder.get_block_end())
 
     def test_get_last_open_parens(self):
         finder = self.get_range_finder('a = 10', 1)

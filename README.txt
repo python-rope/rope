@@ -16,13 +16,13 @@ Version Overview
 
 Some of the features added since 0.1 release:
 
-* reST highlighting
-* renaming local variable
 * Auto-completing names
 * Auto-completing attributes of an object with known type
 * Go to definition
+* Renaming local variable
 * Quick outline
 * Proposing templates in code assists
+* reST highlighting for ``.txt`` files
 
 
 Getting Started
@@ -36,6 +36,7 @@ Alt-/          Show code assists
 Ctrl-o         Show quick outline
 F3             Go to definition
 Alt-Shift-r    Rename local variable
+Alt-Q r        Show project tree
 =============  ======================
 
 You can complete names as you type by using code assist (``M-/``). The
@@ -47,8 +48,9 @@ You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit
 `rope.codeassist.PythonCodeAssist._get_default_templates` method.
 
-In the outline window you can use ``C-n`` and ``C-p`` to navigate and
-``+`` and ``-`` to expand and collapse items.
+In tree views (like quick outline and project tree views) you can
+use ``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
+collapse items. You can use the ``Return`` key to select items.
 
 If you want to change the font or keybindings edit
 `rope.ui.editor.GraphicalEditor` class.
@@ -109,7 +111,7 @@ Refactoring
 -----------
 
 In recent years refactoring has become a basic task of everyday
-programing, specially in java community. In the agile programing
+programing, specially in Java community. In agile programing
 methodologies, like Extreme Programing, Refactoring is one of the core
 practices.
 
@@ -190,8 +192,8 @@ Get Involved!
 =============
 
 *rope* has just started.  Right now *rope*'s design changes rapidly
-and it's not yet ready for code contributions in its central parts.  I
-hope in soon future, somewhere about version 0.5, *rope* would be
+and it's not ready for code contributions in its central parts yet.  I
+hope in soon future, somewhere about version 0.4, *rope* would be
 mature enough for being extended easily in those parts.
 
 Right now contributions are really needed in UI part and patches and

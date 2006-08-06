@@ -61,6 +61,12 @@ class RefactoringTest(unittest.TestCase):
         refactored = self.refactoring.rename("a_var = 20\n# a_var\n", 2, 'new_var')
         self.assertEquals("new_var = 20\n# a_var\n", refactored)
 
+    def test_renaming_all_occurances_in_containing_scope(self):
+        code = 'if True:\n    a_var = 1\nelse:\n    a_var = 20\n'
+        refactored = self.refactoring.rename(code, 16, 'new_var')
+        self.assertEquals('if True:\n    new_var = 1\nelse:\n    new_var = 20\n',
+                          refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

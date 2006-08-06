@@ -6,7 +6,7 @@
 - Resource tree view : August 5, 2006
 
 
-- Handle 'HTTPClient' style names in next/prev word : August 2, 2006
+- Handle ``HTTPClient`` style names in go to next/prev word : August 2, 2006
 
 
 > Public Release 0.2RC : July 30, 2006
