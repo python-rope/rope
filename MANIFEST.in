@@ -5,3 +5,5 @@ include *.txt
 recursive-include rope *.py
 recursive-include ropetest *.py
 include *.py
+
+prune scripts

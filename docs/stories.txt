@@ -255,9 +255,6 @@ Stories
 * Dynamic type inference
 
 
-> Public Release 0.2 : August 6, 2006
-
-
 Remaining Stories
 -----------------
 * Migrating to sourceforge SVN before 0.3 release

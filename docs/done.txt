@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.2 : August 6, 2006
+
+
 - Resource tree view : August 5, 2006
 
 
