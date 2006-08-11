@@ -685,8 +685,8 @@ class PyCoreScopesTest(unittest.TestCase):
         scope = self.pycore.get_string_scope('\ndef sample_func():\n    a = 10\n')
         self.assertEquals(1, len(scope.get_scopes()))
         sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(1, scope.get_lineno())
-        self.assertEquals(2, sample_func_scope.get_lineno())
+        self.assertEquals(1, scope.get_start())
+        self.assertEquals(2, sample_func_scope.get_start())
 
     def test_scope_kind(self):
         scope = self.pycore.get_string_scope('class SampleClass(object):\n    pass\n' +

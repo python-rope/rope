@@ -26,8 +26,7 @@ class PyCore(object):
 
     def get_string_module(self, module_content):
         """Returns a `PyObject` object for the given module_content"""
-        ast = compiler.parse(module_content)
-        return PyModule(self, ast)
+        return PyModule(self, module_content)
 
     def get_string_scope(self, module_content):
         """Returns a `Scope` object for the given module_content"""
@@ -126,8 +125,7 @@ class PyCore(object):
         if resource.is_folder():
             result = PyPackage(self, resource)
         else:
-            ast = compiler.parse(resource.read())
-            result = PyModule(self, ast, resource=resource)
+            result = PyModule(self, resource.read(), resource=resource)
         self.module_map[resource] = result
         resource.add_change_observer(self._invalidate_resource_cache)
         return result
@@ -315,7 +313,9 @@ class PyClass(PyDefinedObject):
 
 class PyModule(PyDefinedObject):
 
-    def __init__(self, pycore, ast_node, resource=None):
+    def __init__(self, pycore, source_code, resource=None):
+        self.source_code = source_code
+        ast_node = compiler.parse(source_code)
         super(PyModule, self).__init__(PyObject.get_base_type('Module'),
                                        pycore, ast_node, None)
         self.resource = resource
@@ -434,9 +434,20 @@ class Scope(object):
         block_objects.sort(cmp=block_compare)
         result = [block.get_scope() for block in block_objects]
         return result
+    
+    def _get_global_scope(self):
+        current = self
+        while current.parent is not None:
+            current = current.parent
+        return current
 
-    def get_lineno(self):
+    def get_start(self):
         return self.pyobject._get_ast().lineno
+    
+    def get_end(self):
+        global_scope = self._get_global_scope()
+        from rope.codeanalyze import HoldingScopeFinder
+        return HoldingScopeFinder(global_scope.pyobject.source_code).find_scope_end(self)
 
     def get_kind(self):
         pass
@@ -454,11 +465,15 @@ class GlobalScope(Scope):
     def __init__(self, pycore, module):
         super(GlobalScope, self).__init__(pycore, module, None)
 
-    def get_lineno(self):
+    def get_start(self):
         return 1
 
     def get_kind(self):
         return 'Module'
+    
+    def get_inner_scope_for_line(self, lineno, indents=None):
+        from rope.codeanalyze import HoldingScopeFinder
+        return HoldingScopeFinder(self.pyobject.source_code).get_holding_scope(self, lineno, indents)
 
 
 class FunctionScope(Scope):

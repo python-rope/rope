@@ -1,8 +1,7 @@
 import re
 
 from rope.codeanalyze import (WordRangeFinder, ScopeNameFinder,
-                              StatementRangeFinder, SourceLinesAdapter,
-                              HoldingScopeFinder)
+                              StatementRangeFinder, SourceLinesAdapter)
 
 class Refactoring(object):
 
@@ -59,12 +58,11 @@ class PythonRefactoring(Refactoring):
 
     def _get_scope_range(self, source_code, offset, module_scope, lineno):
         lines = SourceLinesAdapter(source_code)
-        scope_finder = HoldingScopeFinder(source_code)
-        holding_scope = scope_finder.get_holding_scope(module_scope, lineno)
+        holding_scope = module_scope.get_inner_scope_for_line(lineno)
         range_finder = StatementRangeFinder(lines, lineno)
         range_finder.analyze()
-        start = lines.get_line_start(holding_scope.get_lineno())
-        end = lines.get_line_end(scope_finder.find_scope_end(holding_scope)) + 1
+        start = lines.get_line_start(holding_scope.get_start())
+        end = lines.get_line_end(holding_scope.get_end()) + 1
         return (start, end)
 
 

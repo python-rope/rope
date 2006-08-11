@@ -149,7 +149,7 @@ class HoldingScopeFinder(object):
         return (lineno, offset - current_pos)
 
     def _get_scope_indents(self, scope):
-        return self.get_indents(scope.get_lineno())
+        return self.get_indents(scope.get_start())
     
     def get_holding_scope(self, module_scope, lineno, line_indents=None):
         line_indents = line_indents
@@ -166,13 +166,13 @@ class HoldingScopeFinder(object):
             scopes.append(current_scope)
             new_scope = None
             for scope in current_scope.get_scopes():
-                if scope.get_lineno() <= lineno:
+                if scope.get_start() <= lineno:
                     new_scope = scope
                 else:
                     break
             current_scope = new_scope
         min_indents = line_indents
-        for l in range(scopes[-1].get_lineno() + 1, lineno):
+        for l in range(scopes[-1].get_start() + 1, lineno):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):
                 min_indents = min(min_indents, self.get_indents(l))
@@ -183,7 +183,7 @@ class HoldingScopeFinder(object):
     def find_scope_end(self, scope):
         if not scope.parent:
             return self.lines.length()
-        for l in range(scope.get_lineno() + 1, self.lines.length()):
+        for l in range(scope.get_start() + 1, self.lines.length()):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):
                 if self.get_indents(l) < self._get_scope_indents(scope):
@@ -224,17 +224,25 @@ class ScopeNameFinder(object):
         self.source_code = source_code
         self.module_scope = module_scope
         self.lines = source_code.split('\n')
-        self.scope_finder = HoldingScopeFinder(source_code)
         self.word_finder = WordRangeFinder(source_code)
-    
+
+    def _get_location(self, offset):
+        lines = ArrayLinesAdapter(self.lines)
+        current_pos = 0
+        lineno = 1
+        while current_pos + len(lines.get_line(lineno)) < offset:
+            current_pos += len(lines.get_line(lineno)) + 1
+            lineno += 1
+        return (lineno, offset - current_pos)
+
     def get_pyname_at(self, offset):
         name = self.word_finder.get_statement_at(offset)
-        lineno = self.scope_finder.get_location(offset)[0]
-        holding_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno)
+        lineno = self._get_location(offset)[0]
+        holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
         result = self.get_pyname_in_scope(holding_scope, name)
         # This occurs when renaming a function parameter
         if result is None and lineno < len(self.lines):
-            next_scope = self.scope_finder.get_holding_scope(self.module_scope, lineno + 1)
+            next_scope = self.module_scope.get_inner_scope_for_line(lineno + 1)
             result = self.get_pyname_in_scope(next_scope, name)
         return result
     

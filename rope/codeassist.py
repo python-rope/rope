@@ -4,8 +4,8 @@ import __builtin__
 import re
 
 from rope.exceptions import RopeException
-from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                              HoldingScopeFinder, WordRangeFinder, ScopeNameFinder,
+from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
+                              WordRangeFinder, ScopeNameFinder,
                               SourceLinesAdapter)
 
 class RopeSyntaxError(RopeException):
@@ -159,11 +159,6 @@ class _CodeCompletionCollector(object):
             self.lines[line] = '#' # + lines[line]
         self.lines.append('\n')
 
-    def _find_inner_holding_scope(self, base_scope):
-        scope_finder = HoldingScopeFinder(self.source_code)
-        return scope_finder.get_holding_scope(base_scope, self.lineno,
-                                              self.current_indents)
-
     def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}
         pyname_finder = ScopeNameFinder(self.source_code, module_scope)
@@ -190,9 +185,9 @@ class _CodeCompletionCollector(object):
             module_scope = self.pycore.get_string_scope(self.source_code)
         except SyntaxError, e:
             raise RopeSyntaxError(e)
-        current_scope = module_scope
         result = {}
-        inner_scope = self._find_inner_holding_scope(module_scope)
+        inner_scope = module_scope.get_inner_scope_for_line(self.lineno, 
+                                                            self.current_indents)
         if self.expression.strip() != '':
             result.update(self._get_dotted_completions(module_scope, inner_scope))
         else:
