@@ -12,10 +12,10 @@ We want to able to do::
 
 - Change `PyName.get_definition_location` method to return a
   `PyModule` rather than a `Resource`
+- Removeing ?_get_resource in `rope.pycore` module
+- Not checking all entries in sys.path in `PyCore.find_module`
 
 * Adding `GlobalScope.get_line_scope` method
-* Not checking all entries in sys.path in `PyCore.find_module`
-* Removeing ?_get_resource in `rope.pycore` module
 * Fixing possible problems in `rope.codeassist` module
 * Faster implementation of `GlobalScope.get_line_scope`
 * Move type inference parts to the new `objectanalyzer` module

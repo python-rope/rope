@@ -19,11 +19,10 @@ class PyCore(object):
 
     def get_module(self, name):
         """Returns a `PyObject` if the module was found."""
-        results = self.find_module(name)
-        if not results:
+        module = self.find_module(name)
+        if module is None:
             raise ModuleNotFoundException('Module %s not found' % name)
-        result = results[0]
-        return self.resource_to_pyobject(results[0])
+        return self.resource_to_pyobject(module)
 
     def get_string_module(self, module_content):
         """Returns a `PyObject` object for the given module_content"""
@@ -91,34 +90,31 @@ class PyCore(object):
         return result
     
     def find_module(self, module_name):
-        """Returns a list of resources pointing to the given module"""
-        result = []
+        """Returns a resource pointing to the given module
+        
+        None if it can not be found
+        """
         for src in self.get_source_folders():
             module = self._find_module_in_source_folder(src, module_name)
             if module is not None:
-                result.append(module[-1])
-        if result:
-            return result
+                return module[-1]
         for src in self._get_python_path_folders():
             module = self._find_module_in_source_folder(src, module_name)
             if module is not None:
-                result.append(module[-1])
-        return result
+                return module[-1]
+        return None
     
     def _find_module_resource_list(self, module_name):
         """Returns a list of lists of `Folder`s and `File`s for the given module"""
-        result = []
         for src in self.get_source_folders():
             module = self._find_module_in_source_folder(src, module_name)
             if module is not None:
-                result.append(module)
-        if result:
-            return result
+                return module
         for src in self._get_python_path_folders():
             module = self._find_module_in_source_folder(src, module_name)
             if module is not None:
-                result.append(module)
-        return result
+                return module
+        return None
 
     def get_source_folders(self):
         """Returns project source folders"""
@@ -234,14 +230,6 @@ class PyFunction(PyDefinedObject):
     def _create_scope(self):
         return FunctionScope(self.pycore, self)
     
-    def _get_resource(self):
-        module = self.get_module()
-        if module is not None:
-            return module.get_resource()
-        else:
-            return None
-
-
     def _get_parameters(self):
         result = {}
         if len(self.parameters) > 0:
@@ -575,12 +563,6 @@ class _ScopeVisitor(object):
         self.pycore = pycore
         self.owner_object = owner_object
 
-    def get_resource(self):
-        if self.owner_object is not None:
-            return self.owner_object.get_module().get_resource()
-        else:
-            return None
-    
     def get_module(self):
         if self.owner_object is not None:
             return self.owner_object.get_module()
@@ -622,10 +604,9 @@ class _ScopeVisitor(object):
                                               module=module.get_module(), lineno=lineno)
 
     def _get_module_with_packages(self, module_name):
-        found_modules = self.pycore._find_module_resource_list(module_name)
-        if len(found_modules) == 0:
+        module_list = self.pycore._find_module_resource_list(module_name)
+        if module_list is None:
             return None
-        module_list = found_modules[0]
         return self.pycore.resource_to_pyobject(module_list[0])
 
     def visitFrom(self, node):

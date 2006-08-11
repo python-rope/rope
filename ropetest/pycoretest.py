@@ -221,17 +221,15 @@ class PyCoreTest(unittest.TestCase):
     def test_find_module(self):
         src = self.project.get_root_folder().create_folder('src')
         samplemod = self.pycore.create_module(src, 'samplemod')
-        found_modules = self.pycore.find_module('samplemod')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplemod, found_modules[0])
+        found_module = self.pycore.find_module('samplemod')
+        self.assertEquals(samplemod, found_module)
 
     def test_find_nested_module(self):
         src = self.project.get_root_folder().create_folder('src')
         samplepkg = self.pycore.create_package(src, 'samplepkg')
         samplemod = self.pycore.create_module(samplepkg, 'samplemod')
-        found_modules = self.pycore.find_module('samplepkg.samplemod')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplemod, found_modules[0])
+        found_module = self.pycore.find_module('samplepkg.samplemod')
+        self.assertEquals(samplemod, found_module)
 
     def test_find_multiple_module(self):
         src = self.project.get_root_folder().create_folder('src')
@@ -239,25 +237,23 @@ class PyCoreTest(unittest.TestCase):
         samplemod2 = self.pycore.create_module(self.project.get_root_folder(), 'samplemod')
         test = self.project.get_root_folder().create_folder('test')
         samplemod3 = self.pycore.create_module(test, 'samplemod')
-        found_modules = self.pycore.find_module('samplemod')
-        self.assertEquals(3, len(found_modules))
-        self.assertTrue(samplemod1 in found_modules and samplemod2 in found_modules and \
-                        samplemod3 in found_modules)
+        found_module = self.pycore.find_module('samplemod')
+        self.assertTrue(samplemod1 == found_module or
+                        samplemod2 == found_module or
+                        samplemod3 == found_module)
 
     def test_find_module_packages(self):
         src = self.project.get_root_folder()
         samplepkg = self.pycore.create_package(src, 'samplepkg')
-        found_modules = self.pycore.find_module('samplepkg')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplepkg, found_modules[0])
+        found_module = self.pycore.find_module('samplepkg')
+        self.assertEquals(samplepkg, found_module)
 
     def test_find_module_when_module_and_package_with_the_same_name(self):
         src = self.project.get_root_folder()
         samplemod = self.pycore.create_module(src, 'sample')
         samplepkg = self.pycore.create_package(src, 'sample')
-        found_modules = self.pycore.find_module('sample')
-        self.assertEquals(1, len(found_modules))
-        self.assertEquals(samplepkg, found_modules[0])
+        found_module = self.pycore.find_module('sample')
+        self.assertEquals(samplepkg, found_module)
 
     def test_getting_empty_source_folders(self):
         self.assertEquals([], self.pycore.get_source_folders())
