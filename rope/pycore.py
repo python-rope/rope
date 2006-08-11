@@ -249,14 +249,14 @@ class PyFunction(PyDefinedObject):
                not self.decorators:
                 result[self.parameters[0]] = PyName(PyObject(self.parent),
                                                     lineno=self.ast_node.lineno,
-                                                    module=self._get_resource())
+                                                    module=self.get_module())
             else:
                 result[self.parameters[0]] = PyName(lineno=self.ast_node.lineno,
-                                                    module=self._get_resource())
+                                                    module=self.get_module())
         if len(self.parameters) > 1:
             for parameter in self.parameters[1:]:
                 result[parameter] = PyName(lineno=self.ast_node.lineno,
-                                           module=self._get_resource())
+                                           module=self.get_module())
         return result
 
 
@@ -361,19 +361,23 @@ class PyPackage(PyDefinedObject):
             if child.is_folder():
                 child_pyobject = self.pycore.resource_to_pyobject(child)
                 attributes[child.get_name()] = PyName(child_pyobject, False, 1,
-                                                      child_pyobject.get_resource())
+                                                      child_pyobject)
             elif child.get_name().endswith('.py') and \
                  child.get_name() != '__init__.py':
                 name = child.get_name()[:-3]
                 child_pyobject = self.pycore.resource_to_pyobject(child)
                 attributes[name] = PyName(child_pyobject, False, 1,
-                                                      child_pyobject.get_resource())
+                                                      child_pyobject)
 
     def get_resource(self):
         if self.resource is not None and self.resource.has_child('__init__.py'):
             return self.resource.get_child('__init__.py')
         else:
             return None
+    
+    def get_module(self):
+        init_dot_py = self.get_resource()
+        return self.pycore.resource_to_pyobject(init_dot_py)
 
 
 class PyName(object):
@@ -557,11 +561,11 @@ class _AssignVisitor(object):
         if node.name in self.scope_visitor.names:
             self.scope_visitor.names[node.name].update_object(object_=self.assigned_object,
                                                               lineno=node.lineno, 
-                                                              module=self.scope_visitor.get_resource())
+                                                              module=self.scope_visitor.get_module())
         else:
             self.scope_visitor.names[node.name] = PyName(object_=self.assigned_object,
                                                          lineno=node.lineno,
-                                                         module=self.scope_visitor.get_resource())
+                                                         module=self.scope_visitor.get_module())
 
 
 class _ScopeVisitor(object):
@@ -576,15 +580,21 @@ class _ScopeVisitor(object):
             return self.owner_object.get_module().get_resource()
         else:
             return None
-        
+    
+    def get_module(self):
+        if self.owner_object is not None:
+            return self.owner_object.get_module()
+        else:
+            return None
+    
     def visitClass(self, node):
         self.names[node.name] = PyName(PyClass(self.pycore,
                                                node, self.owner_object), True,
-                                       module=self.get_resource())
+                                       module=self.get_module())
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = PyName(pyobject, True, module=self.get_resource())
+        self.names[node.name] = PyName(pyobject, True, module=self.get_module())
 
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
@@ -597,19 +607,19 @@ class _ScopeVisitor(object):
                 imported = alias
             try:
                 module = self.pycore.get_module(name)
-                module_resource = module.get_resource()
                 lineno = 1
             except ModuleNotFoundException:
-                module = PyObject(PyObject.get_base_type('Module'))
-                module_resource = None
-                lineno = None
+                self.names[imported] = PyName()
+                return
             if alias is None and '.' in imported:
                 tokens = imported.split('.')
                 toplevel_module = self._get_module_with_packages(name)
                 self.names[tokens[0]] = PyName(toplevel_module, False, 
-                                               module=toplevel_module.get_resource(), lineno=lineno)
+                                               module=toplevel_module.get_module(),
+                                               lineno=lineno)
             else:
-                self.names[imported] = PyName(module, False, module=module_resource, lineno=lineno)
+                self.names[imported] = PyName(module, False, 
+                                              module=module.get_module(), lineno=lineno)
 
     def _get_module_with_packages(self, module_name):
         found_modules = self.pycore._find_module_resource_list(module_name)
@@ -622,34 +632,24 @@ class _ScopeVisitor(object):
         try:
             module = self.pycore.get_module(node.modname)
         except ModuleNotFoundException:
-            module = PyPackage(self.pycore)
+            module = None
 
         if node.names[0][0] == '*':
-            if isinstance(module, PyPackage):
+            if module is None or isinstance(module, PyPackage):
                 return
             for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):
-                    pyname_module = module
-                    if pyname.module is not None:
-                        pyname_module = pyname.module
-                    self.names[name] = PyName(pyname.object, False, module=pyname_module,
+                    self.names[name] = PyName(pyname.object, False, module=pyname.module,
                                               lineno=pyname.get_definition_location()[1])
         else:
             for (name, alias) in node.names:
                 imported = name
                 if alias is not None:
                     imported = alias
-                if module.get_attributes().has_key(name):
+                if module is not None and module.get_attributes().has_key(name):
                     imported_pyname = module.get_attributes()[name]
-                    imported_object = imported_pyname.object
-                    pyname_module = module
-                    lineno = None
-                    if imported_pyname.module is not None:
-                        pyname_module = imported_pyname.module
-                        lineno = imported_pyname.get_definition_location()[1]
-                    if imported_pyname.get_type() == PyObject.get_base_type('Module'):
-                        pyname_module = imported_pyname.get_object().get_resource()
-                        lineno = 1                            
+                    imported_object = imported_pyname.get_object()
+                    pyname_module, lineno = imported_pyname.get_definition_location()
                     self.names[imported] = PyName(imported_object, False, module=pyname_module,
                                                   lineno=lineno)
                 else:
@@ -669,7 +669,7 @@ class _ClassVisitor(_ScopeVisitor):
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = PyName(pyobject, True, module=self.get_resource())
+        self.names[node.name] = PyName(pyobject, True, module=self.get_module())
         if node.name == '__init__':
             new_visitor = _ClassInitVisitor(self)
             compiler.walk(node, new_visitor)
@@ -677,7 +677,7 @@ class _ClassVisitor(_ScopeVisitor):
     def visitClass(self, node):
         self.names[node.name] = PyName(PyClass(self.pycore, node,
                                                self.owner_object), True, 
-                                       module=self.get_resource())
+                                       module=self.get_module())
 
 
 class _FunctionVisitor(_ScopeVisitor):
@@ -695,7 +695,7 @@ class _ClassInitVisitor(_AssignVisitor):
         if node.expr.name == 'self':
             self.scope_visitor.names[node.attrname] = PyName(object_=self.assigned_object,
                                                              lineno=node.lineno, 
-                                                             module=self.scope_visitor.get_resource())
+                                                             module=self.scope_visitor.get_module())
     
     def visitAssName(self, node):
         pass
@@ -726,5 +726,4 @@ class PythonFileRunner(object):
     def kill_process(self):
         """Stop the process. This does not work on windows."""
         os.kill(self.process.pid, 9)
-
 

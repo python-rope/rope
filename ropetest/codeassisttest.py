@@ -310,15 +310,6 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((None, 1), result)
 
-    def test_get_definition_location_for_modules(self):
-        pycore = self.project.get_pycore()
-        module = pycore.create_module(self.project.get_root_folder(),
-                                           'mod')
-        module.write('def a_func():\n    pass\na_func()')
-        mod = pycore.get_module('mod')
-        a_func = mod.get_attributes()['a_func']
-        self.assertEquals((module, 1), a_func.get_definition_location())
-
     def test_get_definition_location_underlined_names(self):
         code = 'def a_sample_func():\n    pass\na_sample_func()'
         result = self.assist.get_definition_location(code, len(code) - 11)

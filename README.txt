@@ -39,9 +39,9 @@ Alt-Shift-r    Rename local variable
 Alt-Q r        Show project tree
 =============  ======================
 
-You can complete names as you type by using code assist (``M-/``). The
-capital letter in the left shows the type of the proposal. `L` indicates
-local variables, `G` global variables, `A` attributes, `T`
+You can complete names as you type by using code assist (``M-/``).
+The capital letter in the left shows the type of the proposal.  `L`
+indicates local variables, `G` global variables, `A` attributes, `T`
 templates, `K` keywords and `B` built-ins.
 
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
@@ -50,7 +50,7 @@ templates.  If you want to add more or edit these you can edit
 
 In tree views (like quick outline and project tree views) you can
 use ``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
-collapse items. You can use the ``Return`` key to select items.
+collapse items.  You can use the ``Return`` key to select items.
 
 If you want to change the font or keybindings edit
 `rope.ui.editor.GraphicalEditor` class.
@@ -104,69 +104,69 @@ M-R            rename refactoring
 Description
 ===========
 
-*rope* is a python IDE. It tries to give users lots of things that are
+*rope* is a python IDE.  It tries to give users lots of things that are
 not available in python IDEs yet.
 
 Refactoring
 -----------
 
 In recent years refactoring has become a basic task of everyday
-programing, specially in Java community. In agile programing
+programing, specially in Java community.  In agile programing
 methodologies, like Extreme Programing, Refactoring is one of the core
 practices.
 
 Some IDEs support some basic refactorings like 'PyDev' (which uses
-bicycle repair man). These IDEs have a limited set of refactorings and
+bicycle repair man).  These IDEs have a limited set of refactorings and
 fail when doing refactorings that need to know the type of objects in
-the source code (specially for relatively large projects). *rope*
-tries to provide a rich set of refactorings. Some of the refactorings
+the source code (specially for relatively large projects).  *rope*
+tries to provide a rich set of refactorings.  Some of the refactorings
 require type inference which is described later.
 
 Auto Completion
 ---------------
 
 One of the basic features of modern IDEs is the availability of auto-
-completion. Some Python IDEs have auto-completion support but in a
-limited form. Since the type of many variables cannot be deduced from
-simple analysis of the source code. Auto-completing modules names,
+completion.  Some Python IDEs have auto-completion support but in a
+limited form.  Since the type of many variables cannot be deduced from
+simple analysis of the source code.  Auto-completing modules names,
 class names, static methods, class methods, function names and
-variable names are easy. But auto- completing the methods and
-attributes of an object is hard. Because the IDE needs to know the
+variable names are easy.  But auto- completing the methods and
+attributes of an object is hard.  Because the IDE needs to know the
 type of the object that cannot be achieved easily most of the time in
-dynamic languages. *rope* uses Type Inference algorithms to solve this
-problem.
+dynamic languages.  *rope* uses Type Inference algorithms to solve
+this problem.
 
 Type Inference
 --------------
 
 One disadvantage of dynamic languages like python is that you cannot
 know the type of variables by a simple analysis of program source code
-most of the time. Knowing the type of variables is very essential for
-providing many of the refactorings and auto-completions. *rope* will
+most of the time.  Knowing the type of variables is very essential for
+providing many of the refactorings and auto-completions.  *rope* will
 use type inference to overcome this problem.
 
 Static type inference uses program source code to guess the type of
-objects. But it is is very hard. There have been some attempts though
+objects.  But it is is very hard.  There have been some attempts though
 not very successful (examples: psycho: only str and int types,
-StarKiller: wasn't released and ShedSkin: good but limited). They
+StarKiller: wasn't released and ShedSkin: good but limited).  They
 where mostly directed at speeding up python programs by transforming
-its code to other typed languages rather than building IDEs. Such
+its code to other typed languages rather than building IDEs.  Such
 algorithms might be helpful.
 
-There is another approach toward type inference. That is the analysis
-of running programs. This dynamic approach records the types variables
-are assigned to during the program execution. Although this approach
-is a lot easier to implement than the alternative, it is limited. Only
-the parts of the program that are executed are analyzed. If developers
-write unit tests and use test driven development this approach works
-very well.
+There is another approach toward type inference.  That is the analysis
+of running programs.  This dynamic approach records the types
+variables are assigned to during the program execution.  Although this
+approach is a lot easier to implement than the alternative, it is
+limited.  Only the parts of the program that are executed are
+analyzed.  If developers write unit tests and use test driven
+development this approach works very well.
 
 
 Project Road Map
 ================
 
 The main motive for starting this project was the lack of good
-refactoring tools for python language. Refactoring programs like
+refactoring tools for python language.  Refactoring programs like
 "bicycle repair man" aren't reliable due to type inference problems
 discussed earlier and they support a limited number of refactorings.
 
@@ -176,14 +176,14 @@ As Don Roberts one of the writers of the "Refactoring Browser" for
 smalltalk writes in his doctoral thesis:
 
   "An early implementation of the Refactoring Browser for Smalltalk
-  was a separate tool from the standard Smalltalk development
-  tools. What we found was that no one used it. We did not even use it
-  ourselves. Once we integrated the refactorings directly into the
+  was a separate tool from the standard Smalltalk development tools.
+  What we found was that no one used it.  We did not even use it
+  ourselves.  Once we integrated the refactorings directly into the
   Smalltalk Browser, we used them extensively."
 
 The main goal of *rope* is to concentrate on the type inference and
 refactoring of python programs and not a state of art IDE (At least
-not in the first phase). The type inference and refactoring parts will
+not in the first phase).  The type inference and refactoring parts will
 not be dependent on *rope* and if successful, will be released as
 standalone programs and libraries so that other projects may use them.
 

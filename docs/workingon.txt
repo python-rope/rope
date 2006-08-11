@@ -1,3 +1,30 @@
+Exploring Dynamic Type Inference
+================================
+
+We want to able to do::
+
+  import mod
+  mod_copy = mod
+  double_copy = mod_copy
+  
+  object_of(mod_copy) -> object_of(mod)
+  object_of(double_copy) -> object_of(mod)
+
+- Change `PyName.get_definition_location` method to return a
+  `PyModule` rather than a `Resource`
+
+* Adding `GlobalScope.get_line_scope` method
+* Not checking all entries in sys.path in `PyCore.find_module`
+* Removeing ?_get_resource in `rope.pycore` module
+* Fixing possible problems in `rope.codeassist` module
+* Faster implementation of `GlobalScope.get_line_scope`
+* Move type inference parts to the new `objectanalyzer` module
+* How to save assigned AST nodes to variables?
+* Add the new part
+
+
+
+
 Remaining Stories
 =================
 

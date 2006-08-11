@@ -296,7 +296,8 @@ class _GetDefinitionLocation(object):
         scope_finder = ScopeNameFinder(self.source_code, module_scope)
         element = scope_finder.get_pyname_at(self.offset)
         if element is not None:
-            return element.get_definition_location()
+            module, lineno = element.get_definition_location()
+            return module.get_resource(), lineno
         else:
             return (None, None)
 

@@ -269,7 +269,7 @@ class Core(object):
         toplevel = Toplevel()
         toplevel.title('About Rope')
         text = 'rope, A python IDE ...\n' + \
-               'version 0.2\n\n' + \
+               'version ' + rope.VERSION + '\n\n' + \
                'Copyright (C) 2006 Ali Gholami Rudi\n\n' + \
                'This program is free software; you can redistribute it and/or modify it\n' + \
                'under the terms of GNU General Public License as published by the \n' + \
