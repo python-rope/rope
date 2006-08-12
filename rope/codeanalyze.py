@@ -1,7 +1,7 @@
 import re
 import compiler
 
-from pycore import PyObject, PyName
+import rope.pycore
 
 class WordRangeFinder(object):
 
@@ -125,73 +125,6 @@ class WordRangeFinder(object):
             return (self.source_code[real_start:last_char_position + 1],
                     self.source_code[word_start:offset], word_start)
 
-class HoldingScopeFinder(object):
-
-    def __init__(self, source_code):
-        self.source_code = source_code
-        self.lines = SourceLinesAdapter(source_code)
-    
-    def get_indents(self, lineno):
-        indents = 0
-        for char in self.lines.get_line(lineno):
-            if char == ' ':
-                indents += 1
-            else:
-                break
-        return indents
-    
-    def get_location(self, offset):
-        current_pos = 0
-        lineno = 1
-        while current_pos + len(self.lines.get_line(lineno)) < offset:
-            current_pos += len(self.lines.get_line(lineno)) + 1
-            lineno += 1
-        return (lineno, offset - current_pos)
-
-    def _get_scope_indents(self, scope):
-        return self.get_indents(scope.get_start())
-    
-    def get_holding_scope(self, module_scope, lineno, line_indents=None):
-        line_indents = line_indents
-        if line_indents is None:
-            line_indents = self.get_indents(lineno)
-        scopes = [module_scope]
-        current_scope = module_scope
-        while current_scope is not None and \
-              (current_scope.get_kind() == 'Module' or
-               self._get_scope_indents(current_scope) < line_indents):
-            while len(scopes) > 1 and \
-                  self._get_scope_indents(scopes[-1]) >= self._get_scope_indents(current_scope):
-                scopes.pop()
-            scopes.append(current_scope)
-            new_scope = None
-            for scope in current_scope.get_scopes():
-                if scope.get_start() <= lineno:
-                    new_scope = scope
-                else:
-                    break
-            current_scope = new_scope
-        min_indents = line_indents
-        for l in range(scopes[-1].get_start() + 1, lineno):
-            if self.lines.get_line(l).strip() != '' and \
-               not self.lines.get_line(l).strip().startswith('#'):
-                min_indents = min(min_indents, self.get_indents(l))
-        while len(scopes) > 1 and min_indents <= self._get_scope_indents(scopes[-1]):
-            scopes.pop()
-        return scopes[-1]
-    
-    def find_scope_end(self, scope):
-        if not scope.parent:
-            return self.lines.length()
-        for l in range(scope.get_start() + 1, self.lines.length()):
-            if self.lines.get_line(l).strip() != '' and \
-               not self.lines.get_line(l).strip().startswith('#'):
-                if self.get_indents(l) < self._get_scope_indents(scope):
-                    return l
-        return self.lines.length()
-        
-
-
 class _StatementEvaluator(object):
 
     def __init__(self, scope):
@@ -208,8 +141,8 @@ class _StatementEvaluator(object):
 
     def visitCallFunc(self, node):
         pyname = _StatementEvaluator.get_statement_result(self.scope, node.node)
-        if pyname.get_type() == PyObject.get_base_type('Type'):
-            self.result = PyName(object_=PyObject(type_=pyname.get_object()))
+        if pyname.get_type() == rope.pycore.PyObject.get_base_type('Type'):
+            self.result = rope.pycore.PyName(object_=rope.pycore.PyObject(type_=pyname.get_object()))
 
     @staticmethod
     def get_statement_result(scope, node):

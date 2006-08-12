@@ -17,12 +17,12 @@ We want to able to do::
 - Adding `GlobalScope.get_inner_scope_for_line` method
 - Move `HoldingScopeFinder.find_scope_end` method to `Scope`
 - Renaming `Scope.get_lineno` to `get_start`
+- Adding `pyobjects` and `pyscopes` modules
 
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Review `codeanalyze`; module there seems to be many places to refactor
 * Eliminate `HoldingScopeFinder`
 * Optimize `SourceLinesAdapter` methods
-* Adding `pyobjects` and `scopes` modules
 * Move type inference parts to the new `objectanalyzer` module
 * How to save assigned AST nodes to variables?
 * Add the new TI part
