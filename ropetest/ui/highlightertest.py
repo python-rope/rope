@@ -196,6 +196,9 @@ class ReSTHighlightTest(unittest.TestCase):
     def test_hyperlink3(self):
         self.assertFalse(self.in_highlights('rope_homepage', (0, 5, 'hyperlink')))
 
+    def test_hyperlink4(self):
+        self.assertTrue(self.in_highlights('rope_homepage_', (0, 14, 'hyperlink')))
+
     def test_hyperlink_in_multilines(self):
         self.assertTrue(self.in_highlights('`rope\nhomepage`_', (0, 16, 'hyperlink')))
 
@@ -240,6 +243,12 @@ class ReSTHighlightTest(unittest.TestCase):
         self.assertTrue('anonymous_hyperlink' in self.highlighting.get_styles())
         self.assertFalse(self.in_highlights('rope__', (0, 6, 'hyperlink')))
         self.assertTrue(self.in_highlights('rope__', (0, 6, 'anonymous_hyperlink')))
+
+    def test_literals_in_titles(self):
+        self.assertTrue(self.in_highlights('``rope``\n--------', (0, 8, 'title')))
+
+    def test_dots_in_hyperlinks(self):
+        self.assertTrue(self.in_highlights('rope.rope_', (0, 10, 'hyperlink')))
 
 
 def suite():

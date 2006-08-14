@@ -1,7 +1,7 @@
 import compiler
 
-import rope.pyobjects
 import rope.codeanalyze
+import rope.pyobjects
 
 class Scope(object):
 
@@ -70,7 +70,8 @@ class GlobalScope(Scope):
         return 'Module'
     
     def get_inner_scope_for_line(self, lineno, indents=None):
-        return _HoldingScopeFinder(self.pyobject.source_code).get_holding_scope(self, lineno, indents)
+        return _HoldingScopeFinder(self.pyobject.source_code).\
+               get_holding_scope(self, lineno, indents)
 
 
 class FunctionScope(Scope):
@@ -82,7 +83,8 @@ class FunctionScope(Scope):
     
     def _get_names(self):
         if self.names == None:
-            new_visitor = rope.pyobjects._FunctionVisitor(self.pycore, self.pyobject)
+            new_visitor = rope.pyobjects._FunctionVisitor(self.pycore,
+                                                          self.pyobject)
             for n in self.pyobject._get_ast().getChildNodes():
                 compiler.walk(n, new_visitor)
             self.names = self.pyobject._get_parameters()

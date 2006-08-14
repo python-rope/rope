@@ -154,15 +154,16 @@ class ReSTHighlighting(Highlighting):
         literal_pattern = '(?P<literal>``([^`]|`[^`])+``)'
         interpreted_pattern = '(?P<interpreted>`[^`]+`)(?P<role>:\\w+:)?'
         hyperlink_target_pattern = '(?P<hyperlink_target>\\w+://[^\\s]+)'
-        hyperlink_pattern = '(?P<hyperlink>\\b[a-zA-Z0-9]+_|`[^`]+`_)\\b'
+        hyperlink_pattern = '(?P<hyperlink>\\b[a-zA-Z0-9_\\.]*[a-zA-Z0-9]+_|`[^`]+`_)\\b'
         anonymous_hyperlink_pattern = '(?P<anonymous_hyperlink>\\b[a-zA-Z0-9]+__|`[^`]+`__)\\b'
         hyperlink_definition_pattern = '(?P<hyperlink_definition>\\.\\. _([^`\n:]|`.+`)+:)'
         field_pattern = '^\\s*(?P<field>:[^\n:]+:)'
         escaped_pattern = '(?P<escaped>\\\\.)'
-        all_patterns = literal_pattern + '|' + escaped_pattern + '|' + \
+        all_patterns = escaped_pattern + '|' + title_pattern + '|' + \
+                       literal_pattern + '|' + \
                        anonymous_hyperlink_pattern + '|' + hyperlink_pattern + '|' + \
                        interpreted_pattern + '|' + \
-                       title_pattern + '|' + listsign_pattern + '|' + \
+                       listsign_pattern + '|' + \
                        directive_pattern + '|' + emphasis_pattern + '|' + \
                        strongemphasis_pattern + '|' + \
                        hyperlink_target_pattern + '|' + field_pattern + '|' + \
@@ -176,7 +177,7 @@ class ReSTHighlighting(Highlighting):
                 'listsign' : HighlightingStyle(color='blue', bold=True),
                 'directive' : HighlightingStyle(color='#00AAAA'),
                 'emphasis' : HighlightingStyle(color='#000033', italic=True),
-                'strongemphasis' : HighlightingStyle(color='#330000', bold=True),
+                'strongemphasis' : HighlightingStyle(color='#330022', bold=True),
                 'literal' : HighlightingStyle(color='#605050'),
                 'interpreted' : HighlightingStyle(color='#208820'),
                 'role' : HighlightingStyle(color='#409000'),

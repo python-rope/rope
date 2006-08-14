@@ -1,31 +1,21 @@
-Exploring Dynamic Type Inference
-================================
+Following Chained Assignments
+=============================
 
-We want to able to do::
+- Move type inference parts to the new `objectinfer` module
+- Saving assigned AST nodes in `PyName`\s
+- Move type inference unit tests `ropetest.objectinfertest` package
+- Can we remove `PyName.update` for the sake of `PyName.assigned_asts`
+- Replace `rope.pyobjects._AttributeListFinder` with `rope.codeanalyze.StatementEvaluator`
 
-  import mod
-  mod_copy = mod
-  double_copy = mod_copy
-  
-  object_of(mod_copy) -> object_of(mod)
-  object_of(double_copy) -> object_of(mod)
+* Add the new TI part
+* Breaking circular infering
 
-- Change `PyName.get_definition_location` method to return a
-  `PyModule` rather than a `Resource`
-- Removeing ?_get_resource in `rope.pycore` module
-- Not checking all entries in sys.path in `PyCore.find_module`
-- Adding `GlobalScope.get_inner_scope_for_line` method
-- Move `HoldingScopeFinder.find_scope_end` method to `Scope`
-- Renaming `Scope.get_lineno` to `get_start`
-- Adding `pyobjects` and `pyscopes` modules
+* Weekly plan
 
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
-* Review `codeanalyze`; module there seems to be many places to refactor
+* Review `rope.codeanalyze`; module there seems to be many places to refactor
 * Eliminate `HoldingScopeFinder`
 * Optimize `SourceLinesAdapter` methods
-* Move type inference parts to the new `objectanalyzer` module
-* How to save assigned AST nodes to variables?
-* Add the new TI part
 
 
 Remaining Stories
@@ -35,7 +25,6 @@ Remaining Stories
 * Better editor changing dialog; use uihelpers module
 * Having only one `Refactoring` instance per `Project`?
 * Slow `GraphicalEditor._get_offset`
-* Replace `rope.pycore._AttributeListFinder` with `rope.codeanalyze._StatementEvaluator`
 * More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
 * PyObject and PyName equality checks; Value objects?
 * Do something for modules that can not be found

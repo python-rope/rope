@@ -100,43 +100,6 @@ class PyFunction(PyDefinedObject):
         return result
 
 
-class _AttributeListFinder(object):
-
-    def __init__(self):
-        self.name_list = []
-        
-    def visitName(self, node):
-        self.name_list.append(node.name)
-    
-    def visitGetattr(self, node):
-        compiler.walk(node.expr, self)
-        self.name_list.append(node.attrname)
-
-    @staticmethod
-    def get_attribute_list(node):
-        finder = _AttributeListFinder()
-        compiler.walk(node, finder)
-        return finder.name_list        
-
-    @staticmethod
-    def get_pyname_from_scope(attribute_list, scope):
-        pyname = scope.lookup(attribute_list[0])
-        if pyname != None and len(attribute_list) > 1:
-            for name in attribute_list[1:]:
-                if name in pyname.get_attributes():
-                    pyname = pyname.get_attributes()[name]
-                else:
-                    pyname = None
-                    break
-        return pyname
-    
-    @staticmethod
-    def get_attribute(node, scope):
-        finder = _AttributeListFinder()
-        compiler.walk(node, finder)
-        return _AttributeListFinder.get_pyname_from_scope(finder.name_list, scope)
-
-
 class PyClass(PyDefinedObject):
 
     def __init__(self, pycore, ast_node, parent):
@@ -155,8 +118,8 @@ class PyClass(PyDefinedObject):
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
-            base = _AttributeListFinder.get_attribute(base_name,
-                                                      self.parent.get_scope())
+            base = rope.codeanalyze.StatementEvaluator.\
+                   get_statement_result(self.parent.get_scope(), base_name)
             if base:
                 result.append(base)
         return result
@@ -226,86 +189,58 @@ class PyName(object):
 
     def __init__(self, object_=None, is_defined_here=False, lineno=None, module=None):
         self.object = object_
-        if self.object is None:
-            self.object = PyObject(PyObject.get_base_type('Unknown'))
         self.is_defined_here = is_defined_here
         self.lineno = lineno
         self.module = module
         if self.has_block():
             self.lineno = self._get_ast().lineno
-
-    def update_object(self, object_=None, is_defined_here=False, lineno=None, module=None):
-        self.__init__(object_, is_defined_here, self.lineno, module=module)
+        self.assigned_asts = []
 
     def get_attributes(self):
-        return self.object.get_attributes()
+        return self.get_object().get_attributes()
 
     def get_object(self):
+        if self.object is None and self.module is not None:
+                object_infer = self.module.pycore._get_object_infer()
+                inferred_object = object_infer.infer_object(self)
+                self.object = inferred_object
+        if self.object is None:
+            self.object = PyObject(PyObject.get_base_type('Unknown'))
         return self.object
-        
+    
     def get_type(self):
-        return self.object.get_type()
+        return self.get_object().get_type()
 
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
-        return (self.module, self.lineno)
+        lineno = self.lineno
+        if lineno == None and self.assigned_asts:
+            lineno = self.assigned_asts[0].lineno
+        return (self.module, lineno)
 
     def has_block(self):
-        return self.is_defined_here and isinstance(self.object,
+        return self.is_defined_here and isinstance(self.get_object(),
                                                    PyDefinedObject)
     
     def _get_ast(self):
-        return self.object._get_ast()
+        return self.get_object()._get_ast()
 
 
 class _AssignVisitor(object):
 
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
-        self.assigned_object = None
+        self.assigned_ast = None
     
-    def _search_in_dictionary_for_attribute_list(self, names, attribute_list):
-        pyobject = None
-        if attribute_list[0] in names:
-            pyobject = names.get(attribute_list[0]).get_object()
-        if pyobject != None and len(attribute_list) > 1:
-            for name in attribute_list[1:]:
-                if name in pyobject.get_attributes():
-                    pyobject = pyobject.get_attributes()[name].get_object()
-                else:
-                    pyobject = None
-                    break
-        return pyobject
-        
     def visitAssign(self, node):
-        type_ = None
-        if isinstance(node.expr, compiler.ast.CallFunc):
-            function_name = _AttributeListFinder.get_attribute_list(node.expr.node)
-            function_object = self._search_in_dictionary_for_attribute_list(self.scope_visitor.names,
-                                                                            function_name)
-            if function_object is None and self.scope_visitor.owner_object.parent is not None:
-                function_pyname = _AttributeListFinder.\
-                                  get_pyname_from_scope(function_name,
-                                                        self.scope_visitor.owner_object.
-                                                        parent.get_scope())
-                if function_pyname is not None:
-                    function_object = function_pyname.get_object()
-            if function_object is not None:
-                if function_object.get_type() == PyObject.get_base_type('Type'):
-                    type_ = function_object
-        self.assigned_object = PyObject(type_=type_)
+        self.assigned_ast = node.expr
         for child_node in node.nodes:
             compiler.walk(child_node, self)
 
     def visitAssName(self, node):
-        if node.name in self.scope_visitor.names:
-            self.scope_visitor.names[node.name].update_object(object_=self.assigned_object,
-                                                              lineno=node.lineno, 
-                                                              module=self.scope_visitor.get_module())
-        else:
-            self.scope_visitor.names[node.name] = PyName(object_=self.assigned_object,
-                                                         lineno=node.lineno,
-                                                         module=self.scope_visitor.get_module())
+        if node.name not in self.scope_visitor.names:
+            self.scope_visitor.names[node.name] = PyName(module=self.scope_visitor.get_module())
+        self.scope_visitor.names[node.name].assigned_asts.append(self.assigned_ast)
 
 
 class _ScopeVisitor(object):
@@ -372,7 +307,7 @@ class _ScopeVisitor(object):
                 return
             for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):
-                    self.names[name] = PyName(pyname.object, False, module=pyname.module,
+                    self.names[name] = PyName(pyname.get_object(), False, module=pyname.module,
                                               lineno=pyname.get_definition_location()[1])
         else:
             for (name, alias) in node.names:
@@ -426,9 +361,9 @@ class _ClassInitVisitor(_AssignVisitor):
     
     def visitAssAttr(self, node):
         if node.expr.name == 'self':
-            self.scope_visitor.names[node.attrname] = PyName(object_=self.assigned_object,
-                                                             lineno=node.lineno, 
+            self.scope_visitor.names[node.attrname] = PyName(lineno=node.lineno, 
                                                              module=self.scope_visitor.get_module())
+            self.scope_visitor.names[node.attrname].assigned_asts.append(self.assigned_ast)
     
     def visitAssName(self, node):
         pass

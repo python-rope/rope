@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 
+import rope.objectinfer
 from rope.exceptions import ModuleNotFoundException
 from rope.pyobjects import *
 
@@ -11,6 +12,7 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
+        self.object_infer = rope.objectinfer.ObjectInfer()
 
     def get_module(self, name):
         """Returns a `PyObject` if the module was found."""
@@ -86,7 +88,7 @@ class PyCore(object):
     def find_module(self, module_name):
         """Returns a resource pointing to the given module
         
-        None if it can not be found
+        returns None if it can not be found
         """
         for src in self.get_source_folders():
             module = self._find_module_in_source_folder(src, module_name)
@@ -143,6 +145,9 @@ class PyCore(object):
         for resource in folder.get_folders():
             result.extend(self._find_source_folders(resource))
         return result
+    
+    def _get_object_infer(self):
+        return self.object_infer
 
 
 class PythonFileRunner(object):

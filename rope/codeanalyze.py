@@ -1,7 +1,8 @@
-import re
 import compiler
+import re
 
 import rope.pycore
+
 
 class WordRangeFinder(object):
 
@@ -125,7 +126,8 @@ class WordRangeFinder(object):
             return (self.source_code[real_start:last_char_position + 1],
                     self.source_code[word_start:offset], word_start)
 
-class _StatementEvaluator(object):
+
+class StatementEvaluator(object):
 
     def __init__(self, scope):
         self.scope = scope
@@ -135,18 +137,18 @@ class _StatementEvaluator(object):
         self.result = self.scope.lookup(node.name)
     
     def visitGetattr(self, node):
-        pyname = _StatementEvaluator.get_statement_result(self.scope, node.expr)
+        pyname = StatementEvaluator.get_statement_result(self.scope, node.expr)
         if pyname is not None:
             self.result = pyname.get_attributes().get(node.attrname, None)
 
     def visitCallFunc(self, node):
-        pyname = _StatementEvaluator.get_statement_result(self.scope, node.node)
+        pyname = StatementEvaluator.get_statement_result(self.scope, node.node)
         if pyname.get_type() == rope.pycore.PyObject.get_base_type('Type'):
             self.result = rope.pycore.PyName(object_=rope.pycore.PyObject(type_=pyname.get_object()))
 
     @staticmethod
     def get_statement_result(scope, node):
-        evaluator = _StatementEvaluator(scope)
+        evaluator = StatementEvaluator(scope)
         compiler.walk(node, evaluator)
         return evaluator.result
 
@@ -181,7 +183,7 @@ class ScopeNameFinder(object):
     
     def get_pyname_in_scope(self, holding_scope, name):
         ast = compiler.parse(name)
-        result = _StatementEvaluator.get_statement_result(holding_scope, ast)
+        result = StatementEvaluator.get_statement_result(holding_scope, ast)
         return result
 
 

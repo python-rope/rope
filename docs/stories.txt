@@ -10,6 +10,9 @@ For an overview of future goals of rope have a look at `future.txt`_ file.
 Stories
 =======
 
+> Unestimated Stories
+
+
 * Organize imports
 
 
@@ -69,9 +72,6 @@ Stories
 
 
 * File Encodings
-
-
-* Static type inference
 
 
 * Commenting and uncommenting lines
@@ -202,6 +202,9 @@ Stories
 * Rename function parameters
 
 
+* Static type inference
+
+
 * Rename module refactoring
 
 
@@ -209,6 +212,19 @@ Stories
 
 
 * Auto-completing function parameter names when calling
+
+
+* Formating Code
+
+
+* Enhancing editor
+
+  * Clearing selection if something happens
+  * Unifying builtin and emacs-style selections; if selection
+    is active do the builtin cut and paste
+
+
+* What to do when the program has syntax errors for code assists @ 2
 
 
 * Rename class/function
@@ -228,31 +244,27 @@ Stories
   has been changed.
 
 
-* Formating Code
-
-
-* Enhancing editor
-
-  * Clearing selection if something happens
-  * Unifying builtin and emacs-style selections; if selection
-    is active do the builtin cut and paste
-
-
-* What to do when the program has syntax errors for code assists @ 2
-
-
-* Show PyDoc
-
-
-* Better list and tree navigation
-  Add filter texts and selection texts to trees and lists.
-
-
 * Packages should be filtered @ 4h
   Do not show submodules that are not imported yet as attributes.
 
 
 * Dynamic type inference
+
+
+> Public Release 0.3pre1 : August 20, 2006
+
+
+* Better list and tree navigation @ 10h
+  Add filter texts and selection texts to trees and lists.
+
+
+* Static type inference of functions @ 8h
+
+
+* Show PyDoc And Signature @ 4h
+
+
+* TI for chained assignments @ 8h
 
 
 Remaining Stories
