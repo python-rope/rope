@@ -1,7 +1,10 @@
-Following Chained Assignments
-=============================
+Show PyDoc @ 4h
+===============
 
-- Breaking circular infering
+- Add codeassist.get_doc
+- Showing docs
+
+* ReST highlighting
 
 * Weekly plan
 

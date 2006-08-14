@@ -347,6 +347,7 @@ class GraphicalEditor(object):
         def ignore(event):
             return 'break'
         self.text.bind('<Control-x>', ignore)
+        self.text.bind('<F2>', lambda event: self._show_doc_window())
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
@@ -473,15 +474,19 @@ class GraphicalEditor(object):
         enhanced_list.list.bind('<Any-KeyPress>', key_pressed)
         toplevel.grab_set()
 
-    def _show_outline_window(self):
-        toplevel = Toplevel()
-        toplevel.title('Quick Outline')
-        tree_view = TreeView(toplevel, _OutlineViewHandle(self, toplevel),
-                             title='Quick Outline')
-        for node in self.outline.get_root_nodes(self.get_text()):
-            tree_view.add_entry(node)
-        tree_view.list.focus_set()
-        toplevel.grab_set()
+    def _show_doc_window(self):
+        doc = self.code_assist.get_doc(self.get_text(), self.get_current_offset())
+        if doc is not None:
+            toplevel = Toplevel()
+            toplevel.title('Show Doc')
+            doc_text = Label(toplevel, text='\n%s\n' % doc)
+            doc_text.grid()
+            def close(event=None):
+                toplevel.destroy()
+            toplevel.bind('<Escape>', close)
+            toplevel.bind('<Control-g>', close)
+            toplevel.bind('<FocusOut>', close)
+            toplevel.grab_set()
 
     def _get_template_information(self, result, proposal):
         template = proposal.template

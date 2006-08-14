@@ -28,8 +28,11 @@ class ObjectInfer(object):
             return
         for assign_node in reversed(pyname.assigned_asts):
             try:
+                lineno = assign_node.lineno
+                if lineno is None:
+                    lineno = 1
                 holding_scope = pyname.module.get_scope().\
-                                get_inner_scope_for_line(assign_node.lineno)
+                                get_inner_scope_for_line(lineno)
                 resulting_pyname = rope.codeanalyze.StatementEvaluator.\
                                    get_statement_result(holding_scope, assign_node)
                 if resulting_pyname is None:

@@ -368,6 +368,18 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals('my_sample_function', sorted_proposals[1].name)
         self.assertEquals('my_sample_template', sorted_proposals[2].name)
 
+    def test_get_pydoc_for_functions(self):
+        src = 'def a_func():\n    """a function"""\n' \
+              '    a_var = 10\na_func()'
+        self.assertEquals('a function', self.assist.get_doc(src, len(src) - 4))
+
+    def test_get_pydoc_for_modules(self):
+        pycore = self.project.get_pycore()
+        mod = pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('"""a module"""\n')
+        src = 'import mod\nmod'
+        self.assertEquals('a module', self.assist.get_doc(src, len(src) - 1))
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 

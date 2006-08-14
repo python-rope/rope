@@ -7,6 +7,7 @@ from rope.exceptions import RopeException
 from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
                               WordRangeFinder, ScopeNameFinder,
                               SourceLinesAdapter)
+import rope.pyobjects
 
 class RopeSyntaxError(RopeException):
     pass
@@ -111,6 +112,9 @@ class CodeAssist(object):
         pass
     
     def get_definition_location(self, source_code, offset):
+        pass
+    
+    def get_doc(self, source_code, offset):
         pass
 
 
@@ -277,6 +281,17 @@ class PythonCodeAssist(CodeAssist):
     def get_definition_location(self, source_code, offset):
         return _GetDefinitionLocation(self.project, source_code,
                                       offset).get_definition_location()
+
+    def get_doc(self, source_code, offset):
+        module_scope = self.project.pycore.get_string_scope(source_code)
+        scope_finder = ScopeNameFinder(source_code, module_scope)
+        element = scope_finder.get_pyname_at(offset)
+        if element is None:
+            return None
+        pyobject = element.get_object()
+        if isinstance(pyobject, rope.pyobjects.PyDefinedObject):
+            return pyobject._get_ast().doc
+        return None
 
 
 class _GetDefinitionLocation(object):

@@ -101,6 +101,7 @@ class PythonOutlineNode(OutlineNode):
 
     def __cmp__(self, obj):
         return cmp(self.get_line_number(), obj.get_line_number())
+
 def _get_pyname_children(pyname):
     result = []
     for name, pyname in pyname.get_attributes().iteritems():
