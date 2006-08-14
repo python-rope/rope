@@ -23,16 +23,18 @@ class ObjectInfer(object):
         return pyobject
         
     def infer_object(self, pyname):
-        assign_node = None
-        if pyname.assigned_asts:
-            assign_node = pyname.assigned_asts[-1]
-        else:
+        """Infers the `PyObject` this `PyName` references"""
+        if not pyname.assigned_asts:
             return
-        holding_scope = pyname.module.get_scope().\
-                        get_inner_scope_for_line(assign_node.lineno)
-        resulting_pyname = rope.codeanalyze.StatementEvaluator.\
-                           get_statement_result(holding_scope, assign_node)
-        if resulting_pyname is None:
-            return None
-        return resulting_pyname.get_object()
+        for assign_node in reversed(pyname.assigned_asts):
+            try:
+                holding_scope = pyname.module.get_scope().\
+                                get_inner_scope_for_line(assign_node.lineno)
+                resulting_pyname = rope.codeanalyze.StatementEvaluator.\
+                                   get_statement_result(holding_scope, assign_node)
+                if resulting_pyname is None:
+                    return None
+                return resulting_pyname.get_object()
+            except IsBeingInferredException:
+                pass
 

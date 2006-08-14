@@ -1,20 +1,12 @@
 Following Chained Assignments
 =============================
 
-- Move type inference parts to the new `objectinfer` module
-- Saving assigned AST nodes in `PyName`\s
-- Move type inference unit tests `ropetest.objectinfertest` package
-- Can we remove `PyName.update` for the sake of `PyName.assigned_asts`
-- Replace `rope.pyobjects._AttributeListFinder` with `rope.codeanalyze.StatementEvaluator`
-
-* Add the new TI part
-* Breaking circular infering
+- Breaking circular infering
 
 * Weekly plan
 
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Review `rope.codeanalyze`; module there seems to be many places to refactor
-* Eliminate `HoldingScopeFinder`
 * Optimize `SourceLinesAdapter` methods
 
 

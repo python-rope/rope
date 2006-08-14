@@ -64,6 +64,16 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(sample_class.get_object(), 
                           copied_sample.get_object())
 
+    def test_following_chained_assignments_avoiding_circles(self):
+        mod = 'class Sample(object):\n    pass\n' \
+              'sample_class = Sample\n' \
+              'sample_class = sample_class\n'
+        mod_scope = self.project.get_pycore().get_string_scope(mod)
+        sample_class = mod_scope.get_names()['Sample']
+        sample_class_var = mod_scope.get_names()['sample_class']
+        self.assertEquals(sample_class.get_object(), 
+                          sample_class_var.get_object())
+
 
 def suite():
     result = unittest.TestSuite()

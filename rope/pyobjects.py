@@ -1,7 +1,7 @@
 import compiler
 
 import rope.pyscopes
-from rope.exceptions import ModuleNotFoundException
+from rope.exceptions import ModuleNotFoundException, RopeException
 
 
 class PyObject(object):
@@ -192,18 +192,23 @@ class PyName(object):
         self.is_defined_here = is_defined_here
         self.lineno = lineno
         self.module = module
-        if self.has_block():
-            self.lineno = self._get_ast().lineno
+        self.is_being_inferred = False
         self.assigned_asts = []
 
     def get_attributes(self):
         return self.get_object().get_attributes()
 
     def get_object(self):
+        if self.is_being_inferred:
+            raise IsBeingInferredException('Circular assignments')
         if self.object is None and self.module is not None:
+            self.is_being_inferred = True
+            try:
                 object_infer = self.module.pycore._get_object_infer()
                 inferred_object = object_infer.infer_object(self)
                 self.object = inferred_object
+            finally:
+                self.is_being_inferred = False
         if self.object is None:
             self.object = PyObject(PyObject.get_base_type('Unknown'))
         return self.object
@@ -213,9 +218,7 @@ class PyName(object):
 
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
-        lineno = self.lineno
-        if lineno == None and self.assigned_asts:
-            lineno = self.assigned_asts[0].lineno
+        lineno = self._get_lineno()
         return (self.module, lineno)
 
     def has_block(self):
@@ -224,6 +227,13 @@ class PyName(object):
     
     def _get_ast(self):
         return self.get_object()._get_ast()
+    
+    def _get_lineno(self):
+        if self.has_block():
+            self.lineno = self._get_ast().lineno
+        if self.lineno == None and self.assigned_asts:
+            self.lineno = self.assigned_asts[0].lineno
+        return self.lineno
 
 
 class _AssignVisitor(object):
@@ -367,4 +377,8 @@ class _ClassInitVisitor(_AssignVisitor):
     
     def visitAssName(self, node):
         pass
+
+
+class IsBeingInferredException(RopeException):
+    pass
 
