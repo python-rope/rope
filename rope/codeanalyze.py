@@ -143,9 +143,15 @@ class StatementEvaluator(object):
 
     def visitCallFunc(self, node):
         pyname = StatementEvaluator.get_statement_result(self.scope, node.node)
-        if pyname is not None and \
-           pyname.get_type() == rope.pycore.PyObject.get_base_type('Type'):
+        if pyname is None:
+            return
+        if pyname.get_type() == rope.pycore.PyObject.get_base_type('Type'):
             self.result = rope.pycore.PyName(object_=rope.pycore.PyObject(type_=pyname.get_object()))
+        elif pyname.get_type() == rope.pycore.PyObject.get_base_type('Function'):
+            self.result = rope.pycore.PyName(object_=pyname.get_object()._get_returned_object())
+        elif '__call__' in pyname.get_object().get_attributes():
+            call_function = pyname.get_object().get_attributes()['__call__']
+            self.result = rope.pycore.PyName(object_=call_function.get_object()._get_returned_object())
 
     @staticmethod
     def get_statement_result(scope, node):

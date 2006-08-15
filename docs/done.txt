@@ -3,6 +3,9 @@
 ===========
 
 
+- Show PyDoc : August 15, 2006
+
+
 - TI for chained assignments : August 14, 2006
 
 

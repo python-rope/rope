@@ -75,6 +75,8 @@ class PyFunction(PyDefinedObject):
                                          pycore, ast_node, parent)
         self.parameters = self.ast_node.argnames
         self.decorators = self.ast_node.decorators
+        self.is_being_inferred = False
+        self.returned_object = None
 
     def _update_attributes_from_ast(self, attributes):
         pass
@@ -98,6 +100,21 @@ class PyFunction(PyDefinedObject):
                 result[parameter] = PyName(lineno=self.ast_node.lineno,
                                            module=self.get_module())
         return result
+    
+    def _get_returned_object(self):
+        if self.is_being_inferred:
+            raise IsBeingInferredException('Circular assignments')
+        if self.returned_object is None:
+            self.is_being_inferred = True
+            try:
+                object_infer = self.pycore._get_object_infer()
+                inferred_object = object_infer.infer_returned_object(self)
+                self.returned_object = inferred_object
+            finally:
+                self.is_being_inferred = False
+        if self.returned_object is None:
+            self.returned_object = PyObject(PyObject.get_base_type('Unknown'))
+        return self.returned_object
 
 
 class PyClass(PyDefinedObject):
@@ -362,6 +379,10 @@ class _FunctionVisitor(_ScopeVisitor):
 
     def __init__(self, pycore, owner_object):
         super(_FunctionVisitor, self).__init__(pycore, owner_object)
+        self.returned_asts = []
+    
+    def visitReturn(self, node):
+        self.returned_asts.append(node.value)
 
 
 class _ClassInitVisitor(_AssignVisitor):

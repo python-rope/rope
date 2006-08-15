@@ -8,6 +8,7 @@ class StatusBarException(rope.exceptions.RopeUIException):
 
 
 class StatusText(object):
+    
     def __init__(self, status_bar_manager, kind, label):
         self.manager = status_bar_manager
         self.kind = kind

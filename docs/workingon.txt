@@ -1,12 +1,9 @@
-Show PyDoc @ 4h
-===============
+Function returned object static type inference @ 8h
+===================================================
 
-- Add codeassist.get_doc
-- Showing docs
-
-* ReST highlighting
-
-* Weekly plan
+- Recursive calls
+- Caching `PyFunction._get_returned_object`
+- Using __call__
 
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Review `rope.codeanalyze`; module there seems to be many places to refactor

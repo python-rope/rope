@@ -40,4 +40,19 @@ class ObjectInfer(object):
                 return resulting_pyname.get_object()
             except IsBeingInferredException:
                 pass
-
+    
+    def infer_returned_object(self, pyobject):
+        """Infers the `PyObject` this callable `PyObject` returns"""
+        scope = pyobject.get_scope()
+        if not scope._get_returned_asts():
+            return
+        for returned_node in reversed(scope._get_returned_asts()):
+            try:
+                resulting_pyname = rope.codeanalyze.StatementEvaluator.\
+                                   get_statement_result(scope, returned_node)
+                if resulting_pyname is None:
+                    return None
+                return resulting_pyname.get_object()
+            except IsBeingInferredException:
+                pass
+        

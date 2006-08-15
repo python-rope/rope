@@ -80,8 +80,14 @@ class FunctionScope(Scope):
         super(FunctionScope, self).__init__(pycore, pyobject,
                                             pyobject.parent.get_scope())
         self.names = None
+        self.returned_asts = None
     
     def _get_names(self):
+        if self.names == None:
+            self._visit_function()
+        return self.names
+    
+    def _visit_function(self):
         if self.names == None:
             new_visitor = rope.pyobjects._FunctionVisitor(self.pycore,
                                                           self.pyobject)
@@ -89,7 +95,12 @@ class FunctionScope(Scope):
                 compiler.walk(n, new_visitor)
             self.names = self.pyobject._get_parameters()
             self.names.update(new_visitor.names)
-        return self.names
+            self.returned_asts = new_visitor.returned_asts
+    
+    def _get_returned_asts(self):
+        if self.names == None:
+            self._visit_function()
+        return self.returned_asts
     
     def get_names(self):
         return self._get_names()

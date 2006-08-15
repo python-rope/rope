@@ -475,11 +475,13 @@ class GraphicalEditor(object):
         toplevel.grab_set()
 
     def _show_doc_window(self):
-        doc = self.code_assist.get_doc(self.get_text(), self.get_current_offset())
+        doc = self.code_assist.get_doc(self.get_text(),
+                                       self.get_current_offset())
         if doc is not None:
             toplevel = Toplevel()
             toplevel.title('Show Doc')
-            doc_text = Label(toplevel, text='\n%s\n' % doc)
+            doc_text = Label(toplevel, text='\n%s\n' % doc, justify=LEFT, 
+                             relief=GROOVE, width=70)
             doc_text.grid()
             def close(event=None):
                 toplevel.destroy()

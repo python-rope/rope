@@ -251,6 +251,12 @@ Stories
 * Dynamic type inference
 
 
+* Showing function signature
+
+
+* Show PyDoc reST highlighting
+
+
 > Public Release 0.3pre1 : August 20, 2006
 
 
@@ -258,10 +264,7 @@ Stories
   Add filter texts and selection texts to trees and lists.
 
 
-* Static type inference of functions @ 8h
-
-
-* Show PyDoc @ 4h
+* Function return object static type inference @ 8h
 
 
 Remaining Stories

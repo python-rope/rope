@@ -74,6 +74,44 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(sample_class.get_object(), 
                           sample_class_var.get_object())
 
+    def test_function_returned_object_static_type_inference1(self):
+        src = 'class Sample(object):\n    pass\n' \
+              'def a_func():\n    return Sample\n' \
+              'a_var = a_func()\n'
+        scope = self.project.get_pycore().get_string_scope(src)
+        sample_class = scope.get_names()['Sample']
+        a_var = scope.get_names()['a_var']
+        self.assertEquals(sample_class.get_object(), a_var.get_object())
+
+    def test_function_returned_object_static_type_inference2(self):
+        src = 'class Sample(object):\n    pass\n' \
+              'def a_func():\n    return Sample()\n' \
+              'a_var = a_func()\n'
+        scope = self.project.get_pycore().get_string_scope(src)
+        sample_class = scope.get_names()['Sample']
+        a_var = scope.get_names()['a_var']
+        self.assertEquals(sample_class.get_object(), a_var.get_type())
+
+    def test_recursive_function_returned_object_static_type_inference(self):
+        src = 'class Sample(object):\n    pass\n' \
+              'def a_func():\n' \
+              '    if True:\n        return Sample()\n' \
+              '    else:\n        return a_func()\n' \
+              'a_var = a_func()\n'
+        scope = self.project.get_pycore().get_string_scope(src)
+        sample_class = scope.get_names()['Sample']
+        a_var = scope.get_names()['a_var']
+        self.assertEquals(sample_class.get_object(), a_var.get_type())
+
+    def test_function_returned_object_using_call_special_function_static_type_inference(self):
+        src = 'class Sample(object):\n' \
+              '    def __call__(self):\n        return Sample\n' \
+              'sample = Sample()\na_var = sample()'
+        scope = self.project.get_pycore().get_string_scope(src)
+        sample_class = scope.get_names()['Sample']
+        a_var = scope.get_names()['a_var']
+        self.assertEquals(sample_class.get_object(), a_var.get_object())
+
 
 def suite():
     result = unittest.TestSuite()
