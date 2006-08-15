@@ -3,6 +3,9 @@
 ===========
 
 
+- Function return object static type inference : August 15, 2006
+
+
 - Show PyDoc : August 15, 2006
 
 

@@ -112,6 +112,13 @@ class ObjectInferTest(unittest.TestCase):
         a_var = scope.get_names()['a_var']
         self.assertEquals(sample_class.get_object(), a_var.get_object())
 
+    def test_list_type_inferencing(self):
+        src = 'class Sample(object):\n    pass\na_var = [Sample()]\n'
+        scope = self.pycore.get_string_scope(src)
+        sample_class = scope.get_names()['Sample'].get_object()
+        a_var = scope.get_names()['a_var']
+        self.assertNotEquals(sample_class, a_var.get_type())
+        
 
 def suite():
     result = unittest.TestSuite()

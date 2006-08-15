@@ -474,6 +474,16 @@ class GraphicalEditor(object):
         enhanced_list.list.bind('<Any-KeyPress>', key_pressed)
         toplevel.grab_set()
 
+   def _show_outline_window(self):
+       toplevel = Toplevel()
+       toplevel.title('Quick Outline')
+       tree_view = TreeView(toplevel, _OutlineViewHandle(self, toplevel),
+                            title='Quick Outline')
+       for node in self.outline.get_root_nodes(self.get_text()):
+           tree_view.add_entry(node)
+       tree_view.list.focus_set()
+       toplevel.grab_set()
+    
     def _show_doc_window(self):
         doc = self.code_assist.get_doc(self.get_text(),
                                        self.get_current_offset())
@@ -481,7 +491,7 @@ class GraphicalEditor(object):
             toplevel = Toplevel()
             toplevel.title('Show Doc')
             doc_text = Label(toplevel, text='\n%s\n' % doc, justify=LEFT, 
-                             relief=GROOVE, width=70)
+                             relief=GROOVE, width=80)
             doc_text.grid()
             def close(event=None):
                 toplevel.destroy()

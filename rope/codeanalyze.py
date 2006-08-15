@@ -152,6 +152,69 @@ class StatementEvaluator(object):
         elif '__call__' in pyname.get_object().get_attributes():
             call_function = pyname.get_object().get_attributes()['__call__']
             self.result = rope.pycore.PyName(object_=call_function.get_object()._get_returned_object())
+    
+    def visitAdd(self, node):
+        pass
+
+    def visitAnd(self, node):
+        pass
+
+    def visitBackquote(self, node):
+        pass
+
+    def visitBitand(self, node):
+        pass
+
+    def visitBitor(self, node):
+        pass
+
+    def visitXor(self, node):
+        pass
+
+    def visitCompare(self, node):
+        pass
+    
+    def visitDict(self, node):
+        pass
+    
+    def visitFloorDiv(self, node):
+        pass
+    
+    def visitList(self, node):
+        pass
+    
+    def visitListComp(self, node):
+        pass
+
+    def visitMul(self, node):
+        pass
+    
+    def visitNot(self, node):
+        pass
+    
+    def visitOr(self, node):
+        pass
+    
+    def visitPower(self, node):
+        pass
+    
+    def visitRightShift(self, node):
+        pass
+    
+    def visitLeftShift(self, node):
+        pass
+    
+    def visitSlice(self, node):
+        pass
+    
+    def visitSliceobj(self, node):
+        pass
+    
+    def visitTuple(self, node):
+        pass
+    
+    def visitSubscript(self, node):
+        pass
 
     @staticmethod
     def get_statement_result(scope, node):
@@ -192,7 +255,6 @@ class ScopeNameFinder(object):
         ast = compiler.parse(name)
         result = StatementEvaluator.get_statement_result(holding_scope, ast)
         return result
-
 
 
 class Lines(object):
