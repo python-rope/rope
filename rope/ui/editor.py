@@ -388,11 +388,13 @@ class GraphicalEditor(object):
 
     def rename_refactoring(self, new_name):
         initial_position = self.text.index(INSERT)
-        refactored = self.refactoring.rename(self.get_text(),
-                                             self.get_current_offset(), new_name)
-        self.set_text(refactored, False)
-        self.text.mark_set(INSERT, initial_position)
-        self.text.see(INSERT)
+        refactored = self.refactoring.local_rename(self.get_text(),
+                                                   self.get_current_offset(),
+                                                   new_name)
+        if refactored is not None:
+            self.set_text(refactored, False)
+            self.text.mark_set(INSERT, initial_position)
+            self.text.see(INSERT)
 
     def _focus_went_out(self):
         if self.searcher.is_searching():

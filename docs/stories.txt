@@ -92,9 +92,6 @@ Stories
 * Python C extensions
 
 
-* Relative imports
-
-
 * User specified source folders
   You should save this project specific information somewhere. How should
   guessed source folders be used.
@@ -176,17 +173,10 @@ Stories
 * Inline function
 
 
-* Extract function
-
-
 * AssList and AssTuple assignments
 
 
 * *global* keyword issues for pycore
-
-
-* Read ``__init__.py`` of packages
-  Should folders contain ``__init__.py`` to be considered packages.
 
 
 * reST goto definition
@@ -203,9 +193,6 @@ Stories
 
 
 * Static type inference
-
-
-* Rename module refactoring
 
 
 * Move a class to another module
@@ -227,9 +214,6 @@ Stories
 * What to do when the program has syntax errors for code assists @ 2
 
 
-* Rename class/function
-
-
 * Enhancing module running @ 20h
 
   * Showing running status in the GUI
@@ -239,11 +223,6 @@ Stories
   * Running last run
 
 
-* Reloading changed editors after refactorings @ 8h
-  `FileEditor` should be a resource visitor. What to do when buffer
-  has been changed.
-
-
 * Packages should be filtered @ 4h
   Do not show submodules that are not imported yet as attributes.
 
@@ -251,10 +230,11 @@ Stories
 * Dynamic type inference
 
 
+* Read ``__init__.py`` of packages
+  Should folders contain ``__init__.py`` to be considered packages.
+
+
 * Show PyDoc reST highlighting
-
-
-> Public Release 0.3pre1 : August 20, 2006
 
 
 * Handling builtin functions and types
@@ -262,6 +242,29 @@ Stories
 
 * Better list and tree navigation @ 10h
   Add filter texts and selection texts to trees and lists.
+
+
+* Extract function
+
+
+* Relative imports
+
+
+* Rename module/package
+
+
+* Rename method/attribute
+
+
+> Public Release 0.3pre1 : August 20, 2006
+
+
+* Rename class/function
+
+
+* Reloading changed editors after refactorings @ 8h
+  `FileEditor` should be a resource visitor. What to do when buffer
+  has been changed.
 
 
 Remaining Stories

@@ -5,7 +5,10 @@ from rope.codeanalyze import (WordRangeFinder, ScopeNameFinder,
 
 class Refactoring(object):
 
-    def rename(self, source_code, offset, new_name):
+    def local_rename(self, source_code, offset, new_name):
+        """Returns the changed source_code or ``None`` if nothing has been changed"""
+    
+    def rename(self, resource, offset, new_name):
         pass
 
 
@@ -25,18 +28,16 @@ class PythonRefactoring(Refactoring):
     def any(name, list):
         return "(?P<%s>" % name + "|".join(list) + ")"
 
-    def rename(self, source_code, offset, new_name):
+    def local_rename(self, source_code, offset, new_name):
         result = []
         module_scope = self.pycore.get_string_scope(source_code)
         word_finder = WordRangeFinder(source_code)
-        old_name = word_finder.get_statement_at(offset)
+        old_name = word_finder.get_statement_at(offset).split('.')[-1]
         pyname_finder = ScopeNameFinder(source_code, module_scope)
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:
-            return source_code
-        occurance_pattern = PythonRefactoring.any('occurance', ['\\b' + old_name + '\\b'])
-        pattern = re.compile(occurance_pattern + "|" + \
-                             self.comment_pattern + "|" + self.string_pattern)
+            return None
+        pattern = self._get_occurance_pattern(old_name)
         last_modified_char = 0
         scope_start, scope_end = self._get_scope_range(source_code, offset, module_scope,
                                                        old_pyname.get_definition_location()[1])
@@ -53,8 +54,56 @@ class PythonRefactoring(Refactoring):
                     if new_pyname == old_pyname:
                         result.append(source_code[last_modified_char:match_start] + new_name)
                         last_modified_char = match_end
+        if last_modified_char == 0:
+            return None
         result.append(source_code[last_modified_char:])
         return ''.join(result)
+    
+    def rename(self, resource, offset, new_name):
+        module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
+        source_code = resource.read()
+        word_finder = WordRangeFinder(source_code)
+        old_name = word_finder.get_statement_at(offset).split('.')[-1]
+        pyname_finder = ScopeNameFinder(source_code, module_scope)
+        old_pyname = pyname_finder.get_pyname_at(offset)
+        if old_pyname is None:
+            return None
+        pattern = self._get_occurance_pattern(old_name)
+        for file_ in self.pycore.get_python_files():
+            self._rename_occurance_in_file(file_, old_pyname, pattern, new_name)
+    
+    def _rename_occurance_in_file(self, resource, old_pyname, pattern, new_name):
+        source_code = resource.read()
+        result = []
+        last_modified_char = 0
+        pyname_finder = None
+        for match in pattern.finditer(source_code):
+            for key, value in match.groupdict().items():
+                if value and key == "occurance":
+                    match_start = match.start(key)
+                    match_end = match.end(key)
+                    new_pyname = None
+                    try:
+                        if pyname_finder == None:
+                            module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
+                            pyname_finder = ScopeNameFinder(source_code, module_scope)
+                        new_pyname = pyname_finder.get_pyname_at(match_start + 1)
+                    except SyntaxError:
+                        pass
+                    if new_pyname == old_pyname or \
+                       (new_pyname.get_object() == old_pyname.get_object() and
+                        new_pyname.get_definition_location() == new_pyname.get_definition_location()):
+                        result.append(source_code[last_modified_char:match_start] + new_name)
+                        last_modified_char = match_end
+        if last_modified_char != 0:
+            result.append(source_code[last_modified_char:])
+            resource.write(''.join(result))
+    
+    def _get_occurance_pattern(self, name):
+        occurance_pattern = PythonRefactoring.any('occurance', ['\\b' + name + '\\b'])
+        pattern = re.compile(occurance_pattern + "|" + \
+                             self.comment_pattern + "|" + self.string_pattern)
+        return pattern
 
     def _get_scope_range(self, source_code, offset, module_scope, lineno):
         lines = SourceLinesAdapter(source_code)
@@ -67,7 +116,5 @@ class PythonRefactoring(Refactoring):
 
 
 class NoRefactoring(Refactoring):
-
-    def rename(self, source_code, offset, new_name):
-        return source_code
+    pass
 

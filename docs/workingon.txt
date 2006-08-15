@@ -1,3 +1,17 @@
+Renaming Global Functions/Classes
+=================================
+
+- Add ``refactoring.rename_local_name(source_code, offset, new_name)``
+- Add ``refactoring.rename(resource, offset, new_name)``
+- Handle from import
+- Renaming from another module
+
+* Committing all changes together
+* Undoing refactorings
+* Refactoring `rope.refactoring` module; removing duplication
+* Addition to UI
+
+
 Weekly Plan
 ===========
 

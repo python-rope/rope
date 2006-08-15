@@ -126,6 +126,11 @@ class PyCore(object):
         self.module_map[resource] = result
         resource.add_change_observer(self._invalidate_resource_cache)
         return result
+    
+    def get_python_files(self):
+        """Returns all python files available in the project"""
+        return [resource for resource in self.project.get_files()
+                if resource.get_name().endswith('.py')]
 
     def _is_package(self, folder):
         if folder.has_child('__init__.py') and \
