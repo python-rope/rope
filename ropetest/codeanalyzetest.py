@@ -54,7 +54,9 @@ class StatementRangeFinderTest(unittest.TestCase):
     def test_source_lines_get_line_number(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')
         self.assertEquals(1, to_lines.get_line_number(0))
+        self.assertEquals(1, to_lines.get_line_number(5))
         self.assertEquals(2, to_lines.get_line_number(7))
+        self.assertEquals(3, to_lines.get_line_number(12))
 
     def test_source_lines_get_line_start(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')

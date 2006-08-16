@@ -165,10 +165,7 @@ class _HoldingScopeFinder(object):
         current_scope = module_scope
         while current_scope is not None and \
               (current_scope.get_kind() == 'Module' or
-               self._get_scope_indents(current_scope) < line_indents):
-            while len(scopes) > 1 and \
-                  self._get_scope_indents(scopes[-1]) >= self._get_scope_indents(current_scope):
-                scopes.pop()
+               self._get_scope_indents(current_scope) <= line_indents):
             scopes.append(current_scope)
             new_scope = None
             for scope in current_scope.get_scopes():
@@ -182,7 +179,10 @@ class _HoldingScopeFinder(object):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):
                 min_indents = min(min_indents, self.get_indents(l))
-        while len(scopes) > 1 and min_indents <= self._get_scope_indents(scopes[-1]):
+        while len(scopes) > 1 and \
+              (min_indents <= self._get_scope_indents(scopes[-1]) and
+               not (min_indents == self._get_scope_indents(scopes[-1]) and
+                    lineno == scopes[-1].get_start())):
             scopes.pop()
         return scopes[-1]
     

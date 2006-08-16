@@ -270,40 +270,43 @@ class SourceLinesAdapter(Lines):
     
     def __init__(self, source_code):
         self.source_code = source_code
+        self.line_starts = None
+        self._initialize_line_starts()
+    
+    def _initialize_line_starts(self):
+        self.line_starts = []
+        self.line_starts.append(0)
+        for i, c in enumerate(self.source_code):
+            if c == '\n':
+                self.line_starts.append(i + 1)
+        self.line_starts.append(len(self.source_code) + 1)
     
     def get_line(self, line_number):
-        return self.source_code.split('\n')[line_number - 1]
+        return self.source_code[self.line_starts[line_number - 1]:self.line_starts[line_number] - 1]
     
     def length(self):
-        return len(self.source_code.split('\n'))
+        return len(self.line_starts) - 1
 
     def get_line_number(self, offset):
-        return len(self.source_code[:offset].split('\n'))
+        down = 0
+        up = len(self.line_starts)
+        current = (down + up) / 2
+        while down <= current < up:
+            if self.line_starts[current] <= offset < self.line_starts[current + 1]:
+                return current + 1
+            if offset < self.line_starts[current]:
+                up = current - 1
+            else:
+                down = current + 1
+            current = (down + up) / 2
+        return current + 1
 
     def get_line_start(self, line_number):
-        if line_number == 1:
-            return 0
-        current_line = 1
-        current_pos = 0
-        for c in self.source_code:
-            current_pos += 1
-            if c == '\n':
-                current_line += 1
-                if current_line == line_number:
-                    return current_pos
-        return current_pos
-    
+        return self.line_starts[line_number - 1]
+
     def get_line_end(self, line_number):
-        current_line = 0
-        current_pos = 0
-        for c in self.source_code:
-            current_pos += 1
-            if c == '\n':
-                current_line += 1
-                if current_line == line_number:
-                    return current_pos - 1
-        return current_pos
-    
+        return self.line_starts[line_number] - 1
+
 
 class ArrayLinesAdapter(Lines):
 

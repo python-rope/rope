@@ -69,6 +69,25 @@ class RefactoringTest(unittest.TestCase):
         self.assertEquals('if True:\n    new_var = 1\nelse:\n    new_var = 20\n',
                           refactored)
     
+    def test_renaming_a_variable_with_arguement_name(self):
+        code = 'a_var = 10\ndef a_func(a_var):\n    print a_var\n'
+        refactored = self.refactoring.local_rename(code, 1, 'new_var')
+        self.assertEquals('new_var = 10\ndef a_func(a_var):\n    print a_var\n',
+                          refactored)
+    
+    def test_renaming_an_arguement_with_variable_name(self):
+        code = 'a_var = 10\ndef a_func(a_var):\n    print a_var\n'
+        refactored = self.refactoring.local_rename(code, len(code) - 3, 'new_var')
+        self.assertEquals('a_var = 10\ndef a_func(new_var):\n    print new_var\n',
+                          refactored)
+    
+    # FIXME: Function headers are in function scopes
+    def xxx_test_renaming_function_with_local_variable_name(self):
+        code = 'def a_func():\n    a_func=20\na_func()'
+        refactored = self.refactoring.local_rename(code, len(code) - 3, 'new_func')
+        self.assertEquals('def new_func():\n    a_func=20\nnew_func()',
+                          refactored)
+    
     def test_renaming_functions(self):
         code = 'def a_func():\n    pass\na_func()\n'
         refactored = self.refactoring.local_rename(code, len(code) - 5, 'new_func')
