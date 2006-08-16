@@ -102,6 +102,15 @@ class RefactoringTest(unittest.TestCase):
         self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod1.read())
         self.assertEquals('import mod1\nmod1.new_func()\n', mod2.read())
 
+    def test_applying_all_changes_together(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('import mod2\nmod2.a_func()\n')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2.write('def a_func():\n    pass\na_func()\n')
+        self.refactoring.rename(mod2, len(mod2.read()) - 5, 'new_func')
+        self.assertEquals('import mod2\nmod2.new_func()\n', mod1.read())
+        self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()

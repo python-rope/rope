@@ -5,17 +5,12 @@ Renaming Global Functions/Classes
 - Add ``refactoring.rename(resource, offset, new_name)``
 - Handle from import
 - Renaming from another module
+- Committing all changes together
 
-* Committing all changes together
 * Undoing refactorings
 * Refactoring `rope.refactoring` module; removing duplication
 * Addition to UI
 
-
-Weekly Plan
-===========
-
-* Special functions TI
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Review `rope.codeanalyze`; module there seems to be many places to refactor
 * Optimize `SourceLinesAdapter` methods

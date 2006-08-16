@@ -69,8 +69,13 @@ class PythonRefactoring(Refactoring):
         if old_pyname is None:
             return None
         pattern = self._get_occurance_pattern(old_name)
+        changes = []
         for file_ in self.pycore.get_python_files():
-            self._rename_occurance_in_file(file_, old_pyname, pattern, new_name)
+            new_content = self._rename_occurance_in_file(file_, old_pyname, pattern, new_name)
+            if new_content is not None:
+                changes.append((file_, new_content))
+        for file_, new_content in changes:
+            file_.write(new_content)
     
     def _rename_occurance_in_file(self, resource, old_pyname, pattern, new_name):
         source_code = resource.read()
@@ -82,22 +87,23 @@ class PythonRefactoring(Refactoring):
                 if value and key == "occurance":
                     match_start = match.start(key)
                     match_end = match.end(key)
-                    new_pyname = None
-                    try:
-                        if pyname_finder == None:
-                            module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
-                            pyname_finder = ScopeNameFinder(source_code, module_scope)
-                        new_pyname = pyname_finder.get_pyname_at(match_start + 1)
-                    except SyntaxError:
-                        pass
-                    if new_pyname == old_pyname or \
-                       (new_pyname.get_object() == old_pyname.get_object() and
-                        new_pyname.get_definition_location() == new_pyname.get_definition_location()):
+                    if pyname_finder == None:
+                        module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
+                        pyname_finder = ScopeNameFinder(source_code, module_scope)
+                    new_pyname = pyname_finder.get_pyname_at(match_start + 1)
+                    if self._are_pynames_the_same(old_pyname, new_pyname):
                         result.append(source_code[last_modified_char:match_start] + new_name)
                         last_modified_char = match_end
         if last_modified_char != 0:
             result.append(source_code[last_modified_char:])
-            resource.write(''.join(result))
+            return ''.join(result)
+        return None
+    
+    def _are_pynames_the_same(self, pyname1, pyname2):
+        return pyname1 == pyname2 or \
+               (pyname1 is not None and pyname2 is not None and 
+                pyname1.get_object() == pyname2.get_object() and
+                pyname1.get_definition_location() == pyname2.get_definition_location())
     
     def _get_occurance_pattern(self, name):
         occurance_pattern = PythonRefactoring.any('occurance', ['\\b' + name + '\\b'])
