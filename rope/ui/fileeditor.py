@@ -26,6 +26,7 @@ class FileEditor(object):
     def _file_was_modified(self, file_):
         if not self.saving:
             self.editor.set_text(file_.read())
+            self.editor.saving_editor()
     
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)
@@ -43,4 +44,7 @@ class FileEditor(object):
 
     def get_file(self):
         return self.file
+    
+    def close(self):
+        self.file.remove_change_observer(self._file_was_modified)
 

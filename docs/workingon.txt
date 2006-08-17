@@ -14,7 +14,6 @@ Remaining Stories
 * Goto definition for ``# comment.\na_var``
 * Better editor changing dialog; use uihelpers module
 * Slow `GraphicalEditor._get_offset`
-* More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
 * PyObject and PyName equality checks; Value objects?
 * Do something for modules that can not be found
 * Dotted not found modules

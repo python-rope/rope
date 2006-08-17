@@ -80,9 +80,9 @@ Finding Occurances
 For doing many refactoring we need to find occurances of an object.
 Find an efficient way of doing it.  Currently rope tries to find
 occurences by textually searching for the variable name and for each
-suspected name we check whether this name points to the object
-we are interested in or not.  This seems slow when the number of
-similar names is considerable.  Having a type database?
+suspected name we check whether this name points to the object we are
+interested in or not.  This seems slow when the number of similar
+names is considerable.  Having a type database?
 
 
 Limiting the scope for searching
@@ -96,33 +96,33 @@ Cann't We Start Static Type Inference?
 ======================================
 
 I need to think about the problems that might arise for static TI.
-Now I think that static TI is not that hard and in dynamic TI some
-of the approaches in static TI is used.  The difference is in the
-type inference of the function returned objects.  In the dynamic
-TI approach we use our database and in static TI we follow the
-return statement.
+Now I think that static TI is not that hard and in dynamic TI some of
+the approaches in static TI is used.  The difference is in the type
+inference of the function returned objects.  In the dynamic TI
+approach we use our database and in static TI we follow the return
+statement.
 
-For static type inference, we need some changes to the 
-`_FunctionVisitor` class to collect the return AST nodes, too.
-When we want to find out the returned type of the function, we
-look up in a dictionary for the given argument types.  If it is
-already calculated we return it, otherwise we type inference
-returned statement recursively.  A new question arises here and
-that is how we set the `PyObject` of argument `PyName`\s.
+For static type inference, we need some changes to the
+`_FunctionVisitor` class to collect the return AST nodes, too.  When
+we want to find out the returned type of the function, we look up in a
+dictionary for the given argument types.  If it is already calculated
+we return it, otherwise we type inference returned statement
+recursively.  A new question arises here and that is how we set the
+`PyObject` of argument `PyName`\s.
 
 There is some complex issues about type inferencing variables in
-functions, too.  For type inferencing a local variable we might
-need to have `PyObject`\s of arguements but we don't know the
-type of arguments.  In dynamic TI we can record the type of
-arguments and use them when needed.  But in static TI it is much
-harder because we need to find function calls and type inference
-the arguements that are passed to the function.
+functions, too.  For type inferencing a local variable we might need
+to have `PyObject`\s of arguements but we don't know the type of
+arguments.  In dynamic TI we can record the type of arguments and use
+them when needed.  But in static TI it is much harder because we need
+to find function calls and type inference the arguements that are
+passed to the function.
 
 So as a conclusion it seems better to mix static and dynamic TI.
 Static type inference seem to work good for general cases while
 dynamic inference seems more suitable for type inference of long
-chains of function calls and function arguments.  This means to
-use dynamic TI when static TI does not work or is expensive.
+chains of function calls and function arguments.  This means to use
+dynamic TI when static TI does not work or is expensive.
 
 
 Infering Function Argument Objects
@@ -135,10 +135,10 @@ continuing our efforts in refactorings.
 Supporting Relative Imports
 ===========================
 
-Right now rope does *not* support relative imports.  One reason
-is that the syntax for relative imports is changing in python ``2.5``.
-The new relative import syntax will be supported by *rope*
-before python``2.5`` release.  Think about supporting the old syntax.
+Right now rope does *not* support relative imports.  One reason is
+that the syntax for relative imports is changing in python ``2.5``.
+The new relative import syntax will be supported by *rope* before
+python ``2.5`` release.  Think about supporting the old syntax.
 
 
 Builtin Types And Functions
@@ -170,15 +170,15 @@ Builtin functions:
 * range
 * super
 
-One approach to builtin types would be to use the `__builtin__`
-module dynamically.
+One approach to builtin types would be to use the `__builtin__` module
+dynamically.
 
 
 Container Types Require Call Information
 ========================================
 
-We need to know the type `list`\s and `dict`\s hold. This is
-actually a special case of knowing function argument objects.
+We need to know the type `list`\s and `dict`\s hold. This is actually
+a special case of knowing function argument objects.
 
 
 Heading For Refactorings Once More
@@ -294,8 +294,8 @@ Probable Refactorings
 Holding Source Code In `PyModule`
 ---------------------------------
 
-In order to add `GlobalScope.get_inner_scope_for_line` we need to
-hold the source code in `PyModule`.  This might consume lots of memory.
+In order to add `GlobalScope.get_inner_scope_for_line` we need to hold
+the source code in `PyModule`.  This might consume lots of memory.
 But right now I don't think that it is a problem.  So I will do that.
 
 
@@ -304,44 +304,42 @@ Passing `ObjectInfer` Object To `PyName`\s
 
 One way would be having one `ObjectInfer` instance in `PyCore`.  But
 `PyName`\s don't hold an instance to `PyCore`\s, not do all of
-`PyObject`\s.  Only `PyDefinedObject`\s do that.  The simplest approach
-would be to use `PyName.module` but we should keep in mind that it
-is ``None`` for modules that cannot be found.  This might be a 
+`PyObject`\s.  Only `PyDefinedObject`\s do that.  The simplest
+approach would be to use `PyName.module` but we should keep in mind
+that it is ``None`` for modules that cannot be found.  This might be a
 *noticeable issue* in future.
 
 
 Which Is Right? Type Or Object Inference
 ========================================
 
-Should we use type inference or object inference? I believe
-object inference is better.  What we try do is to infer the object
-a variable references during program execution.  Sometimes we are
-only interested in the type of the referenced object and sometimes
-we need the object itself.  This latter situation occurs when an
-instance holds interesting information that does not exist in its
-type.
+Should we use type inference or object inference? I believe object
+inference is better.  What we try do is to infer the object a variable
+references during program execution.  Sometimes we are only interested
+in the type of the referenced object and sometimes we need the object
+itself.  This latter situation occurs when an instance holds
+interesting information that does not exist in its type.
 
-As an example classes(types) are instances of `type` class.  That
-is their type is `type`.  But knowing their type does not give us
-much information about the methods defined in these derived classes.
+As an example classes(types) are instances of `type` class.  That is
+their type is `type`.  But knowing their type does not give us much
+information about the methods defined in these derived classes.
 
 
 Getting Buried In Layers
 ========================
 
 Starting from `rope.pycore` module, there are many layers that are
-hidden beneath it.  Most of unit tests only test `PyCore` 
-directly and other parts are tested indirectly through many layers
-that lead to `PyCore`.  I guess this is a bad sign.  Maybe I should
-put more time in making each layer more testable and independant of
-other layers.
+hidden beneath it.  Most of unit tests only test `PyCore` directly and
+other parts are tested indirectly through many layers that lead to
+`PyCore`.  I guess this is a bad sign.  Maybe I should put more time
+in making each layer more testable and independant of other layers.
 
 
 Refactoring `rope.codeanalyze` Module
 =====================================
 
-Merging `WordRangeFinder` and `StatementRangeFinder`.
-Physical source divisions:
+Merging `WordRangeFinder` and `StatementRangeFinder`.  Physical source
+divisions:
 
 * scope
 * block
@@ -353,10 +351,9 @@ Better Scope Finding Algorithm
 ==============================
 
 The current implementation is very slow and recently I've moved
-finding inner scope parts to `GlobalScope` class.  However the
-new implementation would be if it does not recompute the same
-information for each call it is a lot faster than the current
-implementation.
+finding inner scope parts to `GlobalScope` class.  However the new
+implementation would be if it does not recompute the same information
+for each call it is a lot faster than the current implementation.
 
 By caching `Scope.get_scope_end` method, we can use current
 implementation with small changes.
@@ -371,14 +368,14 @@ correct but this line does not belong to the function scope either.
 Actually the function name part of function header belongs to the
 parents scope and the arguments part belongs to function scope.
 
-I can't think of any good way of doing that and maybe the best
-thing I can do is to check for this exception when finding scopes.
-Think about other exceptions.  Does a similar situation occur for
-classes too? What about ``for`` loops?
+I can't think of any good way of doing that and maybe the best thing I
+can do is to check for this exception when finding scopes.  Think
+about other exceptions.  Does a similar situation occur for classes
+too? What about ``for`` loops?
 
 If the problem only occurs for functions I think the exception
-approach would be a good solution.  But the problem is that the
-scope finding part is separate from refactoring part.
+approach would be a good solution.  But the problem is that the scope
+finding part is separate from refactoring part.
 
 
 Profiling Renaming
@@ -417,8 +414,16 @@ Until recently I was thinking about the problems of working with ASTs
 for refactorings.  Now I feel that there might be other ways of
 transforming source code for refactorings.
 
-Many of refactorings only require the references to a name
-to be replaced with another.  This can be done without using ASTs.
+Many of refactorings only require the references to a name to be
+replaced with another.  This can be done without using ASTs.
 Refactorings like inline/extract function can be done without using
 AST's, too.
+
+
+Working More On The UI Parts
+============================
+
+My ignorance to UI has make some modules like `rope.ui.core` and
+`rope.ui.editor` very large and full of duplication.  These modules
+need many refactorings.  Put more time on these modules.
 

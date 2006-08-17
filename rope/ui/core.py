@@ -79,6 +79,7 @@ class EditorManager(object):
         button = self.buttons[self.active_editor]
         button.forget()
         button.destroy()
+        self.active_editor.close()
         del self.buttons[self.active_editor]
         self.active_editor = None
         if self.editors:

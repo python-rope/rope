@@ -3,7 +3,10 @@
 ===========
 
 
-- Rename class/function
+- Reloading changed editors after refactorings : August 17, 2006
+
+
+- Rename class/function : August 17, 2006
 
 
 - Function return object static type inference : August 15, 2006

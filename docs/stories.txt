@@ -265,10 +265,6 @@ Stories
 * Undoing refactorings
 
 
-* Reloading changed editors after refactorings @ 8h
-  What to do when buffer has been changed.
-
-
 Remaining Stories
 -----------------
 * Migrating to sourceforge SVN before 0.3 release
