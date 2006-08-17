@@ -231,6 +231,20 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEquals(a_class_pyname, 
                           name_finder.get_pyname_at(code.index('AClass') + 2))
 
+    def test_class_method_in_class_body_but_not_indexed(self):
+        code = 'class Sample(object):\n    def a_func(self, a_func):\n        pass\n'
+        scope = self.pycore.get_string_scope(code)
+        a_func_pyname = scope.get_scopes()[0].get_scopes()[0].get_names()['a_func']
+        name_finder = ScopeNameFinder(code, scope)
+        self.assertEquals(a_func_pyname, name_finder.get_pyname_at(code.index(', a_func') + 3))
+
+    def test_function_but_not_indexed(self):
+        code = 'def a_func(a_func):\n    pass\n'
+        scope = self.pycore.get_string_scope(code)
+        a_func_pyname = scope.get_names()['a_func']
+        name_finder = ScopeNameFinder(code, scope)
+        self.assertEquals(a_func_pyname, name_finder.get_pyname_at(code.index('a_func') + 3))
+
 
 def suite():
     result = unittest.TestSuite()
