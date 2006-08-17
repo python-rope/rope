@@ -259,6 +259,8 @@ class Core(object):
 
         codeMenu.add_command(label='Goto Defenition', 
                              command=goto_definition, underline=0)
+        codeMenu.add_command(label='Run Module', 
+                             command=self.run_active_editor, underline=4)
         helpMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Help', menu=helpMenu, underline=3)
         helpMenu.add_command(label='About', 

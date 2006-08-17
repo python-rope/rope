@@ -38,26 +38,10 @@ class PythonRefactoring(Refactoring):
         if old_pyname is None:
             return None
         pattern = self._get_occurance_pattern(old_name)
-        last_modified_char = 0
-        scope_start, scope_end = self._get_scope_range(source_code, offset, module_scope,
-                                                       old_pyname.get_definition_location()[1])
-        for match in pattern.finditer(source_code[scope_start:scope_end]):
-            for key, value in match.groupdict().items():
-                if value and key == "occurance":
-                    match_start = scope_start + match.start(key)
-                    match_end = scope_start + match.end(key)
-                    new_pyname = None
-                    try:
-                        new_pyname = pyname_finder.get_pyname_at(match_start + 1)
-                    except SyntaxError:
-                        pass
-                    if new_pyname == old_pyname:
-                        result.append(source_code[last_modified_char:match_start] + new_name)
-                        last_modified_char = match_end
-        if last_modified_char == 0:
-            return None
-        result.append(source_code[last_modified_char:])
-        return ''.join(result)
+        def scope_retriever():
+            return module_scope
+        return self._rename_occurance_in_file(source_code, scope_retriever, old_pyname,
+                                              pattern, new_name)
     
     def rename(self, resource, offset, new_name):
         module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
@@ -71,14 +55,17 @@ class PythonRefactoring(Refactoring):
         pattern = self._get_occurance_pattern(old_name)
         changes = []
         for file_ in self.pycore.get_python_files():
-            new_content = self._rename_occurance_in_file(file_, old_pyname, pattern, new_name)
+            def scope_retriever():
+                return self.pycore.resource_to_pyobject(file_).get_scope()
+            new_content = self._rename_occurance_in_file(file_.read(), scope_retriever, 
+                                                         old_pyname, pattern, new_name)
             if new_content is not None:
                 changes.append((file_, new_content))
         for file_, new_content in changes:
             file_.write(new_content)
     
-    def _rename_occurance_in_file(self, resource, old_pyname, pattern, new_name):
-        source_code = resource.read()
+    def _rename_occurance_in_file(self, source_code, scope_retriever, old_pyname,
+                                  pattern, new_name):
         result = []
         last_modified_char = 0
         pyname_finder = None
@@ -88,7 +75,7 @@ class PythonRefactoring(Refactoring):
                     match_start = match.start(key)
                     match_end = match.end(key)
                     if pyname_finder == None:
-                        module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
+                        module_scope = scope_retriever()
                         pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
                     new_pyname = pyname_finder.get_pyname_at(match_start + 1)
                     if self._are_pynames_the_same(old_pyname, new_pyname):
