@@ -1,13 +1,12 @@
 Renaming Global Functions/Classes
 =================================
 
-* Faster implementation of `GlobalScope.get_inner_scope_for_line`
-* Optimize `SourceLinesAdapter` methods
+- Optimize `SourceLinesAdapter` methods
 
-* Undoing refactorings
-* Refactoring `rope.refactoring` module; removing duplication
 * Addition to UI
-
+* Faster implementation of `GlobalScope.get_inner_scope_for_line`
+* Performing refactorings based on the object of the pyname
+* Refactoring `rope.refactoring` module; removing duplication
 * Review `rope.codeanalyze`; module there seems to be many places to refactor
 * Add run module to menus
 

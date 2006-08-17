@@ -93,6 +93,7 @@ M-w            copy region
 C-x C-x        swap mark and insert
 C-y            paste
 C-x C-s        save
+C-x s          save all
 C-i            correct line indentation
 M-/            code-assist
 F3             go to definition location

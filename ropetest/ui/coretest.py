@@ -97,6 +97,16 @@ class CoreTest(unittest.TestCase):
         Core.get_core().switch_active_editor()
         self.assertEquals(editor1, Core.get_core().get_active_editor())
 
+    def test_saving_all(self):
+        self.textEditor.get_editor().set_text('another text')
+        text_editor2 = Core.get_core().create_file(self.fileName2)
+        text_editor2.get_editor().set_text('another text')
+        file1 = self.project.get_resource(self.fileName)
+        file2 = self.project.get_resource(self.fileName)
+        Core.get_core().save_all_editors()
+        self.assertEquals('another text', file1.read())
+        self.assertEquals('another text', file2.read())
+
 
 if __name__ == '__main__':
     unittest.main()

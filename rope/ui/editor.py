@@ -382,6 +382,7 @@ class GraphicalEditor(object):
         ok_button.grid(row=1, column=0)
         new_name_entry.bind('<Return>', lambda event: ok())
         new_name_entry.bind('<Escape>', lambda event: cancel())
+        new_name_entry.bind('<Control-g>', lambda event: cancel())
         cancel_button.grid(row=1, column=1)
         frame.grid()
         new_name_entry.focus_set()

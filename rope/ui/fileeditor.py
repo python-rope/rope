@@ -2,8 +2,8 @@ import rope.ui.editingtools
 
 class FileEditor(object):
 
-    def __init__(self, project, file, editor_factory):
-        self.file = file
+    def __init__(self, project, file_, editor_factory):
+        self.file = file_
         self.project = project
         editing_tools = None
         if self.file.get_name().endswith('.py'):
@@ -16,10 +16,14 @@ class FileEditor(object):
         self.editor.set_text(self.file.read())
         self.modification_observers = []
         self.editor.add_modification_observer(self._editor_was_modified)
+        self.file.add_change_observer(self._file_was_modified)
     
     def _editor_was_modified(self):
         for observer in self.modification_observers:
             observer(self)
+    
+    def _file_was_modified(self, file_):
+        self.editor.set_text(file_.read())
     
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)

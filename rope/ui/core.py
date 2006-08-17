@@ -162,6 +162,8 @@ class Core(object):
                              command=self._change_editor_dialog, underline=0)
         fileMenu.add_command(label='Save Editor',
                              command=self.save_active_editor, underline=0)
+        fileMenu.add_command(label='Save All',
+                             command=self.save_all_editors, underline=5)
         fileMenu.add_command(label='Close Editor',
                              command=self._close_active_editor_dialog, underline=0)
         fileMenu.add_separator()
@@ -293,7 +295,11 @@ class Core(object):
         def _save_active_editor(event):
             self.save_active_editor()
             return 'break'
+        def _save_all_editors(event):
+            self.save_all_editors()
+            return 'break'
         widget.bind('<Control-x><Control-s>', _save_active_editor)
+        widget.bind('<Control-x><s>', _save_all_editors)
         widget.bind('<Control-x><Control-p>', self._open_project_dialog)
         def _exit(event):
             self._close_project_and_exit()
@@ -629,9 +635,13 @@ class Core(object):
         self.editor_manager.close_active_editor()
 
     def save_active_editor(self):
-        activeEditor = self.editor_manager.active_editor
-        if activeEditor:
-            activeEditor.save()
+        active_editor = self.editor_manager.active_editor
+        if active_editor:
+            active_editor.save()
+
+    def save_all_editors(self):
+        for editor in self.editor_manager.editors:
+            editor.save()
 
     def create_file(self, file_name):
         if self.project is None:

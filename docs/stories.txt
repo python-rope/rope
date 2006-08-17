@@ -230,10 +230,6 @@ Stories
 * Dynamic type inference
 
 
-* Read ``__init__.py`` of packages
-  Should folders contain ``__init__.py`` to be considered packages.
-
-
 * Show PyDoc reST highlighting
 
 
@@ -242,6 +238,16 @@ Stories
 
 * Better list and tree navigation @ 10h
   Add filter texts and selection texts to trees and lists.
+
+
+* Rename method/attribute
+
+
+* Function argument object inference
+
+
+* Read ``__init__.py`` of packages
+  Should folders contain ``__init__.py`` to be considered packages.
 
 
 * Extract function
@@ -253,18 +259,18 @@ Stories
 * Rename module/package
 
 
-* Rename method/attribute
-
-
 > Public Release 0.3pre1 : August 20, 2006
-
-
-* Rename class/function
 
 
 * Reloading changed editors after refactorings @ 8h
   `FileEditor` should be a resource visitor. What to do when buffer
   has been changed.
+
+
+* Undoing refactorings
+
+
+* Rename class/function
 
 
 Remaining Stories
