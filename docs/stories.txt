@@ -211,10 +211,10 @@ Stories
     is active do the builtin cut and paste
 
 
-* What to do when the program has syntax errors for code assists @ 2
+* What to do when the program has syntax errors for code assists
 
 
-* Enhancing module running @ 20h
+* Enhancing module running
 
   * Showing running status in the GUI
   * Printing output somewhere
@@ -223,7 +223,7 @@ Stories
   * Running last run
 
 
-* Packages should be filtered @ 4h
+* Packages should be filtered
   Do not show submodules that are not imported yet as attributes.
 
 

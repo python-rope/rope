@@ -125,6 +125,37 @@ class WordRangeFinder(object):
             last_char_position = self._find_last_non_space_char(last_dot_position - 1)
             return (self.source_code[real_start:last_char_position + 1],
                     self.source_code[word_start:offset], word_start)
+    
+    def _get_line_start(self, offset):
+        while offset > 0 and self.source_code[offset] != '\n':
+            offset -= 1
+        return offset
+    
+    def _get_line_end(self, offset):
+        while offset < len(self.source_code) and self.source_code[offset] != '\n':
+            offset += 1
+        return offset
+    
+    def _is_followed_by_equals(self, offset):
+        while offset < len(self.source_code) and self.source_code[offset] in ' \\':
+            if self.source_code[offset] == '\\':
+                offset = self._get_line_end(offset)
+            offset += 1
+        if offset + 1 < len(self.source_code) and \
+           self.source_code[offset] == '=' and self.source_code[offset + 1] != '=' :
+            return True
+        return False
+    
+    def is_name_defined(self, offset):
+        word_start = self._find_word_start(offset - 1)
+        word_end = self._find_word_end(offset - 1) + 1
+        if '.' in self.source_code[word_start:word_end]:
+            return False
+        line_start = self._get_line_start(word_start)
+        line = self.source_code[line_start:word_start].strip()
+        if line == '' and self._is_followed_by_equals(word_end):
+            return True
+        return False
 
 
 class StatementEvaluator(object):
@@ -240,10 +271,28 @@ class ScopeNameFinder(object):
             lineno += 1
         return (lineno, offset - current_pos)
 
+    def _is_defined_in_class_body(self, holding_scope, offset, lineno):
+        if lineno == holding_scope.get_start() and \
+           holding_scope.parent is not None and \
+           holding_scope.parent.pyobject.get_type() == rope.pycore.PyObject.get_base_type('Type'):
+            return True
+        if lineno != holding_scope.get_start() and \
+           holding_scope.pyobject.get_type() == rope.pycore.PyObject.get_base_type('Type') and \
+           self.word_finder.is_name_defined(offset):
+            return True
+        return False
+    
     def get_pyname_at(self, offset):
-        name = self.word_finder.get_statement_at(offset)
         lineno = self._get_location(offset)[0]
         holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
+        # class body
+        if self._is_defined_in_class_body(holding_scope, offset, lineno):
+            class_scope = holding_scope
+            if lineno == holding_scope.get_start():
+                class_scope = holding_scope.parent
+            name = self.word_finder.get_statement_at(offset).strip()
+            return class_scope.pyobject.get_attributes().get(name, None)
+        name = self.word_finder.get_statement_at(offset)
         result = self.get_pyname_in_scope(holding_scope, name)
         return result
     

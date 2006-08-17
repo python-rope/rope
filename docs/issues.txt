@@ -347,6 +347,39 @@ divisions:
 * primary
 
 
+Renaming Class Attributes
+=========================
+
+Renaming class attributes is almost the same as renaming a function
+or class.  The only difference is that the attribute inside class
+body is not renamed.  Consider this piece of code: ::
+
+  class Sample(object):
+      an_attr = 'An Attribute'
+      
+      def a_method(self):
+          pass
+      
+      class AClass(object):
+          pass
+
+For renaming ``an_attr``, ``a_method`` or ``AClass`` all occurances of
+them will be renamed except the ones in class body.
+
+On way of solving this problem might be to change `ClassScope` or
+maybe changing `ScopeNameFinder.get_name_at`.  The latter seems more
+practical.  In `get_name_at` method we can check whether the element
+is defined in class body.  That is we might have: ::
+
+  a_var = 10
+  class Sample(object):
+      a_var = a_var
+
+The two ``a_var`` names in the third line reference different objects.
+That is if a name is defined in class body it is an attribute and if
+the name is used it must be looked up in parent scope.
+
+
 Better Scope Finding Algorithm
 ==============================
 
@@ -404,7 +437,6 @@ pyobject:_update_attributes_from_ast(157)  17.2
 pyobject:visitFrom                         12.4
 pyobject:get_attributes(44)                17.2
 =========================================  =====
-
 
 
 AST Writer Might Be A Mistake

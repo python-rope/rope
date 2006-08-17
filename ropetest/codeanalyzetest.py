@@ -1,7 +1,9 @@
 import unittest
 
+from ropetest import testutils
 from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                              SourceLinesAdapter, WordRangeFinder)
+                              SourceLinesAdapter, WordRangeFinder, ScopeNameFinder)
+from rope.project import Project
 
 class StatementRangeFinderTest(unittest.TestCase):
 
@@ -180,10 +182,61 @@ class WordRangeFinderTest(unittest.TestCase):
                           word_finder.get_statement_at(21))
 
 
+class ScopeNameFinderTest(unittest.TestCase):
+
+    def setUp(self):
+        super(ScopeNameFinderTest, self).setUp()
+        self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(ScopeNameFinderTest, self).tearDown()
+
+    def test_global_name_in_class_body(self):
+        code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
+        scope = self.pycore.get_string_scope(code)
+        name_finder = ScopeNameFinder(code, scope)
+        self.assertEquals(scope.get_names()['a_var'], name_finder.get_pyname_at(len(code) - 3))
+        
+    def test_class_variable_attribute_in_class_body(self):
+        code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
+        scope = self.pycore.get_string_scope(code)
+        name_finder = ScopeNameFinder(code, scope)
+        a_var_pyname = scope.get_names()['Sample'].get_attributes()['a_var']
+        self.assertEquals(a_var_pyname, name_finder.get_pyname_at(len(code) - 12))
+
+    def test_class_variable_attribute_in_class_body2(self):
+        code = 'a_var = 10\nclass Sample(object):\n    a_var \\\n= a_var\n'
+        scope = self.pycore.get_string_scope(code)
+        name_finder = ScopeNameFinder(code, scope)
+        a_var_pyname = scope.get_names()['Sample'].get_attributes()['a_var']
+        self.assertEquals(a_var_pyname, name_finder.get_pyname_at(len(code) - 12))
+
+    def test_class_method_attribute_in_class_body(self):
+        code = 'class Sample(object):\n    def a_method(self):\n        pass\n'
+        scope = self.pycore.get_string_scope(code)
+        name_finder = ScopeNameFinder(code, scope)
+        a_method_pyname = scope.get_names()['Sample'].get_attributes()['a_method']
+        self.assertEquals(a_method_pyname,
+                          name_finder.get_pyname_at(code.index('a_method') + 2))
+
+    def test_inner_class_attribute_in_class_body(self):
+        code = 'class Sample(object):\n    class AClass(object):\n        pass\n'
+        scope = self.pycore.get_string_scope(code)
+        name_finder = ScopeNameFinder(code, scope)
+        a_class_pyname = scope.get_names()['Sample'].get_attributes()['AClass']
+        self.assertEquals(a_class_pyname, 
+                          name_finder.get_pyname_at(code.index('AClass') + 2))
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(StatementRangeFinderTest))
     result.addTests(unittest.makeSuite(WordRangeFinderTest))
+    result.addTests(unittest.makeSuite(ScopeNameFinderTest))
     return result
 
 if __name__ == '__main__':
