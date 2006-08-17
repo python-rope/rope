@@ -1,9 +1,9 @@
 Renaming Global Functions/Classes
 =================================
 
-- Add ``Run Module`` to menu
+- Addition to UI
 
-* Addition to UI
+* Refactor `rope.ui.editor` and `rope.ui.core` modules
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname
 * Review `rope.codeanalyze`; module there seems to be many places to refactor

@@ -3,6 +3,9 @@
 ===========
 
 
+- Rename class/function
+
+
 - Function return object static type inference : August 15, 2006
 
 

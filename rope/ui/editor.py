@@ -389,6 +389,39 @@ class GraphicalEditor(object):
 
     def rename_refactoring(self, new_name):
         initial_position = self.text.index(INSERT)
+        core = rope.ui.core.Core.get_core()
+        editor_manager = core.get_editor_manager()
+        resource = editor_manager.active_editor.get_file()
+        self.refactoring.rename(resource,
+                                self.get_current_offset(),
+                                new_name)
+
+    def _local_rename_dialog(self, event=None):
+        toplevel = Toplevel()
+        toplevel.title('Rename Variable In File')
+        frame = Frame(toplevel)
+        label = Label(frame, text='New Name :')
+        label.grid(row=0, column=0)
+        new_name_entry = Entry(frame)
+        new_name_entry.grid(row=0, column=1)
+        def ok(event=None):
+            self.rename_refactoring(new_name_entry.get())
+            toplevel.destroy()
+        def cancel(event=None):
+            toplevel.destroy()
+
+        ok_button = Button(frame, text='Done', command=ok)
+        cancel_button = Button(frame, text='Cancel', command=cancel)
+        ok_button.grid(row=1, column=0)
+        new_name_entry.bind('<Return>', lambda event: ok())
+        new_name_entry.bind('<Escape>', lambda event: cancel())
+        new_name_entry.bind('<Control-g>', lambda event: cancel())
+        cancel_button.grid(row=1, column=1)
+        frame.grid()
+        new_name_entry.focus_set()
+
+    def local_rename(self, new_name):
+        initial_position = self.text.index(INSERT)
         refactored = self.refactoring.local_rename(self.get_text(),
                                                    self.get_current_offset(),
                                                    new_name)

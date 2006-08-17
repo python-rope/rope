@@ -247,7 +247,7 @@ Stories
 
 
 * Read ``__init__.py`` of packages
-  Should folders contain ``__init__.py`` to be considered packages.
+  Should folders contain ``__init__.py`` to be considered packages?
 
 
 * Extract function
@@ -262,15 +262,11 @@ Stories
 > Public Release 0.3pre1 : August 20, 2006
 
 
-* Reloading changed editors after refactorings @ 8h
-  `FileEditor` should be a resource visitor. What to do when buffer
-  has been changed.
-
-
 * Undoing refactorings
 
 
-* Rename class/function
+* Reloading changed editors after refactorings @ 8h
+  What to do when buffer has been changed.
 
 
 Remaining Stories

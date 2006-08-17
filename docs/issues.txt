@@ -58,8 +58,7 @@ Bottlenecks
 
 Repairs
     Some UI parts need to be refactored.  Better GUI and functional
-    tests.  The number of enhancement and refactoring stories is
-    getting more and more.  Do those stories.
+    tests.
 
 Themes
     rope needs values.  Our next move toward the proposed features
@@ -76,9 +75,11 @@ Finding Occurances
 ==================
 
 For doing many refactoring we need to find occurances of an object.
-Find a good way of doing it.
-
-Having a type database?
+Find an efficient way of doing it.  Currently rope tries to find
+occurences by textually searching for the variable name and for each
+suspected name we check whether this name points to the object
+we are interested in or not.  This seems slow when the number of
+similar names is considerable.  Having a type database?
 
 
 Cann't We Start Static Type Inference?
@@ -124,10 +125,10 @@ continuing our efforts in refactorings.
 Supporting Relative Imports
 ===========================
 
-Right now *rope* does not support relative imports.  One reason
-is that the syntax for relative imports is changing in python ``2.5``
-release.  The new relative import syntax will be supported by *rope*
-before ``2.5`` releases.  Think about supporting the old syntax.
+Right now rope does *not* support relative imports.  One reason
+is that the syntax for relative imports is changing in python ``2.5``.
+The new relative import syntax will be supported by *rope*
+before ``2.5`` release.  Think about supporting the old syntax.
 
 
 Builtin Types And Functions
@@ -167,13 +168,13 @@ Container Types Require Call Information
 ========================================
 
 We need to know the type `list`\s and `dict`\s hold. This is
-actually a special case of knowing function argument.
+actually a special case of knowing function argument objects.
 
 
 Heading For Refactorings Once More
 ==================================
 
-After this recent object inference enhancements lets add some
+After these recent object inference enhancements lets add some
 refactorings.
 
 
@@ -185,7 +186,7 @@ of rope:
 
 * Finding occurances of variables
 * Support for more advanced refactorings that need the object
-  of arguements.
+  of arguements
 * Code assist for container types
 * Code assist for function arguments
 
@@ -199,48 +200,6 @@ Like completion, highlighting.
 
 Dyanmic Type Inference Issues
 =============================
-
-Storing Collected Informations:
-
-How should we store information gained during program execution?
-Should we analyze as we run or should we just collect the information
-and analyze them only when needed.  We might not be able to save all
-of the information, which to throw away?
-
-Two ways to use the collected data:
-
-* Storing function return types for each call
-* Storing function return types for each set of argument types
-  (Cartesian Product algorithm)
-
-Or maybe a combination of these methods.
-
-
-For analyzing information we'll probably need:
-
-* Finding a method `PyObject` based on its compiled code object
-* Transforming each statement into a function calls and attribute
-  accesses
-* Making a function call graph
-
-Other issues:
-
-Both functions and variables need to be type inferenced.  That is it
-makes sense to have::
-
-  def a_func():
-    return 1
-
-  type_inference(a_func) -> function type
-  call_type_inference(a_func) -> integer type
-
-Changing `pycore` structure all together.  Only saving the names and
-visible structure.  The type inference part would be responsible for
-finding the type of object a name is assigned.
-
-Applying refactorings dynamically.  Find occurances of objects while
-running.
-
 
 Saving Collected Data
 ---------------------
@@ -263,6 +222,12 @@ saving collected data is the ``(file, lineno)`` tuple.  The other is
 the hierarchical representation and in this approach we save the data
 like ``file.class.method``.
 
+What to save when executing:
+
+* Storing function return types for each call
+* Storing function return types for each set of argument types
+  (Cartesian Product algorithm)
+
 
 Returned Types Or Objects
 -------------------------
@@ -282,44 +247,13 @@ extended when we start holding information for individual objects like
 lists and maps.
 
 
-Type Inference Phases
----------------------
-
-* Collecting return types when running.  We need:
-
-  * Finding the function
-  * Finding the return type
-
-* Using collected data to type inference.  We need:
-
-  * Building type inference function trees
-  * Using stored data for type inference
-
-
-Type Inference Function Trees
------------------------------
-
-In order to type inference variables or statements, we need so make a
-tree of function calls.  In a recursive manner we can compute the
-wanted object.
-
-
-Using Collected Data
---------------------
-
-We use the collected data for two reasons:
-
-* Finding out the `PyObject` of a `PyName`
-* Finding out the returned `PyObject` after calling a `PyObject`
-
-
 External program execution
 --------------------------
 
 Because the program is executed in a separate process we should find
 someway for transfering information back to the main process.  I
 believe we have to execute the program in a separate process because
-of possible problems.
+of these possible problems:
 
 * Getting out of memory
 * Having more control on the process for tracing function calls
@@ -341,30 +275,6 @@ deterministic as possible and it should be easily used in tests, too.
 available).
 
 
-DTI Stories
------------
-
-I should break up DTI into smaller stories that can be implemented
-independantly.  These smaller stories should be very easily testable.
-
-* Finding `PyObject`\s using code objects 
-* TI while ignoring argument types
-* Normal DTI
-
-The first story that I'm gonna implement will be a simple type
-inference as in::
-  
-  import mod
-  mod_copy = mod
-  double_copy = mod_copy
-  
-  type(mod_copy) -> module
-  type(double_copy) -> module
-
-I will add `typeanalyzer` module for this kind of analysis.
-
-
-
 Probable Refactorings
 ---------------------
 
@@ -377,14 +287,6 @@ Holding Source Code In `PyModule`
 In order to add `GlobalScope.get_inner_scope_for_line` we need to
 hold the source code in `PyModule`.  This might consume lots of memory.
 But right now I don't think that it is a problem.  So I will do that.
-
-
-Get Going!
-----------
-
-I believe I've put lots of time thinking and now I think I should use
-my time better.  I will try to implement the simplest possible
-algorithm to escape from this deadlock.
 
 
 Passing `ObjectInfer` Object To `PyName`\s
@@ -451,7 +353,7 @@ implementation with small changes.
 
 
 Problems With The Current Way Of Finding Scope
-==============================================
+----------------------------------------------
 
 When getting the scope for the first line of a function, function
 header, we get that it belongs to the parent scope.  This is not
@@ -477,6 +379,14 @@ Renaming `Project` to `MyProject`:
 =========================================  =====
 function                                   time
 =========================================  =====
+refactoring:rename                         20.1
+refactoring:rename_pyname_in_file          17.6
+
+pyscopes:get_holding_scope(160)            17.4
+pyscopes:get_scopes(18)                    17.4
+pyscopes:_create_scopes(27)                17.4
+pyscopes:get_inner_scope_for_line          17.6
+
 codeanalyze:get_name_at                    17.8
 
 pycore:resource_to_project                 17.0
@@ -486,14 +396,6 @@ pyobject:__init__(150)                     17.0
 pyobject:_update_attributes_from_ast(157)  17.2
 pyobject:visitFrom                         12.4
 pyobject:get_attributes(44)                17.2
-
-pyscopes:get_holding_scope(160)            17.4
-pyscopes:get_scopes(18)                    17.4
-pyscopes:_create_scopes(27)                17.4
-pyscopes:get_inner_scope_for_line          17.6
-
-refactoring:rename                         20.1
-refactoring:rename_pyname_in_file          17.6
 =========================================  =====
 
 

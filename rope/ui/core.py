@@ -245,12 +245,19 @@ class Core(object):
 
         codeMenu.add_command(label='Code Assist',
                              command=code_assist, underline=0)
+        def local_rename():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._local_rename_dialog()
+
+        codeMenu.add_command(label='Rename Local Variable', 
+                             command=local_rename, underline=1)
         def rename():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._rename_refactoring_dialog()
 
-        codeMenu.add_command(label='Rename Local Variable', 
+        codeMenu.add_command(label='Rename Refactoring', 
                              command=rename, underline=0)
         def goto_definition():
             activeEditor = self.editor_manager.active_editor
