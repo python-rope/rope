@@ -245,10 +245,6 @@ class ScopeNameFinder(object):
         lineno = self._get_location(offset)[0]
         holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
         result = self.get_pyname_in_scope(holding_scope, name)
-        # This occurs when renaming a function parameter
-        if result is None and lineno < len(self.lines):
-            next_scope = self.module_scope.get_inner_scope_for_line(lineno + 1)
-            result = self.get_pyname_in_scope(next_scope, name)
         return result
     
     def get_pyname_in_scope(self, holding_scope, name):

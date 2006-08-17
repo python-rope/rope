@@ -11,8 +11,8 @@ class RefactoringTest(unittest.TestCase):
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
-        self.refactoring = PythonRefactoring(self.project.get_pycore())
         self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)

@@ -41,7 +41,7 @@ class PythonEditingTools(EditingTools):
         return rope.outline.PythonOutline(self.project)
 
     def create_refactoring(self):
-        return rope.refactoring.PythonRefactoring(self.project.get_pycore())
+        return self.project.get_pycore().get_refactoring()
 
 
 class NormalEditingTools(EditingTools):

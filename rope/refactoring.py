@@ -1,7 +1,7 @@
 import re
 
-from rope.codeanalyze import (WordRangeFinder, ScopeNameFinder,
-                              StatementRangeFinder, SourceLinesAdapter)
+import rope.codeanalyze
+
 
 class Refactoring(object):
 
@@ -31,9 +31,9 @@ class PythonRefactoring(Refactoring):
     def local_rename(self, source_code, offset, new_name):
         result = []
         module_scope = self.pycore.get_string_scope(source_code)
-        word_finder = WordRangeFinder(source_code)
+        word_finder = rope.codeanalyze.WordRangeFinder(source_code)
         old_name = word_finder.get_statement_at(offset).split('.')[-1]
-        pyname_finder = ScopeNameFinder(source_code, module_scope)
+        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:
             return None
@@ -62,9 +62,9 @@ class PythonRefactoring(Refactoring):
     def rename(self, resource, offset, new_name):
         module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
         source_code = resource.read()
-        word_finder = WordRangeFinder(source_code)
+        word_finder = rope.codeanalyze.WordRangeFinder(source_code)
         old_name = word_finder.get_statement_at(offset).split('.')[-1]
-        pyname_finder = ScopeNameFinder(source_code, module_scope)
+        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:
             return None
@@ -89,7 +89,7 @@ class PythonRefactoring(Refactoring):
                     match_end = match.end(key)
                     if pyname_finder == None:
                         module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
-                        pyname_finder = ScopeNameFinder(source_code, module_scope)
+                        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
                     new_pyname = pyname_finder.get_pyname_at(match_start + 1)
                     if self._are_pynames_the_same(old_pyname, new_pyname):
                         result.append(source_code[last_modified_char:match_start] + new_name)
@@ -112,9 +112,9 @@ class PythonRefactoring(Refactoring):
         return pattern
 
     def _get_scope_range(self, source_code, offset, module_scope, lineno):
-        lines = SourceLinesAdapter(source_code)
+        lines = rope.codeanalyze.SourceLinesAdapter(source_code)
         holding_scope = module_scope.get_inner_scope_for_line(lineno)
-        range_finder = StatementRangeFinder(lines, lineno)
+        range_finder = rope.codeanalyze.StatementRangeFinder(lines, lineno)
         range_finder.analyze()
         start = lines.get_line_start(holding_scope.get_start())
         end = lines.get_line_end(holding_scope.get_end()) + 1

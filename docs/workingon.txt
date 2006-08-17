@@ -2,6 +2,7 @@ Renaming Global Functions/Classes
 =================================
 
 - Optimize `SourceLinesAdapter` methods
+- Having only one `Refactoring` instance per `PyCore`
 
 * Addition to UI
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
@@ -16,7 +17,6 @@ Remaining Stories
 
 * Goto definition for ``# comment.\na_var``
 * Better editor changing dialog; use uihelpers module
-* Having only one `Refactoring` instance per `Project`?
 * Slow `GraphicalEditor._get_offset`
 * More work on WordRangeFinder._get_statment_start; merging with StatementRangeFinder?
 * PyObject and PyName equality checks; Value objects?

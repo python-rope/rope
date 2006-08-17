@@ -3,6 +3,7 @@ import subprocess
 import sys
 
 import rope.objectinfer
+import rope.refactoring
 from rope.exceptions import ModuleNotFoundException
 from rope.pyobjects import *
 
@@ -13,6 +14,7 @@ class PyCore(object):
         self.project = project
         self.module_map = {}
         self.object_infer = rope.objectinfer.ObjectInfer()
+        self.refactoring = rope.refactoring.PythonRefactoring(self)
 
     def get_module(self, name):
         """Returns a `PyObject` if the module was found."""
@@ -153,6 +155,9 @@ class PyCore(object):
     
     def _get_object_infer(self):
         return self.object_infer
+    
+    def get_refactoring(self):
+        return self.refactoring
 
 
 class PythonFileRunner(object):
