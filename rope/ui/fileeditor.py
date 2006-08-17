@@ -17,20 +17,26 @@ class FileEditor(object):
         self.modification_observers = []
         self.editor.add_modification_observer(self._editor_was_modified)
         self.file.add_change_observer(self._file_was_modified)
+        self.saving = False
     
     def _editor_was_modified(self):
         for observer in self.modification_observers:
             observer(self)
     
     def _file_was_modified(self, file_):
-        self.editor.set_text(file_.read())
+        if not self.saving:
+            self.editor.set_text(file_.read())
     
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)
 
     def save(self):
-        self.file.write(self.editor.get_text())
-        self.editor.saving_editor()
+        self.saving = True
+        try:
+            self.file.write(self.editor.get_text())
+            self.editor.saving_editor()
+        finally:
+            self.saving = False
 
     def get_editor(self):
         return self.editor
