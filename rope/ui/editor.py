@@ -343,7 +343,7 @@ class GraphicalEditor(object):
             self._show_outline_window()
             return 'break'
         self.text.bind('<Control-o>', show_quick_outline)
-        self.text.bind('<Alt-R>', self._rename_refactoring_dialog)
+        self.text.bind('<Alt-R>', self._confirm_all_editors_are_saved)
         def ignore(event):
             return 'break'
         self.text.bind('<Control-x>', ignore)
@@ -362,7 +362,37 @@ class GraphicalEditor(object):
                      get_resource_editor(resource).get_editor()
         if lineno is not None:
             editor.goto_line(lineno)
-            
+    
+    def _confirm_all_editors_are_saved(self, event=None):
+        core = rope.ui.core.Core.get_core()
+        editors = core.get_editor_manager().editors
+        is_modified = False
+        for editor in editors:
+            if editor.get_editor().is_modified():
+                is_modified = True
+                break
+        if not is_modified:
+            return self._rename_refactoring_dialog()
+        toplevel = Toplevel()
+        toplevel.title('Save All')
+        frame = Frame(toplevel)
+        label = Label(frame, text='All editors should be saved before refactorings.')
+        label.grid(row=0, column=0, columnspan=2)
+        def ok(event=None):
+            core.save_all_editors()
+            toplevel.destroy()
+            self._rename_refactoring_dialog()
+        def cancel(event=None):
+            toplevel.destroy()
+        ok_button = Button(frame, text='Save All', command=ok)
+        cancel_button = Button(frame, text='Cancel', command=cancel)
+        ok_button.grid(row=1, column=0)
+        toplevel.bind('<Return>', lambda event: ok())
+        toplevel.bind('<Escape>', lambda event: cancel())
+        toplevel.bind('<Control-g>', lambda event: cancel())
+        cancel_button.grid(row=1, column=1)
+        frame.grid()
+    
     def _rename_refactoring_dialog(self, event=None):
         toplevel = Toplevel()
         toplevel.title('Rename Refactoring')

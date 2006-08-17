@@ -20,6 +20,9 @@ Week   Release Number
 12     x.y
 =====  ===============
 
+This is only a rough plan.  For example some release candidates
+might be released before the ``x.y`` release.
+
 
 Version 0.3
 ===========
@@ -82,6 +85,13 @@ we are interested in or not.  This seems slow when the number of
 similar names is considerable.  Having a type database?
 
 
+Limiting the scope for searching
+--------------------------------
+
+Rope searches all python files for a name.  But this seems unnecessary
+for local variables or modules that does not import that name.
+
+
 Cann't We Start Static Type Inference?
 ======================================
 
@@ -109,10 +119,10 @@ harder because we need to find function calls and type inference
 the arguements that are passed to the function.
 
 So as a conclusion it seems better to mix static and dynamic TI.
-static type inference seem to work good for general cases while
+Static type inference seem to work good for general cases while
 dynamic inference seems more suitable for type inference of long
-chains of functions and function arguments.  This means to use
-dynamic TI when static TI does not work or is expensive.
+chains of function calls and function arguments.  This means to
+use dynamic TI when static TI does not work or is expensive.
 
 
 Infering Function Argument Objects
@@ -128,7 +138,7 @@ Supporting Relative Imports
 Right now rope does *not* support relative imports.  One reason
 is that the syntax for relative imports is changing in python ``2.5``.
 The new relative import syntax will be supported by *rope*
-before ``2.5`` release.  Think about supporting the old syntax.
+before python``2.5`` release.  Think about supporting the old syntax.
 
 
 Builtin Types And Functions
@@ -313,7 +323,7 @@ type.
 
 As an example classes(types) are instances of `type` class.  That
 is their type is `type`.  But knowing their type does not give us
-any information about the methods defined in these derived classes.
+much information about the methods defined in these derived classes.
 
 
 Getting Buried In Layers

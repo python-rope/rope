@@ -72,9 +72,13 @@ class EditorManager(object):
     def close_active_editor(self):
         if self.active_editor is None:
             return
-        self.active_editor.get_editor().getWidget().forget()
+        widget = self.active_editor.get_editor().getWidget()
+        widget.forget()
+        widget.destroy()
         self.editors.remove(self.active_editor)
-        self.buttons[self.active_editor].forget()
+        button = self.buttons[self.active_editor]
+        button.forget()
+        button.destroy()
         del self.buttons[self.active_editor]
         self.active_editor = None
         if self.editors:
