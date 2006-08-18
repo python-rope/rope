@@ -391,6 +391,22 @@ class ProjectTest(unittest.TestCase):
         sample_file.write('a sample file version 2')
         self.assertEquals(0, sample_observer.change_count)
 
+    def test_resource_change_observer_for_folders(self):
+        root_folder = self.project.get_root_folder()
+        my_folder = root_folder.create_folder('my_folder')
+        my_folder_observer = SampleObserver()
+        root_folder_observer = SampleObserver()
+        my_folder.add_change_observer(my_folder_observer.changed)
+        root_folder.add_change_observer(root_folder_observer.changed)
+        my_file = my_folder.create_file('my_file.txt')
+        self.assertEquals(1, my_folder_observer.change_count)
+        my_file.move('another_file.txt')
+        self.assertEquals(2, my_folder_observer.change_count)
+        self.assertEquals(1, root_folder_observer.change_count)
+        my_file.remove()
+        self.assertEquals(2, my_folder_observer.change_count)
+        self.assertEquals(2, root_folder_observer.change_count)
+
     def test_moving_files(self):
         root_folder = self.project.get_root_folder()
         my_file = root_folder.create_file('my_file.txt')

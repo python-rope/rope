@@ -1,15 +1,7 @@
-Rename modules/packages
-=======================
-
-- Handle ``from x import y`` in NameScopeFinder
-
-* Rename module resource
-* Updating editor buttons
-
-
 Clean Up And Refactoring
 ========================
 
+* Updating editor buttons after file has been renamed
 * Showing the initial name in renaming dialogs
 * Refactor `rope.ui.editor` and `rope.ui.core` modules
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`

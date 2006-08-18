@@ -148,6 +148,16 @@ class RefactoringTest(unittest.TestCase):
         self.assertEquals('newpkg/mod1.py', mod1.get_path())
         self.assertEquals('from newpkg.mod1 import a_func\n', mod2.read())
 
+    def test_importing_special_case(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod1.write('def a_func():\n    pass\n')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('import pkg.mod1\npkg.mod1.a_func()')
+        self.refactoring.rename(mod, len(mod.read()) - 3, 'new_func')
+        self.assertEquals('def new_func():\n    pass\n', mod1.read())
+        self.assertEquals('import pkg.mod1\npkg.mod1.new_func()', mod.read())
+        
 
 if __name__ == '__main__':
     unittest.main()

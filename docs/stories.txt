@@ -265,9 +265,6 @@ Stories
 * Undoing refactorings
 
 
-* Rename modules/packages
-
-
 Remaining Stories
 -----------------
 * Migrating to sourceforge SVN before 0.3 release

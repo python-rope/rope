@@ -116,6 +116,7 @@ class Resource(object):
     def __init__(self, project, name):
         self.project = project
         self.name = name
+        self.observers = []
 
     def get_path(self):
         """Returns the path of this resource relative to the project root
@@ -143,11 +144,12 @@ class Resource(object):
         return self.project
 
     def add_change_observer(self, observer):
-        pass
+        self.observers.append(observer)
 
     def remove_change_observer(self, observer):
-        pass
-    
+        if observer in self.observers:
+            self.observers.remove(observer)
+
     def get_parent(self):
         parent = '/'.join(self.name.split('/')[0:-1])
         return self.project.get_resource(parent)
@@ -168,7 +170,6 @@ class _File(Resource):
 
     def __init__(self, project, name):
         super(_File, self).__init__(project, name)
-        self.observers = []
     
     def read(self):
         return open(self.project._get_resource_path(self.name)).read()
@@ -179,29 +180,26 @@ class _File(Resource):
         file.close()
         for observer in self.observers:
             observer(self)
+        self.get_parent()._child_changed(self)
 
     def is_folder(self):
         return False
-
-    def add_change_observer(self, observer):
-        self.observers.append(observer)
-
-    def remove_change_observer(self, observer):
-        if observer in self.observers:
-            self.observers.remove(observer)
 
     def remove(self):
         Project.remove_recursively(self.project._get_resource_path(self.name))
         self.project._update_resource_location(self)
         for observer in self.observers:
             observer(self)
+        self.get_parent()._child_changed(self)
 
     def move(self, new_location):
         destination = self._get_destination_for_move(new_location)
         shutil.move(self.project._get_resource_path(self.name),
                     self.project._get_resource_path(destination))
         self.project._update_resource_location(self, destination)
+        self.get_parent()._child_changed(self)
         self.name = destination
+        self.get_parent()._child_changed(self)
 
 
 class File(_File):
@@ -234,7 +232,7 @@ class _Folder(Resource):
         return True
 
     def get_children(self):
-        '''Returns the children resources of this folder'''
+        """Returns the children resources of this folder"""
         path = self._get_real_path()
         result = []
         content = os.listdir(path)
@@ -252,7 +250,9 @@ class _Folder(Resource):
         else:
             file_path = file_name
         self.project._create_file(file_path)
-        return self.get_child(file_name)
+        child = self.get_child(file_name)
+        self._child_changed(child)
+        return child
 
     def create_folder(self, folder_name):
         if self.get_path():
@@ -260,7 +260,9 @@ class _Folder(Resource):
         else:
             folder_path = folder_name
         self.project._create_folder(folder_path)
-        return self.get_child(folder_name)
+        child = self.get_child(folder_name)
+        self._child_changed(child)
+        return child
 
     def get_child(self, name):
         if self.get_path():
@@ -295,6 +297,7 @@ class _Folder(Resource):
             child.remove()
         Project.remove_recursively(self.project._get_resource_path(self.name))
         self.project._update_resource_location(self)
+        self.get_parent()._child_changed(self)
 
     def move(self, new_location):
         destination = self._get_destination_for_move(new_location)
@@ -303,7 +306,14 @@ class _Folder(Resource):
             child.move(destination + '/' + child.get_name())
         shutil.rmtree(self.project._get_resource_path(self.get_path()))
         self.project._update_resource_location(self, destination)
+        self.get_parent()._child_changed(self)
         self.name = destination
+        self.get_parent()._child_changed(self)
+    
+    def _child_changed(self, child):
+        if child != self:
+            for observer in self.observers:
+                observer(self)
 
 
 class Folder(_Folder):

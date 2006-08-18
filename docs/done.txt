@@ -3,6 +3,9 @@
 ===========
 
 
+- Rename modules/packages : August 18, 2006
+
+
 - Reloading changed editors after refactorings : August 17, 2006
 
 
