@@ -158,14 +158,6 @@ class Resource(object):
             return destination + '/' + self.get_name()
         return destination
 
-    def __hash__(self):
-        return hash(self.get_path())
-
-    def __eq__(self, resource):
-        if type(resource) != type(self):
-            return False
-        return self.get_path() == resource.get_path()
-
 
 class _File(Resource):
     """Represents a file in a project"""

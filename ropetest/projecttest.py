@@ -417,6 +417,13 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(my_file, my_folder.get_child('my_file.txt'))
         self.assertEquals('my_folder/my_file.txt', my_file.get_path())
                           
+    def test_moving_files_and_reference_objects(self):
+        root_folder = self.project.get_root_folder()
+        my_file = root_folder.create_file('my_file.txt')
+        old_hash = hash(my_file)
+        my_file.move('my_other_file.txt')
+        self.assertEquals(old_hash, hash(my_file))
+                          
 
 class SampleObserver(object):
     def __init__(self):
@@ -485,6 +492,7 @@ class OutOfProjectTest(unittest.TestCase):
 
 
 class FileFinderTest(unittest.TestCase):
+    
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.projectMaker = SampleProjectMaker()

@@ -1,10 +1,8 @@
 Rename modules/packages
 =======================
 
-* Renaming `Resource`\s
-* What if destination is a directory
-* Exceptional conditions; Destination not directory
-
+* Handle ``from x import y`` in NameScopeFinder
+* Rename module resource
 * Handle ``from`` imports
 
 
