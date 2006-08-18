@@ -156,12 +156,18 @@ class ProjectTest(unittest.TestCase):
         folder_path = os.path.join(self.project.get_root_address(), folder_name, folder_name)
         self.assertTrue(os.path.exists(folder_path) and os.path.isdir(folder_path))
 
-    def test_removing_riles(self):
+    def test_removing_files(self):
         self.assertTrue(os.path.exists(os.path.join(self.project.get_root_address(),
                                                     self.projectMaker.get_sample_file_name())))
         self.project.get_resource(self.projectMaker.get_sample_file_name()).remove()
         self.assertFalse(os.path.exists(os.path.join(self.project.get_root_address(),
                                                      self.projectMaker.get_sample_file_name())))
+                          
+    def test_removing_files_invalidating_in_project_resource_pool(self):
+        root_folder = self.project.get_root_folder()
+        my_file = root_folder.create_file('my_file.txt')
+        my_file.remove()
+        self.assertFalse(root_folder.has_child('my_file.txt'))
                           
     def test_removing_directories(self):
         self.assertTrue(os.path.exists(os.path.join(self.project.get_root_address(),
@@ -385,6 +391,32 @@ class ProjectTest(unittest.TestCase):
         sample_file.write('a sample file version 2')
         self.assertEquals(0, sample_observer.change_count)
 
+    def test_moving_files(self):
+        root_folder = self.project.get_root_folder()
+        my_file = root_folder.create_file('my_file.txt')
+        my_file.move('my_other_file.txt')
+        self.assertFalse(root_folder.has_child('my_file.txt'))
+        self.assertEquals(my_file, root_folder.get_child('my_other_file.txt'))
+        self.assertEquals('my_other_file.txt', my_file.get_path())
+                          
+    def test_moving_folders(self):
+        root_folder = self.project.get_root_folder()
+        my_folder = root_folder.create_folder('my_folder')
+        my_file = my_folder.create_file('my_file.txt')
+        my_folder.move('new_folder')
+        self.assertFalse(root_folder.has_child('my_folder'))
+        self.assertEquals(my_folder, root_folder.get_child('new_folder'))
+        self.assertEquals('new_folder/my_file.txt', my_file.get_path())
+                          
+    def test_moving_destination_folders(self):
+        root_folder = self.project.get_root_folder()
+        my_folder = root_folder.create_folder('my_folder')
+        my_file = root_folder.create_file('my_file.txt')
+        my_file.move('my_folder')
+        self.assertFalse(root_folder.has_child('my_file.txt'))
+        self.assertEquals(my_file, my_folder.get_child('my_file.txt'))
+        self.assertEquals('my_folder/my_file.txt', my_file.get_path())
+                          
 
 class SampleObserver(object):
     def __init__(self):

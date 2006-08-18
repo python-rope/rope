@@ -52,9 +52,6 @@ Stories
 * Commanding buffer
 
 
-* Subversion support using pysvn
-
-
 * Last edit location; C-q
 
 
@@ -195,9 +192,6 @@ Stories
 * Static type inference
 
 
-* Move a class to another module
-
-
 * Auto-completing function parameter names when calling
 
 
@@ -246,6 +240,12 @@ Stories
 * Function argument object inference
 
 
+* Move a module or package to another package
+
+
+* Move a class/function to another module
+
+
 * Read ``__init__.py`` of packages
   Should folders contain ``__init__.py`` to be considered packages?
 
@@ -256,13 +256,16 @@ Stories
 * Relative imports
 
 
-* Rename module/package
+* Subversion support using pysvn
 
 
 > Public Release 0.3pre1 : August 20, 2006
 
 
 * Undoing refactorings
+
+
+* Rename modules/packages
 
 
 Remaining Stories

@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import rope.pycore
 from rope.exceptions import RopeException
@@ -90,6 +91,11 @@ class Project(object):
             else:
                 raise RopeException('Unknown resource ' + path)
         return self.out_of_project_resources[path]
+    
+    def _update_resource_location(self, resource, new_location=None):
+        del self.resources[resource.get_path()]
+        if new_location is not None:
+            self.resources[new_location] = resource
 
     @staticmethod
     def remove_recursively(file):
@@ -125,7 +131,9 @@ class Resource(object):
     
     def remove(self):
         """Removes resource from the project"""
-        Project.remove_recursively(self.project._get_resource_path(self.name))
+    
+    def move(self, new_location):
+        """Moves resource to new_lcation"""
 
     def is_folder(self):
         """Returns true if the resource is a folder"""
@@ -143,6 +151,12 @@ class Resource(object):
     def _get_real_path(self):
         """Returns the file system path of this resource"""
         return self.project._get_resource_path(self.name)
+    
+    def _get_destination_for_move(self, destination):
+        dest_path = self.project._get_resource_path(destination)
+        if os.path.isdir(dest_path):
+            return destination + '/' + self.get_name()
+        return destination
 
     def __hash__(self):
         return hash(self.get_path())
@@ -181,9 +195,17 @@ class _File(Resource):
             self.observers.remove(observer)
 
     def remove(self):
-        super(_File, self).remove()
+        Project.remove_recursively(self.project._get_resource_path(self.name))
+        self.project._update_resource_location(self)
         for observer in self.observers:
             observer(self)
+
+    def move(self, new_location):
+        destination = self._get_destination_for_move(new_location)
+        shutil.move(self.project._get_resource_path(self.name),
+                    self.project._get_resource_path(destination))
+        self.project._update_resource_location(self, destination)
+        self.name = destination
 
 
 class File(_File):
@@ -272,6 +294,20 @@ class _Folder(Resource):
                 result.append(resource)
         return result
 
+    def remove(self):
+        for child in self.get_children():
+            child.remove()
+        Project.remove_recursively(self.project._get_resource_path(self.name))
+        self.project._update_resource_location(self)
+
+    def move(self, new_location):
+        destination = self._get_destination_for_move(new_location)
+        os.makedirs(self.project._get_resource_path(destination))
+        for child in self.get_children():
+            child.move(destination + '/' + child.get_name())
+        shutil.rmtree(self.project._get_resource_path(self.get_path()))
+        self.project._update_resource_location(self, destination)
+        self.name = destination
 
 
 class Folder(_Folder):

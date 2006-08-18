@@ -347,8 +347,39 @@ divisions:
 * primary
 
 
+Better Scope Finding Algorithm
+==============================
+
+The current implementation is very slow and recently I've moved
+finding inner scope parts to `GlobalScope` class.  However the new
+implementation would be if it does not recompute the same information
+for each call it is a lot faster than the current implementation.
+
+By caching `Scope.get_scope_end` method, we can use current
+implementation with small changes.
+
+
+Problems With The Current Way Of Finding Scope
+----------------------------------------------
+
+When getting the scope for the first line of a function, function
+header, we get that it belongs to the parent scope.  This is not
+correct but this line does not belong to the function scope either.
+Actually the function name part of function header belongs to the
+parents scope and the arguments part belongs to function scope.
+
+I can't think of any good way of doing that and maybe the best thing I
+can do is to check for this exception when finding scopes.  Think
+about other exceptions.  Does a similar situation occur for classes
+too? What about ``for`` loops?
+
+If the problem only occurs for functions I think the exception
+approach would be a good solution.  But the problem is that the scope
+finding part is separate from refactoring part.
+
+
 Renaming Class Attributes
-=========================
+-------------------------
 
 Renaming class attributes is almost the same as renaming a function
 or class.  The only difference is that the attribute inside class
@@ -379,36 +410,25 @@ The two ``a_var`` names in the third line reference different objects.
 That is if a name is defined in class body it is an attribute and if
 the name is used it must be looked up in parent scope.
 
-
-Better Scope Finding Algorithm
-==============================
-
-The current implementation is very slow and recently I've moved
-finding inner scope parts to `GlobalScope` class.  However the new
-implementation would be if it does not recompute the same information
-for each call it is a lot faster than the current implementation.
-
-By caching `Scope.get_scope_end` method, we can use current
-implementation with small changes.
+This problem was solved before ``0.3pre1`` release.
 
 
-Problems With The Current Way Of Finding Scope
-----------------------------------------------
+Renaming modules/packages
+=========================
 
-When getting the scope for the first line of a function, function
-header, we get that it belongs to the parent scope.  This is not
-correct but this line does not belong to the function scope either.
-Actually the function name part of function header belongs to the
-parents scope and the arguments part belongs to function scope.
+Renaming module/package is very similar to renaming any other element.
+There are two differences:
 
-I can't think of any good way of doing that and maybe the best thing I
-can do is to check for this exception when finding scopes.  Think
-about other exceptions.  Does a similar situation occur for classes
-too? What about ``for`` loops?
+1. We should both rename the occurances of the module name and its
+   file or folder.
+2. The only part of the problem is after ``from`` import statements.
 
-If the problem only occurs for functions I think the exception
-approach would be a good solution.  But the problem is that the scope
-finding part is separate from refactoring part.
+
+Undoing Refactorings
+====================
+
+If we encounter an exception while doing our refactoring we should
+undo the changes made so far.
 
 
 Profiling Renaming
