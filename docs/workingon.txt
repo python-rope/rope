@@ -1,9 +1,10 @@
 Rename modules/packages
 =======================
 
-* Handle ``from x import y`` in NameScopeFinder
+- Handle ``from x import y`` in NameScopeFinder
+
 * Rename module resource
-* Handle ``from`` imports
+* Updating editor buttons
 
 
 Clean Up And Refactoring

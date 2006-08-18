@@ -192,13 +192,16 @@ class PyPackage(PyDefinedObject):
                                                       child_pyobject)
 
     def get_resource(self):
+        return self.resource
+    
+    def _get_init_dot_py(self):
         if self.resource is not None and self.resource.has_child('__init__.py'):
             return self.resource.get_child('__init__.py')
         else:
             return None
     
     def get_module(self):
-        init_dot_py = self.get_resource()
+        init_dot_py = self._get_init_dot_py()
         return self.pycore.resource_to_pyobject(init_dot_py)
 
 

@@ -147,6 +147,10 @@ class Resource(object):
 
     def remove_change_observer(self, observer):
         pass
+    
+    def get_parent(self):
+        parent = '/'.join(self.name.split('/')[0:-1])
+        return self.project.get_resource(parent)
 
     def _get_real_path(self):
         """Returns the file system path of this resource"""

@@ -63,6 +63,19 @@ class PythonRefactoring(Refactoring):
                 changes.append((file_, new_content))
         for file_, new_content in changes:
             file_.write(new_content)
+        if old_pyname.get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
+            self._rename_module(old_pyname.get_object(), new_name)
+    
+    def _rename_module(self, pyobject, new_name):
+        resource = pyobject.get_resource()
+        if not resource.is_folder():
+            new_name = new_name + '.py'
+        parent_path = resource.get_parent().get_path()
+        if parent_path == '':
+            new_location = new_name
+        else:
+            new_location = parent_path + '/' + new_name
+        resource.move(new_location)
     
     def _rename_occurance_in_file(self, source_code, scope_retriever, old_pyname,
                                   pattern, new_name):
