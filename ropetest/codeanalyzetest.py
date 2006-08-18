@@ -245,6 +245,17 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = ScopeNameFinder(code, scope)
         self.assertEquals(a_func_pyname, name_finder.get_pyname_at(code.index('a_func') + 3))
 
+    def test_modules_after_from_statements(self):
+        root_folder = self.project.get_root_folder()
+        mod = self.pycore.create_module(root_folder, 'mod')
+        mod.write('def a_func():\n    pass\n')
+        code = 'from mod import a_func\n'
+        scope = self.pycore.get_string_scope(code)
+        name_finder = ScopeNameFinder(code, scope)
+        mod_pyobject = self.pycore.resource_to_pyobject(mod)
+        found_pyname = name_finder.get_pyname_at(code.index('mod') + 1)
+        self.assertEquals(mod_pyobject, found_pyname.get_object())
+
 
 def suite():
     result = unittest.TestSuite()

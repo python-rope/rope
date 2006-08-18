@@ -163,6 +163,12 @@ class WordRangeFinder(object):
         line_start = self._get_line_start(word_start)
         prev_word = self.source_code[line_start:word_start].strip()
         return prev_word in ['def', 'class']
+    
+    def is_from_statement_module(self, offset):
+        stmt_start = self._find_name_start(offset)
+        line_start = self._get_line_start(stmt_start)
+        prev_word = self.source_code[line_start:stmt_start].strip()
+        return prev_word == 'from'
 
 
 class StatementEvaluator(object):
@@ -310,6 +316,13 @@ class ScopeNameFinder(object):
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
             name = self.word_finder.get_statement_at(offset).strip()
             return holding_scope.parent.get_names()[name]
+        if self.word_finder.is_from_statement_module(offset):
+            module = self.word_finder.get_statement_at(offset)
+            module_pyobject = self.module_scope.pycore.get_module(module)
+            module_pyname = rope.pycore.PyName(module_pyobject, False, 
+                                               module=module_pyobject.get_module(),
+                                               lineno=1)
+            return module_pyname
         name = self.word_finder.get_statement_at(offset)
         result = self.get_pyname_in_scope(holding_scope, name)
         return result
