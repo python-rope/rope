@@ -268,7 +268,7 @@ class PythonCodeAssist(CodeAssist):
         if offset > len(source_code):
             return Proposals()
         word_finder = WordRangeFinder(source_code)
-        expression, starting, starting_offset = word_finder.get_splitted_statement_before(offset)
+        expression, starting, starting_offset = word_finder.get_splitted_primary_before(offset)
         completions = self._get_code_completions(source_code, offset, expression, starting)
         templates = []
         if expression.strip() == '' and starting.strip() != '':

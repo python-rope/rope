@@ -145,14 +145,28 @@ class PyClass(PyDefinedObject):
         return rope.pyscopes.ClassScope(self.pycore, self)
 
 
-class PyModule(PyDefinedObject):
+class _PyModule(PyDefinedObject):
+    
+    def __init__(self, pycore, ast_node, resource=None):
+        super(_PyModule, self).__init__(PyObject.get_base_type('Module'),
+                                        pycore, ast_node, None)
+        self.dependant_modules = []
+        self.resource = resource
+
+    def _add_dependant(self, pymodule):
+        if pymodule.get_resource():
+            self.dependant_modules.append(pymodule.get_resource())
+
+    def get_resource(self):
+        return self.resource
+    
+
+class PyModule(_PyModule):
 
     def __init__(self, pycore, source_code, resource=None):
         self.source_code = source_code
         ast_node = compiler.parse(source_code)
-        super(PyModule, self).__init__(PyObject.get_base_type('Module'),
-                                       pycore, ast_node, None)
-        self.resource = resource
+        super(PyModule, self).__init__(pycore, ast_node, resource)
 
     def _update_attributes_from_ast(self, attributes):
         visitor = _GlobalVisitor(self.pycore, self)
@@ -162,11 +176,8 @@ class PyModule(PyDefinedObject):
     def _create_scope(self):
         return rope.pyscopes.GlobalScope(self.pycore, self)
 
-    def get_resource(self):
-        return self.resource
 
-
-class PyPackage(PyDefinedObject):
+class PyPackage(_PyModule):
 
     def __init__(self, pycore, resource=None):
         self.resource = resource
@@ -174,7 +185,7 @@ class PyPackage(PyDefinedObject):
             ast_node = compiler.parse(resource.get_child('__init__.py').read())
         else:
             ast_node = compiler.parse('\n')
-        super(PyPackage, self).__init__(PyObject.get_base_type('Module'), pycore, ast_node, None)
+        super(PyPackage, self).__init__(pycore, ast_node, resource)
 
     def _update_attributes_from_ast(self, attributes):
         if self.resource is None:
@@ -191,9 +202,6 @@ class PyPackage(PyDefinedObject):
                 attributes[name] = PyName(child_pyobject, False, 1,
                                                       child_pyobject)
 
-    def get_resource(self):
-        return self.resource
-    
     def _get_init_dot_py(self):
         if self.resource is not None and self.resource.has_child('__init__.py'):
             return self.resource.get_child('__init__.py')
@@ -306,6 +314,7 @@ class _ScopeVisitor(object):
                 imported = alias
             try:
                 module = self.pycore.get_module(name)
+                module._add_dependant(self.owner_object.get_module())
                 lineno = 1
             except ModuleNotFoundException:
                 self.names[imported] = PyName()
@@ -329,6 +338,7 @@ class _ScopeVisitor(object):
     def visitFrom(self, node):
         try:
             module = self.pycore.get_module(node.modname)
+            module._add_dependant(self.owner_object.get_module())
         except ModuleNotFoundException:
             module = None
 

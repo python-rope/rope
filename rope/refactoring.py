@@ -32,7 +32,7 @@ class PythonRefactoring(Refactoring):
         result = []
         module_scope = self.pycore.get_string_scope(source_code)
         word_finder = rope.codeanalyze.WordRangeFinder(source_code)
-        old_name = word_finder.get_statement_at(offset).split('.')[-1]
+        old_name = word_finder.get_primary_at(offset).split('.')[-1]
         pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:
@@ -47,7 +47,7 @@ class PythonRefactoring(Refactoring):
         module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
         source_code = resource.read()
         word_finder = rope.codeanalyze.WordRangeFinder(source_code)
-        old_name = word_finder.get_statement_at(offset).split('.')[-1]
+        old_name = word_finder.get_primary_at(offset).split('.')[-1]
         pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:

@@ -33,8 +33,11 @@ class PyCore(object):
 
     def _invalidate_resource_cache(self, resource):
         if resource in self.module_map:
+            module = self.module_map[resource]
             del self.module_map[resource]
             resource.remove_change_observer(self._invalidate_resource_cache)
+            for dependant in module.dependant_modules:
+                self._invalidate_resource_cache(dependant)
 
     def create_module(self, src_folder, new_module):
         """Creates a module and returns a `rope.project.File`"""

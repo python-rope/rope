@@ -55,7 +55,7 @@ class WordRangeFinder(object):
             if self.source_code[current_offset] in ':,':
                 pass
             else:
-                current_offset = self._find_name_start(current_offset)
+                current_offset = self._find_primary_start(current_offset)
             current_offset = self._find_last_non_space_char(current_offset - 1)
         return current_offset
 
@@ -71,7 +71,7 @@ class WordRangeFinder(object):
             return self._find_word_start(offset)
         return old_offset
 
-    def _find_name_start(self, offset):
+    def _find_primary_start(self, offset):
         current_offset = offset + 1
         if self.source_code[offset] != '.':
             current_offset = self._find_atom_start(offset)
@@ -97,11 +97,11 @@ class WordRangeFinder(object):
                     break
         return current_offset
     
-    def get_statement_at(self, offset):
-        return self.source_code[self._find_name_start(offset - 1):
+    def get_primary_at(self, offset):
+        return self.source_code[self._find_primary_start(offset - 1):
                                 self._find_word_end(offset - 1) + 1].strip()
 
-    def get_splitted_statement_before(self, offset):
+    def get_splitted_primary_before(self, offset):
         """returns expression, starting, starting_offset
         
         This function is used in `rope.codeassist.assist` function.
@@ -109,7 +109,7 @@ class WordRangeFinder(object):
         if offset == 0:
             return ('', '', 0)
         word_start = self._find_atom_start(offset - 1)
-        real_start = self._find_name_start(offset - 1)
+        real_start = self._find_primary_start(offset - 1)
         if self.source_code[word_start:offset].strip() == '':
             word_start = offset
         if self.source_code[real_start:offset].strip() == '':
@@ -165,7 +165,7 @@ class WordRangeFinder(object):
         return prev_word in ['def', 'class']
     
     def is_from_statement_module(self, offset):
-        stmt_start = self._find_name_start(offset)
+        stmt_start = self._find_primary_start(offset)
         line_start = self._get_line_start(stmt_start)
         prev_word = self.source_code[line_start:stmt_start].strip()
         return prev_word == 'from'
@@ -311,19 +311,19 @@ class ScopeNameFinder(object):
             class_scope = holding_scope
             if lineno == holding_scope.get_start():
                 class_scope = holding_scope.parent
-            name = self.word_finder.get_statement_at(offset).strip()
+            name = self.word_finder.get_primary_at(offset).strip()
             return class_scope.pyobject.get_attributes().get(name, None)
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
-            name = self.word_finder.get_statement_at(offset).strip()
+            name = self.word_finder.get_primary_at(offset).strip()
             return holding_scope.parent.get_names()[name]
         if self.word_finder.is_from_statement_module(offset):
-            module = self.word_finder.get_statement_at(offset)
+            module = self.word_finder.get_primary_at(offset)
             module_pyobject = self.module_scope.pycore.get_module(module)
             module_pyname = rope.pycore.PyName(module_pyobject, False, 
                                                module=module_pyobject.get_module(),
                                                lineno=1)
             return module_pyname
-        name = self.word_finder.get_statement_at(offset)
+        name = self.word_finder.get_primary_at(offset)
         result = self.get_pyname_in_scope(holding_scope, name)
         return result
     

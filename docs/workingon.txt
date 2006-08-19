@@ -1,5 +1,5 @@
-Clean Up And Refactoring
-========================
+Clean Ups And Refactorings
+==========================
 
 * Updating editor buttons after file has been renamed
 * Showing the initial name in renaming dialogs
@@ -16,7 +16,6 @@ Remaining Stories
 * Goto definition for ``# comment.\na_var``
 * Better editor changing dialog; use uihelpers module
 * Slow `GraphicalEditor._get_offset`
-* PyObject and PyName equality checks; Value objects?
 * Do something for modules that can not be found
 * Dotted not found modules
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?

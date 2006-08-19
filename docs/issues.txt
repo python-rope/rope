@@ -92,8 +92,8 @@ Rope searches all python files for a name.  But this seems unnecessary
 for local variables or modules that does not import that name.
 
 
-Cann't We Start Static Type Inference?
-======================================
+Can't We Start Static Type Inference?
+=====================================
 
 I need to think about the problems that might arise for static TI.
 Now I think that static TI is not that hard and in dynamic TI some of
@@ -410,7 +410,7 @@ The two ``a_var`` names in the third line reference different objects.
 That is if a name is defined in class body it is an attribute and if
 the name is used it must be looked up in parent scope.
 
-This problem was solved before ``0.3pre1`` release.
+This problem was solved for ``0.3pre1`` release.
 
 
 Renaming modules/packages
@@ -422,6 +422,8 @@ There are two differences:
 1. We should both rename the occurances of the module name and its
    file or folder.
 2. The only part of the problem is after ``from`` import statements.
+
+This was done for ``0.3pre1`` release.
 
 
 Undoing Refactorings
@@ -478,4 +480,77 @@ Working More On The UI Parts
 My ignorance to UI has make some modules like `rope.ui.core` and
 `rope.ui.editor` very large and full of duplication.  These modules
 need many refactorings.  Put more time on these modules.
+
+
+`PyName`\s and `PyObject`\s; Values Or References
+=================================================
+
+Finally I am in a situation in which I should answer this old question
+to go forward.  The problem with current way of doing things is when
+some changes are made to some modules, other modules might have
+imported some older objects from this changed module and problems
+start.  Because the imported objects are no longer valid and fail when
+finding occurances of some object.
+
+Was done for ``0.3pre1``.
+
+
+The Problem
+-----------
+
+Before proposing possible solution lets analyze the situation more
+deeply.  For making the discussion more accurate consider we have two
+modules `mod1` and `mod2` and the latter imports the other.
+
+``mod1.py``::
+  
+  class AClass(object):
+      pass
+
+``mod2.py``::
+
+  import mod1
+  
+  a = mod1.AClass()
+
+Consider after the creation of `PyModule` for `mod2` we change `mod1`:
+
+``mod1.py``::
+  
+  class AClass(object):
+      an_attr = 10
+
+The problems shows up here.  If we want to rename `mod1.AClass`, the
+third line in `mod2` will not be changed because it is not the object
+which should be changed.  Here we should have relied on old data.  But
+if we change `mod1` as:
+
+``mod1.py``::
+
+  AClass = str
+
+We should invalidate old data this time.  So the problem is not only
+using old data, but it is to invalidate the out of date data.
+
+
+Looser Coupling Between `PyModule`\s
+------------------------------------
+
+This is one of the approaches that does not seem applicable.  It says
+we don't import the main objects and we only point to the imported
+objects.  For example we can have something like `ImportedPyName` that
+only holds the module name and the imported name and looks for the real
+objects whenever needed.  Clearly this does not work; The `mod2.a`
+will contain an instance of `mod1.AClass`, but after change it should
+have been an empty string.  That is among module relations it is not
+the imported names only that are concerned.
+
+
+Making Module Dependency Graphs
+-------------------------------
+
+For each module we can hold the modules that depend on it, so that
+if this module is changed all dependant modules would be invalidated.
+One advantage of this approach is that it eliminates the possibility
+of touching invalid objects.
 

@@ -148,15 +148,17 @@ class RefactoringTest(unittest.TestCase):
         self.assertEquals('newpkg/mod1.py', mod1.get_path())
         self.assertEquals('from newpkg.mod1 import a_func\n', mod2.read())
 
-    def test_importing_special_case(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
-        mod1 = self.pycore.create_module(pkg, 'mod1')
-        mod1.write('def a_func():\n    pass\n')
-        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
-        mod.write('import pkg.mod1\npkg.mod1.a_func()')
-        self.refactoring.rename(mod, len(mod.read()) - 3, 'new_func')
-        self.assertEquals('def new_func():\n    pass\n', mod1.read())
-        self.assertEquals('import pkg.mod1\npkg.mod1.new_func()', mod.read())
+    def test_module_dependencies(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('class AClass(object):\n    pass\n')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2.write('import mod1\na_var = mod1.AClass()\n')
+        self.pycore.resource_to_pyobject(mod2).get_attributes()['mod1']
+        mod1.write('def AClass():\n    return 0\n')
+        
+        self.refactoring.rename(mod2, len(mod2.read()) - 3, 'a_func')
+        self.assertEquals('def a_func():\n    return 0\n', mod1.read())
+        self.assertEquals('import mod1\na_var = mod1.a_func()\n', mod2.read())
         
 
 if __name__ == '__main__':

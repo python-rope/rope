@@ -14,15 +14,14 @@ written in python and uses the Tkinter library.
 Version Overview
 ================
 
-Some of the features added since 0.1 release:
+Features added in this release:
 
-* Auto-completing names
-* Auto-completing attributes of an object with known type
-* Go to definition
-* Renaming local variable
-* Quick outline
-* Proposing templates in code assists
-* reST highlighting for ``.txt`` files
+* Rename modules/packages
+* Reloading changed editors after refactorings
+* Rename class/function
+* Simple function returned object inference
+* Show PyDoc; F2
+* Object inference for chained assignments
 
 
 Getting Started
@@ -35,8 +34,9 @@ these:
 Alt-/          Show code assists
 Ctrl-o         Show quick outline
 F3             Go to definition
-Alt-Shift-r    Rename local variable
+Alt-Shift-r    Rename Refactoring
 Alt-Q r        Show project tree
+F2             Show PyDoc
 =============  ======================
 
 You can complete names as you type by using code assist (``M-/``).
