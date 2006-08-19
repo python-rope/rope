@@ -152,10 +152,10 @@ class ChangeSet(Change):
             for change in self.changes:
                 change.do()
                 done.append(change)
-        except Exception, e:
+        except Exception:
             for change in done:
                 done.undo()
-            raise e
+            raise
     
     def undo(self):
         try:
@@ -163,10 +163,10 @@ class ChangeSet(Change):
             for change in self.changes:
                 change.undo()
                 done.append(change)
-        except Exception, e:
+        except Exception:
             for change in done:
                 done.do()
-            raise e
+            raise
     
     def add_change(self, change):
         self.changes.append(change)

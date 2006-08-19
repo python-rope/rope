@@ -141,7 +141,7 @@ class Core(object):
 
     def _create_menu(self):
         fileMenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='File', menu=fileMenu, underline=1)
+        self.menubar.add_cascade(label='File', menu=fileMenu, underline=2)
         fileMenu.add_command(label='Open Project ...',
                              command=self._open_project_dialog, underline=0)
         fileMenu.add_command(label='Close Project',
@@ -176,7 +176,7 @@ class Core(object):
                              command=self._close_project_and_exit, underline=1)
         
         editMenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Edit', menu=editMenu, underline=3)
+        self.menubar.add_cascade(label='Edit', menu=editMenu, underline=2)
         def set_mark():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
@@ -257,13 +257,6 @@ class Core(object):
 
         codeMenu.add_command(label='Rename Local Variable', 
                              command=local_rename, underline=1)
-        def rename():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._rename_refactoring_dialog()
-
-        codeMenu.add_command(label='Rename Refactoring', 
-                             command=rename, underline=0)
         def goto_definition():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
@@ -273,11 +266,31 @@ class Core(object):
                              command=goto_definition, underline=0)
         codeMenu.add_command(label='Run Module', 
                              command=self.run_active_editor, underline=4)
+        
+        refactor_menu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='Refactor', 
+                                 menu=refactor_menu, underline=5)
+        
+        def rename():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._rename_refactoring_dialog()
+
+        refactor_menu.add_command(label='Rename Refactoring', 
+                             command=rename, underline=0)
+        refactor_menu.add_command(label='Undo Last Refactoring',
+                                  command=self._undo_last_refactoring, underline=0)
+
         helpMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Help', menu=helpMenu, underline=3)
         helpMenu.add_command(label='About', 
                              command=self._show_about_dialog, underline=0)
 
+    def _undo_last_refactoring(self):
+        project = self.get_open_project()
+        if project:
+            project.get_pycore().get_refactoring().undo_last_refactoring()
+    
     def _close_project_and_exit(self):
         self._close_project_dialog(exit_=True)
 

@@ -191,14 +191,14 @@ class PyPackage(_PyModule):
         if self.resource is None:
             return
         for child in self.resource.get_children():
+            child_pyobject = self.pycore.resource_to_pyobject(child)
+            child_pyobject._add_dependant(self)
             if child.is_folder():
-                child_pyobject = self.pycore.resource_to_pyobject(child)
                 attributes[child.get_name()] = PyName(child_pyobject, False, 1,
                                                       child_pyobject)
             elif child.get_name().endswith('.py') and \
                  child.get_name() != '__init__.py':
                 name = child.get_name()[:-3]
-                child_pyobject = self.pycore.resource_to_pyobject(child)
                 attributes[name] = PyName(child_pyobject, False, 1,
                                                       child_pyobject)
 
