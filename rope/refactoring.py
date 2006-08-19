@@ -10,6 +10,9 @@ class Refactoring(object):
     
     def rename(self, resource, offset, new_name):
         pass
+    
+    def undo_last_refactoring(self):
+        pass
 
 
 class PythonRefactoring(Refactoring):
@@ -23,6 +26,7 @@ class PythonRefactoring(Refactoring):
         dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
         self.string_pattern = PythonRefactoring.any("string",
                                                     [sq3string, dq3string, sqstring, dqstring])
+        self.last_changes = ChangeSet()
 
     @staticmethod
     def any(name, list):
@@ -53,18 +57,18 @@ class PythonRefactoring(Refactoring):
         if old_pyname is None:
             return None
         pattern = self._get_occurance_pattern(old_name)
-        changes = []
+        changes = ChangeSet()
         for file_ in self.pycore.get_python_files():
             def scope_retriever():
                 return self.pycore.resource_to_pyobject(file_).get_scope()
             new_content = self._rename_occurance_in_file(file_.read(), scope_retriever, 
                                                          old_pyname, pattern, new_name)
             if new_content is not None:
-                changes.append((file_, new_content))
-        for file_, new_content in changes:
-            file_.write(new_content)
+                changes.add_change(ChangeFileContents(file_, new_content))
         if old_pyname.get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
-            self._rename_module(old_pyname.get_object(), new_name)
+            changes.add_change(self._rename_module(old_pyname.get_object(), new_name))
+        changes.do()
+        self.last_changes = changes
     
     def _rename_module(self, pyobject, new_name):
         resource = pyobject.get_resource()
@@ -75,7 +79,7 @@ class PythonRefactoring(Refactoring):
             new_location = new_name
         else:
             new_location = parent_path + '/' + new_name
-        resource.move(new_location)
+        return MoveResource(resource, new_location)
     
     def _rename_occurance_in_file(self, source_code, scope_retriever, old_pyname,
                                   pattern, new_name):
@@ -120,7 +124,81 @@ class PythonRefactoring(Refactoring):
         end = lines.get_line_end(holding_scope.get_end()) + 1
         return (start, end)
 
+    def undo_last_refactoring(self):
+        self.last_changes.undo()
+
 
 class NoRefactoring(Refactoring):
     pass
+
+
+class Change(object):
+    
+    def do(self):
+        pass
+    
+    def undo(self):
+        pass
+
+
+class ChangeSet(Change):
+    
+    def __init__(self):
+        self.changes = []
+    
+    def do(self):
+        try:
+            done = []
+            for change in self.changes:
+                change.do()
+                done.append(change)
+        except Exception, e:
+            for change in done:
+                done.undo()
+            raise e
+    
+    def undo(self):
+        try:
+            done = []
+            for change in self.changes:
+                change.undo()
+                done.append(change)
+        except Exception, e:
+            for change in done:
+                done.do()
+            raise e
+    
+    def add_change(self, change):
+        self.changes.append(change)
+
+
+class ChangeFileContents(Change):
+    
+    def __init__(self, resource, new_content):
+        self.resource = resource
+        self.new_content = new_content
+        self.old_content = None
+
+    def do(self):
+        self.old_content = self.resource.read()
+        self.resource.write(self.new_content)
+    
+    def undo(self):
+        self.resource.write(self.old_content)
+
+
+class MoveResource(Change):
+    
+    def __init__(self, resource, new_location):
+        self.resource = resource
+        self.new_location = new_location
+        self.old_location = None
+    
+    def do(self):
+        self.old_location = self.resource.get_path()
+        self.resource.move(self.new_location)
+    
+    def undo(self):
+        self.resource.move(self.old_location)
+        
 

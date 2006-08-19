@@ -150,12 +150,12 @@ class _PyModule(PyDefinedObject):
     def __init__(self, pycore, ast_node, resource=None):
         super(_PyModule, self).__init__(PyObject.get_base_type('Module'),
                                         pycore, ast_node, None)
-        self.dependant_modules = []
+        self.dependant_modules = set()
         self.resource = resource
 
     def _add_dependant(self, pymodule):
         if pymodule.get_resource():
-            self.dependant_modules.append(pymodule.get_resource())
+            self.dependant_modules.add(pymodule.get_resource())
 
     def get_resource(self):
         return self.resource

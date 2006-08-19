@@ -159,7 +159,24 @@ class RefactoringTest(unittest.TestCase):
         self.refactoring.rename(mod2, len(mod2.read()) - 3, 'a_func')
         self.assertEquals('def a_func():\n    return 0\n', mod1.read())
         self.assertEquals('import mod1\na_var = mod1.a_func()\n', mod2.read())
+    
+    def test_undoing_refactorings(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('def a_func():\n    pass\na_func()\n')
+        self.refactoring.rename(mod1, len(mod1.read()) - 5, 'new_func')
+        self.refactoring.undo_last_refactoring()
+        self.assertEquals('def a_func():\n    pass\na_func()\n', mod1.read())
         
+    def test_undoing_renaming_modules(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('def a_func():\n    pass\n')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2.write('from mod1 import a_func\n')
+        self.refactoring.rename(mod2, 6, 'newmod')
+        self.refactoring.undo_last_refactoring()
+        self.assertEquals('mod1.py', mod1.get_path())
+        self.assertEquals('from mod1 import a_func\n', mod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()
