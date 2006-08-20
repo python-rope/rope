@@ -20,11 +20,10 @@ class FileEditor(object):
         self.saving = False
     
     def _editor_was_modified(self):
-        for observer in self.modification_observers:
+        for observer in list(self.modification_observers):
             observer(self)
     
     def _file_was_modified(self, file_):
-        print 'FileEditor._file_was_modified' # DEBUG
         if not self.saving:
             self.editor.set_text(file_.read())
             self.editor.saving_editor()

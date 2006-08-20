@@ -42,17 +42,17 @@ class Project(object):
         return self._get_files_recursively(self.get_root_folder())
 
     def _create_file(self, fileName):
-        filePath = self._get_resource_path(fileName)
-        if os.path.exists(filePath):
-            if os.path.isfile(filePath):
+        file_path = self._get_resource_path(fileName)
+        if os.path.exists(file_path):
+            if os.path.isfile(file_path):
                 raise RopeException('File already exists')
             else:
                 raise RopeException('A folder with the same name as this file already exists')
         try:
-            newFile = open(filePath, 'w')
+            new_file = open(file_path, 'w')
         except IOError, e:
             raise RopeException(e)
-        newFile.close()
+        new_file.close()
 
     def _create_folder(self, folderName):
         folderPath = self._get_resource_path(folderName)
@@ -178,8 +178,7 @@ class _File(Resource):
         file_ = open(self.project._get_resource_path(self.name), 'w')
         file_.write(contents)
         file_.close()
-        print self.get_name(), self.observers
-        for observer in self.observers:
+        for observer in list(self.observers):
             observer(self)
         self.get_parent()._child_changed(self)
 
@@ -189,7 +188,7 @@ class _File(Resource):
     def remove(self):
         Project.remove_recursively(self.project._get_resource_path(self.name))
         self.project._update_resource_location(self)
-        for observer in self.observers:
+        for observer in list(self.observers):
             observer(self)
         self.get_parent()._child_changed(self)
 
@@ -313,7 +312,7 @@ class _Folder(Resource):
     
     def _child_changed(self, child):
         if child != self:
-            for observer in self.observers:
+            for observer in list(self.observers):
                 observer(self)
 
 
