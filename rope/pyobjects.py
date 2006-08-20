@@ -324,6 +324,8 @@ class _ScopeVisitor(object):
             if alias is None and '.' in imported:
                 tokens = imported.split('.')
                 toplevel_module = self._get_module_with_packages(name)
+                if toplevel_module is not None:
+                    toplevel_module._add_dependant(self.owner_object.get_module())
                 self.names[tokens[0]] = PyName(toplevel_module, False, 
                                                module=toplevel_module.get_module(),
                                                lineno=lineno)

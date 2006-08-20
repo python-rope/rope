@@ -154,7 +154,7 @@ class ChangeSet(Change):
                 done.append(change)
         except Exception:
             for change in done:
-                done.undo()
+                change.undo()
             raise
     
     def undo(self):
@@ -165,7 +165,7 @@ class ChangeSet(Change):
                 done.append(change)
         except Exception:
             for change in done:
-                done.do()
+                change.do()
             raise
     
     def add_change(self, change):

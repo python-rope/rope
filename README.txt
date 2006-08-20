@@ -16,12 +16,12 @@ Version Overview
 
 Features added in this release:
 
-* Undoing refactorings
 * Rename modules/packages
-* Reloading changed editors after refactorings
-* Rename class/function
-* Simple function returned object inference
 * Show PyDoc; F2
+* Rename class/function
+* Undoing refactorings
+* Simple function returned object inference
+* Reloading changed editors after refactorings
 * Object inference for chained assignments
 
 

@@ -16,10 +16,11 @@ class FileEditor(object):
         self.editor.set_text(self.file.read())
         self.modification_observers = []
         self.editor.add_modification_observer(self._editor_was_modified)
+        self.file.get_parent().add_change_observer(self._editor_was_modified)
         self.file.add_change_observer(self._file_was_modified)
         self.saving = False
     
-    def _editor_was_modified(self):
+    def _editor_was_modified(self, *args):
         for observer in list(self.modification_observers):
             observer(self)
     

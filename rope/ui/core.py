@@ -28,6 +28,8 @@ class EditorManager(object):
         self.active_editor = None
 
     def _editor_was_modified(self, editor):
+        if editor not in self.buttons:
+            return
         new_title = editor.get_file().get_name()
         if editor.get_editor().is_modified():
             new_title = '*' + new_title
