@@ -175,9 +175,10 @@ class _File(Resource):
         return open(self.project._get_resource_path(self.name)).read()
 
     def write(self, contents):
-        file = open(self.project._get_resource_path(self.name), 'w')
-        file.write(contents)
-        file.close()
+        file_ = open(self.project._get_resource_path(self.name), 'w')
+        file_.write(contents)
+        file_.close()
+        print self.get_name(), self.observers
         for observer in self.observers:
             observer(self)
         self.get_parent()._child_changed(self)

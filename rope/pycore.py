@@ -33,10 +33,10 @@ class PyCore(object):
 
     def _invalidate_resource_cache(self, resource):
         if resource in self.module_map:
-            module = self.module_map[resource]
+            local_module = self.module_map[resource]
             del self.module_map[resource]
             resource.remove_change_observer(self._invalidate_resource_cache)
-            for dependant in module.dependant_modules:
+            for dependant in local_module.dependant_modules:
                 self._invalidate_resource_cache(dependant)
 
     def create_module(self, src_folder, new_module):
@@ -53,9 +53,9 @@ class PyCore(object):
         parent = src_folder
         for package in packages[:-1]:
             parent = parent.get_child(package)
-        created_package = parent.create_folder(packages[-1])
-        created_package.create_file('__init__.py')
-        return created_package
+        made_packages = parent.create_folder(packages[-1])
+        made_packages.create_file('__init__.py')
+        return made_packages
 
     def _find_module_in_source_folder(self, source_folder, module_name):
         result = []

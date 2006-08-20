@@ -243,6 +243,9 @@ Stories
 * Move a class/function to another module
 
 
+* Renaming attributes in a hierarchy
+
+
 * Analyzing function decorators
 
 

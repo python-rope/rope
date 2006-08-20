@@ -191,16 +191,18 @@ class PyPackage(_PyModule):
         if self.resource is None:
             return
         for child in self.resource.get_children():
-            child_pyobject = self.pycore.resource_to_pyobject(child)
-            child_pyobject._add_dependant(self)
             if child.is_folder():
+                child_pyobject = self.pycore.resource_to_pyobject(child)
+                child_pyobject._add_dependant(self)
                 attributes[child.get_name()] = PyName(child_pyobject, False, 1,
                                                       child_pyobject)
             elif child.get_name().endswith('.py') and \
                  child.get_name() != '__init__.py':
+                child_pyobject = self.pycore.resource_to_pyobject(child)
+                child_pyobject._add_dependant(self)
                 name = child.get_name()[:-3]
                 attributes[name] = PyName(child_pyobject, False, 1,
-                                                      child_pyobject)
+                                          child_pyobject)
 
     def _get_init_dot_py(self):
         if self.resource is not None and self.resource.has_child('__init__.py'):
@@ -404,7 +406,7 @@ class _ClassInitVisitor(_AssignVisitor):
         super(_ClassInitVisitor, self).__init__(scope_visitor)
     
     def visitAssAttr(self, node):
-        if node.expr.name == 'self':
+        if isinstance(node.expr, compiler.ast.Name) and node.expr.name == 'self':
             self.scope_visitor.names[node.attrname] = PyName(lineno=node.lineno, 
                                                              module=self.scope_visitor.get_module())
             self.scope_visitor.names[node.attrname].assigned_asts.append(self.assigned_ast)

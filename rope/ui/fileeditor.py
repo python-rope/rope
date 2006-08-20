@@ -24,6 +24,7 @@ class FileEditor(object):
             observer(self)
     
     def _file_was_modified(self, file_):
+        print 'FileEditor._file_was_modified' # DEBUG
         if not self.saving:
             self.editor.set_text(file_.read())
             self.editor.saving_editor()
