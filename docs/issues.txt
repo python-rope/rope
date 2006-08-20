@@ -12,15 +12,16 @@ quarter.  That is
 =====  ===============
 Week   Release Number
 =====  ===============
-2      x.ypre1
-4      x.ypre2
-6      x.ypre3
-8      x.ypre4
-10     x.ypre5
-12     x.y
+2      x.ym1
+4      x.ym2
+6      x.ym3
+8      x.ym4
+10     x.ym5
+12     x.yrc1
+13     x.y
 =====  ===============
 
-This is only a rough plan.  For example some release candidates
+This is only a rough plan.  For example some more release candidates
 might be released before the ``x.y`` release.
 
 
@@ -49,7 +50,7 @@ Possible Plans
 Releases
 --------
 
-0.3pre1
+0.3m1
     Working on.
 
 
@@ -72,6 +73,13 @@ Stories
 
 Big Picture
     ...
+
+
+Changing Release Names
+----------------------
+
+From ``0.2`` release, the ``pre`` in package versions will be replaced
+with ``m``.  I think ``preview`` works but ``milestone`` is better.
 
 
 Finding Occurances
@@ -410,7 +418,7 @@ The two ``a_var`` names in the third line reference different objects.
 That is if a name is defined in class body it is an attribute and if
 the name is used it must be looked up in parent scope.
 
-This problem was solved for ``0.3pre1`` release.
+This problem was solved for ``0.3m1`` release.
 
 
 Renaming modules/packages
@@ -421,9 +429,10 @@ There are two differences:
 
 1. We should both rename the occurances of the module name and its
    file or folder.
-2. The only part of the problem is after ``from`` import statements.
+2. The only problem is handling names after ``from`` in from-import
+   statements.
 
-This was done for ``0.3pre1`` release.
+This was done for ``0.3m1`` release.
 
 
 Undoing Refactorings
@@ -431,6 +440,8 @@ Undoing Refactorings
 
 If we encounter an exception while doing our refactoring we should
 undo the changes made so far.
+
+This was done for ``0.3m1`` release.
 
 
 Profiling Renaming
@@ -474,12 +485,31 @@ Refactorings like inline/extract function can be done without using
 AST's, too.
 
 
-Working More On The UI Parts
-============================
+The GUI Mess; Working More On The UI Parts
+==========================================
 
 My ignorance to UI has make some modules like `rope.ui.core` and
 `rope.ui.editor` very large and full of duplication.  These modules
 need many refactorings.  Put more time on these modules.
+
+
+Introducing Extension Points
+----------------------------
+
+Define Some extension points for the UI.  I think ``menu`` and
+``key`` extension points are enough for now.  A difficulty for using
+extension points is that extensions may be meaningful only in some
+contexts.  For example when no editor is open the ``Edit`` menu does
+not make any sense or when not editing a python file the
+``Run Module`` menu item is meaningless.  Even in a context a menu
+item might be disabled sometimes; like ``undo`` menu item.
+
+
+Better Dialogs
+--------------
+
+Many dialogs look very similar.  They can be factored.  Continue
+using `rope.ui.uihelpers` module and extend it.
 
 
 `PyName`\s and `PyObject`\s; Values Or References
@@ -492,7 +522,7 @@ imported some older objects from this changed module and problems
 start.  Because the imported objects are no longer valid and fail when
 finding occurances of some object.
 
-Was done for ``0.3pre1``.
+Was done for ``0.3m1``.
 
 
 The Problem

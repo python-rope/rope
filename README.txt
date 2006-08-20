@@ -16,6 +16,7 @@ Version Overview
 
 Features added in this release:
 
+* Undoing refactorings
 * Rename modules/packages
 * Reloading changed editors after refactorings
 * Rename class/function
@@ -30,14 +31,15 @@ Getting Started
 If it is the first time you use *rope*, it might be helpful to try
 these:
 
-=============  ======================
-Alt-/          Show code assists
-Ctrl-o         Show quick outline
-F3             Go to definition
-Alt-Shift-r    Rename Refactoring
-Alt-Q r        Show project tree
-F2             Show PyDoc
-=============  ======================
+==============  ======================
+Alt-/           Show code assists
+Ctrl-o          Show quick outline
+F3              Go to definition
+Alt-Shift-r     Rename Refactoring
+Alt-Shift-q r   Show project tree
+F2              Show PyDoc
+Ctrl-F11        Run module
+==============  ======================
 
 You can complete names as you type by using code assist (``M-/``).
 The capital letter in the left shows the type of the proposal.  `L`

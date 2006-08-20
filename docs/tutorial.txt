@@ -7,17 +7,17 @@
 Overview
 ========
 
-Right now most of rope's development efforts are toward developing the
-core parts and not the UI. Because of this UI parts don't look very
+Right now most of rope's development efforts are toward developing
+core parts and not the UI.  Because of this UI parts don't look very
 user friendly and there is no documentation or help for the UI
-parts. This does not mean that rope does not allow you to use the
-developed features in the core parts. We highly believe and value fast
-feedback. And developed features are added to the UI before marking
-them as complete.
+parts.  This tutorial tries to demonstrate how to use rope for basic
+programming tasks.  This tutorial attempts to give a fast overview of
+rope and some of its basic features.
 
-This tutorial tries to demonstrate how to use rope for basic programming
-tasks. This tutorial attempts to give a fast overview of rope and some
-of its features.
+For finding more about rope features and keybinding have a look at
+`README.txt`_ file.
+
+.. _README.txt: ../README.txt
 
 
 Starting Rope
@@ -30,7 +30,7 @@ Creating And Opening Projects
 =============================
 
 To create or open a project select the ``Open Project`` from the file
-menu. You will be asked about the location of the root(toplevel)
+menu.  You will be asked about the location of the root(toplevel)
 folder of your project.
 
 
@@ -60,7 +60,7 @@ File.New File         folder1/folder2     file3.txt
 ====================  ==================  =================
 
 Note that for making ``file3.txt`` we've used ``/`` as a directory
-separator. You should always use ``/`` as directory separator
+separator.  You should always use ``/`` as directory separator
 regardless of the operating system you are running rope on.
 
 
@@ -101,9 +101,9 @@ Opening Files
 =============
 
 You can select the ``Find File`` item from the ``File`` menu or use
-``C-x C-f``. In the `Find File` dialog use the name of the file or
-module to find it. The dialog shows all files that start with the
-given name. Press enter to open the file.
+``C-x C-f``.  In the `Find File` dialog use the name of the file or
+module to find it.  The dialog shows all files that start with the
+given name.  Press enter to open the file.
 
 
 Saving A File
@@ -115,22 +115,22 @@ Use ``C-x C-s`` to save the contents of the active editor.
 Changing Editor
 ===============
 
-With rope you can open and edit many files at the same time. To switch
+With rope you can open and edit many files at the same time.  To switch
 between open editors you can use ``C-x b``.
 
 
 Closing An Editor
 =================
 
-Use ``C-x C-k`` to close the active editor.
+Use ``C-x k`` to close the active editor.
 
 
 Emacs Keybindings
 =================
 
-*rope* uses emacs keybindings most of the time. For example in most of
+*rope* uses emacs keybindings most of the time.  For example in most of
 the dialogs like ``code assist`` or ``outline`` you can use ``C-n``
-and ``C-p`` to move throw the items.
+and ``C-p`` to move over the items.
 
 Copying And Cutting
 -------------------

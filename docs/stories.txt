@@ -62,9 +62,6 @@ Stories
 * Replacement; M-%
 
 
-* Save as and save all; C-x C-w, C-x s
-
-
 * Remembering last open project
 
 
@@ -246,6 +243,9 @@ Stories
 * Move a class/function to another module
 
 
+* Analyzing function decorators
+
+
 * Read ``__init__.py`` of packages
   Should folders contain ``__init__.py`` to be considered packages?
 
@@ -260,9 +260,6 @@ Stories
 
 
 > Public Release 0.3pre1 : August 20, 2006
-
-
-* Undoing refactorings
 
 
 Remaining Stories

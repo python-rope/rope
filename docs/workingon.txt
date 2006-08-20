@@ -1,14 +1,8 @@
-Undoing Refactorings
-====================
-
-- Undoing if an exception occurs
-- Adding to UI
-
-
 Clean Ups And Refactorings
 ==========================
 
 * Updating editor buttons after file has been renamed
+* More work on ``tutorial.txt``
 * Showing the initial name in renaming dialogs
 * Refactor `rope.ui.editor` and `rope.ui.core` modules
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
