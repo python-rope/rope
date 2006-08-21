@@ -2,8 +2,9 @@ Extract Function
 ================
 
 - Extracting to after the end of scope not end of file
+- Returning values
 
-* Returning values
+* Addition to UI
 * Exception on bad ranges
 * Module level extract method
 * Extract method

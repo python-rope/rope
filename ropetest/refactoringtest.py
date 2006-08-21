@@ -224,6 +224,25 @@ class RefactoringTest(unittest.TestCase):
                    "def new_func(a_var, another_var):\n    third_var = a_var + another_var\n"
         self.assertEquals(expected, refactored)
 
+    def test_simple_extract_function_with_return_value(self):
+        code = "def a_func():\n    a_var = 10\n    print a_var\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "def a_func():\n    a_var = new_func()\n    print a_var\n\n" \
+                   "def new_func():\n    a_var = 10\n    return a_var\n"
+        self.assertEquals(expected, refactored)
+
+    def test_simple_extract_function_with_multiple_return_values(self):
+        code = "def a_func():\n    a_var = 10\n    another_var = 20\n" \
+               "    third_var = a_var + another_var\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "def a_func():\n    a_var, another_var = new_func()\n" \
+                   "    third_var = a_var + another_var\n\n" \
+                   "def new_func():\n    a_var = 10\n    another_var = 20\n" \
+                   "    return a_var, another_var\n"
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

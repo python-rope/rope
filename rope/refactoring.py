@@ -151,23 +151,32 @@ class _ExtractMethodPerformer(object):
         
     def extract(self):
         args = self._find_function_arguments()
+        returns = self._find_function_returns()
         method_signature = self._get_method_signature(args)
         result = []
         result.append(self.source_code[:self.start_offset])
-        result.append(' ' * self.scope_indents + method_signature + '\n')
+        call_prefix = ''
+        if returns:
+            call_prefix = self._get_comma_form(returns) + ' = '
+        result.append(' ' * self.scope_indents + call_prefix + method_signature + '\n')
         result.append(self.source_code[self.end_offset:self.scope_end])
         result.append('\ndef %s:\n' % method_signature)
         result.append(self.source_code[self.start_offset:self.end_offset])
+        if returns:
+            result.append(' ' * self.scope_indents + 'return %s\n' % self._get_comma_form(returns))
         result.append(self.source_code[self.scope_end:])
         return ''.join(result)
     
     def _get_method_signature(self, args):
-        result = self.extracted_name + '('
-        if args:
-            result += args[0]
-            for arg in args[1:]:
-                result += ', ' + arg
-        return result + ')'
+        return self.extracted_name + '(%s)' % self._get_comma_form(args)
+    
+    def _get_comma_form(self, names):
+        result = ''
+        if names:
+            result += names[0]
+            for name in names[1:]:
+                result += ', ' + name
+        return result        
     
     def _find_function_arguments(self):
         start1 = self.lines.get_line_start(self.holding_scope.get_start() + 1)
@@ -185,6 +194,23 @@ class _ExtractMethodPerformer(object):
         visitor2 = _VariableReadsAndWritesFinder()
         compiler.walk(ast2, visitor2)
         return list(visitor1.written.intersection(visitor2.read))
+    
+    def _find_function_returns(self):
+        code2 = self._deindent_lines(self.source_code[self.start_offset:
+                                                      self.end_offset],
+                                     self.scope_indents)
+        ast2 = compiler.parse(code2)
+        visitor2 = _VariableReadsAndWritesFinder()
+        compiler.walk(ast2, visitor2)
+        
+        code3 = self._deindent_lines(self.source_code[self.end_offset:
+                                                      self.scope_end],
+                                     self.scope_indents)
+        ast3 = compiler.parse(code3)
+        visitor3 = _VariableReadsAndWritesFinder()
+        compiler.walk(ast3, visitor3)
+        
+        return list(visitor2.written.intersection(visitor3.read))
         
     def _choose_closest_line_end(self, source_code, offset):
         lineno = self.lines.get_line_number(offset)
