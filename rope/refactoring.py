@@ -2,6 +2,7 @@ import compiler
 import re
 
 import rope.codeanalyze
+import rope.pyobjects
 
 
 class Refactoring(object):
@@ -133,43 +134,64 @@ class PythonRefactoring(Refactoring):
     def undo_last_refactoring(self):
         self.last_changes.undo()
 
+
 class _ExtractMethodPerformer(object):
     
     def __init__(self, refactoring, source_code, start_offset, end_offset, extracted_name):
         self.refactoring = refactoring
         self.source_code = source_code
         self.extracted_name = extracted_name
-        scope = self.refactoring.pycore.get_string_scope(source_code)
+        
         self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
         self.start_offset = self._choose_closest_line_end(source_code, start_offset)
         self.end_offset = self._choose_closest_line_end(source_code, end_offset)
+        
         start_line = self.lines.get_line_number(start_offset)
+        scope = self.refactoring.pycore.get_string_scope(source_code)
         self.holding_scope = scope.get_inner_scope_for_line(start_line)
         self.scope_start = self.lines.get_line_start(self.holding_scope.get_start())
         self.scope_end = self.lines.get_line_end(self.holding_scope.get_end()) + 1
         self.scope_indents = self._get_indents(self.holding_scope.get_start() + 1)
+
+        self.is_method = self.holding_scope.parent.pyobject.get_type() == \
+                         rope.pyobjects.PyObject.get_base_type('Type')
         
     def extract(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
-        method_signature = self._get_method_signature(args)
+        
         result = []
         result.append(self.source_code[:self.start_offset])
         call_prefix = ''
         if returns:
             call_prefix = self._get_comma_form(returns) + ' = '
-        result.append(' ' * self.scope_indents + call_prefix + method_signature + '\n')
+        result.append(' ' * self.scope_indents + call_prefix + self._get_function_call(args) + '\n')
         result.append(self.source_code[self.end_offset:self.scope_end])
-        result.append('\ndef %s:\n' % method_signature)
+        result.append('\n%sdef %s:\n' %
+                      (' ' * self._get_indents(self.holding_scope.get_start()),
+                       self._get_function_signature(args)))
         result.append(self.source_code[self.start_offset:self.end_offset])
         if returns:
             result.append(' ' * self.scope_indents + 'return %s\n' % self._get_comma_form(returns))
         result.append(self.source_code[self.scope_end:])
         return ''.join(result)
     
-    def _get_method_signature(self, args):
+    def _get_function_signature(self, args):
+        args = list(args)
+        if self.is_method:
+            if  'self' in args:
+                args.remove(self)
+            args.insert(0, 'self')
         return self.extracted_name + '(%s)' % self._get_comma_form(args)
     
+    def _get_function_call(self, args):
+        prefix = ''
+        if self.is_method:
+            if  'self' in args:
+                args.remove(self)
+            prefix = 'self.'
+        return prefix + '%s(%s)' % (self.extracted_name, self._get_comma_form(args))
+
     def _get_comma_form(self, names):
         result = ''
         if names:
@@ -208,8 +230,7 @@ class _ExtractMethodPerformer(object):
                                      self.scope_indents)
         ast3 = compiler.parse(code3)
         visitor3 = _VariableReadsAndWritesFinder()
-        compiler.walk(ast3, visitor3)
-        
+        compiler.walk(ast3, visitor3)        
         return list(visitor2.written.intersection(visitor3.read))
         
     def _choose_closest_line_end(self, source_code, offset):

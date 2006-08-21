@@ -1,13 +1,11 @@
 Extract Function
 ================
 
-- Extracting to after the end of scope not end of file
-- Returning values
+- Extract method
 
-* Addition to UI
-* Exception on bad ranges
 * Module level extract method
-* Extract method
+* Addition to UI
+* Exception on bad ranges or if in class body
 
 
 Remaining Stories

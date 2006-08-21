@@ -232,7 +232,7 @@ class RefactoringTest(unittest.TestCase):
                    "def new_func():\n    a_var = 10\n    return a_var\n"
         self.assertEquals(expected, refactored)
 
-    def test_simple_extract_function_with_multiple_return_values(self):
+    def test_extract_function_with_multiple_return_values(self):
         code = "def a_func():\n    a_var = 10\n    another_var = 20\n" \
                "    third_var = a_var + another_var\n"
         start, end = self._convert_line_range_to_offset(code, 2, 3)
@@ -241,6 +241,34 @@ class RefactoringTest(unittest.TestCase):
                    "    third_var = a_var + another_var\n\n" \
                    "def new_func():\n    a_var = 10\n    another_var = 20\n" \
                    "    return a_var, another_var\n"
+        self.assertEquals(expected, refactored)
+
+    def test_simple_extract_method(self):
+        code = "class AClass(object):\n\n" \
+               "    def a_func(self):\n        print 'one'\n        print 'two'\n"
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "class AClass(object):\n\n" \
+                   "    def a_func(self):\n        self.new_func()\n        print 'two'\n\n" \
+                   "    def new_func(self):\n        print 'one'\n"
+        self.assertEquals(expected, refactored)
+
+    def test_extract_method_with_args_and_returns(self):
+        code = "class AClass(object):\n" \
+               "    def a_func(self):\n" \
+               "        a_var = 10\n" \
+               "        another_var = a_var * 3\n" \
+               "        third_var = a_var + another_var\n"
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "class AClass(object):\n" \
+                   "    def a_func(self):\n" \
+                   "        a_var = 10\n" \
+                   "        another_var = self.new_func(a_var)\n" \
+                   "        third_var = a_var + another_var\n\n" \
+                   "    def new_func(self, a_var):\n" \
+                   "        another_var = a_var * 3\n" \
+                   "        return another_var\n"
         self.assertEquals(expected, refactored)
 
 
