@@ -10,6 +10,7 @@ For an overview of future goals of rope have a look at `future.txt`_ file.
 Stories
 =======
 
+
 > Unestimated Stories
 
 
@@ -234,10 +235,10 @@ Stories
 * Rename method/attribute
 
 
-* Function argument object inference
-
-
 * Move a module or package to another package
+
+
+* Inline method
 
 
 * Move a class/function to another module
@@ -249,20 +250,23 @@ Stories
 * Analyzing function decorators
 
 
-* Read ``__init__.py`` of packages
-  Should folders contain ``__init__.py`` to be considered packages?
+* Function argument object inference
 
 
-* Extract function
-
-
-* Relative imports
+> Public Release 0.3m2 : September 3, 2006
 
 
 * Subversion support using pysvn
 
 
-> Public Release 0.3pre1 : August 20, 2006
+* Read ``__init__.py`` of packages
+  Should folders contain ``__init__.py`` to be considered packages?
+
+
+* Relative imports
+
+
+* Extract function
 
 
 Remaining Stories

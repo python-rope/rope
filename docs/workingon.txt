@@ -1,5 +1,16 @@
-Clean Ups And Refactorings
-==========================
+Extract Function
+================
+
+- Extracting to after the end of scope not end of file
+
+* Returning values
+* Exception on bad ranges
+* Module level extract method
+* Extract method
+
+
+Remaining Stories
+=================
 
 * Showing the initial name in renaming dialogs
 * Refactor `rope.ui.editor` and `rope.ui.core` modules
@@ -7,10 +18,6 @@ Clean Ups And Refactorings
 * Performing refactorings based on the object of the pyname
 * Review `rope.codeanalyze`; module there seems to be many places to refactor
 * Refactoring `rope.refactoring` module; removing duplication
-
-
-Remaining Stories
-=================
 
 * Goto definition for ``# comment.\na_var``
 * Better editor changing dialog; use uihelpers module

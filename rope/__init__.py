@@ -1,1 +1,1 @@
-VERSION = '0.3m1'
+VERSION = '0.3m2'

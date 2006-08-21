@@ -189,9 +189,12 @@ class _HoldingScopeFinder(object):
     def find_scope_end(self, scope):
         if not scope.parent:
             return self.lines.length()
+        end = scope.get_start()
         for l in range(scope.get_start() + 1, self.lines.length()):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):
-                if self.get_indents(l) < self._get_scope_indents(scope):
-                    return l
+                if self.get_indents(l) <= self._get_scope_indents(scope):
+                    return end
+                else:
+                    end = l
         return self.lines.length()

@@ -2,6 +2,7 @@ import unittest
 
 from rope.refactoring import PythonRefactoring
 from rope.project import Project
+import rope.codeanalyze
 from ropetest import testutils
 
 class RefactoringTest(unittest.TestCase):
@@ -176,6 +177,52 @@ class RefactoringTest(unittest.TestCase):
         self.refactoring.undo_last_refactoring()
         self.assertEquals('mod1.py', mod1.get_path())
         self.assertEquals('from mod1 import a_func\n', mod2.read())
+    
+    def _convert_line_range_to_offset(self, code, start, end):
+        lines = rope.codeanalyze.SourceLinesAdapter(code)
+        return lines.get_line_start(start), lines.get_line_end(end)
+    
+    def test_simple_extract_function(self):
+        code = "def a_func():\n    print 'one'\n    print 'two'\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        refactored = self.refactoring.extract_method(code, start, end, 'extracted')
+        expected = "def a_func():\n    extracted()\n    print 'two'\n\n" \
+                   "def extracted():\n    print 'one'\n"
+        self.assertEquals(expected, refactored)
+
+    def test_extract_function_after_scope(self):
+        code = "def a_func():\n    print 'one'\n    print 'two'\n\nprint 'hey'\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        refactored = self.refactoring.extract_method(code, start, end, 'extracted')
+        expected = "def a_func():\n    extracted()\n    print 'two'\n\n" \
+                   "def extracted():\n    print 'one'\n\nprint 'hey'\n"
+        self.assertEquals(expected, refactored)
+
+    def test_simple_extract_function_with_parameter(self):
+        code = "def a_func():\n    a_var = 10\n    print a_var\n"
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "def a_func():\n    a_var = 10\n    new_func(a_var)\n\n" \
+                   "def new_func(a_var):\n    print a_var\n"
+        self.assertEquals(expected, refactored)
+
+    def test_not_unread_variables_as_parameter(self):
+        code = "def a_func():\n    a_var = 10\n    print 'hey'\n"
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "def a_func():\n    a_var = 10\n    new_func()\n\n" \
+                   "def new_func():\n    print 'hey'\n"
+        self.assertEquals(expected, refactored)
+
+    def test_simple_extract_function_with_two_parameter(self):
+        code = "def a_func():\n    a_var = 10\n    another_var = 20\n" \
+               "    third_var = a_var + another_var\n"
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "def a_func():\n    a_var = 10\n    another_var = 20\n" \
+                   "    new_func(a_var, another_var)\n\n" \
+                   "def new_func(a_var, another_var):\n    third_var = a_var + another_var\n"
+        self.assertEquals(expected, refactored)
 
 
 if __name__ == '__main__':

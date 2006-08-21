@@ -75,11 +75,10 @@ Big Picture
     ...
 
 
-Changing Release Names
-----------------------
+To Be Discussed
+===============
 
-From ``0.2`` release, the ``pre`` in package versions will be replaced
-with ``m``.  I think ``preview`` works but ``milestone`` is better.
+* Reducing the cost of invalidation
 
 
 Finding Occurances
@@ -100,39 +99,6 @@ Rope searches all python files for a name.  But this seems unnecessary
 for local variables or modules that does not import that name.
 
 
-Can't We Start Static Type Inference?
-=====================================
-
-I need to think about the problems that might arise for static TI.
-Now I think that static TI is not that hard and in dynamic TI some of
-the approaches in static TI is used.  The difference is in the type
-inference of the function returned objects.  In the dynamic TI
-approach we use our database and in static TI we follow the return
-statement.
-
-For static type inference, we need some changes to the
-`_FunctionVisitor` class to collect the return AST nodes, too.  When
-we want to find out the returned type of the function, we look up in a
-dictionary for the given argument types.  If it is already calculated
-we return it, otherwise we type inference returned statement
-recursively.  A new question arises here and that is how we set the
-`PyObject` of argument `PyName`\s.
-
-There is some complex issues about type inferencing variables in
-functions, too.  For type inferencing a local variable we might need
-to have `PyObject`\s of arguements but we don't know the type of
-arguments.  In dynamic TI we can record the type of arguments and use
-them when needed.  But in static TI it is much harder because we need
-to find function calls and type inference the arguements that are
-passed to the function.
-
-So as a conclusion it seems better to mix static and dynamic TI.
-Static type inference seem to work good for general cases while
-dynamic inference seems more suitable for type inference of long
-chains of function calls and function arguments.  This means to use
-dynamic TI when static TI does not work or is expensive.
-
-
 Infering Function Argument Objects
 ==================================
 
@@ -149,39 +115,6 @@ The new relative import syntax will be supported by *rope* before
 python ``2.5`` release.  Think about supporting the old syntax.
 
 
-Builtin Types And Functions
-===========================
-
-What should we do about builtin functions and types?
-
-Builtin types:
-
-* list, typle
-* dict
-* str, unicode
-* file
-* set, frozenset
-* int, float, long, complex
-* iterator types
-* boolean
-
-Builtin constants:
-
-* False
-* True
-* None
-* NotImplemented
-* Ellipsis
-
-Builtin functions:
-
-* range
-* super
-
-One approach to builtin types would be to use the `__builtin__` module
-dynamically.
-
-
 Container Types Require Call Information
 ========================================
 
@@ -189,11 +122,40 @@ We need to know the type `list`\s and `dict`\s hold. This is actually
 a special case of knowing function argument objects.
 
 
-Heading For Refactorings Once More
-==================================
+Refactoring Issues
+==================
 
-After these recent object inference enhancements lets add some
-refactorings.
+Getting Source Code Or Resource?
+--------------------------------
+
+Considering the changes refactorings may make, we can devide them into
+two groups:
+
+* those that only change one piece of code
+* those that change multiple files
+
+For the second group, the `Refactoring` class should work on resources
+and make changes to them directly, but for the first group only
+passing the source code of one resource suffices.  The problem is
+that undo refactoring only works when we make changes to resources
+directly. Changing refactorings in the first group to use resources
+have the following consequences:
+
+* Undo refactoring will work on them, too.
+* All editors should be saved before performing them.
+
+
+AST Writer Might Be A Mistake
+-----------------------------
+
+Until recently I was thinking about the problems of working with ASTs
+for refactorings.  Now I feel that there might be other ways of
+transforming source code for refactorings.
+
+Many of refactorings only require the references to a name to be
+replaced with another.  This can be done without using ASTs.
+Refactorings like inline/extract function can be done without using
+AST's, too.
 
 
 Classifying Object Inference Goals
@@ -207,13 +169,6 @@ of rope:
   of arguements
 * Code assist for container types
 * Code assist for function arguments
-
-
-Isolating Text Widget Features
-==============================
-
-Some of the features of GraphicalEditor can be used in other widgets.
-Like completion, highlighting.
 
 
 Dyanmic Type Inference Issues
@@ -318,6 +273,39 @@ that it is ``None`` for modules that cannot be found.  This might be a
 *noticeable issue* in future.
 
 
+Can't We Start Static Type Inference?
+=====================================
+
+I need to think about the problems that might arise for static TI.
+Now I think that static TI is not that hard and in dynamic TI some of
+the approaches in static TI is used.  The difference is in the type
+inference of the function returned objects.  In the dynamic TI
+approach we use our database and in static TI we follow the return
+statement.
+
+For static type inference, we need some changes to the
+`_FunctionVisitor` class to collect the return AST nodes, too.  When
+we want to find out the returned type of the function, we look up in a
+dictionary for the given argument types.  If it is already calculated
+we return it, otherwise we type inference returned statement
+recursively.  A new question arises here and that is how we set the
+`PyObject` of argument `PyName`\s.
+
+There is some complex issues about type inferencing variables in
+functions, too.  For type inferencing a local variable we might need
+to have `PyObject`\s of arguements but we don't know the type of
+arguments.  In dynamic TI we can record the type of arguments and use
+them when needed.  But in static TI it is much harder because we need
+to find function calls and type inference the arguements that are
+passed to the function.
+
+So as a conclusion it seems better to mix static and dynamic TI.
+Static type inference seem to work good for general cases while
+dynamic inference seems more suitable for type inference of long
+chains of function calls and function arguments.  This means to use
+dynamic TI when static TI does not work or is expensive.
+
+
 Which Is Right? Type Or Object Inference
 ========================================
 
@@ -341,18 +329,6 @@ hidden beneath it.  Most of unit tests only test `PyCore` directly and
 other parts are tested indirectly through many layers that lead to
 `PyCore`.  I guess this is a bad sign.  Maybe I should put more time
 in making each layer more testable and independant of other layers.
-
-
-Refactoring `rope.codeanalyze` Module
-=====================================
-
-Merging `WordRangeFinder` and `StatementRangeFinder`.  Physical source
-divisions:
-
-* scope
-* block
-* logical line
-* primary
 
 
 Better Scope Finding Algorithm
@@ -386,103 +362,49 @@ approach would be a good solution.  But the problem is that the scope
 finding part is separate from refactoring part.
 
 
-Renaming Class Attributes
--------------------------
+Builtin Types And Functions
+===========================
 
-Renaming class attributes is almost the same as renaming a function
-or class.  The only difference is that the attribute inside class
-body is not renamed.  Consider this piece of code: ::
+What should we do about builtin functions and types?
 
-  class Sample(object):
-      an_attr = 'An Attribute'
-      
-      def a_method(self):
-          pass
-      
-      class AClass(object):
-          pass
+Builtin types:
 
-For renaming ``an_attr``, ``a_method`` or ``AClass`` all occurances of
-them will be renamed except the ones in class body.
+* list, typle
+* dict
+* str, unicode
+* file
+* set, frozenset
+* int, float, long, complex
+* iterator types
+* boolean
 
-On way of solving this problem might be to change `ClassScope` or
-maybe changing `ScopeNameFinder.get_name_at`.  The latter seems more
-practical.  In `get_name_at` method we can check whether the element
-is defined in class body.  That is we might have: ::
+Builtin constants:
 
-  a_var = 10
-  class Sample(object):
-      a_var = a_var
+* False
+* True
+* None
+* NotImplemented
+* Ellipsis
 
-The two ``a_var`` names in the third line reference different objects.
-That is if a name is defined in class body it is an attribute and if
-the name is used it must be looked up in parent scope.
+Builtin functions:
 
-This problem was solved for ``0.3m1`` release.
+* range
+* super
+
+One approach to builtin types would be to use the `__builtin__` module
+dynamically.
 
 
-Renaming modules/packages
-=========================
+Refactoring `rope.codeanalyze` Module
+=====================================
 
-Renaming module/package is very similar to renaming any other element.
-There are two differences:
+Merging `WordRangeFinder` and `StatementRangeFinder`.  Physical source
+divisions:
 
-1. We should both rename the occurances of the module name and its
-   file or folder.
-2. The only problem is handling names after ``from`` in from-import
-   statements.
-
-This was done for ``0.3m1`` release.
-
-
-Undoing Refactorings
-====================
-
-If we encounter an exception while doing our refactoring we should
-undo the changes made so far.
-
-This was done for ``0.3m1`` release.
-
-
-Profiling Renaming
-==================
-
-Renaming `Project` to `MyProject`:
-
-=========================================  =====
-function                                   time
-=========================================  =====
-refactoring:rename                         20.1
-refactoring:rename_pyname_in_file          17.6
-
-pyscopes:get_holding_scope(160)            17.4
-pyscopes:get_scopes(18)                    17.4
-pyscopes:_create_scopes(27)                17.4
-pyscopes:get_inner_scope_for_line          17.6
-
-codeanalyze:get_name_at                    17.8
-
-pycore:resource_to_project                 17.0
-pycore:get_module                          13.4
-
-pyobject:__init__(150)                     17.0
-pyobject:_update_attributes_from_ast(157)  17.2
-pyobject:visitFrom                         12.4
-pyobject:get_attributes(44)                17.2
-=========================================  =====
-
-
-AST Writer Might Be A Mistake
-=============================
-
-Until recently I was thinking about the problems of working with ASTs
-for refactorings.  Now I feel that there might be other ways of
-transforming source code for refactorings.
-
-Many of refactorings only require the references to a name to be
-replaced with another.  This can be done without using ASTs.
-Refactorings like inline/extract function can be done without using
-AST's, too.
+* scope
+* block
+* logical line
+* primary
 
 
 The GUI Mess; Working More On The UI Parts
@@ -511,76 +433,10 @@ Better Dialogs
 Many dialogs look very similar.  They can be factored.  Continue
 using `rope.ui.uihelpers` module and extend it.
 
+Isolating Text Widget Features
+------------------------------
 
-`PyName`\s and `PyObject`\s; Values Or References
-=================================================
+Some of the features of GraphicalEditor can be used in other widgets.
+Like completion, highlighting.
 
-Finally I am in a situation in which I should answer this old question
-to go forward.  The problem with current way of doing things is when
-some changes are made to some modules, other modules might have
-imported some older objects from this changed module and problems
-start.  Because the imported objects are no longer valid and fail when
-finding occurances of some object.
-
-Was done for ``0.3m1``.
-
-
-The Problem
------------
-
-Before proposing possible solution lets analyze the situation more
-deeply.  For making the discussion more accurate consider we have two
-modules `mod1` and `mod2` and the latter imports the other.
-
-``mod1.py``::
-  
-  class AClass(object):
-      pass
-
-``mod2.py``::
-
-  import mod1
-  
-  a = mod1.AClass()
-
-Consider after the creation of `PyModule` for `mod2` we change `mod1`:
-
-``mod1.py``::
-  
-  class AClass(object):
-      an_attr = 10
-
-The problems shows up here.  If we want to rename `mod1.AClass`, the
-third line in `mod2` will not be changed because it is not the object
-which should be changed.  Here we should have relied on old data.  But
-if we change `mod1` as:
-
-``mod1.py``::
-
-  AClass = str
-
-We should invalidate old data this time.  So the problem is not only
-using old data, but it is to invalidate the out of date data.
-
-
-Looser Coupling Between `PyModule`\s
-------------------------------------
-
-This is one of the approaches that does not seem applicable.  It says
-we don't import the main objects and we only point to the imported
-objects.  For example we can have something like `ImportedPyName` that
-only holds the module name and the imported name and looks for the real
-objects whenever needed.  Clearly this does not work; The `mod2.a`
-will contain an instance of `mod1.AClass`, but after change it should
-have been an empty string.  That is among module relations it is not
-the imported names only that are concerned.
-
-
-Making Module Dependency Graphs
--------------------------------
-
-For each module we can hold the modules that depend on it, so that
-if this module is changed all dependant modules would be invalidated.
-One advantage of this approach is that it eliminates the possibility
-of touching invalid objects.
 

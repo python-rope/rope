@@ -1,3 +1,4 @@
+import compiler
 import re
 
 import rope.codeanalyze
@@ -9,6 +10,9 @@ class Refactoring(object):
         """Returns the changed source_code or ``None`` if nothing has been changed"""
     
     def rename(self, resource, offset, new_name):
+        pass
+    
+    def extract_method(self, source_code, start_offset, end_offset, extracted_name):
         pass
     
     def undo_last_refactoring(self):
@@ -118,14 +122,107 @@ class PythonRefactoring(Refactoring):
     def _get_scope_range(self, source_code, offset, module_scope, lineno):
         lines = rope.codeanalyze.SourceLinesAdapter(source_code)
         holding_scope = module_scope.get_inner_scope_for_line(lineno)
-        range_finder = rope.codeanalyze.StatementRangeFinder(lines, lineno)
-        range_finder.analyze()
         start = lines.get_line_start(holding_scope.get_start())
         end = lines.get_line_end(holding_scope.get_end()) + 1
         return (start, end)
 
+    def extract_method(self, source_code, start_offset, end_offset, extracted_name):
+        return _ExtractMethodPerformer(self, source_code, start_offset,
+                                       end_offset, extracted_name).extract()
+    
     def undo_last_refactoring(self):
         self.last_changes.undo()
+
+class _ExtractMethodPerformer(object):
+    
+    def __init__(self, refactoring, source_code, start_offset, end_offset, extracted_name):
+        self.refactoring = refactoring
+        self.source_code = source_code
+        self.extracted_name = extracted_name
+        scope = self.refactoring.pycore.get_string_scope(source_code)
+        self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
+        self.start_offset = self._choose_closest_line_end(source_code, start_offset)
+        self.end_offset = self._choose_closest_line_end(source_code, end_offset)
+        start_line = self.lines.get_line_number(start_offset)
+        self.holding_scope = scope.get_inner_scope_for_line(start_line)
+        self.scope_start = self.lines.get_line_start(self.holding_scope.get_start())
+        self.scope_end = self.lines.get_line_end(self.holding_scope.get_end()) + 1
+        self.scope_indents = self._get_indents(self.holding_scope.get_start() + 1)
+        
+    def extract(self):
+        args = self._find_function_arguments()
+        method_signature = self._get_method_signature(args)
+        result = []
+        result.append(self.source_code[:self.start_offset])
+        result.append(' ' * self.scope_indents + method_signature + '\n')
+        result.append(self.source_code[self.end_offset:self.scope_end])
+        result.append('\ndef %s:\n' % method_signature)
+        result.append(self.source_code[self.start_offset:self.end_offset])
+        result.append(self.source_code[self.scope_end:])
+        return ''.join(result)
+    
+    def _get_method_signature(self, args):
+        result = self.extracted_name + '('
+        if args:
+            result += args[0]
+            for arg in args[1:]:
+                result += ', ' + arg
+        return result + ')'
+    
+    def _find_function_arguments(self):
+        start1 = self.lines.get_line_start(self.holding_scope.get_start() + 1)
+        code1 = self._deindent_lines(self.source_code[start1:
+                                                      self.start_offset],
+                                     self.scope_indents)
+        ast1 = compiler.parse(code1)
+        visitor1 = _VariableReadsAndWritesFinder()
+        compiler.walk(ast1, visitor1)
+        
+        code2 = self._deindent_lines(self.source_code[self.start_offset:
+                                                      self.end_offset],
+                                     self.scope_indents)
+        ast2 = compiler.parse(code2)
+        visitor2 = _VariableReadsAndWritesFinder()
+        compiler.walk(ast2, visitor2)
+        return list(visitor1.written.intersection(visitor2.read))
+        
+    def _choose_closest_line_end(self, source_code, offset):
+        lineno = self.lines.get_line_number(offset)
+        line_start = self.lines.get_line_start(lineno)
+        line_end = self.lines.get_line_end(lineno)
+        if source_code[line_start:offset].strip() == '':
+            return line_start
+        return line_end + 1
+    
+    def _get_indents(self, lineno):
+        indents = 0
+        for c in self.lines.get_line(lineno):
+            if c == ' ':
+                indents += 1
+            else:
+                break
+        return indents
+    
+    def _deindent_lines(self, source_code, amount):
+        lines = source_code.split('\n')
+        result = []
+        for l in lines:
+            if len(l) > amount:
+                result.append(l[amount:])
+        return '\n'.join(result)
+    
+
+class _VariableReadsAndWritesFinder(object):
+    
+    def __init__(self):
+        self.written = set()
+        self.read = set()
+    
+    def visitAssName(self, node):
+        self.written.add(node.name)
+    
+    def visitName(self, node):
+        self.read.add(node.name)
 
 
 class NoRefactoring(Refactoring):
