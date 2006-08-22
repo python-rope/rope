@@ -252,13 +252,6 @@ class Core(object):
 
         codeMenu.add_command(label='Code Assist',
                              command=code_assist, underline=0)
-        def local_rename():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._local_rename_dialog()
-
-        codeMenu.add_command(label='Rename Local Variable', 
-                             command=local_rename, underline=1)
         def goto_definition():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
@@ -272,16 +265,31 @@ class Core(object):
         refactor_menu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Refactor', 
                                  menu=refactor_menu, underline=5)
-        
         def rename():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._rename_refactoring_dialog()
 
-        refactor_menu.add_command(label='Rename Refactoring', 
+        refactor_menu.add_command(label='Rename', 
                              command=rename, underline=0)
         refactor_menu.add_command(label='Undo Last Refactoring',
                                   command=self._undo_last_refactoring, underline=0)
+        
+        refactor_menu.add_separator()
+        def local_rename():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._local_rename_dialog()
+
+        refactor_menu.add_command(label='Rename Local Variable', 
+                                  command=local_rename, underline=1)
+        def extract_method():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._extract_method_dialog()
+
+        refactor_menu.add_command(label='Extract Method', 
+                                  command=extract_method, underline=8)
 
         helpMenu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Help', menu=helpMenu, underline=3)

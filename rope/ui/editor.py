@@ -348,6 +348,7 @@ class GraphicalEditor(object):
             return 'break'
         self.text.bind('<Control-x>', ignore)
         self.text.bind('<F2>', lambda event: self._show_doc_window())
+        self.text.bind('<Alt-M>', lambda event: self._extract_method_dialog())
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
@@ -425,6 +426,46 @@ class GraphicalEditor(object):
         self.refactoring.rename(resource,
                                 self.get_current_offset(),
                                 new_name)
+    
+    def _extract_method_dialog(self, event=None):
+        toplevel = Toplevel()
+        toplevel.title('Extract Method')
+        frame = Frame(toplevel)
+        label = Label(frame, text='New Method Name :')
+        label.grid(row=0, column=0)
+        new_name_entry = Entry(frame)
+        new_name_entry.grid(row=0, column=1)
+        def ok(event=None):
+            self.extract_method_refactoring(new_name_entry.get())
+            toplevel.destroy()
+        def cancel(event=None):
+            toplevel.destroy()
+
+        ok_button = Button(frame, text='Done', command=ok)
+        cancel_button = Button(frame, text='Cancel', command=cancel)
+        ok_button.grid(row=1, column=0)
+        new_name_entry.bind('<Return>', lambda event: ok())
+        new_name_entry.bind('<Escape>', lambda event: cancel())
+        new_name_entry.bind('<Control-g>', lambda event: cancel())
+        cancel_button.grid(row=1, column=1)
+        frame.grid()
+        new_name_entry.focus_set()
+
+    def extract_method_refactoring(self, extracted_name):
+        initial_position = self.text.index(INSERT)
+        start = self.text.index('mark')
+        end = self.text.index(INSERT)
+        if self.text.compare(start, '>', end):
+            start, end = end, start
+        start_offset = self._get_offset(start)
+        end_offset = self._get_offset(end)
+        refactored = self.refactoring.extract_method(self.get_text(),
+                                                     start_offset, end_offset,
+                                                     extracted_name)
+        if refactored is not None:
+            self.set_text(refactored, False)
+            self.text.mark_set(INSERT, initial_position)
+            self.text.see(INSERT)
 
     def _local_rename_dialog(self, event=None):
         toplevel = Toplevel()

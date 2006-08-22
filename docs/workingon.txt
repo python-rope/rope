@@ -1,10 +1,8 @@
 Extract Function
 ================
 
-- Returning functions or classes
-- Module level extract function
-
 * Addition to UI; M-M
+* Imported names
 * Exception on bad ranges or if in class body
 * Inner functions reading function variables
 
