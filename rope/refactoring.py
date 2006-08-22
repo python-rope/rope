@@ -149,12 +149,21 @@ class _ExtractMethodPerformer(object):
         start_line = self.lines.get_line_number(start_offset)
         scope = self.refactoring.pycore.get_string_scope(source_code)
         self.holding_scope = scope.get_inner_scope_for_line(start_line)
+        if self.holding_scope.pyobject.get_type() != \
+           rope.pyobjects.PyObject.get_base_type('Module') and \
+           self.holding_scope.get_start()  == start_line:
+            self.holding_scope = self.holding_scope.parent
         self.scope_start = self.lines.get_line_start(self.holding_scope.get_start())
         self.scope_end = self.lines.get_line_end(self.holding_scope.get_end()) + 1
-        self.scope_indents = self._get_indents(self.holding_scope.get_start() + 1)
 
-        self.is_method = self.holding_scope.parent.pyobject.get_type() == \
+        self.is_method = self.holding_scope.parent is not None and \
+                         self.holding_scope.parent.pyobject.get_type() == \
                          rope.pyobjects.PyObject.get_base_type('Type')
+        self.is_global = self.holding_scope.pyobject.get_type() == \
+                         rope.pyobjects.PyObject.get_base_type('Module')
+        self.scope_indents = self._get_indents(self.holding_scope.get_start()) + 4
+        if self.is_global:
+            self.scope_indents = 0
         
     def extract(self):
         args = self._find_function_arguments()
@@ -162,18 +171,36 @@ class _ExtractMethodPerformer(object):
         
         result = []
         result.append(self.source_code[:self.start_offset])
+        if self.is_global:
+            result.append('\n%s\n' % self._get_function_definition())
         call_prefix = ''
         if returns:
             call_prefix = self._get_comma_form(returns) + ' = '
         result.append(' ' * self.scope_indents + call_prefix + self._get_function_call(args) + '\n')
         result.append(self.source_code[self.end_offset:self.scope_end])
-        result.append('\n%sdef %s:\n' %
+        if not self.is_global:
+            result.append('\n%s' % self._get_function_definition())
+        result.append(self.source_code[self.scope_end:])
+        return ''.join(result)
+    
+    def _get_function_definition(self):
+        args = self._find_function_arguments()
+        returns = self._find_function_returns()
+        if not self.is_global:
+            function_indents = self.scope_indents
+        else:
+            function_indents = 4
+        result = []
+        result.append('%sdef %s:\n' %
                       (' ' * self._get_indents(self.holding_scope.get_start()),
                        self._get_function_signature(args)))
-        result.append(self.source_code[self.start_offset:self.end_offset])
+        function_body = self.source_code[self.start_offset:self.end_offset]
+        if self.is_global:
+            function_body = self._indent_lines(function_body, function_indents)
+        result.append(function_body)
         if returns:
-            result.append(' ' * self.scope_indents + 'return %s\n' % self._get_comma_form(returns))
-        result.append(self.source_code[self.scope_end:])
+            result.append(' ' * function_indents +
+                          'return %s\n' % self._get_comma_form(returns))
         return ''.join(result)
     
     def _get_function_signature(self, args):
@@ -202,32 +229,32 @@ class _ExtractMethodPerformer(object):
     
     def _find_function_arguments(self):
         start1 = self.lines.get_line_start(self.holding_scope.get_start() + 1)
-        code1 = self._deindent_lines(self.source_code[start1:
-                                                      self.start_offset],
-                                     self.scope_indents)
+        code1 = self._indent_lines(self.source_code[start1:
+                                                    self.start_offset],
+                                     -self.scope_indents)
         ast1 = compiler.parse(code1)
         visitor1 = _VariableReadsAndWritesFinder()
         compiler.walk(ast1, visitor1)
         
-        code2 = self._deindent_lines(self.source_code[self.start_offset:
-                                                      self.end_offset],
-                                     self.scope_indents)
+        code2 = self._indent_lines(self.source_code[self.start_offset:
+                                                    self.end_offset],
+                                     -self.scope_indents)
         ast2 = compiler.parse(code2)
         visitor2 = _VariableReadsAndWritesFinder()
         compiler.walk(ast2, visitor2)
         return list(visitor1.written.intersection(visitor2.read))
     
     def _find_function_returns(self):
-        code2 = self._deindent_lines(self.source_code[self.start_offset:
-                                                      self.end_offset],
-                                     self.scope_indents)
+        code2 = self._indent_lines(self.source_code[self.start_offset:
+                                                    self.end_offset],
+                                   -self.scope_indents)
         ast2 = compiler.parse(code2)
         visitor2 = _VariableReadsAndWritesFinder()
         compiler.walk(ast2, visitor2)
         
-        code3 = self._deindent_lines(self.source_code[self.end_offset:
-                                                      self.scope_end],
-                                     self.scope_indents)
+        code3 = self._indent_lines(self.source_code[self.end_offset:
+                                                    self.scope_end],
+                                   -self.scope_indents)
         ast3 = compiler.parse(code3)
         visitor3 = _VariableReadsAndWritesFinder()
         compiler.walk(ast3, visitor3)        
@@ -250,12 +277,16 @@ class _ExtractMethodPerformer(object):
                 break
         return indents
     
-    def _deindent_lines(self, source_code, amount):
+    def _indent_lines(self, source_code, amount):
         lines = source_code.split('\n')
         result = []
         for l in lines:
-            if len(l) > amount:
-                result.append(l[amount:])
+            if amount < 0 and len(l) > -amount:
+                result.append(l[-amount:])
+            elif amount > 0 and l.strip() != '':
+                result.append(' ' * amount + l)
+            else:
+                result.append('')
         return '\n'.join(result)
     
 
@@ -270,6 +301,12 @@ class _VariableReadsAndWritesFinder(object):
     
     def visitName(self, node):
         self.read.add(node.name)
+    
+    def visitFunction(self, node):
+        self.written.add(node.name)
+
+    def visitClass(self, node):
+        self.written.add(node.name)
 
 
 class NoRefactoring(Refactoring):

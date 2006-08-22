@@ -1,11 +1,15 @@
 Extract Function
 ================
 
-- Extract method
+- Returning functions or classes
+- Module level extract function
 
-* Module level extract method
-* Addition to UI
+* Addition to UI; M-M
 * Exception on bad ranges or if in class body
+* Inner functions reading function variables
+
+* Rename local variable should go to the last cursor position after renaming
+* Shortcut for renaming local variable
 
 
 Remaining Stories
