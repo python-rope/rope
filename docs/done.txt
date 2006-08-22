@@ -3,6 +3,9 @@
 ===========
 
 
+- Extract function : August 22, 2006
+
+
 > Public Release 0.3m1 : August 20, 2006
 
 

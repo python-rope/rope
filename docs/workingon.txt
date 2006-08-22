@@ -1,20 +1,8 @@
-Extract Function
-================
-
-* Addition to UI; M-M
-* Imported names
-* Exception on bad ranges or if in class body
-* Inner functions reading function variables
-
-* Rename local variable should go to the last cursor position after renaming
-* Shortcut for renaming local variable
-
-
 Remaining Stories
 =================
 
+* A keyboard shortcut for renaming local variables
 * Showing the initial name in renaming dialogs
-* Refactor `rope.ui.editor` and `rope.ui.core` modules
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname
 * Review `rope.codeanalyze`; module there seems to be many places to refactor

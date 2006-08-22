@@ -476,7 +476,7 @@ class GraphicalEditor(object):
         new_name_entry = Entry(frame)
         new_name_entry.grid(row=0, column=1)
         def ok(event=None):
-            self.rename_refactoring(new_name_entry.get())
+            self.local_rename(new_name_entry.get())
             toplevel.destroy()
         def cancel(event=None):
             toplevel.destroy()

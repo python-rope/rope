@@ -1,6 +1,6 @@
 import unittest
 
-from rope.refactoring import PythonRefactoring
+from rope.refactoring import PythonRefactoring, RefactoringException
 from rope.project import Project
 import rope.codeanalyze
 from ropetest import testutils
@@ -285,6 +285,27 @@ class RefactoringTest(unittest.TestCase):
         refactored = self.refactoring.extract_method(code, start, end, 'new_func')
         expected = "print 'one'\n\ndef new_func():\n    print 'two'\n\nnew_func()\nprint 'three'\n"
         self.assertEquals(expected, refactored)
+
+    def test_extract_function_while_inner_function_reads(self):
+        code = "def a_func():\n    a_var = 10\n    " \
+               "def inner_func():\n        print a_var\n    return inner_func\n"
+        start, end = self._convert_line_range_to_offset(code, 3, 4)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "def a_func():\n    a_var = 10\n" \
+                   "    inner_func = new_func(a_var)\n    return inner_func\n\n" \
+                   "def new_func(a_var):\n    def inner_func():\n        print a_var\n" \
+                   "    return inner_func\n"
+        self.assertEquals(expected, refactored)
+
+    def test_extract_method_bad_range(self):
+        code = "def a_func():\n    pass\na_var = 10\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        try:
+            self.refactoring.extract_method(code, start, end, 'new_func')
+        except RefactoringException:
+            pass
+        else:
+            self.fail('Should have thrown exception')
 
 
 if __name__ == '__main__':

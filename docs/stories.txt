@@ -266,9 +266,6 @@ Stories
 * Relative imports
 
 
-* Extract function
-
-
 Remaining Stories
 -----------------
 * Migrating to sourceforge SVN before 0.3 release

@@ -79,6 +79,7 @@ To Be Discussed
 ===============
 
 * Reducing the cost of invalidation
+* Saving information for individual PyObjects or only for types
 
 
 Finding Occurances
@@ -418,13 +419,78 @@ need many refactorings.  Put more time on these modules.
 Introducing Extension Points
 ----------------------------
 
-Define Some extension points for the UI.  I think ``menu`` and
-``key`` extension points are enough for now.  A difficulty for using
-extension points is that extensions may be meaningful only in some
-contexts.  For example when no editor is open the ``Edit`` menu does
-not make any sense or when not editing a python file the
-``Run Module`` menu item is meaningless.  Even in a context a menu
-item might be disabled sometimes; like ``undo`` menu item.
+Define Some extension points for the UI.  I think ``menu`` and ``key``
+extension points are enough for now.  A difficulty for using extension
+points is that extensions may be meaningful only in some contexts.
+For example when no editor is open the ``Edit`` menu does not make any
+sense or when not editing a python file the ``Run Module`` menu item
+is meaningless.  Even in a context a menu item might be disabled
+sometimes; like ``undo`` menu item.
+
+Forgetting all these constraints we'd rather start with a simple hack.
+The first thing to keep in mind is that after this refactoring we
+probably want to put code assist dialogs in the same module maybe
+`rope.ui.codeassist`.  After this refactoring `rope.ui.editor` will
+contain only things that directly deal with editing and `rope.ui.core`
+only contains features that directly deal with files and projects.  Or
+maybe we can factor these things to a `rope.ui.filedialogs` module.
+
+One of the main things to decide about is how to register these
+callbacks to one of these extension points.  The easiest thing may be
+to specify the modules that contain extensions.  `Core` class loads
+those modules when needed.  We can either *push* or *pull* the data.
+In the push method as a module is being loaded it registers its
+components using methods that `Core` class makes available.
+Alternatively in the pull model, the module can set some variables
+that hold the data for registering the plugins.  When the modules
+are loaded, `Core` reads those variables and registers those
+components.
+
+Another issue is how to pass `Core` or any needed context information
+to these callbacks when they should execute; probably as arguments.
+
+
+Components
+~~~~~~~~~~
+
+More on components: is_enabled, is_visible methods? What are them at all.
+Sample code::
+
+  class Action(object):
+      
+      def is_enabled(self):
+          pass
+      
+      def get_name(self):
+          pass
+      
+      def do(self):
+          pass
+  
+      def get_key(self):
+          pass
+      
+      def get_menu(self):
+          pass
+      
+  class GoToDefinition(Action):
+      
+      def is_enabled(self):
+          return True
+      
+      def get_name(self):
+          return 'Go To Definition'
+      
+      def get_key(self):
+          return '<F3>'
+      
+      def get_menu(self):
+          return ['Code', 'Go To Definition']
+  
+  
+  gtd = GoToDefinition()
+  
+  Core.get_core().register(gtd)
 
 
 Better Dialogs
@@ -433,10 +499,10 @@ Better Dialogs
 Many dialogs look very similar.  They can be factored.  Continue
 using `rope.ui.uihelpers` module and extend it.
 
+
 Isolating Text Widget Features
 ------------------------------
 
 Some of the features of GraphicalEditor can be used in other widgets.
 Like completion, highlighting.
-
 

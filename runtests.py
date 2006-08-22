@@ -1,14 +1,5 @@
 import unittest
 
-import ropetest.ui.editortest
-import ropetest.ui.fileeditortest
-import ropetest.ui.coretest
-import ropetest.ui.mockeditortest
-import ropetest.ui.highlightertest
-import ropetest.ui.searchertest
-import ropetest.ui.statusbartest
-import ropetest.ui.uihelperstest
-import ropetest.ui.indentertest
 import ropetest.projecttest
 import ropetest.codeassisttest
 import ropetest.codeanalyzetest
@@ -18,8 +9,18 @@ import ropetest.formattertest
 import ropetest.refactoringtest
 import ropetest.objectinfertest
 
+import ropetest.ui.editortest
+import ropetest.ui.fileeditortest
+import ropetest.ui.coretest
+import ropetest.ui.mockeditortest
+import ropetest.ui.highlightertest
+import ropetest.ui.searchertest
+import ropetest.ui.statusbartest
+import ropetest.ui.uihelperstest
+import ropetest.ui.indentertest
 
-if __name__ == '__main__':
+
+def suite():
     result = unittest.TestSuite()
     result.addTests(ropetest.ui.mockeditortest.suite())
     result.addTests(unittest.makeSuite(ropetest.ui.fileeditortest.FileEditorTest))
@@ -38,5 +39,9 @@ if __name__ == '__main__':
     result.addTests(unittest.makeSuite(ropetest.formattertest.FormatterTest))
     result.addTests(unittest.makeSuite(ropetest.refactoringtest.RefactoringTest))
     result.addTests(ropetest.objectinfertest.suite())
+    return result
+
+
+if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    runner.run(result)
+    runner.run(suite())

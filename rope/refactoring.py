@@ -3,6 +3,7 @@ import re
 
 import rope.codeanalyze
 import rope.pyobjects
+import rope.exceptions
 
 
 class Refactoring(object):
@@ -134,6 +135,8 @@ class PythonRefactoring(Refactoring):
     def undo_last_refactoring(self):
         self.last_changes.undo()
 
+class RefactoringException(rope.exceptions.RopeException):
+    pass
 
 class _ExtractMethodPerformer(object):
     
@@ -164,6 +167,13 @@ class _ExtractMethodPerformer(object):
         self.scope_indents = self._get_indents(self.holding_scope.get_start()) + 4
         if self.is_global:
             self.scope_indents = 0
+        self._check_exceptional_conditions()
+    
+    def _check_exceptional_conditions(self):
+        if self.holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
+            raise RefactoringException('Can not extract methods in class body')
+        if self.end_offset > self.scope_end:
+            raise RefactoringException('Bad range selected for extract method')
         
     def extract(self):
         args = self._find_function_arguments()
@@ -304,6 +314,9 @@ class _VariableReadsAndWritesFinder(object):
     
     def visitFunction(self, node):
         self.written.add(node.name)
+        visitor = _VariableReadsAndWritesFinder()
+        compiler.walk(node.code, visitor)
+        self.read.update(visitor.read - visitor.written)
 
     def visitClass(self, node):
         self.written.add(node.name)
@@ -382,4 +395,3 @@ class MoveResource(Change):
     def undo(self):
         self.resource.move(self.old_location)
         
-
