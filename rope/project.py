@@ -220,6 +220,10 @@ class OutOfProjectFile(_File):
         """Returns the file system path of this resource"""
         return self.path
 
+    def get_parent(self):
+        parent = '/'.join(self.path.split('/')[0:-1])
+        return self.project.get_out_of_project_resource(parent)
+
 
 class _Folder(Resource):
     """Represents a folder in a project"""

@@ -504,6 +504,33 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_not_in_result('Sample', 'global', result)
 
+    def test_assist_on_relative_imports(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod1.write('def a_func():\n    pass\n')
+        code = 'import mod1\nmod1.'
+        result = self.assist.assist(code, len(code), mod2)
+        self.assert_completion_in_result('a_func', 'attribute', result)
+
+    def test_get_location_on_relative_imports(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod1.write('def a_func():\n    pass\n')
+        code = 'import mod1\nmod1.a_func\n'
+        result = self.assist.get_definition_location(code, len(code) - 2, mod2)
+        self.assertEquals((mod1, 1), result)
+        
+    def test_get_doc_on_relative_imports(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod1.write('def a_func():\n    """hey"""\n    pass\n')
+        code = 'import mod1\nmod1.a_func\n'
+        result = self.assist.get_doc(code, len(code) - 2, mod2)
+        self.assertEquals('hey', result)
+        
 
 class TemplateTest(unittest.TestCase):
 
@@ -551,7 +578,7 @@ class TemplateTest(unittest.TestCase):
         template = Template('${name}\n')
         self.assertEquals(['name'], template.variables())
 
-    def test_the_same_variable_many_time(self):
+    def test_the_same_variable_many_times(self):
         template = Template("Today is ${today}, the day after ${today} is ${tomorrow}")
         self.assertEquals(['today', 'tomorrow'], template.variables())
         self.assertEquals("Today is 26th, the day after 26th is 27th",

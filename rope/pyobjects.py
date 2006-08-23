@@ -312,6 +312,12 @@ class _ScopeVisitor(object):
 
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
+    
+    def _get_current_folder(self):
+        resource = self.owner_object.get_module().get_resource()
+        if resource is None:
+            return None
+        return resource.get_parent()
 
     def visitImport(self, node):
         for import_pair in node.names:
@@ -320,7 +326,7 @@ class _ScopeVisitor(object):
             if alias is not None:
                 imported = alias
             try:
-                module = self.pycore.get_module(name)
+                module = self.pycore.get_module(name, self._get_current_folder())
                 module._add_dependant(self.owner_object.get_module())
                 lineno = 1
             except ModuleNotFoundException:
@@ -346,7 +352,7 @@ class _ScopeVisitor(object):
 
     def visitFrom(self, node):
         try:
-            module = self.pycore.get_module(node.modname)
+            module = self.pycore.get_module(node.modname, self._get_current_folder())
             module._add_dependant(self.owner_object.get_module())
         except ModuleNotFoundException:
             module = None

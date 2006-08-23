@@ -16,20 +16,20 @@ class PyCore(object):
         self.object_infer = rope.objectinfer.ObjectInfer()
         self.refactoring = rope.refactoring.PythonRefactoring(self)
 
-    def get_module(self, name):
+    def get_module(self, name, current_folder=None):
         """Returns a `PyObject` if the module was found."""
-        module = self.find_module(name)
+        module = self.find_module(name, current_folder)
         if module is None:
             raise ModuleNotFoundException('Module %s not found' % name)
         return self.resource_to_pyobject(module)
 
-    def get_string_module(self, module_content):
+    def get_string_module(self, module_content, resource=None):
         """Returns a `PyObject` object for the given module_content"""
-        return PyModule(self, module_content)
+        return PyModule(self, module_content, resource)
 
-    def get_string_scope(self, module_content):
+    def get_string_scope(self, module_content, resource=None):
         """Returns a `Scope` object for the given module_content"""
-        return self.get_string_module(module_content).get_scope()
+        return self.get_string_module(module_content, resource).get_scope()
 
     def _invalidate_resource_cache(self, resource):
         if resource in self.module_map:
@@ -90,7 +90,7 @@ class PyCore(object):
                 pass
         return result
     
-    def find_module(self, module_name):
+    def find_module(self, module_name, current_folder=None):
         """Returns a resource pointing to the given module
         
         returns None if it can not be found
@@ -101,6 +101,10 @@ class PyCore(object):
                 return module[-1]
         for src in self._get_python_path_folders():
             module = self._find_module_in_source_folder(src, module_name)
+            if module is not None:
+                return module[-1]
+        if current_folder is not None:
+            module = self._find_module_in_source_folder(current_folder, module_name)
             if module is not None:
                 return module[-1]
         return None

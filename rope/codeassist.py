@@ -105,37 +105,38 @@ class Proposals(object):
 
 class CodeAssist(object):
 
-    def assist(self, source, offset):
+    def assist(self, source, offset, resource=None):
         pass
 
     def add_template(self, name, template):
         pass
     
-    def get_definition_location(self, source_code, offset):
+    def get_definition_location(self, source_code, offset, resource=None):
         pass
     
-    def get_doc(self, source_code, offset):
+    def get_doc(self, source_code, offset, resource=None):
         pass
 
 
 class NoAssist(CodeAssist):
 
-    def assist(self, source_code, offset):
+    def assist(self, source_code, offset, resource=None):
         return Proposals()
 
-    def get_definition_location(self, source_code, offset):
+    def get_definition_location(self, source_code, offset, resource=None):
         return (None, None)
 
 
 class _CodeCompletionCollector(object):
 
-    def __init__(self, project, source_code, offset, expression, starting):
+    def __init__(self, project, source_code, offset, expression, starting, resource):
         self.project = project
         self.expression = expression
         self.starting = starting
         self.pycore = self.project.get_pycore()
         self.lines = source_code.split('\n')
         self.source_code = source_code
+        self.resource = resource
         source_lines = SourceLinesAdapter(source_code)
         self.lineno = source_lines.get_line_number(offset)
         self.current_indents = self._get_line_indents(source_lines.get_line(self.lineno))
@@ -186,7 +187,8 @@ class _CodeCompletionCollector(object):
 
     def get_code_completions(self):
         try:
-            module_scope = self.pycore.get_string_scope(self.source_code)
+            module_scope = self.pycore.get_string_scope(self.source_code,
+                                                        self.resource)
         except SyntaxError, e:
             raise RopeSyntaxError(e)
         result = {}
@@ -259,17 +261,17 @@ class PythonCodeAssist(CodeAssist):
                 result.append(template)
         return result
 
-    def _get_code_completions(self, source_code, offset, expression, starting):
+    def _get_code_completions(self, source_code, offset, expression, starting, resource):
         collector = _CodeCompletionCollector(self.project, source_code,
-                                             offset, expression, starting)
+                                             offset, expression, starting, resource)
         return collector.get_code_completions()
 
-    def assist(self, source_code, offset):
+    def assist(self, source_code, offset, resource=None):
         if offset > len(source_code):
             return Proposals()
         word_finder = WordRangeFinder(source_code)
         expression, starting, starting_offset = word_finder.get_splitted_primary_before(offset)
-        completions = self._get_code_completions(source_code, offset, expression, starting)
+        completions = self._get_code_completions(source_code, offset, expression, starting, resource)
         templates = []
         if expression.strip() == '' and starting.strip() != '':
             completions.update(self._get_matching_builtins(starting))
@@ -278,12 +280,12 @@ class PythonCodeAssist(CodeAssist):
         return Proposals(completions.values(), templates,
                          starting_offset)
 
-    def get_definition_location(self, source_code, offset):
+    def get_definition_location(self, source_code, offset, resource=None):
         return _GetDefinitionLocation(self.project, source_code,
-                                      offset).get_definition_location()
+                                      offset, resource).get_definition_location()
 
-    def get_doc(self, source_code, offset):
-        module_scope = self.project.pycore.get_string_scope(source_code)
+    def get_doc(self, source_code, offset, resource=None):
+        module_scope = self.project.pycore.get_string_scope(source_code, resource)
         scope_finder = ScopeNameFinder(source_code, module_scope)
         element = scope_finder.get_pyname_at(offset)
         if element is None:
@@ -296,13 +298,15 @@ class PythonCodeAssist(CodeAssist):
 
 class _GetDefinitionLocation(object):
 
-    def __init__(self, project, source_code, offset):
+    def __init__(self, project, source_code, offset, resource):
         self.project = project
         self.offset = offset
         self.source_code = source_code
+        self.resource = resource
 
     def get_definition_location(self):
-        module_scope = self.project.pycore.get_string_scope(self.source_code)
+        module_scope = self.project.pycore.get_string_scope(self.source_code,
+                                                            self.resource)
         scope_finder = ScopeNameFinder(self.source_code, module_scope)
         element = scope_finder.get_pyname_at(self.offset)
         if element is not None:

@@ -352,7 +352,8 @@ class GraphicalEditor(object):
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
-                                                          self.get_current_offset())
+                                                          self.get_current_offset(),
+                                                          self._get_resource())
         self._goto_editor_location(result[0], result[1])
             
     def _goto_editor_location(self, resource, lineno):
@@ -363,6 +364,11 @@ class GraphicalEditor(object):
                      get_resource_editor(resource).get_editor()
         if lineno is not None:
             editor.goto_line(lineno)
+    
+    def _get_resource(self):
+        import rope.ui.core
+        editor = rope.ui.core.Core.get_core().get_editor_manager().active_editor
+        return editor.get_file()
     
     def _confirm_all_editors_are_saved(self, event=None):
         core = rope.ui.core.Core.get_core()
@@ -420,9 +426,7 @@ class GraphicalEditor(object):
 
     def rename_refactoring(self, new_name):
         initial_position = self.text.index(INSERT)
-        core = rope.ui.core.Core.get_core()
-        editor_manager = core.get_editor_manager()
-        resource = editor_manager.active_editor.get_file()
+        resource = self._get_resource()
         self.refactoring.rename(resource,
                                 self.get_current_offset(),
                                 new_name)
@@ -461,7 +465,8 @@ class GraphicalEditor(object):
         end_offset = self._get_offset(end)
         refactored = self.refactoring.extract_method(self.get_text(),
                                                      start_offset, end_offset,
-                                                     extracted_name)
+                                                     extracted_name,
+                                                     self._get_resource())
         if refactored is not None:
             self.set_text(refactored, False)
             self.text.mark_set(INSERT, initial_position)
@@ -495,7 +500,7 @@ class GraphicalEditor(object):
         initial_position = self.text.index(INSERT)
         refactored = self.refactoring.local_rename(self.get_text(),
                                                    self.get_current_offset(),
-                                                   new_name)
+                                                   new_name, self._get_resource())
         if refactored is not None:
             self.set_text(refactored, False)
             self.text.mark_set(INSERT, initial_position)
@@ -548,7 +553,8 @@ class GraphicalEditor(object):
         self.text.see(INSERT)
 
     def _show_completion_window(self):
-        result = self.code_assist.assist(self.get_text(), self.get_current_offset())
+        result = self.code_assist.assist(self.get_text(), self.get_current_offset(),
+                                         self._get_resource())
         toplevel = Toplevel()
         toplevel.title('Code Assist Proposals')
         enhanced_list = EnhancedList(toplevel, _CompletionListHandle(self, toplevel, result),
@@ -593,7 +599,8 @@ class GraphicalEditor(object):
     
     def _show_doc_window(self):
         doc = self.code_assist.get_doc(self.get_text(),
-                                       self.get_current_offset())
+                                       self.get_current_offset(),
+                                       self._get_resource())
         if doc is not None:
             toplevel = Toplevel()
             toplevel.title('Show Doc')

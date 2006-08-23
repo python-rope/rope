@@ -1,5 +1,12 @@
-Read ``__init__.py`` of packages
-================================
+Relative imports
+================
+
+- Changing ``visitFrom`` and ``visitImport``
+- Changing `rope.codeassist` module
+- Changing `rope.refactoring` module
+- Fixing UI
+
+* New style imports
 
 
 Remaining Stories

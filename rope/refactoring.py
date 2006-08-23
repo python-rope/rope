@@ -38,9 +38,9 @@ class PythonRefactoring(Refactoring):
     def any(name, list):
         return "(?P<%s>" % name + "|".join(list) + ")"
 
-    def local_rename(self, source_code, offset, new_name):
+    def local_rename(self, source_code, offset, new_name, resource=None):
         result = []
-        module_scope = self.pycore.get_string_scope(source_code)
+        module_scope = self.pycore.get_string_scope(source_code, resource)
         word_finder = rope.codeanalyze.WordRangeFinder(source_code)
         old_name = word_finder.get_primary_at(offset).split('.')[-1]
         pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
@@ -135,12 +135,15 @@ class PythonRefactoring(Refactoring):
     def undo_last_refactoring(self):
         self.last_changes.undo()
 
+
 class RefactoringException(rope.exceptions.RopeException):
     pass
 
+
 class _ExtractMethodPerformer(object):
     
-    def __init__(self, refactoring, source_code, start_offset, end_offset, extracted_name):
+    def __init__(self, refactoring, source_code, start_offset,
+                 end_offset, extracted_name, resource=None):
         self.refactoring = refactoring
         self.source_code = source_code
         self.extracted_name = extracted_name
@@ -150,7 +153,7 @@ class _ExtractMethodPerformer(object):
         self.end_offset = self._choose_closest_line_end(source_code, end_offset)
         
         start_line = self.lines.get_line_number(start_offset)
-        self.scope = self.refactoring.pycore.get_string_scope(source_code)
+        self.scope = self.refactoring.pycore.get_string_scope(source_code, resource)
         self.holding_scope = self.scope.get_inner_scope_for_line(start_line)
         if self.holding_scope.pyobject.get_type() != \
            rope.pyobjects.PyObject.get_base_type('Module') and \

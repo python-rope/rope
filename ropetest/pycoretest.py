@@ -605,6 +605,44 @@ class PyCoreInProjectsTest(unittest.TestCase):
         init_dot_py.write('a_var = 1\n')
         pkg_object = self.pycore.get_module('pkg')
         self.assertTrue('a_var' in pkg_object.get_attributes())
+    
+    def test_relative_imports(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod2.write('import mod1\n')
+        mod1_object = self.pycore.resource_to_pyobject(mod1)
+        mod2_object = self.pycore.resource_to_pyobject(mod2)
+        self.assertEquals(mod1_object, mod2_object.get_attributes()['mod1'].get_object())
+
+    def test_relative_froms(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod1.write('def a_func():\n    pass\n')
+        mod2.write('from mod1 import a_func\n')
+        mod1_object = self.pycore.resource_to_pyobject(mod1)
+        mod2_object = self.pycore.resource_to_pyobject(mod2)
+        self.assertEquals(mod1_object.get_attributes()['a_func'].get_object(), 
+                          mod2_object.get_attributes()['a_func'].get_object())
+
+    def test_relative_imports_for_string_modules(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod2.write('import mod1\n')
+        mod1_object = self.pycore.resource_to_pyobject(mod1)
+        mod2_object = self.pycore.get_string_module(mod2.read(), mod2)
+        self.assertEquals(mod1_object, mod2_object.get_attributes()['mod1'].get_object())
+
+    def test_relative_imports_for_string_scopes(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod2.write('import mod1\n')
+        mod1_object = self.pycore.resource_to_pyobject(mod1)
+        mod2_scope = self.pycore.get_string_scope(mod2.read(), mod2)
+        self.assertEquals(mod1_object, mod2_scope.get_names()['mod1'].get_object())
 
 
 class PyCoreScopesTest(unittest.TestCase):
