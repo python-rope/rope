@@ -22,7 +22,13 @@ class PyCore(object):
         if module is None:
             raise ModuleNotFoundException('Module %s not found' % name)
         return self.resource_to_pyobject(module)
-
+    
+    def get_relative_module(self, name, current_folder, level):
+        module = self.find_relative_module(name, current_folder, level)
+        if module is None:
+            raise ModuleNotFoundException('Module %s not found' % name)
+        return self.resource_to_pyobject(module)
+    
     def get_string_module(self, module_content, resource=None):
         """Returns a `PyObject` object for the given module_content"""
         return PyModule(self, module_content, resource)
@@ -95,21 +101,22 @@ class PyCore(object):
         
         returns None if it can not be found
         """
-        for src in self.get_source_folders():
-            module = self._find_module_in_source_folder(src, module_name)
-            if module is not None:
-                return module[-1]
-        for src in self._get_python_path_folders():
-            module = self._find_module_in_source_folder(src, module_name)
-            if module is not None:
-                return module[-1]
-        if current_folder is not None:
+        module_resource_list = self._find_module_resource_list(module_name,
+                                                               current_folder)
+        if module_resource_list is not None:
+            return module_resource_list[-1]
+    
+    def find_relative_module(self, module_name, current_folder, level):
+        for i in range(level - 1):
+            current_folder = current_folder.get_parent()
+        if module_name == '':
+            return current_folder
+        else:
             module = self._find_module_in_source_folder(current_folder, module_name)
             if module is not None:
                 return module[-1]
-        return None
     
-    def _find_module_resource_list(self, module_name):
+    def _find_module_resource_list(self, module_name, current_folder=None):
         """Returns a list of lists of `Folder`s and `File`s for the given module"""
         for src in self.get_source_folders():
             module = self._find_module_in_source_folder(src, module_name)
@@ -117,6 +124,10 @@ class PyCore(object):
                 return module
         for src in self._get_python_path_folders():
             module = self._find_module_in_source_folder(src, module_name)
+            if module is not None:
+                return module
+        if current_folder is not None:
+            module = self._find_module_in_source_folder(current_folder, module_name)
             if module is not None:
                 return module
         return None

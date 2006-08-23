@@ -1,12 +1,11 @@
 Relative imports
 ================
 
-- Changing ``visitFrom`` and ``visitImport``
-- Changing `rope.codeassist` module
-- Changing `rope.refactoring` module
-- Fixing UI
+- New style imports
+- ``from ..mod import name``
+- Add `only_for_25` test decorator
 
-* New style imports
+* Finding ``from mod`` occurances in refactoring
 
 
 Remaining Stories

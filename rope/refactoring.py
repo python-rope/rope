@@ -8,13 +8,13 @@ import rope.exceptions
 
 class Refactoring(object):
 
-    def local_rename(self, source_code, offset, new_name):
+    def local_rename(self, source_code, offset, new_name, resource=None):
         """Returns the changed source_code or ``None`` if nothing has been changed"""
     
     def rename(self, resource, offset, new_name):
         pass
     
-    def extract_method(self, source_code, start_offset, end_offset, extracted_name):
+    def extract_method(self, source_code, start_offset, end_offset, extracted_name, resource=None):
         pass
     
     def undo_last_refactoring(self):
@@ -128,9 +128,11 @@ class PythonRefactoring(Refactoring):
         end = lines.get_line_end(holding_scope.get_end()) + 1
         return (start, end)
 
-    def extract_method(self, source_code, start_offset, end_offset, extracted_name):
+    def extract_method(self, source_code, start_offset, end_offset,
+                       extracted_name, resource=None):
         return _ExtractMethodPerformer(self, source_code, start_offset,
-                                       end_offset, extracted_name).extract()
+                                       end_offset, extracted_name,
+                                       resource).extract()
     
     def undo_last_refactoring(self):
         self.last_changes.undo()

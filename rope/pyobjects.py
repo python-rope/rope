@@ -345,14 +345,23 @@ class _ScopeVisitor(object):
                                               module=module.get_module(), lineno=lineno)
 
     def _get_module_with_packages(self, module_name):
-        module_list = self.pycore._find_module_resource_list(module_name)
+        module_list = self.pycore._find_module_resource_list(module_name,
+                                                             self._get_current_folder())
         if module_list is None:
             return None
         return self.pycore.resource_to_pyobject(module_list[0])
 
     def visitFrom(self, node):
         try:
-            module = self.pycore.get_module(node.modname, self._get_current_folder())
+            level = 0
+            if hasattr(node, 'level'):
+                level = node.level
+            if level == 0:
+                module = self.pycore.get_module(node.modname, self._get_current_folder())
+            else:
+                module = self.pycore.get_relative_module(node.modname,
+                                                         self._get_current_folder(),
+                                                         level)
             module._add_dependant(self.owner_object.get_module())
         except ModuleNotFoundException:
             module = None

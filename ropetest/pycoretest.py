@@ -644,6 +644,28 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2_scope = self.pycore.get_string_scope(mod2.read(), mod2)
         self.assertEquals(mod1_object, mod2_scope.get_names()['mod1'].get_object())
 
+    @testutils.run_only_for_25
+    def test_new_style_relative_imports(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod2.write('from . import mod1\n')
+        mod1_object = self.pycore.resource_to_pyobject(mod1)
+        mod2_object = self.pycore.resource_to_pyobject(mod2)
+        self.assertEquals(mod1_object, mod2_object.get_attributes()['mod1'].get_object())
+
+    @testutils.run_only_for_25
+    def test_new_style_relative_imports2(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod1.write('def a_func():\n    pass\n')
+        mod2.write('from ..mod1 import a_func\n')
+        mod1_object = self.pycore.resource_to_pyobject(mod1)
+        mod2_object = self.pycore.resource_to_pyobject(mod2)
+        self.assertEquals(mod1_object.get_attributes()['a_func'].get_object(),
+                          mod2_object.get_attributes()['a_func'].get_object())
+
 
 class PyCoreScopesTest(unittest.TestCase):
 
