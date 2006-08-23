@@ -3,6 +3,9 @@
 ===========
 
 
+- Read ``__init__.py`` of packages : August 23, 2006
+
+
 - Extract function : August 22, 2006
 
 

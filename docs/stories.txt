@@ -259,10 +259,6 @@ Stories
 * Subversion support using pysvn
 
 
-* Read ``__init__.py`` of packages
-  Should folders contain ``__init__.py`` to be considered packages?
-
-
 * Relative imports
 
 

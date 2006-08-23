@@ -79,7 +79,7 @@ To Be Discussed
 ===============
 
 * Reducing the cost of invalidation
-* Saving information for individual PyObjects or only for types
+* Saving information for individual objects or only for types
 
 
 Finding Occurances
@@ -114,6 +114,15 @@ Right now rope does *not* support relative imports.  One reason is
 that the syntax for relative imports is changing in python ``2.5``.
 The new relative import syntax will be supported by *rope* before
 python ``2.5`` release.  Think about supporting the old syntax.
+
+The main problem for supporting relative imports is that we have
+string `PyModules` that are used in `rope.codeassist` and
+`rope.refactoring` modules.  Maybe the only way to get over this
+problem is passing resources even if we want a string module.
+
+If this problem is dealt we need to change `Core.find_module` to
+accept a ``current_folder`` argument and change ``visitImport`` and
+``visitFrom`` to pass the correct folder.
 
 
 Container Types Require Call Information

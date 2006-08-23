@@ -150,8 +150,8 @@ class _ExtractMethodPerformer(object):
         self.end_offset = self._choose_closest_line_end(source_code, end_offset)
         
         start_line = self.lines.get_line_number(start_offset)
-        scope = self.refactoring.pycore.get_string_scope(source_code)
-        self.holding_scope = scope.get_inner_scope_for_line(start_line)
+        self.scope = self.refactoring.pycore.get_string_scope(source_code)
+        self.holding_scope = self.scope.get_inner_scope_for_line(start_line)
         if self.holding_scope.pyobject.get_type() != \
            rope.pyobjects.PyObject.get_base_type('Module') and \
            self.holding_scope.get_start()  == start_line:
@@ -173,6 +173,10 @@ class _ExtractMethodPerformer(object):
         if self.holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
             raise RefactoringException('Can not extract methods in class body')
         if self.end_offset > self.scope_end:
+            raise RefactoringException('Bad range selected for extract method')
+        end_line = self.lines.get_line_number(self.end_offset)
+        end_scope = self.scope.get_inner_scope_for_line(end_line)
+        if end_scope != self.holding_scope and end_scope.get_end() != end_line:
             raise RefactoringException('Bad range selected for extract method')
         
     def extract(self):

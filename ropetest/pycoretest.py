@@ -172,9 +172,10 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(PyObject.get_base_type('Function'), derived.get_attributes()['method'].get_type())
 
     def test_inheriting_multiple_base_class_attributes(self):
-        mod = self.pycore.get_string_module('class Base1(object):\n    def method1(self):\n        pass\n' +
-                                            'class Base2(object):\n    def method2(self):\n        pass\n' +
-                                             'class Derived(Base1, Base2):\n    pass\n')
+        code = 'class Base1(object):\n    def method1(self):\n        pass\n' \
+               'class Base2(object):\n    def method2(self):\n        pass\n' \
+               'class Derived(Base1, Base2):\n    pass\n'
+        mod = self.pycore.get_string_module(code)
         derived = mod.get_attributes()['Derived']
         self.assertTrue('method1' in derived.get_attributes())
         self.assertTrue('method2' in derived.get_attributes())
@@ -597,6 +598,13 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod_pyobject = scope.get_names()['pkg'].get_attributes()['mod']
         self.assertEquals((imported_module, 1),
                           mod_pyobject.get_definition_location())
+    
+    def test_reading_init_dot_py(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        init_dot_py = pkg.get_child('__init__.py')
+        init_dot_py.write('a_var = 1\n')
+        pkg_object = self.pycore.get_module('pkg')
+        self.assertTrue('a_var' in pkg_object.get_attributes())
 
 
 class PyCoreScopesTest(unittest.TestCase):
@@ -788,6 +796,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner.wait_process()
         self.assertEquals('run', self.get_output_file_content(file_path))
 
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(PyCoreTest))
@@ -795,6 +804,7 @@ def suite():
     result.addTests(unittest.makeSuite(PyCoreScopesTest))
     result.addTests(unittest.makeSuite(PythonFileRunnerTest))
     return result
+
 
 if __name__ == '__main__':
     unittest.main()

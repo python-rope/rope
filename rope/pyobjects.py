@@ -203,6 +203,11 @@ class PyPackage(_PyModule):
                 name = child.get_name()[:-3]
                 attributes[name] = PyName(child_pyobject, False, 1,
                                           child_pyobject)
+        init_dot_py = self._get_init_dot_py()
+        if init_dot_py:
+            init_object = self.pycore.resource_to_pyobject(init_dot_py)
+            attributes.update(init_object.get_attributes())
+            init_object._add_dependant(self)
 
     def _get_init_dot_py(self):
         if self.resource is not None and self.resource.has_child('__init__.py'):

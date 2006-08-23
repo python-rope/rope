@@ -307,6 +307,16 @@ class RefactoringTest(unittest.TestCase):
         else:
             self.fail('Should have thrown exception')
 
+    def test_extract_method_bad_range2(self):
+        code = "class AClass(object):\n    pass\n"
+        start, end = self._convert_line_range_to_offset(code, 1, 1)
+        try:
+            self.refactoring.extract_method(code, start, end, 'new_func')
+        except RefactoringException:
+            pass
+        else:
+            self.fail('Should have thrown exception')
+
 
 if __name__ == '__main__':
     unittest.main()
