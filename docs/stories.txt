@@ -259,9 +259,6 @@ Stories
 * Subversion support using pysvn
 
 
-* Relative imports
-
-
 Remaining Stories
 -----------------
 * Migrating to sourceforge SVN before 0.3 release

@@ -3,6 +3,9 @@
 ===========
 
 
+- Relative imports : August 23, 2006
+
+
 - Read ``__init__.py`` of packages : August 23, 2006
 
 

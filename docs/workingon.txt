@@ -4,8 +4,7 @@ Relative imports
 - New style imports
 - ``from ..mod import name``
 - Add `only_for_25` test decorator
-
-* Finding ``from mod`` occurances in refactoring
+- Finding ``from mod`` occurances in refactoring
 
 
 Remaining Stories

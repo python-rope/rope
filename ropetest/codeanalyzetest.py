@@ -256,6 +256,21 @@ class ScopeNameFinderTest(unittest.TestCase):
         found_pyname = name_finder.get_pyname_at(code.index('mod') + 1)
         self.assertEquals(mod_pyobject, found_pyname.get_object())
 
+    @testutils.run_only_for_25
+    def test_relative_modules_after_from_statements(self):
+        pkg1 = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')
+        pkg2 = self.pycore.create_package(pkg1, 'pkg2')
+        mod1 = self.pycore.create_module(pkg1, 'mod1')
+        mod2 = self.pycore.create_module(pkg2, 'mod2')
+        mod1.write('def a_func():\n    pass\n')
+        code = 'from ..mod1 import a_func\n'
+        mod2.write(code)
+        mod2_scope = self.pycore.resource_to_pyobject(mod2).get_scope()
+        name_finder = ScopeNameFinder(code, mod2_scope)
+        mod1_pyobject = self.pycore.resource_to_pyobject(mod1)
+        found_pyname = name_finder.get_pyname_at(code.index('mod1') + 1)
+        self.assertEquals(mod1_pyobject, found_pyname.get_object())
+
 
 def suite():
     result = unittest.TestSuite()
@@ -266,5 +281,4 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main()
-
 
