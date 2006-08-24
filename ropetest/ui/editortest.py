@@ -305,6 +305,16 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.paste()
         self.assertEquals('sample text', self.editor.get_text())
 
+    def test_kill_line(self):
+        self.editor.set_text('sample\n text')
+        self.editor.set_insert(self.editor.get_index(1))
+        self.editor.kill_line()
+        self.assertEquals('s\n text', self.editor.get_text())
+        self.editor.kill_line()
+        self.assertEquals('s text', self.editor.get_text())
+        self.editor.kill_line()
+        self.assertEquals('s', self.editor.get_text())
+
     def test_mark_not_set(self):
         self.editor.cut_region()
         self.editor.copy_region()

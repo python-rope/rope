@@ -2,9 +2,8 @@ Refactoring UI Modules
 ======================
 
 - Add ``M-c`` and ``M-l`` and ``M-u``
+- Add ``C-k``
 
-* Add ``C-k``
-* Add ``C-l``
 
 Remaining Stories
 =================

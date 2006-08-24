@@ -352,6 +352,10 @@ class GraphicalEditor(object):
         self.text.bind('<Alt-l>', lambda event: self.lower_next_word())
         self.text.bind('<Alt-u>', lambda event: self.upper_next_word())
         self.text.bind('<Alt-c>', lambda event: self.capitalize_next_word())
+        def kill_line(event):
+            self.kill_line()
+            return 'break'
+        self.text.bind('<Control-k>', kill_line)
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
@@ -884,6 +888,14 @@ class GraphicalEditor(object):
             self.text.see(INSERT)
         except TclError:
             pass
+    
+    def kill_line(self):
+        text = self.text.get(INSERT, 'insert lineend')
+        if text == '':
+            self.text.delete('insert')
+        else:
+            self.text.mark_set('mark', 'insert lineend')
+            self.cut_region()
 
     def next_page(self):
         self.text.event_generate('<Next>')
