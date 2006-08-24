@@ -4,117 +4,14 @@ import tkSimpleDialog
 from threading import Thread
 from Tkinter import *
 
-import rope.ui.editor
-import rope.ui.fileeditor
-import rope.ui.statusbar
-from rope.ui.uihelpers import TreeViewHandle, TreeView
 from rope.exceptions import RopeException
 from rope.project import Project, FileFinder
 from rope.pycore import PythonFileRunner
-
-
-class EditorManager(object):
-
-    def __init__(self, editor_panel, core):
-        self.core = core
-        self.editor_list = Frame(editor_panel, borderwidth=0)
-        self.editor_frame = Frame(editor_panel, borderwidth=0, relief=RIDGE)
-        self.editor_list.pack(fill=BOTH, side=TOP)
-        self.editor_frame.pack(fill=BOTH, expand=1)
-        self.editor_frame.pack_propagate(0)
-        self.editors = []
-        self.buttons = {}
-        self.active_file_path = StringVar('')
-        self.active_editor = None
-
-    def _editor_was_modified(self, editor):
-        if editor not in self.buttons:
-            return
-        new_title = editor.get_file().get_name()
-        if editor.get_editor().is_modified():
-            new_title = '*' + new_title
-        self.buttons[editor]['text'] = new_title
-
-    def activate_editor(self, editor):
-        if self.active_editor:
-            self.active_editor.get_editor().getWidget().forget()
-        editor.get_editor().getWidget().pack(fill=BOTH, expand=1)
-        editor.get_editor().getWidget().focus_set()
-        self.buttons[editor].select()
-        self.active_editor = editor
-        self.editors.remove(editor)
-        self.editors.insert(0, editor)
-
-    def get_resource_editor(self, file_):
-        for editor in self.editors:
-            if editor.get_file() == file_:
-                self.buttons[editor].invoke()
-                return editor
-        editor = rope.ui.fileeditor.FileEditor(Core.get_core().get_open_project(), file_,
-                                            rope.ui.editor.GraphicalEditorFactory(self.editor_frame))
-        editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
-        self.editors.append(editor)
-        title = Radiobutton(self.editor_list, text=file_.get_name(),
-                            variable=self.active_file_path,
-                            value=file_.get_path(), indicatoron=0, bd=2,
-                            command=lambda: self.activate_editor(editor),
-                            selectcolor='#99A', relief=GROOVE)
-        self.buttons[editor] = title
-        title.select()
-        title.pack(fill=BOTH, side=LEFT)
-        self.activate_editor(editor)
-        self.core._set_key_binding(editor.get_editor().getWidget())
-        editor.add_modification_observer(self._editor_was_modified)
-        return editor
-
-    def switch_active_editor(self):
-        if len(self.editors) >= 2:
-            self.activate_editor(self.editors[1])
-
-    def close_active_editor(self):
-        if self.active_editor is None:
-            return
-        widget = self.active_editor.get_editor().getWidget()
-        widget.forget()
-        widget.destroy()
-        self.editors.remove(self.active_editor)
-        button = self.buttons[self.active_editor]
-        button.forget()
-        button.destroy()
-        self.active_editor.close()
-        del self.buttons[self.active_editor]
-        self.active_editor = None
-        if self.editors:
-            self.buttons[self.editors[0]].invoke()
-            
-
-class _ResourceViewHandle(TreeViewHandle):
-    
-    def __init__(self, core, toplevel):
-        self.core = core
-        self.toplevel = toplevel
-
-    def entry_to_string(self, resource):
-        return resource.get_name()
-    
-    def get_children(self, resource):
-        if resource.is_folder():
-            return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and 
-                    not child.get_name().endswith('.pyc')]
-        else:
-            return []
-
-    def selected(self, resource):
-        if not resource.is_folder():
-            self.core.editor_manager.get_resource_editor(resource)
-            self.toplevel.destroy()
-    
-    def canceled(self):
-        self.toplevel.destroy()
-
-    def focus_went_out(self):
-        pass
+import rope.ui.editor
+import rope.ui.statusbar
+import rope.ui.editorpile
+import rope.ui.menubar
+from rope.ui.uihelpers import TreeViewHandle, TreeView
 
 
 class Core(object):
@@ -125,11 +22,12 @@ class Core(object):
         self.root.title('Rope')
         self.menubar = Menu(self.root, relief=RAISED, borderwidth=1)
         self.root['menu'] = self.menubar
+        self.menubar_manager = rope.ui.menubar.MenuBarManager(self.menubar)
         self._create_menu()
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
         self.editor_panel = Frame(self.main, borderwidth=0)
-        self.editor_manager = EditorManager(self.editor_panel, self)
+        self.editor_manager = rope.ui.editorpile.EditorPile(self.editor_panel, self)
 
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
         self.status_bar_manager = rope.ui.statusbar.StatusBarManager(self.status_bar)
@@ -138,133 +36,133 @@ class Core(object):
 
         self._set_key_binding(self.root)
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
-        self.runningThread = Thread(target=self.run)
+        self.running_thread = Thread(target=self.run)
         self.project = None
 
     def _create_menu(self):
-        fileMenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='File', menu=fileMenu, underline=2)
-        fileMenu.add_command(label='Open Project ...',
-                             command=self._open_project_dialog, underline=0)
-        fileMenu.add_command(label='Close Project',
-                             command=self._close_project_dialog, underline=1)
-        fileMenu.add_separator()
-        fileMenu.add_command(label='New File ...',
-                             command=self._create_new_file_dialog, underline=0)
-        fileMenu.add_command(label='New Folder ...',
-                             command=self._create_new_folder_dialog, underline=1)
-        fileMenu.add_command(label='New Module ...',
-                             command=self._create_module_dialog, underline=4)
-        fileMenu.add_command(label='New Package ...',
-                             command=self._create_package_dialog, underline=4)
-        fileMenu.add_separator()
-        fileMenu.add_command(label='Find File ...',
-                             command=self._find_file_dialog, underline=0)
-        fileMenu.add_command(label='Project Tree',
-                             command=self._show_resource_view, underline=0)
-        fileMenu.add_command(label='Open File ...',
-                             command=self._open_file_dialog)
-        fileMenu.add_separator()
-        fileMenu.add_command(label='Change Editor ...',
-                             command=self._change_editor_dialog, underline=0)
-        fileMenu.add_command(label='Save Editor',
-                             command=self.save_active_editor, underline=0)
-        fileMenu.add_command(label='Save All',
-                             command=self.save_all_editors, underline=5)
-        fileMenu.add_command(label='Close Editor',
-                             command=self._close_active_editor_dialog, underline=0)
-        fileMenu.add_separator()
-        fileMenu.add_command(label='Exit',
-                             command=self._close_project_and_exit, underline=1)
+        file_menu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='File', menu=file_menu, underline=1)
+        file_menu.add_command(label='Open Project ...',
+                              command=self._open_project_dialog, underline=0)
+        file_menu.add_command(label='Close Project',
+                              command=self._close_project_dialog, underline=1)
+        file_menu.add_separator()
+        file_menu.add_command(label='New File ...',
+                              command=self._create_new_file_dialog, underline=0)
+        file_menu.add_command(label='New Folder ...',
+                              command=self._create_new_folder_dialog, underline=1)
+        file_menu.add_command(label='New Module ...',
+                              command=self._create_module_dialog, underline=4)
+        file_menu.add_command(label='New Package ...',
+                              command=self._create_package_dialog, underline=4)
+        file_menu.add_separator()
+        file_menu.add_command(label='Find File ...',
+                              command=self._find_file_dialog, underline=0)
+        file_menu.add_command(label='Project Tree',
+                              command=self._show_resource_view, underline=0)
+        file_menu.add_command(label='Open File ...',
+                              command=self._open_file_dialog)
+        file_menu.add_separator()
+        file_menu.add_command(label='Change Editor ...',
+                              command=self._change_editor_dialog, underline=0)
+        file_menu.add_command(label='Save Editor',
+                              command=self.save_active_editor, underline=0)
+        file_menu.add_command(label='Save All',
+                              command=self.save_all_editors, underline=5)
+        file_menu.add_command(label='Close Editor',
+                              command=self._close_active_editor_dialog, underline=0)
+        file_menu.add_separator()
+        file_menu.add_command(label='Exit',
+                              command=self._close_project_and_exit, underline=1)
         
-        editMenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Edit', menu=editMenu, underline=2)
+        edit_menu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='Edit', menu=edit_menu, underline=3)
         def set_mark():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().set_mark()
-        editMenu.add_command(label='Emacs Set Mark',
-                             command=set_mark, underline=6)
+        edit_menu.add_command(label='Emacs Set Mark',
+                              command=set_mark, underline=6)
         def copy():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().copy_region()
-        editMenu.add_command(label='Emacs Copy', command=copy, underline=6)
+        edit_menu.add_command(label='Emacs Copy', command=copy, underline=6)
         def cut():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().cut_region()
-        editMenu.add_command(label='Emacs Cut', command=cut, underline=8)
+        edit_menu.add_command(label='Emacs Cut', command=cut, underline=8)
         def paste():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().paste()
-        editMenu.add_command(label='Paste', command=paste, underline=0)
+        edit_menu.add_command(label='Paste', command=paste, underline=0)
 
-        editMenu.add_separator()
+        edit_menu.add_separator()
         def undo():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().undo()
-        editMenu.add_command(label='Undo', command=undo, underline=0)
+        edit_menu.add_command(label='Undo', command=undo, underline=0)
         def redo():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().redo()
-        editMenu.add_command(label='Redo', command=redo, underline=0)
-        editMenu.add_separator()
+        edit_menu.add_command(label='Redo', command=redo, underline=0)
+        edit_menu.add_separator()
         def forward_search():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().start_searching(True)
 
-        editMenu.add_command(label='Forward Search', command=forward_search, underline=0)
+        edit_menu.add_command(label='Forward Search', command=forward_search, underline=0)
 
         def backward_search():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().start_searching(False)
 
-        editMenu.add_command(label='Backward Search', 
-                             command=backward_search, underline=0)
+        edit_menu.add_command(label='Backward Search', 
+                              command=backward_search, underline=0)
 
-        codeMenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Code', menu=codeMenu, underline=1)
+        code_menu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='Code', menu=code_menu, underline=1)
 
         def correct_line_indentation():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().correct_line_indentation()
 
-        codeMenu.add_command(label='Correct Line Indentation', 
-                             command=correct_line_indentation, underline=13)
+        code_menu.add_command(label='Correct Line Indentation', 
+                              command=correct_line_indentation, underline=13)
         def quick_outline():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._show_outline_window()
 
-        codeMenu.add_command(label='Quick Outline', 
-                             command=quick_outline, underline=0)
+        code_menu.add_command(label='Quick Outline', 
+                              command=quick_outline, underline=0)
         def code_assist():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._show_completion_window()
 
-        codeMenu.add_command(label='Code Assist',
-                             command=code_assist, underline=0)
+        code_menu.add_command(label='Code Assist',
+                              command=code_assist, underline=0)
         def goto_definition():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().goto_definition()
 
-        codeMenu.add_command(label='Goto Defenition', 
-                             command=goto_definition, underline=0)
-        codeMenu.add_command(label='Run Module', 
-                             command=self.run_active_editor, underline=4)
+        code_menu.add_command(label='Goto Defenition', 
+                              command=goto_definition, underline=0)
+        code_menu.add_command(label='Run Module', 
+                              command=self.run_active_editor, underline=4)
         
         refactor_menu = Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label='Refactor', 
-                                 menu=refactor_menu, underline=5)
+                                 menu=refactor_menu, underline=0)
         def rename():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
@@ -291,9 +189,9 @@ class Core(object):
         refactor_menu.add_command(label='Extract Method', 
                                   command=extract_method, underline=8)
 
-        helpMenu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Help', menu=helpMenu, underline=3)
-        helpMenu.add_command(label='About', 
+        help_menu = Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='Help', menu=help_menu, underline=3)
+        help_menu.add_command(label='About', 
                              command=self._show_about_dialog, underline=0)
 
     def _undo_last_refactoring(self):
@@ -646,7 +544,7 @@ class Core(object):
         save_button.focus_set()
 
     def start(self):
-        self.runningThread.start()
+        self.running_thread.start()
 
     def run(self):
         self.root.rowconfigure(0, weight=1)
@@ -772,4 +670,33 @@ class Core(object):
         if not hasattr(Core, '_core'):
             Core._core = Core()
         return Core._core
+
+
+class _ResourceViewHandle(TreeViewHandle):
+    
+    def __init__(self, core, toplevel):
+        self.core = core
+        self.toplevel = toplevel
+
+    def entry_to_string(self, resource):
+        return resource.get_name()
+    
+    def get_children(self, resource):
+        if resource.is_folder():
+            return [child for child in resource.get_children()
+                    if not child.get_name().startswith('.') and 
+                    not child.get_name().endswith('.pyc')]
+        else:
+            return []
+
+    def selected(self, resource):
+        if not resource.is_folder():
+            self.core.editor_manager.get_resource_editor(resource)
+            self.toplevel.destroy()
+    
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        pass
 

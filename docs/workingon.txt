@@ -1,11 +1,10 @@
-Relative imports
-================
+Refactoring UI Modules
+======================
 
-- New style imports
-- ``from ..mod import name``
-- Add `only_for_25` test decorator
-- Finding ``from mod`` occurances in refactoring
+- Add ``M-c`` and ``M-l`` and ``M-u``
 
+* Add ``C-k``
+* Add ``C-l``
 
 Remaining Stories
 =================

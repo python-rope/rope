@@ -228,6 +228,27 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.prev_word()
         self.assertEquals(self.editor.get_index(7), self.editor.get_insert())
 
+    def test_upper_next_word(self):
+        self.editor.set_text('sample text')
+        self.editor.set_insert(self.editor.get_index(1))
+        self.editor.upper_next_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+        self.assertEquals('sAMPLE text', self.editor.get_text())
+
+    def test_lower_next_word(self):
+        self.editor.set_text('SAMPLE TEXT')
+        self.editor.set_insert(self.editor.get_index(1))
+        self.editor.lower_next_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+        self.assertEquals('Sample TEXT', self.editor.get_text())
+
+    def test_upper_next_word(self):
+        self.editor.set_text('sample text')
+        self.editor.set_insert(self.editor.get_index(1))
+        self.editor.capitalize_next_word()
+        self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
+        self.assertEquals('sAmple text', self.editor.get_text())
+
     def test_going_to_the_start(self):
         self.editor.set_insert(self.editor.get_index(3))
         self.editor.goto_start()

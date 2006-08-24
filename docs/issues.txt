@@ -82,6 +82,20 @@ To Be Discussed
 * Saving information for individual objects or only for types
 
 
+Choosing The Next Move
+======================
+
+I'm in a tough situation.  The UI part really needs big refactorings,
+while I am very eager to add values to rope.  For making a better
+decision I'll need better estimate for planned stories:
+
+* Adding `MenuBarManager` class
+* Using `rope.ui.extension.Action` in Core
+* Adding an `Action` for code assist and refactoring commands
+* Thinking about argument object inference
+* Thinking about holding everything inside memory
+
+
 Finding Occurances
 ==================
 

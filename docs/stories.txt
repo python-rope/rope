@@ -106,20 +106,11 @@ Stories
   * Fixed places for StatusTexts
 
 
-* Having different strategies for selecting next/prev words @ 8h
-
-
 * Indenting a range of file
 
 
 * Better New ... Dialogs
   Better folder and module selection. Completing or selecting from a list.
-
-
-* Refactoring Core
-
-  * Refactor editor._goto_definition; not using Core.get_core()
-  * Refactor Core; Only use EditorManager when working with the Editors
 
 
 * Better multi-sequence key event handling
@@ -163,9 +154,6 @@ Stories
 
 
 * Introduce temporary variable
-
-
-* Inline function
 
 
 * AssList and AssTuple assignments

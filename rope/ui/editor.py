@@ -349,6 +349,9 @@ class GraphicalEditor(object):
         self.text.bind('<Control-x>', ignore)
         self.text.bind('<F2>', lambda event: self._show_doc_window())
         self.text.bind('<Alt-M>', lambda event: self._extract_method_dialog())
+        self.text.bind('<Alt-l>', lambda event: self.lower_next_word())
+        self.text.bind('<Alt-u>', lambda event: self.upper_next_word())
+        self.text.bind('<Alt-c>', lambda event: self.capitalize_next_word())
 
     def goto_definition(self):
         result = self.code_assist.get_definition_location(self.get_text(),
@@ -368,7 +371,8 @@ class GraphicalEditor(object):
     def _get_resource(self):
         import rope.ui.core
         editor = rope.ui.core.Core.get_core().get_editor_manager().active_editor
-        return editor.get_file()
+        if editor is not None:
+            return editor.get_file()
     
     def _confirm_all_editors_are_saved(self, event=None):
         core = rope.ui.core.Core.get_core()
@@ -752,6 +756,23 @@ class GraphicalEditor(object):
     def next_word(self):
         self.text.mark_set(INSERT, self._get_next_word_index())
         self.text.see(INSERT)
+    
+    def _change_next_word(self, function):
+        next_word = self.text.index(self._get_next_word_index())
+        word = self.text.get(INSERT, next_word)
+        self.text.delete(INSERT, next_word)
+        self.text.insert(INSERT, function(word))
+        self.text.mark_set(INSERT, next_word)
+        self.text.see(INSERT)
+    
+    def upper_next_word(self):
+        self._change_next_word(str.upper)
+
+    def lower_next_word(self):
+        self._change_next_word(str.lower)
+
+    def capitalize_next_word(self):
+        self._change_next_word(str.capitalize)
 
     def _get_prev_word_index_old(self):
         result = INSERT
