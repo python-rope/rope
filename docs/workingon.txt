@@ -1,10 +1,12 @@
 Refactoring UI Modules
 ======================
 
-- Support groups
-- Support underline
+- Extracting methods and method arguments
 
-* Extracting methods and method arguments
+* Not proposing var in here::
+    if True:
+        print va${cursor}
+    var = 10
 
 
 Remaining Stories

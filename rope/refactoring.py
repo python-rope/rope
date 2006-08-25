@@ -251,33 +251,38 @@ class _ExtractMethodPerformer(object):
         code1 = self._indent_lines(self.source_code[start1:
                                                     self.start_offset],
                                      -self.scope_indents)
-        ast1 = compiler.parse(code1)
-        visitor1 = _VariableReadsAndWritesFinder()
-        compiler.walk(ast1, visitor1)
+        read1, written1 = _VariableReadsAndWritesFinder.find_reads_and_writes(code1)
+        if self.holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Function'):
+            written1.update(self._get_function_arg_names())
         
         code2 = self._indent_lines(self.source_code[self.start_offset:
                                                     self.end_offset],
                                      -self.scope_indents)
-        ast2 = compiler.parse(code2)
-        visitor2 = _VariableReadsAndWritesFinder()
-        compiler.walk(ast2, visitor2)
-        return list(visitor1.written.intersection(visitor2.read))
+        read2, written2 = _VariableReadsAndWritesFinder.find_reads_and_writes(code2)
+        return list(written1.intersection(read2))
+    
+    def _get_function_arg_names(self):
+        indents = self._get_indents(self.holding_scope.get_start())
+        function_header_end = self.source_code.index(':', self.scope_start)
+        function_header = self._indent_lines(self.source_code[self.scope_start:
+                                                              function_header_end], -indents) + \
+                                                              ':\n' + ' ' * 4 + 'pass'
+        ast = compiler.parse(function_header)
+        visitor = _FunctionArgnamesCollector()
+        compiler.walk(ast, visitor)
+        return visitor.argnames
+        
     
     def _find_function_returns(self):
         code2 = self._indent_lines(self.source_code[self.start_offset:
                                                     self.end_offset],
                                    -self.scope_indents)
-        ast2 = compiler.parse(code2)
-        visitor2 = _VariableReadsAndWritesFinder()
-        compiler.walk(ast2, visitor2)
-        
+        read2, written2 = _VariableReadsAndWritesFinder.find_reads_and_writes(code2)
         code3 = self._indent_lines(self.source_code[self.end_offset:
                                                     self.scope_end],
                                    -self.scope_indents)
-        ast3 = compiler.parse(code3)
-        visitor3 = _VariableReadsAndWritesFinder()
-        compiler.walk(ast3, visitor3)        
-        return list(visitor2.written.intersection(visitor3.read))
+        read3, written3 = _VariableReadsAndWritesFinder.find_reads_and_writes(code3)
+        return list(written2.intersection(read3))
         
     def _choose_closest_line_end(self, source_code, offset):
         lineno = self.lines.get_line_number(offset)
@@ -297,6 +302,8 @@ class _ExtractMethodPerformer(object):
         return indents
     
     def _indent_lines(self, source_code, amount):
+        if amount == 0:
+            return source_code
         lines = source_code.split('\n')
         result = []
         for l in lines:
@@ -329,6 +336,22 @@ class _VariableReadsAndWritesFinder(object):
 
     def visitClass(self, node):
         self.written.add(node.name)
+    
+    @staticmethod
+    def find_reads_and_writes(code):
+        ast = compiler.parse(code)
+        visitor = _VariableReadsAndWritesFinder()
+        compiler.walk(ast, visitor)
+        return visitor.read, visitor.written
+
+
+class _FunctionArgnamesCollector(object):
+    
+    def __init__(self):
+        self.argnames = []
+    
+    def visitFunction(self, node):
+        self.argnames = node.argnames
 
 
 class NoRefactoring(Refactoring):
