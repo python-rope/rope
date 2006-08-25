@@ -10,7 +10,7 @@ from rope.pycore import PythonFileRunner
 import rope.ui.editor
 import rope.ui.statusbar
 import rope.ui.editorpile
-import rope.ui.menubar
+from rope.ui.menubar import MenuBarManager, MenuAddress
 from rope.ui.uihelpers import TreeViewHandle, TreeView
 
 
@@ -22,7 +22,7 @@ class Core(object):
         self.root.title('Rope')
         self.menubar = Menu(self.root, relief=RAISED, borderwidth=1)
         self.root['menu'] = self.menubar
-        self.menubar_manager = rope.ui.menubar.MenuBarManager(self.menubar)
+        self.menubar_manager = MenuBarManager(self.menubar)
         self._create_menu()
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
@@ -40,159 +40,155 @@ class Core(object):
         self.project = None
 
     def _create_menu(self):
-        file_menu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='File', menu=file_menu, underline=1)
-        file_menu.add_command(label='Open Project ...',
-                              command=self._open_project_dialog, underline=0)
-        file_menu.add_command(label='Close Project',
-                              command=self._close_project_dialog, underline=1)
-        file_menu.add_separator()
-        file_menu.add_command(label='New File ...',
-                              command=self._create_new_file_dialog, underline=0)
-        file_menu.add_command(label='New Folder ...',
-                              command=self._create_new_folder_dialog, underline=1)
-        file_menu.add_command(label='New Module ...',
-                              command=self._create_module_dialog, underline=4)
-        file_menu.add_command(label='New Package ...',
-                              command=self._create_package_dialog, underline=4)
-        file_menu.add_separator()
-        file_menu.add_command(label='Find File ...',
-                              command=self._find_file_dialog, underline=0)
-        file_menu.add_command(label='Project Tree',
-                              command=self._show_resource_view, underline=0)
-        file_menu.add_command(label='Open File ...',
-                              command=self._open_file_dialog)
-        file_menu.add_separator()
-        file_menu.add_command(label='Change Editor ...',
-                              command=self._change_editor_dialog, underline=0)
-        file_menu.add_command(label='Save Editor',
-                              command=self.save_active_editor, underline=0)
-        file_menu.add_command(label='Save All',
-                              command=self.save_all_editors, underline=5)
-        file_menu.add_command(label='Close Editor',
-                              command=self._close_active_editor_dialog, underline=0)
-        file_menu.add_separator()
-        file_menu.add_command(label='Exit',
-                              command=self._close_project_and_exit, underline=1)
+        self.menubar_manager.add_menu_cascade(MenuAddress(['File'], 'i'))
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Open Project ...'],
+                                                          'o'), self._open_project_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Close Project'],
+                                                          'l'), self._close_project_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New File ...'],
+                                                          'n', 1), self._create_new_file_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New Folder ...'],
+                                                          'e', 1), self._create_new_folder_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New Module ...'],
+                                                          'm', 1), self._create_module_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New Package ...'],
+                                                          'p', 1), self._create_package_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Find File ...'],
+                                                          'f', 2), self._find_file_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Project Tree'],
+                                                          't', 2), self._show_resource_view)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Open File ...'],
+                                                          last_group=2), self._open_file_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Change Editor ...'],
+                                                          'c', 3), self._change_editor_dialog)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Save Editor'],
+                                                          's', 3), self.save_active_editor)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Save All Editors'],
+                                                          'a', 3), self.save_all_editors)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Close Editor'],
+                                                          'c', 3), self.close_active_editor)
+        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Exit'],
+                                                          'x', 4), self._close_project_and_exit)
         
-        edit_menu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Edit', menu=edit_menu, underline=3)
         def set_mark():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().set_mark()
-        edit_menu.add_command(label='Emacs Set Mark',
-                              command=set_mark, underline=6)
         def copy():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().copy_region()
-        edit_menu.add_command(label='Emacs Copy', command=copy, underline=6)
         def cut():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().cut_region()
-        edit_menu.add_command(label='Emacs Cut', command=cut, underline=8)
         def paste():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().paste()
-        edit_menu.add_command(label='Paste', command=paste, underline=0)
-
-        edit_menu.add_separator()
         def undo():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().undo()
-        edit_menu.add_command(label='Undo', command=undo, underline=0)
         def redo():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().redo()
-        edit_menu.add_command(label='Redo', command=redo, underline=0)
-        edit_menu.add_separator()
         def forward_search():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().start_searching(True)
-
-        edit_menu.add_command(label='Forward Search', command=forward_search, underline=0)
-
         def backward_search():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().start_searching(False)
 
-        edit_menu.add_command(label='Backward Search', 
-                              command=backward_search, underline=0)
-
-        code_menu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Code', menu=code_menu, underline=1)
-
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Edit'], 't'))
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Emacs Set Mark'],
+                                                          's'), set_mark)
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Emacs Copy'],
+                                                          'c'), copy)
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Emacs Cut'],
+                                                          't'), cut)
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Paste'],
+                                                          'p'), paste)
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Undo'],
+                                                          'u', 1), undo)
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Redo'],
+                                                          'r', 1), redo)
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Forward Search'],
+                                                          'f', 2), forward_search)
+        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Backward Search'],
+                                                          'b', 2), backward_search)
         def correct_line_indentation():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().correct_line_indentation()
 
-        code_menu.add_command(label='Correct Line Indentation', 
-                              command=correct_line_indentation, underline=13)
         def quick_outline():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._show_outline_window()
 
-        code_menu.add_command(label='Quick Outline', 
-                              command=quick_outline, underline=0)
         def code_assist():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._show_completion_window()
 
-        code_menu.add_command(label='Code Assist',
-                              command=code_assist, underline=0)
         def goto_definition():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor().goto_definition()
 
-        code_menu.add_command(label='Goto Defenition', 
-                              command=goto_definition, underline=0)
-        code_menu.add_command(label='Run Module', 
-                              command=self.run_active_editor, underline=4)
-        
-        refactor_menu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Refactor', 
-                                 menu=refactor_menu, underline=0)
-        def rename():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._rename_refactoring_dialog()
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Code'], 'o'))
+        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Correct Line Indentation'],
+                                                          'i'),
+                                              correct_line_indentation)
+        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Quick Outline'],
+                                                          'q'),
+                                              quick_outline)
+        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Code Assist'],
+                                                          'c'),
+                                              code_assist)
+        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Goto Definition'],
+                                                          'g'),
+                                              goto_definition)
+        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Run Module'],
+                                                          'm'),
+                                              self.run_active_editor)
 
-        refactor_menu.add_command(label='Rename', 
-                             command=rename, underline=0)
-        refactor_menu.add_command(label='Undo Last Refactoring',
-                                  command=self._undo_last_refactoring, underline=0)
-        
-        refactor_menu.add_separator()
         def local_rename():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._local_rename_dialog()
 
-        refactor_menu.add_command(label='Rename Local Variable', 
-                                  command=local_rename, underline=1)
         def extract_method():
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._extract_method_dialog()
 
-        refactor_menu.add_command(label='Extract Method', 
-                                  command=extract_method, underline=8)
-
-        help_menu = Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label='Help', menu=help_menu, underline=3)
-        help_menu.add_command(label='About', 
-                             command=self._show_about_dialog, underline=0)
+        def rename():
+            activeEditor = self.editor_manager.active_editor
+            if activeEditor:
+                activeEditor.get_editor()._rename_refactoring_dialog()
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor']))
+        self.menubar_manager.add_menu_command(MenuAddress(['Refactor', 'Rename'], 'r'),
+                                              rename)
+        self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
+                                                           'Undo Last Refactoring'], 'u'),
+                                              self._undo_last_refactoring)
+        self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
+                                                           'Rename Local Variable'],
+                                                          'e', last_group=1),
+                                              local_rename)
+        self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
+                                                           'Extract Method'],
+                                                          'm', last_group=1),
+                                              extract_method)
+        
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
+        self.menubar_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
+                                              self._show_about_dialog)
 
     def _undo_last_refactoring(self):
         project = self.get_open_project()

@@ -80,6 +80,8 @@ To Be Discussed
 
 * Reducing the cost of invalidation
 * Saving information for individual objects or only for types
+* Should we analyze all source files for holding type hierarchies and
+  argument object inference
 
 
 Choosing The Next Move
@@ -87,13 +89,13 @@ Choosing The Next Move
 
 I'm in a tough situation.  The UI part really needs big refactorings,
 while I am very eager to add values to rope.  For making a better
-decision I'll need better estimate for planned stories:
+decision I'll need better estimate for planned stories.
 
-* Adding `MenuBarManager` class
-* Using `rope.ui.extension.Action` in Core
-* Adding an `Action` for code assist and refactoring commands
-* Thinking about argument object inference
-* Thinking about holding everything inside memory
+The decision has been made and in the remaining two days of this week
+I will concentrate my efforts in refactoring the UI. I will think
+about the next week on Sunday at weekly planning.
+
+For the next week implement another refactoring.
 
 
 Finding Occurances
@@ -514,6 +516,19 @@ Sample code::
   gtd = GoToDefinition()
   
   Core.get_core().register(gtd)
+
+
+Addressing Menu Items
+~~~~~~~~~~~~~~~~~~~~~
+
+Suggestions:
+
+* ['Refactoring', 'Extract Method']
+* ['Refactoring:1', 'Extract Method']
+* {'Refactoring': 1, 'Extract Method': 0}
+* [('Refactoring', 1), 'Extract Method']
+
+* ['Refactoring:Inlines', 'Extract Method']
 
 
 Better Dialogs

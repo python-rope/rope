@@ -1,8 +1,10 @@
 Refactoring UI Modules
 ======================
 
-- Add ``M-c`` and ``M-l`` and ``M-u``
-- Add ``C-k``
+- Support groups
+- Support underline
+
+* Extracting methods and method arguments
 
 
 Remaining Stories
