@@ -263,7 +263,8 @@ class _ExtractMethodPerformer(object):
     
     def _get_function_arg_names(self):
         indents = self._get_indents(self.holding_scope.get_start())
-        function_header_end = self.source_code.index(':', self.scope_start)
+        function_header_end = min(self.source_code.index('):\n', self.scope_start) + 1,
+                                  self.scope_end)
         function_header = self._indent_lines(self.source_code[self.scope_start:
                                                               function_header_end], -indents) + \
                                                               ':\n' + ' ' * 4 + 'pass'
@@ -308,7 +309,10 @@ class _ExtractMethodPerformer(object):
         result = []
         for l in lines:
             if amount < 0 and len(l) > -amount:
-                result.append(l[-amount:])
+                indents = 0
+                while indents < len(l) and l[indents] == ' ':
+                    indents += 1
+                result.append(l[-min(amount, indents):])
             elif amount > 0 and l.strip() != '':
                 result.append(' ' * amount + l)
             else:

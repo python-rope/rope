@@ -34,6 +34,8 @@ class Core(object):
         line_status = self.status_bar_manager.create_status('line')
         line_status.set_width(12)
 
+        self.key_binding = []
+        self._init_key_binding()
         self._set_key_binding(self.root)
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
         self.running_thread = Thread(target=self.run)
@@ -171,7 +173,7 @@ class Core(object):
             activeEditor = self.editor_manager.active_editor
             if activeEditor:
                 activeEditor.get_editor()._rename_refactoring_dialog()
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor']))
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor'], 'e'))
         self.menubar_manager.add_menu_command(MenuAddress(['Refactor', 'Rename'], 'r'),
                                               rename)
         self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
@@ -221,34 +223,34 @@ class Core(object):
         ok_button.grid()
         toplevel.focus_set()
 
-    def _set_key_binding(self, widget):
-        widget.bind('<Control-x><Control-n>', self._create_new_file_dialog)
+    def _init_key_binding(self):
+        self._bind_key('<Control-x><Control-n>', self._create_new_file_dialog)
         def _save_active_editor(event):
             self.save_active_editor()
             return 'break'
         def _save_all_editors(event):
             self.save_all_editors()
             return 'break'
-        widget.bind('<Control-x><Control-s>', _save_active_editor)
-        widget.bind('<Control-x><s>', _save_all_editors)
-        widget.bind('<Control-x><Control-p>', self._open_project_dialog)
+        self._bind_key('<Control-x><Control-s>', _save_active_editor)
+        self._bind_key('<Control-x><s>', _save_all_editors)
+        self._bind_key('<Control-x><Control-p>', self._open_project_dialog)
         def _exit(event):
             self._close_project_and_exit()
             return 'break'
-        widget.bind('<Control-x><Control-c>', _exit)
-        widget.bind('<Control-x><Control-d>', self._create_new_folder_dialog)
-        widget.bind('<Control-R>', self._find_file_dialog)
-        widget.bind('<Control-x><Control-f>', self._find_file_dialog)
-        widget.bind('<Control-F11>', self._run_active_editor)
+        self._bind_key('<Control-x><Control-c>', _exit)
+        self._bind_key('<Control-x><Control-d>', self._create_new_folder_dialog)
+        self._bind_key('<Control-R>', self._find_file_dialog)
+        self._bind_key('<Control-x><Control-f>', self._find_file_dialog)
+        self._bind_key('<Control-F11>', self._run_active_editor)
         def _close_active_editor(event):
             self._close_active_editor_dialog()
             return 'break'
-        widget.bind('<Control-x><k>', _close_active_editor)
-        widget.bind('<Control-x><b>', self._change_editor_dialog)
+        self._bind_key('<Control-x><k>', _close_active_editor)
+        self._bind_key('<Control-x><b>', self._change_editor_dialog)
         def do_switch_active_editor(event):
             self.switch_active_editor()
             return 'break'
-        widget.bind('<Control-KeyRelease-F6>', do_switch_active_editor)
+        self._bind_key('<Control-KeyRelease-F6>', do_switch_active_editor)
         line_status = self.status_bar_manager.get_status('line')
         def show_current_line_number(event):
             line_text = ' '
@@ -259,11 +261,19 @@ class Core(object):
         def show_resource_tree(event):
             self._show_resource_view()
             return 'break'
-        widget.bind('<Alt-Q><r>', show_resource_tree)
-        widget.bind('<Any-KeyRelease>', show_current_line_number, '+')
-        widget.bind('<Any-Button>', show_current_line_number)
-        widget.bind('<FocusIn>', show_current_line_number)
+        self._bind_key('<Alt-Q><r>', show_resource_tree)
+        self._bind_key('<Any-KeyRelease>', show_current_line_number)
+        self._bind_key('<Any-Button>', show_current_line_number)
+        self._bind_key('<FocusIn>', show_current_line_number)
+    
+    def _bind_key(self, key, function):
+        self.key_binding.append((key, function))
+        self.root.bind(key, function)
 
+    def _set_key_binding(self, widget):
+        for (key, function) in self.key_binding:
+            widget.bind(key, function)
+    
     def _find_file_dialog(self, event=None):
         if not self._check_if_project_is_open():
             return
@@ -659,6 +669,14 @@ class Core(object):
 
     def get_editor_manager(self):
         return self.editor_manager
+    
+    def register_action(self, action):
+        callback = self.make_callback(action)
+        self.menubar_manager.add_menu_command(action.get_menu(), callback)
+        self._bind_key(action.get_key(), callback)
+    
+    def _make_callback(action):
+        return lambda event=None: action.do(ActionContext())
 
     @staticmethod
     def get_core():

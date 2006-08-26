@@ -432,6 +432,9 @@ divisions:
 * logical line
 * primary
 
+After this refactoring, many places of rope can be refactored.  The
+logical line is very useful in many places for instance.
+
 
 The GUI Mess; Working More On The UI Parts
 ==========================================
@@ -518,24 +521,19 @@ Sample code::
   Core.get_core().register(gtd)
 
 
-Addressing Menu Items
-~~~~~~~~~~~~~~~~~~~~~
-
-Suggestions:
-
-* ['Refactoring', 'Extract Method']
-* ['Refactoring:1', 'Extract Method']
-* {'Refactoring': 1, 'Extract Method': 0}
-* [('Refactoring', 1), 'Extract Method']
-
-* ['Refactoring:Inlines', 'Extract Method']
-
-
 Better Dialogs
 --------------
 
 Many dialogs look very similar.  They can be factored.  Continue
 using `rope.ui.uihelpers` module and extend it.
+
+
+Not Resetting The Whole Editor
+------------------------------
+
+After actions like extract method, we reset the whole editor.  This
+is slow and makes the undo difficult.  Find someway of solving this.
+I might be able to use `difflib` module.
 
 
 Isolating Text Widget Features

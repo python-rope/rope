@@ -379,6 +379,12 @@ class CodeAssistTest(unittest.TestCase):
         mod.write('"""a module"""\n')
         src = 'import mod\nmod'
         self.assertEquals('a module', self.assist.get_doc(src, len(src) - 1))
+    
+    # TODO: should comment till the end of scope rather and not block
+    def xxx_test_not_proposing_variables_defined_till_the_end_of_scope(self):
+        code = 'if True:\n    a_v\na_var = 10\n'
+        result = self.assist.assist(code, code.index('a_v') + 3)
+        self.assert_completion_not_in_result('a_var', 'global', result)
 
 
 class CodeAssistInProjectsTest(unittest.TestCase):

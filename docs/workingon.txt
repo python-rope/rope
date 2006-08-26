@@ -1,12 +1,14 @@
 Refactoring UI Modules
 ======================
 
-- Extracting methods and method arguments
+* Should Menu cascades be made automatically?
+* Define the responsibility of `Core` class
 
-* Not proposing var in here::
-    if True:
-        print va${cursor}
-    var = 10
+  * Providing an interface to the plug-ins
+  * Providing methods for controlling rope?
+
+* Moving code assist ui dialogs to `rope.ui.codeassist` module
+* Moving refactoring ui dialogs to `rope.ui.refactorings` module
 
 
 Remaining Stories
