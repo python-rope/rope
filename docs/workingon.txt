@@ -1,7 +1,7 @@
 Refactoring UI Modules
 ======================
 
-* Should Menu cascades be made automatically?
+* Should menu cascades be made automatically?
 * Define the responsibility of `Core` class
 
   * Providing an interface to the plug-ins
@@ -15,6 +15,7 @@ Remaining Stories
 =================
 
 * A keyboard shortcut for renaming local variables
+* Function keywords and extract method
 * Showing the initial name in renaming dialogs
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname

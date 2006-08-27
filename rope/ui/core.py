@@ -12,6 +12,7 @@ import rope.ui.statusbar
 import rope.ui.editorpile
 from rope.ui.menubar import MenuBarManager, MenuAddress
 from rope.ui.uihelpers import TreeViewHandle, TreeView
+from rope.ui.extension import ActionContext
 
 
 class Core(object):
@@ -40,6 +41,10 @@ class Core(object):
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
         self.running_thread = Thread(target=self.run)
         self.project = None
+    
+    def _load_actions(self):
+        import rope.ui.codeassist
+        import rope.ui.refactoring
 
     def _create_menu(self):
         self.menubar_manager.add_menu_cascade(MenuAddress(['File'], 'i'))
@@ -122,81 +127,14 @@ class Core(object):
                                                           'f', 2), forward_search)
         self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Backward Search'],
                                                           'b', 2), backward_search)
-        def correct_line_indentation():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().correct_line_indentation()
-
-        def quick_outline():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._show_outline_window()
-
-        def code_assist():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._show_completion_window()
-
-        def goto_definition():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().goto_definition()
-
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Code'], 'o'))
-        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Correct Line Indentation'],
-                                                          'i'),
-                                              correct_line_indentation)
-        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Quick Outline'],
-                                                          'q'),
-                                              quick_outline)
-        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Code Assist'],
-                                                          'c'),
-                                              code_assist)
-        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Goto Definition'],
-                                                          'g'),
-                                              goto_definition)
-        self.menubar_manager.add_menu_command(MenuAddress(['Code', 'Run Module'],
-                                                          'm'),
-                                              self.run_active_editor)
-
-        def local_rename():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._local_rename_dialog()
-
-        def extract_method():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._extract_method_dialog()
-
-        def rename():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor()._rename_refactoring_dialog()
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor'], 'e'))
-        self.menubar_manager.add_menu_command(MenuAddress(['Refactor', 'Rename'], 'r'),
-                                              rename)
-        self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
-                                                           'Undo Last Refactoring'], 'u'),
-                                              self._undo_last_refactoring)
-        self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
-                                                           'Rename Local Variable'],
-                                                          'e', last_group=1),
-                                              local_rename)
-        self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
-                                                           'Extract Method'],
-                                                          'm', last_group=1),
-                                              extract_method)
         
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Code'], 'o'))
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor'], 'e'))
         self.menubar_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
+
         self.menubar_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
                                               self._show_about_dialog)
 
-    def _undo_last_refactoring(self):
-        project = self.get_open_project()
-        if project:
-            project.get_pycore().get_refactoring().undo_last_refactoring()
-    
     def _close_project_and_exit(self):
         self._close_project_dialog(exit_=True)
 
@@ -241,7 +179,6 @@ class Core(object):
         self._bind_key('<Control-x><Control-d>', self._create_new_folder_dialog)
         self._bind_key('<Control-R>', self._find_file_dialog)
         self._bind_key('<Control-x><Control-f>', self._find_file_dialog)
-        self._bind_key('<Control-F11>', self._run_active_editor)
         def _close_active_editor(event):
             self._close_active_editor_dialog()
             return 'break'
@@ -553,6 +490,7 @@ class Core(object):
         self.running_thread.start()
 
     def run(self):
+        self._load_actions()
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
         self.main.rowconfigure(0, weight=1)
@@ -671,12 +609,21 @@ class Core(object):
         return self.editor_manager
     
     def register_action(self, action):
-        callback = self.make_callback(action)
-        self.menubar_manager.add_menu_command(action.get_menu(), callback)
-        self._bind_key(action.get_key(), callback)
+        callback = self._make_callback(action)
+        menu = action.get_menu()
+        if action.get_default_key():
+            self._bind_key(action.get_default_key(), callback)
+            if menu:
+                menu.address[-1] = menu.address[-1].ljust(27) + action.get_default_key()
+        if action.get_menu():
+            self.menubar_manager.add_menu_command(action.get_menu(), callback)
     
-    def _make_callback(action):
-        return lambda event=None: action.do(ActionContext())
+    def _make_callback(self, action):
+        def callback(event=None):
+            action.do(ActionContext(self))
+            if event:
+                return 'break'
+        return callback
 
     @staticmethod
     def get_core():

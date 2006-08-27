@@ -152,7 +152,7 @@ class ReSTHighlighting(Highlighting):
         emphasis_pattern = '(?P<emphasis>\\*[^*\n]+\\*)'
         strongemphasis_pattern = '(?P<strongemphasis>\\*\\*[^*\n]+\\*\\*)'
         literal_pattern = '(?P<literal>``([^`]|`[^`])+``)'
-        interpreted_pattern = '(?P<interpreted>`[^`]+`)(?P<role>:\\w+:)?'
+        interpreted_pattern = '(?P<pre_role>:\\w+:)?(?P<interpreted>`[^`]+`)(?P<post_role>:\\w+:)?'
         hyperlink_target_pattern = '(?P<hyperlink_target>\\w+://[^\\s]+)'
         hyperlink_pattern = '(?P<hyperlink>\\b[a-zA-Z0-9_\\.]*[a-zA-Z0-9]+_|`[^`]+`_)\\b'
         anonymous_hyperlink_pattern = '(?P<anonymous_hyperlink>\\b[a-zA-Z0-9]+__|`[^`]+`__)\\b'
@@ -180,7 +180,8 @@ class ReSTHighlighting(Highlighting):
                 'strongemphasis' : HighlightingStyle(color='#330022', bold=True),
                 'literal' : HighlightingStyle(color='#605050'),
                 'interpreted' : HighlightingStyle(color='#208820'),
-                'role' : HighlightingStyle(color='#409000'),
+                'pre_role' : HighlightingStyle(color='#409000'),
+                'post_role' : HighlightingStyle(color='#409000'),
                 'hyperlink_target' : HighlightingStyle(color='#002299'),
                 'hyperlink' : HighlightingStyle(color='#2200FF'),
                 'hyperlink_definition' : HighlightingStyle(color='#2222FF'),

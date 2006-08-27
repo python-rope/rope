@@ -9,7 +9,7 @@ class MenuBarManager(object):
     def add_menu_command(self, address, command):
         parent = self._find_parent(address)
         parent.add_command(address.address[-1], command, address.alt_key,
-                              address.last_group)
+                           address.last_group)
 
     def add_menu_cascade(self, address):
         parent = self._find_parent(address)
@@ -57,7 +57,7 @@ class _MenuCascade(_MenuItem):
 
     def add_cascade(self, name, alt_key=None, group=None):
         location = self._find_location(name, group)
-        new_menu = Tkinter.Menu(self.menu, tearoff=0)
+        new_menu = Tkinter.Menu(self.menu, tearoff=0, font=("mono", 13, 'bold'))
         optional_kws = {}
         if self._calculate_underline(name, alt_key) != -1:
             optional_kws['underline'] = self._calculate_underline(name, alt_key)

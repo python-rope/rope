@@ -542,3 +542,4 @@ Isolating Text Widget Features
 Some of the features of GraphicalEditor can be used in other widgets.
 Like completion, highlighting.
 
+

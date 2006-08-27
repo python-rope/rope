@@ -177,9 +177,13 @@ class ReSTHighlightTest(unittest.TestCase):
         self.assertTrue('interpreted' in self.highlighting.get_styles())
         self.assertTrue(self.in_highlights('`rope`', (0, 6, 'interpreted')))
 
-    def test_role(self):
-        self.assertTrue('role' in self.highlighting.get_styles())
-        self.assertTrue(self.in_highlights('`rope`:emphasis:', (6, 16, 'role')))
+    def test_pre_role(self):
+        self.assertTrue('pre_role' in self.highlighting.get_styles())
+        self.assertTrue(self.in_highlights(':emphasis:`rope`', (0, 10, 'pre_role')))
+
+    def test_post_role(self):
+        self.assertTrue('post_role' in self.highlighting.get_styles())
+        self.assertTrue(self.in_highlights('`rope`:emphasis:', (6, 16, 'post_role')))
 
     def test_hyperlink_target(self):
         self.assertTrue('hyperlink_target' in self.highlighting.get_styles())

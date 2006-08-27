@@ -303,13 +303,9 @@ class GraphicalEditor(object):
             self.prev_page()
             return 'break'
         self.text.bind('<Alt-v>', go_prev_page)
-        def indent_line(event):
-            self.correct_line_indentation()
-            return 'break'
         def do_insert_tab(event):
             self.insert_tab()
             return 'break'
-        self.text.bind('<Control-i>', indent_line)
         self.text.bind('<Tab>', do_insert_tab)
         def return_handler(event):
             if self.searcher.is_searching():
@@ -336,19 +332,10 @@ class GraphicalEditor(object):
                        lambda event: self.start_searching(False))
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
-        self.text.bind('<Alt-slash>', lambda event: self._show_completion_window());
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
-        self.text.bind('<F3>', lambda event: self.goto_definition())
-        def show_quick_outline(event):
-            self._show_outline_window()
-            return 'break'
-        self.text.bind('<Control-o>', show_quick_outline)
-        self.text.bind('<Alt-R>', self._confirm_all_editors_are_saved)
         def ignore(event):
             return 'break'
         self.text.bind('<Control-x>', ignore)
-        self.text.bind('<F2>', lambda event: self._show_doc_window())
-        self.text.bind('<Alt-M>', lambda event: self._extract_method_dialog())
         self.text.bind('<Alt-l>', lambda event: self.lower_next_word())
         self.text.bind('<Alt-u>', lambda event: self.upper_next_word())
         self.text.bind('<Alt-c>', lambda event: self.capitalize_next_word())
