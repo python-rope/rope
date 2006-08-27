@@ -34,17 +34,3 @@ core = rope.ui.core.Core.get_core()
 for action in actions:
     core.register_action(action)
 
-#self.menubar_manager.add_menu_command(MenuAddress(['Refactor', 'Rename'], 'r'),
-#                                      rename)
-#self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
-#                                                   'Undo Last Refactoring'], 'u'),
-#                                      self._undo_last_refactoring)
-#self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
-#                                                   'Rename Local Variable'],
-#                                                  'e', last_group=1),
-#                                      local_rename)
-#self.menubar_manager.add_menu_command(MenuAddress(['Refactor',
-#                                                   'Extract Method'],
-#                                                  'm', last_group=1),
-#                                      extract_method)
-

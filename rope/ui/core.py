@@ -1,7 +1,6 @@
 import tkMessageBox
 import tkFileDialog
 import tkSimpleDialog
-from threading import Thread
 from Tkinter import *
 
 from rope.exceptions import RopeException
@@ -36,102 +35,21 @@ class Core(object):
         line_status.set_width(12)
 
         self.key_binding = []
-        self._init_key_binding()
-        self._set_key_binding(self.root)
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
-        self.running_thread = Thread(target=self.run)
         self.project = None
     
     def _load_actions(self):
+        import rope.ui.fileactions
+        import rope.ui.editactions
         import rope.ui.codeassist
         import rope.ui.refactoring
 
     def _create_menu(self):
         self.menubar_manager.add_menu_cascade(MenuAddress(['File'], 'i'))
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Open Project ...'],
-                                                          'o'), self._open_project_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Close Project'],
-                                                          'l'), self._close_project_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New File ...'],
-                                                          'n', 1), self._create_new_file_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New Folder ...'],
-                                                          'e', 1), self._create_new_folder_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New Module ...'],
-                                                          'm', 1), self._create_module_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'New Package ...'],
-                                                          'p', 1), self._create_package_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Find File ...'],
-                                                          'f', 2), self._find_file_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Project Tree'],
-                                                          't', 2), self._show_resource_view)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Open File ...'],
-                                                          last_group=2), self._open_file_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Change Editor ...'],
-                                                          'c', 3), self._change_editor_dialog)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Save Editor'],
-                                                          's', 3), self.save_active_editor)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Save All Editors'],
-                                                          'a', 3), self.save_all_editors)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Close Editor'],
-                                                          'c', 3), self.close_active_editor)
-        self.menubar_manager.add_menu_command(MenuAddress(['File', 'Exit'],
-                                                          'x', 4), self._close_project_and_exit)
-        
-        def set_mark():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().set_mark()
-        def copy():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().copy_region()
-        def cut():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().cut_region()
-        def paste():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().paste()
-        def undo():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().undo()
-        def redo():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().redo()
-        def forward_search():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().start_searching(True)
-        def backward_search():
-            activeEditor = self.editor_manager.active_editor
-            if activeEditor:
-                activeEditor.get_editor().start_searching(False)
-
         self.menubar_manager.add_menu_cascade(MenuAddress(['Edit'], 't'))
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Emacs Set Mark'],
-                                                          's'), set_mark)
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Emacs Copy'],
-                                                          'c'), copy)
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Emacs Cut'],
-                                                          't'), cut)
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Paste'],
-                                                          'p'), paste)
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Undo'],
-                                                          'u', 1), undo)
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Redo'],
-                                                          'r', 1), redo)
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Forward Search'],
-                                                          'f', 2), forward_search)
-        self.menubar_manager.add_menu_command(MenuAddress(['Edit', 'Backward Search'],
-                                                          'b', 2), backward_search)
-        
         self.menubar_manager.add_menu_cascade(MenuAddress(['Code'], 'o'))
         self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor'], 'e'))
         self.menubar_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
-
         self.menubar_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
                                               self._show_about_dialog)
 
@@ -162,28 +80,6 @@ class Core(object):
         toplevel.focus_set()
 
     def _init_key_binding(self):
-        self._bind_key('<Control-x><Control-n>', self._create_new_file_dialog)
-        def _save_active_editor(event):
-            self.save_active_editor()
-            return 'break'
-        def _save_all_editors(event):
-            self.save_all_editors()
-            return 'break'
-        self._bind_key('<Control-x><Control-s>', _save_active_editor)
-        self._bind_key('<Control-x><s>', _save_all_editors)
-        self._bind_key('<Control-x><Control-p>', self._open_project_dialog)
-        def _exit(event):
-            self._close_project_and_exit()
-            return 'break'
-        self._bind_key('<Control-x><Control-c>', _exit)
-        self._bind_key('<Control-x><Control-d>', self._create_new_folder_dialog)
-        self._bind_key('<Control-R>', self._find_file_dialog)
-        self._bind_key('<Control-x><Control-f>', self._find_file_dialog)
-        def _close_active_editor(event):
-            self._close_active_editor_dialog()
-            return 'break'
-        self._bind_key('<Control-x><k>', _close_active_editor)
-        self._bind_key('<Control-x><b>', self._change_editor_dialog)
         def do_switch_active_editor(event):
             self.switch_active_editor()
             return 'break'
@@ -195,10 +91,6 @@ class Core(object):
                 line_text = 'line : %d' % \
                               self.editor_manager.active_editor.get_editor().get_current_line_number()
             line_status.set_text(line_text)
-        def show_resource_tree(event):
-            self._show_resource_view()
-            return 'break'
-        self._bind_key('<Alt-Q><r>', show_resource_tree)
         self._bind_key('<Any-KeyRelease>', show_current_line_number)
         self._bind_key('<Any-Button>', show_current_line_number)
         self._bind_key('<FocusIn>', show_current_line_number)
@@ -486,10 +378,8 @@ class Core(object):
         cancel_button.grid(row=1, column=2)
         save_button.focus_set()
 
-    def start(self):
-        self.running_thread.start()
-
     def run(self):
+        self._init_key_binding()
         self._load_actions()
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
@@ -608,15 +498,19 @@ class Core(object):
     def get_editor_manager(self):
         return self.editor_manager
     
+    def get_menubar_manager(self):
+        return self.menubar_manager
+    
     def register_action(self, action):
         callback = self._make_callback(action)
         menu = action.get_menu()
-        if action.get_default_key():
-            self._bind_key(action.get_default_key(), callback)
-            if menu:
-                menu.address[-1] = menu.address[-1].ljust(27) + action.get_default_key()
-        if action.get_menu():
-            self.menubar_manager.add_menu_command(action.get_menu(), callback)
+        key = action.get_default_key()
+        if key:
+            self._bind_key(key, callback)
+        if menu:
+            if key:
+                menu.address[-1] = menu.address[-1].ljust(27) + key
+            self.menubar_manager.add_menu_command(menu, callback)
     
     def _make_callback(self, action):
         def callback(event=None):

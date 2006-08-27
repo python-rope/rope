@@ -7,8 +7,8 @@ Refactoring UI Modules
   * Providing an interface to the plug-ins
   * Providing methods for controlling rope?
 
-* Moving code assist ui dialogs to `rope.ui.codeassist` module
-* Moving refactoring ui dialogs to `rope.ui.refactorings` module
+* Showing keys in emacs style ``C-? M-?`` formats
+* Moving related parts from Editor and Core to action files
 
 
 Remaining Stories

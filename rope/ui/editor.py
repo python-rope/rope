@@ -269,22 +269,6 @@ class GraphicalEditor(object):
             self.text.see(INSERT)
         self.text.bind('<Alt-less>', do_goto_start)
         self.text.bind('<Alt-KeyPress->>', do_goto_end)
-        def do_set_mark(event):
-            self.set_mark()
-            return 'break'
-        self.text.bind('<Control-space>', do_set_mark)
-        def do_copy(event):
-            self.copy_region()
-            return 'break'
-        self.text.bind('<Alt-w>', do_copy)
-        def do_cut(event):
-            self.cut_region()
-            return 'break'
-        self.text.bind('<Control-w>', do_cut)
-        def do_paste(event):
-            self.paste()
-            return 'break'
-        self.text.bind('<Control-y>', do_paste)
         def escape(event):
             self.clear_mark()
             if self.get_searcher().is_searching():
@@ -324,12 +308,6 @@ class GraphicalEditor(object):
                 self.indenter.deindent(self.get_current_line_number())
                 return 'break'
         self.text.bind('<Return>', return_handler)
-        self.text.event_add('<<ForwardSearch>>', '<Control-s>')
-        self.text.event_add('<<BackwardSearch>>', '<Control-r>')
-        self.text.bind('<<ForwardSearch>>',
-                       lambda event: self.start_searching(True), '+')
-        self.text.bind('<<BackwardSearch>>',
-                       lambda event: self.start_searching(False))
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
