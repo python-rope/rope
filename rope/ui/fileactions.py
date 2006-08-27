@@ -61,7 +61,7 @@ actions.append(SimpleAction('Create Module', create_module, None,
 actions.append(SimpleAction('Create Package', create_package, None,
                             MenuAddress(['File', 'New Package...'], 'p', 1)))
 
-actions.append(SimpleAction('Find File', find_file, 'C-x C-p',
+actions.append(SimpleAction('Find File', find_file, 'C-x C-f',
                             MenuAddress(['File', 'Find File...'], 'f', 2)))
 actions.append(SimpleAction('Project Tree', project_tree, 'M-Q r',
                             MenuAddress(['File', 'Project Tree'], 't', 2)))
