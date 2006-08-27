@@ -57,7 +57,7 @@ class _MenuCascade(_MenuItem):
 
     def add_cascade(self, name, alt_key=None, group=None):
         location = self._find_location(name, group)
-        new_menu = Tkinter.Menu(self.menu, tearoff=0, font=("mono", 13, 'bold'))
+        new_menu = Tkinter.Menu(self.menu, tearoff=0, font=("courier", 12, 'bold'))
         optional_kws = {}
         if self._calculate_underline(name, alt_key) != -1:
             optional_kws['underline'] = self._calculate_underline(name, alt_key)

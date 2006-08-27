@@ -1,14 +1,5 @@
-Refactoring UI Modules
-======================
-
-* Should menu cascades be made automatically?
-* Define the responsibility of `Core` class
-
-  * Providing an interface to the plug-ins
-  * Providing methods for controlling rope?
-
-* Showing keys in emacs style ``C-? M-?`` formats
-
+Weekly Planning
+===============
 
 Remaining Stories
 =================

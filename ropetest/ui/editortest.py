@@ -242,12 +242,17 @@ class GraphicalEditorTest(unittest.TestCase):
         self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
         self.assertEquals('Sample TEXT', self.editor.get_text())
 
-    def test_upper_next_word(self):
+    def test_capitalize_next_word(self):
         self.editor.set_text('sample text')
         self.editor.set_insert(self.editor.get_index(1))
         self.editor.capitalize_next_word()
         self.assertEquals(self.editor.get_index(6), self.editor.get_insert())
         self.assertEquals('sAmple text', self.editor.get_text())
+
+    def test_capitalize_next_word_after_spaces(self):
+        self.editor.set_text(' text')
+        self.editor.capitalize_next_word()
+        self.assertEquals(' Text', self.editor.get_text())
 
     def test_going_to_the_start(self):
         self.editor.set_insert(self.editor.get_index(3))

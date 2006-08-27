@@ -36,12 +36,13 @@ Metaphor: Deliver the most interesting values.
 Possible Plans
 --------------
 
-* Dynamic type inference
 * Rename class/function
 * Extract/Inline methods/functions
+* Rename module/package
+
+* Dynamic type inference
 * Introduce/Inline temporary variable
 * Formatter
-* Rename module/package
 * reST go to definition and quick outline
 * Better file/folder/module selection dialogs
 * Code contexts
@@ -51,6 +52,8 @@ Releases
 --------
 
 0.3m1
+    Done.
+0.3m2
     Working on.
 
 
@@ -87,15 +90,43 @@ To Be Discussed
 Choosing The Next Move
 ======================
 
-I'm in a tough situation.  The UI part really needs big refactorings,
-while I am very eager to add values to rope.  For making a better
-decision I'll need better estimate for planned stories.
+If we want to move toward the promised features we need to think about
+another refactoring for this week.  But there are other important
+issues to think about that have direct effect upon many of remaining
+refactorings.  So I think this week I have to put more time in
+figuring out the answer to many of these important questions and
+possible refactorings.
 
-The decision has been made and in the remaining two days of this week
-I will concentrate my efforts in refactoring the UI. I will think
-about the next week on Sunday at weekly planning.
 
-For the next week implement another refactoring.
+Having All Modules In Memory
+----------------------------
+
+One of the main questions to answer is whether we need to have the
+`PyModule` of all modules in the memory. Having all of them in memory
+can help:
+
+* For function and arguement object inferencing
+* For renaming attributes in a hierarchy
+* For having references to an object if enough memory
+
+But this seems very hard to achieve because cpu and memory constraints.
+
+
+Holding Information For Individual Objects
+------------------------------------------
+
+From this respect, we can divide typess into two groups.  The types that
+its instances hold valuable and difference information; for example
+container classes, types, functions and modules.  Types in the second
+group hold all information for all instances.  That is instances are
+exactly the same.
+
+
+Lower The Cost Of Module Invalidation
+-------------------------------------
+
+When a single module in the project is changed many other modules
+are invalidated.  This is very expensive.
 
 
 Finding Occurances
@@ -508,4 +539,9 @@ Isolating Text Widget Features
 Some of the features of GraphicalEditor can be used in other widgets.
 Like completion, highlighting.
 
+Defining The Responsibilities Of `Core`
+=======================================
+
+* Providing an interface to the plug-ins
+* Providing methods for controlling rope?
 

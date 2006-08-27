@@ -24,7 +24,7 @@ def find_file(context):
     context.get_core()._find_file_dialog()
 
 def project_tree(context):
-    context.get_core()._show_resource_tree()
+    context.get_core()._show_resource_view()
 
 def open_file(context):
     context.get_core()._open_file_dialog()

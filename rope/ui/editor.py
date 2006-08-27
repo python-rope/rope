@@ -8,7 +8,6 @@ import rope.codeassist
 import rope.ui.editingtools
 import rope.ui.searcher
 from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
-from rope.ui.uihelpers import TreeView, TreeViewHandle
 from rope.ui.tkhelpers import WidgetRedirector
 
 class LineEditor(object):
@@ -86,29 +85,6 @@ class _CompletionListHandle(EnhancedListHandle):
         self.canceled()
 
 
-class _OutlineViewHandle(TreeViewHandle):
-    
-    def __init__(self, editor, toplevel):
-        self.editor = editor
-        self.toplevel = toplevel
-
-    def entry_to_string(self, outline_node):
-        return outline_node.get_name()
-
-    def canceled(self):
-        self.toplevel.destroy()
-
-    def selected(self, selected):
-        self.editor.goto_line(selected.get_line_number())
-        self.toplevel.destroy()
-
-    def focus_went_out(self):
-        self.canceled()
-
-    def get_children(self, outline_node):
-        return outline_node.get_children()
-        
-
 class _TextChangeInspector(object):
 
     def __init__(self, editor, change_observer=None):
@@ -147,8 +123,8 @@ class _TextChangeInspector(object):
             if self.text.compare(end, '<', self.changed_region[1]):
                 delete_len = 1
                 if len(args) > 1 and args[1] is not None:
-                    delete_len = self.editor._get_offset(str(self.text.index(args[1]))) - \
-                                 self.editor._get_offset(start)
+                    delete_len = self.editor.get_offset(str(self.text.index(args[1]))) - \
+                                 self.editor.get_offset(start)
                 end = self.text.index(self.changed_region[1] + ' -%dc' % delete_len)
             if self.text.compare(self.changed_region[0], '<', start):
                 start = self.changed_region[0]
@@ -213,8 +189,8 @@ class GraphicalEditor(object):
     def _colorize(self, start, end):
         start_offset, end_offset = self.highlighting.\
                                    get_suspected_region_after_change(self.get_text(),
-                                                                     self._get_offset(start),
-                                                                     self._get_offset(end))
+                                                                     self.get_offset(start),
+                                                                     self.get_offset(end))
         start = self.text.index('1.0 +%dc' % start_offset)
         end = self.text.index(start + ' +%dc' % (end_offset - start_offset))
         start_tags = self.text.tag_names(start)
@@ -236,8 +212,8 @@ class GraphicalEditor(object):
     def _highlight_range(self, start_index, end_index):
         for style in self.highlighting.get_styles().keys():
             self.text.tag_remove(style, start_index, end_index)
-        start_offset = self._get_offset(start_index)
-        end_offset = self._get_offset(end_index)
+        start_offset = self.get_offset(start_index)
+        end_offset = self.get_offset(end_index)
         for start, end, kind in self.highlighting.highlights(self.get_text(),
                                                              start_offset,
                                                              end_offset):
@@ -434,8 +410,8 @@ class GraphicalEditor(object):
         end = self.text.index(INSERT)
         if self.text.compare(start, '>', end):
             start, end = end, start
-        start_offset = self._get_offset(start)
-        end_offset = self._get_offset(end)
+        start_offset = self.get_offset(start)
+        end_offset = self.get_offset(end)
         refactored = self.refactoring.extract_method(self.get_text(),
                                                      start_offset, end_offset,
                                                      extracted_name,
@@ -559,33 +535,6 @@ class GraphicalEditor(object):
         enhanced_list.list.focus_set()
         enhanced_list.list.bind('<Any-KeyPress>', key_pressed)
         toplevel.grab_set()
-
-    def _show_outline_window(self):
-        toplevel = Toplevel()
-        toplevel.title('Quick Outline')
-        tree_view = TreeView(toplevel, _OutlineViewHandle(self, toplevel),
-                             title='Quick Outline')
-        for node in self.outline.get_root_nodes(self.get_text()):
-            tree_view.add_entry(node)
-        tree_view.list.focus_set()
-        toplevel.grab_set()
-    
-    def _show_doc_window(self):
-        doc = self.code_assist.get_doc(self.get_text(),
-                                       self.get_current_offset(),
-                                       self._get_resource())
-        if doc is not None:
-            toplevel = Toplevel()
-            toplevel.title('Show Doc')
-            doc_text = Label(toplevel, text='\n%s\n' % doc, justify=LEFT, 
-                             relief=GROOVE, width=80)
-            doc_text.grid()
-            def close(event=None):
-                toplevel.destroy()
-            toplevel.bind('<Escape>', close)
-            toplevel.bind('<Control-g>', close)
-            toplevel.bind('<FocusOut>', close)
-            toplevel.grab_set()
 
     def _get_template_information(self, result, proposal):
         template = proposal.template
@@ -727,6 +676,10 @@ class GraphicalEditor(object):
         self.text.see(INSERT)
     
     def _change_next_word(self, function):
+        while self.text.compare('insert', '<', 'end -1c') and \
+              not self.text.get(INSERT).isalnum():
+            self.text.mark_set(INSERT, 'insert +1c')
+            
         next_word = self.text.index(self._get_next_word_index())
         word = self.text.get(INSERT, next_word)
         self.text.delete(INSERT, next_word)
@@ -968,7 +921,7 @@ class GraphicalEditor(object):
         return self._get_line_from_index(INSERT)
 
     def get_current_offset(self):
-        return self._get_offset(INSERT)
+        return self.get_offset(INSERT)
     
     def _get_offset1(self, index):
         # adding up line lengths
@@ -1015,8 +968,8 @@ class GraphicalEditor(object):
                 start_index = mid_index + '+1c'
         return start
     
-    def _get_offset(self, index):
-        return self._get_offset3(index)
+    def get_offset(self, get_offset):
+        return self._get_offset3(get_offset)
     
     def set_status_bar_manager(self, manager):
         self.status_bar_manager = manager

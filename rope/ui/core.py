@@ -349,11 +349,11 @@ class Core(object):
             doOpen(directory)
         return 'break'
 
-    def _show_open_dialog(self, openCommand, title='Open Dialog'):
+    def _show_open_dialog(self, open_command, title='Open Dialog'):
         input_ = tkSimpleDialog.askstring(title, 'Address :', parent=self.root)
         if input_:
             try:
-                openCommand(input_)
+                open_command(input_)
             except Exception, e:
                 tkMessageBox.showerror(parent=self.root, title='Failed',
                                        message=str(e))
