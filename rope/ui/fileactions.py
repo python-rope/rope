@@ -33,7 +33,7 @@ def change_editor(context):
     context.get_core()._change_editor_dialog()
 
 def save_editor(context):
-    context.get_core().save_adtive_editor()
+    context.get_core().save_active_editor()
 
 def save_all(context):
     context.get_core().save_all_editors()
