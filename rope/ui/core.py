@@ -96,8 +96,16 @@ class Core(object):
         self._bind_key('<FocusIn>', show_current_line_number)
     
     def _bind_key(self, key, function):
+        if not key.startswith('<'):
+            key = self._emacs_to_tk(key)
         self.key_binding.append((key, function))
         self.root.bind(key, function)
+    
+    def _emacs_to_tk(self, key):
+        result = []
+        for token in key.split(' '):
+            result.append('<%s>' % token.replace('M-', 'Alt-').replace('C-', 'Control-'))
+        return ''.join(result)
 
     def _set_key_binding(self, widget):
         for (key, function) in self.key_binding:

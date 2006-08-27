@@ -20,14 +20,14 @@ def do_undo_last_refactoring(context):
     
 
 actions = []
-actions.append(SimpleAction('Rename Refactoring', do_rename, '<Alt-R>',
+actions.append(SimpleAction('Rename Refactoring', do_rename, 'M-R',
                             MenuAddress(['Refactor', 'Rename'], 'r')))
 actions.append(SimpleAction('Undo Last Refactoring', do_undo_last_refactoring, None,
                             MenuAddress(['Refactor', 'Undo Last Refactoring'], 'u')))
 
 actions.append(SimpleAction('Rename Local Variable', do_local_rename, None,
                             MenuAddress(['Refactor', 'Rename Local Variable'], 'e', 1)))
-actions.append(SimpleAction('Extract Method', do_extract_method, '<Alt-M>',
+actions.append(SimpleAction('Extract Method', do_extract_method, 'M-M',
                             MenuAddress(['Refactor', 'Extract Method'], 'e', 1)))
 
 core = rope.ui.core.Core.get_core()

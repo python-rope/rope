@@ -478,47 +478,13 @@ Another issue is how to pass `Core` or any needed context information
 to these callbacks when they should execute; probably as arguments.
 
 
-Components
-~~~~~~~~~~
+Shifting To `Action`\s
+~~~~~~~~~~~~~~~~~~~~~~
 
-More on components: is_enabled, is_visible methods? What are them at all.
-Sample code::
-
-  class Action(object):
-      
-      def is_enabled(self):
-          pass
-      
-      def get_name(self):
-          pass
-      
-      def do(self):
-          pass
-  
-      def get_key(self):
-          pass
-      
-      def get_menu(self):
-          pass
-      
-  class GoToDefinition(Action):
-      
-      def is_enabled(self):
-          return True
-      
-      def get_name(self):
-          return 'Go To Definition'
-      
-      def get_key(self):
-          return '<F3>'
-      
-      def get_menu(self):
-          return ['Code', 'Go To Definition']
-  
-  
-  gtd = GoToDefinition()
-  
-  Core.get_core().register(gtd)
+After the addition of `rope.ui.extension` module followed by the
+addition modules like `rope.ui.codeassist`, we have to gradually move
+related dialogs to this modules.  This helps `Core` and `Editor`
+modules not to be so much messy.
 
 
 Better Dialogs

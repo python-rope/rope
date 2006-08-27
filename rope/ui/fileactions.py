@@ -15,10 +15,10 @@ def create_folder(context):
     context.get_core()._create_new_folder_dialog()
 
 def create_module(context):
-    context.get_core()._create_new_module_dialog()
+    context.get_core()._create_module_dialog()
 
 def create_package(context):
-    context.get_core()._create_new_package_dialog()
+    context.get_core()._create_package_dialog()
 
 def find_file(context):
     context.get_core()._find_file_dialog()
@@ -47,7 +47,7 @@ def exit_rope(context):
 core = rope.ui.core.Core.get_core()
 actions = []
 
-actions.append(SimpleAction('Open Project', open_project, '<Control-x><Control-p>',
+actions.append(SimpleAction('Open Project', open_project, 'C-x C-p',
                             MenuAddress(['File', 'Open Project...'], 'o')))
 actions.append(SimpleAction('Close Project', close_project, None,
                             MenuAddress(['File', 'Close Project'], 'l')))
@@ -61,23 +61,23 @@ actions.append(SimpleAction('Create Module', create_module, None,
 actions.append(SimpleAction('Create Package', create_package, None,
                             MenuAddress(['File', 'New Package...'], 'p', 1)))
 
-actions.append(SimpleAction('Find File', find_file, '<Control-x><Control-f>',
+actions.append(SimpleAction('Find File', find_file, 'C-x C-p',
                             MenuAddress(['File', 'Find File...'], 'f', 2)))
-actions.append(SimpleAction('Project Tree', project_tree, '<Alt-Q><r>',
+actions.append(SimpleAction('Project Tree', project_tree, 'M-Q r',
                             MenuAddress(['File', 'Project Tree'], 't', 2)))
 actions.append(SimpleAction('Open File', open_file, None,
                             MenuAddress(['File', 'Open File...'], None, 2)))
 
-actions.append(SimpleAction('Change Editor', change_editor, '<Control-x><b>',
+actions.append(SimpleAction('Change Editor', change_editor, 'C-x b',
                             MenuAddress(['File', 'Change Editor...'], 'c', 3)))
-actions.append(SimpleAction('Save Editor', save_editor, '<Control-x><Control-s>',
+actions.append(SimpleAction('Save Editor', save_editor, 'C-x C-s',
                             MenuAddress(['File', 'Save Editor'], 's', 3)))
-actions.append(SimpleAction('Save All Editors', save_all, '<Control-x><s>',
+actions.append(SimpleAction('Save All Editors', save_all, 'C-x s',
                             MenuAddress(['File', 'Save All'], 'a', 3)))
-actions.append(SimpleAction('Close Editor', close_editor, '<Control-x><k>',
+actions.append(SimpleAction('Close Editor', close_editor, 'C-x k',
                             MenuAddress(['File', 'Close Editor'], 'c', 3)))
 
-actions.append(SimpleAction('Exit', exit_rope, '<Control-x><Control-c>',
+actions.append(SimpleAction('Exit', exit_rope, 'C-x C-c',
                             MenuAddress(['File', 'Exit'], 'x', 4)))
 
 for action in actions:
