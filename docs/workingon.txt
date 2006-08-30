@@ -1,6 +1,17 @@
 Weekly Planning
 ===============
 
+* Package.get_scope
+
+* Experiments
+
+  * Running rope tests involves 302726 function calls
+  * Using sockets
+  * Using FIFOs
+
+* Ageson paper
+
+
 Remaining Stories
 =================
 

@@ -28,8 +28,8 @@ these:
 Alt-/           Show code assists
 Ctrl-o          Show quick outline
 F3              Go to definition
-Alt-Shift-r     Rename Refactoring
-Alt-Shift-q r   Show project tree
+Alt-R           Rename Refactoring
+Alt-Q r         Show project tree
 F2              Show PyDoc
 Ctrl-F11        Run module
 ==============  ======================
@@ -92,6 +92,7 @@ C-x s          save all
 C-i            correct line indentation
 M-/            code-assist
 F3             go to definition location
+F2             show doc
 C-o            show quick outline
 M-R            rename refactoring
 =============  ==========================
@@ -196,7 +197,7 @@ Right now contributions are really needed in UI part and patches and
 extensions in the UI part are extremely welcome.  Have a look at the
 UI enhancement stories (docs/stories.txt).  Send your patches in
 sourceforge.net project page, http://sf.net/projects/rope.  Patches
-should use python coding style, `8`:PEP:, and should have good unit
+should use python coding style, :PEP:`8`, and should have good unit
 tests.  *rope* uses a local repository right now, but it will be moved
 to SVN repository on sourceforge.net some time before the 0.3 release.
 If you're making your patches using source package distributions

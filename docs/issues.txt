@@ -30,7 +30,11 @@ Version 0.3
 
 Time: August 7, 2006 - October 29, 2006
 
-Metaphor: Deliver the most interesting values.
+
+Release Goals
+-------------
+
+Metaphor: Try deliver the most interesting values.
 
 
 Possible Plans
@@ -55,27 +59,6 @@ Releases
     Done.
 0.3m2
     Working on.
-
-
-Release Goals
--------------
-
-Bottlenecks
-    ...
-
-Repairs
-    Some UI parts need to be refactored.  Better GUI and functional
-    tests.
-
-Themes
-    rope needs values.  Our next move toward the proposed features
-    would be to provide as many as refactorings as possible.
-
-Stories
-    ...
-
-Big Picture
-    ...
 
 
 To Be Discussed
@@ -110,13 +93,16 @@ can help:
 * For having references to an object if enough memory
 
 But this seems very hard to achieve because cpu and memory constraints.
+For rope itself holding all modules in memory needs almost ``120mb`` of
+memory and ``11s`` of cpu time.  So holding all modules in memory seems
+impractical for large projects.
 
 
 Holding Information For Individual Objects
 ------------------------------------------
 
 From this respect, we can divide typess into two groups.  The types that
-its instances hold valuable and difference information; for example
+its instances hold valuable and distinct information; examples are
 container classes, types, functions and modules.  Types in the second
 group hold all information for all instances.  That is instances are
 exactly the same.
@@ -127,6 +113,67 @@ Lower The Cost Of Module Invalidation
 
 When a single module in the project is changed many other modules
 are invalidated.  This is very expensive.
+
+Maybe we can separate the concluded data from structure of code.
+
+
+Argument Object Inference
+-------------------------
+
+I think static object inference is hard and right now I consider it
+a risk to put much time on it.  I think I should implement dynamic
+object inference first.  So I need to put more time on dynamic OI
+issues.
+
+
+Separating Structural From Concluded Data
+=========================================
+
+Structure data is function and class definitions, variable assignments.
+Conclusions are `PyObject`\s of `PyName`\s.  This move involves many
+changes to the implementation of `rope.pyobjects` module but it won't
+probably change the APIs.  Since this, if approved, will need big
+refactorings it need more thought.
+
+
+What Do We Gain?
+----------------
+
+This separation will dramatically reduce the cost of invalidation.
+After doing this separation the structural data do not invalidate and
+it is the conclusions that might need to be updated after a module
+change.  So the cost of reconstructing `PyModule`\s reduces
+considerably.  Also since we don't care about imported `PyName`\s
+until when really needed this eliminates some extra time.
+
+Although we lower the memory usage, we propably still can't hold all
+`PyModule`\s in memory.
+
+* What does it make easier among goals?
+* Is it memory efficient?
+* Does it help argument object inference?
+* Does it help hierarchies?
+
+
+Implementation Issues
+---------------------
+
+In the constructing the structural part we only care about ``AssName``\s
+, ``Function``\s, ``Classes``\s and somehow ``Import``\s.
+
+* new `PyName`\s
+* imports
+* from imports
+* superclasses
+
+
+How To Hold Concluded Information?
+----------------------------------
+
+Where should we store concluded data.  We should be able to invalidate
+those data too.
+
+What does these data contain exactly?
 
 
 Finding Occurances
@@ -152,24 +199,6 @@ Infering Function Argument Objects
 
 Function argument object inference seem to be very important for
 continuing our efforts in refactorings.
-
-
-Supporting Relative Imports
-===========================
-
-Right now rope does *not* support relative imports.  One reason is
-that the syntax for relative imports is changing in python ``2.5``.
-The new relative import syntax will be supported by *rope* before
-python ``2.5`` release.  Think about supporting the old syntax.
-
-The main problem for supporting relative imports is that we have
-string `PyModules` that are used in `rope.codeassist` and
-`rope.refactoring` modules.  Maybe the only way to get over this
-problem is passing resources even if we want a string module.
-
-If this problem is dealt we need to change `Core.find_module` to
-accept a ``current_folder`` argument and change ``visitImport`` and
-``visitFrom`` to pass the correct folder.
 
 
 Container Types Require Call Information
@@ -252,12 +281,6 @@ saving collected data is the ``(file, lineno)`` tuple.  The other is
 the hierarchical representation and in this approach we save the data
 like ``file.class.method``.
 
-What to save when executing:
-
-* Storing function return types for each call
-* Storing function return types for each set of argument types
-  (Cartesian Product algorithm)
-
 
 Returned Types Or Objects
 -------------------------
@@ -267,14 +290,14 @@ consider the object itself too?
 
 Well, it depends on the type of the objects that is returned.  If it
 is an instance of a class then only the type matters.  If it is a
-function, module or class then the objects is important.
+function, module or class then the object is important.
 
 Indeed you should make some difference between the objects that we
 only care about their types and the objects that their individual
 characters is important to us.  Right now the latter group contains
 only functions, classes and modules but this list will probably be
 extended when we start holding information for individual objects like
-lists and maps.
+lists and dicts.
 
 
 External program execution
@@ -305,29 +328,40 @@ deterministic as possible and it should be easily used in tests, too.
 available).
 
 
-Probable Refactorings
----------------------
+Transferring Data
+-----------------
 
-* More separation of `PyObject`\s and `PyName`\s
-
-
-Holding Source Code In `PyModule`
----------------------------------
-
-In order to add `GlobalScope.get_inner_scope_for_line` we need to hold
-the source code in `PyModule`.  This might consume lots of memory.
-But right now I don't think that it is a problem.  So I will do that.
+We need to send the module to be run to the runner and get collected
+data.
 
 
-Passing `ObjectInfer` Object To `PyName`\s
-------------------------------------------
+Where To Analyze Data?
+----------------------
 
-One way would be having one `ObjectInfer` instance in `PyCore`.  But
-`PyName`\s don't hold an instance to `PyCore`\s, not do all of
-`PyObject`\s.  Only `PyDefinedObject`\s do that.  The simplest
-approach would be to use `PyName.module` but we should keep in mind
-that it is ``None`` for modules that cannot be found.  This might be a
-*noticeable issue* in future.
+As program is executed we collect function call data.  But the question
+is whether the runner or rope should analyze them.  If we use file
+for transfering, data should be analyze before writing to file because
+the amount of required memory is substantial.
+
+
+Analyzing Data
+--------------
+
+The input data are function call information; ie ``(called_function,
+passed_args, returned_object)``.  In order to use these collected
+data we need to either:
+
+* store function return types for each call
+* store function return types for each set of argument types
+  (Cartesian Product algorithm)
+
+The first approach doesn't seem reasonable because of memory inefficiency.
+
+
+Organizing And Saving Data
+--------------------------
+
+Can we store all information in a database?
 
 
 Can't We Start Static Type Inference?
@@ -539,8 +573,9 @@ Isolating Text Widget Features
 Some of the features of GraphicalEditor can be used in other widgets.
 Like completion, highlighting.
 
+
 Defining The Responsibilities Of `Core`
-=======================================
+---------------------------------------
 
 * Providing an interface to the plug-ins
 * Providing methods for controlling rope?

@@ -92,10 +92,7 @@ Stories
   guessed source folders be used.
 
 
-* Enhancing menu @ 16h
-
-  * Disable inaccessable items
-  * Showing keyboard short-cuts in front of menu items
+* Disabling menu items
 
 
 * Enhancing editor @ 8h

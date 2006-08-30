@@ -257,8 +257,7 @@ class PyName(object):
         return (self.module, lineno)
 
     def has_block(self):
-        return self.is_defined_here and isinstance(self.get_object(),
-                                                   PyDefinedObject)
+        return self.is_defined_here
     
     def _get_ast(self):
         return self.get_object()._get_ast()

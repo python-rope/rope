@@ -5,7 +5,6 @@ from Tkinter import *
 
 from rope.exceptions import RopeException
 from rope.project import Project, FileFinder
-from rope.pycore import PythonFileRunner
 import rope.ui.editor
 import rope.ui.statusbar
 import rope.ui.editorpile
@@ -312,12 +311,6 @@ class Core(object):
         if event:
             return 'break'
 
-    def _run_active_editor(self, event=None):
-        if not self._check_if_project_is_open():
-            return
-        self.run_active_editor()
-        return 'break'
-
     def _open_file_dialog(self, event=None):
         if not self._check_if_project_is_open():
             return 'break'
@@ -490,12 +483,6 @@ class Core(object):
 
     def get_open_project(self):
         return self.project
-
-    def run_active_editor(self):
-        activeEditor = self.editor_manager.active_editor
-        if activeEditor:
-            runner = PythonFileRunner(activeEditor.get_file())
-            return runner
 
     def switch_active_editor(self):
         self.editor_manager.switch_active_editor()

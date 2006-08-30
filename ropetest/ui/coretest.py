@@ -62,16 +62,6 @@ class CoreTest(unittest.TestCase):
     def test_creating_folders(self):
         Core.get_core().create_folder('SampleFolder')
 
-    def test_running_current_editor(self):
-        self.project.get_root_folder().create_file('sample.py')
-        self.project.get_root_folder().create_file('output.txt')
-        sample_file = self.project.get_resource('sample.py')
-        sample_file.write("file = open('output.txt', 'w')\nfile.write('run')\nfile.close()\n")
-        Core.get_core().open_file('sample.py')
-        runner = Core.get_core().run_active_editor()
-        runner.wait_process()
-        self.assertEquals('run', self.project.get_resource('output.txt').read())
-
     def test_not_reopening_editors(self):
         editor1 = Core.get_core().open_file(self.projectMaker.get_sample_file_name())
         editor2 = Core.get_core().open_file(self.projectMaker.get_sample_file_name())

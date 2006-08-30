@@ -319,36 +319,6 @@ class GraphicalEditor(object):
         if editor is not None:
             return editor.get_file()
     
-    def _confirm_all_editors_are_saved(self, event=None):
-        core = rope.ui.core.Core.get_core()
-        editors = core.get_editor_manager().editors
-        is_modified = False
-        for editor in editors:
-            if editor.get_editor().is_modified():
-                is_modified = True
-                break
-        if not is_modified:
-            return self._rename_refactoring_dialog()
-        toplevel = Toplevel()
-        toplevel.title('Save All')
-        frame = Frame(toplevel)
-        label = Label(frame, text='All editors should be saved before refactorings.')
-        label.grid(row=0, column=0, columnspan=2)
-        def ok(event=None):
-            core.save_all_editors()
-            toplevel.destroy()
-            self._rename_refactoring_dialog()
-        def cancel(event=None):
-            toplevel.destroy()
-        ok_button = Button(frame, text='Save All', command=ok)
-        cancel_button = Button(frame, text='Cancel', command=cancel)
-        ok_button.grid(row=1, column=0)
-        toplevel.bind('<Return>', lambda event: ok())
-        toplevel.bind('<Escape>', lambda event: cancel())
-        toplevel.bind('<Control-g>', lambda event: cancel())
-        cancel_button.grid(row=1, column=1)
-        frame.grid()
-    
     def _rename_refactoring_dialog(self, event=None):
         toplevel = Toplevel()
         toplevel.title('Rename Refactoring')
@@ -676,15 +646,17 @@ class GraphicalEditor(object):
         self.text.see(INSERT)
     
     def _change_next_word(self, function):
-        while self.text.compare('insert', '<', 'end -1c') and \
-              not self.text.get(INSERT).isalnum():
-            self.text.mark_set(INSERT, 'insert +1c')
-            
         next_word = self.text.index(self._get_next_word_index())
-        word = self.text.get(INSERT, next_word)
-        self.text.delete(INSERT, next_word)
-        self.text.insert(INSERT, function(word))
-        self.text.mark_set(INSERT, next_word)
+        while self.text.compare('insert', '<', 'end -1c') and \
+              not self.text.get(INSERT).isalnum() and \
+              self.text.compare('insert', '<', next_word):
+            self.text.mark_set(INSERT, 'insert +1c')
+        
+        if self.text.compare('insert', '!=', next_word):
+            word = self.text.get(INSERT, next_word)
+            self.text.delete(INSERT, next_word)
+            self.text.insert(INSERT, function(word))
+            self.text.mark_set(INSERT, next_word)
         self.text.see(INSERT)
     
     def upper_next_word(self):
@@ -808,6 +780,8 @@ class GraphicalEditor(object):
             pass
     
     def kill_line(self):
+        if self.text.compare('insert', '>=', 'end -1c'):
+            return
         text = self.text.get(INSERT, 'insert lineend')
         if text == '':
             self.text.delete('insert')
