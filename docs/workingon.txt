@@ -6,7 +6,7 @@ Initial Moves Toward Dynamic Object Inference
 
 * `object_to_persisted_form`
 * `persisted_form_to_pyobject`
-* Using collected data for dynamic OI
+* Test instances
 
 * Calling `sys.settrace` for all threads
 * Running rope tests involves 302726 function calls
