@@ -364,6 +364,13 @@ Organizing And Saving Data
 Can we store all information in a database?
 
 
+Dynamic Object Inference On Active Editor
+-----------------------------------------
+
+Because of the way we save call information, it seems impossible to
+get object information about active editor.
+
+
 Can't We Start Static Type Inference?
 =====================================
 

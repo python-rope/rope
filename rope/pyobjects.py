@@ -147,7 +147,7 @@ class PyClass(PyDefinedObject):
 
 class _PyModule(PyDefinedObject):
     
-    def __init__(self, pycore, ast_node, resource=None):
+    def __init__(self, pycore, ast_node, resource):
         super(_PyModule, self).__init__(PyObject.get_base_type('Module'),
                                         pycore, ast_node, None)
         self.dependant_modules = set()

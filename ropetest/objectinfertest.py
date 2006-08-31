@@ -7,7 +7,7 @@ class ObjectInferTest(unittest.TestCase):
 
     def setUp(self):
         super(ObjectInferTest, self).setUp()
-        self.project_root = 'sample_project'
+        self.project_root = 'sampleproject'
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
         self.pycore = self.project.get_pycore()
@@ -118,11 +118,74 @@ class ObjectInferTest(unittest.TestCase):
         sample_class = scope.get_names()['Sample'].get_object()
         a_var = scope.get_names()['a_var']
         self.assertNotEquals(sample_class, a_var.get_type())
-        
+
+
+class DynamicOITest(unittest.TestCase):
+
+    def setUp(self):
+        super(DynamicOITest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(DynamicOITest, self).tearDown()
+
+    def test_simple_dti(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'def a_func(arg):\n    return arg\n' \
+               'a_var = a_func(a_func)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertEquals(pymod.get_attributes()['a_func'].get_object(),
+                          pymod.get_attributes()['a_var'].get_object())
+
+    def test_module_dti(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        code = 'import mod1\ndef a_func(arg):\n    return arg\n' \
+               'a_var = a_func(mod1)\n'
+        mod2.write(code)
+        self.pycore.run_module(mod2).wait_process()
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        self.assertEquals(self.pycore.resource_to_pyobject(mod1),
+                          pymod2.get_attributes()['a_var'].get_object())
+
+    def test_class_from_another_module_dti(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        code1 = 'class AClass(object):\n    pass\n'
+        code2 = 'from mod1 import AClass\n' \
+               '\ndef a_func(arg):\n    return arg\n' \
+               'a_var = a_func(AClass)\n'
+        mod1.write(code1)
+        mod2.write(code2)
+        self.pycore.run_module(mod2).wait_process()
+        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        self.assertEquals(pymod2.get_attributes()['AClass'].get_object(),
+                          pymod2.get_attributes()['a_var'].get_object())
+
+
+    def test_class_dti(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class AClass(object):\n    pass\n' \
+               '\ndef a_func(arg):\n    return arg\n' \
+               'a_var = a_func(AClass)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertEquals(pymod.get_attributes()['AClass'].get_object(),
+                          pymod.get_attributes()['a_var'].get_object())
+
 
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ObjectInferTest))
+    result.addTests(unittest.makeSuite(DynamicOITest))
     return result
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ import sys
 
 import rope.objectinfer
 import rope.refactoring
+import rope.dynamicoi
 from rope.exceptions import ModuleNotFoundException
 from rope.pyobjects import *
 
@@ -11,8 +12,9 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
-        self.object_infer = rope.objectinfer.ObjectInfer()
+        self.object_infer = rope.objectinfer.ObjectInfer(self)
         self.refactoring = rope.refactoring.PythonRefactoring(self)
+        self.dynamicoi = rope.dynamicoi.DynamicObjectInference(self)
 
     def get_module(self, name, current_folder=None):
         """Returns a `PyObject` if the module was found."""
@@ -175,3 +177,5 @@ class PyCore(object):
     def get_refactoring(self):
         return self.refactoring
 
+    def run_module(self, resource, stdin=None, stdout=None):
+        return self.dynamicoi.run_module(resource, stdin, stdout)

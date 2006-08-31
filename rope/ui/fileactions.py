@@ -65,8 +65,8 @@ actions.append(SimpleAction('Find File', find_file, 'C-x C-f',
                             MenuAddress(['File', 'Find File...'], 'f', 2)))
 actions.append(SimpleAction('Project Tree', project_tree, 'M-Q r',
                             MenuAddress(['File', 'Project Tree'], 't', 2)))
-actions.append(SimpleAction('Open File', open_file, None,
-                            MenuAddress(['File', 'Open File...'], None, 2)))
+#actions.append(SimpleAction('Open File', open_file, None,
+#                            MenuAddress(['File', 'Open File...'], None, 2)))
 
 actions.append(SimpleAction('Change Editor', change_editor, 'C-x b',
                             MenuAddress(['File', 'Change Editor...'], 'c', 3)))

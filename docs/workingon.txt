@@ -1,20 +1,21 @@
-Weekly Planning
-===============
+Initial Moves Toward Dynamic Object Inference
+=============================================
 
-* Package.get_scope
+- Adding `rope.dynamicoi` and `rope.runmod` modules
+- Implementing the data transfering tools
 
-* Experiments
+* `object_to_persisted_form`
+* `persisted_form_to_pyobject`
+* Using collected data for dynamic OI
 
-  * Running rope tests involves 302726 function calls
-  * Using sockets
-  * Using FIFOs
-
-* Ageson paper
+* Calling `sys.settrace` for all threads
+* Running rope tests involves 302726 function calls
 
 
 Remaining Stories
 =================
 
+* Package.get_scope
 * A keyboard shortcut for renaming local variables
 * Function keywords and extract method
 * Showing the initial name in renaming dialogs

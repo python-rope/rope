@@ -4,8 +4,8 @@ import rope.codeanalyze
 
 class ObjectInfer(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, pycore):
+        self.pycore = pycore
     
     def infer_object(self, pyname):
         """Infers the `PyObject` this `PyName` references"""
@@ -28,6 +28,9 @@ class ObjectInfer(object):
     
     def infer_returned_object(self, pyobject):
         """Infers the `PyObject` this callable `PyObject` returns after calling"""
+        dynamically_inferred_object = self.pycore.dynamicoi.infer_returned_object(pyobject)
+        if dynamically_inferred_object is not None:
+            return dynamically_inferred_object
         scope = pyobject.get_scope()
         if not scope._get_returned_asts():
             return

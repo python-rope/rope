@@ -1,7 +1,6 @@
 import os
 import unittest
 
-from rope.runmod import PythonFileRunner
 from rope.project import Project
 from ropetest import testutils
 
@@ -42,7 +41,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path)
         file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
+        runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEquals('run', self.get_output_file_content(file_path))
 
@@ -53,7 +52,7 @@ class PythonFileRunnerTest(unittest.TestCase):
                                      "def get_text():" +
                                      "\n    import time\n    time.sleep(1)\n    return 'run'\n")
         file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
+        runner = self.pycore.run_module(file_resource)
         runner.kill_process()
         self.assertEquals('', self.get_output_file_content(file_path))
 
@@ -62,7 +61,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_path = 'src/sample.py'
         self.make_sample_python_file(file_path)
         file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
+        runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEquals('run', self.get_output_file_content(file_path))
 
@@ -78,7 +77,7 @@ class PythonFileRunnerTest(unittest.TestCase):
             temp_file.close()
             file_resource = self.project.get_resource(file_path)
             stdin = open(temp_file_name)
-            runner = PythonFileRunner(file_resource, stdin=stdin)
+            runner = self.pycore.run_module(file_resource, stdin=stdin)
             runner.wait_process()
             stdin.close()
             self.assertEquals('input text\n', self.get_output_file_content(file_path))
@@ -94,7 +93,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         try:
             file_resource = self.project.get_resource(file_path)
             stdout = open(temp_file_name, 'w')
-            runner = PythonFileRunner(file_resource, stdout=stdout)
+            runner = self.pycore.run_module(file_resource, stdout=stdout)
             runner.wait_process()
             stdout.close()
             temp_file = open(temp_file_name, 'r')
@@ -113,7 +112,7 @@ class PythonFileRunnerTest(unittest.TestCase):
                                      "def get_text():" +
                                      "\n    import sample\n    sample.f()\n    return'run'\n")
         file_resource = self.project.get_resource(file_path)
-        runner = PythonFileRunner(file_resource)
+        runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEquals('run', self.get_output_file_content(file_path))
 

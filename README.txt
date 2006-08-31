@@ -95,6 +95,7 @@ F3             go to definition location
 F2             show doc
 C-o            show quick outline
 M-R            rename refactoring
+M-M            extract method
 =============  ==========================
 
 

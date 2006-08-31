@@ -1,7 +1,6 @@
 import Tkinter
 
 import rope.ui.core
-import rope.runmod
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 from rope.ui.uihelpers import TreeView, TreeViewHandle
@@ -77,7 +76,7 @@ def do_show_doc(context):
 
 def do_run_module(context):
     if context.get_active_editor():
-        runner = rope.runmod.PythonFileRunner(context.get_active_editor().get_file())
+        context.get_core().get_open_project().get_pycore().run_module(context.get_active_editor().get_file())
 
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
