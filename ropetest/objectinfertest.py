@@ -181,6 +181,17 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(pymod.get_attributes()['AClass'].get_object(),
                           pymod.get_attributes()['a_var'].get_object())
 
+    def test_instance_dti(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class AClass(object):\n    pass\n' \
+               '\ndef a_func(arg):\n    return arg()\n' \
+               'a_var = a_func(AClass)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertEquals(pymod.get_attributes()['AClass'].get_object(),
+                          pymod.get_attributes()['a_var'].get_object().get_type())
+
 
 def suite():
     result = unittest.TestSuite()

@@ -5,43 +5,78 @@ import socket
 import cPickle as pickle
 import threading
 
+import rope.pyobjects
+
 
 class DynamicObjectInference(object):
     
     def __init__(self, pycore):
         self.pycore = pycore
-        self.objectdb = {}
+        self.files = {}
     
     def run_module(self, resource, stdin=None, stdout=None):
+        """Return a PythonFileRunner for controlling the process"""
         return PythonFileRunner(self.pycore, resource, stdin, stdout, self._data_received)
-    
-    def _data_received(self, data):
-        self.objectdb[data[0]] = (data[1], data[2])
     
     def infer_returned_object(self, pyobject):
         resource = pyobject.get_module().get_resource()
         if resource is None:
             return
-        name = (True, os.path.abspath(resource._get_real_path()),
-                pyobject.get_scope().get_start())
-        if name not in self.objectdb:
-            return
-        result = self.objectdb[name][1]
-        return _persisted_form_to_pyobject(self.pycore.project, result[1], result[2])
+        path = os.path.abspath(resource._get_real_path())
+        lineno = pyobject.get_scope().get_start()
+        if path in self.files and lineno in self.files[path]:
+            organizer = self.files[path][lineno]
+            return organizer.returned.to_pyobject(self.pycore.project)
+
+    def _data_received(self, data):
+        path = data[0][1]
+        lineno = data[0][2]
+        if path not in self.files:
+            self.files[path] = {}
+        if lineno not in self.files[path]:
+            self.files[path][lineno] = _CallInformationOrganizer()
+        self.files[path][lineno].add_call_information(None, _ObjectPersistedForm(*data[2]))
+    
+
+class _CallInformationOrganizer(object):
+    
+    def __init__(self):
+        self.returned = None
+    
+    def add_call_information(self, args, returned):
+        self.returned = returned
 
 
-def _persisted_form_to_pyobject(project, path, lineno):
-    root = os.path.abspath(project.get_root_address())
-    if path.startswith(root):
-        relative_path = path[len(root):]
-        if relative_path.startswith('/'):
-            relative_path = relative_path[1:]
-        resource = project.get_resource(relative_path)
-    else:
-        resource = project.get_out_of_project_resource(path)
-    scope = project.get_pycore().resource_to_pyobject(resource).get_scope()
-    inner_scope = scope.get_inner_scope_for_line(lineno)
-    return inner_scope.pyobject    
+class _ObjectPersistedForm(object):
+    
+    def __init__(self, is_object, path, lineno):
+        self.is_object = is_object
+        self.path = path
+        self.lineno = lineno
+    
+    def to_pyobject(self, project):
+        root = os.path.abspath(project.get_root_address())
+        if self.path.startswith(root):
+            relative_path = self.path[len(root):]
+            if relative_path.startswith('/'):
+                relative_path = relative_path[1:]
+            resource = project.get_resource(relative_path)
+        else:
+            resource = project.get_out_of_project_resource(self.path)
+        scope = project.get_pycore().resource_to_pyobject(resource).get_scope()
+        inner_scope = scope.get_inner_scope_for_line(self.lineno)
+        pyobject = inner_scope.pyobject
+        if self.is_object:
+            return pyobject
+        else:
+            return rope.pyobjects.PyObject(pyobject)
+
+    def __eq__(self, object_):
+        if not isinstance(object_, _ObjectPersistedForm):
+            return False
+        return (self.is_object == object_.is_object and
+                self.path == object_.path and
+                self.lineno == object_.lineno)
 
 
 class PythonFileRunner(object):

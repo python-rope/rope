@@ -1,4 +1,10 @@
 class Action(object):
+    """Extending rope commands
+    
+    Represents an action that can have keyboard short-cut and
+    menu item.  The `do` method is called when the action was
+    invoked
+    """
     
     def get_name(self):
         pass

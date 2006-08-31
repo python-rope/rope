@@ -191,20 +191,8 @@ Stories
 * What to do when the program has syntax errors for code assists
 
 
-* Enhancing module running
-
-  * Showing running status in the GUI
-  * Printing output somewhere
-  * Getting input from somewhere
-  * Customizing CWD and parameters
-  * Running last run
-
-
 * Packages should be filtered
   Do not show submodules that are not imported yet as attributes.
-
-
-* Dynamic type inference
 
 
 * Show PyDoc reST highlighting
@@ -235,13 +223,25 @@ Stories
 * Analyzing function decorators
 
 
-* Function argument object inference
+* Subversion support using pysvn
 
 
 > Public Release 0.3m2 : September 3, 2006
 
 
-* Subversion support using pysvn
+* Enhancing module running
+
+  * Showing running status in the GUI
+  * Printing output somewhere
+  * Getting input from somewhere
+  * Customizing CWD and parameters
+  * Running last run
+
+
+* Dynamic type inference using Cartesian algorithm
+
+
+* Function argument dynamic object inference
 
 
 Remaining Stories
