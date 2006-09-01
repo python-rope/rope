@@ -1,12 +1,7 @@
 Initial Moves Toward Dynamic Object Inference
 =============================================
 
-- Adding `rope.dynamicoi` and `rope.runmod` modules
-- Implementing the data transfering tools
-- `object_to_persisted_form`
-- `persisted_form_to_pyobject`
-- Test instances
-
+* Not failing if some of the arguments cannot be found in `rope.runmod`
 * Optimizations
 * Calling `sys.settrace` for all threads
 * Running rope tests involves 302726 function calls

@@ -23,8 +23,14 @@ def __rope_start_everything():
 
         def on_function_call(self, frame, event, arg):
             if event == 'return':
+                if frame.f_code.co_name in ['?', '<module>']:
+                    return
                 try:
-                    data = (self._object_to_persisted_form(frame.f_code), None,
+                    args = []
+                    code = frame.f_code
+                    for argname in code.co_varnames[:code.co_argcount]:
+                        args.append(self._object_to_persisted_form(frame.f_locals[argname]))
+                    data = (self._object_to_persisted_form(frame.f_code), args,
                             self._object_to_persisted_form(arg))
                     pickle.dump(data, self.my_file)
                 except TypeError, e:
@@ -42,6 +48,8 @@ def __rope_start_everything():
                     inspect.getsourcelines(object_)[1])
     
         def _object_to_persisted_form(self, object_):
+            if object_ == None:
+                return (None, None, None)
             if isinstance(object_, types.CodeType):
                 return self._get_persisted_code(object_)
             if isinstance(object_, types.FunctionType):

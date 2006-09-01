@@ -19,15 +19,27 @@ class DynamicObjectInference(object):
         return PythonFileRunner(self.pycore, resource, stdin, stdout, self._data_received)
     
     def infer_returned_object(self, pyobject):
+        organizer = self._find_organizer(pyobject)
+        if organizer:
+            return organizer.returned.to_pyobject(self.pycore.project)
+
+    def infer_parameter_objects(self, pyobject):
+        organizer = self._find_organizer(pyobject)
+        if organizer:
+            pyobjects = [parameter.to_pyobject(self.pycore.project)
+                         for parameter in organizer.args]
+            return pyobjects
+    
+    def _find_organizer(self, pyobject):
         resource = pyobject.get_module().get_resource()
         if resource is None:
             return
         path = os.path.abspath(resource._get_real_path())
-        lineno = pyobject.get_scope().get_start()
+        lineno = pyobject._get_ast().lineno
         if path in self.files and lineno in self.files[path]:
             organizer = self.files[path][lineno]
-            return organizer.returned.to_pyobject(self.pycore.project)
-
+            return organizer
+    
     def _data_received(self, data):
         path = data[0][1]
         lineno = data[0][2]
@@ -35,15 +47,19 @@ class DynamicObjectInference(object):
             self.files[path] = {}
         if lineno not in self.files[path]:
             self.files[path][lineno] = _CallInformationOrganizer()
-        self.files[path][lineno].add_call_information(None, _ObjectPersistedForm(*data[2]))
-    
+        returned = _ObjectPersistedForm(*data[2])
+        args = [_ObjectPersistedForm(*arg) for arg in data[1]]
+        self.files[path][lineno].add_call_information(args, returned)
+
 
 class _CallInformationOrganizer(object):
     
     def __init__(self):
+        self.args = None
         self.returned = None
     
     def add_call_information(self, args, returned):
+        self.args = args
         self.returned = returned
 
 
@@ -55,6 +71,8 @@ class _ObjectPersistedForm(object):
         self.lineno = lineno
     
     def to_pyobject(self, project):
+        if self.is_none():
+            return None
         root = os.path.abspath(project.get_root_address())
         if self.path.startswith(root):
             relative_path = self.path[len(root):]
@@ -70,6 +88,9 @@ class _ObjectPersistedForm(object):
             return pyobject
         else:
             return rope.pyobjects.PyObject(pyobject)
+    
+    def is_none(self):
+        return self.is_object is None
 
     def __eq__(self, object_):
         if not isinstance(object_, _ObjectPersistedForm):

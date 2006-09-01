@@ -92,27 +92,27 @@ can help:
 * For renaming attributes in a hierarchy
 * For having references to an object if enough memory
 
-But this seems very hard to achieve because cpu and memory constraints.
-For rope itself holding all modules in memory needs almost ``120mb`` of
-memory and ``11s`` of cpu time.  So holding all modules in memory seems
-impractical for large projects.
+But this seems very hard to achieve because cpu and memory
+constraints.  For rope itself holding all modules in memory needs
+almost ``120mb`` of memory and ``11s`` of cpu time.  So holding all
+modules in memory seems impractical for large projects.
 
 
 Holding Information For Individual Objects
 ------------------------------------------
 
-From this respect, we can divide typess into two groups.  The types that
-its instances hold valuable and distinct information; examples are
-container classes, types, functions and modules.  Types in the second
-group hold all information for all instances.  That is instances are
-exactly the same.
+From this respect, we can divide typess into two groups.  The types
+that its instances hold valuable and distinct information; examples
+are container classes, types, functions and modules.  Types in the
+second group hold all information for all instances.  That is
+instances are exactly the same.
 
 
 Lower The Cost Of Module Invalidation
 -------------------------------------
 
-When a single module in the project is changed many other modules
-are invalidated.  This is very expensive.
+When a single module in the project is changed many other modules are
+invalidated.  This is very expensive.
 
 Maybe we can separate the concluded data from structure of code.
 
@@ -120,8 +120,8 @@ Maybe we can separate the concluded data from structure of code.
 Argument Object Inference
 -------------------------
 
-I think static object inference is hard and right now I consider it
-a risk to put much time on it.  I think I should implement dynamic
+I think static object inference is hard and right now I consider it a
+risk to put much time on it.  I think I should implement dynamic
 object inference first.  So I need to put more time on dynamic OI
 issues.
 
@@ -129,11 +129,11 @@ issues.
 Separating Structural From Concluded Data
 =========================================
 
-Structure data is function and class definitions, variable assignments.
-Conclusions are `PyObject`\s of `PyName`\s.  This move involves many
-changes to the implementation of `rope.pyobjects` module but it won't
-probably change the APIs.  Since this, if approved, will need big
-refactorings it need more thought.
+Structure data is function and class definitions, variable
+assignments.  Conclusions are `PyObject`\s of `PyName`\s.  This move
+involves many changes to the implementation of `rope.pyobjects` module
+but it won't probably change the APIs.  Since this, if approved, will
+need big refactorings it need more thought.
 
 
 What Do We Gain?
@@ -158,8 +158,9 @@ Although we lower the memory usage, we propably still can't hold all
 Implementation Issues
 ---------------------
 
-In the constructing the structural part we only care about ``AssName``\s
-, ``Function``\s, ``Classes``\s and somehow ``Import``\s.
+In the constructing the structural part we only care about
+``AssName``\s , ``Function``\s, ``Classes``\s and somehow
+``Import``\s.
 
 * new `PyName`\s
 * imports
@@ -222,8 +223,8 @@ two groups:
 
 For the second group, the `Refactoring` class should work on resources
 and make changes to them directly, but for the first group only
-passing the source code of one resource suffices.  The problem is
-that undo refactoring only works when we make changes to resources
+passing the source code of one resource suffices.  The problem is that
+undo refactoring only works when we make changes to resources
 directly. Changing refactorings in the first group to use resources
 have the following consequences:
 
@@ -328,47 +329,44 @@ deterministic as possible and it should be easily used in tests, too.
 available).
 
 
-Transferring Data
------------------
-
-We need to send the module to be run to the runner and get collected
-data.
-
-
-Where To Analyze Data?
-----------------------
-
-As program is executed we collect function call data.  But the question
-is whether the runner or rope should analyze them.  If we use file
-for transfering, data should be analyze before writing to file because
-the amount of required memory is substantial.
-
-
 Analyzing Data
 --------------
 
 The input data are function call information; ie ``(called_function,
-passed_args, returned_object)``.  In order to use these collected
-data we need to either:
+passed_args, returned_object)``.  In order to use these collected data
+we need to either:
 
 * store function return types for each call
 * store function return types for each set of argument types
   (Cartesian Product algorithm)
 
-The first approach doesn't seem reasonable because of memory inefficiency.
+The first approach doesn't seem reasonable because of memory
+inefficiency.
 
 
-Organizing And Saving Data
---------------------------
+Optimizing DOI
+--------------
 
-Can we store all information in a database?
+The current implementation is very slow.  Runtime is now almost 5 or 6
+times a normal execution.
 
 
-Dynamic Object Inference On Active Editor
------------------------------------------
+Better Attribute Object Inference
+=================================
 
-Because of the way we save call information, it seems impossible to
-get object information about active editor.
+Consider this situation::
+  
+  class AClass(object):
+      
+      def __init__(self):
+          self.an_attr = None
+      
+      def set_attr(self, new_value):
+          self.an_attr = self.new_value
+
+This situation occurs rather frequently, specially when using lazy
+initialization.  Another common situation is in test cases where
+variables are defined in `setUp` method rather than `__init__`.
 
 
 Can't We Start Static Type Inference?

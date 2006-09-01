@@ -43,4 +43,10 @@ class ObjectInfer(object):
                 return resulting_pyname.get_object()
             except IsBeingInferredException:
                 pass
+    
+    def infer_parameter_objects(self, pyobject):
+        """Infers the `PyObject` of parameters of this callable `PyObject`"""
+        dynamically_inferred_object = self.pycore.dynamicoi.infer_parameter_objects(pyobject)
+        if dynamically_inferred_object is not None:
+            return dynamically_inferred_object
         

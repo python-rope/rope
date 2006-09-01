@@ -24,24 +24,27 @@ class ObjectInferTest(unittest.TestCase):
         
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
-                                        'def a_func():\n    a_var = Sample()\n')
+                                             'def a_func():\n    a_var = Sample()\n')
         sample_class = scope.get_names()['Sample'].get_object()
         a_var = scope.get_names()['a_func'].get_object().get_scope().get_names()['a_var']
         self.assertEquals(sample_class, a_var.get_type())
         
     def test_simple_type_inferencing_classes_in_class_methods(self):
-        scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
-                                             'class Another(object):\n' + 
-                                             '    def a_method():\n        a_var = Sample()\n')
+        code = 'class Sample(object):\n    pass\n' \
+               'class Another(object):\n' \
+               '    def a_method():\n        a_var = Sample()\n'
+        scope = self.pycore.get_string_scope(code)
         sample_class = scope.get_names()['Sample'].get_object()
         another_class = scope.get_names()['Another']
-        a_var = another_class.get_attributes()['a_method'].get_object().get_scope().get_names()['a_var']
+        a_var = another_class.get_attributes()['a_method'].\
+                get_object().get_scope().get_names()['a_var']
         self.assertEquals(sample_class, a_var.get_type())
         
     def test_simple_type_inferencing_class_attributes(self):
-        scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
-                                             'class Another(object):\n' + 
-                                             '    def __init__(self):\n        self.a_var = Sample()\n')
+        code = 'class Sample(object):\n    pass\n' \
+               'class Another(object):\n' \
+               '    def __init__(self):\n        self.a_var = Sample()\n'
+        scope = self.pycore.get_string_scope(code)
         sample_class = scope.get_names()['Sample'].get_object()
         another_class = scope.get_names()['Another']
         a_var = another_class.get_attributes()['a_var']
@@ -191,6 +194,27 @@ class DynamicOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(mod)
         self.assertEquals(pymod.get_attributes()['AClass'].get_object(),
                           pymod.get_attributes()['a_var'].get_object().get_type())
+
+    def test_method_dti(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class AClass(object):\n    def a_method(self, arg):\n        return arg()\n' \
+               'an_instance = AClass()\n' \
+               'a_var = an_instance.a_method(AClass)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertEquals(pymod.get_attributes()['AClass'].get_object(),
+                          pymod.get_attributes()['a_var'].get_type())
+
+    def test_function_arguement_dti(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'def a_func(arg):\n    pass\n' \
+               'a_func(a_func)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
+        self.assertEquals(pyscope.get_names()['a_func'].get_object(),
+                          pyscope.get_scopes()[0].get_names()['arg'].get_object())
 
 
 def suite():

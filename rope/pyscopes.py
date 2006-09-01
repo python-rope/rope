@@ -167,6 +167,8 @@ class _HoldingScopeFinder(object):
               (current_scope.get_kind() == 'Module' or
                self._get_scope_indents(current_scope) <= line_indents):
             scopes.append(current_scope)
+            if current_scope.get_start() == lineno and current_scope.get_kind() != 'Module':
+                return current_scope
             new_scope = None
             for scope in current_scope.get_scopes():
                 if scope.get_start() <= lineno:

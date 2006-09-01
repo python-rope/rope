@@ -85,20 +85,25 @@ class PyFunction(PyDefinedObject):
         return rope.pyscopes.FunctionScope(self.pycore, self)
     
     def _get_parameters(self):
-        result = {}
-        if len(self.parameters) > 0:
+        if len(self.parameters) == 0:
+            return {}
+        object_infer = self.pycore._get_object_infer()
+        pyobjects = object_infer.infer_parameter_objects(self)
+        
+        if pyobjects is None:
+            pyobjects = []
             if self.parent.get_type() == PyObject.get_base_type('Type') and \
                not self.decorators:
-                result[self.parameters[0]] = PyName(PyObject(self.parent),
-                                                    lineno=self.ast_node.lineno,
-                                                    module=self.get_module())
+                pyobjects.append(PyObject(self.parent))
             else:
-                result[self.parameters[0]] = PyName(lineno=self.ast_node.lineno,
-                                                    module=self.get_module())
-        if len(self.parameters) > 1:
+                pyobjects.append(None)
             for parameter in self.parameters[1:]:
-                result[parameter] = PyName(lineno=self.ast_node.lineno,
-                                           module=self.get_module())
+                pyobjects.append(None)
+        
+        result = {}
+        for name, pyobject in zip(self.parameters, pyobjects):
+            result[name] = PyName(pyobject, lineno=self.ast_node.lineno,
+                                  module=self.get_module())
         return result
     
     def _get_returned_object(self):
