@@ -119,6 +119,7 @@ class PythonFileRunner(object):
         self.data_port = -1
         self._init_data_receiving()
         args = (sys.executable, runmod_path, str(self.data_port),
+                os.path.abspath(pycore.project.get_root_address()),
                 os.path.abspath(self.file._get_real_path()))
         self.process = subprocess.Popen(executable=sys.executable, args=args,
                                         cwd=os.path.split(file_path)[0], stdin=stdin,

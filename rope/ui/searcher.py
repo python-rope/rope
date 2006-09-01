@@ -134,6 +134,7 @@ class Searcher(object):
         if not forward and self.searching_state.is_searching(self) and \
                not isinstance(self.searching_state, BackwardSearching):
             self.searching_state = BackwardSearching()
+        self.update_status_text()
 
     def next_match(self):
         self.searching_state.next_match(self)

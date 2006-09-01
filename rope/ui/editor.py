@@ -10,156 +10,6 @@ import rope.ui.searcher
 from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
 from rope.ui.tkhelpers import WidgetRedirector
 
-class LineEditor(object):
-    """An interface for line oriented editors"""
-    
-    def get_line(self, line_number):
-        pass
-    
-    def length(self):
-        pass
-    
-    def indent_line(self, line_number, count):
-        pass
-
-
-class EditorFactory(object):
-
-    def create(self):
-        pass
-
-class GraphicalEditorFactory(EditorFactory):
-
-    def __init__(self, frame):
-        self.frame = frame
-
-    def create(self, *args, **kws):
-        return GraphicalEditor(self.frame, *args, **kws)
-
-
-class GraphicalLineEditor(LineEditor):
-
-    def __init__(self, editor):
-        self.editor = editor
-
-    def get_line(self, line_number):
-        return self.editor.text.get('%d.0' % line_number, '%d.0 lineend' % line_number)
-
-    def length(self):
-        result = self.editor._get_line_from_index(END) - 1
-        return result
-
-    def indent_line(self, line_number, count):
-        if count == 0:
-            return
-        if count > 0:
-            self.editor.text.insert('%d.0' % line_number, count * ' ')
-        else:
-            self.editor.text.delete('%d.0' % line_number,
-                                    '%d.%d' % (line_number, -count))
-
-
-class _CompletionListHandle(EnhancedListHandle):
-
-    def __init__(self, editor, toplevel, code_assist_result):
-        self.editor = editor
-        self.toplevel = toplevel
-        self.result = code_assist_result
-
-    def entry_to_string(self, proposal):
-        return proposal.kind[0].upper() + '  ' + proposal.name
-
-    def canceled(self):
-        self.toplevel.destroy()
-
-    def selected(self, selected):
-        if selected.kind != 'template':
-            self.editor.text.delete('0.0 +%dc' % self.result.start_offset, INSERT)
-            self.editor.text.insert('0.0 +%dc' % self.result.start_offset,
-                                    selected.name)
-        else:
-            self.editor._get_template_information(self.result, selected)
-        self.toplevel.destroy()
-
-    def focus_went_out(self):
-        self.canceled()
-
-
-class _TextChangeInspector(object):
-
-    def __init__(self, editor, change_observer=None):
-        self.editor = editor
-        self.text = editor.text
-        self.redirector = WidgetRedirector(self.text)
-        self.old_insert = self.redirector.register('insert', self._insert)
-        self.old_delete = self.redirector.register('delete', self._delete)
-        self.old_edit = self.redirector.register('edit', self._edit)
-        self.change_observer = change_observer
-        self.changed_region = None
-
-    def _insert(self, *args):
-        start = self.text.index(args[0])
-        result = self.old_insert(*args)
-        end = self.text.index(start + ' +%dc' % len(args[1]))
-        if not start or not end:
-            return
-        if self.changed_region is not None:
-            if self.text.compare(start, '<', self.changed_region[1]):
-                end = self.text.index(self.changed_region[1] + ' +%dc' % len(args[1]))
-            if self.text.compare(self.changed_region[0], '<', start):
-                start = self.changed_region[0]
-        if self.changed_region is None and self.change_observer:
-            self.text.after_idle(self.change_observer)
-        self.changed_region = (start, end)
-        return result
-    
-    def _delete(self, *args):
-        start = self.text.index(args[0])
-        result = self.old_delete(*args)
-        end = start
-        if not start:
-            return
-        if self.changed_region is not None:
-            if self.text.compare(end, '<', self.changed_region[1]):
-                delete_len = 1
-                if len(args) > 1 and args[1] is not None:
-                    delete_len = self.editor.get_offset(str(self.text.index(args[1]))) - \
-                                 self.editor.get_offset(start)
-                end = self.text.index(self.changed_region[1] + ' -%dc' % delete_len)
-            if self.text.compare(self.changed_region[0], '<', start):
-                start = self.changed_region[0]
-        if self.changed_region is None and self.change_observer:
-            self.text.after_idle(self.change_observer)
-        self.changed_region = (start, end)
-        return result
-    
-    def _edit(self, *args):
-        if len(args) < 1 or args[0] not in ['undo', 'redo']:
-            return self.old_edit(*args)
-        start = self.text.index(INSERT)
-        result = self.old_edit(*args)
-        end = self.text.index(INSERT)
-        if self.text.compare(end, '<', start):
-            start, end = end, start
-        if self.changed_region is not None:
-            if self.text.compare(self.changed_region[0], '<', start):
-                start = self.changed_region[0]
-            if self.text.compare(self.changed_region[1], '>', end):
-                end = self.changed_region[1]
-        if self.changed_region is None and self.change_observer:
-            self.text.after_idle(self.change_observer)
-        self.changed_region = (start, end)
-        return result
-    
-    def get_changed_region(self):
-        return self.changed_region
-    
-    def is_changed(self):
-        return self.changed_region is not None
-
-    def clear_changed(self):
-        self.changed_region = None
-
 
 class GraphicalEditor(object):
 
@@ -983,4 +833,155 @@ class GraphicalTextIndex(object):
 
     def __str__(self):
         return '<%s, %s>' % (self.__class__.__name__, self.index)
+
+
+class _TextChangeInspector(object):
+
+    def __init__(self, editor, change_observer=None):
+        self.editor = editor
+        self.text = editor.text
+        self.redirector = WidgetRedirector(self.text)
+        self.old_insert = self.redirector.register('insert', self._insert)
+        self.old_delete = self.redirector.register('delete', self._delete)
+        self.old_edit = self.redirector.register('edit', self._edit)
+        self.change_observer = change_observer
+        self.changed_region = None
+
+    def _insert(self, *args):
+        start = self.text.index(args[0])
+        result = self.old_insert(*args)
+        end = self.text.index(start + ' +%dc' % len(args[1]))
+        if not start or not end:
+            return
+        if self.changed_region is not None:
+            if self.text.compare(start, '<', self.changed_region[1]):
+                end = self.text.index(self.changed_region[1] + ' +%dc' % len(args[1]))
+            if self.text.compare(self.changed_region[0], '<', start):
+                start = self.changed_region[0]
+        if self.changed_region is None and self.change_observer:
+            self.text.after_idle(self.change_observer)
+        self.changed_region = (start, end)
+        return result
+    
+    def _delete(self, *args):
+        start = self.text.index(args[0])
+        result = self.old_delete(*args)
+        end = start
+        if not start:
+            return
+        if self.changed_region is not None:
+            if self.text.compare(end, '<', self.changed_region[1]):
+                delete_len = 1
+                if len(args) > 1 and args[1] is not None:
+                    delete_len = self.editor.get_offset(str(self.text.index(args[1]))) - \
+                                 self.editor.get_offset(start)
+                end = self.text.index(self.changed_region[1] + ' -%dc' % delete_len)
+            if self.text.compare(self.changed_region[0], '<', start):
+                start = self.changed_region[0]
+        if self.changed_region is None and self.change_observer:
+            self.text.after_idle(self.change_observer)
+        self.changed_region = (start, end)
+        return result
+    
+    def _edit(self, *args):
+        if len(args) < 1 or args[0] not in ['undo', 'redo']:
+            return self.old_edit(*args)
+        start = self.text.index(INSERT)
+        result = self.old_edit(*args)
+        end = self.text.index(INSERT)
+        if self.text.compare(end, '<', start):
+            start, end = end, start
+        if self.changed_region is not None:
+            if self.text.compare(self.changed_region[0], '<', start):
+                start = self.changed_region[0]
+            if self.text.compare(self.changed_region[1], '>', end):
+                end = self.changed_region[1]
+        if self.changed_region is None and self.change_observer:
+            self.text.after_idle(self.change_observer)
+        self.changed_region = (start, end)
+        return result
+    
+    def get_changed_region(self):
+        return self.changed_region
+    
+    def is_changed(self):
+        return self.changed_region is not None
+
+    def clear_changed(self):
+        self.changed_region = None
+
+
+class LineEditor(object):
+    """An interface for line oriented editors"""
+    
+    def get_line(self, line_number):
+        pass
+    
+    def length(self):
+        pass
+    
+    def indent_line(self, line_number, count):
+        pass
+
+
+class EditorFactory(object):
+
+    def create(self):
+        pass
+
+class GraphicalEditorFactory(EditorFactory):
+
+    def __init__(self, frame):
+        self.frame = frame
+
+    def create(self, *args, **kws):
+        return GraphicalEditor(self.frame, *args, **kws)
+
+
+class GraphicalLineEditor(LineEditor):
+
+    def __init__(self, editor):
+        self.editor = editor
+
+    def get_line(self, line_number):
+        return self.editor.text.get('%d.0' % line_number, '%d.0 lineend' % line_number)
+
+    def length(self):
+        result = self.editor._get_line_from_index(END) - 1
+        return result
+
+    def indent_line(self, line_number, count):
+        if count == 0:
+            return
+        if count > 0:
+            self.editor.text.insert('%d.0' % line_number, count * ' ')
+        else:
+            self.editor.text.delete('%d.0' % line_number,
+                                    '%d.%d' % (line_number, -count))
+
+
+class _CompletionListHandle(EnhancedListHandle):
+
+    def __init__(self, editor, toplevel, code_assist_result):
+        self.editor = editor
+        self.toplevel = toplevel
+        self.result = code_assist_result
+
+    def entry_to_string(self, proposal):
+        return proposal.kind[0].upper() + '  ' + proposal.name
+
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def selected(self, selected):
+        if selected.kind != 'template':
+            self.editor.text.delete('0.0 +%dc' % self.result.start_offset, INSERT)
+            self.editor.text.insert('0.0 +%dc' % self.result.start_offset,
+                                    selected.name)
+        else:
+            self.editor._get_template_information(self.result, selected)
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        self.canceled()
 

@@ -347,8 +347,30 @@ inefficiency.
 Optimizing DOI
 --------------
 
-The current implementation is very slow.  Runtime is now almost 5 or 6
-times a normal execution.
+The current implementation is very slow.  For the cpu time I found out
+that the bottle-neck is not on the rope side or sending data.  One of
+the main problems is that using `inspect` module for finding the line
+number of classes is very inefficient.
+
+
+`inspect`'s Simplistic Way Of Finding Classes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`inspect` module does a simple text search for finding a class.  `inspect`
+fails to find the correct class here.::
+
+  def a_func():
+      class AClass(object):
+          pass
+  
+  class AClass(object):
+      pass
+
+If you ask `inspect` to give you the first line of `AClass` it will give
+you ``2`` while the correct answer is ``5``.  Apart from this bug `inspect`
+is very slow for finding the starting line number of a class definition.
+
+I think I can implement that much faster.
 
 
 Better Attribute Object Inference
