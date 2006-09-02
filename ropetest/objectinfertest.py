@@ -216,6 +216,28 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(pyscope.get_names()['a_func'].get_object(),
                           pyscope.get_scopes()[0].get_names()['arg'].get_object())
 
+    def test_classes_with_the_same_name(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'def a_func(arg):\n    class AClass(object):\n        pass\n    return arg\n' \
+               'class AClass(object):\n    pass\n' \
+               'a_var = a_func(AClass)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertEquals(pymod.get_attributes()['AClass'].get_object(),
+                          pymod.get_attributes()['a_var'].get_object())
+
+    def test_nested_classes(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'def a_func():\n    class AClass(object):\n        pass\n    return AClass\n' \
+               'def another_func(arg):\n    return arg\n' \
+               'a_var = another_func(a_func())\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
+        self.assertEquals(pyscope.get_scopes()[0].get_names()['AClass'].get_object(),
+                          pyscope.get_names()['a_var'].get_object())
+
 
 def suite():
     result = unittest.TestSuite()

@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 import socket
@@ -47,8 +48,8 @@ class DynamicObjectInference(object):
             self.files[path] = {}
         if lineno not in self.files[path]:
             self.files[path][lineno] = _CallInformationOrganizer()
-        returned = _ObjectPersistedForm(*data[2])
-        args = [_ObjectPersistedForm(*arg) for arg in data[1]]
+        returned = _ObjectPersistedForm.create_persistent_object(data[2])
+        args = [_ObjectPersistedForm.create_persistent_object(arg) for arg in data[1]]
         self.files[path][lineno].add_call_information(args, returned)
 
 
@@ -65,39 +66,97 @@ class _CallInformationOrganizer(object):
 
 class _ObjectPersistedForm(object):
     
-    def __init__(self, is_object, path, lineno):
-        self.is_object = is_object
-        self.path = path
-        self.lineno = lineno
-    
-    def to_pyobject(self, project):
-        if self.is_none():
-            return None
+    def _get_pymodule(self, project, path):
         root = os.path.abspath(project.get_root_address())
-        if self.path.startswith(root):
-            relative_path = self.path[len(root):]
+        if path.startswith(root):
+            relative_path = path[len(root):]
             if relative_path.startswith('/'):
                 relative_path = relative_path[1:]
             resource = project.get_resource(relative_path)
         else:
-            resource = project.get_out_of_project_resource(self.path)
-        scope = project.get_pycore().resource_to_pyobject(resource).get_scope()
-        inner_scope = scope.get_inner_scope_for_line(self.lineno)
-        pyobject = inner_scope.pyobject
-        if self.is_object:
-            return pyobject
-        else:
-            return rope.pyobjects.PyObject(pyobject)
+            resource = project.get_out_of_project_resource(path)
+        return project.get_pycore().resource_to_pyobject(resource)
     
-    def is_none(self):
-        return self.is_object is None
+    def _get_pyobject_at(self, project, path, lineno):
+        scope = self._get_pymodule(project, path).get_scope()
+        inner_scope = scope.get_inner_scope_for_line(lineno)
+        return inner_scope.pyobject
 
     def __eq__(self, object_):
-        if not isinstance(object_, _ObjectPersistedForm):
+        if type(object) != type(self):
             return False
-        return (self.is_object == object_.is_object and
-                self.path == object_.path and
-                self.lineno == object_.lineno)
+
+    @staticmethod
+    def create_persistent_object(data):
+        type_ = data[0]
+        if type_ == 'none':
+            return _PersistedNone()
+        if type_ == 'module':
+            return _PersistedModule(*data[1:])
+        if type_ == 'function':
+            return _PersistedFunction(*data[1:])
+        if type_ == 'class':
+            return _PersistedClass(*data[1:])
+        if type_ == 'instance':
+            return _PersistedClass(is_instance=True, *data[1:])
+
+
+class _PersistedNone(_ObjectPersistedForm):
+
+    def to_pyobject(self, project):
+        return None
+
+
+class _PersistedModule(_ObjectPersistedForm):
+    
+    def __init__(self, path):
+        self.path = path
+    
+    def to_pyobject(self, project):
+        return self._get_pymodule(project, self.path)
+
+
+class _PersistedFunction(_ObjectPersistedForm):
+    
+    def __init__(self, path, lineno):
+        self.path = path
+        self.lineno = lineno
+    
+    def to_pyobject(self, project):
+        return self._get_pyobject_at(project, self.path, self.lineno)
+
+
+class _PersistedClass(_ObjectPersistedForm):
+    
+    def __init__(self, path, name, is_instance=False):
+        self.path = path
+        self.name = name
+        self.is_instance = is_instance
+    
+    def to_pyobject(self, project):
+        pymodule = self._get_pymodule(project, self.path)
+        module_scope = pymodule.get_scope()
+        suspected_pyobject = None
+        if self.name in module_scope.get_names():
+            suspected_pyobject = module_scope.get_names()[self.name].get_object()
+        if suspected_pyobject is not None and \
+           suspected_pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
+            if self.is_instance:
+                return rope.pyobjects.PyObject(suspected_pyobject)
+            else:
+                return suspected_pyobject
+        else:
+            lineno = self._find_occurance(pymodule.get_resource().read())
+            if lineno is not None:
+                inner_scope = module_scope.get_inner_scope_for_line(lineno)
+                return inner_scope.pyobject
+    
+    def _find_occurance(self, source):
+        pattern = re.compile(r'^\s*class\s*' + self.name + r'\b')
+        lines = source.split('\n')
+        for i in range(len(lines)):
+            if pattern.match(lines[i]):
+                return i + 1
 
 
 class PythonFileRunner(object):

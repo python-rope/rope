@@ -76,6 +76,7 @@ class PyFunction(PyDefinedObject):
         self.parameters = self.ast_node.argnames
         self.decorators = self.ast_node.decorators
         self.is_being_inferred = False
+        self.are_args_being_inferred = False
         self.returned_object = None
 
     def _update_attributes_from_ast(self, attributes):
@@ -85,10 +86,16 @@ class PyFunction(PyDefinedObject):
         return rope.pyscopes.FunctionScope(self.pycore, self)
     
     def _get_parameters(self):
+        if self.are_args_being_inferred:
+            raise IsBeingInferredException('Circular assignments')
         if len(self.parameters) == 0:
             return {}
-        object_infer = self.pycore._get_object_infer()
-        pyobjects = object_infer.infer_parameter_objects(self)
+        self.are_args_being_inferred = True
+        try:
+            object_infer = self.pycore._get_object_infer()
+            pyobjects = object_infer.infer_parameter_objects(self)
+        finally:
+            self.are_args_being_inferred = False
         
         if pyobjects is None:
             pyobjects = []

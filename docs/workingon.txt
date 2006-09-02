@@ -1,12 +1,10 @@
 Initial Moves Toward Dynamic Object Inference
 =============================================
 
-- We are only interested in calls that their callers are in the project
+* Persistent object types: function, class, instance, none, module
 
 * Not failing if some of the arguments cannot be found in `rope.runmod`
-* Optimizations
 * Calling `sys.settrace` for all threads
-* Running rope tests involves 302726 function calls
 
 
 Remaining Stories

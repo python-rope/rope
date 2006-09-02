@@ -370,7 +370,18 @@ If you ask `inspect` to give you the first line of `AClass` it will give
 you ``2`` while the correct answer is ``5``.  Apart from this bug `inspect`
 is very slow for finding the starting line number of a class definition.
 
-I think I can implement that much faster.
+I think I can implement that much faster.  For this reason I should extend
+the way I pass objects to rope.  For classes and instances I should be
+able to say the name of the class and its containing module.  I can
+calculate the real object when necessary.  For finding the real objects
+first I can search module global scope.  If it wasn't there I can use the
+approach that `inspect` uses.  This approach is very good because most
+classes are defined in the global scope.
+
+Although this approach outperforms `inspect` module, does lazy computation
+(only when getting the real object) and passes the above test, it fails
+in a more complex situation where there are two classes with the same
+name inside two different nested scopes.
 
 
 Better Attribute Object Inference

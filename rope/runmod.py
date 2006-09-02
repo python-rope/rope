@@ -50,15 +50,15 @@ def __rope_start_everything():
             return True
     
         def _get_persisted_code(self, object_):
-            return (True, os.path.abspath(object_.co_filename), object_.co_firstlineno)
+            return ('function', os.path.abspath(object_.co_filename), object_.co_firstlineno)
     
-        def _get_persisted_class(self, object_, is_object=True):
-            return (is_object, os.path.abspath(inspect.getsourcefile(object_)),
-                    inspect.getsourcelines(object_)[1])
+        def _get_persisted_class(self, object_, type_):
+            return (type_, os.path.abspath(inspect.getsourcefile(object_)),
+                    object_.__name__)
     
         def _object_to_persisted_form(self, object_):
             if object_ == None:
-                return (None, None, None)
+                return ('none')
             if isinstance(object_, types.CodeType):
                 return self._get_persisted_code(object_)
             if isinstance(object_, types.FunctionType):
@@ -66,10 +66,10 @@ def __rope_start_everything():
             if isinstance(object_, types.MethodType):
                 return self._get_persisted_code(object_.im_func.func_code)
             if isinstance(object_, types.ModuleType):
-                return (True, os.path.abspath(object_.__file__), 0)
+                return ('module', os.path.abspath(object_.__file__))
             if isinstance(object_, (types.TypeType, types.ClassType)):
-                return self._get_persisted_class(object_)
-            return self._get_persisted_class(type(object_), False)
+                return self._get_persisted_class(object_, 'class')
+            return self._get_persisted_class(type(object_), 'instance')
 
 
     data_port = int(sys.argv[1])
