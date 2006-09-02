@@ -106,10 +106,6 @@ Stories
 * Indenting a range of file
 
 
-* Better New ... Dialogs
-  Better folder and module selection. Completing or selecting from a list.
-
-
 * Better multi-sequence key event handling
 
 
@@ -226,6 +222,9 @@ Stories
 * Subversion support using pysvn
 
 
+* Dynamic type inference using Cartesian algorithm
+
+
 > Public Release 0.3m2 : September 3, 2006
 
 
@@ -236,12 +235,6 @@ Stories
   * Getting input from somewhere
   * Customizing CWD and parameters
   * Running last run
-
-
-* Dynamic type inference using Cartesian algorithm
-
-
-* Function argument dynamic object inference
 
 
 Remaining Stories

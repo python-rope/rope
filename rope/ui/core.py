@@ -250,7 +250,6 @@ class Core(object):
         tree_view.list.focus_set()
         toplevel.grab_set()
 
-    
     def _check_if_project_is_open(self):
         if not self.project:
             tkMessageBox.showerror(parent=self.root, title='No Open Project',
@@ -271,6 +270,20 @@ class Core(object):
         create_dialog = Frame(toplevel)
         parent_label = Label(create_dialog, text=parent_name)
         parent_entry = Entry(create_dialog)
+        def do_select(folder):
+            parent_entry.delete(0, END)
+            parent_entry.insert(0, folder.get_path())
+        def show_directory_view():
+            toplevel = Toplevel()
+            toplevel.title('Select ' + parent_name)
+            tree_handle = _FolderViewHandle(self, toplevel, do_select)
+            tree_view = TreeView(toplevel, tree_handle, title='Resources')
+            for child in tree_handle.get_children(self.project.get_root_folder()):
+                tree_view.add_entry(child)
+            tree_view.list.focus_set()
+            toplevel.grab_set()
+
+        parent_browse = Button(create_dialog, text='...', command=show_directory_view)
         resource_label = Label(create_dialog, text=('New ' + resource_name))
         resource_entry = Entry(create_dialog)
         
@@ -286,6 +299,7 @@ class Core(object):
         resource_entry.bind('<Escape>', lambda event: cancel())
         parent_label.grid(row=0, column=0, sticky=W)
         parent_entry.grid(row=0, column=1)
+        parent_browse.grid(row=0, column=2)
         resource_label.grid(row=1, column=0, sticky=W)
         resource_entry.grid(row=1, column=1)
         create_dialog.grid()
@@ -543,6 +557,35 @@ class _ResourceViewHandle(TreeViewHandle):
         if not resource.is_folder():
             self.core.editor_manager.get_resource_editor(resource)
             self.toplevel.destroy()
+    
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        pass
+
+
+class _FolderViewHandle(TreeViewHandle):
+    
+    def __init__(self, core, toplevel, do_select):
+        self.core = core
+        self.toplevel = toplevel
+        self.do_select = do_select
+
+    def entry_to_string(self, resource):
+        return resource.get_name()
+    
+    def get_children(self, resource):
+        if resource.is_folder():
+            return [child for child in resource.get_children()
+                    if not child.get_name().startswith('.') and 
+                    child.is_folder()]
+        else:
+            return []
+
+    def selected(self, resource):
+        self.toplevel.destroy()
+        self.do_select(resource)
     
     def canceled(self):
         self.toplevel.destroy()

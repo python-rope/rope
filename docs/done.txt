@@ -3,6 +3,15 @@
 ===========
 
 
+- Better New ... Dialogs : September 2, 2006
+
+
+- Function argument dynamic object inference : September 2, 2006
+
+
+- Basic dynamic type inference : September 2, 2006
+
+
 - Relative imports : August 23, 2006
 
 

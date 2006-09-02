@@ -82,6 +82,7 @@ class _ObjectPersistedForm(object):
         inner_scope = scope.get_inner_scope_for_line(lineno)
         return inner_scope.pyobject
 
+    # TODO: Implement __eq__ for subclasses
     def __eq__(self, object_):
         if type(object) != type(self):
             return False

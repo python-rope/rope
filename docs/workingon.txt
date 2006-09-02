@@ -1,9 +1,14 @@
 Dynamic OI Small Enhancements
 =============================
 
-- Not failing if some of the arguments cannot be found in `rope.runmod`
+* Calling `sys.settrace` for all threads in `rope.runmod` module
 
-* Calling `sys.settrace` for all threads
+
+Before 0.3m2 Release
+====================
+
+* Update ``README.txt`` file
+* Update homepage
 
 
 Remaining Stories
@@ -13,7 +18,7 @@ Remaining Stories
 * Package.get_scope
 * A keyboard shortcut for renaming local variables
 * Function keywords and extract method
-* Showing the initial name in renaming dialogs
+* Showing the initial name in rename dialogs
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname
 * Review `rope.codeanalyze`; module there seems to be many places to refactor
