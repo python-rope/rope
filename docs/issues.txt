@@ -81,8 +81,8 @@ figuring out the answer to many of these important questions and
 possible refactorings.
 
 
-Having All Modules In Memory
-----------------------------
+Having All Of The Modules In Memory
+-----------------------------------
 
 One of the main questions to answer is whether we need to have the
 `PyModule` of all modules in the memory. Having all of them in memory
@@ -618,3 +618,10 @@ Defining The Responsibilities Of `Core`
 * Providing an interface to the plug-ins
 * Providing methods for controlling rope?
 
+
+Handling Multi-key Keyboard Shortcuts
+-------------------------------------
+
+Unfortunately `Tk` has problems for handling multi-key keyboard
+shortcuts.  We can develop another independant keybinding system that
+uses `Tk` to solve these problems.

@@ -4,12 +4,11 @@ import tkSimpleDialog
 from Tkinter import *
 
 from rope.exceptions import RopeException
-from rope.project import Project, FileFinder
+from rope.project import Project
 import rope.ui.editor
 import rope.ui.statusbar
 import rope.ui.editorpile
 from rope.ui.menubar import MenuBarManager, MenuAddress
-from rope.ui.uihelpers import TreeViewHandle, TreeView
 from rope.ui.extension import ActionContext
 
 
@@ -110,67 +109,6 @@ class Core(object):
         for (key, function) in self.key_binding:
             widget.bind(key, function)
     
-    def _find_file_dialog(self, event=None):
-        if not self._check_if_project_is_open():
-            return
-        toplevel = Toplevel()
-        toplevel.title('Find Project File')
-        find_dialog = Frame(toplevel)
-        name_label = Label(find_dialog, text='Name')
-        name = Entry(find_dialog)
-        found_label = Label(find_dialog, text='Matching Files')
-        found = Listbox(find_dialog, selectmode=SINGLE, width=48, height=15)
-        scrollbar = Scrollbar(find_dialog, orient=VERTICAL)
-        scrollbar['command'] = found.yview
-        found.config(yscrollcommand=scrollbar.set)
-        file_finder = FileFinder(self.project)
-        def name_changed(event):
-            if name.get() == '':
-                result = ()
-            else:
-                result = file_finder.find_files_starting_with(name.get())
-            found.delete(0, END)
-            for file_ in result:
-                found.insert(END, file_.get_path())
-            if result:
-                found.selection_set(0)
-        def open_selected():
-            selection = found.curselection()
-            if selection:
-                resource_name = found.get(selection[0])
-                self.open_file(resource_name)
-                toplevel.destroy()
-        def cancel():
-            toplevel.destroy()
-        name.bind('<Any-KeyRelease>', name_changed)
-        name.bind('<Return>', lambda event: open_selected())
-        name.bind('<Escape>', lambda event: cancel())
-        found.bind('<Return>', lambda event: open_selected())
-        found.bind('<Escape>', lambda event: cancel())
-        def select_prev(event):
-            active = found.index(ACTIVE)
-            if active - 1 >= 0:
-                found.activate(active - 1)
-                found.see(active - 1)
-        found.bind('<Control-p>', select_prev)
-        def select_next(event):
-            active = found.index(ACTIVE)
-            if active + 1 < found.size():
-                found.activate(active + 1)
-                found.see(active + 1)
-        found.bind('<Control-n>', select_next)
-        name_label.grid(row=0, column=0, columnspan=2)
-        name.grid(row=1, column=0, columnspan=2)
-        found_label.grid(row=2, column=0, columnspan=2)
-        found.grid(row=3, column=0, columnspan=1)
-        scrollbar.grid(row=3, column=1, columnspan=1, sticky=N+S)
-        find_dialog.grid()
-        name.focus_set()
-        toplevel.grab_set()
-        self.root.wait_window(toplevel)
-        if event:
-            return 'break'
-
     def _change_editor_dialog(self, event=None):
         toplevel = Toplevel()
         toplevel.title('Change Editor')
@@ -208,8 +146,10 @@ class Core(object):
         name.bind('<Any-KeyRelease>', name_changed)
         name.bind('<Return>', lambda event: open_selected())
         name.bind('<Escape>', lambda event: cancel())
+        name.bind('<Control-g>', lambda event: cancel())
         found.bind('<Return>', lambda event: open_selected())
         found.bind('<Escape>', lambda event: cancel())
+        found.bind('<Control-g>', lambda event: cancel())
         def select_prev(event):
             active = found.index(ACTIVE)
             if active - 1 >= 0:
@@ -238,116 +178,6 @@ class Core(object):
         if event:
             return 'break'
 
-    def _show_resource_view(self):
-        if not self._check_if_project_is_open():
-            return
-        toplevel = Toplevel()
-        toplevel.title('Resources')
-        tree_handle = _ResourceViewHandle(self, toplevel)
-        tree_view = TreeView(toplevel, tree_handle, title='Resources')
-        for child in tree_handle.get_children(self.project.get_root_folder()):
-            tree_view.add_entry(child)
-        tree_view.list.focus_set()
-        toplevel.grab_set()
-
-    def _check_if_project_is_open(self):
-        if not self.project:
-            tkMessageBox.showerror(parent=self.root, title='No Open Project',
-                                   message='No project is open')
-            return False
-        return True
-    
-    def _create_resource_dialog(self, creation_callback,
-                                resource_name='File', parent_name='Parent Folder'):
-        """Ask user about the parent folder and the name of the resource to be created
-        
-        creation_callback is a function accepting the parent and the name
-        """
-        if not self._check_if_project_is_open():
-            return
-        toplevel = Toplevel()
-        toplevel.title('New ' + resource_name)
-        create_dialog = Frame(toplevel)
-        parent_label = Label(create_dialog, text=parent_name)
-        parent_entry = Entry(create_dialog)
-        def do_select(folder):
-            parent_entry.delete(0, END)
-            parent_entry.insert(0, folder.get_path())
-        def show_directory_view():
-            toplevel = Toplevel()
-            toplevel.title('Select ' + parent_name)
-            tree_handle = _FolderViewHandle(self, toplevel, do_select)
-            tree_view = TreeView(toplevel, tree_handle, title='Resources')
-            for child in tree_handle.get_children(self.project.get_root_folder()):
-                tree_view.add_entry(child)
-            tree_view.list.focus_set()
-            toplevel.grab_set()
-
-        parent_browse = Button(create_dialog, text='...', command=show_directory_view)
-        resource_label = Label(create_dialog, text=('New ' + resource_name))
-        resource_entry = Entry(create_dialog)
-        
-        def do_create_resource():
-            parent_folder = self.project.get_resource(parent_entry.get())
-            creation_callback(parent_folder, resource_entry.get())
-            toplevel.destroy()
-        def cancel():
-            toplevel.destroy()
-        parent_entry.bind('<Return>', lambda event: do_create_resource())
-        parent_entry.bind('<Escape>', lambda event: cancel())
-        resource_entry.bind('<Return>', lambda event: do_create_resource())
-        resource_entry.bind('<Escape>', lambda event: cancel())
-        parent_label.grid(row=0, column=0, sticky=W)
-        parent_entry.grid(row=0, column=1)
-        parent_browse.grid(row=0, column=2)
-        resource_label.grid(row=1, column=0, sticky=W)
-        resource_entry.grid(row=1, column=1)
-        create_dialog.grid()
-        resource_entry.focus_set()
-        toplevel.grab_set()
-        self.root.wait_window(toplevel)
-
-    def _create_module_dialog(self, event=None):
-        def do_create_module(source_folder, module_name):
-            new_module = self.project.get_pycore().create_module(source_folder,
-                                                                 module_name)
-            self.editor_manager.get_resource_editor(new_module)
-        self._create_resource_dialog(do_create_module, 'Module', 'Source Folder')
-        if event:
-            return 'break'
-
-    def _create_package_dialog(self, event=None):
-        def do_create_package(source_folder, package_name):
-            new_package = self.project.get_pycore().create_package(source_folder,
-                                                                   package_name)
-            self.editor_manager.get_resource_editor(new_package.get_child('__init__.py'))
-        self._create_resource_dialog(do_create_package, 'Package', 'Source Folder')
-        if event:
-            return 'break'
-
-    def _open_file_dialog(self, event=None):
-        if not self._check_if_project_is_open():
-            return 'break'
-        def doOpen(fileName):
-                self.open_file(fileName)
-        self._show_open_dialog(doOpen, 'Open File Dialog')
-        return 'break'
-
-    def _create_new_file_dialog(self, event=None):
-        def do_create_file(parent_folder, file_name):
-            new_file = parent_folder.create_file(file_name)
-            self.editor_manager.get_resource_editor(new_file)
-        self._create_resource_dialog(do_create_file, 'File', 'Parent Folder')
-        if event:
-            return 'break'
-
-    def _create_new_folder_dialog(self, event=None):
-        def do_create_folder(parent_folder, folder_name):
-            new_folder = parent_folder.create_folder(folder_name)
-        self._create_resource_dialog(do_create_folder, 'Folder', 'Parent Folder')
-        if event:
-            return 'break'
-
     def _open_project_dialog(self, event=None):
         def doOpen(projectRoot):
             self.open_project(projectRoot)
@@ -356,15 +186,6 @@ class Core(object):
             doOpen(directory)
         return 'break'
 
-    def _show_open_dialog(self, open_command, title='Open Dialog'):
-        input_ = tkSimpleDialog.askstring(title, 'Address :', parent=self.root)
-        if input_:
-            try:
-                open_command(input_)
-            except Exception, e:
-                tkMessageBox.showerror(parent=self.root, title='Failed',
-                                       message=str(e))
-    
     def _close_active_editor_dialog(self):
         active_editor = self.editor_manager.active_editor
         if not active_editor:
@@ -534,62 +355,4 @@ class Core(object):
         if not hasattr(Core, '_core'):
             Core._core = Core()
         return Core._core
-
-
-class _ResourceViewHandle(TreeViewHandle):
-    
-    def __init__(self, core, toplevel):
-        self.core = core
-        self.toplevel = toplevel
-
-    def entry_to_string(self, resource):
-        return resource.get_name()
-    
-    def get_children(self, resource):
-        if resource.is_folder():
-            return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and 
-                    not child.get_name().endswith('.pyc')]
-        else:
-            return []
-
-    def selected(self, resource):
-        if not resource.is_folder():
-            self.core.editor_manager.get_resource_editor(resource)
-            self.toplevel.destroy()
-    
-    def canceled(self):
-        self.toplevel.destroy()
-
-    def focus_went_out(self):
-        pass
-
-
-class _FolderViewHandle(TreeViewHandle):
-    
-    def __init__(self, core, toplevel, do_select):
-        self.core = core
-        self.toplevel = toplevel
-        self.do_select = do_select
-
-    def entry_to_string(self, resource):
-        return resource.get_name()
-    
-    def get_children(self, resource):
-        if resource.is_folder():
-            return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and 
-                    child.is_folder()]
-        else:
-            return []
-
-    def selected(self, resource):
-        self.toplevel.destroy()
-        self.do_select(resource)
-    
-    def canceled(self):
-        self.toplevel.destroy()
-
-    def focus_went_out(self):
-        pass
 
