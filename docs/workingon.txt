@@ -1,8 +1,9 @@
 Dynamic OI Small Enhancements
 =============================
 
+- Handle ``a_func()()``
+
 * Calling `sys.settrace` for all threads in `rope.runmod` module
-* Handle ``a_func()()``
 
 
 Before 0.3m2 Release
@@ -31,4 +32,3 @@ Remaining Stories
 * Do something for modules that can not be found
 * Dotted not found modules
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?
-

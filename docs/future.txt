@@ -36,6 +36,7 @@ These refactorings need type inferencing.
 * Encapsulate attribute
 * Inline method
 * Change method signature
+* Introduce redirection
 
 Advanced Algorithms
 -------------------

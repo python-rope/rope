@@ -45,12 +45,15 @@ def __rope_start_everything():
                     pass
         
         def _is_an_interesting_call(self, frame):
-            if not frame.f_back or \
-               not os.path.abspath(inspect.getsourcefile(frame.f_back)).startswith(self.project_root):
+            if not self._is_code_inside_project(frame.f_code) and \
+               (not frame.f_back or not self._is_code_inside_project(frame.f_back)):
                 return False
             if frame.f_code.co_name in ['?', '<module>']:
                 return False
             return True
+        
+        def _is_code_inside_project(self, code):
+            return os.path.abspath(inspect.getsourcefile(code)).startswith(self.project_root)
     
         def _get_persisted_code(self, object_):
             return ('function', os.path.abspath(object_.co_filename), object_.co_firstlineno)

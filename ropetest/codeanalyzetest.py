@@ -170,6 +170,12 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals('print {1: "one", 2: "two"}.keys',
                           word_finder.get_primary_at(29))
 
+    def test_following_parens(self):
+        code = 'a_var = a_func()()'
+        word_finder = WordRangeFinder(code)
+        self.assertEquals('a_func()()',
+                          word_finder.get_primary_at(code.index(')(') + 3))
+
     # TODO: eliminating comments
     def xxx_test_comments_for_finding_statements(self):
         word_finder = WordRangeFinder('# var2 . \n  var3')

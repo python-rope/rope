@@ -25,6 +25,8 @@ class WordRangeFinder(object):
         return current_offset - 1
 
     def _find_last_non_space_char(self, offset):
+        if offset <= 0:
+            return 0
         current_offset = offset
         while current_offset >= 0 and self.source_code[current_offset] in ' \t\n':
             while current_offset >= 0 and self.source_code[current_offset] in ' \t':
@@ -70,31 +72,34 @@ class WordRangeFinder(object):
         if self.source_code[offset].isalnum() or self.source_code[offset] == '_':
             return self._find_word_start(offset)
         return old_offset
+    
+    def _find_primary_without_dot_start(self, offset):
+        last_parens = offset
+        current_offset = self._find_last_non_space_char(offset)
+        while current_offset > 0 and self.source_code[current_offset] in ')]}':
+            last_parens = current_offset = self._find_parens_start(current_offset)
+            current_offset = self._find_last_non_space_char(current_offset - 1)
+
+        if current_offset > 0 and self.source_code[current_offset] in '\'"':
+            return self._find_string_start(current_offset)
+        elif current_offset > 0 and (self.source_code[current_offset].isalnum() or \
+                                     self.source_code[current_offset] == '_'):
+            return self._find_word_start(current_offset)
+        return last_parens
 
     def _find_primary_start(self, offset):
         current_offset = offset + 1
         if self.source_code[offset] != '.':
-            current_offset = self._find_atom_start(offset)
+            current_offset = self._find_primary_without_dot_start(offset)
         while current_offset > 0 and \
               self.source_code[self._find_last_non_space_char(current_offset - 1)] == '.':
             dot_position = self._find_last_non_space_char(current_offset - 1)
-            current_offset = self._find_last_non_space_char(dot_position - 1)
+            current_offset = self._find_primary_without_dot_start(dot_position - 1)
+            
+            first_char = self.source_code[current_offset]
+            if first_char != '_' and not first_char.isalnum():
+                break
 
-            if self.source_code[current_offset].isalnum() or \
-               self.source_code[current_offset] == '_':
-                current_offset = self._find_word_start(current_offset)
-            elif self.source_code[current_offset] in '\'"':
-                current_offset = self._find_string_start(current_offset)
-            elif self.source_code[current_offset] in ')]}':
-                current_offset = self._find_parens_start(current_offset)
-                if current_offset == 0:
-                    break
-                current_offset = self._find_last_non_space_char(current_offset - 1)
-                if self.source_code[current_offset].isalnum() or \
-                   self.source_code[current_offset] == '_':
-                    current_offset = self._find_word_start(current_offset)
-                else:
-                    break
         return current_offset
     
     def get_primary_at(self, offset):

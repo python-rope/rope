@@ -97,7 +97,6 @@ Stories
 
 * Enhancing editor @ 8h
 
-  * Kill line; C-k
   * Select all; C-x h
   * Go to line
   * Fixed places for StatusTexts
@@ -119,9 +118,6 @@ Stories
 
 
 * Local history
-
-
-* Open Type; C-T
 
 
 * Compound statements and auto-completion
@@ -161,20 +157,7 @@ Stories
 * reST outlines
 
 
-* Code contexts; context_finder.get_context(text, offset)
-  This can be used when proposing code assists.
-
-
-* Rename function parameters
-
-
 * Static type inference
-
-
-* Auto-completing function parameter names when calling
-
-
-* Formating Code
 
 
 * Enhancing editor
@@ -182,6 +165,16 @@ Stories
   * Clearing selection if something happens
   * Unifying builtin and emacs-style selections; if selection
     is active do the builtin cut and paste
+
+
+* Auto-completing function parameter names when calling
+
+
+* Code contexts; context_finder.get_context(text, offset)
+  This can be used when proposing code assists.
+
+
+* Formating Code
 
 
 * What to do when the program has syntax errors for code assists
@@ -207,19 +200,37 @@ Stories
 * Move a module or package to another package
 
 
-* Inline method
-
-
 * Move a class/function to another module
 
 
-* Renaming attributes in a hierarchy
+* Inline method
+
+
+* Encapsulate method
+
+
+* Introduce redirection
+
+
+* Introduce factory method
+
+
+* Change method signature
+
+
+* Rename function parameters
+
+
+* Open Type; C-T
 
 
 * Analyzing function decorators
 
 
 * Subversion support using pysvn
+
+
+* Renaming attributes in a hierarchy
 
 
 * Dynamic type inference using Cartesian algorithm
@@ -231,14 +242,15 @@ Stories
 * Enhancing module running
 
   * Showing running status in the GUI
-  * Printing output somewhere
-  * Getting input from somewhere
+  * Printing output
+  * Getting input
   * Customizing CWD and parameters
   * Running last run
 
 
 Remaining Stories
 -----------------
+
 * Migrating to sourceforge SVN before 0.3 release
   SF repository; How to synchronize local SVN with SF SVN?
 * Change program goals and description; principles.txt
