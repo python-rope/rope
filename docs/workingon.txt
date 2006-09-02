@@ -1,9 +1,8 @@
-Initial Moves Toward Dynamic Object Inference
-=============================================
+Dynamic OI Small Enhancements
+=============================
 
-* Persistent object types: function, class, instance, none, module
+- Not failing if some of the arguments cannot be found in `rope.runmod`
 
-* Not failing if some of the arguments cannot be found in `rope.runmod`
 * Calling `sys.settrace` for all threads
 
 

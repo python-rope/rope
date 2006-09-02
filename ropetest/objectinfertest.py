@@ -238,6 +238,16 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(pyscope.get_scopes()[0].get_names()['AClass'].get_object(),
                           pyscope.get_names()['a_var'].get_object())
 
+    def test_function_arguement_dti(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'def a_func(arg, a_builtin_type):\n    pass\n' \
+               'a_func(a_func, [])\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
+        self.assertEquals(pyscope.get_names()['a_func'].get_object(),
+                          pyscope.get_scopes()[0].get_names()['arg'].get_object())
+
 
 def suite():
     result = unittest.TestSuite()

@@ -30,15 +30,18 @@ def __rope_start_everything():
                     args = []
                     code = frame.f_code
                     for argname in code.co_varnames[:code.co_argcount]:
-                        args.append(self._object_to_persisted_form(frame.f_locals[argname]))
+                        try:
+                            args.append(self._object_to_persisted_form(frame.f_locals[argname]))
+                        except TypeError:
+                            args.append(('unknown'))
+                        except AttributeError:
+                            args.append(('unknown'))
                     data = (self._object_to_persisted_form(frame.f_code), args,
                             self._object_to_persisted_form(arg))
                     pickle.dump(data, self.my_file)
                 except TypeError, e:
                     pass
                 except AttributeError, e:
-                    pass
-                except IOError, e:
                     pass
         
         def _is_an_interesting_call(self, frame):

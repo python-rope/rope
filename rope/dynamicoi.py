@@ -99,9 +99,16 @@ class _ObjectPersistedForm(object):
             return _PersistedClass(*data[1:])
         if type_ == 'instance':
             return _PersistedClass(is_instance=True, *data[1:])
+        return _PersistedUnknown()
 
 
 class _PersistedNone(_ObjectPersistedForm):
+
+    def to_pyobject(self, project):
+        return None
+
+
+class _PersistedUnknown(_ObjectPersistedForm):
 
     def to_pyobject(self, project):
         return None
