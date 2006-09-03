@@ -1,8 +1,8 @@
 import Tkinter
+import tkMessageBox
 
 import rope.project
 import rope.ui.core
-
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 from rope.ui.uihelpers import TreeViewHandle, TreeView

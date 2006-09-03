@@ -129,11 +129,11 @@ issues.
 Separating Structural From Concluded Data
 =========================================
 
-Structure data is function and class definitions, variable
-assignments.  Conclusions are `PyObject`\s of `PyName`\s.  This move
-involves many changes to the implementation of `rope.pyobjects` module
-but it won't probably change the APIs.  Since this, if approved, will
-need big refactorings it need more thought.
+Structural data are function and class definitions, variable
+assignments and imports.  Conclusions are `PyObject`\s of `PyName`\s.
+This move involves many changes to the implementation of
+`rope.pyobjects` module but it won't probably change the APIs.  Since
+this, if approved, will need big refactorings it need more thought.
 
 
 What Do We Gain?
@@ -158,8 +158,8 @@ Although we lower the memory usage, we propably still can't hold all
 Implementation Issues
 ---------------------
 
-In the constructing the structural part we only care about
-``AssName``\s , ``Function``\s, ``Classes``\s and somehow
+In the construction of structural parts we only care about
+``AssName``\s , ``Function``\s, ``Class``\es and somehow
 ``Import``\s.
 
 * new `PyName`\s
@@ -195,20 +195,6 @@ Rope searches all python files for a name.  But this seems unnecessary
 for local variables or modules that does not import that name.
 
 
-Infering Function Argument Objects
-==================================
-
-Function argument object inference seem to be very important for
-continuing our efforts in refactorings.
-
-
-Container Types Require Call Information
-========================================
-
-We need to know the type `list`\s and `dict`\s hold. This is actually
-a special case of knowing function argument objects.
-
-
 Refactoring Issues
 ==================
 
@@ -232,19 +218,6 @@ have the following consequences:
 * All editors should be saved before performing them.
 
 
-AST Writer Might Be A Mistake
------------------------------
-
-Until recently I was thinking about the problems of working with ASTs
-for refactorings.  Now I feel that there might be other ways of
-transforming source code for refactorings.
-
-Many of refactorings only require the references to a name to be
-replaced with another.  This can be done without using ASTs.
-Refactorings like inline/extract function can be done without using
-AST's, too.
-
-
 Classifying Object Inference Goals
 ==================================
 
@@ -252,8 +225,7 @@ Here is the list of goals that we want to achieve in the TI parts
 of rope:
 
 * Finding occurances of variables
-* Support for more advanced refactorings that need the object
-  of arguements
+* Support for more advanced refactorings
 * Code assist for container types
 * Code assist for function arguments
 
@@ -306,7 +278,7 @@ External program execution
 
 Because the program is executed in a separate process we should find
 someway for transfering information back to the main process.  I
-believe we have to execute the program in a separate process because
+nbelieve we have to execute the program in a separate process because
 of these possible problems:
 
 * Getting out of memory
@@ -325,7 +297,7 @@ information we might be able to use:
 
 The thing to keep in mind is that we want the result to be as
 deterministic as possible and it should be easily used in tests, too.
-(or at least there should be a good place holder implementation
+(or at least there should be a good placeholder implementation
 available).
 
 
@@ -338,7 +310,7 @@ we need to either:
 
 * store function return types for each call
 * store function return types for each set of argument types
-  (Cartesian Product algorithm)
+  (something like Cartesian Product algorithm)
 
 The first approach doesn't seem reasonable because of memory
 inefficiency.
@@ -351,6 +323,45 @@ The current implementation is very slow.  For the cpu time I found out
 that the bottle-neck is not on the rope side or sending data.  One of
 the main problems is that using `inspect` module for finding the line
 number of classes is very inefficient.
+
+
+Using `sys.settrace` Better
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After setting the trace function, it is called everytime we are
+entering a new local scope and asked for a local trace function.  So
+we can ignore some of these local scopes that are not interesting.  If
+we have lots of uninteresting function calls this will help much.  So
+now the problem is which function calls are not interesting.
+
+In the following table we list all possible function calls.  The
+``from`` field means the location of the caller of a method and the
+``to`` field means the location of the method itself.  ``in`` stands
+for inside project and ``out`` stands for outside project.
+
+======  ======  ==============
+ from    to      interesting?
+======  ======  ==============
+in      in      yes
+in      out     yes
+out     in      yes
+out     out     no
+======  ======  ==============
+
+So the only unintersting group is the group of functions outside the
+project that call another function outside project.  This does not
+help us much.  Because we should ignore a local scope completely or
+not.
+
+If we think about the interesting ``out to in`` group, they are
+nothing but the callbacks that a function outside project calls the
+inside ones.  If we ignore our interest in this group we'll be able to
+ignore all of the local scopes that are out of the project (Since we
+are not interested in ``out to out`` group as well).  But it depends
+on whether the program has many of these ``out to in`` calls or not.
+For a typical program these calls are very few.  They might be from an
+event handling system or some special visitor functions in standard
+library.  This issue needs more thought.
 
 
 `inspect`'s Simplistic Way Of Finding Classes
@@ -366,22 +377,23 @@ fails to find the correct class here.::
   class AClass(object):
       pass
 
-If you ask `inspect` to give you the first line of `AClass` it will give
-you ``2`` while the correct answer is ``5``.  Apart from this bug `inspect`
-is very slow for finding the starting line number of a class definition.
+If you ask `inspect` to give you the first line of `AClass` it will
+give you ``2`` while the correct answer is ``5``.  Apart from this bug
+`inspect` is very slow for finding the starting line number of a class
+definition.
 
-I think I can implement that much faster.  For this reason I should extend
-the way I pass objects to rope.  For classes and instances I should be
-able to say the name of the class and its containing module.  I can
-calculate the real object when necessary.  For finding the real objects
-first I can search module global scope.  If it wasn't there I can use the
-approach that `inspect` uses.  This approach is very good because most
-classes are defined in the global scope.
+I think I can implement that much faster.  For this reason I should
+extend the way I pass objects to rope.  For classes and instances I
+should be able to say the name of the class and its containing module.
+I can calculate the real object when necessary.  For finding the real
+objects first I can search module global scope.  If it wasn't there I
+can use the approach that `inspect` uses.  This approach is very good
+because most classes are defined in the global scope.
 
-Although this approach outperforms `inspect` module, does lazy computation
-(only when getting the real object) and passes the above test, it fails
-in a more complex situation where there are two classes with the same
-name inside two different nested scopes.
+Although this approach outperforms `inspect` module, does lazy
+computation (only when getting the real object) and passes the above
+test, it fails in a more complex situation where there are two classes
+with the same name inside two different nested scopes.
 
 
 Better Attribute Object Inference
@@ -400,39 +412,6 @@ Consider this situation::
 This situation occurs rather frequently, specially when using lazy
 initialization.  Another common situation is in test cases where
 variables are defined in `setUp` method rather than `__init__`.
-
-
-Can't We Start Static Type Inference?
-=====================================
-
-I need to think about the problems that might arise for static TI.
-Now I think that static TI is not that hard and in dynamic TI some of
-the approaches in static TI is used.  The difference is in the type
-inference of the function returned objects.  In the dynamic TI
-approach we use our database and in static TI we follow the return
-statement.
-
-For static type inference, we need some changes to the
-`_FunctionVisitor` class to collect the return AST nodes, too.  When
-we want to find out the returned type of the function, we look up in a
-dictionary for the given argument types.  If it is already calculated
-we return it, otherwise we type inference returned statement
-recursively.  A new question arises here and that is how we set the
-`PyObject` of argument `PyName`\s.
-
-There is some complex issues about type inferencing variables in
-functions, too.  For type inferencing a local variable we might need
-to have `PyObject`\s of arguements but we don't know the type of
-arguments.  In dynamic TI we can record the type of arguments and use
-them when needed.  But in static TI it is much harder because we need
-to find function calls and type inference the arguements that are
-passed to the function.
-
-So as a conclusion it seems better to mix static and dynamic TI.
-Static type inference seem to work good for general cases while
-dynamic inference seems more suitable for type inference of long
-chains of function calls and function arguments.  This means to use
-dynamic TI when static TI does not work or is expensive.
 
 
 Which Is Right? Type Or Object Inference
@@ -458,37 +437,6 @@ hidden beneath it.  Most of unit tests only test `PyCore` directly and
 other parts are tested indirectly through many layers that lead to
 `PyCore`.  I guess this is a bad sign.  Maybe I should put more time
 in making each layer more testable and independant of other layers.
-
-
-Better Scope Finding Algorithm
-==============================
-
-The current implementation is very slow and recently I've moved
-finding inner scope parts to `GlobalScope` class.  However the new
-implementation would be if it does not recompute the same information
-for each call it is a lot faster than the current implementation.
-
-By caching `Scope.get_scope_end` method, we can use current
-implementation with small changes.
-
-
-Problems With The Current Way Of Finding Scope
-----------------------------------------------
-
-When getting the scope for the first line of a function, function
-header, we get that it belongs to the parent scope.  This is not
-correct but this line does not belong to the function scope either.
-Actually the function name part of function header belongs to the
-parents scope and the arguments part belongs to function scope.
-
-I can't think of any good way of doing that and maybe the best thing I
-can do is to check for this exception when finding scopes.  Think
-about other exceptions.  Does a similar situation occur for classes
-too? What about ``for`` loops?
-
-If the problem only occurs for functions I think the exception
-approach would be a good solution.  But the problem is that the scope
-finding part is separate from refactoring part.
 
 
 Builtin Types And Functions
@@ -521,7 +469,8 @@ Builtin functions:
 * super
 
 One approach to builtin types would be to use the `__builtin__` module
-dynamically.
+dynamically.  The other might be to write classes for the most
+interesting ones like `list`\s, `dict`\s and `str`\s.
 
 
 Refactoring `rope.codeanalyze` Module
@@ -593,16 +542,16 @@ modules not to be so much messy.
 Better Dialogs
 --------------
 
-Many dialogs look very similar.  They can be factored.  Continue
-using `rope.ui.uihelpers` module and extend it.
+Many dialogs look very similar.  They can be factored.  Continue using
+`rope.ui.uihelpers` module and extend it.
 
 
 Not Resetting The Whole Editor
 ------------------------------
 
-After actions like extract method, we reset the whole editor.  This
-is slow and makes the undo difficult.  Find someway of solving this.
-I might be able to use `difflib` module.
+After actions like extract method, we reset the whole editor.  This is
+slow and makes the undo difficult.  Find someway of solving this.  I
+might be able to use `difflib` module.
 
 
 Isolating Text Widget Features

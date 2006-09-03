@@ -12,6 +12,9 @@
 - Basic dynamic type inference : September 2, 2006
 
 
+- Better menus : August 27, 2006
+
+
 - Relative imports : August 23, 2006
 
 

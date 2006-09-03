@@ -16,7 +16,27 @@ Version Overview
 
 Features added in this release:
 
-* 
+* Extract function refactoring
+* Basic dynamic type inference
+* Function argument dynamic object inference
+* Supporting relative imports
+* Reading ``__init__.py`` of packages
+* Better New ... Dialogs
+* Better menus
+
+Basic dynamic type inference was added in this release.  Though it is
+not quite efficient and it just uses a basic algorithm, it can be used
+for small programs.  DTI gets its needed information from running
+modules(``C-F11``).  You open the module to run ( probably your test
+suite), then use ``C-F11``.  Since as the program is running rope
+gathers type information, the program runs slower.  Right now rope
+doesn't have a good interface for running programs.  It just prints
+the output to the terminal and does not get inputs.  This will be
+enhanced probably for the next release.
+
+After the program is run, you can get better attribute completions and
+rename attribute refactoring performs much better.
+
 
 Getting Started
 ===============
@@ -25,13 +45,17 @@ If it is the first time you use *rope*, it might be helpful to try
 these:
 
 ==============  ======================
-Alt-/           Show code assists
-Ctrl-o          Show quick outline
-F3              Go to definition
-Alt-R           Rename Refactoring
+Ctrl-x Ctrl-f   Find file
 Alt-Q r         Show project tree
+
+Alt-/           Show code assists
 F2              Show PyDoc
+F3              Go to definition
+Ctrl-o          Show quick outline
 Ctrl-F11        Run module
+
+Alt-R           Rename Refactoring
+Alt-M           Extract metho
 ==============  ======================
 
 You can complete names as you type by using code assist (``M-/``).
@@ -43,13 +67,9 @@ You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit
 `rope.codeassist.PythonCodeAssist._get_default_templates` method.
 
-In tree views (like quick outline and project tree views) you can
-use ``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
+In tree views (like quick outline and project tree views) you can use
+``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
 collapse items.  You can use the ``Return`` key to select items.
-
-If you want to change the font or keybindings edit
-`rope.ui.editor.GraphicalEditor` class.
-
 
 
 Keybinding
@@ -89,6 +109,7 @@ C-x C-x        swap mark and insert
 C-y            paste
 C-x C-s        save
 C-x s          save all
+-------------  --------------------------
 C-i            correct line indentation
 M-/            code-assist
 F3             go to definition location
@@ -102,8 +123,8 @@ M-M            extract method
 Description
 ===========
 
-*rope* is a python IDE.  It tries to give users lots of things that are
-not available in python IDEs yet.
+*rope* is a python IDE.  It tries to give users lots of things that
+are not available in python IDEs yet.
 
 Refactoring
 -----------
@@ -114,9 +135,9 @@ methodologies, like Extreme Programing, Refactoring is one of the core
 practices.
 
 Some IDEs support some basic refactorings like 'PyDev' (which uses
-bicycle repair man).  These IDEs have a limited set of refactorings and
-fail when doing refactorings that need to know the type of objects in
-the source code (specially for relatively large projects).  *rope*
+bicycle repair man).  These IDEs have a limited set of refactorings
+and fail when doing refactorings that need to know the type of objects
+in the source code (specially for relatively large projects).  *rope*
 tries to provide a rich set of refactorings.  Some of the refactorings
 require type inference which is described later.
 
@@ -144,8 +165,8 @@ providing many of the refactorings and auto-completions.  *rope* will
 use type inference to overcome this problem.
 
 Static type inference uses program source code to guess the type of
-objects.  But it is is very hard.  There have been some attempts though
-not very successful (examples: psycho: only str and int types,
+objects.  But it is is very hard.  There have been some attempts
+though not very successful (examples: psycho: only str and int types,
 StarKiller: wasn't released and ShedSkin: good but limited).  They
 where mostly directed at speeding up python programs by transforming
 its code to other typed languages rather than building IDEs.  Such
@@ -181,8 +202,8 @@ smalltalk writes in his doctoral thesis:
 
 The main goal of *rope* is to concentrate on the type inference and
 refactoring of python programs and not a state of art IDE (At least
-not in the first phase).  The type inference and refactoring parts will
-not be dependent on *rope* and if successful, will be released as
+not in the first phase).  The type inference and refactoring parts
+will not be dependent on *rope* and if successful, will be released as
 standalone programs and libraries so that other projects may use them.
 
 

@@ -1,6 +1,4 @@
-import tkMessageBox
 import tkFileDialog
-import tkSimpleDialog
 from Tkinter import *
 
 from rope.exceptions import RopeException

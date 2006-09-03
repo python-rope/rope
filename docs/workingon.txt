@@ -1,23 +1,16 @@
-Dynamic OI Small Enhancements
-=============================
-
-- Handle ``a_func()()``
-
-* Calling `sys.settrace` for all threads in `rope.runmod` module
-
-
 Before 0.3m2 Release
 ====================
 
-* Update ``README.txt`` file
-* Update homepage
+- Update ``README.txt`` file
+- Update homepage
+- Package.get_scope
 
 
 Remaining Stories
 =================
 
+* Calling `sys.settrace` for all threads in `rope.runmod` module
 * Adding ``show_what_rope_can_do`` file
-* Package.get_scope
 * A keyboard shortcut for renaming local variables
 * Function keywords and extract method
 * Showing the initial name in rename dialogs

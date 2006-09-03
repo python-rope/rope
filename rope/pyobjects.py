@@ -227,6 +227,9 @@ class PyPackage(_PyModule):
         else:
             return None
     
+    def _create_scope(self):
+        return self.get_module().get_scope()
+    
     def get_module(self):
         init_dot_py = self._get_init_dot_py()
         return self.pycore.resource_to_pyobject(init_dot_py)
