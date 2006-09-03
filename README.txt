@@ -27,15 +27,15 @@ Features added in this release:
 Basic dynamic type inference was added in this release.  Though it is
 not quite efficient and it just uses a basic algorithm, it can be used
 for small programs.  DTI gets its needed information from running
-modules(``C-F11``).  You open the module to run ( probably your test
-suite), then use ``C-F11``.  Since as the program is running rope
-gathers type information, the program runs slower.  Right now rope
-doesn't have a good interface for running programs.  It just prints
-the output to the terminal and does not get inputs.  This will be
-enhanced probably for the next release.
+modules(``C-F11``).  You open the module to run (probably your test
+suite), then use ``C-F11``.  Since as the program runs rope gathers
+type information, the program runs slower.  Right now rope doesn't
+have a good interface for running programs.  It just prints the output
+to the terminal and does not get inputs.  This will be enhanced
+probably for the next release.
 
-After the program is run, you can get better attribute completions and
-rename attribute refactoring performs much better.
+After the program is run, you can get better code assists and rename
+attribute refactoring performs much better.
 
 
 Getting Started

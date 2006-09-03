@@ -1,9 +1,3 @@
-Before 0.3m2 Release
-====================
-
-
-
-
 Remaining Stories
 =================
 

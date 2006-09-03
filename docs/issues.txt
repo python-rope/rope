@@ -340,7 +340,7 @@ In the following table we list all possible function calls.  The
 for inside project and ``out`` stands for outside project.
 
 ======  ======  ==============
- from    to      interesting?
+from    to      interesting?
 ======  ======  ==============
 in      in      yes
 in      out     yes

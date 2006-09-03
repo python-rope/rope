@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.3m2 : September 3, 2006
+
+
 - Better New ... Dialogs : September 2, 2006
 
 

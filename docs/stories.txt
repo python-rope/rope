@@ -245,9 +245,6 @@ Stories
   * Running last run
 
 
-> Public Release 0.3m2 : September 3, 2006
-
-
 Remaining Stories
 -----------------
 
