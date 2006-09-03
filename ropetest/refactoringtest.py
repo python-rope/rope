@@ -284,6 +284,23 @@ class RefactoringTest(unittest.TestCase):
                    "        print self\n"
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_with_multiple_methods(self):
+        code = "class AClass(object):\n" \
+               "    def a_func(self):\n" \
+               "        print self\n\n" \
+               "    def another_func(self):\n" \
+               "        pass\n"
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "class AClass(object):\n" \
+                   "    def a_func(self):\n" \
+                   "        self.new_func()\n\n" \
+                   "    def new_func(self):\n" \
+                   "        print self\n\n" \
+                   "    def another_func(self):\n" \
+                   "        pass\n"
+        self.assertEquals(expected, refactored)
+
     def test_extract_function_with_function_returns(self):
         code = "def a_func():\n    def inner_func():\n        pass\n    inner_func()\n"
         start, end = self._convert_line_range_to_offset(code, 2, 3)

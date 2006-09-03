@@ -1,13 +1,6 @@
 Before 0.3m2 Release
 ====================
 
-- Failing if there is a ``return`` statement in extracted method
-- Extract method and indented blocks as extracting lines (2, 3) of::
-
-  def a_func():
-      while condition:
-          if another_condition:
-               print a_var
 
 
 

@@ -180,7 +180,7 @@ class _ExtractMethodPerformer(object):
             raise RefactoringException('Can not extract methods in class body')
         if self.end_offset > self.scope_end:
             raise RefactoringException('Bad range selected for extract method')
-        end_line = self.lines.get_line_number(self.end_offset)
+        end_line = self.lines.get_line_number(self.end_offset - 1)
         end_scope = self.scope.get_inner_scope_for_line(end_line)
         if end_scope != self.holding_scope and end_scope.get_end() != end_line:
             raise RefactoringException('Bad range selected for extract method')
