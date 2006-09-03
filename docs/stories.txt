@@ -194,25 +194,13 @@ Stories
   Add filter texts and selection texts to trees and lists.
 
 
-* Rename method/attribute
-
-
 * Move a module or package to another package
 
 
 * Move a class/function to another module
 
 
-* Inline method
-
-
-* Encapsulate method
-
-
 * Introduce redirection
-
-
-* Introduce factory method
 
 
 * Change method signature
@@ -230,7 +218,22 @@ Stories
 * Subversion support using pysvn
 
 
+> Public Release 0.3m2 : September 17, 2006
+
+
 * Renaming attributes in a hierarchy
+
+
+* Inline method
+
+
+* Encapsulate method
+
+
+* Introduce factory method
+
+
+* Rename method/attribute
 
 
 * Dynamic type inference using Cartesian algorithm

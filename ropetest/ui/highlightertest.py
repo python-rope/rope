@@ -254,6 +254,12 @@ class ReSTHighlightTest(unittest.TestCase):
     def test_dots_in_hyperlinks(self):
         self.assertTrue(self.in_highlights('rope.rope_', (0, 10, 'hyperlink')))
 
+    def test_hyperlink_definition(self):
+        self.assertTrue('literal_block' in self.highlighting.get_styles())
+        code = 'here ::\n  line1\n    line2\nnormal\n'
+        self.assertTrue(self.in_highlights(code, (code.index('::'), code.index('normal'),
+                                                  'literal_block')))
+
 
 def suite():
     result = unittest.TestSuite()

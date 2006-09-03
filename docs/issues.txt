@@ -68,34 +68,63 @@ To Be Discussed
 * Saving information for individual objects or only for types
 * Should we analyze all source files for holding type hierarchies and
   argument object inference
+* Root cause analysis of high defect rate for extract method
 
 
 Choosing The Next Move
 ======================
 
-If we want to move toward the promised features we need to think about
-another refactoring for this week.  But there are other important
-issues to think about that have direct effect upon many of remaining
-refactorings.  So I think this week I have to put more time in
-figuring out the answer to many of these important questions and
-possible refactorings.
+Before starting release planning I need to find out some of the
+reasons for the low quality extract method.  In the release
+planning for ``0.3m3``, I prefer adding more refactorings and
+starting some of the planned refactorings.
+
+Think about the features that you need right now the most and
+give preference for adding them.  These might include:
+
+* Folding text files
 
 
-Having All Of The Modules In Memory
------------------------------------
+Root Cause Analysis Of Low Quality Modules
+------------------------------------------
 
-One of the main questions to answer is whether we need to have the
-`PyModule` of all modules in the memory. Having all of them in memory
-can help:
+I just can't seem to find that out.  All of the tests were passing
+but the tests did not consider many of the situations that might
+happen.  So I think there is only one way out of it.  I should
+think about the problem at hand more with a good perspective on
+our goal.  Put more time on considering possible situations and
+use developed features more.  I rarely used extrace method.  Anyway
+I think `rope.refactoring` modules is getting large and making a
+`rope.refactoring` package would make sense.
 
-* For function and arguement object inferencing
-* For renaming attributes in a hierarchy
-* For having references to an object if enough memory
+One other problem that I faced was the `rope.codeanalyze` module.
+Again all of the tests were passing but the code was a real mess. That
+meant I did not refactor after passing a test.  So think about it
+more. After each unit test put sometime for thinking about refactoring
+and removing duplications.
 
-But this seems very hard to achieve because cpu and memory
-constraints.  For rope itself holding all modules in memory needs
-almost ``120mb`` of memory and ``11s`` of cpu time.  So holding all
-modules in memory seems impractical for large projects.
+This means that although with TDD you don't need a good idea of what
+you're going to write, in the end you should have a good idea of
+what you've done and its parts that need to be refactored.
+
+
+What Refactoring To Add Next?
+-----------------------------
+
+I prefer implementing some of these:
+
+* Encapsulate field
+* Introduce factory method
+* Rename method/attribute
+* Inline method
+* Renaming attributes in a hierarchy
+
+
+Continuing Dynamic Object Inference Movement
+--------------------------------------------
+
+Implement cartesian Product algorithm.  What to do when asked for
+argument objects.  Think about optimizing it.
 
 
 Holding Information For Individual Objects
@@ -106,24 +135,6 @@ that its instances hold valuable and distinct information; examples
 are container classes, types, functions and modules.  Types in the
 second group hold all information for all instances.  That is
 instances are exactly the same.
-
-
-Lower The Cost Of Module Invalidation
--------------------------------------
-
-When a single module in the project is changed many other modules are
-invalidated.  This is very expensive.
-
-Maybe we can separate the concluded data from structure of code.
-
-
-Argument Object Inference
--------------------------
-
-I think static object inference is hard and right now I consider it a
-risk to put much time on it.  I think I should implement dynamic
-object inference first.  So I need to put more time on dynamic OI
-issues.
 
 
 Separating Structural From Concluded Data
