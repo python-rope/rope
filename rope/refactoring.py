@@ -225,8 +225,8 @@ class _ExtractMethodPerformer(object):
     def _get_function_signature(self, args):
         args = list(args)
         if self.is_method:
-            if  'self' in args:
-                args.remove(self)
+            if 'self' in args:
+                args.remove('self')
             args.insert(0, 'self')
         return self.extracted_name + '(%s)' % self._get_comma_form(args)
     
@@ -234,7 +234,7 @@ class _ExtractMethodPerformer(object):
         prefix = ''
         if self.is_method:
             if  'self' in args:
-                args.remove(self)
+                args.remove('self')
             prefix = 'self.'
         return prefix + '%s(%s)' % (self.extracted_name, self._get_comma_form(args))
 
