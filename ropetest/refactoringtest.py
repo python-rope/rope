@@ -330,12 +330,30 @@ class RefactoringTest(unittest.TestCase):
         else:
             self.fail('Should have thrown exception')
 
+    def test_extract_method_containing_return(self):
+        code = "def a_func(arg):\n    return arg * 2\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        try:
+            self.refactoring.extract_method(code, start, end, 'new_func')
+        except RefactoringException:
+            pass
+        else:
+            self.fail('Should have thrown exception')
+
     def test_extract_function_and_argument_as_paramenter(self):
         code = "def a_func(arg):\n    print arg\n"
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.refactoring.extract_method(code, start, end, 'new_func')
         expected = "def a_func(arg):\n    new_func(arg)\n\n" \
                    "def new_func(arg):\n    print arg\n"
+        self.assertEquals(expected, refactored)
+
+    def test_extract_function_and_indented_blocks(self):
+        code = "def a_func(arg):\n    if True:\n        if True:\n            print arg\n"
+        start, end = self._convert_line_range_to_offset(code, 3, 4)
+        refactored = self.refactoring.extract_method(code, start, end, 'new_func')
+        expected = "def a_func(arg):\n    if True:\n        new_func(arg)\n\n" \
+                   "def new_func(arg):\n    if True:\n        print arg\n"
         self.assertEquals(expected, refactored)
 
 
