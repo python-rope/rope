@@ -1,3 +1,12 @@
+Eliminating get_attributes and get_names
+========================================
+
+* Rename `${x}.get_${y}s` to `${x}.get_${y}` for x, y in
+  [(PyObject, attribute), (PyName, name)]
+* Eliminate get_attributes usage when not needed
+* Eliminate get_names usage when not needed
+
+
 Remaining Stories
 =================
 

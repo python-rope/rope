@@ -2,6 +2,7 @@ import compiler
 
 import rope.codeanalyze
 import rope.pyobjects
+import rope.exceptions
 
 class Scope(object):
 
@@ -12,11 +13,17 @@ class Scope(object):
         self.scopes = None
     
     def get_names(self):
-        """Returns the names defined in this scope"""
+        """Return the names defined in this scope"""
         return self.pyobject.get_attributes()
 
+    def get_name(self, name):
+        """Return name `PyName` defined in this scope"""
+        if name not in self.get_names():
+            raise rope.exceptions.NameNotFoundException('name %s not found' % name)
+        return self.get_names()[name]
+
     def get_scopes(self):
-        """Returns the subscopes of this scope.
+        """Return the subscopes of this scope.
         
         The returned scopes should be sorted by the order they appear
         """

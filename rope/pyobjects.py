@@ -1,7 +1,8 @@
 import compiler
 
 import rope.pyscopes
-from rope.exceptions import ModuleNotFoundException, RopeException
+from rope.exceptions import (ModuleNotFoundException, RopeException,
+                             AttributeNotFoundException)
 
 
 class PyObject(object):
@@ -15,6 +16,11 @@ class PyObject(object):
         if self.type is self:
             return {}
         return self.type.get_attributes()
+    
+    def get_attribute(self, name):
+        if name not in self.get_attributes():
+            raise AttributeNotFoundException('Attribute %s not found' % name)
+        return self.get_attributes()[name]
 
     def get_type(self):
         return self.type
@@ -138,7 +144,7 @@ class PyClass(PyDefinedObject):
 
     def _update_attributes_from_ast(self, attributes):
         for base in reversed(self._get_bases()):
-            attributes.update(base.get_attributes())
+            attributes.update(base.get_object().get_attributes())
         new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():
             compiler.walk(n, new_visitor)
@@ -245,9 +251,6 @@ class PyName(object):
         self.is_being_inferred = False
         self.assigned_asts = []
 
-    def get_attributes(self):
-        return self.get_object().get_attributes()
-
     def get_object(self):
         if self.is_being_inferred:
             raise IsBeingInferredException('Circular assignments')
@@ -263,9 +266,6 @@ class PyName(object):
             self.object = PyObject(PyObject.get_base_type('Unknown'))
         return self.object
     
-    def get_type(self):
-        return self.get_object().get_type()
-
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
         lineno = self._get_lineno()
@@ -393,7 +393,7 @@ class _ScopeVisitor(object):
                 if alias is not None:
                     imported = alias
                 if module is not None and module.get_attributes().has_key(name):
-                    imported_pyname = module.get_attributes()[name]
+                    imported_pyname = module.get_attribute(name)
                     imported_object = imported_pyname.get_object()
                     pyname_module, lineno = imported_pyname.get_definition_location()
                     self.names[imported] = PyName(imported_object, False, module=pyname_module,

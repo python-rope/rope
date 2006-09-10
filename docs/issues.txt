@@ -72,8 +72,6 @@ Hot Topics
 * `Better Attribute Object Inference`_
 
 * Finding Type Hierarchy
-* Rename `${x}.get_${y}s` to `${x}.get_${y}` for x, y in
-  [(PyObject, attribute), (PyName, name)]
 
 
 Choosing The Next Move

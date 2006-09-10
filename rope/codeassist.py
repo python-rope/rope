@@ -167,7 +167,8 @@ class _CodeCompletionCollector(object):
     def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}
         pyname_finder = ScopeNameFinder(self.source_code, module_scope)
-        element = pyname_finder.get_pyname_in_scope(holding_scope, self.expression)
+        element = pyname_finder.get_pyname_in_scope(holding_scope,
+                                                    self.expression).get_object()
         if element is not None:
             for name, pyname in element.get_attributes().iteritems():
                 if name.startswith(self.starting) or self.starting == '':

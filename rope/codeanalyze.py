@@ -2,6 +2,7 @@ import compiler
 import re
 
 import rope.pycore
+import rope.exceptions
 
 
 class WordRangeFinder(object):
@@ -188,18 +189,22 @@ class StatementEvaluator(object):
     def visitGetattr(self, node):
         pyname = StatementEvaluator.get_statement_result(self.scope, node.expr)
         if pyname is not None:
-            self.result = pyname.get_attributes().get(node.attrname, None)
+            try:
+                self.result = pyname.get_object().get_attribute(node.attrname)
+            except rope.exceptions.AttributeNotFoundException:
+                self.result = None
 
     def visitCallFunc(self, node):
         pyname = StatementEvaluator.get_statement_result(self.scope, node.node)
         if pyname is None:
             return
-        if pyname.get_type() == rope.pycore.PyObject.get_base_type('Type'):
-            self.result = rope.pycore.PyName(object_=rope.pycore.PyObject(type_=pyname.get_object()))
-        elif pyname.get_type() == rope.pycore.PyObject.get_base_type('Function'):
-            self.result = rope.pycore.PyName(object_=pyname.get_object()._get_returned_object())
-        elif '__call__' in pyname.get_object().get_attributes():
-            call_function = pyname.get_object().get_attributes()['__call__']
+        pyobject = pyname.get_object()
+        if pyobject.get_type() == rope.pycore.PyObject.get_base_type('Type'):
+            self.result = rope.pycore.PyName(object_=rope.pycore.PyObject(type_=pyobject))
+        elif pyobject.get_type() == rope.pycore.PyObject.get_base_type('Function'):
+            self.result = rope.pycore.PyName(object_=pyobject._get_returned_object())
+        elif '__call__' in pyobject.get_attributes():
+            call_function = pyobject.get_attribute('__call__')
             self.result = rope.pycore.PyName(object_=call_function.get_object()._get_returned_object())
     
     def visitAdd(self, node):
@@ -317,10 +322,13 @@ class ScopeNameFinder(object):
             if lineno == holding_scope.get_start():
                 class_scope = holding_scope.parent
             name = self.word_finder.get_primary_at(offset).strip()
-            return class_scope.pyobject.get_attributes().get(name, None)
+            try:
+                return class_scope.pyobject.get_attribute(name)
+            except rope.exceptions.AttributeNotFoundException:
+                return None
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
             name = self.word_finder.get_primary_at(offset).strip()
-            return holding_scope.parent.get_names()[name]
+            return holding_scope.parent.get_name(name)
         if self.word_finder.is_from_statement_module(offset):
             module = self.word_finder.get_primary_at(offset)
             module_pyobject = self._find_module(module)

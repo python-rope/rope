@@ -205,27 +205,27 @@ class ScopeNameFinderTest(unittest.TestCase):
         code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
         scope = self.pycore.get_string_scope(code)
         name_finder = ScopeNameFinder(code, scope)
-        self.assertEquals(scope.get_names()['a_var'], name_finder.get_pyname_at(len(code) - 3))
+        self.assertEquals(scope.get_name('a_var'), name_finder.get_pyname_at(len(code) - 3))
         
     def test_class_variable_attribute_in_class_body(self):
         code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
         scope = self.pycore.get_string_scope(code)
         name_finder = ScopeNameFinder(code, scope)
-        a_var_pyname = scope.get_names()['Sample'].get_attributes()['a_var']
+        a_var_pyname = scope.get_name('Sample').get_object().get_attribute('a_var')
         self.assertEquals(a_var_pyname, name_finder.get_pyname_at(len(code) - 12))
 
     def test_class_variable_attribute_in_class_body2(self):
         code = 'a_var = 10\nclass Sample(object):\n    a_var \\\n= a_var\n'
         scope = self.pycore.get_string_scope(code)
         name_finder = ScopeNameFinder(code, scope)
-        a_var_pyname = scope.get_names()['Sample'].get_attributes()['a_var']
+        a_var_pyname = scope.get_name('Sample').get_object().get_attribute('a_var')
         self.assertEquals(a_var_pyname, name_finder.get_pyname_at(len(code) - 12))
 
     def test_class_method_attribute_in_class_body(self):
         code = 'class Sample(object):\n    def a_method(self):\n        pass\n'
         scope = self.pycore.get_string_scope(code)
         name_finder = ScopeNameFinder(code, scope)
-        a_method_pyname = scope.get_names()['Sample'].get_attributes()['a_method']
+        a_method_pyname = scope.get_name('Sample').get_object().get_attribute('a_method')
         self.assertEquals(a_method_pyname,
                           name_finder.get_pyname_at(code.index('a_method') + 2))
 
@@ -233,21 +233,21 @@ class ScopeNameFinderTest(unittest.TestCase):
         code = 'class Sample(object):\n    class AClass(object):\n        pass\n'
         scope = self.pycore.get_string_scope(code)
         name_finder = ScopeNameFinder(code, scope)
-        a_class_pyname = scope.get_names()['Sample'].get_attributes()['AClass']
+        a_class_pyname = scope.get_name('Sample').get_object().get_attribute('AClass')
         self.assertEquals(a_class_pyname, 
                           name_finder.get_pyname_at(code.index('AClass') + 2))
 
     def test_class_method_in_class_body_but_not_indexed(self):
         code = 'class Sample(object):\n    def a_func(self, a_func):\n        pass\n'
         scope = self.pycore.get_string_scope(code)
-        a_func_pyname = scope.get_scopes()[0].get_scopes()[0].get_names()['a_func']
+        a_func_pyname = scope.get_scopes()[0].get_scopes()[0].get_name('a_func')
         name_finder = ScopeNameFinder(code, scope)
         self.assertEquals(a_func_pyname, name_finder.get_pyname_at(code.index(', a_func') + 3))
 
     def test_function_but_not_indexed(self):
         code = 'def a_func(a_func):\n    pass\n'
         scope = self.pycore.get_string_scope(code)
-        a_func_pyname = scope.get_names()['a_func']
+        a_func_pyname = scope.get_name('a_func')
         name_finder = ScopeNameFinder(code, scope)
         self.assertEquals(a_func_pyname, name_finder.get_pyname_at(code.index('a_func') + 3))
 

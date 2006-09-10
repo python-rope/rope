@@ -146,7 +146,7 @@ class _PersistedClass(_ObjectPersistedForm):
         module_scope = pymodule.get_scope()
         suspected_pyobject = None
         if self.name in module_scope.get_names():
-            suspected_pyobject = module_scope.get_names()[self.name].get_object()
+            suspected_pyobject = module_scope.get_name(self.name).get_object()
         if suspected_pyobject is not None and \
            suspected_pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
             if self.is_instance:
