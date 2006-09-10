@@ -137,7 +137,7 @@ class PyClass(PyDefinedObject):
         self.parent = parent
 
     def _update_attributes_from_ast(self, attributes):
-        for base in self._get_bases():
+        for base in reversed(self._get_bases()):
             attributes.update(base.get_attributes())
         new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():

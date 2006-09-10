@@ -1,8 +1,3 @@
-Release Planning For 0.3m3
-==========================
-
-
-
 Remaining Stories
 =================
 
@@ -13,9 +8,6 @@ Remaining Stories
 * Showing the initial name in rename dialogs
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname
-* Review `rope.codeanalyze`; module there seems to be many places to refactor
-* Refactoring `rope.refactoring` module; removing duplication
-
 * Goto definition for ``# comment.\na_var``
 * Better editor changing dialog; use uihelpers module
 * Slow `GraphicalEditor._get_offset`

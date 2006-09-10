@@ -249,10 +249,44 @@ class DynamicOITest(unittest.TestCase):
                           pyscope.get_scopes()[0].get_names()['arg'].get_object())
 
 
+class CartesianProductDynamicOITest(unittest.TestCase):
+
+    def setUp(self):
+        super(CartesianProductDynamicOITest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        common = self.pycore.create_module(self.project.get_root_folder(), 'common')
+        common.write('class AClass(object):\n    pass\n\n'
+                     'class AnotherClass(object):\n    pass\n')
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(CartesianProductDynamicOITest, self).tearDown()
+    
+    def xxx_test_simple_case(self):
+        code = 'from common import AClass, AnotherClass\n\n' \
+               'def a_func(arg):\n' \
+               '    if isinstance(arg, AnotherClass):\n        return AClass\n' \
+               '    else:\n        return AnotherClass\n' \
+               'a_var = a_func(AnotherClass)\n' \
+               'another_var = a_func(AClass)\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertEquals(pymod.get_attributes()['AnotherClass'].get_object(),
+                          pymod.get_attributes()['a_var'].get_object())
+        self.assertEquals(pymod.get_attributes()['AClass'].get_object(),
+                          pymod.get_attributes()['another_var'].get_object())
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ObjectInferTest))
     result.addTests(unittest.makeSuite(DynamicOITest))
+    result.addTests(unittest.makeSuite(CartesianProductDynamicOITest))
     return result
 
 if __name__ == '__main__':

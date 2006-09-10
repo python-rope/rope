@@ -28,7 +28,7 @@ might be released before the ``x.y`` release.
 Version 0.3
 ===========
 
-Time: August 7, 2006 - October 29, 2006
+From August 7, 2006 till November 5, 2006
 
 
 Release Goals
@@ -58,54 +58,47 @@ Releases
 0.3m1
     Done.
 0.3m2
+    Done.
+0.3m3
     Working on.
 
 
-To Be Discussed
-===============
+Hot Topics
+==========
 
-* Reducing the cost of invalidation
-* Saving information for individual objects or only for types
-* Should we analyze all source files for holding type hierarchies and
-  argument object inference
-* Root cause analysis of high defect rate for extract method
+* `Python's Implicit Interfaces`_
+* `Separating Structural From Concluded Data`_
+* `Enhanced Import Tools`_
+* `Better Attribute Object Inference`_
+
+* Finding Type Hierarchy
+* Rename `${x}.get_${y}s` to `${x}.get_${y}` for x, y in
+  [(PyObject, attribute), (PyName, name)]
 
 
 Choosing The Next Move
 ======================
 
-Before starting release planning I need to find out some of the
-reasons for the low quality extract method.  In the release
-planning for ``0.3m3``, I prefer adding more refactorings and
-starting some of the planned refactorings.
+We are facing an important question.  Should we support `Python's
+Implicit Interfaces`_.  In the meantime I can add encapsulate field
+refactoring and renaming attributes in a hierarchy.  I can think
+about `Better Attribute Object Inference`_, too.
 
-Think about the features that you need right now the most and
-give preference for adding them.  These might include:
-
-* Folding text files
+We should be able to find the superclasses and subclasses of a
+class for supporting renaming attributes in a hierarchy.
 
 
-Root Cause Analysis Of Low Quality Modules
-------------------------------------------
+Enhanced Import Tools
+---------------------
 
-I just can't seem to find that out.  All of the tests were passing
-but the tests did not consider many of the situations that might
-happen.  So I think there is only one way out of it.  I should
-think about the problem at hand more with a good perspective on
-our goal.  Put more time on considering possible situations and
-use developed features more.  I rarely used extrace method.  Anyway
-I think `rope.refactoring` modules is getting large and making a
-`rope.refactoring` package would make sense.
+The first question to answer is what do we need? We need better
+import analysis and manipulation tools to help us do many refactorings
+such as:
 
-One other problem that I faced was the `rope.codeanalyze` module.
-Again all of the tests were passing but the code was a real mess. That
-meant I did not refactor after passing a test.  So think about it
-more. After each unit test put sometime for thinking about refactoring
-and removing duplications.
-
-This means that although with TDD you don't need a good idea of what
-you're going to write, in the end you should have a good idea of
-what you've done and its parts that need to be refactored.
+* Move method might require some imports to be moved to.
+* Introduce factory method might need to import the method.
+* Inline method might require to add and remove some imports.
+* Organizing imports or adding imports.
 
 
 What Refactoring To Add Next?
@@ -113,11 +106,10 @@ What Refactoring To Add Next?
 
 I prefer implementing some of these:
 
+* Renaming attributes in a hierarchy
 * Encapsulate field
 * Introduce factory method
-* Rename method/attribute
 * Inline method
-* Renaming attributes in a hierarchy
 
 
 Continuing Dynamic Object Inference Movement
@@ -160,11 +152,6 @@ until when really needed this eliminates some extra time.
 Although we lower the memory usage, we propably still can't hold all
 `PyModule`\s in memory.
 
-* What does it make easier among goals?
-* Is it memory efficient?
-* Does it help argument object inference?
-* Does it help hierarchies?
-
 
 Implementation Issues
 ---------------------
@@ -184,8 +171,6 @@ How To Hold Concluded Information?
 
 Where should we store concluded data.  We should be able to invalidate
 those data too.
-
-What does these data contain exactly?
 
 
 Finding Occurances
@@ -227,18 +212,6 @@ have the following consequences:
 
 * Undo refactoring will work on them, too.
 * All editors should be saved before performing them.
-
-
-Classifying Object Inference Goals
-==================================
-
-Here is the list of goals that we want to achieve in the TI parts
-of rope:
-
-* Finding occurances of variables
-* Support for more advanced refactorings
-* Code assist for container types
-* Code assist for function arguments
 
 
 Dyanmic Type Inference Issues
@@ -284,56 +257,10 @@ extended when we start holding information for individual objects like
 lists and dicts.
 
 
-External program execution
---------------------------
-
-Because the program is executed in a separate process we should find
-someway for transfering information back to the main process.  I
-nbelieve we have to execute the program in a separate process because
-of these possible problems:
-
-* Getting out of memory
-* Having more control on the process for tracing function calls
-* Changing interrupt handling
-* Security
-
-We should also keep in mind that we should probably be able to
-transfer input/output to the running program, too.  To transfer
-information we might be able to use:
-
-* Files
-* Standard input/output
-* Shared memory
-* Network sockets
-
-The thing to keep in mind is that we want the result to be as
-deterministic as possible and it should be easily used in tests, too.
-(or at least there should be a good placeholder implementation
-available).
-
-
-Analyzing Data
---------------
-
-The input data are function call information; ie ``(called_function,
-passed_args, returned_object)``.  In order to use these collected data
-we need to either:
-
-* store function return types for each call
-* store function return types for each set of argument types
-  (something like Cartesian Product algorithm)
-
-The first approach doesn't seem reasonable because of memory
-inefficiency.
-
-
 Optimizing DOI
 --------------
 
-The current implementation is very slow.  For the cpu time I found out
-that the bottle-neck is not on the rope side or sending data.  One of
-the main problems is that using `inspect` module for finding the line
-number of classes is very inefficient.
+We should make `run module` more efficient.
 
 
 Using `sys.settrace` Better
@@ -371,8 +298,8 @@ ignore all of the local scopes that are out of the project (Since we
 are not interested in ``out to out`` group as well).  But it depends
 on whether the program has many of these ``out to in`` calls or not.
 For a typical program these calls are very few.  They might be from an
-event handling system or some special visitor functions in standard
-library.  This issue needs more thought.
+event handling system or some visitor functions in standard library.
+This issue needs more thought.
 
 
 `inspect`'s Simplistic Way Of Finding Classes
@@ -405,6 +332,99 @@ Although this approach outperforms `inspect` module, does lazy
 computation (only when getting the real object) and passes the above
 test, it fails in a more complex situation where there are two classes
 with the same name inside two different nested scopes.
+
+
+Python's Implicit Interfaces
+============================
+
+In python you don't have to define interfaces to declare that classes
+use a specific protocol or interface.  There are lots of such examples
+in standard library.
+
+For example::
+  
+  class A(object):
+      
+      def a_method(self):
+          pass
+  
+  class B(object):
+      
+      def a_method(self):
+          pass
+    
+  def a_func(arg):
+      arg.a_method()
+  
+  a_func(A())
+  a_func(B())
+
+Here although there is no inheritance relations between `A` and `B`,
+renaming `A.a_method` should force `B.a_method` to be renamed too.
+
+Or as another example::
+  
+  a_var = A()
+  a_var.a_method()
+
+renaming `a_var.a_method` should rename both `A.a_method` and
+`B.a_method`.  That is `a_func` function defines the interface and its
+members.
+
+Now the problem is, if rope wants to support implicit interfaces, how
+should it find out these interfaces and their members.
+
+
+Not Supporting Implicit Interfaces
+----------------------------------
+
+If we plan not to support implicit interfaces things simplify
+considerably.  Function arguments objects are the common base class
+of encountered arguments and function returned value object is the
+common base class of returned values.
+
+
+Supporting Implicit Interfaces
+------------------------------
+
+We need to find out the way these implicit interfaces are defined?
+Actually each function defines an interface for each of its parameters
+and the members of this interface are the objects that are passed as
+that arguement.  Another thing to keep in mind is that implicit
+interfaces are extended by inheritance relation, too.  For example::
+  
+  class C(A):
+      
+      def a_method(self):
+          pass
+  
+  def a_func(arg):
+      arg.a_method()
+  
+  another_func(C())
+
+Renaming `arg.a_method` not only should rename `C.a_method` but also it
+it should rename `A.a_method`.
+
+We should be careful about situations like::
+  
+  def a_func(arg):
+      if isinstance(arg, A):
+          A.do_something()
+      else:
+          B.do_some_other_thing()
+
+
+Implementation Changes
+----------------------
+
+To support implicit interfaces we need to make lots of changes.  First
+of all we know that a function parameter can be anything, so using DOI
+we have a set of objects for each parameter.  So the question that
+comes up here is when do we need parameter objects.
+
+* When refactoring and finding occurances
+* When code assisting in a function
 
 
 Better Attribute Object Inference

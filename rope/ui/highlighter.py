@@ -20,7 +20,7 @@ class Highlighting(object):
             for key, value in match.groupdict().items():
                 if value and not key.startswith('_'):
                     a, b = match.span(key)
-#                    print a, b, key
+                    # print a, b, key
                     yield (start + a, start + b, key)
 
     def get_suspected_region_after_change(self, text, change_start, change_end):

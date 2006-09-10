@@ -180,6 +180,16 @@ class PyCoreTest(unittest.TestCase):
         self.assertTrue('method1' in derived.get_attributes())
         self.assertTrue('method2' in derived.get_attributes())
 
+    def test_inheriting_multiple_base_class_attributes_with_the_same_name(self):
+        code = 'class Base1(object):\n    def method(self):\n        pass\n' \
+               'class Base2(object):\n    def method(self):\n        pass\n' \
+               'class Derived(Base1, Base2):\n    pass\n'
+        mod = self.pycore.get_string_module(code)
+        base1 = mod.get_attributes()['Base1']
+        derived = mod.get_attributes()['Derived']
+        self.assertEquals(base1.get_attributes()['method'].get_object(),
+                          derived.get_attributes()['method'].get_object())
+
     def test_inheriting_unknown_base_class(self):
         mod = self.pycore.get_string_module('class Derived(NotFound):\n    def f(self):\n        pass\n')
         derived = mod.get_attributes()['Derived']
