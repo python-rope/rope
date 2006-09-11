@@ -215,15 +215,6 @@ Stories
 * Analyzing function decorators
 
 
-* Subversion support using pysvn
-
-
-> Public Release 0.3m2 : September 17, 2006
-
-
-* Renaming attributes in a hierarchy
-
-
 * Inline method
 
 
@@ -233,12 +224,6 @@ Stories
 * Introduce factory method
 
 
-* Rename method/attribute
-
-
-* Dynamic type inference using Cartesian algorithm
-
-
 * Enhancing module running
 
   * Showing running status in the GUI
@@ -246,6 +231,21 @@ Stories
   * Getting input
   * Customizing CWD and parameters
   * Running last run
+
+
+> Public Release 0.3m2 : September 17, 2006
+
+
+* Rename method/attribute
+
+
+* Dynamic type inference using Cartesian algorithm
+
+
+* Subversion support using pysvn
+
+
+* Renaming attributes in a hierarchy
 
 
 Remaining Stories

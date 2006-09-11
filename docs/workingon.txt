@@ -2,9 +2,10 @@ Transform module to package refactoring
 =======================================
 
 - Undoing
+- Indenting continued lines with backslash and no equal sign
 
 * Relative imports
-* Indenting continued lines with backslash and no equal sign
+* Eliminating `Editor.refactoring`
 
 
 Class Hierarchies

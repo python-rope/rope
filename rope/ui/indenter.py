@@ -117,7 +117,7 @@ class PythonCodeIndenter(TextIndenter):
             try:
                 return start_line.index(' = ') + 3
             except ValueError:
-                match = re.search('\\b ', start_line)
+                match = re.search(r'(\b )|(\.)', start_line)
                 if match:
                     return match.start() + 1
                 else:

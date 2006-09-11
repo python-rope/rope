@@ -52,7 +52,7 @@ def extract_method(context):
 
 def undo_last_refactoring(context):
     if context.get_core().get_open_project():
-        context.get_core().get_open_project().get_refactoring().undo_last_refactoring()
+        context.get_core().get_open_project().get_pycore().get_refactoring().undo_last_refactoring()
     
 
 actions = []

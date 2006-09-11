@@ -167,6 +167,11 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.correct_indentation(3)
         self.assertEquals('def f():\n    return (2,\n            3)', self.editor.get_text())
 
+    def test_implicit_continuation_after_return(self):
+        self.editor.set_text('a_var.an_attr.\\\na_method()')
+        self.indenter.correct_indentation(2)
+        self.assertEquals('a_var.an_attr.\\\n      a_method()', self.editor.get_text())
+
     def test_deindenting_empty_lines(self):
         self.editor.set_text('\n')
         self.indenter.deindent(2)
