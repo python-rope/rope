@@ -183,7 +183,7 @@ class PyCore(object):
     
     def get_subclasses(self, pyclass):
         classes = []
-        pattern = re.compile(r'^\s*class\s+\w', re.M)
+        pattern = re.compile(r'^.*class.+\w', re.M)
         for resource in self.get_python_files():
             pyscope = self.resource_to_pyobject(resource).get_scope()
             import rope.codeanalyze

@@ -42,9 +42,9 @@ class Core(object):
 
     def _create_menu(self):
         self.menubar_manager.add_menu_cascade(MenuAddress(['File'], 'i'))
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Edit'], 't'))
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Edit'], 'e'))
         self.menubar_manager.add_menu_cascade(MenuAddress(['Code'], 'o'))
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor'], 'e'))
+        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor'], 't'))
         self.menubar_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
         self.menubar_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
                                               self._show_about_dialog)

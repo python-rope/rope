@@ -3,7 +3,7 @@ import re
 
 import rope.codeanalyze
 import rope.pyobjects
-import rope.exceptions
+from rope.exceptions import RefactoringException
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 
@@ -67,19 +67,51 @@ class PythonRefactoring(Refactoring):
         old_pyname = pyname_finder.get_pyname_at(offset)
         if old_pyname is None:
             return None
+        old_pynames = [old_pyname]
+        if self._is_it_a_class_method(old_pyname):
+            old_pynames = self._get_all_methods_in_hierarchy(old_pyname.get_object().
+                                                             parent, old_name)
         pattern = self._get_occurance_pattern(old_name)
         changes = ChangeSet()
         for file_ in self.pycore.get_python_files():
             def scope_retriever():
                 return self.pycore.resource_to_pyobject(file_).get_scope()
             new_content = self._rename_occurance_in_file(file_.read(), scope_retriever, 
-                                                         [old_pyname], pattern, new_name)
+                                                         old_pynames, pattern, new_name)
             if new_content is not None:
                 changes.add_change(ChangeFileContents(file_, new_content))
+        
         if old_pyname.get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
             changes.add_change(self._rename_module(old_pyname.get_object(), new_name))
         changes.do()
         self.last_changes = changes
+    
+    def _is_it_a_class_method(self, pyname):
+        return pyname.has_block() and \
+               pyname.get_object().get_type() == rope.pyobjects.PyObject.get_base_type('Function') and \
+               pyname.get_object().parent.get_type() == rope.pyobjects.PyObject.get_base_type('Type')
+    
+    def _get_superclasses_defining_method(self, pyclass, attr_name):
+        result = set()
+        for superclass in pyclass.get_superclasses():
+            if attr_name in superclass.get_attributes():
+                result.update(self._get_superclasses_defining_method(superclass, attr_name))
+        if not result:
+            return set([pyclass])
+        return result
+    
+    def _get_all_methods_in_subclasses(self, pyclass, attr_name):
+        result = set([pyclass.get_attribute(attr_name)])
+        for subclass in self.pycore.get_subclasses(pyclass):
+            result.update(self._get_all_methods_in_subclasses(subclass, attr_name))
+        return result
+    
+    def _get_all_methods_in_hierarchy(self, pyclass, attr_name):
+        superclasses = self._get_superclasses_defining_method(pyclass, attr_name)
+        methods = set()
+        for superclass in superclasses:
+            methods.update(self._get_all_methods_in_subclasses(superclass, attr_name))
+        return methods
     
     def _rename_module(self, pyobject, new_name):
         resource = pyobject.get_resource()
@@ -152,10 +184,6 @@ class PythonRefactoring(Refactoring):
     
     def undo_last_refactoring(self):
         self.last_changes.undo()
-
-
-class RefactoringException(rope.exceptions.RopeException):
-    pass
 
 
 class _ExtractMethodPerformer(object):

@@ -161,8 +161,7 @@ class RefactoringTest(unittest.TestCase):
         self.assertEquals('def a_func():\n    return 0\n', mod1.read())
         self.assertEquals('import mod1\na_var = mod1.a_func()\n', mod2.read())
     
-    # TODO: Renaming attributes in the whole hierarchy
-    def xxx_test_renaming_attributes_in_subclasses(self):
+    def test_renaming_methods_in_subclasses(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod.write('class A(object):\n    def a_method(self):\n        pass\n'
                   'class B(A):\n    def a_method(self):\n        pass\n')
@@ -170,6 +169,17 @@ class RefactoringTest(unittest.TestCase):
         self.refactoring.rename(mod, mod.read().rindex('a_method') + 1, 'new_method')
         self.assertEquals('class A(object):\n    def new_method(self):\n        pass\n'
                           'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
+    
+    def test_renaming_methods_in_sibling_classes(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod.write('class A(object):\n    def a_method(self):\n        pass\n'
+                  'class B(A):\n    def a_method(self):\n        pass\n'
+                  'class C(A):\n    def a_method(self):\n        pass\n')
+
+        self.refactoring.rename(mod, mod.read().rindex('a_method') + 1, 'new_method')
+        self.assertEquals('class A(object):\n    def new_method(self):\n        pass\n'
+                  'class B(A):\n    def new_method(self):\n        pass\n'
+                  'class C(A):\n    def new_method(self):\n        pass\n', mod.read())
     
     def test_undoing_refactorings(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')

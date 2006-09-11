@@ -1,20 +1,12 @@
-Transform module to package refactoring
-=======================================
+Renaming Attributes In Class Hierarchies
+========================================
 
-- Undoing
-- Indenting continued lines with backslash and no equal sign
-- Updating editor name after transforming module to package
-
+* Add `rope.refactor.rename` and `rope.refactor.extractmethod` modules
 * Relative imports and transforming modules to packages
+* `rope.exceptions` should only contain user exceptions that are
+  thrown from public classes like `Project`, `PyCore`, `Refactoring`
+* Saving active editor before transform module to package refactoring
 * Eliminating `Editor.refactoring`
-
-
-Class Hierarchies
-=================
-
-- PyClass.get_superclasses
-- PyCore.get_subclasses
-
 * PyCore.get_all_subclasses
 * Adding `ropetest.classestest` to `runtests`
 * Transform module to package refactoring
