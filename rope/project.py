@@ -200,6 +200,8 @@ class _File(Resource):
         self.get_parent()._child_changed(self)
         self.name = destination
         self.get_parent()._child_changed(self)
+        for observer in list(self.observers):
+            observer(self)
 
 
 class File(_File):

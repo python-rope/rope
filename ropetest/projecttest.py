@@ -440,6 +440,14 @@ class ProjectTest(unittest.TestCase):
         my_file.move('my_other_file.txt')
         self.assertEquals(old_hash, hash(my_file))
                           
+    def test_resource_change_observer_after_moving(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        sample_observer = SampleObserver()
+        sample_file.add_change_observer(sample_observer.changed)
+        sample_file.move('new_file.txt')
+        self.assertEquals(1, sample_observer.change_count)
+        self.assertEquals(sample_file, sample_observer.last_changed)
+
 
 class SampleObserver(object):
     def __init__(self):

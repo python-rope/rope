@@ -3,8 +3,9 @@ Transform module to package refactoring
 
 - Undoing
 - Indenting continued lines with backslash and no equal sign
+- Updating editor name after transforming module to package
 
-* Relative imports
+* Relative imports and transforming modules to packages
 * Eliminating `Editor.refactoring`
 
 
