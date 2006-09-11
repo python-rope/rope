@@ -1,7 +1,8 @@
 import unittest
 
 import rope.codeanalyze
-from rope.refactor import PythonRefactoring, RefactoringException
+from rope.refactor import PythonRefactoring
+from rope.exceptions import RefactoringException
 from rope.project import Project
 from ropetest import testutils
 
