@@ -1,8 +1,8 @@
 import unittest
 
-from rope.refactoring import PythonRefactoring, RefactoringException
-from rope.project import Project
 import rope.codeanalyze
+from rope.refactor import PythonRefactoring, RefactoringException
+from rope.project import Project
 from ropetest import testutils
 
 class RefactoringTest(unittest.TestCase):
@@ -160,6 +160,16 @@ class RefactoringTest(unittest.TestCase):
         self.refactoring.rename(mod2, len(mod2.read()) - 3, 'a_func')
         self.assertEquals('def a_func():\n    return 0\n', mod1.read())
         self.assertEquals('import mod1\na_var = mod1.a_func()\n', mod2.read())
+    
+    # TODO: Renaming attributes in the whole hierarchy
+    def xxx_test_renaming_attributes_in_subclasses(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod.write('class A(object):\n    def a_method(self):\n        pass\n'
+                  'class B(A):\n    def a_method(self):\n        pass\n')
+
+        self.refactoring.rename(mod, mod.read().rindex('a_method') + 1, 'new_method')
+        self.assertEquals('class A(object):\n    def new_method(self):\n        pass\n'
+                          'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
     
     def test_undoing_refactorings(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
@@ -372,6 +382,28 @@ class RefactoringTest(unittest.TestCase):
         expected = "def a_func(arg):\n    if True:\n        new_func(arg)\n\n" \
                    "def new_func(arg):\n    if True:\n        print arg\n"
         self.assertEquals(expected, refactored)
+    
+    def test_transform_module_to_package(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('import mod2\nfrom mod2 import AClass\n')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2.write('class AClass(object):\n    pass\n')
+        self.refactoring.transform_module_to_package(mod2)
+        mod2 = self.project.get_resource('mod2')
+        root_folder = self.project.get_root_folder()
+        self.assertFalse(root_folder.has_child('mod2.py'))
+        self.assertEquals('class AClass(object):\n    pass\n', root_folder.get_child('mod2').
+                          get_child('__init__.py').read())
+
+    def test_transform_module_to_package_undoing(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod = self.pycore.create_module(pkg, 'mod')
+        self.refactoring.transform_module_to_package(mod)
+        self.assertFalse(pkg.has_child('mod.py'))
+        self.assertTrue(pkg.get_child('mod').has_child('__init__.py'))
+        self.refactoring.undo_last_refactoring()
+        self.assertTrue(pkg.has_child('mod.py'))
+        self.assertFalse(pkg.has_child('mod'))
 
 
 if __name__ == '__main__':

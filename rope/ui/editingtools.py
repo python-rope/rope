@@ -2,7 +2,7 @@ import rope.ui.indenter
 import rope.ui.highlighter
 import rope.codeassist
 import rope.outline
-import rope.refactoring
+import rope.refactor
 
 
 class EditingTools(object):
@@ -62,7 +62,7 @@ class NormalEditingTools(EditingTools):
         return rope.outline.NoOutline()
 
     def create_refactoring(self):
-        return rope.refactoring.NoRefactoring()
+        return rope.refactor.NoRefactoring()
 
 class ReSTEditingTools(EditingTools):
 
@@ -82,5 +82,5 @@ class ReSTEditingTools(EditingTools):
         return rope.outline.NoOutline()
 
     def create_refactoring(self):
-        return rope.refactoring.NoRefactoring()
+        return rope.refactor.NoRefactoring()
 

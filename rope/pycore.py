@@ -1,7 +1,8 @@
+import re
 import sys
 
 import rope.objectinfer
-import rope.refactoring
+import rope.refactor
 import rope.dynamicoi
 from rope.exceptions import ModuleNotFoundException
 from rope.pyobjects import *
@@ -13,7 +14,7 @@ class PyCore(object):
         self.project = project
         self.module_map = {}
         self.object_infer = rope.objectinfer.ObjectInfer(self)
-        self.refactoring = rope.refactoring.PythonRefactoring(self)
+        self.refactoring = rope.refactor.PythonRefactoring(self)
         self.dynamicoi = rope.dynamicoi.DynamicObjectInference(self)
 
     def get_module(self, name, current_folder=None):
@@ -179,3 +180,16 @@ class PyCore(object):
 
     def run_module(self, resource, stdin=None, stdout=None):
         return self.dynamicoi.run_module(resource, stdin, stdout)
+    
+    def get_subclasses(self, pyclass):
+        classes = []
+        pattern = re.compile(r'^\s*class\s+\w', re.M)
+        for resource in self.get_python_files():
+            pyscope = self.resource_to_pyobject(resource).get_scope()
+            import rope.codeanalyze
+            source = pyscope.pyobject.source_code
+            lines = rope.codeanalyze.SourceLinesAdapter(source)
+            for match in pattern.finditer(source):
+                holding_scope = pyscope.get_inner_scope_for_line(lines.get_line_number(match.start()))
+                classes.append(holding_scope.pyobject)
+        return [class_ for class_ in classes if pyclass in class_.get_superclasses()]

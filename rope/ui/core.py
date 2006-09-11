@@ -38,7 +38,7 @@ class Core(object):
         import rope.ui.fileactions
         import rope.ui.editactions
         import rope.ui.codeassist
-        import rope.ui.refactoring
+        import rope.ui.refactor
 
     def _create_menu(self):
         self.menubar_manager.add_menu_cascade(MenuAddress(['File'], 'i'))
@@ -337,7 +337,7 @@ class Core(object):
             self._bind_key(key, callback)
         if menu:
             if key:
-                menu.address[-1] = menu.address[-1].ljust(27) + key
+                menu.address[-1] = menu.address[-1].ljust(29) + key
             self.menubar_manager.add_menu_command(menu, callback)
     
     def _make_callback(self, action):

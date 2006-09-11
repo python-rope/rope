@@ -1,9 +1,10 @@
 import os
 import unittest
 
-from ropetest import testutils
 from rope.pycore import PyObject, ModuleNotFoundException
 from rope.project import Project
+from ropetest import testutils
+
 
 class PyCoreTest(unittest.TestCase):
 

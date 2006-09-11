@@ -5,6 +5,50 @@ from rope.exceptions import (ModuleNotFoundException, RopeException,
                              AttributeNotFoundException)
 
 
+class PyName(object):
+
+    def __init__(self, object_=None, is_defined_here=False, lineno=None, module=None):
+        self.object = object_
+        self.is_defined_here = is_defined_here
+        self.lineno = lineno
+        self.module = module
+        self.is_being_inferred = False
+        self.assigned_asts = []
+
+    def get_object(self):
+        if self.is_being_inferred:
+            raise IsBeingInferredException('Circular assignments')
+        if self.object is None and self.module is not None:
+            self.is_being_inferred = True
+            try:
+                object_infer = self.module.pycore._get_object_infer()
+                inferred_object = object_infer.infer_object(self)
+                self.object = inferred_object
+            finally:
+                self.is_being_inferred = False
+        if self.object is None:
+            self.object = PyObject(PyObject.get_base_type('Unknown'))
+        return self.object
+    
+    def get_definition_location(self):
+        """Returns a (module, lineno) tuple"""
+        lineno = self._get_lineno()
+        return (self.module, lineno)
+
+    def has_block(self):
+        return self.is_defined_here
+    
+    def _get_ast(self):
+        return self.get_object()._get_ast()
+    
+    def _get_lineno(self):
+        if self.has_block():
+            self.lineno = self._get_ast().lineno
+        if self.lineno == None and self.assigned_asts:
+            self.lineno = self.assigned_asts[0].lineno
+        return self.lineno
+
+
 class PyObject(object):
 
     def __init__(self, type_):
@@ -141,10 +185,16 @@ class PyClass(PyDefinedObject):
         super(PyClass, self).__init__(PyObject.get_base_type('Type'),
                                       pycore, ast_node, parent)
         self.parent = parent
+        self._superclasses = None
+    
+    def get_superclasses(self):
+        if self._superclasses is None:
+            self._superclasses = self._get_bases()
+        return self._superclasses
 
     def _update_attributes_from_ast(self, attributes):
-        for base in reversed(self._get_bases()):
-            attributes.update(base.get_object().get_attributes())
+        for base in reversed(self.get_superclasses()):
+            attributes.update(base.get_attributes())
         new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():
             compiler.walk(n, new_visitor)
@@ -156,7 +206,7 @@ class PyClass(PyDefinedObject):
             base = rope.codeanalyze.StatementEvaluator.\
                    get_statement_result(self.parent.get_scope(), base_name)
             if base:
-                result.append(base)
+                result.append(base.get_object())
         return result
 
     def _create_scope(self):
@@ -239,50 +289,6 @@ class PyPackage(_PyModule):
     def get_module(self):
         init_dot_py = self._get_init_dot_py()
         return self.pycore.resource_to_pyobject(init_dot_py)
-
-
-class PyName(object):
-
-    def __init__(self, object_=None, is_defined_here=False, lineno=None, module=None):
-        self.object = object_
-        self.is_defined_here = is_defined_here
-        self.lineno = lineno
-        self.module = module
-        self.is_being_inferred = False
-        self.assigned_asts = []
-
-    def get_object(self):
-        if self.is_being_inferred:
-            raise IsBeingInferredException('Circular assignments')
-        if self.object is None and self.module is not None:
-            self.is_being_inferred = True
-            try:
-                object_infer = self.module.pycore._get_object_infer()
-                inferred_object = object_infer.infer_object(self)
-                self.object = inferred_object
-            finally:
-                self.is_being_inferred = False
-        if self.object is None:
-            self.object = PyObject(PyObject.get_base_type('Unknown'))
-        return self.object
-    
-    def get_definition_location(self):
-        """Returns a (module, lineno) tuple"""
-        lineno = self._get_lineno()
-        return (self.module, lineno)
-
-    def has_block(self):
-        return self.is_defined_here
-    
-    def _get_ast(self):
-        return self.get_object()._get_ast()
-    
-    def _get_lineno(self):
-        if self.has_block():
-            self.lineno = self._get_ast().lineno
-        if self.lineno == None and self.assigned_asts:
-            self.lineno = self.assigned_asts[0].lineno
-        return self.lineno
 
 
 class _AssignVisitor(object):

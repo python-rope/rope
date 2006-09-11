@@ -71,7 +71,14 @@ Hot Topics
 * `Enhanced Import Tools`_
 * `Better Attribute Object Inference`_
 
-* Finding Type Hierarchy
+* Finding Type Hierarchies
+
+
+To Be Discussed
+===============
+
+* Having a persistant form for PyNames and PyObjects for saving
+  hard to compute information like class hierarchies.
 
 
 Choosing The Next Move

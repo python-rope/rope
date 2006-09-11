@@ -5,7 +5,7 @@ from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 
 
-def do_rename(context):
+def refactor(context):
     fileeditor = context.get_active_editor()
     editors = context.get_core().get_editor_manager().editors
     is_modified = False
@@ -36,28 +36,36 @@ def do_rename(context):
     frame.grid()
     ok_button.focus_set()
 
-def do_local_rename(context):
+def transform_module_to_package(context):
+    if context.get_active_editor():
+        resource = context.get_active_editor().get_file()
+        context.get_core().get_open_project().get_pycore().\
+                get_refactoring().transform_module_to_package(resource)
+
+def local_rename(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor()._local_rename_dialog()
 
-def do_extract_method(context):
+def extract_method(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor()._extract_method_dialog()
 
-def do_undo_last_refactoring(context):
+def undo_last_refactoring(context):
     if context.get_core().get_open_project():
         context.get_core().get_open_project().get_refactoring().undo_last_refactoring()
     
 
 actions = []
-actions.append(SimpleAction('Rename Refactoring', do_rename, 'M-R',
+actions.append(SimpleAction('Rename Refactoring', refactor, 'M-R',
                             MenuAddress(['Refactor', 'Rename'], 'r')))
-actions.append(SimpleAction('Undo Last Refactoring', do_undo_last_refactoring, None,
+actions.append(SimpleAction('Transform Module To Package', transform_module_to_package, None,
+                            MenuAddress(['Refactor', 'Transform Module To Package'], 't')))
+actions.append(SimpleAction('Undo Last Refactoring', undo_last_refactoring, None,
                             MenuAddress(['Refactor', 'Undo Last Refactoring'], 'u')))
 
-actions.append(SimpleAction('Rename Local Variable', do_local_rename, None,
+actions.append(SimpleAction('Rename Local Variable', local_rename, None,
                             MenuAddress(['Refactor', 'Rename Local Variable'], 'e', 1)))
-actions.append(SimpleAction('Extract Method', do_extract_method, 'M-M',
+actions.append(SimpleAction('Extract Method', extract_method, 'M-M',
                             MenuAddress(['Refactor', 'Extract Method'], 'e', 1)))
 
 core = rope.ui.core.Core.get_core()

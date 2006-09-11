@@ -1,10 +1,22 @@
-Eliminating get_attributes and get_names
-========================================
+Transform module to package refactoring
+=======================================
 
-* Rename `${x}.get_${y}s` to `${x}.get_${y}` for x, y in
-  [(PyObject, attribute), (PyName, name)]
-* Eliminate get_attributes usage when not needed
-* Eliminate get_names usage when not needed
+- Undoing
+
+* Relative imports
+* Indenting continued lines with backslash and no equal sign
+
+
+Class Hierarchies
+=================
+
+- PyClass.get_superclasses
+- PyCore.get_subclasses
+
+* PyCore.get_all_subclasses
+* Adding `ropetest.classestest` to `runtests`
+* Transform module to package refactoring
+* Adding rename current module/package
 
 
 Remaining Stories

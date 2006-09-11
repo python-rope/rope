@@ -6,7 +6,7 @@ import ropetest.codeanalyzetest
 import ropetest.pycoretest
 import ropetest.outlinetest
 import ropetest.formattertest
-import ropetest.refactoringtest
+import ropetest.refactortest
 import ropetest.objectinfertest
 import ropetest.runmodtest
 
@@ -38,7 +38,7 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.ui.uihelperstest.UIHelpersTest))
     result.addTests(unittest.makeSuite(ropetest.outlinetest.OutlineTest))
     result.addTests(unittest.makeSuite(ropetest.formattertest.FormatterTest))
-    result.addTests(unittest.makeSuite(ropetest.refactoringtest.RefactoringTest))
+    result.addTests(unittest.makeSuite(ropetest.refactortest.RefactoringTest))
     result.addTests(ropetest.objectinfertest.suite())
     result.addTests(ropetest.runmodtest.suite())
     return result

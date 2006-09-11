@@ -17,6 +17,9 @@ class Refactoring(object):
     def extract_method(self, source_code, start_offset, end_offset, extracted_name, resource=None):
         pass
     
+    def transform_module_to_package(self, resource):
+        pass
+    
     def undo_last_refactoring(self):
         pass
 
@@ -50,7 +53,7 @@ class PythonRefactoring(Refactoring):
         pattern = self._get_occurance_pattern(old_name)
         def scope_retriever():
             return module_scope
-        return self._rename_occurance_in_file(source_code, scope_retriever, old_pyname,
+        return self._rename_occurance_in_file(source_code, scope_retriever, [old_pyname],
                                               pattern, new_name)
     
     def rename(self, resource, offset, new_name):
@@ -68,7 +71,7 @@ class PythonRefactoring(Refactoring):
             def scope_retriever():
                 return self.pycore.resource_to_pyobject(file_).get_scope()
             new_content = self._rename_occurance_in_file(file_.read(), scope_retriever, 
-                                                         old_pyname, pattern, new_name)
+                                                         [old_pyname], pattern, new_name)
             if new_content is not None:
                 changes.add_change(ChangeFileContents(file_, new_content))
         if old_pyname.get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
@@ -87,7 +90,7 @@ class PythonRefactoring(Refactoring):
             new_location = parent_path + '/' + new_name
         return MoveResource(resource, new_location)
     
-    def _rename_occurance_in_file(self, source_code, scope_retriever, old_pyname,
+    def _rename_occurance_in_file(self, source_code, scope_retriever, old_pynames,
                                   pattern, new_name):
         result = []
         last_modified_char = 0
@@ -101,9 +104,10 @@ class PythonRefactoring(Refactoring):
                         module_scope = scope_retriever()
                         pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
                     new_pyname = pyname_finder.get_pyname_at(match_start + 1)
-                    if self._are_pynames_the_same(old_pyname, new_pyname):
-                        result.append(source_code[last_modified_char:match_start] + new_name)
-                        last_modified_char = match_end
+                    for old_pyname in old_pynames:
+                        if self._are_pynames_the_same(old_pyname, new_pyname):
+                            result.append(source_code[last_modified_char:match_start] + new_name)
+                            last_modified_char = match_end
         if last_modified_char != 0:
             result.append(source_code[last_modified_char:])
             return ''.join(result)
@@ -133,6 +137,16 @@ class PythonRefactoring(Refactoring):
         return _ExtractMethodPerformer(self, source_code, start_offset,
                                        end_offset, extracted_name,
                                        resource).extract()
+    
+    def transform_module_to_package(self, resource):
+        changes = ChangeSet()
+        parent = resource.get_parent()
+        name = resource.get_name()[:-3]
+        changes.add_change(CreateFolder(parent, name))
+        new_path = parent.get_path() + '/%s/__init__.py' % name
+        changes.add_change(MoveResource(resource, new_path))
+        self.last_changes = changes
+        changes.do()
     
     def undo_last_refactoring(self):
         self.last_changes.undo()
@@ -432,7 +446,7 @@ class ChangeSet(Change):
     def undo(self):
         try:
             done = []
-            for change in self.changes:
+            for change in reversed(self.changes):
                 change.undo()
                 done.append(change)
         except Exception:
@@ -472,4 +486,17 @@ class MoveResource(Change):
     
     def undo(self):
         self.resource.move(self.old_location)
-        
+
+
+class CreateFolder(Change):
+    
+    def __init__(self, parent, name):
+        self.parent = parent
+        self.name = name
+        self.new_folder = None
+    
+    def do(self):
+        self.new_folder = self.parent.create_folder(self.name)
+    
+    def undo(self):
+        self.new_folder.remove()
