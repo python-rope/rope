@@ -91,12 +91,9 @@ class PyCoreTest(unittest.TestCase):
         var = sample_class.get_attribute('InnerClass').get_object()
         self.assertEquals(PyObject.get_base_type('Type'), var.get_type())
 
+    @testutils.assert_raises(ModuleNotFoundException)
     def test_non_existant_module(self):
-        try:
-            self.pycore.get_module('mod')
-            self.fail('And exception should have been raised')
-        except ModuleNotFoundException:
-            pass
+        self.pycore.get_module('mod')
 
     def test_imported_names(self):
         self.pycore.create_module(self.project.get_root_folder(), 'mod1')

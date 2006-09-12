@@ -24,8 +24,7 @@ class ExtractMethodRefactoring(object):
 
 class _ExtractMethodPerformer(object):
     
-    def __init__(self, refactoring, resource, start_offset,
-                 end_offset, extracted_name):
+    def __init__(self, refactoring, resource, start_offset, end_offset, extracted_name):
         self.refactoring = refactoring
         source_code = resource.read()
         self.source_code = source_code
@@ -41,20 +40,25 @@ class _ExtractMethodPerformer(object):
         self.holding_scope = self.scope.get_inner_scope_for_line(start_line)
         if self.holding_scope.pyobject.get_type() != \
            rope.pyobjects.PyObject.get_base_type('Module') and \
-           self.holding_scope.get_start()  == start_line:
+           self.holding_scope.get_start() == start_line:
             self.holding_scope = self.holding_scope.parent
         self.scope_start = self.lines.get_line_start(self.holding_scope.get_start())
         self.scope_end = self.lines.get_line_end(self.holding_scope.get_end()) + 1
 
-        self.is_method = self.holding_scope.parent is not None and \
-                         self.holding_scope.parent.pyobject.get_type() == \
-                         rope.pyobjects.PyObject.get_base_type('Type')
-        self.is_global = self.holding_scope.pyobject.get_type() == \
-                         rope.pyobjects.PyObject.get_base_type('Module')
         self.scope_indents = self._get_indents(self.holding_scope.get_start()) + 4
-        if self.is_global:
+        if self._is_global():
             self.scope_indents = 0
         self._check_exceptional_conditions()
+        self.info_collector = self._create_info_collector()
+
+    def _is_global(self):
+        return self.holding_scope.pyobject.get_type() == \
+               rope.pyobjects.PyObject.get_base_type('Module')
+
+    def _is_method(self):
+        return self.holding_scope.parent is not None and \
+               self.holding_scope.parent.pyobject.get_type() == \
+               rope.pyobjects.PyObject.get_base_type('Type')
     
     def _check_exceptional_conditions(self):
         if self.holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
@@ -67,14 +71,26 @@ class _ExtractMethodPerformer(object):
             raise RefactoringException('Bad range selected for extract method')
         if _ReturnFinder.does_it_return(self.source_code[self.start_offset:self.end_offset]):
             raise RefactoringException('Extracted piece should not contain return statements')
-        
+
+    def _create_info_collector(self):
+        zero = self.holding_scope.get_start() - 1
+        start_line = self.lines.get_line_number(self.start_offset) - zero
+        end_line = self.lines.get_line_number(self.end_offset) - 1 - zero
+        info_collector = _FunctionInformationCollector(start_line, end_line,
+                                                       self._is_global())
+        indented_body = self.source_code[self.scope_start:self.scope_end]
+        body = _indent_lines(indented_body, -_find_minimum_indents(indented_body))
+        ast = compiler.parse(body)
+        compiler.walk(ast, info_collector)
+        return info_collector
+
     def extract(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         
         result = []
         result.append(self.source_code[:self.start_offset])
-        if self.is_global:
+        if self._is_global():
             result.append('\n%s\n' % self._get_function_definition())
         call_prefix = ''
         if returns:
@@ -82,7 +98,7 @@ class _ExtractMethodPerformer(object):
         result.append(' ' * self.first_line_indents + call_prefix
                       + self._get_function_call(args) + '\n')
         result.append(self.source_code[self.end_offset:self.scope_end])
-        if not self.is_global:
+        if not self._is_global():
             result.append('\n%s' % self._get_function_definition())
         result.append(self.source_code[self.scope_end:])
         return ''.join(result)
@@ -90,7 +106,7 @@ class _ExtractMethodPerformer(object):
     def _get_function_definition(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
-        if not self.is_global:
+        if not self._is_global():
             function_indents = self.scope_indents
         else:
             function_indents = 4
@@ -109,7 +125,7 @@ class _ExtractMethodPerformer(object):
     
     def _get_function_signature(self, args):
         args = list(args)
-        if self.is_method:
+        if self._is_method():
             if 'self' in args:
                 args.remove('self')
             args.insert(0, 'self')
@@ -117,7 +133,7 @@ class _ExtractMethodPerformer(object):
     
     def _get_function_call(self, args):
         prefix = ''
-        if self.is_method:
+        if self._is_method():
             if  'self' in args:
                 args.remove('self')
             prefix = 'self.'
@@ -129,39 +145,13 @@ class _ExtractMethodPerformer(object):
             result += names[0]
             for name in names[1:]:
                 result += ', ' + name
-        return result        
+        return result
     
     def _find_function_arguments(self):
-        start1 = self.lines.get_line_start(self.holding_scope.get_start() + 1)
-        code1 = self.source_code[start1:self.start_offset] + \
-                '%spass' % (' ' * self.first_line_indents)
-        read1, written1 = _VariableReadsAndWritesFinder.find_reads_and_writes(code1)
-        if self.holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Function'):
-            written1.update(self._get_function_arg_names())
-        
-        code2 = self.source_code[self.start_offset:self.end_offset]
-        read2, written2 = _VariableReadsAndWritesFinder.find_reads_and_writes(code2)
-        return list(written1.intersection(read2))
-    
-    def _get_function_arg_names(self):
-        indents = self._get_indents(self.holding_scope.get_start())
-        function_header_end = min(self.source_code.index('):\n', self.scope_start) + 1,
-                                  self.scope_end)
-        function_header = _indent_lines(self.source_code[self.scope_start:
-                                                              function_header_end], -indents) + \
-                                                              ':\n' + ' ' * 4 + 'pass'
-        ast = compiler.parse(function_header)
-        visitor = _FunctionArgnamesCollector()
-        compiler.walk(ast, visitor)
-        return visitor.argnames
-        
+        return list(self.info_collector.prewritten.intersection(self.info_collector.read))
     
     def _find_function_returns(self):
-        code2 = self.source_code[self.start_offset:self.end_offset]
-        read2, written2 = _VariableReadsAndWritesFinder.find_reads_and_writes(code2)
-        code3 = self.source_code[self.end_offset:self.scope_end]
-        read3, written3 = _VariableReadsAndWritesFinder.find_reads_and_writes(code3)
-        return list(written2.intersection(read3))
+        return list(self.info_collector.written.intersection(self.info_collector.postread))
         
     def _choose_closest_line_end(self, source_code, offset):
         lineno = self.lines.get_line_number(offset)
@@ -180,6 +170,7 @@ class _ExtractMethodPerformer(object):
                 break
         return indents
     
+
 def _find_minimum_indents(source_code):
     result = 80
     lines = source_code.split('\n')
@@ -211,6 +202,53 @@ def _indent_lines(source_code, amount):
         else:
             result.append('')
     return '\n'.join(result)
+    
+
+class _FunctionInformationCollector(object):
+    
+    def __init__(self, start, end, is_global):
+        self.start = start
+        self.end = end
+        self.is_global = is_global
+        self.prewritten = set()
+        self.written = set()
+        self.read = set()
+        self.postread = set()
+        self.host_function = True
+    
+    def _read_variable(self, name, lineno):
+        if self.start <= lineno <= self.end:
+            self.read.add(name)
+        if self.end < lineno:
+            self.postread.add(name)
+    
+    def _written_variable(self, name, lineno):
+        if self.start <= lineno <= self.end:
+            self.written.add(name)
+        if self.start > lineno:
+            self.prewritten.add(name)
+        
+    def visitFunction(self, node):
+        if not self.is_global and self.host_function:
+            self.host_function = False
+            for name in node.argnames:
+                self._written_variable(name, node.lineno)
+            compiler.walk(node.code, self)
+        else:
+            self._written_variable(node.name, node.lineno)
+            visitor = _VariableReadsAndWritesFinder()
+            compiler.walk(node.code, visitor)
+            for name in visitor.read - visitor.written:
+                self._read_variable(name, node.lineno)
+
+    def visitAssName(self, node):
+        self._written_variable(node.name, node.lineno)
+    
+    def visitName(self, node):
+        self._read_variable(node.name, node.lineno)
+    
+    def visitClass(self, node):
+        self._written_variable(node.name, node.lineno)
     
 
 class _VariableReadsAndWritesFinder(object):
@@ -254,6 +292,9 @@ class _ReturnFinder(object):
     def visitReturn(self, node):
         self.returns = True
 
+    def visitYield(self, node):
+        self.returns = True
+
     def visitFunction(self, node):
         pass
     
@@ -271,11 +312,3 @@ class _ReturnFinder(object):
         compiler.walk(ast, visitor)
         return visitor.returns
 
-
-class _FunctionArgnamesCollector(object):
-    
-    def __init__(self):
-        self.argnames = []
-    
-    def visitFunction(self, node):
-        self.argnames = node.argnames

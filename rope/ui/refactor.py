@@ -71,17 +71,16 @@ def undo_last_refactoring(context):
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
                             MenuAddress(['Refactor', 'Rename'], 'r')))
+actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_method), 'M-M',
+                            MenuAddress(['Refactor', 'Extract Method'], 'e')))
+actions.append(SimpleAction('Rename Local Variable', ConfirmAllEditorsAreSaved(local_rename), None,
+                            MenuAddress(['Refactor', 'Rename Local Variable'], 'l')))
 actions.append(SimpleAction('Transform Module To Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
-                            MenuAddress(['Refactor', 'Transform Module To Package'], 't')))
+                            MenuAddress(['Refactor', 'Transform Module To Package'], 't', 1)))
 actions.append(SimpleAction('Undo Last Refactoring', 
                             ConfirmAllEditorsAreSaved(undo_last_refactoring), None,
-                            MenuAddress(['Refactor', 'Undo Last Refactoring'], 'u')))
-
-actions.append(SimpleAction('Rename Local Variable', ConfirmAllEditorsAreSaved(local_rename), None,
-                            MenuAddress(['Refactor', 'Rename Local Variable'], 'e', 1)))
-actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_method), 'M-M',
-                            MenuAddress(['Refactor', 'Extract Method'], 'e', 1)))
+                            MenuAddress(['Refactor', 'Undo Last Refactoring'], 'u', 2)))
 
 core = rope.ui.core.Core.get_core()
 for action in actions:

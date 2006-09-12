@@ -558,13 +558,10 @@ class TemplateTest(unittest.TestCase):
         self.assertEquals(['name_var'], template.variables())
         self.assertEquals('Name = Ali', template.substitute({'name_var': 'Ali'}))
 
+    @testutils.assert_raises(KeyError)
     def test_unmapped_variable(self):
         template = Template('Name = ${name}')
-        try:
-            template.substitute({})
-            self.fail('Expected keyError')
-        except KeyError:
-            pass
+        template.substitute({})
 
     def test_double_dollar_sign(self):
         template = Template('Name = $${name}')

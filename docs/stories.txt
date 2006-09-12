@@ -239,16 +239,10 @@ Stories
 > Public Release 0.3m2 : September 17, 2006
 
 
-* Rename method/attribute
-
-
-* Dynamic type inference using Cartesian algorithm
-
-
 * Subversion support using pysvn
 
 
-* Renaming attributes in a hierarchy
+* Renaming methods in a hierarchy
 
 
 * Transform module to package refactoring

@@ -62,12 +62,10 @@ class ProjectTest(unittest.TestCase):
         projectFile = self.project.get_resource(self.projectMaker.get_sample_file_name())
         self.assertEquals(self.projectMaker.get_sample_file_contents(), projectFile.read())
     
+    @testutils.assert_raises(RopeException)
     def test_getting_not_existing_project_file(self):
-        try:
-            projectFile = self.project.get_resource('DoesNotExistFile.txt')
-            self.fail('Should have failed')
-        except RopeException:
-            pass
+        projectFile = self.project.get_resource('DoesNotExistFile.txt')
+        self.fail('Should have failed')
 
     def test_writing_in_project_files(self):
         projectFile = self.project.get_resource(self.projectMaker.get_sample_file_name())
@@ -80,12 +78,10 @@ class ProjectTest(unittest.TestCase):
         newFile = self.project.get_resource(projectFile)
         self.assertTrue(newFile is not None)
 
+    @testutils.assert_raises(RopeException)
     def test_creating_files_that_already_exist(self):
-        try:
-            self.project.get_root_folder().create_file(self.projectMaker.get_sample_file_name())
-            self.fail('Should have failed')
-        except RopeException:
-            pass
+        self.project.get_root_folder().create_file(self.projectMaker.get_sample_file_name())
+        self.fail('Should have failed')
 
     def test_making_root_folder_if_it_does_not_exist(self):
         projectRoot = 'SampleProject2'
@@ -95,13 +91,13 @@ class ProjectTest(unittest.TestCase):
         finally:
             testutils.remove_recursively(projectRoot)
 
+    @testutils.assert_raises(RopeException)
     def test_failure_when_project_root_exists_and_is_a_file(self):
-        projectRoot = 'SampleProject2'
-        open(projectRoot, 'w').close()
         try:
+            projectRoot = 'SampleProject2'
+            open(projectRoot, 'w').close()
             project = Project(projectRoot)
-            self.fail('Should have failed')
-        except RopeException:
+        finally:
             os.remove(projectRoot)
 
     def test_creating_folders(self):
@@ -110,23 +106,17 @@ class ProjectTest(unittest.TestCase):
         folderPath = os.path.join(self.project.get_root_address(), folderName)
         self.assertTrue(os.path.exists(folderPath) and os.path.isdir(folderPath))
 
+    @testutils.assert_raises(RopeException)
     def test_making_folder_that_already_exists(self):
         folderName = 'SampleFolder'
         self.project.get_root_folder().create_folder(folderName)
-        try:
-            self.project.get_root_folder().create_folder(folderName)
-            self.fail('Should have failed')
-        except RopeException:
-            pass
+        self.project.get_root_folder().create_folder(folderName)
 
+    @testutils.assert_raises(RopeException)
     def test_failing_if_creating_folder_while_file_already_exists(self):
         folderName = 'SampleFolder'
         self.project.get_root_folder().create_file(folderName)
-        try:
-            self.project.get_root_folder().create_folder(folderName)
-            self.fail('Should have failed')
-        except RopeException:
-            pass
+        self.project.get_root_folder().create_folder(folderName)
 
     def test_creating_file_inside_folder(self):
         folder_name = 'sampleFolder'
@@ -137,17 +127,12 @@ class ProjectTest(unittest.TestCase):
         file = self.project.get_resource(file_path)
         file.write('sample notes')
         self.assertEquals(file_path, file.get_path())
-        self.assertEquals('sample notes',
-                          open(os.path.join(self.project.get_root_address(),
-                                            file_path))
-                          .read())
+        self.assertEquals('sample notes', open(os.path.join(self.project.get_root_address(),
+                                                            file_path)).read())
 
+    @testutils.assert_raises(RopeException)
     def test_failing_when_creating_file_inside_non_existant_folder(self):
-        try:
-            self.project.get_root_folder().create_file('NonexistantFolder/SomeFile.txt')
-            self.fail('Should have failed')
-        except RopeException:
-            pass
+        self.project.get_root_folder().create_file('NonexistantFolder/SomeFile.txt')
 
     def test_nested_directories(self):
         folder_name = 'SampleFolder'
@@ -176,12 +161,9 @@ class ProjectTest(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.project.get_root_address(),
                                                      self.projectMaker.get_sample_folder_name())))
 
+    @testutils.assert_raises(RopeException)
     def test_removing_non_existant_files(self):
-        try:
-            self.project.get_resource('NonExistantFile.txt').remove()
-            self.fail('Should have failed')
-        except RopeException:
-            pass
+        self.project.get_resource('NonExistantFile.txt').remove()
 
     def test_removing_nested_files(self):
         fileName = self.projectMaker.get_sample_folder_name() + '/SampleFile.txt'

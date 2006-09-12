@@ -1,10 +1,11 @@
 Renaming Attributes In Class Hierarchies
 ========================================
 
-* Think about special cases for renaming
 * Refactor `rope.refactor.rename`
 * Refactor `rope.refactor.extract`
+* Think about special cases for renaming
 
+* Extract methos in a function with multi-line header
 * Adding `ropetest.classestest` to `runtests`
 * Saving active editor before "transform module to package" refactoring
 * PyCore.get_all_subclasses

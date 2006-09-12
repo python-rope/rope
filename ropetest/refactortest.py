@@ -360,35 +360,29 @@ class RefactoringTest(unittest.TestCase):
                    "    return inner_func\n"
         self.assertEquals(expected, refactored)
 
+    @testutils.assert_raises(RefactoringException)
     def test_extract_method_bad_range(self):
         code = "def a_func():\n    pass\na_var = 10\n"
         start, end = self._convert_line_range_to_offset(code, 2, 3)
-        try:
-            self.do_extract_method(code, start, end, 'new_func')
-        except RefactoringException:
-            pass
-        else:
-            self.fail('Should have thrown exception')
+        self.do_extract_method(code, start, end, 'new_func')
 
+    @testutils.assert_raises(RefactoringException)
     def test_extract_method_bad_range2(self):
         code = "class AClass(object):\n    pass\n"
         start, end = self._convert_line_range_to_offset(code, 1, 1)
-        try:
-            self.do_extract_method(code, start, end, 'new_func')
-        except RefactoringException:
-            pass
-        else:
-            self.fail('Should have thrown exception')
+        self.do_extract_method(code, start, end, 'new_func')
 
+    @testutils.assert_raises(RefactoringException)
     def test_extract_method_containing_return(self):
         code = "def a_func(arg):\n    return arg * 2\n"
         start, end = self._convert_line_range_to_offset(code, 2, 2)
-        try:
-            self.do_extract_method(code, start, end, 'new_func')
-        except RefactoringException:
-            pass
-        else:
-            self.fail('Should have thrown exception')
+        self.do_extract_method(code, start, end, 'new_func')
+
+    @testutils.assert_raises(RefactoringException)
+    def test_extract_method_containing_yield(self):
+        code = "def a_func(arg):\n    yield arg * 2\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_function_and_argument_as_paramenter(self):
         code = "def a_func(arg):\n    print arg\n"
@@ -404,6 +398,14 @@ class RefactoringTest(unittest.TestCase):
         refactored = self.do_extract_method(code, start, end, 'new_func')
         expected = "def a_func(arg):\n    if True:\n        new_func(arg)\n\n" \
                    "def new_func(arg):\n    if True:\n        print arg\n"
+        self.assertEquals(expected, refactored)
+    
+    def test_extract_method_and_multi_line_headers(self):
+        code = "def a_func(\n           arg):\n    print arg\n"
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = "def a_func(\n           arg):\n    new_func(arg)\n\n" \
+                   "def new_func(arg):\n    print arg\n"
         self.assertEquals(expected, refactored)
     
     def test_transform_module_to_package(self):
