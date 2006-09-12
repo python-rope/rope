@@ -141,27 +141,6 @@ class PyCoreTest(unittest.TestCase):
         scope = mod.get_scope()
         self.assertTrue('var' in scope.get_names())
     
-    def test_function_scopes(self):
-        scope = self.pycore.get_string_scope('def func():\n    var = 10\n')
-        func_scope = scope.get_scopes()[0]
-        self.assertTrue('var' in func_scope.get_names())
-
-    def test_function_scopes_classes(self):
-        scope = self.pycore.get_string_scope('def func():\n    class Sample(object):\n        pass\n')
-        func_scope = scope.get_scopes()[0]
-        self.assertTrue('Sample' in func_scope.get_names())
-
-    def test_function_getting_scope(self):
-        mod = self.pycore.get_string_module('def func():    var = 10\n')
-        func_scope = mod.get_attribute('func').object.get_scope()
-        self.assertTrue('var' in func_scope.get_names())
-
-    def test_scopes_in_function_scopes(self):
-        scope = self.pycore.get_string_scope('def func():\n    def inner():\n        var = 10\n')
-        func_scope = scope.get_scopes()[0]
-        inner_scope = func_scope.get_scopes()[0]
-        self.assertTrue('var' in inner_scope.get_names())
-
     def test_inheriting_base_class_attributes(self):
         mod = self.pycore.get_string_module('class Base(object):\n    def method(self):\n        pass\n' +
                                              'class Derived(Base):\n    pass\n')
@@ -685,10 +664,10 @@ class PyCoreInProjectsTest(unittest.TestCase):
                           mod2_object.get_attribute('a_func').get_object())
 
 
-class PyCoreScopesTest(unittest.TestCase):
+class ClassHierarchyTest(unittest.TestCase):
 
     def setUp(self):
-        super(PyCoreScopesTest, self).setUp()
+        super(ClassHierarchyTest, self).setUp()
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
@@ -696,79 +675,74 @@ class PyCoreScopesTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
-        super(PyCoreScopesTest, self).tearDown()
+        super(ClassHierarchyTest, self).tearDown()
 
-    def test_simple_scope(self):
-        scope = self.pycore.get_string_scope('def sample_func():\n    pass\n')
-        sample_func = scope.get_name('sample_func').get_object()
-        self.assertEquals(PyObject.get_base_type('Function'), sample_func.get_type())
+    def test_empty_get_superclasses(self):
+        code = 'class AClass(object):\n    pass\n'
+        mod = self.pycore.get_string_module(code)
+        a_class = mod.get_attribute('AClass').get_object()
+        self.assertTrue(len(a_class.get_superclasses()) <= 1)
 
-    def test_simple_function_scope(self):
-        scope = self.pycore.get_string_scope('def sample_func():\n    a = 10\n')
-        self.assertEquals(1, len(scope.get_scopes()))
-        sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(1, len(sample_func_scope.get_names()))
-        self.assertEquals(0, len(sample_func_scope.get_scopes()))
+    def test_simple_get_superclasses(self):
+        code = 'class A(object):\n    pass\n' \
+               'class B(A):\n    pass\n'
+        mod = self.pycore.get_string_module(code)
+        a_class = mod.get_attribute('A').get_object()
+        b_class = mod.get_attribute('B').get_object()
+        self.assertEquals([a_class], b_class.get_superclasses())
 
-    def test_classes_inside_function_scopes(self):
-        scope = self.pycore.get_string_scope('def sample_func():\n' +
-                                             '    class SampleClass(object):\n        pass\n')
-        self.assertEquals(1, len(scope.get_scopes()))
-        sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(PyObject.get_base_type('Type'), 
-                          scope.get_scopes()[0].
-                          get_name('SampleClass').get_object().get_type())
+    def test_get_superclasses_with_two_superclasses(self):
+        code = 'class A(object):\n    pass\n' \
+               'class B(object):\n    pass\n' \
+               'class C(A, B):\n    pass\n'
+        mod = self.pycore.get_string_module(code)
+        a_class = mod.get_attribute('A').get_object()
+        b_class = mod.get_attribute('B').get_object()
+        c_class = mod.get_attribute('C').get_object()
+        self.assertEquals([a_class, b_class], c_class.get_superclasses())
+    
+    def test_empty_get_subclasses(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('class A(object):\n    pass\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        a_class = pymod.get_attribute('A')
+        self.assertEquals([], self.pycore.get_subclasses(a_class))
 
-    def test_simple_class_scope(self):
-        scope = self.pycore.get_string_scope('class SampleClass(object):\n' +
-                                             '    def f(self):\n        var = 10\n')
-        self.assertEquals(1, len(scope.get_scopes()))
-        sample_class_scope = scope.get_scopes()[0]
-        self.assertEquals(0, len(sample_class_scope.get_names()))
-        self.assertEquals(1, len(sample_class_scope.get_scopes()))
-        f_in_class = sample_class_scope.get_scopes()[0]
-        self.assertTrue('var' in f_in_class.get_names())
+    def test_get_subclasses(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('class A(object):\n    pass\n\n'
+                  'class B(A):\n    pass\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        a_class = pymod.get_attribute('A').get_object()
+        b_class = pymod.get_attribute('B').get_object()
+        self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
 
-    def test_get_lineno(self):
-        scope = self.pycore.get_string_scope('\ndef sample_func():\n    a = 10\n')
-        self.assertEquals(1, len(scope.get_scopes()))
-        sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(1, scope.get_start())
-        self.assertEquals(2, sample_func_scope.get_start())
+    def test_get_subclasses_in_multiple_modules(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class A(object):\n    pass\n')
+        mod2.write('import mod1\nclass B(mod1.A):\n    pass\n')
+        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        a_class = pymod1.get_attribute('A').get_object()
+        b_class = pymod2.get_attribute('B').get_object()
+        self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
 
-    def test_scope_kind(self):
-        scope = self.pycore.get_string_scope('class SampleClass(object):\n    pass\n' +
-                                             'def sample_func():\n    pass\n')
-        sample_class_scope = scope.get_scopes()[0]
-        sample_func_scope = scope.get_scopes()[1]
-        self.assertEquals('Module', scope.get_kind())
-        self.assertEquals('Class', sample_class_scope.get_kind())
-        self.assertEquals('Function', sample_func_scope.get_kind())
-
-    def test_function_parameters_in_scope_names(self):
-        scope = self.pycore.get_string_scope('def sample_func(param):\n    a = 10\n')
-        sample_func_scope = scope.get_scopes()[0]
-        self.assertTrue('param' in sample_func_scope.get_names())
-
-    def test_get_names_contains_only_names_defined_in_a_scope(self):
-        scope = self.pycore.get_string_scope('var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
-        sample_func_scope = scope.get_scopes()[0]
-        self.assertTrue('var1' not in sample_func_scope.get_names())
-
-    def test_scope_lookup(self):
-        scope = self.pycore.get_string_scope('var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
-        self.assertTrue(scope.lookup('var2') is None)
-        self.assertEquals(PyObject.get_base_type('Function'),
-                          scope.lookup('sample_func').get_object().get_type())
-        sample_func_scope = scope.get_scopes()[0]
-        self.assertTrue(sample_func_scope.lookup('var1') is not None)
+    def test_get_subclasses_reversed(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('class B(A):\n    pass\n'
+                  'class A(object):\n    pass\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        a_class = pymod.get_attribute('A').get_object()
+        b_class = pymod.get_attribute('B').get_object()
+        self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
 
 
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(PyCoreTest))
     result.addTests(unittest.makeSuite(PyCoreInProjectsTest))
-    result.addTests(unittest.makeSuite(PyCoreScopesTest))
+    result.addTests(unittest.makeSuite(ClassHierarchyTest))
     return result
 
 

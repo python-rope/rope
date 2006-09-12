@@ -24,7 +24,8 @@ class ExtractMethodRefactoring(object):
 
 class _ExtractMethodPerformer(object):
     
-    def __init__(self, refactoring, resource, start_offset, end_offset, extracted_name):
+    def __init__(self, refactoring, resource, start_offset,
+                 end_offset, extracted_name):
         self.refactoring = refactoring
         source_code = resource.read()
         self.source_code = source_code
@@ -69,7 +70,7 @@ class _ExtractMethodPerformer(object):
         end_scope = self.scope.get_inner_scope_for_line(end_line)
         if end_scope != self.holding_scope and end_scope.get_end() != end_line:
             raise RefactoringException('Bad range selected for extract method')
-        if _ReturnFinder.does_it_return(self.source_code[self.start_offset:self.end_offset]):
+        if _ReturnOrYieldFinder.does_it_return(self.source_code[self.start_offset:self.end_offset]):
             raise RefactoringException('Extracted piece should not contain return statements')
 
     def _create_info_collector(self):
@@ -284,7 +285,7 @@ class _VariableReadsAndWritesFinder(object):
         return visitor.read, visitor.written
 
 
-class _ReturnFinder(object):
+class _ReturnOrYieldFinder(object):
     
     def __init__(self):
         self.returns = False
@@ -308,7 +309,7 @@ class _ReturnFinder(object):
         min_indents = _find_minimum_indents(code)
         indented_code = _indent_lines(code, -min_indents)
         ast = compiler.parse(indented_code)
-        visitor = _ReturnFinder()
+        visitor = _ReturnOrYieldFinder()
         compiler.walk(ast, visitor)
         return visitor.returns
 

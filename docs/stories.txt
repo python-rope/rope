@@ -221,6 +221,9 @@ Stories
 * Inline method
 
 
+* Inline variable
+
+
 * Encapsulate method
 
 
@@ -240,12 +243,6 @@ Stories
 
 
 * Subversion support using pysvn
-
-
-* Renaming methods in a hierarchy
-
-
-* Transform module to package refactoring
 
 
 Remaining Stories

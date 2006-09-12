@@ -3,6 +3,12 @@
 ===========
 
 
+- Renaming methods in a hierarchy : September 12, 2006
+
+
+- Transform module to package refactoring : September 11, 2006
+
+
 > Public Release 0.3m2 : September 3, 2006
 
 

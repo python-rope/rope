@@ -110,6 +110,9 @@ class PythonCodeIndenter(TextIndenter):
             return self._count_line_indents(start) + changes
 
         if range_finder.last_open_parens():
+            open_parens = range_finder.last_open_parens()
+            if self.line_editor.get_line(open_parens[0])[open_parens[1] + 1:].strip() == '':
+                return self._count_line_indents(start) + 4
             return range_finder.last_open_parens()[1] + 1
 
         start_line = self.line_editor.get_line(start)

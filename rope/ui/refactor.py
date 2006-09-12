@@ -73,8 +73,8 @@ actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rena
                             MenuAddress(['Refactor', 'Rename'], 'r')))
 actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_method), 'M-M',
                             MenuAddress(['Refactor', 'Extract Method'], 'e')))
-actions.append(SimpleAction('Rename Local Variable', ConfirmAllEditorsAreSaved(local_rename), None,
-                            MenuAddress(['Refactor', 'Rename Local Variable'], 'l')))
+actions.append(SimpleAction('Rename In File', ConfirmAllEditorsAreSaved(local_rename), None,
+                            MenuAddress(['Refactor', 'Rename In File'], 'f')))
 actions.append(SimpleAction('Transform Module To Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
                             MenuAddress(['Refactor', 'Transform Module To Package'], 't', 1)))
