@@ -419,8 +419,8 @@ We should be careful about situations like::
           B.do_some_other_thing()
 
 
-Implementation Changes
-----------------------
+Implementation Issues
+---------------------
 
 To support implicit interfaces we need to make lots of changes.  First
 of all we know that a function parameter can be anything, so using DOI
@@ -429,6 +429,15 @@ comes up here is when do we need parameter objects.
 
 * When refactoring and finding occurances
 * When code assisting in a function
+
+Also for a rename refactoring we need to check all functions and methods
+for implicit interfaces that are involved.  This does not seem practical.
+Find someway of making it possible.  Maybe we can find
+all of the occurances of a method and for each check whether it is
+invoked on a parameter or not.  Now that we have a bigger set of
+methods we need to do the same for these methods.  When we're finished
+we can perform the actual refactoring.  The challenge here is that we
+should consider inheritance relations, too.
 
 
 Better Attribute Object Inference

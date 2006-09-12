@@ -14,29 +14,19 @@ class RenameRefactoring(object):
         dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
         sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
         dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
-        self.string_pattern = RenameRefactoring.any("string",
-                                                    [sq3string, dq3string, sqstring, dqstring])
+        self.string_pattern = RenameRefactoring.any(
+            "string", [sq3string, dq3string, sqstring, dqstring])
     
     def local_rename(self, resource, offset, new_name):
-        result = []
-        source_code = resource.read()
-        module_scope = self.pycore.get_string_scope(source_code, resource)
-        word_finder = rope.codeanalyze.WordRangeFinder(source_code)
-        old_name = word_finder.get_primary_at(offset).split('.')[-1]
-        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
-        old_pyname = pyname_finder.get_pyname_at(offset)
-        if old_pyname is None:
-            return None
-        pattern = self._get_occurance_pattern(old_name)
-        def scope_retriever():
-            return module_scope
-        new_contents = self._rename_occurance_in_file(source_code, scope_retriever, [old_pyname],
-                                                     pattern, new_name)
-        changes = ChangeSet()
-        changes.add_change(ChangeFileContents(resource, new_contents))
-        return changes
+        return self._rename(resource, offset, new_name, True)
         
     def rename(self, resource, offset, new_name):
+        return self._rename(resource, offset, new_name)
+    
+    def _rename(self, resource, offset, new_name, in_file=False):
+        files = [resource]
+        if not in_file:
+            files = self.pycore.get_python_files()
         module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
         source_code = resource.read()
         word_finder = rope.codeanalyze.WordRangeFinder(source_code)
@@ -46,15 +36,13 @@ class RenameRefactoring(object):
         if old_pyname is None:
             return None
         old_pynames = [old_pyname]
-        if self._is_it_a_class_method(old_pyname):
+        if self._is_it_a_class_method(old_pyname) and not in_file:
             old_pynames = self._get_all_methods_in_hierarchy(old_pyname.get_object().
                                                              parent, old_name)
         pattern = self._get_occurance_pattern(old_name)
         changes = ChangeSet()
-        for file_ in self.pycore.get_python_files():
-            def scope_retriever():
-                return self.pycore.resource_to_pyobject(file_).get_scope()
-            new_content = self._rename_occurance_in_file(file_.read(), scope_retriever, 
+        for file_ in files:
+            new_content = self._rename_occurance_in_file(file_, 
                                                          old_pynames, pattern, new_name)
             if new_content is not None:
                 changes.add_change(ChangeFileContents(file_, new_content))
@@ -101,8 +89,9 @@ class RenameRefactoring(object):
             new_location = parent_path + '/' + new_name
         return MoveResource(resource, new_location)
     
-    def _rename_occurance_in_file(self, source_code, scope_retriever, old_pynames,
+    def _rename_occurance_in_file(self, resource, old_pynames,
                                   pattern, new_name):
+        source_code = resource.read()
         result = []
         last_modified_char = 0
         pyname_finder = None
@@ -112,7 +101,7 @@ class RenameRefactoring(object):
                     match_start = match.start(key)
                     match_end = match.end(key)
                     if pyname_finder == None:
-                        module_scope = scope_retriever()
+                        module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
                         pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
                     new_pyname = pyname_finder.get_pyname_at(match_start + 1)
                     for old_pyname in old_pynames:

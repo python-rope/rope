@@ -1,8 +1,7 @@
 Refactoring
 ===========
 
-* Refactor `rope.refactor.rename`; making local_rename and rename similar
-* Think about special cases for renaming
+- Refactor `rope.refactor.rename`; making local_rename and rename similar
 
 
 Remaining Stories
