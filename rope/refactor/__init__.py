@@ -9,14 +9,14 @@ from rope.refactor.extract import ExtractMethodRefactoring
 
 class Refactoring(object):
 
-    def local_rename(self, source_code, offset, new_name, resource=None):
+    def local_rename(self, resource, offset, new_name):
         """Returns the changed source_code or ``None`` if nothing has been changed"""
     
     def rename(self, resource, offset, new_name):
         pass
     
-    def extract_method(self, source_code, start_offset, end_offset,
-                       extracted_name, resource=None):
+    def extract_method(self, resource, start_offset, end_offset,
+                       extracted_name):
         pass
     
     def transform_module_to_package(self, resource):
@@ -32,20 +32,24 @@ class PythonRefactoring(Refactoring):
         self.pycore = pycore
         self.last_changes = ChangeSet()
 
-    def local_rename(self, source_code, offset, new_name, resource=None):
-        return RenameRefactoring(self.pycore).\
-               local_rename(source_code, offset, new_name, resource)
+    def local_rename(self, resource, offset, new_name):
+        changes = RenameRefactoring(self.pycore).\
+                  local_rename(resource, offset, new_name)
+        changes.do()
+        self.last_changes = changes
     
     def rename(self, resource, offset, new_name):
         changes = RenameRefactoring(self.pycore).rename(resource, offset, new_name)
         changes.do()
         self.last_changes = changes
     
-    def extract_method(self, source_code, start_offset, end_offset,
-                       extracted_name, resource=None):
-        return ExtractMethodRefactoring(self.pycore).\
-               extract_method(source_code, start_offset, end_offset,
-                              extracted_name, resource)
+    def extract_method(self, resource, start_offset, end_offset,
+                       extracted_name):
+        changes = ExtractMethodRefactoring(self.pycore).\
+                  extract_method(resource, start_offset, end_offset,
+                                 extracted_name)
+        changes.do()
+        self.last_changes = changes
     
     def transform_module_to_package(self, resource):
         changes = ChangeSet()

@@ -4,6 +4,7 @@ import sys
 import rope.objectinfer
 import rope.refactor
 import rope.dynamicoi
+import rope.codeanalyze
 from rope.exceptions import ModuleNotFoundException
 from rope.pyobjects import *
 
@@ -16,6 +17,7 @@ class PyCore(object):
         self.object_infer = rope.objectinfer.ObjectInfer(self)
         self.refactoring = rope.refactor.PythonRefactoring(self)
         self.dynamicoi = rope.dynamicoi.DynamicObjectInference(self)
+        self.classes = None
 
     def get_module(self, name, current_folder=None):
         """Returns a `PyObject` if the module was found."""
@@ -39,6 +41,7 @@ class PyCore(object):
         return self.get_string_module(module_content, resource).get_scope()
 
     def _invalidate_resource_cache(self, resource):
+        self.classes = None
         if resource in self.module_map:
             local_module = self.module_map[resource]
             del self.module_map[resource]
@@ -182,14 +185,15 @@ class PyCore(object):
         return self.dynamicoi.run_module(resource, stdin, stdout)
     
     def get_subclasses(self, pyclass):
-        classes = []
-        pattern = re.compile(r'^.*class.+\w', re.M)
-        for resource in self.get_python_files():
-            pyscope = self.resource_to_pyobject(resource).get_scope()
-            import rope.codeanalyze
-            source = pyscope.pyobject.source_code
-            lines = rope.codeanalyze.SourceLinesAdapter(source)
-            for match in pattern.finditer(source):
-                holding_scope = pyscope.get_inner_scope_for_line(lines.get_line_number(match.start()))
-                classes.append(holding_scope.pyobject)
-        return [class_ for class_ in classes if pyclass in class_.get_superclasses()]
+        if self.classes is None:
+            classes = []
+            pattern = re.compile(r'^[ \t]*class[ \t]+\w', re.M)
+            for resource in self.get_python_files():
+                pyscope = self.resource_to_pyobject(resource).get_scope()
+                source = pyscope.pyobject.source_code
+                lines = rope.codeanalyze.SourceLinesAdapter(source)
+                for match in pattern.finditer(source):
+                    holding_scope = pyscope.get_inner_scope_for_line(lines.get_line_number(match.start()))
+                    classes.append(holding_scope.pyobject)
+            self.classes = classes
+        return [class_ for class_ in self.classes if pyclass in class_.get_superclasses()]

@@ -1,28 +1,28 @@
 Renaming Attributes In Class Hierarchies
 ========================================
 
-- Add `rope.refactor.rename` and `rope.refactor.extractmethod` modules
+* Think about special cases for renaming
+* Refactor `rope.refactor.rename`
+* Refactor `rope.refactor.extract`
 
-* Relative imports and transforming modules to packages
+* Adding `ropetest.classestest` to `runtests`
+* Saving active editor before "transform module to package" refactoring
+* PyCore.get_all_subclasses
+
+* Eliminating `Editor.refactoring`
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
-* Saving active editor before transform module to package refactoring
-* Eliminating `Editor.refactoring`
-* PyCore.get_all_subclasses
-* Adding `ropetest.classestest` to `runtests`
-* Transform module to package refactoring
-* Adding rename current module/package
+*  Transform module to package refactoring and relative imports
 
 
 Remaining Stories
 =================
 
-* Finding unused imports
 * Calling `sys.settrace` for all threads in `rope.runmod` module
 * Adding ``show_what_rope_can_do`` file
 * A keyboard shortcut for renaming local variables
 * Function keywords and extract method
-* Showing the initial name in rename dialogs
+* Showing initial name in rename dialogs
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname
 * Goto definition for ``# comment.\na_var``

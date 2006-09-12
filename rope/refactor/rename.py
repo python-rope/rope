@@ -17,8 +17,9 @@ class RenameRefactoring(object):
         self.string_pattern = RenameRefactoring.any("string",
                                                     [sq3string, dq3string, sqstring, dqstring])
     
-    def local_rename(self, source_code, offset, new_name, resource=None):
+    def local_rename(self, resource, offset, new_name):
         result = []
+        source_code = resource.read()
         module_scope = self.pycore.get_string_scope(source_code, resource)
         word_finder = rope.codeanalyze.WordRangeFinder(source_code)
         old_name = word_finder.get_primary_at(offset).split('.')[-1]
@@ -29,8 +30,12 @@ class RenameRefactoring(object):
         pattern = self._get_occurance_pattern(old_name)
         def scope_retriever():
             return module_scope
-        return self._rename_occurance_in_file(source_code, scope_retriever, [old_pyname],
-                                              pattern, new_name)
+        new_contents = self._rename_occurance_in_file(source_code, scope_retriever, [old_pyname],
+                                                     pattern, new_name)
+        changes = ChangeSet()
+        changes.add_change(ChangeFileContents(resource, new_contents))
+        return changes
+        
     def rename(self, resource, offset, new_name):
         module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
         source_code = resource.read()

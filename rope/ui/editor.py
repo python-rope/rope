@@ -225,21 +225,15 @@ class GraphicalEditor(object):
         new_name_entry.focus_set()
 
     def extract_method_refactoring(self, extracted_name):
-        initial_position = self.text.index(INSERT)
         start = self.text.index('mark')
         end = self.text.index(INSERT)
         if self.text.compare(start, '>', end):
             start, end = end, start
         start_offset = self.get_offset(start)
         end_offset = self.get_offset(end)
-        refactored = self.refactoring.extract_method(self.get_text(),
-                                                     start_offset, end_offset,
-                                                     extracted_name,
-                                                     self._get_resource())
-        if refactored is not None:
-            self.set_text(refactored, False)
-            self.text.mark_set(INSERT, initial_position)
-            self.text.see(INSERT)
+        self.refactoring.extract_method(self._get_resource(),
+                                        start_offset, end_offset,
+                                        extracted_name)
 
     def _local_rename_dialog(self, event=None):
         toplevel = Toplevel()
@@ -266,14 +260,9 @@ class GraphicalEditor(object):
         new_name_entry.focus_set()
 
     def local_rename(self, new_name):
-        initial_position = self.text.index(INSERT)
-        refactored = self.refactoring.local_rename(self.get_text(),
-                                                   self.get_current_offset(),
-                                                   new_name, self._get_resource())
-        if refactored is not None:
-            self.set_text(refactored, False)
-            self.text.mark_set(INSERT, initial_position)
-            self.text.see(INSERT)
+        self.refactoring.local_rename(self._get_resource(),
+                                      self.get_current_offset(),
+                                      new_name)
 
     def _focus_went_out(self):
         if self.searcher.is_searching():
@@ -402,9 +391,11 @@ class GraphicalEditor(object):
         return self.text.get('1.0', 'end-1c')
 
     def set_text(self, text, reset_editor=True):
+        initial_position = self.text.index(INSERT)
         self.text.delete('1.0', END)
         self.text.insert('1.0', text)
-        self.text.mark_set(INSERT, '1.0')
+        self.text.mark_set(INSERT, initial_position)
+        self.text.see(INSERT)
         if reset_editor:
             self.text.edit_reset()
             self.text.edit_modified(False)

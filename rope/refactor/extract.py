@@ -4,23 +4,30 @@ from rope.exceptions import RefactoringException
 
 import rope.codeanalyze
 import rope.pyobjects
+from rope.refactor.change import (ChangeSet, ChangeFileContents,
+                                  MoveResource, CreateFolder)
+
 
 class ExtractMethodRefactoring(object):
     
     def __init__(self, pycore):
         self.pycore = pycore
     
-    def extract_method(self, source_code, start_offset, end_offset,
-                       extracted_name, resource=None):
-        return _ExtractMethodPerformer(self, source_code, start_offset,
-                                       end_offset, extracted_name,
-                                       resource).extract()
+    def extract_method(self, resource, start_offset, end_offset,
+                       extracted_name):
+        new_contents = _ExtractMethodPerformer(self, resource, start_offset,
+                                              end_offset, extracted_name).extract()
+        changes = ChangeSet()
+        changes.add_change(ChangeFileContents(resource, new_contents))
+        return changes
+        
 
 class _ExtractMethodPerformer(object):
     
-    def __init__(self, refactoring, source_code, start_offset,
-                 end_offset, extracted_name, resource=None):
+    def __init__(self, refactoring, resource, start_offset,
+                 end_offset, extracted_name):
         self.refactoring = refactoring
+        source_code = resource.read()
         self.source_code = source_code
         self.extracted_name = extracted_name
         

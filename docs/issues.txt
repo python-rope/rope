@@ -71,8 +71,6 @@ Hot Topics
 * `Enhanced Import Tools`_
 * `Better Attribute Object Inference`_
 
-* Finding Type Hierarchies
-
 
 To Be Discussed
 ===============
@@ -103,6 +101,7 @@ such as:
 * Move method might require some imports to be moved to.
 * Introduce factory method might need to import the method.
 * Inline method might require to add and remove some imports.
+* Transform module to package might change relative imports.
 * Organizing imports or adding imports.
 
 
