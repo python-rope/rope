@@ -456,6 +456,7 @@ Consider this situation::
 This situation occurs rather frequently, specially when using lazy
 initialization.  Another common situation is in test cases where
 variables are defined in `setUp` method rather than `__init__`.
+This was done for ``0.3m3`` release.
 
 
 Which Is Right? Type Or Object Inference

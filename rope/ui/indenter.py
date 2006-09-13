@@ -101,12 +101,13 @@ class PythonCodeIndenter(TextIndenter):
         return new_indent
 
     def _get_base_indentation(self, lineno):
-        range_finder = StatementRangeFinder(self.line_editor, self._get_last_non_empty_line(lineno))
+        range_finder = StatementRangeFinder(self.line_editor,
+                                            self._get_last_non_empty_line(lineno))
         range_finder.analyze()
         start = range_finder.get_statement_start()
         if not range_finder.is_line_continued():
-            changes = self._get_indentation_changes_caused_by_prev_stmt((start,
-                                                                         self._get_last_non_empty_line(lineno)))
+            changes = self._get_indentation_changes_caused_by_prev_stmt(
+                (start, self._get_last_non_empty_line(lineno)))
             return self._count_line_indents(start) + changes
 
         if range_finder.last_open_parens():
@@ -118,7 +119,10 @@ class PythonCodeIndenter(TextIndenter):
         start_line = self.line_editor.get_line(start)
         if start == lineno - 1:
             try:
-                return start_line.index(' = ') + 3
+                equals_index = start_line.index(' = ') + 1
+                if start_line[equals_index + 1:].strip() == '\\':
+                    return self._count_line_indents(start) + 4
+                return equals_index + 2
             except ValueError:
                 match = re.search(r'(\b )|(\.)', start_line)
                 if match:
