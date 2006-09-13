@@ -16,13 +16,7 @@ Version Overview
 
 Features added in this release:
 
-* Extract function refactoring
-* Basic dynamic type inference
-* Function argument dynamic object inference
-* Supporting relative imports
-* Reading ``__init__.py`` of packages
-* Better New ... Dialogs
-* Better menus
+* 
 
 Basic dynamic type inference was added in this release.  Though it is
 not quite efficient and it just uses a basic algorithm, it can be used

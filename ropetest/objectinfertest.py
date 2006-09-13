@@ -123,6 +123,15 @@ class ObjectInferTest(unittest.TestCase):
         a_var = scope.get_name('a_var').get_object()
         self.assertNotEquals(sample_class, a_var.get_type())
 
+    def test_attributed_object_inference(self):
+        src = 'class Sample(object):\n' \
+              '    def __init__(self):\n        self.a_var = None\n' \
+              '    def set(self):\n        self.a_var = Sample()\n'
+        scope = self.pycore.get_string_scope(src)
+        sample_class = scope.get_name('Sample').get_object()
+        a_var = sample_class.get_attribute('a_var').get_object()
+        self.assertEquals(sample_class, a_var.get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 
@@ -248,7 +257,7 @@ class DynamicOITest(unittest.TestCase):
         pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
         self.assertEquals(pyscope.get_name('a_func').get_object(),
                           pyscope.get_scopes()[0].get_name('arg').get_object())
-
+        
 
 class CartesianProductDynamicOITest(unittest.TestCase):
 

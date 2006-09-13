@@ -1,7 +1,8 @@
-Refactoring
-===========
+Better Attribute Object Inference
+=================================
 
-- Refactor `rope.refactor.rename`; making local_rename and rename similar
+* indenting after ``name = \\n``
+
 
 
 Remaining Stories

@@ -422,8 +422,8 @@ class _ClassVisitor(_ScopeVisitor):
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
         self.names[node.name] = PyName(pyobject, True, module=self.get_module())
-        if node.name == '__init__':
-            new_visitor = _ClassInitVisitor(self)
+        if len(node.argnames) > 0:
+            new_visitor = _ClassInitVisitor(self, node.argnames[0])
             compiler.walk(node, new_visitor)
 
     def visitClass(self, node):
@@ -444,13 +444,15 @@ class _FunctionVisitor(_ScopeVisitor):
 
 class _ClassInitVisitor(_AssignVisitor):
 
-    def __init__(self, scope_visitor):
+    def __init__(self, scope_visitor, self_name):
         super(_ClassInitVisitor, self).__init__(scope_visitor)
+        self.self_name = self_name
     
     def visitAssAttr(self, node):
-        if isinstance(node.expr, compiler.ast.Name) and node.expr.name == 'self':
-            self.scope_visitor.names[node.attrname] = PyName(lineno=node.lineno, 
-                                                             module=self.scope_visitor.get_module())
+        if isinstance(node.expr, compiler.ast.Name) and node.expr.name == self.self_name:
+            if node.attrname not in self.scope_visitor.names:
+                self.scope_visitor.names[node.attrname] = PyName(lineno=node.lineno, 
+                                                                 module=self.scope_visitor.get_module())
             self.scope_visitor.names[node.attrname].assigned_asts.append(self.assigned_ast)
     
     def visitAssName(self, node):
