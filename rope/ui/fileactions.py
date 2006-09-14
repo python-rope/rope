@@ -128,6 +128,30 @@ def create_package(context):
         context.get_core().editor_manager.get_resource_editor(new_package.get_child('__init__.py'))
     _create_resource_dialog(context.get_core(), do_create_package, 'Package', 'Source Folder')
 
+
+class FileFinder(object):
+
+    def __init__(self, project):
+        self.project = project
+        self.last_keyword = None
+        self.last_result = None
+
+    def find_files_starting_with(self, starting):
+        """Returns the Files in the project whose names starts with starting"""
+        files = []
+        if self.last_keyword is not None and starting.startswith(self.last_keyword):
+            files = self.last_result
+        else:
+            files = self.project.get_files()
+        result = []
+        for file in files:
+            if file.get_name().startswith(starting):
+                result.append(file)
+        self.last_keyword = starting
+        self.last_result = result
+        return result
+
+
 def _find_file_dialog(core):
     if not _check_if_project_is_open(core):
         return
@@ -141,7 +165,7 @@ def _find_file_dialog(core):
     scrollbar = Tkinter.Scrollbar(find_dialog, orient=Tkinter.VERTICAL)
     scrollbar['command'] = found.yview
     found.config(yscrollcommand=scrollbar.set)
-    file_finder = rope.project.FileFinder(core.project)
+    file_finder = FileFinder(core.project)
     def name_changed(event):
         if name.get() == '':
             result = ()

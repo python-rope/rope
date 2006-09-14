@@ -329,6 +329,20 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((module_resource, 1), result)
 
+    def test_get_definition_location_for_nested_packages(self):
+        pycore = self.project.get_pycore()
+        mod1 = pycore.create_module(self.project.get_root_folder(), 'mod1')
+        pkg1 = pycore.create_package(self.project.get_root_folder(), 'pkg1')
+        pkg2 = pycore.create_package(pkg1, 'pkg2')
+        mod2 = pycore.create_module(pkg2, 'mod2')
+        mod1.write('import pkg1.pkg2.mod2')
+
+        mod1_scope = pycore.resource_to_pyobject(mod1).get_scope()
+        init_dot_py = pkg2.get_child('__init__.py')
+        found_pyname = self.assist.get_definition_location(mod1.read(),
+                                                           mod1.read().index('pkg2') + 1)
+        self.assertEquals(init_dot_py, found_pyname[0])
+
     def test_get_definition_location_unknown(self):
         code = 'a_func()\n'
         result = self.assist.get_definition_location(code, len(code) - 3)

@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from rope.project import Project, FileFinder, RootFolder
+from rope.project import Project, RootFolder
 from rope.exceptions import RopeException
 from ropetest import testutils
 
@@ -497,64 +497,10 @@ class OutOfProjectTest(unittest.TestCase):
         self.assertEquals(sample_resource, sample_folder.get_child('sample.txt'))
 
 
-class FileFinderTest(unittest.TestCase):
-    
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-        self.projectMaker = SampleProjectMaker()
-        self.projectMaker.make_project()
-        self.project = Project(self.projectMaker.get_root())
-        self.finder = FileFinder(self.project)
-        self.project.get_resource(self.projectMaker.get_sample_file_name()).remove()
-        self.file1 = 'aa'
-        self.file2 = 'abb'
-        self.file3 = 'abc'
-        self.file4 = 'b'
-        self.parent = self.project.get_resource(self.projectMaker.get_sample_folder_name())
-        self.parent.create_file(self.file1)
-        self.parent.create_file(self.file2)
-        self.parent.create_file(self.file3)
-        self.parent.create_file(self.file4)
-        
-    def tearDown(self):
-        self.projectMaker.remove_all()
-        unittest.TestCase.tearDown(self)
-
-    def testEmptyFinding(self):
-        files = self.finder.find_files_starting_with('')
-        self.assertEquals(4, len(files))
-
-    def testFinding(self):
-        self.assertEquals(3, len(self.finder.find_files_starting_with('a')))
-        
-    def testAbsoluteFinding(self):
-        result = self.finder.find_files_starting_with('aa')
-        self.assertEquals(1, len(result))
-        self.assertEquals(self.file1, result[0].get_name())
-        self.assertEquals(self.file2, self.finder.find_files_starting_with('abb')[0].get_name())
-
-    def testSpecializedFinding(self):
-        result = self.finder.find_files_starting_with('ab')
-        self.assertEquals(2, len(result))
-
-    def testEnsuringCorrectCaching(self):
-        result0 = self.finder.find_files_starting_with('')
-        self.assertEquals(4, len(result0))
-        result1 = self.finder.find_files_starting_with('a')
-        self.assertEquals(3, len(result1))
-        result2 = self.finder.find_files_starting_with('ab')
-        self.assertEquals(2, len(result2))
-        result3 = self.finder.find_files_starting_with('aa')
-        self.assertEquals(1, len(result3))
-        result4 = self.finder.find_files_starting_with('a')
-        self.assertEquals(3, len(result4))
-
-
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ProjectTest))
     result.addTests(unittest.makeSuite(OutOfProjectTest))
-    result.addTests(unittest.makeSuite(FileFinderTest))
     return result
 
 if __name__ == '__main__':

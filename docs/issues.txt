@@ -66,10 +66,10 @@ Releases
 Hot Topics
 ==========
 
-* `Python's Implicit Interfaces`_
-* `Separating Structural From Concluded Data`_
 * `Enhanced Import Tools`_
-* `Better Attribute Object Inference`_
+* `Separating Structural From Concluded Data`_
+* `Python's Implicit Interfaces`_
+* Rope's preference saving system
 
 
 To Be Discussed
@@ -84,25 +84,10 @@ Choosing The Next Move
 
 We are facing an important question.  Should we support `Python's
 Implicit Interfaces`_.  In the meantime I can add encapsulate field
-refactoring and renaming attributes in a hierarchy.  I can think
-about `Better Attribute Object Inference`_, too.
+refactoring.
 
 We should be able to find the superclasses and subclasses of a
 class for supporting renaming attributes in a hierarchy.
-
-
-Enhanced Import Tools
----------------------
-
-The first question to answer is what do we need? We need better
-import analysis and manipulation tools to help us do many refactorings
-such as:
-
-* Move method might require some imports to be moved to.
-* Introduce factory method might need to import the method.
-* Inline method might require to add and remove some imports.
-* Transform module to package might change relative imports.
-* Organizing imports or adding imports.
 
 
 What Refactoring To Add Next?
@@ -114,6 +99,7 @@ I prefer implementing some of these:
 * Encapsulate field
 * Introduce factory method
 * Inline method
+* Inline variable
 
 
 Continuing Dynamic Object Inference Movement
@@ -131,6 +117,35 @@ that its instances hold valuable and distinct information; examples
 are container classes, types, functions and modules.  Types in the
 second group hold all information for all instances.  That is
 instances are exactly the same.
+
+
+Enhanced Import Tools
+=====================
+
+The first question to answer is what do we need? We need better
+import analysis and manipulation tools to help us do many refactorings
+such as:
+
+* Move method might require some imports to be moved to.
+* Introduce factory method might need to import the method.
+* Inline method might require to add and remove some imports.
+* Transform module to package might change relative imports.
+* Organizing imports or adding imports.
+
+We need actions like:
+
+* Used imports for a line range of a module
+* Moving one import from one module to another
+* Get import statement for a pyobject
+* Extend star imports
+* Add an import statements to a set of imports
+
+
+Implementation
+--------------
+
+* Used imports for a line range of a module
+
 
 
 Separating Structural From Concluded Data

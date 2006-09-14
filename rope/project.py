@@ -1,7 +1,7 @@
 import os
-import shutil
 
 import rope.pycore
+import rope.fscommands
 from rope.exceptions import RopeException
 
 
@@ -18,6 +18,7 @@ class Project(object):
         self.resources = {}
         self.resources[''] = RootFolder(self)
         self.out_of_project_resources = {}
+        self.fscommands = rope.fscommands.create_fscommands(self)
 
     def get_root_folder(self):
         return self.get_resource('')
@@ -41,27 +42,28 @@ class Project(object):
     def get_files(self):
         return self._get_files_recursively(self.get_root_folder())
 
-    def _create_file(self, fileName):
-        file_path = self._get_resource_path(fileName)
+    def _create_file(self, file_name):
+        file_path = self._get_resource_path(file_name)
         if os.path.exists(file_path):
             if os.path.isfile(file_path):
                 raise RopeException('File already exists')
             else:
-                raise RopeException('A folder with the same name as this file already exists')
+                raise RopeException('A folder with the same name'
+                                    ' as this file already exists')
         try:
-            new_file = open(file_path, 'w')
+            self.fscommands.create_file(file_path)
         except IOError, e:
             raise RopeException(e)
-        new_file.close()
 
-    def _create_folder(self, folderName):
-        folderPath = self._get_resource_path(folderName)
-        if os.path.exists(folderPath):
-            if not os.path.isdir(folderPath):
-                raise RopeException('A file with the same name as this folder already exists')
+    def _create_folder(self, folder_name):
+        folder_path = self._get_resource_path(folder_name)
+        if os.path.exists(folder_path):
+            if not os.path.isdir(folder_path):
+                raise RopeException('A file with the same name as'
+                                    ' this folder already exists')
             else:
                 raise RopeException('Folder already exists')
-        os.mkdir(folderPath)
+        self.fscommands.create_folder(folder_path)
 
     def _get_resource_path(self, name):
         return os.path.join(self.root, *name.split('/'))
@@ -97,17 +99,8 @@ class Project(object):
         if new_location is not None:
             self.resources[new_location] = resource
 
-    @staticmethod
-    def remove_recursively(file):
-        for root, dirs, files in os.walk(file, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-        if os.path.isdir(file):
-            os.rmdir(file)
-        else:
-            os.remove(file)
+    def remove_recursively(self, path):
+        self.fscommands.remove(path)
 
 
 class Resource(object):
@@ -186,7 +179,7 @@ class _File(Resource):
         return False
 
     def remove(self):
-        Project.remove_recursively(self.project._get_resource_path(self.name))
+        self.project.remove_recursively(self.project._get_resource_path(self.name))
         self.project._update_resource_location(self)
         for observer in list(self.observers):
             observer(self)
@@ -194,8 +187,8 @@ class _File(Resource):
 
     def move(self, new_location):
         destination = self._get_destination_for_move(new_location)
-        shutil.move(self.project._get_resource_path(self.name),
-                    self.project._get_resource_path(destination))
+        self.project.fscommands.move(self.project._get_resource_path(self.name),
+                                     self.project._get_resource_path(destination))
         self.project._update_resource_location(self, destination)
         self.get_parent()._child_changed(self)
         self.name = destination
@@ -301,16 +294,16 @@ class _Folder(Resource):
     def remove(self):
         for child in self.get_children():
             child.remove()
-        Project.remove_recursively(self.project._get_resource_path(self.name))
+        self.project.remove_recursively(self.project._get_resource_path(self.name))
         self.project._update_resource_location(self)
         self.get_parent()._child_changed(self)
 
     def move(self, new_location):
         destination = self._get_destination_for_move(new_location)
-        os.makedirs(self.project._get_resource_path(destination))
+        self.project.fscommands.create_folder(self.project._get_resource_path(destination))
         for child in self.get_children():
             child.move(destination + '/' + child.get_name())
-        shutil.rmtree(self.project._get_resource_path(self.get_path()))
+        self.project.fscommands.remove(self.project._get_resource_path(self.get_path()))
         self.project._update_resource_location(self, destination)
         self.get_parent()._child_changed(self)
         self.name = destination
@@ -358,27 +351,4 @@ class OutOfProjectFolder(_Folder):
     def _get_real_path(self):
         """Returns the file system path of this resource"""
         return self.path
-
-
-class FileFinder(object):
-
-    def __init__(self, project):
-        self.project = project
-        self.last_keyword = None
-        self.last_result = None
-
-    def find_files_starting_with(self, starting):
-        """Returns the Files in the project whose names starts with starting"""
-        files = []
-        if self.last_keyword is not None and starting.startswith(self.last_keyword):
-            files = self.last_result
-        else:
-            files = self.project.get_files()
-        result = []
-        for file in files:
-            if file.get_name().startswith(starting):
-                result.append(file)
-        self.last_keyword = starting
-        self.last_result = result
-        return result
 

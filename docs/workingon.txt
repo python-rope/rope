@@ -1,8 +1,8 @@
-Better Attribute Object Inference
-=================================
+Enhanced Import Utils
+=====================
 
-* indenting after ``name = \\n``
-
+* Moving one import from one module to another
+* Adding a `NoPlaceResource` and removing all string functions
 
 
 Remaining Stories
