@@ -128,7 +128,8 @@ class PyCoreTest(unittest.TestCase):
         mod = self.pycore.get_string_module('def sample_function(param1, param2=10,' +
                                             ' *param3, **param4):\n    pass')
         sample_function = mod.get_attribute('sample_function')
-        self.assertEquals(['param1', 'param2', 'param3', 'param4'], sample_function.object.parameters)
+        self.assertEquals(['param1', 'param2', 'param3', 'param4'],
+                          sample_function.get_object().parameters)
 
     # FIXME: does not work
     def xxx_test_not_found_module_is_module(self):
@@ -564,7 +565,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_self_in_methods(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n' \
                                              '    def func(self):\n        pass\n')
-        sample_class = scope.get_name('Sample').object
+        sample_class = scope.get_name('Sample').get_object()
         func_scope = scope.get_scopes()[0].get_scopes()[0]
         self.assertEquals(sample_class,
                           func_scope.get_name('self').get_object().get_type())
@@ -574,7 +575,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_self_in_methods_with_decorators(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    @staticmethod\n' +
                                              '    def func(self):\n        pass\n')
-        sample_class = scope.get_name('Sample').object
+        sample_class = scope.get_name('Sample').get_object()
         func_scope = scope.get_scopes()[0].get_scopes()[0]
         self.assertNotEquals(sample_class,
                              func_scope.get_name('self').get_object().get_type())

@@ -3,50 +3,7 @@ import compiler
 import rope.pyscopes
 from rope.exceptions import (ModuleNotFoundException, RopeException,
                              AttributeNotFoundException)
-
-
-class PyName(object):
-
-    def __init__(self, object_=None, is_defined_here=False, lineno=None, module=None):
-        self.object = object_
-        self.is_defined_here = is_defined_here
-        self.lineno = lineno
-        self.module = module
-        self.is_being_inferred = False
-        self.assigned_asts = []
-
-    def get_object(self):
-        if self.is_being_inferred:
-            raise IsBeingInferredException('Circular assignments')
-        if self.object is None and self.module is not None:
-            self.is_being_inferred = True
-            try:
-                object_infer = self.module.pycore._get_object_infer()
-                inferred_object = object_infer.infer_object(self)
-                self.object = inferred_object
-            finally:
-                self.is_being_inferred = False
-        if self.object is None:
-            self.object = PyObject(PyObject.get_base_type('Unknown'))
-        return self.object
-    
-    def get_definition_location(self):
-        """Returns a (module, lineno) tuple"""
-        lineno = self._get_lineno()
-        return (self.module, lineno)
-
-    def has_block(self):
-        return self.is_defined_here
-    
-    def _get_ast(self):
-        return self.get_object()._get_ast()
-    
-    def _get_lineno(self):
-        if self.has_block():
-            self.lineno = self._get_ast().lineno
-        if self.lineno == None and self.assigned_asts:
-            self.lineno = self.assigned_asts[0].lineno
-        return self.lineno
+from rope.pynames import *
 
 
 class PyObject(object):
@@ -159,7 +116,7 @@ class PyFunction(PyDefinedObject):
         
         result = {}
         for name, pyobject in zip(self.parameters, pyobjects):
-            result[name] = PyName(pyobject, lineno=self.ast_node.lineno,
+            result[name] = AssignedName(pyobject=pyobject, lineno=self.ast_node.lineno,
                                   module=self.get_module())
         return result
     
@@ -262,15 +219,13 @@ class PyPackage(_PyModule):
             if child.is_folder():
                 child_pyobject = self.pycore.resource_to_pyobject(child)
                 child_pyobject._add_dependant(self)
-                attributes[child.get_name()] = PyName(child_pyobject, False, 1,
-                                                      child_pyobject)
+                attributes[child.get_name()] = ImportedModule(child_pyobject)
             elif child.get_name().endswith('.py') and \
                  child.get_name() != '__init__.py':
                 child_pyobject = self.pycore.resource_to_pyobject(child)
                 child_pyobject._add_dependant(self)
                 name = child.get_name()[:-3]
-                attributes[name] = PyName(child_pyobject, False, 1,
-                                          child_pyobject)
+                attributes[name] = ImportedModule(child_pyobject)
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
             init_object = self.pycore.resource_to_pyobject(init_dot_py)
@@ -304,8 +259,10 @@ class _AssignVisitor(object):
             compiler.walk(child_node, self)
 
     def visitAssName(self, node):
-        if node.name not in self.scope_visitor.names:
-            self.scope_visitor.names[node.name] = PyName(module=self.scope_visitor.get_module())
+        old_pyname = self.scope_visitor.names.get(node.name, None)
+        if old_pyname is None or not isinstance(old_pyname, AssignedName):
+            self.scope_visitor.names[node.name] = AssignedName(
+                module=self.scope_visitor.get_module())
         self.scope_visitor.names[node.name].assigned_asts.append(self.assigned_ast)
 
 
@@ -323,13 +280,12 @@ class _ScopeVisitor(object):
             return None
     
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore,
-                                               node, self.owner_object), True,
-                                       module=self.get_module())
+        self.names[node.name] = DefinedName(PyClass(self.pycore,
+                                                    node, self.owner_object))
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = PyName(pyobject, True, module=self.get_module())
+        self.names[node.name] = DefinedName(pyobject)
 
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
@@ -351,19 +307,16 @@ class _ScopeVisitor(object):
                 module._add_dependant(self.owner_object.get_module())
                 lineno = 1
             except ModuleNotFoundException:
-                self.names[imported] = PyName()
+                self.names[imported] = ImportedModule()
                 return
             if alias is None and '.' in imported:
                 tokens = imported.split('.')
                 toplevel_module = self._get_module_with_packages(name)
                 if toplevel_module is not None:
                     toplevel_module._add_dependant(self.owner_object.get_module())
-                self.names[tokens[0]] = PyName(toplevel_module, False, 
-                                               module=toplevel_module.get_module(),
-                                               lineno=lineno)
+                self.names[tokens[0]] = ImportedModule(toplevel_module)
             else:
-                self.names[imported] = PyName(module, False, 
-                                              module=module.get_module(), lineno=lineno)
+                self.names[imported] = ImportedModule(module)
 
     def _get_module_with_packages(self, module_name):
         module_list = self.pycore._find_module_resource_list(module_name,
@@ -392,8 +345,7 @@ class _ScopeVisitor(object):
                 return
             for name, pyname in module.get_attributes().iteritems():
                 if not name.startswith('_'):
-                    self.names[name] = PyName(pyname.get_object(), False, module=pyname.module,
-                                              lineno=pyname.get_definition_location()[1])
+                    self.names[name] = ImportedName(pyname)
         else:
             for (name, alias) in node.names:
                 imported = name
@@ -401,12 +353,9 @@ class _ScopeVisitor(object):
                     imported = alias
                 if module is not None and module.get_attributes().has_key(name):
                     imported_pyname = module.get_attribute(name)
-                    imported_object = imported_pyname.get_object()
-                    pyname_module, lineno = imported_pyname.get_definition_location()
-                    self.names[imported] = PyName(imported_object, False, module=pyname_module,
-                                                  lineno=lineno)
+                    self.names[imported] = ImportedName(imported_pyname)
                 else:
-                    self.names[imported] = PyName()
+                    self.names[imported] = ImportedModule()
 
 
 class _GlobalVisitor(_ScopeVisitor):
@@ -422,15 +371,14 @@ class _ClassVisitor(_ScopeVisitor):
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = PyName(pyobject, True, module=self.get_module())
+        self.names[node.name] = DefinedName(pyobject)
         if len(node.argnames) > 0:
             new_visitor = _ClassInitVisitor(self, node.argnames[0])
             compiler.walk(node, new_visitor)
 
     def visitClass(self, node):
-        self.names[node.name] = PyName(PyClass(self.pycore, node,
-                                               self.owner_object),
-                                       True, module=self.get_module())
+        self.names[node.name] = DefinedName(PyClass(self.pycore, node,
+                                                    self.owner_object))
 
 
 class _FunctionVisitor(_ScopeVisitor):
@@ -452,8 +400,8 @@ class _ClassInitVisitor(_AssignVisitor):
     def visitAssAttr(self, node):
         if isinstance(node.expr, compiler.ast.Name) and node.expr.name == self.self_name:
             if node.attrname not in self.scope_visitor.names:
-                self.scope_visitor.names[node.attrname] = PyName(lineno=node.lineno, 
-                                                                 module=self.scope_visitor.get_module())
+                self.scope_visitor.names[node.attrname] = AssignedName(
+                    lineno=node.lineno, module=self.scope_visitor.get_module())
             self.scope_visitor.names[node.attrname].assigned_asts.append(self.assigned_ast)
     
     def visitAssName(self, node):

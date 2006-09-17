@@ -95,7 +95,7 @@ class PyCoreScopesTest(unittest.TestCase):
 
     def test_function_getting_scope(self):
         mod = self.pycore.get_string_module('def func():    var = 10\n')
-        func_scope = mod.get_attribute('func').object.get_scope()
+        func_scope = mod.get_attribute('func').get_object().get_scope()
         self.assertTrue('var' in func_scope.get_names())
 
     def test_scopes_in_function_scopes(self):

@@ -193,7 +193,8 @@ We might need to separate different types of `PyName`s. ::
           self.imported_module = module
 
 After separating concluded data we should be able to recompute the
-missing data ::
+missing data.  Keep in mind that this requires not saving pyobjects
+inside `PyName`\s::
   
   class ImportedPyName(PyName):
       def __init__(self, module_name, level, name, as_name):

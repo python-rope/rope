@@ -1,6 +1,7 @@
 import compiler
 
 import rope.codeanalyze
+import rope.pynames
 import rope.pyobjects
 import rope.exceptions
 
@@ -32,9 +33,9 @@ class Scope(object):
         return self.scopes
 
     def _create_scopes(self):
-        block_objects = [pyname.object for pyname in
+        block_objects = [pyname.get_object() for pyname in
                          self.pyobject.get_attributes().values()
-                         if pyname.has_block()]
+                         if isinstance(pyname, rope.pynames.DefinedName)]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
         block_objects.sort(cmp=block_compare)
@@ -113,8 +114,8 @@ class FunctionScope(Scope):
         return self._get_names()
 
     def _create_scopes(self):
-        block_objects = [pyname.object for pyname in self._get_names().values()
-                         if pyname.has_block()]
+        block_objects = [pyname.get_object() for pyname in self._get_names().values()
+                         if isinstance(pyname, rope.pynames.DefinedName)]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
         block_objects.sort(cmp=block_compare)

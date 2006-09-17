@@ -1,6 +1,7 @@
 import re
 
 import rope.codeanalyze
+import rope.pynames
 import rope.pyobjects
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
@@ -52,7 +53,7 @@ class RenameRefactoring(object):
         return changes
     
     def _is_it_a_class_method(self, pyname):
-        return pyname.has_block() and \
+        return isinstance(pyname, rope.pynames.DefinedName) and \
                pyname.get_object().get_type() == rope.pyobjects.PyObject.get_base_type('Function') and \
                pyname.get_object().parent.get_type() == rope.pyobjects.PyObject.get_base_type('Type')
     
