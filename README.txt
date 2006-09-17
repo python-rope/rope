@@ -11,8 +11,8 @@ auto-completion, refactorings, code assists and outlines.  It is
 written in python and uses the Tkinter library.
 
 
-Version Overview
-================
+New Features
+============
 
 Features added in this release:
 
@@ -20,25 +20,25 @@ Features added in this release:
 * Renaming methods in class hierarchy
 * Transform module to package refactoring
 
-The subversion support is somewhat basic.  What rope does is that
-when creating new files or when moving modules and packages for
-refactorings it will call the appropriate subversion commands.
-The subversion support is automatically turned on when there is
-a ``.svn`` folder inside project root and the ``pysvn`` package
-is available. (You can get PySVN from http://pysvn.tigris.org ).
-Rope assumes all files are under version control when these conditions
-are met.  Also don't forget to commit your changes yourself, rope
-doesn't do that yet.
+The subversion support is somewhat basic.  What rope does is that when
+creating new files or when moving modules and packages for
+refactorings it will call the appropriate subversion commands.  The
+subversion support is automatically turned on when there is a ``.svn``
+folder inside project root and the ``pysvn`` package is
+available. (You can get PySVN from http://pysvn.tigris.org ).  Rope
+assumes all files are under version control when these conditions are
+met.  Also don't forget to commit your changes yourself, rope doesn't
+do that yet.
 
-The transform module to package refactoring does not change relative
-imports yet and if there are some relative imports in the module
-you have to change them manually.  This refactoring works by replacing
-a module with a package of the same name and copying its content to the
-``__init__.py`` module of the package.
+Transform module to package refactoring works by replacing a module
+with a package of the same name and copying its content to the
+``__init__.py`` module of the package.  This refactoring does not
+change relative imports yet and if there are some relative imports in
+the module you have to change them manually.
 
 Dynamic type inference gets its needed information from running
 modules (``C-F11``).  You open the module to run (probably your test
-suite), then use ``C-F11``.  Since as the program runs rope gathers
+suite), then use ``C-F11``.  Since as the program runs, rope gathers
 type information, the program runs slower.  Right now rope doesn't
 have a good interface for running programs.  It just prints the output
 to the terminal and does not get inputs.  This will be enhanced in

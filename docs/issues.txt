@@ -81,9 +81,9 @@ To Be Discussed
 Enhanced Import Tools
 =====================
 
-First we should find out what we need exactly.  We need better
-import analysis and manipulation tools to help us do many
-refactorings such as:
+First we should find out what we need exactly.  We need better import
+analysis and manipulation tools to help us do many refactorings such
+as:
 
 * Move method might require some imports to be moved to.
 * Introduce factory method might need to import the method.
@@ -112,8 +112,8 @@ Adding SVN Support Using `pysvn`
 Currently `rope.fscommands` module makes an all or nothing assumption.
 Either all or none of the files should be under version control.
 
-We should be able to make transaction so that if an error occurs during
-one action we can revert back.
+We should be able to make transaction so that if an error occurs
+during one action we can revert back.
 
 
 Separating Structural From Concluded Data
@@ -192,8 +192,8 @@ We might need to separate different types of `PyName`s. ::
       def __init__(self, imported_module):
           self.imported_module = module
 
-After separating concluded data we should be able to recompute
-the missing data ::
+After separating concluded data we should be able to recompute the
+missing data ::
   
   class ImportedPyName(PyName):
       def __init__(self, module_name, level, name, as_name):
