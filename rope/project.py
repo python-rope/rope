@@ -302,7 +302,8 @@ class _Folder(Resource):
         destination = self._get_destination_for_move(new_location)
         self.project.fscommands.create_folder(self.project._get_resource_path(destination))
         for child in self.get_children():
-            child.move(destination + '/' + child.get_name())
+            if not (child.is_folder() and child.get_name() == '.svn'):
+                child.move(destination + '/' + child.get_name())
         self.project.fscommands.remove(self.project._get_resource_path(self.get_path()))
         self.project._update_resource_location(self, destination)
         self.get_parent()._child_changed(self)

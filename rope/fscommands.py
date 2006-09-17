@@ -9,7 +9,7 @@ except ImportError:
 
 def create_fscommands(project):
     root = project.get_root_folder()
-    if False and 'pysvn' in globals() and root.has_child('.svn'):
+    if 'pysvn' in globals() and root.has_child('.svn'):
         return SubversionCommands()
     return FileSystemCommands()
 
@@ -40,14 +40,14 @@ class SubversionCommands(object):
     
     def create_file(self, path):
         self.normal_actions.create_file(path)
-        self.client.add(path)
+        self.client.add(path, force=True)
     
     def create_folder(self, path):
         self.normal_actions.create_folder(path)
-        self.client.add(path)
+        self.client.add(path, force=True)
     
     def move(self, path, new_location):
         self.client.move(path, new_location, force=True)
     
     def remove(self, path):
-        self.client.remove(path)
+        self.client.remove(path, force=True)

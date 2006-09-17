@@ -60,8 +60,10 @@ class _CallInformationOrganizer(object):
         self.returned = None
     
     def add_call_information(self, args, returned):
-        self.args = args
-        self.returned = returned
+        if not isinstance(returned, (_PersistedNone, _PersistedUnknown)):
+            self.returned = returned
+        if args and not isinstance(args[0], (_PersistedNone, _PersistedUnknown)):
+            self.args = args
 
 
 class _ObjectPersistedForm(object):

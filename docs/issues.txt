@@ -34,21 +34,19 @@ From August 7, 2006 till November 5, 2006
 Release Goals
 -------------
 
-Metaphor: Try deliver the most interesting values.
+Metaphor: Deliver the most interesting values
 
 
 Possible Plans
 --------------
 
-* Rename class/function
-* Extract/Inline methods/functions
-* Rename module/package
-
 * Dynamic type inference
+* Move class/function/module/package
+* Introduce factory method
+* Encapsulate method
 * Introduce/Inline temporary variable
 * Formatter
 * reST go to definition and quick outline
-* Better file/folder/module selection dialogs
 * Code contexts
 
 
@@ -69,83 +67,53 @@ Hot Topics
 * `Enhanced Import Tools`_
 * `Separating Structural From Concluded Data`_
 * `Python's Implicit Interfaces`_
-* Rope's preference saving system
 
 
 To Be Discussed
 ===============
 
+* Rope's preference saving system: format, location
+* Holding holding scope instead of module in `PyName`\s
 * Having a persistant format for PyNames and PyObjects for saving
-  hard to compute information like class hierarchies.
-
-
-Choosing The Next Move
-======================
-
-We are facing an important question.  Should we support `Python's
-Implicit Interfaces`_.  In the meantime I can add encapsulate field
-refactoring.
-
-We should be able to find the superclasses and subclasses of a
-class for supporting renaming attributes in a hierarchy.
-
-
-What Refactoring To Add Next?
------------------------------
-
-I prefer implementing some of these:
-
-* Renaming attributes in a hierarchy
-* Encapsulate field
-* Introduce factory method
-* Inline method
-* Inline variable
-
-
-Continuing Dynamic Object Inference Movement
---------------------------------------------
-
-Implement cartesian Product algorithm.  What to do when asked for
-argument objects.  Think about optimizing it.
-
-
-Holding Information For Individual Objects
-------------------------------------------
-
-From this respect, we can divide typess into two groups.  The types
-that its instances hold valuable and distinct information; examples
-are container classes, types, functions and modules.  Types in the
-second group hold all information for all instances.  That is
-instances are exactly the same.
+  hard to compute information like class hierarchies
 
 
 Enhanced Import Tools
 =====================
 
-The first question to answer is what do we need? We need better
-import analysis and manipulation tools to help us do many refactorings
-such as:
+First we should find out what we need exactly.  We need better
+import analysis and manipulation tools to help us do many
+refactorings such as:
 
 * Move method might require some imports to be moved to.
 * Introduce factory method might need to import the method.
 * Inline method might require to add and remove some imports.
 * Transform module to package might change relative imports.
-* Organizing imports or adding imports.
+
+Organizing imports:
+
+* Eliminate star imports
+* Remove duplicates
+* Remove unused
+* Relative to absolute
+* Relative to new relative
 
 We need actions like:
 
-* Used imports for a line range of a module
-* Moving one import from one module to another
-* Get import statement for a pyobject
-* Extend star imports
-* Add an import statements to a set of imports
+* Used imports in a part of module
+* Moving one import statement from one module to another
+* Get import statement for a `PyName`
+* Add/remove an import statements
 
 
-Implementation
---------------
+Adding SVN Support Using `pysvn`
+================================
 
-* Used imports for a line range of a module
+Currently `rope.fscommands` module makes an all or nothing assumption.
+Either all or none of the files should be under version control.
 
+We should be able to make transaction so that if an error occurs during
+one action we can revert back.
 
 
 Separating Structural From Concluded Data
@@ -190,6 +158,63 @@ How To Hold Concluded Information?
 
 Where should we store concluded data.  We should be able to invalidate
 those data too.
+
+
+Different Types Of PyNames
+--------------------------
+
+We might need to separate different types of `PyName`s. ::
+  
+  class PyName(object):
+      
+      def get_object(self):
+          pass
+      
+      def get_definition_location(self):
+          pass
+  
+  class DefinedPyName(PyName):
+      def __init__(self, pyobject):
+          self.pyobject = pyobject
+  
+  class AssignedPyName(PyName):
+      def __init__(self, lineno=None, module=None):
+          self.lineno = lineno
+          self.module = module
+          self.is_being_inferred = False
+          self.assigned_asts = []
+  
+  class ImportedPyName(PyName):
+      def __init__(self, imported_pyname):
+          self.imported_pyname = imported_pyname
+  
+  class ImportedModule(PyName):
+      def __init__(self, imported_module):
+          self.imported_module = module
+
+After separating concluded data we should be able to recompute
+the missing data ::
+  
+  class ImportedPyName(PyName):
+      def __init__(self, module_name, level, name, as_name):
+          pass
+  
+  class ImportedModule(PyName):
+      def __init__(self, module_name):
+          pass
+  
+  class StarImported(object):
+      def __init__(self, module_name):
+          pass
+      
+      def get_pynames(self):
+          pass
+
+We only need to change imported `PyName`\s.  So we should store import
+information in an abstract form.  Note that`StarImported` objects are
+not pynames.  When encoutering a star import in source we add one
+`StartImport` object to the pyobject that contains that scope.
+`PyDefinedObject.get_attribute` can be optimized.
 
 
 Finding Occurances
@@ -406,7 +431,7 @@ common base class of returned values.
 Supporting Implicit Interfaces
 ------------------------------
 
-We need to find out the way these implicit interfaces are defined?
+We need to find out the way these implicit interfaces are defined.
 Actually each function defines an interface for each of its parameters
 and the members of this interface are the objects that are passed as
 that arguement.  Another thing to keep in mind is that implicit
@@ -429,9 +454,9 @@ We should be careful about situations like::
   
   def a_func(arg):
       if isinstance(arg, A):
-          A.do_something()
+          arg.do_something()
       else:
-          B.do_some_other_thing()
+          arg.do_some_other_thing()
 
 
 Implementation Issues

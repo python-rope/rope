@@ -3,7 +3,10 @@
 ===========
 
 
-- Renaming methods in a hierarchy : September 12, 2006
+- Basic subversion support using pysvn : September 14, 2006
+
+
+- Renaming methods in class hierarchy : September 12, 2006
 
 
 - Transform module to package refactoring : September 11, 2006

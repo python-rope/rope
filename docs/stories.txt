@@ -242,9 +242,6 @@ Stories
 > Public Release 0.3m3 : September 17, 2006
 
 
-* Subversion support using pysvn
-
-
 Remaining Stories
 -----------------
 

@@ -333,7 +333,7 @@ class ScopeNameFinder(object):
             module = self.word_finder.get_primary_at(offset)
             module_pyobject = self._find_module(module)
             module_pyname = rope.pycore.PyName(module_pyobject, False, 
-                                               module=module_pyobject.get_module(),
+                                               module=module_pyobject,
                                                lineno=1)
             return module_pyname
         name = self.word_finder.get_primary_at(offset)

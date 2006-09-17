@@ -1,8 +1,8 @@
-Enhanced Import Utils
-=====================
+Before ``0.3m3`` Release
+========================
 
-* Moving one import from one module to another
-* Adding a `NoPlaceResource` and removing all string functions
+- Update documents and homepage
+- Have a look at ``issues.txt``
 
 
 Remaining Stories

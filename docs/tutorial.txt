@@ -30,7 +30,7 @@ Creating And Opening Projects
 =============================
 
 To create or open a project select the ``Open Project`` from the file
-menu.  You will be asked about the location of the root(toplevel)
+menu.  You will be asked about the location of the root (toplevel)
 folder of your project.
 
 
