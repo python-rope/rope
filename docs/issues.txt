@@ -58,7 +58,19 @@ Releases
 0.3m2
     Done.
 0.3m3
+    Done.
+0.3m4
     Working on.
+
+
+This Release
+------------
+
+* `Separating Structural From Concluded Data`_
+* `Encapsulate Field Refactoring`_
+* `Enhanced Import Tools`_
+* Move a class/function to another module
+* Introduce factory method
 
 
 Hot Topics
@@ -66,6 +78,7 @@ Hot Topics
 
 * `Enhanced Import Tools`_
 * `Separating Structural From Concluded Data`_
+* `Encapsulate Field Refactoring`_
 * `Python's Implicit Interfaces`_
 
 
@@ -104,16 +117,6 @@ We need actions like:
 * Moving one import statement from one module to another
 * Get import statement for a `PyName`
 * Add/remove an import statements
-
-
-Adding SVN Support Using `pysvn`
-================================
-
-Currently `rope.fscommands` module makes an all or nothing assumption.
-Either all or none of the files should be under version control.
-
-We should be able to make transaction so that if an error occurs
-during one action we can revert back.
 
 
 Separating Structural From Concluded Data
@@ -158,6 +161,10 @@ How To Hold Concluded Information?
 
 Where should we store concluded data.  We should be able to invalidate
 those data too.
+
+A good place for holding the data maybe inside `PyModule`\s.  The
+disadvantage of this approach is the cost of holding lots of data
+in one place.
 
 
 Different Types Of PyNames
@@ -218,6 +225,16 @@ not pynames.  When encoutering a star import in source we add one
 `PyDefinedObject.get_attribute` can be optimized.
 
 
+Encapsulate Field Refactoring
+=============================
+
+We should divide program source code into two sections.  The section
+in which references to an attribute should be replaced with getters
+and setters and the section that shouldn't.  The latter consists of
+class constructor or maybe all functions inside the class and the
+former consists of all other places.
+
+
 Finding Occurances
 ==================
 
@@ -236,27 +253,14 @@ Rope searches all python files for a name.  But this seems unnecessary
 for local variables or modules that does not import that name.
 
 
-Refactoring Issues
-==================
+Adding SVN Support Using `pysvn`
+================================
 
-Getting Source Code Or Resource?
---------------------------------
+Currently `rope.fscommands` module makes an all or nothing assumption.
+Either all or none of the files should be under version control.
 
-Considering the changes refactorings may make, we can devide them into
-two groups:
-
-* those that only change one piece of code
-* those that change multiple files
-
-For the second group, the `Refactoring` class should work on resources
-and make changes to them directly, but for the first group only
-passing the source code of one resource suffices.  The problem is that
-undo refactoring only works when we make changes to resources
-directly. Changing refactorings in the first group to use resources
-have the following consequences:
-
-* Undo refactoring will work on them, too.
-* All editors should be saved before performing them.
+We should be able to make transaction so that if an error occurs
+during one action we can revert back.
 
 
 Dyanmic Type Inference Issues

@@ -1,6 +1,11 @@
 Release And Weekly Planning
 ===========================
 
+* Star imports should not overwrite global `DefinedName`\s
+* What to do about ``__init__.py`` and packages; Should we
+  consider them as star imports
+* Clearing module dependants when invalidating
+
 
 Remaining Stories
 =================

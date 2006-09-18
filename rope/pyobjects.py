@@ -1,8 +1,7 @@
 import compiler
 
 import rope.pyscopes
-from rope.exceptions import (ModuleNotFoundException, RopeException,
-                             AttributeNotFoundException)
+from rope.exceptions import (RopeException, AttributeNotFoundException)
 from rope.pynames import *
 
 
@@ -177,6 +176,24 @@ class PyClass(PyDefinedObject):
         return rope.pyscopes.ClassScope(self.pycore, self)
 
 
+class _ConcludedData(object):
+    
+    def __init__(self):
+        self.data = None
+    
+    def set(self, data):
+        self.data = data
+    
+    def get(self):
+        return self.data
+    
+    def _invalidate(self):
+        self.data = None
+    
+    def __str__(self):
+        return '<' + str(self.data) + '>'
+
+
 class _PyModule(PyDefinedObject):
     
     def __init__(self, pycore, ast_node, resource):
@@ -184,14 +201,28 @@ class _PyModule(PyDefinedObject):
                                         pycore, ast_node, None)
         self.dependant_modules = set()
         self.resource = resource
+        self.concluded_data = []
+    
+    def _get_concluded_data(self):
+        new_data = _ConcludedData()
+        self.concluded_data.append(new_data)
+        return new_data
 
     def _add_dependant(self, pymodule):
         if pymodule.get_resource():
-            self.dependant_modules.add(pymodule.get_resource())
+            self.dependant_modules.add(pymodule)
+    
+    def _invalidate_concluded_data(self):
+        dependant_modules = set(self.dependant_modules)
+        self.dependant_modules.clear()
+        for data in self.concluded_data:
+            data._invalidate()
+        for module in dependant_modules:
+            module._invalidate_concluded_data()
 
     def get_resource(self):
         return self.resource
-    
+
 
 class PyModule(_PyModule):
 
@@ -199,12 +230,15 @@ class PyModule(_PyModule):
         self.source_code = source_code
         ast_node = compiler.parse(source_code)
         super(PyModule, self).__init__(pycore, ast_node, resource)
-
+        self.star_imports = []
+    
     def _update_attributes_from_ast(self, attributes):
         visitor = _GlobalVisitor(self.pycore, self)
         compiler.walk(self.ast_node, visitor)
         attributes.update(visitor.names)
-
+        for star_import in self.star_imports:
+            attributes.update(star_import.get_names())
+    
     def _create_scope(self):
         return rope.pyscopes.GlobalScope(self.pycore, self)
 
@@ -224,15 +258,11 @@ class PyPackage(_PyModule):
             return
         for child in self.resource.get_children():
             if child.is_folder():
-                child_pyobject = self.pycore.resource_to_pyobject(child)
-                child_pyobject._add_dependant(self)
-                attributes[child.get_name()] = ImportedModule(child_pyobject)
+                attributes[child.get_name()] = ImportedModule(self, resource=child)
             elif child.get_name().endswith('.py') and \
                  child.get_name() != '__init__.py':
-                child_pyobject = self.pycore.resource_to_pyobject(child)
-                child_pyobject._add_dependant(self)
                 name = child.get_name()[:-3]
-                attributes[name] = ImportedModule(child_pyobject)
+                attributes[name] = ImportedModule(self, resource=child)
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
             init_object = self.pycore.resource_to_pyobject(init_dot_py)
@@ -297,72 +327,28 @@ class _ScopeVisitor(object):
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
     
-    def _get_current_folder(self):
-        resource = self.owner_object.get_module().get_resource()
-        if resource is None:
-            return None
-        return resource.get_parent()
-
     def visitImport(self, node):
         for import_pair in node.names:
-            name, alias = import_pair
-            imported = name
+            module_name, alias = import_pair
+            first_package = module_name.split('.')[0]
             if alias is not None:
-                imported = alias
-            try:
-                module = self.pycore.get_module(name, self._get_current_folder())
-                module._add_dependant(self.owner_object.get_module())
-                lineno = 1
-            except ModuleNotFoundException:
-                self.names[imported] = ImportedModule()
-                return
-            if alias is None and '.' in imported:
-                tokens = imported.split('.')
-                toplevel_module = self._get_module_with_packages(name)
-                if toplevel_module is not None:
-                    toplevel_module._add_dependant(self.owner_object.get_module())
-                self.names[tokens[0]] = ImportedModule(toplevel_module)
+                self.names[alias] = ImportedModule(self.get_module(), module_name)
             else:
-                self.names[imported] = ImportedModule(module)
-
-    def _get_module_with_packages(self, module_name):
-        module_list = self.pycore._find_module_resource_list(module_name,
-                                                             self._get_current_folder())
-        if module_list is None:
-            return None
-        return self.pycore.resource_to_pyobject(module_list[0])
+                self.names[first_package] = ImportedModule(self.get_module(), first_package)
 
     def visitFrom(self, node):
-        try:
-            level = 0
-            if hasattr(node, 'level'):
-                level = node.level
-            if level == 0:
-                module = self.pycore.get_module(node.modname, self._get_current_folder())
-            else:
-                module = self.pycore.get_relative_module(node.modname,
-                                                         self._get_current_folder(),
-                                                         level)
-            module._add_dependant(self.owner_object.get_module())
-        except ModuleNotFoundException:
-            module = None
-
+        level = 0
+        if hasattr(node, 'level'):
+            level = node.level
+        imported_module = ImportedModule(self.get_module(), node.modname, level)
         if node.names[0][0] == '*':
-            if module is None or isinstance(module, PyPackage):
-                return
-            for name, pyname in module.get_attributes().iteritems():
-                if not name.startswith('_'):
-                    self.names[name] = ImportedName(pyname)
+            self.owner_object.star_imports.append(StarImport(imported_module))
         else:
             for (name, alias) in node.names:
                 imported = name
                 if alias is not None:
                     imported = alias
-                if module is not None and module.get_attributes().has_key(name):
-                    imported_pyname = module.get_attribute(name)
-                    self.names[imported] = ImportedName(imported_pyname)
-                else:
-                    self.names[imported] = ImportedModule()
+                self.names[imported] = ImportedName(imported_module, name)
 
 
 class _GlobalVisitor(_ScopeVisitor):

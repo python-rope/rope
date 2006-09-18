@@ -333,8 +333,7 @@ class ScopeNameFinder(object):
             return holding_scope.parent.get_name(name)
         if self.word_finder.is_from_statement_module(offset):
             module = self.word_finder.get_primary_at(offset)
-            module_pyobject = self._find_module(module)
-            module_pyname = rope.pynames.ImportedModule(module_pyobject)
+            module_pyname = self._find_module(module)
             return module_pyname
         name = self.word_finder.get_primary_at(offset)
         result = self.get_pyname_in_scope(holding_scope, name)
@@ -344,19 +343,16 @@ class ScopeNameFinder(object):
         current_folder = None
         if self.module_scope.pyobject.get_resource():
             current_folder = self.module_scope.pyobject.get_resource().get_parent()
+        dot_count = 0
         if module_name.startswith('.'):
-            dot_count = 0
             for c in module_name:
                 if c == '.':
                     dot_count += 1
                 else:
                     break
-            return self.module_scope.pycore.get_relative_module(module_name[dot_count:],
-                                                                current_folder,
-                                                                dot_count)
-        else:
-            return self.module_scope.pycore.get_module(module_name, current_folder)
-    
+        return rope.pynames.ImportedModule(self.module_scope.pyobject,
+                                           module_name[dot_count:], dot_count)
+
     def get_pyname_in_scope(self, holding_scope, name):
         ast = compiler.parse(name)
         result = StatementEvaluator.get_statement_result(holding_scope, ast)
