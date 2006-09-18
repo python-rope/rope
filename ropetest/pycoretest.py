@@ -439,6 +439,15 @@ class PyCoreInProjectsTest(unittest.TestCase):
                           mod.get_attribute('sample_func').get_object().get_type())
         self.assertTrue(mod.get_attribute('sample_var') is not None)
 
+    def test_from_import_star_overwriting(self):
+        code = 'from samplemod import *\n' \
+               'class SampleClass(object):\n    pass\n'
+        mod = self.pycore.get_string_module(code)
+        samplemod = self.pycore.get_module('samplemod')
+        sample_class = samplemod.get_attribute('SampleClass').get_object()
+        self.assertNotEquals(sample_class,
+                             mod.get_attributes()['SampleClass'].get_object())
+
     def test_from_import_star_not_imporing_underlined(self):
         mod = self.pycore.get_string_module('from samplemod import *')
         self.assertTrue('_underlined_func' not in mod.get_attributes())

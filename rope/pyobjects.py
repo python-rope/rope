@@ -43,16 +43,37 @@ class PyDefinedObject(PyObject):
         super(PyDefinedObject, self).__init__(type_)
         self.pycore = pycore
         self.ast_node = ast_node
-        self.attributes = None
         self.scope = None
         self.parent = parent
+        self.structural_attributes = None
+        self.concluded_attributes = self.get_module()._get_concluded_data()
+        self.attributes = self.get_module()._get_concluded_data()
+    
+    def _get_structural_attributes(self):
+        if self.structural_attributes is None:
+            self.structural_attributes = self._create_structural_attributes()
+        return self.structural_attributes
+
+    def _get_concluded_attributes(self):
+        if self.concluded_attributes.get() is None:
+            self._get_structural_attributes()
+            self.concluded_attributes.set(self._create_concluded_attributes())
+        return self.concluded_attributes.get()
 
     def get_attributes(self):
-        if self.attributes is None:
-            self.attributes = {}
-            self._update_attributes_from_ast(self.attributes)
-        return self.attributes
-
+        if self.attributes.get() is None:
+            result = dict(self._get_concluded_attributes())
+            result.update(self._get_structural_attributes())
+            self.attributes.set(result)
+        return self.attributes.get()
+    
+    def get_attribute(self, name):
+        if name in self._get_structural_attributes():
+            return self._get_structural_attributes()[name]
+        if name in self._get_concluded_attributes():
+            return self._get_concluded_attributes()[name]
+        raise AttributeNotFoundException('Attribute %s not found' % name)
+    
     def get_scope(self):
         if self.scope == None:
             self.scope = self._create_scope()
@@ -63,9 +84,12 @@ class PyDefinedObject(PyObject):
         while current_object.parent is not None:
             current_object = current_object.parent
         return current_object
+    
+    def _create_structural_attributes(self):
+        return {}
 
-    def _update_attributes_from_ast(self, attributes):
-        pass
+    def _create_concluded_attributes(self):
+        return {}
 
     def _get_ast(self):
         return self.ast_node
@@ -86,9 +110,12 @@ class PyFunction(PyDefinedObject):
         self.returned_object = None
         self.parameter_pyobjects = None
 
-    def _update_attributes_from_ast(self, attributes):
-        pass
+    def _create_structural_attributes(self):
+        return {}
     
+    def _create_concluded_attributes(self):
+        return {}
+
     def _create_scope(self):
         return rope.pyscopes.FunctionScope(self.pycore, self)
     
@@ -155,14 +182,18 @@ class PyClass(PyDefinedObject):
             self._superclasses = self._get_bases()
         return self._superclasses
 
-    def _update_attributes_from_ast(self, attributes):
-        for base in reversed(self.get_superclasses()):
-            attributes.update(base.get_attributes())
+    def _create_structural_attributes(self):
         new_visitor = _ClassVisitor(self.pycore, self)
         for n in self.ast_node.getChildNodes():
             compiler.walk(n, new_visitor)
-        attributes.update(new_visitor.names)
+        return new_visitor.names
 
+    def _create_concluded_attributes(self):
+        result = {}
+        for base in reversed(self.get_superclasses()):
+            result.update(base.get_attributes())
+        return result
+    
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
@@ -197,11 +228,11 @@ class _ConcludedData(object):
 class _PyModule(PyDefinedObject):
     
     def __init__(self, pycore, ast_node, resource):
-        super(_PyModule, self).__init__(PyObject.get_base_type('Module'),
-                                        pycore, ast_node, None)
         self.dependant_modules = set()
         self.resource = resource
         self.concluded_data = []
+        super(_PyModule, self).__init__(PyObject.get_base_type('Module'),
+                                        pycore, ast_node, None)
     
     def _get_concluded_data(self):
         new_data = _ConcludedData()
@@ -229,15 +260,19 @@ class PyModule(_PyModule):
     def __init__(self, pycore, source_code, resource=None):
         self.source_code = source_code
         ast_node = compiler.parse(source_code)
-        super(PyModule, self).__init__(pycore, ast_node, resource)
         self.star_imports = []
+        super(PyModule, self).__init__(pycore, ast_node, resource)
     
-    def _update_attributes_from_ast(self, attributes):
+    def _create_concluded_attributes(self):
+        result = {}
+        for star_import in self.star_imports:
+            result.update(star_import.get_names())
+        return result
+    
+    def _create_structural_attributes(self):
         visitor = _GlobalVisitor(self.pycore, self)
         compiler.walk(self.ast_node, visitor)
-        attributes.update(visitor.names)
-        for star_import in self.star_imports:
-            attributes.update(star_import.get_names())
+        return visitor.names
     
     def _create_scope(self):
         return rope.pyscopes.GlobalScope(self.pycore, self)
@@ -253,21 +288,23 @@ class PyPackage(_PyModule):
             ast_node = compiler.parse('\n')
         super(PyPackage, self).__init__(pycore, ast_node, resource)
 
-    def _update_attributes_from_ast(self, attributes):
+    def _create_structural_attributes(self):
+        result = {}
         if self.resource is None:
-            return
+            return result
         for child in self.resource.get_children():
             if child.is_folder():
-                attributes[child.get_name()] = ImportedModule(self, resource=child)
+                result[child.get_name()] = ImportedModule(self, resource=child)
             elif child.get_name().endswith('.py') and \
                  child.get_name() != '__init__.py':
                 name = child.get_name()[:-3]
-                attributes[name] = ImportedModule(self, resource=child)
+                result[name] = ImportedModule(self, resource=child)
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
             init_object = self.pycore.resource_to_pyobject(init_dot_py)
-            attributes.update(init_object.get_attributes())
+            result.update(init_object.get_attributes())
             init_object._add_dependant(self)
+        return result
 
     def _get_init_dot_py(self):
         if self.resource is not None and self.resource.has_child('__init__.py'):
