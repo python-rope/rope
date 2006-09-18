@@ -101,7 +101,7 @@ class FunctionScope(Scope):
                                                           self.pyobject)
             for n in self.pyobject._get_ast().getChildNodes():
                 compiler.walk(n, new_visitor)
-            self.names = self.pyobject._get_parameters()
+            self.names = self.pyobject._get_parameter_pynames()
             self.names.update(new_visitor.names)
             self.returned_asts = new_visitor.returned_asts
     

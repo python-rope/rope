@@ -200,9 +200,6 @@ Stories
 * Move a module or package to another package
 
 
-* Move a class/function to another module
-
-
 * Introduce redirection
 
 
@@ -218,18 +215,6 @@ Stories
 * Analyzing function decorators
 
 
-* Inline method
-
-
-* Inline variable
-
-
-* Encapsulate method
-
-
-* Introduce factory method
-
-
 * Enhancing module running
 
   * Showing running status in the GUI
@@ -239,7 +224,22 @@ Stories
   * Running last run
 
 
-> Public Release 0.3m3 : September 17, 2006
+* Inline method
+
+
+* Inline variable
+
+
+> Public Release 0.3m4 : October 1, 2006
+
+
+* Move a class/function to another module
+
+
+* Encapsulate field
+
+
+* Introduce factory method
 
 
 Remaining Stories

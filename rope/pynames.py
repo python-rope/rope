@@ -4,11 +4,10 @@ import rope.pyobjects
 class PyName(object):
 
     def get_object(self):
-        pass
+        """Return the `PyObject` object referenced by this `PyName`"""
     
     def get_definition_location(self):
-        """Returns a (module, lineno) tuple"""
-        pass
+        """Return a (module, lineno) tuple"""
 
 
 class DefinedName(PyName):
@@ -81,3 +80,19 @@ class ImportedModule(PyName):
         if self.pyobject is None:
             return (None, None)
         return (self.pyobject.get_module(), 1)
+
+
+class ParameterName(PyName):
+    
+    def __init__(self, pyfunction, index):
+        self.pyfunction = pyfunction
+        self.index = index
+        self.pyobject = None
+    
+    def get_object(self):
+        if self.pyobject is None:
+            self.pyobject = self.pyfunction._get_parameter(self.index)
+        return self.pyobject
+    
+    def get_definition_location(self):
+        return (self.pyfunction.get_module(), self.pyfunction._get_ast().lineno)

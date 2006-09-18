@@ -85,6 +85,7 @@ class PyFunction(PyDefinedObject):
         self.is_being_inferred = False
         self.are_args_being_inferred = False
         self.returned_object = None
+        self.parameter_pyobjects = None
 
     def _update_attributes_from_ast(self, attributes):
         pass
@@ -92,7 +93,7 @@ class PyFunction(PyDefinedObject):
     def _create_scope(self):
         return rope.pyscopes.FunctionScope(self.pycore, self)
     
-    def _get_parameters(self):
+    def _get_parameter_pyobjects(self):
         if self.are_args_being_inferred:
             raise IsBeingInferredException('Circular assignments')
         if len(self.parameters) == 0:
@@ -110,15 +111,21 @@ class PyFunction(PyDefinedObject):
                not self.decorators:
                 pyobjects.append(PyObject(self.parent))
             else:
-                pyobjects.append(None)
+                pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
             for parameter in self.parameters[1:]:
-                pyobjects.append(None)
-        
+                pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
+        return pyobjects
+    
+    def _get_parameter_pynames(self):
         result = {}
-        for name, pyobject in zip(self.parameters, pyobjects):
-            result[name] = AssignedName(pyobject=pyobject, lineno=self.ast_node.lineno,
-                                  module=self.get_module())
+        for index, name in enumerate(self.parameters):
+            result[name] = ParameterName(self, index)
         return result
+    
+    def _get_parameter(self, index):
+        if not self.parameter_pyobjects:
+            self.parameter_pyobjects = self._get_parameter_pyobjects()
+        return self.parameter_pyobjects[index]
     
     def _get_returned_object(self):
         if self.is_being_inferred:

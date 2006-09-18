@@ -34,7 +34,7 @@ From August 7, 2006 till November 5, 2006
 Release Goals
 -------------
 
-Metaphor: Deliver the most interesting values
+Metaphor: Deliver the most interesting features
 
 
 Possible Plans
@@ -193,7 +193,7 @@ We might need to separate different types of `PyName`s. ::
           self.imported_module = module
 
 After separating concluded data we should be able to recompute the
-missing data.  Keep in mind that this requires not saving pyobjects
+missing data.  Keep in mind that this requires not saving `PyObject`\s
 inside `PyName`\s::
   
   class ImportedPyName(PyName):
@@ -212,7 +212,7 @@ inside `PyName`\s::
           pass
 
 We only need to change imported `PyName`\s.  So we should store import
-information in an abstract form.  Note that`StarImported` objects are
+information in an abstract form.  Note that `StarImported` objects are
 not pynames.  When encoutering a star import in source we add one
 `StartImport` object to the pyobject that contains that scope.
 `PyDefinedObject.get_attribute` can be optimized.

@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.3m3 : September 17, 2006
+
+
 - Basic subversion support using pysvn : September 14, 2006
 
 
