@@ -107,8 +107,8 @@ class PyFunction(PyDefinedObject):
         self.decorators = self.ast_node.decorators
         self.is_being_inferred = False
         self.are_args_being_inferred = False
-        self.returned_object = None
-        self.parameter_pyobjects = None
+        self.returned_object = self.get_module()._get_concluded_data()
+        self.parameter_pyobjects = self.get_module()._get_concluded_data()
 
     def _create_structural_attributes(self):
         return {}
@@ -149,24 +149,24 @@ class PyFunction(PyDefinedObject):
         return result
     
     def _get_parameter(self, index):
-        if not self.parameter_pyobjects:
-            self.parameter_pyobjects = self._get_parameter_pyobjects()
-        return self.parameter_pyobjects[index]
+        if not self.parameter_pyobjects.get():
+            self.parameter_pyobjects.set(self._get_parameter_pyobjects())
+        return self.parameter_pyobjects.get()[index]
     
     def _get_returned_object(self):
         if self.is_being_inferred:
             raise IsBeingInferredException('Circular assignments')
-        if self.returned_object is None:
+        if self.returned_object.get() is None:
             self.is_being_inferred = True
             try:
                 object_infer = self.pycore._get_object_infer()
                 inferred_object = object_infer.infer_returned_object(self)
-                self.returned_object = inferred_object
+                self.returned_object.set(inferred_object)
             finally:
                 self.is_being_inferred = False
-        if self.returned_object is None:
-            self.returned_object = PyObject(PyObject.get_base_type('Unknown'))
-        return self.returned_object
+        if self.returned_object.get() is None:
+            self.returned_object.set(PyObject(PyObject.get_base_type('Unknown')))
+        return self.returned_object.get()
 
 
 class PyClass(PyDefinedObject):

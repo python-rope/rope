@@ -11,6 +11,7 @@ class PyName(object):
     def get_definition_location(self):
         """Return a (module, lineno) tuple"""
 
+
 class DefinedName(PyName):
     
     def __init__(self, pyobject):
@@ -22,10 +23,6 @@ class DefinedName(PyName):
     def get_definition_location(self):
         return (self.pyobject.get_module(), self.pyobject._get_ast().lineno)
     
-def _get_concluded_data(module):
-    if module is None:
-        return rope.pyobjects._ConcludedData()
-    return module._get_concluded_data()
 
 class AssignedName(PyName):
     
@@ -162,3 +159,9 @@ class StarImport(object):
                     result[name] = ImportedName(self.imported_module, name)
             self.names.set(result)
         return self.names.get()
+
+
+def _get_concluded_data(module):
+    if module is None:
+        return rope.pyobjects._ConcludedData()
+    return module._get_concluded_data()

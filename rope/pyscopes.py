@@ -34,13 +34,12 @@ class Scope(object):
 
     def _create_scopes(self):
         block_objects = [pyname.get_object() for pyname in
-                         self.pyobject.get_attributes().values()
+                         self.pyobject._get_structural_attributes().values()
                          if isinstance(pyname, rope.pynames.DefinedName)]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
         block_objects.sort(cmp=block_compare)
-        result = [block.get_scope() for block in block_objects]
-        return result
+        return [block.get_scope() for block in block_objects]
     
     def _get_global_scope(self):
         current = self
@@ -77,6 +76,12 @@ class GlobalScope(Scope):
     def get_kind(self):
         return 'Module'
     
+    def get_name(self, name):
+        try:
+            return self.pyobject.get_attribute(name)
+        except rope.exceptions.AttributeNotFoundException:
+            raise rope.exceptions.NameNotFoundException('name %s not found' % name)
+
     def get_inner_scope_for_line(self, lineno, indents=None):
         return _HoldingScopeFinder(self.pyobject.source_code).\
                get_holding_scope(self, lineno, indents)

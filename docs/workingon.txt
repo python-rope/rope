@@ -1,15 +1,19 @@
 Release And Weekly Planning
 ===========================
 
-- Reimplementing `PyModule.get_attribute`
-- Star imports should not overwrite global `DefinedName`\s
-- Imported base classes and `get_attributes`
+- Using `PyDefinedObject._get_structural_data` in scopes.get_scopes
+- Optimizing `Scope.get_name`
+- Invalidating concluded data after running modules
 
-* What to do about ``__init__.py`` and packages; Should we
-  consider them as star imports
-* Invalidating concluded data after running modules
+* Kill editor and confirm saving
 * Caching `PyCore.classes`
-* Function scope and concluded data
+* Handling::
+  
+    class A(object):
+        var = A
+        another = var
+
+* Profiling and finding bottlenecks
 
 
 Remaining Stories

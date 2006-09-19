@@ -179,9 +179,16 @@ class PyCore(object):
     
     def get_refactoring(self):
         return self.refactoring
+    
+    def _invalidate_all_concluded_data(self):
+        for module in self.module_map.values():
+            module._invalidate_concluded_data()
 
     def run_module(self, resource, stdin=None, stdout=None):
-        return self.dynamicoi.run_module(resource, stdin, stdout)
+        runner = self.dynamicoi.run_module(resource, stdin, stdout)
+        runner.add_finishing_observer(self._invalidate_all_concluded_data)
+        runner.run()
+        return runner
     
     def get_subclasses(self, pyclass):
         if self.classes is None:

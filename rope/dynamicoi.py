@@ -176,11 +176,15 @@ class PythonFileRunner(object):
         self.pycore = pycore
         self.file = file_
         self.analyze_data = analyze_data
-        file_path = self.file._get_real_path()
-        env = {}
-        env.update(os.environ)
+        self.observers = []
+        self.stdin = stdin
+        self.stdout = stdout
+    
+    def run(self):
+        env = dict(os.environ)
         source_folders = []
-        for folder in file_.get_project().get_pycore().get_source_folders():
+        file_path = self.file._get_real_path()
+        for folder in self.file.get_project().get_pycore().get_source_folders():
             source_folders.append(os.path.abspath(folder._get_real_path()))
         env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)
@@ -188,11 +192,11 @@ class PythonFileRunner(object):
         self.data_port = -1
         self._init_data_receiving()
         args = (sys.executable, runmod_path, str(self.data_port),
-                os.path.abspath(pycore.project.get_root_address()),
+                os.path.abspath(self.pycore.project.get_root_address()),
                 os.path.abspath(self.file._get_real_path()))
         self.process = subprocess.Popen(executable=sys.executable, args=args,
-                                        cwd=os.path.split(file_path)[0], stdin=stdin,
-                                        stdout=stdout, stderr=stdout, env=env)
+                                        cwd=os.path.split(file_path)[0], stdin=self.stdin,
+                                        stdout=self.stdout, stderr=self.stdout, env=env)
     
     def _init_data_receiving(self):
         if self.analyze_data is None:
@@ -219,9 +223,10 @@ class PythonFileRunner(object):
                 self.analyze_data(pickle.load(my_file))
             except EOFError:
                 break
-
         my_file.close()
         conn.close()
+        for observer in self.observers:
+            observer()
 
     def wait_process(self):
         """Wait for the process to finish"""
@@ -232,3 +237,6 @@ class PythonFileRunner(object):
     def kill_process(self):
         """Stop the process. This does *not* work on windows."""
         os.kill(self.process.pid, 9)
+    
+    def add_finishing_observer(self, observer):
+        self.observers.append(observer)

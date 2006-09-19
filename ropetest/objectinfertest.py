@@ -258,6 +258,17 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(pyscope.get_name('a_func').get_object(),
                           pyscope.get_scopes()[0].get_name('arg').get_object())
         
+    def test_dti_and_concluded_data_invalidation(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'def a_func(arg):\n    return arg\n' \
+               'a_var = a_func(a_func)\n'
+        mod.write(code)
+        pymod = self.pycore.resource_to_pyobject(mod)
+        pymod.get_attribute('a_var').get_object()
+        self.pycore.run_module(mod).wait_process()
+        self.assertEquals(pymod.get_attribute('a_func').get_object(),
+                          pymod.get_attribute('a_var').get_object())
+
 
 class CartesianProductDynamicOITest(unittest.TestCase):
 
