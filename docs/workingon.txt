@@ -2,11 +2,11 @@ Enhanced Import Tools
 =====================
 
 - get_import_for_pyname defined in `__init__.py` of a package
+- `Import.remove_names` -> `Import`
 
+* Imports that are defined in multiple lines
 * `ImportTools.get_from_import(module, name)`
 * `FromImport.expand_star(accepter)`
-* `Import.remove_names` -> `Import`
-* Imports that are defined in multiple lines
 
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
