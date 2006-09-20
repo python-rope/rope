@@ -1,19 +1,22 @@
-Release And Weekly Planning
-===========================
+Enhanced Import Tools
+=====================
 
-- Using `PyDefinedObject._get_structural_data` in scopes.get_scopes
-- Optimizing `Scope.get_name`
-- Invalidating concluded data after running modules
+- get_import_for_pyname defined in `__init__.py` of a package
 
-* Kill editor and confirm saving
+* `ImportTools.get_from_import(module, name)`
+* `FromImport.expand_star(accepter)`
+* `Import.remove_names` -> `Import`
+* Imports that are defined in multiple lines
+
+* Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
-* Handling::
+* Handling `Scope.lookup` for ::
   
     class A(object):
         var = A
         another = var
 
-* Profiling and finding bottlenecks
+* Preferring `DefinedName`\s for code assists
 
 
 Remaining Stories

@@ -76,4 +76,10 @@ class EditorPile(object):
         self.active_editor = None
         if self.editors:
             self.buttons[self.editors[0]].invoke()
-
+    
+    def get_editor_list(self):
+        if not self.editors:
+            return []
+        result = self.editors[1:]
+        result.append(self.editors[0])
+        return result

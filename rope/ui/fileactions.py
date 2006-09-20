@@ -268,7 +268,7 @@ def save_all(context):
     context.get_core().save_all_editors()
 
 def close_editor(context):
-    context.get_core().close_active_editor()
+    context.get_core()._close_active_editor_dialog()
 
 def exit_rope(context):
     context.get_core()._close_project_and_exit()

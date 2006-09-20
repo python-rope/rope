@@ -19,8 +19,9 @@ def __rope_start_everything():
                 if event == 'return':
                     self.on_function_call(frame, event, arg)
             def global_trace(frame, event, arg):
-                 # if True or self._is_code_inside_project(frame.f_code):
-                 return local_trace
+                # Note: Ignoring out to in calls
+                if self._is_code_inside_project(frame.f_code):
+                    return local_trace
             sys.settrace(global_trace)
 
         def on_function_call(self, frame, event, arg):

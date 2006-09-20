@@ -67,8 +67,9 @@ This Release
 ------------
 
 * `Separating Structural From Concluded Data`_
-* `Encapsulate Field Refactoring`_
+
 * `Enhanced Import Tools`_
+* `Encapsulate Field Refactoring`_
 * Move a class/function to another module
 * Introduce factory method
 
@@ -77,7 +78,7 @@ Hot Topics
 ==========
 
 * `Enhanced Import Tools`_
-* `Separating Structural From Concluded Data`_
+* `Undo Unification`_
 * `Encapsulate Field Refactoring`_
 * `Python's Implicit Interfaces`_
 
@@ -110,6 +111,8 @@ Organizing imports:
 * Remove unused
 * Relative to absolute
 * Relative to new relative
+* From to import
+* Import to from
 
 We need actions like:
 
@@ -117,6 +120,62 @@ We need actions like:
 * Moving one import statement from one module to another
 * Get import statement for a `PyName`
 * Add/remove an import statements
+
+We need to answer:
+
+* How to hold import statements
+
+Before going any farther we need to find a way for holding and
+manipulating imports.  It should be noted that we need to
+separate import location from import information.
+
+
+Finding Used Imports for a Part of a Module
+-------------------------------------------
+
+After adding the `rope.pynames` module it is relatively easy.
+We need to:
+
+1. Find all `ImportedName`\s and `ImportedModule`\s.
+2. Find a matching between these imported `PyName`\s and
+   imported statements by analyzing `Import` and `From` ast nodes.
+3. Recursively visit scopes with `compiler.walk` and collect
+   the `Name` nodes that are not in `Scope.get_names`.
+4. For each name from the last phase if there is an imported object,
+   collect its matching import.
+
+
+Finding Unused Imports for a Module
+-----------------------------------
+
+
+Move Function/Class Refactoring And Imports
+-------------------------------------------
+
+The things we should do for this refactoring can be devided into
+`Finding used imports for a part of a module`_ and replacing old
+occurances.  The former is already addressed.  For replacing old
+occurances we need to:
+
+* Add new import statement; from or import?
+* Fix references using old import names to new import names
+* Remove old import statement; both normal and from imports
+
+First of we can add new import statements if needed.  Then find all
+occurances of moving objects and replace them with the new import.
+Next we can find if there is any from import that is importing
+the moving object.  If so change that import.
+
+So we need basic operations like:
+
+* Get an import statement for a pyname
+* Add an import statement if not already there
+* Finding old occurances
+* Remove unused imports from source module
+* Remove a name from from imports
+
+Then we need to move the object.  The problem with this moving is
+that we need to move its needed imports too.
 
 
 Separating Structural From Concluded Data
@@ -156,75 +215,6 @@ In the construction of structural parts we only care about
 * superclasses
 
 
-How To Hold Concluded Information?
-----------------------------------
-
-Where should we store concluded data.  We should be able to invalidate
-those data too.
-
-A good place for holding the data maybe inside `PyModule`\s.  The
-disadvantage of this approach is the cost of holding lots of data
-in one place.
-
-
-Different Types Of PyNames
---------------------------
-
-We might need to separate different types of `PyName`s. ::
-  
-  class PyName(object):
-      
-      def get_object(self):
-          pass
-      
-      def get_definition_location(self):
-          pass
-  
-  class DefinedPyName(PyName):
-      def __init__(self, pyobject):
-          self.pyobject = pyobject
-  
-  class AssignedPyName(PyName):
-      def __init__(self, lineno=None, module=None):
-          self.lineno = lineno
-          self.module = module
-          self.is_being_inferred = False
-          self.assigned_asts = []
-  
-  class ImportedPyName(PyName):
-      def __init__(self, imported_pyname):
-          self.imported_pyname = imported_pyname
-  
-  class ImportedModule(PyName):
-      def __init__(self, imported_module):
-          self.imported_module = module
-
-After separating concluded data we should be able to recompute the
-missing data.  Keep in mind that this requires not saving `PyObject`\s
-inside `PyName`\s::
-  
-  class ImportedPyName(PyName):
-      def __init__(self, module_name, level, name, as_name):
-          pass
-  
-  class ImportedModule(PyName):
-      def __init__(self, module_name):
-          pass
-  
-  class StarImported(object):
-      def __init__(self, module_name):
-          pass
-      
-      def get_pynames(self):
-          pass
-
-We only need to change imported `PyName`\s.  So we should store import
-information in an abstract form.  Note that `StarImported` objects are
-not pynames.  When encoutering a star import in source we add one
-`StartImport` object to the pyobject that contains that scope.
-`PyDefinedObject.get_attribute` can be optimized.
-
-
 Encapsulate Field Refactoring
 =============================
 
@@ -233,6 +223,16 @@ in which references to an attribute should be replaced with getters
 and setters and the section that shouldn't.  The latter consists of
 class constructor or maybe all functions inside the class and the
 former consists of all other places.
+
+
+Undo Unification
+================
+
+Currently there are separate undo actions for editing text and
+refactorings and in future there might be undos for other changes.
+We need to mix them together.  This seems hard to do mainly because
+We don't have much access to the undo mechanism of Tkinter.  I think
+an approximation here will save us.
 
 
 Finding Occurances
@@ -483,25 +483,6 @@ invoked on a parameter or not.  Now that we have a bigger set of
 methods we need to do the same for these methods.  When we're finished
 we can perform the actual refactoring.  The challenge here is that we
 should consider inheritance relations, too.
-
-
-Better Attribute Object Inference
-=================================
-
-Consider this situation::
-  
-  class AClass(object):
-      
-      def __init__(self):
-          self.an_attr = None
-      
-      def set_attr(self, new_value):
-          self.an_attr = self.new_value
-
-This situation occurs rather frequently, specially when using lazy
-initialization.  Another common situation is in test cases where
-variables are defined in `setUp` method rather than `__init__`.
-This was done for ``0.3m3`` release.
 
 
 Which Is Right? Type Or Object Inference

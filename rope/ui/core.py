@@ -118,16 +118,17 @@ class Core(object):
         scrollbar = Scrollbar(find_dialog, orient=VERTICAL)
         scrollbar['command'] = found.yview
         found.config(yscrollcommand=scrollbar.set)
-        for editor in self.editor_manager.editors:
+        editor_list = self.editor_manager.get_editor_list()
+        for editor in editor_list:
             found.insert(END, editor.get_file().get_name())
-        if len(self.editor_manager.editors) >= 2:
-            found.selection_set(1)
+        if len(editor_list) >= 2:
+            found.selection_set(0)
         def name_changed(event):
             if name.get() == '':
                 return
             found.select_clear(0, END)
             found_index = -1
-            for index, editor in enumerate(self.editor_manager.editors):
+            for index, editor in enumerate(editor_list):
                 if editor.get_file().get_name().startswith(name.get()):
                     found_index = index
                     break
@@ -136,7 +137,7 @@ class Core(object):
         def open_selected():
             selection = found.curselection()
             if selection:
-                editor = self.editor_manager.editors[int(selection[0])]
+                editor = editor_list[int(selection[0])]
                 self.activate_editor(editor)
                 toplevel.destroy()
         def cancel():
