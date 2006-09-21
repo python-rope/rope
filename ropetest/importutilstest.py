@@ -87,6 +87,14 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg1 import mod1',
                           imports[0].import_info.get_import_statement())
 
+    def test_get_multi_line_import_statements_for_froms(self):
+        self.mod.write('from pkg1 \\\n    import mod1\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        imports = module_with_imports.get_import_statements()
+        self.assertEquals('from pkg1 import mod1',
+                          imports[0].import_info.get_import_statement())
+
     def test_get_import_statements_for_from_star(self):
         self.mod.write('from pkg1 import *\n')
         pymod = self.pycore.get_module('mod')
@@ -103,6 +111,13 @@ class ImportUtilsTest(unittest.TestCase):
         imports = module_with_imports.get_import_statements()
         self.assertEquals('from .mod3 import *',
                           imports[0].import_info.get_import_statement())
+
+    def test_ignoring_indented_imports(self):
+        self.mod.write('if True:\n    import pkg1\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        imports = module_with_imports.get_import_statements()
+        self.assertEquals(0, len(imports))
 
     def test_import_get_names(self):
         self.mod.write('import pkg1 as pkg\n')

@@ -1,10 +1,9 @@
 Enhanced Import Tools
 =====================
 
-- `ImportTools.get_from_import(module, name)`
+- Imports that are defined in multiple lines
+- Ignoring indented imports
 
-* Imports that are defined in multiple lines
-* Ignoring indented imports
 * `FromImport.expand_star(accepter)`
 
 

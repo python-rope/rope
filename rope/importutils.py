@@ -48,12 +48,8 @@ class ModuleWithImports(object):
     
     def get_import_statements(self):
         if self.import_statements is None:
-            current_folder = None
-            if self.pymodule.get_resource():
-                current_folder = self.pymodule.get_resource().get_parent()
-            visitor = _GlobalImportVisitor(current_folder, self.pycore)
-            compiler.walk(self.pymodule._get_ast(), visitor)
-            self.import_statements = visitor.imports
+            self.import_statements = _GlobalImportFinder(self.pymodule, self.pycore).\
+                                     find_import_statements()
         return self.import_statements
     
     def _get_unbound_names(self, defined_pyobject):
@@ -351,28 +347,41 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
         self.parent.add_unbound(name)
 
 
-class _GlobalImportVisitor(object):
+class _GlobalImportFinder(object):
     
-    def __init__(self, current_folder, pycore):
-        self.current_folder = current_folder
+    def __init__(self, pymodule, pycore):
+        self.current_folder = None
+        if pymodule.get_resource():
+            self.current_folder = pymodule.get_resource().get_parent()
+            self.pymodule = pymodule
         self.pycore = pycore
         self.imports = []
     
-    def visitImport(self, node):
+    def visit_import(self, node, end_line):
         import_statement = ImportStatement(NormalImport(node.names),
-                                           node.lineno, node.lineno + 1)
+                                           node.lineno, end_line)
         self.imports.append(import_statement)
 
-    def visitFrom(self, node):
+    def visit_from(self, node, end_line):
         level = 0
         if hasattr(node, 'level'):
             level = node.level
         import_info = FromImport(node.modname, level, node.names,
                                  self.current_folder, self.pycore)
-        self.imports.append(ImportStatement(import_info, node.lineno, node.lineno + 1))
+        self.imports.append(ImportStatement(import_info, node.lineno, end_line))
     
-    def visitClass(self, node):
-        pass
-    
-    def visitFunction(self, node):
-        pass
+    def find_import_statements(self):
+        lines = SourceLinesAdapter(self.pymodule.source_code)
+        nodes = self.pymodule._get_ast().node.nodes
+        for index, node in enumerate(nodes):
+            if isinstance(node, (compiler.ast.Import, compiler.ast.From)):
+                end_line = lines.length() + 1
+                if index + 1 < len(nodes):
+                    end_line = nodes[index + 1].lineno
+                while lines.get_line(end_line - 1).strip() == '':
+                    end_line -= 1
+            if isinstance(node, compiler.ast.Import):
+                self.visit_import(node, end_line)
+            if isinstance(node, compiler.ast.From):
+                self.visit_from(node, end_line)
+        return self.imports
