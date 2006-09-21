@@ -130,30 +130,11 @@ manipulating imports.  It should be noted that we need to
 separate import location from import information.
 
 
-Finding Used Imports for a Part of a Module
--------------------------------------------
-
-After adding the `rope.pynames` module it is relatively easy.
-We need to:
-
-1. Find all `ImportedName`\s and `ImportedModule`\s.
-2. Find a matching between these imported `PyName`\s and
-   imported statements by analyzing `Import` and `From` ast nodes.
-3. Recursively visit scopes with `compiler.walk` and collect
-   the `Name` nodes that are not in `Scope.get_names`.
-4. For each name from the last phase if there is an imported object,
-   collect its matching import.
-
-
-Finding Unused Imports for a Module
------------------------------------
-
-
 Move Function/Class Refactoring And Imports
 -------------------------------------------
 
 The things we should do for this refactoring can be devided into
-`Finding used imports for a part of a module`_ and replacing old
+finding used imports for a part of a module and replacing old
 occurances.  The former is already addressed.  For replacing old
 occurances we need to:
 

@@ -10,6 +10,7 @@ import ropetest.formattertest
 import ropetest.refactortest
 import ropetest.objectinfertest
 import ropetest.runmodtest
+import ropetest.importutilstest
 
 import ropetest.ui.editortest
 import ropetest.ui.fileeditortest
@@ -35,6 +36,7 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.refactortest.RefactoringTest))
     result.addTests(ropetest.objectinfertest.suite())
     result.addTests(ropetest.runmodtest.suite())
+    result.addTests(unittest.makeSuite(ropetest.importutilstest.ImportUtilsTest))
 
     result.addTests(ropetest.ui.mockeditortest.suite())
     result.addTests(unittest.makeSuite(ropetest.ui.fileeditortest.FileEditorTest))

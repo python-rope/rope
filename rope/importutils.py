@@ -11,6 +11,15 @@ class ImportTools(object):
         self.pycore = project.get_pycore()
     
     def get_import_for_module(self, module):
+        module_name = self._get_module_name(module)
+        return NormalImport(([module_name, None], ))
+    
+    def get_from_import_for_module(self, module, name):
+        module_name = self._get_module_name(module)
+        return FromImport(module_name, 0, [(name, None)],
+                          module.get_resource().get_parent(), self.pycore)
+
+    def _get_module_name(self, module):
         resource = module.get_resource()
         if resource.get_name() == '__init__.py':
             module_name = resource.get_parent().get_name()
@@ -18,13 +27,13 @@ class ImportTools(object):
         else:
             module_name = resource.get_name()[:-3]
             source_folder = resource.get_parent()
-        
+
         source_folders = self.pycore.get_source_folders()
         while source_folder != self.project.get_root_folder() and \
               source_folder not in source_folders:
             module_name = source_folder.get_name() + '.' + module_name
             source_folder = source_folder.get_parent()
-        return NormalImport(([module_name, None], ))
+        return module_name
     
     def get_module_with_imports(self, module):
         return ModuleWithImports(self.pycore, module)
@@ -75,7 +84,7 @@ class ModuleWithImports(object):
         lines = self.pymodule.source_code.splitlines(True)
         result = []
         last_index = 0
-        for import_statement in self.import_statements:
+        for import_statement in self.get_import_statements():
             start = import_statement.start_line - 1
             result.extend(lines[last_index:start])
             last_index = import_statement.end_line - 1
@@ -85,15 +94,23 @@ class ModuleWithImports(object):
         return ''.join(result)
     
     def add_import(self, import_info):
+        for import_statement in self.get_import_statements():
+            if import_statement.add_import(import_info):
+                break
+        else:
+            all_imports = self.get_import_statements()
+            last_line = 1
+            if all_imports:
+                last_line = all_imports[-1].end_line
+            all_imports.append(ImportStatement(import_info, last_line, last_line))
+    
+    def expand_stars(self):
         pass
     
     def relative_to_absolute(self):
         pass
     
     def relative_to_new_relative(self):
-        pass
-    
-    def expand_star(self):
         pass
     
 
@@ -106,6 +123,13 @@ class ImportStatement(object):
     
     def filter_names(self, can_select):
         self.import_info = self.import_info.filter_names(can_select)
+    
+    def add_import(self, import_info):
+        result = self.import_info.add_import(import_info)
+        if result is not None:
+            self.import_info = result
+            return True
+        return False
     
 
 class ImportInfo(object):
@@ -120,6 +144,9 @@ class ImportInfo(object):
         pass
     
     def is_empty(self):
+        pass
+    
+    def add_import(self, import_info):
         pass
 
 
@@ -158,6 +185,12 @@ class NormalImport(ImportInfo):
     
     def is_empty(self):
         return len(self.names_and_aliases) == 0
+
+    def add_import(self, import_info):
+        if isinstance(import_info, self.__class__):
+            if self.names_and_aliases == import_info.names_and_aliases:
+                return self
+        return None
 
 
 class FromImport(ImportInfo):
@@ -216,6 +249,25 @@ class FromImport(ImportInfo):
     
     def is_empty(self):
         return len(self.names_and_aliases) == 0
+    
+    def add_import(self, import_info):
+        if isinstance(import_info, self.__class__) and \
+           self.module_name == import_info.module_name and \
+           self.level == import_info.level:
+            if self._is_star_import():
+                return self
+            if import_info._is_star_import():
+                return import_info
+            new_pairs = list(self.names_and_aliases)
+            for pair in import_info.names_and_aliases:
+                if pair not in new_pairs:
+                    new_pairs.append(pair)
+            return FromImport(self.module_name, self.level, new_pairs,
+                              self.current_folder, self.pycore)
+        return None
+    
+    def _is_star_import(self):
+        return self.names_and_aliases and self.names_and_aliases[0][0] == '*'
 
 
 class _UnboundNameFinder(object):

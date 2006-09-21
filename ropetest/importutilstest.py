@@ -42,6 +42,27 @@ class ImportUtilsTest(unittest.TestCase):
         import_statement = self.import_tools.get_import_for_module(pymod)
         self.assertEquals('import pkg1', import_statement.get_import_statement())
     
+    
+    def test_get_from_import_for_module(self):
+        pymod = self.pycore.get_module('mod')
+        import_statement = self.import_tools.get_from_import_for_module(pymod, 'a_func')
+        self.assertEquals('from mod import a_func', 
+                          import_statement.get_import_statement())
+
+    def test_get_from_import_for_module_in_nested_modules(self):
+        pymod = self.pycore.get_module('pkg1.mod1')
+        import_statement = self.import_tools.get_from_import_for_module(pymod, 'a_func')
+        self.assertEquals('from pkg1.mod1 import a_func',
+                          import_statement.get_import_statement())
+
+    def test_get_from_import_for_module_in_init_dot_py(self):
+        init_dot_py = self.pkg1.get_child('__init__.py')
+        pymod = self.pycore.resource_to_pyobject(init_dot_py)
+        import_statement = self.import_tools.get_from_import_for_module(pymod, 'a_func')
+        self.assertEquals('from pkg1 import a_func',
+                          import_statement.get_import_statement())
+    
+    
     def test_get_import_statements(self):
         self.mod.write('import pkg1\n')
         pymod = self.pycore.get_module('mod')
@@ -174,7 +195,49 @@ class ImportUtilsTest(unittest.TestCase):
         module_with_imports = self.import_tools.get_module_with_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('\n', module_with_imports.get_changed_source())
-        
+    
+    def test_adding_imports(self):
+        self.mod.write('\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        new_import = self.import_tools.get_import_for_module(
+            self.pycore.resource_to_pyobject(self.mod1))
+        module_with_imports.add_import(new_import)
+        self.assertEquals('import pkg1.mod1\n\n', module_with_imports.get_changed_source())
+
+    def test_adding_from_imports(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import a_func\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        new_import = self.import_tools.get_from_import_for_module(
+            self.pycore.resource_to_pyobject(self.mod1), 'another_func')
+        module_with_imports.add_import(new_import)
+        self.assertEquals('from pkg1.mod1 import a_func, another_func\n',
+                          module_with_imports.get_changed_source())
+
+    def test_adding_to_star_imports(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import *\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        new_import = self.import_tools.get_from_import_for_module(
+            self.pycore.resource_to_pyobject(self.mod1), 'another_func')
+        module_with_imports.add_import(new_import)
+        self.assertEquals('from pkg1.mod1 import *\n',
+                          module_with_imports.get_changed_source())
+
+    def test_adding_star_imports(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import a_func\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        new_import = self.import_tools.get_from_import_for_module(
+            self.pycore.resource_to_pyobject(self.mod1), '*')
+        module_with_imports.add_import(new_import)
+        self.assertEquals('from pkg1.mod1 import *\n',
+                          module_with_imports.get_changed_source())
+
 
 if __name__ == '__main__':
     unittest.main()

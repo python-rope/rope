@@ -1,12 +1,15 @@
 Enhanced Import Tools
 =====================
 
-- get_import_for_pyname defined in `__init__.py` of a package
-- `Import.remove_names` -> `Import`
+- `ImportTools.get_from_import(module, name)`
 
 * Imports that are defined in multiple lines
-* `ImportTools.get_from_import(module, name)`
+* Ignoring indented imports
 * `FromImport.expand_star(accepter)`
+
+
+Remaining Stories
+=================
 
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
@@ -17,11 +20,6 @@ Enhanced Import Tools
         another = var
 
 * Preferring `DefinedName`\s for code assists
-
-
-Remaining Stories
-=================
-
 * Transform module to package refactoring and relative imports
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
