@@ -25,6 +25,9 @@ class Refactoring(object):
     def undo_last_refactoring(self):
         pass
 
+    def introduce_factory(self, resource, offset, factory_name):
+        pass
+
 
 class PythonRefactoring(Refactoring):
 
@@ -62,8 +65,11 @@ class PythonRefactoring(Refactoring):
         changes.do()
     
     def introduce_factory(self, resource, offset, factory_name):
-        factory_introducer = IntroduceFactoryRefactoring(self.pycore)
-        factory_introducer.introduce_factory(resource, offset, factory_name)
+        factory_introducer = IntroduceFactoryRefactoring(self.pycore, resource,
+                                                         offset, factory_name)
+        changes = factory_introducer.introduce_factory()
+        self.last_changes = changes
+        changes.do()
         
     def undo_last_refactoring(self):
         self.last_changes.undo()

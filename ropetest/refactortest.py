@@ -469,7 +469,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
-    def test_chaning_occurances_in_the_main_module(self):
+    def test_changing_occurances_in_the_main_module(self):
         code = 'class AClass(object):\n    an_attr = 10\na_var = AClass()'
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write(code)
@@ -480,7 +480,19 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
-    def test_chaning_occurances_in_other_modules(self):
+    def test_changing_occurances_with_arguments(self):
+        code = 'class AClass(object):\n    def __init__(self, arg):\n        pass\n' \
+               'a_var = AClass(10)\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    def __init__(self, arg):\n        pass\n\n' \
+                   '    @staticmethod\n    def create(*args, **kws):\n' \
+                   '        return AClass(*args, **kws)\n' \
+                   'a_var = AClass.create(10)\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+    def test_changing_occurances_in_other_modules(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
@@ -493,19 +505,24 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
-    def test_chaning_occurances_in_other_modules_adding_import(self):
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_for_non_classes(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('def a_func():\n    pass\n')
+        self.refactoring.introduce_factory(mod, mod.read().index('a_func') + 1, 'create')
+
+    def test_undoing_introduce_factory(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
-        mod1.write('class AClass(object):\n    an_attr = 10\n')
-        mod2.write('from mod1 import AClass\na_var = AClass()\n')
+        code1 = 'class AClass(object):\n    an_attr = 10\n'
+        mod1.write(code1)
+        code2 = 'from mod1 import AClass\na_var = AClass()\n'
+        mod2.write(code2)
         self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
-        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kws):\n' \
-                   '        return AClass(*args, **kws)\n'
-        expected2 = 'from mod1 import AClass\nimport mod1\na_var = mod1.AClass.create()\n'
-        self.assertEquals(expected1, mod1.read())
-        self.assertEquals(expected2, mod2.read())
-
+        self.refactoring.undo_last_refactoring()
+        self.assertEquals(code1, mod1.read())
+        self.assertEquals(code2, mod2.read())
+    
 
 def suite():
     result = unittest.TestSuite()

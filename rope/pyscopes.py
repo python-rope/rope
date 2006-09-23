@@ -212,4 +212,5 @@ class _HoldingScopeFinder(object):
                     return end
                 else:
                     end = l
-        return self.lines.length()
+        return end
+

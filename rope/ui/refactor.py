@@ -62,6 +62,10 @@ def extract_method(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor()._extract_method_dialog()
 
+def introduce_factory(context):
+    if context.get_active_editor():
+        context.get_active_editor().get_editor()._introduce_factory_refactoring_dialog()
+
 def undo_last_refactoring(context):
     if context.get_core().get_open_project():
         context.get_core().get_open_project().get_pycore().\
@@ -73,11 +77,14 @@ actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rena
                             MenuAddress(['Refactor', 'Rename'], 'r')))
 actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_method), 'M-M',
                             MenuAddress(['Refactor', 'Extract Method'], 'e')))
-actions.append(SimpleAction('Rename In File', ConfirmAllEditorsAreSaved(local_rename), None,
-                            MenuAddress(['Refactor', 'Rename In File'], 'f')))
-actions.append(SimpleAction('Transform Module To Package', 
+actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
+                            MenuAddress(['Refactor', 'Rename in File'], 'f')))
+actions.append(SimpleAction('Transform Module to Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
-                            MenuAddress(['Refactor', 'Transform Module To Package'], 't', 1)))
+                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1)))
+actions.append(SimpleAction('Introduce Factory Method', 
+                            ConfirmAllEditorsAreSaved(introduce_factory), None,
+                            MenuAddress(['Refactor', 'Introduce Factory Method'], 'i', 1)))
 actions.append(SimpleAction('Undo Last Refactoring', 
                             ConfirmAllEditorsAreSaved(undo_last_refactoring), None,
                             MenuAddress(['Refactor', 'Undo Last Refactoring'], 'u', 2)))

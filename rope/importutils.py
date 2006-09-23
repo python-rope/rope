@@ -309,7 +309,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
                 self.names.add(name)
         wanted_scope = wanted_pyobject.get_scope()
         self.start = wanted_scope.get_start()
-        self.end = wanted_scope.get_end()
+        self.end = wanted_scope.get_end() + 1
     
     def _get_root(self):
         return self

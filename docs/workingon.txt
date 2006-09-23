@@ -1,14 +1,17 @@
 Introduce Factory Method Refactoring
 ====================================
 
-* We need; the class, factory method name, is global
+- Undoing introduce factory
+- Adding to UI
+
 * Import kind
-* Changing occurances
-* Undoing introduce factory method
+* Using factory method on a class occurance other than the defining module
+* Nested classes; factory method should be indented
+* global factory method; raising exception for nested classes
 * Asking about the import style
-* Passing constructor arguments
 * Removing ``pass`` when adding factory method to an empty class
 
+* Adding uihelpers.ask_fields(callback)
 * Import addition when adding a relative with an absolute import
 
 
@@ -24,6 +27,7 @@ Remaining Stories
         var = A
         another = var
 
+* Showing function signature in ``F2``
 * Preferring `DefinedName`\s for code assists; this works for class methods, too
 * Transform module to package refactoring and relative imports
 * `rope.exceptions` should only contain user exceptions that are

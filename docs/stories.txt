@@ -14,15 +14,6 @@ Stories
 > Unestimated Stories
 
 
-* Organize imports
-
-
-* Finding unused imports
-
-
-* Add import
-
-
 * Variable indentation and tab size
 
 
@@ -206,6 +197,9 @@ Stories
 * Rename function parameters
 
 
+* Add import
+
+
 * Open Type; C-T
 
 
@@ -230,13 +224,19 @@ Stories
 * Move a module or package to another package
 
 
+* Organize imports
+
+
 > Public Release 0.3m4 : October 1, 2006
+
+
+* Encapsulate field
 
 
 * Move a class/function to another module
 
 
-* Encapsulate field
+* Removing unused imports
 
 
 * Introduce factory method

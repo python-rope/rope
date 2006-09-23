@@ -88,8 +88,8 @@ To Be Discussed
 
 * Using a modification of `compiler` AST for simplifying refactorings
 * Function to function object refactoring
+* For, while, with blocks and loop variables
 * Rope's preference saving system: format, location
-* Holding holding scope instead of module in `PyName`\s
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * `What rope assumes...`_

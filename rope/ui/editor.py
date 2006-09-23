@@ -264,6 +264,36 @@ class GraphicalEditor(object):
                                       self.get_current_offset(),
                                       new_name)
 
+    def _introduce_factory_refactoring_dialog(self, event=None):
+        toplevel = Toplevel()
+        toplevel.title('Introduce Factory Method Refactoring')
+        frame = Frame(toplevel)
+        label = Label(frame, text='Factory Method Name :')
+        label.grid(row=0, column=0)
+        new_name_entry = Entry(frame)
+        new_name_entry.grid(row=0, column=1)
+        def ok(event=None):
+            self.introduce_factory(new_name_entry.get())
+            toplevel.destroy()
+        def cancel(event=None):
+            toplevel.destroy()
+
+        ok_button = Button(frame, text='Done', command=ok)
+        cancel_button = Button(frame, text='Cancel', command=cancel)
+        ok_button.grid(row=1, column=0)
+        new_name_entry.bind('<Return>', lambda event: ok())
+        new_name_entry.bind('<Escape>', lambda event: cancel())
+        new_name_entry.bind('<Control-g>', lambda event: cancel())
+        cancel_button.grid(row=1, column=1)
+        frame.grid()
+        new_name_entry.focus_set()
+
+    def introduce_factory(self, factory_name):
+        resource = self._get_resource()
+        self.refactoring.introduce_factory(resource,
+                                           self.get_current_offset(),
+                                           factory_name)
+    
     def _focus_went_out(self):
         if self.searcher.is_searching():
             self.searcher.end_searching()
