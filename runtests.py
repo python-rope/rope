@@ -33,7 +33,7 @@ def suite():
     result.addTests(ropetest.pyscopestest.suite())
     result.addTests(unittest.makeSuite(ropetest.outlinetest.OutlineTest))
     result.addTests(unittest.makeSuite(ropetest.formattertest.FormatterTest))
-    result.addTests(unittest.makeSuite(ropetest.refactortest.RefactoringTest))
+    result.addTests(ropetest.refactortest.suite())
     result.addTests(ropetest.objectinfertest.suite())
     result.addTests(ropetest.runmodtest.suite())
     result.addTests(unittest.makeSuite(ropetest.importutilstest.ImportUtilsTest))

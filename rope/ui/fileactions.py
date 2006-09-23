@@ -193,12 +193,16 @@ def _find_file_dialog(core):
     def select_prev(event):
         active = found.index(Tkinter.ACTIVE)
         if active - 1 >= 0:
+            found.select_clear(0, Tkinter.END)
+            found.selection_set(active - 1)
             found.activate(active - 1)
             found.see(active - 1)
     found.bind('<Control-p>', select_prev)
     def select_next(event):
         active = found.index(Tkinter.ACTIVE)
         if active + 1 < found.size():
+            found.select_clear(0, Tkinter.END)
+            found.selection_set(active + 1)
             found.activate(active + 1)
             found.see(active + 1)
     found.bind('<Control-n>', select_next)

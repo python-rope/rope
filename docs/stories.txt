@@ -197,9 +197,6 @@ Stories
   Add filter texts and selection texts to trees and lists.
 
 
-* Move a module or package to another package
-
-
 * Introduce redirection
 
 
@@ -228,6 +225,9 @@ Stories
 
 
 * Inline variable
+
+
+* Move a module or package to another package
 
 
 > Public Release 0.3m4 : October 1, 2006

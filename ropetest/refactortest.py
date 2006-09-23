@@ -6,10 +6,10 @@ from rope.exceptions import RefactoringException
 from rope.project import Project
 from ropetest import testutils
 
-class RefactoringTest(unittest.TestCase):
+class RenameRefactoringTest(unittest.TestCase):
 
     def setUp(self):
-        super(RefactoringTest, self).setUp()
+        super(RenameRefactoringTest, self).setUp()
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
@@ -18,18 +18,12 @@ class RefactoringTest(unittest.TestCase):
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
-        super(RefactoringTest, self).tearDown()
+        super(RenameRefactoringTest, self).tearDown()
         
     def do_local_rename(self, source_code, offset, new_name):
         testmod = self.pycore.create_module(self.project.get_root_folder(), 'testmod')
         testmod.write(source_code)
         self.refactoring.local_rename(testmod, offset, new_name)
-        return testmod.read()
-
-    def do_extract_method(self, source_code, start, end, extracted):
-        testmod = self.pycore.create_module(self.project.get_root_folder(), 'testmod')
-        testmod.write(source_code)
-        self.refactoring.extract_method(testmod, start, end, extracted)
         return testmod.read()
 
     def test_simple_global_variable_renaming(self):
@@ -211,6 +205,26 @@ class RefactoringTest(unittest.TestCase):
         self.assertEquals('mod1.py', mod1.get_path())
         self.assertEquals('from mod1 import a_func\n', mod2.read())
     
+class ExtractMethodTest(unittest.TestCase):
+
+    def setUp(self):
+        super(ExtractMethodTest, self).setUp()
+        self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(ExtractMethodTest, self).tearDown()
+        
+    def do_extract_method(self, source_code, start, end, extracted):
+        testmod = self.pycore.create_module(self.project.get_root_folder(), 'testmod')
+        testmod.write(source_code)
+        self.refactoring.extract_method(testmod, start, end, extracted)
+        return testmod.read()
+
     def _convert_line_range_to_offset(self, code, start, end):
         lines = rope.codeanalyze.SourceLinesAdapter(code)
         return lines.get_line_start(start), lines.get_line_end(end)
@@ -429,6 +443,76 @@ class RefactoringTest(unittest.TestCase):
         self.refactoring.undo_last_refactoring()
         self.assertTrue(pkg.has_child('mod.py'))
         self.assertFalse(pkg.has_child('mod'))
+
+
+class IntroduceFactoryTest(unittest.TestCase):
+
+    def setUp(self):
+        super(IntroduceFactoryTest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(IntroduceFactoryTest, self).tearDown()
+    
+    def test_adding_the_method(self):
+        code = 'class AClass(object):\n    an_attr = 10\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kws):\n' \
+                   '        return AClass(*args, **kws)\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+    def test_chaning_occurances_in_the_main_module(self):
+        code = 'class AClass(object):\n    an_attr = 10\na_var = AClass()'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kws):\n' \
+                   '        return AClass(*args, **kws)\n'\
+                   'a_var = AClass.create()'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+    def test_chaning_occurances_in_other_modules(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('import mod1\na_var = mod1.AClass()\n')
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kws):\n' \
+                   '        return AClass(*args, **kws)\n'
+        expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+    def test_chaning_occurances_in_other_modules_adding_import(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('from mod1 import AClass\na_var = AClass()\n')
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kws):\n' \
+                   '        return AClass(*args, **kws)\n'
+        expected2 = 'from mod1 import AClass\nimport mod1\na_var = mod1.AClass.create()\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(RenameRefactoringTest))
+    result.addTests(unittest.makeSuite(ExtractMethodTest))
+    result.addTests(unittest.makeSuite(IntroduceFactoryTest))
+    return result
 
 
 if __name__ == '__main__':

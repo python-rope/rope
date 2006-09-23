@@ -171,6 +171,25 @@ class WordRangeFinder(object):
         prev_word = self.source_code[line_start:word_start].strip()
         return prev_word in ['def', 'class']
     
+    def _find_first_non_space_char(self, offset):
+        if offset >= len(self.source_code):
+            return len(offset)
+        current_offset = offset
+        while current_offset < len(self.source_code) and\
+              self.source_code[current_offset] in ' \t\n':
+            while current_offset >= 0 and self.source_code[current_offset] in ' \t\n':
+                current_offset += 1
+            if current_offset + 1 < len(self.source_code) and self.source_code[current_offset] == '\\':
+                current_offset += 2
+        return current_offset
+    
+    def is_a_function_being_called(self, offset):
+        word_start = self._find_word_start(offset - 1)
+        word_end = self._find_word_end(offset - 1) + 1
+        next_char = self._find_first_non_space_char(word_end)
+        return not self.is_a_class_or_function_name_in_header(offset) and \
+               next_char < len(self.source_code) and self.source_code[next_char] == '('
+    
     def is_from_statement_module(self, offset):
         stmt_start = self._find_primary_start(offset)
         line_start = self._get_line_start(stmt_start)

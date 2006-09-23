@@ -67,11 +67,11 @@ This Release
 ------------
 
 * `Separating Structural From Concluded Data`_
-
 * `Enhanced Import Tools`_
+
+* `Introduce factory method refactoring`_
+* `Move function/class refactoring`_
 * `Encapsulate Field Refactoring`_
-* Move a class/function to another module
-* Introduce factory method
 
 
 Hot Topics
@@ -86,10 +86,98 @@ Hot Topics
 To Be Discussed
 ===============
 
+* Using a modification of `compiler` AST for simplifying refactorings
+* Function to function object refactoring
 * Rope's preference saving system: format, location
 * Holding holding scope instead of module in `PyName`\s
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
+* `What rope assumes...`_
+
+
+Choosing the Next Refactoring to Add
+====================================
+
+The possibilities are:
+
+* `Move function/class refactoring`_
+* `Introduce factory method refactoring`_
+* `Encapsulate field refactoring`_
+
+I like to add the simplest of these.
+
+
+Move Function/Class Refactoring
+===============================
+
+* Copy the moving class or function and its used imports to the
+  destination module.
+* Add an import statement for the new class or function in every
+  module that uses the old one and change the references to the
+  old one to the new one.
+* Remove unused imports from changed modules
+
+The problem for this refactoring is that we need to perform
+refactorings on an already changed module.  This makes problems
+for our undo mechanisms.
+
+
+Introduce Factory Method Refactoring
+====================================
+
+Parameters to ask for: method_name, is_global, import_type.
+We should only change calls.  Maybe we can add
+`RenameFunctionCallsInModule` class that somehow extends the
+`RenameInModule` class.  Then we need to add
+`RenamePrimariesInModule` to replace the whole expression when
+replacing occurances.  If we could somehow use ASTs things
+would have been much easier, but the problem for working with
+ASTs is that we don't have the offset of nodes and we merely
+have their line number.
+
+
+Encapsulate Field Refactoring
+=============================
+
+We should divide program source code into two sections.  The section
+in which references to an attribute should be replaced with getters
+and setters and the section that shouldn't.  The latter consists of
+class constructor or maybe all functions inside the class and the
+former consists of all other places.
+
+
+Multi-Step Refactorings
+=======================
+
+Some of the refactorings need to be performed in multi steps.  In
+such situations I believe I have to use `PyCore.get_string_module`.
+So for refactorings like rename there should be a method that works
+on `PyModule`\s rather than `Resource`\s.  The problem with this
+approach is that other modules might need to have access to a changed
+module, but since the change is not committed, it is not possible. So
+we might need to add another layer on the `PyCore.get_module`, but
+that seems like a big refactoring.
+
+Another approach is doing refactorings in each step before going
+to the next one.  In this approach we won't be able to preview
+before performing the refactoring.
+
+
+Do We Really Need to Access Changed Modules?
+--------------------------------------------
+
+I think we can do refactorings like move method or introduce
+factory without having access to changed modules.
+
+
+Undo Unification
+================
+
+Currently there are separate undo actions for editing text and
+refactorings and in future there might be undos for other changes.
+We need to mix them together.  This seems hard to do mainly because
+We don't have much access to the undo mechanism of Tkinter.  I think
+an approximation here will save us.
 
 
 Enhanced Import Tools
@@ -113,50 +201,6 @@ Organizing imports:
 * Relative to new relative
 * From to import
 * Import to from
-
-We need actions like:
-
-* Used imports in a part of module
-* Moving one import statement from one module to another
-* Get import statement for a `PyName`
-* Add/remove an import statements
-
-We need to answer:
-
-* How to hold import statements
-
-Before going any farther we need to find a way for holding and
-manipulating imports.  It should be noted that we need to
-separate import location from import information.
-
-
-Move Function/Class Refactoring And Imports
--------------------------------------------
-
-The things we should do for this refactoring can be devided into
-finding used imports for a part of a module and replacing old
-occurances.  The former is already addressed.  For replacing old
-occurances we need to:
-
-* Add new import statement; from or import?
-* Fix references using old import names to new import names
-* Remove old import statement; both normal and from imports
-
-First of we can add new import statements if needed.  Then find all
-occurances of moving objects and replace them with the new import.
-Next we can find if there is any from import that is importing
-the moving object.  If so change that import.
-
-So we need basic operations like:
-
-* Get an import statement for a pyname
-* Add an import statement if not already there
-* Finding old occurances
-* Remove unused imports from source module
-* Remove a name from from imports
-
-Then we need to move the object.  The problem with this moving is
-that we need to move its needed imports too.
 
 
 Separating Structural From Concluded Data
@@ -194,26 +238,6 @@ In the construction of structural parts we only care about
 * imports
 * from imports
 * superclasses
-
-
-Encapsulate Field Refactoring
-=============================
-
-We should divide program source code into two sections.  The section
-in which references to an attribute should be replaced with getters
-and setters and the section that shouldn't.  The latter consists of
-class constructor or maybe all functions inside the class and the
-former consists of all other places.
-
-
-Undo Unification
-================
-
-Currently there are separate undo actions for editing text and
-refactorings and in future there might be undos for other changes.
-We need to mix them together.  This seems hard to do mainly because
-We don't have much access to the undo mechanism of Tkinter.  I think
-an approximation here will save us.
 
 
 Finding Occurances
@@ -538,6 +562,20 @@ divisions:
 
 After this refactoring, many places of rope can be refactored.  The
 logical line is very useful in many places for instance.
+
+
+What Rope Assumes...
+====================
+
+In order to simplify problems a bit, rope makes some assumptions about
+the source code.  In futures some of this restrictions might be removed.
+
+* All of the modules should use 4 spaces for indenting and no hard tabs.
+* All files that end with ``.py`` are considered to be python files and
+  all others not.
+* Either all files should be under version control or none.
+* All ``*.txt`` files are considered in reST formats.
+* XXX
 
 
 The GUI Mess; Working More On The UI Parts

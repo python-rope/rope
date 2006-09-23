@@ -1,10 +1,10 @@
 import re
 
-import rope.codeanalyze
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 from rope.refactor.rename import RenameRefactoring
 from rope.refactor.extract import ExtractMethodRefactoring
+from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 
 
 class Refactoring(object):
@@ -61,6 +61,10 @@ class PythonRefactoring(Refactoring):
         self.last_changes = changes
         changes.do()
     
+    def introduce_factory(self, resource, offset, factory_name):
+        factory_introducer = IntroduceFactoryRefactoring(self.pycore)
+        factory_introducer.introduce_factory(resource, offset, factory_name)
+        
     def undo_last_refactoring(self):
         self.last_changes.undo()
 

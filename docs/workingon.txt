@@ -1,15 +1,21 @@
-Enhanced Import Tools
-=====================
+Introduce Factory Method Refactoring
+====================================
 
-- Imports that are defined in multiple lines
-- Ignoring indented imports
+* We need; the class, factory method name, is global
+* Import kind
+* Changing occurances
+* Undoing introduce factory method
+* Asking about the import style
+* Passing constructor arguments
+* Removing ``pass`` when adding factory method to an empty class
 
-* `FromImport.expand_star(accepter)`
+* Import addition when adding a relative with an absolute import
 
 
 Remaining Stories
 =================
 
+* `FromImport.expand_star(accepter)`
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
 * Handling `Scope.lookup` for ::
@@ -18,7 +24,7 @@ Remaining Stories
         var = A
         another = var
 
-* Preferring `DefinedName`\s for code assists
+* Preferring `DefinedName`\s for code assists; this works for class methods, too
 * Transform module to package refactoring and relative imports
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`

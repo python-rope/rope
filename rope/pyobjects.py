@@ -210,13 +210,15 @@ class PyClass(PyDefinedObject):
 class _ConcludedData(object):
     
     def __init__(self):
-        self.data = None
+        self.data_ = None
     
     def set(self, data):
-        self.data = data
+        self.data_ = data
     
     def get(self):
-        return self.data
+        return self.data_
+    
+    data = property(get, set)
     
     def _invalidate(self):
         self.data = None
