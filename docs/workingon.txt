@@ -1,12 +1,10 @@
 Introduce Factory Method Refactoring
 ====================================
 
-- Undoing introduce factory
-- Adding to UI
+- Using factory method on a class occurance other than the defining module
+- Nested classes; factory method should be indented
 
 * Import kind
-* Using factory method on a class occurance other than the defining module
-* Nested classes; factory method should be indented
 * global factory method; raising exception for nested classes
 * Asking about the import style
 * Removing ``pass`` when adding factory method to an empty class

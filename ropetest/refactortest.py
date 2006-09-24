@@ -523,6 +523,35 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEquals(code1, mod1.read())
         self.assertEquals(code2, mod2.read())
     
+    def test_using_on_an_occurance_outside_the_main_module(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('import mod1\na_var = mod1.AClass()\n')
+        self.refactoring.introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kws):\n' \
+                   '        return AClass(*args, **kws)\n'
+        expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+    def test_introduce_factory_in_nested_scopes(self):
+        code = 'def create_var():\n'\
+               '    class AClass(object):\n'\
+               '        an_attr = 10\n'\
+               '    return AClass()\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'def create_var():\n'\
+                   '    class AClass(object):\n'\
+                   '        an_attr = 10\n\n'\
+                   '        @staticmethod\n        def create(*args, **kws):\n'\
+                   '            return AClass(*args, **kws)\n'\
+                   '    return AClass.create()\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
 
 def suite():
     result = unittest.TestSuite()

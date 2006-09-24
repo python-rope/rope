@@ -4,6 +4,8 @@ from rope.exceptions import RefactoringException
 
 import rope.codeanalyze
 import rope.pyobjects
+from rope.refactor import sourcetools
+
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 
@@ -80,7 +82,8 @@ class _ExtractMethodPerformer(object):
         info_collector = _FunctionInformationCollector(start_line, end_line,
                                                        self._is_global())
         indented_body = self.source_code[self.scope_start:self.scope_end]
-        body = _indent_lines(indented_body, -_find_minimum_indents(indented_body))
+        body = sourcetools.indent_lines(indented_body,
+                                        -sourcetools.find_minimum_indents(indented_body))
         ast = compiler.parse(body)
         compiler.walk(ast, info_collector)
         return info_collector
@@ -116,8 +119,9 @@ class _ExtractMethodPerformer(object):
                       (' ' * self._get_indents(self.holding_scope.get_start()),
                        self._get_function_signature(args)))
         extracted_body = self.source_code[self.start_offset:self.end_offset]
-        unindented_body = _indent_lines(extracted_body, -_find_minimum_indents(extracted_body))
-        function_body = _indent_lines(unindented_body, function_indents)
+        unindented_body = sourcetools.indent_lines(extracted_body,
+                                                   -sourcetools.find_minimum_indents(extracted_body))
+        function_body = sourcetools.indent_lines(unindented_body, function_indents)
         result.append(function_body)
         if returns:
             result.append(' ' * function_indents +
@@ -163,46 +167,7 @@ class _ExtractMethodPerformer(object):
         return line_end + 1
     
     def _get_indents(self, lineno):
-        indents = 0
-        for c in self.lines.get_line(lineno):
-            if c == ' ':
-                indents += 1
-            else:
-                break
-        return indents
-    
-
-def _find_minimum_indents(source_code):
-    result = 80
-    lines = source_code.split('\n')
-    for line in lines:
-        if line.strip() == '':
-            continue
-        indents = 0
-        for c in line:
-            if c == ' ':
-                indents += 1
-            else:
-                break
-        result = min(result, indents)
-    return result
-
-def _indent_lines(source_code, amount):
-    if amount == 0:
-        return source_code
-    lines = source_code.split('\n')
-    result = []
-    for l in lines:
-        if amount < 0 and len(l) > -amount:
-            indents = 0
-            while indents < len(l) and l[indents] == ' ':
-                indents += 1
-            result.append(l[-min(amount, indents):])
-        elif amount > 0 and l.strip() != '':
-            result.append(' ' * amount + l)
-        else:
-            result.append('')
-    return '\n'.join(result)
+        return sourcetools.get_indents(self.lines, lineno)
     
 
 class _FunctionInformationCollector(object):
@@ -277,8 +242,8 @@ class _VariableReadsAndWritesFinder(object):
     def find_reads_and_writes(code):
         if code.strip() == '':
             return set(), set()
-        min_indents = _find_minimum_indents(code)
-        indented_code = _indent_lines(code, -min_indents)
+        min_indents = sourcetools.find_minimum_indents(code)
+        indented_code = sourcetools.indent_lines(code, -min_indents)
         ast = compiler.parse(indented_code)
         visitor = _VariableReadsAndWritesFinder()
         compiler.walk(ast, visitor)
@@ -306,8 +271,8 @@ class _ReturnOrYieldFinder(object):
     def does_it_return(code):
         if code.strip() == '':
             return False
-        min_indents = _find_minimum_indents(code)
-        indented_code = _indent_lines(code, -min_indents)
+        min_indents = sourcetools.find_minimum_indents(code)
+        indented_code = sourcetools.indent_lines(code, -min_indents)
         ast = compiler.parse(indented_code)
         visitor = _ReturnOrYieldFinder()
         compiler.walk(ast, visitor)
