@@ -6,6 +6,7 @@ from rope.exceptions import RefactoringException
 from rope.project import Project
 from ropetest import testutils
 
+
 class RenameRefactoringTest(unittest.TestCase):
 
     def setUp(self):
@@ -205,6 +206,7 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('mod1.py', mod1.get_path())
         self.assertEquals('from mod1 import a_func\n', mod2.read())
     
+
 class ExtractMethodTest(unittest.TestCase):
 
     def setUp(self):
@@ -464,8 +466,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write(code)
         expected = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kws):\n' \
-                   '        return AClass(*args, **kws)\n'
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'
         self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
@@ -474,8 +476,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write(code)
         expected = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kws):\n' \
-                   '        return AClass(*args, **kws)\n'\
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'\
                    'a_var = AClass.create()'
         self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
@@ -486,8 +488,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write(code)
         expected = 'class AClass(object):\n    def __init__(self, arg):\n        pass\n\n' \
-                   '    @staticmethod\n    def create(*args, **kws):\n' \
-                   '        return AClass(*args, **kws)\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n' \
                    'a_var = AClass.create(10)\n'
         self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
@@ -499,8 +501,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2.write('import mod1\na_var = mod1.AClass()\n')
         self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kws):\n' \
-                   '        return AClass(*args, **kws)\n'
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'
         expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
@@ -530,8 +532,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2.write('import mod1\na_var = mod1.AClass()\n')
         self.refactoring.introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kws):\n' \
-                   '        return AClass(*args, **kws)\n'
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'
         expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
@@ -546,11 +548,73 @@ class IntroduceFactoryTest(unittest.TestCase):
         expected = 'def create_var():\n'\
                    '    class AClass(object):\n'\
                    '        an_attr = 10\n\n'\
-                   '        @staticmethod\n        def create(*args, **kws):\n'\
-                   '            return AClass(*args, **kws)\n'\
+                   '        @staticmethod\n        def create(*args, **kwds):\n'\
+                   '            return AClass(*args, **kwds)\n'\
                    '    return AClass.create()\n'
         self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
+
+    def test_adding_factory_for_global_factories(self):
+        code = 'class AClass(object):\n    an_attr = 10\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   'def create(*args, **kwds):\n' \
+                   '    return AClass(*args, **kwds)\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        self.assertEquals(expected, mod.read())
+
+    @testutils.assert_raises(rope.exceptions.RefactoringException)
+    def test_raising_exception_for_global_factory_for_nested_classes(self):
+        code = 'def create_var():\n'\
+               '    class AClass(object):\n'\
+               '        an_attr = 10\n'\
+               '    return AClass()\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+
+    def test_changing_occurances_in_the_main_module_for_global_factories(self):
+        code = 'class AClass(object):\n    an_attr = 10\na_var = AClass()'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   'def create(*args, **kwds):\n' \
+                   '    return AClass(*args, **kwds)\n'\
+                   'a_var = create()'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        self.assertEquals(expected, mod.read())
+
+    def test_changing_occurances_in_other_modules_for_global_factories(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('import mod1\na_var = mod1.AClass()\n')
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                    'def create(*args, **kwds):\n' \
+                    '    return AClass(*args, **kwds)\n'
+        expected2 = 'import mod1\na_var = mod1.create()\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+    def test_importing_if_necessary_in_other_modules_for_global_factories(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('from mod1 import AClass\npair = AClass(), AClass\n')
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                    'def create(*args, **kwds):\n' \
+                    '    return AClass(*args, **kwds)\n'
+        expected2 = 'from mod1 import AClass\nimport mod1\npair = mod1.create(), AClass\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
 
 
 def suite():

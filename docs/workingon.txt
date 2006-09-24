@@ -1,14 +1,14 @@
 Introduce Factory Method Refactoring
 ====================================
 
-- Using factory method on a class occurance other than the defining module
-- Nested classes; factory method should be indented
+- Global factory method; raising exception for nested classes
+- Adding global_factory option to the UI
+
+* Refactor `introduce_factory` and `rename` modules
+* Refactor `rope.ui.editor`
 
 * Import kind
-* global factory method; raising exception for nested classes
-* Asking about the import style
 * Removing ``pass`` when adding factory method to an empty class
-
 * Adding uihelpers.ask_fields(callback)
 * Import addition when adding a relative with an absolute import
 
@@ -22,10 +22,10 @@ Remaining Stories
 * Handling `Scope.lookup` for ::
   
     class A(object):
-        var = A
-        another = var
+        a_var = 10
+        another_var = a_var
 
-* Showing function signature in ``F2``
+* Showing function signature in show doc
 * Preferring `DefinedName`\s for code assists; this works for class methods, too
 * Transform module to package refactoring and relative imports
 * `rope.exceptions` should only contain user exceptions that are

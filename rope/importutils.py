@@ -6,17 +6,16 @@ from rope.codeanalyze import SourceLinesAdapter
 
 class ImportTools(object):
     
-    def __init__(self, project):
-        self.project = project
-        self.pycore = project.get_pycore()
+    def __init__(self, pycore):
+        self.pycore = pycore
     
     def get_import_for_module(self, module):
         module_name = self._get_module_name(module)
-        return NormalImport(([module_name, None], ))
+        return NormalImport(((module_name, None), ))
     
     def get_from_import_for_module(self, module, name):
         module_name = self._get_module_name(module)
-        return FromImport(module_name, 0, [(name, None)],
+        return FromImport(module_name, 0, ((name, None),),
                           module.get_resource().get_parent(), self.pycore)
 
     def _get_module_name(self, module):
@@ -29,7 +28,7 @@ class ImportTools(object):
             source_folder = resource.get_parent()
 
         source_folders = self.pycore.get_source_folders()
-        while source_folder != self.project.get_root_folder() and \
+        while source_folder != source_folder.get_parent() and \
               source_folder not in source_folders:
             module_name = source_folder.get_name() + '.' + module_name
             source_folder = source_folder.get_parent()
@@ -183,8 +182,12 @@ class NormalImport(ImportInfo):
         return len(self.names_and_aliases) == 0
 
     def add_import(self, import_info):
-        if isinstance(import_info, self.__class__):
-            if self.names_and_aliases == import_info.names_and_aliases:
+        if isinstance(import_info, self.__class__) and \
+           len(self.names_and_aliases) == len(import_info.names_and_aliases):
+            for pair1, pair2 in zip(self.names_and_aliases, import_info.names_and_aliases):
+                if pair1 != pair2:
+                    break
+            else:
                 return self
         return None
 

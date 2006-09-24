@@ -13,7 +13,7 @@ class ImportUtilsTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
         self.pycore = self.project.get_pycore()
-        self.import_tools = ImportTools(self.project)
+        self.import_tools = ImportTools(self.pycore)
         
         self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         self.pkg1 = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')

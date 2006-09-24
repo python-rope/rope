@@ -85,12 +85,14 @@ class RenameRefactoring(object):
 
 class RenameInModule(object):
     
-    def __init__(self, pycore, old_pynames, old_name, new_name, only_function_calls=False):
+    def __init__(self, pycore, old_pynames, old_name, new_name,
+                 only_function_calls=False, replace_primary=False):
         self.pycore = pycore
         self.old_pynames = old_pynames
         self.old_name = old_name
         self.new_name = new_name
         self.only_function_calls = only_function_calls
+        self.replace_primary = replace_primary
         self.comment_pattern = RenameInModule.any("comment", [r"#[^\n]*"])
         sqstring = r"(\b[rR])?'[^'\\\n]*(\\.[^'\\\n]*)*'?"
         dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
@@ -112,28 +114,35 @@ class RenameInModule(object):
         for match in self.pattern.finditer(source_code):
             for key, value in match.groupdict().items():
                 if value and key == "occurance":
-                    match_start = match.start(key)
-                    match_end = match.end(key)
+                    start = match_start = match.start(key)
+                    end = match_end = match.end(key)
                     if pyname_finder == None:
-                        if resource is not None:
-                            module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
-                        else:
-                            module_scope = pymodule.get_scope()
-                        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code,
-                                                                         module_scope)
+                        pyname_finder = self._create_pyname_finder(source_code, resource, pymodule)
                     new_pyname = pyname_finder.get_pyname_at(match_start + 1)
+                    
+                    if self.replace_primary:
+                        start = word_finder._find_primary_start(match_start + 1)
+                        end = word_finder._find_word_end(match_start + 1) + 1
                     for old_pyname in self.old_pynames:
                         if self.only_function_calls and \
                            not word_finder.is_a_function_being_called(match_start + 1):
                             continue
                         if self._are_pynames_the_same(old_pyname, new_pyname):
-                            result.append(source_code[last_modified_char:match_start]
+                            result.append(source_code[last_modified_char:start]
                                           + self.new_name)
-                            last_modified_char = match_end
+                            last_modified_char = end
         if last_modified_char != 0:
             result.append(source_code[last_modified_char:])
             return ''.join(result)
         return None
+
+    def _create_pyname_finder(self, source_code, resource, pymodule):
+        if resource is not None:
+            module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
+        else:
+            module_scope = pymodule.get_scope()
+        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
+        return pyname_finder
     
     def _are_pynames_the_same(self, pyname1, pyname2):
         return pyname1 == pyname2 or \
