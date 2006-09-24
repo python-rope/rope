@@ -43,9 +43,34 @@ class ConfirmAllEditorsAreSaved(object):
 
 
 def rename(context):
-    if context.get_active_editor():
-        fileeditor = context.get_active_editor()
-        fileeditor.get_editor()._rename_refactoring_dialog()
+    if not context.get_active_editor():
+        return
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Rename Refactoring')
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text='New Name :')
+    label.grid(row=0, column=0)
+    new_name_entry = Tkinter.Entry(frame)
+    new_name_entry.grid(row=0, column=1)
+    def ok(event=None):
+        resource = context.get_active_editor().get_file()
+        editor = context.get_active_editor().get_editor()
+        editor.refactoring.rename(resource,
+                                  editor.get_current_offset(),
+                                  new_name_entry.get())
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+
+    ok_button = Tkinter.Button(frame, text='Done', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    new_name_entry.bind('<Return>', lambda event: ok())
+    new_name_entry.bind('<Escape>', lambda event: cancel())
+    new_name_entry.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    new_name_entry.focus_set()
 
 def transform_module_to_package(context):
     if context.get_active_editor():
@@ -55,23 +80,83 @@ def transform_module_to_package(context):
         editor.refactoring.transform_module_to_package(resource)
 
 def local_rename(context):
-    if context.get_active_editor():
-        context.get_active_editor().get_editor()._local_rename_dialog()
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Rename Variable In File')
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text='New Name :')
+    label.grid(row=0, column=0)
+    new_name_entry = Tkinter.Entry(frame)
+    new_name_entry.grid(row=0, column=1)
+    def ok(event=None):
+        resource = context.get_active_editor().get_file()
+        editor = context.get_active_editor().get_editor()
+        editor.refactoring.local_rename(resource,
+                                        editor.get_current_offset(),
+                                        new_name_entry.get())
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+
+    ok_button = Tkinter.Button(frame, text='Done', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    new_name_entry.bind('<Return>', lambda event: ok())
+    new_name_entry.bind('<Escape>', lambda event: cancel())
+    new_name_entry.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    new_name_entry.focus_set()
 
 def extract_method(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor()._extract_method_dialog()
-
-def introduce_factory(context):
-    if context.get_active_editor():
-        context.get_active_editor().get_editor()._introduce_factory_refactoring_dialog()
 
 def undo_last_refactoring(context):
     if context.get_core().get_open_project():
         context.get_core().get_open_project().get_pycore().\
                 get_refactoring().undo_last_refactoring()
     
+def introduce_factory(context):
+    if not context.get_active_editor():
+        return
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Introduce Factory Method Refactoring')
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text='Factory Method Name :')
+    new_name_entry = Tkinter.Entry(frame)
+        
+    global_factory_val = Tkinter.BooleanVar(False)
+    static_factory_button = Tkinter.Radiobutton(frame, variable=global_factory_val,
+                                                value=False, text='Use static method')
+    global_factory_button = Tkinter.Radiobutton(frame, variable=global_factory_val,
+                                                value=True, text='Use global function')
+    
+    def ok(event=None):
+        resource = context.get_active_editor().get_file()
+        editor = context.get_active_editor().get_editor()
+        editor.refactoring.introduce_factory(resource, editor.get_current_offset(),
+                                             new_name_entry.get(),
+                                             global_factory=global_factory_val.get())
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
 
+    ok_button = Tkinter.Button(frame, text='Done', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    new_name_entry.bind('<Return>', lambda event: ok())
+    new_name_entry.bind('<Escape>', lambda event: cancel())
+    new_name_entry.bind('<Control-g>', lambda event: cancel())
+        
+    label.grid(row=0, column=0)
+    new_name_entry.grid(row=0, column=1)
+    static_factory_button.grid(row=1, column=0)
+    global_factory_button.grid(row=1, column=1)
+    ok_button.grid(row=2, column=0)
+    cancel_button.grid(row=2, column=1)
+    frame.grid()
+    new_name_entry.focus_set()
+
+    
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
                             MenuAddress(['Refactor', 'Rename'], 'r')))

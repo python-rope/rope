@@ -1,13 +1,11 @@
 Introduce Factory Method Refactoring
 ====================================
 
-- Global factory method; raising exception for nested classes
-- Adding global_factory option to the UI
+- Refactor `rope.ui.editor`
 
 * Refactor `introduce_factory` and `rename` modules
-* Refactor `rope.ui.editor`
-
 * Import kind
+* Not changing the format of unchanged imports in `importtools`
 * Removing ``pass`` when adding factory method to an empty class
 * Adding uihelpers.ask_fields(callback)
 * Import addition when adding a relative with an absolute import
@@ -16,7 +14,7 @@ Introduce Factory Method Refactoring
 Remaining Stories
 =================
 
-* `FromImport.expand_star(accepter)`
+* Changing rope short description to ``a python refactoring IDE ...``
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
 * Handling `Scope.lookup` for ::
@@ -26,7 +24,7 @@ Remaining Stories
         another_var = a_var
 
 * Showing function signature in show doc
-* Preferring `DefinedName`\s for code assists; this works for class methods, too
+* Preferring `DefinedName`\s in attribute code assists
 * Transform module to package refactoring and relative imports
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`

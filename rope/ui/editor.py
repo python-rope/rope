@@ -169,37 +169,6 @@ class GraphicalEditor(object):
         if editor is not None:
             return editor.get_file()
     
-    def _rename_refactoring_dialog(self, event=None):
-        toplevel = Toplevel()
-        toplevel.title('Rename Refactoring')
-        frame = Frame(toplevel)
-        label = Label(frame, text='New Name :')
-        label.grid(row=0, column=0)
-        new_name_entry = Entry(frame)
-        new_name_entry.grid(row=0, column=1)
-        def ok(event=None):
-            self.rename_refactoring(new_name_entry.get())
-            toplevel.destroy()
-        def cancel(event=None):
-            toplevel.destroy()
-
-        ok_button = Button(frame, text='Done', command=ok)
-        cancel_button = Button(frame, text='Cancel', command=cancel)
-        ok_button.grid(row=1, column=0)
-        new_name_entry.bind('<Return>', lambda event: ok())
-        new_name_entry.bind('<Escape>', lambda event: cancel())
-        new_name_entry.bind('<Control-g>', lambda event: cancel())
-        cancel_button.grid(row=1, column=1)
-        frame.grid()
-        new_name_entry.focus_set()
-
-    def rename_refactoring(self, new_name):
-        initial_position = self.text.index(INSERT)
-        resource = self._get_resource()
-        self.refactoring.rename(resource,
-                                self.get_current_offset(),
-                                new_name)
-    
     def _extract_method_dialog(self, event=None):
         toplevel = Toplevel()
         toplevel.title('Extract Method')
@@ -235,74 +204,6 @@ class GraphicalEditor(object):
                                         start_offset, end_offset,
                                         extracted_name)
 
-    def _local_rename_dialog(self, event=None):
-        toplevel = Toplevel()
-        toplevel.title('Rename Variable In File')
-        frame = Frame(toplevel)
-        label = Label(frame, text='New Name :')
-        label.grid(row=0, column=0)
-        new_name_entry = Entry(frame)
-        new_name_entry.grid(row=0, column=1)
-        def ok(event=None):
-            self.local_rename(new_name_entry.get())
-            toplevel.destroy()
-        def cancel(event=None):
-            toplevel.destroy()
-
-        ok_button = Button(frame, text='Done', command=ok)
-        cancel_button = Button(frame, text='Cancel', command=cancel)
-        ok_button.grid(row=1, column=0)
-        new_name_entry.bind('<Return>', lambda event: ok())
-        new_name_entry.bind('<Escape>', lambda event: cancel())
-        new_name_entry.bind('<Control-g>', lambda event: cancel())
-        cancel_button.grid(row=1, column=1)
-        frame.grid()
-        new_name_entry.focus_set()
-
-    def local_rename(self, new_name):
-        self.refactoring.local_rename(self._get_resource(),
-                                      self.get_current_offset(),
-                                      new_name)
-
-    def _introduce_factory_refactoring_dialog(self, event=None):
-        toplevel = Toplevel()
-        toplevel.title('Introduce Factory Method Refactoring')
-        frame = Frame(toplevel)
-        label = Label(frame, text='Factory Method Name :')
-        new_name_entry = Entry(frame)
-        
-        global_factory_val = BooleanVar(False)
-        static_factory_button = Radiobutton(frame, variable=global_factory_val,
-                                            value=False, text='Use static method')
-        global_factory_button = Radiobutton(frame, variable=global_factory_val,
-                                            value=True, text='Use global function')
-        
-        def ok(event=None):
-            self.introduce_factory(new_name_entry.get(), global_factory_val.get())
-            toplevel.destroy()
-        def cancel(event=None):
-            toplevel.destroy()
-
-        ok_button = Button(frame, text='Done', command=ok)
-        cancel_button = Button(frame, text='Cancel', command=cancel)
-        new_name_entry.bind('<Return>', lambda event: ok())
-        new_name_entry.bind('<Escape>', lambda event: cancel())
-        new_name_entry.bind('<Control-g>', lambda event: cancel())
-        
-        label.grid(row=0, column=0)
-        new_name_entry.grid(row=0, column=1)
-        static_factory_button.grid(row=1, column=0)
-        global_factory_button.grid(row=1, column=1)
-        ok_button.grid(row=2, column=0)
-        cancel_button.grid(row=2, column=1)
-        frame.grid()
-        new_name_entry.focus_set()
-
-    def introduce_factory(self, factory_name, global_factory):
-        resource = self._get_resource()
-        self.refactoring.introduce_factory(resource, self.get_current_offset(),
-                                           factory_name, global_factory=global_factory)
-    
     def _focus_went_out(self):
         if self.searcher.is_searching():
             self.searcher.end_searching()

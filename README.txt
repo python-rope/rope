@@ -63,7 +63,7 @@ Ctrl-o          Show quick outline
 Ctrl-F11        Run module
 
 Alt-R           Rename Refactoring
-Alt-M           Extract metho
+Alt-M           Extract method
 ==============  ======================
 
 You can complete names as you type by using code assist (``M-/``).

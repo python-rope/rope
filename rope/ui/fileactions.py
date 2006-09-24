@@ -7,6 +7,7 @@ from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 from rope.ui.uihelpers import TreeViewHandle, TreeView
 
+
 def open_project(context):
     context.get_core()._open_project_dialog()
 

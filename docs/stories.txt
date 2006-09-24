@@ -233,6 +233,9 @@ Stories
 * Encapsulate field
 
 
+* Expand star imports
+
+
 * Move a class/function to another module
 
 
