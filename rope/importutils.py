@@ -47,7 +47,8 @@ class ModuleWithImports(object):
     
     def get_import_statements(self):
         if self.import_statements is None:
-            self.import_statements = _GlobalImportFinder(self.pymodule, self.pycore).\
+            self.import_statements = _GlobalImportFinder(self.pymodule,
+                                                         self.pycore).\
                                      find_import_statements()
         return self.import_statements
     
@@ -84,7 +85,7 @@ class ModuleWithImports(object):
             result.extend(lines[last_index:start])
             last_index = import_statement.end_line - 1
             if not import_statement.import_info.is_empty():
-                result.append(import_statement.import_info.get_import_statement() + '\n')
+                result.append(import_statement.get_import_statement() + '\n')
         result.extend(lines[last_index:])
         return ''.join(result)
     
@@ -111,20 +112,32 @@ class ModuleWithImports(object):
 
 class ImportStatement(object):
     
-    def __init__(self, import_info, start_line, end_line):
+    def __init__(self, import_info, start_line, end_line, main_statement=None):
         self.import_info = import_info
         self.start_line = start_line
         self.end_line = end_line
+        self.main_statement = main_statement
+        self.is_changed = False
     
     def filter_names(self, can_select):
-        self.import_info = self.import_info.filter_names(can_select)
+        new_import = self.import_info.filter_names(can_select)
+        if new_import != self.import_info:
+            self.is_changed = True
+        self.import_info = new_import
     
     def add_import(self, import_info):
         result = self.import_info.add_import(import_info)
         if result is not None:
             self.import_info = result
+            self.is_changed = True
             return True
         return False
+    
+    def get_import_statement(self):
+        if self.is_changed or self.main_statement is None:
+            return self.import_info.get_import_statement()
+        else:
+            return self.main_statement
     
 
 class ImportInfo(object):
@@ -359,11 +372,20 @@ class _GlobalImportFinder(object):
             self.pymodule = pymodule
         self.pycore = pycore
         self.imports = []
+        self.lines = SourceLinesAdapter(self.pymodule.source_code)
     
     def visit_import(self, node, end_line):
+        start_line = node.lineno
         import_statement = ImportStatement(NormalImport(node.names),
-                                           node.lineno, end_line)
+                                           start_line, end_line,
+                                           self._get_text(start_line, end_line))
         self.imports.append(import_statement)
+    
+    def _get_text(self, start_line, end_line):
+        result = []
+        for index in range(start_line, end_line):
+            result.append(self.lines.get_line(index))
+        return '\n'.join(result)
 
     def visit_from(self, node, end_line):
         level = 0
@@ -371,17 +393,18 @@ class _GlobalImportFinder(object):
             level = node.level
         import_info = FromImport(node.modname, level, node.names,
                                  self.current_folder, self.pycore)
-        self.imports.append(ImportStatement(import_info, node.lineno, end_line))
+        start_line = node.lineno
+        self.imports.append(ImportStatement(import_info, node.lineno, end_line,
+                                            self._get_text(start_line, end_line)))
     
     def find_import_statements(self):
-        lines = SourceLinesAdapter(self.pymodule.source_code)
         nodes = self.pymodule._get_ast().node.nodes
         for index, node in enumerate(nodes):
             if isinstance(node, (compiler.ast.Import, compiler.ast.From)):
-                end_line = lines.length() + 1
+                end_line = self.lines.length() + 1
                 if index + 1 < len(nodes):
                     end_line = nodes[index + 1].lineno
-                while lines.get_line(end_line - 1).strip() == '':
+                while self.lines.get_line(end_line - 1).strip() == '':
                     end_line -= 1
             if isinstance(node, compiler.ast.Import):
                 self.visit_import(node, end_line)

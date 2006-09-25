@@ -68,8 +68,8 @@ This Release
 
 * `Separating Structural From Concluded Data`_
 * `Enhanced Import Tools`_
-
 * `Introduce factory method refactoring`_
+
 * `Move function/class refactoring`_
 * `Encapsulate Field Refactoring`_
 
@@ -77,9 +77,8 @@ This Release
 Hot Topics
 ==========
 
-* `Enhanced Import Tools`_
-* `Undo Unification`_
 * `Encapsulate Field Refactoring`_
+* `Undo Unification`_
 * `Python's Implicit Interfaces`_
 
 
@@ -93,18 +92,6 @@ To Be Discussed
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * `What rope assumes...`_
-
-
-Choosing the Next Refactoring to Add
-====================================
-
-The possibilities are:
-
-* `Move function/class refactoring`_
-* `Introduce factory method refactoring`_
-* `Encapsulate field refactoring`_
-
-I like to add the simplest of these.
 
 
 Move Function/Class Refactoring
@@ -251,7 +238,7 @@ interested in or not.  This seems slow when the number of similar
 names is considerable.  Having a type database?
 
 
-Limiting the scope for searching
+Limiting the Scope for Searching
 --------------------------------
 
 Rope searches all python files for a name.  But this seems unnecessary
@@ -505,8 +492,8 @@ their type is `type`.  But knowing their type does not give us much
 information about the methods defined in these derived classes.
 
 
-Getting Buried In Layers
-========================
+Getting Buried Under Layers
+===========================
 
 Starting from `rope.pycore` module, there are many layers that are
 hidden beneath it.  Most of unit tests only test `PyCore` directly and
@@ -578,7 +565,7 @@ the source code.  In futures some of this restrictions might be removed.
 * XXX
 
 
-The GUI Mess; Working More On The UI Parts
+The GUI Mess; Working More on the UI Parts
 ==========================================
 
 My ignorance to UI has make some modules like `rope.ui.core` and
@@ -620,7 +607,7 @@ Another issue is how to pass `Core` or any needed context information
 to these callbacks when they should execute; probably as arguments.
 
 
-Shifting To `Action`\s
+Shifting to `Action`\s
 ~~~~~~~~~~~~~~~~~~~~~~
 
 After the addition of `rope.ui.extension` module followed by the
@@ -636,7 +623,7 @@ Many dialogs look very similar.  They can be factored.  Continue using
 `rope.ui.uihelpers` module and extend it.
 
 
-Not Resetting The Whole Editor
+Not Resetting the Whole Editor
 ------------------------------
 
 After actions like extract method, we reset the whole editor.  This is
@@ -651,7 +638,7 @@ Some of the features of GraphicalEditor can be used in other widgets.
 Like completion, highlighting.
 
 
-Defining The Responsibilities Of `Core`
+Defining the Responsibilities of `Core`
 ---------------------------------------
 
 * Providing an interface to the plug-ins

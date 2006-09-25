@@ -252,6 +252,14 @@ class ImportUtilsTest(unittest.TestCase):
         module_with_imports.add_import(new_import)
         self.assertEquals('from pkg1.mod1 import *\n',
                           module_with_imports.get_changed_source())
+    
+    def test_not_changing_the_format_of_unchanged_imports(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import (a_func,\n    another_func)\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        self.assertEquals('from pkg1.mod1 import (a_func,\n    another_func)\n',
+                          module_with_imports.get_changed_source())
 
 
 if __name__ == '__main__':

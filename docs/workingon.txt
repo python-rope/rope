@@ -1,11 +1,9 @@
 Introduce Factory Method Refactoring
 ====================================
 
-- Refactor `rope.ui.editor`
+- Not changing the format of unchanged imports in `importutils`
 
-* Refactor `introduce_factory` and `rename` modules
 * Import kind
-* Not changing the format of unchanged imports in `importtools`
 * Removing ``pass`` when adding factory method to an empty class
 * Adding uihelpers.ask_fields(callback)
 * Import addition when adding a relative with an absolute import
