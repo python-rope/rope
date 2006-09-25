@@ -233,16 +233,13 @@ Stories
 * Encapsulate field
 
 
-* Expand star imports
-
-
-* Move a class/function to another module
+* Expand from-star-imports
 
 
 * Removing unused imports
 
 
-* Introduce factory method
+* Move a class/function to another module
 
 
 Remaining Stories

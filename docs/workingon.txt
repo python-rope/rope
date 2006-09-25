@@ -1,17 +1,21 @@
-Introduce Factory Method Refactoring
-====================================
+Move a Class/Function to Another Module
+=======================================
 
-- Not changing the format of unchanged imports in `importutils`
+- Changing `rope.codeanalyze.ScopeNameFinder` to take only a pymodule
+- Moving `rope.refactor.sourcetools.get_name_at` to `rope.codeanalyze`
+- What if the name at offset does not match class or function name;
+  Maybe we can add `PyDefinedName.get_defined_name` which uses `_get_ast`
+  method.
 
-* Import kind
-* Removing ``pass`` when adding factory method to an empty class
-* Adding uihelpers.ask_fields(callback)
-* Import addition when adding a relative with an absolute import
+* Raise an exception when moving a non-global element
+* Peforming move refactoring from other modules rather than the defining one
 
 
 Remaining Stories
 =================
 
+* Asking import kind for introduce factory and move refactoring
+* Import addition when adding a relative with an absolute import
 * Changing rope short description to ``a python refactoring IDE ...``
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
@@ -29,14 +33,12 @@ Remaining Stories
 * Eliminating `Editor.refactoring`
 * Calling `sys.settrace` for all threads in `rope.runmod` module
 * Adding ``show_what_rope_can_do`` file
-* A keyboard shortcut for renaming local variables
+* Keyboard shortcuts for new features
 * Function keywords and extract method
 * Showing initial name in rename dialogs
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname
-* Goto definition for ``# comment.\na_var``
+* Goto definition for ``"# comment.\na_var"``
 * Better editor changing dialog; use uihelpers module
 * Slow `GraphicalEditor._get_offset`
-* Do something for modules that can not be found
-* Dotted not found modules
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?

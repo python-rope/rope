@@ -1,3 +1,5 @@
+import rope.codeanalyze
+
 
 def get_indents(lines, lineno):
     indents = 0
@@ -40,4 +42,3 @@ def indent_lines(source_code, amount):
             result.append('\n')
     return ''.join(result)
     
-

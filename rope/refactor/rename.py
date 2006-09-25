@@ -21,12 +21,8 @@ class RenameRefactoring(object):
         files = [resource]
         if not in_file:
             files = self.pycore.get_python_files()
-        module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
-        source_code = resource.read()
-        word_finder = rope.codeanalyze.WordRangeFinder(source_code)
-        old_name = word_finder.get_primary_at(offset).split('.')[-1]
-        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
-        old_pyname = pyname_finder.get_pyname_at(offset)
+        old_name, old_pyname = rope.codeanalyze.\
+                               get_name_and_pyname_at(self.pycore, resource, offset)
         if old_pyname is None:
             return None
         old_pynames = [old_pyname]
@@ -138,10 +134,8 @@ class RenameInModule(object):
 
     def _create_pyname_finder(self, source_code, resource, pymodule):
         if resource is not None:
-            module_scope = self.pycore.resource_to_pyobject(resource).get_scope()
-        else:
-            module_scope = pymodule.get_scope()
-        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
+            pymodule = self.pycore.resource_to_pyobject(resource)
+        pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
         return pyname_finder
     
     def _are_pynames_the_same(self, pyname1, pyname2):

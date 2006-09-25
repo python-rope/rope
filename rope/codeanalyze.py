@@ -301,11 +301,11 @@ class StatementEvaluator(object):
 
 class ScopeNameFinder(object):
     
-    def __init__(self, source_code, module_scope):
-        self.source_code = source_code
-        self.module_scope = module_scope
-        self.lines = source_code.split('\n')
-        self.word_finder = WordRangeFinder(source_code)
+    def __init__(self, pymodule):
+        self.source_code = pymodule.source_code
+        self.module_scope = pymodule.get_scope()
+        self.lines = self.source_code.split('\n')
+        self.word_finder = WordRangeFinder(self.source_code)
 
     def _get_location(self, offset):
         lines = ArrayLinesAdapter(self.lines)
@@ -377,6 +377,24 @@ class ScopeNameFinder(object):
         ast = compiler.parse(name)
         result = StatementEvaluator.get_statement_result(holding_scope, ast)
         return result
+
+
+def get_name_and_pyname_at(pycore, resource, offset):
+    pymodule = pycore.resource_to_pyobject(resource)
+    source_code = pymodule.source_code
+    word_finder = rope.codeanalyze.WordRangeFinder(source_code)
+    name = word_finder.get_primary_at(offset).split('.')[-1]
+    pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
+    pyname = pyname_finder.get_pyname_at(offset)
+    return (name, pyname)
+
+
+def get_pyname_at(pycore, resource, offset):
+    pymodule = pycore.resource_to_pyobject(resource)
+    source_code = pymodule.source_code
+    pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
+    pyname = pyname_finder.get_pyname_at(offset)
+    return pyname
 
 
 class Lines(object):

@@ -5,6 +5,7 @@ from rope.refactor.change import (ChangeSet, ChangeFileContents,
 from rope.refactor.rename import RenameRefactoring
 from rope.refactor.extract import ExtractMethodRefactoring
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
+from rope.refactor.move import MoveRefactoring
 
 
 class Refactoring(object):
@@ -68,6 +69,12 @@ class PythonRefactoring(Refactoring):
         factory_introducer = IntroduceFactoryRefactoring(self.pycore, resource,
                                                          offset, factory_name, global_factory)
         changes = factory_introducer.introduce_factory()
+        self.last_changes = changes
+        changes.do()
+    
+    def move(self, resource, offset, dest_resource):
+        changes = MoveRefactoring(self.pycore, resource,
+                                  offset, dest_resource).move()
         self.last_changes = changes
         changes.do()
         

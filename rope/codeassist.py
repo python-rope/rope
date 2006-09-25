@@ -167,7 +167,7 @@ class _CodeCompletionCollector(object):
 
     def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}
-        pyname_finder = ScopeNameFinder(self.source_code, module_scope)
+        pyname_finder = ScopeNameFinder(module_scope.pyobject)
         found_pyname = pyname_finder.get_pyname_in_scope(holding_scope,
                                                     self.expression)
         if found_pyname is not None:
@@ -288,8 +288,8 @@ class PythonCodeAssist(CodeAssist):
                                       offset, resource).get_definition_location()
 
     def get_doc(self, source_code, offset, resource=None):
-        module_scope = self.project.pycore.get_string_scope(source_code, resource)
-        scope_finder = ScopeNameFinder(source_code, module_scope)
+        pymodule = self.project.pycore.get_string_module(source_code, resource)
+        scope_finder = ScopeNameFinder(pymodule)
         element = scope_finder.get_pyname_at(offset)
         if element is None:
             return None
@@ -335,9 +335,9 @@ class _GetDefinitionLocation(object):
         self.resource = resource
 
     def get_definition_location(self):
-        module_scope = self.project.pycore.get_string_scope(self.source_code,
-                                                            self.resource)
-        scope_finder = ScopeNameFinder(self.source_code, module_scope)
+        pymodule = self.project.pycore.get_string_module(self.source_code,
+                                                         self.resource)
+        scope_finder = ScopeNameFinder(pymodule)
         element = scope_finder.get_pyname_at(self.offset)
         if element is not None:
             module, lineno = element.get_definition_location()

@@ -104,23 +104,26 @@ Move Function/Class Refactoring
   old one to the new one.
 * Remove unused imports from changed modules
 
-The problem for this refactoring is that we need to perform
-refactorings on an already changed module.  This makes problems
-for our undo mechanisms.
+For module and packages we change all of the occurances and
+add an import for the new location.  What to do about occurances
+inside import statements?
 
+For classes and packages we change all of the occurances using a new
+import to the new location.
 
-Introduce Factory Method Refactoring
-====================================
+One of the problem that we are facing is that we should remove old
+imports, because they would be no longer valid.  But
+for classes and functions there might be some from imports.  So we
+need to erase them.
 
-Parameters to ask for: method_name, is_global, import_type.
-We should only change calls.  Maybe we can add
-`RenameFunctionCallsInModule` class that somehow extends the
-`RenameInModule` class.  Then we need to add
-`RenamePrimariesInModule` to replace the whole expression when
-replacing occurances.  If we could somehow use ASTs things
-would have been much easier, but the problem for working with
-ASTs is that we don't have the offset of nodes and we merely
-have their line number.
+What to do for::
+  
+  from pkg import tobemove
+
+or for::
+  
+  from mod import ToBeMoved
+
 
 
 Encapsulate Field Refactoring

@@ -7,7 +7,6 @@ import rope.importutils
 from rope.refactor.change import (ChangeSet, ChangeFileContents)
 from rope.refactor import sourcetools
 
-
 class IntroduceFactoryRefactoring(object):
     
     def __init__(self, pycore, resource, offset, factory_name, global_factory=False):
@@ -16,18 +15,13 @@ class IntroduceFactoryRefactoring(object):
         self.factory_name = factory_name
         self.global_factory = global_factory
         
-        current_pymodule = self.pycore.resource_to_pyobject(resource)
-        module_scope = current_pymodule.get_scope()
-        source_code = current_pymodule.source_code
-        word_finder = rope.codeanalyze.WordRangeFinder(source_code)
-        self.old_name = word_finder.get_primary_at(offset).split('.')[-1]
-        pyname_finder = rope.codeanalyze.ScopeNameFinder(source_code, module_scope)
-        self.old_pyname = pyname_finder.get_pyname_at(offset)
-        if self.old_pyname is None:
-            return None
-        if self.old_pyname.get_object().get_type() != rope.pyobjects.PyObject.get_base_type('Type'):
+        self.old_pyname = \
+            rope.codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        if self.old_pyname is None or \
+           self.old_pyname.get_object().get_type() != rope.pyobjects.PyObject.get_base_type('Type'):
             raise rope.exceptions.RefactoringException(
                 'Introduce factory should be performed on a class.')
+        self.old_name = self.old_pyname.get_object()._get_ast().name
         self.pymodule = self.old_pyname.get_object().get_module()
         self.resource = self.pymodule.get_resource()
 

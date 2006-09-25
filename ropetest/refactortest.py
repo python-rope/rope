@@ -616,12 +616,49 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
+    # XXX: Should we replace `a_class` here with `AClass.create` too
+    def test_changing_occurances_for_renamed_classes(self):
+        code = 'class AClass(object):\n    an_attr = 10\na_class = AClass\na_var = a_class()'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n' \
+                   'a_class = AClass\n' \
+                   'a_var = a_class()'
+        self.refactoring.introduce_factory(mod, mod.read().index('a_class') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+
+class MoveRefactoringTest(unittest.TestCase):
+
+    def setUp(self):
+        super(MoveRefactoringTest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(MoveRefactoringTest, self).tearDown()
+    
+    def test_simple_moving(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    pass\n')
+        self.refactoring.move(mod1, mod1.read().index('AClass') + 1, mod2)
+        self.assertEquals('', mod1.read())
+        self.assertEquals('class AClass(object):\n    pass\n', mod2.read())
+    
 
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(RenameRefactoringTest))
     result.addTests(unittest.makeSuite(ExtractMethodTest))
     result.addTests(unittest.makeSuite(IntroduceFactoryTest))
+    result.addTests(unittest.makeSuite(MoveRefactoringTest))
     return result
 
 
