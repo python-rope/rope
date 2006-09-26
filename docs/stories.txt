@@ -224,13 +224,22 @@ Stories
 * Move a module or package to another package
 
 
+* Encapsulate field
+
+
 * Organize imports
 
 
 > Public Release 0.3m4 : October 1, 2006
 
 
-* Encapsulate field
+* Changing from imports to normal imports
+
+
+* Removing imports from the same module
+
+
+* Removing duplicate imports
 
 
 * Expand from-star-imports

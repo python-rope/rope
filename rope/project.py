@@ -26,18 +26,18 @@ class Project(object):
     def get_root_address(self):
         return self.root
 
-    def get_resource(self, resourceName):
-        if resourceName not in self.resources:
-            path = self._get_resource_path(resourceName)
+    def get_resource(self, resource_name):
+        if resource_name not in self.resources:
+            path = self._get_resource_path(resource_name)
             if not os.path.exists(path):
-                raise RopeException('Resource %s does not exist' % resourceName)
+                raise RopeException('Resource %s does not exist' % resource_name)
             elif os.path.isfile(path):
-                self.resources[resourceName] = File(self, resourceName)
+                self.resources[resource_name] = File(self, resource_name)
             elif os.path.isdir(path):
-                self.resources[resourceName] = Folder(self, resourceName)
+                self.resources[resource_name] = Folder(self, resource_name)
             else:
-                raise RopeException('Unknown resource ' + resourceName)
-        return self.resources[resourceName]
+                raise RopeException('Unknown resource ' + resource_name)
+        return self.resources[resource_name]
 
     def get_files(self):
         return self._get_files_recursively(self.get_root_folder())

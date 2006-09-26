@@ -197,6 +197,19 @@ class WordRangeFinder(object):
         prev_word = self.source_code[line_start:stmt_start].strip()
         return prev_word == 'from'
 
+    def is_a_name_after_from_import(self, offset):
+        stmt_start = self._find_primary_start(offset)
+        prev_word_start = self._find_word_start(stmt_start - 2)
+        prev_word = self.source_code[prev_word_start:stmt_start].strip()
+        if prev_word != 'import':
+            return False
+        prev_word_start2 = self._find_primary_start(prev_word_start - 2)
+        prev_word_start3 = self._find_primary_start(prev_word_start2 - 2)
+        prev_word3 = self.source_code[prev_word_start3:prev_word_start2].strip()
+        line_start = self._get_line_start(prev_word_start3)
+        till_line_start = self.source_code[line_start:prev_word_start3].strip()
+        return prev_word3 == 'from' and till_line_start == ''
+
 
 class StatementEvaluator(object):
 

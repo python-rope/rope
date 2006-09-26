@@ -100,6 +100,11 @@ class ModuleWithImports(object):
                 last_line = all_imports[-1].end_line
             all_imports.append(ImportStatement(import_info, last_line, last_line))
     
+    def filter_names(self, can_select):
+        all_import_statements = self.get_import_statements()
+        for import_statement in all_import_statements:
+            new_import = import_statement.filter_names(can_select)
+    
     def expand_stars(self):
         pass
     

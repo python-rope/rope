@@ -29,6 +29,9 @@ class Refactoring(object):
     def introduce_factory(self, resource, offset, factory_name, global_factory):
         pass
 
+    def move(self, resource, offset, dest_resource):
+        pass
+
 
 class PythonRefactoring(Refactoring):
 

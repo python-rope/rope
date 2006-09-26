@@ -66,9 +66,9 @@ Releases
 This Release
 ------------
 
-* `Separating Structural From Concluded Data`_
-* `Enhanced Import Tools`_
-* `Introduce factory method refactoring`_
+* Separating Structural From Concluded Data
+* Enhanced Import Tools
+* Introduce factory method refactoring
 
 * `Move function/class refactoring`_
 * `Encapsulate Field Refactoring`_
@@ -85,12 +85,14 @@ Hot Topics
 To Be Discussed
 ===============
 
-* Using a modification of `compiler` AST for simplifying refactorings
+* Changing relative imports in refactorings
 * Function to function object refactoring
 * For, while, with blocks and loop variables
+
 * Rope's preference saving system: format, location
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
+* Using a modification of `compiler` AST for simplifying refactorings
 * `What rope assumes...`_
 
 
@@ -112,18 +114,43 @@ For classes and packages we change all of the occurances using a new
 import to the new location.
 
 One of the problem that we are facing is that we should remove old
-imports, because they would be no longer valid.  But
-for classes and functions there might be some from imports.  So we
-need to erase them.
+imports, because they would be no longer valid.  So we need to erase
+them.  I believe we can solve this problem by using `ImportInfo.
+filter_names`. Here are two examples that we need to filter out of
+date imports::
 
-What to do for::
-  
   from pkg import tobemove
-
-or for::
-  
   from mod import ToBeMoved
 
+Another problem is we can find out the imports used in a class or
+function body using `get_used_imports` but there might be some other
+global classes or functions in the source module that are used by
+the moving element.  On the other hand some imports might be
+unnecessary because we are importing objects that are defined in the
+destination module.  The simple approach to the first problem is
+importing star from the source module.  Later we can use expand star
+to remove unneeded imports.  Unfortunately I think this approach
+might cause circular imports.
+
+We can summarize above discussions in the following tables.
+
+For moving functions and classes:
+
+=========  ==================  ============================
+location   what to import      what to replace moving with
+=========  ==================  ============================
+dest       from src import *   moving
+src        import dest         dest.moving
+others     import dest         dest.moving
+=========  ==================  ============================
+
+For moving module and packages:
+
+=========  ==================  ============================
+location   what to import      what to replace moving with
+=========  ==================  ============================
+others     import moving       moving
+=========  ==================  ============================
 
 
 Encapsulate Field Refactoring

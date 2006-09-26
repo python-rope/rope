@@ -3,6 +3,7 @@ import Tkinter
 import rope.ui.core
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
+from rope.ui.uihelpers import TreeViewHandle, TreeView
 
 
 class ConfirmAllEditorsAreSaved(object):
@@ -156,12 +157,90 @@ def introduce_factory(context):
     frame.grid()
     new_name_entry.focus_set()
 
+class _ModuleViewHandle(TreeViewHandle):
     
+    def __init__(self, core, toplevel, do_select):
+        self.core = core
+        self.toplevel = toplevel
+        self.do_select = do_select
+
+    def entry_to_string(self, resource):
+        result = resource.get_name()
+        if result == '':
+            result = 'project root'
+        return result
+    
+    def get_children(self, resource):
+        if resource.is_folder():
+            return [child for child in resource.get_children()
+                    if (not child.get_name().startswith('.') and
+                        not child.get_name().endswith('.pyc'))]
+        else:
+            return []
+
+    def selected(self, resource):
+        self.toplevel.destroy()
+        self.do_select(resource)
+    
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        pass
+
+def move(context):
+    if not context.get_active_editor():
+        return
+    project = context.get_core().get_open_project()
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Move Refactoring')
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text='Destination Module :')
+    label.grid(row=0, column=0)
+    new_name_entry = Tkinter.Entry(frame)
+    new_name_entry.grid(row=0, column=1)
+    def ok(event=None):
+        resource = context.get_active_editor().get_file()
+        editor = context.get_active_editor().get_editor()
+        destination = project.get_resource(new_name_entry.get())
+        editor.refactoring.move(resource,
+                                editor.get_current_offset(),
+                                destination)
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+    def do_select(folder):
+        new_name_entry.delete(0, Tkinter.END)
+        new_name_entry.insert(0, folder.get_path())
+    def browse():
+        toplevel = Tkinter.Toplevel()
+        toplevel.title('Choose Destination Module')
+        tree_handle = _ModuleViewHandle(core, toplevel, do_select)
+        tree_view = TreeView(toplevel, tree_handle, title='Destination Module')
+        tree_view.add_entry(context.get_core().project.get_root_folder())
+        tree_view.list.focus_set()
+        toplevel.grab_set()
+
+    browse_button = Tkinter.Button(frame, text='...', command=browse)
+    browse_button.grid(row=0, column=2)
+    ok_button = Tkinter.Button(frame, text='Done', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    new_name_entry.bind('<Return>', lambda event: ok())
+    new_name_entry.bind('<Escape>', lambda event: cancel())
+    new_name_entry.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    new_name_entry.focus_set()
+
+
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
                             MenuAddress(['Refactor', 'Rename'], 'r')))
 actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_method), 'M-M',
                             MenuAddress(['Refactor', 'Extract Method'], 'e')))
+actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move), 'M-V',
+                            MenuAddress(['Refactor', 'Move'], 'v')))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
                             MenuAddress(['Refactor', 'Rename in File'], 'f')))
 actions.append(SimpleAction('Transform Module to Package', 

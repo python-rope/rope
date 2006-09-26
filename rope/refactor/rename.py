@@ -123,6 +123,10 @@ class RenameInModule(object):
                         if self.only_function_calls and \
                            not word_finder.is_a_function_being_called(match_start + 1):
                             continue
+                        if self.replace_primary and \
+                           (word_finder.is_a_name_after_from_import(match_start + 1) or
+                            word_finder.is_a_class_or_function_name_in_header(match_start + 1)):
+                            continue
                         if self._are_pynames_the_same(old_pyname, new_pyname):
                             result.append(source_code[last_modified_char:start]
                                           + self.new_name)

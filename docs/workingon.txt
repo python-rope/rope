@@ -1,14 +1,22 @@
+Refactor
+========
+
+* Refactor `rope.refactor.move` and `rope.codeanalyze` modules
+
+
 Move a Class/Function to Another Module
 =======================================
 
-- Changing `rope.codeanalyze.ScopeNameFinder` to take only a pymodule
-- Moving `rope.refactor.sourcetools.get_name_at` to `rope.codeanalyze`
-- What if the name at offset does not match class or function name;
-  Maybe we can add `PyDefinedName.get_defined_name` which uses `_get_ast`
-  method.
+- Removing out of date imports
 
 * Raise an exception when moving a non-global element
-* Peforming move refactoring from other modules rather than the defining one
+* What to do when destination is a folder
+* Moving used imports by moving from the source class
+* Preventing circular imports
+
+* Considering already imported names in `ModuleWithImport.filter`
+* More tests for `rope.codeanalyze.WordRangeFinder` methods; can we
+  use ASTs
 
 
 Remaining Stories
