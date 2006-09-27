@@ -7,10 +7,9 @@ Refactor
 Move a Class/Function to Another Module
 =======================================
 
-- Removing out of date imports
+- What to do when destination is a folder
+- Raise an exception when moving a non-global element
 
-* Raise an exception when moving a non-global element
-* What to do when destination is a folder
 * Moving used imports by moving from the source class
 * Preventing circular imports
 

@@ -145,12 +145,18 @@ class FileFinder(object):
         else:
             files = self.project.get_files()
         result = []
-        for file in files:
-            if file.get_name().startswith(starting):
-                result.append(file)
+        for file_ in files:
+            if file_.get_name().startswith(starting):
+                result.append(file_)
+        result.sort(cmp=self._compare_files)
         self.last_keyword = starting
         self.last_result = result
         return result
+    
+    def _compare_files(self, file1, file2):
+        if file1.get_name() != file2.get_name():
+            return cmp(file1.get_name(), file2.get_name())
+        return cmp(file1.get_path(), file2.get_path())
 
 
 def _find_file_dialog(core):

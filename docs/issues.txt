@@ -71,14 +71,13 @@ This Release
 * Introduce factory method refactoring
 
 * `Move function/class refactoring`_
-* `Encapsulate Field Refactoring`_
 
 
 Hot Topics
 ==========
 
-* `Encapsulate Field Refactoring`_
 * `Undo Unification`_
+* `Encapsulate Field Refactoring`_
 * `Python's Implicit Interfaces`_
 
 
@@ -87,7 +86,7 @@ To Be Discussed
 
 * Changing relative imports in refactorings
 * Function to function object refactoring
-* For, while, with blocks and loop variables
+* For, while, with blocks and block variables
 
 * Rope's preference saving system: format, location
 * Having a persistant format for PyNames and PyObjects for saving
@@ -132,26 +131,6 @@ importing star from the source module.  Later we can use expand star
 to remove unneeded imports.  Unfortunately I think this approach
 might cause circular imports.
 
-We can summarize above discussions in the following tables.
-
-For moving functions and classes:
-
-=========  ==================  ============================
-location   what to import      what to replace moving with
-=========  ==================  ============================
-dest       from src import *   moving
-src        import dest         dest.moving
-others     import dest         dest.moving
-=========  ==================  ============================
-
-For moving module and packages:
-
-=========  ==================  ============================
-location   what to import      what to replace moving with
-=========  ==================  ============================
-others     import moving       moving
-=========  ==================  ============================
-
 
 Encapsulate Field Refactoring
 =============================
@@ -193,7 +172,7 @@ Undo Unification
 Currently there are separate undo actions for editing text and
 refactorings and in future there might be undos for other changes.
 We need to mix them together.  This seems hard to do mainly because
-We don't have much access to the undo mechanism of Tkinter.  I think
+we don't have much access to the undo mechanism of Tkinter.  I think
 an approximation here will save us.
 
 

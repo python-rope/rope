@@ -686,6 +686,20 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('from mod1 import *\n\n\nclass AClass(object):\n    pass\na_var = AClass()',
                           self.mod2.read())
 
+    def test_folder_destination(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        self.mod1.write('class AClass(object):\n    pass\n')
+        self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, pkg)
+        self.assertEquals('from mod1 import *\n\n\nclass AClass(object):\n    pass\n',
+                          pkg.get_child('__init__.py').read())
+        self.assertEquals('import pkg\n', self.mod1.read())
+    
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_for_moving_non_global_elements(self):
+        self.mod1.write('def a_func():\n    class AClass(object):\n        pass\n')
+        self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1,
+                              self.mod2)
+
 
 def suite():
     result = unittest.TestSuite()
