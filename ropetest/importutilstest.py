@@ -219,6 +219,15 @@ class ImportUtilsTest(unittest.TestCase):
         module_with_imports.remove_unused_imports()
         self.assertEquals('\n', module_with_imports.get_changed_source())
     
+    def test_simple_removing_unused_imports_for_nested_modules(self):
+        self.mod1.write('def a_func():\n    pass\n')
+        self.mod.write('import pkg1.mod1\npkg1.mod1.a_func()')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()',
+                          module_with_imports.get_changed_source())
+    
     def test_adding_imports(self):
         self.mod.write('\n')
         pymod = self.pycore.get_module('mod')
@@ -267,6 +276,15 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_with_imports(pymod)
         self.assertEquals('from pkg1.mod1 import (a_func,\n    another_func)\n',
+                          module_with_imports.get_changed_source())
+
+    def test_not_changing_the_format_of_unchanged_imports2(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import (a_func)\na_func()\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('from pkg1.mod1 import (a_func)\na_func()\n',
                           module_with_imports.get_changed_source())
 
     def test_trivial_expanding_star_imports(self):

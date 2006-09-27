@@ -134,9 +134,9 @@ class ImportStatement(object):
     
     def filter_names(self, can_select):
         new_import = self.import_info.filter_names(can_select)
-        if new_import != self.import_info:
+        if new_import is not None and not new_import == self.import_info:
             self.is_changed = True
-        self.import_info = new_import
+            self.import_info = new_import
     
     def add_import(self, import_info):
         result = self.import_info.add_import(import_info)
@@ -181,6 +181,13 @@ class ImportInfo(object):
     def add_import(self, import_info):
         pass
     
+    def __hash__(self):
+        return hash(self.get_import_statement())
+    
+    def __eq__(self, obj):
+        return isinstance(obj, self.__class__) and \
+               self.get_import_statement() == obj.get_import_statement()
+
     @staticmethod
     def get_empty_import():
         class EmptyImport(ImportInfo):
@@ -215,7 +222,7 @@ class NormalImport(ImportInfo):
     def filter_names(self, can_select):
         new_pairs = []
         for name, alias in self.names_and_aliases:
-            imported = name
+            imported = name.split('.')[0]
             if alias:
                 imported = alias
             if can_select(imported):
@@ -234,7 +241,7 @@ class NormalImport(ImportInfo):
             else:
                 return self
         return None
-
+    
 
 class FromImport(ImportInfo):
     

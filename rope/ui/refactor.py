@@ -274,7 +274,7 @@ actions.append(SimpleAction('Introduce Factory Method',
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'i', 1)))
 actions.append(SimpleAction('Remove Unused Imports', 
-                            ConfirmAllEditorsAreSaved(remove_unused_imports), None,
+                            ConfirmAllEditorsAreSaved(remove_unused_imports), 'M-O',
                             MenuAddress(['Refactor', 'Remove Unused Imports'], 'o', 2)))
 actions.append(SimpleAction('Expand Star Imports', 
                             ConfirmAllEditorsAreSaved(expand_star_imports), None,
