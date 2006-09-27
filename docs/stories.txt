@@ -239,15 +239,6 @@ Stories
 * Removing imports from the same module
 
 
-* Removing duplicate imports
-
-
-* Expand from-star-imports
-
-
-* Removing unused imports
-
-
 * Move a class/function to another module
 
 

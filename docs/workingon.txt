@@ -1,21 +1,24 @@
-Refactor
-========
-
-* Refactor `rope.refactor.move` and `rope.codeanalyze` modules
-
-
 Move a Class/Function to Another Module
 =======================================
-
-- What to do when destination is a folder
-- Raise an exception when moving a non-global element
 
 * Moving used imports by moving from the source class
 * Preventing circular imports
 
-* Considering already imported names in `ModuleWithImport.filter`
+* Considering already imported names in `ModuleWithImport.filter`::
+
+  ...
+  def can_select(name):
+      if name in unbound_names and name not in already_imported:
+          already_imported.add(name)
+          return True
+      return False
+  for import_statement in reversed(all_imports):
+      import_statement.filter(can_select)
+  ...
+
 * More tests for `rope.codeanalyze.WordRangeFinder` methods; can we
   use ASTs
+* Refactor `rope.refactor.move` and `rope.codeanalyze` modules
 
 
 Remaining Stories

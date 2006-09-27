@@ -98,29 +98,6 @@ To Be Discussed
 Move Function/Class Refactoring
 ===============================
 
-* Copy the moving class or function and its used imports to the
-  destination module.
-* Add an import statement for the new class or function in every
-  module that uses the old one and change the references to the
-  old one to the new one.
-* Remove unused imports from changed modules
-
-For module and packages we change all of the occurances and
-add an import for the new location.  What to do about occurances
-inside import statements?
-
-For classes and packages we change all of the occurances using a new
-import to the new location.
-
-One of the problem that we are facing is that we should remove old
-imports, because they would be no longer valid.  So we need to erase
-them.  I believe we can solve this problem by using `ImportInfo.
-filter_names`. Here are two examples that we need to filter out of
-date imports::
-
-  from pkg import tobemove
-  from mod import ToBeMoved
-
 Another problem is we can find out the imports used in a class or
 function body using `get_used_imports` but there might be some other
 global classes or functions in the source module that are used by

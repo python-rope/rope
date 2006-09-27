@@ -3,6 +3,15 @@
 ===========
 
 
+- Removing duplicate imports : September 27, 2006
+
+
+- Expanding from-star-imports : September 27, 2006
+
+
+- Removing unused imports : September 27, 2006
+
+
 - Introduce Factory Method Refactoring : September 25, 2006
 
 

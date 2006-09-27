@@ -106,14 +106,22 @@ class ModuleWithImports(object):
             new_import = import_statement.filter_names(can_select)
     
     def expand_stars(self):
-        pass
+        unbound_names = self._get_unbound_names(self.pymodule)
+        def can_select(name):
+            return name in unbound_names
+        for import_statement in self.get_import_statements():
+            import_statement.expand_star(can_select)
     
-    def relative_to_absolute(self):
-        pass
-    
-    def relative_to_new_relative(self):
-        pass
-    
+    def remove_duplicates(self):
+        imports = self.get_import_statements()
+        added_imports = []
+        for import_stmt in imports:
+            for added_import in added_imports:
+                if added_import.add_import(import_stmt.import_info):
+                    import_stmt.empty_import()
+            else:
+                added_imports.append(import_stmt)
+
 
 class ImportStatement(object):
     
@@ -144,6 +152,17 @@ class ImportStatement(object):
         else:
             return self.main_statement
     
+    def expand_star(self, can_select):
+        if isinstance(self.import_info, FromImport):
+            new_import = self.import_info.expand_star(can_select)
+            if new_import is not None and new_import != self.import_info:
+                self.is_changed = True
+                self.import_info = new_import
+    
+    def empty_import(self):
+        self.is_changed = True
+        self.import_info = ImportInfo.get_empty_import()
+
 
 class ImportInfo(object):
     
@@ -161,7 +180,14 @@ class ImportInfo(object):
     
     def add_import(self, import_info):
         pass
-
+    
+    @staticmethod
+    def get_empty_import():
+        class EmptyImport(ImportInfo):
+            def is_empty(self):
+                return True
+        return EmptyImport()
+    
 
 class NormalImport(ImportInfo):
     
@@ -285,6 +311,16 @@ class FromImport(ImportInfo):
     
     def _is_star_import(self):
         return self.names_and_aliases and self.names_and_aliases[0][0] == '*'
+    
+    def expand_star(self, can_select):
+        if not self._is_star_import():
+            return None
+        new_pairs = []
+        for name in self.get_imported_names():
+            new_pairs.append((name, None))
+        new_import = FromImport(self.module_name, self.level, new_pairs,
+                                self.current_folder, self.pycore)
+        return new_import.filter_names(can_select)
 
 
 class _UnboundNameFinder(object):
@@ -293,7 +329,8 @@ class _UnboundNameFinder(object):
         self.pyobject = pyobject
     
     def _visit_child_scope(self, node):
-        pyobject = self.pyobject.get_scope().get_inner_scope_for_line(node.lineno).pyobject
+        pyobject = self.pyobject.get_module().get_scope().\
+                   get_inner_scope_for_line(node.lineno).pyobject
         visitor = _LocalUnboundNameFinder(pyobject, self)
         for child in pyobject._get_ast().getChildNodes():
             compiler.walk(child, visitor)

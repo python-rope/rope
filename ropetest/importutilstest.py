@@ -163,6 +163,14 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals(1, len(imports))
         self.assertEquals('import pkg', imports[0].get_import_statement())
 
+    def test_simple_getting_used_imports2(self):
+        self.mod.write('import pkg\ndef a_func():\n    print pkg\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        imports = module_with_imports.get_used_imports(pymod)
+        self.assertEquals(1, len(imports))
+        self.assertEquals('import pkg', imports[0].get_import_statement())
+
     def test_getting_used_imports_for_nested_scopes(self):
         self.mod.write('import pkg1\nprint pkg1\ndef a_func():\n    pass\nprint pkg1\n')
         pymod = self.pycore.get_module('mod')
@@ -259,6 +267,40 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_with_imports(pymod)
         self.assertEquals('from pkg1.mod1 import (a_func,\n    another_func)\n',
+                          module_with_imports.get_changed_source())
+
+    def test_trivial_expanding_star_imports(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import *\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.expand_stars()
+        self.assertEquals('', module_with_imports.get_changed_source())
+
+    def test_expanding_star_imports(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import *\na_func()\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.expand_stars()
+        self.assertEquals('from pkg1.mod1 import a_func\na_func()\n',
+                          module_with_imports.get_changed_source())
+
+    def test_removing_duplicate_imports(self):
+        self.mod.write('import pkg1\nimport pkg1\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_duplicates()
+        self.assertEquals('import pkg1\n',
+                          module_with_imports.get_changed_source())
+
+    def test_removing_duplicate_imports_for_froms(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1 import a_func\nfrom pkg1 import a_func, another_func\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_duplicates()
+        self.assertEquals('from pkg1 import a_func, another_func\n',
                           module_with_imports.get_changed_source())
 
 
