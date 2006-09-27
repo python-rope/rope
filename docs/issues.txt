@@ -86,7 +86,7 @@ To Be Discussed
 
 * Changing relative imports in refactorings
 * Function to function object refactoring
-* For, while, with blocks and block variables
+* Getting code completion on ``except`` line
 
 * Rope's preference saving system: format, location
 * Having a persistant format for PyNames and PyObjects for saving

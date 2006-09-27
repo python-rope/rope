@@ -366,6 +366,9 @@ class _ScopeVisitor(object):
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
     
+    def visitFor(self, node):
+        self.visitAssign(node.assign)
+    
     def visitImport(self, node):
         for import_pair in node.names:
             module_name, alias = import_pair

@@ -104,6 +104,10 @@ class PyCoreScopesTest(unittest.TestCase):
         inner_scope = func_scope.get_scopes()[0]
         self.assertTrue('var' in inner_scope.get_names())
 
+    def test_for_variables_in_scopes(self):
+        scope = self.pycore.get_string_scope('for a_var in range(10):\n    pass\n')
+        self.assertTrue('a_var' in scope.get_names())
+
 
 def suite():
     result = unittest.TestSuite()
