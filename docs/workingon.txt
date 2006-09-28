@@ -1,14 +1,10 @@
 Move a Class/Function to Another Module
 =======================================
 
-- Mix remove duplicate imports and remove unused imports to make
-  organize imports
-- Handling relative imports in transforming froms to normals
+- Moving imports used by the moving element to the destination
+- Importing names used by the moving element in the destination
 
-* Moving imports used by the moving element to the destination
-* Importing names used by the moving element to the destination
-* Preventing circular imports
-
+* Moving and relative imports
 * Considering already imported names in `ModuleWithImport.filter` and
   for `ModuleWithImports.expand_from_imports`::
   

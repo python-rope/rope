@@ -46,11 +46,14 @@ class MoveRefactoring(object):
     
     def _change_source_module(self, changes):
         source = self.resource.read()
+        uses_moving = False
         # Changing occurances
         pymodule = self.pycore.resource_to_pyobject(self.resource)
         source = self._rename_in_module(pymodule, self.new_imported_name)
         if source is None:
             source = pymodule.source_code
+        else:
+            uses_moving = True
         
         lines = rope.codeanalyze.SourceLinesAdapter(source)
         scope = self.old_pyname.get_object().get_scope()
@@ -58,9 +61,10 @@ class MoveRefactoring(object):
         end = lines.get_line_end(scope.get_end())
         source = source[:start] + source[end + 1:]
         
-        pymodule = self.pycore.get_string_module(source, self.resource)
-        # Adding new import
-        source = self._add_imports_to_module(pymodule, [self.new_import])
+        if uses_moving:
+            pymodule = self.pycore.get_string_module(source, self.resource)
+            # Adding new import
+            source = self._add_imports_to_module(pymodule, [self.new_import])
         
         changes.add_change(ChangeFileContents(self.resource, source))
     
@@ -74,12 +78,6 @@ class MoveRefactoring(object):
         else:
             pymodule = self.pycore.get_string_module(source, self.dest_resource)
         
-        lines = rope.codeanalyze.SourceLinesAdapter(self.resource.read())
-        scope = self.old_pyname.get_object().get_scope()
-        start = lines.get_line_start(scope.get_start())
-        end = lines.get_line_end(scope.get_end())
-        moving = self.resource.read()[start:end]
-        
         module_with_imports = self.import_tools.get_module_with_imports(pymodule)
         def can_select(name):
             try:
@@ -90,18 +88,63 @@ class MoveRefactoring(object):
                 pass
             return True
         module_with_imports.filter_names(can_select)
-        source_pymodule = self.pycore.resource_to_pyobject(self.resource)
-        new_import = self.import_tools.get_from_import_for_module(source_pymodule, '*')
-        module_with_imports.add_import(new_import)
+        moving, imports = self._get_moving_element_with_imports()
+        for import_info in imports:
+            module_with_imports.add_import(import_info)
         source = module_with_imports.get_changed_source()
         
         pymodule = self.pycore.get_string_module(source, self.dest_resource)
         module_with_imports = self.import_tools.get_module_with_imports(pymodule)
-        lines = rope.codeanalyze.SourceLinesAdapter(source)
-        start = lines.get_line_end(module_with_imports.get_import_statements()[-1].end_line - 1)
-        source = source[:start + 1] + '\n\n' + moving + '\n' + source[start + 1:]
+        if module_with_imports.get_import_statements():
+            lines = rope.codeanalyze.SourceLinesAdapter(source)
+            start = lines.get_line_end(module_with_imports.
+                                       get_import_statements()[-1].end_line - 1)
+            result = source[:start + 1] + '\n\n'
+        else:
+            result = ''
+            start = -1
+        result += moving + '\n' + source[start + 1:]
         
-        changes.add_change(ChangeFileContents(self.dest_resource, source))
+        changes.add_change(ChangeFileContents(self.dest_resource, result))
+    
+    def _get_moving_element_with_imports(self):
+        moving = self._get_moving_element()
+        module_with_imports = self._get_module_with_imports(moving, self.resource)
+        for import_info in self._get_used_imports_by_the_moving_element():
+            module_with_imports.add_import(import_info)
+        source_pymodule = self.pycore.resource_to_pyobject(self.resource)
+        new_import = self.import_tools.get_from_import_for_module(source_pymodule, '*')
+        module_with_imports.add_import(new_import)
+        
+        pymodule = self.pycore.get_string_module(
+            module_with_imports.get_changed_source(), self.resource)
+        source = self.import_tools.transform_froms_to_normal_imports(pymodule)
+        module_with_imports = self._get_module_with_imports(source, self.resource)
+        imports = [import_stmt.import_info 
+                   for import_stmt in module_with_imports.get_import_statements()]
+        start = 1
+        if imports:
+            start = module_with_imports.get_import_statements()[-1].end_line
+        lines = rope.codeanalyze.SourceLinesAdapter(source)
+        moving = source[lines.get_line_start(start):]
+        return moving, imports
+    
+    def _get_module_with_imports(self, source_code, resource):
+        pymodule = self.pycore.get_string_module(source_code, resource)
+        return self.import_tools.get_module_with_imports(pymodule)
+
+    def _get_moving_element(self):
+        lines = rope.codeanalyze.SourceLinesAdapter(self.resource.read())
+        scope = self.old_pyname.get_object().get_scope()
+        start = lines.get_line_start(scope.get_start())
+        end = lines.get_line_end(scope.get_end())
+        moving = self.resource.read()[start:end]
+        return moving
+        
+    def _get_used_imports_by_the_moving_element(self):
+        pymodule = self.pycore.resource_to_pyobject(self.resource)
+        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        return module_with_imports.get_used_imports(self.old_pyname.get_object())
     
     def _change_other_modules(self, changes):
         for file_ in self.pycore.get_python_files():

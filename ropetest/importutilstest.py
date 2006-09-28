@@ -366,6 +366,16 @@ class ImportUtilsTest(unittest.TestCase):
         changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
         self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()\n', changed_module)
 
+    def test_transforming_froms_to_normal_from_stars(self):
+        self.mod1.write('a_var = 10')
+        self.mod.write('import pkg1.mod1\nfrom pkg1.mod1 import a_var\n' \
+                       'def a_func():\n    print pkg1.mod1, a_var\n')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1.mod1\n' \
+                          'def a_func():\n    print pkg1.mod1, pkg1.mod1.a_var\n',
+                          changed_module)
+
     def test_transforming_froms_to_normal_from_with_alias(self):
         self.mod1.write('def a_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import a_func as another_func\nanother_func()\n')

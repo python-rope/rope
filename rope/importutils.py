@@ -74,6 +74,7 @@ class ImportTools(object):
                 import_stmt.relative_to_absolute(self.pycore, resource.get_parent())
                 import_stmt.import_info = \
                     NormalImport(((import_stmt.import_info.module_name, None),))
+        module_with_imports.remove_duplicates()
         return module_with_imports.get_changed_source()
     
     def _can_import_be_transformed_to_normal_import(self, import_info):
@@ -102,18 +103,14 @@ class ModuleWithImports(object):
         return visitor.unbound
     
     def remove_unused_imports(self):
-        unbound_names = self._get_unbound_names(self.pymodule)
-        def can_select(name):
-            return name in unbound_names
+        can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         for import_statement in self.get_import_statements():
             import_statement.filter_names(can_select)
     
     def get_used_imports(self, defined_pyobject):
         all_import_statements = self.get_import_statements()
-        unbound_names = self._get_unbound_names(defined_pyobject)
-        def can_select(name):
-            return name in unbound_names
         result = []
+        can_select = _OneTimeSelector(self._get_unbound_names(defined_pyobject))
         for import_statement in all_import_statements:
             new_import = import_statement.import_info.filter_names(can_select)
             if not new_import.is_empty():
@@ -150,9 +147,7 @@ class ModuleWithImports(object):
             new_import = import_statement.filter_names(can_select)
     
     def expand_stars(self):
-        unbound_names = self._get_unbound_names(self.pymodule)
-        def can_select(name):
-            return name in unbound_names
+        can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         for import_statement in self.get_import_statements():
             import_statement.expand_star(can_select)
     
@@ -170,6 +165,18 @@ class ModuleWithImports(object):
         for import_stmt in self.get_import_statements():
             import_stmt.relative_to_absolute(self.pycore,
                                              self.pymodule.get_resource().get_parent())
+
+class _OneTimeSelector(object):
+    
+    def __init__(self, names):
+        self.names = names
+        self.selected_names = set()
+    
+    def __call__(self, name):
+        if name in self.names and name not in self.selected_names:
+            self.selected_names.add(name)
+            return True
+        return False
 
 
 class ImportStatement(object):
@@ -210,10 +217,14 @@ class ImportStatement(object):
             return self.main_statement
     
     def expand_star(self, can_select):
-        if isinstance(self.import_info, FromImport):
+        if isinstance(self.import_info, FromImport) and \
+           self.import_info.is_star_import():
             new_import = self.import_info.expand_star(can_select)
             if new_import is not None and new_import != self.import_info:
                 self.import_info = new_import
+        else:
+            for name in self.import_info.get_imported_names():
+                can_select(name)
     
     def empty_import(self):
         self.import_info = ImportInfo.get_empty_import()
@@ -384,9 +395,9 @@ class FromImport(ImportInfo):
         if isinstance(import_info, self.__class__) and \
            self.module_name == import_info.module_name and \
            self.level == import_info.level:
-            if self._is_star_import():
+            if self.is_star_import():
                 return self
-            if import_info._is_star_import():
+            if import_info.is_star_import():
                 return import_info
             new_pairs = list(self.names_and_aliases)
             for pair in import_info.names_and_aliases:
@@ -396,11 +407,11 @@ class FromImport(ImportInfo):
                               self.current_folder, self.pycore)
         return None
     
-    def _is_star_import(self):
-        return self.names_and_aliases and self.names_and_aliases[0][0] == '*'
+    def is_star_import(self):
+        return len(self.names_and_aliases) > 0 and self.names_and_aliases[0][0] == '*'
     
     def expand_star(self, can_select):
-        if not self._is_star_import():
+        if not self.is_star_import():
             return None
         new_pairs = []
         for name in self.get_imported_names():

@@ -673,8 +673,8 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write('class AClass(object):\n    pass\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1,
                               self.mod2)
-        self.assertEquals('import mod2\n', self.mod1.read())
-        self.assertEquals('from mod1 import *\n\n\nclass AClass(object):\n    pass\n',
+        self.assertEquals('', self.mod1.read())
+        self.assertEquals('class AClass(object):\n    pass\n',
                           self.mod2.read())
     
     def test_changing_other_modules_adding_normal_imports(self):
@@ -702,25 +702,45 @@ class MoveRefactoringTest(unittest.TestCase):
     
     def test_changing_destination_module(self):
         self.mod1.write('class AClass(object):\n    pass\n')
-        self.mod2.write('from mod1 import AClass\na_var = AClass()')
+        self.mod2.write('from mod1 import AClass\na_var = AClass()\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1,
                               self.mod2)
-        self.assertEquals('from mod1 import *\n\n\nclass AClass(object):\n    pass\na_var = AClass()',
+        self.assertEquals('class AClass(object):\n    pass\na_var = AClass()\n',
                           self.mod2.read())
 
     def test_folder_destination(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         self.mod1.write('class AClass(object):\n    pass\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, pkg)
-        self.assertEquals('from mod1 import *\n\n\nclass AClass(object):\n    pass\n',
+        self.assertEquals('class AClass(object):\n    pass\n',
                           pkg.get_child('__init__.py').read())
-        self.assertEquals('import pkg\n', self.mod1.read())
+        self.assertEquals('', self.mod1.read())
     
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_for_moving_non_global_elements(self):
         self.mod1.write('def a_func():\n    class AClass(object):\n        pass\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1,
                               self.mod2)
+
+    def test_moving_used_imports_to_destination_module(self):
+        self.mod3.write('a_var = 10')
+        self.mod1.write('import mod3\nfrom mod3 import a_var\n' \
+                        'def a_func():\n    print mod3, a_var\n')
+        self.refactoring.move(self.mod1, self.mod1.read().index('a_func') + 1,
+                              self.mod2)
+        self.assertEquals('import mod3\n\n\n' \
+                          'def a_func():\n    print mod3, mod3.a_var\n',
+                          self.mod2.read())
+
+    def test_moving_used_names_to_destination_module(self):
+        self.mod1.write('a_var = 10\n' \
+                        'def a_func():\n    print a_var\n')
+        self.refactoring.move(self.mod1, self.mod1.read().index('a_func') + 1,
+                              self.mod2)
+        self.assertEquals('a_var = 10\n',
+                          self.mod1.read())
+        self.assertEquals('import mod1\n\n\ndef a_func():\n    print mod1.a_var\n',
+                          self.mod2.read())
 
 
 def suite():
