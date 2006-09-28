@@ -233,10 +233,13 @@ Stories
 > Public Release 0.3m4 : October 1, 2006
 
 
-* Changing from imports to normal imports
-
-
 * Removing imports from the same module
+
+
+* Change relative imports to absolute
+
+
+* Changing from imports to normal imports
 
 
 * Move a class/function to another module

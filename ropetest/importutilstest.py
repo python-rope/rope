@@ -320,6 +320,58 @@ class ImportUtilsTest(unittest.TestCase):
         module_with_imports.remove_duplicates()
         self.assertEquals('from pkg1 import a_func, another_func\n',
                           module_with_imports.get_changed_source())
+    
+    def test_transforming_froms_to_normal_changing_imports(self):
+        self.mod1.write('def a_func():\n    pass\n')
+        self.mod.write('from pkg1 import a_func\n')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1\n', changed_module)
+
+    def test_transforming_froms_to_normal_changing_imports(self):
+        self.mod1.write('def a_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import a_func\n')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1.mod1\n', changed_module)
+
+    def test_transforming_froms_to_normal_changing_occurances(self):
+        self.mod1.write('def a_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import a_func\na_func()')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()', changed_module)
+
+    def test_transforming_froms_to_normal_for_multi_imports(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import *\na_func()\nanother_func()\n')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()\npkg1.mod1.another_func()\n',
+                          changed_module)
+
+    def test_transforming_froms_to_normal_for_multi_imports_inside_parens(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import (a_func, \n    another_func)' \
+                       '\na_func()\nanother_func()\n')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()\npkg1.mod1.another_func()\n',
+                          changed_module)
+
+    def test_transforming_froms_to_normal_from_stars(self):
+        self.mod1.write('def a_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import *\na_func()\n')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()\n', changed_module)
+
+    def test_transforming_froms_to_normal_from_with_alias(self):
+        self.mod1.write('def a_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import a_func as another_func\nanother_func()\n')
+        pymod = self.pycore.get_module('mod')
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()\n', changed_module)
 
 
 if __name__ == '__main__':

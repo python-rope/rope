@@ -257,6 +257,14 @@ def remove_duplicate_imports(context):
     if import_organizer:
         import_organizer.remove_duplicate_imports(file_editor.get_file())
 
+def transform_froms_to_imports(context):
+    if not context.get_active_editor():
+        return
+    file_editor = context.get_active_editor()
+    import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
+    if import_organizer:
+        import_organizer.transform_froms_to_imports(file_editor.get_file())
+
 
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
@@ -282,6 +290,9 @@ actions.append(SimpleAction('Expand Star Imports',
 actions.append(SimpleAction('Remove Duplicate Imports', 
                             ConfirmAllEditorsAreSaved(remove_duplicate_imports), None,
                             MenuAddress(['Refactor', 'Remove Duplicate Imports'], 'd', 2)))
+actions.append(SimpleAction('Transform froms to imports', 
+                            ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
+                            MenuAddress(['Refactor', 'Transform froms to imports'], 's', 2)))
 actions.append(SimpleAction('Undo Last Refactoring', 
                             ConfirmAllEditorsAreSaved(undo_last_refactoring), None,
                             MenuAddress(['Refactor', 'Undo Last Refactoring'], 'u', 3)))

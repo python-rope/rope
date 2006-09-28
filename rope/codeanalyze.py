@@ -198,17 +198,29 @@ class WordRangeFinder(object):
         return prev_word == 'from'
 
     def is_a_name_after_from_import(self, offset):
-        stmt_start = self._find_primary_start(offset)
-        prev_word_start = self._find_word_start(stmt_start - 2)
-        prev_word = self.source_code[prev_word_start:stmt_start].strip()
-        if prev_word != 'import':
+        try:
+            last_from = self.source_code.rindex('from ', 0, offset)
+            from_import = self.source_code.index(' import ', last_from)
+            from_names = from_import + 8
+        except ValueError:
             return False
-        prev_word_start2 = self._find_primary_start(prev_word_start - 2)
-        prev_word_start3 = self._find_primary_start(prev_word_start2 - 2)
-        prev_word3 = self.source_code[prev_word_start3:prev_word_start2].strip()
-        line_start = self._get_line_start(prev_word_start3)
-        till_line_start = self.source_code[line_start:prev_word_start3].strip()
-        return prev_word3 == 'from' and till_line_start == ''
+        next_char = self._find_first_non_space_char(from_names)
+        if self.source_code[next_char] == '(':
+            try:
+                closing_parens = self.source_code.index(')', next_char)
+                return closing_parens >= offset
+            except ValueError:
+                return False
+        else:
+            current_offset = next_char
+            while current_offset < len(self.source_code):
+                if self.source_code[current_offset] == '\n':
+                    break
+                if self.source_code[current_offset] == '\\':
+                    current_offset += 1
+                current_offset += 1
+            return current_offset >= offset
+        return False
 
 
 class StatementEvaluator(object):

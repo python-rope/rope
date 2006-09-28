@@ -43,7 +43,7 @@ Possible Plans
 * Dynamic type inference
 * Move class/function/module/package
 * Introduce factory method
-* Encapsulate method
+* Encapsulate field
 * Introduce/Inline temporary variable
 * Formatter
 * reST go to definition and quick outline
@@ -85,14 +85,30 @@ To Be Discussed
 ===============
 
 * Changing relative imports in refactorings
-* Function to function object refactoring
-* Getting code completion on ``except`` line
+* Function to `Function Object` refactoring
+* Getting code completion inside uncompleted ``try`` blocks
 
 * Rope's preference saving system: format, location
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * `What rope assumes...`_
+
+
+Changing From Imports to Normal Imports
+=======================================
+
+Where does it belong to?
+
+* make a list of all original import statement using `ImportTools`
+
+* for each `ImportStatement` holding a `FromImport`:
+
+  * for name, alias in import_stmt:
+  
+    * rename occurances of imported to module_name.imported
+
+* remove the old from imports and add new normal imports
 
 
 Move Function/Class Refactoring
@@ -107,6 +123,11 @@ destination module.  The simple approach to the first problem is
 importing star from the source module.  Later we can use expand star
 to remove unneeded imports.  Unfortunately I think this approach
 might cause circular imports.
+
+So I propose to find out the unbound names of moving element.  From
+this we can find out the imports and global elements in source modules
+that are needed by it.  We might need `change from imports to normal
+imports`_ and `remove imports from the same module`.
 
 
 Encapsulate Field Refactoring

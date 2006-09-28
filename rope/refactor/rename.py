@@ -117,16 +117,11 @@ class RenameInModule(object):
                     new_pyname = pyname_finder.get_pyname_at(match_start + 1)
                     
                     if self.replace_primary:
-                        start = word_finder._find_primary_start(match_start + 1)
-                        end = word_finder._find_word_end(match_start + 1) + 1
+                        start = word_finder._find_primary_start(match_start)
+                        end = word_finder._find_word_end(match_start) + 1
+                    if not self._can_we_replace(word_finder, match_start):
+                        continue
                     for old_pyname in self.old_pynames:
-                        if self.only_function_calls and \
-                           not word_finder.is_a_function_being_called(match_start + 1):
-                            continue
-                        if self.replace_primary and \
-                           (word_finder.is_a_name_after_from_import(match_start + 1) or
-                            word_finder.is_a_class_or_function_name_in_header(match_start + 1)):
-                            continue
                         if self._are_pynames_the_same(old_pyname, new_pyname):
                             result.append(source_code[last_modified_char:start]
                                           + self.new_name)
@@ -135,6 +130,16 @@ class RenameInModule(object):
             result.append(source_code[last_modified_char:])
             return ''.join(result)
         return None
+
+    def _can_we_replace(self, word_finder, match_start):
+        if self.only_function_calls and \
+           not word_finder.is_a_function_being_called(match_start + 1):
+            return False
+        if self.replace_primary and \
+           (word_finder.is_a_name_after_from_import(match_start + 1) or
+            word_finder.is_a_class_or_function_name_in_header(match_start + 1)):
+            return False
+        return True
 
     def _create_pyname_finder(self, source_code, resource, pymodule):
         if resource is not None:

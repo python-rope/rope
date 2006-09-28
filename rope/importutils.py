@@ -1,6 +1,7 @@
 import compiler
 
 import rope.pynames
+import rope.refactor.rename
 from rope.codeanalyze import SourceLinesAdapter
 
 
@@ -36,6 +37,46 @@ class ImportTools(object):
     
     def get_module_with_imports(self, module):
         return ModuleWithImports(self.pycore, module)
+    
+    def transform_froms_to_normal_imports(self, pymodule):
+        resource = pymodule.get_resource()
+        module_with_imports = self.get_module_with_imports(pymodule)
+        module_with_imports.expand_stars()
+        source = module_with_imports.get_changed_source()
+        if source is not None:
+            pymodule = self.pycore.get_string_module(source, resource)
+        module_with_imports = self.get_module_with_imports(pymodule)
+        for import_stmt in module_with_imports.get_import_statements():
+            if not self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
+                continue
+            from_import = import_stmt.import_info
+            module_name = from_import.module_name
+            imported_pymodule = self.pycore.get_module(module_name)
+            for name, alias in from_import.names_and_aliases:
+                imported = name
+                if alias is not None:
+                    imported = alias
+                rename_in_module = rope.refactor.rename.RenameInModule(
+                    self.pycore, [imported_pymodule.get_attribute(name)], imported,
+                    module_name + '.' + name, replace_primary=True)
+                source = rename_in_module.get_changed_module(pymodule=pymodule)
+                if source is not None:
+                    pymodule = self.pycore.get_string_module(source,
+                                                             resource)
+        
+        module_with_imports = self.get_module_with_imports(pymodule)
+        for import_stmt in module_with_imports.get_import_statements():
+            if self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
+                import_stmt.import_info = \
+                    NormalImport(((import_stmt.import_info.module_name, None),))
+        return module_with_imports.get_changed_source()
+    
+    def _can_import_be_transformed_to_normal_import(self, import_info):
+        if not isinstance(import_info, FromImport):
+            return False
+        if import_info.level != 0:
+            False
+        return True
 
 
 class ModuleWithImports(object):
@@ -126,23 +167,31 @@ class ModuleWithImports(object):
 class ImportStatement(object):
     
     def __init__(self, import_info, start_line, end_line, main_statement=None):
-        self.import_info = import_info
         self.start_line = start_line
         self.end_line = end_line
         self.main_statement = main_statement
+        self._import_info = None
+        self.import_info = import_info
         self.is_changed = False
+    
+    def _get_import_info(self):
+        return self._import_info
+    
+    def _set_import_info(self, new_import):
+        self.is_changed = True
+        self._import_info = new_import
+    
+    import_info = property(_get_import_info, _set_import_info)
     
     def filter_names(self, can_select):
         new_import = self.import_info.filter_names(can_select)
         if new_import is not None and not new_import == self.import_info:
-            self.is_changed = True
             self.import_info = new_import
     
     def add_import(self, import_info):
         result = self.import_info.add_import(import_info)
         if result is not None:
             self.import_info = result
-            self.is_changed = True
             return True
         return False
     
@@ -156,11 +205,9 @@ class ImportStatement(object):
         if isinstance(self.import_info, FromImport):
             new_import = self.import_info.expand_star(can_select)
             if new_import is not None and new_import != self.import_info:
-                self.is_changed = True
                 self.import_info = new_import
     
     def empty_import(self):
-        self.is_changed = True
         self.import_info = ImportInfo.get_empty_import()
 
 

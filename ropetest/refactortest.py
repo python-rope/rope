@@ -1,6 +1,7 @@
 import unittest
 
 import rope.codeanalyze
+import rope.refactor.rename
 from rope.refactor import PythonRefactoring
 from rope.exceptions import RefactoringException
 from rope.project import Project
@@ -205,6 +206,16 @@ class RenameRefactoringTest(unittest.TestCase):
         self.refactoring.undo_last_refactoring()
         self.assertEquals('mod1.py', mod1.get_path())
         self.assertEquals('from mod1 import a_func\n', mod2.read())
+    
+    def test_rename_in_module_renaming_one_letter_names_for_expressions(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('a = 10\nprint (1+a)\n')
+        pymod = self.pycore.get_module('mod1')
+        old_pyname = pymod.get_attribute('a')
+        rename_in_module = rope.refactor.rename.RenameInModule(
+            self.pycore, [old_pyname], 'a', 'new_var', replace_primary=True)
+        refactored = rename_in_module.get_changed_module(pymodule=pymod)
+        self.assertEquals('new_var = 10\nprint (1+new_var)\n', refactored)
     
 
 class ExtractMethodTest(unittest.TestCase):

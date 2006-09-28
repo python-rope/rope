@@ -1,11 +1,22 @@
+Transforming from imports to normal imports
+===========================================
+
+- Handling multi froms
+- Handling aliases
+
+* Handling relative imports from transforming froms to normals
+
+
 Move a Class/Function to Another Module
 =======================================
 
-* Moving used imports by moving from the source class
+* Moving imports used by the moving element to the destination
+* Importing names used by the moving element to the destination
 * Preventing circular imports
 
-* Considering already imported names in `ModuleWithImport.filter`::
-
+* Considering already imported names in `ModuleWithImport.filter` and
+  for `ModuleWithImports.expand_from_imports`::
+  
   ...
   def can_select(name):
       if name in unbound_names and name not in already_imported:
@@ -18,7 +29,16 @@ Move a Class/Function to Another Module
 
 * More tests for `rope.codeanalyze.WordRangeFinder` methods; can we
   use ASTs
-* Refactor `rope.refactor.move` and `rope.codeanalyze` modules
+
+
+Before 0.3m4
+============
+
+* Refactor `rope.importutils`
+* Refactor `rope.refactor.move`
+* Refactor `rope.codeanalyze`
+* Showing function signature in show doc
+* Update homepage and docs
 
 
 Remaining Stories
@@ -35,7 +55,6 @@ Remaining Stories
         a_var = 10
         another_var = a_var
 
-* Showing function signature in show doc
 * Preferring `DefinedName`\s in attribute code assists
 * Transform module to package refactoring and relative imports
 * `rope.exceptions` should only contain user exceptions that are
