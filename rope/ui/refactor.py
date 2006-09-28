@@ -233,13 +233,13 @@ def move(context):
     frame.grid()
     new_name_entry.focus_set()
 
-def remove_unused_imports(context):
+def organize_imports(context):
     if not context.get_active_editor():
         return
     file_editor = context.get_active_editor()
     import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
     if import_organizer:
-        import_organizer.remove_unused_imports(file_editor.get_file())
+        import_organizer.organize_imports(file_editor.get_file())
 
 def expand_star_imports(context):
     if not context.get_active_editor():
@@ -248,14 +248,6 @@ def expand_star_imports(context):
     import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
     if import_organizer:
         import_organizer.expand_star_imports(file_editor.get_file())
-
-def remove_duplicate_imports(context):
-    if not context.get_active_editor():
-        return
-    file_editor = context.get_active_editor()
-    import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
-    if import_organizer:
-        import_organizer.remove_duplicate_imports(file_editor.get_file())
 
 def transform_froms_to_imports(context):
     if not context.get_active_editor():
@@ -289,15 +281,12 @@ actions.append(SimpleAction('Transform Module to Package',
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'i', 1)))
-actions.append(SimpleAction('Remove Unused Imports', 
-                            ConfirmAllEditorsAreSaved(remove_unused_imports), 'M-O',
-                            MenuAddress(['Refactor', 'Remove Unused Imports'], 'o', 2)))
+actions.append(SimpleAction('Organize Imports', 
+                            ConfirmAllEditorsAreSaved(organize_imports), 'M-O',
+                            MenuAddress(['Refactor', 'Organize Imports'], 'o', 2)))
 actions.append(SimpleAction('Expand Star Imports', 
                             ConfirmAllEditorsAreSaved(expand_star_imports), None,
                             MenuAddress(['Refactor', 'Expand Star Imports'], 'x', 2)))
-actions.append(SimpleAction('Remove Duplicate Imports', 
-                            ConfirmAllEditorsAreSaved(remove_duplicate_imports), None,
-                            MenuAddress(['Refactor', 'Remove Duplicate Imports'], 'd', 2)))
 actions.append(SimpleAction('Transform Froms to Imports', 
                             ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
                             MenuAddress(['Refactor', 'Transform Froms to Imports'], 's', 2)))

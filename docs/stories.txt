@@ -236,9 +236,6 @@ Stories
 * Removing imports from the same module
 
 
-* Change relative imports to absolute
-
-
 * Move a class/function to another module
 
 
@@ -250,3 +247,5 @@ Remaining Stories
 * Change program goals and description; principles.txt
   Go toward refactoring and ... library rather than an IDE?
 * Logo
+* Changing rope short description to ``a python refactoring IDE ...``
+* Adding ``show_what_rope_can_do`` file

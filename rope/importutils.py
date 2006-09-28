@@ -52,6 +52,7 @@ class ImportTools(object):
         for import_stmt in module_with_imports.get_import_statements():
             if not self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
                 continue
+            import_stmt.relative_to_absolute(self.pycore, resource.get_parent())
             from_import = import_stmt.import_info
             module_name = from_import.module_name
             imported_pymodule = self.pycore.get_module(module_name)
@@ -70,6 +71,7 @@ class ImportTools(object):
         module_with_imports = self.get_module_with_imports(pymodule)
         for import_stmt in module_with_imports.get_import_statements():
             if self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
+                import_stmt.relative_to_absolute(self.pycore, resource.get_parent())
                 import_stmt.import_info = \
                     NormalImport(((import_stmt.import_info.module_name, None),))
         return module_with_imports.get_changed_source()
@@ -77,8 +79,6 @@ class ImportTools(object):
     def _can_import_be_transformed_to_normal_import(self, import_info):
         if not isinstance(import_info, FromImport):
             return False
-        if import_info.level != 0:
-            False
         return True
 
 

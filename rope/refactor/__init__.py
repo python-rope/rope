@@ -53,18 +53,16 @@ class ImportOrganizer(object):
             changes.add_change(ChangeFileContents(resource, result))
         self.refactoring._add_and_commit_changes(changes)
     
-    def remove_unused_imports(self, resource):
+    def organize_imports(self, resource):
         self._perform_command_on_module_with_imports(
             resource, rope.importutils.ModuleWithImports.remove_unused_imports)
+        self._perform_command_on_module_with_imports(
+            resource, rope.importutils.ModuleWithImports.remove_duplicates)
 
     def expand_star_imports(self, resource):
         self._perform_command_on_module_with_imports(
             resource, rope.importutils.ModuleWithImports.expand_stars)
 
-    def remove_duplicate_imports(self, resource):
-        self._perform_command_on_module_with_imports(
-            resource, rope.importutils.ModuleWithImports.remove_duplicates)
-    
     def transform_froms_to_imports(self, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
         result = self.import_tools.transform_froms_to_normal_imports(pymodule)

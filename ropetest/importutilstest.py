@@ -373,6 +373,13 @@ class ImportUtilsTest(unittest.TestCase):
         changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
         self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()\n', changed_module)
     
+    def test_transforming_froms_to_normal_for_relatives(self):
+        self.mod2.write('def a_func():\n    pass\n')
+        self.mod3.write('from mod2 import *\na_func()\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod3)
+        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
+        self.assertEquals('import pkg2.mod2\npkg2.mod2.a_func()\n', changed_module)
+
     def test_transform_relatives_imports_to_absolute_imports_doing_nothing(self):
         self.mod2.write('from pkg1 import mod1\nimport mod1\n')
         pymod = self.pycore.resource_to_pyobject(self.mod2)

@@ -1,13 +1,9 @@
-Change Relative Imports to Absolute
-===================================
-
-- Handling relative imports in transforming modules to packages
-
-* Handling relative imports in transforming froms to normals
-
-
 Move a Class/Function to Another Module
 =======================================
+
+- Mix remove duplicate imports and remove unused imports to make
+  organize imports
+- Handling relative imports in transforming froms to normals
 
 * Moving imports used by the moving element to the destination
 * Importing names used by the moving element to the destination
@@ -26,8 +22,6 @@ Move a Class/Function to Another Module
       import_statement.filter(can_select)
   ...
 
-* More tests for `rope.codeanalyze.WordRangeFinder` methods; can we
-  use ASTs
 
 
 Before 0.3m4
@@ -45,7 +39,6 @@ Remaining Stories
 
 * Asking import kind for introduce factory and move refactoring
 * Import addition when adding a relative with an absolute import
-* Changing rope short description to ``a python refactoring IDE ...``
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
 * Handling `Scope.lookup` for ::
@@ -59,13 +52,11 @@ Remaining Stories
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
 * Eliminating `Editor.refactoring`
 * Calling `sys.settrace` for all threads in `rope.runmod` module
-* Adding ``show_what_rope_can_do`` file
 * Keyboard shortcuts for new features
 * Function keywords and extract method
 * Showing initial name in rename dialogs
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Performing refactorings based on the object of the pyname
 * Goto definition for ``"# comment.\na_var"``
-* Better editor changing dialog; use uihelpers module
 * Slow `GraphicalEditor._get_offset`
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?

@@ -16,9 +16,7 @@ New Features
 
 Features added in this release:
 
-* Basic subversion support using pysvn
-* Renaming methods in class hierarchy
-* Transform module to package refactoring
+* 
 
 The subversion support is somewhat basic.  What rope does is that when
 creating new files or when moving modules and packages for
@@ -29,12 +27,6 @@ available. (You can get PySVN from http://pysvn.tigris.org ).  Rope
 assumes all files are under version control when these conditions are
 met.  Also don't forget to commit your changes yourself, rope doesn't
 do that yet.
-
-Transform module to package refactoring works by replacing a module
-with a package of the same name and copying its content to the
-``__init__.py`` module of the package.  This refactoring does not
-change relative imports yet and if there are some relative imports in
-the module you have to change them manually.
 
 Dynamic type inference gets its needed information from running
 modules (``C-F11``).  You open the module to run (probably your test

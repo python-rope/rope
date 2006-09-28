@@ -3,6 +3,9 @@
 ===========
 
 
+- Change relative imports to absolute : September 28, 2006
+
+
 - Changing from imports to normal imports : September 28, 2006
 
 
