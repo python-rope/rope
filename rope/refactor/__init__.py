@@ -73,6 +73,10 @@ class ImportOrganizer(object):
             changes.add_change(ChangeFileContents(resource, result))
         self.refactoring._add_and_commit_changes(changes)
 
+    def transform_relatives_to_absolute(self, resource):
+        self._perform_command_on_module_with_imports(
+            resource, rope.importutils.ModuleWithImports.relative_to_absolute)
+    
 
 class PythonRefactoring(Refactoring):
 
@@ -98,12 +102,22 @@ class PythonRefactoring(Refactoring):
     
     def transform_module_to_package(self, resource):
         changes = ChangeSet()
+        new_content = self._transform_relatives_to_absolute(resource)
+        if new_content is not None:
+            changes.add_change(ChangeFileContents(resource, new_content))
         parent = resource.get_parent()
         name = resource.get_name()[:-3]
         changes.add_change(CreateFolder(parent, name))
         new_path = parent.get_path() + '/%s/__init__.py' % name
         changes.add_change(MoveResource(resource, new_path))
         self._add_and_commit_changes(changes)
+    
+    def _transform_relatives_to_absolute(self, resource):
+        pymodule = self.pycore.resource_to_pyobject(resource)
+        import_tools = rope.importutils.ImportTools(self.pycore)
+        module_with_imports = import_tools.get_module_with_imports(pymodule)
+        module_with_imports.relative_to_absolute()
+        return module_with_imports.get_changed_source()
     
     def introduce_factory(self, resource, offset, factory_name, global_factory=False):
         factory_introducer = IntroduceFactoryRefactoring(self.pycore, resource,

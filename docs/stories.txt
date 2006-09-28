@@ -215,6 +215,12 @@ Stories
   * Running last run
 
 
+* Encapsulate field
+
+
+* Organize imports
+
+
 * Inline method
 
 
@@ -224,12 +230,6 @@ Stories
 * Move a module or package to another package
 
 
-* Encapsulate field
-
-
-* Organize imports
-
-
 > Public Release 0.3m4 : October 1, 2006
 
 
@@ -237,9 +237,6 @@ Stories
 
 
 * Change relative imports to absolute
-
-
-* Changing from imports to normal imports
 
 
 * Move a class/function to another module

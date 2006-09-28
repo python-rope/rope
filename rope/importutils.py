@@ -11,24 +11,27 @@ class ImportTools(object):
         self.pycore = pycore
     
     def get_import_for_module(self, module):
-        module_name = self._get_module_name(module)
+        module_name = ImportTools._get_module_name(self.pycore, module.get_resource())
         return NormalImport(((module_name, None), ))
     
     def get_from_import_for_module(self, module, name):
-        module_name = self._get_module_name(module)
+        module_name = ImportTools._get_module_name(self.pycore, module.get_resource())
         return FromImport(module_name, 0, ((name, None),),
                           module.get_resource().get_parent(), self.pycore)
 
-    def _get_module_name(self, module):
-        resource = module.get_resource()
-        if resource.get_name() == '__init__.py':
+    @staticmethod
+    def _get_module_name(pycore, resource):
+        if resource.is_folder():
+            module_name = resource.get_name()
+            source_folder = resource.get_parent()
+        elif resource.get_name() == '__init__.py':
             module_name = resource.get_parent().get_name()
             source_folder = resource.get_parent().get_parent()
         else:
             module_name = resource.get_name()[:-3]
             source_folder = resource.get_parent()
 
-        source_folders = self.pycore.get_source_folders()
+        source_folders = pycore.get_source_folders()
         while source_folder != source_folder.get_parent() and \
               source_folder not in source_folders:
             module_name = source_folder.get_name() + '.' + module_name
@@ -162,6 +165,11 @@ class ModuleWithImports(object):
                     import_stmt.empty_import()
             else:
                 added_imports.append(import_stmt)
+    
+    def relative_to_absolute(self):
+        for import_stmt in self.get_import_statements():
+            import_stmt.relative_to_absolute(self.pycore,
+                                             self.pymodule.get_resource().get_parent())
 
 
 class ImportStatement(object):
@@ -209,6 +217,11 @@ class ImportStatement(object):
     
     def empty_import(self):
         self.import_info = ImportInfo.get_empty_import()
+    
+    def relative_to_absolute(self, pycore, current_folder):
+        new_import = self.import_info.relative_to_absolute(pycore, current_folder)
+        if new_import is not None and new_import != self.import_info:
+            self.import_info = new_import
 
 
 class ImportInfo(object):
@@ -230,6 +243,17 @@ class ImportInfo(object):
     
     def __hash__(self):
         return hash(self.get_import_statement())
+    
+    def relative_to_absolute(self, pycore, current_folder):
+        pass
+    
+    def _are_name_and_alias_lists_equal(self, list1, list2):
+        if len(list1) != len(list2):
+            return False
+        for pair1, pair2 in zip(list1, list2):
+            if pair1 != pair2:
+                return False
+        return True
     
     def __eq__(self, obj):
         return isinstance(obj, self.__class__) and \
@@ -281,12 +305,21 @@ class NormalImport(ImportInfo):
 
     def add_import(self, import_info):
         if isinstance(import_info, self.__class__) and \
-           len(self.names_and_aliases) == len(import_info.names_and_aliases):
-            for pair1, pair2 in zip(self.names_and_aliases, import_info.names_and_aliases):
-                if pair1 != pair2:
-                    break
-            else:
-                return self
+           self._are_name_and_alias_lists_equal(self.names_and_aliases,
+                                                import_info.names_and_aliases):
+            return self
+        return None
+    
+    def relative_to_absolute(self, pycore, current_folder):
+        new_pairs = []
+        for name, alias in self.names_and_aliases:
+            resource = pycore.find_module(name, current_folder=current_folder)
+            if resource is None:
+                return None
+            absolute_name = ImportTools._get_module_name(pycore, resource)
+            new_pairs.append((absolute_name, alias))
+        if not self._are_name_and_alias_lists_equal(new_pairs, self.names_and_aliases):
+            return NormalImport(new_pairs)
         return None
     
 
@@ -376,6 +409,21 @@ class FromImport(ImportInfo):
                                 self.current_folder, self.pycore)
         return new_import.filter_names(can_select)
 
+    def relative_to_absolute(self, pycore, current_folder):
+        if self.level == 0:
+            resource = pycore.find_module(self.module_name,
+                                          current_folder=current_folder)
+        else:
+            resource = pycore.find_relative_module(
+                self.module_name, current_folder, self.level)
+        if resource is None:
+            return None
+        absolute_name = ImportTools._get_module_name(pycore, resource)
+        if self.module_name != absolute_name:
+            return FromImport(absolute_name, 0, self.names_and_aliases,
+                              current_folder, pycore)
+        return None
+    
 
 class _UnboundNameFinder(object):
     

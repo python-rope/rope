@@ -95,34 +95,18 @@ To Be Discussed
 * `What rope assumes...`_
 
 
-Changing From Imports to Normal Imports
-=======================================
-
-Where does it belong to?
-
-* make a list of all original import statement using `ImportTools`
-
-* for each `ImportStatement` holding a `FromImport`:
-
-  * for name, alias in import_stmt:
-  
-    * rename occurances of imported to module_name.imported
-
-* remove the old from imports and add new normal imports
-
-
 Move Function/Class Refactoring
 ===============================
 
 Another problem is we can find out the imports used in a class or
 function body using `get_used_imports` but there might be some other
-global classes or functions in the source module that are used by
-the moving element.  On the other hand some imports might be
-unnecessary because we are importing objects that are defined in the
-destination module.  The simple approach to the first problem is
-importing star from the source module.  Later we can use expand star
-to remove unneeded imports.  Unfortunately I think this approach
-might cause circular imports.
+global classes or functions in the source module that are used by the
+moving element.  On the other hand some imports might be unnecessary
+because we are importing objects that are defined in the destination
+module.  The simple approach to the first problem is importing star
+from the source module.  Later we can use expand star to remove
+unneeded imports.  Unfortunately I think this approach might cause
+circular imports.
 
 So I propose to find out the unbound names of moving element.  From
 this we can find out the imports and global elements in source modules
@@ -143,35 +127,35 @@ former consists of all other places.
 Multi-Step Refactorings
 =======================
 
-Some of the refactorings need to be performed in multi steps.  In
-such situations I believe I have to use `PyCore.get_string_module`.
-So for refactorings like rename there should be a method that works
-on `PyModule`\s rather than `Resource`\s.  The problem with this
-approach is that other modules might need to have access to a changed
-module, but since the change is not committed, it is not possible. So
-we might need to add another layer on the `PyCore.get_module`, but
-that seems like a big refactoring.
+Some of the refactorings need to be performed in multi steps.  In such
+situations I believe I have to use `PyCore.get_string_module`.  So for
+refactorings like rename there should be a method that works on
+`PyModule`\s rather than `Resource`\s.  The problem with this approach
+is that other modules might need to have access to a changed mondule,
+but since the change is not committed, it is not possible. So we might
+need to add another layer on the `PyCore.get_module`, but that seems
+like a big refactoring.
 
-Another approach is doing refactorings in each step before going
-to the next one.  In this approach we won't be able to preview
-before performing the refactoring.
+Another approach is doing refactorings in each step before going to
+the next one.  In this approach we won't be able to preview before
+performing the refactoring.
 
 
 Do We Really Need to Access Changed Modules?
 --------------------------------------------
 
-I think we can do refactorings like move method or introduce
-factory without having access to changed modules.
+I think we can do refactorings like move method or introduce factory
+without having access to changed modules.
 
 
 Undo Unification
 ================
 
 Currently there are separate undo actions for editing text and
-refactorings and in future there might be undos for other changes.
-We need to mix them together.  This seems hard to do mainly because
-we don't have much access to the undo mechanism of Tkinter.  I think
-an approximation here will save us.
+refactorings and in future there might be undos for other changes.  We
+need to mix them together.  This seems hard to do mainly because we
+don't have much access to the undo mechanism of Tkinter.  I think an
+approximation here will save us.
 
 
 Enhanced Import Tools

@@ -18,7 +18,7 @@ class ExtractMethodRefactoring(object):
     def extract_method(self, resource, start_offset, end_offset,
                        extracted_name):
         new_contents = _ExtractMethodPerformer(self, resource, start_offset,
-                                              end_offset, extracted_name).extract()
+                                               end_offset, extracted_name).extract()
         changes = ChangeSet()
         changes.add_change(ChangeFileContents(resource, new_contents))
         return changes

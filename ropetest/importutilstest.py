@@ -372,6 +372,42 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
         self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()\n', changed_module)
+    
+    def test_transform_relatives_imports_to_absolute_imports_doing_nothing(self):
+        self.mod2.write('from pkg1 import mod1\nimport mod1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod2)
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.relative_to_absolute()
+        self.assertEquals('from pkg1 import mod1\nimport mod1\n',
+                          module_with_imports.get_changed_source())
+        
+    def test_transform_relatives_imports_to_absolute_imports_for_normal_imports(self):
+        self.mod2.write('import mod3\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod2)
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.relative_to_absolute()
+        self.assertEquals('import pkg2.mod3\n',
+                          module_with_imports.get_changed_source())
+        
+    def test_transform_relatives_imports_to_absolute_imports_for_froms(self):
+        self.mod3.write('def a_func():\n    pass\n')
+        self.mod2.write('from mod3 import a_func\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod2)
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.relative_to_absolute()
+        self.assertEquals('from pkg2.mod3 import a_func\n',
+                          module_with_imports.get_changed_source())
+        
+    @testutils.run_only_for_25
+    def test_transform_relatives_imports_to_absolute_imports_for_new_relatives(self):
+        self.mod3.write('def a_func():\n    pass\n')
+        self.mod2.write('from .mod3 import a_func\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod2)
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.relative_to_absolute()
+        self.assertEquals('from pkg2.mod3 import a_func\n',
+                          module_with_imports.get_changed_source())
+        
 
 
 if __name__ == '__main__':

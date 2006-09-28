@@ -1,10 +1,9 @@
-Transforming from imports to normal imports
-===========================================
+Change Relative Imports to Absolute
+===================================
 
-- Handling multi froms
-- Handling aliases
+- Handling relative imports in transforming modules to packages
 
-* Handling relative imports from transforming froms to normals
+* Handling relative imports in transforming froms to normals
 
 
 Move a Class/Function to Another Module
@@ -56,7 +55,6 @@ Remaining Stories
         another_var = a_var
 
 * Preferring `DefinedName`\s in attribute code assists
-* Transform module to package refactoring and relative imports
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
 * Eliminating `Editor.refactoring`

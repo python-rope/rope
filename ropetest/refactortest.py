@@ -457,6 +457,17 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertTrue(pkg.has_child('mod.py'))
         self.assertFalse(pkg.has_child('mod'))
 
+    def test_transform_module_to_package_with_relative_imports(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(pkg, 'mod1')
+        mod1.write('import mod2\nfrom mod2 import AClass\n')
+        mod2 = self.pycore.create_module(pkg, 'mod2')
+        mod2.write('class AClass(object):\n    pass\n')
+        self.refactoring.transform_module_to_package(mod1)
+        new_init = self.project.get_resource('pkg/mod1/__init__.py')
+        self.assertEquals('import pkg.mod2\nfrom pkg.mod2 import AClass\n',
+                          new_init.read())
+
 
 class IntroduceFactoryTest(unittest.TestCase):
 
