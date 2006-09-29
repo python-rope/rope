@@ -32,6 +32,7 @@ class ImportTools(object):
             source_folder = resource.get_parent()
 
         source_folders = pycore.get_source_folders()
+        source_folders.extend(pycore.get_python_path_folders())
         while source_folder != source_folder.get_parent() and \
               source_folder not in source_folders:
             module_name = source_folder.get_name() + '.' + module_name
@@ -70,7 +71,7 @@ class ImportTools(object):
                     pymodule = self.pycore.get_string_module(source,
                                                              resource)
         
-        # ???: What does it do?
+        # Adding normal imports in place of froms
         module_with_imports = self.get_module_with_imports(pymodule)
         for import_stmt in module_with_imports.get_import_statements():
             if self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
@@ -133,7 +134,7 @@ class ModuleWithImports(object):
         can_select = _OneTimeSelector(self._get_unbound_names(defined_pyobject))
         for import_statement in all_import_statements:
             new_import = import_statement.import_info.filter_names(can_select)
-            if not new_import.is_empty():
+            if new_import is not None and not new_import.is_empty():
                 result.append(new_import)
         return result
 
@@ -185,7 +186,7 @@ class ModuleWithImports(object):
         visitor = _ImportInfoRelativeToAbsoluteVisitor(
             self.pycore, self.pymodule.get_resource().get_parent())
         for import_stmt in self.get_import_statements():
-            import_stmt.analyze_relative_to_absolute(visitor)
+            import_stmt.accept_visitor(visitor)
         return visitor.to_be_absolute
 
 
@@ -205,10 +206,13 @@ class _ImportInfoRelativeToAbsoluteVisitor(object):
         return import_info.relative_to_absolute_for_aliases(
             self.pycore, self.current_folder)
     
+    def visitEmptyImport(self, import_info):
+        pass
+    
     def dispatch(self, import_info):
         method = getattr(self, 'visit' + import_info.__class__.__name__)
         return method(import_info)
-            
+
 
 class _OneTimeSelector(object):
     
@@ -216,9 +220,10 @@ class _OneTimeSelector(object):
         self.names = names
         self.selected_names = set()
     
-    def __call__(self, name):
-        if name in self.names and name not in self.selected_names:
-            self.selected_names.add(name)
+    def __call__(self, imported_primary):
+        name = imported_primary.split('.')[0]
+        if name in self.names and imported_primary not in self.selected_names:
+            self.selected_names.add(imported_primary)
             return True
         return False
 
@@ -237,15 +242,15 @@ class ImportStatement(object):
         return self._import_info
     
     def _set_import_info(self, new_import):
-        self.is_changed = True
-        self._import_info = new_import
+        if new_import is not None and not new_import == self._import_info:
+            self.is_changed = True
+            self._import_info = new_import
     
     import_info = property(_get_import_info, _set_import_info)
     
     def filter_names(self, can_select):
         new_import = self.import_info.filter_names(can_select)
-        if new_import is not None and not new_import == self.import_info:
-            self.import_info = new_import
+        self.import_info = new_import
     
     def add_import(self, import_info):
         result = self.import_info.add_import(import_info)
@@ -263,31 +268,39 @@ class ImportStatement(object):
     def expand_star(self, can_select):
         if isinstance(self.import_info, FromImport) and \
            self.import_info.is_star_import():
-            new_import = self.import_info.expand_star(can_select)
-            if new_import is not None and new_import != self.import_info:
-                self.import_info = new_import
+            self.import_info = self.import_info.expand_star(can_select)
         else:
-            for name in self.import_info.get_imported_names():
-                can_select(name)
+            for primary in self.import_info.get_imported_primaries():
+                can_select(primary)
     
     def empty_import(self):
         self.import_info = ImportInfo.get_empty_import()
     
-    def analyze_relative_to_absolute(self, visitor):
-        new_import = visitor.dispatch(self.import_info)
-        if new_import is not None and new_import != self.import_info:
-            self.import_info = new_import
+    def accept_visitor(self, visitor):
+        self.import_info = visitor.dispatch(self.import_info)
 
 
 class ImportInfo(object):
     
-    def get_imported_names(self):
+    def get_imported_primaries(self):
         pass
+    
+    def get_imported_names(self):
+        return [primary.split('.')[0]
+                for primary in self.get_imported_primaries()]
     
     def get_import_statement(self):
         pass
     
-    def filter_names(can_select):
+    def filter_names(self, can_select):
+        def can_select_name_and_alias(name, alias):
+            imported = name
+            if alias:
+                imported = alias
+            return can_select(imported)
+        return self.filter_names_and_aliases(can_select_name_and_alias)
+    
+    def filter_names_and_aliases(can_select):
         pass
     
     def is_empty(self):
@@ -314,8 +327,11 @@ class ImportInfo(object):
     @staticmethod
     def get_empty_import():
         class EmptyImport(ImportInfo):
+            names_and_aliases = []
             def is_empty(self):
                 return True
+            def get_imported_primaries(self):
+                return []
         return EmptyImport()
     
 
@@ -324,13 +340,13 @@ class NormalImport(ImportInfo):
     def __init__(self, names_and_aliases):
         self.names_and_aliases = names_and_aliases
     
-    def get_imported_names(self):
+    def get_imported_primaries(self):
         result = []
         for name, alias in self.names_and_aliases:
             if alias:
                 result.append(alias)
             else:
-                result.append(name.split('.')[0])
+                result.append(name)
         return result
     
     def get_import_statement(self):
@@ -342,13 +358,10 @@ class NormalImport(ImportInfo):
             result += ', '
         return result[:-2]
     
-    def filter_names(self, can_select):
+    def filter_names_and_aliases(self, can_select):
         new_pairs = []
         for name, alias in self.names_and_aliases:
-            imported = name.split('.')[0]
-            if alias:
-                imported = alias
-            if can_select(imported):
+            if can_select(name, alias):
                 new_pairs.append((name, alias))
         return NormalImport(new_pairs)
     
@@ -401,7 +414,7 @@ class FromImport(ImportInfo):
         self.current_folder = current_folder
         self.pycore = pycore
 
-    def get_imported_names(self):
+    def get_imported_primaries(self):
         if self.names_and_aliases[0][0] == '*':
             if self.level == 0:
                 module = self.pycore.get_module(self.module_name,
@@ -429,19 +442,16 @@ class FromImport(ImportInfo):
             result += ', '
         return result[:-2]
 
-    def filter_names(self, can_select):
+    def filter_names_and_aliases(self, can_select):
         new_pairs = []
         if self.names_and_aliases and self.names_and_aliases[0][0] == '*':
             for name in self.get_imported_names():
-                if can_select(name):
+                if can_select(name, None):
                     new_pairs.append(self.names_and_aliases[0])
                     break
         else:
             for name, alias in self.names_and_aliases:
-                imported = name
-                if alias:
-                    imported = alias
-                if can_select(imported):
+                if can_select(name, alias):
                     new_pairs.append((name, alias))
         return FromImport(self.module_name, self.level, new_pairs,
                           self.current_folder, self.pycore)

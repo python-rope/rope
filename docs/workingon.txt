@@ -1,39 +1,18 @@
-Move a Class/Function to Another Module
-=======================================
+Before 0.3m4
+============
 
-- Relative to absolute and normal imports with occurances
-- What if there is an alias
-- Update relative to absolute in the UI
-- Moving and relative imports
-- Considering already imported names in `ModuleWithImport.filter` and
-  for `ModuleWithImports.expand_from_imports`::
-  
-  ...
-  def can_select(name):
-      if name in unbound_names and name not in already_imported:
-          already_imported.add(name)
-          return True
-      return False
-  for import_statement in reversed(all_imports):
-      import_statement.filter(can_select)
-  ...
-
-
-* Handling indentation for::
+- Handling indentation for::
   
   self.to_be_absolute.extend(import_info.get_relative_to_absolute_list(
       self.pycore, self.current_folder))
 
-
-Before 0.3m4
-============
+- Go to linenumber
 
 * Refactor `rope.importutils`
 * Refactor `rope.refactor.move`
 * Refactor `rope.codeanalyze`
 * Showing function signature in show doc
 * Update homepage and docs
-* Go to linenumber
 
 
 Remaining Stories

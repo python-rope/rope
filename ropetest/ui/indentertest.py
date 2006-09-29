@@ -288,6 +288,11 @@ class PythonCodeIndenterTest(unittest.TestCase):
                           '    else:\n',
                           self.editor.get_text())
             
+    def test_line_break_after_inner_parens(self):
+        self.editor.set_text('a_func(a_func(\na_var)')
+        self.indenter.correct_indentation(2)
+        self.assertEquals('a_func(a_func(\n       a_var)', self.editor.get_text())
+    
 
 if __name__ == '__main__':
     unittest.main()

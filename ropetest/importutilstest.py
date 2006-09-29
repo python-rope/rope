@@ -296,6 +296,14 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg1.mod1 import *\na_func()\n',
                           module_with_imports.get_changed_source())
 
+    def test_removing_unused_imports_and_reoccuring_names2(self):
+        self.mod.write('import pkg2.mod2\nimport pkg2.mod3\nprint pkg2.mod2, pkg2.mod3')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('import pkg2.mod2\nimport pkg2.mod3\nprint pkg2.mod2, pkg2.mod3',
+                          module_with_imports.get_changed_source())
+
     def test_trivial_expanding_star_imports(self):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import *\n')
@@ -319,6 +327,14 @@ class ImportUtilsTest(unittest.TestCase):
         module_with_imports = self.import_tools.get_module_with_imports(pymod)
         module_with_imports.remove_duplicates()
         self.assertEquals('import pkg1\n',
+                          module_with_imports.get_changed_source())
+
+    def test_removing_duplicates_and_reoccuring_names(self):
+        self.mod.write('import pkg2.mod2\nimport pkg2.mod3\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_duplicates()
+        self.assertEquals('import pkg2.mod2\nimport pkg2.mod3\n',
                           module_with_imports.get_changed_source())
 
     def test_removing_duplicate_imports_for_froms(self):

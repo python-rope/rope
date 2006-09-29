@@ -3,6 +3,9 @@
 ===========
 
 
+- Move refactoring for global class/function : September 29, 2006
+
+
 - Change relative imports to absolute : September 28, 2006
 
 

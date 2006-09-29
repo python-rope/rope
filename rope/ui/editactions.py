@@ -1,3 +1,5 @@
+import Tkinter
+
 import rope.ui.core
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
@@ -34,6 +36,28 @@ def backward_search(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor().start_searching(False)
 
+def goto_line(context):
+    if not context.get_active_editor():
+        return
+    editor = context.get_active_editor().get_editor()
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Goto Line')
+    label = Tkinter.Label(toplevel, text='Line Number :')
+    line_entry = Tkinter.Entry(toplevel)
+    label.grid(row=0, column=0)
+    line_entry.grid(row=0, column=1)
+    def cancel(event=None):
+        toplevel.destroy()
+    def ok(event=None):
+        editor.goto_line(int(line_entry.get()))
+        toplevel.destroy()
+    line_entry.bind('<Return>', ok)
+    line_entry.bind('<Control-g>', cancel)
+    line_entry.bind('<Escape>', cancel)
+    toplevel.grid()
+    line_entry.focus_set()
+    
+
 core = rope.ui.core.Core.get_core()
 actions = []
 
@@ -45,6 +69,8 @@ actions.append(SimpleAction('Emacs Cut', cut, 'C-w',
                             MenuAddress(['Edit', 'Emacs Cut'], 't')))
 actions.append(SimpleAction('Paste', paste, 'C-y',
                             MenuAddress(['Edit', 'Emacs Paste'], 'p')))
+actions.append(SimpleAction('Goto Line', goto_line, 'C-x C-g',
+                            MenuAddress(['Edit', 'Goto Line'], 'g')))
 actions.append(SimpleAction('Undo', undo, 'C-x u',
                             MenuAddress(['Edit', 'Undo'], 'u', 1)))
 actions.append(SimpleAction('Redo', redo, 'C-x r',

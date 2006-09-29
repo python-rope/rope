@@ -89,7 +89,7 @@ class PyCore(object):
             return result
         return None
     
-    def _get_python_path_folders(self):
+    def get_python_path_folders(self):
         result = []
         for src in sys.path:
             try:
@@ -125,7 +125,7 @@ class PyCore(object):
             module = self._find_module_in_source_folder(src, module_name)
             if module is not None:
                 return module
-        for src in self._get_python_path_folders():
+        for src in self.get_python_path_folders():
             module = self._find_module_in_source_folder(src, module_name)
             if module is not None:
                 return module

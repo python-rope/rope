@@ -218,25 +218,19 @@ Stories
 * Encapsulate field
 
 
-* Organize imports
-
-
 * Inline method
 
 
 * Inline variable
 
 
+* Removing imports from the same module
+
+
 * Move a module or package to another package
 
 
 > Public Release 0.3m4 : October 1, 2006
-
-
-* Removing imports from the same module
-
-
-* Move a class/function to another module
 
 
 Remaining Stories
