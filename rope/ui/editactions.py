@@ -69,7 +69,7 @@ actions.append(SimpleAction('Emacs Cut', cut, 'C-w',
                             MenuAddress(['Edit', 'Emacs Cut'], 't')))
 actions.append(SimpleAction('Paste', paste, 'C-y',
                             MenuAddress(['Edit', 'Emacs Paste'], 'p')))
-actions.append(SimpleAction('Goto Line', goto_line, 'C-x C-g',
+actions.append(SimpleAction('Goto Line', goto_line, None,
                             MenuAddress(['Edit', 'Goto Line'], 'g')))
 actions.append(SimpleAction('Undo', undo, 'C-x u',
                             MenuAddress(['Edit', 'Undo'], 'u', 1)))

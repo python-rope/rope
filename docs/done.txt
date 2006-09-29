@@ -3,6 +3,12 @@
 ===========
 
 
+- Showing function signature in show doc : September 29, 2006
+
+
+- Goto line : September 29, 2006
+
+
 - Move refactoring for global class/function : September 29, 2006
 
 

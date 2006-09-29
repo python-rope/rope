@@ -1,17 +1,9 @@
 Before 0.3m4
 ============
 
-- Handling indentation for::
-  
-  self.to_be_absolute.extend(import_info.get_relative_to_absolute_list(
-      self.pycore, self.current_folder))
-
-- Go to linenumber
-
 * Refactor `rope.importutils`
 * Refactor `rope.refactor.move`
 * Refactor `rope.codeanalyze`
-* Showing function signature in show doc
 * Update homepage and docs
 
 

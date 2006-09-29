@@ -295,9 +295,28 @@ class PythonCodeAssist(CodeAssist):
             return None
         pyobject = element.get_object()
         if isinstance(pyobject, rope.pyobjects.PyDefinedObject):
-            return _trim_docstring(pyobject._get_ast().doc)
+            if pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Function'):
+                return _get_function_docstring(pyobject._get_ast())
+            else:
+                return _trim_docstring(pyobject._get_ast().doc)
         return None
 
+def _get_function_docstring(node):
+    has_args = node.flags & 4
+    has_kwds = node.flags & 8
+    normal_arg_count = len(node.argnames)
+    if has_kwds:
+        normal_arg_count -= 1
+    if has_args:
+        normal_arg_count -= 1
+    signature = node.name + '(' + ', '.join(node.argnames[:normal_arg_count])
+    if has_args:
+        signature += ', *%s' % node.argnames[normal_arg_count]
+    if has_kwds:
+        signature += ', **%s' % node.argnames[-1]
+    signature += ')\n\n'
+        
+    return signature + _trim_docstring(node.doc)
 
 def _trim_docstring(docstring):
     """The sample code from :PEP:`257`"""

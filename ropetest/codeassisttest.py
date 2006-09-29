@@ -385,7 +385,7 @@ class CodeAssistTest(unittest.TestCase):
     def test_get_pydoc_for_functions(self):
         src = 'def a_func():\n    """a function"""\n' \
               '    a_var = 10\na_func()'
-        self.assertEquals('a function', self.assist.get_doc(src, len(src) - 4))
+        self.assertTrue(self.assist.get_doc(src, len(src) - 4).endswith('a function'))
 
     def test_get_pydoc_for_modules(self):
         pycore = self.project.get_pycore()
@@ -549,7 +549,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         mod1.write('def a_func():\n    """hey"""\n    pass\n')
         code = 'import mod1\nmod1.a_func\n'
         result = self.assist.get_doc(code, len(code) - 2, mod2)
-        self.assertEquals('hey', result)
+        self.assertTrue(result.endswith('hey'))
         
 
 class TemplateTest(unittest.TestCase):
