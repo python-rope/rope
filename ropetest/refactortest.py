@@ -737,10 +737,20 @@ class MoveRefactoringTest(unittest.TestCase):
                         'def a_func():\n    print a_var\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('a_func') + 1,
                               self.mod2)
-        self.assertEquals('a_var = 10\n',
-                          self.mod1.read())
+        self.assertEquals('a_var = 10\n', self.mod1.read())
         self.assertEquals('import mod1\n\n\ndef a_func():\n    print mod1.a_var\n',
                           self.mod2.read())
+
+    def test_moving_and_used_relative_imports(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod4 = self.pycore.create_module(pkg, 'mod4')
+        mod5 = self.pycore.create_module(pkg, 'mod5')
+        mod4.write('import mod5\n' \
+                        'def a_func():\n    print mod5\n')
+        self.refactoring.move(mod4, mod4.read().index('a_func') + 1,
+                              self.mod1)
+        self.assertEquals('import pkg.mod5\n\n\ndef a_func():\n    print pkg.mod5\n',
+                          self.mod1.read())
 
 
 def suite():

@@ -322,6 +322,13 @@ class StatementEvaluator(object):
         evaluator = StatementEvaluator(scope)
         compiler.walk(node, evaluator)
         return evaluator.result
+    
+    @staticmethod
+    def get_string_result(scope, string):
+        evaluator = StatementEvaluator(scope)
+        node = compiler.parse(string)
+        compiler.walk(node, evaluator)
+        return evaluator.result
 
 
 class ScopeNameFinder(object):

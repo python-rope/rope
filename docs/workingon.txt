@@ -1,11 +1,11 @@
 Move a Class/Function to Another Module
 =======================================
 
-- Moving imports used by the moving element to the destination
-- Importing names used by the moving element in the destination
-
-* Moving and relative imports
-* Considering already imported names in `ModuleWithImport.filter` and
+- Relative to absolute and normal imports with occurances
+- What if there is an alias
+- Update relative to absolute in the UI
+- Moving and relative imports
+- Considering already imported names in `ModuleWithImport.filter` and
   for `ModuleWithImports.expand_from_imports`::
   
   ...
@@ -19,6 +19,11 @@ Move a Class/Function to Another Module
   ...
 
 
+* Handling indentation for::
+  
+  self.to_be_absolute.extend(import_info.get_relative_to_absolute_list(
+      self.pycore, self.current_folder))
+
 
 Before 0.3m4
 ============
@@ -28,6 +33,7 @@ Before 0.3m4
 * Refactor `rope.codeanalyze`
 * Showing function signature in show doc
 * Update homepage and docs
+* Go to linenumber
 
 
 Remaining Stories

@@ -287,6 +287,15 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg1.mod1 import (a_func)\na_func()\n',
                           module_with_imports.get_changed_source())
 
+    def test_removing_unused_imports_and_reoccuring_names(self):
+        self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
+        self.mod.write('from pkg1.mod1 import *\nfrom pkg1.mod1 import a_func\na_func()\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('from pkg1.mod1 import *\na_func()\n',
+                          module_with_imports.get_changed_source())
+
     def test_trivial_expanding_star_imports(self):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import *\n')
@@ -393,38 +402,41 @@ class ImportUtilsTest(unittest.TestCase):
     def test_transform_relatives_imports_to_absolute_imports_doing_nothing(self):
         self.mod2.write('from pkg1 import mod1\nimport mod1\n')
         pymod = self.pycore.resource_to_pyobject(self.mod2)
-        module_with_imports = self.import_tools.get_module_with_imports(pymod)
-        module_with_imports.relative_to_absolute()
         self.assertEquals('from pkg1 import mod1\nimport mod1\n',
-                          module_with_imports.get_changed_source())
+                          self.import_tools.transform_relative_imports_to_absolute(pymod))
         
     def test_transform_relatives_imports_to_absolute_imports_for_normal_imports(self):
         self.mod2.write('import mod3\n')
         pymod = self.pycore.resource_to_pyobject(self.mod2)
-        module_with_imports = self.import_tools.get_module_with_imports(pymod)
-        module_with_imports.relative_to_absolute()
         self.assertEquals('import pkg2.mod3\n',
-                          module_with_imports.get_changed_source())
+                          self.import_tools.transform_relative_imports_to_absolute(pymod))
         
     def test_transform_relatives_imports_to_absolute_imports_for_froms(self):
         self.mod3.write('def a_func():\n    pass\n')
         self.mod2.write('from mod3 import a_func\n')
         pymod = self.pycore.resource_to_pyobject(self.mod2)
-        module_with_imports = self.import_tools.get_module_with_imports(pymod)
-        module_with_imports.relative_to_absolute()
         self.assertEquals('from pkg2.mod3 import a_func\n',
-                          module_with_imports.get_changed_source())
-        
+                          self.import_tools.transform_relative_imports_to_absolute(pymod))
+    
     @testutils.run_only_for_25
     def test_transform_relatives_imports_to_absolute_imports_for_new_relatives(self):
         self.mod3.write('def a_func():\n    pass\n')
         self.mod2.write('from .mod3 import a_func\n')
         pymod = self.pycore.resource_to_pyobject(self.mod2)
-        module_with_imports = self.import_tools.get_module_with_imports(pymod)
-        module_with_imports.relative_to_absolute()
         self.assertEquals('from pkg2.mod3 import a_func\n',
-                          module_with_imports.get_changed_source())
-        
+                          self.import_tools.transform_relative_imports_to_absolute(pymod))
+    
+    def test_transform_relatives_imports_to_absolute_imports_for_normal_imports2(self):
+        self.mod2.write('import mod3\nprint mod3')
+        pymod = self.pycore.resource_to_pyobject(self.mod2)
+        self.assertEquals('import pkg2.mod3\nprint pkg2.mod3',
+                          self.import_tools.transform_relative_imports_to_absolute(pymod))
+
+    def test_transform_relatives_imports_to_absolute_imports_for_aliases(self):
+        self.mod2.write('import mod3 as mod3\nprint mod3')
+        pymod = self.pycore.resource_to_pyobject(self.mod2)
+        self.assertEquals('import pkg2.mod3 as mod3\nprint mod3',
+                          self.import_tools.transform_relative_imports_to_absolute(pymod))
 
 
 if __name__ == '__main__':

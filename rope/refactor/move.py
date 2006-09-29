@@ -118,6 +118,9 @@ class MoveRefactoring(object):
         
         pymodule = self.pycore.get_string_module(
             module_with_imports.get_changed_source(), self.resource)
+        source = self.import_tools.transform_relative_imports_to_absolute(pymodule)
+        if source is not None:
+            pymodule = self.pycore.get_string_module(source, self.resource)
         source = self.import_tools.transform_froms_to_normal_imports(pymodule)
         module_with_imports = self._get_module_with_imports(source, self.resource)
         imports = [import_stmt.import_info 
