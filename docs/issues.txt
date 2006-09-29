@@ -69,49 +69,26 @@ This Release
 * Separating Structural From Concluded Data
 * Enhanced Import Tools
 * Introduce factory method refactoring
-
-* `Move function/class refactoring`_
+* Move function/class refactoring
 
 
 Hot Topics
 ==========
 
 * `Undo Unification`_
-* `Encapsulate Field Refactoring`_
 * `Python's Implicit Interfaces`_
 
 
 To Be Discussed
 ===============
 
-* Changing relative imports in refactorings
+* Code Completions Inside Uncompleted ``try`` Blocks
 * Function to `Function Object` refactoring
-* Getting code completion inside uncompleted ``try`` blocks
-
 * Rope's preference saving system: format, location
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * `What rope assumes...`_
-
-
-Move Function/Class Refactoring
-===============================
-
-Another problem is we can find out the imports used in a class or
-function body using `get_used_imports` but there might be some other
-global classes or functions in the source module that are used by the
-moving element.  On the other hand some imports might be unnecessary
-because we are importing objects that are defined in the destination
-module.  The simple approach to the first problem is importing star
-from the source module.  Later we can use expand star to remove
-unneeded imports.  Unfortunately I think this approach might cause
-circular imports.
-
-So I propose to find out the unbound names of moving element.  From
-this we can find out the imports and global elements in source modules
-that are needed by it.  We might need `change from imports to normal
-imports`_ and `remove imports from the same module`.
 
 
 Encapsulate Field Refactoring
@@ -124,30 +101,6 @@ class constructor or maybe all functions inside the class and the
 former consists of all other places.
 
 
-Multi-Step Refactorings
-=======================
-
-Some of the refactorings need to be performed in multi steps.  In such
-situations I believe I have to use `PyCore.get_string_module`.  So for
-refactorings like rename there should be a method that works on
-`PyModule`\s rather than `Resource`\s.  The problem with this approach
-is that other modules might need to have access to a changed mondule,
-but since the change is not committed, it is not possible. So we might
-need to add another layer on the `PyCore.get_module`, but that seems
-like a big refactoring.
-
-Another approach is doing refactorings in each step before going to
-the next one.  In this approach we won't be able to preview before
-performing the refactoring.
-
-
-Do We Really Need to Access Changed Modules?
---------------------------------------------
-
-I think we can do refactorings like move method or introduce factory
-without having access to changed modules.
-
-
 Undo Unification
 ================
 
@@ -156,66 +109,6 @@ refactorings and in future there might be undos for other changes.  We
 need to mix them together.  This seems hard to do mainly because we
 don't have much access to the undo mechanism of Tkinter.  I think an
 approximation here will save us.
-
-
-Enhanced Import Tools
-=====================
-
-First we should find out what we need exactly.  We need better import
-analysis and manipulation tools to help us do many refactorings such
-as:
-
-* Move method might require some imports to be moved to.
-* Introduce factory method might need to import the method.
-* Inline method might require to add and remove some imports.
-* Transform module to package might change relative imports.
-
-Organizing imports:
-
-* Eliminate star imports
-* Remove duplicates
-* Remove unused
-* Relative to absolute
-* Relative to new relative
-* From to import
-* Import to from
-
-
-Separating Structural From Concluded Data
-=========================================
-
-Structural data are function and class definitions, variable
-assignments and imports.  Conclusions are `PyObject`\s of `PyName`\s.
-This move involves many changes to the implementation of
-`rope.pyobjects` module but it won't probably change the APIs.  Since
-this, if approved, will need big refactorings it need more thought.
-
-
-What Do We Gain?
-----------------
-
-This separation will dramatically reduce the cost of invalidation.
-After doing this separation the structural data do not invalidate and
-it is the conclusions that might need to be updated after a module
-change.  So the cost of reconstructing `PyModule`\s reduces
-considerably.  Also since we don't care about imported `PyName`\s
-until when really needed this eliminates some extra time.
-
-Although we lower the memory usage, we propably still can't hold all
-`PyModule`\s in memory.
-
-
-Implementation Issues
----------------------
-
-In the construction of structural parts we only care about
-``AssName``\s , ``Function``\s, ``Class``\es and somehow
-``Import``\s.
-
-* new `PyName`\s
-* imports
-* from imports
-* superclasses
 
 
 Finding Occurances

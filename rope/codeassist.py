@@ -59,7 +59,7 @@ class Template(object):
         self.var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>[a-zA-Z][\w]*)}')
 
     def variables(self):
-        '''Returns the list of variables sorted by their order of occurence in the template'''
+        """Returns the list of variables sorted by their order of occurence in the template"""
         result = []
         for match in self.var_pattern.finditer(self.template):
             new_var = match.group('variable')

@@ -112,10 +112,15 @@ def extract_method(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor()._extract_method_dialog()
 
-def undo_last_refactoring(context):
+def undo_refactoring(context):
     if context.get_core().get_open_project():
         context.get_core().get_open_project().get_pycore().\
-                get_refactoring().undo_last_refactoring()
+                get_refactoring().undo()
+    
+def redo_refactoring(context):
+    if context.get_core().get_open_project():
+        context.get_core().get_open_project().get_pycore().\
+                get_refactoring().redo()
     
 def introduce_factory(context):
     if not context.get_active_editor():
@@ -293,9 +298,12 @@ actions.append(SimpleAction('Transform Froms to Imports',
 actions.append(SimpleAction('Transform Relatives to Absolute', 
                             ConfirmAllEditorsAreSaved(transform_relatives_to_absolute), None,
                             MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2)))
+actions.append(SimpleAction('Undo Refactoring', 
+                            ConfirmAllEditorsAreSaved(undo_refactoring), None,
+                            MenuAddress(['Refactor', 'Undo Refactoring'], 'u', 3)))
 actions.append(SimpleAction('Undo Last Refactoring', 
-                            ConfirmAllEditorsAreSaved(undo_last_refactoring), None,
-                            MenuAddress(['Refactor', 'Undo Last Refactoring'], 'u', 3)))
+                            ConfirmAllEditorsAreSaved(redo_refactoring), None,
+                            MenuAddress(['Refactor', 'Redo Refactoring'], 'd', 3)))
 
 core = rope.ui.core.Core.get_core()
 for action in actions:

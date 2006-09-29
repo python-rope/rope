@@ -1,16 +1,19 @@
 Before 0.3m4
 ============
 
+- Changing ``C-F11`` to ``M-X p``
+- Better refactoring undo
+
 * Refactor `rope.importutils`
 * Refactor `rope.refactor.move`
 * Refactor `rope.codeanalyze`
 * Update homepage and docs
+* Move module/package
 
 
 Remaining Stories
 =================
 
-* Asking import kind for introduce factory and move refactoring
 * Import addition when adding a relative with an absolute import
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`

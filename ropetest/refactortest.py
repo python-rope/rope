@@ -2,9 +2,10 @@ import unittest
 
 import rope.codeanalyze
 import rope.refactor.rename
-from rope.refactor import PythonRefactoring
+from rope.refactor import PythonRefactoring, Undo
 from rope.exceptions import RefactoringException
 from rope.project import Project
+from rope.refactor.change import *
 from ropetest import testutils
 
 
@@ -194,7 +195,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
         self.refactoring.rename(mod1, len(mod1.read()) - 5, 'new_func')
-        self.refactoring.undo_last_refactoring()
+        self.refactoring.undo()
         self.assertEquals('def a_func():\n    pass\na_func()\n', mod1.read())
         
     def test_undoing_renaming_modules(self):
@@ -203,7 +204,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
         mod2.write('from mod1 import a_func\n')
         self.refactoring.rename(mod2, 6, 'newmod')
-        self.refactoring.undo_last_refactoring()
+        self.refactoring.undo()
         self.assertEquals('mod1.py', mod1.get_path())
         self.assertEquals('from mod1 import a_func\n', mod2.read())
     
@@ -453,7 +454,7 @@ class ExtractMethodTest(unittest.TestCase):
         self.refactoring.transform_module_to_package(mod)
         self.assertFalse(pkg.has_child('mod.py'))
         self.assertTrue(pkg.get_child('mod').has_child('__init__.py'))
-        self.refactoring.undo_last_refactoring()
+        self.refactoring.undo()
         self.assertTrue(pkg.has_child('mod.py'))
         self.assertFalse(pkg.has_child('mod'))
 
@@ -543,7 +544,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         code2 = 'from mod1 import AClass\na_var = AClass()\n'
         mod2.write(code2)
         self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
-        self.refactoring.undo_last_refactoring()
+        self.refactoring.undo()
         self.assertEquals(code1, mod1.read())
         self.assertEquals(code2, mod2.read())
     
@@ -753,12 +754,70 @@ class MoveRefactoringTest(unittest.TestCase):
                           self.mod1.read())
 
 
+class RefactoringUndoTest(unittest.TestCase):
+
+    def setUp(self):
+        super(RefactoringUndoTest, self).setUp()
+        self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.file = self.project.get_root_folder().create_file('file.txt')
+        self.undo = Undo()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(RefactoringUndoTest, self).tearDown()
+
+    def test_simple_undo(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.assertEquals('1', self.file.read())
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.assertEquals('', self.file.read())
+
+    def test_simple_redo(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.undo.redo()
+        self.assertEquals('1', self.file.read())
+
+    def test_simple_re_undo(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.undo.redo()
+        self.undo.undo()
+        self.assertEquals('', self.file.read())
+
+    def test_multiple_undos(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.undo.add_change(change)
+        change = ChangeFileContents(self.file, '2')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.assertEquals('1', self.file.read())
+        change = ChangeFileContents(self.file, '3')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.assertEquals('1', self.file.read())
+        self.undo.redo()
+        self.assertEquals('3', self.file.read())
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(RenameRefactoringTest))
     result.addTests(unittest.makeSuite(ExtractMethodTest))
     result.addTests(unittest.makeSuite(IntroduceFactoryTest))
     result.addTests(unittest.makeSuite(MoveRefactoringTest))
+    result.addTests(unittest.makeSuite(RefactoringUndoTest))
     return result
 
 

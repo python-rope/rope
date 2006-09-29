@@ -5,6 +5,7 @@ from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 from rope.ui.uihelpers import TreeView, TreeViewHandle
 
+
 def do_correct_line_indentation(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor().correct_line_indentation()
@@ -30,7 +31,7 @@ class _OutlineViewHandle(TreeViewHandle):
 
     def get_children(self, outline_node):
         return outline_node.get_children()
-        
+
 
 def do_quick_outline(context):
     if not context.get_active_editor():
@@ -64,8 +65,8 @@ def do_show_doc(context):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Show Doc')
         doc_text = Tkinter.Label(toplevel, text='\n%s\n' % doc, justify=Tkinter.LEFT, 
-                         relief=Tkinter.GROOVE, width=80)
-        doc_text.grid()
+                                 relief=Tkinter.GROOVE, width=80)
+        doc_text.grid(sticky=Tkinter.W+Tkinter.N)
         def close(event=None):
             toplevel.destroy()
         toplevel.bind('<Escape>', close)
@@ -76,7 +77,8 @@ def do_show_doc(context):
 
 def do_run_module(context):
     if context.get_active_editor():
-        context.get_core().get_open_project().get_pycore().run_module(context.get_active_editor().get_file())
+        context.get_core().get_open_project().get_pycore().\
+                run_module(context.get_active_editor().get_file())
 
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
@@ -94,7 +96,7 @@ actions.append(SimpleAction('Correct Line Indentation',
                             MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1)))
 actions.append(SimpleAction('Quick Outline', do_quick_outline, 'C-o',
                             MenuAddress(['Code', 'Quick Outline'], 'q', 2)))
-actions.append(SimpleAction('Run Module', do_run_module, 'C-F11',
+actions.append(SimpleAction('Run Module', do_run_module, 'M-X p',
                             MenuAddress(['Code', 'Run Module'], 'm', 2)))
 
 for action in actions:

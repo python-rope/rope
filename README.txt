@@ -29,8 +29,8 @@ met.  Also don't forget to commit your changes yourself, rope doesn't
 do that yet.
 
 Dynamic type inference gets its needed information from running
-modules (``C-F11``).  You open the module to run (probably your test
-suite), then use ``C-F11``.  Since as the program runs, rope gathers
+modules (``M-X p``).  You open the module to run (probably your test
+suite), then use ``M-X p``.  Since as the program runs, rope gathers
 type information, the program runs slower.  Right now rope doesn't
 have a good interface for running programs.  It just prints the output
 to the terminal and does not get inputs.  This will be enhanced in
@@ -52,7 +52,7 @@ Alt-/           Show code assists
 F2              Show PyDoc
 F3              Go to definition
 Ctrl-o          Show quick outline
-Ctrl-F11        Run module
+Alt-X p        Run module
 
 Alt-R           Rename Refactoring
 Alt-M           Extract method
@@ -88,7 +88,7 @@ C-x C-f        find file
 C-x b          change active editor
 C-x k          close active editor
 C-x C-c        exit
-C-F11          run active editor
+M-X p          run active editor
 M-Q r          show project tree
 -------------  --------------------------
 C-f            forward character

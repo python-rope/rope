@@ -23,7 +23,10 @@ class Refactoring(object):
     def transform_module_to_package(self, resource):
         pass
     
-    def undo_last_refactoring(self):
+    def undo(self):
+        pass
+    
+    def redo(self):
         pass
 
     def introduce_factory(self, resource, offset, factory_name, global_factory):
@@ -91,7 +94,7 @@ class PythonRefactoring(Refactoring):
 
     def __init__(self, pycore):
         self.pycore = pycore
-        self.last_changes = ChangeSet()
+        self._undo = Undo()
 
     def local_rename(self, resource, offset, new_name):
         changes = RenameRefactoring(self.pycore).\
@@ -138,11 +141,14 @@ class PythonRefactoring(Refactoring):
         self._add_and_commit_changes(changes)
     
     def _add_and_commit_changes(self, changes):
-        self.last_changes = changes
+        self._undo.add_change(changes)
         changes.do()
         
-    def undo_last_refactoring(self):
-        self.last_changes.undo()
+    def undo(self):
+        self._undo.undo()
+    
+    def redo(self):
+        self._undo.redo()
 
     def get_import_organizer(self):
         return ImportOrganizer(self)
@@ -150,3 +156,24 @@ class PythonRefactoring(Refactoring):
 
 class NoRefactoring(Refactoring):
     pass
+
+
+class Undo(object):
+    
+    def __init__(self):
+        self._undo_list = []
+        self._redo_list = []
+    
+    def add_change(self, change):
+        self._undo_list.append(change)
+        del self._redo_list[:]
+    
+    def undo(self):
+        change = self._undo_list.pop()
+        self._redo_list.append(change)
+        change.undo()
+    
+    def redo(self):
+        change = self._redo_list.pop()
+        self._undo_list.append(change)
+        change.do()

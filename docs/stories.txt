@@ -89,10 +89,9 @@ Stories
 * Disabling menu items
 
 
-* Enhancing editor @ 8h
+* Enhancing editor
 
   * Select all; C-x h
-  * Go to line
   * Fixed places for StatusTexts
 
 
@@ -114,10 +113,6 @@ Stories
 * Local history
 
 
-* Compound statements and auto-completion
-  Completions for for-loop, except, lambda and with variables
-
-
 * Zip imports
 
 
@@ -127,22 +122,13 @@ Stories
   * Inserting common prefixes
 
 
-* We know the type of list and keyword args
-
-
-* Introduce factory method
-
-
 * Showing function signature when calling
 
 
 * Introduce temporary variable
 
 
-* AssList and AssTuple assignments
-
-
-* *global* keyword issues for pycore
+* ``global`` keyword issues for pycore
 
 
 * reST goto definition
