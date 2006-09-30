@@ -90,12 +90,12 @@ actions.append(SimpleAction('Goto Definition', do_goto_definition, 'F3',
                             MenuAddress(['Code', 'Goto Definition'], 'g')))
 actions.append(SimpleAction('Show Doc', do_show_doc, 'F2',
                             MenuAddress(['Code', 'Show Doc'], 's')))
+actions.append(SimpleAction('Quick Outline', do_quick_outline, 'C-o',
+                            MenuAddress(['Code', 'Quick Outline'], 'q')))
 
 actions.append(SimpleAction('Correct Line Indentation',
                             do_correct_line_indentation, 'C-i',
                             MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1)))
-actions.append(SimpleAction('Quick Outline', do_quick_outline, 'C-o',
-                            MenuAddress(['Code', 'Quick Outline'], 'q', 2)))
 actions.append(SimpleAction('Run Module', do_run_module, 'M-X p',
                             MenuAddress(['Code', 'Run Module'], 'm', 2)))
 

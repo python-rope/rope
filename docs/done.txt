@@ -27,10 +27,10 @@
 - Removing unused imports : September 27, 2006
 
 
-- Introduce Factory Method Refactoring : September 25, 2006
+- Introduce factory method refactoring : September 25, 2006
 
 
-- Enhanced import tools : September 21, 2006
+- Basic import tools : September 21, 2006
 
 
 - Separating concluded and structural data in `PyModule`\s : September 19, 2006

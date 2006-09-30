@@ -52,6 +52,13 @@ class ImportTools(object):
         source = self.transform_relative_imports_to_absolute(pymodule)
         if source is not None:
             pymodule = self.pycore.get_string_module(source, resource)
+
+        module_with_imports = self.get_module_with_imports(pymodule)
+        module_with_imports.remove_duplicates()
+        module_with_imports.remove_unused_imports()
+        source = module_with_imports.get_changed_source()
+        if source is not None:
+            pymodule = self.pycore.get_string_module(source, resource)
         module_with_imports = self.get_module_with_imports(pymodule)
         for import_stmt in module_with_imports.get_import_statements():
             if not self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
@@ -223,6 +230,9 @@ class _OneTimeSelector(object):
     def __call__(self, imported_primary):
         name = imported_primary.split('.')[0]
         if name in self.names and imported_primary not in self.selected_names:
+            for imported_name in self.selected_names:
+                if imported_name.startswith(imported_primary + '.'):
+                    return False
             self.selected_names.add(imported_primary)
             return True
         return False

@@ -14,7 +14,7 @@ class MenuBarManager(object):
     def add_menu_cascade(self, address):
         parent = self._find_parent(address)
         parent.add_cascade(address.address[-1], address.alt_key,
-                              address.last_group)
+                           address.last_group)
     
     def _find_parent(self, address):
         parent = self.root

@@ -189,6 +189,9 @@ Stories
 * Open Type; C-T
 
 
+* Function to "function object" refactoring
+
+
 * Analyzing function decorators
 
 
@@ -226,6 +229,5 @@ Remaining Stories
   SF repository; How to synchronize local SVN with SF SVN?
 * Change program goals and description; principles.txt
   Go toward refactoring and ... library rather than an IDE?
-* Logo
 * Changing rope short description to ``a python refactoring IDE ...``
 * Adding ``show_what_rope_can_do`` file

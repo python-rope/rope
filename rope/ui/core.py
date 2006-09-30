@@ -338,7 +338,7 @@ class Core(object):
             self._bind_key(key, callback)
         if menu:
             if key:
-                menu.address[-1] = menu.address[-1].ljust(29) + key
+                menu.address[-1] = menu.address[-1].ljust(31) + key
             self.menubar_manager.add_menu_command(menu, callback)
     
     def _make_callback(self, action):

@@ -43,7 +43,7 @@ Advanced Algorithms
 * Finding similar pieces of code while extracting methods
 * Finding similar statements while extracting local variables
 
-Help coding
+Help Coding
 -----------
 * Override/implement methods
 * Make getters and setters

@@ -77,28 +77,17 @@ Hot Topics
 
 * `Undo Unification`_
 * `Python's Implicit Interfaces`_
+* Code Completions Inside Uncompleted ``try`` Blocks
 
 
 To Be Discussed
 ===============
 
-* Code Completions Inside Uncompleted ``try`` Blocks
-* Function to `Function Object` refactoring
 * Rope's preference saving system: format, location
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * `What rope assumes...`_
-
-
-Encapsulate Field Refactoring
-=============================
-
-We should divide program source code into two sections.  The section
-in which references to an attribute should be replaced with getters
-and setters and the section that shouldn't.  The latter consists of
-class constructor or maybe all functions inside the class and the
-former consists of all other places.
 
 
 Undo Unification
@@ -498,6 +487,18 @@ After the addition of `rope.ui.extension` module followed by the
 addition modules like `rope.ui.codeassist`, we have to gradually move
 related dialogs to this modules.  This helps `Core` and `Editor`
 modules not to be so much messy.
+
+
+Editor Contexts
+~~~~~~~~~~~~~~~
+
+One of the problems that we are facing is that we want some of the
+actions to be available when editing python files and we want them
+to disappear of get disabled when editing normal text files.  One
+way for solving this problem might be the introduction of `Editor
+Contexts`.  Each editor action can be available in some or all of
+these contexts.  So we can add a ``get_active_contexts`` to each
+`Action` that can return ``python``, ``reST``, ``all`` or ``others``.
 
 
 Better Dialogs

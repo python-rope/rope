@@ -348,17 +348,10 @@ class ImportUtilsTest(unittest.TestCase):
     
     def test_transforming_froms_to_normal_changing_imports(self):
         self.mod1.write('def a_func():\n    pass\n')
-        self.mod.write('from pkg1 import a_func\n')
+        self.mod.write('from pkg1.mod1 import a_func\nprint a_func\n')
         pymod = self.pycore.get_module('mod')
         changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
-        self.assertEquals('import pkg1\n', changed_module)
-
-    def test_transforming_froms_to_normal_changing_imports(self):
-        self.mod1.write('def a_func():\n    pass\n')
-        self.mod.write('from pkg1.mod1 import a_func\n')
-        pymod = self.pycore.get_module('mod')
-        changed_module = self.import_tools.transform_froms_to_normal_imports(pymod)
-        self.assertEquals('import pkg1.mod1\n', changed_module)
+        self.assertEquals('import pkg1.mod1\nprint pkg1.mod1.a_func\n', changed_module)
 
     def test_transforming_froms_to_normal_changing_occurances(self):
         self.mod1.write('def a_func():\n    pass\n')

@@ -16,7 +16,54 @@ New Features
 
 Features added in this release:
 
-* 
+* Move refactoring for global class/function
+* Introduce factory method refactoring
+* Change relative imports to absolute
+* Changing from imports to normal imports
+* Removing duplicate imports
+* Expanding from-star-imports
+* Removing unused imports
+* Basic import tools
+* Separating concluded and structural data in modules
+* Showing function signature in show doc
+* Goto line
+
+
+Getting Started
+===============
+
+If it is the first time you use *rope*, it might be helpful to try
+these:
+
+==============  ======================
+Ctrl-x Ctrl-f   Find file
+Alt-Q r         Show project tree
+
+Alt-/           Show code assists
+F2              Show PyDoc
+F3              Go to definition
+Ctrl-o          Show quick outline
+Alt-X p         Run module
+
+Alt-R           Rename Refactoring
+Alt-M           Extract method
+Alt-V           Move refactoring
+
+Alt-O           Organize imports
+==============  ======================
+
+You can complete names as you type by using code assist (``M-/``).
+The capital letter in the left shows the type of the proposal.  `L`
+indicates local variables, `G` global variables, `A` attributes, `T`
+templates, `K` keywords and `B` built-ins.
+
+You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
+templates.  If you want to add more or edit these you can edit
+`rope.codeassist.PythonCodeAssist._get_default_templates` method.
+
+In tree views (like quick outline and project tree views) you can use
+``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
+collapse items.  You can use the ``Return`` key to select items.
 
 The subversion support is somewhat basic.  What rope does is that when
 creating new files or when moving modules and packages for
@@ -36,40 +83,6 @@ have a good interface for running programs.  It just prints the output
 to the terminal and does not get inputs.  This will be enhanced in
 future releases. After the program is run, you can get better code
 assists and rename attribute refactoring performs much better.
-
-
-Getting Started
-===============
-
-If it is the first time you use *rope*, it might be helpful to try
-these:
-
-==============  ======================
-Ctrl-x Ctrl-f   Find file
-Alt-Q r         Show project tree
-
-Alt-/           Show code assists
-F2              Show PyDoc
-F3              Go to definition
-Ctrl-o          Show quick outline
-Alt-X p        Run module
-
-Alt-R           Rename Refactoring
-Alt-M           Extract method
-==============  ======================
-
-You can complete names as you type by using code assist (``M-/``).
-The capital letter in the left shows the type of the proposal.  `L`
-indicates local variables, `G` global variables, `A` attributes, `T`
-templates, `K` keywords and `B` built-ins.
-
-You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
-templates.  If you want to add more or edit these you can edit
-`rope.codeassist.PythonCodeAssist._get_default_templates` method.
-
-In tree views (like quick outline and project tree views) you can use
-``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
-collapse items.  You can use the ``Return`` key to select items.
 
 
 Keybinding
@@ -117,6 +130,7 @@ F2             show doc
 C-o            show quick outline
 M-R            rename refactoring
 M-M            extract method
+M-V            move refactoring
 =============  ==========================
 
 

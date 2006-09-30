@@ -280,24 +280,24 @@ actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move),
                             MenuAddress(['Refactor', 'Move'], 'v')))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
                             MenuAddress(['Refactor', 'Rename in File'], 'f')))
-actions.append(SimpleAction('Transform Module to Package', 
-                            ConfirmAllEditorsAreSaved(transform_module_to_package), None,
-                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1)))
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'i', 1)))
+actions.append(SimpleAction('Transform Module to Package', 
+                            ConfirmAllEditorsAreSaved(transform_module_to_package), None,
+                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1)))
 actions.append(SimpleAction('Organize Imports', 
                             ConfirmAllEditorsAreSaved(organize_imports), 'M-O',
                             MenuAddress(['Refactor', 'Organize Imports'], 'o', 2)))
 actions.append(SimpleAction('Expand Star Imports', 
                             ConfirmAllEditorsAreSaved(expand_star_imports), None,
                             MenuAddress(['Refactor', 'Expand Star Imports'], 'x', 2)))
-actions.append(SimpleAction('Transform Froms to Imports', 
-                            ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
-                            MenuAddress(['Refactor', 'Transform Froms to Imports'], 's', 2)))
 actions.append(SimpleAction('Transform Relatives to Absolute', 
                             ConfirmAllEditorsAreSaved(transform_relatives_to_absolute), None,
                             MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2)))
+actions.append(SimpleAction('Transform Froms to Imports', 
+                            ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
+                            MenuAddress(['Refactor', 'Transform Froms to Imports'], 's', 2)))
 actions.append(SimpleAction('Undo Refactoring', 
                             ConfirmAllEditorsAreSaved(undo_refactoring), None,
                             MenuAddress(['Refactor', 'Undo Refactoring'], 'u', 3)))
