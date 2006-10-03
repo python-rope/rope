@@ -86,7 +86,7 @@ To Be Discussed
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
-* `What rope assumes...`_
+* Indexing source files
 
 
 Undo Unification

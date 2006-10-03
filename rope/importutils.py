@@ -11,34 +11,14 @@ class ImportTools(object):
         self.pycore = pycore
     
     def get_import_for_module(self, module):
-        module_name = ImportTools._get_module_name(self.pycore, module.get_resource())
+        module_name = ImportTools.get_module_name(self.pycore, module.get_resource())
         return NormalImport(((module_name, None), ))
     
     def get_from_import_for_module(self, module, name):
-        module_name = ImportTools._get_module_name(self.pycore, module.get_resource())
+        module_name = ImportTools.get_module_name(self.pycore, module.get_resource())
         return FromImport(module_name, 0, ((name, None),),
                           module.get_resource().get_parent(), self.pycore)
 
-    @staticmethod
-    def _get_module_name(pycore, resource):
-        if resource.is_folder():
-            module_name = resource.get_name()
-            source_folder = resource.get_parent()
-        elif resource.get_name() == '__init__.py':
-            module_name = resource.get_parent().get_name()
-            source_folder = resource.get_parent().get_parent()
-        else:
-            module_name = resource.get_name()[:-3]
-            source_folder = resource.get_parent()
-
-        source_folders = pycore.get_source_folders()
-        source_folders.extend(pycore.get_python_path_folders())
-        while source_folder != source_folder.get_parent() and \
-              source_folder not in source_folders:
-            module_name = source_folder.get_name() + '.' + module_name
-            source_folder = source_folder.get_parent()
-        return module_name
-    
     def get_module_with_imports(self, module):
         return ModuleWithImports(self.pycore, module)
     
@@ -119,6 +99,26 @@ class ImportTools(object):
             return False
         return True
 
+    @staticmethod
+    def get_module_name(pycore, resource):
+        if resource.is_folder():
+            module_name = resource.get_name()
+            source_folder = resource.get_parent()
+        elif resource.get_name() == '__init__.py':
+            module_name = resource.get_parent().get_name()
+            source_folder = resource.get_parent().get_parent()
+        else:
+            module_name = resource.get_name()[:-3]
+            source_folder = resource.get_parent()
+
+        source_folders = pycore.get_source_folders()
+        source_folders.extend(pycore.get_python_path_folders())
+        while source_folder != source_folder.get_parent() and \
+              source_folder not in source_folders:
+            module_name = source_folder.get_name() + '.' + module_name
+            source_folder = source_folder.get_parent()
+        return module_name
+    
 
 class ModuleWithImports(object):
     
@@ -413,7 +413,7 @@ class NormalImport(ImportInfo):
             if resource is None:
                 new_pairs.append((name, alias))
                 continue
-            absolute_name = ImportTools._get_module_name(pycore, resource)
+            absolute_name = ImportTools.get_module_name(pycore, resource)
             new_pairs.append((absolute_name, alias))
         if not self._are_name_and_alias_lists_equal(new_pairs, self.names_and_aliases):
             return NormalImport(new_pairs)
@@ -427,7 +427,7 @@ class NormalImport(ImportInfo):
             resource = pycore.find_module(name, current_folder=current_folder)
             if resource is None:
                 continue
-            absolute_name = ImportTools._get_module_name(pycore, resource)
+            absolute_name = ImportTools.get_module_name(pycore, resource)
             if absolute_name != name:
                 result.append((name, absolute_name))
         return result
@@ -525,7 +525,7 @@ class FromImport(ImportInfo):
                 self.module_name, current_folder, self.level)
         if resource is None:
             return None
-        absolute_name = ImportTools._get_module_name(pycore, resource)
+        absolute_name = ImportTools.get_module_name(pycore, resource)
         if self.module_name != absolute_name:
             return FromImport(absolute_name, 0, self.names_and_aliases,
                               current_folder, pycore)

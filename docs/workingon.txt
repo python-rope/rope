@@ -1,8 +1,8 @@
-Release Planning And Estimation
-===============================
-
+Move a module or package to another package
+===========================================
 
 * Problems when organizing imports in `ropetests.codeanalyzetest` module
+
 
 Remaining Stories
 =================
@@ -11,7 +11,7 @@ Remaining Stories
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
 * Handling `Scope.lookup` for ::
-  
+
     class A(object):
         a_var = 10
         another_var = a_var

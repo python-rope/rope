@@ -8,13 +8,12 @@ import rope.refactor.occurances
 
 class OccurrenceFinder(object):
     
-    def __init__(self, pycore, pynames, name,
-                 function_calls=False, whole_primary=False,
-                 imports=True):
+    def __init__(self, pycore, pynames, name, only_calls=False,
+                 whole_primary=False, imports=True):
         self.pycore = pycore
         self.pynames = pynames
         self.name = name
-        self.function_calls = function_calls
+        self.only_calls = only_calls
         self.whole_primary = whole_primary
         self.imports = imports
         self.comment_pattern = OccurrenceFinder.any("comment", [r"#[^\n]*"])
@@ -28,7 +27,9 @@ class OccurrenceFinder(object):
     
     def find_occurances(self, resource=None, pymodule=None):
         source_code = self._get_source(resource, pymodule)
-        name_finder_creator = rope.refactor.occurances._LazyNameFinderCreator(self.pycore, resource, pymodule)
+        name_finder_creator = rope.refactor.occurances.\
+                              _LazyNameFinderCreator(self.pycore,
+                                                     resource, pymodule)
         word_finder = rope.codeanalyze.WordRangeFinder(source_code)
         for match in self.pattern.finditer(source_code):
             for key, value in match.groupdict().items():
@@ -49,7 +50,7 @@ class OccurrenceFinder(object):
             return pymodule.source_code
 
     def _is_a_match(self, name_finder_creator, word_finder, match_start):
-        if self.function_calls and \
+        if self.only_calls and \
            not word_finder.is_a_function_being_called(match_start + 1):
             return False
         if self.whole_primary and \

@@ -715,13 +715,11 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('class AClass(object):\n    pass\na_var = AClass()\n',
                           self.mod2.read())
 
+    @testutils.assert_raises(RefactoringException)
     def test_folder_destination(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         self.mod1.write('class AClass(object):\n    pass\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, pkg)
-        self.assertEquals('class AClass(object):\n    pass\n',
-                          pkg.get_child('__init__.py').read())
-        self.assertEquals('', self.mod1.read())
     
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_for_moving_non_global_elements(self):
@@ -758,6 +756,15 @@ class MoveRefactoringTest(unittest.TestCase):
                               self.mod1)
         self.assertEquals('import pkg.mod5\n\n\ndef a_func():\n    print pkg.mod5\n',
                           self.mod1.read())
+    
+    # TODO: Moving modules
+    def xxx_test_moving_modules(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        self.mod2.write('import mod1\nprint mod1')
+        self.refactoring.move(self.mod2, self.mod2.read().index('mod1') + 1, pkg)
+        self.assertEquals('import pkg.mod1\nprint pkg.mod1', self.mod1.read())
+        self.assertEquals('pkg/mod1.py', self.mod1.get_path())
+        
 
 
 class RefactoringUndoTest(unittest.TestCase):

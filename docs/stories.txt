@@ -205,13 +205,13 @@ Stories
   * Reorder
 
 
-* Single line extract method and variable @ 10h
-
-
 * Inline method @ 20h
 
 
 * Removing imports from the same module @8h
+
+
+* Single line extract method and variable @ 10h
 
 
 > Public Release 0.3m5 : October 15, 2006

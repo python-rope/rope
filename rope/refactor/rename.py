@@ -99,10 +99,10 @@ class RenameRefactoring(object):
 class RenameInModule(object):
     
     def __init__(self, pycore, old_pynames, old_name, new_name,
-                 only_function_calls=False, replace_primary=False, imports=True):
-        self.occurances_finder = rope.refactor.occurances.OccurrenceFinder(pycore, old_pynames, old_name,
-                                                  only_function_calls, replace_primary,
-                                                  imports)
+                 only_calls=False, replace_primary=False, imports=True):
+        self.occurances_finder = rope.refactor.occurances.OccurrenceFinder(
+            pycore, old_pynames, old_name, only_calls,
+            replace_primary, imports)
         self.new_name = new_name
     
     def get_changed_module(self, resource=None, pymodule=None):

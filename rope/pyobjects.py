@@ -369,6 +369,7 @@ class _ScopeVisitor(object):
     
     def visitFor(self, node):
         self.visitAssign(node.assign)
+        compiler.walk(node.body, self)
     
     def visitImport(self, node):
         for import_pair in node.names:

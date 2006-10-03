@@ -87,8 +87,7 @@ class IntroduceFactoryRefactoring(object):
                 continue
             rename_in_module = rope.refactor.rename.RenameInModule(
                 self.pycore, [self.old_pyname], self.old_name, changed_name,
-                only_function_calls=True,
-                replace_primary=self.global_factory)
+                only_calls=True, replace_primary=self.global_factory)
             changed_code = rename_in_module.get_changed_module(resource=file_)
             if changed_code is not None:
                 if self.global_factory:
