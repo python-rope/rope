@@ -89,7 +89,7 @@ Keybinding
 ==========
 
 The keybinding will be customizable in future.  Some of these bindings
-are choosen from emacs and some from eclipse.  ('C' stands for Control
+are chosen from emacs and some from eclipse.  ('C' stands for Control
 key and 'M' for Meta(Alt) key.)
 
 =============  ==========================

@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.3m4 : October 1, 2006
+
+
 - Showing function signature in show doc : September 29, 2006
 
 

@@ -191,26 +191,13 @@ class WordRangeFinder(object):
         return not self.is_a_class_or_function_name_in_header(offset) and \
                next_char < len(self.source_code) and self.source_code[next_char] == '('
     
-    def is_from_statement_module(self, offset):
-        stmt_start = self._find_primary_start(offset)
-        line_start = self._get_line_start(stmt_start)
-        prev_word = self.source_code[line_start:stmt_start].strip()
-        return prev_word == 'from'
-
-    def is_a_name_after_from_import(self, offset):
-        try:
-            last_from = self.source_code.rindex('from ', 0, offset)
-            from_import = self.source_code.index(' import ', last_from)
-            from_names = from_import + 8
-        except ValueError:
-            return False
-        next_char = self._find_first_non_space_char(from_names)
+    def _find_import_pair_end(self, start):
+        next_char = self._find_first_non_space_char(start)
         if self.source_code[next_char] == '(':
             try:
-                closing_parens = self.source_code.index(')', next_char)
-                return closing_parens >= offset
+                return self.source_code.index(')', next_char)
             except ValueError:
-                return False
+                return SyntaxError('Unmatched Parens')
         else:
             current_offset = next_char
             while current_offset < len(self.source_code):
@@ -219,8 +206,42 @@ class WordRangeFinder(object):
                 if self.source_code[current_offset] == '\\':
                     current_offset += 1
                 current_offset += 1
-            return current_offset >= offset
-        return False
+            return current_offset
+        
+    
+    def is_import_statement(self, offset):
+        try:
+            last_import = self.source_code.rindex('import ', 0, offset)
+            import_names = last_import + 8
+        except ValueError:
+            return False
+        return self._find_import_pair_end(import_names) >= offset
+
+    def is_from_statement(self, offset):
+        try:
+            last_from = self.source_code.rindex('from ', 0, offset)
+            from_import = self.source_code.index(' import ', last_from)
+            from_names = from_import + 8
+        except ValueError:
+            return False
+        return self._find_import_pair_end(from_names) >= offset
+
+    def is_from_statement_module(self, offset):
+        stmt_start = self._find_primary_start(offset)
+        line_start = self._get_line_start(stmt_start)
+        prev_word = self.source_code[line_start:stmt_start].strip()
+        return prev_word == 'from'
+    
+    def is_a_name_after_from_import(self, offset):
+        try:
+            last_from = self.source_code.rindex('from ', 0, offset)
+            from_import = self.source_code.index(' import ', last_from)
+            from_names = from_import + 8
+        except ValueError:
+            return False
+        if from_names >= offset:
+            return False
+        return self._find_import_pair_end(from_names) >= offset
 
 
 class StatementEvaluator(object):
@@ -411,22 +432,19 @@ class ScopeNameFinder(object):
         return result
 
 
-def get_name_and_pyname_at(pycore, resource, offset):
-    pymodule = pycore.resource_to_pyobject(resource)
-    source_code = pymodule.source_code
-    word_finder = rope.codeanalyze.WordRangeFinder(source_code)
-    name = word_finder.get_primary_at(offset).split('.')[-1]
-    pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
-    pyname = pyname_finder.get_pyname_at(offset)
-    return (name, pyname)
-
-
 def get_pyname_at(pycore, resource, offset):
     pymodule = pycore.resource_to_pyobject(resource)
     source_code = pymodule.source_code
     pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
     pyname = pyname_finder.get_pyname_at(offset)
     return pyname
+
+def get_name_at(pycore, resource, offset):
+    pymodule = pycore.resource_to_pyobject(resource)
+    source_code = pymodule.source_code
+    word_finder = rope.codeanalyze.WordRangeFinder(source_code)
+    name = word_finder.get_primary_at(offset).split('.')[-1]
+    return name
 
 
 class Lines(object):

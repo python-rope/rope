@@ -5,6 +5,7 @@ from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                               SourceLinesAdapter, WordRangeFinder, ScopeNameFinder)
 from rope.project import Project
 
+
 class StatementRangeFinderTest(unittest.TestCase):
 
     def setUp(self):
@@ -186,6 +187,12 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder('var1 + "# var2".\n  var3')
         self.assertEquals('"# var2".\n  var3',
                           word_finder.get_primary_at(21))
+    
+    def test_import_statement_finding(self):
+        code = 'import mod\na_var = 10\n'
+        word_finder = WordRangeFinder(code)
+        self.assertTrue(word_finder.is_import_statement(code.index('mod') + 1))
+        self.assertFalse(word_finder.is_import_statement(code.index('a_var') + 1))
 
 
 class ScopeNameFinderTest(unittest.TestCase):

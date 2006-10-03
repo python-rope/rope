@@ -339,7 +339,8 @@ class _AssignVisitor(object):
         if old_pyname is None or not isinstance(old_pyname, AssignedName):
             self.scope_visitor.names[node.name] = AssignedName(
                 module=self.scope_visitor.get_module())
-        self.scope_visitor.names[node.name].assigned_asts.append(self.assigned_ast)
+        if self.assigned_ast:
+            self.scope_visitor.names[node.name].assigned_asts.append(self.assigned_ast)
 
 
 class _ScopeVisitor(object):

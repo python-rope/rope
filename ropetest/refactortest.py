@@ -218,6 +218,12 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = rename_in_module.get_changed_module(pymodule=pymod)
         self.assertEquals('new_var = 10\nprint (1+new_var)\n', refactored)
     
+    def test_renaming_for_loop_variable(self):
+        code = 'for var in range(10):\n    print var\n'
+        refactored = self.do_local_rename(code, code.find('var') + 1, 'new_var')
+        self.assertEquals('for new_var in range(10):\n    print new_var\n',
+                          refactored)
+    
 
 class ExtractMethodTest(unittest.TestCase):
 

@@ -304,6 +304,22 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('import pkg2.mod2\nimport pkg2.mod3\nprint pkg2.mod2, pkg2.mod3',
                           module_with_imports.get_changed_source())
 
+    def test_removing_unused_imports_and_common_packages(self):
+        self.mod.write('import pkg1.mod1\nimport pkg1\nprint pkg1, pkg1.mod1\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('import pkg1.mod1\nprint pkg1, pkg1.mod1\n',
+                          module_with_imports.get_changed_source())
+
+    def test_removing_unused_imports_and_common_packages_reversed(self):
+        self.mod.write('import pkg1\nimport pkg1.mod1\nprint pkg1, pkg1.mod1\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_duplicates()
+        self.assertEquals('import pkg1.mod1\nprint pkg1, pkg1.mod1\n',
+                          module_with_imports.get_changed_source())
+
     def test_trivial_expanding_star_imports(self):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import *\n')

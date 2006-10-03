@@ -170,7 +170,7 @@ class MoveRefactoring(object):
     def _rename_in_module(self, pymodule, new_name):
         rename_in_module = rope.refactor.rename.RenameInModule(
             self.pycore, [self.old_pyname], self.old_name,
-            new_name, replace_primary=True)
+            new_name, replace_primary=True, imports=False)
         return rename_in_module.get_changed_module(pymodule=pymodule)
     
     def _add_imports_to_module(self, pymodule, new_imports):

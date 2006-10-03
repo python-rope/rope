@@ -60,16 +60,15 @@ Releases
 0.3m3
     Done.
 0.3m4
+    Done.
+0.3m5
     Working on.
 
 
 This Release
 ------------
 
-* Separating Structural From Concluded Data
-* Enhanced Import Tools
-* Introduce factory method refactoring
-* Move function/class refactoring
+* ...
 
 
 Hot Topics

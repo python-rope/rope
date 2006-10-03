@@ -125,9 +125,6 @@ Stories
 * Showing function signature when calling
 
 
-* Introduce temporary variable
-
-
 * ``global`` keyword issues for pycore
 
 
@@ -170,17 +167,11 @@ Stories
 * Handling builtin functions and types
 
 
-* Better list and tree navigation @ 10h
+* Encapsulate field
+
+
+* Better list and tree navigation
   Add filter texts and selection texts to trees and lists.
-
-
-* Introduce redirection
-
-
-* Change method signature
-
-
-* Rename function parameters
 
 
 * Add import
@@ -189,10 +180,13 @@ Stories
 * Open Type; C-T
 
 
-* Function to "function object" refactoring
+* Replace method with method object refactoring
 
 
 * Analyzing function decorators
+
+
+* Introduce redirection
 
 
 * Enhancing module running
@@ -204,22 +198,32 @@ Stories
   * Running last run
 
 
-* Encapsulate field
+* Change method signature @ 24h
+
+  * Add parameter
+  * Remove parameter
+  * Reorder
 
 
-* Inline method
+* Single line extract method and variable @ 10h
 
 
-* Inline variable
+* Inline method @ 20h
 
 
-* Removing imports from the same module
+* Removing imports from the same module @8h
 
 
-* Move a module or package to another package
+> Public Release 0.3m5 : October 15, 2006
 
 
-> Public Release 0.3m4 : October 1, 2006
+* Inline local variable @8h
+
+
+* Rename function parameters @12h
+
+
+* Move a module or package to another package @12h
 
 
 Remaining Stories

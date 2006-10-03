@@ -27,24 +27,31 @@ class IntroduceFactoryRefactoring(object):
 
     def introduce_factory(self):
         changes = ChangeSet()
-        class_scope = self.old_pyname.get_object().get_scope()
         self._change_occurances_in_other_modules(changes)
     
+        self._change_resource(changes)
+        return changes
+
+    def _change_resource(self, changes):
+        class_scope = self.old_pyname.get_object().get_scope()
         rename_in_module = rope.refactor.rename.RenameInModule(
             self.pycore, [self.old_pyname], self.old_name, self._get_new_function_name(), True)
         source_code = rename_in_module.get_changed_module(pymodule=self.pymodule)
         if source_code is None:
             source_code = self.pymodule.source_code
         lines = rope.codeanalyze.SourceLinesAdapter(source_code)
-        start_line = class_scope.get_end()
-        if class_scope.get_scopes():
-            start_line = class_scope.get_scopes()[-1].get_end()
-        start = lines.get_line_end(start_line) + 1
+        start = self._get_insertion_offset(class_scope, lines)
         result = source_code[:start]
         result += self._get_factory_method(lines, class_scope)
         result += source_code[start:]
         changes.add_change(ChangeFileContents(self.resource, result))
-        return changes
+
+    def _get_insertion_offset(self, class_scope, lines):
+        start_line = class_scope.get_end()
+        if class_scope.get_scopes():
+            start_line = class_scope.get_scopes()[-1].get_end()
+        start = lines.get_line_end(start_line) + 1
+        return start
 
     def _get_factory_method(self, lines, class_scope):
         if self.global_factory:

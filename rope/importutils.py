@@ -44,6 +44,41 @@ class ImportTools(object):
     
     def transform_froms_to_normal_imports(self, pymodule):
         resource = pymodule.get_resource()
+        pymodule = self._clean_up_imports(pymodule)
+        module_with_imports = self.get_module_with_imports(pymodule)
+        for import_stmt in module_with_imports.get_import_statements():
+            if not self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
+                continue
+            pymodule = self._from_to_normal(pymodule, import_stmt)
+        
+        # Adding normal imports in place of froms
+        module_with_imports = self.get_module_with_imports(pymodule)
+        for import_stmt in module_with_imports.get_import_statements():
+            if self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
+                import_stmt.import_info = \
+                    NormalImport(((import_stmt.import_info.module_name, None),))
+        module_with_imports.remove_duplicates()
+        return module_with_imports.get_changed_source()
+
+    def _from_to_normal(self, pymodule, import_stmt):
+        resource = pymodule.get_resource()
+        from_import = import_stmt.import_info
+        module_name = from_import.module_name
+        imported_pymodule = self.pycore.get_module(module_name)
+        for name, alias in from_import.names_and_aliases:
+            imported = name
+            if alias is not None:
+                imported = alias
+            rename_in_module = rope.refactor.rename.RenameInModule(
+                self.pycore, [imported_pymodule.get_attribute(name)], imported,
+                module_name + '.' + name, replace_primary=True, imports=False)
+            source = rename_in_module.get_changed_module(pymodule=pymodule)
+            if source is not None:
+                pymodule = self.pycore.get_string_module(source, resource)
+        return pymodule
+
+    def _clean_up_imports(self, pymodule):
+        resource = pymodule.get_resource()
         module_with_imports = self.get_module_with_imports(pymodule)
         module_with_imports.expand_stars()
         source = module_with_imports.get_changed_source()
@@ -59,33 +94,7 @@ class ImportTools(object):
         source = module_with_imports.get_changed_source()
         if source is not None:
             pymodule = self.pycore.get_string_module(source, resource)
-        module_with_imports = self.get_module_with_imports(pymodule)
-        for import_stmt in module_with_imports.get_import_statements():
-            if not self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
-                continue
-            from_import = import_stmt.import_info
-            module_name = from_import.module_name
-            imported_pymodule = self.pycore.get_module(module_name)
-            for name, alias in from_import.names_and_aliases:
-                imported = name
-                if alias is not None:
-                    imported = alias
-                rename_in_module = rope.refactor.rename.RenameInModule(
-                    self.pycore, [imported_pymodule.get_attribute(name)], imported,
-                    module_name + '.' + name, replace_primary=True)
-                source = rename_in_module.get_changed_module(pymodule=pymodule)
-                if source is not None:
-                    pymodule = self.pycore.get_string_module(source,
-                                                             resource)
-        
-        # Adding normal imports in place of froms
-        module_with_imports = self.get_module_with_imports(pymodule)
-        for import_stmt in module_with_imports.get_import_statements():
-            if self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
-                import_stmt.import_info = \
-                    NormalImport(((import_stmt.import_info.module_name, None),))
-        module_with_imports.remove_duplicates()
-        return module_with_imports.get_changed_source()
+        return pymodule
     
     def transform_relative_imports_to_absolute(self, pymodule):
         module_with_imports = self.get_module_with_imports(pymodule)
@@ -99,7 +108,7 @@ class ImportTools(object):
                 pymodule.get_scope(), name)
             rename_in_module = rope.refactor.rename.RenameInModule(
                 self.pycore, [old_pyname], old_name,
-                absolute_name, replace_primary=True)
+                absolute_name, replace_primary=True, imports=False)
             source = rename_in_module.get_changed_module(pymodule=pymodule)
             if source is not None:
                 pymodule = self.pycore.get_string_module(source, pymodule.get_resource())
@@ -210,7 +219,7 @@ class _ImportInfoRelativeToAbsoluteVisitor(object):
     def visitNormalImport(self, import_info):
         self.to_be_absolute.extend(import_info.get_relative_to_absolute_list(
                                    self.pycore, self.current_folder))
-        return import_info.relative_to_absolute_for_aliases(
+        return import_info.relative_to_absolute(
             self.pycore, self.current_folder)
     
     def visitEmptyImport(self, import_info):
@@ -379,18 +388,27 @@ class NormalImport(ImportInfo):
         return len(self.names_and_aliases) == 0
 
     def add_import(self, import_info):
-        if isinstance(import_info, self.__class__) and \
-           self._are_name_and_alias_lists_equal(self.names_and_aliases,
+        if not isinstance(import_info, self.__class__):
+            return None
+        # Adding ``import x`` and ``import x.y`` that results ``import x.y``
+        if len(self.names_and_aliases) == len(import_info.names_and_aliases) == 1:
+            imported1 = self.names_and_aliases[0]
+            imported2 = import_info.names_and_aliases[0]
+            if imported1[1] == imported2[1] == None:
+                if imported1[0].startswith(imported2[0] + '.'):
+                    return self
+                if imported2[0].startswith(imported1[0] + '.'):
+                    return import_info
+        # Multiple imports using a single import statement is discouraged
+        # so we won't bother adding them.
+        if self._are_name_and_alias_lists_equal(self.names_and_aliases,
                                                 import_info.names_and_aliases):
             return self
         return None
     
-    def relative_to_absolute_for_aliases(self, pycore, current_folder):
+    def relative_to_absolute(self, pycore, current_folder):
         new_pairs = []
         for name, alias in self.names_and_aliases:
-            if alias is None:
-                new_pairs.append((name, alias))
-                continue
             resource = pycore.find_module(name, current_folder=current_folder)
             if resource is None:
                 new_pairs.append((name, alias))

@@ -5,6 +5,7 @@ import rope.pynames
 import rope.pyobjects
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
+import rope.refactor.occurances
 
 class RenameRefactoring(object):
     
@@ -18,17 +19,11 @@ class RenameRefactoring(object):
         return self._rename(resource, offset, new_name)
     
     def _rename(self, resource, offset, new_name, in_file=False):
-        files = [resource]
-        if not in_file:
-            files = self.pycore.get_python_files()
-        old_name, old_pyname = rope.codeanalyze.\
-                               get_name_and_pyname_at(self.pycore, resource, offset)
-        if old_pyname is None:
+        files = self._get_interesting_files(resource, in_file)
+        old_name = rope.codeanalyze.get_name_at(self.pycore, resource, offset)
+        old_pynames = self._get_old_pynames(offset, resource, in_file, old_name)
+        if not old_pynames:
             return None
-        old_pynames = [old_pyname]
-        if self._is_it_a_class_method(old_pyname) and not in_file:
-            old_pynames = self._get_all_methods_in_hierarchy(old_pyname.get_object().
-                                                             parent, old_name)
         changes = ChangeSet()
         for file_ in files:
             new_content = RenameInModule(self.pycore, old_pynames, old_name, new_name).\
@@ -36,11 +31,33 @@ class RenameRefactoring(object):
             if new_content is not None:
                 changes.add_change(ChangeFileContents(file_, new_content))
         
-        if old_pyname.get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
-            changes.add_change(self._rename_module(old_pyname.get_object(), new_name))
+        if self._is_renaming_a_module(old_pynames):
+            changes.add_change(self._rename_module(old_pynames[0].get_object(), new_name))
         return changes
     
-    def _is_it_a_class_method(self, pyname):
+    def _is_renaming_a_module(self, old_pynames):
+        if len(old_pynames) == 1 and \
+           old_pynames[0].get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
+            return True
+        return False
+
+    def _get_old_pynames(self, offset, resource, in_file, old_name):
+        old_pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource,
+                                                    offset)
+        if old_pyname is None:
+            return []
+        if self._is_a_class_method(old_pyname) and not in_file:
+            return self._get_all_methods_in_hierarchy(old_pyname.get_object().
+                                                      parent, old_name)
+        else:
+            return [old_pyname]
+
+    def _get_interesting_files(self, resource, in_file):
+        if not in_file:
+            return self.pycore.get_python_files()
+        return [resource]
+    
+    def _is_a_class_method(self, pyname):
         return isinstance(pyname, rope.pynames.DefinedName) and \
                pyname.get_object().get_type() == rope.pyobjects.PyObject.get_base_type('Function') and \
                pyname.get_object().parent.get_type() == rope.pyobjects.PyObject.get_base_type('Type')
@@ -77,89 +94,33 @@ class RenameRefactoring(object):
         else:
             new_location = parent_path + '/' + new_name
         return MoveResource(resource, new_location)
-    
+
 
 class RenameInModule(object):
     
     def __init__(self, pycore, old_pynames, old_name, new_name,
-                 only_function_calls=False, replace_primary=False):
-        self.pycore = pycore
-        self.old_pynames = old_pynames
-        self.old_name = old_name
+                 only_function_calls=False, replace_primary=False, imports=True):
+        self.occurances_finder = rope.refactor.occurances.OccurrenceFinder(pycore, old_pynames, old_name,
+                                                  only_function_calls, replace_primary,
+                                                  imports)
         self.new_name = new_name
-        self.only_function_calls = only_function_calls
-        self.replace_primary = replace_primary
-        self.comment_pattern = RenameInModule.any("comment", [r"#[^\n]*"])
-        sqstring = r"(\b[rR])?'[^'\\\n]*(\\.[^'\\\n]*)*'?"
-        dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
-        sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
-        dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
-        self.string_pattern = RenameInModule.any(
-            "string", [sq3string, dq3string, sqstring, dqstring])
-        self.pattern = self._get_occurance_pattern(self.old_name)
     
     def get_changed_module(self, resource=None, pymodule=None):
-        if resource is not None:
-            source_code = resource.read()
-        else:
-            source_code = pymodule.source_code
+        source_code = self._get_source(resource, pymodule)
         result = []
         last_modified_char = 0
-        pyname_finder = None
-        word_finder = rope.codeanalyze.WordRangeFinder(source_code)
-        for match in self.pattern.finditer(source_code):
-            for key, value in match.groupdict().items():
-                if value and key == "occurance":
-                    start = match_start = match.start(key)
-                    end = match_end = match.end(key)
-                    if pyname_finder == None:
-                        pyname_finder = self._create_pyname_finder(source_code, resource, pymodule)
-                    new_pyname = pyname_finder.get_pyname_at(match_start + 1)
-                    
-                    if self.replace_primary:
-                        start = word_finder._find_primary_start(match_start)
-                        end = word_finder._find_word_end(match_start) + 1
-                    if not self._can_we_replace(word_finder, match_start):
-                        continue
-                    for old_pyname in self.old_pynames:
-                        if self._are_pynames_the_same(old_pyname, new_pyname):
-                            result.append(source_code[last_modified_char:start]
-                                          + self.new_name)
-                            last_modified_char = end
+        for start, end in self.occurances_finder.find_occurances(resource, pymodule):
+            result.append(source_code[last_modified_char:start]
+                          + self.new_name)
+            last_modified_char = end
         if last_modified_char != 0:
             result.append(source_code[last_modified_char:])
             return ''.join(result)
         return None
-
-    def _can_we_replace(self, word_finder, match_start):
-        if self.only_function_calls and \
-           not word_finder.is_a_function_being_called(match_start + 1):
-            return False
-        if self.replace_primary and \
-           (word_finder.is_a_name_after_from_import(match_start + 1) or
-            word_finder.is_a_class_or_function_name_in_header(match_start + 1)):
-            return False
-        return True
-
-    def _create_pyname_finder(self, source_code, resource, pymodule):
+    
+    def _get_source(self, resource, pymodule):
         if resource is not None:
-            pymodule = self.pycore.resource_to_pyobject(resource)
-        pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
-        return pyname_finder
-    
-    def _are_pynames_the_same(self, pyname1, pyname2):
-        return pyname1 == pyname2 or \
-               (pyname1 is not None and pyname2 is not None and 
-                pyname1.get_object() == pyname2.get_object() and
-                pyname1.get_definition_location() == pyname2.get_definition_location())
-    
-    def _get_occurance_pattern(self, name):
-        occurance_pattern = RenameInModule.any('occurance', ['\\b' + name + '\\b'])
-        pattern = re.compile(occurance_pattern + "|" + \
-                             self.comment_pattern + "|" + self.string_pattern)
-        return pattern
-
-    @staticmethod
-    def any(name, list_):
-        return "(?P<%s>" % name + "|".join(list_) + ")"
+            return resource.read()
+        else:
+            return pymodule.source_code
 
