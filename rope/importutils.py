@@ -1,6 +1,7 @@
 import compiler
 
 import rope.pynames
+import rope.exceptions
 import rope.refactor.rename
 from rope.codeanalyze import SourceLinesAdapter
 
@@ -268,8 +269,11 @@ class ImportStatement(object):
     import_info = property(_get_import_info, _set_import_info)
     
     def filter_names(self, can_select):
-        new_import = self.import_info.filter_names(can_select)
-        self.import_info = new_import
+        try:
+            new_import = self.import_info.filter_names(can_select)
+            self.import_info = new_import
+        except rope.exceptions.ModuleNotFoundException:
+            pass
     
     def add_import(self, import_info):
         result = self.import_info.add_import(import_info)
@@ -318,9 +322,6 @@ class ImportInfo(object):
                 imported = alias
             return can_select(imported)
         return self.filter_names_and_aliases(can_select_name_and_alias)
-    
-    def filter_names_and_aliases(can_select):
-        pass
     
     def is_empty(self):
         pass
@@ -444,13 +445,7 @@ class FromImport(ImportInfo):
 
     def get_imported_primaries(self):
         if self.names_and_aliases[0][0] == '*':
-            if self.level == 0:
-                module = self.pycore.get_module(self.module_name,
-                                                self.current_folder)
-            else:
-                module = self.pycore.get_relative_module(self.module_name,
-                                                         self.current_folder,
-                                                         self.level)
+            module = self.get_imported_module()
             return [name for name in module.get_attributes().keys()
                     if not name.startswith('_')]
         result = []
@@ -460,6 +455,15 @@ class FromImport(ImportInfo):
             else:
                 result.append(name)
         return result
+    
+    def get_imported_module(self):
+        if self.level == 0:
+            return self.pycore.get_module(self.module_name,
+                                          self.current_folder)
+        else:
+            return self.pycore.get_relative_module(self.module_name,
+                                                   self.current_folder,
+                                                   self.level)
     
     def get_import_statement(self):
         result = 'from ' + '.' * self.level + self.module_name + ' import '

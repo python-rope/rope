@@ -776,13 +776,13 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('import mod4\nprint mod4', self.mod2.read())
         self.assertEquals('mod4.py', self.mod4.get_path())
     
-    # TODO: removing out of date froms
-    def xxx_test_moving_modules_and_removing_out_of_date_froms2(self):
+    def test_moving_modules_and_removing_out_of_date_froms2(self):
         self.mod4.write('a_var = 10')
         self.mod2.write('from pkg.mod4 import a_var\nprint a_var\n')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
                               self.project.get_root_folder())
-        self.assertEquals('import mod4\nprint mod4.a_var\n', self.mod2.read())
+        self.assertEquals('from mod4 import a_var\nprint a_var\n',
+                          self.mod2.read())
     
     def test_moving_modules_and_relative_import(self):
         self.mod4.write('import mod5\nprint mod5\n')
@@ -791,6 +791,15 @@ class MoveRefactoringTest(unittest.TestCase):
                               self.project.get_root_folder())
         self.assertEquals('import pkg.mod5\nprint pkg.mod5\n', self.mod4.read())
 
+    def test_moving_packages(self):
+        pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
+        self.mod1.write('import pkg.mod4\nprint pkg.mod4')
+        self.refactoring.move(self.mod1, self.mod1.read().index('pkg') + 1, pkg2)
+        self.assertEquals('pkg2/pkg', self.pkg.get_path())
+        self.assertEquals('pkg2/pkg/mod4.py', self.mod4.get_path())
+        self.assertEquals('pkg2/pkg/mod5.py', self.mod5.get_path())
+        self.assertEquals('import pkg2.pkg.mod4\nprint pkg2.pkg.mod4', self.mod1.read())
+        
 
 class RefactoringUndoTest(unittest.TestCase):
 
