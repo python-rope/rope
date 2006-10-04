@@ -199,7 +199,9 @@ class PyCore(object):
                 source = pyscope.pyobject.source_code
                 lines = rope.codeanalyze.SourceLinesAdapter(source)
                 for match in pattern.finditer(source):
-                    holding_scope = pyscope.get_inner_scope_for_line(lines.get_line_number(match.start()))
+                    holding_scope = pyscope.get_inner_scope_for_line(
+                        lines.get_line_number(match.start()))
                     classes.append(holding_scope.pyobject)
             self.classes = classes
-        return [class_ for class_ in self.classes if pyclass in class_.get_superclasses()]
+        return [class_ for class_ in self.classes
+                if pyclass in class_.get_superclasses()]

@@ -3,6 +3,9 @@
 ===========
 
 
+- Move a module or package to another package : October 4, 2006
+
+
 > Public Release 0.3m4 : October 1, 2006
 
 

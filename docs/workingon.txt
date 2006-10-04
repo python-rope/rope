@@ -1,16 +1,14 @@
 Move a module or package to another package
 ===========================================
 
-- Problems when organizing imports in `ropetests.codeanalyzetest` module
-
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
-* Function decorators and renaming attributes of self
 
 
 Remaining Stories
 =================
 
+* Function decorators and renaming attributes of self
 * Import addition when adding a relative with an absolute import
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`

@@ -28,7 +28,7 @@ class Core(object):
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
         self.status_bar_manager = rope.ui.statusbar.StatusBarManager(self.status_bar)
         line_status = self.status_bar_manager.create_status('line')
-        line_status.set_width(12)
+        line_status.set_width(8)
 
         self.key_binding = []
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
@@ -84,8 +84,9 @@ class Core(object):
         def show_current_line_number(event):
             line_text = ' '
             if self.editor_manager.active_editor:
-                line_text = 'line : %d' % \
-                              self.editor_manager.active_editor.get_editor().get_current_line_number()
+                editor = self.editor_manager.active_editor.get_editor()
+                line_text = '%d: %d' % (editor.get_current_line_number(),
+                                        editor.get_current_column_number())
             line_status.set_text(line_text)
         self._bind_key('<Any-KeyRelease>', show_current_line_number)
         self._bind_key('<Any-Button>', show_current_line_number)

@@ -223,9 +223,6 @@ Stories
 * Rename function parameters @12h
 
 
-* Move a module or package to another package @12h
-
-
 Remaining Stories
 -----------------
 

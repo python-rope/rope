@@ -675,6 +675,9 @@ class GraphicalEditor(object):
     def get_current_line_number(self):
         return self._get_line_from_index(INSERT)
 
+    def get_current_column_number(self):
+        return self._get_column_from_index(INSERT)
+
     def get_current_offset(self):
         return self.get_offset(INSERT)
     
