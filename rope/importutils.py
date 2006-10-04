@@ -545,7 +545,7 @@ class _UnboundNameFinder(object):
         pyobject = self.pyobject.get_module().get_scope().\
                    get_inner_scope_for_line(node.lineno).pyobject
         visitor = _LocalUnboundNameFinder(pyobject, self)
-        for child in pyobject._get_ast().getChildNodes():
+        for child in node.getChildNodes():
             compiler.walk(child, visitor)
     
     def visitFunction(self, node):

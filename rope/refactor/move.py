@@ -44,6 +44,23 @@ class _Mover(object):
             module_with_imports.add_import(new_import)
         return module_with_imports.get_changed_source()
     
+    def _remove_old_pyname_imports(self, pymodule):
+        old_source = pymodule.source_code
+        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        def can_select(name):
+            try:
+                if name == self.old_name and \
+                   pymodule.get_attribute(name).get_object() == self.old_pyname.get_object():
+                    return False
+            except rope.exceptions.AttributeNotFoundException:
+                pass
+            return True
+        module_with_imports.filter_names(can_select)
+        new_source = module_with_imports.get_changed_source()
+        if old_source != new_source:
+            return new_source
+        return None
+
 
 class _GlobalMover(_Mover):
     
@@ -52,10 +69,10 @@ class _GlobalMover(_Mover):
         
         self.old_name = self.old_pyname.get_object()._get_ast().name
         pymodule = self.old_pyname.get_object().get_module()
-        self.resource = pymodule.get_resource()
+        self.source = pymodule.get_resource()
         self.new_import = self.import_tools.get_import_for_module(
             self.pycore.resource_to_pyobject(self.destination))
-        self.new_imported_name = self.new_import.names_and_aliases[0][0] + '.' + self.old_name
+        self.new_name = self.new_import.names_and_aliases[0][0] + '.' + self.old_name
 
     def _check_exceptional_conditions(self):
         if self.old_pyname is None or \
@@ -84,11 +101,11 @@ class _GlobalMover(_Mover):
         return changes
     
     def _change_source_module(self, changes):
-        source = self.resource.read()
+        source = self.source.read()
         uses_moving = False
         # Changing occurances
-        pymodule = self.pycore.resource_to_pyobject(self.resource)
-        source = self._rename_in_module(pymodule, self.new_imported_name)
+        pymodule = self.pycore.resource_to_pyobject(self.source)
+        source = self._rename_in_module(pymodule, self.new_name)
         if source is None:
             source = pymodule.source_code
         else:
@@ -101,11 +118,11 @@ class _GlobalMover(_Mover):
         source = source[:start] + source[end + 1:]
         
         if uses_moving:
-            pymodule = self.pycore.get_string_module(source, self.resource)
+            pymodule = self.pycore.get_string_module(source, self.source)
             # Adding new import
             source = self._add_imports_to_module(pymodule, [self.new_import])
         
-        changes.add_change(ChangeFileContents(self.resource, source))
+        changes.add_change(ChangeFileContents(self.source, source))
     
     def _change_destination_module(self, changes):
         source = self.destination.read()
@@ -148,20 +165,20 @@ class _GlobalMover(_Mover):
     
     def _get_moving_element_with_imports(self):
         moving = self._get_moving_element()
-        module_with_imports = self._get_module_with_imports(moving, self.resource)
+        module_with_imports = self._get_module_with_imports(moving, self.source)
         for import_info in self._get_used_imports_by_the_moving_element():
             module_with_imports.add_import(import_info)
-        source_pymodule = self.pycore.resource_to_pyobject(self.resource)
+        source_pymodule = self.pycore.resource_to_pyobject(self.source)
         new_import = self.import_tools.get_from_import_for_module(source_pymodule, '*')
         module_with_imports.add_import(new_import)
         
         pymodule = self.pycore.get_string_module(
-            module_with_imports.get_changed_source(), self.resource)
+            module_with_imports.get_changed_source(), self.source)
         source = self.import_tools.transform_relative_imports_to_absolute(pymodule)
         if source is not None:
-            pymodule = self.pycore.get_string_module(source, self.resource)
+            pymodule = self.pycore.get_string_module(source, self.source)
         source = self.import_tools.transform_froms_to_normal_imports(pymodule)
-        module_with_imports = self._get_module_with_imports(source, self.resource)
+        module_with_imports = self._get_module_with_imports(source, self.source)
         imports = [import_stmt.import_info 
                    for import_stmt in module_with_imports.get_import_statements()]
         start = 1
@@ -176,32 +193,35 @@ class _GlobalMover(_Mover):
         return self.import_tools.get_module_with_imports(pymodule)
 
     def _get_moving_element(self):
-        lines = rope.codeanalyze.SourceLinesAdapter(self.resource.read())
+        lines = rope.codeanalyze.SourceLinesAdapter(self.source.read())
         scope = self.old_pyname.get_object().get_scope()
         start = lines.get_line_start(scope.get_start())
         end = lines.get_line_end(scope.get_end())
-        moving = self.resource.read()[start:end]
+        moving = self.source.read()[start:end]
         return moving
         
     def _get_used_imports_by_the_moving_element(self):
-        pymodule = self.pycore.resource_to_pyobject(self.resource)
+        pymodule = self.pycore.resource_to_pyobject(self.source)
         module_with_imports = self.import_tools.get_module_with_imports(pymodule)
         return module_with_imports.get_used_imports(self.old_pyname.get_object())
     
     def _change_other_modules(self, changes):
         for file_ in self.pycore.get_python_files():
-            if file_ in (self.resource, self.destination):
+            if file_ in (self.source, self.destination):
                 continue
             # Changing occurances
             pymodule = self.pycore.resource_to_pyobject(file_)
-            source = self._rename_in_module(pymodule, self.new_imported_name)
+            source = self._rename_in_module(pymodule, self.new_name)
             if source is None:
                 continue
             # Removing out of date imports
             pymodule = self.pycore.get_string_module(source, file_)
             source = self._remove_old_pyname_imports(pymodule)
+            if source is None:
+                source = pymodule.source_code
+            else:
+                pymodule = self.pycore.get_string_module(source, file_)
             # Adding new import
-            pymodule = self.pycore.get_string_module(source, file_)
             source = self._add_imports_to_module(pymodule, [self.new_import])
             
             changes.add_change(ChangeFileContents(file_, source))
@@ -212,19 +232,6 @@ class _GlobalMover(_Mover):
             new_name, replace_primary=True, imports=False)
         return rename_in_module.get_changed_module(pymodule=pymodule)
     
-    def _remove_old_pyname_imports(self, pymodule):
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
-        def can_select(name):
-            try:
-                if name == self.old_name and \
-                   pymodule.get_attribute(name).get_object() == self.old_pyname.get_object():
-                    return False
-            except rope.exceptions.AttributeNotFoundException:
-                pass
-            return True
-        module_with_imports.filter_names(can_select)
-        return module_with_imports.get_changed_source()
-
 
 class _ModuleMover(_Mover):
     
@@ -267,6 +274,8 @@ class _ModuleMover(_Mover):
 
     def _change_other_modules(self, changes):
         for module in self.pycore.get_python_files():
+            if module in (self.source, self.destination):
+                continue
             is_changed = False
             should_import = False
             pymodule = self.pycore.resource_to_pyobject(module)
@@ -290,20 +299,3 @@ class _ModuleMover(_Mover):
             if is_changed:
                 changes.add_change(ChangeFileContents(module, source))
     
-    def _remove_old_pyname_imports(self, pymodule):
-        old_source = pymodule.source_code
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
-        def can_select(name):
-            try:
-                if name == self.old_name and \
-                   pymodule.get_attribute(name).get_object() == self.old_pyname.get_object():
-                    return False
-            except rope.exceptions.AttributeNotFoundException:
-                pass
-            return True
-        module_with_imports.filter_names(can_select)
-        new_source = module_with_imports.get_changed_source()
-        if old_source != new_source:
-            return new_source
-        return None
-

@@ -1,11 +1,10 @@
 Move a module or package to another package
 ===========================================
 
-- Moving packages
+- Problems when organizing imports in `ropetests.codeanalyzetest` module
 
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
-* Problems when organizing imports in `ropetests.codeanalyzetest` module
 * Function decorators and renaming attributes of self
 
 

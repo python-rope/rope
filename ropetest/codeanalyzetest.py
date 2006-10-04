@@ -93,7 +93,7 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_function_calls(self):
         word_finder = WordRangeFinder('sample_function()')
         self.assertEquals('sample_function', word_finder.get_statement_at(10))
-    
+
     def test_attribute_accesses(self):
         word_finder = WordRangeFinder('a_var.an_attr')
         self.assertEquals('a_var.an_attr', word_finder.get_primary_at(10))
@@ -102,7 +102,7 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder('"a string".split()')
         self.assertEquals('"a string".split', word_finder.get_primary_at(14))
 
-    def test_function_calls(self):
+    def test_function_calls2(self):
         word_finder = WordRangeFinder('file("afile.txt").read()')
         self.assertEquals('file("afile.txt").read',
                           word_finder.get_primary_at(18))
@@ -284,7 +284,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         found_pyname = name_finder.get_pyname_at(code.index('mod1') + 1)
         self.assertEquals(mod1_pyobject, found_pyname.get_object())
 
-    def test_relative_modules_after_from_statements(self):
+    def test_relative_modules_after_from_statements2(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         pkg1 = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')
         pkg2 = self.pycore.create_package(pkg1, 'pkg2')

@@ -228,6 +228,14 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()',
                           module_with_imports.get_changed_source())
     
+    def test_removing_unused_imports_and_functions_of_the_same_name(self):
+        self.mod.write('def a_func():\n    pass\ndef a_func():\n    pass\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('def a_func():\n    pass\ndef a_func():\n    pass\n',
+                          module_with_imports.get_changed_source())
+        
     def test_adding_imports(self):
         self.mod.write('\n')
         pymod = self.pycore.get_module('mod')
