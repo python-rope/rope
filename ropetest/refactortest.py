@@ -671,7 +671,10 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         self.mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
         self.mod3 = self.pycore.create_module(self.project.get_root_folder(), 'mod3')
-
+        self.pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        self.mod4 = self.pycore.create_module(self.pkg, 'mod4')
+        self.mod5 = self.pycore.create_module(self.pkg, 'mod5')
+    
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(MoveRefactoringTest, self).tearDown()
@@ -717,9 +720,8 @@ class MoveRefactoringTest(unittest.TestCase):
 
     @testutils.assert_raises(RefactoringException)
     def test_folder_destination(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         self.mod1.write('class AClass(object):\n    pass\n')
-        self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, pkg)
+        self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, self.pkg)
     
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_for_moving_non_global_elements(self):
@@ -747,24 +749,47 @@ class MoveRefactoringTest(unittest.TestCase):
                           self.mod2.read())
 
     def test_moving_and_used_relative_imports(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
-        mod4 = self.pycore.create_module(pkg, 'mod4')
-        mod5 = self.pycore.create_module(pkg, 'mod5')
-        mod4.write('import mod5\n' \
+        self.mod4.write('import mod5\n' \
                         'def a_func():\n    print mod5\n')
-        self.refactoring.move(mod4, mod4.read().index('a_func') + 1,
+        self.refactoring.move(self.mod4, self.mod4.read().index('a_func') + 1,
                               self.mod1)
         self.assertEquals('import pkg.mod5\n\n\ndef a_func():\n    print pkg.mod5\n',
                           self.mod1.read())
     
-    # TODO: Moving modules
-    def xxx_test_moving_modules(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+    def test_moving_modules(self):
         self.mod2.write('import mod1\nprint mod1')
-        self.refactoring.move(self.mod2, self.mod2.read().index('mod1') + 1, pkg)
-        self.assertEquals('import pkg.mod1\nprint pkg.mod1', self.mod1.read())
+        self.refactoring.move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
+        self.assertEquals('import pkg.mod1\nprint pkg.mod1', self.mod2.read())
         self.assertEquals('pkg/mod1.py', self.mod1.get_path())
         
+    def test_moving_modules_and_removing_out_of_date_imports(self):
+        self.mod2.write('import pkg.mod4\nprint pkg.mod4')
+        self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
+                              self.project.get_root_folder())
+        self.assertEquals('import mod4\nprint mod4', self.mod2.read())
+        self.assertEquals('mod4.py', self.mod4.get_path())
+    
+    def test_moving_modules_and_removing_out_of_date_froms(self):
+        self.mod2.write('from pkg import mod4\nprint mod4')
+        self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
+                              self.project.get_root_folder())
+        self.assertEquals('import mod4\nprint mod4', self.mod2.read())
+        self.assertEquals('mod4.py', self.mod4.get_path())
+    
+    # TODO: removing out of date froms
+    def xxx_test_moving_modules_and_removing_out_of_date_froms2(self):
+        self.mod4.write('a_var = 10')
+        self.mod2.write('from pkg.mod4 import a_var\nprint a_var\n')
+        self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
+                              self.project.get_root_folder())
+        self.assertEquals('import mod4\nprint mod4.a_var\n', self.mod2.read())
+    
+    def test_moving_modules_and_relative_import(self):
+        self.mod4.write('import mod5\nprint mod5\n')
+        self.mod2.write('import pkg.mod4\nprint pkg.mod4')
+        self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
+                              self.project.get_root_folder())
+        self.assertEquals('import pkg.mod5\nprint pkg.mod5\n', self.mod4.read())
 
 
 class RefactoringUndoTest(unittest.TestCase):

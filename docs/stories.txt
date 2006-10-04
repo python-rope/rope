@@ -2,7 +2,8 @@
  rope, a Python IDE ...
 ========================
 
-For an overview of future goals of rope have a look at `future.txt`_ file.
+For an overview of possible future goals of rope have a look
+at `future.txt`_ file.
 
 .. _future.txt: future.html
 
@@ -48,10 +49,6 @@ Stories
 
 
 * Last edit location; C-q
-
-
-* Running unit tests
-  Add a graphical view for running tests.
 
 
 * Replacement; M-%
@@ -209,6 +206,9 @@ Stories
 
 
 * Removing imports from the same module @8h
+
+
+* Running unit tests view
 
 
 * Single line extract method and variable @ 10h

@@ -118,7 +118,7 @@ class ImportTools(object):
             module_name = source_folder.get_name() + '.' + module_name
             source_folder = source_folder.get_parent()
         return module_name
-    
+
 
 class ModuleWithImports(object):
     

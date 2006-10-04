@@ -50,17 +50,19 @@ class OccurrenceFinder(object):
             return pymodule.source_code
 
     def _is_a_match(self, name_finder_creator, word_finder, match_start):
+        offset = match_start + 1
         if self.only_calls and \
-           not word_finder.is_a_function_being_called(match_start + 1):
+           not word_finder.is_a_function_being_called(offset):
             return False
         if self.whole_primary and \
-           word_finder.is_a_class_or_function_name_in_header(match_start + 1):
+           (word_finder.is_a_class_or_function_name_in_header(offset) or
+            word_finder.is_a_name_after_from_import(offset)):
             return False
         if not self.imports and \
-           (word_finder.is_from_statement(match_start + 1) or
-            word_finder.is_import_statement(match_start + 1)):
+           (word_finder.is_from_statement(offset) or
+            word_finder.is_import_statement(offset)):
             return False
-        new_pyname = name_finder_creator.get_name_finder().get_pyname_at(match_start + 1)
+        new_pyname = name_finder_creator.get_name_finder().get_pyname_at(offset)
         for pyname in self.pynames:
             if self._are_pynames_the_same(pyname, new_pyname):
                 return True

@@ -37,19 +37,6 @@ Release Goals
 Metaphor: Deliver the most interesting features
 
 
-Possible Plans
---------------
-
-* Dynamic type inference
-* Move class/function/module/package
-* Introduce factory method
-* Encapsulate field
-* Introduce/Inline temporary variable
-* Formatter
-* reST go to definition and quick outline
-* Code contexts
-
-
 Releases
 --------
 
@@ -68,7 +55,13 @@ Releases
 This Release
 ------------
 
-* ...
+Since we're getting closer to ``0.3`` release fewer new features
+should be added in this release.  ``0.3m4`` was a has added many
+things that should be used and refactored.
+
+* Inline local variable
+* Rename function parameters
+* Move a module or package to another package
 
 
 Hot Topics
@@ -87,6 +80,61 @@ To Be Discussed
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * Indexing source files
+
+
+Move Package/Module
+===================
+
+Adding this refactoring requires lots of refactorings. For each module
+we need to remove out of date imports, add new imports and change
+accesses using those old imports to use new imports.
+
+The first problem is how to find out of date imports.
+
+These can be fixed with `RenameInModule`:
+
+* ``import pkg.moving``
+* ``import pkg.moving.mod``
+* ``from pkg.moving.mod import name``
+
+Problematic:
+
+* ``from pkg import moving``
+  
+  This can be fixed by adding a new ``import pkg.moving`` import and
+  changing all references to moving with ``pkg.moving``.  Actually
+  we are here transforming froms to normal imports.
+  
+* ``from pkg.moving import ...``
+  
+  The simplest thing to do would be to transform it to imports like
+  our previous case.
+
+
+Is There a Better And Cleaner Solution?
+---------------------------------------
+
+There are many pieces of code that change imports before
+renaming.  `transform_froms_to_normal_imports`
+
+* Handling import changes in `rename` module
+  
+  If we are renaming a primary and that primary apprears in some
+  import statement, first change that import statement to normal
+  import statement and then do the renaming.
+  
+  The problem is `ImportTools` uses `rename` so we can not use
+  `ImportTools` in `rename`.
+  
+  We should also prevent unneeded growth of `OccuranceFinder` class.
+  Adding a ``handle_imports`` keyword argument?
+  
+* Handling all import changes separately
+  
+  This might need lots of rework since we have to change the imports
+  that can be fixed with `RenameInModule`, too.
+
+Look for similar situations in move function/class.
 
 
 Undo Unification

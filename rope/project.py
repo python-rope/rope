@@ -154,7 +154,10 @@ class Resource(object):
     def _get_destination_for_move(self, destination):
         dest_path = self.project._get_resource_path(destination)
         if os.path.isdir(dest_path):
-            return destination + '/' + self.get_name()
+            if destination != '':
+                return destination + '/' + self.get_name()
+            else:
+                return self.get_name()
         return destination
 
 
