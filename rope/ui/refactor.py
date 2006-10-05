@@ -270,6 +270,14 @@ def transform_relatives_to_absolute(context):
     if import_organizer:
         import_organizer.transform_relatives_to_absolute(file_editor.get_file())
 
+def inline(context):
+    if context.get_active_editor():
+        fileeditor = context.get_active_editor()
+        resource = fileeditor.get_file()
+        editor = fileeditor.get_editor()
+        editor.refactoring.inline_local_variable(resource, editor.get_current_offset())
+    
+    
 
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
@@ -280,9 +288,11 @@ actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move),
                             MenuAddress(['Refactor', 'Move'], 'v')))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
                             MenuAddress(['Refactor', 'Rename in File'], 'f')))
+actions.append(SimpleAction('Inline Local Variable', ConfirmAllEditorsAreSaved(inline), 'M-I',
+                            MenuAddress(['Refactor', 'Inline Local Variable'], 'i')))
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
-                            MenuAddress(['Refactor', 'Introduce Factory Method'], 'i', 1)))
+                            MenuAddress(['Refactor', 'Introduce Factory Method'], 'c', 1)))
 actions.append(SimpleAction('Transform Module to Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
                             MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1)))

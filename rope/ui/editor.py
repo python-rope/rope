@@ -19,7 +19,7 @@ class GraphicalEditor(object):
             font = Font(family='Typewriter', size=14)
         else:
             font = Font(family='Courier', size=13)
-        self.text = ScrolledText(parent, bg='#f6f6ff', font=font,
+        self.text = ScrolledText(parent, bg='white', font=font,
                                  undo=True, maxundo=20, highlightcolor='#99A')
         self.change_inspector = _TextChangeInspector(self, self._text_changed)
         self.searcher = rope.ui.searcher.Searcher(self)

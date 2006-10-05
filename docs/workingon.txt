@@ -1,6 +1,10 @@
 Inline local variable
 =====================
 
+* Logical lines
+* ``a_var, another_var = ...``
+* Adding `rope.refactor.inline` module
+
 * Deviding `refactortest`
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module

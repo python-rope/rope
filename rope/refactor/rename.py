@@ -20,7 +20,7 @@ class RenameRefactoring(object):
     
     def _rename(self, resource, offset, new_name, in_file=False):
         files = self._get_interesting_files(resource, in_file)
-        old_name = rope.codeanalyze.get_name_at(self.pycore, resource, offset)
+        old_name = rope.codeanalyze.get_name_at(resource, offset)
         old_pynames = self._get_old_pynames(offset, resource, in_file, old_name)
         if not old_pynames:
             return None

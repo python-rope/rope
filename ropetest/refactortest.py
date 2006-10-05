@@ -899,6 +899,31 @@ class RefactoringUndoTest(unittest.TestCase):
         self.undo.redo()
         self.assertEquals('3', self.file.read())
 
+class InlineLocalVariableTest(unittest.TestCase):
+
+    def setUp(self):
+        super(InlineLocalVariableTest, self).setUp()
+        self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
+        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(InlineLocalVariableTest, self).tearDown()
+    
+    def _inline_local_variable(self, code, offset):
+        self.mod.write(code)
+        self.refactoring.inline_local_variable(self.mod, offset)
+        return self.mod.read()
+    
+    def test_simple_case(self):
+        code = 'a_var = 10\nanother_var = a_var\n'
+        refactored = self._inline_local_variable(code, code.index('a_var') + 1)
+        self.assertEquals('another_var = 10\n', refactored)        
+
 
 def suite():
     result = unittest.TestSuite()
@@ -907,6 +932,7 @@ def suite():
     result.addTests(unittest.makeSuite(IntroduceFactoryTest))
     result.addTests(unittest.makeSuite(MoveRefactoringTest))
     result.addTests(unittest.makeSuite(RefactoringUndoTest))
+    result.addTests(unittest.makeSuite(InlineLocalVariableTest))
     return result
 
 

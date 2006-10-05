@@ -1,11 +1,11 @@
 import rope.importutils
-
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 from rope.refactor.rename import RenameRefactoring
 from rope.refactor.extract import ExtractMethodRefactoring
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.move import MoveRefactoring
+from rope.refactor.inline import InlineRefactoring
 
 
 class Refactoring(object):
@@ -36,6 +36,9 @@ class Refactoring(object):
         pass
     
     def get_import_organizer(self):
+        pass
+    
+    def inline_local_variable(self, resource, offset):
         pass
 
 
@@ -140,6 +143,10 @@ class PythonRefactoring(Refactoring):
                                   offset, dest_resource).move()
         self._add_and_commit_changes(changes)
     
+    def inline_local_variable(self, resource, offset):
+        changes = InlineRefactoring(self.pycore).inline(resource, offset)
+        self._add_and_commit_changes(changes)
+
     def _add_and_commit_changes(self, changes):
         self._undo.add_change(changes)
         changes.do()

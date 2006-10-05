@@ -476,9 +476,8 @@ def get_pyname_at(pycore, resource, offset):
     pyname = pyname_finder.get_pyname_at(offset)
     return pyname
 
-def get_name_at(pycore, resource, offset):
-    pymodule = pycore.resource_to_pyobject(resource)
-    source_code = pymodule.source_code
+def get_name_at(resource, offset):
+    source_code = resource.read()
     word_finder = rope.codeanalyze.WordRangeFinder(source_code)
     name = word_finder.get_primary_at(offset).split('.')[-1]
     return name
