@@ -286,10 +286,10 @@ actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_
                             MenuAddress(['Refactor', 'Extract Method'], 'e')))
 actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move), 'M-V',
                             MenuAddress(['Refactor', 'Move'], 'v')))
-actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
-                            MenuAddress(['Refactor', 'Rename in File'], 'f')))
 actions.append(SimpleAction('Inline Local Variable', ConfirmAllEditorsAreSaved(inline), 'M-I',
                             MenuAddress(['Refactor', 'Inline Local Variable'], 'i')))
+actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
+                            MenuAddress(['Refactor', 'Rename in File'], 'f')))
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'c', 1)))

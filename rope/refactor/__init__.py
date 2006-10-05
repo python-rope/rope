@@ -144,7 +144,7 @@ class PythonRefactoring(Refactoring):
         self._add_and_commit_changes(changes)
     
     def inline_local_variable(self, resource, offset):
-        changes = InlineRefactoring(self.pycore).inline(resource, offset)
+        changes = InlineRefactoring(self.pycore, resource, offset).inline()
         self._add_and_commit_changes(changes)
 
     def _add_and_commit_changes(self, changes):

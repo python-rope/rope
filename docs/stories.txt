@@ -211,13 +211,10 @@ Stories
 * Running unit tests view
 
 
-* Single line extract method and variable @ 10h
-
-
 > Public Release 0.3m5 : October 15, 2006
 
 
-* Inline local variable @8h
+* Single line extract method and variable @ 10h
 
 
 Remaining Stories

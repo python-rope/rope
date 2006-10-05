@@ -3,6 +3,9 @@
 ===========
 
 
+- Inline local variable : October 5, 2006
+
+
 - Rename function parameters : October 5, 2006
 
 

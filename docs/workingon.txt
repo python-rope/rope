@@ -1,10 +1,13 @@
 Inline local variable
 =====================
 
-* Logical lines
-* ``a_var, another_var = ...``
-* Adding `rope.refactor.inline` module
+- Logical lines
+- Exceptional conditions
+- Striping spaces in multi lines
+- ``a_var, another_var = ...``
 
+* Automatically using local_rename when renaming function local variables
+* Using assigned_asts for finding variable writes
 * Deviding `refactortest`
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
@@ -33,7 +36,6 @@ Remaining Stories
 * Function keywords and extract method
 * Showing initial name in rename dialogs
 * Faster implementation of `GlobalScope.get_inner_scope_for_line`
-* Performing refactorings based on the object of the pyname
 * Goto definition for ``"# comment.\na_var"``
 * Slow `GraphicalEditor._get_offset`
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?
