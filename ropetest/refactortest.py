@@ -171,6 +171,32 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('def a_func():\n    return 0\n', mod1.read())
         self.assertEquals('import mod1\na_var = mod1.a_func()\n', mod2.read())
     
+    def test_renaming_class_attributes(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('class AClass(object):\n    def __init__(self):\n'
+                   '        self.an_attr = 10\n')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2.write('import mod1\na_var = mod1.AClass()\nanother_var = a_var.an_attr')
+        
+        self.refactoring.rename(mod1, mod1.read().index('an_attr'), 'attr')
+        self.assertEquals('class AClass(object):\n    def __init__(self):\n'
+                          '        self.attr = 10\n', mod1.read())
+        self.assertEquals('import mod1\na_var = mod1.AClass()\nanother_var = a_var.attr',
+                          mod2.read())
+    
+    def test_renaming_class_attributes2(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('class AClass(object):\n    def __init__(self):\n'
+                   '        an_attr = 10\n        self.an_attr = 10\n')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2.write('import mod1\na_var = mod1.AClass()\nanother_var = a_var.an_attr')
+        
+        self.refactoring.rename(mod1, mod1.read().rindex('an_attr'), 'attr')
+        self.assertEquals('class AClass(object):\n    def __init__(self):\n'
+                          '        an_attr = 10\n        self.attr = 10\n', mod1.read())
+        self.assertEquals('import mod1\na_var = mod1.AClass()\nanother_var = a_var.attr',
+                          mod2.read())
+    
     def test_renaming_methods_in_subclasses(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod.write('class A(object):\n    def a_method(self):\n        pass\n'

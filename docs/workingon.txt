@@ -1,14 +1,10 @@
-Inline local variable
-=====================
+Refactoring
+===========
 
-- Logical lines
-- Exceptional conditions
-- Striping spaces in multi lines
-- ``a_var, another_var = ...``
+- Automatically using local_rename when renaming function local variables
 
-* Automatically using local_rename when renaming function local variables
 * Using assigned_asts for finding variable writes
-* Deviding `refactortest`
+* Dividing `refactortest`
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
 

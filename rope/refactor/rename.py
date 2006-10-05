@@ -19,11 +19,16 @@ class RenameRefactoring(object):
         return self._rename(resource, offset, new_name)
     
     def _rename(self, resource, offset, new_name, in_file=False):
-        files = self._get_interesting_files(resource, in_file)
         old_name = rope.codeanalyze.get_name_at(resource, offset)
         old_pynames = self._get_old_pynames(offset, resource, in_file, old_name)
         if not old_pynames:
             return None
+        # HACK: Do a local rename for names defined in function scopes.
+        # XXX: This might cause problems for global keyword usages.
+        if not in_file and len(old_pynames) == 1 and \
+           self._is_renaming_a_function_local_name(old_pynames[0]):
+            in_file = True
+        files = self._get_interesting_files(resource, in_file)
         changes = ChangeSet()
         for file_ in files:
             new_content = RenameInModule(self.pycore, old_pynames, old_name, new_name).\
@@ -34,6 +39,16 @@ class RenameRefactoring(object):
         if self._is_renaming_a_module(old_pynames):
             changes.add_change(self._rename_module(old_pynames[0].get_object(), new_name))
         return changes
+    
+    def _is_renaming_a_function_local_name(self, pyname):
+        module, lineno = pyname.get_definition_location()
+        if lineno is None:
+            return False
+        scope = module.get_scope().get_inner_scope_for_line(lineno)
+        if isinstance(pyname, rope.pynames.DefinedName) and \
+           scope.get_kind() in ('Function', 'Class'):
+            scope = scope.parent
+        return scope.get_kind() == 'Function' and pyname in scope.get_names().values()
     
     def _is_renaming_a_module(self, old_pynames):
         if len(old_pynames) == 1 and \

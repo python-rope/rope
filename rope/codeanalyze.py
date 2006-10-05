@@ -508,7 +508,8 @@ class SourceLinesAdapter(Lines):
         self.line_starts.append(len(self.source_code) + 1)
     
     def get_line(self, line_number):
-        return self.source_code[self.line_starts[line_number - 1]:self.line_starts[line_number] - 1]
+        return self.source_code[self.line_starts[line_number - 1]:
+                                self.line_starts[line_number] - 1]
     
     def length(self):
         return len(self.line_starts) - 1
