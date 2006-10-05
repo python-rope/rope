@@ -242,6 +242,34 @@ class WordRangeFinder(object):
         if from_names >= offset:
             return False
         return self._find_import_pair_end(from_names) >= offset
+    
+    def is_function_keyword_parameter(self, offset):
+        word_end = self._find_word_end(offset)
+        if word_end + 1 == len(self.source_code):
+            return False
+        next_char = self._find_first_non_space_char(word_end + 1)
+        if next_char + 2 >= len(self.source_code) or \
+           self.source_code[next_char] != '=' or \
+           self.source_code[next_char + 1] == '=':
+            return False
+        word_start = self._find_word_start(offset)
+        prev_char = self._find_last_non_space_char(word_start - 1)
+        if prev_char - 1 < 0 or self.source_code[prev_char] not in ',(':
+            return False
+        return True
+    
+    def find_parens_start_from_inside(self, offset):
+        current_offset = offset
+        opens = 1
+        while current_offset > 0:
+            if self.source_code[current_offset] == '(':
+                opens -= 1
+            if opens == 0:
+                break
+            if self.source_code[current_offset] == ')':
+                opens += 1
+            current_offset -= 1
+        return current_offset
 
 
 class StatementEvaluator(object):
@@ -391,6 +419,12 @@ class ScopeNameFinder(object):
     def get_pyname_at(self, offset):
         lineno = self._get_location(offset)[0]
         holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
+        # function keyword parameter
+        if self.word_finder.is_function_keyword_parameter(offset):
+            keyword_name = self.word_finder.get_word_at(offset)
+            function_parens = self.word_finder.find_parens_start_from_inside(offset)
+            function_pyname = self.get_pyname_at(function_parens - 1)
+            return function_pyname.get_object().get_parameters().get(keyword_name, None)
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
             class_scope = holding_scope
@@ -401,9 +435,11 @@ class ScopeNameFinder(object):
                 return class_scope.pyobject.get_attribute(name)
             except rope.exceptions.AttributeNotFoundException:
                 return None
+        # function header
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
             name = self.word_finder.get_primary_at(offset).strip()
             return holding_scope.parent.get_name(name)
+        # from statement module
         if self.word_finder.is_from_statement_module(offset):
             module = self.word_finder.get_primary_at(offset)
             module_pyname = self._find_module(module)

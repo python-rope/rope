@@ -109,6 +109,7 @@ class PyFunction(PyDefinedObject):
         self.are_args_being_inferred = False
         self.returned_object = self.get_module()._get_concluded_data()
         self.parameter_pyobjects = self.get_module()._get_concluded_data()
+        self.parameter_pynames = self.get_module()._get_concluded_data()
 
     def _create_structural_attributes(self):
         return {}
@@ -142,11 +143,13 @@ class PyFunction(PyDefinedObject):
                 pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
         return pyobjects
     
-    def _get_parameter_pynames(self):
-        result = {}
-        for index, name in enumerate(self.parameters):
-            result[name] = ParameterName(self, index)
-        return result
+    def get_parameters(self):
+        if self.parameter_pynames.get() is None:
+            result = {}
+            for index, name in enumerate(self.parameters):
+                result[name] = ParameterName(self, index)
+            self.parameter_pynames.set(result)
+        return self.parameter_pynames.get()
     
     def _get_parameter(self, index):
         if not self.parameter_pyobjects.get():

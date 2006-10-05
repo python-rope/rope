@@ -220,9 +220,6 @@ Stories
 * Inline local variable @8h
 
 
-* Rename function parameters @12h
-
-
 Remaining Stories
 -----------------
 

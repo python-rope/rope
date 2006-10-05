@@ -1,6 +1,10 @@
-Move a module or package to another package
-===========================================
+Rename function parameters
+--------------------------
 
+- Multi-parameter
+- a_func   (a_parm)
+
+* Extract method and return statements
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
 

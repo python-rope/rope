@@ -3,6 +3,9 @@
 ===========
 
 
+- Rename function parameters : October 5, 2006
+
+
 - Move a module or package to another package : October 4, 2006
 
 
