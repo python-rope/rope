@@ -75,7 +75,7 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.indenter.correct_indentation(3)
         self.assertEquals('c = \\\n    b\\\n    + a', self.editor.get_text())
 
-    def test_returning_after_backslashes(self):
+    def test_returning_after_backslashes2(self):
         self.editor.set_text('c = \\\n    b\na')
         self.indenter.correct_indentation(3)
         self.assertEquals('c = \\\n    b\na', self.editor.get_text())

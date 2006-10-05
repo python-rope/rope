@@ -2,7 +2,7 @@ import unittest
 
 import rope.codeanalyze
 import rope.refactor.rename
-from rope.refactor import PythonRefactoring, Undo
+from rope.refactor import Undo
 from rope.exceptions import RefactoringException
 from rope.project import Project
 from rope.refactor.change import *
@@ -230,6 +230,18 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('def a_func(new_param):\n    print new_param\n'
                           'a_func(new_param=hey)\n', refactored)
     
+    def test_renaming_parameters_not_renaming_others(self):
+        code = 'def a_func(param):\n    print param\nparam=10\na_func(param)\n'
+        refactored = self.do_local_rename(code, code.find('param') + 1, 'new_param')
+        self.assertEquals('def a_func(new_param):\n    print new_param\n'
+                          'param=10\na_func(param)\n', refactored)
+    
+    def test_renaming_parameters_not_renaming_others2(self):
+        code = 'def a_func(param):\n    print param\nparam=10\na_func(param=param)'
+        refactored = self.do_local_rename(code, code.find('param') + 1, 'new_param')
+        self.assertEquals('def a_func(new_param):\n    print new_param\n'
+                          'param=10\na_func(new_param=param)', refactored)
+    
     def test_renaming_parameters_with_multiple_params(self):
         code = 'def a_func(param1, param2):\n    print param1\na_func(param1=1, param2=2)\n'
         refactored = self.do_local_rename(code, code.find('param1') + 1, 'new_param')
@@ -243,10 +255,10 @@ class RenameRefactoringTest(unittest.TestCase):
                           'a_func(param1=1, new_param=2)\n', refactored)
     
     def test_renaming_parameters_on_calls(self):
-        code = 'def a_func(param):\n    print param\na_func(param=hey)\n'
+        code = 'def a_func(param):\n    print param\na_func(param = hey)\n'
         refactored = self.do_local_rename(code, code.rfind('param') + 1, 'new_param')
         self.assertEquals('def a_func(new_param):\n    print new_param\n'
-                          'a_func(new_param=hey)\n', refactored)
+                          'a_func(new_param = hey)\n', refactored)
     
     def test_renaming_parameters_spaces_before_call(self):
         code = 'def a_func(param):\n    print param\na_func  (param=hey)\n'

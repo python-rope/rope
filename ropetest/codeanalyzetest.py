@@ -2,7 +2,8 @@ import unittest
 
 from ropetest import testutils
 from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                              SourceLinesAdapter, WordRangeFinder, ScopeNameFinder)
+                              SourceLinesAdapter, WordRangeFinder,
+                              ScopeNameFinder, LogicalLineFinder)
 from rope.project import Project
 
 
@@ -92,7 +93,7 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_function_calls(self):
         word_finder = WordRangeFinder('sample_function()')
-        self.assertEquals('sample_function', word_finder.get_statement_at(10))
+        self.assertEquals('sample_function', word_finder.get_primary_at(10))
 
     def test_attribute_accesses(self):
         word_finder = WordRangeFinder('a_var.an_attr')
@@ -298,11 +299,50 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEquals(pkg2_pyobject, found_pyname.get_object())
 
 
+class LogicalLineFinderTest(unittest.TestCase):
+
+    def setUp(self):
+        super(LogicalLineFinderTest, self).setUp()
+
+    def tearDown(self):
+        super(LogicalLineFinderTest, self).tearDown()
+    
+    def _get_logical_line_finder(self, code):
+        return LogicalLineFinder(SourceLinesAdapter(code))
+    
+    def test_normal_lines(self):
+        code = 'a_var = 10'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((1, 1), line_finder.get_logical_line_in(1))
+
+    def test_normal_lines2(self):
+        code = 'another = 10\na_var = 20\n'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((1, 1), line_finder.get_logical_line_in(1))
+        self.assertEquals((2, 2), line_finder.get_logical_line_in(2))
+
+    def test_implicit_continuation(self):
+        code = 'a_var = 3 + \\\n    4 + \\\n    5'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((1, 3), line_finder.get_logical_line_in(2))
+
+    def test_explicit_continuation(self):
+        code = 'print 2\na_var = (3 + \n    4, \n    5)\n'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((2, 4), line_finder.get_logical_line_in(2))
+
+    def test_explicit_continuation_comments(self):
+        code = '#\na_var = 3\n'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((2, 2), line_finder.get_logical_line_in(2))
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(StatementRangeFinderTest))
     result.addTests(unittest.makeSuite(WordRangeFinderTest))
     result.addTests(unittest.makeSuite(ScopeNameFinderTest))
+    result.addTests(unittest.makeSuite(LogicalLineFinderTest))
     return result
 
 if __name__ == '__main__':

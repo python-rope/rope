@@ -1,10 +1,7 @@
-Rename function parameters
---------------------------
+Inline local variable
+=====================
 
-- Multi-parameter
-- a_func   (a_parm)
-
-* Extract method and return statements
+* Deviding `refactortest`
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
 
@@ -12,6 +9,7 @@ Rename function parameters
 Remaining Stories
 =================
 
+* Extract method and return statements
 * Function decorators and renaming attributes of self
 * Import addition when adding a relative with an absolute import
 * Test `difflib` for `Editor.set_text`

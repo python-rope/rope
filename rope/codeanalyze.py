@@ -1,5 +1,7 @@
 import compiler
 import re
+import tokenize
+import token
 
 import rope.pyobjects
 import rope.pynames
@@ -207,7 +209,6 @@ class WordRangeFinder(object):
                     current_offset += 1
                 current_offset += 1
             return current_offset
-        
     
     def is_import_statement(self, offset):
         try:
@@ -546,6 +547,51 @@ class ArrayLinesAdapter(Lines):
         return len(self.lines)
 
 
+class LinesToReadline(object):
+    
+    def __init__(self, lines, start):
+        self.lines = lines
+        self.current = start
+    
+    def readline(self):
+        if self.current <= self.lines.length():
+            self.current += 1
+            return self.lines.get_line(self.current - 1) + '\n'
+        return ''
+    
+    def __call__(self):
+        return self.readline()
+
+
+class LogicalLineFinder(object):
+    
+    def __init__(self, lines):
+        self.lines = lines
+    
+    def get_logical_line_in(self, line_number):
+        block_start = StatementRangeFinder.get_block_start(self.lines,
+                                                           line_number)
+        readline = LinesToReadline(self.lines, block_start)
+        last_line_start = block_start
+        for current in tokenize.generate_tokens(readline):
+            current_lineno = current[2][0] + block_start - 1
+            if current[0] == token.NEWLINE:
+                if current_lineno >= line_number:
+                    return (self._get_first_non_empty_line(last_line_start),
+                            current_lineno)
+                last_line_start = current_lineno + 1
+        return (last_line_start, self.lines.length())
+    
+    def _get_first_non_empty_line(self, line_number):
+        current = line_number
+        while current <= self.lines.length():
+            line = self.lines.get_line(current)
+            if line.strip() != '' and not line.startswith('#'):
+                return current
+            current += 1
+        return current
+
+
 class StatementRangeFinder(object):
     """A method object for finding the range of a statement"""
 
@@ -553,9 +599,9 @@ class StatementRangeFinder(object):
         self.lines = lines
         self.lineno = lineno
         self.in_string = ''
-        self.open_parens = 0
+        self.open_count = 0
         self.explicit_continuation = False
-        self.parens_openings = []
+        self.open_parens = []
 
     def _analyze_line(self, current_line_number):
         current_line = self.lines.get_line(current_line_number)
@@ -574,29 +620,22 @@ class StatementRangeFinder(object):
             if char == '#':
                 break
             if char in '([{':
-                self.open_parens += 1
-                self.parens_openings.append((current_line_number, i))
+                self.open_count += 1
+                self.open_parens.append((current_line_number, i))
             if char in ')]}':
-                self.open_parens -= 1
-                if self.parens_openings:
-                    self.parens_openings.pop()
+                self.open_count -= 1
+                if self.open_parens:
+                    self.open_parens.pop()
         if current_line.rstrip().endswith('\\'):
             self.explicit_continuation = True
         else:
             self.explicit_continuation = False
 
-    def _get_block_start(self):
-        """Aproximating block start for `analyze` method"""
-        pattern = StatementRangeFinder.get_block_start_patterns()
-        for i in reversed(range(1, self.lineno + 1)):
-            if pattern.search(self.lines.get_line(i)) is not None:
-                return i
-        return 1
-
     def analyze(self):
         last_statement = 1
-        for current_line_number in range(self._get_block_start(), self.lineno + 1):
-            if not self.explicit_continuation and self.open_parens == 0 and self.in_string == '':
+        for current_line_number in range(self.get_block_start(self.lines, self.lineno),
+                                         self.lineno + 1):
+            if not self.explicit_continuation and self.open_count == 0 and self.in_string == '':
                 last_statement = current_line_number
             self._analyze_line(current_line_number)
         last_indents = self.get_line_indents(last_statement)
@@ -616,12 +655,12 @@ class StatementRangeFinder(object):
         return self.block_end
 
     def last_open_parens(self):
-        if not self.parens_openings:
+        if not self.open_parens:
             return None
-        return self.parens_openings[-1]
+        return self.open_parens[-1]
 
     def is_line_continued(self):
-        return self.open_parens != 0 or self.explicit_continuation
+        return self.open_count != 0 or self.explicit_continuation
 
     def get_line_indents(self, line_number):
         indents = 0
@@ -632,10 +671,81 @@ class StatementRangeFinder(object):
                 break
         return indents
     
+    @staticmethod
+    def get_block_start(lines, lineno):
+        """Aproximating block start for `analyze` method"""
+        pattern = StatementRangeFinder.get_block_start_patterns()
+        for i in reversed(range(1, lineno + 1)):
+            if pattern.search(lines.get_line(i)) is not None:
+                return i
+        return 1
+
     @classmethod
     def get_block_start_patterns(cls):
         if not hasattr(cls, '__block_start_pattern'):
             pattern = '^\\s*(def|class|if|else|elif|try|except|for|while|with)\\s'
             cls.__block_start_pattern = re.compile(pattern, re.M)
         return cls.__block_start_pattern
+    
 
+# XXX: Should we use it
+class xxxStatementRangeFinder(object):
+    """A method object for finding the range of a statement"""
+
+    def __init__(self, lines, lineno):
+        self.lines = lines
+        self.lineno = lineno
+        self.block_start = StatementRangeFinder.get_block_start(lines, lineno)
+        self.open_parens = []
+        self.statement_start = self.block_start
+        self.block_end = lineno
+        self.continued = True
+
+    def analyze(self):
+        readline = LinesToReadline(self.lines, self.block_start)
+        try:
+            for current in tokenize.generate_tokens(readline):
+                current_lineno = current[2][0] + self.block_start - 1
+                if current_lineno < self.lineno:
+                    if current[0] == token.NEWLINE:
+                        self.statement_start = current_lineno + 1
+                if current_lineno <= self.lineno:
+                    if current[0] == token.OP and current[1] in '([{':
+                        self.open_parens.append((current_lineno, current[2][1]))
+                    if current[0] == token.OP and current[1] in ')]}':
+                        self.open_parens.pop()
+
+                if current_lineno == self.lineno:
+                    if current[0] in (tokenize.NEWLINE, tokenize.COMMENT):
+                        self.continued = False
+
+                if current_lineno > self.lineno:
+                    self.block_end = current_lineno - 1
+                    if current[0] == token.DEDENT:
+                        break
+        except tokenize.TokenError:
+            pass
+
+    def get_statement_start(self):
+        return self.statement_start
+
+    def get_block_end(self):
+        return self.block_end
+
+    def last_open_parens(self):
+        if not self.open_parens:
+            return None
+        return self.open_parens[-1]
+
+    def is_line_continued(self):
+        return self.continued
+
+    def get_line_indents(self, line_number):
+        indents = 0
+        for char in self.lines.get_line(line_number):
+            if char == ' ':
+                indents += 1
+            else:
+                break
+        return indents
+    
