@@ -1,13 +1,10 @@
 Single line extract method and variable
 =======================================
 
-- Exceptional conditions for extract method/variable
+- Holding complete lines for multi-line extractions
 
 * Refactor `extract` module
-* More tests for extract variable
-
 * Refactor `rope.ui.refactor` dialogs
-* Changing sourcetools.* to use logical lines?
 * Refactor `importutils` module
 
 

@@ -175,7 +175,7 @@ class WordRangeFinder(object):
     
     def _find_first_non_space_char(self, offset):
         if offset >= len(self.source_code):
-            return len(offset)
+            return len(self.source_code)
         current_offset = offset
         while current_offset < len(self.source_code) and\
               self.source_code[current_offset] in ' \t\n':
@@ -228,6 +228,8 @@ class WordRangeFinder(object):
         return self._find_import_pair_end(from_names) >= offset
 
     def is_from_statement_module(self, offset):
+        if offset >= len(self.source_code) - 1:
+            return False
         stmt_start = self._find_primary_start(offset)
         line_start = self._get_line_start(stmt_start)
         prev_word = self.source_code[line_start:stmt_start].strip()

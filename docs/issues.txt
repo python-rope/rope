@@ -57,7 +57,6 @@ Hot Topics
 
 * `Undo Unification`_
 * `Python's Implicit Interfaces`_
-* Code completions inside uncompleted ``try`` blocks
 
 
 To Be Discussed
@@ -68,7 +67,7 @@ To Be Discussed
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * Indexing source files for faster occurance finding
-* Ways for eliminating `NoRefactoring`
+* Undoing/redoing refactorings should confirm
 
 
 Undo Unification

@@ -214,6 +214,20 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         self.do_extract_method(code, start, end, 'new_func')
 
+    @testutils.assert_raises(rope.exceptions.RefactoringException)
+    def test_extract_method_containing_uncomplete_lines(self):
+        code = 'a_var = 20\nanother_var = 30\n'
+        start = code.index('20')
+        end = code.index('30') + 2
+        self.do_extract_method(code, start, end, 'new_func')
+
+    @testutils.assert_raises(rope.exceptions.RefactoringException)
+    def test_extract_method_containing_uncomplete_lines2(self):
+        code = 'a_var = 20\nanother_var = 30\n'
+        start = code.index('20')
+        end = code.index('another') + 5
+        self.do_extract_method(code, start, end, 'new_func')
+
     def test_extract_function_and_argument_as_paramenter(self):
         code = 'def a_func(arg):\n    print arg\n'
         start, end = self._convert_line_range_to_offset(code, 2, 2)
@@ -315,6 +329,22 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'c = 1\na = c + 2\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_variable_for_a_tuple(self):
+        code = 'a = 1, 2\n'
+        start = code.index('1')
+        end = code.index('2') + 1
+        refactored = self.do_extract_variable(code, start, end, 'c')
+        expected = 'c = 1, 2\na = c\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_variable_for_a_string(self):
+        code = 'def a_func():\n    a = "hey!"\n'
+        start = code.index('"')
+        end = code.rindex('"') + 1
+        refactored = self.do_extract_variable(code, start, end, 'c')
+        expected = 'def a_func():\n    c = "hey!"\n    a = c\n'
+        self.assertEquals(expected, refactored)
+
     @testutils.assert_raises(rope.exceptions.RefactoringException)
     def test_raising_exception_when_on_incomplete_variables(self):
         code = 'a_var = 10 + 20\n'
@@ -341,6 +371,14 @@ class ExtractMethodTest(unittest.TestCase):
         code = 'a_var = 10 + 20 + 30\n'
         start = code.index('10')
         end = code.rindex('+') + 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+
+    # FIXME: Extract method should be more intelligent about bad ranges
+    @testutils.assert_raises(rope.exceptions.RefactoringException)
+    def xxx_test_raising_exception_on_function_parens(self):
+        code = 'a = range(10)'
+        start = code.index('(')
+        end = code.rindex(')') + 1
         refactored = self.do_extract_method(code, start, end, 'new_func')
 
 

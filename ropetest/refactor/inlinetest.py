@@ -49,6 +49,11 @@ class InlineLocalVariableTest(unittest.TestCase):
         refactored = self._inline_local_variable(code, code.index('a_var') + 1)
         self.assertEquals('another_var = 10 + 10\n', refactored)        
 
+    def test_inlining_at_the_end_of_input(self):
+        code = 'a = 1\nb = a'
+        refactored = self._inline_local_variable(code, code.index('a') + 1)
+        self.assertEquals('b = 1', refactored)
+
     @ropetest.testutils.assert_raises(rope.exceptions.RefactoringException)
     def test_on_classes(self):
         code = 'def AClass(object):\n    pass\n'
@@ -68,3 +73,7 @@ class InlineLocalVariableTest(unittest.TestCase):
     def test_tuple_assignments(self):
         code = 'a_var, another_var = (20, 30)\n'
         refactored = self._inline_local_variable(code, code.index('a_var') + 1)
+
+
+if __name__ == '__main__':
+    unittest.main()

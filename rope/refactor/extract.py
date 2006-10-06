@@ -27,12 +27,13 @@ class ExtractMethodRefactoring(object):
         changes = ChangeSet()
         changes.add_change(ChangeFileContents(resource, new_contents))
         return changes
-        
+    
 
 class _ExtractPerformer(object):
     """Perform extract method/variable refactoring
     
     We devide program source code into these parts::
+      
       [...]
         scope_start
             [before_line]
@@ -75,26 +76,24 @@ class _ExtractPerformer(object):
 
         self.start_line = self.lines.get_line_start(start_line)
         self.end_line = self.lines.get_line_end(end_line)
-                
-        start_line = self.lines.get_line_number(start_offset)
+        
         self.first_line_indents = self._get_indents(start_line)
-        self.scope = self.refactoring.pycore.get_string_scope(source_code,
-                                                              resource)
+        self.scope = self.refactoring.pycore.get_string_scope(source_code, resource)
         self.holding_scope = self._find_holding_scope(start_line)
         self.scope_start = self.lines.get_line_start(self.holding_scope.get_start())
         self.scope_end = self.lines.get_line_end(self.holding_scope.get_end()) + 1
         
         self.is_one_line = self._is_one_line_extract(start_line, end_line)
-        if extract_variable:
-            self.extract_info = _ExtractVariableInfo(self)
-        else:
-            self.extract_info = _ExtractInfo(self)
-        if self._is_global():
-            self.scope_indents = 0
-        else:
-            self.scope_indents = self._get_indents(self.holding_scope.get_start()) + 4
+        self.extract_info = self._create_extract_info()
+        
         self._check_exceptional_conditions()
         self.info_collector = self._create_info_collector()
+    
+    def _create_extract_info(self):
+        if self.extract_variable:
+            return _ExtractVariableInfo(self)
+        else:
+            return _ExtractInfo(self)
 
     def _find_holding_scope(self, start_line):
         holding_scope = self.scope.get_inner_scope_for_line(start_line)
@@ -134,13 +133,19 @@ class _ExtractPerformer(object):
             raise RefactoringException('Extracted piece should contain complete statements.')
         if self.is_one_line or self.extract_variable:
             self._check_exceptional_conditions_for_one_liners()
+        else:
+            self._check_exceptional_conditions_for_multi_liners()
+    
+    def _check_exceptional_conditions_for_multi_liners(self):
+        if self.start != self.start_line or self.end != self.end_line:
+            raise RefactoringException('Extracted piece should contain complete statements.')
     
     def _check_exceptional_conditions_for_one_liners(self):
         if (self.start > 0 and self._is_on_a_word(self.start - 1)) or \
            (self.end < len(self.source_code) and self._is_on_a_word(self.end - 1)):
             raise RefactoringException('Should extract complete statements.')
         start_line = self.lines.get_line_number(self.start)
-        end_line = self.lines.get_line_number(self.end) - 1
+        end_line = self.lines.get_line_number(self.end)
         if self.extract_variable and not self._is_one_line_extract(start_line, end_line):
             raise RefactoringException('Extract variable should not span multiple lines.')
     
@@ -184,13 +189,22 @@ class _ExtractPerformer(object):
             return ' ' * self.first_line_indents + call_prefix + \
                    self._get_function_call(args)
     
+    def _get_scope_indents(self):
+        if self._is_global():
+            return 0
+        else:
+            return self._get_indents(self.holding_scope.get_start()) + 4
+    
+    def _get_function_indents(self):
+        if self._is_global():
+            return 4
+        else:
+            return self._get_scope_indents()
+    
     def _get_function_definition(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
-        if not self._is_global():
-            function_indents = self.scope_indents
-        else:
-            function_indents = 4
+        function_indents = self._get_function_indents()
         result = []
         result.append('%sdef %s:\n' %
                       (' ' * self._get_indents(self.holding_scope.get_start()),
@@ -290,7 +304,7 @@ class _ExtractVariableInfo(object):
         self.performer = performer
     
     def get_before_line(self):
-        result = ' ' * self.performer.scope_indents + \
+        result = ' ' * self.performer._get_scope_indents() + \
                  self.performer.extracted_name + ' = ' + \
                  self.performer._get_one_line_definition() + '\n'
         return result
