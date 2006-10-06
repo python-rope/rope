@@ -1,9 +1,6 @@
-Refactoring
-===========
+Single line extract method and variable
+=======================================
 
-- Automatically using local_rename when renaming function local variables
-
-* Using assigned_asts for finding variable writes
 * Dividing `refactortest`
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
@@ -12,6 +9,7 @@ Refactoring
 Remaining Stories
 =================
 
+* Better refactoring dialogs
 * Extract method and return statements
 * Function decorators and renaming attributes of self
 * Import addition when adding a relative with an absolute import

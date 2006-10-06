@@ -1,5 +1,6 @@
 import Tkinter
 
+
 class MenuBarManager(object):
     
     def __init__(self, menubar):

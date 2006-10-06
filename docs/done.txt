@@ -3,6 +3,9 @@
 ===========
 
 
+- Hiding unappropriate menu items in different contexts : October 6, 2006
+
+
 - Inline local variable : October 5, 2006
 
 

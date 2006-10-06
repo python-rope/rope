@@ -281,41 +281,47 @@ def inline(context):
 
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
-                            MenuAddress(['Refactor', 'Rename'], 'r')))
+                            MenuAddress(['Refactor', 'Rename'], 'r'), ['python']))
 actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_method), 'M-M',
-                            MenuAddress(['Refactor', 'Extract Method'], 'e')))
+                            MenuAddress(['Refactor', 'Extract Method'], 'e'), ['python']))
 actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move), 'M-V',
-                            MenuAddress(['Refactor', 'Move'], 'v')))
+                            MenuAddress(['Refactor', 'Move'], 'v'), ['python']))
 actions.append(SimpleAction('Inline Local Variable', ConfirmAllEditorsAreSaved(inline), 'M-I',
-                            MenuAddress(['Refactor', 'Inline Local Variable'], 'i')))
+                            MenuAddress(['Refactor', 'Inline Local Variable'], 'i'), ['python']))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
-                            MenuAddress(['Refactor', 'Rename in File'], 'f')))
+                            MenuAddress(['Refactor', 'Rename in File'], 'f'), ['python']))
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
-                            MenuAddress(['Refactor', 'Introduce Factory Method'], 'c', 1)))
+                            MenuAddress(['Refactor', 'Introduce Factory Method'], 'c', 1),
+                            ['python']))
 actions.append(SimpleAction('Transform Module to Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
-                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1)))
+                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1), 
+                            ['python']))
 actions.append(SimpleAction('Organize Imports', 
                             ConfirmAllEditorsAreSaved(organize_imports), 'M-O',
-                            MenuAddress(['Refactor', 'Organize Imports'], 'o', 2)))
+                            MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
 actions.append(SimpleAction('Expand Star Imports', 
                             ConfirmAllEditorsAreSaved(expand_star_imports), None,
-                            MenuAddress(['Refactor', 'Expand Star Imports'], 'x', 2)))
+                            MenuAddress(['Refactor', 'Expand Star Imports'], 'x', 2),
+                            ['python']))
 actions.append(SimpleAction('Transform Relatives to Absolute', 
                             ConfirmAllEditorsAreSaved(transform_relatives_to_absolute), None,
-                            MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2)))
+                            MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2),
+                            ['python']))
 actions.append(SimpleAction('Transform Froms to Imports', 
                             ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
-                            MenuAddress(['Refactor', 'Transform Froms to Imports'], 's', 2)))
+                            MenuAddress(['Refactor', 'Transform Froms to Imports'], 's', 2),
+                            ['python']))
 actions.append(SimpleAction('Undo Refactoring', 
                             ConfirmAllEditorsAreSaved(undo_refactoring), None,
-                            MenuAddress(['Refactor', 'Undo Refactoring'], 'u', 3)))
+                            MenuAddress(['Refactor', 'Undo Refactoring'], 'u', 3), ['python']))
 actions.append(SimpleAction('Undo Last Refactoring', 
                             ConfirmAllEditorsAreSaved(redo_refactoring), None,
-                            MenuAddress(['Refactor', 'Redo Refactoring'], 'd', 3)))
+                            MenuAddress(['Refactor', 'Redo Refactoring'], 'd', 3), ['python']))
 
 core = rope.ui.core.Core.get_core()
+core._add_menu_cascade(MenuAddress(['Refactor'], 't'), ['python'])
 for action in actions:
     core.register_action(action)
 

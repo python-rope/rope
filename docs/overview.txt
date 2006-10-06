@@ -1,0 +1,62 @@
+===============
+ Rope Features
+===============
+
+.. contents:: Table of Contents
+
+TODO:
+
+* Code assist
+* Rename
+* Move
+* SVN support
+* Type inference
+
+
+Code Assist
+===========
+
+You can complete names as you type by using code assist (``M-/``).
+The capital letter in the left shows the type of the proposal.  `L`
+indicates local variables, `G` global variables, `A` attributes, `T`
+templates, `K` keywords and `B` built-ins.
+
+You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
+templates.  If you want to add more or edit these you can edit
+`rope.codeassist.PythonCodeAssist._get_default_templates` method.
+
+
+Outline
+=======
+
+In tree views (like quick outline and project tree views) you can use
+``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
+collapse items.  You can use the ``Return`` key to select items.
+
+
+SVN Support
+===========
+
+The subversion support is somewhat basic.  What rope does is that when
+creating new files or when moving modules and packages for
+refactorings it will call the appropriate subversion commands.  The
+subversion support is automatically turned on when there is a ``.svn``
+folder inside project root and the ``pysvn`` package is
+available. (You can get PySVN from http://pysvn.tigris.org ).  Rope
+assumes all files are under version control when these conditions are
+met.  Also don't forget to commit your changes yourself, rope doesn't
+do that yet.
+
+
+Dynamic Type Inference
+======================
+
+Dynamic type inference gets its needed information from running
+modules (``M-X p``).  You open the module to run (probably your test
+suite), then use ``M-X p``.  Since as the program runs, rope gathers
+type information, the program runs slower.  Right now rope doesn't
+have a good interface for running programs.  It just prints the output
+to the terminal and does not get inputs.  This will be enhanced in
+future releases. After the program is run, you can get better code
+assists and some of the refactorings perform much better.
+

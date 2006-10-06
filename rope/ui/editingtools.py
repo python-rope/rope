@@ -21,6 +21,9 @@ class EditingTools(object):
 
     def create_refactoring(self):
         pass
+    
+    def get_editing_context(self):
+        pass
 
 
 class PythonEditingTools(EditingTools):
@@ -43,6 +46,9 @@ class PythonEditingTools(EditingTools):
     def create_refactoring(self):
         return self.project.get_pycore().get_refactoring()
 
+    def get_editing_context(self):
+        return 'python'
+
 
 class NormalEditingTools(EditingTools):
 
@@ -64,6 +70,10 @@ class NormalEditingTools(EditingTools):
     def create_refactoring(self):
         return rope.refactor.NoRefactoring()
 
+    def get_editing_context(self):
+        return 'others'
+
+
 class ReSTEditingTools(EditingTools):
 
     def __init__(self):
@@ -84,3 +94,5 @@ class ReSTEditingTools(EditingTools):
     def create_refactoring(self):
         return rope.refactor.NoRefactoring()
 
+    def get_editing_context(self):
+        return 'rest'

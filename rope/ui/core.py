@@ -16,10 +16,13 @@ class Core(object):
     def __init__(self):
         self.root = Tk()
         self.root.title('Rope')
-        self.menubar = Menu(self.root, relief=RAISED, borderwidth=1)
-        self.root['menu'] = self.menubar
-        self.menubar_manager = MenuBarManager(self.menubar)
-        self._create_menu()
+        self.menus = {}
+        self.menu_managers = {}
+        self.all_contexts = ['python', 'rest', 'others', 'none']
+        for context in self.all_contexts:
+            self.menus[context] = Menu(self.root, relief=RAISED, borderwidth=1)
+            self.menu_managers[context] = MenuBarManager(self.menus[context])
+        self.root['menu'] = self.menus['none']
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
         self.editor_panel = Frame(self.main, borderwidth=0)
@@ -30,7 +33,7 @@ class Core(object):
         line_status = self.status_bar_manager.create_status('line')
         line_status.set_width(8)
 
-        self.key_binding = []
+        self.key_bindings = dict((context, []) for context in self.all_contexts)
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
         self.project = None
     
@@ -39,15 +42,16 @@ class Core(object):
         import rope.ui.editactions
         import rope.ui.codeassist
         import rope.ui.refactor
+        for menu_manager in self.menu_managers.values():
+            menu_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
+            menu_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
+                                             self._show_about_dialog)
 
-    def _create_menu(self):
-        self.menubar_manager.add_menu_cascade(MenuAddress(['File'], 'i'))
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Edit'], 'e'))
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Code'], 'o'))
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Refactor'], 't'))
-        self.menubar_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
-        self.menubar_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
-                                              self._show_about_dialog)
+    def _add_menu_cascade(self, menu_address, active_contexts):
+        active_contexts = self._get_matching_contexts(active_contexts)
+        for context in active_contexts:
+            menu_manager = self.menu_managers[context]
+            menu_manager.add_menu_cascade(menu_address)
 
     def _close_project_and_exit(self):
         self._close_project_dialog(exit_=True)
@@ -92,11 +96,25 @@ class Core(object):
         self._bind_key('<Any-Button>', show_current_line_number)
         self._bind_key('<FocusIn>', show_current_line_number)
     
-    def _bind_key(self, key, function):
+    def _get_matching_contexts(self, contexts):
+        result = set(contexts)
+        if 'all' in contexts:
+            result.remove('all')
+            for c in self.all_contexts:
+                if c != 'none':
+                    result.add(c)
+        return result
+    
+    def _bind_key(self, key, function, active_contexts=['all']):
         if not key.startswith('<'):
             key = self._emacs_to_tk(key)
-        self.key_binding.append((key, function))
-        self.root.bind(key, function)
+        active_contexts = self._get_matching_contexts(active_contexts)
+        for key_binding in self.key_bindings.values():
+            for context in active_contexts:
+                key_binding = self.key_bindings[context]
+                key_binding.append((key, function))
+        if 'none' in active_contexts:
+            self.root.bind(key, function)
     
     def _emacs_to_tk(self, key):
         result = []
@@ -104,8 +122,9 @@ class Core(object):
             result.append('<%s>' % token.replace('M-', 'Alt-').replace('C-', 'Control-'))
         return ''.join(result)
 
-    def _set_key_binding(self, widget):
-        for (key, function) in self.key_binding:
+    def _set_key_binding(self, graphical_editor):
+        widget = graphical_editor.getWidget()
+        for (key, function) in self.key_bindings[graphical_editor.get_editing_context()]:
             widget.bind(key, function)
     
     def _change_editor_dialog(self, event=None):
@@ -328,19 +347,22 @@ class Core(object):
     def get_editor_manager(self):
         return self.editor_manager
     
-    def get_menubar_manager(self):
-        return self.menubar_manager
-    
     def register_action(self, action):
         callback = self._make_callback(action)
         menu = action.get_menu()
         key = action.get_default_key()
         if key:
-            self._bind_key(key, callback)
+            self._bind_key(key, callback, action.get_active_contexts())
         if menu:
             if key:
                 menu.address[-1] = menu.address[-1].ljust(31) + key
-            self.menubar_manager.add_menu_command(menu, callback)
+            self._add_menu_command(menu, callback, action.get_active_contexts())
+    
+    def _add_menu_command(self, menu, callback, active_contexts):
+        active_contexts = self._get_matching_contexts(active_contexts)
+        for context in active_contexts:
+            menu_manager = self.menu_managers[context]
+            menu_manager.add_menu_command(menu, callback)
     
     def _make_callback(self, action):
         def callback(event=None):
@@ -348,6 +370,14 @@ class Core(object):
             if event:
                 return 'break'
         return callback
+    
+    def _editor_changed(self):
+        active_editor = self.editor_manager.active_editor
+        if active_editor:
+            self.root['menu'] = self.menus[active_editor.get_editor()
+                                           .get_editing_context()]
+        else:
+            self.root['menu'] = self.menus['none']
 
     @staticmethod
     def get_core():

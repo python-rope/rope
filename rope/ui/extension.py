@@ -17,6 +17,9 @@ class Action(object):
     
     def get_default_key(self):
         pass
+    
+    def get_active_contexts(self):
+        pass
 
 
 class ActionContext(object):
@@ -33,11 +36,13 @@ class ActionContext(object):
 
 class SimpleAction(object):
     
-    def __init__(self, name, command, default_key, menu_address):
+    def __init__(self, name, command, default_key, menu_address,
+                 active_contexts=['all', 'none']):
         self.name = name
         self.command = command
         self.key = default_key
         self.menu = menu_address
+        self.active_contexts = active_contexts
     
     def get_name(self):
         return self.name
@@ -50,3 +55,6 @@ class SimpleAction(object):
     
     def get_default_key(self):
         return self.key
+    
+    def get_active_contexts(self):
+        return self.active_contexts

@@ -105,27 +105,11 @@ class Proposals(object):
 
 
 class CodeAssist(object):
-
-    def assist(self, source, offset, resource=None):
-        pass
-
-    def add_template(self, name, template):
-        pass
-    
-    def get_definition_location(self, source_code, offset, resource=None):
-        pass
-    
-    def get_doc(self, source_code, offset, resource=None):
-        pass
+    pass
 
 
 class NoAssist(CodeAssist):
-
-    def assist(self, source_code, offset, resource=None):
-        return Proposals()
-
-    def get_definition_location(self, source_code, offset, resource=None):
-        return (None, None)
+    pass
 
 
 class _CodeCompletionCollector(object):

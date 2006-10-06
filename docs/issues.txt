@@ -52,24 +52,12 @@ Releases
     Working on.
 
 
-This Release
-------------
-
-Since we're getting closer to ``0.3`` release fewer new features
-should be added in this release.  ``0.3m4`` was a has added many
-things that should be used and refactored.
-
-* Inline local variable
-* Rename function parameters
-* Move a module or package to another package
-
-
 Hot Topics
 ==========
 
 * `Undo Unification`_
 * `Python's Implicit Interfaces`_
-* Code Completions Inside Uncompleted ``try`` Blocks
+* Code completions inside uncompleted ``try`` blocks
 
 
 To Be Discussed
@@ -79,7 +67,8 @@ To Be Discussed
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
-* Indexing source files
+* Indexing source files for faster occurance finding
+* Ways for eliminating `NoRefactoring`
 
 
 Undo Unification
@@ -90,24 +79,6 @@ refactorings and in future there might be undos for other changes.  We
 need to mix them together.  This seems hard to do mainly because we
 don't have much access to the undo mechanism of Tkinter.  I think an
 approximation here will save us.
-
-
-Finding Occurances
-==================
-
-For doing many refactoring we need to find occurances of an object.
-Find an efficient way of doing it.  Currently rope tries to find
-occurences by textually searching for the variable name and for each
-suspected name we check whether this name points to the object we are
-interested in or not.  This seems slow when the number of similar
-names is considerable.  Having a type database?
-
-
-Limiting the Scope for Searching
---------------------------------
-
-Rope searches all python files for a name.  But this seems unnecessary
-for local variables or modules that does not import that name.
 
 
 Adding SVN Support Using `pysvn`
@@ -491,6 +462,14 @@ way for solving this problem might be the introduction of `Editor
 Contexts`.  Each editor action can be available in some or all of
 these contexts.  So we can add a ``get_active_contexts`` to each
 `Action` that can return ``python``, ``reST``, ``all`` or ``others``.
+
+For using contexts there are two places that need to be changed.
+For keybindings we can change `Core._set_key_binding` to consider
+editor contexts.  We should have a list of keybinding for each
+context.
+
+For menus we can have a separate `MenuBarManager` for each context.
+We might need to methods for disabling and enabling `MenuBarManger` s.
 
 
 Better Dialogs

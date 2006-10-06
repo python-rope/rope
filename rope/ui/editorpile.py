@@ -34,14 +34,16 @@ class EditorPile(object):
         self.active_editor = editor
         self.editors.remove(editor)
         self.editors.insert(0, editor)
+        self.core._editor_changed()
 
     def get_resource_editor(self, file_):
         for editor in self.editors:
             if editor.get_file() == file_:
                 self.buttons[editor].invoke()
                 return editor
-        editor = rope.ui.fileeditor.FileEditor(self.core.get_open_project(), file_,
-                                               rope.ui.editor.GraphicalEditorFactory(self.editor_frame))
+        editor = rope.ui.fileeditor.FileEditor(
+            self.core.get_open_project(), file_,
+            rope.ui.editor.GraphicalEditorFactory(self.editor_frame))
         editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),
@@ -53,7 +55,7 @@ class EditorPile(object):
         title.select()
         title.pack(fill=BOTH, side=LEFT)
         self.activate_editor(editor)
-        self.core._set_key_binding(editor.get_editor().getWidget())
+        self.core._set_key_binding(editor.get_editor())
         editor.add_modification_observer(self._editor_was_modified)
         return editor
 
@@ -76,6 +78,8 @@ class EditorPile(object):
         self.active_editor = None
         if self.editors:
             self.buttons[self.editors[0]].invoke()
+        else:
+            self.core._editor_changed()
     
     def get_editor_list(self):
         if not self.editors:

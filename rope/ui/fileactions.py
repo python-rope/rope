@@ -285,6 +285,7 @@ def exit_rope(context):
     context.get_core()._close_project_and_exit()
 
 core = rope.ui.core.Core.get_core()
+core._add_menu_cascade(MenuAddress(['File'], 'i'), ['all', 'none'])
 actions = []
 
 actions.append(SimpleAction('Open Project', open_project, 'C-x C-p',

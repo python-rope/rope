@@ -9,89 +9,8 @@ from rope.refactor.inline import InlineRefactoring
 
 
 class Refactoring(object):
+    pass
 
-    def local_rename(self, resource, offset, new_name):
-        """Returns the changed source_code or ``None`` if nothing has been changed"""
-    
-    def rename(self, resource, offset, new_name):
-        pass
-    
-    def extract_method(self, resource, start_offset, end_offset,
-                       extracted_name):
-        pass
-    
-    def transform_module_to_package(self, resource):
-        pass
-    
-    def undo(self):
-        pass
-    
-    def redo(self):
-        pass
-
-    def introduce_factory(self, resource, offset, factory_name, global_factory):
-        pass
-
-    def move(self, resource, offset, dest_resource):
-        pass
-    
-    def get_import_organizer(self):
-        pass
-    
-    def inline_local_variable(self, resource, offset):
-        pass
-
-
-class ImportOrganizer(object):
-    
-    def __init__(self, refactoring):
-        self.refactoring = refactoring
-        self.pycore = refactoring.pycore
-        self.import_tools = rope.importutils.ImportTools(self.pycore)
-    
-    def _perform_command_on_module_with_imports(self, resource, method):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
-        method(module_with_imports)
-        result = module_with_imports.get_changed_source()
-        return result
-    
-    def organize_imports(self, resource):
-        source = resource.read()
-        pymodule = self.pycore.get_string_module(source, resource)
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
-        module_with_imports.remove_unused_imports()
-        module_with_imports.remove_duplicates()
-        source = module_with_imports.get_changed_source()
-        if source:
-            changes = ChangeSet()
-            changes.add_change(ChangeFileContents(resource, source))
-            self.refactoring._add_and_commit_changes(changes)
-
-    def expand_star_imports(self, resource):
-        source = self._perform_command_on_module_with_imports(
-            resource, rope.importutils.ModuleWithImports.expand_stars)
-        if source is not None:
-            changes = ChangeSet()
-            changes.add_change(ChangeFileContents(source))
-            self.refactoring._add_and_commit_changes(changes)
-
-    def transform_froms_to_imports(self, resource):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        result = self.import_tools.transform_froms_to_normal_imports(pymodule)
-        if result is not None:
-            changes = ChangeSet()
-            changes.add_change(ChangeFileContents(resource, result))
-            self.refactoring._add_and_commit_changes(changes)
-
-    def transform_relatives_to_absolute(self, resource):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        result = self.import_tools.transform_relative_imports_to_absolute(pymodule)
-        if result is not None:
-            changes = ChangeSet()
-            changes.add_change(ChangeFileContents(resource, result))
-            self.refactoring._add_and_commit_changes(changes)
-    
 
 class PythonRefactoring(Refactoring):
 
@@ -160,6 +79,57 @@ class PythonRefactoring(Refactoring):
     def get_import_organizer(self):
         return ImportOrganizer(self)
 
+
+class ImportOrganizer(object):
+    
+    def __init__(self, refactoring):
+        self.refactoring = refactoring
+        self.pycore = refactoring.pycore
+        self.import_tools = rope.importutils.ImportTools(self.pycore)
+    
+    def _perform_command_on_module_with_imports(self, resource, method):
+        pymodule = self.pycore.resource_to_pyobject(resource)
+        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        method(module_with_imports)
+        result = module_with_imports.get_changed_source()
+        return result
+    
+    def organize_imports(self, resource):
+        source = resource.read()
+        pymodule = self.pycore.get_string_module(source, resource)
+        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        module_with_imports.remove_unused_imports()
+        module_with_imports.remove_duplicates()
+        source = module_with_imports.get_changed_source()
+        if source:
+            changes = ChangeSet()
+            changes.add_change(ChangeFileContents(resource, source))
+            self.refactoring._add_and_commit_changes(changes)
+
+    def expand_star_imports(self, resource):
+        source = self._perform_command_on_module_with_imports(
+            resource, rope.importutils.ModuleWithImports.expand_stars)
+        if source is not None:
+            changes = ChangeSet()
+            changes.add_change(ChangeFileContents(source))
+            self.refactoring._add_and_commit_changes(changes)
+
+    def transform_froms_to_imports(self, resource):
+        pymodule = self.pycore.resource_to_pyobject(resource)
+        result = self.import_tools.transform_froms_to_normal_imports(pymodule)
+        if result is not None:
+            changes = ChangeSet()
+            changes.add_change(ChangeFileContents(resource, result))
+            self.refactoring._add_and_commit_changes(changes)
+
+    def transform_relatives_to_absolute(self, resource):
+        pymodule = self.pycore.resource_to_pyobject(resource)
+        result = self.import_tools.transform_relative_imports_to_absolute(pymodule)
+        if result is not None:
+            changes = ChangeSet()
+            changes.add_change(ChangeFileContents(resource, result))
+            self.refactoring._add_and_commit_changes(changes)
+    
 
 class NoRefactoring(Refactoring):
     pass

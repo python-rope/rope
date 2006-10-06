@@ -82,22 +82,24 @@ def do_run_module(context):
 
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
+core._add_menu_cascade(MenuAddress(['Code'], 'o'), ['python', 'rest'])
 actions = []
 
 actions.append(SimpleAction('Code Assist', do_code_assist, 'M-slash',
-                            MenuAddress(['Code', 'Code Assist'], 'c')))
+                            MenuAddress(['Code', 'Code Assist'], 'c'), ['python']))
 actions.append(SimpleAction('Goto Definition', do_goto_definition, 'F3',
-                            MenuAddress(['Code', 'Goto Definition'], 'g')))
+                            MenuAddress(['Code', 'Goto Definition'], 'g'), ['python']))
 actions.append(SimpleAction('Show Doc', do_show_doc, 'F2',
-                            MenuAddress(['Code', 'Show Doc'], 's')))
+                            MenuAddress(['Code', 'Show Doc'], 's'), ['python']))
 actions.append(SimpleAction('Quick Outline', do_quick_outline, 'C-o',
-                            MenuAddress(['Code', 'Quick Outline'], 'q')))
+                            MenuAddress(['Code', 'Quick Outline'], 'q'), ['python']))
 
 actions.append(SimpleAction('Correct Line Indentation',
                             do_correct_line_indentation, 'C-i',
-                            MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1)))
+                            MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1),
+                            ['python', 'rest']))
 actions.append(SimpleAction('Run Module', do_run_module, 'M-X p',
-                            MenuAddress(['Code', 'Run Module'], 'm', 2)))
+                            MenuAddress(['Code', 'Run Module'], 'm', 2), ['python']))
 
 for action in actions:
     core.register_action(action)

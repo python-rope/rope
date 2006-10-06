@@ -1,6 +1,6 @@
-========================
- rope, a Python IDE ...
-========================
+====================================
+ rope, a python refactoring IDE ...
+====================================
 
 For an overview of possible future goals of rope have a look
 at `future.txt`_ file.
@@ -195,7 +195,7 @@ Stories
   * Running last run
 
 
-* Change method signature @ 24h
+* Change method signature @24h
 
   * Add parameter
   * Remove parameter
@@ -214,7 +214,7 @@ Stories
 > Public Release 0.3m5 : October 15, 2006
 
 
-* Single line extract method and variable @ 10h
+* Single line extract method and variable @10h
 
 
 Remaining Stories
@@ -222,7 +222,3 @@ Remaining Stories
 
 * Migrating to sourceforge SVN before 0.3 release
   SF repository; How to synchronize local SVN with SF SVN?
-* Change program goals and description; principles.txt
-  Go toward refactoring and ... library rather than an IDE?
-* Changing rope short description to ``a python refactoring IDE ...``
-* Adding ``show_what_rope_can_do`` file

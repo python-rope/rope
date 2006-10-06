@@ -59,26 +59,27 @@ def goto_line(context):
     
 
 core = rope.ui.core.Core.get_core()
+core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all'])
 actions = []
 
 actions.append(SimpleAction('Emacs Set Mark', set_mark, 'C-space',
-                            MenuAddress(['Edit', 'Emacs Set Mark'], 's')))
+                            MenuAddress(['Edit', 'Emacs Set Mark'], 's'), ['all']))
 actions.append(SimpleAction('Emacs Copy', copy, 'M-w',
-                            MenuAddress(['Edit', 'Emacs Copy'], 'c')))
+                            MenuAddress(['Edit', 'Emacs Copy'], 'c'), ['all']))
 actions.append(SimpleAction('Emacs Cut', cut, 'C-w',
-                            MenuAddress(['Edit', 'Emacs Cut'], 't')))
+                            MenuAddress(['Edit', 'Emacs Cut'], 't'), ['all']))
 actions.append(SimpleAction('Paste', paste, 'C-y',
-                            MenuAddress(['Edit', 'Emacs Paste'], 'p')))
+                            MenuAddress(['Edit', 'Emacs Paste'], 'p'), ['all']))
 actions.append(SimpleAction('Goto Line', goto_line, None,
-                            MenuAddress(['Edit', 'Goto Line'], 'g')))
+                            MenuAddress(['Edit', 'Goto Line'], 'g'), ['all']))
 actions.append(SimpleAction('Undo', undo, 'C-x u',
-                            MenuAddress(['Edit', 'Undo'], 'u', 1)))
+                            MenuAddress(['Edit', 'Undo'], 'u', 1), ['all']))
 actions.append(SimpleAction('Redo', redo, 'C-x r',
-                            MenuAddress(['Edit', 'Redo'], 'r', 1)))
+                            MenuAddress(['Edit', 'Redo'], 'r', 1), ['all']))
 actions.append(SimpleAction('Forward Search', forward_search, 'C-s',
-                            MenuAddress(['Edit', 'Forward Search'], 'f', 2)))
+                            MenuAddress(['Edit', 'Forward Search'], 'f', 2), ['all']))
 actions.append(SimpleAction('Backward Search', backward_search, 'C-r',
-                            MenuAddress(['Edit', 'Backward Search'], 'b', 2)))
+                            MenuAddress(['Edit', 'Backward Search'], 'b', 2), ['all']))
 
 for action in actions:
     core.register_action(action)

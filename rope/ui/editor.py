@@ -740,6 +740,9 @@ class GraphicalEditor(object):
         self.outline = editing_tools.create_outline()
         self.refactoring = editing_tools.create_refactoring()
 
+    def get_editing_context(self):
+        return self.editing_tools.get_editing_context()
+
     def line_editor(self):
         return GraphicalLineEditor(self)
 
