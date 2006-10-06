@@ -1,7 +1,8 @@
 Single line extract method and variable
 =======================================
 
-* Dividing `refactortest`
+- Dividing `refactortest`
+
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
 

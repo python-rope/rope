@@ -1,0 +1,270 @@
+import unittest
+
+import rope.codeanalyze
+import rope.refactor.rename
+from rope.refactor import Undo
+from rope.exceptions import RefactoringException
+from rope.project import Project
+from rope.refactor.change import *
+from ropetest import testutils
+import ropetest.refactor.renametest
+import ropetest.refactor.extracttest
+import ropetest.refactor.movetest
+import ropetest.refactor.inlinetest
+
+
+class IntroduceFactoryTest(unittest.TestCase):
+
+    def setUp(self):
+        super(IntroduceFactoryTest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(IntroduceFactoryTest, self).tearDown()
+    
+    def test_adding_the_method(self):
+        code = 'class AClass(object):\n    an_attr = 10\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+    def test_changing_occurances_in_the_main_module(self):
+        code = 'class AClass(object):\n    an_attr = 10\na_var = AClass()'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'\
+                   'a_var = AClass.create()'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+    def test_changing_occurances_with_arguments(self):
+        code = 'class AClass(object):\n    def __init__(self, arg):\n        pass\n' \
+               'a_var = AClass(10)\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    def __init__(self, arg):\n        pass\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n' \
+                   'a_var = AClass.create(10)\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+    def test_changing_occurances_in_other_modules(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('import mod1\na_var = mod1.AClass()\n')
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'
+        expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_for_non_classes(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('def a_func():\n    pass\n')
+        self.refactoring.introduce_factory(mod, mod.read().index('a_func') + 1, 'create')
+
+    def test_undoing_introduce_factory(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        code1 = 'class AClass(object):\n    an_attr = 10\n'
+        mod1.write(code1)
+        code2 = 'from mod1 import AClass\na_var = AClass()\n'
+        mod2.write(code2)
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        self.refactoring.undo()
+        self.assertEquals(code1, mod1.read())
+        self.assertEquals(code2, mod2.read())
+    
+    def test_using_on_an_occurance_outside_the_main_module(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('import mod1\na_var = mod1.AClass()\n')
+        self.refactoring.introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n'
+        expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+    def test_introduce_factory_in_nested_scopes(self):
+        code = 'def create_var():\n'\
+               '    class AClass(object):\n'\
+               '        an_attr = 10\n'\
+               '    return AClass()\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'def create_var():\n'\
+                   '    class AClass(object):\n'\
+                   '        an_attr = 10\n\n'\
+                   '        @staticmethod\n        def create(*args, **kwds):\n'\
+                   '            return AClass(*args, **kwds)\n'\
+                   '    return AClass.create()\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+    def test_adding_factory_for_global_factories(self):
+        code = 'class AClass(object):\n    an_attr = 10\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   'def create(*args, **kwds):\n' \
+                   '    return AClass(*args, **kwds)\n'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        self.assertEquals(expected, mod.read())
+
+    @testutils.assert_raises(rope.exceptions.RefactoringException)
+    def test_raising_exception_for_global_factory_for_nested_classes(self):
+        code = 'def create_var():\n'\
+               '    class AClass(object):\n'\
+               '        an_attr = 10\n'\
+               '    return AClass()\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+
+    def test_changing_occurances_in_the_main_module_for_global_factories(self):
+        code = 'class AClass(object):\n    an_attr = 10\na_var = AClass()'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   'def create(*args, **kwds):\n' \
+                   '    return AClass(*args, **kwds)\n'\
+                   'a_var = create()'
+        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        self.assertEquals(expected, mod.read())
+
+    def test_changing_occurances_in_other_modules_for_global_factories(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('import mod1\na_var = mod1.AClass()\n')
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                    'def create(*args, **kwds):\n' \
+                    '    return AClass(*args, **kwds)\n'
+        expected2 = 'import mod1\na_var = mod1.create()\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+    def test_importing_if_necessary_in_other_modules_for_global_factories(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('class AClass(object):\n    an_attr = 10\n')
+        mod2.write('from mod1 import AClass\npair = AClass(), AClass\n')
+        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1,
+                                           'create', global_factory=True)
+        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+                    'def create(*args, **kwds):\n' \
+                    '    return AClass(*args, **kwds)\n'
+        expected2 = 'from mod1 import AClass\nimport mod1\npair = mod1.create(), AClass\n'
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
+
+    # XXX: Should we replace `a_class` here with `AClass.create` too
+    def test_changing_occurances_for_renamed_classes(self):
+        code = 'class AClass(object):\n    an_attr = 10\na_class = AClass\na_var = a_class()'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(code)
+        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return AClass(*args, **kwds)\n' \
+                   'a_class = AClass\n' \
+                   'a_var = a_class()'
+        self.refactoring.introduce_factory(mod, mod.read().index('a_class') + 1, 'create')
+        self.assertEquals(expected, mod.read())
+
+
+class RefactoringUndoTest(unittest.TestCase):
+
+    def setUp(self):
+        super(RefactoringUndoTest, self).setUp()
+        self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.file = self.project.get_root_folder().create_file('file.txt')
+        self.undo = Undo()
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(RefactoringUndoTest, self).tearDown()
+
+    def test_simple_undo(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.assertEquals('1', self.file.read())
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.assertEquals('', self.file.read())
+
+    def test_simple_redo(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.undo.redo()
+        self.assertEquals('1', self.file.read())
+
+    def test_simple_re_undo(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.undo.redo()
+        self.undo.undo()
+        self.assertEquals('', self.file.read())
+
+    def test_multiple_undos(self):
+        change = ChangeFileContents(self.file, '1')
+        change.do()
+        self.undo.add_change(change)
+        change = ChangeFileContents(self.file, '2')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.assertEquals('1', self.file.read())
+        change = ChangeFileContents(self.file, '3')
+        change.do()
+        self.undo.add_change(change)
+        self.undo.undo()
+        self.assertEquals('1', self.file.read())
+        self.undo.redo()
+        self.assertEquals('3', self.file.read())
+
+
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(ropetest.refactor.renametest.RenameRefactoringTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.extracttest.ExtractMethodTest))
+    result.addTests(unittest.makeSuite(IntroduceFactoryTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.movetest.MoveRefactoringTest))
+    result.addTests(unittest.makeSuite(RefactoringUndoTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.inlinetest.InlineLocalVariableTest))
+    return result
+
+
+
+if __name__ == '__main__':
+    runner = unittest.TextTestRunner()
+    runner.run(suite())
