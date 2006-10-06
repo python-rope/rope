@@ -35,7 +35,7 @@ class RenameRefactoringTest(unittest.TestCase):
 
     def test_variable_renaming_only_in_its_scope(self):
         refactored = self.do_local_rename('a_var = 20\ndef a_func():\n    a_var = 10\n',
-                                                   32, 'new_var')
+                                          32, 'new_var')
         self.assertEquals('a_var = 20\ndef a_func():\n    new_var = 10\n', refactored)
 
     def test_not_renaming_dot_name(self):
