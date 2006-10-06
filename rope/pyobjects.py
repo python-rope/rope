@@ -264,7 +264,7 @@ class PyModule(_PyModule):
 
     def __init__(self, pycore, source_code, resource=None):
         self.source_code = source_code
-        ast_node = compiler.parse(source_code)
+        ast_node = compiler.parse(source_code.rstrip(' \t'))
         self.star_imports = []
         super(PyModule, self).__init__(pycore, ast_node, resource)
     

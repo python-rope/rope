@@ -38,6 +38,11 @@ class Core(object):
         self.project = None
     
     def _load_actions(self):
+        """Load extension modules.
+        
+        The modules that are loaded here use `Core.register_action`
+        to register their `Action` s.
+        """
         import rope.ui.fileactions
         import rope.ui.editactions
         import rope.ui.codeassist
@@ -59,7 +64,7 @@ class Core(object):
     def _show_about_dialog(self):
         toplevel = Toplevel()
         toplevel.title('About Rope')
-        text = 'rope, A python IDE ...\n' + \
+        text = 'rope, a python refactoring IDE ...\n' + \
                'version ' + rope.VERSION + '\n\n' + \
                'Copyright (C) 2006 Ali Gholami Rudi\n\n' + \
                'This program is free software; you can redistribute it and/or modify it\n' + \
@@ -348,6 +353,7 @@ class Core(object):
         return self.editor_manager
     
     def register_action(self, action):
+        """Register a `rope.ui.extension.Action`"""
         callback = self._make_callback(action)
         menu = action.get_menu()
         key = action.get_default_key()

@@ -103,14 +103,6 @@ class PyCoreTest(unittest.TestCase):
         imported_sys = module.get_attribute('mod1').get_object()
         self.assertEquals(PyObject.get_base_type('Module'), imported_sys.get_type())
 
-    # FIXME: importing nonexistant modules
-    def xxx_test_importing_out_of_project_names(self):
-        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
-        mod.write('import sys\n')
-        module = self.pycore.get_module('mod')
-        imported_sys = module.get_attribute('sys')
-        self.assertEquals(PyObject.get_base_type('Module'), imported_sys.get_type())
-
     def test_imported_as_names(self):
         self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
@@ -124,6 +116,10 @@ class PyCoreTest(unittest.TestCase):
         sample_class = mod.get_attribute('Sample').get_object()
         self.assertEquals(PyObject.get_base_type('Type'), sample_class.get_type())
 
+    # FIXME: Extra spaces seem to cause problems
+    def test_get_string_module_with_extra_spaces(self):
+        mod = self.pycore.get_string_module('a = 10\n    ')
+
     def test_parameter_info_for_functions(self):
         mod = self.pycore.get_string_module('def sample_function(param1, param2=10,' +
                                             ' *param3, **param4):\n    pass')
@@ -131,11 +127,12 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(['param1', 'param2', 'param3', 'param4'],
                           sample_function.get_object().parameters)
 
-    # FIXME: does not work
+    # FIXME: Not found modules
     def xxx_test_not_found_module_is_module(self):
         mod = self.pycore.get_string_module('import doesnotexist\n')
         self.assertEquals(PyObject.get_base_type('Module'),
-                          mod.get_attribute('doesnotexist').get_type())
+                          mod.get_attribute('doesnotexist').
+                          get_object().get_type())
 
     def test_mixing_scopes_and_objects_hierarchy(self):
         mod = self.pycore.get_string_module('var = 200\n')

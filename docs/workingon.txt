@@ -1,8 +1,15 @@
 Single line extract method and variable
 =======================================
 
-- Dividing `refactortest`
+- Inner scopes (extra indenting)
+- Logical lines
+- Methods
+- Extracting at the end of buffer
 
+* Exceptional conditions
+* Reversed offsets
+
+* Changing sourcetools.* to use logical lines?
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
 

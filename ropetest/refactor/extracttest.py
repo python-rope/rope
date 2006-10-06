@@ -38,6 +38,14 @@ class ExtractMethodTest(unittest.TestCase):
                    "def extracted():\n    print 'one'\n"
         self.assertEquals(expected, refactored)
 
+    def test_extract_function_at_the_end_of_file(self):
+        code = "def a_func():\n    print 'one'"
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        refactored = self.do_extract_method(code, start, end, 'extracted')
+        expected = "def a_func():\n    extracted()\n\n" \
+                   "def extracted():\n    print 'one'"
+        self.assertEquals(expected, refactored)
+
     def test_extract_function_after_scope(self):
         code = "def a_func():\n    print 'one'\n    print 'two'\n\nprint 'hey'\n"
         start, end = self._convert_line_range_to_offset(code, 2, 2)
@@ -200,58 +208,82 @@ class ExtractMethodTest(unittest.TestCase):
         self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_function_and_argument_as_paramenter(self):
-        code = "def a_func(arg):\n    print arg\n"
+        code = 'def a_func(arg):\n    print arg\n'
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = "def a_func(arg):\n    new_func(arg)\n\n" \
-                   "def new_func(arg):\n    print arg\n"
+        expected = 'def a_func(arg):\n    new_func(arg)\n\n' \
+                   'def new_func(arg):\n    print arg\n'
         self.assertEquals(expected, refactored)
 
     def test_extract_function_and_indented_blocks(self):
-        code = "def a_func(arg):\n    if True:\n        if True:\n            print arg\n"
+        code = 'def a_func(arg):\n    if True:\n' \
+               '        if True:\n            print arg\n'
         start, end = self._convert_line_range_to_offset(code, 3, 4)
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = "def a_func(arg):\n    if True:\n        new_func(arg)\n\n" \
-                   "def new_func(arg):\n    if True:\n        print arg\n"
+        expected = 'def a_func(arg):\n    if True:\n        new_func(arg)\n\n' \
+                   'def new_func(arg):\n    if True:\n        print arg\n'
         self.assertEquals(expected, refactored)
     
     def test_extract_method_and_multi_line_headers(self):
-        code = "def a_func(\n           arg):\n    print arg\n"
+        code = 'def a_func(\n           arg):\n    print arg\n'
         start, end = self._convert_line_range_to_offset(code, 3, 3)
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = "def a_func(\n           arg):\n    new_func(arg)\n\n" \
-                   "def new_func(arg):\n    print arg\n"
+        expected = 'def a_func(\n           arg):\n    new_func(arg)\n\n' \
+                   'def new_func(arg):\n    print arg\n'
         self.assertEquals(expected, refactored)
     
-    def test_transform_module_to_package(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
-        mod1.write('import mod2\nfrom mod2 import AClass\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
-        mod2.write('class AClass(object):\n    pass\n')
-        self.refactoring.transform_module_to_package(mod2)
-        mod2 = self.project.get_resource('mod2')
-        root_folder = self.project.get_root_folder()
-        self.assertFalse(root_folder.has_child('mod2.py'))
-        self.assertEquals('class AClass(object):\n    pass\n', root_folder.get_child('mod2').
-                          get_child('__init__.py').read())
+    def test_single_line_extract_function(self):
+        code = 'a_var = 10 + 20\n'
+        start = code.index('10')
+        end = code.index('20') + 2
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = "\ndef new_func():\n    return 10 + 20\n\na_var = new_func()\n"
+        self.assertEquals(expected, refactored)
 
-    def test_transform_module_to_package_undoing(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
-        mod = self.pycore.create_module(pkg, 'mod')
-        self.refactoring.transform_module_to_package(mod)
-        self.assertFalse(pkg.has_child('mod.py'))
-        self.assertTrue(pkg.get_child('mod').has_child('__init__.py'))
-        self.refactoring.undo()
-        self.assertTrue(pkg.has_child('mod.py'))
-        self.assertFalse(pkg.has_child('mod'))
+    def test_single_line_extract_function2(self):
+        code = 'def a_func():\n    a = 10\n    b = a * 20\n'
+        start = code.rindex('a')
+        end = code.index('20') + 2
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'def a_func():\n    a = 10\n    b = new_func(a)\n' \
+                   '\ndef new_func(a):\n    return a * 20\n'
+        self.assertEquals(expected, refactored)
 
-    def test_transform_module_to_package_with_relative_imports(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
-        mod1 = self.pycore.create_module(pkg, 'mod1')
-        mod1.write('import mod2\nfrom mod2 import AClass\n')
-        mod2 = self.pycore.create_module(pkg, 'mod2')
-        mod2.write('class AClass(object):\n    pass\n')
-        self.refactoring.transform_module_to_package(mod1)
-        new_init = self.project.get_resource('pkg/mod1/__init__.py')
-        self.assertEquals('import pkg.mod2\nfrom pkg.mod2 import AClass\n',
-                          new_init.read())
+    def test_single_line_extract_method_and_logical_lines(self):
+        code = 'a_var = 10 +\\\n    20\n'
+        start = code.index('10')
+        end = code.index('20') + 2
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = "\ndef new_func():\n    return 10 + 20\n\na_var = new_func()\n"
+        self.assertEquals(expected, refactored)
+
+    def test_single_line_extract_method_and_logical_lines2(self):
+        code = 'a_var = (10,\\\n    20)\n'
+        start = code.index('10') - 1
+        end = code.index('20') + 3
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = "\ndef new_func():\n    return (10, 20)\n\na_var = new_func()\n"
+        self.assertEquals(expected, refactored)
+
+    def test_single_line_extract_method(self):
+        code = "class AClass(object):\n\n" \
+               "    def a_func(self):\n        a = 10\n        b = a * a\n"
+        start = code.rindex('=') + 2
+        end = code.rindex('a') + 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = "class AClass(object):\n\n" \
+                   "    def a_func(self):\n        a = 10\n        b = self.new_func(a)\n\n" \
+                   "    def new_func(self, a):\n        return a * a\n"
+        self.assertEquals(expected, refactored)
+
+    def test_single_line_extract_function_if_condition(self):
+        code = 'if True:\n    pass\n'
+        start = code.index('True')
+        end = code.index('True') + 4
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = "\ndef new_func():\n    return True\n\nif new_func():\n    pass\n"
+        self.assertEquals(expected, refactored)
+
+
+if __name__ == '__main__':
+    unittest.main()

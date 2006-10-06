@@ -52,7 +52,8 @@ class Scope(object):
     
     def get_end(self):
         global_scope = self._get_global_scope()
-        return _HoldingScopeFinder(global_scope.pyobject.source_code).find_scope_end(self)
+        return _HoldingScopeFinder(global_scope.pyobject.source_code).\
+               find_scope_end(self)
 
     def get_kind(self):
         pass
@@ -205,7 +206,7 @@ class _HoldingScopeFinder(object):
         if not scope.parent:
             return self.lines.length()
         end = scope.get_start()
-        for l in range(scope.get_start() + 1, self.lines.length()):
+        for l in range(scope.get_start() + 1, self.lines.length() + 1):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):
                 if self.get_indents(l) <= self._get_scope_indents(scope):

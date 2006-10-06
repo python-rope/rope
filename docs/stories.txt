@@ -199,13 +199,13 @@ Stories
 * Inline method @ 20h
 
 
-* Encapsulate field
-
-
 * Removing imports from the same module @8h
 
 
 * Running unit tests view
+
+
+* Encapsulate field
 
 
 > Public Release 0.3m5 : October 15, 2006
