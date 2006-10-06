@@ -83,9 +83,6 @@ Stories
   guessed source folders be used.
 
 
-* Disabling menu items
-
-
 * Enhancing editor
 
   * Select all; C-x h
@@ -164,9 +161,6 @@ Stories
 * Handling builtin functions and types
 
 
-* Encapsulate field
-
-
 * Better list and tree navigation
   Add filter texts and selection texts to trees and lists.
 
@@ -205,6 +199,9 @@ Stories
 * Inline method @ 20h
 
 
+* Encapsulate field
+
+
 * Removing imports from the same module @8h
 
 
@@ -220,5 +217,4 @@ Stories
 Remaining Stories
 -----------------
 
-* Migrating to sourceforge SVN before 0.3 release
-  SF repository; How to synchronize local SVN with SF SVN?
+* Migrating to sourceforge SVN; How to synchronize local SVN with SF SVN?

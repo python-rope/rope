@@ -1,10 +1,11 @@
 Single line extract method and variable
 =======================================
 
+- Showing ``__init__`` signature for show doc on classes
+
 * Dividing `refactortest`
 * Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
-
 
 Remaining Stories
 =================

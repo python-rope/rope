@@ -386,6 +386,15 @@ class CodeAssistTest(unittest.TestCase):
         src = 'def a_func():\n    """a function"""\n' \
               '    a_var = 10\na_func()'
         self.assertTrue(self.assist.get_doc(src, len(src) - 4).endswith('a function'))
+        self.assist.get_doc(src, len(src) - 4).index('a_func()')
+
+    def test_get_pydoc_for_classes(self):
+        src = 'class AClass(object):\n    pass\n'
+        self.assist.get_doc(src, src.index('AClass') + 1).index('AClass')
+
+    def test_get_pydoc_for_classes_with_init(self):
+        src = 'class AClass(object):\n    def __init__(self):\n        pass\n'
+        self.assist.get_doc(src, src.index('AClass') + 1).index('AClass')
 
     def test_get_pydoc_for_modules(self):
         pycore = self.project.get_pycore()

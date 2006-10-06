@@ -281,11 +281,28 @@ class PythonCodeAssist(CodeAssist):
         if isinstance(pyobject, rope.pyobjects.PyDefinedObject):
             if pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Function'):
                 return _get_function_docstring(pyobject._get_ast())
+            elif pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
+                return _get_class_docstring(pyobject)
             else:
                 return _trim_docstring(pyobject._get_ast().doc)
         return None
 
+def _get_class_docstring(pyclass):
+    node = pyclass._get_ast()
+    doc = 'class %s\n\n' % node.name + _trim_docstring(node.doc)
+
+    if '__init__' in pyclass.get_attributes():
+        init = pyclass.get_attribute('__init__').get_object()
+        if isinstance(init, rope.pyobjects.PyDefinedObject):
+            doc += '\n\n' + _get_function_docstring(init._get_ast())
+    return doc
+
 def _get_function_docstring(node):
+    signature = _get_function_signature(node)
+        
+    return signature + _trim_docstring(node.doc)
+
+def _get_function_signature(node):
     has_args = node.flags & 4
     has_kwds = node.flags & 8
     normal_arg_count = len(node.argnames)
@@ -299,8 +316,7 @@ def _get_function_docstring(node):
     if has_kwds:
         signature += ', **%s' % node.argnames[-1]
     signature += ')\n\n'
-        
-    return signature + _trim_docstring(node.doc)
+    return signature
 
 def _trim_docstring(docstring):
     """The sample code from :PEP:`257`"""
