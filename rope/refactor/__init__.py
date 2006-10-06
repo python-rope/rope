@@ -34,6 +34,13 @@ class PythonRefactoring(Refactoring):
                                  extracted_name)
         self._add_and_commit_changes(changes)
     
+    def extract_variable(self, resource, start_offset, end_offset,
+                         extracted_name):
+        changes = ExtractMethodRefactoring(self.pycore).\
+                  extract_variable(resource, start_offset, end_offset,
+                                   extracted_name)
+        self._add_and_commit_changes(changes)
+    
     def transform_module_to_package(self, resource):
         changes = ChangeSet()
         new_content = self._transform_relatives_to_absolute(resource)

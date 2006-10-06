@@ -1,16 +1,13 @@
 Single line extract method and variable
 =======================================
 
-- Inner scopes (extra indenting)
-- Logical lines
-- Methods
-- Extracting at the end of buffer
+- Exceptional conditions for extract method/variable
 
-* Exceptional conditions
-* Reversed offsets
+* Refactor `extract` module
+* More tests for extract variable
 
+* Refactor `rope.ui.refactor` dialogs
 * Changing sourcetools.* to use logical lines?
-* Refactoring `_Mover` hierarchy
 * Refactor `importutils` module
 
 

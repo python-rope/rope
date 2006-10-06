@@ -109,8 +109,66 @@ def local_rename(context):
     new_name_entry.focus_set()
 
 def extract_method(context):
-    if context.get_active_editor():
-        context.get_active_editor().get_editor()._extract_method_dialog()
+    if not context.get_active_editor():
+        return
+    editor = context.get_active_editor().get_editor()
+    resource = context.get_active_editor().get_file()
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Extract Method')
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text='New Method Name :')
+    label.grid(row=0, column=0)
+    new_name_entry = Tkinter.Entry(frame)
+    new_name_entry.grid(row=0, column=1)
+    def ok(event=None):
+        (start_offset, end_offset) = editor.get_region_offset()
+        editor.refactoring.extract_method(resource,
+                                          start_offset, end_offset,
+                                          new_name_entry.get())
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+
+    ok_button = Tkinter.Button(frame, text='Done', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    new_name_entry.bind('<Return>', lambda event: ok())
+    new_name_entry.bind('<Escape>', lambda event: cancel())
+    new_name_entry.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    new_name_entry.focus_set()
+
+def extract_variable(context):
+    if not context.get_active_editor():
+        return
+    editor = context.get_active_editor().get_editor()
+    resource = context.get_active_editor().get_file()
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Extract Local Variable')
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text='New Variable Name :')
+    label.grid(row=0, column=0)
+    new_name_entry = Tkinter.Entry(frame)
+    new_name_entry.grid(row=0, column=1)
+    def ok(event=None):
+        (start_offset, end_offset) = editor.get_region_offset()
+        editor.refactoring.extract_variable(resource,
+                                            start_offset, end_offset,
+                                            new_name_entry.get())
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+
+    ok_button = Tkinter.Button(frame, text='Done', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    new_name_entry.bind('<Return>', lambda event: ok())
+    new_name_entry.bind('<Escape>', lambda event: cancel())
+    new_name_entry.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    new_name_entry.focus_set()
 
 def undo_refactoring(context):
     if context.get_core().get_open_project():
@@ -290,6 +348,8 @@ actions.append(SimpleAction('Inline Local Variable', ConfirmAllEditorsAreSaved(i
                             MenuAddress(['Refactor', 'Inline Local Variable'], 'i'), ['python']))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
                             MenuAddress(['Refactor', 'Rename in File'], 'f'), ['python']))
+actions.append(SimpleAction('Extract Local Variable', ConfirmAllEditorsAreSaved(extract_variable), None,
+                            MenuAddress(['Refactor', 'Extract Local Variable'], 'l'), ['python']))
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'c', 1),

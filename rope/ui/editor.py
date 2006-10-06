@@ -169,40 +169,14 @@ class GraphicalEditor(object):
         if editor is not None:
             return editor.get_file()
     
-    def _extract_method_dialog(self, event=None):
-        toplevel = Toplevel()
-        toplevel.title('Extract Method')
-        frame = Frame(toplevel)
-        label = Label(frame, text='New Method Name :')
-        label.grid(row=0, column=0)
-        new_name_entry = Entry(frame)
-        new_name_entry.grid(row=0, column=1)
-        def ok(event=None):
-            self.extract_method_refactoring(new_name_entry.get())
-            toplevel.destroy()
-        def cancel(event=None):
-            toplevel.destroy()
-
-        ok_button = Button(frame, text='Done', command=ok)
-        cancel_button = Button(frame, text='Cancel', command=cancel)
-        ok_button.grid(row=1, column=0)
-        new_name_entry.bind('<Return>', lambda event: ok())
-        new_name_entry.bind('<Escape>', lambda event: cancel())
-        new_name_entry.bind('<Control-g>', lambda event: cancel())
-        cancel_button.grid(row=1, column=1)
-        frame.grid()
-        new_name_entry.focus_set()
-
-    def extract_method_refactoring(self, extracted_name):
+    def get_region_offset(self):
         start = self.text.index('mark')
         end = self.text.index(INSERT)
         if self.text.compare(start, '>', end):
             start, end = end, start
         start_offset = self.get_offset(start)
         end_offset = self.get_offset(end)
-        self.refactoring.extract_method(self._get_resource(),
-                                        start_offset, end_offset,
-                                        extracted_name)
+        return (start_offset, end_offset)
 
     def _focus_went_out(self):
         if self.searcher.is_searching():
