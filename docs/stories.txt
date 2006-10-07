@@ -211,12 +211,6 @@ Stories
 > Public Release 0.3m5 : October 15, 2006
 
 
-* Code completions inside uncompleted ``try`` blocks
-
-
-* Single line extract method and variable @10h
-
-
 Remaining Stories
 -----------------
 

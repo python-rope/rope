@@ -409,6 +409,57 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.assist(code, code.index('a_v') + 3)
         self.assert_completion_not_in_result('a_var', 'global', result)
 
+    def test_completing_in_uncomplete_try_blocks(self):
+        code = 'try:\n    a_var = 10\n    a_'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_var', 'global', result)
+
+    def test_completing_in_uncomplete_try_blocks_in_functions(self):
+        code = 'def a_func():\n    try:\n        a_var = 10\n        a_'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_var', 'local', result)
+
+    def test_already_complete_try_blocks_with_finally(self):
+        code = 'def a_func():\n    try:\n        a_var = 10\n        a_'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_var', 'local', result)
+
+    def test_already_complete_try_blocks_with_finally2(self):
+        code = 'try:\n    a_var = 10\n    a_\nfinally:\n    pass\n'
+        result = self.assist.assist(code, code.rindex('a_') + 2)
+        self.assert_completion_in_result('a_var', 'global', result)
+
+    def test_already_complete_try_blocks_with_except(self):
+        code = 'try:\n    a_var = 10\n    a_\nexcept Exception:\n    pass\n'
+        result = self.assist.assist(code, code.rindex('a_') + 2)
+        self.assert_completion_in_result('a_var', 'global', result)
+
+    def test_already_complete_try_blocks_with_except2(self):
+        code = 'a_var = 10\ntry:\n    another_var = a_\n    another_var = 10\n' \
+               'except Exception:\n    pass\n'
+        result = self.assist.assist(code, code.rindex('a_') + 2)
+        self.assert_completion_in_result('a_var', 'global', result)
+
+    def test_completing_ifs_in_uncomplete_try_blocks(self):
+        code = 'try:\n    if True:\n        a_var = 10\n    a_'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_var', 'global', result)
+
+    def test_completing_ifs_in_uncomplete_try_blocks2(self):
+        code = 'try:\n    if True:\n        a_var = 10\n        a_'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_var', 'global', result)
+
+    def test_completing_excepts_in_uncomplete_try_blocks(self):
+        code = 'try:\n    pass\nexcept Exc'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('Exception', 'builtin', result)
+
+    def test_nested_blocks(self):
+        code = 'a_var = 10\ntry:\n    try:\n        a_v'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('a_var', 'global', result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 

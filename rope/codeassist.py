@@ -4,11 +4,13 @@ import __builtin__
 import re
 import sys
 
+import rope.codeanalyze
 from rope.exceptions import RopeException
 from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
                               WordRangeFinder, ScopeNameFinder,
                               SourceLinesAdapter)
 import rope.pyobjects
+
 
 class RopeSyntaxError(RopeException):
     pass
@@ -148,6 +150,36 @@ class _CodeCompletionCollector(object):
         for line in range(start + 1, end + 1):
             self.lines[line] = '#' # + lines[line]
         self.lines.append('\n')
+        self._fix_uncomplete_try_blocks()
+    
+    def _fix_uncomplete_try_blocks(self):
+        block_start = self.lineno
+        last_indents = self.current_indents
+        while block_start > 0:
+            block_start = rope.codeanalyze.StatementRangeFinder.get_block_start(
+                ArrayLinesAdapter(self.lines), block_start) - 1
+            if self.lines[block_start].strip().startswith('try:'):
+                indents = self._get_line_indents(self.lines[block_start])
+                if indents > last_indents:
+                    continue
+                last_indents = indents
+                block_end = self._find_matching_deindent(block_start)
+                if not self.lines[block_end].strip().startswith('finally:') and \
+                   not self.lines[block_end].strip().startswith('except '):
+                    self.lines.insert(block_end, ' ' * indents + 'finally:')
+                    self.lines.insert(block_end + 1, ' ' * indents + '    pass')
+    
+    def _find_matching_deindent(self, line_number):
+        indents = self._get_line_indents(self.lines[line_number])
+        current_line = line_number + 1
+        while current_line < len(self.lines):
+            line = self.lines[current_line]
+            if not line.strip().startswith('#') and not line.strip() == '':
+                # HACK: We should have used logical lines here
+                if self._get_line_indents(self.lines[current_line]) <= indents:
+                    return current_line
+            current_line += 1
+        return len(self.lines) - 1
 
     def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}

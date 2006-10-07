@@ -1,7 +1,9 @@
-Single line extract method and variable
-=======================================
+Code completions inside uncompleted ``try`` blocks
+==================================================
 
-- Holding complete lines for multi-line extractions
+- Complete ``try`` s
+- handle nested ``try`` s
+- Comments and empty lines
 
 * Refactor `extract` module
 * Refactor `rope.ui.refactor` dialogs

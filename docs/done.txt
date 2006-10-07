@@ -3,6 +3,12 @@
 ===========
 
 
+- Code completions inside uncompleted ``try`` blocks : October 7, 2006
+
+
+- Single line extract method and variable : October 7, 2006
+
+
 - Hiding unappropriate menu items in different contexts : October 6, 2006
 
 

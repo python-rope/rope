@@ -675,7 +675,7 @@ class StatementRangeFinder(object):
     
     @staticmethod
     def get_block_start(lines, lineno):
-        """Aproximating block start for `analyze` method"""
+        """Aproximating block start"""
         pattern = StatementRangeFinder.get_block_start_patterns()
         for i in reversed(range(1, lineno + 1)):
             if pattern.search(lines.get_line(i)) is not None:
@@ -685,7 +685,7 @@ class StatementRangeFinder(object):
     @classmethod
     def get_block_start_patterns(cls):
         if not hasattr(cls, '__block_start_pattern'):
-            pattern = '^\\s*(def|class|if|else|elif|try|except|for|while|with)\\s'
+            pattern = '^\\s*(((def|class|if|elif|except|for|while|with)\\s)|((try|else|finally|except)\\s*:))'
             cls.__block_start_pattern = re.compile(pattern, re.M)
         return cls.__block_start_pattern
     
