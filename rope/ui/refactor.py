@@ -170,15 +170,43 @@ def extract_variable(context):
     frame.grid()
     new_name_entry.focus_set()
 
+def _confirm_action(title, message, action):
+    toplevel = Tkinter.Toplevel()
+    toplevel.title(title)
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text=message)
+    label.grid(row=0, column=0, columnspan=2)
+    def ok(event=None):
+        action()
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+    ok_button = Tkinter.Button(frame, text='OK', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    toplevel.bind('<Return>', lambda event: ok())
+    toplevel.bind('<Escape>', lambda event: cancel())
+    toplevel.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    ok_button.focus_set()
+
 def undo_refactoring(context):
     if context.get_core().get_open_project():
-        context.get_core().get_open_project().get_pycore().\
-                get_refactoring().undo()
-    
+        def undo():
+            context.get_core().get_open_project().get_pycore().\
+                    get_refactoring().undo()
+        _confirm_action('Undoing Refactoring',
+                        'Undo refactoring might change many files. Proceed?',
+                        undo)
 def redo_refactoring(context):
     if context.get_core().get_open_project():
-        context.get_core().get_open_project().get_pycore().\
-                get_refactoring().redo()
+        def redo():
+            context.get_core().get_open_project().get_pycore().\
+                    get_refactoring().redo()
+        _confirm_action('Redoing Refactoring',
+                        'Redo refactoring might change many files. Proceed?',
+                        redo)
     
 def introduce_factory(context):
     if not context.get_active_editor():

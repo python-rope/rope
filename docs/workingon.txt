@@ -1,9 +1,9 @@
-Code completions inside uncompleted ``try`` blocks
-==================================================
+Confirming Before Undoing/Redoing Refactorings
+==============================================
 
-- Complete ``try`` s
-- handle nested ``try`` s
-- Comments and empty lines
+
+Refactor
+========
 
 * Refactor `extract` module
 * Refactor `rope.ui.refactor` dialogs

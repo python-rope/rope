@@ -205,10 +205,10 @@ Stories
 * Running unit tests view
 
 
-* Encapsulate field
-
-
 > Public Release 0.3m5 : October 15, 2006
+
+
+* Encapsulate field
 
 
 Remaining Stories
