@@ -14,20 +14,75 @@ class ExtractMethodRefactoring(object):
     
     def extract_method(self, resource, start_offset, end_offset,
                        extracted_name):
-        new_contents = _ExtractPerformer(self, resource, start_offset,
-                                         end_offset, extracted_name).extract()
+        info = _ExtractInformation(self.pycore, resource, start_offset, end_offset)
+        if info.is_one_line_extract():
+            new_contents = _OneLineExtractPerformer(self.pycore, resource, info,
+                                                    extracted_name).extract()
+        else:
+            new_contents = _MultiLineExtractPerformer(self.pycore, resource, info,
+                                                      extracted_name).extract()
         changes = ChangeSet()
         changes.add_change(ChangeFileContents(resource, new_contents))
         return changes
         
     def extract_variable(self, resource, start_offset, end_offset,
                          extracted_name):
-        new_contents = _ExtractPerformer(self, resource, start_offset,
-                                         end_offset, extracted_name, True).extract()
+        info = _ExtractInformation(self.pycore, resource, start_offset, end_offset)
+        new_contents = _OneLineExtractPerformer(self.pycore, resource, info, 
+                                                extracted_name, True).extract()
         changes = ChangeSet()
         changes.add_change(ChangeFileContents(resource, new_contents))
         return changes
+
+
+class _ExtractInformation(object):
     
+    def __init__(self, pycore, resource, start_offset, end_offset):
+        self.source_code = source_code = resource.read()
+        
+        self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
+        self.line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
+        
+        self.region = (self._choose_closest_line_end(start_offset),
+                       self._choose_closest_line_end(end_offset, end=True))
+        
+        self.region_linenos = (
+            self.line_finder.get_logical_line_in(self.lines.get_line_number(self.region[0]))[0],
+            self.line_finder.get_logical_line_in(self.lines.get_line_number(self.region[1]))[1])
+
+        self.region_lines = (self.lines.get_line_start(self.region_linenos[0]),
+                             self.lines.get_line_end(self.region_linenos[1]))
+        
+        scope = pycore.resource_to_pyobject(resource).get_scope()
+        holding_scope = self._find_holding_scope(scope, self.region_linenos[0])
+        self.scope = (self.lines.get_line_start(holding_scope.get_start()),
+                      self.lines.get_line_end(holding_scope.get_end()) + 1)
+        
+    def _find_holding_scope(self, scope, start_line):
+        holding_scope = scope.get_inner_scope_for_line(start_line)
+        if holding_scope.get_kind() != 'Module' and \
+           holding_scope.get_start() == start_line:
+            holding_scope = holding_scope.parent
+        return holding_scope
+    
+    def _choose_closest_line_end(self, offset, end=False):
+        lineno = self.lines.get_line_number(offset)
+        line_start = self.lines.get_line_start(lineno)
+        line_end = self.lines.get_line_end(lineno)
+        if self.source_code[line_start:offset].strip() == '':
+            if end:
+                return line_start - 1
+            else:
+                return line_start
+        elif self.source_code[offset:line_end].strip() == '':
+            return min(line_end, len(self.source_code))
+        return offset
+    
+    def is_one_line_extract(self):
+        return self.region[0] != self.region_lines[0] and \
+               (self.line_finder.get_logical_line_in(self.region_linenos[0]) == 
+                self.line_finder.get_logical_line_in(self.region_linenos[1]))
+
 
 class _ExtractPerformer(object):
     """Perform extract method/variable refactoring
@@ -59,33 +114,18 @@ class _ExtractPerformer(object):
 
     """
     
-    def __init__(self, refactoring, resource, start_offset,
-                 end_offset, extracted_name, extract_variable=False):
-        self.refactoring = refactoring
-        self.resource = resource
+    def __init__(self, pycore, resource, info, extracted_name, extract_variable=False):
         self.source_code = source_code = resource.read()
         self.extracted_name = extracted_name
         self.extract_variable = extract_variable
+        self.info = info
         
         self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
-        self.line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
         
-        self.start = self._choose_closest_line_end(source_code, start_offset)
-        self.end = self._choose_closest_line_end(source_code, end_offset, end=True)
+        self.first_line_indents = self._get_indents(self.info.region_linenos[0])
+        self.scope = pycore.get_string_scope(source_code, resource)
+        self.holding_scope = self._find_holding_scope(self.info.region_linenos[0])
         
-        start_line = self.line_finder.get_logical_line_in(self.lines.get_line_number(self.start))[0]
-        end_line = self.line_finder.get_logical_line_in(self.lines.get_line_number(self.end))[1]
-
-        self.start_line = self.lines.get_line_start(start_line)
-        self.end_line = self.lines.get_line_end(end_line)
-        
-        self.first_line_indents = self._get_indents(start_line)
-        self.scope = self.refactoring.pycore.get_string_scope(source_code, resource)
-        self.holding_scope = self._find_holding_scope(start_line)
-        self.scope_start = self.lines.get_line_start(self.holding_scope.get_start())
-        self.scope_end = self.lines.get_line_end(self.holding_scope.get_end()) + 1
-        
-        self.is_one_line = self._is_one_line_extract(start_line, end_line)
         self.extract_info = self._create_extract_info()
         
         self._check_exceptional_conditions()
@@ -93,9 +133,9 @@ class _ExtractPerformer(object):
     
     def _create_extract_info(self):
         if self.extract_variable:
-            return _ExtractVariableInfo(self)
+            return _ExtractedVariablePieces(self)
         else:
-            return _ExtractInfo(self)
+            return _ExtractedPieces(self)
 
     def _find_holding_scope(self, start_line):
         holding_scope = self.scope.get_inner_scope_for_line(start_line)
@@ -104,12 +144,6 @@ class _ExtractPerformer(object):
             holding_scope = holding_scope.parent
         return holding_scope
     
-    def _is_one_line_extract(self, start_line, end_line):
-        line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
-        return self.start != self.start_line and \
-               (line_finder.get_logical_line_in(start_line) == 
-                line_finder.get_logical_line_in(end_line))
-
     def _is_global(self):
         return self.holding_scope.pyobject.get_type() == \
                rope.pyobjects.PyObject.get_base_type('Module')
@@ -122,35 +156,18 @@ class _ExtractPerformer(object):
     def _check_exceptional_conditions(self):
         if self.holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
             raise RefactoringException('Can not extract methods in class body')
-        if self.end > self.scope_end:
+        if self.info.region[1] > self.info.scope[1]:
             raise RefactoringException('Bad range selected for extract method')
-        end_line = self.lines.get_line_number(self.end - 1)
+        end_line = self.info.region_linenos[1]
         end_scope = self.scope.get_inner_scope_for_line(end_line)
         if end_scope != self.holding_scope and end_scope.get_end() != end_line:
             raise RefactoringException('Bad range selected for extract method')
         try:
-            if _ReturnOrYieldFinder.does_it_return(self.source_code[self.start:self.end]):
+            if _ReturnOrYieldFinder.does_it_return(self.source_code[self.info.region[0]:self.info.region[1]]):
                 raise RefactoringException('Extracted piece should not contain return statements')
         except SyntaxError:
             raise RefactoringException('Extracted piece should contain complete statements.')
-        if self.is_one_line or self.extract_variable:
-            self._check_exceptional_conditions_for_one_liners()
-        else:
-            self._check_exceptional_conditions_for_multi_liners()
-    
-    def _check_exceptional_conditions_for_multi_liners(self):
-        if self.start != self.start_line or self.end != self.end_line:
-            raise RefactoringException('Extracted piece should contain complete statements.')
-    
-    def _check_exceptional_conditions_for_one_liners(self):
-        if (self.start > 0 and self._is_on_a_word(self.start - 1)) or \
-           (self.end < len(self.source_code) and self._is_on_a_word(self.end - 1)):
-            raise RefactoringException('Should extract complete statements.')
-        start_line = self.lines.get_line_number(self.start)
-        end_line = self.lines.get_line_number(self.end)
-        if self.extract_variable and not self._is_one_line_extract(start_line, end_line):
-            raise RefactoringException('Extract variable should not span multiple lines.')
-    
+
     def _is_on_a_word(self, offset):
         prev = self.source_code[offset]
         next = self.source_code[offset + 1]
@@ -158,11 +175,11 @@ class _ExtractPerformer(object):
 
     def _create_info_collector(self):
         zero = self.holding_scope.get_start() - 1
-        start_line = self.lines.get_line_number(self.start) - zero
-        end_line = self.lines.get_line_number(self.end) - zero
+        start_line = self.info.region_linenos[0] - zero
+        end_line = self.info.region_linenos[1] - zero
         info_collector = _FunctionInformationCollector(start_line, end_line,
                                                        self._is_global())
-        indented_body = self.source_code[self.scope_start:self.scope_end]
+        indented_body = self.source_code[self.info.scope[0]:self.info.scope[1]]
         body = sourcetools.indent_lines(indented_body,
                                         -sourcetools.find_minimum_indents(indented_body))
         ast = compiler.parse(body)
@@ -171,26 +188,16 @@ class _ExtractPerformer(object):
 
     def extract(self):
         result = []
-        result.append(self.source_code[:self.start_line])
+        result.append(self.source_code[:self.info.region_lines[0]])
         result.append(self.extract_info.get_before_line())
-        result.append(self.source_code[self.start_line:self.start])
+        result.append(self.source_code[self.info.region_lines[0]:self.info.region[0]])
         result.append(self.extract_info.get_call())
-        result.append(self.source_code[self.end:self.end_line])
-        result.append(self.source_code[self.end_line:self.scope_end])
+        result.append(self.source_code[self.info.region[1]:self.info.region_lines[1]])
+        result.append(self.source_code[self.info.region_lines[1]:self.info.scope[1]])
         result.append(self.extract_info.get_after_scope())
-        result.append(self.source_code[self.scope_end:])
+        result.append(self.source_code[self.info.scope[1]:])
         return ''.join(result)
 
-    def _get_call(self, returns, args):
-        if self.is_one_line:
-            return self._get_function_call(args)
-        else:
-            call_prefix = ''
-            if returns:
-                call_prefix = self._get_comma_form(returns) + ' = '
-            return ' ' * self.first_line_indents + call_prefix + \
-                   self._get_function_call(args)
-    
     def _get_scope_indents(self):
         if self._is_global():
             return 0
@@ -211,22 +218,15 @@ class _ExtractPerformer(object):
         result.append('%sdef %s:\n' %
                       (' ' * self._get_indents(self.holding_scope.get_start()),
                        self._get_function_signature(args)))
-        if self.is_one_line:
-            unindented_body = 'return ' + self._get_one_line_definition()
-        else:
-            extracted_body = self.source_code[self.start:self.end]
-            unindented_body = sourcetools.indent_lines(
-                extracted_body, -sourcetools.find_minimum_indents(extracted_body))
-            if returns:
-                unindented_body += '\nreturn %s' % self._get_comma_form(returns)
+        unindented_body = self._get_unindented_function_body(returns)
         function_body = sourcetools.indent_lines(unindented_body, function_indents)
         result.append(function_body)
         definition = ''.join(result)
         
         return definition + '\n'
-    
+
     def _get_one_line_definition(self):
-        extracted_body = self.source_code[self.start:self.end]
+        extracted_body = self.source_code[self.info.region[0]:self.info.region[1]]
         lines = []
         for line in extracted_body.splitlines():
             if line.endswith('\\'):
@@ -259,37 +259,73 @@ class _ExtractPerformer(object):
                 result += ', ' + name
         return result
     
-    def _find_function_arguments(self):
-        if self.is_one_line:
-            function_definition = self.source_code[self.start:self.end]
-            read = _VariableReadsAndWritesFinder.find_reads_for_one_liners(
-                function_definition)
-            return list(self.info_collector.prewritten.intersection(read))
-        return list(self.info_collector.prewritten.intersection(self.info_collector.read))
-    
-    def _find_function_returns(self):
-        if self.is_one_line:
-            return []
-        return list(self.info_collector.written.intersection(self.info_collector.postread))
-        
-    def _choose_closest_line_end(self, source_code, offset, end=False):
-        lineno = self.lines.get_line_number(offset)
-        line_start = self.lines.get_line_start(lineno)
-        line_end = self.lines.get_line_end(lineno)
-        if source_code[line_start:offset].strip() == '':
-            if end:
-                return line_start - 1
-            else:
-                return line_start
-        elif source_code[offset:line_end].strip() == '':
-            return min(line_end, len(source_code))
-        return offset
-    
     def _get_indents(self, lineno):
         return sourcetools.get_indents(self.lines, lineno)
 
 
-class _ExtractInfo(object):
+class _OneLineExtractPerformer(_ExtractPerformer):
+    
+    def __init__(self, *args, **kwds):
+        super(_OneLineExtractPerformer, self).__init__(*args, **kwds)
+
+    def _check_exceptional_conditions(self):
+        super(_OneLineExtractPerformer, self)._check_exceptional_conditions()
+        if (self.info.region[0] > 0 and self._is_on_a_word(self.info.region[0] - 1)) or \
+           (self.info.region[1] < len(self.source_code) and self._is_on_a_word(self.info.region[1] - 1)):
+            raise RefactoringException('Should extract complete statements.')
+        if self.extract_variable and not self.info.is_one_line_extract():
+            raise RefactoringException('Extract variable should not span multiple lines.')
+    
+    def _get_call(self, returns, args):
+        return self._get_function_call(args)
+
+    def _find_function_arguments(self):
+        function_definition = self.source_code[self.info.region[0]:self.info.region[1]]
+        read = _VariableReadsAndWritesFinder.find_reads_for_one_liners(
+            function_definition)
+        return list(self.info_collector.prewritten.intersection(read))
+    
+    def _find_function_returns(self):
+        return []
+        
+    def _get_unindented_function_body(self, returns):
+        return 'return ' + self._get_one_line_definition()
+    
+
+class _MultiLineExtractPerformer(_ExtractPerformer):
+    
+    def __init__(self, *args, **kwds):
+        super(_MultiLineExtractPerformer, self).__init__(*args, **kwds)
+
+    def _check_exceptional_conditions(self):
+        super(_MultiLineExtractPerformer, self)._check_exceptional_conditions()
+        if self.info.region[0] != self.info.region_lines[0] or \
+           self.info.region[1] != self.info.region_lines[1]:
+            raise RefactoringException('Extracted piece should contain complete statements.')
+    
+    def _get_call(self, returns, args):
+        call_prefix = ''
+        if returns:
+            call_prefix = self._get_comma_form(returns) + ' = '
+        return ' ' * self.first_line_indents + call_prefix + \
+               self._get_function_call(args)
+
+    def _find_function_arguments(self):
+        return list(self.info_collector.prewritten.intersection(self.info_collector.read))
+    
+    def _find_function_returns(self):
+        return list(self.info_collector.written.intersection(self.info_collector.postread))
+        
+    def _get_unindented_function_body(self, returns):
+        extracted_body = self.source_code[self.info.region[0]:self.info.region[1]]
+        unindented_body = sourcetools.indent_lines(
+            extracted_body, -sourcetools.find_minimum_indents(extracted_body))
+        if returns:
+            unindented_body += '\nreturn %s' % self._get_comma_form(returns)
+        return unindented_body
+    
+
+class _ExtractedPieces(object):
     
     def __init__(self, performer):
         self.performer = performer
@@ -310,7 +346,7 @@ class _ExtractInfo(object):
         return ''
 
 
-class _ExtractVariableInfo(object):
+class _ExtractedVariablePieces(object):
     
     def __init__(self, performer):
         self.performer = performer

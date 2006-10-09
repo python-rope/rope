@@ -1,8 +1,8 @@
 Refactor
 ========
 
-- arguments and single liners
-
+* Inlining attributes
+* Moving to attributes
 * Refactor `rope.ui.refactor` dialogs
 * Refactor `importutils` module
 
