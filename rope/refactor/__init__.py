@@ -118,7 +118,7 @@ class ImportOrganizer(object):
             resource, rope.importutils.ModuleWithImports.expand_stars)
         if source is not None:
             changes = ChangeSet()
-            changes.add_change(ChangeFileContents(source))
+            changes.add_change(ChangeFileContents(resource, source))
             self.refactoring._add_and_commit_changes(changes)
 
     def transform_froms_to_imports(self, resource):

@@ -236,6 +236,14 @@ class ExtractMethodTest(unittest.TestCase):
                    'def new_func(arg):\n    print arg\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_function_and_end_as_the_start_of_a_line(self):
+        code = 'print "hey"\nif True:\n    pass\n'
+        start = 0
+        end = code.index('\n') + 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = '\ndef new_func():\n    print "hey"\n\nnew_func()\nif True:\n    pass\n'
+        self.assertEquals(expected, refactored)
+
     def test_extract_function_and_indented_blocks(self):
         code = 'def a_func(arg):\n    if True:\n' \
                '        if True:\n            print arg\n'
@@ -305,6 +313,16 @@ class ExtractMethodTest(unittest.TestCase):
         expected = "\ndef new_func():\n    return True\n\nif new_func():\n    pass\n"
         self.assertEquals(expected, refactored)
 
+    def test_unneeded_params(self):
+        code = 'class A(object):\n    def a_func(self):\n        a_var = 10\n        a_var += 2\n'
+        start = code.rindex('2')
+        end = code.rindex('2') + 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'class A(object):\n' \
+                   '    def a_func(self):\n        a_var = 10\n        a_var += self.new_func()\n\n' \
+                   '    def new_func(self):\n        return 2\n'
+        self.assertEquals(expected, refactored)
+
     def test_extract_variable(self):
         code = 'a_var = 10 + 20\n'
         start = code.index('10')
@@ -343,6 +361,22 @@ class ExtractMethodTest(unittest.TestCase):
         end = code.rindex('"') + 1
         refactored = self.do_extract_variable(code, start, end, 'c')
         expected = 'def a_func():\n    c = "hey!"\n    a = c\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_variable_inside_ifs(self):
+        code = 'if True:\n    a = 1 + 2\n'
+        start = code.index('1')
+        end = code.rindex('2') + 1
+        refactored = self.do_extract_variable(code, start, end, 'b')
+        expected = 'if True:\n    b = 1 + 2\n    a = b\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_variable_inside_ifs_and_logical_lines(self):
+        code = 'if True:\n    a = (3 + \n1 + 2)\n'
+        start = code.index('1')
+        end = code.index('2') + 1
+        refactored = self.do_extract_variable(code, start, end, 'b')
+        expected = 'if True:\n    b = 1 + 2\n    a = (3 + \nb)\n'
         self.assertEquals(expected, refactored)
 
     @testutils.assert_raises(rope.exceptions.RefactoringException)

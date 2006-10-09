@@ -68,11 +68,13 @@ class _ExtractPerformer(object):
         self.extract_variable = extract_variable
         
         self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
-        self.start = self._choose_closest_line_end(source_code, start_offset)
-        self.end = self._choose_closest_line_end(source_code, end_offset)
+        self.line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
         
-        start_line = self.lines.get_line_number(self.start)
-        end_line = self.lines.get_line_number(self.end)
+        self.start = self._choose_closest_line_end(source_code, start_offset)
+        self.end = self._choose_closest_line_end(source_code, end_offset, end=True)
+        
+        start_line = self.line_finder.get_logical_line_in(self.lines.get_line_number(self.start))[0]
+        end_line = self.line_finder.get_logical_line_in(self.lines.get_line_number(self.end))[1]
 
         self.start_line = self.lines.get_line_start(start_line)
         self.end_line = self.lines.get_line_end(end_line)
@@ -258,17 +260,27 @@ class _ExtractPerformer(object):
         return result
     
     def _find_function_arguments(self):
+        if self.is_one_line:
+            function_definition = self.source_code[self.start:self.end]
+            read = _VariableReadsAndWritesFinder.find_reads_for_one_liners(
+                function_definition)
+            return list(self.info_collector.prewritten.intersection(read))
         return list(self.info_collector.prewritten.intersection(self.info_collector.read))
     
     def _find_function_returns(self):
+        if self.is_one_line:
+            return []
         return list(self.info_collector.written.intersection(self.info_collector.postread))
         
-    def _choose_closest_line_end(self, source_code, offset):
+    def _choose_closest_line_end(self, source_code, offset, end=False):
         lineno = self.lines.get_line_number(offset)
         line_start = self.lines.get_line_start(lineno)
         line_end = self.lines.get_line_end(lineno)
         if source_code[line_start:offset].strip() == '':
-            return line_start
+            if end:
+                return line_start - 1
+            else:
+                return line_start
         elif source_code[offset:line_end].strip() == '':
             return min(line_end, len(source_code))
         return offset
@@ -304,7 +316,7 @@ class _ExtractVariableInfo(object):
         self.performer = performer
     
     def get_before_line(self):
-        result = ' ' * self.performer._get_scope_indents() + \
+        result = ' ' * self.performer.first_line_indents + \
                  self.performer.extracted_name + ' = ' + \
                  self.performer._get_one_line_definition() + '\n'
         return result
@@ -394,6 +406,15 @@ class _VariableReadsAndWritesFinder(object):
         visitor = _VariableReadsAndWritesFinder()
         compiler.walk(ast, visitor)
         return visitor.read, visitor.written
+
+    @staticmethod
+    def find_reads_for_one_liners(code):
+        if code.strip() == '':
+            return set(), set()
+        ast = compiler.parse(code)
+        visitor = _VariableReadsAndWritesFinder()
+        compiler.walk(ast, visitor)
+        return visitor.read
 
 
 class _ReturnOrYieldFinder(object):

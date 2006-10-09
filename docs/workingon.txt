@@ -1,27 +1,8 @@
-Optimizing Module Running
-=========================
-
-* Having different algorithms for sending and coding data
-
-* On 'nt' use socket and pickle
-* On others use fifo and marshal
-
-========  ========  =======
-medium    coding    time
-========  ========  =======
-socket    pickle    13.140
-fifo      pickle    9.664
-fifo      marshal   8.094
- -        -         7.229
- -        -         4.329
- -        -         0.611
-========  ========  =======
-
-
 Refactor
 ========
 
-* Refactor `extract` module
+- arguments and single liners
+
 * Refactor `rope.ui.refactor` dialogs
 * Refactor `importutils` module
 

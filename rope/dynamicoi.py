@@ -275,7 +275,7 @@ class _SocketReceiver(_MessageReceiver):
 class _FIFOReceiver(_MessageReceiver):
     
     def __init__(self):
-        # might cause race conditions
+        # XXX: this is unsecure and might cause race conditions
         self.file_name = self._get_file_name()
         os.mkfifo(self.file_name)
     
