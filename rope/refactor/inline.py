@@ -3,6 +3,7 @@ import rope.exceptions
 import rope.pynames
 from rope.refactor.change import ChangeSet, ChangeFileContents
 
+
 class InlineRefactoring(object):
     
     def __init__(self, pycore, resource, offset):
@@ -32,7 +33,8 @@ class InlineRefactoring(object):
                                                 index('=') + 1:].strip()
         
         changed_source = rope.refactor.rename.RenameInModule(
-            self.pycore, [self.pyname], self.name, definition).get_changed_module(pymodule=self.pymodule)
+            self.pycore, [self.pyname], self.name, definition, replace_primary=True).\
+            get_changed_module(pymodule=self.pymodule)
         if changed_source is None:
             changed_source = self.pymodule.source_code
         lines = rope.codeanalyze.SourceLinesAdapter(changed_source)

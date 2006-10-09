@@ -74,6 +74,24 @@ class InlineLocalVariableTest(unittest.TestCase):
         code = 'a_var, another_var = (20, 30)\n'
         refactored = self._inline_local_variable(code, code.index('a_var') + 1)
 
+    def test_attribute_inlining(self):
+        code = 'class A(object):\n    def __init__(self):\n' \
+               '        self.an_attr = 3\n        range(self.an_attr)\n'
+        refactored = self._inline_local_variable(code, code.index('an_attr') + 1)
+        expected = 'class A(object):\n    def __init__(self):\n' \
+                   '        range(3)\n'
+        self.assertEquals(expected, refactored)
+
+    def test_attribute_inlining2(self):
+        code = 'class A(object):\n    def __init__(self):\n' \
+               '        self.an_attr = 3\n        range(self.an_attr)\n' \
+               'a = A()\nrange(a.an_attr)'
+        refactored = self._inline_local_variable(code, code.index('an_attr') + 1)
+        expected = 'class A(object):\n    def __init__(self):\n' \
+                   '        range(3)\n' \
+                   'a = A()\nrange(3)'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
