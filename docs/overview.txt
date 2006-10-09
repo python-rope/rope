@@ -4,13 +4,12 @@
 
 .. contents:: Table of Contents
 
-TODO:
 
-* Code assist
-* Rename
-* Move
-* SVN support
-* Type inference
+Overview
+========
+
+The purpose of this file is to give an overview of some of rope's
+features.
 
 
 Code Assist
@@ -24,6 +23,15 @@ templates, `K` keywords and `B` built-ins.
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit
 `rope.codeassist.PythonCodeAssist._get_default_templates` method.
+
+Completions
+-----------
+
+Show PyDoc
+----------
+
+Goto Definition
+---------------
 
 
 Outline
@@ -48,6 +56,30 @@ met.  Also don't forget to commit your changes yourself, rope doesn't
 do that yet.
 
 
+Basic Type Inference
+====================
+
+::
+  
+  class AClass(object):
+      
+      def __init__(self):
+          self.an_attr = 1
+      
+      def call_a_func(self):
+          return a_func()
+  
+  def a_func():
+      return a_func()
+  
+  a_var = a_func()
+  a_var.${codeassist}
+  
+  another_var = a_var
+  another_var.${codeassist}
+  another_var.call_a_func().${codeassist}
+
+
 Dynamic Type Inference
 ======================
 
@@ -60,3 +92,89 @@ to the terminal and does not get inputs.  This will be enhanced in
 future releases. After the program is run, you can get better code
 assists and some of the refactorings perform much better.
 
+
+Refactorings
+============
+
+Renaming attributes
+-------------------
+
+Consider we have::
+  
+  class AClass(object):
+      
+      def __init__(self):
+          self.an_attr = 1
+      
+      def a_method(self, arg):
+          print self.an_attr, arg
+  
+  a_var = AClass()
+  a_var.a_method(a_var.an_attr)
+
+After renaming ``an_attr`` to ``new_attr`` and ``a_method`` to
+``new_method`` we'll have::
+  
+  class AClass(object):
+      
+      def __init__(self):
+          self.new_attr = 1
+      
+      def new_method(self, arg):
+          print self.new_attr, arg
+  
+  a_var = AClass()
+  a_var.new_method(a_var.new_attr)
+
+
+Renaming Function Keyword Parameters
+------------------------------------
+
+We have::
+  
+  def a_func(a_param):
+      print a_param
+  
+  a_func(a_param=10)
+  a_func(10)
+
+After performing rename refactoring on any occurance of ``a_param``
+we will have::
+  
+  def a_func(new_param):
+      print new_param
+  
+  a_func(new_param=10)
+  a_func(10)
+
+
+Renaming modules
+----------------
+
+Consider the project tree is something like::
+  
+  root/
+    mod1.py
+    mod2.py
+
+``mod1.py`` contains::
+  
+  import mod2
+  from mod2 import AClass
+  
+  mod2.a_func()
+  a_var = AClass()
+
+After performing rename refactoring one of the ``mod2`` occurances in
+`mod1` we'll get::
+  
+  import newmod
+  from newmod import AClass
+  
+  newmod.a_func()
+  a_var = AClass()
+
+and the new project tree would be::
+  root/
+    mod1.py
+    newmod.py

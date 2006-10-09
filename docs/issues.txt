@@ -67,7 +67,6 @@ To Be Discussed
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * Indexing source files for faster occurance finding
-* Undoing/redoing refactorings should confirm
 
 
 Undo Unification

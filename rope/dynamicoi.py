@@ -4,6 +4,8 @@ import subprocess
 import sys
 import socket
 import cPickle as pickle
+import marshal
+import tempfile
 import threading
 
 import rope.pyobjects
@@ -189,9 +191,12 @@ class PythonFileRunner(object):
         env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)
         runmod_path = self.pycore.find_module('rope.runmod')._get_real_path()
-        self.data_port = -1
+        self.receiver = None
         self._init_data_receiving()
-        args = (sys.executable, runmod_path, str(self.data_port),
+        send_info = '-'
+        if self.receiver:
+            send_info = self.receiver.get_send_info()
+        args = (sys.executable, runmod_path, send_info,
                 os.path.abspath(self.pycore.project.get_root_address()),
                 os.path.abspath(self.file._get_real_path()))
         self.process = subprocess.Popen(executable=sys.executable, args=args,
@@ -201,30 +206,17 @@ class PythonFileRunner(object):
     def _init_data_receiving(self):
         if self.analyze_data is None:
             return
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_port = 3037
-        while self.data_port < 4000:
-            try:
-                self.server_socket.bind(('', self.data_port))
-                break
-            except socket.error, e:
-                self.data_port += 1
-        self.server_socket.listen(1)
+        if os.name == 'nt':
+            self.receiver = _SocketReceiver()
+        else:
+            self.receiver = _FIFOReceiver()
         self.receiving_thread = threading.Thread(target=self._receive_information)
         self.receiving_thread.setDaemon(True)
         self.receiving_thread.start()
     
     def _receive_information(self):
-        conn, addr = self.server_socket.accept()
-        self.server_socket.close()
-        my_file = conn.makefile('r')
-        while True:
-            try:
-                self.analyze_data(pickle.load(my_file))
-            except EOFError:
-                break
-        my_file.close()
-        conn.close()
+        for data in self.receiver.receive_data():
+            self.analyze_data(data)
         for observer in self.observers:
             observer()
 
@@ -240,3 +232,71 @@ class PythonFileRunner(object):
     
     def add_finishing_observer(self, observer):
         self.observers.append(observer)
+
+
+class _MessageReceiver(object):
+    
+    def receive_data(self):
+        pass
+    
+    def get_send_info(self):
+        pass
+
+
+class _SocketReceiver(_MessageReceiver):
+    
+    def __init__(self):
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.data_port = 3037
+        while self.data_port < 4000:
+            try:
+                self.server_socket.bind(('', self.data_port))
+                break
+            except socket.error, e:
+                self.data_port += 1
+        self.server_socket.listen(1)
+    
+    def get_send_info(self):
+        return str(self.data_port)
+        
+    def receive_data(self):
+        conn, addr = self.server_socket.accept()
+        self.server_socket.close()
+        my_file = conn.makefile('r')
+        while True:
+            try:
+                yield pickle.load(my_file)
+            except EOFError:
+                break
+        my_file.close()
+        conn.close()
+
+
+class _FIFOReceiver(_MessageReceiver):
+    
+    def __init__(self):
+        # might cause race conditions
+        self.file_name = self._get_file_name()
+        os.mkfifo(self.file_name)
+    
+    def _get_file_name(self):
+        prefix = tempfile.gettempdir() + '/__rope_'
+        i = 0
+        while os.path.exists(prefix + str(i).rjust(4, '0')):
+            i += 1
+        return prefix + str(i).rjust(4, '0')
+    
+    def get_send_info(self):
+        return self.file_name
+        
+    def receive_data(self):
+        try:
+            my_file = open(self.file_name, 'rb')
+            while True:
+                try:
+                    yield marshal.load(my_file)
+                except EOFError:
+                    break
+            my_file.close()
+        finally:
+            os.remove(self.file_name)

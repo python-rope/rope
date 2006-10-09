@@ -1,5 +1,21 @@
-Confirming Before Undoing/Redoing Refactorings
-==============================================
+Optimizing Module Running
+=========================
+
+* Having different algorithms for sending and coding data
+
+* On 'nt' use socket and pickle
+* On others use fifo and marshal
+
+========  ========  =======
+medium    coding    time
+========  ========  =======
+socket    pickle    13.140
+fifo      pickle    9.664
+fifo      marshal   8.094
+ -        -         7.229
+ -        -         4.329
+ -        -         0.611
+========  ========  =======
 
 
 Refactor
@@ -13,6 +29,8 @@ Refactor
 Remaining Stories
 =================
 
+* Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
+  ``COPYING`` to help menu; Adding readonly mode?
 * Better refactoring dialogs
 * Extract method and return statements
 * Function decorators and renaming attributes of self
