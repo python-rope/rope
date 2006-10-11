@@ -52,8 +52,7 @@ class Scope(object):
     
     def get_end(self):
         global_scope = self._get_global_scope()
-        return _HoldingScopeFinder(global_scope.pyobject.source_code).\
-               find_scope_end(self)
+        return global_scope._get_scope_finder().find_scope_end(self)
 
     def get_kind(self):
         pass
@@ -70,6 +69,7 @@ class GlobalScope(Scope):
 
     def __init__(self, pycore, module):
         super(GlobalScope, self).__init__(pycore, module, None)
+        self.scope_finder = None
 
     def get_start(self):
         return 1
@@ -84,8 +84,15 @@ class GlobalScope(Scope):
             raise rope.exceptions.NameNotFoundException('name %s not found' % name)
 
     def get_inner_scope_for_line(self, lineno, indents=None):
-        return _HoldingScopeFinder(self.pyobject.source_code).\
-               get_holding_scope(self, lineno, indents)
+        return self._get_scope_finder().get_holding_scope(self, lineno, indents)
+    
+    def get_inner_scope_for_offset(self, lineno, indents=None):
+        return self._get_scope_finder().get_holding_scope_for_offset(self, lineno)
+    
+    def _get_scope_finder(self):
+        if self.scope_finder is None:
+            self.scope_finder = _HoldingScopeFinder(self.pyobject.source_code)
+        return self.scope_finder
 
 
 class FunctionScope(Scope):
@@ -201,6 +208,9 @@ class _HoldingScopeFinder(object):
                     lineno == scopes[-1].get_start())):
             scopes.pop()
         return scopes[-1]
+    
+    def get_holding_scope_for_offset(self, scope, offset):
+        return self.get_holding_scope(scope, self.lines.get_line_number(offset))        
     
     def find_scope_end(self, scope):
         if not scope.parent:

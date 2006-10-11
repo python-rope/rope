@@ -189,26 +189,32 @@ Stories
   * Running last run
 
 
-* Change method signature @24h
+* Change method signature
 
   * Add parameter
   * Remove parameter
   * Reorder
 
 
-* Inline method @ 20h
+* Sorting imports; standard, third party, project
 
 
-* Removing imports from the same module @8h
+* Inline method
+
+
+* Removing imports from the same module
 
 
 * Running unit tests view
 
 
-> Public Release 0.3m5 : October 15, 2006
-
-
 * Encapsulate field
+
+
+* Moving fields/methods to attribute classes
+
+
+> Public Release 0.3m5 : October 15, 2006
 
 
 Remaining Stories

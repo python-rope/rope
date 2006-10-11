@@ -388,17 +388,8 @@ class ScopeNameFinder(object):
     def __init__(self, pymodule):
         self.source_code = pymodule.source_code
         self.module_scope = pymodule.get_scope()
-        self.lines = self.source_code.split('\n')
+        self.lines = SourceLinesAdapter(self.source_code)
         self.word_finder = WordRangeFinder(self.source_code)
-
-    def _get_location(self, offset):
-        lines = ArrayLinesAdapter(self.lines)
-        current_pos = 0
-        lineno = 1
-        while current_pos + len(lines.get_line(lineno)) < offset:
-            current_pos += len(lines.get_line(lineno)) + 1
-            lineno += 1
-        return (lineno, offset - current_pos)
 
     def _is_defined_in_class_body(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \
@@ -420,7 +411,7 @@ class ScopeNameFinder(object):
         return False
 
     def get_pyname_at(self, offset):
-        lineno = self._get_location(offset)[0]
+        lineno = self.lines.get_line_number(offset)
         holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
         # function keyword parameter
         if self.word_finder.is_function_keyword_parameter(offset):
@@ -472,6 +463,11 @@ class ScopeNameFinder(object):
 
 
 def get_pyname_at(pycore, resource, offset):
+    """Finds the pyname at the offset
+    
+    This function is unefficient for multiple calls because of the
+    recalculation of initialization data
+    """
     pymodule = pycore.resource_to_pyobject(resource)
     source_code = pymodule.source_code
     pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
@@ -495,6 +491,10 @@ class Lines(object):
 
 
 class SourceLinesAdapter(Lines):
+    """Adapts source_code to Lines interface
+    
+    Note: The creation of this class is expensive.
+    """    
     
     def __init__(self, source_code):
         self.source_code = source_code

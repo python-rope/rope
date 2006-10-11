@@ -197,10 +197,8 @@ class PyCore(object):
             for resource in self.get_python_files():
                 pyscope = self.resource_to_pyobject(resource).get_scope()
                 source = pyscope.pyobject.source_code
-                lines = rope.codeanalyze.SourceLinesAdapter(source)
                 for match in pattern.finditer(source):
-                    holding_scope = pyscope.get_inner_scope_for_line(
-                        lines.get_line_number(match.start()))
+                    holding_scope = pyscope.get_inner_scope_for_offset(match.start())
                     classes.append(holding_scope.pyobject)
             self.classes = classes
         return [class_ for class_ in self.classes

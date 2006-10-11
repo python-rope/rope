@@ -1,19 +1,20 @@
-Refactor
-========
+Refactoring
+===========
 
-- Inlining attributes
+- Adding `GlobalScope.get_inner_scope_for_offset` to avoid using
+  `SourceLinesAdapter` in find_subclasses
 
-* Moving to attributes
-* Refactor `rope.ui.refactor` dialogs
-* Refactor `importutils` module
+* Creating `SourceLinesAdapter` s are expensive; Having one in `PyModule`
 
 
 Remaining Stories
 =================
 
+* Reporting unhandled exceptions in the GUI
+* Better move dialog; complete modules names; use editor._CompletionListHandle
+* Showing initial name in rename dialogs
 * Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
   ``COPYING`` to help menu; Adding readonly mode?
-* Better refactoring dialogs
 * Extract method and return statements
 * Function decorators and renaming attributes of self
 * Import addition when adding a relative with an absolute import
@@ -31,9 +32,6 @@ Remaining Stories
 * Eliminating `Editor.refactoring`
 * Calling `sys.settrace` for all threads in `rope.runmod` module
 * Keyboard shortcuts for new features
-* Function keywords and extract method
-* Showing initial name in rename dialogs
-* Faster implementation of `GlobalScope.get_inner_scope_for_line`
 * Goto definition for ``"# comment.\na_var"``
 * Slow `GraphicalEditor._get_offset`
 * GUI testing redux; make a functests directory?; rename ropetest to unittests?

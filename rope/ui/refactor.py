@@ -43,22 +43,16 @@ class ConfirmAllEditorsAreSaved(object):
         ok_button.focus_set()
 
 
-def rename(context):
-    if not context.get_active_editor():
-        return
+def _rename_dialog(do_rename, title):
     toplevel = Tkinter.Toplevel()
-    toplevel.title('Rename Refactoring')
+    toplevel.title(title)
     frame = Tkinter.Frame(toplevel)
     label = Tkinter.Label(frame, text='New Name :')
     label.grid(row=0, column=0)
     new_name_entry = Tkinter.Entry(frame)
     new_name_entry.grid(row=0, column=1)
     def ok(event=None):
-        resource = context.get_active_editor().get_file()
-        editor = context.get_active_editor().get_editor()
-        editor.refactoring.rename(resource,
-                                  editor.get_current_offset(),
-                                  new_name_entry.get())
+        do_rename(new_name_entry.get())
         toplevel.destroy()
     def cancel(event=None):
         toplevel.destroy()
@@ -73,6 +67,15 @@ def rename(context):
     frame.grid()
     new_name_entry.focus_set()
 
+def rename(context):
+    def do_rename(new_name):
+        resource = context.get_active_editor().get_file()
+        editor = context.get_active_editor().get_editor()
+        editor.refactoring.rename(resource,
+                                  editor.get_current_offset(),
+                                  new_name)
+    _rename_dialog(do_rename, 'Rename Refactoring')
+
 def transform_module_to_package(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
@@ -81,19 +84,24 @@ def transform_module_to_package(context):
         editor.refactoring.transform_module_to_package(resource)
 
 def local_rename(context):
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Rename Variable In File')
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text='New Name :')
-    label.grid(row=0, column=0)
-    new_name_entry = Tkinter.Entry(frame)
-    new_name_entry.grid(row=0, column=1)
-    def ok(event=None):
+    def do_rename(new_name):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         editor.refactoring.local_rename(resource,
                                         editor.get_current_offset(),
-                                        new_name_entry.get())
+                                        new_name)
+    _rename_dialog(do_rename, 'Rename Variable In File')
+
+def _extract_dialog(do_extract, kind):
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Extract ' + kind)
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text='New %s Name :' % kind)
+    label.grid(row=0, column=0)
+    new_name_entry = Tkinter.Entry(frame)
+    new_name_entry.grid(row=0, column=1)
+    def ok(event=None):
+        do_extract(new_name_entry.get())
         toplevel.destroy()
     def cancel(event=None):
         toplevel.destroy()
@@ -109,66 +117,24 @@ def local_rename(context):
     new_name_entry.focus_set()
 
 def extract_method(context):
-    if not context.get_active_editor():
-        return
-    editor = context.get_active_editor().get_editor()
-    resource = context.get_active_editor().get_file()
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Extract Method')
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text='New Method Name :')
-    label.grid(row=0, column=0)
-    new_name_entry = Tkinter.Entry(frame)
-    new_name_entry.grid(row=0, column=1)
-    def ok(event=None):
+    def do_extract(new_name):
+        editor = context.get_active_editor().get_editor()
+        resource = context.get_active_editor().get_file()
         (start_offset, end_offset) = editor.get_region_offset()
         editor.refactoring.extract_method(resource,
                                           start_offset, end_offset,
-                                          new_name_entry.get())
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-
-    ok_button = Tkinter.Button(frame, text='Done', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    new_name_entry.bind('<Return>', lambda event: ok())
-    new_name_entry.bind('<Escape>', lambda event: cancel())
-    new_name_entry.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    new_name_entry.focus_set()
+                                          new_name)
+    _extract_dialog(do_extract, 'Method')
 
 def extract_variable(context):
-    if not context.get_active_editor():
-        return
-    editor = context.get_active_editor().get_editor()
-    resource = context.get_active_editor().get_file()
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Extract Local Variable')
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text='New Variable Name :')
-    label.grid(row=0, column=0)
-    new_name_entry = Tkinter.Entry(frame)
-    new_name_entry.grid(row=0, column=1)
-    def ok(event=None):
+    def do_extract(new_name):
+        editor = context.get_active_editor().get_editor()
+        resource = context.get_active_editor().get_file()
         (start_offset, end_offset) = editor.get_region_offset()
         editor.refactoring.extract_variable(resource,
                                             start_offset, end_offset,
-                                            new_name_entry.get())
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-
-    ok_button = Tkinter.Button(frame, text='Done', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    new_name_entry.bind('<Return>', lambda event: ok())
-    new_name_entry.bind('<Escape>', lambda event: cancel())
-    new_name_entry.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    new_name_entry.focus_set()
+                                            new_name)
+    _extract_dialog(do_extract, 'Variable')
 
 def _confirm_action(title, message, action):
     toplevel = Tkinter.Toplevel()

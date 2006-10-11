@@ -97,5 +97,5 @@ class _LazyNameFinderCreator(object):
         if self.name_finder is None:
             if self.pymodule is None:
                 self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-            self.pyname_finder = rope.codeanalyze.ScopeNameFinder(self.pymodule)
-        return self.pyname_finder
+            self.name_finder = rope.codeanalyze.ScopeNameFinder(self.pymodule)
+        return self.name_finder

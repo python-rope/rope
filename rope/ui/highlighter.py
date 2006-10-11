@@ -58,7 +58,8 @@ class Highlighting(object):
 
 class HighlightingStyle(object):
 
-    def __init__(self, color=None, bold=None, italic=None, strikethrough=None, underline=None):
+    def __init__(self, color=None, bold=None, italic=None,
+                 strikethrough=None, underline=None):
         self.color = color
         self.bold = bold
         self.italic = italic
@@ -84,7 +85,8 @@ class PythonHighlighting(Highlighting):
         dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
         sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
         dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
-        string_pattern = PythonHighlighting.any("string", [sq3string, dq3string, sqstring, dqstring])
+        string_pattern = PythonHighlighting.any(
+                       "string", [sq3string, dq3string, sqstring, dqstring])
         definition_pattern = r'^\s*(?P<defkeyword>def|class)\s+(?P<definition>\w+)'
         all_patterns = definition_pattern + '|' + keyword_pattern + '|' + \
                        builtin_pattern + '|' + comment_pattern + '|' + string_pattern

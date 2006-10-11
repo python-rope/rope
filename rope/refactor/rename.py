@@ -7,6 +7,7 @@ from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 import rope.refactor.occurances
 
+
 class RenameRefactoring(object):
     
     def __init__(self, pycore):
