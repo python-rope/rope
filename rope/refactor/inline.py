@@ -16,7 +16,7 @@ class InlineRefactoring(object):
     
     def inline(self):
         definition_line = self.pyname.assigned_asts[0].lineno
-        lines = rope.codeanalyze.SourceLinesAdapter(self.pymodule.source_code)
+        lines = self.pymodule.lines
         start, end = rope.codeanalyze.LogicalLineFinder(lines).\
                      get_logical_line_in(definition_line)
         definition_lines = []

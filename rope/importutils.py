@@ -3,7 +3,6 @@ import compiler
 import rope.pynames
 import rope.exceptions
 import rope.refactor.rename
-from rope.codeanalyze import SourceLinesAdapter
 
 
 class ImportTools(object):
@@ -627,7 +626,7 @@ class _GlobalImportFinder(object):
             self.pymodule = pymodule
         self.pycore = pycore
         self.imports = []
-        self.lines = SourceLinesAdapter(self.pymodule.source_code)
+        self.lines = self.pymodule.lines
     
     def visit_import(self, node, end_line):
         start_line = node.lineno

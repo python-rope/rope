@@ -1,14 +1,7 @@
 Refactoring
 ===========
 
-- Function decorators and the type of the first parameter
-
-  - normal functions
-  - @classmethod
-  - @staticmethod
-  - otherwise if its name is self
-
-* Creating `SourceLinesAdapter` s are expensive; Having one in `PyModule`
+- Creating `SourceLinesAdapter` s are expensive; Having one in `PyModule`
 
 
 Remaining Stories
@@ -34,7 +27,4 @@ Remaining Stories
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
 * Eliminating `Editor.refactoring`
 * Calling `sys.settrace` for all threads in `rope.runmod` module
-* Keyboard shortcuts for new features
 * Goto definition for ``"# comment.\na_var"``
-* Slow `GraphicalEditor._get_offset`
-* GUI testing redux; make a functests directory?; rename ropetest to unittests?

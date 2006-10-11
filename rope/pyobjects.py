@@ -278,9 +278,17 @@ class PyModule(_PyModule):
 
     def __init__(self, pycore, source_code, resource=None):
         self.source_code = source_code
+        self._lines = None
         ast_node = compiler.parse(source_code.rstrip(' \t'))
         self.star_imports = []
         super(PyModule, self).__init__(pycore, ast_node, resource)
+    
+    def _get_lines(self):
+        if self._lines is None:
+            self._lines = rope.codeanalyze.SourceLinesAdapter(self.source_code)
+        return self._lines
+    
+    lines = property(_get_lines, doc="return `SourceLinesAdapter`")
     
     def _create_concluded_attributes(self):
         result = {}

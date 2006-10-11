@@ -40,7 +40,8 @@ class _ExtractInformation(object):
     def __init__(self, pycore, resource, start_offset, end_offset):
         self.source_code = source_code = resource.read()
         
-        self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
+        pymodule = pycore.resource_to_pyobject(resource)
+        self.lines = pymodule.lines
         self.line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
         
         self.region = (self._choose_closest_line_end(start_offset),
@@ -53,8 +54,7 @@ class _ExtractInformation(object):
         self.region_lines = (self.lines.get_line_start(self.region_linenos[0]),
                              self.lines.get_line_end(self.region_linenos[1]))
         
-        scope = pycore.resource_to_pyobject(resource).get_scope()
-        holding_scope = self._find_holding_scope(scope, self.region_linenos[0])
+        holding_scope = self._find_holding_scope(pymodule.get_scope(), self.region_linenos[0])
         self.scope = (self.lines.get_line_start(holding_scope.get_start()),
                       self.lines.get_line_end(holding_scope.get_end()) + 1)
         
@@ -120,7 +120,7 @@ class _ExtractPerformer(object):
         self.extract_variable = extract_variable
         self.info = info
         
-        self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
+        self.lines = info.lines
         
         self.first_line_indents = self._get_indents(self.info.region_linenos[0])
         self.scope = pycore.get_string_scope(source_code, resource)

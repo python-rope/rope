@@ -4,7 +4,6 @@ import sys
 import rope.objectinfer
 import rope.refactor
 import rope.dynamicoi
-import rope.codeanalyze
 from rope.exceptions import ModuleNotFoundException
 from rope.pyobjects import *
 

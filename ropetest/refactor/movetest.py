@@ -144,3 +144,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('pkg2/pkg/mod4.py', self.mod4.get_path())
         self.assertEquals('pkg2/pkg/mod5.py', self.mod5.get_path())
         self.assertEquals('import pkg2.pkg.mod4\nprint pkg2.pkg.mod4', self.mod1.read())
+
+
+if __name__ == '__main__':
+    unittest.main()

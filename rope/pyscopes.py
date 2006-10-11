@@ -1,6 +1,5 @@
 import compiler
 
-import rope.codeanalyze
 import rope.pynames
 import rope.pyobjects
 import rope.exceptions
@@ -91,7 +90,7 @@ class GlobalScope(Scope):
     
     def _get_scope_finder(self):
         if self.scope_finder is None:
-            self.scope_finder = _HoldingScopeFinder(self.pyobject.source_code)
+            self.scope_finder = _HoldingScopeFinder(self.pyobject)
         return self.scope_finder
 
 
@@ -154,9 +153,9 @@ class ClassScope(Scope):
 
 class _HoldingScopeFinder(object):
 
-    def __init__(self, source_code):
-        self.source_code = source_code
-        self.lines = rope.codeanalyze.SourceLinesAdapter(source_code)
+    def __init__(self, pymodule):
+        self.source_code = pymodule.source_code
+        self.lines = pymodule.lines
     
     def get_indents(self, lineno):
         indents = 0

@@ -39,7 +39,7 @@ class IntroduceFactoryRefactoring(object):
         source_code = rename_in_module.get_changed_module(pymodule=self.pymodule)
         if source_code is None:
             source_code = self.pymodule.source_code
-        lines = rope.codeanalyze.SourceLinesAdapter(source_code)
+        lines = self.pymodule.lines
         start = self._get_insertion_offset(class_scope, lines)
         result = source_code[:start]
         result += self._get_factory_method(lines, class_scope)

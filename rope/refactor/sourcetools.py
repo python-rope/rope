@@ -1,4 +1,3 @@
-import rope.codeanalyze
 
 
 def get_indents(lines, lineno):

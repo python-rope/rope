@@ -136,7 +136,7 @@ class _GlobalMover(_Mover):
         changes.add_change(ChangeFileContents(self.source, source))
 
     def _get_moved_moving_source(self, source):
-        lines = rope.codeanalyze.SourceLinesAdapter(source)
+        lines = self.pycore.resource_to_pyobject(self.source).lines
         scope = self.old_pyname.get_object().get_scope()
         start = lines.get_line_start(scope.get_start())
         end = lines.get_line_end(scope.get_end())
@@ -155,9 +155,8 @@ class _GlobalMover(_Mover):
         module_with_imports = self.import_tools.get_module_with_imports(pymodule)
         source = pymodule.source_code
         if module_with_imports.get_import_statements():
-            lines = rope.codeanalyze.SourceLinesAdapter(source)
-            start = lines.get_line_end(module_with_imports.
-                                       get_import_statements()[-1].end_line - 1)
+            start = pymodule.lines.get_line_end(
+                module_with_imports.get_import_statements()[-1].end_line - 1)
             result = source[:start + 1] + '\n\n'
         else:
             result = ''
@@ -194,7 +193,7 @@ class _GlobalMover(_Mover):
         return self.import_tools.get_module_with_imports(pymodule)
 
     def _get_moving_element(self):
-        lines = rope.codeanalyze.SourceLinesAdapter(self.source.read())
+        lines = self.pycore.resource_to_pyobject(self.source).lines
         scope = self.old_pyname.get_object().get_scope()
         start = lines.get_line_start(scope.get_start())
         end = lines.get_line_end(scope.get_end())
