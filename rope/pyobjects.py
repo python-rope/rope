@@ -134,14 +134,28 @@ class PyFunction(PyDefinedObject):
         
         if pyobjects is None:
             pyobjects = []
-            if self.parent.get_type() == PyObject.get_base_type('Type') and \
-               not self.decorators:
-                pyobjects.append(PyObject(self.parent))
+            if self.parent.get_type() == PyObject.get_base_type('Type'):
+                if not self.decorators:
+                    pyobjects.append(PyObject(self.parent))
+                elif self._is_staticmethod_decorator(self.decorators.nodes[0]):
+                    pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
+                elif self._is_classmethod_decorator(self.decorators.nodes[0]):
+                    pyobjects.append(self.parent)
+                elif self.parameters[0] == 'self':
+                    pyobjects.append(PyObject(self.parent))
+                else:
+                    pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
             else:
                 pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
             for parameter in self.parameters[1:]:
                 pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
         return pyobjects
+    
+    def _is_staticmethod_decorator(self, node):
+        return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'
+    
+    def _is_classmethod_decorator(self, node):
+        return isinstance(node, compiler.ast.Name) and node.name == 'classmethod'
     
     def get_parameters(self):
         if self.parameter_pynames.get() is None:
@@ -288,7 +302,7 @@ class PyPackage(_PyModule):
     def __init__(self, pycore, resource=None):
         self.resource = resource
         if resource is not None and resource.has_child('__init__.py'):
-            ast_node = compiler.parse(resource.get_child('__init__.py').read())
+            ast_node = pycore.resource_to_pyobject(resource.get_child('__init__.py'))._get_ast()
         else:
             ast_node = compiler.parse('\n')
         super(PyPackage, self).__init__(pycore, ast_node, resource)

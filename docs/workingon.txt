@@ -1,8 +1,12 @@
 Refactoring
 ===========
 
-- Adding `GlobalScope.get_inner_scope_for_offset` to avoid using
-  `SourceLinesAdapter` in find_subclasses
+- Function decorators and the type of the first parameter
+
+  - normal functions
+  - @classmethod
+  - @staticmethod
+  - otherwise if its name is self
 
 * Creating `SourceLinesAdapter` s are expensive; Having one in `PyModule`
 
@@ -10,13 +14,12 @@ Refactoring
 Remaining Stories
 =================
 
-* Reporting unhandled exceptions in the GUI
+* Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use editor._CompletionListHandle
 * Showing initial name in rename dialogs
 * Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
   ``COPYING`` to help menu; Adding readonly mode?
 * Extract method and return statements
-* Function decorators and renaming attributes of self
 * Import addition when adding a relative with an absolute import
 * Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
