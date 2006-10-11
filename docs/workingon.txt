@@ -1,8 +1,7 @@
 Refactoring
 ===========
 
-- Creating `SourceLinesAdapter` s are expensive; Having one in `PyModule`
-
+- Better unused imports finding
 
 Remaining Stories
 =================

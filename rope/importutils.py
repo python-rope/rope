@@ -237,13 +237,21 @@ class _OneTimeSelector(object):
         self.selected_names = set()
     
     def __call__(self, imported_primary):
-        name = imported_primary.split('.')[0]
-        if name in self.names and imported_primary not in self.selected_names:
-            for imported_name in self.selected_names:
-                if imported_name.startswith(imported_primary + '.'):
-                    return False
-            self.selected_names.add(imported_primary)
+        if self._can_name_be_added(imported_primary):
+            for name in self._get_dotted_tokens(imported_primary):
+                self.selected_names.add(name)
             return True
+        return False
+    
+    def _get_dotted_tokens(self, imported_primary):
+        tokens = imported_primary.split('.')
+        for i in range(len(tokens)):
+            yield '.'.join(tokens[:i + 1])
+    
+    def _can_name_be_added(self, imported_primary):
+        for name in self._get_dotted_tokens(imported_primary):
+            if name in self.names and name not in self.selected_names:
+                return True
         return False
 
 
@@ -556,6 +564,15 @@ class _UnboundNameFinder(object):
     def visitName(self, node):
         if self._get_root()._is_node_interesting(node) and not self.is_bound(node.name):
             self.add_unbound(node.name)
+    
+    def visitGetattr(self, node):
+        result = []
+        while isinstance(node, compiler.ast.Getattr):
+            result.append(node.attrname)
+            node = node.expr
+        if isinstance(node, compiler.ast.Name):
+            result.append(node.name)
+            self.add_unbound('.'.join(reversed(result)))
 
     def _get_root(self):
         pass
@@ -590,7 +607,9 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
         return False
     
     def add_unbound(self, name):
-        self.unbound.add(name)
+        names = name.split('.')
+        for i in range(len(names)):
+            self.unbound.add('.'.join(names[:i + 1]))
 
     def _is_node_interesting(self, node):
         start = self.start
