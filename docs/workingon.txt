@@ -1,7 +1,9 @@
 Refactoring
 ===========
 
-- Better unused imports finding
+- Changing move refactoring dialog to take module name
+- Folder destinations and move refactorings
+
 
 Remaining Stories
 =================

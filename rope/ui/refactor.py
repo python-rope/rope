@@ -1,5 +1,6 @@
 import Tkinter
 
+import rope.importutils
 import rope.ui.core
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
@@ -216,22 +217,25 @@ def introduce_factory(context):
 
 class _ModuleViewHandle(TreeViewHandle):
     
-    def __init__(self, core, toplevel, do_select):
-        self.core = core
+    def __init__(self, project, toplevel, do_select):
+        self.project = project
         self.toplevel = toplevel
         self.do_select = do_select
 
     def entry_to_string(self, resource):
-        result = resource.get_name()
-        if result == '':
-            result = 'project root'
-        return result
+        if resource.is_folder():
+            result = resource.get_name()
+            if result == '':
+                result = 'project root'
+            return result
+        else:
+            return resource.get_name()[:-3]
     
     def get_children(self, resource):
         if resource.is_folder():
             return [child for child in resource.get_children()
-                    if (not child.get_name().startswith('.') and
-                        not child.get_name().endswith('.pyc'))]
+                    if not child.get_name().startswith('.') and 
+                    (child.is_folder() or child.get_name().endswith('.py'))]
         else:
             return []
 
@@ -244,6 +248,7 @@ class _ModuleViewHandle(TreeViewHandle):
 
     def focus_went_out(self):
         pass
+
 
 def move(context):
     if not context.get_active_editor():
@@ -259,20 +264,21 @@ def move(context):
     def ok(event=None):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
-        destination = project.get_resource(new_name_entry.get())
+        destination = project.get_pycore().find_module(new_name_entry.get())
         editor.refactoring.move(resource,
                                 editor.get_current_offset(),
                                 destination)
         toplevel.destroy()
     def cancel(event=None):
         toplevel.destroy()
-    def do_select(folder):
+    def do_select(resource):
+        name = rope.importutils.ImportTools.get_module_name(project.get_pycore(), resource)
         new_name_entry.delete(0, Tkinter.END)
-        new_name_entry.insert(0, folder.get_path())
+        new_name_entry.insert(0, name)
     def browse():
         toplevel = Tkinter.Toplevel()
         toplevel.title('Choose Destination Module')
-        tree_handle = _ModuleViewHandle(core, toplevel, do_select)
+        tree_handle = _ModuleViewHandle(core.get_open_project(), toplevel, do_select)
         tree_view = TreeView(toplevel, tree_handle, title='Destination Module')
         tree_view.add_entry(context.get_core().project.get_root_folder())
         tree_view.list.focus_set()

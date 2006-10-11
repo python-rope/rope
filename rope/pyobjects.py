@@ -319,18 +319,24 @@ class PyPackage(_PyModule):
         result = {}
         if self.resource is None:
             return result
-        for child in self.resource.get_children():
-            if child.is_folder():
-                result[child.get_name()] = ImportedModule(self, resource=child)
-            elif child.get_name().endswith('.py') and \
-                 child.get_name() != '__init__.py':
-                name = child.get_name()[:-3]
-                result[name] = ImportedModule(self, resource=child)
+        for name, resource in self._get_child_resources().items():
+            result[name] = ImportedModule(self, resource=resource)
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
             init_object = self.pycore.resource_to_pyobject(init_dot_py)
             result.update(init_object.get_attributes())
             init_object._add_dependant(self)
+        return result
+
+    def _get_child_resources(self):
+        result = {}
+        for child in self.resource.get_children():
+            if child.is_folder():
+                result[child.get_name()] = child
+            elif child.get_name().endswith('.py') and \
+                 child.get_name() != '__init__.py':
+                name = child.get_name()[:-3]
+                result[name] = child
         return result
 
     def _get_init_dot_py(self):

@@ -91,6 +91,8 @@ class _GlobalMover(_Mover):
         source = pymodule.get_resource()
         new_name = rope.importutils.ImportTools.get_module_name(
             pycore, destination) + '.' + old_name
+        if destination.is_folder() and destination.has_child('__init__.py'):
+            destination = destination.get_child('__init__.py')
         
         super(_GlobalMover, self).__init__(pycore, source, destination,
                                            pyname, old_name, new_name)

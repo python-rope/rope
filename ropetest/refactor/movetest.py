@@ -65,8 +65,9 @@ class MoveRefactoringTest(unittest.TestCase):
 
     @ropetest.testutils.assert_raises(rope.exceptions.RefactoringException)
     def test_folder_destination(self):
+        folder = self.project.get_root_folder().create_folder('folder')
         self.mod1.write('class AClass(object):\n    pass\n')
-        self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, self.pkg)
+        self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, folder)
     
     @ropetest.testutils.assert_raises(rope.exceptions.RefactoringException)
     def test_raising_exception_for_moving_non_global_elements(self):
