@@ -280,7 +280,8 @@ def move(context):
         toplevel.title('Choose Destination Module')
         tree_handle = _ModuleViewHandle(core.get_open_project(), toplevel, do_select)
         tree_view = TreeView(toplevel, tree_handle, title='Destination Module')
-        tree_view.add_entry(context.get_core().project.get_root_folder())
+        for folder in project.get_pycore().get_source_folders():
+            tree_view.add_entry(folder)
         tree_view.list.focus_set()
         toplevel.grab_set()
 
@@ -359,7 +360,7 @@ actions.append(SimpleAction('Transform Module to Package',
                             MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1), 
                             ['python']))
 actions.append(SimpleAction('Organize Imports', 
-                            ConfirmAllEditorsAreSaved(organize_imports), 'M-O',
+                            ConfirmAllEditorsAreSaved(organize_imports), 'C-O',
                             MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
 actions.append(SimpleAction('Expand Star Imports', 
                             ConfirmAllEditorsAreSaved(expand_star_imports), None,

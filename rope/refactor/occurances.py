@@ -1,9 +1,6 @@
 import re
 
 import rope.codeanalyze
-import rope.pynames
-import rope.pyobjects
-import rope.refactor.occurances
 
 
 class OccurrenceFinder(object):
@@ -27,8 +24,7 @@ class OccurrenceFinder(object):
     
     def find_occurances(self, resource=None, pymodule=None):
         source_code = self._get_source(resource, pymodule)
-        name_finder_creator = rope.refactor.occurances.\
-                              _LazyNameFinderCreator(self.pycore,
+        name_finder_creator = _LazyNameFinderCreator(self.pycore,
                                                      resource, pymodule)
         word_finder = rope.codeanalyze.WordRangeFinder(source_code)
         for match in self.pattern.finditer(source_code):

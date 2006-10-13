@@ -146,6 +146,28 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('pkg2/pkg/mod5.py', self.mod5.get_path())
         self.assertEquals('import pkg2.pkg.mod4\nprint pkg2.pkg.mod4', self.mod1.read())
 
+    def test_moving_modules_with_self_imports(self):
+        self.mod1.write('import mod1\nprint mod1\n')
+        self.mod2.write('import mod1\n')
+        self.refactoring.move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
+        self.assertEquals('import pkg.mod1\nprint pkg.mod1\n', self.mod1.read())
+    
+    # TODO: moving fields
+    def xxx_test_moving_fields(self):
+        a_class = 'class A(object):\n' \
+                  '    def __init__(self):\n' \
+                  '        self.b = B()\n' \
+                  '        self.attr = 1\n'
+        b_class = 'class B(object):\n    pass\n'
+        self.mod1.write(a_class + b_class)
+        self.refactoring.move(self.mod1, self.mod1.read().index('attr') + 1, 'b')
+        
+        a_class2 = 'class A(object):\n' \
+                   '    def __init__(self):\n' \
+                   '        self.b = B()\n' \
+                   '        self.b.attr = 1\n'
+        self.assertEquals(a_class2 + b_class, self.mod1.read())
+
 
 if __name__ == '__main__':
     unittest.main()

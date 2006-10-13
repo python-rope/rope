@@ -8,11 +8,7 @@ from rope.refactor.move import MoveRefactoring
 from rope.refactor.inline import InlineRefactoring
 
 
-class Refactoring(object):
-    pass
-
-
-class PythonRefactoring(Refactoring):
+class PythonRefactoring(object):
 
     def __init__(self, pycore):
         self.pycore = pycore
@@ -138,7 +134,7 @@ class ImportOrganizer(object):
             self.refactoring._add_and_commit_changes(changes)
     
 
-class NoRefactoring(Refactoring):
+class NoRefactoring(object):
     pass
 
 

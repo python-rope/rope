@@ -89,6 +89,49 @@ We should be able to make transaction so that if an error occurs
 during one action we can revert back.
 
 
+Moving Fields/Methods
+=====================
+
+* How to specify the destination field?
+
+  The problem is move refactoring takes a resource as its
+  destination but surely we need something to indicate destination fields.
+
+* How tell that a pyname is a class attribute?
+
+  * An attribute should be defined in a class or a method in a class
+  * The holding class for a pyname should consider it as one of its
+    attributes
+
+* Moving defined objects
+
+  * If self is used renaming it and passing it as a second argument?
+  * Moving used imports
+
+Move refactoring should support moving:
+
+=======================  =============
+source                   destination
+=======================  =============
+module                   module
+global class/function    module
+class fields/methods     attribute
+static functions         class
+=======================  =============
+
+The problem of destination might be solved by passing a `PyName`
+or a `PyObject` instead of a `Resource`.  Maybe we can take a
+class as the destination for moving fields and methods instead
+of an attribute.
+
+Maybe we can have separate methods for moving each of above
+groups.
+
+move_module(resource, resource)
+move_global(pyobject, resource)
+move_attribute(pyobject, pyobject)
+
+
 Dyanmic Type Inference Issues
 =============================
 
@@ -233,6 +276,17 @@ methods we need to do the same for these methods.  When we're finished
 we can perform the actual refactoring.  The challenge here is that we
 should consider inheritance relations, too.
 
+Among `PyName` classes `AssignedName`, `ParameterName` and
+`ImportedName` might have more than one object.  And I believe
+the main place to change is `StatementEvaluator` that might
+return a list of pynames in ``${attribute_accesses}.name``
+where `attribute_accessses` might result in more than one kind
+of pyname.  This implies that `get_pyname_at` might return a list
+of pynames.
+
+`objectinfer` should be changed to find all of the objects that can
+be inferred.
+
 
 Which Is Right? Type Or Object Inference
 ========================================
@@ -247,16 +301,6 @@ interesting information that does not exist in its type.
 As an example classes(types) are instances of `type` class.  That is
 their type is `type`.  But knowing their type does not give us much
 information about the methods defined in these derived classes.
-
-
-Getting Buried Under Layers
-===========================
-
-Starting from `rope.pycore` module, there are many layers that are
-hidden beneath it.  Most of unit tests only test `PyCore` directly and
-other parts are tested indirectly through many layers that lead to
-`PyCore`.  I guess this is a bad sign.  Maybe I should put more time
-in making each layer more testable and independant of other layers.
 
 
 Builtin Types And Functions
@@ -361,3 +405,9 @@ Handling Multi-key Keyboard Shortcuts
 Unfortunately `Tk` has problems for handling multi-key keyboard
 shortcuts.  We can develop another independant keybinding system that
 uses `Tk` to solve these problems.
+
+
+A Good Keybinding
+-----------------
+
+Make a good emacs-ish keybinding.

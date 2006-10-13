@@ -287,3 +287,7 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self.do_local_rename(code, code.rfind('param') + 1, 'new_param')
         self.assertEquals('def a_func(new_param):\n    print new_param\n'
                           'a_func  (new_param=hey)\n', refactored)
+
+
+if __name__ == '__main__':
+    unittest.main()

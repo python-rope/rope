@@ -180,13 +180,7 @@ Stories
 * Introduce redirection
 
 
-* Enhancing module running
-
-  * Showing running status in the GUI
-  * Printing output
-  * Getting input
-  * Customizing CWD and parameters
-  * Running last run
+* Encapsulate field
 
 
 * Change method signature
@@ -196,22 +190,28 @@ Stories
   * Reorder
 
 
+* Moving fields/methods to attribute classes
+
+
 * Sorting imports; standard, third party, project
-
-
-* Inline method
 
 
 * Removing imports from the same module
 
 
+* Enhancing module running
+
+  * Showing running status in the GUI
+  * Printing output
+  * Getting input
+  * Customizing CWD and parameters
+  * Running last run
+
+
 * Running unit tests view
 
 
-* Encapsulate field
-
-
-* Moving fields/methods to attribute classes
+* Inline method
 
 
 > Public Release 0.3m5 : October 15, 2006

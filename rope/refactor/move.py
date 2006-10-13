@@ -98,6 +98,7 @@ class _GlobalMover(_Mover):
                                            pyname, old_name, new_name)
         self.new_import = self.import_tools.get_import_for_module(
             self.pycore.resource_to_pyobject(self.destination))
+        scope = pyname.get_object().get_scope()
 
     def _check_exceptional_conditions(self):
         if self.old_pyname is None or \
@@ -129,7 +130,7 @@ class _GlobalMover(_Mover):
         pymodule, has_changed = self._rename_in_module(pymodule, self.new_name)
         if has_changed:
             uses_moving = True
-        source = self._get_moved_moving_source(pymodule.source_code)
+        source = self._get_moved_moving_source(pymodule)
         if uses_moving:
             pymodule = self.pycore.get_string_module(source, self.source)
             # Adding new import
@@ -137,8 +138,9 @@ class _GlobalMover(_Mover):
         
         changes.add_change(ChangeFileContents(self.source, source))
 
-    def _get_moved_moving_source(self, source):
-        lines = self.pycore.resource_to_pyobject(self.source).lines
+    def _get_moved_moving_source(self, pymodule):
+        source = pymodule.source_code
+        lines = pymodule.lines
         scope = self.old_pyname.get_object().get_scope()
         start = lines.get_line_start(scope.get_start())
         end = lines.get_line_end(scope.get_end())
@@ -261,11 +263,19 @@ class _ModuleMover(_Mover):
     
     def _change_moving_module(self, changes):
         if not self.source.is_folder():
+            is_changed = False
             pymodule = self.pycore.resource_to_pyobject(self.source)
             source = self.import_tools.transform_relative_imports_to_absolute(pymodule)
             if source is not None:
-                changes.add_change(ChangeFileContents(self.source,
-                                                      source))
+                pymodule = self.pycore.get_string_module(source, self.source)
+                is_changed = True
+            source = self._change_occurances_in_module(pymodule)
+            if source is not None:
+                is_changed = True
+            else:
+                source = pymodule.source_code
+            if is_changed:
+                changes.add_change(ChangeFileContents(self.source, source))
         changes.add_change(MoveResource(self.source,
                                         self.destination.get_path()))
 
@@ -273,20 +283,26 @@ class _ModuleMover(_Mover):
         for module in self.pycore.get_python_files():
             if module in (self.source, self.destination):
                 continue
-            is_changed = False
-            should_import = False
             pymodule = self.pycore.resource_to_pyobject(module)
-            pymodule, has_changed = self._rename_in_module(pymodule, self.new_name, imports=True)
-            if has_changed:
-                is_changed = True
-            pymodule, has_changed = self._remove_old_pyname_imports(pymodule)
-            if has_changed:
-                should_import = True
-                is_changed = True
-            if should_import:
-                source = self._add_imports_to_module(pymodule, [self.new_import])
-            else:
-                source = pymodule.source_code
-            if is_changed:
+            source = self._change_occurances_in_module(pymodule)
+            if source is not None:
                 changes.add_change(ChangeFileContents(module, source))
-    
+
+    def _change_occurances_in_module(self, pymodule):
+        is_changed = False
+        should_import = False
+        pymodule, has_changed = self._rename_in_module(pymodule, self.new_name,
+                                                       imports=True)
+        if has_changed:
+            is_changed = True
+        pymodule, has_changed = self._remove_old_pyname_imports(pymodule)
+        if has_changed:
+            should_import = True
+            is_changed = True
+        if should_import:
+            source = self._add_imports_to_module(pymodule, [self.new_import])
+        else:
+            source = pymodule.source_code
+        if is_changed:
+            return source
+

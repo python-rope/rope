@@ -1,15 +1,28 @@
-Refactoring
+Exploration
 ===========
 
-- Changing move refactoring dialog to take module name
-- Folder destinations and move refactorings
+* Implicit interfaces sprint
+* Unit test view
+* Move field
+
+* Adding ``add_method(scope, method)``
+* Adding ``add_statement(method, statement)``
+
+
+Before ``0.3m5``
+================
+
+* ``overview.txt``
+* ``README.txt``
+* homepage
 
 
 Remaining Stories
 =================
 
 * Reporting unhandled exceptions as error dialogs in the GUI
-* Better move dialog; complete modules names; use editor._CompletionListHandle
+* Better move dialog; complete modules names; use `editor._CompletionListHandle`
+* Moving/renaming current module
 * Showing initial name in rename dialogs
 * Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
   ``COPYING`` to help menu; Adding readonly mode?

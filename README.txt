@@ -41,7 +41,7 @@ M-M        Extract method
 M-V        Move refactoring
 M-I        Inline local variable
 
-M-O        Organize imports
+C-O        Organize imports
 =========  ======================
 
 
@@ -92,6 +92,7 @@ M-R            rename refactoring
 M-M            extract method
 M-V            move refactoring
 M-I            inline local variable
+C-O            organize imports
 =============  ==========================
 
 Have a look at `docs/overview.txt`_ file for an overview of rope's features.

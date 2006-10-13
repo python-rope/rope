@@ -109,8 +109,8 @@ class PythonFileRunnerTest(unittest.TestCase):
         self.project.get_root_folder().create_folder('test')
         file_path = 'test/test.py'
         self.make_sample_python_file(file_path,
-                                     "def get_text():" +
-                                     "\n    import sample\n    sample.f()\n    return'run'\n")
+                                     "def get_text():\n"
+                                     "    import sample\n    sample.f()\n    return'run'\n")
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
