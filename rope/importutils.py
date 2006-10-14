@@ -572,7 +572,11 @@ class _UnboundNameFinder(object):
             node = node.expr
         if isinstance(node, compiler.ast.Name):
             result.append(node.name)
-            self.add_unbound('.'.join(reversed(result)))
+            primary = '.'.join(reversed(result))
+            if self._get_root()._is_node_interesting(node) and not self.is_bound(primary):
+                self.add_unbound(primary)
+        else:
+            compiler.walk(node, self)
 
     def _get_root(self):
         pass
@@ -601,7 +605,8 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
     def _get_root(self):
         return self
     
-    def is_bound(self, name):
+    def is_bound(self, primary):
+        name = primary.split('.')[0]
         if name in self.names:
             return True
         return False
@@ -626,8 +631,9 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
     def _get_root(self):
         return self.parent._get_root()
     
-    def is_bound(self, name):
-        if name in self.pyobject.get_attributes() or \
+    def is_bound(self, primary):
+        name = primary.split('.')[0]
+        if name in self.pyobject.get_scope().get_names() or \
            self.parent.is_bound(name):
             return True
         return False

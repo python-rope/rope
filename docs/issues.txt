@@ -92,11 +92,6 @@ during one action we can revert back.
 Moving Fields/Methods
 =====================
 
-* How to specify the destination field?
-
-  The problem is move refactoring takes a resource as its
-  destination but surely we need something to indicate destination fields.
-
 * How tell that a pyname is a class attribute?
 
   * An attribute should be defined in a class or a method in a class
@@ -125,11 +120,26 @@ class as the destination for moving fields and methods instead
 of an attribute.
 
 Maybe we can have separate methods for moving each of above
-groups.
+groups.::
+  
+  move_module(resource, resource)
+  move_global(pyobject, resource)
+  move_attribute(pyobject, pyobject)
 
-move_module(resource, resource)
-move_global(pyobject, resource)
-move_attribute(pyobject, pyobject)
+
+Reconsidering Refactoring Interface
+===================================
+
+Adding `Refactoring` class::
+  
+  class Refactoring(object):
+      
+      def get_name(self):
+          pass
+      
+      def get_changes(self, *args, *kwds):
+          pass
+
 
 
 Dyanmic Type Inference Issues

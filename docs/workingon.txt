@@ -1,16 +1,7 @@
-Exploration
-===========
-
-* Implicit interfaces sprint
-* Unit test view
-* Move field
-
-* Adding ``add_method(scope, method)``
-* Adding ``add_statement(method, statement)``
-
-
 Before ``0.3m5``
 ================
+
+- Function parameters and unbound names
 
 * ``overview.txt``
 * ``README.txt``
@@ -20,6 +11,8 @@ Before ``0.3m5``
 Remaining Stories
 =================
 
+* Adding ``add_method(scope, method, preceding_method=None)``
+* Adding ``add_statement(method, statement)``
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Moving/renaming current module

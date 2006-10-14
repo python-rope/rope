@@ -285,6 +285,43 @@ class RefactoringUndoTest(unittest.TestCase):
         self.assertEquals('3', self.file.read())
 
 
+class EncapsulateFieldTest(unittest.TestCase):
+
+    def setUp(self):
+        super(EncapsulateFieldTest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
+        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        self.mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        self.a_class = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n'
+        self.setter_and_getter = '\n    def get_attr(self):\n        return self.attr\n\n' \
+                                 '    def set_attr(self, value):\n        self.attr = value\n'
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(EncapsulateFieldTest, self).tearDown()
+
+    def test_adding_getters_and_setters(self):
+        code = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n'
+        self.mod.write(code)
+        self.refactoring.encapsulate_field(self.mod, code.index('attr') + 1)
+        expected = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n\n' \
+                   '    def get_attr(self):\n        return self.attr\n\n' \
+                   '    def set_attr(self, value):\n        self.attr = value\n'
+        self.assertEquals(expected, self.mod.read())
+
+    # TODO: Continue after 0.3m5 release
+    def xxx_test_changing_getter(self):
+        self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
+        self.mod.write(self.a_class)
+        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
+                          self.mod1.read())
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ropetest.refactor.renametest.RenameRefactoringTest))
@@ -293,10 +330,12 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.refactor.movetest.MoveRefactoringTest))
     result.addTests(unittest.makeSuite(RefactoringUndoTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.inlinetest.InlineLocalVariableTest))
+    result.addTests(unittest.makeSuite(EncapsulateFieldTest))
     return result
 
 
 
 if __name__ == '__main__':
+    #    unittest.main()
     runner = unittest.TextTestRunner()
     runner.run(suite())

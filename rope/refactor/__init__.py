@@ -1,4 +1,5 @@
 import rope.importutils
+import rope.codeanalyze
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 from rope.refactor.rename import RenameRefactoring
@@ -68,6 +69,13 @@ class PythonRefactoring(object):
     def inline_local_variable(self, resource, offset):
         changes = InlineRefactoring(self.pycore, resource, offset).inline()
         self._add_and_commit_changes(changes)
+    
+    def encapsulate_field(self, resource, offset):
+        name = rope.codeanalyze.get_name_at(resource, offset)
+        pyname = rope.codeanalyze.get_name_at(resource, offset)
+        getter = '\n    def get_%s(self):\n        return self.%s\n' % (name, name)
+        setter = '\n    def set_%s(self, value):\n        self.%s = value\n' % (name, name)
+        resource.write(resource.read() + getter + setter)
 
     def _add_and_commit_changes(self, changes):
         self._undo.add_change(changes)
@@ -104,7 +112,7 @@ class ImportOrganizer(object):
         module_with_imports.remove_unused_imports()
         module_with_imports.remove_duplicates()
         source = module_with_imports.get_changed_source()
-        if source:
+        if source is not None:
             changes = ChangeSet()
             changes.add_change(ChangeFileContents(resource, source))
             self.refactoring._add_and_commit_changes(changes)
