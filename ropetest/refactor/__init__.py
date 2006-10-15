@@ -313,12 +313,19 @@ class EncapsulateFieldTest(unittest.TestCase):
                    '    def set_attr(self, value):\n        self.attr = value\n'
         self.assertEquals(expected, self.mod.read())
 
-    # TODO: Continue after 0.3m5 release
-    def xxx_test_changing_getter(self):
+    def test_changing_getters_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
         self.mod.write(self.a_class)
         self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
+                          self.mod1.read())
+
+    # TODO: After ``0.3m5`` release
+    def xxx_test_changing_setters_in_other_modules(self):
+        self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\n')
+        self.mod.write(self.a_class)
+        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self.assertEquals('import mod\na_var = mod.A()\na_var.set_attr(1))\n',
                           self.mod1.read())
 
 
@@ -336,6 +343,6 @@ def suite():
 
 
 if __name__ == '__main__':
-    #    unittest.main()
-    runner = unittest.TextTestRunner()
-    runner.run(suite())
+    unittest.main()
+#    runner = unittest.TextTestRunner()
+#    runner.run(suite())

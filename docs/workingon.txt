@@ -1,8 +1,6 @@
 Before ``0.3m5``
 ================
 
-- Function parameters and unbound names
-
 * ``overview.txt``
 * ``README.txt``
 * homepage
@@ -11,6 +9,7 @@ Before ``0.3m5``
 Remaining Stories
 =================
 
+* Considering logical lines in `rope.codeanalyze`
 * Adding ``add_method(scope, method, preceding_method=None)``
 * Adding ``add_statement(method, statement)``
 * Reporting unhandled exceptions as error dialogs in the GUI

@@ -155,7 +155,7 @@ class WordRangeFinder(object):
             return True
         return False
     
-    def is_name_assigned_here(self, offset):
+    def _is_name_assigned_here(self, offset):
         word_start = self._find_word_start(offset - 1)
         word_end = self._find_word_end(offset - 1) + 1
         if '.' in self.source_code[word_start:word_end]:
@@ -399,7 +399,7 @@ class ScopeNameFinder(object):
             return True
         if lineno != holding_scope.get_start() and \
            holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type') and \
-           self.word_finder.is_name_assigned_here(offset):
+           self.word_finder._is_name_assigned_here(offset):
             return True
         return False
     

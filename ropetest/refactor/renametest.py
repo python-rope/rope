@@ -57,6 +57,15 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_renaming_function_parameters2(self):
         refactored = self.do_local_rename("def f(a_param):\n    print a_param\n", 30, 'new_param')
         self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
+    
+    def test_renaming_functions_parameters_and_occurances_in_other_modules(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('def a_func(a_param):\n    print a_param\n')
+        mod2.write('from mod1 import a_func\na_func(a_param=10)\n')
+        self.refactoring.rename(mod1, mod1.read().index('a_param') + 1, 'new_param')
+        self.assertEquals('def a_func(new_param):\n    print new_param\n', mod1.read())
+        self.assertEquals('from mod1 import a_func\na_func(new_param=10)\n', mod2.read())
 
     def test_renaming_with_backslash_continued_names(self):
         refactored = self.do_local_rename("replace = True\n'ali'.\\\nreplace\n", 2, 'is_replace')

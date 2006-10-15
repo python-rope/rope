@@ -2,7 +2,7 @@ import rope.importutils
 import rope.codeanalyze
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
-from rope.refactor.rename import RenameRefactoring
+from rope.refactor.rename import RenameRefactoring, RenameInModule
 from rope.refactor.extract import ExtractMethodRefactoring
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.move import MoveRefactoring
@@ -71,11 +71,22 @@ class PythonRefactoring(object):
         self._add_and_commit_changes(changes)
     
     def encapsulate_field(self, resource, offset):
+        changes = ChangeSet()
         name = rope.codeanalyze.get_name_at(resource, offset)
-        pyname = rope.codeanalyze.get_name_at(resource, offset)
+        pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource, offset)
         getter = '\n    def get_%s(self):\n        return self.%s\n' % (name, name)
         setter = '\n    def set_%s(self, value):\n        self.%s = value\n' % (name, name)
-        resource.write(resource.read() + getter + setter)
+        changes.add_change(ChangeFileContents(resource, resource.read() + getter + setter))
+        rename_in_module = RenameInModule(self.pycore, [pyname], name,
+                                          'get_%s()' % name)
+        for file in self.pycore.get_python_files():
+            if file == resource:
+                continue
+            result = rename_in_module.get_changed_module(file)
+            if result is not None:
+                changes.add_change(ChangeFileContents(file, result))
+        self._add_and_commit_changes(changes)
+            
 
     def _add_and_commit_changes(self, changes):
         self._undo.add_change(changes)

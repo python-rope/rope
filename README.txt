@@ -16,7 +16,21 @@ New Features
 
 Features added in this release:
 
-* 
+* Single line extract method
+* Extract variable
+* Rename function parameters
+* Move a module or package to another package
+* Code completions inside uncompleted ``try`` blocks
+* Hiding unappropriate menu items in different contexts
+* Inline local variable
+
+The `rope.extension` module which can be used to extend rope actions
+has been documented and can be used for writing simle plugins for rope.
+Also rename and move refactorings are now notably faster.
+
+The ``docs/overview.txt`` file has been added that is supposed to
+contain an overview of some of ropes features but right now it is
+quite uncomplete.
 
 
 Getting Started

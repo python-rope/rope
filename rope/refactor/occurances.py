@@ -71,9 +71,10 @@ class OccurrenceFinder(object):
                 pyname1.get_definition_location() == pyname2.get_definition_location())
     
     def _get_occurance_pattern(self, name):
-        occurance_pattern = OccurrenceFinder.any('occurance', ['\\b' + name + '\\b'])
-        pattern = re.compile(occurance_pattern + "|" + \
-                             self.comment_pattern + "|" + self.string_pattern)
+        occurance_pattern = OccurrenceFinder.any('occurance',
+                                                 ['\\b' + name + '\\b'])
+        pattern = re.compile(occurance_pattern + "|" + self.comment_pattern +
+                             "|" + self.string_pattern)
         return pattern
 
     @staticmethod

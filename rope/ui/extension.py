@@ -1,3 +1,11 @@
+"""rope extension module
+
+This module contains interfaces and instructions for extending rope
+actions.
+
+"""
+
+
 class Action(object):
     """Extending rope commands
     

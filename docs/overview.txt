@@ -34,65 +34,6 @@ Goto Definition
 ---------------
 
 
-Outline
-=======
-
-In tree views (like quick outline and project tree views) you can use
-``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
-collapse items.  You can use the ``Return`` key to select items.
-
-
-SVN Support
-===========
-
-The subversion support is somewhat basic.  What rope does is that when
-creating new files or when moving modules and packages for
-refactorings it will call the appropriate subversion commands.  The
-subversion support is automatically turned on when there is a ``.svn``
-folder inside project root and the ``pysvn`` package is
-available. (You can get PySVN from http://pysvn.tigris.org ).  Rope
-assumes all files are under version control when these conditions are
-met.  Also don't forget to commit your changes yourself, rope doesn't
-do that yet.
-
-
-Basic Type Inference
-====================
-
-::
-  
-  class AClass(object):
-      
-      def __init__(self):
-          self.an_attr = 1
-      
-      def call_a_func(self):
-          return a_func()
-  
-  def a_func():
-      return a_func()
-  
-  a_var = a_func()
-  a_var.${codeassist}
-  
-  another_var = a_var
-  another_var.${codeassist}
-  another_var.call_a_func().${codeassist}
-
-
-Dynamic Type Inference
-======================
-
-Dynamic type inference gets its needed information from running
-modules (``M-X p``).  You open the module to run (probably your test
-suite), then use ``M-X p``.  Since as the program runs, rope gathers
-type information, the program runs slower.  Right now rope doesn't
-have a good interface for running programs.  It just prints the output
-to the terminal and does not get inputs.  This will be enhanced in
-future releases. After the program is run, you can get better code
-assists and some of the refactorings perform much better.
-
-
 Refactorings
 ============
 
@@ -178,3 +119,116 @@ and the new project tree would be::
   root/
     mod1.py
     newmod.py
+
+
+Extract Method
+--------------
+
+The position of the mark would be region start and the current
+cursor position would be region end. (The same as emacs copy and
+paste). ::
+  
+  def a_func():
+      a = 1
+      b = 2 * a
+      c = ${region_start}a * 2 + b * 3${region_end}
+  
+After performing extract method we'll have::
+
+  def a_func():
+      a = 1
+      b = 2 * a
+      c = new_func(a, b)
+  
+  def new_func(a, b):
+      return a * 2 + b * 3
+
+
+Basic Type Inference
+====================
+
+::
+  
+  class AClass(object):
+      
+      def __init__(self):
+          self.an_attr = 1
+      
+      def call_a_func(self):
+          return a_func()
+  
+  def a_func():
+      return a_func()
+  
+  a_var = a_func()
+  a_var.${codeassist}
+  
+  another_var = a_var
+  another_var.${codeassist}
+  another_var.call_a_func().${codeassist}
+
+
+Dynamic Type Inference
+======================
+
+Dynamic type inference gets its needed information from running
+modules (``M-X p``).  You open the module to run (probably your test
+suite), then use ``M-X p``.  Since as the program runs, rope gathers
+type information, the program runs slower.  Right now rope doesn't
+have a good interface for running programs.  It just prints the output
+to the terminal and does not get inputs.  This will be enhanced in
+future releases. After the program is run, you can get better code
+assists and some of the refactorings perform much better.
+
+``mod1.py``::
+
+  def f1(param):
+      param.${codeassist}
+      f2(param).${codeassist}
+  
+  def f2(param):
+      param.${codeassist}
+      return param
+
+Using code assist in specified places does not give any information
+and there is actually no information about the return type of `f2` or
+the parameter `param` of `f1`.
+
+``mod2.py``::
+  
+  import mod1
+  
+  class A(object):
+      
+      def a_method(self):
+          pass
+  
+  a_var = A()
+  mod1.f1(a_var)
+  
+After running `mod2` module using rope's `Run Module`, we get good
+code assists in `mod1`.
+
+
+Outline
+=======
+
+In tree views (like quick outline and project tree views) you can use
+``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
+collapse items.  You can use the ``Return`` key to select items.
+
+
+SVN Support
+===========
+
+The subversion support is somewhat basic.  What rope does is that when
+creating new files or when moving modules and packages for
+refactorings it will call the appropriate subversion commands.  The
+subversion support is automatically turned on when there is a ``.svn``
+folder inside project root and the ``pysvn`` package is
+available. (You can get PySVN from http://pysvn.tigris.org ).  Rope
+assumes all files are under version control when these conditions are
+met.  Also don't forget to commit your changes yourself, rope doesn't
+do that yet.
+
+
