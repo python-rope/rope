@@ -127,21 +127,6 @@ groups.::
   move_attribute(pyobject, pyobject)
 
 
-Reconsidering Refactoring Interface
-===================================
-
-Adding `Refactoring` class::
-  
-  class Refactoring(object):
-      
-      def get_name(self):
-          pass
-      
-      def get_changes(self, *args, *kwds):
-          pass
-
-
-
 Dyanmic Type Inference Issues
 =============================
 

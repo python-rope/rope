@@ -180,9 +180,6 @@ Stories
 * Introduce redirection
 
 
-* Encapsulate field
-
-
 * Change method signature
 
   * Add parameter
@@ -212,6 +209,9 @@ Stories
 
 
 * Inline method
+
+
+* Encapsulate field
 
 
 > Public Release 0.3m5 : October 15, 2006

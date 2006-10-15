@@ -1,12 +1,3 @@
-Before ``0.3m5``
-================
-
-* ``overview.txt``
-* ``README.txt``
-* homepage
-* Function keyword parameters an class constructors
-
-
 Remaining Stories
 =================
 
@@ -32,6 +23,6 @@ Remaining Stories
 * Preferring `DefinedName`\s in attribute code assists
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
-* Eliminating `Editor.refactoring`
+* Eliminating `Editor.refactoring`; Use editing contexts
 * Calling `sys.settrace` for all threads in `rope.runmod` module
 * Goto definition for ``"# comment.\na_var"``
