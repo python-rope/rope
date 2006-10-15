@@ -58,6 +58,14 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self.do_local_rename("def f(a_param):\n    print a_param\n", 30, 'new_param')
         self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
     
+    def test_renaming_function_parameters_of_class_init(self):
+        code = 'class A(object):\n    def __init__(self, a_param):\n        pass\n' \
+               'a_var = A(a_param=1)\n'
+        refactored = self.do_local_rename(code, code.index('a_param') + 1, 'new_param')
+        expected = 'class A(object):\n    def __init__(self, new_param):\n        pass\n' \
+                   'a_var = A(new_param=1)\n'
+        self.assertEquals(expected, refactored)
+    
     def test_renaming_functions_parameters_and_occurances_in_other_modules(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')

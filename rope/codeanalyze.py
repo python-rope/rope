@@ -418,7 +418,13 @@ class ScopeNameFinder(object):
             keyword_name = self.word_finder.get_word_at(offset)
             function_parens = self.word_finder.find_parens_start_from_inside(offset)
             function_pyname = self.get_pyname_at(function_parens - 1)
-            return function_pyname.get_object().get_parameters().get(keyword_name, None)
+            if function_pyname is not None:
+                function_pyobject = function_pyname.get_object()
+                if function_pyobject.get_type() == \
+                   rope.pyobjects.PyObject.get_base_type('Type'):
+                    function_pyobject = function_pyobject.get_attribute('__init__').get_object()
+                return function_pyobject.get_parameters().get(keyword_name, None)
+
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
             class_scope = holding_scope

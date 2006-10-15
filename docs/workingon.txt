@@ -4,6 +4,7 @@ Before ``0.3m5``
 * ``overview.txt``
 * ``README.txt``
 * homepage
+* Function keyword parameters an class constructors
 
 
 Remaining Stories

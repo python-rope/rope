@@ -320,7 +320,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
                           self.mod1.read())
 
-    # TODO: After ``0.3m5`` release
+    # TODO: Continue after ``0.3m5`` release
     def xxx_test_changing_setters_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\n')
         self.mod.write(self.a_class)
@@ -343,6 +343,6 @@ def suite():
 
 
 if __name__ == '__main__':
-    unittest.main()
-#    runner = unittest.TextTestRunner()
-#    runner.run(suite())
+    #    unittest.main()
+    runner = unittest.TextTestRunner()
+    runner.run(suite())

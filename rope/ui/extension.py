@@ -15,6 +15,7 @@ class Action(object):
     Core.register_action` method.  Usually `Action` s are registered
     using `rope.ui.core.Core._load_actions` by loading the modules
     that register their actions when loading.
+    
     """
     
     def get_name(self):
