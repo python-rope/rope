@@ -125,7 +125,7 @@ class _GlobalMover(_Mover):
     
     def _change_source_module(self, changes):
         uses_moving = False
-        # Changing occurances
+        # Changing occurrences
         pymodule = self.pycore.resource_to_pyobject(self.source)
         pymodule, has_changed = self._rename_in_module(pymodule, self.new_name)
         if has_changed:
@@ -148,7 +148,7 @@ class _GlobalMover(_Mover):
         return source
     
     def _change_destination_module(self, changes):
-        # Changing occurances
+        # Changing occurrences
         pymodule = self.pycore.resource_to_pyobject(self.destination)
         pymodule, has_changed = self._rename_in_module(pymodule, self.old_name)
         
@@ -216,7 +216,7 @@ class _GlobalMover(_Mover):
             is_changed = False
             should_import = False
             pymodule = self.pycore.resource_to_pyobject(file_)
-            # Changing occurances
+            # Changing occurrences
             pymodule, has_changed = self._rename_in_module(pymodule, self.new_name)
             if has_changed:
                 should_import = True
@@ -269,7 +269,7 @@ class _ModuleMover(_Mover):
             if source is not None:
                 pymodule = self.pycore.get_string_module(source, self.source)
                 is_changed = True
-            source = self._change_occurances_in_module(pymodule)
+            source = self._change_occurrences_in_module(pymodule)
             if source is not None:
                 is_changed = True
             else:
@@ -284,11 +284,11 @@ class _ModuleMover(_Mover):
             if module in (self.source, self.destination):
                 continue
             pymodule = self.pycore.resource_to_pyobject(module)
-            source = self._change_occurances_in_module(pymodule)
+            source = self._change_occurrences_in_module(pymodule)
             if source is not None:
                 changes.add_change(ChangeFileContents(module, source))
 
-    def _change_occurances_in_module(self, pymodule):
+    def _change_occurrences_in_module(self, pymodule):
         is_changed = False
         should_import = False
         pymodule, has_changed = self._rename_in_module(pymodule, self.new_name,

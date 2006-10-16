@@ -5,7 +5,7 @@ import rope.pynames
 import rope.pyobjects
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
-import rope.refactor.occurances
+import rope.refactor.occurrences
 
 
 class RenameRefactoring(object):
@@ -117,17 +117,24 @@ class RenameRefactoring(object):
 class RenameInModule(object):
     
     def __init__(self, pycore, old_pynames, old_name, new_name,
-                 only_calls=False, replace_primary=False, imports=True):
-        self.occurances_finder = rope.refactor.occurances.OccurrenceFinder(
-            pycore, old_pynames, old_name, only_calls,
-            replace_primary, imports)
+                 only_calls=False, replace_primary=False,
+                 imports=True, only_writes=False):
+        self.occurrences_finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
+            pycore, old_pynames, old_name, only_calls, imports, only_writes)
+        self.whole_primary = replace_primary
         self.new_name = new_name
     
     def get_changed_module(self, resource=None, pymodule=None):
         source_code = self._get_source(resource, pymodule)
         result = []
         last_modified_char = 0
-        for start, end in self.occurances_finder.find_occurances(resource, pymodule):
+        for occurrence in self.occurrences_finder.find_occurrences(resource, pymodule):
+            if self.whole_primary and occurrence.is_a_fixed_primary():
+                continue
+            if self.whole_primary:
+                start, end = occurrence.get_primary_range()
+            else:
+                start, end = occurrence.get_word_range()
             result.append(source_code[last_modified_char:start]
                           + self.new_name)
             last_modified_char = end

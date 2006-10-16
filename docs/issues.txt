@@ -49,7 +49,9 @@ Releases
 0.3m4
     Done.
 0.3m5
-    Working on.
+    Done.
+0.3rc1
+    Working one.
 
 
 Hot Topics
@@ -66,7 +68,7 @@ To Be Discussed
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
-* Indexing source files for faster occurance finding
+* Indexing source files for faster occurrence finding
 
 
 Undo Unification
@@ -125,6 +127,65 @@ groups.::
   move_module(resource, resource)
   move_global(pyobject, resource)
   move_attribute(pyobject, pyobject)
+
+
+Renaming And Occurrence Finding
+==============================
+
+What is the responsibility of `OccurrenceFinder`.  Should it only
+find text occurrences or should it also do some filtering and check
+for `PyName` equality?
+
+The problem is we want to be able to replace occurrences with
+different strings, depending on the kind of access.
+
+Maybe what we need is a rename interface::
+  
+  class OccurrenceFinder(object):
+      
+      def find_occurrences(self, ...):
+          """Generates `Occurrence` instances"""
+  
+  class Occurrence(object):
+      
+      def get_word_range(self):
+          pass
+      
+      def get_primary_range(self):
+          pass
+      
+      def get_pyname(self, pyname_finder):
+          pass
+      
+      def is_in_import_statement(self):
+          pass
+      
+      def is_called(self):
+          pass
+      
+      def is_read(self):
+          pass
+      
+      def is_written(self):
+          pass
+  
+  class FilteredOccurrenceFinder(object):
+      
+      def __init__(self, ..., pyname, imports, calls):
+          pass
+  
+      def find_occurrences(self, ...):
+          pass
+  
+  class GenericRename(object):
+      
+      def __init__(self, ..., occurrence_finder):
+          pass
+  
+  done.
+
+This new approach makes easy for writing a new Rename class that
+only replaces what it wants.
 
 
 Dyanmic Type Inference Issues
@@ -259,13 +320,13 @@ of all we know that a function parameter can be anything, so using DOI
 we have a set of objects for each parameter.  So the question that
 comes up here is when do we need parameter objects.
 
-* When refactoring and finding occurances
+* When refactoring and finding occurrences
 * When code assisting in a function
 
 Also for a rename refactoring we need to check all functions and methods
 for implicit interfaces that are involved.  This does not seem practical.
 Find someway of making it possible.  Maybe we can find
-all of the occurances of a method and for each check whether it is
+all of the occurrences of a method and for each check whether it is
 invoked on a parameter or not.  Now that we have a bigger set of
 methods we need to do the same for these methods.  When we're finished
 we can perform the actual refactoring.  The challenge here is that we

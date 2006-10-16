@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.3m5 : October 15, 2006
+
+
 - Code completions inside uncompleted ``try`` blocks : October 7, 2006
 
 

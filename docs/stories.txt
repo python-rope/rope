@@ -196,6 +196,12 @@ Stories
 * Removing imports from the same module
 
 
+* Inline method
+
+
+> Public Release 0.3rc1 : October 29, 2006
+
+
 * Enhancing module running
 
   * Showing running status in the GUI
@@ -208,13 +214,7 @@ Stories
 * Running unit tests view
 
 
-* Inline method
-
-
 * Encapsulate field
-
-
-> Public Release 0.3m5 : October 15, 2006
 
 
 Remaining Stories

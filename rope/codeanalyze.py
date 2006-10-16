@@ -24,7 +24,7 @@ class WordRangeFinder(object):
         current_offset = offset + 1
         while current_offset < len(self.source_code) and \
               (self.source_code[current_offset].isalnum() or
-               self.source_code[current_offset] in '_'):
+               self.source_code[current_offset] == '_'):
             current_offset += 1;
         return current_offset - 1
 

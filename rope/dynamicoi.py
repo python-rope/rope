@@ -160,12 +160,12 @@ class _PersistedClass(_ObjectPersistedForm):
             else:
                 return suspected_pyobject
         else:
-            lineno = self._find_occurance(pymodule.get_resource().read())
+            lineno = self._find_occurrence(pymodule.get_resource().read())
             if lineno is not None:
                 inner_scope = module_scope.get_inner_scope_for_line(lineno)
                 return inner_scope.pyobject
     
-    def _find_occurance(self, source):
+    def _find_occurrence(self, source):
         pattern = re.compile(r'^\s*class\s*' + self.name + r'\b')
         lines = source.split('\n')
         for i in range(len(lines)):

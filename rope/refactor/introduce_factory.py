@@ -27,7 +27,7 @@ class IntroduceFactoryRefactoring(object):
 
     def introduce_factory(self):
         changes = ChangeSet()
-        self._change_occurances_in_other_modules(changes)
+        self._change_occurrences_in_other_modules(changes)
     
         self._change_resource(changes)
         return changes
@@ -75,7 +75,7 @@ class IntroduceFactoryRefactoring(object):
         else:
             return self.old_name + '.' + self.factory_name
     
-    def _change_occurances_in_other_modules(self, changes):
+    def _change_occurrences_in_other_modules(self, changes):
         changed_name = self._get_new_function_name()
         import_tools = rope.importutils.ImportTools(self.pycore)
         new_import = import_tools.get_import_for_module(self.pymodule)
