@@ -155,7 +155,7 @@ class WordRangeFinder(object):
             return True
         return False
     
-    def _is_name_assigned_here(self, offset):
+    def _is_name_assigned_in_class_body(self, offset):
         word_start = self._find_word_start(offset - 1)
         word_end = self._find_word_end(offset - 1) + 1
         if '.' in self.source_code[word_start:word_end]:
@@ -273,6 +273,15 @@ class WordRangeFinder(object):
                 opens += 1
             current_offset -= 1
         return current_offset
+    
+    def is_assigned_here(self, offset):
+        word_end = self._find_word_end(offset)
+        next_char = self._find_first_non_space_char(word_end + 1)
+        if next_char < len(self.source_code) and self.source_code[next_char] == '=' and \
+           len(self.source_code) > next_char + 1 and \
+           self.source_code[next_char + 1] != '=':
+            return True
+        return False
 
 
 class StatementEvaluator(object):
@@ -399,7 +408,7 @@ class ScopeNameFinder(object):
             return True
         if lineno != holding_scope.get_start() and \
            holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type') and \
-           self.word_finder._is_name_assigned_here(offset):
+           self.word_finder._is_name_assigned_in_class_body(offset):
             return True
         return False
     

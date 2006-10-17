@@ -336,6 +336,13 @@ def inline(context):
         editor = fileeditor.get_editor()
         editor.refactoring.inline_local_variable(resource, editor.get_current_offset())
     
+def encapsulate_field(context):
+    if context.get_active_editor():
+        fileeditor = context.get_active_editor()
+        resource = fileeditor.get_file()
+        editor = fileeditor.get_editor()
+        editor.refactoring.encapsulate_field(resource, editor.get_current_offset())
+    
     
 
 actions = []
@@ -354,6 +361,10 @@ actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_re
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'c', 1),
+                            ['python']))
+actions.append(SimpleAction('Encapsulate Field', 
+                            ConfirmAllEditorsAreSaved(encapsulate_field), None,
+                            MenuAddress(['Refactor', 'Encapsulate Field'], 'n', 1),
                             ['python']))
 actions.append(SimpleAction('Transform Module to Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,

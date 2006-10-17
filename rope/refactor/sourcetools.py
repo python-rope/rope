@@ -40,4 +40,26 @@ def indent_lines(source_code, amount):
         else:
             result.append('\n')
     return ''.join(result)
-    
+
+
+def add_methods(pymodule, class_scope, methods_sources):
+    source_code = pymodule.source_code
+    lines = pymodule.lines
+    insertion_line = class_scope.get_end()
+    if class_scope.get_scopes():
+        insertion_line = class_scope.get_scopes()[-1].get_end()
+    insertion_offset = lines.get_line_end(insertion_line)
+    methods = '\n\n' + '\n\n'.join(methods_sources)
+    unindented_methods = indent_lines(methods, -find_minimum_indents(methods))
+    indented_methods = indent_lines(unindented_methods,
+                                    get_indents(lines, class_scope.get_start()) + 4)
+    result = []
+    result.append(source_code[:insertion_offset])
+    result.append(indented_methods)
+    result.append(source_code[insertion_offset:])
+    return ''.join(result)
+
+def add_statement(pymodule, method_scope, statement_source):
+    # TODO: Implement it
+    pass
+

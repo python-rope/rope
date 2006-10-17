@@ -182,9 +182,8 @@ Maybe what we need is a rename interface::
       def __init__(self, ..., occurrence_finder):
           pass
   
-  done.
 
-This new approach makes easy for writing a new Rename class that
+This new approach makes it easy to write a new Rename class that
 only replaces what it wants.
 
 

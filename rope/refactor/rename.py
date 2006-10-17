@@ -118,9 +118,9 @@ class RenameInModule(object):
     
     def __init__(self, pycore, old_pynames, old_name, new_name,
                  only_calls=False, replace_primary=False,
-                 imports=True, only_writes=False):
+                 imports=True):
         self.occurrences_finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
-            pycore, old_pynames, old_name, only_calls, imports, only_writes)
+            pycore, old_name, old_pynames, only_calls, imports)
         self.whole_primary = replace_primary
         self.new_name = new_name
     

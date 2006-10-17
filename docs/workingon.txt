@@ -1,18 +1,32 @@
 Encapsulate Field
 =================
 
-- Renaming occurances to occurrences
+- Adding `Occurrence.is_written`
+- Gets as sets
+- Adding ``add_methods(pymodule, class_scope, methods)``
+- Adding methods to the end of class scope rather than module
+
+* What if performed on non-classes
+* Performing encapsulate field in some other module than defining
+* Changing occurances in the module that contains the class
+* Tuple assignments
+* `AugAssign` nodes
+* Not considering keyword parameters as assignments
+
+* Using properties for source_code and lines
+* Using cached decorator
+* Refactoring `sourcetools` module; pack methods
+* Changing refactor modules to use `sourcetools.add_methods`
+* Adding ``add_statement(method, statement)``
+* Change local variable to field refactoring
+* Changing `Rename` to take an `OccuranceFinder`
 * Caching `Occurrence` fields
-* For renaming variable writes for encapsulate field
-  we need to replace occurances with different variables.
 
 
 Remaining Stories
 =================
 
 * Considering logical lines in `rope.codeanalyze`
-* Adding ``add_method(scope, method, preceding_method=None)``
-* Adding ``add_statement(method, statement)``
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Moving/renaming current module
