@@ -65,6 +65,7 @@ To Be Discussed
 ===============
 
 * Showing available refactorings for a place
+* Designing refactorings to be used on IDEs
 * Rope's preference saving system: format, location
 
 * Indexing source files for faster occurrence finding

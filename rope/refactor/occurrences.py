@@ -77,11 +77,12 @@ class Occurrence(object):
     
     def is_written(self):
         return self.tools.word_finder.is_assigned_here(self.offset)
-
-    def is_read(self):
-        # TODO: Implement it
-        raise NotImplementedError()
     
+    def get_assignment_type(self):
+        if not self.is_written():
+            return None
+        return self.tools.word_finder.get_assignment_type(self.offset)
+
 
 class FilteredOccurrenceFinder(object):
     

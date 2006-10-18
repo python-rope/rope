@@ -1,21 +1,9 @@
-Change Local Variable to Field Refactoring
-==========================================
-
-- Check for being a local variable in side a method
-- Check that there is no other attribute with the same name
-- Other names than `self` first parameter
-- Adding `localtofield` module
-- Adding to ui
-
-* Refactoring common testcase setUps and tearDowns into a decorators;
-  We'll miss code assists in tests.
-
-
 Encapsulate Field
 =================
 
+- `AugAssign` nodes
+
 * Tuple assignments
-* `AugAssign` nodes
 
 * Handling `AssList` for inline variable and encapsulate field
 * Changing refactor modules to use `sourcetools.add_methods`

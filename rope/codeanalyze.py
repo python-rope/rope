@@ -275,13 +275,22 @@ class WordRangeFinder(object):
         return current_offset
     
     def is_assigned_here(self, offset):
+        operation = self.get_assignment_type(offset)
+        operations = ('=', '-=', '+=', '*=', '/=', '%=', '**=',
+                      '>>=', '<<=', '&=', '^=', '|=')
+        return operation in operations
+
+    def get_assignment_type(self, offset):
         word_end = self._find_word_end(offset)
         next_char = self._find_first_non_space_char(word_end + 1)
-        if next_char < len(self.source_code) and self.source_code[next_char] == '=' and \
-           len(self.source_code) > next_char + 1 and \
-           self.source_code[next_char + 1] != '=':
-            return True
-        return False
+        current_char = next_char
+        while current_char + 1 < len(self.source_code) and \
+              (self.source_code[current_char] != '=' or \
+               self.source_code[current_char + 1] == '=') and \
+              current_char < next_char + 3:
+            current_char += 1
+        operation = self.source_code[next_char:current_char + 1]
+        return operation
 
 
 class StatementEvaluator(object):

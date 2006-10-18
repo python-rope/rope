@@ -111,7 +111,13 @@ class _FindChangesForModule(object):
             self._manage_writes(start, result)
             result.append(self.source[self.last_modified:start])
             if occurrence.is_written():
-                result.append(self.setter + '(')
+                assignment_type = occurrence.get_assignment_type()
+                if assignment_type == '=':
+                    result.append(self.setter + '(')
+                else:
+                    var_name = self.source[occurrence.get_primary_range()[0]:
+                                           start] + self.getter + '()'
+                    result.append(self.setter + '(' + var_name + ' %s ' % assignment_type[:-1])
                 if line_finder is None:
                     line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
                 current_line = self.lines.get_line_number(start)

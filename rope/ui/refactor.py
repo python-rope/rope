@@ -354,28 +354,28 @@ def convert_local_to_field(context):
 
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
-                            MenuAddress(['Refactor', 'Rename'], 'r'), ['python']))
+                            MenuAddress(['Refactor', 'Rename'], 'n'), ['python']))
 actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_method), 'M-M',
-                            MenuAddress(['Refactor', 'Extract Method'], 'e'), ['python']))
+                            MenuAddress(['Refactor', 'Extract Method'], 'x'), ['python']))
 actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move), 'M-V',
-                            MenuAddress(['Refactor', 'Move'], 'v'), ['python']))
+                            MenuAddress(['Refactor', 'Move'], 'm'), ['python']))
 actions.append(SimpleAction('Inline Local Variable', ConfirmAllEditorsAreSaved(inline), 'M-I',
                             MenuAddress(['Refactor', 'Inline Local Variable'], 'i'), ['python']))
 actions.append(SimpleAction('Extract Local Variable', ConfirmAllEditorsAreSaved(extract_variable), None,
                             MenuAddress(['Refactor', 'Extract Local Variable'], 'l'), ['python']))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
-                            MenuAddress(['Refactor', 'Rename in File'], 'f'), ['python']))
+                            MenuAddress(['Refactor', 'Rename in File'], 'e'), ['python']))
 actions.append(SimpleAction('Introduce Factory Method', 
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
-                            MenuAddress(['Refactor', 'Introduce Factory Method'], 'c', 1),
+                            MenuAddress(['Refactor', 'Introduce Factory Method'], 'f', 1),
                             ['python']))
 actions.append(SimpleAction('Encapsulate Field', 
                             ConfirmAllEditorsAreSaved(encapsulate_field), None,
-                            MenuAddress(['Refactor', 'Encapsulate Field'], 'n', 1),
+                            MenuAddress(['Refactor', 'Encapsulate Field'], 's', 1),
                             ['python']))
 actions.append(SimpleAction('Convert Local Variable to Field', 
                             ConfirmAllEditorsAreSaved(convert_local_to_field), None,
-                            MenuAddress(['Refactor', 'Convert Local Variable to Field'], None, 1),
+                            MenuAddress(['Refactor', 'Convert Local Variable to Field'], 'b', 1),
                             ['python']))
 actions.append(SimpleAction('Transform Module to Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
@@ -386,7 +386,7 @@ actions.append(SimpleAction('Organize Imports',
                             MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
 actions.append(SimpleAction('Expand Star Imports', 
                             ConfirmAllEditorsAreSaved(expand_star_imports), None,
-                            MenuAddress(['Refactor', 'Expand Star Imports'], 'x', 2),
+                            MenuAddress(['Refactor', 'Expand Star Imports'], 'p', 2),
                             ['python']))
 actions.append(SimpleAction('Transform Relatives to Absolute', 
                             ConfirmAllEditorsAreSaved(transform_relatives_to_absolute), None,
@@ -394,7 +394,7 @@ actions.append(SimpleAction('Transform Relatives to Absolute',
                             ['python']))
 actions.append(SimpleAction('Transform Froms to Imports', 
                             ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
-                            MenuAddress(['Refactor', 'Transform Froms to Imports'], 's', 2),
+                            MenuAddress(['Refactor', 'Transform Froms to Imports'], 'r', 2),
                             ['python']))
 actions.append(SimpleAction('Undo Refactoring', 
                             ConfirmAllEditorsAreSaved(undo_refactoring), None,

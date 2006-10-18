@@ -362,6 +362,22 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.mod1.write('attr = 10')
         self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
+    def test_changing_augmented_assignments(self):
+        self.mod1.write('import mod\na_var = mod.A()\na_var.attr += 1\n')
+        self.mod.write(self.a_class)
+        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self.assertEquals(
+            'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() + 1)\n',
+            self.mod1.read())
+    
+    def test_changing_augmented_assignments2(self):
+        self.mod1.write('import mod\na_var = mod.A()\na_var.attr <<= 1\n')
+        self.mod.write(self.a_class)
+        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self.assertEquals(
+            'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() << 1)\n',
+            self.mod1.read())
+    
 
 class LocalToFieldTest(unittest.TestCase):
 
