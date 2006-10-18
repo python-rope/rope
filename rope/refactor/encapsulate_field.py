@@ -93,8 +93,8 @@ class _FindChangesForModule(object):
         self.setter = rename_in_module.setter
         self.resource = resource
         self.pymodule = pymodule
-        self.source_code = None
-        self.lines = None
+        self._source = None
+        self._lines = None
         self.last_modified = 0
         self.last_set = None
         self.set_index = None
@@ -110,28 +110,28 @@ class _FindChangesForModule(object):
             if self.skip_start <= start < self.skip_end:
                 continue
             self._manage_writes(start, result)
-            result.append(self._get_source()[self.last_modified:start])
+            result.append(self.source[self.last_modified:start])
             if occurrence.is_written():
                 result.append(self.setter + '(')
                 if line_finder is None:
-                    line_finder = rope.codeanalyze.LogicalLineFinder(self._get_lines())
-                current_line = self._get_lines().get_line_number(start)
+                    line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
+                current_line = self.lines.get_line_number(start)
                 start_line, end_line = line_finder.get_logical_line_in(current_line)
-                self.last_set = self._get_lines().get_line_end(end_line)                
-                end = self._get_source().index('=', end) + 1
+                self.last_set = self.lines.get_line_end(end_line)                
+                end = self.source.index('=', end) + 1
                 self.set_index = len(result)
             else:
                 result.append(self.getter + '()')
             self.last_modified = end
         if self.last_modified != 0:
-            self._manage_writes(len(self._get_source()), result)
-            result.append(self._get_source()[self.last_modified:])
+            self._manage_writes(len(self.source), result)
+            result.append(self.source[self.last_modified:])
             return ''.join(result)
         return None
 
     def _manage_writes(self, offset, result):
         if self.last_set is not None and self.last_set <= offset:
-            result.append(self._get_source()[self.last_modified:self.last_set])
+            result.append(self.source[self.last_modified:self.last_set])
             set_value = ''.join(result[self.set_index:]).strip()
             del result[self.set_index:]
             result.append(set_value + ')')
@@ -139,16 +139,19 @@ class _FindChangesForModule(object):
             self.last_set = None
     
     def _get_source(self):
-        if self.source_code is None:
+        if self._source is None:
             if self.resource is not None:
-                self.source_code = self.resource.read()
+                self._source = self.resource.read()
             else:
-                self.source_code = self.pymodule.source_code
-        return self.source_code
+                self._source = self.pymodule.source_code
+        return self._source
 
     def _get_lines(self):
-        if self.lines is None:
+        if self._lines is None:
             if self.pymodule is None:
                 self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-            self.lines = self.pymodule.lines
-        return self.lines
+            self._lines = self.pymodule.lines
+        return self._lines
+    
+    source = property(_get_source)
+    lines = property(_get_lines)

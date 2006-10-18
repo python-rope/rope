@@ -1,10 +1,6 @@
 Encapsulate Field
 =================
 
-- Performing encapsulate field in some other module than being defining
-- Changing occurances in the module that contains the class
-- What if performed on non-classes
-
 * Tuple assignments
 * `AugAssign` nodes
 
