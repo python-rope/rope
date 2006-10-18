@@ -51,7 +51,7 @@ class RenameRefactoring(object):
             scope = scope.parent
         return scope.get_kind() == 'Function' and \
                pyname in scope.get_names().values() and \
-               pyname not in scope.pyobject.get_parameters().values()
+               isinstance(pyname, rope.pynames.AssignedName)
     
     def _is_renaming_a_module(self, old_pynames):
         if len(old_pynames) == 1 and \

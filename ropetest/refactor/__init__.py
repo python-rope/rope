@@ -363,6 +363,72 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
 
+class LocalToFieldTest(unittest.TestCase):
+
+    def setUp(self):
+        super(LocalToFieldTest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.refactoring = self.project.get_pycore().get_refactoring()
+        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(LocalToFieldTest, self).tearDown()
+    
+    def test_simple_local_to_field(self):
+        code = 'class A(object):\n    def a_func(self):\n' \
+               '        var = 10\n'
+        self.mod.write(code)
+        self.refactoring.convert_local_variable_to_field(self.mod,
+                                                         code.index('var') + 1)
+        expected = 'class A(object):\n    def a_func(self):\n' \
+                   '        self.var = 10\n'
+        self.assertEquals(expected, self.mod.read())
+    
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_when_performed_on_a_global_var(self):
+        self.mod.write('var = 10\n')
+        self.refactoring.convert_local_variable_to_field(
+            self.mod, self.mod.read().index('var') + 1)
+
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_when_performed_on_field(self):
+        code = 'class A(object):\n    def a_func(self):\n' \
+               '        self.var = 10\n'
+        self.mod.write(code)
+        self.refactoring.convert_local_variable_to_field(
+            self.mod, self.mod.read().index('var') + 1)
+
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_when_performed_on_a_parameter(self):
+        code = 'class A(object):\n    def a_func(self, var):\n' \
+               '        a = var\n'
+        self.mod.write(code)
+        self.refactoring.convert_local_variable_to_field(
+            self.mod, self.mod.read().index('var') + 1)
+
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_when_there_is_a_field_with_the_same_name(self):
+        code = 'class A(object):\n    def __init__(self):\n        self.var = 1\n' \
+               '    def a_func(self):\n        var = 10\n'
+        self.mod.write(code)
+        self.refactoring.convert_local_variable_to_field(
+            self.mod, self.mod.read().rindex('var') + 1)
+
+    def test_local_to_field_with_self_renamed(self):
+        code = 'class A(object):\n    def a_func(myself):\n' \
+               '        var = 10\n'
+        self.mod.write(code)
+        self.refactoring.convert_local_variable_to_field(self.mod,
+                                                         code.index('var') + 1)
+        expected = 'class A(object):\n    def a_func(myself):\n' \
+                   '        myself.var = 10\n'
+        self.assertEquals(expected, self.mod.read())
+    
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ropetest.refactor.renametest.RenameRefactoringTest))
@@ -372,6 +438,7 @@ def suite():
     result.addTests(unittest.makeSuite(RefactoringUndoTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.inlinetest.InlineLocalVariableTest))
     result.addTests(unittest.makeSuite(EncapsulateFieldTest))
+    result.addTests(unittest.makeSuite(LocalToFieldTest))
     return result
 
 

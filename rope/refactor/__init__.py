@@ -7,6 +7,7 @@ from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.move import MoveRefactoring
 from rope.refactor.inline import InlineRefactoring
 from rope.refactor.encapsulate_field import EncapsulateFieldRefactoring
+from rope.refactor.localtofield import ConvertLocalToFieldRefactoring
 
 
 class PythonRefactoring(object):
@@ -74,8 +75,12 @@ class PythonRefactoring(object):
         changes = EncapsulateFieldRefactoring(self.pycore, resource, offset).\
                   encapsulate_field()
         self._add_and_commit_changes(changes)
-            
-
+    
+    def convert_local_variable_to_field(self, resource, offset):
+        changes = ConvertLocalToFieldRefactoring(self.pycore).\
+                  convert_local_variable_to_field(resource, offset)
+        self._add_and_commit_changes(changes)
+        
     def _add_and_commit_changes(self, changes):
         self._undo.add_change(changes)
         changes.do()

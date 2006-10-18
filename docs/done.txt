@@ -3,6 +3,9 @@
 ===========
 
 
+- Convert local variable to field refactoring : October 18, 2006
+
+
 > Public Release 0.3m5 : October 15, 2006
 
 

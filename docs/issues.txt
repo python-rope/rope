@@ -64,11 +64,13 @@ Hot Topics
 To Be Discussed
 ===============
 
+* Showing available refactorings for a place
 * Rope's preference saving system: format, location
+
+* Indexing source files for faster occurrence finding
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
-* Indexing source files for faster occurrence finding
 
 
 Undo Unification

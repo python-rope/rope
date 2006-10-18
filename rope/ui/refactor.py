@@ -343,7 +343,14 @@ def encapsulate_field(context):
         editor = fileeditor.get_editor()
         editor.refactoring.encapsulate_field(resource, editor.get_current_offset())
     
-    
+def convert_local_to_field(context):
+    if context.get_active_editor():
+        fileeditor = context.get_active_editor()
+        resource = fileeditor.get_file()
+        editor = fileeditor.get_editor()
+        editor.refactoring.convert_local_variable_to_field(
+            resource, editor.get_current_offset())
+
 
 actions = []
 actions.append(SimpleAction('Rename Refactoring', ConfirmAllEditorsAreSaved(rename), 'M-R',
@@ -365,6 +372,10 @@ actions.append(SimpleAction('Introduce Factory Method',
 actions.append(SimpleAction('Encapsulate Field', 
                             ConfirmAllEditorsAreSaved(encapsulate_field), None,
                             MenuAddress(['Refactor', 'Encapsulate Field'], 'n', 1),
+                            ['python']))
+actions.append(SimpleAction('Convert Local Variable to Field', 
+                            ConfirmAllEditorsAreSaved(convert_local_to_field), None,
+                            MenuAddress(['Refactor', 'Convert Local Variable to Field'], None, 1),
                             ['python']))
 actions.append(SimpleAction('Transform Module to Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,

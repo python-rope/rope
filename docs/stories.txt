@@ -131,6 +131,9 @@ Stories
 * Static type inference
 
 
+* Updating similarly named variables and methods in rename refactoring
+
+
 * Enhancing editor
 
   * Clearing selection if something happens
@@ -153,6 +156,16 @@ Stories
 
 * Packages should be filtered
   Do not show submodules that are not imported yet as attributes.
+
+
+* Introduce parameter
+  Change global accesses or attributes accesses to parameters
+
+
+* Pull up method
+
+
+* Push down method
 
 
 * Show PyDoc reST highlighting
@@ -200,9 +213,6 @@ Stories
 
 
 > Public Release 0.3rc1 : October 29, 2006
-
-
-* Change local variable to field refactoring
 
 
 * Enhancing module running

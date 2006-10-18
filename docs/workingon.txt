@@ -1,3 +1,16 @@
+Change Local Variable to Field Refactoring
+==========================================
+
+- Check for being a local variable in side a method
+- Check that there is no other attribute with the same name
+- Other names than `self` first parameter
+- Adding `localtofield` module
+- Adding to ui
+
+* Refactoring common testcase setUps and tearDowns into a decorators;
+  We'll miss code assists in tests.
+
+
 Encapsulate Field
 =================
 
@@ -9,6 +22,11 @@ Encapsulate Field
 * Adding ``add_statements(method, statements)``
 * Changing `Rename` to take an `OccuranceFinder`
 * Caching `Occurrence` fields
+
+
+Before 0.3 Release
+==================
+
 * Better refactoring categoriztion
 
 
