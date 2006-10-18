@@ -5,7 +5,7 @@ import rope.refactor.rename
 import rope.importutils
 
 from rope.refactor.change import (ChangeSet, ChangeFileContents)
-from rope.refactor import sourcetools
+from rope.refactor import sourceutils
 
 class IntroduceFactoryRefactoring(object):
     
@@ -63,11 +63,11 @@ class IntroduceFactoryRefactoring(object):
         unindented_factory = ('@staticmethod\n' +
                               'def %s(*args, **kwds):\n' % self.factory_name +
                               '    return %s(*args, **kwds)\n' % self.old_name)
-        return '\n' + sourcetools.indent_lines(
+        return '\n' + sourceutils.indent_lines(
             unindented_factory, self._get_scope_indents(lines, class_scope) + 4)
     
     def _get_scope_indents(self, lines, scope):
-        return sourcetools.get_indents(lines, scope.get_start())
+        return sourceutils.get_indents(lines, scope.get_start())
 
     def _get_new_function_name(self):
         if self.global_factory:

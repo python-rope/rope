@@ -3,7 +3,7 @@ import compiler
 import rope.codeanalyze
 import rope.pyobjects
 from rope.exceptions import RefactoringException
-from rope.refactor import sourcetools
+from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeFileContents
 
 
@@ -180,8 +180,8 @@ class _ExtractPerformer(object):
         info_collector = _FunctionInformationCollector(start_line, end_line,
                                                        self._is_global())
         indented_body = self.source_code[self.info.scope[0]:self.info.scope[1]]
-        body = sourcetools.indent_lines(indented_body,
-                                        -sourcetools.find_minimum_indents(indented_body))
+        body = sourceutils.indent_lines(indented_body,
+                                        -sourceutils.find_minimum_indents(indented_body))
         ast = compiler.parse(body)
         compiler.walk(ast, info_collector)
         return info_collector
@@ -219,7 +219,7 @@ class _ExtractPerformer(object):
                       (' ' * self._get_indents(self.holding_scope.get_start()),
                        self._get_function_signature(args)))
         unindented_body = self._get_unindented_function_body(returns)
-        function_body = sourcetools.indent_lines(unindented_body, function_indents)
+        function_body = sourceutils.indent_lines(unindented_body, function_indents)
         result.append(function_body)
         definition = ''.join(result)
         
@@ -260,7 +260,7 @@ class _ExtractPerformer(object):
         return result
     
     def _get_indents(self, lineno):
-        return sourcetools.get_indents(self.lines, lineno)
+        return sourceutils.get_indents(self.lines, lineno)
 
 
 class _OneLineExtractPerformer(_ExtractPerformer):
@@ -318,8 +318,8 @@ class _MultiLineExtractPerformer(_ExtractPerformer):
         
     def _get_unindented_function_body(self, returns):
         extracted_body = self.source_code[self.info.region[0]:self.info.region[1]]
-        unindented_body = sourcetools.indent_lines(
-            extracted_body, -sourcetools.find_minimum_indents(extracted_body))
+        unindented_body = sourceutils.indent_lines(
+            extracted_body, -sourceutils.find_minimum_indents(extracted_body))
         if returns:
             unindented_body += '\nreturn %s' % self._get_comma_form(returns)
         return unindented_body
@@ -436,8 +436,8 @@ class _VariableReadsAndWritesFinder(object):
     def find_reads_and_writes(code):
         if code.strip() == '':
             return set(), set()
-        min_indents = sourcetools.find_minimum_indents(code)
-        indented_code = sourcetools.indent_lines(code, -min_indents)
+        min_indents = sourceutils.find_minimum_indents(code)
+        indented_code = sourceutils.indent_lines(code, -min_indents)
         ast = compiler.parse(indented_code)
         visitor = _VariableReadsAndWritesFinder()
         compiler.walk(ast, visitor)
@@ -474,8 +474,8 @@ class _ReturnOrYieldFinder(object):
     def does_it_return(code):
         if code.strip() == '':
             return False
-        min_indents = sourcetools.find_minimum_indents(code)
-        indented_code = sourcetools.indent_lines(code, -min_indents)
+        min_indents = sourceutils.find_minimum_indents(code)
+        indented_code = sourceutils.indent_lines(code, -min_indents)
         ast = compiler.parse(indented_code)
         visitor = _ReturnOrYieldFinder()
         compiler.walk(ast, visitor)

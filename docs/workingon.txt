@@ -4,10 +4,7 @@ Encapsulate Field
 * Tuple assignments
 * `AugAssign` nodes
 
-* Using properties for source_code and lines
-* Using cached decorator
 * Handling `AssList` for inline variable and encapsulate field
-* Refactoring `sourcetools` module; pack methods
 * Changing refactor modules to use `sourcetools.add_methods`
 * Adding ``add_statements(method, statements)``
 * Changing `Rename` to take an `OccuranceFinder`
