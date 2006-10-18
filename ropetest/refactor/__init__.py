@@ -341,6 +341,27 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals(self.encapsulated + 'a_var = A()\n',
                           self.mod1.read())
 
+    def test_performing_in_other_modules(self):
+        self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
+        self.mod.write(self.a_class)
+        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self.assertEquals(self.encapsulated, self.mod.read())
+        self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
+                          self.mod1.read())
+
+    def test_changing_main_module_occurances(self):
+        self.mod1.write(self.a_class + 'a_var = A()\na_var.attr = a_var.attr * 2\n')
+        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self.assertEquals(
+            self.encapsulated + 
+            'a_var = A()\na_var.set_attr(a_var.get_attr() * 2)\n',
+            self.mod1.read())
+
+    @testutils.assert_raises(RefactoringException)
+    def test_raising_exception_when_performed_on_non_attributes(self):
+        self.mod1.write('attr = 10')
+        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+
 
 def suite():
     result = unittest.TestSuite()
@@ -352,7 +373,6 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.refactor.inlinetest.InlineLocalVariableTest))
     result.addTests(unittest.makeSuite(EncapsulateFieldTest))
     return result
-
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ def remove_recursively(path):
         shutil.rmtree(path)
 
 def run_only_for_25(func):
-    """Should be used as a decorator for a unittest.TestCase test"""
+    """Should be used as a decorator for a unittest.TestCase test method"""
     if sys.version.startswith('2.5'):
         return func
     else:
@@ -22,7 +22,7 @@ def run_only_for_25(func):
 
 
 def assert_raises(exception_class):
-    """Should be used as a decorator for a unittest.TestCase test"""
+    """Should be used as a decorator for a unittest.TestCase test method"""
     def _assert_raises(func):
         def call_func(self, *args, **kws):
             self.assertRaises(exception_class, func, self, *args, **kws)

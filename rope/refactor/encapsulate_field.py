@@ -1,7 +1,8 @@
 import rope.codeanalyze
 import rope.refactor.occurrences
-from rope.refactor import sourcetools
 
+from rope import utils
+from rope.refactor import sourcetools
 from rope.refactor.rename import RenameInModule
 from rope.refactor.change import ChangeSet, ChangeFileContents
 
@@ -10,17 +11,29 @@ class EncapsulateFieldRefactoring(object):
     
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
-        self.resource = resource
-        self.offset = offset
-        self.name = rope.codeanalyze.get_name_at(self.resource, self.offset)
-        self.pyname = rope.codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset)
+        self.name = rope.codeanalyze.get_name_at(resource, offset)
+        self.pyname = rope.codeanalyze.get_pyname_at(pycore, resource, offset)
+        if not self._is_an_attribute(self.pyname):
+            raise rope.exceptions.RefactoringException(
+                'Encapsulate field should be performed on class attributes.')
+        self.resource = self.pyname.get_definition_location()[0].get_resource()
+    
+    def _is_an_attribute(self, pyname):
+        if pyname is not None and isinstance(pyname, rope.pynames.AssignedName):
+            defining_pymodule, defining_line = self.pyname.get_definition_location()
+            defining_scope = defining_pymodule.get_scope().get_inner_scope_for_line(defining_line)
+            parent = defining_scope.parent
+            if defining_scope.get_kind() == 'Class' or \
+               (parent is not None and parent.get_kind() == 'Class'):
+                return True
+        return False
     
     def encapsulate_field(self):
         changes = ChangeSet()
         rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
                                                       [self.pyname])
         
-        self._change_holding_module(changes, self.name)
+        self._change_holding_module(changes, rename_in_module)
         for file in self.pycore.get_python_files():
             if file == self.resource:
                 continue
@@ -29,20 +42,30 @@ class EncapsulateFieldRefactoring(object):
                 changes.add_change(ChangeFileContents(file, result))
         return changes
     
-    def _get_defining_class_scope(self, pyname):
-        defining_pymodule, defining_line = pyname.get_definition_location()
+    def _get_defining_class_scope(self):
+        defining_pymodule, defining_line = self.pyname.get_definition_location()
         defining_scope = defining_pymodule.get_scope().get_inner_scope_for_line(defining_line)
         if defining_scope.get_kind() == 'Function':
             defining_scope = defining_scope.parent
         return defining_scope
 
-    def _change_holding_module(self, changes, name):
-        getter = '    def get_%s(self):\n        return self.%s' % (name, name)
-        setter = '    def set_%s(self, value):\n        self.%s = value' % (name, name)
+    def _change_holding_module(self, changes, rename_in_module):
         pymodule = self.pycore.resource_to_pyobject(self.resource)
-        new_source = sourcetools.add_methods(
-            self.pyname.get_definition_location()[0],
-            self._get_defining_class_scope(self.pyname), [getter, setter])
+        class_scope = self._get_defining_class_scope()
+        class_start_line = class_scope.get_start()
+        class_end_line = class_scope.get_end()
+        class_start = pymodule.lines.get_line_start(class_start_line)
+        class_end = pymodule.lines.get_line_end(class_end_line)
+        new_source = rename_in_module.get_changed_module(pymodule=pymodule,
+                                                         skip_start=class_start,
+                                                         skip_end=class_end)
+        if new_source is not None:
+            pymodule = self.pycore.get_string_module(new_source, self.resource)
+            class_scope = pymodule.get_scope().get_inner_scope_for_line(class_start_line)
+        getter = 'def get_%s(self):\n    return self.%s' % (self.name, self.name)
+        setter = 'def set_%s(self, value):\n    self.%s = value' % (self.name, self.name)
+        new_source = sourcetools.add_methods(pymodule, class_scope,
+                                             [getter, setter])
         changes.add_change(ChangeFileContents(pymodule.get_resource(), new_source))
 
 
@@ -56,13 +79,14 @@ class GetterSetterRenameInModule(object):
         self.getter = 'get_' + name
         self.setter = 'set_' + name
     
-    def get_changed_module(self, resource=None, pymodule=None):
-        return _FindChangesForModule(self, resource, pymodule).get_changed_module()
+    def get_changed_module(self, resource=None, pymodule=None, skip_start=0, skip_end=0):
+        return _FindChangesForModule(self, resource, pymodule,
+                                     skip_start, skip_end).get_changed_module()
 
 
 class _FindChangesForModule(object):
     
-    def __init__(self, rename_in_module, resource, pymodule):
+    def __init__(self, rename_in_module, resource, pymodule, skip_start, skip_end):
         self.pycore = rename_in_module.pycore
         self.occurrences_finder = rename_in_module.occurrences_finder
         self.getter = rename_in_module.getter
@@ -74,6 +98,8 @@ class _FindChangesForModule(object):
         self.last_modified = 0
         self.last_set = None
         self.set_index = None
+        self.skip_start = skip_start
+        self.skip_end = skip_end
         
     def get_changed_module(self):
         result = []
@@ -81,6 +107,8 @@ class _FindChangesForModule(object):
         for occurrence in self.occurrences_finder.find_occurrences(self.resource,
                                                                    self.pymodule):
             start, end = occurrence.get_word_range()
+            if self.skip_start <= start < self.skip_end:
+                continue
             self._manage_writes(start, result)
             result.append(self._get_source()[self.last_modified:start])
             if occurrence.is_written():

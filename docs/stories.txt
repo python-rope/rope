@@ -187,19 +187,22 @@ Stories
   * Reorder
 
 
-* Moving fields/methods to attribute classes
-
-
 * Sorting imports; standard, third party, project
 
 
 * Removing imports from the same module
 
 
+* Moving fields/methods to attribute classes
+
+
 * Inline method
 
 
 > Public Release 0.3rc1 : October 29, 2006
+
+
+* Change local variable to field refactoring
 
 
 * Enhancing module running

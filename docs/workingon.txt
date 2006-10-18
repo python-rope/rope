@@ -1,26 +1,22 @@
 Encapsulate Field
 =================
 
-- Adding `Occurrence.is_written`
-- Gets as sets
-- Adding ``add_methods(pymodule, class_scope, methods)``
-- Adding methods to the end of class scope rather than module
+- Performing encapsulate field in some other module than being defining
+- Changing occurances in the module that contains the class
+- What if performed on non-classes
 
-* What if performed on non-classes
-* Performing encapsulate field in some other module than defining
-* Changing occurances in the module that contains the class
 * Tuple assignments
 * `AugAssign` nodes
-* Not considering keyword parameters as assignments
 
 * Using properties for source_code and lines
 * Using cached decorator
+* Handling `AssList` for inline variable and encapsulate field
 * Refactoring `sourcetools` module; pack methods
 * Changing refactor modules to use `sourcetools.add_methods`
-* Adding ``add_statement(method, statement)``
-* Change local variable to field refactoring
+* Adding ``add_statements(method, statements)``
 * Changing `Rename` to take an `OccuranceFinder`
 * Caching `Occurrence` fields
+* Better refactoring categoriztion
 
 
 Remaining Stories
