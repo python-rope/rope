@@ -1,7 +1,6 @@
 import rope.codeanalyze
 import rope.refactor.occurrences
 
-from rope import utils
 from rope.refactor import sourceutils
 from rope.refactor.rename import RenameInModule
 from rope.refactor.change import ChangeSet, ChangeFileContents
