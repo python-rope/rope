@@ -1,9 +1,7 @@
 Encapsulate Field
 =================
 
-- `AugAssign` nodes
-
-* Tuple assignments
+- Tuple assignments in encapsulate field
 
 * Handling `AssList` for inline variable and encapsulate field
 * Changing refactor modules to use `sourcetools.add_methods`

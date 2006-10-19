@@ -125,8 +125,8 @@ Extract Method
 --------------
 
 The position of the mark would be region start and the current
-cursor position would be region end. (The same as emacs copy and
-paste). ::
+cursor position would be region end. (You can set the mark as in
+emacs copy and paste with ``C-space``). ::
   
   def a_func():
       a = 1

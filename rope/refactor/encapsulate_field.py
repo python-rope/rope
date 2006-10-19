@@ -2,7 +2,6 @@ import rope.codeanalyze
 import rope.refactor.occurrences
 
 from rope.refactor import sourceutils
-from rope.refactor.rename import RenameInModule
 from rope.refactor.change import ChangeSet, ChangeFileContents
 
 
@@ -20,7 +19,8 @@ class EncapsulateFieldRefactoring(object):
     def _is_an_attribute(self, pyname):
         if pyname is not None and isinstance(pyname, rope.pynames.AssignedName):
             defining_pymodule, defining_line = self.pyname.get_definition_location()
-            defining_scope = defining_pymodule.get_scope().get_inner_scope_for_line(defining_line)
+            defining_scope = defining_pymodule.get_scope().\
+                             get_inner_scope_for_line(defining_line)
             parent = defining_scope.parent
             if defining_scope.get_kind() == 'Class' or \
                (parent is not None and parent.get_kind() == 'Class'):
@@ -103,6 +103,7 @@ class _FindChangesForModule(object):
     def get_changed_module(self):
         result = []
         line_finder = None
+        word_finder = rope.codeanalyze.WordRangeFinder(self.source)
         for occurrence in self.occurrences_finder.find_occurrences(self.resource,
                                                                    self.pymodule):
             start, end = occurrence.get_word_range()
@@ -110,8 +111,11 @@ class _FindChangesForModule(object):
                 continue
             self._manage_writes(start, result)
             result.append(self.source[self.last_modified:start])
+            if self._is_assigned_in_a_tuple_assignment(occurrence):
+                raise rope.exceptions.RefactoringException(
+                    'Cannot handle tuple assignments in encapsulate field.') 
             if occurrence.is_written():
-                assignment_type = occurrence.get_assignment_type()
+                assignment_type = word_finder.get_assignment_type(start)
                 if assignment_type == '=':
                     result.append(self.setter + '(')
                 else:
@@ -133,6 +137,32 @@ class _FindChangesForModule(object):
             result.append(self.source[self.last_modified:])
             return ''.join(result)
         return None
+    
+    def _is_assigned_in_a_tuple_assignment(self, occurance):
+        line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
+        offset = occurance.get_word_range()[0]
+        lineno = self.lines.get_line_number(offset)
+        start_line, end_line = line_finder.get_logical_line_in(lineno)
+        start_offset = self.lines.get_line_start(start_line)
+        
+        line = self.source[start_offset:self.lines.get_line_end(end_line)]
+        word_finder = rope.codeanalyze.WordRangeFinder(line)
+        
+        relative_offset = offset - start_offset
+        relative_primary_start = occurance.get_primary_range()[0] - start_offset
+        relative_primary_end = occurance.get_primary_range()[1] - start_offset
+        prev_char_offset = word_finder._find_last_non_space_char(relative_primary_start - 1)
+        next_char_offset = word_finder._find_first_non_space_char(relative_primary_end)
+        next_char = prev_char = ''
+        if prev_char_offset >= 0:
+            prev_char = line[prev_char_offset]
+        if next_char_offset < len(line):
+            next_char = line[next_char_offset]
+        try:
+            equals_offset = line.index('=')
+        except ValueError:
+            return False
+        return relative_offset < equals_offset and (prev_char == ',' or next_char in ',)')
 
     def _manage_writes(self, offset, result):
         if self.last_set is not None and self.last_set <= offset:

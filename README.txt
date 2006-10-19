@@ -148,9 +148,9 @@ and it's not ready for code contributions in its central parts yet.  I
 hope in soon future, somewhere about version 0.4, *rope* would be
 mature enough for being extended easily in those parts.
 
-Right now contributions are really needed in UI part and patches and
-extensions in the UI part are extremely welcome.  Have a look at the
-UI enhancement stories (docs/stories.txt).  Send your patches in
+Right now contributions are really needed in the UI part and patches
+and extensions in the UI part are extremely welcome.  Have a look at
+the UI enhancement stories (docs/stories.txt).  Send your patches in
 sourceforge.net project page, http://sf.net/projects/rope.  Patches
 should use python coding style, :PEP:`8`, and should have good unit
 tests.  *rope* uses a local repository right now, but it will be moved

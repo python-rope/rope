@@ -77,11 +77,6 @@ class Occurrence(object):
     
     def is_written(self):
         return self.tools.word_finder.is_assigned_here(self.offset)
-    
-    def get_assignment_type(self):
-        if not self.is_written():
-            return None
-        return self.tools.word_finder.get_assignment_type(self.offset)
 
 
 class FilteredOccurrenceFinder(object):
@@ -153,4 +148,3 @@ class _OccurrenceToolsCreator(object):
     word_finder = property(get_word_finder)
     source_code = property(get_source_code)
     
-
