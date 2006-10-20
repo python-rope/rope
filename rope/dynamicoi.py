@@ -292,13 +292,11 @@ class _FIFOReceiver(_MessageReceiver):
         return self.file_name
         
     def receive_data(self):
-        try:
-            my_file = open(self.file_name, 'rb')
-            while True:
-                try:
-                    yield marshal.load(my_file)
-                except EOFError:
-                    break
-            my_file.close()
-        finally:
-            os.remove(self.file_name)
+        my_file = open(self.file_name, 'rb')
+        while True:
+            try:
+                yield marshal.load(my_file)
+            except EOFError:
+                break
+        my_file.close()
+        os.remove(self.file_name)

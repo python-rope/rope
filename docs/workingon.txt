@@ -1,11 +1,8 @@
-Designing Refactorings to Be Used for IDEs
-==========================================
-
+- Calling `sys.settrace` for all threads in `rope.runmod` module
 
 Before 0.3 Release
 ==================
 
-* Better refactoring categoriztion
 * ``overview.txt``
 
 
@@ -39,5 +36,4 @@ Remaining Stories
 * Preferring `DefinedName`\s in attribute code assists
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
-* Calling `sys.settrace` for all threads in `rope.runmod` module
 * Goto definition for ``"# comment.\na_var"``

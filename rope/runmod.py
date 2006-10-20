@@ -7,6 +7,7 @@ def __rope_start_everything():
     import marshal
     import inspect
     import types
+    import threading
     
     class _MessageSender(object):
         
@@ -46,6 +47,7 @@ def __rope_start_everything():
                 if self._is_code_inside_project(frame.f_code):
                     return self.on_function_call
             sys.settrace(global_trace)
+            threading.settrace(global_trace)
 
         def on_function_call(self, frame, event, arg):
             if event != 'return':
@@ -79,16 +81,18 @@ def __rope_start_everything():
             return self.on_function_call
         
         def _is_an_interesting_call(self, frame):
-            if frame.f_code.co_name in ['?', '<module>']:
-                return False
+            #if frame.f_code.co_name in ['?', '<module>']:
+            #    return False
             if not self._is_code_inside_project(frame.f_code) and \
                (not frame.f_back or not self._is_code_inside_project(frame.f_back)):
                 return False
             return True
         
         def _is_code_inside_project(self, code):
+            #source = code.co_filename
             source = inspect.getsourcefile(code)
-            return source and os.path.abspath(source).startswith(self.project_root)
+            return source and source.endswith('.py') and \
+                   os.path.abspath(source).startswith(self.project_root)
     
         def _get_persisted_code(self, object_):
             return ('function', os.path.abspath(object_.co_filename), object_.co_firstlineno)
@@ -111,8 +115,7 @@ def __rope_start_everything():
             if isinstance(object_, (types.TypeType, types.ClassType)):
                 return self._get_persisted_class(object_, 'class')
             return self._get_persisted_class(type(object_), 'instance')
-
-
+    
     send_info = sys.argv[1]
     project_root = sys.argv[2]
     file_to_run = sys.argv[3]

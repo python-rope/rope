@@ -73,8 +73,8 @@ To Be Discussed
 * Using a modification of `compiler` AST for simplifying refactorings
 
 
-Designing Refactorings to Be Used for IDEs
-==========================================
+Designing Refactorings to Be Used on IDEs
+=========================================
 
 * Multi-step refactorings
 * Previewing refactorings
