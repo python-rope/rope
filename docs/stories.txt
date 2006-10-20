@@ -165,6 +165,9 @@ Stories
 * Pull up method
 
 
+* Type hierarchy
+
+
 * Push down method
 
 
@@ -225,9 +228,6 @@ Stories
 
 
 * Running unit tests view
-
-
-* Encapsulate field
 
 
 Remaining Stories

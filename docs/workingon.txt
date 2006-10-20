@@ -1,29 +1,29 @@
-Encapsulate Field
-=================
-
-- Tuple assignments in encapsulate field
-
-* Handling `AssList` for inline variable and encapsulate field
-* Changing refactor modules to use `sourcetools.add_methods`
-* Adding ``add_statements(method, statements)``
-* Changing `Rename` to take an `OccuranceFinder`
-* Caching `Occurrence` fields
+Designing Refactorings to Be Used for IDEs
+==========================================
 
 
 Before 0.3 Release
 ==================
 
 * Better refactoring categoriztion
+* ``overview.txt``
 
 
 Remaining Stories
 =================
 
+* Handling `AssList` for inline variable and encapsulate field
+* Changing refactor modules to use `sourcetools.add_methods`
+* Adding ``add_statements(method, statements)``
+* Changing `Rename` to take an `OccuranceFinder`
+* Caching `Occurrence` fields
+* ``break`` and ``continue`` in extract method
+
+* Eliminating `Editor.refactoring`; Use editing contexts
 * Considering logical lines in `rope.codeanalyze`
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Moving/renaming current module
-* Showing initial name in rename dialogs
 * Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
   ``COPYING`` to help menu; Adding readonly mode?
 * Extract method and return statements
@@ -39,6 +39,5 @@ Remaining Stories
 * Preferring `DefinedName`\s in attribute code assists
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
-* Eliminating `Editor.refactoring`; Use editing contexts
 * Calling `sys.settrace` for all threads in `rope.runmod` module
 * Goto definition for ``"# comment.\na_var"``

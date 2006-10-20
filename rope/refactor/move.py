@@ -8,21 +8,20 @@ from rope.refactor.change import (ChangeSet, ChangeFileContents,
 
 class MoveRefactoring(object):
     
-    def __init__(self, pycore, resource, offset, dest_resource):
+    def __init__(self, pycore, resource, offset):
         self.pycore = pycore
-        self.dest_resource = dest_resource
-        pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource, offset)
-        if pyname is None:
+        self.pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        if self.pyname is None:
             raise rope.exceptions.RefactoringException(
                 'Move works on classes,functions or modules.')
-        moving_object = pyname.get_object()
-        if moving_object.get_type() == rope.pyobjects.PyObject.get_base_type('Module'):
-            self.mover = _ModuleMover(pycore, pyname, dest_resource)
-        else:
-            self.mover = _GlobalMover(pycore, pyname, dest_resource)
     
-    def move(self):
-        return self.mover.move()
+    def move(self, dest_resource):
+        moving_object = self.pyname.get_object()
+        if moving_object.get_type() == rope.pyobjects.PyObject.get_base_type('Module'):
+            mover = _ModuleMover(self.pycore, self.pyname, dest_resource)
+        else:
+            mover = _GlobalMover(self.pycore, self.pyname, dest_resource)
+        return mover.move()
 
 
 class _Mover(object):

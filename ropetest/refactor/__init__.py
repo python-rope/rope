@@ -374,6 +374,15 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\nb, a_var.attr = 1, 2\n')
         self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
+    def test_tuple_assignments_and_function_calls(self):
+        self.mod1.write('import mod\ndef func(a1=0, a2=0):\n    pass\n'
+                        'a_var = mod.A()\nfunc(a_var.attr, a2=2)\n')
+        self.mod.write(self.a_class)
+        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self.assertEquals('import mod\ndef func(a1=0, a2=0):\n    pass\n'
+                          'a_var = mod.A()\nfunc(a_var.get_attr(), a2=2)\n',
+                          self.mod1.read())
+
     def test_tuple_assignments(self):
         self.mod1.write('import mod\na_var = mod.A()\na, b = a_var.attr, 1\n')
         self.mod.write(self.a_class)

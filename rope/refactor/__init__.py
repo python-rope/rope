@@ -17,26 +17,27 @@ class PythonRefactoring(object):
         self._undo = Undo()
 
     def local_rename(self, resource, offset, new_name):
-        changes = RenameRefactoring(self.pycore).\
-                  local_rename(resource, offset, new_name)
+        changes = RenameRefactoring(self.pycore, resource, offset).\
+                  local_rename(new_name)
         self._add_and_commit_changes(changes)
     
     def rename(self, resource, offset, new_name):
-        changes = RenameRefactoring(self.pycore).rename(resource, offset, new_name)
+        changes = RenameRefactoring(self.pycore, resource, offset).\
+                  rename(new_name)
         self._add_and_commit_changes(changes)
     
     def extract_method(self, resource, start_offset, end_offset,
                        extracted_name):
-        changes = ExtractMethodRefactoring(self.pycore).\
-                  extract_method(resource, start_offset, end_offset,
-                                 extracted_name)
+        changes = ExtractMethodRefactoring(self.pycore, resource,
+                                           start_offset, end_offset).\
+                                           extract_method(extracted_name)
         self._add_and_commit_changes(changes)
     
     def extract_variable(self, resource, start_offset, end_offset,
                          extracted_name):
-        changes = ExtractMethodRefactoring(self.pycore).\
-                  extract_variable(resource, start_offset, end_offset,
-                                   extracted_name)
+        changes = ExtractMethodRefactoring(self.pycore, resource,
+                                           start_offset, end_offset).\
+                                           extract_variable(extracted_name)
         self._add_and_commit_changes(changes)
     
     def transform_module_to_package(self, resource):
@@ -57,14 +58,15 @@ class PythonRefactoring(object):
         return import_tools.transform_relative_imports_to_absolute(pymodule)
     
     def introduce_factory(self, resource, offset, factory_name, global_factory=False):
-        factory_introducer = IntroduceFactoryRefactoring(self.pycore, resource,
-                                                         offset, factory_name, global_factory)
-        changes = factory_introducer.introduce_factory()
+        factory_introducer = IntroduceFactoryRefactoring(self.pycore,
+                                                         resource, offset)
+        changes = factory_introducer.introduce_factory(factory_name,
+                                                       global_factory)
         self._add_and_commit_changes(changes)
     
     def move(self, resource, offset, dest_resource):
-        changes = MoveRefactoring(self.pycore, resource,
-                                  offset, dest_resource).move()
+        changes = MoveRefactoring(self.pycore, resource, offset).\
+                  move(dest_resource)
         self._add_and_commit_changes(changes)
     
     def inline_local_variable(self, resource, offset):
@@ -77,8 +79,8 @@ class PythonRefactoring(object):
         self._add_and_commit_changes(changes)
     
     def convert_local_variable_to_field(self, resource, offset):
-        changes = ConvertLocalToFieldRefactoring(self.pycore).\
-                  convert_local_variable_to_field(resource, offset)
+        changes = ConvertLocalToFieldRefactoring(self.pycore, resource, offset).\
+                  convert_local_variable_to_field()
         self._add_and_commit_changes(changes)
         
     def _add_and_commit_changes(self, changes):

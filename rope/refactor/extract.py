@@ -9,29 +9,32 @@ from rope.refactor.change import ChangeSet, ChangeFileContents
 
 class ExtractMethodRefactoring(object):
     
-    def __init__(self, pycore):
+    def __init__(self, pycore, resource, start_offset, end_offset):
         self.pycore = pycore
+        self.resource = resource
+        self.start_offset = start_offset
+        self.end_offset = end_offset
     
-    def extract_method(self, resource, start_offset, end_offset,
-                       extracted_name):
-        info = _ExtractInformation(self.pycore, resource, start_offset, end_offset)
+    def extract_method(self, extracted_name):
+        info = _ExtractInformation(self.pycore, self.resource,
+                                   self.start_offset, self.end_offset)
         if info.is_one_line_extract():
-            new_contents = _OneLineExtractPerformer(self.pycore, resource, info,
+            new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info,
                                                     extracted_name).extract()
         else:
-            new_contents = _MultiLineExtractPerformer(self.pycore, resource, info,
+            new_contents = _MultiLineExtractPerformer(self.pycore, self.resource, info,
                                                       extracted_name).extract()
         changes = ChangeSet()
-        changes.add_change(ChangeFileContents(resource, new_contents))
+        changes.add_change(ChangeFileContents(self.resource, new_contents))
         return changes
         
-    def extract_variable(self, resource, start_offset, end_offset,
-                         extracted_name):
-        info = _ExtractInformation(self.pycore, resource, start_offset, end_offset)
-        new_contents = _OneLineExtractPerformer(self.pycore, resource, info, 
+    def extract_variable(self, extracted_name):
+        info = _ExtractInformation(self.pycore, self.resource,
+                                   self.start_offset, self.end_offset)
+        new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info, 
                                                 extracted_name, True).extract()
         changes = ChangeSet()
-        changes.add_change(ChangeFileContents(resource, new_contents))
+        changes.add_change(ChangeFileContents(self.resource, new_contents))
         return changes
 
 

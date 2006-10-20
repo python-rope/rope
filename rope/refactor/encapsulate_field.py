@@ -162,7 +162,11 @@ class _FindChangesForModule(object):
             equals_offset = line.index('=')
         except ValueError:
             return False
-        return relative_offset < equals_offset and (prev_char == ',' or next_char in ',)')
+        if prev_char != ',' and next_char not in ',)':
+            return False
+        parens_start = word_finder.find_parens_start_from_inside(relative_offset)
+        return relative_offset < equals_offset and (parens_start <= 0 or
+                                                    line[:parens_start].strip() == '')
 
     def _manage_writes(self, offset, result):
         if self.last_set is not None and self.last_set <= offset:

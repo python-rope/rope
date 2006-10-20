@@ -10,18 +10,20 @@ import rope.refactor.occurrences
 
 class RenameRefactoring(object):
     
-    def __init__(self, pycore):
+    def __init__(self, pycore, resource, offset):
         self.pycore = pycore
+        self.resource = resource
+        self.offset = offset
     
-    def local_rename(self, resource, offset, new_name):
-        return self._rename(resource, offset, new_name, True)
+    def local_rename(self, new_name):
+        return self._rename(new_name, True)
     
-    def rename(self, resource, offset, new_name):
-        return self._rename(resource, offset, new_name)
+    def rename(self, new_name):
+        return self._rename(new_name)
     
-    def _rename(self, resource, offset, new_name, in_file=False):
-        old_name = rope.codeanalyze.get_name_at(resource, offset)
-        old_pynames = self._get_old_pynames(offset, resource, in_file, old_name)
+    def _rename(self, new_name, in_file=False):
+        old_name = rope.codeanalyze.get_name_at(self.resource, self.offset)
+        old_pynames = self._get_old_pynames(self.offset, self.resource, in_file, old_name)
         if not old_pynames:
             return None
         # HACK: Do a local rename for names defined in function scopes.
@@ -29,7 +31,7 @@ class RenameRefactoring(object):
         if not in_file and len(old_pynames) == 1 and \
            self._is_renaming_a_function_local_name(old_pynames[0]):
             in_file = True
-        files = self._get_interesting_files(resource, in_file)
+        files = self._get_interesting_files(self.resource, in_file)
         changes = ChangeSet()
         for file_ in files:
             new_content = RenameInModule(self.pycore, old_pynames, old_name, new_name).\

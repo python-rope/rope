@@ -3,6 +3,9 @@
 ===========
 
 
+- Encapsulate field : October 19, 2006
+
+
 - Convert local variable to field refactoring : October 18, 2006
 
 

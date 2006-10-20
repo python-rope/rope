@@ -64,7 +64,6 @@ Hot Topics
 To Be Discussed
 ===============
 
-* Showing available refactorings for a place
 * Designing refactorings to be used on IDEs
 * Rope's preference saving system: format, location
 
@@ -72,6 +71,53 @@ To Be Discussed
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
+
+
+Designing Refactorings to Be Used for IDEs
+==========================================
+
+* Multi-step refactorings
+* Previewing refactorings
+* Finding available refactorings
+* A better facade
+* Better refactoring categoriztion
+
+
+Multi-step Refactorings
+-----------------------
+
+A refactoring should be done in three steps.
+
+1. Getting immediate information
+   
+   After this step we can provide some useful information.  Like the
+   initial name for rename refactoring.
+   
+2. Getting user provided information
+
+   The problem with this step is that based on the first step we
+   might need different data.  For example for move refactoring we
+   need different information for moving a field versus moving a
+   class.
+   
+   This separation helps us to report some of the errors earlier.
+
+3. Finding the changes to be made
+
+   We perform the actual refactoring here.  After this step we can
+   preview the changes.
+
+4. Performing the refactoring
+
+
+What will happen to `PythonRefactoring` facade?
+
+
+Finding Available Refactorings
+------------------------------
+
+The question we need to answer before proceeding is to decide
+wether this belongs to UI or core.
 
 
 Undo Unification
