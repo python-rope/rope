@@ -3,6 +3,7 @@ import re
 import rope.codeanalyze
 import rope.pynames
 import rope.pyobjects
+import rope.exceptions
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 import rope.refactor.occurrences
@@ -14,6 +15,12 @@ class RenameRefactoring(object):
         self.pycore = pycore
         self.resource = resource
         self.offset = offset
+        self.old_name = rope.codeanalyze.get_name_at(self.resource, self.offset)
+        self.old_pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource,
+                                                         offset)
+        if self.old_pyname is None:
+            raise rope.exceptions.RefactoringException(
+                'Rename refactoring should be performed on python identifiers.')
     
     def local_rename(self, new_name):
         return self._rename(new_name, True)
@@ -21,63 +28,63 @@ class RenameRefactoring(object):
     def rename(self, new_name):
         return self._rename(new_name)
     
+    def get_old_name(self):
+        return self.old_name
+    
     def _rename(self, new_name, in_file=False):
-        old_name = rope.codeanalyze.get_name_at(self.resource, self.offset)
-        old_pynames = self._get_old_pynames(self.offset, self.resource, in_file, old_name)
+        old_pynames = self._get_old_pynames(in_file)
         if not old_pynames:
             return None
         # HACK: Do a local rename for names defined in function scopes.
         # XXX: This might cause problems for global keyword usages.
         if not in_file and len(old_pynames) == 1 and \
-           self._is_renaming_a_function_local_name(old_pynames[0]):
+           self._is_renaming_a_function_local_name():
             in_file = True
-        files = self._get_interesting_files(self.resource, in_file)
+        files = self._get_interesting_files(in_file)
         changes = ChangeSet()
         for file_ in files:
-            new_content = RenameInModule(self.pycore, old_pynames, old_name, new_name).\
+            new_content = RenameInModule(self.pycore, old_pynames, self.old_name, new_name).\
                           get_changed_module(file_)
             if new_content is not None:
                 changes.add_change(ChangeFileContents(file_, new_content))
         
-        if self._is_renaming_a_module(old_pynames):
+        if self._is_renaming_a_module():
             changes.add_change(self._rename_module(old_pynames[0].get_object(), new_name))
         return changes
     
-    def _is_renaming_a_function_local_name(self, pyname):
-        module, lineno = pyname.get_definition_location()
+    def _is_renaming_a_function_local_name(self):
+        module, lineno = self.old_pyname.get_definition_location()
         if lineno is None:
             return False
         scope = module.get_scope().get_inner_scope_for_line(lineno)
-        if isinstance(pyname, rope.pynames.DefinedName) and \
+        if isinstance(self.old_pyname, rope.pynames.DefinedName) and \
            scope.get_kind() in ('Function', 'Class'):
             scope = scope.parent
         return scope.get_kind() == 'Function' and \
-               pyname in scope.get_names().values() and \
-               isinstance(pyname, rope.pynames.AssignedName)
+               self.old_pyname in scope.get_names().values() and \
+               isinstance(self.old_pyname, rope.pynames.AssignedName)
     
-    def _is_renaming_a_module(self, old_pynames):
-        if len(old_pynames) == 1 and \
-           old_pynames[0].get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
+    def _is_renaming_a_module(self):
+        if self.old_pyname.get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
             return True
         return False
 
-    def _get_old_pynames(self, offset, resource, in_file, old_name):
-        old_pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource,
-                                                    offset)
-        if old_pyname is None:
+    def _get_old_pynames(self, in_file):
+        if self.old_pyname is None:
             return []
-        if self._is_a_class_method(old_pyname) and not in_file:
-            return self._get_all_methods_in_hierarchy(old_pyname.get_object().
-                                                      parent, old_name)
+        if self._is_a_class_method() and not in_file:
+            return self._get_all_methods_in_hierarchy(self.old_pyname.get_object().
+                                                      parent, self.old_name)
         else:
-            return [old_pyname]
+            return [self.old_pyname]
 
-    def _get_interesting_files(self, resource, in_file):
+    def _get_interesting_files(self, in_file):
         if not in_file:
             return self.pycore.get_python_files()
-        return [resource]
+        return [self.resource]
     
-    def _is_a_class_method(self, pyname):
+    def _is_a_class_method(self):
+        pyname = self.old_pyname
         return isinstance(pyname, rope.pynames.DefinedName) and \
                pyname.get_object().get_type() == rope.pyobjects.PyObject.get_base_type('Function') and \
                pyname.get_object().parent.get_type() == rope.pyobjects.PyObject.get_base_type('Type')

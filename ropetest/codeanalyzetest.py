@@ -103,6 +103,26 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder('a_var.an_attr')
         self.assertEquals('a_var.an_attr', word_finder.get_primary_at(10))
     
+    def test_word_finder_on_word_beginning(self):
+        code = 'print a_var\n'
+        word_finder = WordRangeFinder(code)
+        self.assertEquals('a_var', word_finder.get_word_at(code.index('a_var')))
+    
+    def test_word_finder_on_primary_beginning(self):
+        code = 'print a_var\n'
+        word_finder = WordRangeFinder(code)
+        self.assertEquals('a_var', word_finder.get_primary_at(code.index('a_var')))
+    
+    def test_word_finder_on_word_ending(self):
+        code = 'print a_var\n'
+        word_finder = WordRangeFinder(code)
+        self.assertEquals('a_var', word_finder.get_word_at(code.index('a_var') + 5))
+    
+    def test_word_finder_on_primary_ending(self):
+        code = 'print a_var\n'
+        word_finder = WordRangeFinder(code)
+        self.assertEquals('a_var', word_finder.get_primary_at(code.index('a_var') + 5))
+    
     def test_strings(self):
         word_finder = WordRangeFinder('"a string".split()')
         self.assertEquals('"a string".split', word_finder.get_primary_at(14))

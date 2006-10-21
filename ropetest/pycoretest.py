@@ -93,7 +93,7 @@ class PyCoreTest(unittest.TestCase):
 
     @testutils.assert_raises(ModuleNotFoundException)
     def test_non_existant_module(self):
-        self.pycore.get_module('mod')
+        self.pycore.get_module('doesnotexistmodule')
 
     def test_imported_names(self):
         self.pycore.create_module(self.project.get_root_folder(), 'mod1')

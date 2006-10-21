@@ -1,9 +1,17 @@
-- Calling `sys.settrace` for all threads in `rope.runmod` module
+Refactoring
+===========
+
+* Refactor the refactoring modules
+  
+  * What changes the most? refactoring kinds
+  * Designing refactorings for IDE's
+
 
 Before 0.3 Release
 ==================
 
 * ``overview.txt``
+* Encodings
 
 
 Remaining Stories

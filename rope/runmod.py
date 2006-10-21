@@ -89,8 +89,8 @@ def __rope_start_everything():
             return True
         
         def _is_code_inside_project(self, code):
-            #source = code.co_filename
-            source = inspect.getsourcefile(code)
+            source = code.co_filename
+            #source = inspect.getsourcefile(code)
             return source and source.endswith('.py') and \
                    os.path.abspath(source).startswith(self.project_root)
     

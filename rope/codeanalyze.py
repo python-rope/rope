@@ -15,16 +15,14 @@ class WordRangeFinder(object):
     
     def _find_word_start(self, offset):
         current_offset = offset
-        while current_offset >= 0 and (self.source_code[current_offset].isalnum() or
-                                       self.source_code[current_offset] in '_'):
+        while current_offset >= 0 and self._is_id_char(current_offset):
             current_offset -= 1;
         return current_offset + 1
     
     def _find_word_end(self, offset):
         current_offset = offset + 1
         while current_offset < len(self.source_code) and \
-              (self.source_code[current_offset].isalnum() or
-               self.source_code[current_offset] == '_'):
+              self._is_id_char(current_offset):
             current_offset += 1;
         return current_offset - 1
 
@@ -44,9 +42,24 @@ class WordRangeFinder(object):
     def get_word_before(self, offset):
         return self.source_code[self._find_word_start(offset - 1):offset]
     
+
     def get_word_at(self, offset):
-        return self.source_code[self._find_word_start(offset - 1):
-                                self._find_word_end(offset - 1) + 1]
+        offset = self._get_fixed_offset(offset)
+        return self.source_code[self._find_word_start(offset):
+                                self._find_word_end(offset) + 1]
+
+    def _get_fixed_offset(self, offset):
+        if offset >= len(self.source_code):
+            return offset - 1
+        if not self._is_id_char(offset):
+            if offset > 0 and self._is_id_char(offset - 1):
+                return offset - 1
+            if offset < len(self.source_code) - 1 and self._is_id_char(offset + 1):
+                return offset + 1
+        return offset
+    
+    def _is_id_char(self, offset):
+        return self.source_code[offset].isalnum() or self.source_code[offset] == '_'
     
     def _find_string_start(self, offset):
         kind = self.source_code[offset]
@@ -73,7 +86,7 @@ class WordRangeFinder(object):
             return self._find_string_start(offset)
         if self.source_code[offset] in ')]}':
             return self._find_parens_start(offset)
-        if self.source_code[offset].isalnum() or self.source_code[offset] == '_':
+        if self._is_id_char(offset):
             return self._find_word_start(offset)
         return old_offset
     
@@ -86,12 +99,13 @@ class WordRangeFinder(object):
 
         if current_offset > 0 and self.source_code[current_offset] in '\'"':
             return self._find_string_start(current_offset)
-        elif current_offset > 0 and (self.source_code[current_offset].isalnum() or \
-                                     self.source_code[current_offset] == '_'):
+        elif current_offset > 0 and self._is_id_char(current_offset):
             return self._find_word_start(current_offset)
         return last_parens
 
     def _find_primary_start(self, offset):
+        if offset >= len(self.source_code):
+            offset = len(self.source_code) - 1
         current_offset = offset + 1
         if self.source_code[offset] != '.':
             current_offset = self._find_primary_without_dot_start(offset)
@@ -100,15 +114,15 @@ class WordRangeFinder(object):
             dot_position = self._find_last_non_space_char(current_offset - 1)
             current_offset = self._find_primary_without_dot_start(dot_position - 1)
             
-            first_char = self.source_code[current_offset]
-            if first_char != '_' and not first_char.isalnum():
+            if not self._is_id_char(current_offset):
                 break
 
         return current_offset
     
     def get_primary_at(self, offset):
-        return self.source_code[self._find_primary_start(offset - 1):
-                                self._find_word_end(offset - 1) + 1].strip()
+        offset = self._get_fixed_offset(offset)
+        return self.source_code[self._find_primary_start(offset):
+                                self._find_word_end(offset) + 1].strip()
 
     def get_splitted_primary_before(self, offset):
         """returns expression, starting, starting_offset

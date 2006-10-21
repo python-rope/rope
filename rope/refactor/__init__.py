@@ -19,26 +19,26 @@ class PythonRefactoring(object):
     def local_rename(self, resource, offset, new_name):
         changes = RenameRefactoring(self.pycore, resource, offset).\
                   local_rename(new_name)
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def rename(self, resource, offset, new_name):
         changes = RenameRefactoring(self.pycore, resource, offset).\
                   rename(new_name)
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def extract_method(self, resource, start_offset, end_offset,
                        extracted_name):
         changes = ExtractMethodRefactoring(self.pycore, resource,
                                            start_offset, end_offset).\
                                            extract_method(extracted_name)
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def extract_variable(self, resource, start_offset, end_offset,
                          extracted_name):
         changes = ExtractMethodRefactoring(self.pycore, resource,
                                            start_offset, end_offset).\
                                            extract_variable(extracted_name)
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def transform_module_to_package(self, resource):
         changes = ChangeSet()
@@ -50,7 +50,7 @@ class PythonRefactoring(object):
         changes.add_change(CreateFolder(parent, name))
         new_path = parent.get_path() + '/%s/__init__.py' % name
         changes.add_change(MoveResource(resource, new_path))
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def _transform_relatives_to_absolute(self, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
@@ -62,28 +62,28 @@ class PythonRefactoring(object):
                                                          resource, offset)
         changes = factory_introducer.introduce_factory(factory_name,
                                                        global_factory)
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def move(self, resource, offset, dest_resource):
         changes = MoveRefactoring(self.pycore, resource, offset).\
                   move(dest_resource)
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def inline_local_variable(self, resource, offset):
         changes = InlineRefactoring(self.pycore, resource, offset).inline()
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def encapsulate_field(self, resource, offset):
         changes = EncapsulateFieldRefactoring(self.pycore, resource, offset).\
                   encapsulate_field()
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
     
     def convert_local_variable_to_field(self, resource, offset):
         changes = ConvertLocalToFieldRefactoring(self.pycore, resource, offset).\
                   convert_local_variable_to_field()
-        self._add_and_commit_changes(changes)
+        self.add_and_commit_changes(changes)
         
-    def _add_and_commit_changes(self, changes):
+    def add_and_commit_changes(self, changes):
         self._undo.add_change(changes)
         changes.do()
         
@@ -121,7 +121,7 @@ class ImportOrganizer(object):
         if source is not None:
             changes = ChangeSet()
             changes.add_change(ChangeFileContents(resource, source))
-            self.refactoring._add_and_commit_changes(changes)
+            self.refactoring.add_and_commit_changes(changes)
 
     def expand_star_imports(self, resource):
         source = self._perform_command_on_module_with_imports(
@@ -129,7 +129,7 @@ class ImportOrganizer(object):
         if source is not None:
             changes = ChangeSet()
             changes.add_change(ChangeFileContents(resource, source))
-            self.refactoring._add_and_commit_changes(changes)
+            self.refactoring.add_and_commit_changes(changes)
 
     def transform_froms_to_imports(self, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
@@ -137,7 +137,7 @@ class ImportOrganizer(object):
         if result is not None:
             changes = ChangeSet()
             changes.add_change(ChangeFileContents(resource, result))
-            self.refactoring._add_and_commit_changes(changes)
+            self.refactoring.add_and_commit_changes(changes)
 
     def transform_relatives_to_absolute(self, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
@@ -145,7 +145,7 @@ class ImportOrganizer(object):
         if result is not None:
             changes = ChangeSet()
             changes.add_change(ChangeFileContents(resource, result))
-            self.refactoring._add_and_commit_changes(changes)
+            self.refactoring.add_and_commit_changes(changes)
     
 
 class NoRefactoring(object):

@@ -44,14 +44,27 @@ class ConfirmAllEditorsAreSaved(object):
         ok_button.focus_set()
 
 
-def _rename_dialog(do_rename, title):
+def _rename_dialog(context, title, is_local=False):
+    resource = context.get_active_editor().get_file()
+    editor = context.get_active_editor().get_editor()
+    renamer = rope.refactor.rename.RenameRefactoring(
+        context.get_core().get_open_project().get_pycore(), 
+        resource, editor.get_current_offset())
     toplevel = Tkinter.Toplevel()
     toplevel.title(title)
     frame = Tkinter.Frame(toplevel)
     label = Tkinter.Label(frame, text='New Name :')
     label.grid(row=0, column=0)
     new_name_entry = Tkinter.Entry(frame)
+    new_name_entry.insert(0, renamer.get_old_name())
+    new_name_entry.select_range(0, Tkinter.END)
     new_name_entry.grid(row=0, column=1)
+    def do_rename(new_name):
+        if not is_local:
+            changes = renamer.rename(new_name)
+        else:
+            changes = renamer.local_rename(new_name)
+        editor.refactoring.add_and_commit_changes(changes)
     def ok(event=None):
         do_rename(new_name_entry.get())
         toplevel.destroy()
@@ -69,13 +82,10 @@ def _rename_dialog(do_rename, title):
     new_name_entry.focus_set()
 
 def rename(context):
-    def do_rename(new_name):
-        resource = context.get_active_editor().get_file()
-        editor = context.get_active_editor().get_editor()
-        editor.refactoring.rename(resource,
-                                  editor.get_current_offset(),
-                                  new_name)
-    _rename_dialog(do_rename, 'Rename Refactoring')
+    _rename_dialog(context, 'Rename Refactoring')
+
+def local_rename(context):
+    _rename_dialog(context, 'Rename Variable In File', True)
 
 def transform_module_to_package(context):
     if context.get_active_editor():
@@ -83,15 +93,6 @@ def transform_module_to_package(context):
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
         editor.refactoring.transform_module_to_package(resource)
-
-def local_rename(context):
-    def do_rename(new_name):
-        resource = context.get_active_editor().get_file()
-        editor = context.get_active_editor().get_editor()
-        editor.refactoring.local_rename(resource,
-                                        editor.get_current_offset(),
-                                        new_name)
-    _rename_dialog(do_rename, 'Rename Variable In File')
 
 def _extract_dialog(do_extract, kind):
     toplevel = Tkinter.Toplevel()
