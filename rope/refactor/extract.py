@@ -4,7 +4,7 @@ import rope.codeanalyze
 import rope.pyobjects
 from rope.exceptions import RefactoringException
 from rope.refactor import sourceutils
-from rope.refactor.change import ChangeSet, ChangeFileContents
+from rope.refactor.change import ChangeSet, ChangeContents
 
 
 class _ExtractRefactoring(object):
@@ -27,7 +27,7 @@ class ExtractMethodRefactoring(_ExtractRefactoring):
             new_contents = _MultiLineExtractPerformer(self.pycore, self.resource, info,
                                                       extracted_name).extract()
         changes = ChangeSet()
-        changes.add_change(ChangeFileContents(self.resource, new_contents))
+        changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
 
@@ -39,7 +39,7 @@ class ExtractVariableRefactoring(_ExtractRefactoring):
         new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info, 
                                                 extracted_name, True).extract()
         changes = ChangeSet()
-        changes.add_change(ChangeFileContents(self.resource, new_contents))
+        changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
 

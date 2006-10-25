@@ -1,5 +1,5 @@
 import rope.importutils
-from rope.refactor.change import (ChangeSet, ChangeFileContents,
+from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 from rope.refactor.rename import RenameRefactoring
 from rope.refactor.extract import (ExtractMethodRefactoring,
@@ -45,7 +45,7 @@ class PythonRefactoring(object):
         changes = ChangeSet()
         new_content = self._transform_relatives_to_absolute(resource)
         if new_content is not None:
-            changes.add_change(ChangeFileContents(resource, new_content))
+            changes.add_change(ChangeContents(resource, new_content))
         parent = resource.get_parent()
         name = resource.get_name()[:-3]
         changes.add_change(CreateFolder(parent, name))
@@ -120,7 +120,7 @@ class ImportOrganizer(object):
         source = module_with_imports.get_changed_source()
         if source is not None:
             changes = ChangeSet()
-            changes.add_change(ChangeFileContents(resource, source))
+            changes.add_change(ChangeContents(resource, source))
             self.refactoring.add_and_commit_changes(changes)
 
     def expand_star_imports(self, resource):
@@ -128,7 +128,7 @@ class ImportOrganizer(object):
             resource, rope.importutils.ModuleWithImports.expand_stars)
         if source is not None:
             changes = ChangeSet()
-            changes.add_change(ChangeFileContents(resource, source))
+            changes.add_change(ChangeContents(resource, source))
             self.refactoring.add_and_commit_changes(changes)
 
     def transform_froms_to_imports(self, resource):
@@ -136,7 +136,7 @@ class ImportOrganizer(object):
         result = self.import_tools.transform_froms_to_normal_imports(pymodule)
         if result is not None:
             changes = ChangeSet()
-            changes.add_change(ChangeFileContents(resource, result))
+            changes.add_change(ChangeContents(resource, result))
             self.refactoring.add_and_commit_changes(changes)
 
     def transform_relatives_to_absolute(self, resource):
@@ -144,7 +144,7 @@ class ImportOrganizer(object):
         result = self.import_tools.transform_relative_imports_to_absolute(pymodule)
         if result is not None:
             changes = ChangeSet()
-            changes.add_change(ChangeFileContents(resource, result))
+            changes.add_change(ChangeContents(resource, result))
             self.refactoring.add_and_commit_changes(changes)
     
 

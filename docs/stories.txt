@@ -230,9 +230,6 @@ Stories
 * Running unit tests view
 
 
-* Previewing refactoring changes
-
-
 Remaining Stories
 -----------------
 

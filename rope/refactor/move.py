@@ -2,7 +2,7 @@ import rope.codeanalyze
 import rope.pyobjects
 import rope.importutils
 import rope.exceptions
-from rope.refactor.change import (ChangeSet, ChangeFileContents,
+from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 
 
@@ -135,7 +135,7 @@ class _GlobalMover(_Mover):
             # Adding new import
             source = self._add_imports_to_module(pymodule, [self.new_import])
         
-        changes.add_change(ChangeFileContents(self.source, source))
+        changes.add_change(ChangeContents(self.source, source))
 
     def _get_moved_moving_source(self, pymodule):
         source = pymodule.source_code
@@ -166,7 +166,7 @@ class _GlobalMover(_Mover):
             start = -1
         result += moving + '\n' + source[start + 1:]
         
-        changes.add_change(ChangeFileContents(self.destination, result))
+        changes.add_change(ChangeContents(self.destination, result))
     
     def _get_moving_element_with_imports(self):
         moving = self._get_moving_element()
@@ -228,7 +228,7 @@ class _GlobalMover(_Mover):
             if should_import:
                 source = self._add_imports_to_module(pymodule, [self.new_import])
             if is_changed:
-                changes.add_change(ChangeFileContents(file_, source))
+                changes.add_change(ChangeContents(file_, source))
 
 
 class _ModuleMover(_Mover):
@@ -274,7 +274,7 @@ class _ModuleMover(_Mover):
             else:
                 source = pymodule.source_code
             if is_changed:
-                changes.add_change(ChangeFileContents(self.source, source))
+                changes.add_change(ChangeContents(self.source, source))
         changes.add_change(MoveResource(self.source,
                                         self.destination.get_path()))
 
@@ -285,7 +285,7 @@ class _ModuleMover(_Mover):
             pymodule = self.pycore.resource_to_pyobject(module)
             source = self._change_occurrences_in_module(pymodule)
             if source is not None:
-                changes.add_change(ChangeFileContents(module, source))
+                changes.add_change(ChangeContents(module, source))
 
     def _change_occurrences_in_module(self, pymodule):
         is_changed = False

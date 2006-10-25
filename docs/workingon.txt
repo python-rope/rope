@@ -1,9 +1,6 @@
 Previewing Refactoring Changes
 ==============================
 
-* Adding `Change.__str__` and `Change.description` or maybe using a visitor
-* Which refactorings should have previews?
-* SMELL: All refactorings have ok, cancel and preview
 * Empty lines and scope ends
 
 

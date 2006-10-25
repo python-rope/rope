@@ -1,3 +1,5 @@
+import difflib
+
 class Change(object):
     
     def do(self):
@@ -38,7 +40,7 @@ class ChangeSet(Change):
         self.changes.append(change)
 
 
-class ChangeFileContents(Change):
+class ChangeContents(Change):
     
     def __init__(self, resource, new_content):
         self.resource = resource
@@ -51,6 +53,15 @@ class ChangeFileContents(Change):
     
     def undo(self):
         self.resource.write(self.old_content)
+    
+    def __str__(self):
+        return 'Change <%s>' % self.resource.get_path()
+    
+    def get_description(self):
+        differ = difflib.Differ()
+        result = list(differ.compare(self.resource.read().splitlines(True),
+                                     self.new_content.splitlines(True)))
+        return ''.join(result)
 
 
 class MoveResource(Change):
@@ -67,6 +78,12 @@ class MoveResource(Change):
     def undo(self):
         self.resource.move(self.old_location)
 
+    def __str__(self):
+        return 'Move <%s>' % self.resource.get_path()
+
+    def get_description(self):
+        return 'Move <%s> to <%s>' % (self.resource.get_path(), self.new_location)
+
 
 class CreateFolder(Change):
     
@@ -80,3 +97,9 @@ class CreateFolder(Change):
     
     def undo(self):
         self.new_folder.remove()
+
+    def __str__(self):
+        return 'Create Folder <%s>' % (self.parent.get_path() + '/' + self.name)
+    
+    def get_description(self):
+        return str(self)

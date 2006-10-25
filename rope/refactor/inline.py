@@ -1,7 +1,7 @@
 import rope.codeanalyze
 import rope.exceptions
 import rope.pynames
-from rope.refactor.change import ChangeSet, ChangeFileContents
+from rope.refactor.change import ChangeSet, ChangeContents
 
 
 class InlineRefactoring(object):
@@ -41,7 +41,7 @@ class InlineRefactoring(object):
         source = changed_source[:lines.get_line_start(start)] + \
                  changed_source[lines.get_line_end(end) + 1:]
         changes = ChangeSet()
-        changes.add_change(ChangeFileContents(self.resource, source))
+        changes.add_change(ChangeContents(self.resource, source))
         return changes
     
     def _is_tuple_assignment(self, line):

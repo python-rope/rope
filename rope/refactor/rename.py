@@ -3,7 +3,7 @@ import rope.codeanalyze
 import rope.pynames
 import rope.pyobjects
 import rope.exceptions
-from rope.refactor.change import ChangeSet, ChangeFileContents, MoveResource
+from rope.refactor.change import ChangeSet, ChangeContents, MoveResource
 import rope.refactor.occurrences
 
 
@@ -38,7 +38,7 @@ class RenameRefactoring(object):
             new_content = RenameInModule(self.pycore, old_pynames, self.old_name, new_name).\
                           get_changed_module(file_)
             if new_content is not None:
-                changes.add_change(ChangeFileContents(file_, new_content))
+                changes.add_change(ChangeContents(file_, new_content))
         
         if self._is_renaming_a_module():
             changes.add_change(self._rename_module(old_pynames[0].get_object(), new_name))

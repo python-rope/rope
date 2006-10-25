@@ -3,6 +3,9 @@
 ===========
 
 
+- Previewing refactoring changes : October 25, 2006
+
+
 - Encapsulate field : October 19, 2006
 
 

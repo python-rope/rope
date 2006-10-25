@@ -243,7 +243,7 @@ class RefactoringUndoTest(unittest.TestCase):
         super(RefactoringUndoTest, self).tearDown()
 
     def test_simple_undo(self):
-        change = ChangeFileContents(self.file, '1')
+        change = ChangeContents(self.file, '1')
         change.do()
         self.assertEquals('1', self.file.read())
         self.undo.add_change(change)
@@ -251,7 +251,7 @@ class RefactoringUndoTest(unittest.TestCase):
         self.assertEquals('', self.file.read())
 
     def test_simple_redo(self):
-        change = ChangeFileContents(self.file, '1')
+        change = ChangeContents(self.file, '1')
         change.do()
         self.undo.add_change(change)
         self.undo.undo()
@@ -259,7 +259,7 @@ class RefactoringUndoTest(unittest.TestCase):
         self.assertEquals('1', self.file.read())
 
     def test_simple_re_undo(self):
-        change = ChangeFileContents(self.file, '1')
+        change = ChangeContents(self.file, '1')
         change.do()
         self.undo.add_change(change)
         self.undo.undo()
@@ -268,15 +268,15 @@ class RefactoringUndoTest(unittest.TestCase):
         self.assertEquals('', self.file.read())
 
     def test_multiple_undos(self):
-        change = ChangeFileContents(self.file, '1')
+        change = ChangeContents(self.file, '1')
         change.do()
         self.undo.add_change(change)
-        change = ChangeFileContents(self.file, '2')
+        change = ChangeContents(self.file, '2')
         change.do()
         self.undo.add_change(change)
         self.undo.undo()
         self.assertEquals('1', self.file.read())
-        change = ChangeFileContents(self.file, '3')
+        change = ChangeContents(self.file, '3')
         change.do()
         self.undo.add_change(change)
         self.undo.undo()

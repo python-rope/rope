@@ -2,7 +2,7 @@ import rope.codeanalyze
 import rope.refactor.occurrences
 
 from rope.refactor import sourceutils
-from rope.refactor.change import ChangeSet, ChangeFileContents
+from rope.refactor.change import ChangeSet, ChangeContents
 
 
 class EncapsulateFieldRefactoring(object):
@@ -38,7 +38,7 @@ class EncapsulateFieldRefactoring(object):
                 continue
             result = rename_in_module.get_changed_module(file)
             if result is not None:
-                changes.add_change(ChangeFileContents(file, result))
+                changes.add_change(ChangeContents(file, result))
         return changes
     
     def _get_defining_class_scope(self):
@@ -65,7 +65,7 @@ class EncapsulateFieldRefactoring(object):
         setter = 'def set_%s(self, value):\n    self.%s = value' % (self.name, self.name)
         new_source = sourceutils.add_methods(pymodule, class_scope,
                                              [getter, setter])
-        changes.add_change(ChangeFileContents(pymodule.get_resource(), new_source))
+        changes.add_change(ChangeContents(pymodule.get_resource(), new_source))
 
 
 class GetterSetterRenameInModule(object):

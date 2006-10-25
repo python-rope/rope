@@ -4,7 +4,7 @@ import rope.pyobjects
 import rope.refactor.rename
 import rope.importutils
 
-from rope.refactor.change import (ChangeSet, ChangeFileContents)
+from rope.refactor.change import (ChangeSet, ChangeContents)
 from rope.refactor import sourceutils
 
 
@@ -45,7 +45,7 @@ class IntroduceFactoryRefactoring(object):
         result += self._get_factory_method(lines, class_scope,
                                            factory_name, global_factory)
         result += source_code[start:]
-        changes.add_change(ChangeFileContents(self.resource, result))
+        changes.add_change(ChangeContents(self.resource, result))
 
     def _get_insertion_offset(self, class_scope, lines):
         start_line = class_scope.get_end()
@@ -98,4 +98,4 @@ class IntroduceFactoryRefactoring(object):
                     module_with_imports = import_tools.get_module_with_imports(new_pymodule)
                     module_with_imports.add_import(new_import)
                     changed_code = module_with_imports.get_changed_source()
-                changes.add_change(ChangeFileContents(file_, changed_code))
+                changes.add_change(ChangeContents(file_, changed_code))

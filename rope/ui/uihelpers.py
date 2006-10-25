@@ -37,6 +37,7 @@ class EnhancedList(object):
         self.list.bind('<Up>', self._select_prev)
         self.list.bind('<Control-n>', self._select_next)
         self.list.bind('<Down>', self._select_next)
+        self.list.focus_set()
         label.grid(row=0, column=0, columnspan=2)
         self.list.grid(row=1, column=0, sticky=N+E+W+S)
         scrollbar.grid(row=1, column=1, sticky=N+E+W+S)

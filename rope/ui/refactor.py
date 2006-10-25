@@ -1,10 +1,12 @@
 import Tkinter
+import ScrolledText
 
 import rope.importutils
 import rope.ui.core
+import rope.refactor.change
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
-from rope.ui.uihelpers import TreeViewHandle, TreeView
+from rope.ui.uihelpers import TreeViewHandle, TreeView, EnhancedListHandle, EnhancedList
 
 
 class ConfirmAllEditorsAreSaved(object):
@@ -44,6 +46,27 @@ class ConfirmAllEditorsAreSaved(object):
         ok_button.focus_set()
 
 
+class _ChangeListHandle(EnhancedListHandle):
+    
+    def __init__(self, text):
+        self.text = text
+    
+    def entry_to_string(self, obj):
+        return str(obj)
+    
+    def selected(self, obj):
+        self.text['state'] = Tkinter.NORMAL
+        self.text.delete('0.0', Tkinter.END)
+        self.text.insert('0.0', self._get_description(obj))
+        self.text['state'] = Tkinter.DISABLED
+    
+    def _get_description(self, change):
+        return change.get_description()
+    
+    def canceled(self):
+        pass
+
+
 class PreviewAndCommitChanges(object):
     
     def __init__(self, refactoring, changes):
@@ -53,9 +76,15 @@ class PreviewAndCommitChanges(object):
     def preview(self):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Preview Changes')
+        
+        description = ScrolledText.ScrolledText(toplevel)
+        change_list = EnhancedList(toplevel, _ChangeListHandle(description),
+                                   'Changes')
+        description.grid(row=0, column=1)
+        for change in self.changes.changes:
+            change_list.add_entry(change)
+        
         frame = Tkinter.Frame(toplevel)
-        label = Tkinter.Label(frame, text='Changes:')
-        label.grid(row=0, column=0, columnspan=2)
         def ok(event=None):
             toplevel.destroy()
             self.commit()
@@ -64,12 +93,11 @@ class PreviewAndCommitChanges(object):
         ok_button = Tkinter.Button(frame, text='OK', command=ok)
         cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
         ok_button.grid(row=1, column=0)
-        toplevel.bind('<Return>', lambda event: ok())
+        #toplevel.bind('<Return>', lambda event: ok())
         toplevel.bind('<Escape>', lambda event: cancel())
         toplevel.bind('<Control-g>', lambda event: cancel())
         cancel_button.grid(row=1, column=1)
         frame.grid()
-        ok_button.focus_set()
     
     def commit(self):
         self.refactoring.add_and_commit_changes(self.changes)

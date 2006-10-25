@@ -1,6 +1,6 @@
 from rope.refactor.rename import RenameRefactoring
 import rope.codeanalyze
-from rope.refactor.change import (ChangeSet, ChangeFileContents,
+from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 
 
