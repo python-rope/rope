@@ -1,3 +1,12 @@
+Previewing Refactoring Changes
+==============================
+
+* Adding `Change.__str__` and `Change.description` or maybe using a visitor
+* Which refactorings should have previews?
+* SMELL: All refactorings have ok, cancel and preview
+* Empty lines and scope ends
+
+
 Refactoring
 ===========
 
@@ -12,6 +21,7 @@ Before 0.3 Release
 
 * ``overview.txt``
 * Encodings
+* Eliminating `Editor.refactoring`; Use editing contexts
 
 
 Remaining Stories
@@ -24,7 +34,6 @@ Remaining Stories
 * Caching `Occurrence` fields
 * ``break`` and ``continue`` in extract method
 
-* Eliminating `Editor.refactoring`; Use editing contexts
 * Considering logical lines in `rope.codeanalyze`
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`

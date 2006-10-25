@@ -44,48 +44,103 @@ class ConfirmAllEditorsAreSaved(object):
         ok_button.focus_set()
 
 
-def _rename_dialog(context, title, is_local=False):
-    resource = context.get_active_editor().get_file()
-    editor = context.get_active_editor().get_editor()
-    renamer = rope.refactor.rename.RenameRefactoring(
-        context.get_core().get_open_project().get_pycore(), 
-        resource, editor.get_current_offset())
-    toplevel = Tkinter.Toplevel()
-    toplevel.title(title)
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text='New Name :')
-    label.grid(row=0, column=0)
-    new_name_entry = Tkinter.Entry(frame)
-    new_name_entry.insert(0, renamer.get_old_name())
-    new_name_entry.select_range(0, Tkinter.END)
-    new_name_entry.grid(row=0, column=1)
-    def do_rename(new_name):
-        if not is_local:
-            changes = renamer.rename(new_name)
-        else:
-            changes = renamer.local_rename(new_name)
-        editor.refactoring.add_and_commit_changes(changes)
-    def ok(event=None):
-        do_rename(new_name_entry.get())
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
+class PreviewAndCommitChanges(object):
+    
+    def __init__(self, refactoring, changes):
+        self.refactoring = refactoring
+        self.changes = changes
+    
+    def preview(self):
+        toplevel = Tkinter.Toplevel()
+        toplevel.title('Preview Changes')
+        frame = Tkinter.Frame(toplevel)
+        label = Tkinter.Label(frame, text='Changes:')
+        label.grid(row=0, column=0, columnspan=2)
+        def ok(event=None):
+            toplevel.destroy()
+            self.commit()
+        def cancel(event=None):
+            toplevel.destroy()
+        ok_button = Tkinter.Button(frame, text='OK', command=ok)
+        cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+        ok_button.grid(row=1, column=0)
+        toplevel.bind('<Return>', lambda event: ok())
+        toplevel.bind('<Escape>', lambda event: cancel())
+        toplevel.bind('<Control-g>', lambda event: cancel())
+        cancel_button.grid(row=1, column=1)
+        frame.grid()
+        ok_button.focus_set()
+    
+    def commit(self):
+        self.refactoring.add_and_commit_changes(self.changes)
 
-    ok_button = Tkinter.Button(frame, text='Done', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    new_name_entry.bind('<Return>', lambda event: ok())
-    new_name_entry.bind('<Escape>', lambda event: cancel())
-    new_name_entry.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    new_name_entry.focus_set()
+
+class RefactoringDialog(object):
+    
+    def __init__(self, refactoring, title):
+        self.refactoring = refactoring
+        self.title = title
+    
+    def show(self):
+        self.toplevel = Tkinter.Toplevel()
+        self.toplevel.title(self.title)
+        frame = self._get_dialog_frame()
+    
+        ok_button = Tkinter.Button(self.toplevel, text='Done', command=self._ok)
+        preview_button = Tkinter.Button(self.toplevel, text='Preview', command=self._preview)
+        cancel_button = Tkinter.Button(self.toplevel, text='Cancel', command=self._cancel)
+        ok_button.grid(row=1, column=0)
+        preview_button.grid(row=1, column=1)
+        cancel_button.grid(row=1, column=2)
+        frame.grid(row=0, columnspan=3)
+    
+    def _ok(self, event=None):
+        PreviewAndCommitChanges(self.refactoring, self._get_changes()).commit()
+        self.toplevel.destroy()
+        
+    def _preview(self, event=None):
+        PreviewAndCommitChanges(self.refactoring, self._get_changes()).preview()
+        self.toplevel.destroy()
+    
+    def _cancel(self, event=None):
+        self.toplevel.destroy()
+    
+
+class RenameDialog(RefactoringDialog):
+    
+    def __init__(self, context, title, is_local=False):
+        resource = context.get_active_editor().get_file()
+        editor = context.get_active_editor().get_editor()
+        super(RenameDialog, self).__init__(editor.refactoring, title)
+        self.is_local = is_local
+        self.renamer = rope.refactor.rename.RenameRefactoring(
+            context.get_core().get_open_project().get_pycore(), 
+            resource, editor.get_current_offset())
+    
+    def _get_changes(self):
+        new_name = self.new_name_entry.get()
+        return self.renamer.get_changes(new_name, in_file=self.is_local)
+
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(frame, text='New Name :')
+        label.grid(row=0, column=0)
+        self.new_name_entry = Tkinter.Entry(frame)
+        self.new_name_entry.insert(0, self.renamer.get_old_name())
+        self.new_name_entry.select_range(0, Tkinter.END)
+        self.new_name_entry.grid(row=0, column=1, columnspan=2)
+        self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
+        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
+        self.new_name_entry.focus_set()
+        return frame
+
 
 def rename(context):
-    _rename_dialog(context, 'Rename Refactoring')
+    RenameDialog(context, 'Rename Refactoring').show()
 
 def local_rename(context):
-    _rename_dialog(context, 'Rename Variable In File', True)
+    RenameDialog(context, 'Rename Refactoring', True).show()
 
 def transform_module_to_package(context):
     if context.get_active_editor():
@@ -94,89 +149,91 @@ def transform_module_to_package(context):
         editor = fileeditor.get_editor()
         editor.refactoring.transform_module_to_package(resource)
 
-def _extract_dialog(do_extract, kind):
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Extract ' + kind)
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text='New %s Name :' % kind)
-    label.grid(row=0, column=0)
-    new_name_entry = Tkinter.Entry(frame)
-    new_name_entry.grid(row=0, column=1)
-    def ok(event=None):
-        do_extract(new_name_entry.get())
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
+class ExtractDialog(RefactoringDialog):
+    
+    def __init__(self, context, do_extract, kind):
+        editor = context.get_active_editor().get_editor()
+        super(ExtractDialog, self).__init__(editor.refactoring, 'Extract ' + kind)
+        self.do_extract = do_extract
+        self.kind = kind
+    
+    def _get_changes(self):
+        return self.do_extract(self.new_name_entry.get())
+    
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(frame, text='New %s Name :' % self.kind)
+        label.grid(row=0, column=0)
+        self.new_name_entry = Tkinter.Entry(frame)
+        self.new_name_entry.grid(row=0, column=1)
 
-    ok_button = Tkinter.Button(frame, text='Done', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    new_name_entry.bind('<Return>', lambda event: ok())
-    new_name_entry.bind('<Escape>', lambda event: cancel())
-    new_name_entry.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    new_name_entry.focus_set()
+        self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
+        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
+        self.new_name_entry.focus_set()
+        return frame
+
 
 def extract_method(context):
     def do_extract(new_name):
         editor = context.get_active_editor().get_editor()
         resource = context.get_active_editor().get_file()
-        (start_offset, end_offset) = editor.get_region_offset()
-        editor.refactoring.extract_method(resource,
-                                          start_offset, end_offset,
-                                          new_name)
-    _extract_dialog(do_extract, 'Method')
+        start_offset, end_offset = editor.get_region_offset()
+        return rope.refactor.extract.ExtractMethodRefactoring(
+            context.get_core().get_open_project().get_pycore(),
+            resource, start_offset, end_offset).get_changes(new_name)
+    ExtractDialog(context, do_extract, 'Method').show()
 
 def extract_variable(context):
     def do_extract(new_name):
         editor = context.get_active_editor().get_editor()
         resource = context.get_active_editor().get_file()
-        (start_offset, end_offset) = editor.get_region_offset()
-        editor.refactoring.extract_variable(resource,
-                                            start_offset, end_offset,
-                                            new_name)
-    _extract_dialog(do_extract, 'Variable')
+        start_offset, end_offset = editor.get_region_offset()
+        return rope.refactor.extract.ExtractVariableRefactoring(
+            context.get_core().get_open_project().get_pycore(),
+            resource, start_offset, end_offset).get_changes(new_name)
+    ExtractDialog(context, do_extract, 'Variable').show()
 
-def _confirm_action(title, message, action):
-    toplevel = Tkinter.Toplevel()
-    toplevel.title(title)
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text=message)
-    label.grid(row=0, column=0, columnspan=2)
-    def ok(event=None):
-        action()
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-    ok_button = Tkinter.Button(frame, text='OK', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    toplevel.bind('<Return>', lambda event: ok())
-    toplevel.bind('<Escape>', lambda event: cancel())
-    toplevel.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    ok_button.focus_set()
 
-def undo_refactoring(context):
-    if context.get_core().get_open_project():
-        def undo():
-            context.get_core().get_open_project().get_pycore().\
-                    get_refactoring().undo()
-        _confirm_action('Undoing Refactoring',
-                        'Undo refactoring might change many files. Proceed?',
-                        undo)
-def redo_refactoring(context):
-    if context.get_core().get_open_project():
-        def redo():
-            context.get_core().get_open_project().get_pycore().\
-                    get_refactoring().redo()
-        _confirm_action('Redoing Refactoring',
-                        'Redo refactoring might change many files. Proceed?',
-                        redo)
+class IntroduceFactoryDialog(RefactoringDialog):
     
+    def __init__(self, context):
+        resource = context.get_active_editor().get_file()
+        editor = context.get_active_editor().get_editor()
+        super(IntroduceFactoryDialog, self).__init__(
+            editor.refactoring, 'Introduce Factory Method Refactoring')
+        self.introducer = rope.refactor.introduce_factory.IntroduceFactoryRefactoring(
+            context.get_core().get_open_project().get_pycore(), 
+            resource, editor.get_current_offset())
+    
+    def _get_changes(self):
+        return self.introducer.get_changes(
+            self.new_name_entry.get(), global_factory=self.global_factory_val.get())
+    
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(frame, text='Factory Method Name :')
+        self.new_name_entry = Tkinter.Entry(frame)
+        
+        self.global_factory_val = Tkinter.BooleanVar(False)
+        static_factory_button = Tkinter.Radiobutton(frame, variable=self.global_factory_val,
+                                                    value=False, text='Use static method')
+        global_factory_button = Tkinter.Radiobutton(frame, variable=self.global_factory_val,
+                                                    value=True, text='Use global function')
+        self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
+        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
+        
+        label.grid(row=0, column=0)
+        self.new_name_entry.grid(row=0, column=1)
+        static_factory_button.grid(row=1, column=0)
+        global_factory_button.grid(row=1, column=1)
+        self.new_name_entry.focus_set()
+        return frame
+
+
 def introduce_factory(context):
+    return IntroduceFactoryDialog(context).show()
     if not context.get_active_editor():
         return
     toplevel = Tkinter.Toplevel()
@@ -216,6 +273,46 @@ def introduce_factory(context):
     frame.grid()
     new_name_entry.focus_set()
 
+
+def _confirm_action(title, message, action):
+    toplevel = Tkinter.Toplevel()
+    toplevel.title(title)
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text=message)
+    label.grid(row=0, column=0, columnspan=2)
+    def ok(event=None):
+        action()
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+    ok_button = Tkinter.Button(frame, text='OK', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    toplevel.bind('<Return>', lambda event: ok())
+    toplevel.bind('<Escape>', lambda event: cancel())
+    toplevel.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    ok_button.focus_set()
+
+def undo_refactoring(context):
+    if context.get_core().get_open_project():
+        def undo():
+            context.get_core().get_open_project().get_pycore().\
+                    get_refactoring().undo()
+        _confirm_action('Undoing Refactoring',
+                        'Undo refactoring might change many files. Proceed?',
+                        undo)
+def redo_refactoring(context):
+    if context.get_core().get_open_project():
+        def redo():
+            context.get_core().get_open_project().get_pycore().\
+                    get_refactoring().redo()
+        _confirm_action('Redoing Refactoring',
+                        'Redo refactoring might change many files. Proceed?',
+                        redo)
+    
+
 class _ModuleViewHandle(TreeViewHandle):
     
     def __init__(self, project, toplevel, do_select):
@@ -251,52 +348,53 @@ class _ModuleViewHandle(TreeViewHandle):
         pass
 
 
-def move(context):
-    if not context.get_active_editor():
-        return
-    project = context.get_core().get_open_project()
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Move Refactoring')
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text='Destination Module :')
-    label.grid(row=0, column=0)
-    new_name_entry = Tkinter.Entry(frame)
-    new_name_entry.grid(row=0, column=1)
-    def ok(event=None):
+class MoveDialog(RefactoringDialog):
+    
+    def __init__(self, context):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
-        destination = project.get_pycore().find_module(new_name_entry.get())
-        editor.refactoring.move(resource,
-                                editor.get_current_offset(),
-                                destination)
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-    def do_select(resource):
-        name = rope.importutils.ImportTools.get_module_name(project.get_pycore(), resource)
-        new_name_entry.delete(0, Tkinter.END)
-        new_name_entry.insert(0, name)
-    def browse():
-        toplevel = Tkinter.Toplevel()
-        toplevel.title('Choose Destination Module')
-        tree_handle = _ModuleViewHandle(core.get_open_project(), toplevel, do_select)
-        tree_view = TreeView(toplevel, tree_handle, title='Destination Module')
-        for folder in project.get_pycore().get_source_folders():
-            tree_view.add_entry(folder)
-        tree_view.list.focus_set()
-        toplevel.grab_set()
+        self.project = context.get_core().get_open_project()
+        super(MoveDialog, self).__init__(editor.refactoring, 'Move Refactoring')
+        self.mover = rope.refactor.move.MoveRefactoring(
+            context.get_core().get_open_project().get_pycore(), 
+            resource, editor.get_current_offset())
+    
+    def _get_changes(self):
+        destination = self.project.get_pycore().find_module(self.new_name_entry.get())
+        return self.mover.get_changes(destination)
+    
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(frame, text='Destination Module :')
+        label.grid(row=0, column=0)
+        self.new_name_entry = Tkinter.Entry(frame)
+        self.new_name_entry.grid(row=0, column=1)
+        def do_select(resource):
+            name = rope.importutils.ImportTools.get_module_name(
+                self.project.get_pycore(), resource)
+            self.new_name_entry.delete(0, Tkinter.END)
+            self.new_name_entry.insert(0, name)
+        def browse():
+            toplevel = Tkinter.Toplevel()
+            toplevel.title('Choose Destination Module')
+            tree_handle = _ModuleViewHandle(self.project, toplevel, do_select)
+            tree_view = TreeView(toplevel, tree_handle, title='Destination Module')
+            for folder in self.project.get_pycore().get_source_folders():
+                tree_view.add_entry(folder)
+            tree_view.list.focus_set()
+            toplevel.grab_set()
 
-    browse_button = Tkinter.Button(frame, text='...', command=browse)
-    browse_button.grid(row=0, column=2)
-    ok_button = Tkinter.Button(frame, text='Done', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    new_name_entry.bind('<Return>', lambda event: ok())
-    new_name_entry.bind('<Escape>', lambda event: cancel())
-    new_name_entry.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    new_name_entry.focus_set()
+        browse_button = Tkinter.Button(frame, text='...', command=browse)
+        browse_button.grid(row=0, column=2)
+        self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
+        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
+        frame.grid()
+        self.new_name_entry.focus_set()
+        return frame
+
+def move(context):
+    MoveDialog(context).show()
 
 def organize_imports(context):
     if not context.get_active_editor():

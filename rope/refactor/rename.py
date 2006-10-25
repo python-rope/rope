@@ -1,11 +1,9 @@
-import re
 
 import rope.codeanalyze
 import rope.pynames
 import rope.pyobjects
 import rope.exceptions
-from rope.refactor.change import (ChangeSet, ChangeFileContents,
-                                  MoveResource, CreateFolder)
+from rope.refactor.change import ChangeSet, ChangeFileContents, MoveResource
 import rope.refactor.occurrences
 
 
@@ -22,16 +20,10 @@ class RenameRefactoring(object):
             raise rope.exceptions.RefactoringException(
                 'Rename refactoring should be performed on python identifiers.')
     
-    def local_rename(self, new_name):
-        return self._rename(new_name, True)
-    
-    def rename(self, new_name):
-        return self._rename(new_name)
-    
     def get_old_name(self):
         return self.old_name
     
-    def _rename(self, new_name, in_file=False):
+    def get_changes(self, new_name, in_file=False):
         old_pynames = self._get_old_pynames(in_file)
         if not old_pynames:
             return None

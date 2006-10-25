@@ -169,6 +169,7 @@ class PyCore(object):
         for resource in folder.get_files():
             if resource.get_name().endswith('.py'):
                 result.append(folder)
+                break
         for resource in folder.get_folders():
             result.extend(self._find_source_folders(resource))
         return result

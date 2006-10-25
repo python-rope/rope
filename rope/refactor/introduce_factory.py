@@ -24,7 +24,7 @@ class IntroduceFactoryRefactoring(object):
         self.pymodule = self.old_pyname.get_object().get_module()
         self.resource = self.pymodule.get_resource()
 
-    def introduce_factory(self, factory_name, global_factory=False):
+    def get_changes(self, factory_name, global_factory=False):
         changes = ChangeSet()
         self._change_occurrences_in_other_modules(changes, factory_name,
                                                   global_factory)

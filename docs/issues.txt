@@ -83,6 +83,15 @@ Designing Refactorings to Be Used on IDEs
 * Better refactoring categoriztion
 
 
+Decisions to Make
+-----------------
+
+* Unifying refactoring interfaces
+* Introducing factories for refactorings;
+  Decrease the dependence to `rope.refactor` modules
+* Making adding new refactorings easier
+
+
 Multi-step Refactorings
 -----------------------
 
@@ -111,6 +120,29 @@ A refactoring should be done in three steps.
 
 
 What will happen to `PythonRefactoring` facade?
+
+
+A Common Refactoring Interface
+------------------------------
+
+::
+  class Refactoring(object):
+      
+      def __init__(self, *args, **kwds):
+      """Getting immediate informations"""
+      
+      def get_changes(self, *args, **kwds):
+      """Calculate the changes caused by this refactoring.
+      
+      It is passed user provided information.
+      """
+      
+      # Other functions for getting information after construction
+      # for helping IDE's.
+
+
+Note that the arguments of `__init__` and `get_changes` are not the
+same for all refactorings.
 
 
 Finding Available Refactorings

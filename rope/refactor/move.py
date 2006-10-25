@@ -15,7 +15,7 @@ class MoveRefactoring(object):
             raise rope.exceptions.RefactoringException(
                 'Move works on classes,functions or modules.')
     
-    def move(self, dest_resource):
+    def get_changes(self, dest_resource):
         moving_object = self.pyname.get_object()
         if moving_object.get_type() == rope.pyobjects.PyObject.get_base_type('Module'):
             mover = _ModuleMover(self.pycore, self.pyname, dest_resource)

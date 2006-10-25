@@ -28,7 +28,7 @@ class ConvertLocalToFieldRefactoring(object):
         
         new_name = self._get_field_name(function_scope.pyobject, name)
         changes = RenameRefactoring(self.pycore, self.resource, self.offset).\
-                  local_rename(new_name)
+                  get_changes(new_name, in_file=True)
         return changes
 
     def _get_field_name(self, pyfunction, name):

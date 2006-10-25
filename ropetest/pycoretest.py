@@ -252,6 +252,13 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(1, len(source_folders))
         self.assertTrue(self.project.get_root_folder() in source_folders)
 
+    def test_root_source_folder2(self):
+        self.project.get_root_folder().create_file('mod1.py')
+        self.project.get_root_folder().create_file('mod2.py')
+        source_folders = self.pycore.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(self.project.get_root_folder() in source_folders)
+
     def test_src_source_folder(self):
         src = self.project.get_root_folder().create_folder('src')
         src.create_file('sample.py')

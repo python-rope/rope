@@ -2,7 +2,8 @@ import rope.importutils
 from rope.refactor.change import (ChangeSet, ChangeFileContents,
                                   MoveResource, CreateFolder)
 from rope.refactor.rename import RenameRefactoring
-from rope.refactor.extract import ExtractMethodRefactoring
+from rope.refactor.extract import (ExtractMethodRefactoring,
+                                   ExtractVariableRefactoring)
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.move import MoveRefactoring
 from rope.refactor.inline import InlineRefactoring
@@ -18,26 +19,26 @@ class PythonRefactoring(object):
 
     def local_rename(self, resource, offset, new_name):
         changes = RenameRefactoring(self.pycore, resource, offset).\
-                  local_rename(new_name)
+                  get_changes(new_name, in_file=True)
         self.add_and_commit_changes(changes)
     
     def rename(self, resource, offset, new_name):
         changes = RenameRefactoring(self.pycore, resource, offset).\
-                  rename(new_name)
+                  get_changes(new_name)
         self.add_and_commit_changes(changes)
     
     def extract_method(self, resource, start_offset, end_offset,
                        extracted_name):
         changes = ExtractMethodRefactoring(self.pycore, resource,
                                            start_offset, end_offset).\
-                                           extract_method(extracted_name)
+                                           get_changes(extracted_name)
         self.add_and_commit_changes(changes)
     
     def extract_variable(self, resource, start_offset, end_offset,
                          extracted_name):
-        changes = ExtractMethodRefactoring(self.pycore, resource,
-                                           start_offset, end_offset).\
-                                           extract_variable(extracted_name)
+        changes = ExtractVariableRefactoring(self.pycore, resource,
+                                             start_offset, end_offset).\
+                                             get_changes(extracted_name)
         self.add_and_commit_changes(changes)
     
     def transform_module_to_package(self, resource):
@@ -60,13 +61,12 @@ class PythonRefactoring(object):
     def introduce_factory(self, resource, offset, factory_name, global_factory=False):
         factory_introducer = IntroduceFactoryRefactoring(self.pycore,
                                                          resource, offset)
-        changes = factory_introducer.introduce_factory(factory_name,
-                                                       global_factory)
+        changes = factory_introducer.get_changes(factory_name, global_factory)
         self.add_and_commit_changes(changes)
     
     def move(self, resource, offset, dest_resource):
         changes = MoveRefactoring(self.pycore, resource, offset).\
-                  move(dest_resource)
+                  get_changes(dest_resource)
         self.add_and_commit_changes(changes)
     
     def inline_local_variable(self, resource, offset):

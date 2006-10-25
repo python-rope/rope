@@ -7,7 +7,7 @@ from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeFileContents
 
 
-class ExtractMethodRefactoring(object):
+class _ExtractRefactoring(object):
     
     def __init__(self, pycore, resource, start_offset, end_offset):
         self.pycore = pycore
@@ -15,7 +15,9 @@ class ExtractMethodRefactoring(object):
         self.start_offset = start_offset
         self.end_offset = end_offset
     
-    def extract_method(self, extracted_name):
+class ExtractMethodRefactoring(_ExtractRefactoring):
+    
+    def get_changes(self, extracted_name):
         info = _ExtractInformation(self.pycore, self.resource,
                                    self.start_offset, self.end_offset)
         if info.is_one_line_extract():
@@ -27,8 +29,11 @@ class ExtractMethodRefactoring(object):
         changes = ChangeSet()
         changes.add_change(ChangeFileContents(self.resource, new_contents))
         return changes
-        
-    def extract_variable(self, extracted_name):
+
+
+class ExtractVariableRefactoring(_ExtractRefactoring):
+    
+    def get_changes(self, extracted_name):
         info = _ExtractInformation(self.pycore, self.resource,
                                    self.start_offset, self.end_offset)
         new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info, 
