@@ -8,6 +8,9 @@ class Change(object):
     def undo(self):
         pass
 
+    def get_description(self):
+        return str(self)
+
 
 class ChangeSet(Change):
     
@@ -101,5 +104,3 @@ class CreateFolder(Change):
     def __str__(self):
         return 'Create Folder <%s>' % (self.parent.get_path() + '/' + self.name)
     
-    def get_description(self):
-        return str(self)

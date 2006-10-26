@@ -1,7 +1,10 @@
-Previewing Refactoring Changes
-==============================
+Running Unit Tests View
+=======================
 
-* Empty lines and scope ends
+* Stopping?
+* Trying multiple ports
+* Alternatives to XML-RCP for transfaring data
+* Spaces in module path for running modules
 
 
 Refactoring
@@ -11,6 +14,8 @@ Refactoring
   
   * What changes the most? refactoring kinds
   * Designing refactorings for IDE's
+
+* Changing `uihelpers` tree and list to support mouse clicks
 
 
 Before 0.3 Release

@@ -184,8 +184,8 @@ class PyCore(object):
         for module in self.module_map.values():
             module._invalidate_concluded_data()
 
-    def run_module(self, resource, stdin=None, stdout=None):
-        runner = self.dynamicoi.run_module(resource, stdin, stdout)
+    def run_module(self, resource, args=None, stdin=None, stdout=None):
+        runner = self.dynamicoi.run_module(resource, args, stdin, stdout)
         runner.add_finishing_observer(self._invalidate_all_concluded_data)
         runner.run()
         return runner

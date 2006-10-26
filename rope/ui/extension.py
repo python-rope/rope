@@ -58,6 +58,15 @@ class ActionContext(object):
     
     def get_active_editor(self):
         return self.core.get_editor_manager().active_editor
+    
+    def _get_open_project(self):
+        return self.get_core().get_open_project()
+    
+    def _get_active_editor_resource(self):
+        return self.get_active_editor().get_file()
+    
+    project = property(_get_open_project)
+    resource = property(_get_active_editor_resource)
 
 
 class SimpleAction(Action):

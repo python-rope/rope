@@ -1,6 +1,7 @@
 import Tkinter
 
 import rope.ui.core
+import rope.ui.testview
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 from rope.ui.uihelpers import TreeView, TreeViewHandle
@@ -80,6 +81,10 @@ def do_run_module(context):
         context.get_core().get_open_project().get_pycore().\
                 run_module(context.get_active_editor().get_file())
 
+def run_tests(context):
+    rope.ui.testview.run_unit_test(context.project, context.resource)
+
+
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Code'], 'o'), ['python', 'rest'])
@@ -100,6 +105,8 @@ actions.append(SimpleAction('Correct Line Indentation',
                             ['python', 'rest']))
 actions.append(SimpleAction('Run Module', do_run_module, 'M-X p',
                             MenuAddress(['Code', 'Run Module'], 'm', 2), ['python']))
+actions.append(SimpleAction('Run Test', run_tests, 'M-X t',
+                            MenuAddress(['Code', 'Run Test'], 't', 2), ['python']))
 
 for action in actions:
     core.register_action(action)

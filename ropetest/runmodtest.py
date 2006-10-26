@@ -23,7 +23,8 @@ class PythonFileRunnerTest(unittest.TestCase):
         if not get_text_function_source:
             get_text_function_source = "def get_text():\n    return 'run'\n\n"
         file_content = get_text_function_source + \
-                       "output = open('output.txt', 'w')\noutput.write(get_text())\noutput.close()\n"
+                       "output = open('output.txt', 'w')\n" \
+                       "output.write(get_text())\noutput.close()\n"
         file.write(file_content)
         
     def get_output_file_content(self, file_path):
@@ -44,6 +45,15 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEquals('run', self.get_output_file_content(file_path))
+
+    def test_passing_arguments(self):
+        file_path = 'sample.py'
+        function_source = 'import sys\ndef get_text():\n    return str(sys.argv[1:])\n'
+        self.make_sample_python_file(file_path, function_source)
+        file_resource = self.project.get_resource(file_path)
+        runner = self.pycore.run_module(file_resource, args=['hello', 'world'])
+        runner.wait_process()
+        self.assertTrue(self.get_output_file_content(file_path).endswith("['hello', 'world']"))
 
     # FIXME: this does not work on windows
     def xxx_test_killing_runner(self):

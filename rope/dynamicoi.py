@@ -17,9 +17,10 @@ class DynamicObjectInference(object):
         self.pycore = pycore
         self.files = {}
     
-    def run_module(self, resource, stdin=None, stdout=None):
+    def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Return a PythonFileRunner for controlling the process"""
-        return PythonFileRunner(self.pycore, resource, stdin, stdout, self._data_received)
+        return PythonFileRunner(self.pycore, resource, args, stdin,
+                                stdout, self._data_received)
     
     def infer_returned_object(self, pyobject):
         organizer = self._find_organizer(pyobject)
@@ -176,11 +177,13 @@ class _PersistedClass(_ObjectPersistedForm):
 class PythonFileRunner(object):
     """A class for running python project files"""
 
-    def __init__(self, pycore, file_, stdin=None, stdout=None, analyze_data=None):
+    def __init__(self, pycore, file_, args=None, stdin=None,
+                 stdout=None, analyze_data=None):
         self.pycore = pycore
         self.file = file_
         self.analyze_data = analyze_data
         self.observers = []
+        self.args = args
         self.stdin = stdin
         self.stdout = stdout
     
@@ -198,9 +201,11 @@ class PythonFileRunner(object):
         send_info = '-'
         if self.receiver:
             send_info = self.receiver.get_send_info()
-        args = (sys.executable, runmod_path, send_info,
+        args = [sys.executable, runmod_path, send_info,
                 os.path.abspath(self.pycore.project.get_root_address()),
-                os.path.abspath(self.file._get_real_path()))
+                os.path.abspath(self.file._get_real_path())]
+        if self.args is not None:
+            args.extend(self.args)
         self.process = subprocess.Popen(executable=sys.executable, args=args,
                                         cwd=os.path.split(file_path)[0], stdin=self.stdin,
                                         stdout=self.stdout, stderr=self.stdout, env=env)
@@ -208,7 +213,10 @@ class PythonFileRunner(object):
     def _init_data_receiving(self):
         if self.analyze_data is None:
             return
-        if os.name == 'nt':
+        # Disabling FIFO data transfer due to blocking for running
+        # unittests.
+        # XXX: Handle FIFO data transfer for rope.ui.testview
+        if True or os.name == 'nt':
             self.receiver = _SocketReceiver()
         else:
             self.receiver = _FIFOReceiver()
