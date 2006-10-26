@@ -6,7 +6,7 @@ import rope.ui.core
 import rope.refactor.change
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
-from rope.ui.uihelpers import TreeViewHandle, TreeView, EnhancedListHandle, EnhancedList
+from rope.ui.uihelpers import TreeViewHandle, TreeView, DescriptionList
 
 
 class ConfirmAllEditorsAreSaved(object):
@@ -46,27 +46,6 @@ class ConfirmAllEditorsAreSaved(object):
         ok_button.focus_set()
 
 
-class _ChangeListHandle(EnhancedListHandle):
-    
-    def __init__(self, text):
-        self.text = text
-    
-    def entry_to_string(self, obj):
-        return str(obj)
-    
-    def selected(self, obj):
-        self.text['state'] = Tkinter.NORMAL
-        self.text.delete('0.0', Tkinter.END)
-        self.text.insert('0.0', self._get_description(obj))
-        self.text['state'] = Tkinter.DISABLED
-    
-    def _get_description(self, change):
-        return change.get_description()
-    
-    def canceled(self):
-        pass
-
-
 class PreviewAndCommitChanges(object):
     
     def __init__(self, refactoring, changes):
@@ -77,12 +56,11 @@ class PreviewAndCommitChanges(object):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Preview Changes')
         
-        description = ScrolledText.ScrolledText(toplevel)
-        change_list = EnhancedList(toplevel, _ChangeListHandle(description),
-                                   'Changes')
-        description.grid(row=0, column=1)
+        def description(change):
+            return change.get_description()
+        description_list = DescriptionList(toplevel, 'Changes', description)
         for change in self.changes.changes:
-            change_list.add_entry(change)
+            description_list.add_entry(change)
         
         frame = Tkinter.Frame(toplevel)
         def ok(event=None):
@@ -112,6 +90,8 @@ class RefactoringDialog(object):
     def show(self):
         self.toplevel = Tkinter.Toplevel()
         self.toplevel.title(self.title)
+        self.toplevel.bind('<Escape>', lambda event: self._cancel())
+        self.toplevel.bind('<Control-g>', lambda event: self._cancel())
         frame = self._get_dialog_frame()
     
         ok_button = Tkinter.Button(self.toplevel, text='Done', command=self._ok)
@@ -158,8 +138,6 @@ class RenameDialog(RefactoringDialog):
         self.new_name_entry.select_range(0, Tkinter.END)
         self.new_name_entry.grid(row=0, column=1, columnspan=2)
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
-        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
-        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
         self.new_name_entry.focus_set()
         return frame
 
@@ -196,8 +174,6 @@ class ExtractDialog(RefactoringDialog):
         self.new_name_entry.grid(row=0, column=1)
 
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
-        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
-        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
         self.new_name_entry.focus_set()
         return frame
 
@@ -249,8 +225,6 @@ class IntroduceFactoryDialog(RefactoringDialog):
         global_factory_button = Tkinter.Radiobutton(frame, variable=self.global_factory_val,
                                                     value=True, text='Use global function')
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
-        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
-        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
         
         label.grid(row=0, column=0)
         self.new_name_entry.grid(row=0, column=1)
@@ -261,46 +235,7 @@ class IntroduceFactoryDialog(RefactoringDialog):
 
 
 def introduce_factory(context):
-    return IntroduceFactoryDialog(context).show()
-    if not context.get_active_editor():
-        return
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Introduce Factory Method Refactoring')
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text='Factory Method Name :')
-    new_name_entry = Tkinter.Entry(frame)
-        
-    global_factory_val = Tkinter.BooleanVar(False)
-    static_factory_button = Tkinter.Radiobutton(frame, variable=global_factory_val,
-                                                value=False, text='Use static method')
-    global_factory_button = Tkinter.Radiobutton(frame, variable=global_factory_val,
-                                                value=True, text='Use global function')
-    
-    def ok(event=None):
-        resource = context.get_active_editor().get_file()
-        editor = context.get_active_editor().get_editor()
-        editor.refactoring.introduce_factory(resource, editor.get_current_offset(),
-                                             new_name_entry.get(),
-                                             global_factory=global_factory_val.get())
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-
-    ok_button = Tkinter.Button(frame, text='Done', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    new_name_entry.bind('<Return>', lambda event: ok())
-    new_name_entry.bind('<Escape>', lambda event: cancel())
-    new_name_entry.bind('<Control-g>', lambda event: cancel())
-        
-    label.grid(row=0, column=0)
-    new_name_entry.grid(row=0, column=1)
-    static_factory_button.grid(row=1, column=0)
-    global_factory_button.grid(row=1, column=1)
-    ok_button.grid(row=2, column=0)
-    cancel_button.grid(row=2, column=1)
-    frame.grid()
-    new_name_entry.focus_set()
-
+    IntroduceFactoryDialog(context).show()
 
 def _confirm_action(title, message, action):
     toplevel = Tkinter.Toplevel()

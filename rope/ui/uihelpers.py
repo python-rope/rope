@@ -1,3 +1,5 @@
+import ScrolledText
+import Tkinter
 from Tkinter import *
 
 
@@ -89,6 +91,43 @@ class EnhancedList(object):
     def clear(self):
         self.entries = []
         self.list.delete(0, END)
+
+
+class _DescriptionListHandle(EnhancedListHandle):
+    
+    def __init__(self, text, description):
+        self.text = text
+        self.description = description
+    
+    def entry_to_string(self, obj):
+        return str(obj)
+    
+    def selected(self, obj):
+        self.text['state'] = Tkinter.NORMAL
+        self.text.delete('0.0', Tkinter.END)
+        self.text.insert('0.0', self._get_description(obj))
+        self.text['state'] = Tkinter.DISABLED
+    
+    def _get_description(self, obj):
+        return self.description(obj)
+    
+    def canceled(self):
+        pass
+
+
+class DescriptionList(object):
+
+    def __init__(self, parent, title, description):
+        frame = Tkinter.Frame(parent)
+        
+        description_text = ScrolledText.ScrolledText(frame, height=12, width=80)
+        self.list = EnhancedList(
+            frame, _DescriptionListHandle(description_text, description), title)
+        description_text.grid(row=0, column=1, sticky=N+E+W+S)
+        frame.grid()
+    
+    def add_entry(self, obj):
+        self.list.add_entry(obj)
 
 
 class TreeViewHandle(object):
