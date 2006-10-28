@@ -66,6 +66,9 @@ class GUITestRunner(object):
         self.project = project
         self.resource = resource
         self.running_thread = threading.Thread(target=self.run)
+        self.running_thread.setDaemon(True)
+        self.process = None
+        self.is_stopped = False
         self.toplevel = Tkinter.Toplevel()
         self.toplevel.title('Running Unit Tests in <%s>' % resource.get_path())
         label = Tkinter.Label(self.toplevel,
@@ -81,8 +84,8 @@ class GUITestRunner(object):
         def description(test_name):
             return self.failures[test_name]
         self.description_list = DescriptionList(self.toplevel, 'Failures', description)
-        self.ok_button = Tkinter.Button(self.toplevel, text='OK',
-                                        command=self._ok, state=Tkinter.DISABLED)
+        self.ok_button = Tkinter.Button(self.toplevel, text='Stop',
+                                        command=self._ok)
         self.ok_button.grid(row=4)
         self.toplevel.bind('<Control-g>', self._ok)
         self.toplevel.bind('<Escape>', self._ok)
@@ -92,6 +95,10 @@ class GUITestRunner(object):
     
     def _ok(self, event=None):
         if self.result._is_finished():
+            self.toplevel.destroy()
+        elif self.process is not None:
+            self.is_stopped = True
+            self.process.kill_process()
             self.toplevel.destroy()
     
     def start(self):
@@ -110,13 +117,13 @@ class GUITestRunner(object):
             server.register_instance(self.result)
             run_test_py = self.project.get_out_of_project_resource(
                 inspect.getsourcefile(rope.ui.runtest))
-            process = self.project.get_pycore().run_module(
+            self.process = self.project.get_pycore().run_module(
                 run_test_py, args=[str(rpc_port), self.resource._get_real_path()])
-            while not self.result._is_finished():
+            while not self.result._is_finished() and not self.is_stopped:
                 server.handle_request()
         finally:
             server.server_close()
-            self.ok_button['state'] = Tkinter.NORMAL
+            self.ok_button['text'] = 'OK'
 
 
 def run_unit_test(project, resource):

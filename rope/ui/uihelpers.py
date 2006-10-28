@@ -33,6 +33,7 @@ class EnhancedList(object):
         scrollbar['command'] = self.list.yview
         self.list.config(yscrollcommand=scrollbar.set)
         self.list.bind('<Return>', self._open_selected)
+        self.list.bind('<space>', self._open_selected)
         self.list.bind('<Escape>', self._cancel)
         self.list.bind('<FocusOut>', self._focus_out)
         self.list.bind('<Control-p>', self._select_prev)
@@ -121,13 +122,15 @@ class DescriptionList(object):
         frame = Tkinter.Frame(parent)
         
         description_text = ScrolledText.ScrolledText(frame, height=12, width=80)
-        self.list = EnhancedList(
-            frame, _DescriptionListHandle(description_text, description), title)
+        self.handle = _DescriptionListHandle(description_text, description)
+        self.list = EnhancedList(frame, self.handle, title)
         description_text.grid(row=0, column=1, sticky=N+E+W+S)
         frame.grid()
     
     def add_entry(self, obj):
         self.list.add_entry(obj)
+        if self.list.list.size() == 1:
+            self.handle.selected(obj)
 
 
 class TreeViewHandle(object):
@@ -169,6 +172,7 @@ class TreeView(object):
         scrollbar['command'] = self.list.yview
         self.list.config(yscrollcommand=scrollbar.set)
         self.list.bind('<Return>', self._open_selected)
+        self.list.bind('<space>', self._open_selected)
         self.list.bind('<Escape>', self._cancel)
         self.list.bind('<Control-g>', self._cancel)
         self.list.bind('<FocusOut>', self._focus_out)
