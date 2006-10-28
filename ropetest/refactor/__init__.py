@@ -1,10 +1,10 @@
 import unittest
 
-import rope.codeanalyze
+import rope.base.codeanalyze
 import rope.refactor.rename
 from rope.refactor import Undo
-from rope.exceptions import RefactoringException
-from rope.project import Project
+from rope.base.exceptions import RefactoringException
+from rope.base.project import Project
 from rope.refactor.change import *
 from ropetest import testutils
 import ropetest.refactor.renametest
@@ -131,7 +131,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                                            'create', global_factory=True)
         self.assertEquals(expected, mod.read())
 
-    @testutils.assert_raises(rope.exceptions.RefactoringException)
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_raising_exception_for_global_factory_for_nested_classes(self):
         code = 'def create_var():\n'\
                '    class AClass(object):\n'\

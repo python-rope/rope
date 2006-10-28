@@ -6,7 +6,7 @@ from rope.ui.core import Core
 from ropetest.ui.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 from rope.ui.indenter import PythonCodeIndenter
 from rope.ui.editor import _TextChangeInspector
-from rope.codeassist import CodeAssist
+from rope.ide.codeassist import CodeAssist
 
 
 class GraphicalEditorTest(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
-import rope.exceptions
-import rope.project
+import rope.base.exceptions
+import rope.base.project
 import ropetest
 
 
@@ -10,7 +10,7 @@ class MoveRefactoringTest(unittest.TestCase):
         super(MoveRefactoringTest, self).setUp()
         self.project_root = 'sampleproject'
         ropetest.testutils.remove_recursively(self.project_root)
-        self.project = rope.project.Project(self.project_root)
+        self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.refactoring = self.project.get_pycore().get_refactoring()
         self.mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
@@ -63,13 +63,13 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('class AClass(object):\n    pass\na_var = AClass()\n',
                           self.mod2.read())
 
-    @ropetest.testutils.assert_raises(rope.exceptions.RefactoringException)
+    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_folder_destination(self):
         folder = self.project.get_root_folder().create_folder('folder')
         self.mod1.write('class AClass(object):\n    pass\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, folder)
     
-    @ropetest.testutils.assert_raises(rope.exceptions.RefactoringException)
+    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_raising_exception_for_moving_non_global_elements(self):
         self.mod1.write('def a_func():\n    class AClass(object):\n        pass\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1,

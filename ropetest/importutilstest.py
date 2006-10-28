@@ -1,8 +1,8 @@
 import unittest
 
-from rope.project import Project
+from rope.base.project import Project
 from ropetest import testutils
-from rope.importutils import ImportTools
+from rope.refactor.importutils import ImportTools
 
 
 class ImportUtilsTest(unittest.TestCase):

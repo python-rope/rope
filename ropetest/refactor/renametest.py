@@ -1,7 +1,7 @@
 import unittest
-import rope.codeanalyze
+import rope.base.codeanalyze
 import rope.refactor.rename
-import rope.project
+import rope.base.project
 import ropetest
 
 
@@ -11,7 +11,7 @@ class RenameRefactoringTest(unittest.TestCase):
         super(RenameRefactoringTest, self).setUp()
         self.project_root = 'sample_project'
         ropetest.testutils.remove_recursively(self.project_root)
-        self.project = rope.project.Project(self.project_root)
+        self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.refactoring = self.project.get_pycore().get_refactoring()
 

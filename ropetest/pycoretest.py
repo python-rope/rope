@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from rope.pycore import PyObject, ModuleNotFoundException
-from rope.project import Project
+from rope.base.pycore import PyObject, ModuleNotFoundException
+from rope.base.project import Project
 from ropetest import testutils
 
 
@@ -399,9 +399,9 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals((init_module, 1), pkg_pyname.get_definition_location())
     
     def test_out_of_project_modules(self):
-        scope = self.pycore.get_string_scope('import rope.outline as outline\n')
-        imported_module = scope.get_name('outline').get_object()
-        self.assertTrue('Outline' in imported_module.get_attributes())
+        scope = self.pycore.get_string_scope('import rope.base.project as project\n')
+        imported_module = scope.get_name('project').get_object()
+        self.assertTrue('Project' in imported_module.get_attributes())
 
 
 class PyCoreInProjectsTest(unittest.TestCase):

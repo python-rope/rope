@@ -1,6 +1,6 @@
 import unittest
 
-from rope.formatter import Formatter
+from rope.ide.formatter import Formatter
 
 
 class FormatterTest(unittest.TestCase):

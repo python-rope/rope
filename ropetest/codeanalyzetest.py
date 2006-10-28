@@ -1,10 +1,10 @@
 import unittest
 
 from ropetest import testutils
-from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
+from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                               SourceLinesAdapter, WordRangeFinder,
                               ScopeNameFinder, LogicalLineFinder)
-from rope.project import Project
+from rope.base.project import Project
 
 
 class StatementRangeFinderTest(unittest.TestCase):

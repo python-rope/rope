@@ -1,7 +1,7 @@
 import unittest
 import Tkinter
 
-from rope.project import Project
+from rope.base.project import Project
 from rope.ui.editor import *
 from rope.ui.fileeditor import *
 from ropetest.projecttest import SampleProjectMaker

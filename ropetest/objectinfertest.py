@@ -1,6 +1,6 @@
 import unittest
 
-from rope.project import Project
+from rope.base.project import Project
 from ropetest import testutils
 
 class ObjectInferTest(unittest.TestCase):

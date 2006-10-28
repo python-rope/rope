@@ -1,8 +1,8 @@
 import unittest
 import os
 
-from rope.project import Project, RootFolder
-from rope.exceptions import RopeException
+from rope.base.project import Project, RootFolder
+from rope.base.exceptions import RopeException
 from ropetest import testutils
 
 

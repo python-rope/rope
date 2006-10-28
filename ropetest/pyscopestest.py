@@ -1,7 +1,7 @@
 import unittest
 
-from rope.pycore import PyObject
-from rope.project import Project
+from rope.base.pycore import PyObject
+from rope.base.project import Project
 from ropetest import testutils
 
 

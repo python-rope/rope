@@ -19,6 +19,6 @@ setup(name='rope',
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',
-      packages=['rope', 'rope.ui', 'rope.refactor'],
+      packages=['rope', 'rope.base', 'rope.refactor', 'rope.ide', 'rope.ui'],
       scripts=['scripts/rope'])
 

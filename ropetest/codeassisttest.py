@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from rope.codeassist import PythonCodeAssist, RopeSyntaxError, Template, ProposalSorter
-from rope.project import Project
+from rope.ide.codeassist import PythonCodeAssist, RopeSyntaxError, Template, ProposalSorter
+from rope.base.project import Project
 from ropetest import testutils
 
 
