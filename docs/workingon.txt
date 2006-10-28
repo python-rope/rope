@@ -1,8 +1,14 @@
 Running Unit Tests View
 =======================
 
+- Find file and package `__init__.py` files
+
 * Stopping?
 * Killing processes on nt
+
+* Having `rope.ti` module
+* Moving `exceptions` and `project` modules to `rope` package
+* What to do about internal modules?
 
 
 Before 0.3 Release

@@ -28,24 +28,24 @@ class FileFinderTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         super(FileFinderTest, self).tearDown()
 
-    def testEmptyFinding(self):
+    def test_empty_finding(self):
         files = self.finder.find_files_starting_with('')
         self.assertEquals(4, len(files))
 
-    def testFinding(self):
+    def test_finding(self):
         self.assertEquals(3, len(self.finder.find_files_starting_with('a')))
         
-    def testAbsoluteFinding(self):
+    def test_absolute_finding(self):
         result = self.finder.find_files_starting_with('aa')
         self.assertEquals(1, len(result))
         self.assertEquals(self.file1, result[0].get_name())
         self.assertEquals(self.file2, self.finder.find_files_starting_with('abb')[0].get_name())
 
-    def testSpecializedFinding(self):
+    def test_specialized_finding(self):
         result = self.finder.find_files_starting_with('ab')
         self.assertEquals(2, len(result))
 
-    def testEnsuringCorrectCaching(self):
+    def test_ensuring_correct_caching(self):
         result0 = self.finder.find_files_starting_with('')
         self.assertEquals(4, len(result0))
         result1 = self.finder.find_files_starting_with('a')
@@ -56,7 +56,21 @@ class FileFinderTest(unittest.TestCase):
         self.assertEquals(1, len(result3))
         result4 = self.finder.find_files_starting_with('a')
         self.assertEquals(3, len(result4))
-
+    
+    def test_showing_packages_init_files(self):
+        pycore = self.project.get_pycore()
+        pkg = pycore.create_package(self.project.get_root_folder(), 'pkg')
+        result = self.finder.find_files_starting_with('pk')
+        self.assertEquals(1, len(result))
+        self.assertEquals(pkg.get_child('__init__.py'), result[0])
+    
+    def test_putting_packages_last(self):
+        pycore = self.project.get_pycore()
+        pkg = pycore.create_package(self.project.get_root_folder(), 'aaa')
+        result = self.finder.find_files_starting_with('a')
+        self.assertEquals(4, len(result))
+        self.assertEquals(pkg.get_child('__init__.py'), result[-1])
+    
 
 if __name__ == '__main__':
     unittest.main()

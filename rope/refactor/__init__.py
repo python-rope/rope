@@ -1,3 +1,10 @@
+"""rope refactor package
+
+This package contains modules that perform python
+refactorings.
+
+"""
+
 import rope.refactor.importutils
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)

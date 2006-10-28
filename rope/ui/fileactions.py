@@ -149,12 +149,24 @@ class FileFinder(object):
         for file_ in files:
             if file_.get_name().startswith(starting):
                 result.append(file_)
+            elif file_.get_name() == '__init__.py' and \
+                 file_.get_parent().get_name().startswith(starting):
+                result.append(file_)
         result.sort(cmp=self._compare_files)
         self.last_keyword = starting
         self.last_result = result
         return result
     
+    def _is_init_dot_py(self, file):
+        return file.get_name() == '__init__.py'
+    
     def _compare_files(self, file1, file2):
+        if self._is_init_dot_py(file1) or self._is_init_dot_py(file2):
+            if self._is_init_dot_py(file1) and not self._is_init_dot_py(file2):
+                return 1
+            if not self._is_init_dot_py(file1) and self._is_init_dot_py(file2):
+                return -1
+            return 0
         if file1.get_name() != file2.get_name():
             return cmp(file1.get_name(), file2.get_name())
         return cmp(file1.get_path(), file2.get_path())
