@@ -2,6 +2,7 @@ import os
 import unittest
 
 from rope.base.project import Project
+from rope.base.exceptions import RopeException
 from ropetest import testutils
 
 class PythonFileRunnerTest(unittest.TestCase):
@@ -55,8 +56,17 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner.wait_process()
         self.assertTrue(self.get_output_file_content(file_path).endswith("['hello', 'world']"))
 
-    # FIXME: this does not work on windows
-    def xxx_test_killing_runner(self):
+    def test_passing_arguments_with_spaces(self):
+        file_path = 'sample.py'
+        function_source = 'import sys\ndef get_text():\n    return str(sys.argv[1:])\n'
+        self.make_sample_python_file(file_path, function_source)
+        file_resource = self.project.get_resource(file_path)
+        runner = self.pycore.run_module(file_resource, args=['hello world'])
+        runner.wait_process()
+        self.assertTrue(self.get_output_file_content(file_path).endswith("['hello world']"))
+
+    # XXX: Fixing for windows
+    def test_killing_runner(self):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path,
                                      "def get_text():" +

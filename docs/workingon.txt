@@ -1,29 +1,24 @@
 Running Unit Tests View
 =======================
 
-- Trying multiple ports
-
 * Stopping?
-* Alternatives to XML-RCP for transfaring data
-* Spaces in module path for running modules
-* Changing `uihelpers` tree and list to support mouse clicks
-* Refactor the refactoring modules
-  
-  * What changes the most? refactoring kinds
-  * Designing refactorings for IDE's
+* Killing processes on nt
 
 
 Before 0.3 Release
 ==================
 
 * ``overview.txt``
-* Encodings
+* File encodings
 * Eliminating `Editor.refactoring`; Use editing contexts
 
 
 Remaining Stories
 =================
 
+* Alternatives to XML-RCP for transfaring data
+* Spaces in module path for running modules
+* Changing `uihelpers` tree and list to support mouse clicks
 * Handling `AssList` for inline variable and encapsulate field
 * Changing refactor modules to use `sourcetools.add_methods`
 * Adding ``add_statements(method, statements)``

@@ -48,7 +48,7 @@ class GUITestResult(object):
     
     def stop_test(self, test_name):
         self.run_count += 1
-        self.label['text'] = ''
+        self.label['text'] = ('ran %d of %d' % (self.run_count, self.count))
         self._draw_shape()
         return True
     

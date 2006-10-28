@@ -54,6 +54,16 @@ Releases
     Working one.
 
 
+Possible Plans For 0.4
+======================
+
+* Inline method
+* Move field/methods
+* Change method signature
+* Implicit interfaces
+* Handling built-in types
+
+
 Hot Topics
 ==========
 
@@ -64,7 +74,7 @@ Hot Topics
 To Be Discussed
 ===============
 
-* Designing refactorings to be used on IDEs
+* Designing refactorings to be used in IDEs
 * Rope's preference saving system: format, location
 
 * Indexing source files for faster occurrence finding
@@ -73,7 +83,7 @@ To Be Discussed
 * Using a modification of `compiler` AST for simplifying refactorings
 
 
-Designing Refactorings to Be Used on IDEs
+Designing Refactorings to Be Used in IDEs
 =========================================
 
 * Multi-step refactorings

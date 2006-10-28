@@ -231,4 +231,3 @@ assumes all files are under version control when these conditions are
 met.  Also don't forget to commit your changes yourself, rope doesn't
 do that yet.
 
-

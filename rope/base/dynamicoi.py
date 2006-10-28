@@ -238,7 +238,8 @@ class PythonFileRunner(object):
 
     def kill_process(self):
         """Stop the process. This does *not* work on windows."""
-        os.kill(self.process.pid, 9)
+        if os.name != 'nt':
+            os.kill(self.process.pid, 9)
     
     def add_finishing_observer(self, observer):
         self.observers.append(observer)
