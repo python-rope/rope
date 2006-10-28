@@ -1,6 +1,6 @@
-import rope.codeanalyze
-import rope.exceptions
-import rope.pynames
+import rope.base.codeanalyze
+import rope.base.exceptions
+import rope.base.pynames
 from rope.refactor.change import ChangeSet, ChangeContents
 
 
@@ -10,14 +10,14 @@ class InlineRefactoring(object):
         self.pycore = pycore
         self.resource = resource
         self.pymodule = self.pycore.resource_to_pyobject(resource)
-        self.pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource, offset)
-        self.name = rope.codeanalyze.get_name_at(resource, offset)
+        self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        self.name = rope.base.codeanalyze.get_name_at(resource, offset)
         self._check_exceptional_conditions()
     
     def inline(self):
         definition_line = self.pyname.assigned_asts[0].lineno
         lines = self.pymodule.lines
-        start, end = rope.codeanalyze.LogicalLineFinder(lines).\
+        start, end = rope.base.codeanalyze.LogicalLineFinder(lines).\
                      get_logical_line_in(definition_line)
         definition_lines = []
         for line_number in range(start, end + 1):
@@ -27,7 +27,7 @@ class InlineRefactoring(object):
             definition_lines.append(line)
         definition_with_assignment = ' '.join(definition_lines)
         if self._is_tuple_assignment(definition_with_assignment):
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Cannot inline tuple assignments.')
         definition = definition_with_assignment[definition_with_assignment.\
                                                 index('=') + 1:].strip()
@@ -37,7 +37,7 @@ class InlineRefactoring(object):
             get_changed_module(pymodule=self.pymodule)
         if changed_source is None:
             changed_source = self.pymodule.source_code
-        lines = rope.codeanalyze.SourceLinesAdapter(changed_source)
+        lines = rope.base.codeanalyze.SourceLinesAdapter(changed_source)
         source = changed_source[:lines.get_line_start(start)] + \
                  changed_source[lines.get_line_end(end) + 1:]
         changes = ChangeSet()
@@ -53,9 +53,9 @@ class InlineRefactoring(object):
             return False
 
     def _check_exceptional_conditions(self):
-        if self.pyname is None or not isinstance(self.pyname, rope.pynames.AssignedName):
-            raise rope.exceptions.RefactoringException(
+        if self.pyname is None or not isinstance(self.pyname, rope.base.pynames.AssignedName):
+            raise rope.base.exceptions.RefactoringException(
                 'Inline local variable should be performed on a local variable.')
         if len(self.pyname.assigned_asts) != 1:
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Local variable should be assigned Once.')

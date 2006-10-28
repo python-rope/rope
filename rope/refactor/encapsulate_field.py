@@ -1,4 +1,4 @@
-import rope.codeanalyze
+import rope.base.codeanalyze
 import rope.refactor.occurrences
 
 from rope.refactor import sourceutils
@@ -9,15 +9,15 @@ class EncapsulateFieldRefactoring(object):
     
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
-        self.name = rope.codeanalyze.get_name_at(resource, offset)
-        self.pyname = rope.codeanalyze.get_pyname_at(pycore, resource, offset)
+        self.name = rope.base.codeanalyze.get_name_at(resource, offset)
+        self.pyname = rope.base.codeanalyze.get_pyname_at(pycore, resource, offset)
         if not self._is_an_attribute(self.pyname):
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Encapsulate field should be performed on class attributes.')
         self.resource = self.pyname.get_definition_location()[0].get_resource()
     
     def _is_an_attribute(self, pyname):
-        if pyname is not None and isinstance(pyname, rope.pynames.AssignedName):
+        if pyname is not None and isinstance(pyname, rope.base.pynames.AssignedName):
             defining_pymodule, defining_line = self.pyname.get_definition_location()
             defining_scope = defining_pymodule.get_scope().\
                              get_inner_scope_for_line(defining_line)
@@ -103,7 +103,7 @@ class _FindChangesForModule(object):
     def get_changed_module(self):
         result = []
         line_finder = None
-        word_finder = rope.codeanalyze.WordRangeFinder(self.source)
+        word_finder = rope.base.codeanalyze.WordRangeFinder(self.source)
         for occurrence in self.occurrences_finder.find_occurrences(self.resource,
                                                                    self.pymodule):
             start, end = occurrence.get_word_range()
@@ -112,7 +112,7 @@ class _FindChangesForModule(object):
             self._manage_writes(start, result)
             result.append(self.source[self.last_modified:start])
             if self._is_assigned_in_a_tuple_assignment(occurrence):
-                raise rope.exceptions.RefactoringException(
+                raise rope.base.exceptions.RefactoringException(
                     'Cannot handle tuple assignments in encapsulate field.') 
             if occurrence.is_written():
                 assignment_type = word_finder.get_assignment_type(start)
@@ -123,7 +123,7 @@ class _FindChangesForModule(object):
                                            start] + self.getter + '()'
                     result.append(self.setter + '(' + var_name + ' %s ' % assignment_type[:-1])
                 if line_finder is None:
-                    line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
+                    line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
                 current_line = self.lines.get_line_number(start)
                 start_line, end_line = line_finder.get_logical_line_in(current_line)
                 self.last_set = self.lines.get_line_end(end_line)                
@@ -139,14 +139,14 @@ class _FindChangesForModule(object):
         return None
     
     def _is_assigned_in_a_tuple_assignment(self, occurance):
-        line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
+        line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
         offset = occurance.get_word_range()[0]
         lineno = self.lines.get_line_number(offset)
         start_line, end_line = line_finder.get_logical_line_in(lineno)
         start_offset = self.lines.get_line_start(start_line)
         
         line = self.source[start_offset:self.lines.get_line_end(end_line)]
-        word_finder = rope.codeanalyze.WordRangeFinder(line)
+        word_finder = rope.base.codeanalyze.WordRangeFinder(line)
         
         relative_offset = offset - start_offset
         relative_primary_start = occurance.get_primary_range()[0] - start_offset

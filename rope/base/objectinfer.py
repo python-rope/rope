@@ -1,5 +1,5 @@
-from rope.pyobjects import *
-import rope.codeanalyze
+from rope.base.pyobjects import *
+import rope.base.codeanalyze
 
 
 class ObjectInfer(object):
@@ -18,7 +18,7 @@ class ObjectInfer(object):
                     lineno = assign_node.lineno
                 holding_scope = pyname.module.get_scope().\
                                 get_inner_scope_for_line(lineno)
-                resulting_pyname = rope.codeanalyze.StatementEvaluator.\
+                resulting_pyname = rope.base.codeanalyze.StatementEvaluator.\
                                    get_statement_result(holding_scope, assign_node)
                 if resulting_pyname is None:
                     return None
@@ -36,7 +36,7 @@ class ObjectInfer(object):
             return
         for returned_node in reversed(scope._get_returned_asts()):
             try:
-                resulting_pyname = rope.codeanalyze.StatementEvaluator.\
+                resulting_pyname = rope.base.codeanalyze.StatementEvaluator.\
                                    get_statement_result(scope, returned_node)
                 if resulting_pyname is None:
                     return None

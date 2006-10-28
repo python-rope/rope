@@ -4,12 +4,12 @@ import __builtin__
 import re
 import sys
 
-import rope.codeanalyze
-from rope.exceptions import RopeException
-from rope.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
+import rope.base.codeanalyze
+from rope.base.exceptions import RopeException
+from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
                               WordRangeFinder, ScopeNameFinder,
                               SourceLinesAdapter)
-import rope.pyobjects
+import rope.base.pyobjects
 
 
 class RopeSyntaxError(RopeException):
@@ -156,7 +156,7 @@ class _CodeCompletionCollector(object):
         block_start = self.lineno
         last_indents = self.current_indents
         while block_start > 0:
-            block_start = rope.codeanalyze.StatementRangeFinder.get_block_start(
+            block_start = rope.base.codeanalyze.StatementRangeFinder.get_block_start(
                 ArrayLinesAdapter(self.lines), block_start) - 1
             if self.lines[block_start].strip().startswith('try:'):
                 indents = self._get_line_indents(self.lines[block_start])
@@ -198,7 +198,7 @@ class _CodeCompletionCollector(object):
             self._get_undotted_completions(scope.parent, result)
         for name, pyname in scope.get_names().iteritems():
             if name.startswith(self.starting):
-                from rope.pycore import PyObject
+                from rope.base.pycore import PyObject
                 kind = 'local'
                 if scope.get_kind() == 'Module':
                     kind = 'global'
@@ -310,10 +310,10 @@ class PythonCodeAssist(CodeAssist):
         if element is None:
             return None
         pyobject = element.get_object()
-        if isinstance(pyobject, rope.pyobjects.PyDefinedObject):
-            if pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Function'):
+        if isinstance(pyobject, rope.base.pyobjects.PyDefinedObject):
+            if pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
                 return _get_function_docstring(pyobject._get_ast())
-            elif pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
+            elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
                 return _get_class_docstring(pyobject)
             else:
                 return _trim_docstring(pyobject._get_ast().doc)
@@ -325,7 +325,7 @@ def _get_class_docstring(pyclass):
 
     if '__init__' in pyclass.get_attributes():
         init = pyclass.get_attribute('__init__').get_object()
-        if isinstance(init, rope.pyobjects.PyDefinedObject):
+        if isinstance(init, rope.base.pyobjects.PyDefinedObject):
             doc += '\n\n' + _get_function_docstring(init._get_ast())
     return doc
 

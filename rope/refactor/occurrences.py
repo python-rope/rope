@@ -1,6 +1,6 @@
 import re
 
-import rope.codeanalyze
+import rope.base.codeanalyze
 
 
 class OccurrenceFinder(object):
@@ -127,7 +127,7 @@ class _OccurrenceToolsCreator(object):
         if self._name_finder is None:
             if self.pymodule is None:
                 self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-            self._name_finder = rope.codeanalyze.ScopeNameFinder(self.pymodule)
+            self._name_finder = rope.base.codeanalyze.ScopeNameFinder(self.pymodule)
         return self._name_finder
     
     def get_source_code(self):
@@ -140,7 +140,7 @@ class _OccurrenceToolsCreator(object):
     
     def get_word_finder(self):
         if self._word_finder is None:
-            self._word_finder = rope.codeanalyze.WordRangeFinder(
+            self._word_finder = rope.base.codeanalyze.WordRangeFinder(
                 self.get_source_code())
         return self._word_finder
 

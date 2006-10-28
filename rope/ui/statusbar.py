@@ -1,9 +1,9 @@
 from Tkinter import *
 
-import rope.exceptions
+import rope.base.exceptions
 
 
-class StatusBarException(rope.exceptions.RopeUIException):
+class StatusBarException(rope.base.exceptions.RopeUIException):
     pass
 
 

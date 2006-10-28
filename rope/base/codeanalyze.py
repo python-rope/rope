@@ -3,9 +3,9 @@ import re
 import tokenize
 import token
 
-import rope.pyobjects
-import rope.pynames
-import rope.exceptions
+import rope.base.pyobjects
+import rope.base.pynames
+import rope.base.exceptions
 
 
 class WordRangeFinder(object):
@@ -321,7 +321,7 @@ class StatementEvaluator(object):
         if pyname is not None:
             try:
                 self.result = pyname.get_object().get_attribute(node.attrname)
-            except rope.exceptions.AttributeNotFoundException:
+            except rope.base.exceptions.AttributeNotFoundException:
                 self.result = None
 
     def visitCallFunc(self, node):
@@ -329,13 +329,13 @@ class StatementEvaluator(object):
         if pyname is None:
             return
         pyobject = pyname.get_object()
-        if pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
-            self.result = rope.pynames.AssignedName(pyobject=rope.pyobjects.PyObject(type_=pyobject))
-        elif pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Function'):
-            self.result = rope.pynames.AssignedName(pyobject=pyobject._get_returned_object())
+        if pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
+            self.result = rope.base.pynames.AssignedName(pyobject=rope.base.pyobjects.PyObject(type_=pyobject))
+        elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
+            self.result = rope.base.pynames.AssignedName(pyobject=pyobject._get_returned_object())
         elif '__call__' in pyobject.get_attributes():
             call_function = pyobject.get_attribute('__call__')
-            self.result = rope.pynames.AssignedName(
+            self.result = rope.base.pynames.AssignedName(
                 pyobject=call_function.get_object()._get_returned_object())
     
     def visitAdd(self, node):
@@ -426,18 +426,18 @@ class ScopeNameFinder(object):
     def _is_defined_in_class_body(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \
            holding_scope.parent is not None and \
-           holding_scope.parent.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type') and \
+           holding_scope.parent.pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type') and \
            self.word_finder.is_a_class_or_function_name_in_header(offset):
             return True
         if lineno != holding_scope.get_start() and \
-           holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type') and \
+           holding_scope.pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type') and \
            self.word_finder._is_name_assigned_in_class_body(offset):
             return True
         return False
     
     def _is_function_name_in_function_header(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \
-           holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Function') and \
+           holding_scope.pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function') and \
            self.word_finder.is_a_class_or_function_name_in_header(offset):
             return True
         return False
@@ -453,7 +453,7 @@ class ScopeNameFinder(object):
             if function_pyname is not None:
                 function_pyobject = function_pyname.get_object()
                 if function_pyobject.get_type() == \
-                   rope.pyobjects.PyObject.get_base_type('Type'):
+                   rope.base.pyobjects.PyObject.get_base_type('Type'):
                     function_pyobject = function_pyobject.get_attribute('__init__').get_object()
                 return function_pyobject.get_parameters().get(keyword_name, None)
 
@@ -465,7 +465,7 @@ class ScopeNameFinder(object):
             name = self.word_finder.get_primary_at(offset).strip()
             try:
                 return class_scope.pyobject.get_attribute(name)
-            except rope.exceptions.AttributeNotFoundException:
+            except rope.base.exceptions.AttributeNotFoundException:
                 return None
         # function header
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
@@ -491,7 +491,7 @@ class ScopeNameFinder(object):
                     dot_count += 1
                 else:
                     break
-        return rope.pynames.ImportedModule(self.module_scope.pyobject,
+        return rope.base.pynames.ImportedModule(self.module_scope.pyobject,
                                            module_name[dot_count:], dot_count)
 
     def get_pyname_in_scope(self, holding_scope, name):
@@ -508,13 +508,13 @@ def get_pyname_at(pycore, resource, offset):
     """
     pymodule = pycore.resource_to_pyobject(resource)
     source_code = pymodule.source_code
-    pyname_finder = rope.codeanalyze.ScopeNameFinder(pymodule)
+    pyname_finder = rope.base.codeanalyze.ScopeNameFinder(pymodule)
     pyname = pyname_finder.get_pyname_at(offset)
     return pyname
 
 def get_name_at(resource, offset):
     source_code = resource.read()
-    word_finder = rope.codeanalyze.WordRangeFinder(source_code)
+    word_finder = rope.base.codeanalyze.WordRangeFinder(source_code)
     name = word_finder.get_primary_at(offset).split('.')[-1]
     return name
 

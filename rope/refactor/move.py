@@ -1,7 +1,7 @@
-import rope.codeanalyze
-import rope.pyobjects
-import rope.importutils
-import rope.exceptions
+import rope.base.codeanalyze
+import rope.base.pyobjects
+import rope.refactor.importutils
+import rope.base.exceptions
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 
@@ -10,14 +10,14 @@ class MoveRefactoring(object):
     
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
-        self.pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.pyname is None:
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Move works on classes,functions or modules.')
     
     def get_changes(self, dest_resource):
         moving_object = self.pyname.get_object()
-        if moving_object.get_type() == rope.pyobjects.PyObject.get_base_type('Module'):
+        if moving_object.get_type() == rope.base.pyobjects.PyObject.get_base_type('Module'):
             mover = _ModuleMover(self.pycore, self.pyname, dest_resource)
         else:
             mover = _GlobalMover(self.pycore, self.pyname, dest_resource)
@@ -34,7 +34,7 @@ class _Mover(object):
         self.old_pyname = pyname
         self.old_name = old_name
         self.new_name = new_name
-        self.import_tools = rope.importutils.ImportTools(self.pycore)
+        self.import_tools = rope.refactor.importutils.ImportTools(self.pycore)
         self._check_exceptional_conditions()
     
     def _check_exceptional_conditions(self):
@@ -61,7 +61,7 @@ class _Mover(object):
                 if name == self.old_name and \
                    pymodule.get_attribute(name).get_object() == self.old_pyname.get_object():
                     return False
-            except rope.exceptions.AttributeNotFoundException:
+            except rope.base.exceptions.AttributeNotFoundException:
                 pass
             return True
         module_with_imports.filter_names(can_select)
@@ -88,7 +88,7 @@ class _GlobalMover(_Mover):
         old_name = pyname.get_object()._get_ast().name
         pymodule = pyname.get_object().get_module()
         source = pymodule.get_resource()
-        new_name = rope.importutils.ImportTools.get_module_name(
+        new_name = rope.refactor.importutils.ImportTools.get_module_name(
             pycore, destination) + '.' + old_name
         if destination.is_folder() and destination.has_child('__init__.py'):
             destination = destination.get_child('__init__.py')
@@ -101,15 +101,15 @@ class _GlobalMover(_Mover):
 
     def _check_exceptional_conditions(self):
         if self.old_pyname is None or \
-           not isinstance(self.old_pyname.get_object(), rope.pyobjects.PyDefinedObject):
-            raise rope.exceptions.RefactoringException(
+           not isinstance(self.old_pyname.get_object(), rope.base.pyobjects.PyDefinedObject):
+            raise rope.base.exceptions.RefactoringException(
                 'Move refactoring should be performed on a class/function.')
         moving_pyobject = self.old_pyname.get_object()
         if not self._is_global(moving_pyobject):
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Move refactoring should be performed on a global class/function.')
         if self.destination.is_folder():
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Move destination for non-modules should not be folders.')
     
     def _is_global(self, pyobject):
@@ -187,7 +187,7 @@ class _GlobalMover(_Mover):
         start = 1
         if module_with_imports.get_import_statements():
             start = module_with_imports.get_import_statements()[-1].end_line
-        lines = rope.codeanalyze.SourceLinesAdapter(source)
+        lines = rope.base.codeanalyze.SourceLinesAdapter(source)
         moving = source[lines.get_line_start(start):]
         return moving, imports
     
@@ -239,19 +239,19 @@ class _ModuleMover(_Mover):
             old_name = source.get_name()
         else:
             old_name = source.get_name()[:-3]
-        package = rope.importutils.ImportTools.get_module_name(pycore, destination)
+        package = rope.refactor.importutils.ImportTools.get_module_name(pycore, destination)
         if package:
             new_name = package + '.' + old_name
         else:
             new_name = old_name
         super(_ModuleMover, self).__init__(pycore, source, destination,
                                            pyname, old_name, new_name)
-        self.new_import = rope.importutils.NormalImport([(self.new_name, None)])
+        self.new_import = rope.refactor.importutils.NormalImport([(self.new_name, None)])
     
     def _check_exceptional_conditions(self):
         moving_pyobject = self.old_pyname.get_object()
         if not self.destination.is_folder():
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Move destination for modules should be packages.')
     
     def move(self):

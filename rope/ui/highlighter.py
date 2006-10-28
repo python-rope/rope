@@ -1,7 +1,7 @@
 import re
 import keyword
 
-import rope.codeanalyze
+import rope.base.codeanalyze
 
 
 class Highlighting(object):
@@ -111,7 +111,7 @@ class PythonHighlighting(Highlighting):
         return (start, end)
     
     def _find_block_start(self, text, index):
-        block_start_pattern = rope.codeanalyze.StatementRangeFinder.get_block_start_patterns()
+        block_start_pattern = rope.base.codeanalyze.StatementRangeFinder.get_block_start_patterns()
         index = self._get_line_start(text, index)
         while index > 0:
             new_index = self._get_line_start(text, index - 1)
@@ -122,7 +122,7 @@ class PythonHighlighting(Highlighting):
         return 0
 
     def _find_block_end(self, text, index):
-        block_start_pattern = rope.codeanalyze.StatementRangeFinder.get_block_start_patterns()
+        block_start_pattern = rope.base.codeanalyze.StatementRangeFinder.get_block_start_patterns()
         index = self._get_line_end(text, index)
         while index < len(text) - 1:
             new_index = self._get_line_end(text, index + 1)

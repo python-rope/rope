@@ -1,4 +1,4 @@
-import rope.importutils
+import rope.refactor.importutils
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 from rope.refactor.rename import RenameRefactoring
@@ -55,7 +55,7 @@ class PythonRefactoring(object):
     
     def _transform_relatives_to_absolute(self, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
-        import_tools = rope.importutils.ImportTools(self.pycore)
+        import_tools = rope.refactor.importutils.ImportTools(self.pycore)
         return import_tools.transform_relative_imports_to_absolute(pymodule)
     
     def introduce_factory(self, resource, offset, factory_name, global_factory=False):
@@ -102,7 +102,7 @@ class ImportOrganizer(object):
     def __init__(self, refactoring):
         self.refactoring = refactoring
         self.pycore = refactoring.pycore
-        self.import_tools = rope.importutils.ImportTools(self.pycore)
+        self.import_tools = rope.refactor.importutils.ImportTools(self.pycore)
     
     def _perform_command_on_module_with_imports(self, resource, method):
         pymodule = self.pycore.resource_to_pyobject(resource)
@@ -125,7 +125,7 @@ class ImportOrganizer(object):
 
     def expand_star_imports(self, resource):
         source = self._perform_command_on_module_with_imports(
-            resource, rope.importutils.ModuleWithImports.expand_stars)
+            resource, rope.refactor.importutils.ModuleWithImports.expand_stars)
         if source is not None:
             changes = ChangeSet()
             changes.add_change(ChangeContents(resource, source))

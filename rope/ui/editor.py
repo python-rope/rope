@@ -4,7 +4,7 @@ from Tkinter import *
 from tkFont import *
 from ScrolledText import ScrolledText
 
-import rope.codeassist
+import rope.ide.codeassist
 import rope.ui.editingtools
 import rope.ui.searcher
 from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
@@ -231,7 +231,7 @@ class GraphicalEditor(object):
         toplevel.title('Code Assist Proposals')
         enhanced_list = EnhancedList(toplevel, _CompletionListHandle(self, toplevel, result),
                                      title='Code Assist Proposals')
-        proposals = rope.codeassist.ProposalSorter(result).get_sorted_proposal_list()
+        proposals = rope.ide.codeassist.ProposalSorter(result).get_sorted_proposal_list()
         for proposal in proposals:
             enhanced_list.add_entry(proposal)
         start_index = self.text.index('0.0 +%dc' % result.start_offset)

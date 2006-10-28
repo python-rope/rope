@@ -1,5 +1,5 @@
 from rope.refactor.rename import RenameRefactoring
-import rope.codeanalyze
+import rope.base.codeanalyze
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 
@@ -12,10 +12,10 @@ class ConvertLocalToFieldRefactoring(object):
         self.offset = offset
 
     def convert_local_variable_to_field(self):
-        name = rope.codeanalyze.get_name_at(self.resource, self.offset)
-        pyname = rope.codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset)
+        name = rope.base.codeanalyze.get_name_at(self.resource, self.offset)
+        pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset)
         if not self._is_a_method_local(pyname):
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Convert local variable to field should be performed on \n'
                 'the a local variable of a method.')
         
@@ -23,7 +23,7 @@ class ConvertLocalToFieldRefactoring(object):
         function_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         class_scope = function_scope.parent
         if name in class_scope.pyobject.get_attributes():
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'The field %s already exists' % name)
         
         new_name = self._get_field_name(function_scope.pyobject, name)
@@ -40,7 +40,7 @@ class ConvertLocalToFieldRefactoring(object):
         pymodule, lineno = pyname.get_definition_location()
         holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         parent = holding_scope.parent
-        return isinstance(pyname, rope.pynames.AssignedName) and \
+        return isinstance(pyname, rope.base.pynames.AssignedName) and \
                pyname in holding_scope.get_names().values() and \
                holding_scope.get_kind() == 'Function' and \
                parent is not None and parent.get_kind() == 'Class'

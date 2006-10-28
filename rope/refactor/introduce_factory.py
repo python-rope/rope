@@ -1,8 +1,8 @@
-import rope.codeanalyze
-import rope.exceptions
-import rope.pyobjects
+import rope.base.codeanalyze
+import rope.base.exceptions
+import rope.base.pyobjects
 import rope.refactor.rename
-import rope.importutils
+import rope.refactor.importutils
 
 from rope.refactor.change import (ChangeSet, ChangeContents)
 from rope.refactor import sourceutils
@@ -15,10 +15,10 @@ class IntroduceFactoryRefactoring(object):
         self.offset = offset
         
         self.old_pyname = \
-            rope.codeanalyze.get_pyname_at(self.pycore, resource, offset)
+            rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.old_pyname is None or \
-           self.old_pyname.get_object().get_type() != rope.pyobjects.PyObject.get_base_type('Type'):
-            raise rope.exceptions.RefactoringException(
+           self.old_pyname.get_object().get_type() != rope.base.pyobjects.PyObject.get_base_type('Type'):
+            raise rope.base.exceptions.RefactoringException(
                 'Introduce factory should be performed on a class.')
         self.old_name = self.old_pyname.get_object()._get_ast().name
         self.pymodule = self.old_pyname.get_object().get_module()
@@ -58,7 +58,7 @@ class IntroduceFactoryRefactoring(object):
                             factory_name, global_factory):
         if global_factory:
             if self._get_scope_indents(lines, class_scope) > 0:
-                raise rope.exceptions.RefactoringException(
+                raise rope.base.exceptions.RefactoringException(
                     'Cannot make global factory method for nested classes.')
             return ('\ndef %s(*args, **kwds):\n    return %s(*args, **kwds)\n' %
                     (factory_name, self.old_name))
@@ -80,7 +80,7 @@ class IntroduceFactoryRefactoring(object):
     def _change_occurrences_in_other_modules(self, changes,
                                              factory_name, global_factory):
         changed_name = self._get_new_function_name(factory_name, global_factory)
-        import_tools = rope.importutils.ImportTools(self.pycore)
+        import_tools = rope.refactor.importutils.ImportTools(self.pycore)
         new_import = import_tools.get_import_for_module(self.pymodule)
         if global_factory:
             changed_name = new_import.names_and_aliases[0][0] + '.' + factory_name

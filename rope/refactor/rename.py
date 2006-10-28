@@ -1,8 +1,8 @@
 
-import rope.codeanalyze
-import rope.pynames
-import rope.pyobjects
-import rope.exceptions
+import rope.base.codeanalyze
+import rope.base.pynames
+import rope.base.pyobjects
+import rope.base.exceptions
 from rope.refactor.change import ChangeSet, ChangeContents, MoveResource
 import rope.refactor.occurrences
 
@@ -13,11 +13,11 @@ class RenameRefactoring(object):
         self.pycore = pycore
         self.resource = resource
         self.offset = offset
-        self.old_name = rope.codeanalyze.get_name_at(self.resource, self.offset)
-        self.old_pyname = rope.codeanalyze.get_pyname_at(self.pycore, resource,
+        self.old_name = rope.base.codeanalyze.get_name_at(self.resource, self.offset)
+        self.old_pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource,
                                                          offset)
         if self.old_pyname is None:
-            raise rope.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringException(
                 'Rename refactoring should be performed on python identifiers.')
     
     def get_old_name(self):
@@ -49,15 +49,15 @@ class RenameRefactoring(object):
         if lineno is None:
             return False
         scope = module.get_scope().get_inner_scope_for_line(lineno)
-        if isinstance(self.old_pyname, rope.pynames.DefinedName) and \
+        if isinstance(self.old_pyname, rope.base.pynames.DefinedName) and \
            scope.get_kind() in ('Function', 'Class'):
             scope = scope.parent
         return scope.get_kind() == 'Function' and \
                self.old_pyname in scope.get_names().values() and \
-               isinstance(self.old_pyname, rope.pynames.AssignedName)
+               isinstance(self.old_pyname, rope.base.pynames.AssignedName)
     
     def _is_renaming_a_module(self):
-        if self.old_pyname.get_object().get_type() == rope.pycore.PyObject.get_base_type('Module'):
+        if self.old_pyname.get_object().get_type() == rope.base.pycore.PyObject.get_base_type('Module'):
             return True
         return False
 
@@ -77,9 +77,9 @@ class RenameRefactoring(object):
     
     def _is_a_class_method(self):
         pyname = self.old_pyname
-        return isinstance(pyname, rope.pynames.DefinedName) and \
-               pyname.get_object().get_type() == rope.pyobjects.PyObject.get_base_type('Function') and \
-               pyname.get_object().parent.get_type() == rope.pyobjects.PyObject.get_base_type('Type')
+        return isinstance(pyname, rope.base.pynames.DefinedName) and \
+               pyname.get_object().get_type() == rope.base.pyobjects.PyObject.get_base_type('Function') and \
+               pyname.get_object().parent.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type')
     
     def _get_superclasses_defining_method(self, pyclass, attr_name):
         result = set()

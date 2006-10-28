@@ -1,6 +1,6 @@
 import re
 
-from rope.codeanalyze import StatementRangeFinder
+from rope.base.codeanalyze import StatementRangeFinder
 
 
 class TextIndenter(object):

@@ -8,7 +8,7 @@ import marshal
 import tempfile
 import threading
 
-import rope.pyobjects
+import rope.base.pyobjects
 
 
 class DynamicObjectInference(object):
@@ -155,9 +155,9 @@ class _PersistedClass(_ObjectPersistedForm):
         if self.name in module_scope.get_names():
             suspected_pyobject = module_scope.get_name(self.name).get_object()
         if suspected_pyobject is not None and \
-           suspected_pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
+           suspected_pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
             if self.is_instance:
-                return rope.pyobjects.PyObject(suspected_pyobject)
+                return rope.base.pyobjects.PyObject(suspected_pyobject)
             else:
                 return suspected_pyobject
         else:
@@ -195,7 +195,7 @@ class PythonFileRunner(object):
             source_folders.append(os.path.abspath(folder._get_real_path()))
         env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)
-        runmod_path = self.pycore.find_module('rope.runmod')._get_real_path()
+        runmod_path = self.pycore.find_module('rope.base.runmod')._get_real_path()
         self.receiver = None
         self._init_data_receiving()
         send_info = '-'

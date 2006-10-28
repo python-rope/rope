@@ -1,7 +1,7 @@
 import compiler
 
-import rope.pynames
-import rope.exceptions
+import rope.base.pynames
+import rope.base.exceptions
 import rope.refactor.rename
 
 
@@ -84,7 +84,7 @@ class ImportTools(object):
             pymodule = self.pycore.get_string_module(source, pymodule.get_resource())
         for name, absolute_name in to_be_absolute_list:
             old_name = name.split('.')[-1]
-            old_pyname = rope.codeanalyze.StatementEvaluator.get_string_result(
+            old_pyname = rope.base.codeanalyze.StatementEvaluator.get_string_result(
                 pymodule.get_scope(), name)
             rename_in_module = rope.refactor.rename.RenameInModule(
                 self.pycore, [old_pyname], old_name,
@@ -279,7 +279,7 @@ class ImportStatement(object):
         try:
             new_import = self.import_info.filter_names(can_select)
             self.import_info = new_import
-        except rope.exceptions.ModuleNotFoundException:
+        except rope.base.exceptions.ModuleNotFoundException:
             pass
     
     def add_import(self, import_info):
@@ -595,8 +595,8 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
         self.unbound = set()
         self.names = set()
         for name, pyname in pymodule._get_structural_attributes().iteritems():
-            if not isinstance(pyname, (rope.pynames.ImportedName,
-                                       rope.pynames.ImportedModule)):
+            if not isinstance(pyname, (rope.base.pynames.ImportedName,
+                                       rope.base.pynames.ImportedModule)):
                 self.names.add(name)
         wanted_scope = wanted_pyobject.get_scope()
         self.start = wanted_scope.get_start()

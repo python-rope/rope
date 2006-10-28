@@ -1,8 +1,8 @@
 import compiler
 
-import rope.pyscopes
-from rope.exceptions import (RopeException, AttributeNotFoundException)
-from rope.pynames import *
+import rope.base.pyscopes
+from rope.base.exceptions import (RopeException, AttributeNotFoundException)
+from rope.base.pynames import *
 
 
 class PyObject(object):
@@ -118,7 +118,7 @@ class PyFunction(PyDefinedObject):
         return {}
 
     def _create_scope(self):
-        return rope.pyscopes.FunctionScope(self.pycore, self)
+        return rope.base.pyscopes.FunctionScope(self.pycore, self)
     
     def _get_parameter_pyobjects(self):
         if self.are_args_being_inferred:
@@ -214,14 +214,14 @@ class PyClass(PyDefinedObject):
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
-            base = rope.codeanalyze.StatementEvaluator.\
+            base = rope.base.codeanalyze.StatementEvaluator.\
                    get_statement_result(self.parent.get_scope(), base_name)
             if base:
                 result.append(base.get_object())
         return result
 
     def _create_scope(self):
-        return rope.pyscopes.ClassScope(self.pycore, self)
+        return rope.base.pyscopes.ClassScope(self.pycore, self)
 
 
 class _ConcludedData(object):
@@ -285,7 +285,7 @@ class PyModule(_PyModule):
     
     def _get_lines(self):
         if self._lines is None:
-            self._lines = rope.codeanalyze.SourceLinesAdapter(self.source_code)
+            self._lines = rope.base.codeanalyze.SourceLinesAdapter(self.source_code)
         return self._lines
     
     lines = property(_get_lines, doc="return `SourceLinesAdapter`")
@@ -302,7 +302,7 @@ class PyModule(_PyModule):
         return visitor.names
     
     def _create_scope(self):
-        return rope.pyscopes.GlobalScope(self.pycore, self)
+        return rope.base.pyscopes.GlobalScope(self.pycore, self)
 
 
 class PyPackage(_PyModule):

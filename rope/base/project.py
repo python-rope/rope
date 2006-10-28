@@ -1,8 +1,8 @@
 import os
 
-import rope.pycore
-import rope.fscommands
-from rope.exceptions import RopeException
+import rope.base.pycore
+import rope.base.fscommands
+from rope.base.exceptions import RopeException
 
 
 class Project(object):
@@ -14,11 +14,11 @@ class Project(object):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise RopeException('Project root exists and is not a directory')
-        self.pycore = rope.pycore.PyCore(self)
+        self.pycore = rope.base.pycore.PyCore(self)
         self.resources = {}
         self.resources[''] = RootFolder(self)
         self.out_of_project_resources = {}
-        self.fscommands = rope.fscommands.create_fscommands(self)
+        self.fscommands = rope.base.fscommands.create_fscommands(self)
 
     def get_root_folder(self):
         return self.get_resource('')

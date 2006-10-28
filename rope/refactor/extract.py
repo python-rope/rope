@@ -1,8 +1,8 @@
 import compiler
 
-import rope.codeanalyze
-import rope.pyobjects
-from rope.exceptions import RefactoringException
+import rope.base.codeanalyze
+import rope.base.pyobjects
+from rope.base.exceptions import RefactoringException
 from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents
 
@@ -50,7 +50,7 @@ class _ExtractInformation(object):
         
         pymodule = pycore.resource_to_pyobject(resource)
         self.lines = pymodule.lines
-        self.line_finder = rope.codeanalyze.LogicalLineFinder(self.lines)
+        self.line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
         
         self.region = (self._choose_closest_line_end(start_offset),
                        self._choose_closest_line_end(end_offset, end=True))
@@ -154,15 +154,15 @@ class _ExtractPerformer(object):
     
     def _is_global(self):
         return self.holding_scope.pyobject.get_type() == \
-               rope.pyobjects.PyObject.get_base_type('Module')
+               rope.base.pyobjects.PyObject.get_base_type('Module')
 
     def _is_method(self):
         return self.holding_scope.parent is not None and \
                self.holding_scope.parent.pyobject.get_type() == \
-               rope.pyobjects.PyObject.get_base_type('Type')
+               rope.base.pyobjects.PyObject.get_base_type('Type')
     
     def _check_exceptional_conditions(self):
-        if self.holding_scope.pyobject.get_type() == rope.pyobjects.PyObject.get_base_type('Type'):
+        if self.holding_scope.pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
             raise RefactoringException('Can not extract methods in class body')
         if self.info.region[1] > self.info.scope[1]:
             raise RefactoringException('Bad range selected for extract method')

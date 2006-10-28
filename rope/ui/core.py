@@ -1,8 +1,8 @@
 import tkFileDialog
 from Tkinter import *
 
-from rope.exceptions import RopeException
-from rope.project import Project
+from rope.base.exceptions import RopeException
+from rope.base.project import Project
 import rope.ui.editor
 import rope.ui.statusbar
 import rope.ui.editorpile

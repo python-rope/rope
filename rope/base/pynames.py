@@ -1,5 +1,5 @@
-import rope.pyobjects
-from rope.exceptions import (ModuleNotFoundException, AttributeNotFoundException)
+import rope.base.pyobjects
+from rope.base.exceptions import (ModuleNotFoundException, AttributeNotFoundException)
 
 
 class PyName(object):
@@ -36,7 +36,7 @@ class AssignedName(PyName):
     
     def get_object(self):
         if self.is_being_inferred:
-            raise rope.pyobjects.IsBeingInferredException('Circular assignments')
+            raise rope.base.pyobjects.IsBeingInferredException('Circular assignments')
         if self.pyobject.get() is None and self.module is not None:
             self.is_being_inferred = True
             try:
@@ -46,7 +46,7 @@ class AssignedName(PyName):
             finally:
                 self.is_being_inferred = False
         if self.pyobject.get() is None:
-            self.pyobject.set(rope.pyobjects.PyObject(rope.pyobjects.
+            self.pyobject.set(rope.base.pyobjects.PyObject(rope.base.pyobjects.
                                                       PyObject.get_base_type('Unknown')))
         return self.pyobject.get()
     
@@ -93,7 +93,7 @@ class ImportedModule(PyName):
     
     def get_object(self):
         if self._get_pymodule() is None:
-            return rope.pyobjects.PyObject(rope.pyobjects.PyObject.get_base_type('Unknown'))
+            return rope.base.pyobjects.PyObject(rope.base.pyobjects.PyObject.get_base_type('Unknown'))
         return self._get_pymodule()
     
     def get_definition_location(self):
@@ -151,7 +151,7 @@ class StarImport(object):
     
     def get_names(self):
         if self.names.get() is None:
-            if isinstance(self.imported_module.get_object(), rope.pyobjects.PyPackage):
+            if isinstance(self.imported_module.get_object(), rope.base.pyobjects.PyPackage):
                 return {}
             result = {}
             for name, pyname in self.imported_module.get_object().get_attributes().iteritems():
@@ -163,5 +163,5 @@ class StarImport(object):
 
 def _get_concluded_data(module):
     if module is None:
-        return rope.pyobjects._ConcludedData()
+        return rope.base.pyobjects._ConcludedData()
     return module._get_concluded_data()
