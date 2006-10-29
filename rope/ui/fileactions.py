@@ -58,6 +58,7 @@ def _create_resource_dialog(core, creation_callback,
     """Ask user about the parent folder and the name of the resource to be created
     
     creation_callback is a function accepting the parent and the name
+    
     """
     if not _check_if_project_is_open(core):
         return
@@ -166,7 +167,7 @@ class FileFinder(object):
                 return 1
             if not self._is_init_dot_py(file1) and self._is_init_dot_py(file2):
                 return -1
-            return 0
+            return cmp(file1,get_path(), file2.get_path())
         if file1.get_name() != file2.get_name():
             return cmp(file1.get_name(), file2.get_name())
         return cmp(file1.get_path(), file2.get_path())

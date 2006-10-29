@@ -18,15 +18,23 @@ Features added in this release:
 
 * Previewing refactoring changes
 * Encapsulate field
-* Running unit tests view
+* Unit-test running view
 * Convert local variable to field refactoring
+
+Refactoring dialogs have a new ``preview`` button that you
+can click to see the preview of the changes that this
+refactoring need to perform.
+
+You can run unittest modules using ``M-X t``.  The tests will run
+considerably slower, since rope gathers type information while
+they are running.
 
 
 Getting Started
 ===============
 
-If it is the first time you use *rope*, it might be helpful to try
-these:
+If it is the first time you use *rope*, it might be helpful to
+try these:
 ('C' stands for Control key and 'M' for Meta(Alt) key.)
 
 =========  ======================
@@ -38,6 +46,7 @@ F2         Show PyDoc
 F3         Go to definition
 C-o        Show quick outline
 M-X p      Run module
+M-X t      Run unit-tests
 
 M-R        Rename Refactoring
 M-M        Extract method
@@ -65,6 +74,7 @@ C-x b          change active editor
 C-x k          close active editor
 C-x C-c        exit
 M-X p          run active editor
+M-X t          run unit-tests
 M-Q r          show project tree
 -------------  --------------------------
 C-f            forward character

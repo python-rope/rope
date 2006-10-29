@@ -91,6 +91,7 @@ Designing Refactorings to Be Used in IDEs
 * Finding available refactorings
 * A better facade
 * Better refactoring categoriztion
+* Making adding new refactorings easier
 
 
 Decisions to Make
@@ -98,8 +99,7 @@ Decisions to Make
 
 * Unifying refactoring interfaces
 * Introducing factories for refactorings;
-  Decrease the dependence to `rope.refactor` modules
-* Making adding new refactorings easier
+  Reduce the dependence to `rope.refactor` modules
 
 
 Multi-step Refactorings
@@ -159,7 +159,7 @@ Finding Available Refactorings
 ------------------------------
 
 The question we need to answer before proceeding is to decide
-wether this belongs to UI or core.
+whether this belongs to UI or core.
 
 
 Undo Unification
@@ -170,16 +170,6 @@ refactorings and in future there might be undos for other changes.  We
 need to mix them together.  This seems hard to do mainly because we
 don't have much access to the undo mechanism of Tkinter.  I think an
 approximation here will save us.
-
-
-Adding SVN Support Using `pysvn`
-================================
-
-Currently `rope.fscommands` module makes an all or nothing assumption.
-Either all or none of the files should be under version control.
-
-We should be able to make transaction so that if an error occurs
-during one action we can revert back.
 
 
 Moving Fields/Methods

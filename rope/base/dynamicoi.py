@@ -240,6 +240,9 @@ class PythonFileRunner(object):
         """Stop the process. This does *not* work on windows."""
         if os.name != 'nt':
             os.kill(self.process.pid, 9)
+        else:
+            import ctypes
+            ctypes.windll.kernel32.TerminateProcess(int(self.process._handle), -1)
     
     def add_finishing_observer(self, observer):
         self.observers.append(observer)

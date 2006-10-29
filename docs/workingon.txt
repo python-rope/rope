@@ -1,12 +1,10 @@
-Running Unit Tests View
-=======================
+Before 0.3rc1 Release
+=====================
 
-* Stopping?
-* Killing processes on nt
+- Killing processes on nt
 
-* Having `rope.ti` module
-* Moving `exceptions` and `project` modules to `rope` package
-* What to do about internal modules?
+* Test installing
+* Adding `rope.ti` containing `objectinfer`, `dynamicoi`, `runmod`?
 
 
 Before 0.3 Release
@@ -20,7 +18,6 @@ Before 0.3 Release
 Remaining Stories
 =================
 
-* Alternatives to XML-RCP for transfaring data
 * Spaces in module path for running modules
 * Changing `uihelpers` tree and list to support mouse clicks
 * Handling `AssList` for inline variable and encapsulate field
@@ -33,7 +30,7 @@ Remaining Stories
 * Considering logical lines in `rope.codeanalyze`
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
-* Moving/renaming current module
+* Moving/renaming current module/package
 * Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
   ``COPYING`` to help menu; Adding readonly mode?
 * Extract method and return statements
