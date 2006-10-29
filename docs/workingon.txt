@@ -1,18 +1,10 @@
-Before 0.3rc1 Release
-=====================
-
-- Killing processes on nt
-
-* Test installing
-* Adding `rope.ti` containing `objectinfer`, `dynamicoi`, `runmod`?
-
-
 Before 0.3 Release
 ==================
 
 * ``overview.txt``
 * File encodings
 * Eliminating `Editor.refactoring`; Use editing contexts
+* Adding `rope.ti` containing `objectinfer`, `dynamicoi`, `runmod`?
 
 
 Remaining Stories
