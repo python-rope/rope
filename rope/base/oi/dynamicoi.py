@@ -195,7 +195,7 @@ class PythonFileRunner(object):
             source_folders.append(os.path.abspath(folder._get_real_path()))
         env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)
-        runmod_path = self.pycore.find_module('rope.base.runmod')._get_real_path()
+        runmod_path = self.pycore.find_module('rope.base.oi.runmod')._get_real_path()
         self.receiver = None
         self._init_data_receiving()
         send_info = '-'

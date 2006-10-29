@@ -1,10 +1,26 @@
+Restructuring Packages
+======================
+
+::
+  rope
+    base
+      oi
+    refactor
+    ide
+    ui
+
+* Adding `rope.oi` package
+* Not accessing `refactor` in `base`
+* Does supporting implicit interfaces require lots of changes
+  across packages
+
+
 Before 0.3 Release
 ==================
 
 * ``overview.txt``
 * File encodings
 * Eliminating `Editor.refactoring`; Use editing contexts
-* Adding `rope.ti` containing `objectinfer`, `dynamicoi`, `runmod`?
 
 
 Remaining Stories

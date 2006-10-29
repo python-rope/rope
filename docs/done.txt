@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.3rc1 : October 29, 2006
+
+
 - Running unit tests view : October 28, 2006
 
 

@@ -51,7 +51,7 @@ Releases
 0.3m5
     Done.
 0.3rc1
-    Working one.
+    Done.
 
 
 Possible Plans For 0.4
@@ -212,6 +212,23 @@ groups.::
 
 Dyanmic Type Inference Issues
 =============================
+
+
+Rejecting Smalltalk `RefactoringBrowser` Approach
+-------------------------------------------------
+
+We can't use smalltalks approach because it requires the whole
+tests suite to be run before each refactoring but this does not
+seem appealing because it takes time and considering the added
+time of tracing each function call it takes even more.
+
+But I think the same problem existed in smalltalk, too.  Look what
+they did to overcome this problem.  You can also use a strategy
+for testing this approach for renaming.  Maybe in future when
+CPUs get even faster time inefficiency might not be an issue.
+
+Think of other ways of collecting type information.
+
 
 Saving Collected Data
 ---------------------

@@ -1,9 +1,9 @@
 import re
 import sys
 
-import rope.base.objectinfer
+import rope.base.oi.objectinfer
 import rope.refactor
-import rope.base.dynamicoi
+import rope.base.oi.dynamicoi
 from rope.base.exceptions import ModuleNotFoundException
 from rope.base.pyobjects import *
 
@@ -13,9 +13,9 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
-        self.object_infer = rope.base.objectinfer.ObjectInfer(self)
+        self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self.refactoring = rope.refactor.PythonRefactoring(self)
-        self.dynamicoi = rope.base.dynamicoi.DynamicObjectInference(self)
+        self.dynamicoi = rope.base.oi.dynamicoi.DynamicObjectInference(self)
         self.classes = None
 
     def get_module(self, name, current_folder=None):

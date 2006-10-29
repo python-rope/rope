@@ -167,7 +167,7 @@ class FileFinder(object):
                 return 1
             if not self._is_init_dot_py(file1) and self._is_init_dot_py(file2):
                 return -1
-            return cmp(file1,get_path(), file2.get_path())
+            return cmp(file1.get_path(), file2.get_path())
         if file1.get_name() != file2.get_name():
             return cmp(file1.get_name(), file2.get_name())
         return cmp(file1.get_path(), file2.get_path())
