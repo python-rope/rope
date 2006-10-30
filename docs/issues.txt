@@ -224,8 +224,8 @@ time of tracing each function call it takes even more.
 
 But I think the same problem existed in smalltalk, too.  Look what
 they did to overcome this problem.  You can also use a strategy
-for testing this approach for renaming.  Maybe in future when
-CPUs get even faster time inefficiency might not be an issue.
+for testing this approach for finding occurances.  Maybe in future
+when CPUs get even faster time inefficiency might not be an issue.
 
 Think of other ways of collecting type information.
 

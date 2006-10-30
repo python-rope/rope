@@ -89,6 +89,7 @@ class GUITestRunner(object):
         self.ok_button.grid(row=4)
         self.toplevel.bind('<Control-g>', self._ok)
         self.toplevel.bind('<Escape>', self._ok)
+        self.toplevel.protocol('WM_DELETE_WINDOW', self._ok)
     
     def add_failure(self, test_name, error):
         self.failures[test_name] = error

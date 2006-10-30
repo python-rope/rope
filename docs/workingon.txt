@@ -1,33 +1,28 @@
-Restructuring Packages
-======================
-
-::
-  rope
-    base
-      oi
-    refactor
-    ide
-    ui
-
-* Adding `rope.oi` package
-* Not accessing `refactor` in `base`
-* Does supporting implicit interfaces require lots of changes
-  across packages
-
-
 Before 0.3 Release
 ==================
 
-* ``overview.txt``
-* File encodings
+- If the first line contains coding comment do not read the second
+
+* File encodings for notepad style
+* File encodings for normal files
+
+* Changing `Editor.get_region_offset` to work with normal selections
 * Eliminating `Editor.refactoring`; Use editing contexts
+
+  * Should `editingtools` contain `refactoring`, `codeassist`, `outline`
+  * Saving variables for contexts; `Core.save_context_data`
+
+* ``overview.txt``
+* ``contributing.txt``
+* Better pydoc wrapping
+* Better `ropetest` package structure
 
 
 Remaining Stories
 =================
 
-* Spaces in module path for running modules
 * Changing `uihelpers` tree and list to support mouse clicks
+* Spaces in module path for running modules
 * Handling `AssList` for inline variable and encapsulate field
 * Changing refactor modules to use `sourcetools.add_methods`
 * Adding ``add_statements(method, statements)``

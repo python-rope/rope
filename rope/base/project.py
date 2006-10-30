@@ -1,4 +1,5 @@
 import os
+import re
 
 import rope.base.pycore
 import rope.base.fscommands
@@ -168,10 +169,40 @@ class _File(Resource):
         super(_File, self).__init__(project, name)
     
     def read(self):
-        return open(self.project._get_resource_path(self.name)).read()
+        source_bytes = open(self.project._get_resource_path(self.name)).read()
+        encoding = self._conclude_file_encoding(source_bytes)
+        if encoding is not None:
+            return unicode(source_bytes, encoding)
+        return unicode(source_bytes)
+    
+    def _find_line_end(self, source_bytes, start):
+        try:
+            return source_bytes.index('\n', start)
+        except ValueError:
+            return len(source_bytes)
+    
+    def _get_the_first_two_lines(self, source_bytes):
+        line1_end = self._find_line_end(source_bytes, 0)
+        yield source_bytes[:line1_end]
+        if line1_end != len(source_bytes):
+            line2_end = self._find_line_end(source_bytes, line1_end)
+            line2 = source_bytes[line1_end + 1:line2_end]
+            yield line2
+        else:
+            yield ''
+    
+    encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
+    
+    def _conclude_file_encoding(self, source_bytes):
+        for line in self._get_the_first_two_lines(source_bytes):
+            for match in _File.encoding_pattern.finditer(line):
+                return match.group(1)
 
     def write(self, contents):
         file_ = open(self.project._get_resource_path(self.name), 'w')
+        encoding = self._conclude_file_encoding(contents)
+        if encoding is not None and isinstance(contents, unicode):
+            contents = contents.encode(encoding)
         file_.write(contents)
         file_.close()
         for observer in list(self.observers):
@@ -198,7 +229,7 @@ class _File(Resource):
         self.get_parent()._child_changed(self)
         for observer in list(self.observers):
             observer(self)
-
+    
 
 class File(_File):
     """Represents a file in a project"""

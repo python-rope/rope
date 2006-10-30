@@ -2,8 +2,8 @@ import unittest
 
 from ropetest import testutils
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                              SourceLinesAdapter, WordRangeFinder,
-                              ScopeNameFinder, LogicalLineFinder)
+                                   SourceLinesAdapter, WordRangeFinder,
+                                   ScopeNameFinder, LogicalLineFinder)
 from rope.base.project import Project
 
 

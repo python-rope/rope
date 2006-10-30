@@ -430,6 +430,20 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(1, sample_observer.change_count)
         self.assertEquals(sample_file, sample_observer.last_changed)
 
+    def test_file_encoding_reading(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        contents = u'# -*- coding: utf-8 -*-\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        file = open(sample_file._get_real_path(), 'w')
+        file.write(contents.encode('utf-8'))
+        file.close()
+        self.assertEquals(contents, sample_file.read())
+
+    def test_file_encoding_writing(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        contents = u'# -*- coding: utf-8 -*-\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        sample_file.write(contents)
+        self.assertEquals(contents, sample_file.read())
+
 
 class SampleObserver(object):
     def __init__(self):
@@ -495,7 +509,7 @@ class OutOfProjectTest(unittest.TestCase):
         self.assertTrue(sample_folder.has_child('sample.txt'))
         self.assertFalse(sample_folder.has_child('doesnothave.txt'))
         self.assertEquals(sample_resource, sample_folder.get_child('sample.txt'))
-
+    
 
 def suite():
     result = unittest.TestSuite()
