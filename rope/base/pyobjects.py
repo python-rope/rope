@@ -277,6 +277,8 @@ class _PyModule(PyDefinedObject):
 class PyModule(_PyModule):
 
     def __init__(self, pycore, source_code, resource=None):
+        if isinstance(source_code, unicode):
+            source_code = source_code.encode('utf-8')
         self.source_code = source_code
         self._lines = None
         ast_node = compiler.parse(source_code.rstrip(' \t'))
@@ -288,7 +290,7 @@ class PyModule(_PyModule):
             self._lines = rope.base.codeanalyze.SourceLinesAdapter(self.source_code)
         return self._lines
     
-    lines = property(_get_lines, doc="return `SourceLinesAdapter`")
+    lines = property(_get_lines, doc="return a `SourceLinesAdapter`")
     
     def _create_concluded_attributes(self):
         result = {}

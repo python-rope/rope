@@ -403,6 +403,12 @@ class PyCoreTest(unittest.TestCase):
         imported_module = scope.get_name('project').get_object()
         self.assertTrue('Project' in imported_module.get_attributes())
 
+    def test_file_encoding_reading(self):
+        contents = u'# -*- coding: utf-8 -*-\n#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write(contents)
+        self.pycore.get_module('mod')
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 

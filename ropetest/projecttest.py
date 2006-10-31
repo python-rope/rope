@@ -432,7 +432,7 @@ class ProjectTest(unittest.TestCase):
 
     def test_file_encoding_reading(self):
         sample_file = self.project.get_root_folder().create_file('my_file.txt')
-        contents = u'# -*- coding: utf-8 -*-\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        contents = u'# -*- coding: utf-8 -*-\n#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
         file = open(sample_file._get_real_path(), 'w')
         file.write(contents.encode('utf-8'))
         file.close()
@@ -442,6 +442,16 @@ class ProjectTest(unittest.TestCase):
         sample_file = self.project.get_root_folder().create_file('my_file.txt')
         contents = u'# -*- coding: utf-8 -*-\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
         sample_file.write(contents)
+        self.assertEquals(contents, sample_file.read())
+
+    # XXX: supporting utf_8_sig
+    def xxx_test_file_encoding_reading_for_notepad_styles(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        contents = u'#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        file = open(sample_file._get_real_path(), 'w')
+        # file.write('\xef\xbb\xbf')
+        file.write(contents.encode('utf-8-sig'))
+        file.close()
         self.assertEquals(contents, sample_file.read())
 
 

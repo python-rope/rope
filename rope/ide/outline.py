@@ -78,6 +78,8 @@ class PythonOutline(Outline):
         return _get_pyname_children(mod)
 
     def get_root_nodes(self, source_code):
+        if isinstance(source_code, unicode):
+            source_code = source_code.encode('utf-8')
         ast_node = compiler.parse(source_code)
         return _get_ast_children(ast_node)
 

@@ -181,22 +181,20 @@ class _File(Resource):
         except ValueError:
             return len(source_bytes)
     
-    def _get_the_first_two_lines(self, source_bytes):
+    def _get_second_line_end(self, source_bytes):
         line1_end = self._find_line_end(source_bytes, 0)
-        yield source_bytes[:line1_end]
         if line1_end != len(source_bytes):
-            line2_end = self._find_line_end(source_bytes, line1_end)
-            line2 = source_bytes[line1_end + 1:line2_end]
-            yield line2
+            return self._find_line_end(source_bytes, line1_end)
         else:
-            yield ''
+            return line1_end
     
     encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
     
     def _conclude_file_encoding(self, source_bytes):
-        for line in self._get_the_first_two_lines(source_bytes):
-            for match in _File.encoding_pattern.finditer(line):
-                return match.group(1)
+        first_two_lines = source_bytes[:self._get_second_line_end(source_bytes)]
+        match = _File.encoding_pattern.search(first_two_lines)
+        if match is not None:
+            return match.group(1)
 
     def write(self, contents):
         file_ = open(self.project._get_resource_path(self.name), 'w')

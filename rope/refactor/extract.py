@@ -190,7 +190,7 @@ class _ExtractPerformer(object):
         indented_body = self.source_code[self.info.scope[0]:self.info.scope[1]]
         body = sourceutils.indent_lines(indented_body,
                                         -sourceutils.find_minimum_indents(indented_body))
-        ast = compiler.parse(body)
+        ast = _parse_text(body)
         compiler.walk(ast, info_collector)
         return info_collector
 
@@ -446,7 +446,9 @@ class _VariableReadsAndWritesFinder(object):
             return set(), set()
         min_indents = sourceutils.find_minimum_indents(code)
         indented_code = sourceutils.indent_lines(code, -min_indents)
-        ast = compiler.parse(indented_code)
+        if isinstance(indented_body, unicode):
+            indented_body = indented_body.encode('utf-8')
+        ast = _parse_text(indented_code)
         visitor = _VariableReadsAndWritesFinder()
         compiler.walk(ast, visitor)
         return visitor.read, visitor.written
@@ -455,7 +457,7 @@ class _VariableReadsAndWritesFinder(object):
     def find_reads_for_one_liners(code):
         if code.strip() == '':
             return set(), set()
-        ast = compiler.parse(code)
+        ast = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
         compiler.walk(ast, visitor)
         return visitor.read
@@ -484,8 +486,14 @@ class _ReturnOrYieldFinder(object):
             return False
         min_indents = sourceutils.find_minimum_indents(code)
         indented_code = sourceutils.indent_lines(code, -min_indents)
-        ast = compiler.parse(indented_code)
+        ast = _parse_text(indented_code)
         visitor = _ReturnOrYieldFinder()
         compiler.walk(ast, visitor)
         return visitor.returns
+
+def _parse_text(body):
+    if isinstance(body, unicode):
+        body = body.encode('utf-8')
+    ast = compiler.parse(body)
+    return ast
 
