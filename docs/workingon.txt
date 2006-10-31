@@ -1,10 +1,9 @@
 Before 0.3 Release
 ==================
 
-- If the first line contains coding comment do not read the second
+- Changing `Editor.get_region_offset` to work with normal selections
 
 * File encodings for normal files
-* Changing `Editor.get_region_offset` to work with normal selections
 * Eliminating `Editor.refactoring`; Use editing contexts
 
   * Should `editingtools` contain `refactoring`, `codeassist`, `outline`

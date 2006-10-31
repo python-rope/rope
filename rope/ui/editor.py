@@ -170,8 +170,12 @@ class GraphicalEditor(object):
             return editor.get_file()
     
     def get_region_offset(self):
-        start = self.text.index('mark')
-        end = self.text.index(INSERT)
+        try:
+            start = self.text.index(SEL_FIRST)
+            end = self.text.index(SEL_LAST)
+        except TclError:
+            start = self.text.index('mark')
+            end = self.text.index(INSERT)
         if self.text.compare(start, '>', end):
             start, end = end, start
         start_offset = self.get_offset(start)
