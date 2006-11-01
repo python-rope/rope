@@ -3,7 +3,8 @@ import Tkinter
 
 import rope.ui.editingtools
 from rope.ui.core import Core
-from ropetest.ui.mockeditortest import GraphicalEditorFactory, MockEditorFactory
+from ropetest.ui.mockeditortest import (GraphicalEditorFactory, MockEditorFactory,
+                                        get_sample_editingcontext)
 from rope.ui.indenter import PythonCodeIndenter
 from rope.ui.editor import _TextChangeInspector
 from rope.ide.codeassist import CodeAssist
@@ -16,7 +17,7 @@ class GraphicalEditorTest(unittest.TestCase):
     
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.editor = self.__factory.create(rope.ui.editingtools.NormalEditingTools())
+        self.editor = self.__factory.create(get_sample_editingcontext())
         self.editor.set_text('sample text')
     
     def tearDown(self):
@@ -419,14 +420,8 @@ class GraphicalEditorTest(unittest.TestCase):
         self.assertEquals(self.editor.get_index(18), self.editor.get_insert())
 
     def test_goto_definition(self):
-        class GotoDefinitionCodeAssist(CodeAssist):
-            def get_definition_location(self, *arg):
-                return (None, 2)
-        code_assist = GotoDefinitionCodeAssist()
-        self.editor.set_code_assist(code_assist)
         self.editor.set_text('\ndef a_func():\n    pass\na_func()\n')
-        self.editor.set_insert(self.editor.get_index(26))
-        self.editor.goto_definition()
+        self.editor.goto_line(2)
         self.assertEquals(2, self.editor.get_current_line_number())
 
 class TextChangeInspectorTest(unittest.TestCase):
@@ -435,7 +430,7 @@ class TextChangeInspectorTest(unittest.TestCase):
 
     def setUp(self):
         super(TextChangeInspectorTest, self).setUp()
-        editor = TextChangeInspectorTest.__factory.create(rope.ui.editingtools.NormalEditingTools())
+        editor = TextChangeInspectorTest.__factory.create(get_sample_editingcontext())
         self.text = editor.text
         self.change_inspector = editor.change_inspector
 

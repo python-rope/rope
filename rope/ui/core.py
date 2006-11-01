@@ -6,6 +6,7 @@ from rope.base.project import Project
 import rope.ui.editor
 import rope.ui.statusbar
 import rope.ui.editorpile
+from rope.ui import editingcontexts, editingtools
 from rope.ui.menubar import MenuBarManager, MenuAddress
 from rope.ui.extension import ActionContext
 
@@ -16,13 +17,10 @@ class Core(object):
     def __init__(self):
         self.root = Tk()
         self.root.title('Rope')
-        self.menus = {}
-        self.menu_managers = {}
-        self.all_contexts = ['python', 'rest', 'others', 'none']
-        for context in self.all_contexts:
-            self.menus[context] = Menu(self.root, relief=RAISED, borderwidth=1)
-            self.menu_managers[context] = MenuBarManager(self.menus[context])
-        self.root['menu'] = self.menus['none']
+        for context in editingcontexts.contexts.values():
+            context.menu = Menu(self.root, relief=RAISED, borderwidth=1)
+            context.menu_manager = MenuBarManager(context.menu)
+        self.root['menu'] = editingcontexts.none.menu
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
         self.editor_panel = Frame(self.main, borderwidth=0)
@@ -33,7 +31,8 @@ class Core(object):
         line_status = self.status_bar_manager.create_status('line')
         line_status.set_width(8)
 
-        self.key_bindings = dict((context, []) for context in self.all_contexts)
+        for context in editingcontexts.contexts.values():
+            context.key_binding = []
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
         self.project = None
     
@@ -47,16 +46,15 @@ class Core(object):
         import rope.ui.editactions
         import rope.ui.codeassist
         import rope.ui.refactor
-        for menu_manager in self.menu_managers.values():
-            menu_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
-            menu_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
-                                             self._show_about_dialog)
+        for context in editingcontexts.contexts.values():
+            context.menu_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
+            context.menu_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
+                                                  self._show_about_dialog)
 
     def _add_menu_cascade(self, menu_address, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)
         for context in active_contexts:
-            menu_manager = self.menu_managers[context]
-            menu_manager.add_menu_cascade(menu_address)
+            context.menu_manager.add_menu_cascade(menu_address)
 
     def _close_project_and_exit(self):
         self._close_project_dialog(exit_=True)
@@ -102,23 +100,25 @@ class Core(object):
         self._bind_key('<FocusIn>', show_current_line_number)
     
     def _get_matching_contexts(self, contexts):
-        result = set(contexts)
+        contexts = list(contexts)
+        result = set()
         if 'all' in contexts:
-            result.remove('all')
-            for c in self.all_contexts:
-                if c != 'none':
-                    result.add(c)
+            contexts.remove('all')
+            for name, context in editingcontexts.contexts.iteritems():
+                if name != 'none':
+                    result.add(context)
+        for name in contexts:
+            if name in editingcontexts.contexts:
+                result.add(editingcontexts.contexts[name])
         return result
     
     def _bind_key(self, key, function, active_contexts=['all']):
         if not key.startswith('<'):
             key = self._emacs_to_tk(key)
         active_contexts = self._get_matching_contexts(active_contexts)
-        for key_binding in self.key_bindings.values():
-            for context in active_contexts:
-                key_binding = self.key_bindings[context]
-                key_binding.append((key, function))
-        if 'none' in active_contexts:
+        for context in active_contexts:
+            context.key_binding.append((key, function))
+        if editingcontexts.none in active_contexts:
             self.root.bind(key, function)
     
     def _emacs_to_tk(self, key):
@@ -129,7 +129,7 @@ class Core(object):
 
     def _set_key_binding(self, graphical_editor):
         widget = graphical_editor.getWidget()
-        for (key, function) in self.key_bindings[graphical_editor.get_editing_context()]:
+        for (key, function) in graphical_editor.get_editing_context().key_binding:
             widget.bind(key, function)
     
     def _change_editor_dialog(self, event=None):
@@ -288,6 +288,16 @@ class Core(object):
         if self.project:
             self.close_project()
         self.project = Project(projectRoot)
+        self._init_editing_tools()
+    
+    def _init_editing_tools(self):
+        for name, context in editingcontexts.contexts.iteritems():
+            context.editingtools = editingtools.get_editingtools_for_context(
+                name, self.project)
+    
+    def _close_editing_tools(self):
+        for context in editingcontexts.contexts.values():
+            context.editingtools = None
 
     def _close_project_dialog(self, exit_=False):
         modified_editors = [editor for editor in self.editor_manager.editors 
@@ -326,6 +336,7 @@ class Core(object):
     def close_project(self):
         while self.editor_manager.active_editor is not None:
             self.close_active_editor()
+        self._close_editing_tools()
         self.project = None
 
     def create_folder(self, folder_name):
@@ -367,8 +378,7 @@ class Core(object):
     def _add_menu_command(self, menu, callback, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)
         for context in active_contexts:
-            menu_manager = self.menu_managers[context]
-            menu_manager.add_menu_command(menu, callback)
+            context.menu_manager.add_menu_command(menu, callback)
     
     def _make_callback(self, action):
         def callback(event=None):
@@ -380,10 +390,9 @@ class Core(object):
     def _editor_changed(self):
         active_editor = self.editor_manager.active_editor
         if active_editor:
-            self.root['menu'] = self.menus[active_editor.get_editor()
-                                           .get_editing_context()]
+            self.root['menu'] = active_editor.get_editor().get_editing_context().menu
         else:
-            self.root['menu'] = self.menus['none']
+            self.root['menu'] = editingcontexts.none.menu
 
     @staticmethod
     def get_core():

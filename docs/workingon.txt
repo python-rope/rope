@@ -1,18 +1,18 @@
 Before 0.3 Release
 ==================
 
-- Changing `Editor.get_region_offset` to work with normal selections
+- Eliminating `Editor.refactoring`; Use editing contexts
+- Saving variables in contexts
+- Remove `refactoring`, `codeassist` and `outline` from `editingtools` 
 
-* File encodings for normal files
-* Eliminating `Editor.refactoring`; Use editing contexts
-
-  * Should `editingtools` contain `refactoring`, `codeassist`, `outline`
-  * Saving variables for contexts; `Core.save_context_data`
+* Encapsulating editor fields in codeassist dialog
+* Supporting UI tests
 
 * ``overview.txt``
 * ``contributing.txt``
 * Better pydoc wrapping
 * Better `ropetest` package structure
+* Should we release a library, too?
 
 
 Remaining Stories

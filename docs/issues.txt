@@ -490,4 +490,66 @@ uses `Tk` to solve these problems.
 A Good Keybinding
 -----------------
 
-Make a good emacs-ish keybinding.
+Rope should have a good emacs-ish keybinding.
+
+
+Contexts Should Hold Values
+---------------------------
+
+We need someway of saving information inside contexts to eliminate
+`EditingTools`.
+
+In order to achieve this goal we might be able to introduce a
+`Context` object.::
+  
+  class EditingContext(object):
+      pass
+  
+  contexts = {'python': Context(), 'rest': Context(),
+              'others': Context(), 'none': Context()}
+  
+  
+  for context in contexts:
+      context.menu = Menu(self.root, relief=RAISED, borderwidth=1)
+      context.menu_manager = MenuBarManager(context.menu)
+
+This refactoring implies the addition of `editingcontexts` module.
+
+* Why do we need to remove `EditingTools`?
+
+  The goal of `EditingTools` was having only one set of UI tools for
+  all contexts.  But now all we do is mostly for python context.
+  Moreover the same action might need different UI in different
+  contexts.  So, it is quite rare to see the same UI dialog in
+  different dialogs.  What's more rope's main gool is python. So now
+  the problem is much simplified.
+  
+  But we need such an object for creating and passing tools to where
+  they are needed.
+  
+  But the main motive smell for this refactoring is that we have
+  `codeassist` and `outline` fields in `Editor` while none of them
+  are used by it.
+  
+  Maybe we can have something like `Core.get_editing_tools(context)`
+  and `ActionContext.editingtools` or maybe `EditingContext.
+  get_editing_tools(pycore)` and `ActionContext.editingcontext`.
+  Editing tools should be recreated whenever a new project is
+  created.
+
+* Should all `EditingTools`'s fields be saved in a context?
+
+  We cannot move `CodeAssist` and `Outline` instances from `Editor`
+  to UI since they should be initialized every time a new project gets
+  started but `EditingContext` fields initialize only once.  But there
+  might be other approaches possible.
+
+  We can move `Highlighting` and `Indenter` to `EditingContexts`.  But
+  what if in future `Highlighting` and `Indenter` use per project
+  configuration?
+  
+
+* Should we use context names or the real contexts for registering
+  actions?
+* Who decides which context an editor should use?
+* Who should hold the context?

@@ -41,10 +41,10 @@ class Action(object):
         """
     
     def get_active_contexts(self):
-        """Return a list of contexts that this actions is active in.
+        """Return a list of context names this actions is active in
         
         The list can contain 'python', 'rest', 'others', 'all' or 'none'.
-        'none' context is active when there is when no editor open.
+        'none' context is active when no editor is open.
         """
 
 
@@ -65,8 +65,12 @@ class ActionContext(object):
     def _get_active_editor_resource(self):
         return self.get_active_editor().get_file()
     
+    def _get_editing_context(self):
+        return self.get_active_editor().get_editor().get_editing_context().editingtools
+    
     project = property(_get_open_project)
     resource = property(_get_active_editor_resource)
+    editingtools = property(_get_editing_context)
 
 
 class SimpleAction(Action):

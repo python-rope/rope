@@ -5,7 +5,7 @@ from rope.base.project import Project
 from rope.ui.editor import *
 from rope.ui.fileeditor import *
 from ropetest.projecttest import SampleProjectMaker
-from ropetest.ui.mockeditor import MockEditor, MockEditorFactory
+from ropetest.ui.mockeditortest import get_sample_editingcontext
 
 class FileEditorTest(unittest.TestCase):
     
@@ -15,6 +15,7 @@ class FileEditorTest(unittest.TestCase):
         self.projectMaker.make_project()
         self.fileName = self.projectMaker.get_sample_file_name()
         self.project = Project(self.projectMaker.get_root())
+        get_sample_editingcontext()
         self.editor = FileEditor(self.project, self.project.get_resource(self.fileName),
                                  GraphicalEditorFactory(Tkinter.Frame()))
     

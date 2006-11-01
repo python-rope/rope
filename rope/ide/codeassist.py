@@ -1,15 +1,13 @@
-import compiler
-import inspect
 import __builtin__
 import re
 import sys
 
 import rope.base.codeanalyze
+import rope.base.pyobjects
 from rope.base.exceptions import RopeException
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
-                              WordRangeFinder, ScopeNameFinder,
-                              SourceLinesAdapter)
-import rope.base.pyobjects
+                                   WordRangeFinder, ScopeNameFinder,
+                                   SourceLinesAdapter)
 
 
 class RopeSyntaxError(RopeException):
@@ -224,12 +222,13 @@ class PythonCodeAssist(CodeAssist):
 
     def __init__(self, project):
         self.project = project
-        self.builtins = [str(name) for name in dir(__builtin__)
-                         if not name.startswith('_')]
         import keyword
         self.keywords = keyword.kwlist
         self.templates = []
         self.templates.extend(self._get_default_templates())
+
+    builtins = [str(name) for name in dir(__builtin__)
+                if not name.startswith('_')]
 
     def _get_default_templates(self):
         result = []

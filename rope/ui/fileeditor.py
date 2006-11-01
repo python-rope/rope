@@ -1,18 +1,18 @@
-import rope.ui.editingtools
+from rope.ui import editingcontexts
 
 class FileEditor(object):
 
     def __init__(self, project, file_, editor_factory):
         self.file = file_
         self.project = project
-        editing_tools = None
+        editingcontext = None
         if self.file.get_name().endswith('.py'):
-            editing_tools = rope.ui.editingtools.PythonEditingTools(project)
+            editingcontext = editingcontexts.python
         elif self.file.get_name().endswith('.txt'):
-            editing_tools = rope.ui.editingtools.ReSTEditingTools()
+            editingcontext = editingcontexts.rest
         else:
-            editing_tools = rope.ui.editingtools.NormalEditingTools()
-        self.editor = editor_factory.create(editing_tools)
+            editingcontext = editingcontexts.others
+        self.editor = editor_factory.create(editingcontext)
         self.editor.set_text(self.file.read())
         self.modification_observers = []
         self.editor.add_modification_observer(self._editor_was_modified)

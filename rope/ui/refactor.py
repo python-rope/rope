@@ -119,7 +119,7 @@ class RenameDialog(RefactoringDialog):
     def __init__(self, context, title, is_local=False):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
-        super(RenameDialog, self).__init__(editor.refactoring, title)
+        super(RenameDialog, self).__init__(_get_refactoring(context), title)
         self.is_local = is_local
         self.renamer = rope.refactor.rename.RenameRefactoring(
             context.get_core().get_open_project().get_pycore(), 
@@ -153,13 +153,14 @@ def transform_module_to_package(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        editor.refactoring.transform_module_to_package(resource)
+        _get_refactoring(context).transform_module_to_package(resource)
 
 class ExtractDialog(RefactoringDialog):
     
     def __init__(self, context, do_extract, kind):
         editor = context.get_active_editor().get_editor()
-        super(ExtractDialog, self).__init__(editor.refactoring, 'Extract ' + kind)
+        super(ExtractDialog, self).__init__(_get_refactoring(context),
+                                            'Extract ' + kind)
         self.do_extract = do_extract
         self.kind = kind
     
@@ -205,7 +206,7 @@ class IntroduceFactoryDialog(RefactoringDialog):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         super(IntroduceFactoryDialog, self).__init__(
-            editor.refactoring, 'Introduce Factory Method Refactoring')
+            _get_refactoring(context), 'Introduce Factory Method Refactoring')
         self.introducer = rope.refactor.introduce_factory.IntroduceFactoryRefactoring(
             context.get_core().get_open_project().get_pycore(), 
             resource, editor.get_current_offset())
@@ -259,18 +260,16 @@ def _confirm_action(title, message, action):
     ok_button.focus_set()
 
 def undo_refactoring(context):
-    if context.get_core().get_open_project():
+    if context.project:
         def undo():
-            context.get_core().get_open_project().get_pycore().\
-                    get_refactoring().undo()
+            context.project.get_pycore().get_refactoring().undo()
         _confirm_action('Undoing Refactoring',
                         'Undo refactoring might change many files. Proceed?',
                         undo)
 def redo_refactoring(context):
-    if context.get_core().get_open_project():
+    if context.project:
         def redo():
-            context.get_core().get_open_project().get_pycore().\
-                    get_refactoring().redo()
+            context.project.get_pycore().get_refactoring().redo()
         _confirm_action('Redoing Refactoring',
                         'Redo refactoring might change many files. Proceed?',
                         redo)
@@ -317,7 +316,7 @@ class MoveDialog(RefactoringDialog):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
-        super(MoveDialog, self).__init__(editor.refactoring, 'Move Refactoring')
+        super(MoveDialog, self).__init__(_get_refactoring(context), 'Move Refactoring')
         self.mover = rope.refactor.move.MoveRefactoring(
             context.get_core().get_open_project().get_pycore(), 
             resource, editor.get_current_offset())
@@ -396,22 +395,26 @@ def inline(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        editor.refactoring.inline_local_variable(resource, editor.get_current_offset())
+        _get_refactoring(context).inline_local_variable(resource, editor.get_current_offset())
     
 def encapsulate_field(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        editor.refactoring.encapsulate_field(resource, editor.get_current_offset())
+        _get_refactoring(context).encapsulate_field(
+            resource, editor.get_current_offset())
     
 def convert_local_to_field(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        editor.refactoring.convert_local_variable_to_field(
+        _get_refactoring(context).convert_local_variable_to_field(
             resource, editor.get_current_offset())
+
+def _get_refactoring(context):
+    return context.project.get_pycore().get_refactoring()
 
 
 actions = []
