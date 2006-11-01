@@ -1,0 +1,73 @@
+======================
+ Contributing to Rope
+======================
+
+
+Get Involved!
+=============
+
+Rope was started because of the lack of good refactoring tools for
+python.  But after observing the python IDE limitations we grew
+bigger ideas in our head.
+
+If you want to have more a powerful python IDE and you have big ideas
+in your head, too, you can get involved.
+
+
+How to Help Rope?
+=================
+
+* Report bugs and request features in `rope project page`_.
+* Submit patches bugs or new features.
+
+.. _rope project page: http://sf.net/projects/rope
+
+
+Rope Structure
+==============
+
+Rope package structure::
+
+  rope
+    base
+    refactor
+    ide
+    ui
+
+Have a look at ``__init__.py`` of packages for finding their
+description.
+
+
+Wish List
+=========
+
+Right now rope uses Tkinter for its GUI.  But Tkinter, as many has
+complained about, looks very bad and is not suitable for writing an
+IDE.  The UI parts of rope, ie. `rope.ui` package, is a layer on top
+of other core parts of rope.  When I started rope I hoped that
+someday the IDE and UI parts of rope (`rope.ui` and `rope.ide`
+packages) would be developed by other developers and I still do hope
+so.  If you're interested, start sending patches or if you want to
+use some other graphical library like wxPython send a basic but
+working UI.
+
+
+Submitting patches
+==================
+
+We're always grateful for patches to Rope's code. Indeed, bug
+reports with associated patches will get fixed *far* more quickly than
+those without patches.
+
+Patch style
+-----------
+
+Always use the latest version of files from rope Subversion repository
+at https://rope.svn.sourceforge.net/svnroot/rope
+
+* Submit patches in the format returned by the ``svn diff`` command.
+* Follow :PEP:`8`.
+* Use four spaces for indentation.
+* Include good unit-tests if possible.
+* Rope test suite should pass after patching (``python runtests.py``).
+

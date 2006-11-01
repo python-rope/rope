@@ -52,9 +52,6 @@ class PythonEditingTools(EditingTools):
 
 class ReSTEditingTools(EditingTools):
 
-    def __init__(self):
-        pass
-
     def create_indenter(self, editor):
         return rope.ui.indenter.NormalIndenter(editor)
 
@@ -63,9 +60,6 @@ class ReSTEditingTools(EditingTools):
     
 
 class NormalEditingTools(EditingTools):
-
-    def __init__(self):
-        pass
 
     def create_indenter(self, editor):
         return rope.ui.indenter.NormalIndenter(editor)

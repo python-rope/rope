@@ -1,18 +1,16 @@
 Before 0.3 Release
 ==================
 
-- Eliminating `Editor.refactoring`; Use editing contexts
-- Saving variables in contexts
-- Remove `refactoring`, `codeassist` and `outline` from `editingtools` 
+- Adding ``contributing.txt``
 
 * Encapsulating editor fields in codeassist dialog
 * Supporting UI tests
 
 * ``overview.txt``
-* ``contributing.txt``
 * Better pydoc wrapping
 * Better `ropetest` package structure
 * Should we release a library, too?
+* More tests on nt
 
 
 Remaining Stories
