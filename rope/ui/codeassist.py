@@ -91,11 +91,11 @@ def do_code_assist(context):
         import string
         if len(event.char) == 1 and (event.char.isalnum() or
                                      event.char in string.punctuation):
-            editor.text.insert(INSERT, event.char)
+            editor.text.insert(Tkinter.INSERT, event.char)
         elif event.keysym == 'space':
-            editor.text.insert(INSERT, ' ')
+            editor.text.insert(Tkinter.INSERT, ' ')
         elif event.keysym == 'BackSpace':
-            editor.text.delete(INSERT + '-1c')
+            editor.text.delete(Tkinter.INSERT + '-1c')
         elif editor.text.compare(initial_cursor_position, '>', Tkinter.INSERT):
             toplevel.destroy()
             return

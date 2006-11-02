@@ -1,16 +1,14 @@
 Before 0.3 Release
 ==================
 
-- Adding ``contributing.txt``
-
-* Encapsulating editor fields in codeassist dialog
-* Supporting UI tests
-
 * ``overview.txt``
+* Should we release a library, too?
+
+  * `How to use rope as a library` doc
+
 * Better pydoc wrapping
 * Better `ropetest` package structure
-* Should we release a library, too?
-* More tests on nt
+* Testing on nt
 
 
 Remaining Stories

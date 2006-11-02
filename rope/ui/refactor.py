@@ -362,7 +362,7 @@ def organize_imports(context):
     if not context.get_active_editor():
         return
     file_editor = context.get_active_editor()
-    import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
+    import_organizer = _get_refactoring(context).get_import_organizer()
     if import_organizer:
         import_organizer.organize_imports(file_editor.get_file())
 
@@ -370,7 +370,7 @@ def expand_star_imports(context):
     if not context.get_active_editor():
         return
     file_editor = context.get_active_editor()
-    import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
+    import_organizer = _get_refactoring(context).get_import_organizer()
     if import_organizer:
         import_organizer.expand_star_imports(file_editor.get_file())
 
@@ -378,7 +378,7 @@ def transform_froms_to_imports(context):
     if not context.get_active_editor():
         return
     file_editor = context.get_active_editor()
-    import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
+    import_organizer = _get_refactoring(context).get_import_organizer()
     if import_organizer:
         import_organizer.transform_froms_to_imports(file_editor.get_file())
 
@@ -386,7 +386,7 @@ def transform_relatives_to_absolute(context):
     if not context.get_active_editor():
         return
     file_editor = context.get_active_editor()
-    import_organizer = file_editor.get_editor().refactoring.get_import_organizer()
+    import_organizer = _get_refactoring(context).get_import_organizer()
     if import_organizer:
         import_organizer.transform_relatives_to_absolute(file_editor.get_file())
 

@@ -62,6 +62,7 @@ Possible Plans For 0.4
 * Change method signature
 * Implicit interfaces
 * Handling built-in types
+* High level refactorings
 
 
 Hot Topics
@@ -81,6 +82,50 @@ To Be Discussed
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
+
+
+Using Rope As A Library
+=======================
+
+Here is a sample session.::
+
+  # Creating a project
+  >>> from rope.base.project import Project
+  >>> project = Project('.')
+
+  >>> pycore = project.get_pycore()
+  >>> refactoring = project.get_pycore().get_refactoring()
+
+  # Working with files to create and write a module
+  >>> root = project.get_root_folder()
+  >>> mod1 = root.create_file('mod1.py')
+  >>> mod1.write('a_var = 10\n')
+
+  # Creating modules and packages using `PyCore` objects
+  >>> pkg = pycore.create_package(root, 'pkg')
+  >>> mod2 = pycore.create_module(pkg, 'mod2')
+  >>> assert mod2 == pycore.find_module('pkg.mod2')
+  >>> mod2.write('import mod1\nprint mod1.a_var\n')
+
+  # Performing rename refactoring on `mod1.a_var`
+  >>> refactoring.rename(mod1, 1, 'new_var')
+  >>> mod1.read()
+  u'new_var = 10\n'
+  >>> mod2.read()
+  u'import mod1\nprint mod1.new_var\n'
+  
+  # Undoing rename refactoring
+  >>> refactoring.undo()
+  >>> mod1.read()
+  u'a_var = 10\n'
+  >>> mod2.read()
+  u'import mod1\nprint mod1.a_var\n'
+
+  >>> pkg.remove()
+  >>> mod1.remove()
+
+The main problem for using rope is that rope should perform the
+changes to the files, since it has to update its stored information.
 
 
 Designing Refactorings to Be Used in IDEs

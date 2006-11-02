@@ -7,18 +7,19 @@ Get Involved!
 =============
 
 Rope was started because of the lack of good refactoring tools for
-python.  But after observing the python IDE limitations we grew
-bigger ideas in our head.
+python.  But after observing python IDE limitations we grew bigger
+ideas in our head.
 
-If you want to have more a powerful python IDE and you have big ideas
-in your head, too, you can get involved.
+If you want to have more a powerful python IDE and have big ideas
+in your head, you are welcome to get involved.
 
 
 How to Help Rope?
 =================
 
+* Use rope.
 * Report bugs and request features in `rope project page`_.
-* Submit patches bugs or new features.
+* Submit patches for bugs or new features.
 
 .. _rope project page: http://sf.net/projects/rope
 
@@ -55,9 +56,9 @@ working UI.
 Submitting patches
 ==================
 
-We're always grateful for patches to Rope's code. Indeed, bug
-reports with associated patches will get fixed *far* more quickly than
-those without patches.
+We're always grateful for patches to Rope's code.  Indeed, bug
+reports with associated patches will get fixed *far* more quickly
+than those without patches.
 
 Patch style
 -----------

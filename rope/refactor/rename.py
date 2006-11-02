@@ -1,4 +1,3 @@
-
 import rope.base.codeanalyze
 import rope.base.pynames
 import rope.base.pyobjects

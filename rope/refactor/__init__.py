@@ -4,7 +4,6 @@ This package contains modules that perform python
 refactorings.
 
 """
-
 import rope.refactor.importutils
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
@@ -19,6 +18,28 @@ from rope.refactor.localtofield import ConvertLocalToFieldRefactoring
 
 
 class PythonRefactoring(object):
+    """A facade for Rope refactorings
+    
+    This class acts as a facade for refactorings supported by rope.
+    But this interface is not designed for IDEs.  The methods
+    perform a refactoring in one step, while IDEs usually do
+    refactorings in these steps:
+    
+    1. Collect some initial data, like initial name in rename
+       refactoring, and report found problems.
+    2. Ask needed information, like new name in rename refactoring,
+       from the user.
+    3. Analyze the the refactoring and preview the changes this
+       refactoring makes or report problems.
+    4. Commit the changes.
+    
+    If you need these steps you may use the modules under `rope.
+    refactor` yourself.  The refactoring classes have a `get_changes`
+    method that returns the changes this refactoring makes (step 3).
+    you should use `add_and_commit_changes` to use refactoring undo/
+    redo.
+    
+    """
 
     def __init__(self, pycore):
         self.pycore = pycore
@@ -91,6 +112,7 @@ class PythonRefactoring(object):
         self.add_and_commit_changes(changes)
         
     def add_and_commit_changes(self, changes):
+        """Commit the changes and add them to undo list"""
         self._undo.add_change(changes)
         changes.do()
         
