@@ -1,0 +1,93 @@
+======
+ rope
+======
+
+``a python refactoring IDE ...``
+
+
+Overview
+========
+
+*rope* is a python IDE. Its main goal is to provide refactorings and
+code assists. It is written in python and uses the Tkinter library.
+
+
+Status
+======
+
+*rope* is just at the beginning of its path. Features implemented so
+far:
+
+* Refactorings
+
+  * Rename class/function/module/package/method/local
+    variables/keyword args
+  * Extract method
+  * Extract variable
+  * Move class/function/module/package
+  * Introduce factory method
+  * Transform module to package
+  * Inline local variable
+  * Encapsulate field
+  * Convert local variable to field
+  * Previewing refactorings
+  * Undo/redo refactorings
+
+* Code-assists
+
+  * Go to definition
+  * Quick outline
+  * Show PyDoc
+  * Proposing templates in completions
+  * Import tools
+  
+    * Change relative imports to absolute
+    * Change from imports to normal imports
+    * Expand ``from ... import *`` imports
+    * Remove unused and duplicate imports(organize imports)
+
+* Auto-completion
+
+  * Global and local variables and imports
+  * Builtins and keywords
+  * Attributes of objects with known type
+
+* Editing and IDE tools
+
+  * Unit-test running view
+  * Python and reST highlighting
+  * Multiple editers
+  * Basic SVN support using pysvn
+  * Correcting indentation
+  * Project tree view
+  * Basic plug-in support
+
+* Object Inference
+
+  * Simple dynamic object inference
+  * Function argument dynamic object inference
+  * Following assignments
+  * Simple function return value object inference
+
+
+Download
+========
+
+You can download rope from `project download page`_.
+
+
+Feedback
+========
+
+Send your bug reports, feature requests and patches in rope's
+`sourceforge.net project page`_.
+
+
+License
+=======
+
+rope is under the terms of GNU GPL(GNU General Public License).
+
+.. _project download page: http://sf.net/projects/rope/files
+.. _sourceforge.net project page: http://sf.net/projects/rope
+

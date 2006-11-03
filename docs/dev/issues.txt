@@ -60,8 +60,8 @@ Possible Plans For 0.4
 * Inline method
 * Move field/methods
 * Change method signature
-* Implicit interfaces
 * Handling built-in types
+* Implicit interfaces
 * High level refactorings
 
 
@@ -104,8 +104,10 @@ Here is a sample session.::
   # Creating modules and packages using `PyCore` objects
   >>> pkg = pycore.create_package(root, 'pkg')
   >>> mod2 = pycore.create_module(pkg, 'mod2')
-  >>> assert mod2 == pycore.find_module('pkg.mod2')
   >>> mod2.write('import mod1\nprint mod1.a_var\n')
+
+  # We can use `PyCore.find_module` for finding modules, too
+  >>> assert mod2 == pycore.find_module('pkg.mod2')
 
   # Performing rename refactoring on `mod1.a_var`
   >>> refactoring.rename(mod1, 1, 'new_var')
@@ -181,6 +183,7 @@ A Common Refactoring Interface
 ------------------------------
 
 ::
+
   class Refactoring(object):
       
       def __init__(self, *args, **kwds):
@@ -264,8 +267,8 @@ Rejecting Smalltalk `RefactoringBrowser` Approach
 
 We can't use smalltalks approach because it requires the whole
 tests suite to be run before each refactoring but this does not
-seem appealing because it takes time and considering the added
-time of tracing each function call it takes even more.
+seem appealing because it takes longer considering the additional
+time of tracing each function call.
 
 But I think the same problem existed in smalltalk, too.  Look what
 they did to overcome this problem.  You can also use a strategy

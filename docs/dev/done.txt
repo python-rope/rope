@@ -12,7 +12,7 @@
 > Public Release 0.3rc1 : October 29, 2006
 
 
-- Running unit tests view : October 28, 2006
+- Unit-test running view : October 28, 2006
 
 
 - Previewing refactoring changes : October 25, 2006

@@ -4,8 +4,8 @@ import rope.ui.core
 import rope.ui.testview
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
-from rope.ui.uihelpers import TreeView, TreeViewHandle
-from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
+from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
+                               EnhancedListHandle)
 
 
 def do_correct_line_indentation(context):

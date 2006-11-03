@@ -1,9 +1,7 @@
 import Tkinter
-import ScrolledText
 
 import rope.refactor.importutils
 import rope.ui.core
-import rope.refactor.change
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 from rope.ui.uihelpers import TreeViewHandle, TreeView, DescriptionList
