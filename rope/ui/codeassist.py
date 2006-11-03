@@ -1,4 +1,5 @@
 import Tkinter
+import ScrolledText
 
 import rope.ui.core
 import rope.ui.testview
@@ -175,16 +176,20 @@ def do_show_doc(context):
     if doc is not None:
         toplevel = Tkinter.Toplevel()
         toplevel.title('Show Doc')
-        doc_text = Tkinter.Label(toplevel, text='\n%s\n' % doc, justify=Tkinter.LEFT, 
-                                 relief=Tkinter.GROOVE, width=80)
-        doc_text.grid(sticky=Tkinter.W+Tkinter.N)
+        doc_text = ScrolledText.ScrolledText(toplevel, height=15, width=80)
+        doc_text.grid(row=0, column=1,
+                      sticky=Tkinter.N + Tkinter.E + Tkinter.W + Tkinter.S)
+        doc_text.insert('0.0', doc)
+        doc_text.mark_set('insert', '0.0')
+        doc_text['state'] = Tkinter.DISABLED
+
         def close(event=None):
             toplevel.destroy()
         toplevel.bind('<Escape>', close)
         toplevel.bind('<Control-g>', close)
         toplevel.bind('<FocusOut>', close)
         toplevel.grab_set()
-        toplevel.focus_set()
+        doc_text.focus_set()
 
 def do_run_module(context):
     if context.get_active_editor():

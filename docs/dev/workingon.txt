@@ -1,12 +1,14 @@
 Before 0.3 Release
 ==================
 
+- Better pydoc wrapping; Using ScrolledText
+- Test `difflib` for `Editor.set_text`
+
 * ``overview.txt``
 * Should we release a library, too?
 
   * `How to use rope as a library` doc
 
-* Better pydoc wrapping
 * Better `ropetest` package structure
 * Testing on nt
 
@@ -15,7 +17,6 @@ Remaining Stories
 =================
 
 * Changing `uihelpers` tree and list to support mouse clicks
-* Spaces in module path for running modules
 * Handling `AssList` for inline variable and encapsulate field
 * Changing refactor modules to use `sourcetools.add_methods`
 * Adding ``add_statements(method, statements)``
@@ -31,7 +32,6 @@ Remaining Stories
   ``COPYING`` to help menu; Adding readonly mode?
 * Extract method and return statements
 * Import addition when adding a relative with an absolute import
-* Test `difflib` for `Editor.set_text`
 * Caching `PyCore.classes`
 * Handling `Scope.lookup` for ::
 

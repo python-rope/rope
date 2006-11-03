@@ -1,8 +1,8 @@
 import os
 
-import Tkinter
 import tkFont
 import ScrolledText
+from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT
 
 import rope.ide.codeassist
 import rope.ui.editingtools
@@ -88,10 +88,10 @@ class GraphicalEditor(object):
         self.text.bind('<Control-x><r>', do_redo)
         def do_goto_start(event):
             self.goto_start()
-            self.text.see(Tkinter.INSERT)
+            self.text.see(INSERT)
         def do_goto_end(event):
             self.goto_end()
-            self.text.see(Tkinter.INSERT)
+            self.text.see(INSERT)
         self.text.bind('<Alt-less>', do_goto_start)
         self.text.bind('<Alt-KeyPress->>', do_goto_end)
         def escape(event):
@@ -127,7 +127,7 @@ class GraphicalEditor(object):
                 self.searcher.shorten_keyword()
                 return 'break'
             line_starting = self.text.get('insert linestart', 'insert')
-            current_char = self.text.get(Tkinter.INSERT)
+            current_char = self.text.get(INSERT)
             if line_starting.isspace() and (not current_char.isspace() 
                                             or current_char == '' or current_char == '\n'):
                 self.indenter.deindent(self.get_current_line_number())
@@ -151,13 +151,13 @@ class GraphicalEditor(object):
         start = ''
         end = ''
         try:
-            start = self.text.index(Tkinter.SEL_FIRST)
-            end = self.text.index(Tkinter.SEL_LAST)
-        except Tkinter.TclError:
+            start = self.text.index(SEL_FIRST)
+            end = self.text.index(SEL_LAST)
+        except TclError:
             pass
         if start == '' or end == '':
             start = self.text.index('mark')
-            end = self.text.index(Tkinter.INSERT)
+            end = self.text.index(INSERT)
         if self.text.compare(start, '>', end):
             start, end = end, start
         start_offset = self.get_offset(start)
@@ -169,18 +169,18 @@ class GraphicalEditor(object):
             self.searcher.end_searching()
 
     def goto_line(self, lineno, colno=0):
-        self.text.mark_set(Tkinter.INSERT, '%d.%d' % (lineno, colno))
-        self.text.see(Tkinter.INSERT)
+        self.text.mark_set(INSERT, '%d.%d' % (lineno, colno))
+        self.text.see(INSERT)
 
     def _insert_new_line(self):
-        self.text.insert(Tkinter.INSERT, '\n')
+        self.text.insert(INSERT, '\n')
         lineno = self.get_current_line_number()
         self.indenter.entering_new_line(lineno)
         first_non_space = 0
         while self.text.get('%d.%d' % (lineno, first_non_space)) == ' ':
             first_non_space += 1
-        self.text.mark_set(Tkinter.INSERT, '%d.%d' % (lineno, first_non_space))
-        self.text.see(Tkinter.INSERT)
+        self.text.mark_set(INSERT, '%d.%d' % (lineno, first_non_space))
+        self.text.see(INSERT)
     
     def _editor_modified(self, event):
         if self.modified_flag:
@@ -198,7 +198,7 @@ class GraphicalEditor(object):
 
     def correct_line_indentation(self):
         lineno = self.get_current_line_number()
-        cols_from_end = len(self.text.get(Tkinter.INSERT, 'insert lineend'))
+        cols_from_end = len(self.text.get(INSERT, 'insert lineend'))
         self.indenter.correct_indentation(lineno)
         from_end = '%d.end -%dc' % (lineno, cols_from_end)
         first_non_space = 0
@@ -207,30 +207,53 @@ class GraphicalEditor(object):
         new_insert = '%d.%d' % (lineno, first_non_space)
         if self.text.compare(new_insert, '<', from_end):
             new_insert = from_end
-        self.text.mark_set(Tkinter.INSERT, new_insert)
-        self.text.see(Tkinter.INSERT)
+        self.text.mark_set(INSERT, new_insert)
+        self.text.see(INSERT)
 
     def get_text(self):
         return self.text.get('1.0', 'end-1c')
 
     def set_text(self, text, reset_editor=True):
-        initial_position = self.text.index(Tkinter.INSERT)
-        self.text.delete('1.0', Tkinter.END)
-        self.text.insert('1.0', text)
-        self.text.mark_set(Tkinter.INSERT, initial_position)
-        self.text.see(Tkinter.INSERT)
+        initial_position = self.text.index(INSERT)
+        # `_change_text2` performs much better than `_change_text1`
+        # when the number of changes is few
+        self._change_text1(text)
+        self.text.mark_set(INSERT, initial_position)
+        self.text.see(INSERT)
         if reset_editor:
             self.text.edit_reset()
             self.text.edit_modified(False)
 
+    def _change_text1(self, text):
+        self.text.delete('1.0', END)
+        self.text.insert('1.0', text)
+
+    def _change_text2(self, text):
+        import difflib
+        old_text = self.get_text()
+        differ = difflib.Differ()
+        current_line = 1
+        for line in differ.compare(old_text.splitlines(True),
+                                   text.splitlines(True)):
+            if line.startswith(' '):
+                current_line += 1
+                continue
+            if line.startswith('+'):
+                self.text.insert('%s.0' % current_line, line[2:])
+                current_line += 1
+                continue
+            if line.startswith('-'):
+                self.text.delete('%s.0' % current_line, '%s.0' % (current_line + 1))
+                continue
+    
     def get_start(self):
         return GraphicalTextIndex(self, '1.0')
 
     def get_insert(self):
-        return GraphicalTextIndex(self, Tkinter.INSERT)
+        return GraphicalTextIndex(self, INSERT)
 
     def get_end(self):
-        return GraphicalTextIndex(self, Tkinter.END)
+        return GraphicalTextIndex(self, END)
 
     def get_relative(self, textIndex, offset):
         return GraphicalTextIndex(self, self._go(textIndex._getIndex(), offset))
@@ -251,10 +274,10 @@ class GraphicalEditor(object):
         return int(str(self.text.index(index)).split('.')[1])
 
     def set_insert(self, textIndex):
-        self.text.mark_set(Tkinter.INSERT, textIndex._getIndex())
+        self.text.mark_set(INSERT, textIndex._getIndex())
 
     def get(self, start=None, end=None):
-        startIndex = Tkinter.INSERT
+        startIndex = INSERT
         endIndex = None
         if start is not None:
             startIndex = start._getIndex()
@@ -268,7 +291,7 @@ class GraphicalEditor(object):
         self.text.insert(textIndex._getIndex(), text)
 
     def delete(self, start = None, end = None):
-        startIndex = Tkinter.INSERT
+        startIndex = INSERT
         if start is not None:
             startIndex = start._getIndex()
             if start == self.get_end():
@@ -279,7 +302,7 @@ class GraphicalEditor(object):
         self.text.delete(startIndex, endIndex)
         
     def _get_next_word_index_old(self):
-        result = Tkinter.INSERT
+        result = INSERT
         while self.text.compare(result, '!=', 'end-1c') and \
               not self.text.get(result)[0].isalnum():
             result = str(self.text.index(result + '+1c'))
@@ -306,22 +329,22 @@ class GraphicalEditor(object):
         return 'insert +%dc' % offset
 
     def next_word(self):
-        self.text.mark_set(Tkinter.INSERT, self._get_next_word_index())
-        self.text.see(Tkinter.INSERT)
+        self.text.mark_set(INSERT, self._get_next_word_index())
+        self.text.see(INSERT)
     
     def _change_next_word(self, function):
         next_word = self.text.index(self._get_next_word_index())
         while self.text.compare('insert', '<', 'end -1c') and \
-              not self.text.get(Tkinter.INSERT).isalnum() and \
+              not self.text.get(INSERT).isalnum() and \
               self.text.compare('insert', '<', next_word):
-            self.text.mark_set(Tkinter.INSERT, 'insert +1c')
+            self.text.mark_set(INSERT, 'insert +1c')
         
         if self.text.compare('insert', '!=', next_word):
-            word = self.text.get(Tkinter.INSERT, next_word)
-            self.text.delete(Tkinter.INSERT, next_word)
-            self.text.insert(Tkinter.INSERT, function(word))
-            self.text.mark_set(Tkinter.INSERT, next_word)
-        self.text.see(Tkinter.INSERT)
+            word = self.text.get(INSERT, next_word)
+            self.text.delete(INSERT, next_word)
+            self.text.insert(INSERT, function(word))
+            self.text.mark_set(INSERT, next_word)
+        self.text.see(INSERT)
     
     def upper_next_word(self):
         self._change_next_word(str.upper)
@@ -333,7 +356,7 @@ class GraphicalEditor(object):
         self._change_next_word(str.capitalize)
 
     def _get_prev_word_index_old(self):
-        result = Tkinter.INSERT
+        result = INSERT
         while not self.text.compare(result, '==', '1.0') and \
               not self.text.get(result + '-1c')[0].isalnum():
             result = str(self.text.index(result + '-1c'))
@@ -363,14 +386,14 @@ class GraphicalEditor(object):
         return 'insert linestart +%dc' % offset
 
     def prev_word(self):
-        self.text.mark_set(Tkinter.INSERT, self._get_prev_word_index())
-        self.text.see(Tkinter.INSERT)
+        self.text.mark_set(INSERT, self._get_prev_word_index())
+        self.text.see(INSERT)
 
     def delete_next_word(self):
-        self.text.delete(Tkinter.INSERT, self._get_next_word_index())
+        self.text.delete(INSERT, self._get_next_word_index())
 
     def delete_prev_word(self):
-        self.text.delete(self._get_prev_word_index(), Tkinter.INSERT)
+        self.text.delete(self._get_prev_word_index(), INSERT)
 
     def getWidget(self):
         return self.text
@@ -383,13 +406,13 @@ class GraphicalEditor(object):
     def undo(self):
         try:
             self.text.edit_undo()
-        except Tkinter.TclError:
+        except TclError:
             pass
 
     def redo(self):
         try:
             self.text.edit_redo()
-        except Tkinter.TclError:
+        except TclError:
             pass
 
     def goto_start(self):
@@ -402,51 +425,51 @@ class GraphicalEditor(object):
         self.text.event_generate(event)
 
     def set_mark(self):
-        self.text.mark_set('mark', Tkinter.INSERT)
+        self.text.mark_set('mark', INSERT)
 
     def clear_mark(self):
         self.text.mark_unset('mark')
 
     def _select_region(self):
         start = 'mark'
-        end = Tkinter.INSERT
+        end = INSERT
         if self.text.compare(start, '>', end):
             start, end = end, start
-        self.text.tag_add(Tkinter.SEL, start, end)
+        self.text.tag_add(SEL, start, end)
 
     def copy_region(self):
         try:
             self._select_region()
             self.text.event_generate('<<Copy>>')
-            self.text.tag_remove(Tkinter.SEL, '1.0', Tkinter.END)
-        except Tkinter.TclError:
+            self.text.tag_remove(SEL, '1.0', END)
+        except TclError:
             pass
 
     def cut_region(self):
         try:
             self._select_region()
             self.text.event_generate('<<Cut>>')
-            self.text.see(Tkinter.INSERT)
-        except Tkinter.TclError:
+            self.text.see(INSERT)
+        except TclError:
             pass
 
     def paste(self):
         self.text.event_generate('<<Paste>>')
-        self.text.see(Tkinter.INSERT)
+        self.text.see(INSERT)
 
     def swap_mark_and_insert(self):
         try:
             mark = self.text.index('mark')
             self.set_mark()
-            self.text.mark_set(Tkinter.INSERT, mark)
-            self.text.see(Tkinter.INSERT)
-        except Tkinter.TclError:
+            self.text.mark_set(INSERT, mark)
+            self.text.see(INSERT)
+        except TclError:
             pass
     
     def kill_line(self):
         if self.text.compare('insert', '>=', 'end -1c'):
             return
-        text = self.text.get(Tkinter.INSERT, 'insert lineend')
+        text = self.text.get(INSERT, 'insert lineend')
         if text == '':
             self.text.delete('insert')
         else:
@@ -503,13 +526,13 @@ class GraphicalEditor(object):
     def highlight_match(self, match):
         if not match:
             return
-        self.text.tag_remove(Tkinter.SEL, '1.0', Tkinter.END)
-        self.text.tag_add(Tkinter.SEL, match.start._getIndex(), match.end._getIndex())
+        self.text.tag_remove(SEL, '1.0', END)
+        self.text.tag_add(SEL, match.start._getIndex(), match.end._getIndex())
         if match.side == 'right':
-            self.text.mark_set(Tkinter.INSERT, match.end._getIndex())
+            self.text.mark_set(INSERT, match.end._getIndex())
         else:
-            self.text.mark_set(Tkinter.INSERT, match.start._getIndex())
-        self.text.see(Tkinter.INSERT)
+            self.text.mark_set(INSERT, match.start._getIndex())
+        self.text.see(INSERT)
 
 
     def start_searching(self, forward):
@@ -553,13 +576,13 @@ class GraphicalEditor(object):
         return self.indenter
 
     def get_current_line_number(self):
-        return self._get_line_from_index(Tkinter.INSERT)
+        return self._get_line_from_index(INSERT)
 
     def get_current_column_number(self):
-        return self._get_column_from_index(Tkinter.INSERT)
+        return self._get_column_from_index(INSERT)
 
     def get_current_offset(self):
-        return self.get_offset(Tkinter.INSERT)
+        return self.get_offset(INSERT)
     
     def _get_offset1(self, index):
         # adding up line lengths
@@ -701,9 +724,9 @@ class _TextChangeInspector(object):
     def _edit(self, *args):
         if len(args) < 1 or args[0] not in ['undo', 'redo']:
             return self.old_edit(*args)
-        start = self.text.index(Tkinter.INSERT)
+        start = self.text.index(INSERT)
         result = self.old_edit(*args)
-        end = self.text.index(Tkinter.INSERT)
+        end = self.text.index(INSERT)
         if self.text.compare(end, '<', start):
             start, end = end, start
         if self.changed_region is not None:
@@ -762,7 +785,7 @@ class GraphicalLineEditor(LineEditor):
         return self.editor.text.get('%d.0' % line_number, '%d.0 lineend' % line_number)
 
     def length(self):
-        result = self.editor._get_line_from_index(Tkinter.END) - 1
+        result = self.editor._get_line_from_index(END) - 1
         return result
 
     def indent_line(self, line_number, count):
