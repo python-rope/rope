@@ -3,6 +3,7 @@ import ScrolledText
 
 import rope.ui.core
 import rope.ui.testview
+import rope.ide.codeassist
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
 from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
@@ -57,7 +58,15 @@ class _CompletionListHandle(EnhancedListHandle):
         self.result = code_assist_result
 
     def entry_to_string(self, proposal):
-        return proposal.kind[0].upper() + '  ' + proposal.name
+        mode = '  '
+        if isinstance(proposal, rope.ide.codeassist.TemplateProposal):
+            mode = 'T_'
+        if isinstance(proposal, rope.ide.codeassist.CompletionProposal):
+            if proposal.type is None:
+                mode = proposal.kind[0].upper() + '_'
+            else:
+                mode = proposal.kind[0].upper() + proposal.type[0].upper()
+        return mode + '  ' + proposal.name
 
     def canceled(self):
         self.toplevel.destroy()

@@ -1,13 +1,9 @@
 import unittest
 import Tkinter
 
-import rope.ui.editingtools
-from rope.ui.core import Core
-from ropetest.ui.mockeditortest import (GraphicalEditorFactory, MockEditorFactory,
+from ropetest.ui.mockeditortest import (GraphicalEditorFactory,
                                         get_sample_editingcontext)
 from rope.ui.indenter import PythonCodeIndenter
-from rope.ui.editor import _TextChangeInspector
-from rope.ide.codeassist import CodeAssist
 
 
 class GraphicalEditorTest(unittest.TestCase):

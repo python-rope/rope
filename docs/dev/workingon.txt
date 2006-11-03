@@ -1,14 +1,9 @@
 Before 0.3 Release
 ==================
 
-- Better pydoc wrapping; Using ScrolledText
-- Test `difflib` for `Editor.set_text`
-
+* Decide when to use `difflib` in `Editor.set_text`
 * ``overview.txt``
-* Should we release a library, too?
-
-  * `How to use rope as a library` doc
-
+* `How to use rope as a library` doc
 * Better `ropetest` package structure
 * Testing on nt
 

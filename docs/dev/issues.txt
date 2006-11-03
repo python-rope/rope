@@ -130,6 +130,59 @@ The main problem for using rope is that rope should perform the
 changes to the files, since it has to update its stored information.
 
 
+Better Code Assist
+==================
+
+
+Better Type Information
+-----------------------
+
+When asking about the attributes of an object, all of the proposals
+are `attribute` s.  The problem is that we indicate only information
+about the scope a variable is defined in.  We can provide more
+information about its type, too::
+
+  def _get_type(self, pyname):
+      if isinstance(pyname, DefinedName):
+          if isinstance(pyname.get_object(), PyFunction):
+              return 'function'
+          else:
+              return 'class'
+      return 'variable'
+
+
+So the type of completion proposals are:
+
+* ``variable``: AssignedName
+* ``class`` : DefinedName
+* ``function`` : DefinedName
+* ``imported``: ImportedModule, ImportedName
+* ``paramter``: Parameter
+* ``none``: keywords, builtins and ...
+
+Note that actually each pyname may hold any kind of object, but we are
+not reporting the object a pyname holds.  Instead we only say if this
+pyname is defined here and if it is defined what its type is.  That is
+pynames types do not use object inference information.
+
+
+And type of proposals can be:
+
+* ``global``
+* ``local``
+* ``builtin``
+* ``attribute``
+* ``keyword``
+* ``template``
+
+
+Better Sorting
+--------------
+
+Prefering defined objects.
+
+
+
 Designing Refactorings to Be Used in IDEs
 =========================================
 

@@ -16,13 +16,27 @@ Code Assist
 ===========
 
 You can complete names as you type by using code assist (``M-/``).
-The capital letter in the left shows the type of the proposal.  `L`
-indicates local variables, `G` global variables, `A` attributes, `T`
-templates, `K` keywords and `B` built-ins.
+The two capital letters in the left shows the type of the proposal.
+In the first column:
+
+* L: ``local``
+* G: ``global``
+* A: ``attribute``
+* T: ``template``
+* K: ``keyword``
+* B: ``built-in``
+
+In the second column if present:
+
+* V: ``variable``
+* C: ``class``
+* F: ``function``
+* I: ``imported``
+* P: ``paramter``
 
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit
-`rope.codeassist.PythonCodeAssist._get_default_templates` method.
+`rope.ide.codeassist.PythonCodeAssist._get_default_templates` method.
 
 Completions
 -----------

@@ -177,10 +177,6 @@ class ImportOrganizer(object):
             self.refactoring.add_and_commit_changes(changes)
     
 
-class NoRefactoring(object):
-    pass
-
-
 class Undo(object):
     
     def __init__(self):

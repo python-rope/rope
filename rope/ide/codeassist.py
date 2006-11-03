@@ -24,14 +24,20 @@ class CodeAssistProposal(object):
 class CompletionProposal(CodeAssistProposal):
     """A completion proposal
     
-    The kind instance variable shows the type of the completion and
-    can be global_variable, function, class
+    The `kind` instance variable shows the kind of the proposal and
+    can be ``global``, ``local``, ``builtin``, ``attribute``,
+    ``keyword``, and ``template``.
     
+    The `type` instance variable shows the type of the proposal and
+    can be ``variable``, ``class``, ``function``, ``imported`` ,
+    ``paramter`` and `None`.
+
     """
 
-    def __init__(self, name, kind):
+    def __init__(self, name, kind, type=None):
         super(CompletionProposal, self).__init__(name)
         self.kind = kind
+        self.type = type
 
 
 class TemplateProposal(CodeAssistProposal):
@@ -42,7 +48,6 @@ class TemplateProposal(CodeAssistProposal):
 
     def __init__(self, name, template):
         super(TemplateProposal, self).__init__(name)
-        self.kind = 'template'
         self.template = template
 
 
@@ -56,7 +61,8 @@ class Template(object):
 
     def __init__(self, template):
         self.template = template
-        self.var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>[a-zA-Z][\w]*)}')
+
+    var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>[a-zA-Z][\w]*)}')
 
     def variables(self):
         """Returns the list of variables sorted by their order of occurence in the template"""
@@ -102,14 +108,6 @@ class Proposals(object):
         self.completions = completions
         self.templates = templates
         self.start_offset = start_offset
-
-
-class CodeAssist(object):
-    pass
-
-
-class NoAssist(CodeAssist):
-    pass
 
 
 class _CodeCompletionCollector(object):
@@ -183,12 +181,13 @@ class _CodeCompletionCollector(object):
         result = {}
         pyname_finder = ScopeNameFinder(module_scope.pyobject)
         found_pyname = pyname_finder.get_pyname_in_scope(holding_scope,
-                                                    self.expression)
+                                                         self.expression)
         if found_pyname is not None:
             element = found_pyname.get_object()
             for name, pyname in element.get_attributes().iteritems():
                 if name.startswith(self.starting) or self.starting == '':
-                    result[name] = CompletionProposal(name, 'attribute')
+                    result[name] = CompletionProposal(
+                        name, 'attribute', self._get_pyname_type(pyname))
         return result
 
     def _get_undotted_completions(self, scope, result):
@@ -196,11 +195,27 @@ class _CodeCompletionCollector(object):
             self._get_undotted_completions(scope.parent, result)
         for name, pyname in scope.get_names().iteritems():
             if name.startswith(self.starting):
-                from rope.base.pycore import PyObject
                 kind = 'local'
                 if scope.get_kind() == 'Module':
                     kind = 'global'
-                result[name] = CompletionProposal(name, kind)
+                result[name] = CompletionProposal(
+                    name, kind, self._get_pyname_type(pyname))
+    
+    def _get_pyname_type(self, pyname):
+        if isinstance(pyname, rope.base.pynames.AssignedName):
+            return 'variable'
+        if isinstance(pyname, rope.base.pynames.DefinedName):
+            pyobject = pyname.get_object()
+            if isinstance(pyobject, rope.base.pyobjects.PyFunction):
+                return 'function'
+            else:
+                return 'class'
+        if isinstance(pyname, rope.base.pynames.ImportedName) or \
+           isinstance(pyname, rope.base.pynames.ImportedModule):
+            return 'imported'
+        if isinstance(pyname, rope.base.pynames.ParameterName):
+            return 'parameter'
+        
 
     def get_code_completions(self):
         try:
@@ -218,7 +233,7 @@ class _CodeCompletionCollector(object):
         return result
 
 
-class PythonCodeAssist(CodeAssist):
+class PythonCodeAssist(object):
 
     def __init__(self, project):
         self.project = project
@@ -404,19 +419,45 @@ class ProposalSorter(object):
     def get_sorted_proposal_list(self):
         local_proposals = []
         global_proposals = []
+        attribute_proposals = []
         others = []
         for proposal in self.proposals.completions:
             if proposal.kind == 'global':
                 global_proposals.append(proposal)
             elif proposal.kind == 'local':
                 local_proposals.append(proposal)
+            elif proposal.kind == 'attribute':
+                attribute_proposals.append(proposal)
             else:
                 others.append(proposal)
         template_proposals = self.proposals.templates
+        local_proposals.sort(self._pyname_proposal_cmp)
+        global_proposals.sort(self._pyname_proposal_cmp)
+        attribute_proposals.sort(self._pyname_proposal_cmp)
         result = []
         result.extend(local_proposals)
         result.extend(global_proposals)
+        result.extend(attribute_proposals)
         result.extend(template_proposals)
         result.extend(others)
         return result
-
+    
+    def _pyname_proposal_cmp(self, proposal1, proposal2):
+        preference = ['class', 'function', 'parameter',
+                      'variable', 'imported', None]
+        if proposal1.type != proposal2.type:
+            return cmp(preference.index(proposal1.type),
+                       preference.index(proposal2.type))
+        return self._compare_names_with_under_lines(proposal1.name, proposal2.name)
+    
+    def _compare_names_with_under_lines(self, name1, name2):
+        def underline_count(name):
+            result = 0
+            while result < len(name) and name[result] == '_':
+                result += 1
+            return result
+        underline_count1 = underline_count(name1)
+        underline_count2 = underline_count(name2)
+        if underline_count1 != underline_count2:
+            return cmp(underline_count1, underline_count2)
+        return cmp(name1, name2)

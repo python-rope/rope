@@ -13,13 +13,27 @@ def make_scripts():
 
 make_scripts()
 
+classifiers=['Development Status :: 3 - Alpha',
+             'Operating System :: OS Independent',
+             'Environment :: X11 Applications',
+             'Environment :: Win32 (MS Windows)',
+             # Have not been tested on MacOS
+             # 'Environment :: MacOS X',
+             'Intended Audience :: Developers',
+             'License :: OSI Approved :: GNU General Public License (GPL)',
+             'Natural Language :: English',
+             'Programming Language :: Python',
+             'Topic :: Software Development',
+             'Topic :: Text Editors :: Integrated Development Environments (IDE)']
+
 setup(name='rope',
       version=rope.VERSION,
-      description='A Python IDE ...',
+      description='a python refactoring IDE...',
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',
       packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
                 'rope.ide', 'rope.ui'],
-      scripts=['scripts/rope'])
+      scripts=['scripts/rope'],
+      classifiers=classifiers)
 

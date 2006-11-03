@@ -382,6 +382,47 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals('my_sample_function', sorted_proposals[1].name)
         self.assertEquals('my_sample_template', sorted_proposals[2].name)
 
+    def test_proposals_sorter_for_methods_and_attributes(self):
+        self.assist.add_template('my_sample_template', '')
+        code = 'class A(object):\n' + \
+               '    def __init__(self):\n' + \
+               '        self.my_a_var = 10\n' + \
+               '    def my_b_func(self):\n' + \
+               '        pass\n' + \
+               '    def my_c_func(self):\n' + \
+               '        pass\n' + \
+               'a_var = A()\n' + \
+               'a_var.my_'
+        result = self.assist.assist(code, len(code))
+        sorted_proposals = ProposalSorter(result).get_sorted_proposal_list()
+        self.assertEquals('my_b_func', sorted_proposals[0].name)
+        self.assertEquals('my_c_func', sorted_proposals[1].name)
+        self.assertEquals('my_a_var', sorted_proposals[2].name)
+
+    def test_proposals_sorter_for_global_methods_and_funcs(self):
+        code = 'def my_b_func(self):\n' + \
+               '    pass\n' + \
+               'my_a_var = 10\n' + \
+               'my_'
+        result = self.assist.assist(code, len(code))
+        sorted_proposals = ProposalSorter(result).get_sorted_proposal_list()
+        self.assertEquals('my_b_func', sorted_proposals[0].name)
+        self.assertEquals('my_a_var', sorted_proposals[1].name)
+
+    def test_proposals_sorter_underlined_methods(self):
+        self.assist.add_template('my_sample_template', '')
+        code = 'class A(object):\n' + \
+               '    def _my_func(self):\n' + \
+               '        self.my_a_var = 10\n' + \
+               '    def my_func(self):\n' + \
+               '        pass\n' + \
+               'a_var = A()\n' + \
+               'a_var.'
+        result = self.assist.assist(code, len(code))
+        sorted_proposals = ProposalSorter(result).get_sorted_proposal_list()
+        self.assertEquals('my_func', sorted_proposals[0].name)
+        self.assertEquals('_my_func', sorted_proposals[1].name)
+
     def test_get_pydoc_for_functions(self):
         src = 'def a_func():\n    """a function"""\n' \
               '    a_var = 10\na_func()'

@@ -3,10 +3,13 @@
 ===========
 
 
+- Better code assist proposal sorting and dialog : November 3, 2006
+
+
 - Extract method works with normal selection : October 31, 2006
 
 
-- Basic file encoding support : October 31, 2006
+- Basic python file encoding support : October 31, 2006
 
 
 > Public Release 0.3rc1 : October 29, 2006
