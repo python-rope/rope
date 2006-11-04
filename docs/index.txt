@@ -20,8 +20,8 @@ far:
 
 * Refactorings
 
-  * Rename class/function/module/package/method/local
-    variables/keyword args
+  * Rename class/function/module/package/method/local variables/
+    keyword args
   * Extract method
   * Extract variable
   * Move class/function/module/package

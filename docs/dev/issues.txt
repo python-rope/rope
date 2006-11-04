@@ -52,6 +52,8 @@ Releases
     Done.
 0.3rc1
     Done.
+0.3
+    Working on.
 
 
 Possible Plans For 0.4
@@ -133,23 +135,30 @@ changes to the files, since it has to update its stored information.
 Better Code Assist
 ==================
 
+Was done for ``0.3``.
+
 
 Better Type Information
 -----------------------
 
-When asking about the attributes of an object, all of the proposals
-are `attribute` s.  The problem is that we indicate only information
+The problem with code assist is that we indicate only information
 about the scope a variable is defined in.  We can provide more
 information about its type, too::
 
-  def _get_type(self, pyname):
-      if isinstance(pyname, DefinedName):
-          if isinstance(pyname.get_object(), PyFunction):
+  def _get_pyname_type(self, pyname):
+      if isinstance(pyname, rope.base.pynames.AssignedName):
+          return 'variable'
+      if isinstance(pyname, rope.base.pynames.DefinedName):
+          pyobject = pyname.get_object()
+          if isinstance(pyobject, rope.base.pyobjects.PyFunction):
               return 'function'
           else:
               return 'class'
-      return 'variable'
-
+      if isinstance(pyname, rope.base.pynames.ImportedName) or \
+         isinstance(pyname, rope.base.pynames.ImportedModule):
+          return 'imported'
+      if isinstance(pyname, rope.base.pynames.ParameterName):
+          return 'parameter'
 
 So the type of completion proposals are:
 
@@ -158,15 +167,14 @@ So the type of completion proposals are:
 * ``function`` : DefinedName
 * ``imported``: ImportedModule, ImportedName
 * ``paramter``: Parameter
-* ``none``: keywords, builtins and ...
+* `None`: keywords, builtins and ...
 
 Note that actually each pyname may hold any kind of object, but we are
 not reporting the object a pyname holds.  Instead we only say if this
 pyname is defined here and if it is defined what its type is.  That is
 pynames types do not use object inference information.
 
-
-And type of proposals can be:
+And as before proposal kind can be:
 
 * ``global``
 * ``local``
@@ -179,8 +187,8 @@ And type of proposals can be:
 Better Sorting
 --------------
 
-Prefering defined objects.
-
+Rope should prefer defined objects(classes and functions) over
+variables.  After the above change this would be easy.
 
 
 Designing Refactorings to Be Used in IDEs
@@ -270,7 +278,7 @@ Currently there are separate undo actions for editing text and
 refactorings and in future there might be undos for other changes.  We
 need to mix them together.  This seems hard to do mainly because we
 don't have much access to the undo mechanism of Tkinter.  I think an
-approximation here will save us.
+approximation will work.
 
 
 Moving Fields/Methods
@@ -320,15 +328,15 @@ Rejecting Smalltalk `RefactoringBrowser` Approach
 
 We can't use smalltalks approach because it requires the whole
 tests suite to be run before each refactoring but this does not
-seem appealing because it takes longer considering the additional
-time of tracing each function call.
+seem appealing because it might take a lot of time.
 
-But I think the same problem existed in smalltalk, too.  Look what
-they did to overcome this problem.  You can also use a strategy
-for testing this approach for finding occurances.  Maybe in future
-when CPUs get even faster time inefficiency might not be an issue.
+Apart from that if we use a wrapper for a function using python
+runtime mechanisms it is possible to find out from which line
+a function is called, but we cannot always find the offset in that
+file from which this function is called.
 
-Think of other ways of collecting type information.
+If we solve these problems we can can use a strategy for finding
+occurances.  Also Think of other ways of collecting type information.
 
 
 Saving Collected Data

@@ -215,7 +215,6 @@ class _CodeCompletionCollector(object):
             return 'imported'
         if isinstance(pyname, rope.base.pynames.ParameterName):
             return 'parameter'
-        
 
     def get_code_completions(self):
         try:
@@ -443,8 +442,8 @@ class ProposalSorter(object):
         return result
     
     def _pyname_proposal_cmp(self, proposal1, proposal2):
-        preference = ['class', 'function', 'parameter',
-                      'variable', 'imported', None]
+        preference = ['class', 'function', 'variable',
+                      'parameter', 'imported', None]
         if proposal1.type != proposal2.type:
             return cmp(preference.index(proposal1.type),
                        preference.index(proposal2.type))

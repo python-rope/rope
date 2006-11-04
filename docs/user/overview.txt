@@ -28,11 +28,11 @@ In the first column:
 
 In the second column if present:
 
-* V: ``variable``
 * C: ``class``
 * F: ``function``
-* I: ``imported``
+* V: ``variable``
 * P: ``paramter``
+* I: ``imported``
 
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit

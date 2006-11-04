@@ -1,3 +1,3 @@
 """rope, a python refactoring IDE"""
 
-VERSION = '0.3rc2'
+VERSION = '0.3'

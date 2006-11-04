@@ -1,16 +1,18 @@
 Before 0.3 Release
 ==================
 
-* Decide when to use `difflib` in `Editor.set_text`
-* ``overview.txt``
-* `How to use rope as a library` doc
-* Better `ropetest` package structure
+* Working on ``overview.txt``
+* Working on ``tutorial.txt``
 * Testing on nt
+* Moving to Subversion repository on sourceforge.net
 
 
 Remaining Stories
 =================
 
+* ``How to use rope as a library`` doc
+* Better `ropetest` package structure
+* Decide when to use `difflib` in `Editor.set_text`
 * Changing `uihelpers` tree and list to support mouse clicks
 * Handling `AssList` for inline variable and encapsulate field
 * Changing refactor modules to use `sourcetools.add_methods`
