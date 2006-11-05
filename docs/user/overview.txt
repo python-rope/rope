@@ -9,7 +9,7 @@ Overview
 ========
 
 The purpose of this file is to give an overview of some of rope's
-features.
+features.  It is incomplete.
 
 
 Code Assist
@@ -37,9 +37,6 @@ In the second column if present:
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit
 `rope.ide.codeassist.PythonCodeAssist._get_default_templates` method.
-
-Completions
------------
 
 Show PyDoc
 ----------
@@ -186,8 +183,9 @@ Dynamic Type Inference
 ======================
 
 Dynamic type inference gets its needed information from running
-modules (``M-X p``).  You open the module to run (probably your test
-suite), then use ``M-X p``.  Since as the program runs, rope gathers
+modules (``M-X p``) or unit tests (``M-X t``).  You open the module
+to run (probably your test suite), then use ``M-X p`` or ``M-X t`` if
+it is a test suite.  Since as the program runs, rope gathers
 type information, the program runs slower.  Right now rope doesn't
 have a good interface for running programs.  It just prints the output
 to the terminal and does not get inputs.  This will be enhanced in

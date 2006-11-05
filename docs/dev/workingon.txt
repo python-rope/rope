@@ -1,10 +1,8 @@
 Before 0.3 Release
 ==================
 
-* Working on ``overview.txt``
-* Working on ``tutorial.txt``
-* Testing on nt
 * Moving to Subversion repository on sourceforge.net
+* Testing on nt
 
 
 Remaining Stories

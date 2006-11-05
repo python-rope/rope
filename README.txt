@@ -14,20 +14,33 @@ written in python and uses the Tkinter library.
 New Features
 ============
 
-Features added in this release:
+Some of the changes since 0.2
 
+* Unit-test running view
 * Previewing refactoring changes
 * Encapsulate field
-* Unit-test running view
+* Extract method/variable
+* Undoing/redoing refactorings
+* Show PyDoc
 * Convert local variable to field refactoring
+* Inline local variable
+* Rename function parameters/class/function/module/packages
+* Renaming methods in class hierarchies
+* Move refactoring for class/function/module/package
+* Import tools
+* Introduce factory method refactoring
+* Basic subversion support using pysvn
+* Transform module to package refactoring
+* Function argument dynamic object inference
+* Basic dynamic object inference
+* Code completions inside uncompleted ``try`` blocks
+* Hiding unappropriate menu items in different contexts
 
-Refactoring dialogs have a new ``preview`` button that you
-can click to see the preview of the changes that this
-refactoring need to perform.
+Changes since 0.3rc1
 
-You can run unittest modules using ``M-X t``.  The tests will run
-considerably slower, since rope gathers type information while
-they are running.
+* Better code assist proposal sorting and dialog
+* Extract method works with normal selection
+* Basic python file encoding support
 
 
 Getting Started
@@ -108,9 +121,10 @@ M-I            inline local variable
 C-O            organize imports
 =============  ==========================
 
-Have a look at `docs/overview.txt`_ file for an overview of rope's features.
+Have a look at `docs/user/overview.txt`_ file for an overview of rope's
+features.
 
-.. _`docs/overview.txt`: docs/overview.html
+.. _`docs/user/overview.txt`: docs/user/overview.html
 
 
 Project Road Map
@@ -142,7 +156,9 @@ standalone programs and libraries so that other projects may use them.
 Get Involved!
 =============
 
-Read ``docs/contributing.txt``.
+Read `docs/dev/contributing.txt`_.
+
+.. _`docs/dev/contributing.txt`: docs/dev/contributing.html
 
 
 Bug Reports
