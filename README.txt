@@ -21,13 +21,13 @@ Some of the changes since 0.2
 * Encapsulate field
 * Extract method/variable
 * Undoing/redoing refactorings
-* Show PyDoc
 * Convert local variable to field refactoring
 * Inline local variable
 * Rename function parameters/class/function/module/packages
 * Renaming methods in class hierarchies
 * Move refactoring for class/function/module/package
 * Import tools
+* Show PyDoc
 * Introduce factory method refactoring
 * Basic subversion support using pysvn
 * Transform module to package refactoring
