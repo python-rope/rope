@@ -1,13 +1,19 @@
-Before 0.3 Release
-==================
+Exploring Inline Method
+=======================
 
-* Moving to Subversion repository on sourceforge.net
-* Testing on nt
+- Removing the function after inlining
+
+* Ignoring parameters and just putting function definition
+  
+  We should remove the following parameters, too.
+
+Have a look at the ``Inline Method`` section of ``issues.txt``
 
 
 Remaining Stories
 =================
 
+* Problems for renaming vars in `__init__.py` of packages!
 * ``How to use rope as a library`` doc
 * Better `ropetest` package structure
 * Decide when to use `difflib` in `Editor.set_text`

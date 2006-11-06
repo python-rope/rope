@@ -26,9 +26,14 @@ classifiers=['Development Status :: 3 - Alpha',
              'Topic :: Software Development',
              'Topic :: Text Editors :: Integrated Development Environments (IDE)']
 
+long_description = """
+Rope is a python refactoring IDE and library.
+"""
+
 setup(name='rope',
       version=rope.VERSION,
       description='a python refactoring IDE...',
+      long_description=long_description,
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',

@@ -16,31 +16,7 @@ New Features
 
 Some of the changes since 0.2
 
-* Unit-test running view
-* Previewing refactoring changes
-* Encapsulate field
-* Extract method/variable
-* Undoing/redoing refactorings
-* Convert local variable to field refactoring
-* Inline local variable
-* Rename function parameters/class/function/module/packages
-* Renaming methods in class hierarchies
-* Move refactoring for class/function/module/package
-* Import tools
-* Show PyDoc
-* Introduce factory method refactoring
-* Basic subversion support using pysvn
-* Transform module to package refactoring
-* Function argument dynamic object inference
-* Basic dynamic object inference
-* Code completions inside uncompleted ``try`` blocks
-* Hiding unappropriate menu items in different contexts
-
-Changes since 0.3rc1
-
-* Better code assist proposal sorting and dialog
-* Extract method works with normal selection
-* Basic python file encoding support
+* 
 
 
 Getting Started

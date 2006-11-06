@@ -330,6 +330,9 @@ class PyPackage(_PyModule):
             init_object._add_dependant(self)
         return result
 
+    def _create_concluded_attributes(self):
+        return {}
+
     def _get_child_resources(self):
         result = {}
         for child in self.resource.get_children():

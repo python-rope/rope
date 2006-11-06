@@ -304,7 +304,38 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self.do_local_rename(code, code.rfind('param') + 1, 'new_param')
         self.assertEquals('def a_func(new_param):\n    print new_param\n'
                           'a_func  (new_param=hey)\n', refactored)
-
+    
+    def test_renaming_variables_in_init_do_pys(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        init_dot_py = pkg.get_child('__init__.py')
+        init_dot_py.write('a_var = 10\n')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('import pkg\nprint pkg.a_var\n')
+        self.refactoring.rename(mod, mod.read().index('a_var') + 1, 'new_var')
+        self.assertEquals('new_var = 10\n', init_dot_py.read())
+        self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
+    
+    def test_renaming_variables_in_init_do_pys2(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        init_dot_py = pkg.get_child('__init__.py')
+        init_dot_py.write('a_var = 10\n')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('import pkg\nprint pkg.a_var\n')
+        self.refactoring.rename(
+            init_dot_py, init_dot_py.read().index('a_var') + 1, 'new_var')
+        self.assertEquals('new_var = 10\n', init_dot_py.read())
+        self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
+    
+    def test_renaming_variables_in_init_do_pys3(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        init_dot_py = pkg.get_child('__init__.py')
+        init_dot_py.write('a_var = 10\n')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('import pkg\nprint pkg.a_var\n')
+        self.refactoring.rename(mod, mod.read().index('a_var') + 1, 'new_var')
+        self.assertEquals('new_var = 10\n', init_dot_py.read())
+        self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
+    
 
 if __name__ == '__main__':
     unittest.main()

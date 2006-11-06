@@ -393,7 +393,7 @@ def inline(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        _get_refactoring(context).inline_local_variable(resource, editor.get_current_offset())
+        _get_refactoring(context).inline(resource, editor.get_current_offset())
     
 def encapsulate_field(context):
     if context.get_active_editor():
@@ -422,8 +422,8 @@ actions.append(SimpleAction('Extract Method', ConfirmAllEditorsAreSaved(extract_
                             MenuAddress(['Refactor', 'Extract Method'], 'x'), ['python']))
 actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move), 'M-V',
                             MenuAddress(['Refactor', 'Move'], 'm'), ['python']))
-actions.append(SimpleAction('Inline Local Variable', ConfirmAllEditorsAreSaved(inline), 'M-I',
-                            MenuAddress(['Refactor', 'Inline Local Variable'], 'i'), ['python']))
+actions.append(SimpleAction('Inline', ConfirmAllEditorsAreSaved(inline), 'M-I',
+                            MenuAddress(['Refactor', 'Inline'], 'i'), ['python']))
 actions.append(SimpleAction('Extract Local Variable', ConfirmAllEditorsAreSaved(extract_variable), None,
                             MenuAddress(['Refactor', 'Extract Local Variable'], 'l'), ['python']))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,

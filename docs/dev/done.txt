@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.3 : November 5, 2006
+
+
 - Better code assist proposal sorting and dialog : November 3, 2006
 
 

@@ -553,6 +553,17 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2 = self.pycore.get_module('mod')
         self.assertTrue('var' in mod2.get_attributes())
 
+    def test_invalidating_cache_after_resource_change_for_init_do_pys(self):
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        init_dot_py = pkg.get_child('__init__.py')
+        init_dot_py.write('a_var = 10\n')
+        mod.write('import pkg\n')
+        pymod = self.pycore.get_module('mod')
+        self.assertTrue('a_var' in pymod.get_attribute('pkg').get_object().get_attributes())
+        init_dot_py.write('new_var = 10\n')
+        self.assertTrue('a_var' not in pymod.get_attribute('pkg').get_object().get_attributes())
+
     def test_from_import_nonexistant_module(self):
         mod = self.pycore.get_string_module('from doesnotexistmod import DoesNotExistClass\n')
         self.assertTrue('DoesNotExistClass' in mod.get_attributes())

@@ -97,8 +97,8 @@ class PythonRefactoring(object):
                   get_changes(dest_resource)
         self.add_and_commit_changes(changes)
     
-    def inline_local_variable(self, resource, offset):
-        changes = InlineRefactoring(self.pycore, resource, offset).inline()
+    def inline(self, resource, offset):
+        changes = InlineRefactoring(self.pycore, resource, offset).get_changes()
         self.add_and_commit_changes(changes)
     
     def encapsulate_field(self, resource, offset):

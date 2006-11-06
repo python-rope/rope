@@ -165,16 +165,13 @@ Stories
 * Pull up method
 
 
-* Type hierarchy
+* View type hierarchy
 
 
 * Push down method
 
 
 * Show PyDoc reST highlighting
-
-
-* Handling builtin functions and types
 
 
 * Better list and tree navigation
@@ -212,10 +209,16 @@ Stories
   * Reorder
 
 
-* Sorting imports; standard, third party, project
-
-
 * Removing imports from the same module
+
+
+* Handling builtin functions and types
+
+
+> Public Release 0.4m1 : November 19, 2006
+
+
+* Sorting imports; standard, third party, project
 
 
 * Moving fields/methods to attribute classes
@@ -223,5 +226,3 @@ Stories
 
 * Inline method
 
-
-> Public Release 0.3 : November 5, 2006

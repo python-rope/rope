@@ -25,39 +25,20 @@ This is only a rough plan.  For example some more release candidates
 might be released before the ``x.y`` release.
 
 
-Version 0.3
+Version 0.4
 ===========
 
-From August 7, 2006 till November 5, 2006
+From November 6, 2006 till February 4, 2007
 
 
 Release Goals
 -------------
 
-Metaphor: Deliver the most interesting features
+Metaphor: Enhance features and make rope extensible
 
 
-Releases
---------
-
-0.3m1
-    Done.
-0.3m2
-    Done.
-0.3m3
-    Done.
-0.3m4
-    Done.
-0.3m5
-    Done.
-0.3rc1
-    Done.
-0.3
-    Working on.
-
-
-Possible Plans For 0.4
-======================
+Possible Plans
+--------------
 
 * Inline method
 * Move field/methods
@@ -84,6 +65,57 @@ To Be Discussed
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
+
+
+Inline Method
+=============
+
+The simplest thing to do is to replace each method call with its
+body.  We should rename parameters to match the name of the passed
+variable in the method call.  When expressions are passed we can
+assign then to a new variable.
+
+But the problem is we should parse the method call ourselves, since
+we cannot find method calls in ASTs.  This problem happend once more
+for using Smalltalk Refactoring Browser's approach for finding
+occurances.  So it might worth the effort to see if this problem can
+be solved somehow.
+
+* Which of the variables should be renamed?
+* What to do about parameter assignments?
+* Removing the function after removing
+* Handling returns
+* Recursive calls
+* Default parameters
+* Keywords
+* Handling class methods
+* What to do about static or class methods
+* Moving used imports
+
+What to do for::
+
+  def func():
+      print 'hey'
+  
+  f = func
+  f()
+
+Should we inline `f`?  Can we use dynamically gathered information
+for this purpose?
+
+
+Using ASTs For Transformations
+==============================
+
+The main problem with AST nodes is that they only hold the line in
+which statements appear but we need the offset.  If we can add offset
+information to AST nodes, we would be able to use them for all of the
+tasks that we do right now using direct operations on program source
+code.
+
+Using ASTs for transforming programs requires making a new AST tree
+or altering the old one and writing AST trees.  We can use the latter
+in the formatter, too but it seems a lot of work.
 
 
 Using Rope As A Library
@@ -132,70 +164,9 @@ The main problem for using rope is that rope should perform the
 changes to the files, since it has to update its stored information.
 
 
-Better Code Assist
-==================
-
-Was done for ``0.3``.
-
-
-Better Type Information
------------------------
-
-The problem with code assist is that we indicate only information
-about the scope a variable is defined in.  We can provide more
-information about its type, too::
-
-  def _get_pyname_type(self, pyname):
-      if isinstance(pyname, rope.base.pynames.AssignedName):
-          return 'variable'
-      if isinstance(pyname, rope.base.pynames.DefinedName):
-          pyobject = pyname.get_object()
-          if isinstance(pyobject, rope.base.pyobjects.PyFunction):
-              return 'function'
-          else:
-              return 'class'
-      if isinstance(pyname, rope.base.pynames.ImportedName) or \
-         isinstance(pyname, rope.base.pynames.ImportedModule):
-          return 'imported'
-      if isinstance(pyname, rope.base.pynames.ParameterName):
-          return 'parameter'
-
-So the type of completion proposals are:
-
-* ``variable``: AssignedName
-* ``class`` : DefinedName
-* ``function`` : DefinedName
-* ``imported``: ImportedModule, ImportedName
-* ``paramter``: Parameter
-* `None`: keywords, builtins and ...
-
-Note that actually each pyname may hold any kind of object, but we are
-not reporting the object a pyname holds.  Instead we only say if this
-pyname is defined here and if it is defined what its type is.  That is
-pynames types do not use object inference information.
-
-And as before proposal kind can be:
-
-* ``global``
-* ``local``
-* ``builtin``
-* ``attribute``
-* ``keyword``
-* ``template``
-
-
-Better Sorting
---------------
-
-Rope should prefer defined objects(classes and functions) over
-variables.  After the above change this would be easy.
-
-
 Designing Refactorings to Be Used in IDEs
 =========================================
 
-* Multi-step refactorings
-* Previewing refactorings
 * Finding available refactorings
 * A better facade
 * Better refactoring categoriztion
@@ -208,36 +179,6 @@ Decisions to Make
 * Unifying refactoring interfaces
 * Introducing factories for refactorings;
   Reduce the dependence to `rope.refactor` modules
-
-
-Multi-step Refactorings
------------------------
-
-A refactoring should be done in three steps.
-
-1. Getting immediate information
-   
-   After this step we can provide some useful information.  Like the
-   initial name for rename refactoring.
-   
-2. Getting user provided information
-
-   The problem with this step is that based on the first step we
-   might need different data.  For example for move refactoring we
-   need different information for moving a field versus moving a
-   class.
-   
-   This separation helps us to report some of the errors earlier.
-
-3. Finding the changes to be made
-
-   We perform the actual refactoring here.  After this step we can
-   preview the changes.
-
-4. Performing the refactoring
-
-
-What will happen to `PythonRefactoring` facade?
 
 
 A Common Refactoring Interface
@@ -269,6 +210,16 @@ Finding Available Refactorings
 
 The question we need to answer before proceeding is to decide
 whether this belongs to UI or core.
+
+Making Adding New Refactorings Easier
+-------------------------------------
+
+Adding a new refactoring requires changing `Refactoring` facade and
+Adding the new refactoring class.  Duplications:
+
+* Duplicate parameters
+* We have the same refactoring class for inlines, extracts and
+  renames but we have to call their constructors separately.
 
 
 Undo Unification
@@ -490,40 +441,6 @@ of pynames.
 
 `objectinfer` should be changed to find all of the objects that can
 be inferred.
-
-
-Builtin Types And Functions
-===========================
-
-What should we do about builtin functions and types?
-
-Builtin types:
-
-* list, typle
-* dict
-* str, unicode
-* file
-* set, frozenset
-* int, float, long, complex
-* iterator types
-* boolean
-
-Builtin constants:
-
-* False
-* True
-* None
-* NotImplemented
-* Ellipsis
-
-Builtin functions:
-
-* range
-* super
-
-One approach to builtin types would be to use the `__builtin__` module
-dynamically.  The other might be to write classes for the most
-interesting ones like `list`\s, `dict`\s and `str`\s.
 
 
 Refactoring `rope.codeanalyze` Module

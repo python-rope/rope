@@ -481,7 +481,7 @@ def suite():
     result.addTests(unittest.makeSuite(IntroduceFactoryTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.movetest.MoveRefactoringTest))
     result.addTests(unittest.makeSuite(RefactoringUndoTest))
-    result.addTests(unittest.makeSuite(ropetest.refactor.inlinetest.InlineLocalVariableTest))
+    result.addTests(ropetest.refactor.inlinetest.suite())
     result.addTests(unittest.makeSuite(EncapsulateFieldTest))
     result.addTests(unittest.makeSuite(LocalToFieldTest))
     return result
