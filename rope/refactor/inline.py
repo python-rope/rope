@@ -1,7 +1,8 @@
-import rope.base.codeanalyze
+from rope.base import codeanalyze
 import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
+import rope.refactor.sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents
 
 
@@ -9,8 +10,8 @@ class InlineRefactoring(object):
     
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
-        self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
-        self.name = rope.base.codeanalyze.get_name_at(resource, offset)
+        self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        self.name = codeanalyze.get_name_at(resource, offset)
         if self.name is None:
             raise rope.base.exceptions.RefactoringException(
                 'Inline refactoring should be performed on a method/local variable.')
@@ -55,6 +56,7 @@ class _MethodInliner(_Inliner):
     def get_changes(self):
         changes = ChangeSet()
         self._change_defining_file(changes)
+        self._change_other_files(changes)
         return changes
 
     def _change_defining_file(self, changes):
@@ -69,8 +71,60 @@ class _MethodInliner(_Inliner):
         result = source[:start_offset] + source[end_offset + 1:]
         changes.add_change(ChangeContents(resource, result))
     
+    def _get_definition(self):
+        pyfunction = self.pyname.get_object()
+        pymodule = pyfunction.get_module()
+        resource = pyfunction.get_module().get_resource()
+        scope = pyfunction.get_scope()
+        source = pymodule.source_code
+        lines = pymodule.lines
+        start_line = codeanalyze.LogicalLineFinder(lines).\
+                     get_logical_line_in(scope.get_start())[1] + 1
+        start_offset = lines.get_line_start(start_line)
+        end_offset = lines.get_line_end(min(scope.get_end() + 1, len(source)))
+        result = source[start_offset:end_offset]
+        return result
+    
     def _change_other_files(self, changes):
-        pass
+        occurrence_finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
+            self.pycore, self.name, [self.pyname], only_calls=True)
+        for file in self.pycore.get_python_files():
+            result = []
+            last_changed = 0
+            source = file.read()
+            pymodule = None
+            lines = None
+            for occurrence in occurrence_finder.find_occurrences(file):
+                if lines is None:
+                    pymodule = self.pycore.resource_to_pyobject(file)
+                    lines = pymodule.lines
+                start, end = occurrence.get_primary_range()
+                end_parens = self._find_end_parens(source, source.index('(', end))
+                lineno = lines.get_line_number(start)
+                start_line, end_line = codeanalyze.LogicalLineFinder(lines).\
+                                       get_logical_line_in(lineno)
+                line_start = lines.get_line_start(start_line)
+                line_end = lines.get_line_end(end_line)
+                result.append(source[last_changed:line_start])
+                scope = pymodule.get_scope().get_inner_scope_for_line(start_line)
+                result.append(rope.refactor.sourceutils.
+                              indent_statements_for_scope(scope, self._get_definition()))
+                last_changed = line_end + 1
+            if result:
+                result.append(source[last_changed:])
+                changes.add_change(ChangeContents(file, ''.join(result)))
+    
+    def _find_end_parens(self, source, start):
+        index = start
+        open_count = 0
+        while start < len(source):
+            if start == '(':
+                open_count += 1
+            if start == ')':
+                open_count -= 1
+            if open_count == 0:
+                return index
+        return index
 
 
 class _VariableInliner(_Inliner):
@@ -85,7 +139,7 @@ class _VariableInliner(_Inliner):
         resource = pymodule.get_resource()
         definition_line = self.pyname.assigned_asts[0].lineno
         lines = pymodule.lines
-        start, end = rope.base.codeanalyze.LogicalLineFinder(lines).\
+        start, end = codeanalyze.LogicalLineFinder(lines).\
                      get_logical_line_in(definition_line)
         definition_lines = []
         for line_number in range(start, end + 1):
@@ -105,7 +159,7 @@ class _VariableInliner(_Inliner):
             get_changed_module(pymodule=pymodule)
         if changed_source is None:
             changed_source = pymodule.source_code
-        lines = rope.base.codeanalyze.SourceLinesAdapter(changed_source)
+        lines = codeanalyze.SourceLinesAdapter(changed_source)
         source = changed_source[:lines.get_line_start(start)] + \
                  changed_source[lines.get_line_end(end) + 1:]
         changes = ChangeSet()

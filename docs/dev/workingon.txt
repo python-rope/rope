@@ -1,11 +1,15 @@
 Exploring Inline Method
 =======================
 
-- Removing the function after inlining
+- Ignoring parameters and just putting function definition
 
-* Ignoring parameters and just putting function definition
-  
-  We should remove the following parameters, too.
+* Occurances in defining module
+* Adding a class for holding and peforming operations on functions
+* Adding a class for holding and peforming operations on classes
+* Reducing setups line source, pymodule, lines, line_finder and ...
+* Lots of duplication in `inline`; we can reuse `extract`
+* Caching `_MethodInliner._get_definition`
+* Handling in class methods
 
 Have a look at the ``Inline Method`` section of ``issues.txt``
 

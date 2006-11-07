@@ -78,17 +78,25 @@ assign then to a new variable.
 But the problem is we should parse the method call ourselves, since
 we cannot find method calls in ASTs.  This problem happend once more
 for using Smalltalk Refactoring Browser's approach for finding
-occurances.  So it might worth the effort to see if this problem can
+occurrences.  So it might worth the effort to see if this problem can
 be solved somehow.
+
+For each occurrence we can check wether its result has been used or
+not.  If it has been used we can insert the function body in its
+previous line and assign the return statement to a local variable.
+Otherwise we can remove the function call altogether and insert the
+function definition there.
 
 * Which of the variables should be renamed?
 * What to do about parameter assignments?
 * Removing the function after removing
 * Handling returns
 * Recursive calls
+* Calls inside other function or list
+* References to functions other than calls
 * Default parameters
 * Keywords
-* Handling class methods
+* Handling in class methods
 * What to do about static or class methods
 * Moving used imports
 
@@ -102,6 +110,21 @@ What to do for::
 
 Should we inline `f`?  Can we use dynamically gathered information
 for this purpose?
+
+
+Having Class/Function Holders
+-----------------------------
+
+Operations on classes and functions are scattered over the refactoring
+modules.  Can we have classes to perform common tasks on them?::
+
+  class FunctionHolder(object):
+  
+      def __init__(self, function_scope):
+          pass
+      
+      def get_definition(self):
+          pass
 
 
 Using ASTs For Transformations
@@ -287,7 +310,7 @@ a function is called, but we cannot always find the offset in that
 file from which this function is called.
 
 If we solve these problems we can can use a strategy for finding
-occurances.  Also Think of other ways of collecting type information.
+occurrences.  Also Think of other ways of collecting type information.
 
 
 Saving Collected Data

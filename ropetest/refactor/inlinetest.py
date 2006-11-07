@@ -103,15 +103,22 @@ class InlineTest(unittest.TestCase):
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('a_var = 10\nprint a_var\n', self.mod.read())
 
-    # Implement this
-    def xxx_test_a_function_with_no_occurance2(self):
+    def test_replacing_calls_with_function_definition_in_other_modules(self):
         self.mod.write('def a_func():\n    print 1\n')
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod1.write('import mod\nmod.a_func()\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('import mod\nprint 1\n', self.mod.read())
+        self.assertEquals('import mod\nprint 1\n', mod1.read())
 
-    
+    def test_replacing_calls_with_method_definition_in_other_modules(self):
+        self.mod.write('class A(object):\n    var = 10\n    def a_func(self):\n        print 1\n')
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1.write('import mod\nmod.A().a_func()\n')
+        self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
+        self.assertEquals('import mod\nprint 1\n', mod1.read())
+        self.assertEquals('class A(object):\n    var = 10\n', self.mod.read())
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(InlineTest))

@@ -196,7 +196,8 @@ class WordRangeFinder(object):
             while current_offset < len(self.source_code) and \
                   self.source_code[current_offset] in ' \t\n':
                 current_offset += 1
-            if current_offset + 1 < len(self.source_code) and self.source_code[current_offset] == '\\':
+            if current_offset + 1 < len(self.source_code) and \
+               self.source_code[current_offset] == '\\':
                 current_offset += 2
         return current_offset
     
