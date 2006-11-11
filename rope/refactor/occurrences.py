@@ -21,8 +21,7 @@ class OccurrenceFinder(object):
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
         tools = _OccurrenceToolsCreator(self.pycore, resource, pymodule)
-        source_code = tools.source_code
-        for match in self.pattern.finditer(source_code):
+        for match in self.pattern.finditer(tools.source_code):
             for key, value in match.groupdict().items():
                 if value and key == 'occurrence':
                     yield Occurrence(tools, match.start(key) + 1)
@@ -70,6 +69,9 @@ class Occurrence(object):
     
     def is_called(self):
         return self.tools.word_finder.is_a_function_being_called(self.offset)
+    
+    def is_defined(self):
+        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
     
     def is_a_fixed_primary(self):
         return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset) or \

@@ -85,11 +85,11 @@ class GetterSetterRenameInModule(object):
 
 class _FindChangesForModule(object):
     
-    def __init__(self, rename_in_module, resource, pymodule, skip_start, skip_end):
-        self.pycore = rename_in_module.pycore
-        self.occurrences_finder = rename_in_module.occurrences_finder
-        self.getter = rename_in_module.getter
-        self.setter = rename_in_module.setter
+    def __init__(self, occurrence_finder, resource, pymodule, skip_start, skip_end):
+        self.pycore = occurrence_finder.pycore
+        self.occurrences_finder = occurrence_finder.occurrences_finder
+        self.getter = occurrence_finder.getter
+        self.setter = occurrence_finder.setter
         self.resource = resource
         self.pymodule = pymodule
         self._source = None

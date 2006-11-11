@@ -169,11 +169,17 @@ class _File(Resource):
         super(_File, self).__init__(project, name)
     
     def read(self):
-        source_bytes = open(self.project._get_resource_path(self.name)).read()
-        encoding = self._conclude_file_encoding(source_bytes)
+        source_bytes = self._read_file_data()
+        return self._file_data_to_unicode(source_bytes)
+    
+    def _read_file_data(self):
+        """Should be implemented in subclasses"""
+    
+    def _file_data_to_unicode(self, data):
+        encoding = self._conclude_file_encoding(data)
         if encoding is not None:
-            return unicode(source_bytes, encoding)
-        return unicode(source_bytes)
+            return unicode(data, encoding)
+        return unicode(data)
     
     def _find_line_end(self, source_bytes, start):
         try:
@@ -232,6 +238,9 @@ class _File(Resource):
 class File(_File):
     """Represents a file in a project"""
 
+    def _read_file_data(self):
+        return open(self.project._get_resource_path(self.name)).read()
+
 
 class OutOfProjectFile(_File):
     """Represents a file outside a project"""
@@ -240,7 +249,7 @@ class OutOfProjectFile(_File):
         super(OutOfProjectFile, self).__init__(project, path)
         self.path = path
         
-    def read(self):
+    def _read_file_data(self):
         return open(self.path).read()
 
     def _get_real_path(self):

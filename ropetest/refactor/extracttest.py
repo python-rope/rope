@@ -379,6 +379,14 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'if True:\n    b = 1 + 2\n    a = (3 + \nb)\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_variable_starting_from_the_start_of_the_line(self):
+        code = 'a_dict = {1: 1}\na_dict.values().count(1)\n'
+        start = code.rindex('a_dict')
+        end = code.index('count') - 1
+        refactored = self.do_extract_variable(code, start, end, 'values')
+        expected = 'a_dict = {1: 1}\nvalues = a_dict.values()\nvalues.count(1)\n'
+        self.assertEquals(expected, refactored)
+
     @testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_raising_exception_when_on_incomplete_variables(self):
         code = 'a_var = 10 + 20\n'

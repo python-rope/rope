@@ -160,10 +160,7 @@ class TextEditorTest(unittest.TestCase):
         self.assertEquals(1, line_editor.length())
 
 def get_sample_editingcontext():
-    context = editingcontexts.others
-    context.editingtools = editingtools.NormalEditingTools()
-    editingcontexts.rest.editingtools = editingtools.ReSTEditingTools()
-    return context
+    return editingcontexts.others
 
 def suite():
     result = unittest.TestSuite()

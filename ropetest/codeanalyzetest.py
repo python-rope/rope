@@ -123,6 +123,11 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder(code)
         self.assertEquals('a_var', word_finder.get_primary_at(code.index('a_var') + 5))
     
+    def test_word_finder_on_primaries_with_dots_inside_parens(self):
+        code = '(a_var.\nattr)'
+        word_finder = WordRangeFinder(code)
+        self.assertEquals('a_var.\nattr', word_finder.get_primary_at(code.index('attr') + 1))
+    
     def test_strings(self):
         word_finder = WordRangeFinder('"a string".split()')
         self.assertEquals('"a string".split', word_finder.get_primary_at(14))

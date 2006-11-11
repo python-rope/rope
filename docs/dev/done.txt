@@ -3,6 +3,9 @@
 ===========
 
 
+- Inline method : November 10, 2006
+
+
 > Public Release 0.3 : November 5, 2006
 
 

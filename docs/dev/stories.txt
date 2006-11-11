@@ -202,14 +202,17 @@ Stories
 * Introduce redirection
 
 
+* Removing imports from the same module
+
+
+* Moving fields/methods to attribute classes
+
+
 * Change method signature
 
   * Add parameter
   * Remove parameter
   * Reorder
-
-
-* Removing imports from the same module
 
 
 * Handling builtin functions and types
@@ -219,10 +222,3 @@ Stories
 
 
 * Sorting imports; standard, third party, project
-
-
-* Moving fields/methods to attribute classes
-
-
-* Inline method
-

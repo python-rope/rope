@@ -1,15 +1,23 @@
-Exploring Inline Method
-=======================
+Basic Inline Method
+===================
 
-- Ignoring parameters and just putting function definition
-
-* Occurances in defining module
-* Adding a class for holding and peforming operations on functions
-* Adding a class for holding and peforming operations on classes
-* Reducing setups line source, pymodule, lines, line_finder and ...
-* Lots of duplication in `inline`; we can reuse `extract`
-* Caching `_MethodInliner._get_definition`
-* Handling in class methods
+- Occurances in defining module
+- Raising exceptions for function calls in lines that contain other
+  statements
+- Goto definition for '(a_var.\nattr)\n' for attr
+- Extract variable for selections starting from the start of the line
+- Renaming parameters to match parameters passed in call context
+- Default parameters
+- Testing badly formatted text
+- Handling class methods
+- Handling ``return`` statements
+- Lonely ``return``
+- Multiple ``return``\s
+- Keyword and list parameters
+- Caching calculated definitions
+- Test other calls as parameters
+- References to functions other than calls
+- Recursive calls
 
 Have a look at the ``Inline Method`` section of ``issues.txt``
 
@@ -17,6 +25,8 @@ Have a look at the ``Inline Method`` section of ``issues.txt``
 Remaining Stories
 =================
 
+* Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
+  ``COPYING`` to help menu; Adding readonly mode?
 * Problems for renaming vars in `__init__.py` of packages!
 * ``How to use rope as a library`` doc
 * Better `ropetest` package structure
@@ -33,8 +43,6 @@ Remaining Stories
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Moving/renaming current module/package
-* Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
-  ``COPYING`` to help menu; Adding readonly mode?
 * Extract method and return statements
 * Import addition when adding a relative with an absolute import
 * Caching `PyCore.classes`

@@ -42,7 +42,7 @@ description.
 Wish List
 =========
 
-Right now rope uses Tkinter for its GUI.  But Tkinter, as many has
+Right now rope uses Tkinter for its GUI.  But Tkinter, as many have
 complained about, looks very bad and is not suitable for writing an
 IDE.  The UI parts of rope, ie. `rope.ui` package, is a layer on top
 of other core parts of rope.  When I started rope I hoped that

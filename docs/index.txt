@@ -27,7 +27,7 @@ far:
   * Move class/function/module/package
   * Introduce factory method
   * Transform module to package
-  * Inline local variable
+  * Inline method/local variable
   * Encapsulate field
   * Convert local variable to field
   * Previewing refactorings

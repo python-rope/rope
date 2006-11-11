@@ -206,7 +206,8 @@ class WordRangeFinder(object):
         word_end = self._find_word_end(offset - 1) + 1
         next_char = self._find_first_non_space_char(word_end)
         return not self.is_a_class_or_function_name_in_header(offset) and \
-               next_char < len(self.source_code) and self.source_code[next_char] == '('
+               next_char < len(self.source_code) and \
+               self.source_code[next_char] == '('
     
     def _find_import_pair_end(self, start):
         next_char = self._find_first_non_space_char(start)
@@ -427,7 +428,8 @@ class ScopeNameFinder(object):
     def _is_defined_in_class_body(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \
            holding_scope.parent is not None and \
-           holding_scope.parent.pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type') and \
+           holding_scope.parent.pyobject.get_type() == \
+           rope.base.pyobjects.PyObject.get_base_type('Type') and \
            self.word_finder.is_a_class_or_function_name_in_header(offset):
             return True
         if lineno != holding_scope.get_start() and \
@@ -496,7 +498,9 @@ class ScopeNameFinder(object):
                                            module_name[dot_count:], dot_count)
 
     def get_pyname_in_scope(self, holding_scope, name):
-        ast = compiler.parse(name)
+        #ast = compiler.parse(name)
+        # parenthesizing for handling cases like 'a_var.\nattr'
+        ast = compiler.parse('(%s)' % name)
         result = StatementEvaluator.get_statement_result(holding_scope, ast)
         return result
 

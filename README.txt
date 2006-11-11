@@ -14,9 +14,9 @@ written in python and uses the Tkinter library.
 New Features
 ============
 
-Some of the changes since 0.2
+Features added in this release:
 
-* 
+* Inline method refactoring
 
 
 Getting Started

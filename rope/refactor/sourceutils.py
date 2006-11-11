@@ -42,13 +42,9 @@ def indent_lines(source_code, amount):
     return ''.join(result)
 
 
-def indent_statements_for_scope(scope, code):
+def fix_indentation(code, new_indents):
     min_indents = find_minimum_indents(code)
-    if scope.get_kind() == 'Module':
-        expected_indents = 0
-    else:
-        expected_indents = get_indents(scope.start()) + 4
-    return indent_lines(code, expected_indents - min_indents)
+    return indent_lines(code, new_indents - min_indents)
 
 def add_methods(pymodule, class_scope, methods_sources):
     source_code = pymodule.source_code

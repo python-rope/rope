@@ -87,7 +87,7 @@ class _ExtractInformation(object):
         return offset
     
     def is_one_line_extract(self):
-        return self.region[0] != self.region_lines[0] and \
+        return self.region != self.region_lines and \
                (self.line_finder.get_logical_line_in(self.region_linenos[0]) == 
                 self.line_finder.get_logical_line_in(self.region_linenos[1]))
 
@@ -113,8 +113,8 @@ class _ExtractPerformer(object):
     while in extract method it is inserted in scope_end.
     
     Note that start and end are in the same line for one line
-    extractions, so start_line and end_line are in the same line
-    two.
+    extractions, so start_line and end_line are in the same line,
+    too.
     
     The parts marked as before_line, call and after_scope are
     used in refactoring and we use `ExtractInfo` to find the

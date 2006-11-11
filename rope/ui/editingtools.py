@@ -3,13 +3,12 @@ import rope.ui.highlighter
 import rope.ide.codeassist
 import rope.ide.outline
 import rope.refactor
-import rope.ui.editingcontexts
 
 
-def get_editingtools_for_context(name, project):
-    if name == 'python':
+def get_editingtools_for_context(editing_context, project):
+    if editing_context.name == 'python':
         return PythonEditingTools(project)
-    if name == 'rest':
+    if editing_context.name == 'rest':
         return ReSTEditingTools()
     return NormalEditingTools()
 

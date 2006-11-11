@@ -51,37 +51,55 @@ Possible Plans
 Hot Topics
 ==========
 
-* `Undo Unification`_
-* `Python's Implicit Interfaces`_
+* Using DOI for inline method and change method signature
 
 
 To Be Discussed
 ===============
 
-* Designing refactorings to be used in IDEs
+* `Undo Unification`_
+* `Python's Implicit Interfaces`_
 * Rope's preference saving system: format, location
-
 * Indexing source files for faster occurrence finding
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 
 
+Supporting Built-in Types
+=========================
+
+The main motive for supporting built-in types are `list`, `dict` and
+`set`.  We try to start with the simplest of these; `list` types.
+
+
+Supporting `list`
+-----------------
+
+It is relatively easy to support `list` as being a type with some
+functions, but the main motive for supporting `list`\s are providing
+meaningful return values from its functions such as `__index__` or
+providing correct variables in for loops.  To do these we assume that
+every list only contains one type of objects.
+
+* How should we infer the type an iterator holds?
+
+One way of doing this is object inference of `list.append` or other
+insertion functions.  But the difficulty here is we should infer
+the parameters of these functions for each instance in program source
+rather than for the list type in whole.  First of all this analysis
+should be performed at runtime.
+
+* `ObjectInfer.infer_holding_type` for `iterator`\s
+* Addition of a flag to types that indicates the distinction of
+  instances.
+* Can we support `iterator` types, too?
+
+
 Inline Method
 =============
 
-The simplest thing to do is to replace each method call with its
-body.  We should rename parameters to match the name of the passed
-variable in the method call.  When expressions are passed we can
-assign then to a new variable.
-
-But the problem is we should parse the method call ourselves, since
-we cannot find method calls in ASTs.  This problem happend once more
-for using Smalltalk Refactoring Browser's approach for finding
-occurrences.  So it might worth the effort to see if this problem can
-be solved somehow.
-
-For each occurrence we can check wether its result has been used or
+For each occurrence we can check whether its result has been used or
 not.  If it has been used we can insert the function body in its
 previous line and assign the return statement to a local variable.
 Otherwise we can remove the function call altogether and insert the
@@ -89,16 +107,10 @@ function definition there.
 
 * Which of the variables should be renamed?
 * What to do about parameter assignments?
-* Removing the function after removing
-* Handling returns
-* Recursive calls
-* Calls inside other function or list
-* References to functions other than calls
-* Default parameters
-* Keywords
-* Handling in class methods
-* What to do about static or class methods
-* Moving used imports
+* What to do about staticmethod an classmethods decorators
+* Moving used imports and importing defining module globals
+* Inlining generators
+* Inner functions
 
 What to do for::
 
@@ -109,22 +121,30 @@ What to do for::
   f()
 
 Should we inline `f`?  Can we use dynamically gathered information
-for this purpose?
+for this purpose?  Fortunately this case never happens because rope
+does not allow the inlining functions to be assigned to other names
+and it throws an exception in those cases.
 
 
-Having Class/Function Holders
------------------------------
+Holding Resources Based On Their Path
+=====================================
 
-Operations on classes and functions are scattered over the refactoring
-modules.  Can we have classes to perform common tasks on them?::
+:Motive:
+    Supporting opening files before opening a project for help items.
 
-  class FunctionHolder(object):
-  
-      def __init__(self, function_scope):
-          pass
-      
-      def get_definition(self):
-          pass
+Currently resources are devided into two groups; Those that are
+inside the projects and those that are outside.  We might be able to
+collapse these these two hierarchies by using a path based resource.
+Before doing that we need to handle these:
+
+* Using as reference/value object problems?
+* Updating the path of changed files in project; can we use
+  `Resource.add_change_visitor`
+* Providing old `Resource.get_path`
+* We don't need to check '', anymore?
+* Should we mix files that are inside and outside projects?
+* Can we change out of project files?
+* Should we expect files to be changed inside or outside the project?
 
 
 Using ASTs For Transformations
@@ -233,6 +253,7 @@ Finding Available Refactorings
 
 The question we need to answer before proceeding is to decide
 whether this belongs to UI or core.
+
 
 Making Adding New Refactorings Easier
 -------------------------------------

@@ -17,6 +17,7 @@ class Core(object):
     def __init__(self):
         self.root = Tk()
         self.root.title('Rope')
+        editingcontexts.init_contexts(self)
         for context in editingcontexts.contexts.values():
             context.menu = Menu(self.root, relief=RAISED, borderwidth=1)
             context.menu_manager = MenuBarManager(context.menu)
@@ -288,17 +289,7 @@ class Core(object):
         if self.project:
             self.close_project()
         self.project = Project(projectRoot)
-        self._init_editing_tools()
     
-    def _init_editing_tools(self):
-        for name, context in editingcontexts.contexts.iteritems():
-            context.editingtools = editingtools.get_editingtools_for_context(
-                name, self.project)
-    
-    def _close_editing_tools(self):
-        for context in editingcontexts.contexts.values():
-            context.editingtools = None
-
     def _close_project_dialog(self, exit_=False):
         modified_editors = [editor for editor in self.editor_manager.editors 
                            if editor.get_editor().is_modified()]
@@ -336,7 +327,6 @@ class Core(object):
     def close_project(self):
         while self.editor_manager.active_editor is not None:
             self.close_active_editor()
-        self._close_editing_tools()
         self.project = None
 
     def create_folder(self, folder_name):
