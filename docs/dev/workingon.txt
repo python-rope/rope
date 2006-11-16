@@ -1,32 +1,11 @@
-Basic Inline Method
-===================
-
-- Occurances in defining module
-- Raising exceptions for function calls in lines that contain other
-  statements
-- Goto definition for '(a_var.\nattr)\n' for attr
-- Extract variable for selections starting from the start of the line
-- Renaming parameters to match parameters passed in call context
-- Default parameters
-- Testing badly formatted text
-- Handling class methods
-- Handling ``return`` statements
-- Lonely ``return``
-- Multiple ``return``\s
-- Keyword and list parameters
-- Caching calculated definitions
-- Test other calls as parameters
-- References to functions other than calls
-- Recursive calls
-
-Have a look at the ``Inline Method`` section of ``issues.txt``
-
+- Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
+  ``COPYING`` to help menu; Adding readonly mode?
+* Testing on windows
 
 Remaining Stories
 =================
 
-* Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
-  ``COPYING`` to help menu; Adding readonly mode?
+* `PyClass.superclasses` should be concluded data
 * Problems for renaming vars in `__init__.py` of packages!
 * ``How to use rope as a library`` doc
 * Better `ropetest` package structure

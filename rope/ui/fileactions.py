@@ -2,7 +2,6 @@ import Tkinter
 import tkMessageBox
 
 import rope.base.project
-
 import rope.ui.core
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction

@@ -191,7 +191,7 @@ class PythonFileRunner(object):
         env = dict(os.environ)
         source_folders = []
         file_path = self.file._get_real_path()
-        for folder in self.file.get_project().get_pycore().get_source_folders():
+        for folder in self.pycore.get_source_folders():
             source_folders.append(os.path.abspath(folder._get_real_path()))
         env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)

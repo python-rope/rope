@@ -7,9 +7,8 @@ except ImportError:
     pass
 
 
-def create_fscommands(project):
-    root = project.get_root_folder()
-    if 'pysvn' in globals() and root.has_child('.svn'):
+def create_fscommands(root):
+    if 'pysvn' in globals() and '.svn' in os.listdir(root):
         return SubversionCommands()
     return FileSystemCommands()
 

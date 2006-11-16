@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from rope.base.project import Project, RootFolder
+from rope.base.project import Project
 from rope.base.exceptions import RopeException
 from ropetest import testutils
 
@@ -345,7 +345,7 @@ class ProjectTest(unittest.TestCase):
                           folder.get_child('myfolder'))
 
     def test_project_root_is_root_folder(self):
-        self.assertTrue(isinstance(self.project.get_root_folder(), RootFolder))
+        self.assertEquals('', self.project.get_root_folder().get_path())
 
     def test_resource_change_observer(self):
         sample_file = self.project.get_root_folder().create_file('my_file.txt')
@@ -504,7 +504,8 @@ class OutOfProjectTest(unittest.TestCase):
         sample_file_path = os.path.join(self.test_directory, 'sample.txt')
         file(sample_file_path, 'w').close()
         normal_sample_resource = self.project.get_out_of_project_resource(sample_file_path)
-        absolute_sample_resource = self.project.get_out_of_project_resource(os.path.abspath(sample_file_path))
+        absolute_sample_resource = \
+            self.project.get_out_of_project_resource(os.path.abspath(sample_file_path))
         self.assertEquals(normal_sample_resource, absolute_sample_resource)
 
     def test_folder_get_child(self):
@@ -529,4 +530,3 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main()
-

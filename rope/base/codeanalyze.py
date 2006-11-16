@@ -94,8 +94,11 @@ class WordRangeFinder(object):
         last_parens = offset
         current_offset = self._find_last_non_space_char(offset)
         while current_offset > 0 and self.source_code[current_offset] in ')]}':
-            last_parens = current_offset = self._find_parens_start(current_offset)
-            current_offset = self._find_last_non_space_char(current_offset - 1)
+            last_parens = self._find_parens_start(current_offset)
+            current_offset = self._find_last_non_space_char(last_parens - 1)
+        if self.source_code[last_parens] == '(' and self._is_id_char(current_offset):
+           return self._find_primary_without_dot_start(current_offset)
+            
 
         if current_offset > 0 and self.source_code[current_offset] in '\'"':
             return self._find_string_start(current_offset)

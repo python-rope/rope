@@ -18,9 +18,6 @@ Stories
 * Variable indentation and tab size
 
 
-* Find occurances
-
-
 * Configuring keys
 
 
@@ -104,9 +101,6 @@ Stories
   in codeassist
 
 
-* Local history
-
-
 * Zip imports
 
 
@@ -151,6 +145,9 @@ Stories
 * Formating Code
 
 
+* Local history
+
+
 * What to do when the program has syntax errors for code assists
 
 
@@ -158,14 +155,7 @@ Stories
   Do not show submodules that are not imported yet as attributes.
 
 
-* Introduce parameter
-  Change global accesses or attributes accesses to parameters
-
-
 * Pull up method
-
-
-* View type hierarchy
 
 
 * Push down method
@@ -190,9 +180,6 @@ Stories
   * Running last run
 
 
-* Open Type; C-T
-
-
 * Replace method with method object refactoring
 
 
@@ -208,6 +195,9 @@ Stories
 * Moving fields/methods to attribute classes
 
 
+* Handling builtin functions and types
+
+
 * Change method signature
 
   * Add parameter
@@ -215,10 +205,20 @@ Stories
   * Reorder
 
 
-* Handling builtin functions and types
+* View type hierarchy
+
+
+* Find occurances
+
+
+* Introduce parameter
+  Change global accesses or attributes accesses to parameters
+
+
+* Sorting imports; standard, third party, project
 
 
 > Public Release 0.4m1 : November 19, 2006
 
 
-* Sorting imports; standard, third party, project
+* Open Type; C-T

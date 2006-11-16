@@ -47,10 +47,7 @@ class Core(object):
         import rope.ui.editactions
         import rope.ui.codeassist
         import rope.ui.refactor
-        for context in editingcontexts.contexts.values():
-            context.menu_manager.add_menu_cascade(MenuAddress(['Help'], 'p'))
-            context.menu_manager.add_menu_command(MenuAddress(['Help', 'About'], 'a'),
-                                                  self._show_about_dialog)
+        import rope.ui.helpactions
 
     def _add_menu_cascade(self, menu_address, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)
@@ -59,29 +56,6 @@ class Core(object):
 
     def _close_project_and_exit(self):
         self._close_project_dialog(exit_=True)
-
-    def _show_about_dialog(self):
-        toplevel = Toplevel()
-        toplevel.title('About Rope')
-        text = 'rope, a python refactoring IDE ...\n' + \
-               'version ' + rope.VERSION + '\n\n' + \
-               'Copyright (C) 2006 Ali Gholami Rudi\n\n' + \
-               'This program is free software; you can redistribute it and/or modify it\n' + \
-               'under the terms of GNU General Public License as published by the \n' + \
-               'Free Software Foundation; either version 2 of the license, or (at your \n' + \
-               'opinion) any later version.\n\n' + \
-               'This program is distributed in the hope that it will be useful,\n' + \
-               'but WITHOUT ANY WARRANTY; without even the implied warranty of\n' + \
-               'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n' + \
-               'GNU General Public License for more details.\n'
-        label = Label(toplevel, text=text, height=16, width=70, 
-                      justify=LEFT, relief=GROOVE)
-        def ok():
-            toplevel.destroy()
-        ok_button = Button(toplevel, text='OK', command=ok)
-        label.grid()
-        ok_button.grid()
-        toplevel.focus_set()
 
     def _init_key_binding(self):
         def do_switch_active_editor(event):

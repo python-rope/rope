@@ -1,17 +1,30 @@
+import glob
 import os
 import shutil
 from distutils.core import setup
 
 import rope
 
-
-def make_scripts():
+def make_temps():
     if not os.path.exists('scripts'):
         os.mkdir('scripts')
     shutil.copy('rope.py', 'scripts/rope')
+    # copying docs
+    if not os.path.exists('rope/docs'):
+        os.mkdir('rope/docs')
+    docs = ['README.txt', 'COPYING']
+    docs.extend(glob.glob('docs/user/*.txt'))
+    docs.extend(glob.glob('docs/dev/*.txt'))
+    for name in docs:
+        shutil.copy(name, 'rope/docs/')
 
+def remove_temps():
+    if os.path.exists('scripts'):
+        shutil.rmtree('scripts')
+    if os.path.exists('rope/docs'):
+        shutil.rmtree('rope/docs')
 
-make_scripts()
+make_temps()
 
 classifiers=['Development Status :: 3 - Alpha',
              'Operating System :: OS Independent',
@@ -39,6 +52,8 @@ setup(name='rope',
       url='http://rope.sf.net/',
       packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
                 'rope.ide', 'rope.ui'],
+      package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
       scripts=['scripts/rope'],
       classifiers=classifiers)
 
+remove_temps()

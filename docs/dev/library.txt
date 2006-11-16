@@ -1,0 +1,59 @@
+=========================
+ Using Rope As A Library
+=========================
+
+
+Useful Classes
+--------------
+
+* `rope.base.project.Project`
+* `rope.base.pycore.PyCore`
+* `rope.refactor.PythonRefactoring`
+* `rope.refactor` sub-modules
+* `rope.ide.codeassist.PythonCodeAssist`
+
+
+A Sample Session
+----------------
+
+Here is a sample session.::
+
+  # Creating a project
+  >>> from rope.base.project import Project
+  >>> project = Project('.')
+
+  >>> pycore = project.get_pycore()
+  >>> refactoring = project.get_pycore().get_refactoring()
+
+  # Working with files to create and write a module
+  >>> root = project.get_root_folder()
+  >>> mod1 = root.create_file('mod1.py')
+  >>> mod1.write('a_var = 10\n')
+
+  # Creating modules and packages using `PyCore` objects
+  >>> pkg = pycore.create_package(root, 'pkg')
+  >>> mod2 = pycore.create_module(pkg, 'mod2')
+  >>> mod2.write('import mod1\nprint mod1.a_var\n')
+
+  # We can use `PyCore.find_module` for finding modules, too
+  >>> assert mod2 == pycore.find_module('pkg.mod2')
+
+  # Performing rename refactoring on `mod1.a_var`
+  >>> refactoring.rename(mod1, 1, 'new_var')
+  >>> mod1.read()
+  u'new_var = 10\n'
+  >>> mod2.read()
+  u'import mod1\nprint mod1.new_var\n'
+  
+  # Undoing rename refactoring
+  >>> refactoring.undo()
+  >>> mod1.read()
+  u'a_var = 10\n'
+  >>> mod2.read()
+  u'import mod1\nprint mod1.a_var\n'
+
+  >>> pkg.remove()
+  >>> mod1.remove()
+
+The main problem for using rope is that rope should perform the
+changes to the files, since it has to update its stored information.

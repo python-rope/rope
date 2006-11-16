@@ -166,6 +166,10 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals('a_func  (  "(" ) .   an_attr',
                           word_finder.get_primary_at(26))
 
+    def test_functions_on_ending_parens(self):
+        word_finder = WordRangeFinder('A()')
+        self.assertEquals('A()', word_finder.get_primary_at(2))
+
     def test_splitted_statement(self):
         word_finder = WordRangeFinder('an_object.an_attr')
         self.assertEquals(('an_object', 'an_at', 10),

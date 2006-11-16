@@ -37,6 +37,12 @@ Release Goals
 Metaphor: Enhance features and make rope extensible
 
 
+Release Goals
+-------------
+
+* Rope library
+
+
 Possible Plans
 --------------
 
@@ -57,13 +63,15 @@ Hot Topics
 To Be Discussed
 ===============
 
-* `Undo Unification`_
+* `Library Movement`_
+* `Function Tools`_
 * `Python's Implicit Interfaces`_
 * Rope's preference saving system: format, location
 * Indexing source files for faster occurrence finding
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
+* Undo Unification
 
 
 Supporting Built-in Types
@@ -99,12 +107,6 @@ should be performed at runtime.
 Inline Method
 =============
 
-For each occurrence we can check whether its result has been used or
-not.  If it has been used we can insert the function body in its
-previous line and assign the return statement to a local variable.
-Otherwise we can remove the function call altogether and insert the
-function definition there.
-
 * Which of the variables should be renamed?
 * What to do about parameter assignments?
 * What to do about staticmethod an classmethods decorators
@@ -126,25 +128,41 @@ does not allow the inlining functions to be assigned to other names
 and it throws an exception in those cases.
 
 
-Holding Resources Based On Their Path
-=====================================
+Library Movement
+================
 
-:Motive:
-    Supporting opening files before opening a project for help items.
-
-Currently resources are devided into two groups; Those that are
-inside the projects and those that are outside.  We might be able to
-collapse these these two hierarchies by using a path based resource.
-Before doing that we need to handle these:
-
-* Using as reference/value object problems?
-* Updating the path of changed files in project; can we use
-  `Resource.add_change_visitor`
-* Providing old `Resource.get_path`
-* We don't need to check '', anymore?
-* Should we mix files that are inside and outside projects?
-* Can we change out of project files?
+* Updating files that have changed on disk
+* Removing 4-space indentation assumption
+* Removing tabs
+* Changing `rope.base.fscommands` for projects
+* Adding `read` and `write` to `rope.base.fscommands`
 * Should we expect files to be changed inside or outside the project?
+
+
+Updating Changed Files
+----------------------
+
+We can add a `Project.update` method that should be called each
+time we use rope classes.  But this seems inefficient if the
+number of updates are high.  We might be able to pass the
+changing file or folder to this method.  We can use this update in
+`fscommands` for moving and removing files, too.
+
+The other issue that might occur when using rope is that a file
+might detect that it has been changed or its path does not exist.
+What should we do in these situations?
+
+
+Function Tools
+==============
+
+* Adding parameters
+* Removing parameters
+* Renaming parameters
+* Change the order of parameters
+* Inline parameter default value
+* Sort and normalize passed call parameters;
+  a_func(p2=v2, p1=v1, p3=v3) -> a_func(v1, v2, p3=v3)
 
 
 Using ASTs For Transformations
@@ -161,50 +179,18 @@ or altering the old one and writing AST trees.  We can use the latter
 in the formatter, too but it seems a lot of work.
 
 
-Using Rope As A Library
-=======================
+What Rope Assumes...
+====================
 
-Here is a sample session.::
+In order to simplify problems a bit, rope makes some assumptions about
+the source code.  In futures some of this restrictions might be removed.
 
-  # Creating a project
-  >>> from rope.base.project import Project
-  >>> project = Project('.')
-
-  >>> pycore = project.get_pycore()
-  >>> refactoring = project.get_pycore().get_refactoring()
-
-  # Working with files to create and write a module
-  >>> root = project.get_root_folder()
-  >>> mod1 = root.create_file('mod1.py')
-  >>> mod1.write('a_var = 10\n')
-
-  # Creating modules and packages using `PyCore` objects
-  >>> pkg = pycore.create_package(root, 'pkg')
-  >>> mod2 = pycore.create_module(pkg, 'mod2')
-  >>> mod2.write('import mod1\nprint mod1.a_var\n')
-
-  # We can use `PyCore.find_module` for finding modules, too
-  >>> assert mod2 == pycore.find_module('pkg.mod2')
-
-  # Performing rename refactoring on `mod1.a_var`
-  >>> refactoring.rename(mod1, 1, 'new_var')
-  >>> mod1.read()
-  u'new_var = 10\n'
-  >>> mod2.read()
-  u'import mod1\nprint mod1.new_var\n'
-  
-  # Undoing rename refactoring
-  >>> refactoring.undo()
-  >>> mod1.read()
-  u'a_var = 10\n'
-  >>> mod2.read()
-  u'import mod1\nprint mod1.a_var\n'
-
-  >>> pkg.remove()
-  >>> mod1.remove()
-
-The main problem for using rope is that rope should perform the
-changes to the files, since it has to update its stored information.
+* All of the modules should use 4 spaces for indenting and no hard tabs.
+* All files that end with ``.py`` are considered to be python files and
+  all others not.
+* Either all files should be under version control or none.
+* All ``*.txt`` files are considered in reST formats.
+* XXX
 
 
 Designing Refactorings to Be Used in IDEs
@@ -264,16 +250,6 @@ Adding the new refactoring class.  Duplications:
 * Duplicate parameters
 * We have the same refactoring class for inlines, extracts and
   renames but we have to call their constructors separately.
-
-
-Undo Unification
-================
-
-Currently there are separate undo actions for editing text and
-refactorings and in future there might be undos for other changes.  We
-need to mix them together.  This seems hard to do mainly because we
-don't have much access to the undo mechanism of Tkinter.  I think an
-approximation will work.
 
 
 Moving Fields/Methods
@@ -500,20 +476,6 @@ divisions:
 
 After this refactoring, many places of rope can be refactored.  The
 logical line is very useful in many places for instance.
-
-
-What Rope Assumes...
-====================
-
-In order to simplify problems a bit, rope makes some assumptions about
-the source code.  In futures some of this restrictions might be removed.
-
-* All of the modules should use 4 spaces for indenting and no hard tabs.
-* All files that end with ``.py`` are considered to be python files and
-  all others not.
-* Either all files should be under version control or none.
-* All ``*.txt`` files are considered in reST formats.
-* XXX
 
 
 The GUI Mess; Working More on the UI Parts
