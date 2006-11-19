@@ -17,6 +17,7 @@ New Features
 Features added in this release:
 
 * Inline method refactoring
+* Better help menu
 
 
 Getting Started

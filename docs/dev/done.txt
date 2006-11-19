@@ -3,7 +3,13 @@
 ===========
 
 
-- Inline method : November 10, 2006
+> Public Release 0.4m1 : November 19, 2006
+
+
+- Better help menu : November 15, 2006
+
+
+- Inline method refactoring : November 10, 2006
 
 
 > Public Release 0.3 : November 5, 2006

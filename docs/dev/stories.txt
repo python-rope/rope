@@ -218,7 +218,4 @@ Stories
 * Sorting imports; standard, third party, project
 
 
-> Public Release 0.4m1 : November 19, 2006
-
-
 * Open Type; C-T

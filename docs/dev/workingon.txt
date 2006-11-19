@@ -1,5 +1,3 @@
-- Adding ``overview.txt``, ``README.txt``, ``tutorial.txt`` and
-  ``COPYING`` to help menu; Adding readonly mode?
 * Testing on windows
 
 Remaining Stories

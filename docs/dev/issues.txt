@@ -156,6 +156,8 @@ What should we do in these situations?
 Function Tools
 ==============
 
+Hava a look at `inline._CallAnalyzer`.
+
 * Adding parameters
 * Removing parameters
 * Renaming parameters
@@ -169,7 +171,7 @@ Using ASTs For Transformations
 ==============================
 
 The main problem with AST nodes is that they only hold the line in
-which statements appear but we need the offset.  If we can add offset
+which statements appear but we need the offset.  If we add offset
 information to AST nodes, we would be able to use them for all of the
 tasks that we do right now using direct operations on program source
 code.
