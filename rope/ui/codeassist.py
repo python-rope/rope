@@ -72,13 +72,13 @@ class _CompletionListHandle(EnhancedListHandle):
         self.toplevel.destroy()
 
     def selected(self, selected):
-        if selected.kind != 'template':
+        if isinstance(selected, rope.ide.codeassist.TemplateProposal):
+            _get_template_information(self.editor, self.result, selected)
+        else:
             self.editor.text.delete('0.0 +%dc' % self.result.start_offset,
                                     Tkinter.INSERT)
             self.editor.text.insert('0.0 +%dc' % self.result.start_offset,
                                     selected.name)
-        else:
-            _get_template_information(self.editor, self.result, selected)
         self.toplevel.destroy()
 
     def focus_went_out(self):

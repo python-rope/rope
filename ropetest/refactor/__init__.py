@@ -1,7 +1,6 @@
 import unittest
 
 import rope.base.codeanalyze
-import rope.refactor.rename
 from rope.refactor import Undo
 from rope.base.exceptions import RefactoringException
 from rope.base.project import Project
@@ -11,6 +10,7 @@ import ropetest.refactor.renametest
 import ropetest.refactor.extracttest
 import ropetest.refactor.movetest
 import ropetest.refactor.inlinetest
+import ropetest.refactor.change_signature_test
 
 
 class IntroduceFactoryTest(unittest.TestCase):
@@ -484,6 +484,7 @@ def suite():
     result.addTests(ropetest.refactor.inlinetest.suite())
     result.addTests(unittest.makeSuite(EncapsulateFieldTest))
     result.addTests(unittest.makeSuite(LocalToFieldTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.change_signature_test.ChangeSignatureTest))
     return result
 
 

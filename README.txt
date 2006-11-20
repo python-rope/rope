@@ -41,7 +41,7 @@ M-X t      Run unit-tests
 M-R        Rename Refactoring
 M-M        Extract method
 M-V        Move refactoring
-M-I        Inline local variable
+M-I        Inline refactoring
 
 C-O        Organize imports
 =========  ======================
@@ -94,7 +94,7 @@ C-o            show quick outline
 M-R            rename refactoring
 M-M            extract method
 M-V            move refactoring
-M-I            inline local variable
+M-I            inline refactoring
 C-O            organize imports
 =============  ==========================
 

@@ -1,7 +1,6 @@
 import unittest
 import rope.base.exceptions
 import rope.base.project
-import ropetest
 from ropetest import testutils
 
 
@@ -10,14 +9,14 @@ class InlineTest(unittest.TestCase):
     def setUp(self):
         super(InlineTest, self).setUp()
         self.project_root = 'sample_project'
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.refactoring = self.project.get_pycore().get_refactoring()
         self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
 
     def tearDown(self):
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         super(InlineTest, self).tearDown()
     
     def _inline(self, code, offset):
@@ -55,22 +54,22 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index('a') + 1)
         self.assertEquals('b = 1', refactored)
 
-    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_on_classes(self):
         code = 'class AClass(object):\n    pass\n'
         refactored = self._inline(code, code.index('AClass') + 1)
 
-    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_multiple_assignments(self):
         code = 'a_var = 10\na_var = 20\n'
         refactored = self._inline(code, code.index('a_var') + 1)
 
-    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_on_parameters(self):
         code = 'def a_func(a_param):\n    pass\n'
         refactored = self._inline(code, code.index('a_param') + 1)
 
-    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_tuple_assignments(self):
         code = 'a_var, another_var = (20, 30)\n'
         refactored = self._inline(code, code.index('a_var') + 1)

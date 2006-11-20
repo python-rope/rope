@@ -198,14 +198,16 @@ Stories
 * Handling builtin functions and types
 
 
-* Change method signature
-
-  * Add parameter
-  * Remove parameter
-  * Reorder
-
-
 * View type hierarchy
+
+
+* Sorting imports; standard, third party, project
+
+
+* Open Type; C-T
+
+
+> Public Release 0.4m2 : December 3, 2006
 
 
 * Find occurances
@@ -215,7 +217,8 @@ Stories
   Change global accesses or attributes accesses to parameters
 
 
-* Sorting imports; standard, third party, project
+* Change method signature
 
-
-* Open Type; C-T
+  * Add parameter
+  * Remove parameter
+  * Reorder

@@ -1,4 +1,13 @@
-* Testing on windows
+Change Method Signature
+=======================
+
+* Normalize parameters
+* Add parameter
+* Remove parameter
+* Reorder
+* Inline default
+* Rename parameter
+
 
 Remaining Stories
 =================
