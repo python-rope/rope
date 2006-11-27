@@ -515,7 +515,6 @@ def get_pyname_at(pycore, resource, offset):
     recalculation of initialization data
     """
     pymodule = pycore.resource_to_pyobject(resource)
-    source_code = pymodule.source_code
     pyname_finder = rope.base.codeanalyze.ScopeNameFinder(pymodule)
     pyname = pyname_finder.get_pyname_at(offset)
     return pyname

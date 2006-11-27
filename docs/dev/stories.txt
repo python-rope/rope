@@ -207,14 +207,14 @@ Stories
 * Open Type; C-T
 
 
-> Public Release 0.4m2 : December 3, 2006
-
-
 * Find occurances
 
 
 * Introduce parameter
   Change global accesses or attributes accesses to parameters
+
+
+> Public Release 0.4m2 : December 3, 2006
 
 
 * Change method signature

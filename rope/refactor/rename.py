@@ -2,8 +2,9 @@ import rope.base.codeanalyze
 import rope.base.pynames
 import rope.base.pyobjects
 import rope.base.exceptions
-from rope.refactor.change import ChangeSet, ChangeContents, MoveResource
 import rope.refactor.occurrences
+from rope.refactor import sourceutils
+from rope.refactor.change import ChangeSet, ChangeContents, MoveResource
 
 
 class RenameRefactoring(object):
@@ -126,8 +127,7 @@ class RenameInModule(object):
     
     def get_changed_module(self, resource=None, pymodule=None):
         source_code = self._get_source(resource, pymodule)
-        result = []
-        last_modified_char = 0
+        change_collector = sourceutils.ChangeCollector(source_code)
         for occurrence in self.occurrences_finder.find_occurrences(resource, pymodule):
             if self.whole_primary and occurrence.is_a_fixed_primary():
                 continue
@@ -135,13 +135,8 @@ class RenameInModule(object):
                 start, end = occurrence.get_primary_range()
             else:
                 start, end = occurrence.get_word_range()
-            result.append(source_code[last_modified_char:start]
-                          + self.new_name)
-            last_modified_char = end
-        if last_modified_char != 0:
-            result.append(source_code[last_modified_char:])
-            return ''.join(result)
-        return None
+            change_collector.add_change(start, end, self.new_name)
+        return change_collector.get_changed()
     
     def _get_source(self, resource, pymodule):
         if resource is not None:

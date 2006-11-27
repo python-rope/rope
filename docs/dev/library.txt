@@ -2,6 +2,17 @@
  Using Rope As A Library
 =========================
 
+By ``0.4`` release *rope* would probably be ready for being used as a
+library.  Features that need to be added include:
+
+* Extending and having more control on file reading and writing
+* Updating files that are changed outside rope
+* Better support for additional version control systems
+* Removing 4-space tabs and no hard tabs assumption
+* Limiting memory usage; throwing away calculated information when low
+  on memory
+* Documenting published interfaces
+
 
 Useful Classes
 --------------

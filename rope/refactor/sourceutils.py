@@ -1,3 +1,27 @@
+class ChangeCollector(object):
+    
+    def __init__(self, text):
+        self.text = text
+        self.changes = []
+    
+    def add_change(self, start, end, new_text=None):
+        if new_text is None:
+            new_text = self.text[start:end]
+        self.changes.append((start, end, new_text))
+    
+    def get_changed(self):
+        if not self.changes:
+            return None
+        self.changes.sort()
+        result = []
+        last_changed = 0
+        for change in self.changes:
+            start, end, text = change
+            result.append(self.text[last_changed:start] + text)
+            last_changed = end
+        if last_changed < len(self.text):
+            result.append(self.text[last_changed:])
+        return ''.join(result)
 
 
 def get_indents(lines, lineno):

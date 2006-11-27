@@ -6,6 +6,7 @@ import rope.base.pyobjects
 from rope.base import codeanalyze
 from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents
+import rope.refactor.functionutils
 
 
 class InlineRefactoring(object):
@@ -165,8 +166,8 @@ class _InlineFunctionCallsForModule(object):
         self.skip_end = skip_end
 
     def get_changed_module(self):
-        result = []
-        last_changed = 0
+        change_collector = sourceutils.ChangeCollector(self.source)
+        change_collector.add_change(self.skip_start, self.skip_end, '')
         for occurrence in self.occurrence_finder.find_occurrences(self.resource):
             start, end = occurrence.get_primary_range()
             if self.skip_start <= start < self.skip_end:
@@ -189,27 +190,18 @@ class _InlineFunctionCallsForModule(object):
             line_end = self.lines.get_line_end(end_line)
             returns = self.source[line_start:start].strip() != '' or \
                       self.source[end_parens:line_end].strip() != ''
-            if last_changed <= self.skip_start and 0 < self.skip_end <= start:
-                result.append(self.source[last_changed:self.skip_start])
-                last_changed = self.skip_end
-            result.append(self.source[last_changed:line_start])
             indents = sourceutils.get_indents(self.lines, start_line)
             definition = self.generator.get_definition(self.source[start:end_parens],
                                                        returns=returns)
-            result.append(sourceutils.fix_indentation(definition, indents))
+            end = min(line_end + 1, len(self.source))
+            change_collector.add_change(
+                line_start, end, sourceutils.fix_indentation(definition, indents))
             if returns:
                 name = self.generator.get_function_name() + '_result'
-                end = min(line_end + 1, len(self.source))
-                result.append(self.source[line_start:start] + name +
-                              self.source[end_parens:end])
-            last_changed = line_end + 1
-        
-        if result or self.skip_end > 0:
-            if last_changed <= self.skip_start and self.skip_end > 0:
-                result.append(self.source[last_changed:self.skip_start])
-                last_changed = self.skip_end
-            result.append(self.source[max(last_changed, self.skip_end):])
-            return ''.join(result)
+                change_collector.add_change(
+                    line_end, end,self.source[line_start:start] + name +
+                    self.source[end_parens:end])
+        return change_collector.get_changed()
     
     def _get_pymodule(self):
         if self._pymodule is None:
@@ -284,7 +276,7 @@ class _DefinitionGenerator(object):
     def _get_definition_params(self):
         if self._definition_param is None:
             header = self._get_function_header_without_def_and_colon()
-            call_analyzer = _CallAnalyzer(self.pyfunction, header)
+            call_analyzer = rope.refactor.functionutils.CallAnalyzer(self.pyfunction, header)
             paramdict = call_analyzer.get_passed_parameters()
             for value in paramdict.values():
                 if value.startswith('*'):
@@ -304,7 +296,7 @@ class _DefinitionGenerator(object):
         return self._calculated_definitions[key]
     
     def _calculate_definition(self, call, returns):
-        call_analyzer = _CallAnalyzer(self.pyfunction, call)
+        call_analyzer = rope.refactor.functionutils.CallAnalyzer(self.pyfunction, call)
         paramdict = self._get_definition_params()
         for param_name, value in call_analyzer.get_passed_parameters().iteritems():
             paramdict[param_name] = value
@@ -368,54 +360,3 @@ class _DefinitionGenerator(object):
                                              string_pattern + "|" +
                                              return_pattern)
         return cls._return_pattern
-
-
-class _CallAnalyzer(object):
-    
-    def __init__(self, pyfunction, call):
-        self.pyfunction = pyfunction
-        self.call = call
-    
-    def get_passed_parameters(self):
-        word_finder = codeanalyze.WordRangeFinder(self.call)
-        last_parens = self.call.rindex(')')
-        first_parens = word_finder._find_parens_start(last_parens)
-        result = {}
-        params = []
-        current = last_parens - 1
-        current = word_finder._find_last_non_space_char(current)
-        while current > first_parens:
-            primary_start = current
-            while current != first_parens and self.call[current] not in '=,':
-                current = word_finder._find_last_non_space_char(current - 1)
-            primary = self.call[current + 1:primary_start + 1].strip()
-            if self.call[current] == '=':
-                primary_start = current - 1
-                current -= 1
-                while current != first_parens and self.call[current] not in ',':
-                    current = word_finder._find_last_non_space_char(current - 1)
-                param_name = self.call[current + 1:primary_start + 1].strip()
-                result[param_name] = primary
-            else:
-                params.append(primary)
-            current = word_finder._find_last_non_space_char(current - 1)
-        parameter_names = self.pyfunction.parameters
-        if self._is_called_as_a_method() and '.' in self.call[:first_parens]:
-            params.append(word_finder.get_primary_at(
-                          self.call.rindex('.', 0, first_parens) - 1))
-        params.reverse()
-        for index, name in enumerate(parameter_names):
-            if index < len(params):
-                result[name] = params[index]
-        return result
-
-    def _is_called_as_a_method(self):
-        scope = self.pyfunction.get_scope()
-        parent = scope.parent
-        parameter_names = self.pyfunction.parameters
-        return len(parameter_names) > 0 and \
-               (parent.pyobject == self.pyfunction.
-                get_parameters()[parameter_names[0]].get_object().get_type()) and \
-               parent is not None and \
-               parent.pyobject.get_type() == \
-               rope.base.pyobjects.PyObject.get_base_type('Type')

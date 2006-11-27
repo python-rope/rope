@@ -1,28 +1,48 @@
 Change Method Signature
 =======================
 
-* Normalize parameters
-* Add parameter
-* Remove parameter
+- Adding a change collector for collecting changes
+- Handling `instance.method`
+- Handling `a_func(param2=2, param1=1)`
+- Raising exception when performed on non-functions
+- Handling `f(*arg)`
+- Handling `module.function`
+- Handling `f(**kwds)`
+- Normalize calls
+- Remove parameter
+- Rename parameter
+- Using `DefinitionInfo` and `CallInfo` for normalizing
+- Add parameter
+- Problems in `_read_parameters`
+- Should we map argnames to values in `_ArgumentMapping`?
+  Good for reordering, removing, adding and bad for renaming.
+- Refactoring argument actions; should they get a `DefinitionInfo`?
+- Inline default
+- Preserving order for ``*args`` and ``**keywords`` parameters
+
 * Reorder
-* Inline default
-* Rename parameter
+* Peforming multiple actions; renaming, inlining, adding, reordering
+  and normalizing
+* Change method signature Dialog
+
+* Checking exceptional conditions; for example duplicate params
+* More tests
+
+* Remove duplication between `inline` and `change_method_signature`
+* Performing actions on individual functions or imports
+* Distinction between refactorings that can be used by other
+  refactorings from other refactorings; should operate on pymodules?
 
 
 Remaining Stories
 =================
 
 * `PyClass.superclasses` should be concluded data
-* Problems for renaming vars in `__init__.py` of packages!
-* ``How to use rope as a library`` doc
 * Better `ropetest` package structure
 * Decide when to use `difflib` in `Editor.set_text`
 * Changing `uihelpers` tree and list to support mouse clicks
 * Handling `AssList` for inline variable and encapsulate field
-* Changing refactor modules to use `sourcetools.add_methods`
-* Adding ``add_statements(method, statements)``
 * Changing `Rename` to take an `OccuranceFinder`
-* Caching `Occurrence` fields
 * ``break`` and ``continue`` in extract method
 
 * Considering logical lines in `rope.codeanalyze`
@@ -38,7 +58,6 @@ Remaining Stories
         a_var = 10
         another_var = a_var
 
-* Preferring `DefinedName`\s in attribute code assists
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
 * Goto definition for ``"# comment.\na_var"``

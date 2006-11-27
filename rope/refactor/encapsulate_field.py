@@ -138,6 +138,15 @@ class _FindChangesForModule(object):
             return ''.join(result)
         return None
     
+    def _manage_writes(self, offset, result):
+        if self.last_set is not None and self.last_set <= offset:
+            result.append(self.source[self.last_modified:self.last_set])
+            set_value = ''.join(result[self.set_index:]).strip()
+            del result[self.set_index:]
+            result.append(set_value + ')')
+            self.last_modified = self.last_set
+            self.last_set = None
+    
     def _is_assigned_in_a_tuple_assignment(self, occurance):
         line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
         offset = occurance.get_word_range()[0]
@@ -168,15 +177,6 @@ class _FindChangesForModule(object):
         return relative_offset < equals_offset and (parens_start <= 0 or
                                                     line[:parens_start].strip() == '')
 
-    def _manage_writes(self, offset, result):
-        if self.last_set is not None and self.last_set <= offset:
-            result.append(self.source[self.last_modified:self.last_set])
-            set_value = ''.join(result[self.set_index:]).strip()
-            del result[self.set_index:]
-            result.append(set_value + ')')
-            self.last_modified = self.last_set
-            self.last_set = None
-    
     def _get_source(self):
         if self._source is None:
             if self.resource is not None:

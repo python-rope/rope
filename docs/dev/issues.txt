@@ -64,7 +64,6 @@ To Be Discussed
 ===============
 
 * `Library Movement`_
-* `Function Tools`_
 * `Python's Implicit Interfaces`_
 * Rope's preference saving system: format, location
 * Indexing source files for faster occurrence finding
@@ -114,19 +113,6 @@ Inline Method
 * Inlining generators
 * Inner functions
 
-What to do for::
-
-  def func():
-      print 'hey'
-  
-  f = func
-  f()
-
-Should we inline `f`?  Can we use dynamically gathered information
-for this purpose?  Fortunately this case never happens because rope
-does not allow the inlining functions to be assigned to other names
-and it throws an exception in those cases.
-
 
 Library Movement
 ================
@@ -136,6 +122,7 @@ Library Movement
 * Removing tabs
 * Changing `rope.base.fscommands` for projects
 * Adding `read` and `write` to `rope.base.fscommands`
+* Supporting other version control systems
 * Should we expect files to be changed inside or outside the project?
 
 
@@ -160,11 +147,59 @@ Hava a look at `inline._CallAnalyzer`.
 
 * Adding parameters
 * Removing parameters
-* Renaming parameters
 * Change the order of parameters
-* Inline parameter default value
-* Sort and normalize passed call parameters;
-  a_func(p2=v2, p1=v1, p3=v3) -> a_func(v1, v2, p3=v3)
+* Inline default
+
+  Where does this belong to.  Should we perform this refactoring
+  when inline refactoring is performed on a method or should we
+  have a separate refactoring for inline default value.  Or maybe
+  we have to make it available only in change signature dialog.
+
+* Rename parameter
+
+  The same arguments hold for rename parameter.  But we have
+  already implemented it in rename refactoring.
+
+Should we perform each of these separately or can we perform batches
+of these refactorings.
+
+
+Implementation Issues
+---------------------
+
+Function definitions are in this order::
+  
+  def a_function([normal_args, ][args_with_defaults, ][*args, ][**kwds])
+
+Function arguments are passed in this order::
+  
+  [instance.]a_function([normal_args, ][keyword_args, ][*args, ][**kwds])
+
+We can have `CallInformation` and `FunctionInformation` classes for
+holding these information.  But the main problem is the way we have
+to change them.::
+
+  code ->|call_info -> changes ->|call_info -> changed_code
+         |def_info               |def_info
+
+We should perform our changes sometime during the transformation of
+`CallInformation`\s to source code.  Maybe we can have another
+representation for function calls.  We might be able to replace
+``changes`` with::
+
+  ... -> mapped_paramters -> changes -> mapped_parameters -> ...
+
+But the main problem here is that the resulting mapped paramters
+should be decoded into call info using the new definition
+info.  So for each change we should make the new definition info
+prior to performing changes on call infos.  This change requires
+`CallInfo`\s to use a `DefinitionInfo` for transforming to code.
+Another consequence of this approach is that function calls would
+be always normalized.  To summerize:
+
+* Adding a `MappedParameters` Class
+* ``*args`` arguments do not have a clear mapping
+* ``**kwds`` arguments do not have a clear mapping
 
 
 Using ASTs For Transformations
