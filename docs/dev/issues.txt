@@ -149,16 +149,7 @@ Hava a look at `inline._CallAnalyzer`.
 * Removing parameters
 * Change the order of parameters
 * Inline default
-
-  Where does this belong to.  Should we perform this refactoring
-  when inline refactoring is performed on a method or should we
-  have a separate refactoring for inline default value.  Or maybe
-  we have to make it available only in change signature dialog.
-
 * Rename parameter
-
-  The same arguments hold for rename parameter.  But we have
-  already implemented it in rename refactoring.
 
 Should we perform each of these separately or can we perform batches
 of these refactorings.
@@ -167,39 +158,15 @@ of these refactorings.
 Implementation Issues
 ---------------------
 
-Function definitions are in this order::
-  
-  def a_function([normal_args, ][args_with_defaults, ][*args, ][**kwds])
+We should be able to perform many of the above actions.  One way to
+to this is the introduction of `ArgumentChangerSet` class.  But for
+doing this `DefinitionInfo`\s and `CallInfo`\s should not use
+`PyFunction`\s.  We need `PyFunctions` to say whether this function
+is a method and to access parameter name list.  We need:
 
-Function arguments are passed in this order::
-  
-  [instance.]a_function([normal_args, ][keyword_args, ][*args, ][**kwds])
-
-We can have `CallInformation` and `FunctionInformation` classes for
-holding these information.  But the main problem is the way we have
-to change them.::
-
-  code ->|call_info -> changes ->|call_info -> changed_code
-         |def_info               |def_info
-
-We should perform our changes sometime during the transformation of
-`CallInformation`\s to source code.  Maybe we can have another
-representation for function calls.  We might be able to replace
-``changes`` with::
-
-  ... -> mapped_paramters -> changes -> mapped_parameters -> ...
-
-But the main problem here is that the resulting mapped paramters
-should be decoded into call info using the new definition
-info.  So for each change we should make the new definition info
-prior to performing changes on call infos.  This change requires
-`CallInfo`\s to use a `DefinitionInfo` for transforming to code.
-Another consequence of this approach is that function calls would
-be always normalized.  To summerize:
-
-* Adding a `MappedParameters` Class
-* ``*args`` arguments do not have a clear mapping
-* ``**kwds`` arguments do not have a clear mapping
+* Building the first `DefinitionInfo` from pymodule
+* Building `DefinitionInfo`\s from other `DefinitionInfo`\s
+* Building `CallInfo`\s only from `DefinitionInfo`\s
 
 
 Using ASTs For Transformations

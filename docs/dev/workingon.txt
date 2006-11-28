@@ -1,28 +1,11 @@
 Change Method Signature
 =======================
 
-- Adding a change collector for collecting changes
-- Handling `instance.method`
-- Handling `a_func(param2=2, param1=1)`
-- Raising exception when performed on non-functions
-- Handling `f(*arg)`
-- Handling `module.function`
-- Handling `f(**kwds)`
-- Normalize calls
-- Remove parameter
-- Rename parameter
-- Using `DefinitionInfo` and `CallInfo` for normalizing
-- Add parameter
-- Problems in `_read_parameters`
-- Should we map argnames to values in `_ArgumentMapping`?
-  Good for reordering, removing, adding and bad for renaming.
-- Refactoring argument actions; should they get a `DefinitionInfo`?
-- Inline default
-- Preserving order for ``*args`` and ``**keywords`` parameters
+- Reordering parameters
 
-* Reorder
 * Peforming multiple actions; renaming, inlining, adding, reordering
   and normalizing
+* Removing `CallAnalyzer`; changing `inline` to use new classes
 * Change method signature Dialog
 
 * Checking exceptional conditions; for example duplicate params

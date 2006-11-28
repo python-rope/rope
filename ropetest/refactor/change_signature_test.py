@@ -239,6 +239,30 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.normalize().do()
         self.assertEquals('def a_func(*args, **kwds):\n    pass\na_func(3, 1, 2, a=1, c=3, b=2)\n',
                           self.mod.read())
+    
+    def test_change_order_for_only_one_parameter(self):
+        self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')
+        signature = ChangeSignature(self.pycore, self.mod,
+                                    self.mod.read().index('a_func') + 1)
+        signature.reorder([0]).do()
+        self.assertEquals('def a_func(p1):\n    pass\na_func(1)\n',
+                          self.mod.read())
+
+    def test_change_order_for_two_parameter(self):
+        self.mod.write('def a_func(p1, p2):\n    pass\na_func(1, 2)\n')
+        signature = ChangeSignature(self.pycore, self.mod,
+                                    self.mod.read().index('a_func') + 1)
+        signature.reorder([1, 0]).do()
+        self.assertEquals('def a_func(p2, p1):\n    pass\na_func(2, 1)\n',
+                          self.mod.read())
+
+    def test_changing_order_with_static_params(self):
+        self.mod.write('def a_func(p1, p2=0, p3=0):\n    pass\na_func(1, 2)\n')
+        signature = ChangeSignature(self.pycore, self.mod,
+                                    self.mod.read().index('a_func') + 1)
+        signature.reorder([0, 2, 1]).do()
+        self.assertEquals('def a_func(p1, p3=0, p2=0):\n    pass\na_func(1, p2=2)\n',
+                          self.mod.read())
 
 
 if __name__ == '__main__':

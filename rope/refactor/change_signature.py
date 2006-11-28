@@ -4,8 +4,7 @@ import rope.refactor.occurrences
 import rope.base.exceptions
 import rope.base.pyobjects
 from rope.base import codeanalyze
-from rope.refactor import sourceutils
-from rope.refactor import functionutils
+from rope.refactor import sourceutils, functionutils
 from rope.refactor.change import ChangeContents, ChangeSet
 
 
@@ -66,6 +65,11 @@ class ChangeSignature(object):
             _ArguementDefaultInliner(self.pyname.get_object(),
                                      self._get_definition_info(), index))
 
+    def reorder(self, new_ordering):
+        return self._change_calls(
+            _ArguementReorderer(self.pyname.get_object(),
+                                self._get_definition_info(), new_ordering))
+
 
 class _FunctionChanger(object):
 
@@ -81,7 +85,7 @@ class _FunctionChanger(object):
         return call_info.to_string()
 
     def change_call(self, call):
-        call_info = functionutils._CallInfo.read(self.pyfunction, call)
+        call_info = functionutils._CallInfo.read(self.definition_info, call)
         mapping = functionutils._ArgumentMapping(self.definition_info, call_info)
         self._change_argument_mapping(mapping)
         return mapping.to_call_info(self.new_definition_info).to_string()
@@ -185,6 +189,18 @@ class _ArguementDefaultInliner(_FunctionChanger):
         if self.default is not None and name not in mapping.param_dict:
             mapping.param_dict[name] = self.default
 
+
+class _ArguementReorderer(_FunctionChanger):
+    
+    def __init__(self, pyfunction, definition_info, new_order):
+        self.new_order = new_order
+        super(_ArguementReorderer, self).__init__(pyfunction, definition_info)
+    
+    def _change_definition_info(self, definition_info):
+        new_args = list(definition_info.args_with_defaults)
+        for index, new_index in enumerate(self.new_order):
+            new_args[new_index] = definition_info.args_with_defaults[index]
+        definition_info.args_with_defaults = new_args
 
 class _ChangeCallsInModule(object):
     

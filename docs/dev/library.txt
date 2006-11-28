@@ -36,7 +36,7 @@ Here is a sample session.::
   >>> pycore = project.get_pycore()
   >>> refactoring = project.get_pycore().get_refactoring()
 
-  # Working with files to create and write a module
+  # Working with files to create a module
   >>> root = project.get_root_folder()
   >>> mod1 = root.create_file('mod1.py')
   >>> mod1.write('a_var = 10\n')
@@ -66,5 +66,4 @@ Here is a sample session.::
   >>> pkg.remove()
   >>> mod1.remove()
 
-The main problem for using rope is that rope should perform the
-changes to the files, since it has to update its stored information.
+See code documentation and test suites for more information.
