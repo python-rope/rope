@@ -25,6 +25,7 @@ far:
   * Extract method
   * Extract variable
   * Move class/function/module/package
+  * Change method signature
   * Introduce factory method
   * Transform module to package
   * Inline method/local variable

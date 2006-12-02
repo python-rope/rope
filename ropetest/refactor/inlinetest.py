@@ -331,6 +331,12 @@ class InlineTest(unittest.TestCase):
     def test_recursive_functions(self):
         self.mod.write('def a_func(var):\n    a_func(var)\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
+    
+    # TODO: inlining on function parameters
+    def xxx_test_inlining_function_default_parameters(self):
+        self.mod.write('def a_func(p1=1):\n    pass\na_func()\n')
+        self.refactoring.inline(self.mod, self.mod.read().index('p1') + 1)
+        self.assertEquals('def a_func(p1=1):\n    pass\na_func()\n', self.mod.read())
 
 
 def suite():

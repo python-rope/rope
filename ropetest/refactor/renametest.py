@@ -58,6 +58,18 @@ class RenameRefactoringTest(unittest.TestCase):
         refactored = self.do_local_rename("def f(a_param):\n    print a_param\n", 30, 'new_param')
         self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
     
+    def test_renaming_occurrences_inside_functions(self):
+        code = 'def a_func(p1):\n    a = p1\na_func(1)\n'
+        refactored = self.do_local_rename(code, code.index('p1') + 1, 'new_param')
+        self.assertEquals('def a_func(new_param):\n    a = new_param\na_func(1)\n',
+                          refactored)
+    
+    def test_renaming_arguments_for_normal_args_changing_calls(self):
+        code = 'def a_func(p1=None, p2=None):\n    pass\na_func(p2=1)\n'
+        refactored = self.do_local_rename(code, code.index('p2') + 1, 'p3')
+        self.assertEquals('def a_func(p1=None, p3=None):\n    pass\na_func(p3=1)\n',
+                          refactored)
+
     def test_renaming_function_parameters_of_class_init(self):
         code = 'class A(object):\n    def __init__(self, a_param):\n        pass\n' \
                'a_var = A(a_param=1)\n'

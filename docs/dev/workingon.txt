@@ -1,17 +1,15 @@
 Change Method Signature
 =======================
 
-- Reordering parameters
+- Change method signature Dialog
+- Changing `inline` to use new classes in `rope.refactor.functionutils`
+- Preventing recomputation of `DefinitionInfo`\s
+- Throwing exception when adding duplicate paramters
+- Adding inline argument default dialog
 
-* Peforming multiple actions; renaming, inlining, adding, reordering
-  and normalizing
-* Removing `CallAnalyzer`; changing `inline` to use new classes
-* Change method signature Dialog
-
-* Checking exceptional conditions; for example duplicate params
-* More tests
-
-* Remove duplication between `inline` and `change_method_signature`
+* Changing signature in class hierarchies
+* Adding ignored file patterns in projects
+* Problems for inside generator assists
 * Performing actions on individual functions or imports
 * Distinction between refactorings that can be used by other
   refactorings from other refactorings; should operate on pymodules?
@@ -23,7 +21,6 @@ Remaining Stories
 * `PyClass.superclasses` should be concluded data
 * Better `ropetest` package structure
 * Decide when to use `difflib` in `Editor.set_text`
-* Changing `uihelpers` tree and list to support mouse clicks
 * Handling `AssList` for inline variable and encapsulate field
 * Changing `Rename` to take an `OccuranceFinder`
 * ``break`` and ``continue`` in extract method

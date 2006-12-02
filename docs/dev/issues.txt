@@ -6,8 +6,8 @@
 Release Schedule
 ================
 
-*rope* will be release every two weeks and one final release every
-quarter.  That is
+*rope* will be released every two weeks and each quarter a final
+version would be released.  That is:
 
 =====  ===============
 Week   Release Number
@@ -21,8 +21,8 @@ Week   Release Number
 13     x.y
 =====  ===============
 
-This is only a rough plan.  For example some more release candidates
-might be released before the ``x.y`` release.
+This is only a rough plan.  For example we might have more release
+candidates before the ``x.y`` release.
 
 
 Version 0.4
@@ -47,8 +47,8 @@ Possible Plans
 --------------
 
 * Inline method
-* Move field/methods
 * Change method signature
+* Move field/methods
 * Handling built-in types
 * Implicit interfaces
 * High level refactorings
@@ -94,13 +94,72 @@ every list only contains one type of objects.
 One way of doing this is object inference of `list.append` or other
 insertion functions.  But the difficulty here is we should infer
 the parameters of these functions for each instance in program source
-rather than for the list type in whole.  First of all this analysis
-should be performed at runtime.
+rather than for the list type in whole.  This analysis should be
+performed at runtime.
 
 * `ObjectInfer.infer_holding_type` for `iterator`\s
 * Addition of a flag to types that indicates the distinction of
   instances.
 * Can we support `iterator` types, too?
+
+
+Updating Changed Files
+======================
+
+:Motives:
+  * Forcing rope to update its files when using rope as a library
+  * Moving folders should not be performed recursively (for VCS's)
+:Goals:
+  * Adding `Project.validate_resource`
+  * Holding last changed time for files
+
+We need to add `Project.validate_resource` method.  It should
+invalidate or check the validation of the passed resource and its
+children (if it is a folder).  We might also need to add a
+`Resource.is_valid` method.
+
+Currently `Resource.add_change_observer` registers observers to notify
+them that the path or the content of a file or the the children of a
+folder have been changed.  This is different from invalidation which
+means this file or folder no longer exists.
+
+Maybe we can do what eclipse does.  The resources only hold an
+address and the address might or might not exist.  The main difference
+between resources in rope and eclipse is that resources in rope are
+reference objects and in eclipse they are value objects.  That means
+when we invalidate a resource another resource with the same address
+might be made in future.  What's more the old observer are no longer
+notified when that resource changes.
+
+Can We Use Value Objects?
+-------------------------
+
+We decided to use reference objects for rope in the past.  But let's
+consider value objects once more.  If resources are going to be value
+objects they should not hold any information about the state of the
+resource.  Right know the only piece of information that resources
+hold are observers.  These observers can be held in the project.
+
+The other issue is equality check.  We can easily change resources to
+compare their addresses for equality.
+
+Reference to value transition:
+
+* Moving observers to projects to make resources immutable
+* __eq__
+* __hash__
+
+
+Changing Observers
+------------------
+
+We are going to move observers from `Resource` to `Project`.  So there
+does not seem to be much interest toward having observers that are
+interested only in a certain resource.
+
+
+Holding Last Changed Time For Resources
+---------------------------------------
 
 
 Inline Method
@@ -138,35 +197,6 @@ changing file or folder to this method.  We can use this update in
 The other issue that might occur when using rope is that a file
 might detect that it has been changed or its path does not exist.
 What should we do in these situations?
-
-
-Function Tools
-==============
-
-Hava a look at `inline._CallAnalyzer`.
-
-* Adding parameters
-* Removing parameters
-* Change the order of parameters
-* Inline default
-* Rename parameter
-
-Should we perform each of these separately or can we perform batches
-of these refactorings.
-
-
-Implementation Issues
----------------------
-
-We should be able to perform many of the above actions.  One way to
-to this is the introduction of `ArgumentChangerSet` class.  But for
-doing this `DefinitionInfo`\s and `CallInfo`\s should not use
-`PyFunction`\s.  We need `PyFunctions` to say whether this function
-is a method and to access parameter name list.  We need:
-
-* Building the first `DefinitionInfo` from pymodule
-* Building `DefinitionInfo`\s from other `DefinitionInfo`\s
-* Building `CallInfo`\s only from `DefinitionInfo`\s
 
 
 Using ASTs For Transformations

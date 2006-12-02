@@ -3,6 +3,27 @@
 ===========
 
 
+- Change method signature : December 1, 2006
+
+
+- Change method signature dialog : November 30, 2006
+
+
+- Reordering parameters : November 28, 2006
+
+
+- Removing parameters : November 26, 2006
+
+
+- Inline parameter default value : November 26, 2006
+
+
+- Adding parameters : November 26, 2006
+
+
+- Normalizing function calls : November 26, 2006
+
+
 > Public Release 0.4m1 : November 19, 2006
 
 

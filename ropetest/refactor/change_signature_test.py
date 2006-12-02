@@ -2,6 +2,7 @@ import unittest
 import rope.base.exceptions
 import rope.base.project
 from rope.refactor.change_signature import ChangeSignature
+from rope.refactor import change_signature
 
 from ropetest import testutils
 
@@ -162,22 +163,6 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def a_func(p1):\n    pass\na_func(*[1, 2, 3])\n',
                           self.mod.read())
     
-    def test_renaming_arguments_for_normal_args(self):
-        self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')
-        signature = ChangeSignature(self.pycore, self.mod,
-                                    self.mod.read().index('a_func') + 1)
-        signature.rename(0, 'param').do()
-        self.assertEquals('def a_func(param):\n    pass\na_func(1)\n',
-                          self.mod.read())
-
-    def test_renaming_arguments_for_normal_args_changing_calls(self):
-        self.mod.write('def a_func(p1=None, p2=None):\n    pass\na_func(p2=1)\n')
-        signature = ChangeSignature(self.pycore, self.mod,
-                                    self.mod.read().index('a_func') + 1)
-        signature.rename(1, 'p3').do()
-        self.assertEquals('def a_func(p1=None, p3=None):\n    pass\na_func(p3=1)\n',
-                          self.mod.read())
-
     def test_adding_arguments_for_normal_args_changing_definition(self):
         self.mod.write('def a_func():\n    pass\n')
         signature = ChangeSignature(self.pycore, self.mod,
@@ -218,19 +203,26 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def a_func(p1=0, p2=0):\n    pass\na_func(p2=1)\n',
                           self.mod.read())
 
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    def test_adding_duplicate_parameter_and_raising_exceptions(self):
+        self.mod.write('def a_func(p1):\n    pass\n')
+        signature = ChangeSignature(self.pycore, self.mod,
+                                    self.mod.read().index('a_func') + 1)
+        signature.add(1, 'p1').do()
+
     def test_inlining_default_arguments(self):
         self.mod.write('def a_func(p1=0):\n    pass\na_func()\n')
         signature = ChangeSignature(self.pycore, self.mod,
                                     self.mod.read().index('a_func') + 1)
         signature.inline_default(0).do()
-        self.assertEquals('def a_func(p1):\n    pass\na_func(0)\n', self.mod.read())
+        self.assertEquals('def a_func(p1=0):\n    pass\na_func(0)\n', self.mod.read())
 
     def test_inlining_default_arguments2(self):
         self.mod.write('def a_func(p1=0):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.pycore, self.mod,
                                     self.mod.read().index('a_func') + 1)
         signature.inline_default(0).do()
-        self.assertEquals('def a_func(p1):\n    pass\na_func(1)\n', self.mod.read())
+        self.assertEquals('def a_func(p1=0):\n    pass\na_func(1)\n', self.mod.read())
 
     def test_preserving_args_and_keywords_order(self):
         self.mod.write('def a_func(*args, **kwds):\n    pass\na_func(3, 1, 2, a=1, c=3, b=2)\n')
@@ -263,6 +255,27 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.reorder([0, 2, 1]).do()
         self.assertEquals('def a_func(p1, p3=0, p2=0):\n    pass\na_func(1, p2=2)\n',
                           self.mod.read())
+    
+    def test_doing_multiple_changes(self):
+        changers = []
+        self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')
+        changers.append(change_signature.ArgumentRemover(0))
+        changers.append(change_signature.ArgumentAdder(0, 'p2', None, None))
+        signature = ChangeSignature(self.pycore, self.mod,
+                                    self.mod.read().index('a_func') + 1)
+        signature.apply_changers(changers).do()
+        self.assertEquals('def a_func(p2):\n    pass\na_func()\n', self.mod.read())
+
+    def test_doing_multiple_changes2(self):
+        changers = []
+        self.mod.write('def a_func(p1, p2):\n    pass\na_func(p2=2)\n')
+        changers.append(change_signature.ArgumentAdder(2, 'p3', None, '3'))
+        changers.append(change_signature.ArgumentReorderer([1, 0, 2]))
+        changers.append(change_signature.ArgumentRemover(1))
+        signature = ChangeSignature(self.pycore, self.mod,
+                                    self.mod.read().index('a_func') + 1)
+        signature.apply_changers(changers).do()
+        self.assertEquals('def a_func(p2, p3):\n    pass\na_func(2, 3)\n', self.mod.read())
 
 
 if __name__ == '__main__':

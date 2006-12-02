@@ -64,11 +64,7 @@ class EnhancedList(object):
         if selection:
             active = int(selection[0])
             if active - 1 >= 0:
-                self.list.select_clear(0, END)
-                self.list.selection_set(active - 1)
-                self.list.see(active - 1)
-                self.list.activate(active - 1)
-                self.list.see(active - 1)
+                self._activate(active - 1)
         return 'break'
 
     def _select_next(self, event):
@@ -76,13 +72,15 @@ class EnhancedList(object):
         if selection:
             active = int(selection[0])
             if active + 1 < self.list.size():
-                self.list.select_clear(0, END)
-                self.list.selection_set(active + 1)
-                self.list.see(active + 1)
-                self.list.activate(active + 1)
-                self.list.see(active + 1)
+                self._activate(active + 1)
         return 'break'
 
+    def _activate(self, index):
+        self.list.select_clear(0, END)
+        self.list.selection_set(index)
+        self.list.activate(index)
+        self.list.see(index)
+    
     def add_entry(self, entry):
         self.entries.append(entry)
         self.list.insert(END, self.handle.entry_to_string(entry))
@@ -93,6 +91,63 @@ class EnhancedList(object):
         self.entries = []
         self.list.delete(0, END)
 
+
+class VolatileList(EnhancedList):
+
+    def __init__(self, *args, **kwds):
+        super(VolatileList, self).__init__(*args, **kwds)
+        self.list.bind('<Alt-p>', lambda event: self.move_up())
+        self.list.bind('<Alt-n>', lambda event: self.move_down())
+    
+    def insert_entry(self, entry, index=None):
+        if index == None:
+            index = self.get_active_index()
+        self.entries.insert(index, entry)
+        self.list.insert(index, self.handle.entry_to_string(entry))
+        if len(self.entries) == 1:
+            self.list.selection_set(0)
+    
+    def remove_entry(self, index=None):
+        if index == None:
+            index = self.get_active_index()
+        result = self.entries[index]
+        self.list.delete(index)
+        return self.entries.pop(index)
+    
+    def get_active_index(self):
+        selection = self.list.curselection()
+        if selection:
+            return int(selection[0])
+        return 0
+    
+    def get_active_entry(self):
+        if self.entries:
+            return self.entries[self.get_active_index()]
+        
+    def get_entries(self):
+        return list(self.entries)
+    
+    def move_up(self):
+        index = self.get_active_index()
+        if index > 0:
+            entry = self.remove_entry(index)
+            self.insert_entry(entry, index - 1)
+            self._activate(index - 1)
+    
+    def move_down(self):
+        index = self.get_active_index()
+        if index < len(self.entries) - 1:
+            entry = self.remove_entry(index)
+            self.insert_entry(entry, index + 1)
+            self._activate(index + 1)
+    
+    def update(self):
+        index = self.get_active_index()
+        if index > 0:
+            entry = self.remove_entry(index)
+            self.insert_entry(entry, index)
+            self._activate(index)
+    
 
 class _DescriptionListHandle(EnhancedListHandle):
     

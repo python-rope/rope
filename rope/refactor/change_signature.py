@@ -33,7 +33,7 @@ class ChangeSignature(object):
                 changes.add_change(ChangeContents(file, changed_file))
         return changes
     
-    def _get_definition_info(self):
+    def get_definition_info(self):
         pymodule, line = self.pyname.get_definition_location()
         line_start = pymodule.lines.get_line_start(line)
         line_end = pymodule.lines.get_line_end(line)
@@ -42,74 +42,86 @@ class ChangeSignature(object):
                                                   pymodule.source_code[start:line_end])
     
     def normalize(self):
-        return self._change_calls(
-            _ArgumentNormalizer(self.pyname.get_object(), self._get_definition_info()))
-        return self._change_calls(_ArgumentNormalizer(self.pyname.get_object()))
+        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
+                                    [ArgumentNormalizer()])
+        return self._change_calls(changer)
     
     def remove(self, index):
-        return self._change_calls(
-            _ArguementRemover(self.pyname.get_object(), self._get_definition_info(), index))
-
-    def rename(self, index, new_name):
-        return self._change_calls(
-            _ArguementRenamer(self.pyname.get_object(), self._get_definition_info(),
-                              index, new_name))
+        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
+                                    [ArgumentRemover(index)])
+        return self._change_calls(changer)
 
     def add(self, index, name, default=None, value=None):
-        return self._change_calls(
-            _ArguementAdder(self.pyname.get_object(), self._get_definition_info(),
-                            index, name, default, value))
+        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
+                                    [ArgumentAdder(index, name, default, value)])
+        return self._change_calls(changer)
 
     def inline_default(self, index):
-        return self._change_calls(
-            _ArguementDefaultInliner(self.pyname.get_object(),
-                                     self._get_definition_info(), index))
+        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
+                                    [ArgumentDefaultInliner(index)])
+        return self._change_calls(changer)
 
     def reorder(self, new_ordering):
-        return self._change_calls(
-            _ArguementReorderer(self.pyname.get_object(),
-                                self._get_definition_info(), new_ordering))
+        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
+                                    [ArgumentReorderer(new_ordering)])
+        return self._change_calls(changer)
+
+    def apply_changers(self, changers):
+        function_changer = _FunctionChangers(
+            self.pyname.get_object(), self.get_definition_info(), changers)
+        return self._change_calls(function_changer)
 
 
-class _FunctionChanger(object):
-
-    def __init__(self, pyfunction, definition_info):
+class _FunctionChangers(object):
+    
+    def __init__(self, pyfunction, definition_info, changers=None):
         self.pyfunction = pyfunction
         self.definition_info = definition_info
-        self.new_definition_info = copy.deepcopy(definition_info)
-        self._change_definition_info(self.new_definition_info)
+        self.changers = changers
+        self.changed_definition_infos = self._get_changed_definition_infos()
+    
+    def _get_changed_definition_infos(self):
+        result = []
+        definition_info = self.definition_info
+        result.append(definition_info)
+        for changer in self.changers:
+            definition_info = copy.deepcopy(definition_info)
+            changer.change_definition_info(definition_info)
+            result.append(definition_info)
+        return result
     
     def change_definition(self, call):
-        call_info = functionutils._DefinitionInfo.read(self.pyfunction, call)
-        self._change_definition_info(call_info)
-        return call_info.to_string()
+        return self.changed_definition_infos[-1].to_string()
 
     def change_call(self, call):
         call_info = functionutils._CallInfo.read(self.definition_info, call)
         mapping = functionutils._ArgumentMapping(self.definition_info, call_info)
-        self._change_argument_mapping(mapping)
-        return mapping.to_call_info(self.new_definition_info).to_string()
+        
+        for definition_info, changer in zip(self.changed_definition_infos, self.changers):
+            changer.change_argument_mapping(definition_info, mapping)
+        
+        return mapping.to_call_info(self.changed_definition_infos[-1]).to_string()
     
-    def _change_definition_info(self, definition_info):
+
+class _ArgumentChanger(object):
+    
+    def change_definition_info(self, definition_info):
         pass
     
-    def _change_argument_mapping(self, argument_mapping):
+    def change_argument_mapping(self, definition_info, argument_mapping):
         pass
 
 
-class _ArgumentNormalizer(_FunctionChanger):
-    
-    def __init__(self, pyfunction, definition_info):
-        super(_ArgumentNormalizer, self).__init__(pyfunction, definition_info)
-    
+class ArgumentNormalizer(_ArgumentChanger):
+    pass    
 
-class _ArguementRemover(_FunctionChanger):
+
+class ArgumentRemover(_ArgumentChanger):
     
-    def __init__(self, pyfunction, definition_info, index):
+    def __init__(self, index):
         self.index = index
-        super(_ArguementRemover, self).__init__(pyfunction, definition_info)
     
-    def _change_definition_info(self, call_info):
+    def change_definition_info(self, call_info):
         if self.index < len(call_info.args_with_defaults):
             del call_info.args_with_defaults[self.index]
         elif self.index == len(call_info.args_with_defaults) and \
@@ -121,21 +133,76 @@ class _ArguementRemover(_FunctionChanger):
             call_info.args_arg is not None and call_info.keywords_arg is not None):
             call_info.keywords_arg = None
 
-    def _change_argument_mapping(self, mapping):
-        if self.index < len(self.definition_info.args_with_defaults):
-            name = self.definition_info.args_with_defaults[0]
+    def change_argument_mapping(self, definition_info, mapping):
+        if self.index < len(definition_info.args_with_defaults):
+            name = definition_info.args_with_defaults[0]
             if name in mapping.param_dict:
                 del mapping.param_dict[name]
     
 
-class _ArguementRenamer(_FunctionChanger):
+class ArgumentAdder(_ArgumentChanger):
     
-    def __init__(self, pyfunction, definition_info, index, new_name):
+    def __init__(self, index, name, default=None, value=None):
+        self.index = index
+        self.name = name
+        self.default = default
+        self.value = value
+    
+    def change_definition_info(self, definition_info):
+        for pair in definition_info.args_with_defaults:
+            if pair[0] == self.name:
+                raise rope.base.exceptions.RefactoringException(
+                    'Adding duplicate parameter: <%s>.' % self.name)
+        definition_info.args_with_defaults.insert(self.index,
+                                                  (self.name, self.default))
+
+    def change_argument_mapping(self, definition_info, mapping):
+        if self.value is not None:
+            mapping.param_dict[self.name] = self.value
+
+
+class ArgumentDefaultInliner(_ArgumentChanger):
+    
+    def __init__(self, index):
+        self.index = index
+        self.remove = remove = False
+    
+    def change_definition_info(self, definition_info):
+        if self.remove:
+            definition_info.args_with_defaults[self.index] = \
+                (definition_info.args_with_defaults[self.index][0], None)
+
+    def change_argument_mapping(self, definition_info, mapping):
+        default = definition_info.args_with_defaults[self.index][1]
+        name = definition_info.args_with_defaults[self.index][0]
+        if default is not None and name not in mapping.param_dict:
+            mapping.param_dict[name] = default
+
+
+class ArgumentReorderer(_ArgumentChanger):
+    
+    def __init__(self, new_order):
+        self.new_order = new_order
+    
+    def change_definition_info(self, definition_info):
+        new_args = list(definition_info.args_with_defaults)
+        for index, new_index in enumerate(self.new_order):
+            new_args[new_index] = definition_info.args_with_defaults[index]
+        definition_info.args_with_defaults = new_args
+
+
+# XXX: This cannot be used because we need some way of changing
+# occurances inside function bodies.  By the way renaming
+# parameters is already supported by normal rename refactoring.
+# Supproting renaming parameters in change method signature
+# increases the compexity considerably.  So we leave that for now.
+class _XXXArgumentRenamer(_ArgumentChanger):
+    
+    def __init__(self, index, new_name):
         self.index = index
         self.new_name = new_name
-        super(_ArguementRenamer, self).__init__(pyfunction, definition_info)
     
-    def _change_definition_info(self, call_info):
+    def change_definition_info(self, call_info):
         if self.index < len(call_info.args_with_defaults):
             call_info.args_with_defaults[self.index] = (
                 self.new_name, call_info.args_with_defaults[self.index][1])
@@ -148,59 +215,13 @@ class _ArguementRenamer(_FunctionChanger):
             call_info.args_arg is not None and call_info.keywords_arg is not None):
             call_info.keywords_arg = self.new_name
 
-    def _change_argument_mapping(self, mapping):
-        if self.index < len(self.definition_info.args_with_defaults):
-            old_name = self.definition_info.args_with_defaults[self.index][0]
+    def change_argument_mapping(self, definition_info, mapping):
+        if self.index < len(definition_info.args_with_defaults):
+            old_name = definition_info.args_with_defaults[self.index][0]
             if old_name != self.new_name and old_name in mapping.param_dict:
                 mapping.param_dict[self.new_name] = mapping.param_dict[old_name]
                 del mapping.param_dict[old_name]
     
-
-class _ArguementAdder(_FunctionChanger):
-    
-    def __init__(self, pyfunction, definition_info, index, name, default, value):
-        self.index = index
-        self.name = name
-        self.default = default
-        self.value = value
-        super(_ArguementAdder, self).__init__(pyfunction, definition_info)
-    
-    def _change_definition_info(self, definition_info):
-        definition_info.args_with_defaults.insert(self.index, (self.name, self.default))
-
-    def _change_argument_mapping(self, mapping):
-        if self.value is not None:
-            mapping.param_dict[self.name] = self.value
-
-
-class _ArguementDefaultInliner(_FunctionChanger):
-    
-    def __init__(self, pyfunction, definition_info, index):
-        self.index = index
-        super(_ArguementDefaultInliner, self).__init__(pyfunction, definition_info)
-        self.default = self.definition_info.args_with_defaults[index][1]
-    
-    def _change_definition_info(self, definition_info):
-        definition_info.args_with_defaults[self.index] = \
-            (definition_info.args_with_defaults[self.index][0], None)
-
-    def _change_argument_mapping(self, mapping):
-        name = self.definition_info.args_with_defaults[self.index][0]
-        if self.default is not None and name not in mapping.param_dict:
-            mapping.param_dict[name] = self.default
-
-
-class _ArguementReorderer(_FunctionChanger):
-    
-    def __init__(self, pyfunction, definition_info, new_order):
-        self.new_order = new_order
-        super(_ArguementReorderer, self).__init__(pyfunction, definition_info)
-    
-    def _change_definition_info(self, definition_info):
-        new_args = list(definition_info.args_with_defaults)
-        for index, new_index in enumerate(self.new_order):
-            new_args[new_index] = definition_info.args_with_defaults[index]
-        definition_info.args_with_defaults = new_args
 
 class _ChangeCallsInModule(object):
     

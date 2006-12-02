@@ -248,7 +248,6 @@ class Folder(Resource):
     def __init__(self, project, name):
         super(Folder, self).__init__(project, name)
 
-
     def is_folder(self):
         return True
 

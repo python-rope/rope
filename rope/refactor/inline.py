@@ -35,7 +35,7 @@ class InlineRefactoring(object):
 
     def _is_method(self):
         return isinstance(self.pyname.get_object(), rope.base.pyobjects.PyFunction)
-
+    
 
 class _Inliner(object):
     
@@ -49,7 +49,6 @@ class _Inliner(object):
 
     def get_changes(self):
         pass
-
 
 class _MethodInliner(_Inliner):
     
@@ -246,7 +245,8 @@ class _DefinitionGenerator(object):
         self.pyfunction = pyfunction
         self.pymodule = pyfunction.get_module()
         self.resource = self.pymodule.get_resource()
-        self._definition_param = None
+        self.definition_info = self._get_definition_info()
+        self.definition_params = self._get_definition_params()
         self._calculated_definitions = {}
     
     def _get_function_body(self):
@@ -273,17 +273,18 @@ class _DefinitionGenerator(object):
         colon_index = header.rindex(':')
         return header[def_index + 4:colon_index]
     
+    def _get_definition_info(self):
+        header = self._get_function_header_without_def_and_colon()
+        return rope.refactor.functionutils._DefinitionInfo.read(self.pyfunction, header)
+    
     def _get_definition_params(self):
-        if self._definition_param is None:
-            header = self._get_function_header_without_def_and_colon()
-            call_analyzer = rope.refactor.functionutils.CallAnalyzer(self.pyfunction, header)
-            paramdict = call_analyzer.get_passed_parameters()
-            for value in paramdict.values():
-                if value.startswith('*'):
-                    raise rope.base.exceptions.RefactoringException(
-                        'Cannot functions with list and keyword arguements.')
-            self._definition_param = paramdict
-        return self._definition_param
+        definition_info = self.definition_info
+        paramdict = dict([pair for pair in definition_info.args_with_defaults])
+        if definition_info.args_arg is not None or \
+           definition_info.keywords_arg is not None:
+            raise rope.base.exceptions.RefactoringException(
+                'Cannot functions with list and keyword arguements.')
+        return paramdict
     
     def get_function_name(self):
         return self.pyfunction._get_ast().name
@@ -296,9 +297,12 @@ class _DefinitionGenerator(object):
         return self._calculated_definitions[key]
     
     def _calculate_definition(self, call, returns):
-        call_analyzer = rope.refactor.functionutils.CallAnalyzer(self.pyfunction, call)
-        paramdict = self._get_definition_params()
-        for param_name, value in call_analyzer.get_passed_parameters().iteritems():
+        call_info = rope.refactor.functionutils._CallInfo.read(
+            self.definition_info, call)
+        paramdict = self.definition_params
+        mapping = rope.refactor.functionutils._ArgumentMapping(self.definition_info,
+                                                               call_info)
+        for param_name, value in mapping.param_dict.iteritems():
             paramdict[param_name] = value
         header = ""
         to_be_inlined = []

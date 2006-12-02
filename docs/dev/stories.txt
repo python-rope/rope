@@ -215,10 +215,3 @@ Stories
 
 
 > Public Release 0.4m2 : December 3, 2006
-
-
-* Change method signature
-
-  * Add parameter
-  * Remove parameter
-  * Reorder
