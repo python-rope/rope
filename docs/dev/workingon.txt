@@ -1,18 +1,14 @@
 Change Method Signature
 =======================
 
-- Change method signature Dialog
-- Changing `inline` to use new classes in `rope.refactor.functionutils`
-- Preventing recomputation of `DefinitionInfo`\s
-- Throwing exception when adding duplicate paramters
-- Adding inline argument default dialog
+- Adding ``docs/index.txt`` to help menu
 
 * Changing signature in class hierarchies
 * Adding ignored file patterns in projects
 * Problems for inside generator assists
 * Performing actions on individual functions or imports
 * Distinction between refactorings that can be used by other
-  refactorings from other refactorings; should operate on pymodules?
+  refactorings; should they operate on pymodules?
 
 
 Remaining Stories

@@ -65,6 +65,7 @@ To Be Discussed
 
 * `Library Movement`_
 * `Python's Implicit Interfaces`_
+* Removing `PythonRefactoring` facade
 * Rope's preference saving system: format, location
 * Indexing source files for faster occurrence finding
 * Having a persistant format for PyNames and PyObjects for saving

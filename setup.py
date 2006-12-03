@@ -15,6 +15,7 @@ def make_temps():
     docs = ['README.txt', 'COPYING']
     docs.extend(glob.glob('docs/user/*.txt'))
     docs.extend(glob.glob('docs/dev/*.txt'))
+    docs.extend(glob.glob('docs/*.txt'))
     for name in docs:
         shutil.copy(name, 'rope/docs/')
 

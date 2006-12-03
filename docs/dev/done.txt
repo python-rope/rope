@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.4m2 : December 3, 2006
+
+
 - Change method signature : December 1, 2006
 
 

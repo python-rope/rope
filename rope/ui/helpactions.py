@@ -52,6 +52,9 @@ def show_doc(context, name):
 def show_readme(context):
     show_doc(context, 'README.txt')
 
+def show_features(context):
+    show_doc(context, 'docs/index.txt')
+
 def show_overview(context):
     show_doc(context, 'docs/user/overview.txt')
 
@@ -74,6 +77,8 @@ actions = []
 
 actions.append(SimpleAction('HelpReadme', show_readme, None,
                             MenuAddress(['Help', 'Readme'], 'r')))
+actions.append(SimpleAction('HelpFeatures', show_features, None,
+                            MenuAddress(['Help', 'Features'], 'f')))
 actions.append(SimpleAction('HelpOverview', show_overview, None,
                             MenuAddress(['Help', 'Overview'], 'o')))
 actions.append(SimpleAction('HelpTutorial', show_tutorial, None,

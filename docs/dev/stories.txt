@@ -212,6 +212,3 @@ Stories
 
 * Introduce parameter
   Change global accesses or attributes accesses to parameters
-
-
-> Public Release 0.4m2 : December 3, 2006

@@ -612,12 +612,12 @@ actions.append(SimpleAction('Move Refactoring', ConfirmAllEditorsAreSaved(move),
                             MenuAddress(['Refactor', 'Move'], 'm'), ['python']))
 actions.append(SimpleAction('Inline', ConfirmAllEditorsAreSaved(inline), 'M-I',
                             MenuAddress(['Refactor', 'Inline'], 'i'), ['python']))
-actions.append(SimpleAction('Extract Local Variable', ConfirmAllEditorsAreSaved(extract_variable), None,
+actions.append(SimpleAction('Extract Local Variable', ConfirmAllEditorsAreSaved(extract_variable), 'M-L',
                             MenuAddress(['Refactor', 'Extract Local Variable'], 'l'), ['python']))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
                             MenuAddress(['Refactor', 'Rename in File'], 'e'), ['python']))
 actions.append(SimpleAction('Change Method Signature', 
-                            ConfirmAllEditorsAreSaved(change_signature), None,
+                            ConfirmAllEditorsAreSaved(change_signature), 'M-C',
                             MenuAddress(['Refactor', 'Change Method Signature'], 'c'),
                             ['python']))
 actions.append(SimpleAction('Introduce Factory Method', 

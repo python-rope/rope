@@ -16,35 +16,40 @@ New Features
 
 Features added in this release:
 
-* Inline method refactoring
-* Better help menu
+* Change method signature
 
+  * Reorder parameters
+  * Remove parameter
+  * Add parameter
 
-Getting Started
-===============
+* Inline argument default value
 
-If it is the first time you use *rope*, it might be helpful to
-try these:
-('C' stands for Control key and 'M' for Meta(Alt) key.)
+In the change method signature dialog these shortcuts work:
 
-=========  ======================
-C-x C-f    Find file
-M-Q r      Show project tree
+======  ======================
+key     binding
+======  ======================
+C-n     move downward
+C-p     move upward
+M-n     move parameter down
+M-p     move parameter up
+M-r     remove parameter
+M-a     add new parameter
+======  ======================
 
-M-/        Show code assists
-F2         Show PyDoc
-F3         Go to definition
-C-o        Show quick outline
-M-X p      Run module
-M-X t      Run unit-tests
+The ``value`` field in add new parameter dialog changes all calls
+to pass ``value`` as this new parameter if it is non-empty.  You
+can do the same thing for existing arguments using inline argument
+default value.
 
-M-R        Rename Refactoring
-M-M        Extract method
-M-V        Move refactoring
-M-I        Inline refactoring
+Inline argument default value changes all function calls that don't
+pass any value as this argument to pass the default value specified
+in function definition.
 
-C-O        Organize imports
-=========  ======================
+While reordering arguments you should consider the python
+language order for argument types (i.e. : normal args, args with
+defaults, *args, **keywords).  Rope won't complain if you don't but
+python will.
 
 
 Keybinding
@@ -95,6 +100,8 @@ M-R            rename refactoring
 M-M            extract method
 M-V            move refactoring
 M-I            inline refactoring
+M-C            change method signature
+M-L            extract local variable
 C-O            organize imports
 =============  ==========================
 

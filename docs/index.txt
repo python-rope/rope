@@ -25,12 +25,13 @@ far:
   * Extract method
   * Extract variable
   * Move class/function/module/package
+  * Inline method/local variable
   * Change method signature
   * Introduce factory method
   * Transform module to package
-  * Inline method/local variable
   * Encapsulate field
   * Convert local variable to field
+  * Inline argument default value
   * Previewing refactorings
   * Undo/redo refactorings
 
