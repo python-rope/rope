@@ -124,13 +124,24 @@ them that the path or the content of a file or the the children of a
 folder have been changed.  This is different from invalidation which
 means this file or folder no longer exists.
 
-Maybe we can do what eclipse does.  The resources only hold an
-address and the address might or might not exist.  The main difference
-between resources in rope and eclipse is that resources in rope are
-reference objects and in eclipse they are value objects.  That means
-when we invalidate a resource another resource with the same address
-might be made in future.  What's more the old observer are no longer
-notified when that resource changes.
+Todo:
+
+* Fixing resource moving and file editor title changing
+* `Project.validate_resource`
+* Using last changed time in `Project.validate_resource`
+* Revalidate the whole project
+
+Decisions to make:
+
+* Resource observing interface
+* General or per-resource observers
+
+General guidelines:
+
+Do not waste your time speculating.  Start coding and refactor if
+there are any problems.  Remember the goal; We should make it work
+using small steps.
+
 
 Can We Use Value Objects?
 -------------------------
@@ -139,28 +150,117 @@ We decided to use reference objects for rope in the past.  But let's
 consider value objects once more.  If resources are going to be value
 objects they should not hold any information about the state of the
 resource.  Right know the only piece of information that resources
-hold are observers.  These observers can be held in the project.
+hold are observers.  These observers can be held in projects.
 
 The other issue is equality check.  We can easily change resources to
 compare their addresses for equality.
 
-Reference to value transition:
 
-* Moving observers to projects to make resources immutable
-* __eq__
-* __hash__
+Introducing Invalidation Observers
+----------------------------------
+
+Moving files makes fileeditors update the name of editors.  If we
+change resources to be value objects there seems to be no way for
+informing observers about the new location of the resource.  So
+we either have to close the editor or tell the location of the moved
+resource to the fileeditor.
+
+To overcome this problem we can have a set of invalidation
+observers for each resource.  When a resource is invalidated we inform
+these ovservers.  We can add an optional argument for passing the new
+location location of the resource if we know it.  This case occurs
+only when we are moving resources.  For moving files the new resource
+can be found trivially, but for children of folders it needs a bit of
+work.
+
+Now that we have two kinds of observers for each resource we can
+classify the situations in which they are called.  Maybe we can make
+a new `ResourceObserver` interface.::
+  
+  class ResourceObserver(object):
+      
+      def resource_changed(self, resource):
+          """Is called when the content of `resource` changes"""
+      
+      def resource_removed(self, resource, new_resource):
+          """Is called when `resource` no longer exists"""
+
+Or maybe we can have a single interface but the observer should
+determine either the resource is changed or it is invalidated.::
+  
+  class ResourceObserver(object):
+  
+      def resource_changed(self, resource, new_resource=None):
+          if resource.exists():
+              # resource is changed
+          else:
+              # resource is invalidated
+  
+This approach seem to require less modification to adapt a new
+interface that supports invalidation.
 
 
-Changing Observers
-------------------
+Changing Resource Observing Interface
+-------------------------------------
 
-We are going to move observers from `Resource` to `Project`.  So there
-does not seem to be much interest toward having observers that are
-interested only in a certain resource.
+We are going to move observers from `Resource` to `Project`.  Now
+let's consider observers that are interested in changes to all of
+the resources.
+
+* We can have a list of general observers in `Project`.  When a
+  resource changes we inform these observers.  If this resource
+  is a folder the observer should check whether the file or folder
+  it is interested in is a child of this folder or not.
+  
+  In this approach we should change the old observers.  This class
+  might work as an adapter: ::
+    
+    class IndividualResourceObserver(object):
+    
+        def __init__(self, resource, observer):
+            self.resource = resource
+            self.observer = observer
+        
+        def resource_changed(self, resource):
+            if resource == self.resource:
+                self.observer.resource_changed()
+        
+        def resource_removed(self, resource, new_location):
+            if resource == self.resource:
+                self.observer.resource_invalidated(new_location)
+            elif resource.is_folder() and resource.contain(self.resource):
+                new_location = self._calculate(resource, new_location)
+                self.observer.resource_invalidated(new_location)
+
+
+* We can have a list of observers for individual resources in
+  `Project`.  When a resource is changed we check to see whether
+  there are any observers for that resource or not.  This seems
+  a bit tricky, since when folders invalidate, all of its children
+  are invalidated, too.::
+    
+    def resource_changed(self, resource):
+        if resource in self.observers:
+            for observer in self.observers[resource]:
+                observer.resource_changed(resource)
+    
+    def resource_removed(self, resource, new_resource):
+        if resource in self.observers:
+            for observer in self.observers[resource]:
+                observer.resource_invalidated(resource, new_resource)
+        if resource.is_folder():
+            for observed in self.observers:
+                if resource.contains(observed):
+                    new_observed = self._calculate(...)
+                    for observer in self.observers[observed]:
+                        observer.resource_invalidated(observed, new_observed)
 
 
 Holding Last Changed Time For Resources
 ---------------------------------------
+
+In order to be notified about the changes made by others we need to
+save the last time a file was changed by rope.
 
 
 Inline Method

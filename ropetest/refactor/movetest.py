@@ -106,21 +106,21 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod2.write('import mod1\nprint mod1')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
         self.assertEquals('import pkg.mod1\nprint pkg.mod1', self.mod2.read())
-        self.assertEquals('pkg/mod1.py', self.mod1.get_path())
+        self.assertTrue(not self.mod1.exists() and
+                        self.pycore.find_module('pkg.mod1') is not None)
         
     def test_moving_modules_and_removing_out_of_date_imports(self):
         self.mod2.write('import pkg.mod4\nprint pkg.mod4')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
                               self.project.get_root_folder())
         self.assertEquals('import mod4\nprint mod4', self.mod2.read())
-        self.assertEquals('mod4.py', self.mod4.get_path())
+        self.assertTrue(self.pycore.find_module('mod4') is not None)
     
     def test_moving_modules_and_removing_out_of_date_froms(self):
         self.mod2.write('from pkg import mod4\nprint mod4')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
                               self.project.get_root_folder())
         self.assertEquals('import mod4\nprint mod4', self.mod2.read())
-        self.assertEquals('mod4.py', self.mod4.get_path())
     
     def test_moving_modules_and_removing_out_of_date_froms2(self):
         self.mod4.write('a_var = 10')
@@ -135,22 +135,25 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod2.write('import pkg.mod4\nprint pkg.mod4')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
                               self.project.get_root_folder())
-        self.assertEquals('import pkg.mod5\nprint pkg.mod5\n', self.mod4.read())
+        moved = self.pycore.find_module('mod4')
+        self.assertEquals('import pkg.mod5\nprint pkg.mod5\n', moved.read())
 
     def test_moving_packages(self):
         pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
         self.mod1.write('import pkg.mod4\nprint pkg.mod4')
         self.refactoring.move(self.mod1, self.mod1.read().index('pkg') + 1, pkg2)
-        self.assertEquals('pkg2/pkg', self.pkg.get_path())
-        self.assertEquals('pkg2/pkg/mod4.py', self.mod4.get_path())
-        self.assertEquals('pkg2/pkg/mod5.py', self.mod5.get_path())
+        self.assertFalse(self.pkg.exists())
+        self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
+        self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
+        self.assertTrue(self.pycore.find_module('pkg2.pkg.mod5') is not None)
         self.assertEquals('import pkg2.pkg.mod4\nprint pkg2.pkg.mod4', self.mod1.read())
 
     def test_moving_modules_with_self_imports(self):
         self.mod1.write('import mod1\nprint mod1\n')
         self.mod2.write('import mod1\n')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
-        self.assertEquals('import pkg.mod1\nprint pkg.mod1\n', self.mod1.read())
+        moved = self.pycore.find_module('pkg.mod1')
+        self.assertEquals('import pkg.mod1\nprint pkg.mod1\n', moved.read())
     
     # TODO: moving fields
     def xxx_test_moving_fields(self):

@@ -170,8 +170,9 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1.write('def a_func():\n    pass\n')
         mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
         mod2.write('from mod1 import a_func\n')
-        self.refactoring.rename(mod2, 6, 'newmod')
-        self.assertEquals('newmod.py', mod1.get_path())
+        self.refactoring.rename(mod2, mod2.read().index('mod1') + 1, 'newmod')
+        self.assertTrue(not mod1.exists() and
+                        self.pycore.find_module('newmod') is not None)
         self.assertEquals('from newmod import a_func\n', mod2.read())
 
     def test_renaming_packages(self):
@@ -181,8 +182,9 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2 = self.pycore.create_module(pkg, 'mod2')
         mod2.write('from pkg.mod1 import a_func\n')
         self.refactoring.rename(mod2, 6, 'newpkg')
-        self.assertEquals('newpkg/mod1.py', mod1.get_path())
-        self.assertEquals('from newpkg.mod1 import a_func\n', mod2.read())
+        self.assertTrue(self.pycore.find_module('newpkg.mod1') is not None)
+        new_mod2 = self.pycore.find_module('newpkg.mod2')
+        self.assertEquals('from newpkg.mod1 import a_func\n', new_mod2.read())
 
     def test_module_dependencies(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')

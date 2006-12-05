@@ -1,19 +1,30 @@
-Change Method Signature
-=======================
+Enhancing Base
+==============
 
-- Adding ``docs/index.txt`` to help menu
+- `__eq__` and `__hash__`
+- Moving observers to projects to make resources immutable
+- Adding `Resource.exists`
+- Adding `Folder.contains`
+- Per project observers
+- Removing ``resource.get_parent().child_changed(...)``
+- Fixing the UI; resource moving and file editor title changing
 
-* Changing signature in class hierarchies
-* Adding ignored file patterns in projects
-* Problems for inside generator assists
-* Performing actions on individual functions or imports
-* Distinction between refactorings that can be used by other
-  refactorings; should they operate on pymodules?
+* Fix marked tests in `projecttest`
+* Moving observing implementation from resources to projects
+* Allowing non-existance resources?
+* `Project.validate_resource`
+* Using last changed time in `Project.validate_resource`
+* Revalidate the whole project
+* Testing svn for moving folders
 
 
 Remaining Stories
 =================
 
+* Changing signature in class hierarchies
+* Adding ignored file patterns in projects
+* Problems for inside generator assists
+* Performing actions on individual functions or imports
 * `PyClass.superclasses` should be concluded data
 * Better `ropetest` package structure
 * Decide when to use `difflib` in `Editor.set_text`

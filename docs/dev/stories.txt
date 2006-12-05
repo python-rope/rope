@@ -210,5 +210,20 @@ Stories
 * Find occurances
 
 
+> Public Release 0.4m3 : December 17, 2006
+
+
 * Introduce parameter
   Change global accesses or attributes accesses to parameters
+
+
+* Extending and having more control on file reading and writing
+
+
+* Better support for other version control systems
+
+
+* Removing 4-space tabs and no hard tabs assumption in `rope.base`
+
+
+* Updating files that are changed outside rope

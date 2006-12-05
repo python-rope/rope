@@ -9,21 +9,27 @@ from rope.base.exceptions import RopeException
 class _Project(object):
     
     def __init__(self, fscommands):
-        self.resources = {}
         self.fscommands = fscommands
+        self.robservers = {}
+        self.observers = set()
+    
+    def add_observer(self, observer):
+        self.observers.add(observer)
+    
+    def remove_observer(self, observer):
+        if observer in self.observers:
+            self.observers.remove(observer)
 
     def get_resource(self, resource_name):
-        if resource_name not in self.resources:
-            path = self._get_resource_path(resource_name)
-            if not os.path.exists(path):
-                raise RopeException('Resource %s does not exist' % resource_name)
-            elif os.path.isfile(path):
-                self.resources[resource_name] = File(self, resource_name)
-            elif os.path.isdir(path):
-                self.resources[resource_name] = Folder(self, resource_name)
-            else:
-                raise RopeException('Unknown resource ' + resource_name)
-        return self.resources[resource_name]
+        path = self._get_resource_path(resource_name)
+        if not os.path.exists(path):
+            raise RopeException('Resource %s does not exist' % resource_name)
+        elif os.path.isfile(path):
+            return File(self, resource_name)
+        elif os.path.isdir(path):
+            return Folder(self, resource_name)
+        else:
+            raise RopeException('Unknown resource ' + resource_name)
 
     def _create_file(self, file_name):
         file_path = self._get_resource_path(file_name)
@@ -51,11 +57,6 @@ class _Project(object):
     def _get_resource_path(self, name):
         pass
 
-    def _update_resource_location(self, resource, new_location=None):
-        del self.resources[resource.get_path()]
-        if new_location is not None:
-            self.resources[new_location] = resource
-
     def remove_recursively(self, path):
         self.fscommands.remove(path)
 
@@ -72,7 +73,6 @@ class Project(_Project):
         fscommands = rope.base.fscommands.create_fscommands(self.root)
         super(Project, self).__init__(fscommands)
         self.pycore = rope.base.pycore.PyCore(self)
-        self.resources[''] = Folder(self, '')
         self.no_project = NoProject()
 
     def get_root_folder(self):
@@ -124,7 +124,11 @@ class Resource(object):
     def __init__(self, project, name):
         self.project = project
         self.name = name
-        self.observers = []
+        
+    def _get_observers(self):
+        return self.project.observers
+    
+    observers = property(_get_observers)
 
     def get_path(self):
         """Return the path of this resource relative to the project root
@@ -138,21 +142,26 @@ class Resource(object):
         """Return the name of this resource"""
         return self.name.split('/')[-1]
     
-    def remove(self):
-        """Remove resource from the project"""
-    
     def move(self, new_location):
         """Move resource to new_lcation"""
-
+        destination = self._get_destination_for_move(new_location)
+        self.project.fscommands.move(self._get_real_path(),
+                                     self.project._get_resource_path(destination))
+        new_resource = self.project.get_resource(destination)
+        for observer in list(self.observers):
+            observer.resource_removed(self, new_resource)
+    
+    def remove(self):
+        """Remove resource from the project"""
+        self.project.remove_recursively(self._get_real_path())
+        for observer in list(self.observers):
+            observer.resource_removed(self)
+    
     def is_folder(self):
         """Return true if the resource is a folder"""
-
-    def add_change_observer(self, observer):
-        self.observers.append(observer)
-
-    def remove_change_observer(self, observer):
-        if observer in self.observers:
-            self.observers.remove(observer)
+    
+    def exists(self):
+        os.path.exists(self._get_real_path())
 
     def get_parent(self):
         parent = '/'.join(self.name.split('/')[0:-1])
@@ -170,6 +179,12 @@ class Resource(object):
             else:
                 return self.get_name()
         return destination
+    
+    def __eq__(self, obj):
+        return self.__class__ == obj.__class__ and self.name == obj.name
+    
+    def __hash__(self):
+        return hash(self.name)
 
 
 class File(Resource):
@@ -181,7 +196,7 @@ class File(Resource):
     def read(self):
         source_bytes = open(self._get_real_path()).read()
         return self._file_data_to_unicode(source_bytes)
-        
+    
     def _file_data_to_unicode(self, data):
         encoding = self._conclude_file_encoding(data)
         if encoding is not None:
@@ -217,30 +232,11 @@ class File(Resource):
         file_.write(contents)
         file_.close()
         for observer in list(self.observers):
-            observer(self)
-        self.get_parent()._child_changed(self)
+            observer.resource_changed(self)
 
     def is_folder(self):
         return False
 
-    def remove(self):
-        self.project.remove_recursively(self._get_real_path())
-        self.project._update_resource_location(self)
-        for observer in list(self.observers):
-            observer(self)
-        self.get_parent()._child_changed(self)
-
-    def move(self, new_location):
-        destination = self._get_destination_for_move(new_location)
-        self.project.fscommands.move(self._get_real_path(),
-                                     self.project._get_resource_path(destination))
-        self.project._update_resource_location(self, destination)
-        self.get_parent()._child_changed(self)
-        self.name = destination
-        self.get_parent()._child_changed(self)
-        for observer in list(self.observers):
-            observer(self)
-    
 
 class Folder(Resource):
     """Represents a folder"""
@@ -271,7 +267,8 @@ class Folder(Resource):
             file_path = file_name
         self.project._create_file(file_path)
         child = self.get_child(file_name)
-        self._child_changed(child)
+        for observer in list(self.observers):
+            observer.resource_changed(child)
         return child
 
     def create_folder(self, folder_name):
@@ -281,7 +278,8 @@ class Folder(Resource):
             folder_path = folder_name
         self.project._create_folder(folder_path)
         child = self.get_child(folder_name)
-        self._child_changed(child)
+        for observer in list(self.observers):
+            observer.resource_changed(child)
         return child
 
     def get_child(self, name):
@@ -311,27 +309,74 @@ class Folder(Resource):
             if resource.is_folder():
                 result.append(resource)
         return result
-
-    def remove(self):
-        for child in self.get_children():
-            child.remove()
-        self.project.remove_recursively(self._get_real_path())
-        self.project._update_resource_location(self)
-        self.get_parent()._child_changed(self)
-
-    def move(self, new_location):
-        destination = self._get_destination_for_move(new_location)
-        self.project.fscommands.create_folder(self.project._get_resource_path(destination))
-        for child in self.get_children():
-            if not (child.is_folder() and child.get_name() == '.svn'):
-                child.move(destination + '/' + child.get_name())
-        self.project.fscommands.remove(self._get_real_path())
-        self.project._update_resource_location(self, destination)
-        self.get_parent()._child_changed(self)
-        self.name = destination
-        self.get_parent()._child_changed(self)
     
+    def contains(self, resource):
+        return self != resource and resource.get_path().startswith(self.get_path())
+
     def _child_changed(self, child):
         if child != self:
             for observer in list(self.observers):
-                observer(self)
+                observer.resource_changed(self)
+
+
+class ResourceObserver(object):
+    """Provides the interface observing resources
+    
+    `ResourceObserver` s can be registered using `Resource.add_observer`.
+    """
+    
+    def __init__(self, changed, removed):
+        self.changed = changed
+        self.removed = removed
+    
+    def resource_changed(self, resource):
+        """It is called when the resource changes"""
+        self.changed(resource)
+    
+    def resource_removed(self, resource, new_resource=None):
+        """It is called when a resource no longer exists
+        
+        `new_resource` is the destination if we know it, otherwise it
+        is None.
+        """
+        self.removed(resource, new_resource)
+
+
+class FilteredResourceObserver(object):
+    
+    def __init__(self, resources_getter, resource_observer):
+        self._resources_getter = resources_getter
+        self.observer = resource_observer
+    
+    def _get_resources(self):
+        return self._resources_getter()
+    
+    resources = property(_get_resources)
+    
+    def resource_changed(self, changed):
+        if changed in self.resources:
+            self.observer.resource_changed(changed)
+        self._parents_changed(changed)
+    
+    def resource_removed(self, resource, new_resource=None):
+        if resource in self.resources:
+            self.observer.resource_removed(resource, new_resource)
+        if resource.is_folder():
+            for file in self.resources:
+                if resource.contains(file):
+                    new_file = self._calculate_new_resource(resource, new_resource, file)
+                    self.observer.resource_removed(file, new_file)
+        self._parents_changed(resource)
+        if new_resource is not None:
+            self._parents_changed(new_resource)
+    
+    def _parents_changed(self, child):
+        for resource in self.resources:
+            if resource.is_folder() and child.get_parent() == resource:
+                self.observer.resource_changed(resource)
+
+    def _calculate_new_resource(self, main, new_main, resource):
+        if new_main is None:
+            return None
+        diff = resource.get_path()[:len(main.get_path())]
+        return new_main.get_path() + diff

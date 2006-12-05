@@ -1,6 +1,7 @@
 import re
 import sys
 
+import rope.base.project
 import rope.base.oi.objectinfer
 import rope.refactor
 import rope.base.oi.dynamicoi
@@ -17,6 +18,11 @@ class PyCore(object):
         self.refactoring = rope.refactor.PythonRefactoring(self)
         self.dynamicoi = rope.base.oi.dynamicoi.DynamicObjectInference(self)
         self.classes = None
+        observer = rope.base.project.ResourceObserver(
+            self._invalidate_resource_cache, self._invalidate_resource_cache)
+        filtered_observer = rope.base.project.FilteredResourceObserver(
+            self.module_map.keys, observer)
+        self.project.add_observer(filtered_observer)
 
     def get_module(self, name, current_folder=None):
         """Returns a `PyObject` if the module was found."""
@@ -39,12 +45,11 @@ class PyCore(object):
         """Returns a `Scope` object for the given module_content"""
         return self.get_string_module(module_content, resource).get_scope()
 
-    def _invalidate_resource_cache(self, resource):
+    def _invalidate_resource_cache(self, resource, new_resource=None):
         self.classes = None
         if resource in self.module_map:
             local_module = self.module_map[resource]
             del self.module_map[resource]
-            resource.remove_change_observer(self._invalidate_resource_cache)
             local_module._invalidate_concluded_data()
 
     def create_module(self, src_folder, new_module):
@@ -146,7 +151,6 @@ class PyCore(object):
         else:
             result = PyModule(self, resource.read(), resource=resource)
         self.module_map[resource] = result
-        resource.add_change_observer(self._invalidate_resource_cache)
         return result
     
     def get_python_files(self):

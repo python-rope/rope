@@ -70,22 +70,23 @@ class ChangeContents(Change):
 class MoveResource(Change):
     
     def __init__(self, resource, new_location):
-        self.resource = resource
+        self.project = resource.project
         self.new_location = new_location
-        self.old_location = None
+        self.old_location = resource.get_path()
     
     def do(self):
-        self.old_location = self.resource.get_path()
-        self.resource.move(self.new_location)
+        resource = self.project.get_resource(self.old_location)
+        resource.move(self.new_location)
     
     def undo(self):
-        self.resource.move(self.old_location)
+        resource = self.project.get_resource(self.new_location)
+        resource.move(self.old_location)
 
     def __str__(self):
-        return 'Move <%s>' % self.resource.get_path()
+        return 'Move <%s>' % self.old_location
 
     def get_description(self):
-        return 'Move <%s> to <%s>' % (self.resource.get_path(), self.new_location)
+        return 'Move <%s> to <%s>' % (self.old_location, self.new_location)
 
 
 class CreateFolder(Change):

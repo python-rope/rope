@@ -1,6 +1,7 @@
 import Tkinter
 
 import rope.base.exceptions
+from rope.base.project import ResourceObserver, FilteredResourceObserver
 from rope.ui import editingcontexts
 
 class FileEditor(object):
@@ -19,16 +20,30 @@ class FileEditor(object):
         self.editor.set_text(self.file.read())
         self.modification_observers = []
         self.editor.add_modification_observer(self._editor_was_modified)
-        self.file.get_parent().add_change_observer(self._editor_was_modified)
-        self.file.add_change_observer(self._file_was_modified)
+        self._register_observers()
         self.saving = False
         self.readonly = readonly
         #if readonly:
         #    self.editor.getWidget()['state'] = Tkinter.DISABLED
     
+    def _register_observers(self):
+        self.observer = FilteredResourceObserver(
+            lambda: [self.file],
+            ResourceObserver(self._file_was_modified, self._file_was_removed))
+        self.project.add_observer(self.observer)
+    
+    def _remove_observers(self):
+        self.project.remove_observer(self.observer)
+    
     def _editor_was_modified(self, *args):
         for observer in list(self.modification_observers):
             observer(self)
+    
+    def _file_was_removed(self, file, new_file=None):
+        self._remove_observers()
+        self.file = new_file
+        self._register_observers()
+        self._editor_was_modified()
     
     def _file_was_modified(self, file_):
         if not self.saving:
@@ -56,5 +71,5 @@ class FileEditor(object):
         return self.file
     
     def close(self):
-        self.file.remove_change_observer(self._file_was_modified)
+        self._remove_observers()
 
