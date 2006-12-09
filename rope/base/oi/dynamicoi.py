@@ -77,7 +77,7 @@ class _ObjectPersistedForm(object):
         root = os.path.abspath(project.get_root_address())
         if path.startswith(root):
             relative_path = path[len(root):]
-            if relative_path.startswith('/'):
+            if relative_path.startswith('/') or relative_path.startswith(os.sep):
                 relative_path = relative_path[1:]
             resource = project.get_resource(relative_path)
         else:

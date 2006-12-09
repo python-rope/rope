@@ -13,14 +13,14 @@ class _Project(object):
         self.robservers = {}
         self.observers = set()
     
-    def add_observer(self, observer):
-        self.observers.add(observer)
-    
-    def remove_observer(self, observer):
-        if observer in self.observers:
-            self.observers.remove(observer)
-
     def get_resource(self, resource_name):
+        """Get a resource in a project.
+        
+        `resource_name` is the path of a resource in a project.  It
+        is the path of a resource relative to project root.  Project
+        root folder address is an empty string.
+        
+        """
         path = self._get_resource_path(resource_name)
         if not os.path.exists(path):
             raise RopeException('Resource %s does not exist' % resource_name)
@@ -30,6 +30,29 @@ class _Project(object):
             return Folder(self, resource_name)
         else:
             raise RopeException('Unknown resource ' + resource_name)
+    
+    def validate(self, folder):
+        """Validate files and folders contained in this folder
+        
+        This method asks all registered to validate all of the files
+        and folders contained in this folder that they are interested
+        in.
+        
+        """
+        for observer in self.observers:
+            observer.validate(folder)
+
+    def add_observer(self, observer):
+        """Register a `ResourceObserver`
+        
+        See `FilteredResourceObserver`.
+        """
+        self.observers.add(observer)
+    
+    def remove_observer(self, observer):
+        """Remove a registered `ResourceObserver`"""
+        if observer in self.observers:
+            self.observers.remove(observer)
 
     def _create_file(self, file_name):
         file_path = self._get_resource_path(file_name)
@@ -64,13 +87,22 @@ class _Project(object):
 class Project(_Project):
     """A Project containing files and folders"""
 
-    def __init__(self, project_root):
+    def __init__(self, project_root, fscommand=None):
+        """A rope project
+        
+        :parameters:
+            - `project_root`: the address of the root folder of the project
+            - `fscommands`: implements the file system operations rope uses
+              have a look at `rope.base.fscommands`
+
+        """
         self.root = project_root
         if not os.path.exists(self.root):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise RopeException('Project root exists and is not a directory')
-        fscommands = rope.base.fscommands.create_fscommands(self.root)
+        if fscommand is None:
+            fscommands = rope.base.fscommands.create_fscommands(self.root)
         super(Project, self).__init__(fscommands)
         self.pycore = rope.base.pycore.PyCore(self)
         self.no_project = NoProject()
@@ -161,7 +193,7 @@ class Resource(object):
         """Return true if the resource is a folder"""
     
     def exists(self):
-        os.path.exists(self._get_real_path())
+        return os.path.exists(self._get_real_path())
 
     def get_parent(self):
         parent = '/'.join(self.name.split('/')[0:-1])
@@ -248,7 +280,7 @@ class Folder(Resource):
         return True
 
     def get_children(self):
-        """Returns the children resources of this folder"""
+        """Returns the children of this folder"""
         path = self._get_real_path()
         result = []
         content = os.listdir(path)
@@ -323,6 +355,14 @@ class ResourceObserver(object):
     """Provides the interface observing resources
     
     `ResourceObserver` s can be registered using `Resource.add_observer`.
+    But most of the time what is needed is `FilteredResourceObserver`
+    since ResourceObserver report all changes passed to them and they
+    don't report changes to all of the resources.  For example if a
+    folder is removed, it only `removed` for that folder and not its
+    contents.  You can use `FilteredResourceObserver` if you are
+    interested in changes only to a list of resources.  And you want
+    changes to be reported on individual resources.
+    
     """
     
     def __init__(self, changed, removed):
@@ -338,45 +378,171 @@ class ResourceObserver(object):
         
         `new_resource` is the destination if we know it, otherwise it
         is None.
+        
         """
         self.removed(resource, new_resource)
 
+    def validate(self, resource):
+        """Validate the existence of this resource.
+        
+        This function is called when rope need to update its resource
+        cache about the files that might have been changed or removed
+        by other processes.
+        
+        """
+
 
 class FilteredResourceObserver(object):
+    """A useful decorator for `ResourceObserver`
     
-    def __init__(self, resources_getter, resource_observer):
-        self._resources_getter = resources_getter
+    Most resource observers have a list of resources and are
+    interested only in changes to those files.  This class satisfies
+    this need.  It dispatches resource changed and removed messages.
+    It performs these tasks:
+    
+    * Changes to files and folders are analyzed to check whether any
+      of the interesting resources are changed or not.  If they are,
+      it reports these changes to `resource_observer` passed to the
+      constructor.
+    * When a resource is removed it checks whether any of the
+      interesting resources are contained in that folder and reports
+      them to `resource_observer`.
+    * When validating a folder it validates all of the interesting
+      files in that folder.
+    
+    Since most resource observers have are interested in a list of
+    resources that change over time, `add_resource` and
+    `remove_resource` might be useful.
+    
+    """
+    
+    def __init__(self, resource_observer, initial_resources=None, timekeeper=None):
         self.observer = resource_observer
+        self.resources = {}
+        if timekeeper is not None:
+            self.timekeeper = timekeeper
+        else:
+            self.timekeeper = Timekeeper()
+        if initial_resources is not None:
+            for resource in initial_resources:
+                self.add_resource(resource)
     
-    def _get_resources(self):
-        return self._resources_getter()
+    def add_resource(self, resource):
+        """Add a resource to the list of interesting resources"""
+        self.resources[resource] = self.timekeeper.getmtime(resource)
     
-    resources = property(_get_resources)
+    def remove_resource(self, resource):
+        """Add a resource to the list of interesting resources"""
+        if resource in self.resources:
+            del self.resources[resource]
     
-    def resource_changed(self, changed):
+    def resource_changed(self, resource):
+        changes = _Changes()
+        self._update_changes_caused_by_changed(changes, resource)
+        self._perform_changes(changes)
+
+    def _update_changes_caused_by_changed(self, changes, changed):
         if changed in self.resources:
-            self.observer.resource_changed(changed)
-        self._parents_changed(changed)
+            changes.add_changed(changed)
+        if self._is_parent_changed(changed):
+            changes.add_changed(changed.get_parent())
+    
+    def _update_changes_caused_by_removed(self, changes, resource,
+                                          new_resource=None):
+        if resource in self.resources:
+            changes.add_removed(resource, new_resource)
+        if resource.is_folder():
+            for file in list(self.resources):
+                if resource.contains(file):
+                    new_file = self._calculate_new_resource(resource, new_resource, file)
+                    changes.add_removed(file, new_file)
+        if self._is_parent_changed(resource):
+            changes.add_changed(resource.get_parent())
+        if new_resource is not None:
+            if self._is_parent_changed(new_resource):
+                changes.add_changed(new_resource.get_parent())
+    
+    def _is_parent_changed(self, child):
+        return child.get_parent() in self.resources
     
     def resource_removed(self, resource, new_resource=None):
-        if resource in self.resources:
+        changes = _Changes()
+        self._update_changes_caused_by_removed(changes, resource, new_resource)
+        self._perform_changes(changes)
+    
+    def validate(self, resource):
+        moved = self._search_resource_moves(resource)
+        changed = self._search_resource_changes(resource)
+        changes = _Changes()
+        for file in moved:
+            if file in self.resources:
+                self._update_changes_caused_by_removed(changes, file)
+        for file in changed:
+            if file in self.resources:
+                self._update_changes_caused_by_changed(changes, file)
+        self._perform_changes(changes)
+    
+    def _perform_changes(self, changes):
+        for resource in changes.changes:
+            self.observer.resource_changed(resource)
+            self.resources[resource] = self.timekeeper.getmtime(resource)
+        for resource, new_resource in changes.moves.iteritems():
             self.observer.resource_removed(resource, new_resource)
+
+    def _search_resource_moves(self, resource):
+        all_moved = set()
+        if resource in self.resources and not resource.exists():
+            all_moved.add(resource)
         if resource.is_folder():
             for file in self.resources:
                 if resource.contains(file):
-                    new_file = self._calculate_new_resource(resource, new_resource, file)
-                    self.observer.resource_removed(file, new_file)
-        self._parents_changed(resource)
-        if new_resource is not None:
-            self._parents_changed(new_resource)
-    
-    def _parents_changed(self, child):
-        for resource in self.resources:
-            if resource.is_folder() and child.get_parent() == resource:
-                self.observer.resource_changed(resource)
+                    if not file.exists():
+                        all_moved.add(file)
+        moved = set(all_moved)
+        for folder in [file for file in all_moved if file.is_folder()]:
+            if folder in moved:
+                for file in list(moved):
+                    if folder.contains(file):
+                        moved.remove(file)
+        return moved
 
+    def _search_resource_changes(self, resource):
+        changed = set()
+        if resource in self.resources and self._is_changed(resource):
+            changed.add(resource)
+        if resource.is_folder():
+            for file in self.resources:
+                if file.exists() and resource.contains(file):
+                    if self._is_changed(file):
+                        changed.add(file)
+        return changed
+
+    def _is_changed(self, resource):
+        return self.resources[resource] != self.timekeeper.getmtime(resource)
+    
     def _calculate_new_resource(self, main, new_main, resource):
         if new_main is None:
             return None
         diff = resource.get_path()[:len(main.get_path())]
         return new_main.get_path() + diff
+
+
+class Timekeeper(object):
+    
+    def getmtime(self, resource):
+        """Return the modification time of a `Resource`."""
+        return os.path.getmtime(resource._get_real_path())
+
+
+class _Changes(object):
+    
+    def __init__(self):
+        self.changes = set()
+        self.moves = {}
+
+    def add_changed(self, resource):
+        self.changes.add(resource)
+    
+    def add_removed(self, resource, new_resource=None):
+        self.moves[resource] = new_resource
+

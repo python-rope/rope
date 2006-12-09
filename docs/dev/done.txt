@@ -3,6 +3,18 @@
 ===========
 
 
+- 8 spaces per tabs in `rope.base` and `rope.refactor` : December 8, 2006
+
+
+- Better support for other version control systems : December 8, 2006
+
+
+- Updating files that are changed outside rope : December 8, 2006
+
+
+- Fixing module running on Windows : December 6, 2006
+
+
 > Public Release 0.4m2 : December 3, 2006
 
 

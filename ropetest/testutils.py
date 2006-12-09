@@ -4,6 +4,19 @@ import shutil
 import sys
 
 def remove_recursively(path):
+    import time
+    if os.name == 'nt':
+        for i in range(12):
+            try:
+                _remove_recursively(path)
+            except WindowsError:
+                time.sleep(0.3)
+            else:
+                break
+    else:
+        _remove_recursively(path)        
+
+def _remove_recursively(path):
     if not os.path.exists(path):
         return
     if os.path.isfile(path):

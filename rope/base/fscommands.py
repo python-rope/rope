@@ -1,3 +1,10 @@
+"""Project file system commands.
+
+This modules implements file system operations so that different
+version control systems can supported using this interface.
+
+"""
+
 import os
 import shutil
 

@@ -369,6 +369,11 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._get_logical_line_finder(code)
         self.assertEquals((2, 2), line_finder.get_logical_line_in(2))
 
+    def test_multiple_indented_ifs(self):
+        code = 'if True:\n    if True:\n        if True:\n            pass\n    a = 10\n'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((5, 5), line_finder.get_logical_line_in(5))
+
 
 def suite():
     result = unittest.TestSuite()

@@ -1,3 +1,6 @@
+from rope.base import codeanalyze
+
+
 class ChangeCollector(object):
     
     def __init__(self, text):
@@ -25,13 +28,7 @@ class ChangeCollector(object):
 
 
 def get_indents(lines, lineno):
-    indents = 0
-    for c in lines.get_line(lineno):
-        if c == ' ':
-            indents += 1
-        else:
-            break
-    return indents
+    return codeanalyze.count_line_indents(lines.get_line(lineno))
 
 def find_minimum_indents(source_code):
     result = 80
@@ -39,13 +36,7 @@ def find_minimum_indents(source_code):
     for line in lines:
         if line.strip() == '':
             continue
-        indents = 0
-        for c in line:
-            if c == ' ':
-                indents += 1
-            else:
-                break
-        result = min(result, indents)
+        result = min(result, codeanalyze.count_line_indents(line))
     return result
 
 def indent_lines(source_code, amount):
@@ -54,15 +45,14 @@ def indent_lines(source_code, amount):
     lines = source_code.splitlines(True)
     result = []
     for l in lines:
-        if amount < 0 and len(l) > -amount:
-            indents = 0
-            while indents < len(l) and l[indents] == ' ':
-                indents += 1
-            result.append(l[-min(amount, indents):])
-        elif amount > 0 and l.strip() != '':
-            result.append(' ' * amount + l)
-        else:
+        if l.strip() == '':
             result.append('\n')
+            continue
+        if amount < 0:
+            indents = codeanalyze.count_line_indents(l)
+            result.append(max(0, indents + amount) * ' ' + l.lstrip())
+        else:
+            result.append(' ' * amount + l)
     return ''.join(result)
 
 

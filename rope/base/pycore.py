@@ -20,9 +20,8 @@ class PyCore(object):
         self.classes = None
         observer = rope.base.project.ResourceObserver(
             self._invalidate_resource_cache, self._invalidate_resource_cache)
-        filtered_observer = rope.base.project.FilteredResourceObserver(
-            self.module_map.keys, observer)
-        self.project.add_observer(filtered_observer)
+        self.observer = rope.base.project.FilteredResourceObserver(observer)
+        self.project.add_observer(self.observer)
 
     def get_module(self, name, current_folder=None):
         """Returns a `PyObject` if the module was found."""
@@ -49,6 +48,7 @@ class PyCore(object):
         self.classes = None
         if resource in self.module_map:
             local_module = self.module_map[resource]
+            self.observer.remove_resource(resource)
             del self.module_map[resource]
             local_module._invalidate_concluded_data()
 
@@ -151,6 +151,7 @@ class PyCore(object):
         else:
             result = PyModule(self, resource.read(), resource=resource)
         self.module_map[resource] = result
+        self.observer.add_resource(resource)
         return result
     
     def get_python_files(self):

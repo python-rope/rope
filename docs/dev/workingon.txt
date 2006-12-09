@@ -1,21 +1,28 @@
 Enhancing Base
 ==============
 
-- `__eq__` and `__hash__`
-- Moving observers to projects to make resources immutable
-- Adding `Resource.exists`
-- Adding `Folder.contains`
-- Per project observers
-- Removing ``resource.get_parent().child_changed(...)``
-- Fixing the UI; resource moving and file editor title changing
+- Fix marked tests in `projecttest`
+- Test moving/removing and observer.removed
+- Testing `Project.validate` more
+- `__init__.py` should be concluded data
+- Fixing modules running on windows
+- `Project.validate`
+- Adding a `Timekeeper` for testing
+- Fixing logical line finding for deindents after multiple indents
+- Calculating all changes and then performing them
+- Using last changed time in `Project.validate`
+- Updating changed time when resource changes
+- Not calling `resource_changed` more than once for some resources
+- Passing `FileSystemCommand`\s to `Project`\s
+- 8 spaces per tabs in `rope.base` and `rope.refactor`
 
-* Fix marked tests in `projecttest`
-* Moving observing implementation from resources to projects
-* Allowing non-existance resources?
-* `Project.validate_resource`
-* Using last changed time in `Project.validate_resource`
+* What to do if a file is removed while editing
+* A separate module for `ResourceObserver`\s
+* Renaming `FilteredResourceObserver`
+* Moving observing implementation from `Resource` to `Project`
+* Allowing non-existent resources
 * Revalidate the whole project
-* Testing svn for moving folders
+* Updating ``docs/dev/library.txt``
 
 
 Remaining Stories

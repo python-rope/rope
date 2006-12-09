@@ -616,8 +616,9 @@ class LogicalLineFinder(object):
         self.lines = lines
     
     def get_logical_line_in(self, line_number):
-        block_start = StatementRangeFinder.get_block_start(self.lines,
-                                                           line_number)
+        block_start = StatementRangeFinder.get_block_start(
+            self.lines, line_number,
+            count_line_indents(self.lines.get_line(line_number)))
         readline = LinesToReadline(self.lines, block_start)
         last_line_start = block_start
         for current in tokenize.generate_tokens(readline):
@@ -710,20 +711,16 @@ class StatementRangeFinder(object):
         return self.open_count != 0 or self.explicit_continuation
 
     def get_line_indents(self, line_number):
-        indents = 0
-        for char in self.lines.get_line(line_number):
-            if char == ' ':
-                indents += 1
-            else:
-                break
-        return indents
-    
+        return count_line_indents(self.lines.get_line(line_number))
+
     @staticmethod
-    def get_block_start(lines, lineno):
+    def get_block_start(lines, lineno, maximum_indents=80):
         """Aproximating block start"""
         pattern = StatementRangeFinder.get_block_start_patterns()
         for i in reversed(range(1, lineno + 1)):
-            if pattern.search(lines.get_line(i)) is not None:
+            match = pattern.search(lines.get_line(i))
+            if match is not None and \
+               count_line_indents(lines.get_line(i)) <= maximum_indents:
                 return i
         return 1
 
@@ -796,3 +793,13 @@ class xxxStatementRangeFinder(object):
                 break
         return indents
     
+def count_line_indents(line):
+    indents = 0
+    for index, char in enumerate(line):
+        if char == ' ':
+            indents += 1
+        elif char == '\t':
+            indents += 8
+        else:
+            return indents
+    return 0

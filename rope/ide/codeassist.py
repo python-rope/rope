@@ -127,13 +127,7 @@ class _CodeCompletionCollector(object):
         self.source_code = '\n'.join(self.lines)
 
     def _get_line_indents(self, line):
-        indents = 0
-        for char in line:
-            if char == ' ':
-                indents += 1
-            else:
-                break
-        return indents
+        return rope.base.codeanalyze.count_line_indents(line)
 
     def _comment_current_statement(self):
         range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines),

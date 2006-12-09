@@ -28,8 +28,8 @@ class FileEditor(object):
     
     def _register_observers(self):
         self.observer = FilteredResourceObserver(
-            lambda: [self.file],
-            ResourceObserver(self._file_was_modified, self._file_was_removed))
+            ResourceObserver(self._file_was_modified, self._file_was_removed),
+            [self.file])
         self.project.add_observer(self.observer)
     
     def _remove_observers(self):
@@ -41,6 +41,9 @@ class FileEditor(object):
     
     def _file_was_removed(self, file, new_file=None):
         self._remove_observers()
+        # XXX: file was removed while we were editing it.  What to do?
+        if new_file is None:
+            return
         self.file = new_file
         self._register_observers()
         self._editor_was_modified()

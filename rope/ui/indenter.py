@@ -1,6 +1,6 @@
 import re
 
-from rope.base.codeanalyze import StatementRangeFinder
+from rope.base import codeanalyze
 
 
 class TextIndenter(object):
@@ -50,6 +50,8 @@ class TextIndenter(object):
         for x in contents:
             if x == ' ':
                 result += 1
+            elif x == '\t':
+                result += 8
             else:
                 break
         return result
@@ -101,8 +103,8 @@ class PythonCodeIndenter(TextIndenter):
         return new_indent
 
     def _get_base_indentation(self, lineno):
-        range_finder = StatementRangeFinder(self.line_editor,
-                                            self._get_last_non_empty_line(lineno))
+        range_finder = codeanalyze.StatementRangeFinder(
+            self.line_editor, self._get_last_non_empty_line(lineno))
         range_finder.analyze()
         start = range_finder.get_statement_start()
         if not range_finder.is_line_continued():

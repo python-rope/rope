@@ -1,7 +1,7 @@
 import compiler
 
-import rope.base.codeanalyze
 import rope.base.pyobjects
+from rope.base import codeanalyze
 from rope.base.exceptions import RefactoringException
 from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents
@@ -50,7 +50,7 @@ class _ExtractInformation(object):
         
         pymodule = pycore.resource_to_pyobject(resource)
         self.lines = pymodule.lines
-        self.line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
+        self.line_finder = codeanalyze.LogicalLineFinder(self.lines)
         
         self.region = (self._choose_closest_line_end(start_offset),
                        self._choose_closest_line_end(end_offset, end=True))
@@ -171,7 +171,8 @@ class _ExtractPerformer(object):
         if end_scope != self.holding_scope and end_scope.get_end() != end_line:
             raise RefactoringException('Bad range selected for extract method')
         try:
-            if _ReturnOrYieldFinder.does_it_return(self.source_code[self.info.region[0]:self.info.region[1]]):
+            if _ReturnOrYieldFinder.does_it_return(
+                self.source_code[self.info.region[0]:self.info.region[1]]):
                 raise RefactoringException('Extracted piece should not contain return statements')
         except SyntaxError:
             raise RefactoringException('Extracted piece should contain complete statements.')

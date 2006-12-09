@@ -338,6 +338,13 @@ class InlineTest(unittest.TestCase):
         self.refactoring.inline(self.mod, self.mod.read().index('p1') + 1)
         self.assertEquals('def a_func(p1=1):\n    pass\na_func()\n', self.mod.read())
 
+    def test_simple_inlining_after_extra_indented_lines(self):
+        self.mod.write('def a_func():\n    for i in range(10):\n        pass\n'
+                       'if True:\n    pass\na_func()\n')
+        self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
+        self.assertEquals('if True:\n    pass\nfor i in range(10):\n    pass\n',
+                          self.mod.read())
+
 
 def suite():
     result = unittest.TestSuite()

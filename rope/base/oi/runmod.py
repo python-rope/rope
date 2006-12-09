@@ -18,7 +18,7 @@ def __rope_start_everything():
         
         def __init__(self, port):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('', port))
+            s.connect(('127.0.0.1', port))
             self.my_file = s.makefile('w')
         
         def send_data(self, data):

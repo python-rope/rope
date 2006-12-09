@@ -8,7 +8,7 @@ library.  Features that need to be added include:
 * Extending and having more control on file reading and writing
 * Updating files that are changed outside rope
 * Better support for other version control systems
-* Removing 4-space tabs and no hard tabs assumption
+* Considering tabs to be 8 spaces
 * Limiting memory usage; throwing away calculated information when low
   on memory
 * Documenting published interfaces

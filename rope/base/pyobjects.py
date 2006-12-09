@@ -323,15 +323,16 @@ class PyPackage(_PyModule):
             return result
         for name, resource in self._get_child_resources().items():
             result[name] = ImportedModule(self, resource=resource)
+        return result
+
+    def _create_concluded_attributes(self):
+        result = {}
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
             init_object = self.pycore.resource_to_pyobject(init_dot_py)
             result.update(init_object.get_attributes())
             init_object._add_dependant(self)
         return result
-
-    def _create_concluded_attributes(self):
-        return {}
 
     def _get_child_resources(self):
         result = {}
