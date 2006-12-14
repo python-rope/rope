@@ -104,7 +104,7 @@ class PyCore(object):
         return result
     
     def find_module(self, module_name, current_folder=None):
-        """Returns a resource pointing to the given module
+        """Returns a resource corresponding to the given module
         
         returns None if it can not be found
         """

@@ -34,12 +34,7 @@ class ChangeSignature(object):
         return changes
     
     def get_definition_info(self):
-        pymodule, line = self.pyname.get_definition_location()
-        line_start = pymodule.lines.get_line_start(line)
-        line_end = pymodule.lines.get_line_end(line)
-        start = pymodule.source_code.find('def', line_start) + 4
-        return functionutils._DefinitionInfo.read(self.pyname.get_object(),
-                                                  pymodule.source_code[start:line_end])
+        return functionutils.DefinitionInfo.read(self.pyname.get_object())
     
     def normalize(self):
         changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
@@ -94,8 +89,8 @@ class _FunctionChangers(object):
         return self.changed_definition_infos[-1].to_string()
 
     def change_call(self, call):
-        call_info = functionutils._CallInfo.read(self.definition_info, call)
-        mapping = functionutils._ArgumentMapping(self.definition_info, call_info)
+        call_info = functionutils.CallInfo.read(self.definition_info, call)
+        mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
         
         for definition_info, changer in zip(self.changed_definition_infos, self.changers):
             changer.change_argument_mapping(definition_info, mapping)

@@ -5,17 +5,26 @@
 By ``0.4`` release *rope* would probably be ready for being used as a
 library.  Features that need to be added include:
 
-* Extending and having more control on file reading and writing
+Done:
+
 * Updating files that are changed outside rope
 * Better support for other version control systems
 * Considering tabs to be 8 spaces
+
+To be done?:
+
+* Having a list of ignored file and folder patterns
+* Extending and having more control on file reading and writing
 * Limiting memory usage; throwing away calculated information when low
   on memory
 * Documenting published interfaces
 
+If you need other features, send a feature request.  Have a look at
+``docs/dev/contributing.txt``.
+
 
 Useful Classes
---------------
+==============
 
 * `rope.base.project.Project`
 * `rope.base.pycore.PyCore`
@@ -24,8 +33,35 @@ Useful Classes
 * `rope.ide.codeassist.PythonCodeAssist`
 
 
+`rope.base.fscommands`
+======================
+
+The `rope.base.fscommands` module implements the basic file system
+operations that rope needs to perform.  The main reason for the
+existence this module is supporting version control systems.  Have a 
+look at `FileSystemCommands` and `SubversionCommands` in the same module.
+If you need other version control systems you can write a new class
+providing this interface.  `rope.base.project.Project` accepts a
+``fscommands`` argument.  You can use this argument to force rope to
+use your new class.
+
+
+`rope.base.project.Project.validate`
+====================================
+
+When using rope as a library you probably change the files in that
+project in parallel (for example in IDEs).  To force rope to
+invalidate cached information about resources that have been
+removed or changed outside rope you should call `Project.validate`.
+You should pass a resource to this method.  For example::
+  
+  project.validate(project.get_root_folder())
+
+validates all files and directories in the project.
+
+
 A Sample Session
-----------------
+================
 
 Here is a sample session.::
 

@@ -1,5 +1,6 @@
 import rope.base.exceptions
 import rope.base.pyobjects
+from rope.base import codeanalyze
 
 
 class _FunctionParser(object):
@@ -54,7 +55,7 @@ class _FunctionParser(object):
         return self.is_method and '.' in self.call[:self.first_parens]
 
 
-class _DefinitionInfo(object):
+class DefinitionInfo(object):
     
     def __init__(self, function_name, is_method, args_with_defaults, args_arg,
                  keywords_arg):
@@ -78,7 +79,7 @@ class _DefinitionInfo(object):
         return '%s(%s)' % (self.function_name, ', '.join(params))
     
     @staticmethod
-    def read(pyfunction, code):
+    def _read(pyfunction, code):
         scope = pyfunction.get_scope()
         parent = scope.parent
         parameter_names = pyfunction.parameters
@@ -100,11 +101,24 @@ class _DefinitionInfo(object):
             del args[-1]
         args_with_defaults = [(name, None) for name in args]
         args_with_defaults.extend(keywords)
-        return _DefinitionInfo(info.get_function_name(), is_method,
+        return DefinitionInfo(info.get_function_name(), is_method,
                                args_with_defaults, args_arg, keywords_arg)
 
+    @staticmethod
+    def read(pyfunction):
+        pymodule = pyfunction.get_module()
+        source = pymodule.source_code
+        lines = pymodule.lines
+        line_finder = codeanalyze.LogicalLineFinder(lines)
+        start_line, end_line = line_finder.get_logical_line_in(pyfunction._get_ast().lineno)
+        start = lines.get_line_start(start_line)
+        end = lines.get_line_end(end_line)
+        start = pymodule.source_code.find('def', start) + 4
+        end = pymodule.source_code.rfind(':', start, end)
+        return DefinitionInfo._read(pyfunction, pymodule.source_code[start:end])
 
-class _CallInfo(object):
+
+class CallInfo(object):
     
     def __init__(self, function_name, args, keywords, args_arg,
                  keywords_arg, is_method_call):
@@ -145,10 +159,10 @@ class _CallInfo(object):
         if args and args[-1].startswith('*'):
             args_arg = args[-1][1:]
             del args[-1]
-        return _CallInfo(info.get_function_name(), args, keywords, args_arg,
+        return CallInfo(info.get_function_name(), args, keywords, args_arg,
                          keywords_arg, info.is_called_as_a_method())
 
-class _ArgumentMapping(object):
+class ArgumentMapping(object):
     
     def __init__(self, definition_info, call_info):
         self.call_info = call_info
@@ -185,6 +199,6 @@ class _ArgumentMapping(object):
                 break
         args.extend(self.args_arg)
         keywords.extend(self.keyword_args)
-        return _CallInfo(self.call_info.function_name, args, keywords,
+        return CallInfo(self.call_info.function_name, args, keywords,
                          self.call_info.args_arg, self.call_info.keywords_arg,
                          self.call_info.is_method_call)

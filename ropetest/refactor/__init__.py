@@ -1,16 +1,18 @@
 import unittest
 
 import rope.base.codeanalyze
-from rope.refactor import Undo
-from rope.base.exceptions import RefactoringException
-from rope.base.project import Project
-from rope.refactor.change import *
-from ropetest import testutils
 import ropetest.refactor.renametest
 import ropetest.refactor.extracttest
 import ropetest.refactor.movetest
 import ropetest.refactor.inlinetest
 import ropetest.refactor.change_signature_test
+import rope.refactor.introduce_parameter
+from rope.refactor import Undo
+from rope.base.exceptions import RefactoringException
+from rope.base.project import Project
+from rope.refactor.change import *
+
+from ropetest import testutils
 
 
 class IntroduceFactoryTest(unittest.TestCase):
@@ -473,6 +475,62 @@ class LocalToFieldTest(unittest.TestCase):
                    '        myself.var = 10\n'
         self.assertEquals(expected, self.mod.read())
     
+class IntroduceParameterTest(unittest.TestCase):
+
+    def setUp(self):
+        super(IntroduceParameterTest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(IntroduceParameterTest, self).tearDown()
+    
+    def _introduce_parameter(self, offset, name):
+        rope.refactor.introduce_parameter.IntroduceParameter(
+            self.pycore, self.mod, offset).get_changes(name).do()
+    
+    def test_simple_case(self):
+        self.mod.write('var = 1\ndef f():\n    b = var\n')
+        offset = self.mod.read().rindex('var')
+        self._introduce_parameter(offset, 'var')
+        self.assertEquals('var = 1\ndef f(var=var):\n    b = var\n', self.mod.read())
+
+    def test_changing_function_body(self):
+        self.mod.write('var = 1\ndef f():\n    b = var\n')
+        offset = self.mod.read().rindex('var')
+        self._introduce_parameter(offset, 'p1')
+        self.assertEquals('var = 1\ndef f(p1=var):\n    b = p1\n', self.mod.read())
+
+    def test_unknown_variables(self):
+        self.mod.write('def f():\n    b = var + c\n')
+        offset = self.mod.read().rindex('var')
+        self._introduce_parameter(offset, 'p1')
+        self.assertEquals('def f(p1=var):\n    b = p1 + c\n', self.mod.read())
+
+    @testutils.assert_raises(RefactoringException)
+    def test_failing_when_not_inside(self):
+        self.mod.write('var = 10\nb = var\n')
+        offset = self.mod.read().rindex('var')
+        self._introduce_parameter(offset, 'p1')
+
+    def test_attribute_accesses(self):
+        self.mod.write('class C(object):\n    a = 10\nc = C()\ndef f():\n    b = c.a\n')
+        offset = self.mod.read().rindex('a')
+        self._introduce_parameter(offset, 'p1')
+        self.assertEquals('class C(object):\n    a = 10\nc = C()\ndef f(p1=c.a):\n    b = p1\n',
+                          self.mod.read())
+
+    def test_introducing_parameters_for_methods(self):
+        self.mod.write('var = 1\nclass C(object):\n    def f(self):\n        b = var\n')
+        offset = self.mod.read().rindex('var')
+        self._introduce_parameter(offset, 'p1')
+        self.assertEquals('var = 1\nclass C(object):\n    def f(self, p1=var):\n        b = p1\n',
+                          self.mod.read())
+
 
 def suite():
     result = unittest.TestSuite()
@@ -485,6 +543,7 @@ def suite():
     result.addTests(unittest.makeSuite(EncapsulateFieldTest))
     result.addTests(unittest.makeSuite(LocalToFieldTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.change_signature_test.ChangeSignatureTest))
+    result.addTests(unittest.makeSuite(IntroduceParameterTest))
     return result
 
 

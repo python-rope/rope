@@ -87,7 +87,7 @@ class _Project(object):
 class Project(_Project):
     """A Project containing files and folders"""
 
-    def __init__(self, project_root, fscommand=None):
+    def __init__(self, project_root, fscommands=None):
         """A rope project
         
         :parameters:
@@ -101,7 +101,7 @@ class Project(_Project):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):
             raise RopeException('Project root exists and is not a directory')
-        if fscommand is None:
+        if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self.root)
         super(Project, self).__init__(fscommands)
         self.pycore = rope.base.pycore.PyCore(self)
@@ -383,7 +383,7 @@ class ResourceObserver(object):
         self.removed(resource, new_resource)
 
     def validate(self, resource):
-        """Validate the existence of this resource.
+        """Validate the existence of this resource and its children.
         
         This function is called when rope need to update its resource
         cache about the files that might have been changed or removed

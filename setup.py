@@ -46,7 +46,7 @@ Rope is a python refactoring IDE and library.
 
 setup(name='rope',
       version=rope.VERSION,
-      description='a python refactoring IDE...',
+      description='a python refactoring IDE and library...',
       long_description=long_description,
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',

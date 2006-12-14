@@ -2,6 +2,7 @@ import Tkinter
 
 import rope.refactor.importutils
 import rope.refactor.change_signature
+import rope.refactor.introduce_parameter
 import rope.ui.core
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
@@ -544,6 +545,34 @@ class InlineArgumentDefaultDialog(RefactoringDialog):
 def inline_argument_default(context):
     InlineArgumentDefaultDialog(context).show()
 
+class IntroduceParameterDialog(RefactoringDialog):
+    
+    def __init__(self, context, title):
+        editor = context.get_active_editor().get_editor()
+        super(IntroduceParameterDialog, self).__init__(_get_refactoring(context), title)
+        self.renamer = rope.refactor.introduce_parameter.IntroduceParameter(
+            context.project.get_pycore(), context.resource, editor.get_current_offset())
+    
+    def _get_changes(self):
+        new_name = self.new_name_entry.get()
+        return self.renamer.get_changes(new_name)
+
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(frame, text='New Parameter Name :')
+        label.grid(row=0, column=0)
+        self.new_name_entry = Tkinter.Entry(frame)
+        #self.new_name_entry.insert(0, '')
+        self.new_name_entry.select_range(0, Tkinter.END)
+        self.new_name_entry.grid(row=0, column=1, columnspan=2)
+        self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.new_name_entry.focus_set()
+        return frame
+
+
+def introduce_parameter(context):
+    IntroduceParameterDialog(context, 'Introduce Parameter').show()
+
 def organize_imports(context):
     if not context.get_active_editor():
         return
@@ -627,6 +656,10 @@ actions.append(SimpleAction('Introduce Factory Method',
 actions.append(SimpleAction('Encapsulate Field', 
                             ConfirmAllEditorsAreSaved(encapsulate_field), None,
                             MenuAddress(['Refactor', 'Encapsulate Field'], 's', 1),
+                            ['python']))
+actions.append(SimpleAction('Introduce Parameter', 
+                            ConfirmAllEditorsAreSaved(introduce_parameter), None,
+                            MenuAddress(['Refactor', 'Introduce Parameter'], None, 1),
                             ['python']))
 actions.append(SimpleAction('Convert Local Variable to Field', 
                             ConfirmAllEditorsAreSaved(convert_local_to_field), None,

@@ -85,8 +85,8 @@ class GlobalScope(Scope):
     def get_inner_scope_for_line(self, lineno, indents=None):
         return self._get_scope_finder().get_holding_scope(self, lineno, indents)
     
-    def get_inner_scope_for_offset(self, lineno, indents=None):
-        return self._get_scope_finder().get_holding_scope_for_offset(self, lineno)
+    def get_inner_scope_for_offset(self, offset):
+        return self._get_scope_finder().get_holding_scope_for_offset(self, offset)
     
     def _get_scope_finder(self):
         if self.scope_finder is None:

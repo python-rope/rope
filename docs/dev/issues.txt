@@ -48,10 +48,14 @@ Possible Plans
 
 * Inline method
 * Change method signature
+* Introduce parameter
+* Enhancing refactorings and testing
 * Move field/methods
+
+Exploring and analyzing possible solutions for:
+
 * Handling built-in types
 * Implicit interfaces
-* High level refactorings
 
 
 Hot Topics
@@ -520,4 +524,3 @@ A Good Keybinding
 -----------------
 
 Rope should have a good emacs-ish keybinding.
-

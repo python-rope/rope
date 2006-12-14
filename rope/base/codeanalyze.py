@@ -511,8 +511,8 @@ class ScopeNameFinder(object):
 def get_pyname_at(pycore, resource, offset):
     """Finds the pyname at the offset
     
-    This function is unefficient for multiple calls because of the
-    recalculation of initialization data
+    This function is inefficient for multiple calls because of the
+    recalculation of initialization data.
     """
     pymodule = pycore.resource_to_pyobject(resource)
     pyname_finder = rope.base.codeanalyze.ScopeNameFinder(pymodule)

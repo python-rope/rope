@@ -1,6 +1,6 @@
-====================================
- rope, a python refactoring IDE ...
-====================================
+==============
+ rope stories
+==============
 
 For an overview of possible future goals of rope have a look
 at `future.txt`_ file.
@@ -15,9 +15,6 @@ Stories
 > Unestimated Stories
 
 
-* Variable indentation and tab size
-
-
 * Configuring keys
 
 
@@ -28,6 +25,9 @@ Stories
 
 
 * Editor folding
+
+
+* Variable indentation and tab size
 
 
 * Having multiple clipboards
@@ -195,6 +195,9 @@ Stories
 * Moving fields/methods to attribute classes
 
 
+* Changing signature in class hierarchies
+
+
 * Handling builtin functions and types
 
 
@@ -208,6 +211,9 @@ Stories
 
 
 * Find occurances
+
+
+* Adding ignored file patterns in projects
 
 
 > Public Release 0.4m3 : December 17, 2006

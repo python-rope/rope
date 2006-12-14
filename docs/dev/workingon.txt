@@ -1,35 +1,36 @@
-Enhancing Base
-==============
+Introduce parameter
+===================
 
-- Fix marked tests in `projecttest`
-- Test moving/removing and observer.removed
-- Testing `Project.validate` more
-- `__init__.py` should be concluded data
-- Fixing modules running on windows
-- `Project.validate`
-- Adding a `Timekeeper` for testing
-- Fixing logical line finding for deindents after multiple indents
-- Calculating all changes and then performing them
-- Using last changed time in `Project.validate`
-- Updating changed time when resource changes
-- Not calling `resource_changed` more than once for some resources
-- Passing `FileSystemCommand`\s to `Project`\s
-- 8 spaces per tabs in `rope.base` and `rope.refactor`
+Change global accesses or attributes accesses to parameters:
 
+- Added `introduce_parameter`
+- Failing outside a function
+- Primaries
+- Testing methods
+- Adding to UI
+
+* Failing on assignments?
+* What if we want to make a function call a parameter::
+  
+    def a_func():
+        b = get_var()
+        c = get_var() * 2
+        #d = get_var
+
+* Adding a new test module
+
+* Method inlining and pydocs
 * What to do if a file is removed while editing
 * A separate module for `ResourceObserver`\s
 * Renaming `FilteredResourceObserver`
 * Moving observing implementation from `Resource` to `Project`
 * Allowing non-existent resources
-* Revalidate the whole project
-* Updating ``docs/dev/library.txt``
+* Add ``revalidate the whole project`` to file
 
 
 Remaining Stories
 =================
 
-* Changing signature in class hierarchies
-* Adding ignored file patterns in projects
 * Problems for inside generator assists
 * Performing actions on individual functions or imports
 * `PyClass.superclasses` should be concluded data

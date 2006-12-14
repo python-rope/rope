@@ -260,22 +260,8 @@ class _DefinitionGenerator(object):
         body = source[start_offset:end_offset]
         return sourceutils.indent_lines(body, -sourceutils.find_minimum_indents(body))
     
-    def _get_function_header_without_def_and_colon(self):
-        scope = self.pyfunction.get_scope()
-        source = self.pymodule.source_code
-        lines = self.pymodule.lines
-        start_line, end_line = codeanalyze.LogicalLineFinder(lines).\
-                               get_logical_line_in(scope.get_start())
-        start_offset = lines.get_line_start(start_line)
-        end_offset = lines.get_line_end(end_line)
-        header = source[start_offset:end_offset]
-        def_index = header.index('def')
-        colon_index = header.rindex(':')
-        return header[def_index + 4:colon_index]
-    
     def _get_definition_info(self):
-        header = self._get_function_header_without_def_and_colon()
-        return rope.refactor.functionutils._DefinitionInfo.read(self.pyfunction, header)
+        return rope.refactor.functionutils.DefinitionInfo.read(self.pyfunction)
     
     def _get_definition_params(self):
         definition_info = self.definition_info
@@ -297,10 +283,10 @@ class _DefinitionGenerator(object):
         return self._calculated_definitions[key]
     
     def _calculate_definition(self, call, returns):
-        call_info = rope.refactor.functionutils._CallInfo.read(
+        call_info = rope.refactor.functionutils.CallInfo.read(
             self.definition_info, call)
         paramdict = self.definition_params
-        mapping = rope.refactor.functionutils._ArgumentMapping(self.definition_info,
+        mapping = rope.refactor.functionutils.ArgumentMapping(self.definition_info,
                                                                call_info)
         for param_name, value in mapping.param_dict.iteritems():
             paramdict[param_name] = value
