@@ -86,7 +86,9 @@ Here is a sample session.::
   >>> assert mod2 == pycore.find_module('pkg.mod2')
 
   # Performing rename refactoring on `mod1.a_var`
-  >>> refactoring.rename(mod1, 1, 'new_var')
+  >>> from rope.refactor.rename import RenameRefactoring
+  >>> changes = RenameRefactoring(pycore, mod1, 1).get_changes('new_var')
+  >>> refactoring.add_and_commit_changes(changes)
   >>> mod1.read()
   u'new_var = 10\n'
   >>> mod2.read()

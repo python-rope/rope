@@ -335,9 +335,11 @@ class StatementEvaluator(object):
             return
         pyobject = pyname.get_object()
         if pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
-            self.result = rope.base.pynames.AssignedName(pyobject=rope.base.pyobjects.PyObject(type_=pyobject))
+            self.result = rope.base.pynames.AssignedName(
+                pyobject=rope.base.pyobjects.PyObject(type_=pyobject))
         elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
-            self.result = rope.base.pynames.AssignedName(pyobject=pyobject._get_returned_object())
+            self.result = rope.base.pynames.AssignedName(
+                pyobject=pyobject._get_returned_object())
         elif '__call__' in pyobject.get_attributes():
             call_function = pyobject.get_attribute('__call__')
             self.result = rope.base.pynames.AssignedName(

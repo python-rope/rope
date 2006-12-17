@@ -8,28 +8,28 @@
 Overview
 ========
 
-*rope* is a python IDE. Its main goal is to provide refactorings and
-code assists. It is written in python and uses the Tkinter library.
+*rope* is a python refactoring IDE and library.  Its main goal is to
+provide refactorings and code assists. It is written in python and
+uses the Tkinter library.
 
 
 Status
 ======
 
-*rope* is just at the beginning of its path. Features implemented so
-far:
+Features implemented so far:
 
 * Refactorings
 
-  * Rename class/function/module/package/method/local variables/
-    keyword args
+  * Rename class/function/module/package/method/variable/keyword arg
   * Extract method
   * Extract variable
   * Move class/function/module/package
   * Inline method/local variable
   * Change method signature
   * Introduce factory method
-  * Transform module to package
+  * Introduce parameter
   * Encapsulate field
+  * Transform module to package
   * Convert local variable to field
   * Inline argument default value
   * Previewing refactorings

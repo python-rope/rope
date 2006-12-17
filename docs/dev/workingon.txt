@@ -1,28 +1,9 @@
-Introduce parameter
-===================
-
-Change global accesses or attributes accesses to parameters:
-
-- Added `introduce_parameter`
-- Failing outside a function
-- Primaries
-- Testing methods
-- Adding to UI
-
-* Failing on assignments?
-* What if we want to make a function call a parameter::
-  
-    def a_func():
-        b = get_var()
-        c = get_var() * 2
-        #d = get_var
-
-* Adding a new test module
+Cleanups
+========
 
 * Method inlining and pydocs
 * What to do if a file is removed while editing
 * A separate module for `ResourceObserver`\s
-* Renaming `FilteredResourceObserver`
 * Moving observing implementation from `Resource` to `Project`
 * Allowing non-existent resources
 * Add ``revalidate the whole project`` to file

@@ -351,6 +351,15 @@ class InlineTest(unittest.TestCase):
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('a = 1\n', self.mod.read())
 
+    def test_inlining_methods(self):
+        self.mod.write("class A(object):\n    name = 'hey'\n"
+                       "    def get_name(self):\n        return self.name\n"
+                       "a = A()\nname = a.get_name()\n")
+        self.refactoring.inline(self.mod, self.mod.read().rindex('get_name') + 1)
+        self.assertEquals("class A(object):\n    name = 'hey'\n"
+                          "a = A()\nget_name_result = a.name\nname = get_name_result\n",
+                          self.mod.read())
+
 
 def suite():
     result = unittest.TestSuite()

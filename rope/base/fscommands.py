@@ -1,7 +1,8 @@
 """Project file system commands.
 
-This modules implements file system operations so that different
-version control systems can supported using this interface.
+This modules implements file system operations used by rope.
+Different version control systems can supported by implementing the
+interface provided by `FileSystemCommands` class.
 
 """
 

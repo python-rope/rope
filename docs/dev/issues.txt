@@ -61,7 +61,6 @@ Exploring and analyzing possible solutions for:
 Hot Topics
 ==========
 
-* Using DOI for inline method and change method signature
 
 
 To Be Discussed
@@ -76,36 +75,6 @@ To Be Discussed
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * Undo Unification
-
-
-Supporting Built-in Types
-=========================
-
-The main motive for supporting built-in types are `list`, `dict` and
-`set`.  We try to start with the simplest of these; `list` types.
-
-
-Supporting `list`
------------------
-
-It is relatively easy to support `list` as being a type with some
-functions, but the main motive for supporting `list`\s are providing
-meaningful return values from its functions such as `__index__` or
-providing correct variables in for loops.  To do these we assume that
-every list only contains one type of objects.
-
-* How should we infer the type an iterator holds?
-
-One way of doing this is object inference of `list.append` or other
-insertion functions.  But the difficulty here is we should infer
-the parameters of these functions for each instance in program source
-rather than for the list type in whole.  This analysis should be
-performed at runtime.
-
-* `ObjectInfer.infer_holding_type` for `iterator`\s
-* Addition of a flag to types that indicates the distinction of
-  instances.
-* Can we support `iterator` types, too?
 
 
 Updating Changed Files
@@ -209,6 +178,7 @@ Decisions to Make
 * Unifying refactoring interfaces
 * Introducing factories for refactorings;
   Reduce the dependence to `rope.refactor` modules
+* Removing `rope.refactor.PythonRefactoring`
 
 
 A Common Refactoring Interface
@@ -291,8 +261,63 @@ groups.::
   move_attribute(pyobject, pyobject)
 
 
-Dyanmic Type Inference Issues
-=============================
+Object Inference Issues
+=======================
+
+
+Better Object Inference
+-----------------------
+
+Currently rope's object inference mechanisms are simple and there are
+many situations that they are of no use:
+
+* A simple dynamic type inference saves the return types of methods
+* We use a simple static type inference that:
+  
+  * Follows assignments
+  * Checks the returned ASTs
+  * Uses method return value and parameter information gained by DOI
+
+We are very interested in supporting:
+
+* Builtin types
+* Implicit interfaces
+
+Possible alternatives:
+
+* Saving the type of local variables when exiting a scope
+* Having a set of functions to record the place they are called
+* Having a flag that lets us save information per instance
+
+
+Supporting Built-in Types
+-------------------------
+
+The main motive for supporting built-in types are `list`, `dict` and
+`set`.  We try to start with the simplest of these; `list` types.
+
+
+Supporting `list`
+`````````````````
+
+It is relatively easy to support `list` as being a type with some
+functions, but the main motive for supporting `list`\s is providing
+meaningful return values from its functions such as `__index__` or
+providing correct variables in for loops.  To do these we assume that
+every list only contains one type of objects.
+
+* How should we infer the type an iterator holds?
+
+One way of doing this is object inference of `list.append` or other
+insertion functions.  But the difficulty here is we should infer
+the parameters of these functions for each instance in program source
+rather than for the list type in whole.  This analysis should be
+performed at runtime.
+
+* `ObjectInfer.infer_holding_type` for `iterator`\s
+* Addition of a flag to types that indicates the distinction of
+  instances.
+* Can we support `iterator` types, too?
 
 
 Rejecting Smalltalk `RefactoringBrowser` Approach
@@ -430,6 +455,16 @@ We should be careful about situations like::
           arg.do_something()
       else:
           arg.do_some_other_thing()
+
+The other issue is what to do for situations like this::
+  
+  def a_func(obj1, obj2):
+      result = obj1.f(obj2)
+      result.g()
+
+The problem is we don't know the types of `obj1` and `obj2` exactly
+and we have a list of types that these variables are assigned during
+program execution.  `obj1.f` is not a specific method.
 
 
 Implementation Issues
