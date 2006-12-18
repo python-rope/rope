@@ -1,6 +1,7 @@
 import Tkinter
 import ScrolledText
 
+from rope.base import codeanalyze
 import rope.ui.core
 import rope.ui.testview
 import rope.ide.codeassist
@@ -208,6 +209,35 @@ def do_run_module(context):
 def run_tests(context):
     rope.ui.testview.run_unit_test(context.project, context.resource)
 
+def comment_line(context):
+    editor = context.get_active_editor().get_editor()
+    line_number = editor.get_current_line_number()
+    _comment_line(editor, line_number)
+
+def _comment_line(editor, line_number, action='shift'):
+    line_editor = editor.line_editor()
+    line = line_editor.get_line(line_number)
+    if line.strip() == '':
+        return
+    if line.lstrip().startswith('#') and action != 'comment':
+        line_editor.indent_line(line_number, -(line.index('#') + 1))
+    elif action != 'uncomment':
+        line_editor.insert_to_line(line_number, '#')
+
+
+def comment_region(context):
+    editor = context.get_active_editor().get_editor()
+    start, end = editor.get_region_offset()
+    lines = codeanalyze.SourceLinesAdapter(editor.get_text())
+    start_line = lines.get_line_number(start)
+    end_line = lines.get_line_number(end)
+    first_line = lines.get_line(start_line)
+    action = 'comment'
+    if first_line.lstrip().startswith('#'):
+        action = 'uncomment'
+    for i in range(start_line, end_line + 1):
+        _comment_line(editor, i, action)
+
 
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
@@ -227,6 +257,12 @@ actions.append(SimpleAction('Correct Line Indentation',
                             do_correct_line_indentation, 'C-i',
                             MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1),
                             ['python', 'rest']))
+actions.append(SimpleAction('Comment Line', comment_line, 'C-c c',
+                            MenuAddress(['Code', 'Comment Line'], 'e', 1),
+                            ['python']))
+actions.append(SimpleAction('Comment Region', comment_region, 'C-c C-c',
+                            MenuAddress(['Code', 'Comment Region'], 'n', 1),
+                            ['python']))
 actions.append(SimpleAction('Run Module', do_run_module, 'M-X p',
                             MenuAddress(['Code', 'Run Module'], 'm', 2), ['python']))
 actions.append(SimpleAction('Run Test', run_tests, 'M-X t',

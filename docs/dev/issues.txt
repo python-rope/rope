@@ -9,17 +9,17 @@ Release Schedule
 *rope* will be released every two weeks and each quarter a final
 version would be released.  That is:
 
-=====  ===============
-Week   Release Number
-=====  ===============
-2      x.ym1
-4      x.ym2
-6      x.ym3
-8      x.ym4
-10     x.ym5
-12     x.yrc1
-13     x.y
-=====  ===============
+=======  ===============
+Week #   Release Number
+=======  ===============
+2        x.ym1
+4        x.ym2
+6        x.ym3
+8        x.ym4
+10       x.ym5
+12       x.yrc1
+13       x.y
+=======  ===============
 
 This is only a rough plan.  For example we might have more release
 candidates before the ``x.y`` release.
@@ -58,15 +58,28 @@ Exploring and analyzing possible solutions for:
 * Implicit interfaces
 
 
+Status
+------
+
+Now that rope supports many basic refactorings it seems necessary to
+put more time on enhancing old refactorings and finishing remaining
+stories.  So from till ``0.4`` we will:
+
+* Enhance old refactorings
+* Do remaining stories
+* Test
+* Explore better OI; supporting builtins and implicit interfaces
+
+
 Hot Topics
 ==========
 
+* `Library Movement`_
 
 
 To Be Discussed
 ===============
 
-* `Library Movement`_
 * `Python's Implicit Interfaces`_
 * Removing `PythonRefactoring` facade
 * Rope's preference saving system: format, location
@@ -115,24 +128,7 @@ Inline Method
 Library Movement
 ================
 
-* Changing `rope.base.fscommands` for projects
-* Supporting other version control systems
-* Adding `read` and `write` to `rope.base.fscommands`
-* Should we expect files to be changed inside or outside the project?
-
-
-Updating Changed Files
-----------------------
-
-We can add a `Project.update` method that should be called each
-time we use rope classes.  But this seems inefficient if the
-number of updates are high.  We might be able to pass the
-changing file or folder to this method.  We can use this update in
-`fscommands` for moving and removing files, too.
-
-The other issue that might occur when using rope is that a file
-might detect that it has been changed or its path does not exist.
-What should we do in these situations?
+* Adding `read` and `write` to `rope.base.fscommands`?
 
 
 Using ASTs For Transformations
@@ -288,6 +284,8 @@ Possible alternatives:
 * Saving the type of local variables when exiting a scope
 * Having a set of functions to record the place they are called
 * Having a flag that lets us save information per instance
+* Saving the result of every call
+* Using static type inference algorithms
 
 
 Supporting Built-in Types
@@ -324,7 +322,7 @@ Rejecting Smalltalk `RefactoringBrowser` Approach
 -------------------------------------------------
 
 We can't use smalltalks approach because it requires the whole
-tests suite to be run before each refactoring but this does not
+tests suite to be run before each refactoring and this does not
 seem appealing because it might take a lot of time.
 
 Apart from that if we use a wrapper for a function using python

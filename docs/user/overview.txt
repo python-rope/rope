@@ -31,6 +31,7 @@ C-x C-c        exit
 M-X p          run active editor
 M-X t          run unit-tests
 M-Q r          show project tree
+F5             refresh project
 -------------  --------------------------
 C-f            forward character
 C-b            backward character
@@ -54,11 +55,14 @@ C-y            paste
 C-x C-s        save
 C-x s          save all
 -------------  --------------------------
-C-i            correct line indentation
 M-/            code-assist
 F3             go to definition location
 F2             show doc
 C-o            show quick outline
+C-i            correct line indentation
+C-c c          comment current line
+C-c C-c        comment region lines
+-------------  --------------------------
 M-R            rename refactoring
 M-M            extract method
 M-V            move refactoring

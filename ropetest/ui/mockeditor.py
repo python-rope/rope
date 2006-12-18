@@ -1,11 +1,11 @@
-from rope.ui.editor import LineEditor, EditorFactory
+from rope.ui.editor import EditorFactory
 
 class MockEditorFactory(EditorFactory):
 
     def create(self, *args, **kws):
         return MockEditor()
 
-class MockLineEditor(LineEditor):
+class MockLineEditor(object):
     def __init__(self, editor):
         self.editor = editor
 

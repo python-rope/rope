@@ -158,6 +158,8 @@ class GraphicalEditor(object):
         if start == '' or end == '':
             start = self.text.index('mark')
             end = self.text.index(INSERT)
+            if start == '':
+                start = end
         if self.text.compare(start, '>', end):
             start, end = end, start
         start_offset = self.get_offset(start)
@@ -749,19 +751,6 @@ class _TextChangeInspector(object):
         self.changed_region = None
 
 
-class LineEditor(object):
-    """An interface for line oriented editors"""
-    
-    def get_line(self, line_number):
-        pass
-    
-    def length(self):
-        pass
-    
-    def indent_line(self, line_number, count):
-        pass
-
-
 class EditorFactory(object):
 
     def create(self):
@@ -776,7 +765,8 @@ class GraphicalEditorFactory(EditorFactory):
         return GraphicalEditor(self.frame, *args, **kws)
 
 
-class GraphicalLineEditor(LineEditor):
+class GraphicalLineEditor(object):
+    """An interface for line oriented editors"""
 
     def __init__(self, editor):
         self.editor = editor
@@ -796,4 +786,6 @@ class GraphicalLineEditor(LineEditor):
         else:
             self.editor.text.delete('%d.0' % line_number,
                                     '%d.%d' % (line_number, -count))
-
+    
+    def insert_to_line(self, line_number, text):
+        self.editor.text.insert('%d.0' % line_number, text)

@@ -163,13 +163,16 @@ class ReSTHighlighting(Highlighting):
         hyperlink_definition_pattern = r'(?P<hyperlink_definition>\.\. _([^`\n:]|`.+`)+:)'
         field_pattern = r'^\s*(?P<field>:[^\n:]+:)'
         escaped_pattern = r'(?P<escaped>\\.)'
+        footnote_pattern = r'(?P<footnote>\.\.[ \t]+\[\S*\] )'
+        comment_pattern = r'(?P<comment>^\.\.(\n| [^\n]*\n)(([ \t]+[^\n]*\n)|(\n))*)'
         all_patterns = (escaped_pattern, title_pattern,
-                       literal_block_pattern, literal_pattern,
-                       anonymous_hyperlink_pattern, hyperlink_pattern,
-                       interpreted_pattern, listsign_pattern,
-                       directive_pattern, emphasis_pattern,
-                       strongemphasis_pattern, hyperlink_target_pattern, field_pattern,
-                       hyperlink_definition_pattern)
+                        literal_block_pattern, literal_pattern,
+                        anonymous_hyperlink_pattern, hyperlink_pattern,
+                        interpreted_pattern, listsign_pattern,
+                        directive_pattern, emphasis_pattern,
+                        strongemphasis_pattern, hyperlink_target_pattern, field_pattern,
+                        hyperlink_definition_pattern, footnote_pattern,
+                        comment_pattern)
         return re.compile('|'.join(all_patterns), re.M)
     
     def get_styles(self):
@@ -190,6 +193,8 @@ class ReSTHighlighting(Highlighting):
                 'field' : HighlightingStyle(color='#005555'),
                 'anonymous_hyperlink' : HighlightingStyle(color='#003355'),
                 'literal_block' : HighlightingStyle(color='#605050'),
+                'comment' : HighlightingStyle(color='#AA5050'),
+                'footnote' : HighlightingStyle(color='#2222FF'),
                 'escaped' : HighlightingStyle()}
 
     def get_suspected_region_after_change(self, text, change_start, change_end):

@@ -1,17 +1,18 @@
-Cleanups
-========
+Small Stories
+=============
 
-* Method inlining and pydocs
-* What to do if a file is removed while editing
-* A separate module for `ResourceObserver`\s
-* Moving observing implementation from `Resource` to `Project`
-* Allowing non-existent resources
-* Add ``revalidate the whole project`` to file
+- Adding ``refresh project`` to file menu
+- Commenting current line and region ``C-c c`` and ``C-c C-c``
+- Supporting ReST comments
 
 
 Remaining Stories
 =================
 
+* Method inlining and pydocs
+* What to do if a file is removed while editing
+* Allowing non-existent resources?
+* Using utf-8 as default encoding for files?
 * Problems for inside generator assists
 * Performing actions on individual functions or imports
 * `PyClass.superclasses` should be concluded data
@@ -24,7 +25,6 @@ Remaining Stories
 * Considering logical lines in `rope.codeanalyze`
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
-* Moving/renaming current module/package
 * Extract method and return statements
 * Import addition when adding a relative with an absolute import
 * Caching `PyCore.classes`

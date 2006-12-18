@@ -2,64 +2,48 @@
  rope stories
 ==============
 
-For an overview of possible future goals of rope have a look
-at `future.txt`_ file.
+This file is actually a todo list.  Right now most of rope's efforts
+are concentrated on implementing `base stories`_.  Contributions to
+the `IDE and UI stories`_ are extremely welcome. Have a look at
+`contributing.txt`_ file.
 
-.. _future.txt: future.html
-
-
-Stories
-=======
+.. _`contributing.txt`: contributing.html
 
 
-> Unestimated Stories
+Base Stories
+============
 
+* Python C extensions
+* User specified source folders
+* Zip imports
+* Updating similarly named variables and methods in rename refactoring
+* Packages should be filtered; only allowing imported submodules
+* Extract superclass
+* Collapse hierarchy
+* Finding similar statements when extracting variable/method
+* Pull up method
+* Push down method
+* Replace method with method object refactoring
+* Analyzing function decorators
+* Introduce redirection
+* Changing signature in class hierarchies
+* Handling builtin functions and types
+
+
+IDE And UI Stories
+==================
 
 * Configuring keys
-
-
 * Configuring fonts
-
-
 * Showing syntactical errors
-
-
 * Editor folding
-
-
 * Variable indentation and tab size
-
-
 * Having multiple clipboards
-
-
-* reST support inside pydocs
-
-
-* reST codeassists
-
-
+* Auto-importing modules
 * Adding tool bar
-
-
-* Commanding buffer
-
-
 * Last edit location; C-q
-
-
 * Replacement; M-%
-
-
 * Remembering last open project
-
-
-* File Encodings
-
-
-* Commenting and uncommenting lines
-
-
 * Enhancing searching
 
   * End the search when some other key sequence is typed
@@ -68,109 +52,35 @@ Stories
   * Starting from begining when end of file is reached
   * Showing failed searches
 
-
 * Go to matching parenthesis
-
-
-* Python C extensions
-
-
-* User specified source folders
-  You should save this project specific information somewhere. How should
-  guessed source folders be used.
-
-
 * Enhancing editor
 
   * Select all; C-x h
   * Fixed places for StatusTexts
 
-
 * Indenting a range of file
-
-
 * Better multi-sequence key event handling
-
-
-* Optimizing StatementRangeFinder
-  Add CachedLines and not starting from the start of the lines
-
-
-* Auto-importing modules
-  Hold the list of project classes and import them automatically
-  in codeassist
-
-
-* Zip imports
-
-
 * Auto completion type
 
   * Inserting or overwriting
   * Inserting common prefixes
 
-
 * Showing function signature when calling
+* ReST
 
-
-* ``global`` keyword issues for pycore
-
-
-* reST goto definition
-
-
-* reST outlines
-
-
-* Static type inference
-
-
-* Updating similarly named variables and methods in rename refactoring
-
-
-* Enhancing editor
-
-  * Clearing selection if something happens
-  * Unifying builtin and emacs-style selections; if selection
-    is active do the builtin cut and paste
-
+  * highlighting inside pydocs
+  * goto definition
+  * outlines
+  * codeassists
 
 * Auto-completing function parameter names when calling
-
-
 * Code contexts; context_finder.get_context(text, offset)
   This can be used when proposing code assists.
-
-
 * Formating Code
-
-
 * Local history
-
-
-* What to do when the program has syntax errors for code assists
-
-
-* Packages should be filtered
-  Do not show submodules that are not imported yet as attributes.
-
-
-* Pull up method
-
-
-* Push down method
-
-
 * Show PyDoc reST highlighting
-
-
 * Better list and tree navigation
   Add filter texts and selection texts to trees and lists.
-
-
-* Add import
-
-
 * Enhancing module running
 
   * Showing running status in the GUI
@@ -179,35 +89,30 @@ Stories
   * Customizing CWD and parameters
   * Running last run
 
-
-* Replace method with method object refactoring
-
-
-* Analyzing function decorators
+* View type hierarchy
+* Open Type; C-T
 
 
-* Introduce redirection
+Stories
+=======
+
+
+> Public Release 0.4 : February 4, 2007
+
+
+* ``global`` keyword issues for pycore
 
 
 * Removing imports from the same module
 
 
-* Moving fields/methods to attribute classes
-
-
-* Changing signature in class hierarchies
-
-
-* Handling builtin functions and types
-
-
-* View type hierarchy
-
-
 * Sorting imports; standard, third party, project
 
 
-* Open Type; C-T
+* Moving/renaming current module/package
+
+
+* Commanding buffer
 
 
 > Public Release 0.4m4 : December 31, 2006
@@ -216,7 +121,10 @@ Stories
 * Find occurances
 
 
-* Adding ignored file patterns in projects
+* Adding ignored file patterns in projects; ``*.pyc *~ .svn ...``
+
+
+* Moving fields/methods to attribute classes
 
 
 * Extending and having more control on file reading and writing

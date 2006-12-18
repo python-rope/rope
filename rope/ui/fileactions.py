@@ -282,6 +282,9 @@ def _show_resource_view(core):
 def project_tree(context):
     _show_resource_view(context.get_core())
 
+def refresh_project(context):
+    context.project.validate(context.project.get_root_folder())
+
 def change_editor(context):
     context.get_core()._change_editor_dialog()
 
@@ -319,6 +322,8 @@ actions.append(SimpleAction('Find File', find_file, 'C-x C-f',
                             MenuAddress(['File', 'Find File...'], 'f', 2)))
 actions.append(SimpleAction('Project Tree', project_tree, 'M-Q r',
                             MenuAddress(['File', 'Project Tree'], 't', 2)))
+actions.append(SimpleAction('Refresh Project', refresh_project, 'F5',
+                            MenuAddress(['File', 'Refresh Project'], 'r', 2)))
 
 actions.append(SimpleAction('Change Editor', change_editor, 'C-x b',
                             MenuAddress(['File', 'Change Editor...'], 'c', 3)))

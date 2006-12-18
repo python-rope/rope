@@ -259,6 +259,41 @@ class ReSTHighlightTest(unittest.TestCase):
         code = 'here ::\n  line1\n    line2\nnormal\n'
         self.assertTrue(self.in_highlights(code, (code.index('::'), code.index('normal'),
                                                   'literal_block')))
+    
+    def test_comments(self):
+        self.assertTrue('comment' in self.highlighting.get_styles())
+        code = '.. this is a comment\nnormal\n'
+        self.assertTrue(self.in_highlights(code, (0, code.index('normal'), 'comment')))
+        
+    def test_comments2(self):
+        code = 'normal\n\n.. this is a comment\n indented\n  comments\nnormal\n'
+        self.assertTrue(self.in_highlights(code, (code.index('..'),
+                                                  code.rindex('normal'),
+                                                  'comment')))
+
+    def test_comments3(self):
+        code = 'normal\n\n..\n indented\n  comments\nnormal\n'
+        self.assertTrue(self.in_highlights(code, (code.index('..'),
+                                                  code.rindex('normal'),
+                                                  'comment')))
+
+    def test_comments4(self):
+        code = 'normal\n\n..\n indented\n\nnormal\n'
+        self.assertTrue(self.in_highlights(
+                        code, (code.index('..'),
+                               code.rindex('normal'), 'comment')))
+
+    def test_footnote(self):
+        self.assertTrue('footnote' in self.highlighting.get_styles())
+        code = '.. [2] this is a footnote\nnormal\n'
+        self.assertTrue(self.in_highlights(code, (0, code.index(']') + 2,
+                                                  'footnote')))
+        
+    def test_footnote2(self):
+        code = 'normal\n\n.. [hey] this is a footnote\n indented\n  footnote\nnormal\n'
+        self.assertTrue(self.in_highlights(code, (code.index('..'),
+                                                  code.rindex(']') + 2,
+                                                  'footnote')))
 
 
 def suite():

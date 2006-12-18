@@ -6,9 +6,11 @@
 Overview
 ========
 
-*rope* is a python refactoring IDE and library.  Its main goal is to
+`rope`_ is a python refactoring IDE and library.  Its main goal is to
 provide features like refactoring, auto-completion, code assist and
 outline views.  It is written in python and uses Tkinter library.
+
+.. _`rope`: http://rope.sf.net/
 
 
 New Features
@@ -16,11 +18,7 @@ New Features
 
 Features added in this release:
 
-* Introduce parameter refactoring
-* Updating project files that have been changed by other programs.
-  Have a look at `docs/dev/library.txt`_ for more information
-* Fixing module running on windows
-* Support for adding new version control systems
+* 
 
 
 Getting Started
