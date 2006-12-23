@@ -74,6 +74,7 @@ stories.  So from till ``0.4`` we will:
 Hot Topics
 ==========
 
+* `Having Virtual PyModules`_
 * `Library Movement`_
 
 
@@ -88,6 +89,153 @@ To Be Discussed
   hard to compute information like class hierarchies
 * Using a modification of `compiler` AST for simplifying refactorings
 * Undo Unification
+
+
+Refactoring Import Utils
+========================
+
+The special thing about `importutils` module is that it is used by
+other refactorings on an already changed module.  Most of the time
+its methods return the changed source code of a module.
+
+
+Having Virtual `PyModule`\s
+===========================
+
+What Do We Gain?
+----------------
+
+After this refactoring we'll be able to mix any of the refactorings
+and move toward bigger refactorings.
+
+* Handling import changes for all modules
+
+  One of the problems we are facing when performing refactorings is
+  that imports need to be changed in some of the modules involved in
+  that refactoring, but since those modules are already changed for
+  that refactoring, it cannot be changed once more easily.
+
+* Performing multiple refactorings in sequence
+
+  For example for performing move method refactoring we can rename the
+  self parameter of the method and then move the method itself.  Then
+  move the imports used.
+
+* Support for bigger refactorings
+
+  Examples:
+
+
+Consequences
+------------
+
+* Complexity of implementation
+
+  After a change the internal representation of project should be
+  updated.  This requires for example changes to
+  `Folder.get_children` and `File.read`.
+
+* Inefficiency because of multiple changes while refactoring
+
+  If in a refactoring we perform ``3`` changes we might also need to
+  recompute the information calculated in some of the `PyModule`\s
+  ``3`` times.  This seems inefficient.
+
+* Inefficiency due to missing computed information computed locally
+
+  One of the difficulties of having a set of main and many local
+  `PyModule`\s is that when we compute some information in local
+  ones this information might be no longer valid in global pymodules.
+  
+
+* Not convincing uses
+
+  Right know the only need for performing multiple refactorings is
+  for changing imports after performing a refactoring and it has been
+  handled using some kind of virtual `PyModule` already.  We could
+  not think of any good refactoring that needs to perform multiple
+  basic refactorings.
+
+* Lots of changes
+  
+  This refactoring needs lots of changes to `PyCore` and modules that
+  use it.  Some of these changes need to change the design very much.
+
+* Complex design
+
+  Managing multiple `PyCore`\s and changing `PyObject`\s to work with
+  many of them at the same time seems to be hard.
+
+
+A Bit in Details
+----------------
+
+If we change all refactoring modules to work on a pymodule we would
+probably be able to have a structure like this::
+  
+  class PythonProjectFiles(object):
+      
+      def resource_to_pyobject(self, resource):
+          pass
+      
+      def get_module(self, module_name):
+          pass
+  
+  
+  class ChangedPythonProjectFiles(PythonProjectFiles):
+      
+      def resource_to_pyobject(self, resource):
+          pass
+      
+      def get_module(self, module_name):
+          pass
+      
+      def file_changed(self, resource, new_content):
+          pass
+      
+      def move_resource(self, resource, new_location):
+          pass
+
+      def get_changes(self):
+          pass
+          
+
+This way we can perform any number of refactorings in sequence.  But
+it seems as if we should break `PyCore` into two separate classes.
+What's more after this change we would probably be able to remove
+`rope.refactor.change`.  Maybe we can add `Change...` interfaces to 
+`ChangedPythonProjectFiles`.
+
+One of the main obstacles for doing this change is that all of the
+`PyObjects` have a reference to the `PyCore` and ask them about
+other modules.  This causes problems because we want all of the
+`PyObjects` to use a local `PyCore`.
+
+What's more computed information might be valid in a local scope
+but might be invalid in the rest of project.
+
+
+Preventing Unnecessary Recomputations
+-------------------------------------
+
+* Using copy on write
+* Updating global `PyCore` after performing changes
+
+
+Gradual Implementation
+----------------------
+
+Since this would be a big refactoring we need to divide this
+refactoring into a few smaller tasks.
+
+
+Simple Implementation
+---------------------
+
+A simple implementation would be possible by using plain and new
+`PythonProjectFiles` from the beginning.  But the performance might
+really hurt if we actually use it but it won't change if we don't.
+So actually it is a extract class refactorings.
 
 
 Updating Changed Files

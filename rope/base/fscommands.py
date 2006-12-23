@@ -8,6 +8,8 @@ interface provided by `FileSystemCommands` class.
 
 import os
 import shutil
+import re
+
 
 try:
     import pysvn
@@ -58,3 +60,62 @@ class SubversionCommands(object):
     
     def remove(self, path):
         self.client.remove(path, force=True)
+
+
+class FileAccess(object):
+    
+    def read(self, path):
+        """Read the content of the file at `path`.
+        
+        Returns a `Unicode` object
+        """
+        source_bytes = open(path).read()
+        return self._file_data_to_unicode(source_bytes)
+    
+    def _file_data_to_unicode(self, data):
+        encoding = self._conclude_file_encoding(data)
+        if encoding is not None:
+            return unicode(data, encoding)
+        try:
+            return unicode(data)
+        except UnicodeDecodeError:
+            # Using ``utf-8`` if guessed encoding fails
+            return unicode(data, 'utf-8')
+    
+    def _find_line_end(self, source_bytes, start):
+        try:
+            return source_bytes.index('\n', start)
+        except ValueError:
+            return len(source_bytes)
+    
+    def _get_second_line_end(self, source_bytes):
+        line1_end = self._find_line_end(source_bytes, 0)
+        if line1_end != len(source_bytes):
+            return self._find_line_end(source_bytes, line1_end)
+        else:
+            return line1_end
+    
+    encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
+    
+    def _conclude_file_encoding(self, source_bytes):
+        first_two_lines = source_bytes[:self._get_second_line_end(source_bytes)]
+        match = FileAccess.encoding_pattern.search(first_two_lines)
+        if match is not None:
+            return match.group(1)
+
+    def write(self, path, contents):
+        """Write the `contents` to the file at `path`.
+        
+        contents should be a `Unicode` object.
+        """
+        file_ = open(path, 'w')
+        encoding = self._conclude_file_encoding(contents)
+        if encoding is not None and isinstance(contents, unicode):
+            contents = contents.encode(encoding)
+        try:
+            file_.write(contents)
+        except UnicodeEncodeError:
+            # Using ``utf-8`` if guessed encoding fails
+            file_.write(contents.encode('utf-8'))
+        file_.close()
+

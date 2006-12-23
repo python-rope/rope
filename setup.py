@@ -52,7 +52,7 @@ setup(name='rope',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',
       packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
-                'rope.ide', 'rope.ui'],
+                'rope.refactor.importutils', 'rope.ide', 'rope.ui'],
       package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
       scripts=['scripts/rope'],
       classifiers=classifiers)

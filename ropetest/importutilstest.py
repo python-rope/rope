@@ -236,6 +236,15 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('def a_func():\n    pass\ndef a_func():\n    pass\n',
                           module_with_imports.get_changed_source())
         
+    def test_removing_unused_imports_for_from_import_with_as(self):
+        self.mod.write('a_var = 1\n')
+        self.mod1.write('from mod import a_var as myvar\na_var = myvar\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod1)
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('from mod import a_var as myvar\na_var = myvar\n',
+                          module_with_imports.get_changed_source())
+
     def test_adding_imports(self):
         self.mod.write('\n')
         pymod = self.pycore.get_module('mod')
@@ -533,6 +542,78 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod2)
         self.assertEquals('import pkg2.mod3 as mod3\nprint mod3',
                           self.import_tools.transform_relative_imports_to_absolute(pymod))
+    
+    def test_organizing_imports(self):
+        self.mod1.write('import mod1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod1)
+        self.assertEquals('', self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports(self):
+        self.mod.write('import mod\nmod.a_var = 1\nprint mod.a_var\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports2(self):
+        self.mod1.write('import pkg1.mod1\npkg1.mod1.a_var = 1\nprint pkg1.mod1.a_var\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod1)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_with_as(self):
+        self.mod.write('import mod as mymod\nmymod.a_var = 1\nprint mymod.a_var\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_for_froms(self):
+        self.mod1.write('from pkg1 import mod1\nmod1.a_var = 1\nprint mod1.a_var\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod1)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_for_froms_with_as(self):
+        self.mod1.write('from pkg1 import mod1 as mymod\nmymod.a_var = 1\nprint mymod.a_var\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod1)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_for_froms2(self):
+        self.mod.write('from mod import a_var\na_var = 1\nprint a_var\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_for_froms3(self):
+        self.mod.write('from mod import a_var\na_var = 1\nprint a_var\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_for_froms3(self):
+        self.mod.write('from mod import a_var as myvar\na_var = 1\nprint myvar\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_with_no_dot_after_mod(self):
+        self.mod.write('import mod\nprint mod\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import mod\nprint mod\n',
+                          self.import_tools.organize_imports(pymod))
+
+    def test_removing_self_imports_with_no_dot_after_mod2(self):
+        self.mod.write('import mod\na_var = 1\nprint mod\\\n     \\\n     .var\n\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('a_var = 1\nprint var\n\n',
+                          self.import_tools.organize_imports(pymod))
+
+    # XXX: causes stack overflow
+    def xxx_test_removing_self_imports_for_from_import_star(self):
+        self.mod.write('from mod import *\na_var = 1\nprint myvar\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('a_var = 1\nprint a_var\n',
+                          self.import_tools.organize_imports(pymod))
 
 
 if __name__ == '__main__':

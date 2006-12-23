@@ -26,6 +26,7 @@ class GraphicalEditor(object):
         self._bind_keys()
         self.status_bar_manager = None
         self.modification_observers = []
+        self.change_observers = []
         self.modified_flag = False
         self.text.bind('<<Modified>>', self._editor_modified)
         self.text.edit_modified(False)
@@ -34,12 +35,14 @@ class GraphicalEditor(object):
         start, end = self.change_inspector.get_changed_region()
         self._colorize(start, end)
         self.change_inspector.clear_changed()
+        if self.modified_flag:
+            for observer in self.change_observers:
+                observer(end)
 
     def _colorize(self, start, end):
-        start_offset, end_offset = self.highlighting.\
-                                   get_suspected_region_after_change(self.get_text(),
-                                                                     self.get_offset(start),
-                                                                     self.get_offset(end))
+        start_offset, end_offset = \
+            self.highlighting.get_suspected_region_after_change(
+            self.get_text(), self.get_offset(start), self.get_offset(end))
         start = self.text.index('1.0 +%dc' % start_offset)
         end = self.text.index(start + ' +%dc' % (end_offset - start_offset))
         start_tags = self.text.tag_names(start)
@@ -194,6 +197,9 @@ class GraphicalEditor(object):
     
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)
+    
+    def add_change_observer(self, observer):
+        self.change_observers.append(observer)
 
     def is_modified(self):
         return self.modified_flag
@@ -276,7 +282,10 @@ class GraphicalEditor(object):
         return int(str(self.text.index(index)).split('.')[1])
 
     def set_insert(self, textIndex):
-        self.text.mark_set(INSERT, textIndex._getIndex())
+        if isinstance(textIndex, basestring):
+            self.text.mark_set(INSERT, textIndex)
+        else:
+            self.text.mark_set(INSERT, textIndex._getIndex())
 
     def get(self, start=None, end=None):
         startIndex = INSERT

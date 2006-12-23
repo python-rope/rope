@@ -88,7 +88,7 @@ class _GlobalMover(_Mover):
         old_name = pyname.get_object()._get_ast().name
         pymodule = pyname.get_object().get_module()
         source = pymodule.get_resource()
-        new_name = rope.refactor.importutils.ImportTools.get_module_name(
+        new_name = rope.refactor.importutils.get_module_name(
             pycore, destination) + '.' + old_name
         if destination.is_folder() and destination.has_child('__init__.py'):
             destination = destination.get_child('__init__.py')
@@ -166,7 +166,11 @@ class _GlobalMover(_Mover):
             start = -1
         result += moving + '\n' + source[start + 1:]
         
-        changes.add_change(ChangeContents(self.destination, result))
+        # Organizing imports
+        source = result
+        pymodule = self.pycore.get_string_module(source, self.destination)
+        source = self.import_tools.organize_imports(pymodule)
+        changes.add_change(ChangeContents(self.destination, source))
     
     def _get_moving_element_with_imports(self):
         moving = self._get_moving_element()
@@ -239,7 +243,7 @@ class _ModuleMover(_Mover):
             old_name = source.get_name()
         else:
             old_name = source.get_name()[:-3]
-        package = rope.refactor.importutils.ImportTools.get_module_name(pycore, destination)
+        package = rope.refactor.importutils.get_module_name(pycore, destination)
         if package:
             new_name = package + '.' + old_name
         else:

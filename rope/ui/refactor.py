@@ -334,7 +334,7 @@ class MoveDialog(RefactoringDialog):
         self.new_name_entry = Tkinter.Entry(frame)
         self.new_name_entry.grid(row=0, column=1)
         def do_select(resource):
-            name = rope.refactor.importutils.ImportTools.get_module_name(
+            name = rope.refactor.importutils.get_module_name(
                 self.project.get_pycore(), resource)
             self.new_name_entry.delete(0, Tkinter.END)
             self.new_name_entry.insert(0, name)

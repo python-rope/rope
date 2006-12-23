@@ -45,6 +45,7 @@ M-l            downcase word
 M-c            capitalize word
 M-u            upcase word
 C-s            start searching
+C-q            last edit location
 C-x C-u        undo
 C-x C-r        redo
 C-space        set mark

@@ -56,6 +56,9 @@ def goto_line(context):
     line_entry.bind('<Escape>', cancel)
     toplevel.grid()
     line_entry.focus_set()
+
+def goto_last_edit_location(context):
+    context.get_core().get_editor_manager().goto_last_edit_location()
     
 
 core = rope.ui.core.Core.get_core()
@@ -72,6 +75,8 @@ actions.append(SimpleAction('Paste', paste, 'C-y',
                             MenuAddress(['Edit', 'Emacs Paste'], 'p'), ['all']))
 actions.append(SimpleAction('Goto Line', goto_line, None,
                             MenuAddress(['Edit', 'Goto Line'], 'g'), ['all']))
+actions.append(SimpleAction('Goto Last Edit Location', goto_last_edit_location, 'C-q',
+                            MenuAddress(['Edit', 'Goto Last Edit Location'], 'e'), ['all']))
 actions.append(SimpleAction('Undo', undo, 'C-x u',
                             MenuAddress(['Edit', 'Undo'], 'u', 1), ['all']))
 actions.append(SimpleAction('Redo', redo, 'C-x r',

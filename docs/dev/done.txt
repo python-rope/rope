@@ -3,6 +3,18 @@
 ===========
 
 
+- Removing imports from the same module : December 22, 2006
+
+
+- Goto last edit location; ``C-q`` : December 20, 2006
+
+
+- Trying ``utf-8`` if defaults don't work : December 19, 2006
+
+
+- Comment line and region; ``C-c c``, ``C-c C-c`` : December 18, 2006
+
+
 > Public Release 0.4m3 : December 17, 2006
 
 

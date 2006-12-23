@@ -393,6 +393,12 @@ class ProjectTest(unittest.TestCase):
         sample_file.write(contents)
         self.assertEquals(contents, sample_file.read())
 
+    def test_using_utf8_when_writing_in_case_of_errors(self):
+        sample_file = self.project.get_root_folder().create_file('my_file.txt')
+        contents = u'\n\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
+        sample_file.write(contents)
+        self.assertEquals(contents, sample_file.read())
+
     # XXX: supporting utf_8_sig
     def xxx_test_file_encoding_reading_for_notepad_styles(self):
         sample_file = self.project.get_root_folder().create_file('my_file.txt')

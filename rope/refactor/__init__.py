@@ -4,7 +4,7 @@ This package contains modules that perform python
 refactorings.
 
 """
-import rope.refactor.importutils
+import rope.refactor.importutils.module_imports
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 from rope.refactor.rename import RenameRefactoring
@@ -152,9 +152,17 @@ class ImportOrganizer(object):
             changes.add_change(ChangeContents(resource, source))
             self.refactoring.add_and_commit_changes(changes)
 
+    def organize_imports(self, resource):
+        pymodule = self.pycore.resource_to_pyobject(resource)
+        result = self.import_tools.organize_imports(pymodule)
+        if result is not None:
+            changes = ChangeSet()
+            changes.add_change(ChangeContents(resource, result))
+            self.refactoring.add_and_commit_changes(changes)
+
     def expand_star_imports(self, resource):
         source = self._perform_command_on_module_with_imports(
-            resource, rope.refactor.importutils.ModuleWithImports.expand_stars)
+            resource, rope.refactor.importutils.module_imports.ModuleImports.expand_stars)
         if source is not None:
             changes = ChangeSet()
             changes.add_change(ChangeContents(resource, source))

@@ -1,25 +1,39 @@
-Small Stories
-=============
+Removing Imports From The Same Module
+=====================================
 
-- Adding ``refresh project`` to file menu
-- Commenting current line and region ``C-c c`` and ``C-c C-c``
-- Supporting ReST comments
+- Adding `rope.base.fscommands.FileAccess` class
+- Refactoring `importutils` module
+- Moving operations from `ImportInfo`\s to visitors
+- Adding `rope.refactor.importutils` package; needs changing ``setup.py``
+- Not using `ImportInfoVisitor.dispatch` in favor of `ImportStatement.accept`
+- Changing organize imports to use `ImportTools.organize_imports`
+- Organizing imports after move refactorings
+- What if there is no dot after ``mod``
+
+* Importing star
+* Definition location for variables inside loops
+* Choosing better names for import related modules
+  visitors -> actions
+* Adding tools to ease working on long files
+* Supporting ``from w.x.y import z`` for organizing long imports;
+  ``Use long import list format`` refactoring
 
 
 Remaining Stories
 =================
 
+* Allowing running code to call rope functions while rope is running?
+* Extract constant
 * Method inlining and pydocs
 * What to do if a file is removed while editing
 * Allowing non-existent resources?
-* Using utf-8 as default encoding for files?
-* Problems for inside generator assists
+* Problems for inside list comprehension assists
 * Performing actions on individual functions or imports
 * `PyClass.superclasses` should be concluded data
 * Better `ropetest` package structure
 * Decide when to use `difflib` in `Editor.set_text`
 * Handling `AssList` for inline variable and encapsulate field
-* Changing `Rename` to take an `OccuranceFinder`
+* Changing `Rename` to take an `OccurrenceFinder`
 * ``break`` and ``continue`` in extract method
 
 * Considering logical lines in `rope.codeanalyze`

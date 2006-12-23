@@ -155,6 +155,12 @@ class MoveRefactoringTest(unittest.TestCase):
         moved = self.pycore.find_module('pkg.mod1')
         self.assertEquals('import pkg.mod1\nprint pkg.mod1\n', moved.read())
     
+    def test_moving_funtions_to_imported_module(self):
+        self.mod1.write('a_var = 1\n')
+        self.mod2.write('import mod1\ndef a_func():\n    var = mod1.a_var\n')
+        self.refactoring.move(self.mod2, self.mod2.read().index('a_func') + 1, self.mod1)
+        self.assertEquals('\n\ndef a_func():\n    var = a_var\na_var = 1\n', self.mod1.read())
+    
     # TODO: moving fields
     def xxx_test_moving_fields(self):
         a_class = 'class A(object):\n' \

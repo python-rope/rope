@@ -16,6 +16,7 @@ class EditorPile(object):
         self.buttons = {}
         self.active_file_path = StringVar('')
         self.active_editor = None
+        self.last_edited_location = None
 
     def _editor_was_modified(self, editor):
         if editor not in self.buttons:
@@ -24,6 +25,9 @@ class EditorPile(object):
         if editor.get_editor().is_modified():
             new_title = '*' + new_title
         self.buttons[editor]['text'] = new_title
+    
+    def _editor_was_changed(self, resource, offset):
+        self.last_edited_location = (resource, offset)
 
     def activate_editor(self, editor):
         if self.active_editor:
@@ -45,6 +49,7 @@ class EditorPile(object):
             self.core.get_open_project(), file_,
             rope.ui.editor.GraphicalEditorFactory(self.editor_frame), readonly)
         editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
+        editor.add_change_observer(self._editor_was_changed)
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),
                             variable=self.active_file_path,
@@ -87,3 +92,8 @@ class EditorPile(object):
         result = self.editors[1:]
         result.append(self.editors[0])
         return result
+
+    def goto_last_edit_location(self):
+        if self.last_edited_location is not None:
+            self.get_resource_editor(self.last_edited_location[0])
+            self.active_editor.get_editor().set_insert(self.last_edited_location[1])

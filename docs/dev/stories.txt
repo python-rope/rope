@@ -41,7 +41,6 @@ IDE And UI Stories
 * Having multiple clipboards
 * Auto-importing modules
 * Adding tool bar
-* Last edit location; C-q
 * Replacement; M-%
 * Remembering last open project
 * Enhancing searching
@@ -103,9 +102,6 @@ Stories
 * ``global`` keyword issues for pycore
 
 
-* Removing imports from the same module
-
-
 * Sorting imports; standard, third party, project
 
 
@@ -125,6 +121,3 @@ Stories
 
 
 * Moving fields/methods to attribute classes
-
-
-* Extending and having more control on file reading and writing

@@ -9,10 +9,10 @@ actions.
 class Action(object):
     """Extending rope commands
     
-    Represents an action that can have keyboard short-cut and
+    Represents an action that can have keyboard a short-cut and
     menu item.  The `do` method is called when the action is
-    invoked.  `Action` s should be registered using `rope.ui.core.
-    Core.register_action` method.  Usually `Action` s are registered
+    invoked.  `Action`\s should be registered using `rope.ui.core.
+    Core.register_action` method.  Usually `Action`\s are registered
     using `rope.ui.core.Core._load_actions` by loading the modules
     that register their actions when loading.
     

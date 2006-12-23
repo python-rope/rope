@@ -224,45 +224,13 @@ class File(Resource):
 
     def __init__(self, project, name):
         super(File, self).__init__(project, name)
+        self.file_access = rope.base.fscommands.FileAccess()
     
     def read(self):
-        source_bytes = open(self._get_real_path()).read()
-        return self._file_data_to_unicode(source_bytes)
+        return self.file_access.read(self._get_real_path())
     
-    def _file_data_to_unicode(self, data):
-        encoding = self._conclude_file_encoding(data)
-        if encoding is not None:
-            return unicode(data, encoding)
-        return unicode(data)
-    
-    def _find_line_end(self, source_bytes, start):
-        try:
-            return source_bytes.index('\n', start)
-        except ValueError:
-            return len(source_bytes)
-    
-    def _get_second_line_end(self, source_bytes):
-        line1_end = self._find_line_end(source_bytes, 0)
-        if line1_end != len(source_bytes):
-            return self._find_line_end(source_bytes, line1_end)
-        else:
-            return line1_end
-    
-    encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
-    
-    def _conclude_file_encoding(self, source_bytes):
-        first_two_lines = source_bytes[:self._get_second_line_end(source_bytes)]
-        match = File.encoding_pattern.search(first_two_lines)
-        if match is not None:
-            return match.group(1)
-
     def write(self, contents):
-        file_ = open(self._get_real_path(), 'w')
-        encoding = self._conclude_file_encoding(contents)
-        if encoding is not None and isinstance(contents, unicode):
-            contents = contents.encode(encoding)
-        file_.write(contents)
-        file_.close()
+        self.file_access.write(self._get_real_path(), contents)
         for observer in list(self.observers):
             observer.resource_changed(self)
 
@@ -280,7 +248,7 @@ class Folder(Resource):
         return True
 
     def get_children(self):
-        """Returns the children of this folder"""
+        """Return the children of this folder"""
         path = self._get_real_path()
         result = []
         content = os.listdir(path)

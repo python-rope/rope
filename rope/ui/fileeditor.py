@@ -19,6 +19,7 @@ class FileEditor(object):
         self.editor = editor_factory.create(editingcontext)
         self.editor.set_text(self.file.read())
         self.modification_observers = []
+        self.change_observers = []
         self.editor.add_modification_observer(self._editor_was_modified)
         self._register_observers()
         self.saving = False
@@ -30,12 +31,14 @@ class FileEditor(object):
         self.observer = FilteredResourceObserver(
             ResourceObserver(self._file_was_modified, self._file_was_removed),
             [self.file])
-        self.project.add_observer(self.observer)
+        if self.project is not None:
+            self.project.add_observer(self.observer)
     
     def _remove_observers(self):
-        self.project.remove_observer(self.observer)
+        if self.project is not None:
+            self.project.remove_observer(self.observer)
     
-    def _editor_was_modified(self, *args):
+    def _editor_was_modified(self):
         for observer in list(self.modification_observers):
             observer(self)
     
@@ -55,6 +58,9 @@ class FileEditor(object):
     
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)
+
+    def add_change_observer(self, observer):
+        self.editor.add_change_observer(lambda index: observer(self.file, index))
 
     def save(self):
         if self.readonly:
