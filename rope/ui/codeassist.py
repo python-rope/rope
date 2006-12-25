@@ -265,8 +265,8 @@ actions.append(SimpleAction('Comment Region', comment_region, 'C-c C-c',
                             ['python']))
 actions.append(SimpleAction('Run Module', do_run_module, 'M-X p',
                             MenuAddress(['Code', 'Run Module'], 'm', 2), ['python']))
-actions.append(SimpleAction('Run Test', run_tests, 'M-X t',
-                            MenuAddress(['Code', 'Run Test'], 't', 2), ['python']))
+actions.append(SimpleAction('Run Unit Tests', run_tests, 'M-X t',
+                            MenuAddress(['Code', 'Run Unit Tests'], 't', 2), ['python']))
 
 for action in actions:
     core.register_action(action)

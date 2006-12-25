@@ -7,8 +7,8 @@ refactorings or as a separate task.
 
 
 import rope.base.pynames
-import rope.refactor.rename
-
+from rope.refactor import rename
+from rope.refactor import occurrences
 from rope.refactor.importutils.importinfo import \
      (NormalImport, FromImport, get_module_name)
 from rope.refactor.importutils import module_imports
@@ -58,10 +58,11 @@ class ImportTools(object):
             imported = name
             if alias is not None:
                 imported = alias
-            rename_in_module = rope.refactor.rename.RenameInModule(
-                self.pycore, [imported_pymodule.get_attribute(name)], imported,
-                module_name + '.' + name, replace_primary=True, imports=False)
-            source = rename_in_module.get_changed_module(pymodule=pymodule)
+            occurrence_finder = occurrences.FilteredOccurrenceFinder(
+                self.pycore, imported, [imported_pymodule.get_attribute(name)],
+                imports=False)
+            source = rename.rename_in_module(occurrence_finder, module_name + '.' + name,
+                                             pymodule=pymodule, replace_primary=True)
             if source is not None:
                 pymodule = self.pycore.get_string_module(source, resource)
         return pymodule

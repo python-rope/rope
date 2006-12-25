@@ -345,8 +345,7 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('if True:\n    pass\nfor i in range(10):\n    pass\n',
                           self.mod.read())
 
-    # FIXME: inlining functions with pydocs
-    def xxx_test_inlining_a_function_with_pydoc(self):
+    def test_inlining_a_function_with_pydoc(self):
         self.mod.write('def a_func():\n    """docs"""\n    a = 1\na_func()')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('a = 1\n', self.mod.read())

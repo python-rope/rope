@@ -105,9 +105,6 @@ Stories
 * Sorting imports; standard, third party, project
 
 
-* Moving/renaming current module/package
-
-
 * Commanding buffer
 
 

@@ -1,5 +1,5 @@
 import rope.base.codeanalyze
-import rope.refactor.occurrences
+from rope.refactor import occurrences
 
 from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents

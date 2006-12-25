@@ -1,11 +1,12 @@
 import rope.base.codeanalyze
 import rope.base.exceptions
 import rope.base.pyobjects
-import rope.refactor.rename
 import rope.refactor.importutils
+from rope.refactor import rename
+from rope.refactor import occurrences
+from rope.refactor import sourceutils
 
 from rope.refactor.change import (ChangeSet, ChangeContents)
-from rope.refactor import sourceutils
 
 
 class IntroduceFactoryRefactoring(object):
@@ -33,10 +34,11 @@ class IntroduceFactoryRefactoring(object):
 
     def _change_resource(self, changes, factory_name, global_factory):
         class_scope = self.old_pyname.get_object().get_scope()
-        rename_in_module = rope.refactor.rename.RenameInModule(
-            self.pycore, [self.old_pyname], self.old_name,
-            self._get_new_function_name(factory_name, global_factory), True)
-        source_code = rename_in_module.get_changed_module(pymodule=self.pymodule)
+        occurrence_finder = occurrences.FilteredOccurrenceFinder(
+            self.pycore, self.old_name, [self.old_pyname], only_calls=True)
+        source_code = rename.rename_in_module(
+            occurrence_finder, self._get_new_function_name(factory_name, global_factory),
+            pymodule=self.pymodule)
         if source_code is None:
             source_code = self.pymodule.source_code
         lines = self.pymodule.lines
@@ -88,10 +90,10 @@ class IntroduceFactoryRefactoring(object):
         for file_ in self.pycore.get_python_files():
             if file_ == self.resource:
                 continue
-            rename_in_module = rope.refactor.rename.RenameInModule(
-                self.pycore, [self.old_pyname], self.old_name, changed_name,
-                only_calls=True, replace_primary=global_factory)
-            changed_code = rename_in_module.get_changed_module(resource=file_)
+            occurrence_finder = occurrences.FilteredOccurrenceFinder(
+                self.pycore, self.old_name, [self.old_pyname], only_calls=True)
+            changed_code = rename.rename_in_module(occurrence_finder, changed_name, resource=file_,
+                                                   replace_primary=global_factory)
             if changed_code is not None:
                 if global_factory:
                     new_pymodule = self.pycore.get_string_module(changed_code, self.resource)

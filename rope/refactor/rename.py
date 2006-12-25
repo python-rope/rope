@@ -2,23 +2,32 @@ import rope.base.codeanalyze
 import rope.base.pynames
 import rope.base.pyobjects
 import rope.base.exceptions
-import rope.refactor.occurrences
+from rope.refactor import occurrences
 from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents, MoveResource
 
 
 class RenameRefactoring(object):
     
-    def __init__(self, pycore, resource, offset):
+    def __init__(self, pycore, resource, offset=None):
         self.pycore = pycore
         self.resource = resource
-        self.offset = offset
-        self.old_name = rope.base.codeanalyze.get_name_at(self.resource, self.offset)
-        self.old_pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource,
-                                                         offset)
-        if self.old_pyname is None:
-            raise rope.base.exceptions.RefactoringException(
-                'Rename refactoring should be performed on python identifiers.')
+        if offset is not None:
+            self.old_name = rope.base.codeanalyze.get_name_at(self.resource, offset)
+            self.old_pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource,
+                                                                  offset)
+            if self.old_pyname is None:
+                raise rope.base.exceptions.RefactoringException(
+                    'Rename refactoring should be performed on python identifiers.')
+        else:
+            if not resource.is_folder() and resource.get_name() == '__init__.py':
+                resource = resource.get_parent()
+            dummy_pymodule = self.pycore.get_string_module('')
+            self.old_pyname = rope.base.pynames.ImportedModule(dummy_pymodule, resource=resource)
+            if resource.is_folder():
+                self.old_name = resource.get_name()
+            else:
+                self.old_name = resource.get_name()[:-3]
     
     def get_old_name(self):
         return self.old_name
@@ -35,8 +44,8 @@ class RenameRefactoring(object):
         files = self._get_interesting_files(in_file)
         changes = ChangeSet()
         for file_ in files:
-            new_content = RenameInModule(self.pycore, old_pynames, self.old_name, new_name).\
-                          get_changed_module(file_)
+            occurance_finder = occurrences.FilteredOccurrenceFinder(self.pycore, self.old_name, old_pynames)
+            new_content = rename_in_module(occurance_finder, new_name, resource=file_)
             if new_content is not None:
                 changes.add_change(ChangeContents(file_, new_content))
         
@@ -115,32 +124,19 @@ class RenameRefactoring(object):
         return MoveResource(resource, new_location)
 
 
-class RenameInModule(object):
-    
-    def __init__(self, pycore, old_pynames, old_name, new_name,
-                 only_calls=False, replace_primary=False,
-                 imports=True):
-        self.occurrences_finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
-            pycore, old_name, old_pynames, only_calls, imports)
-        self.whole_primary = replace_primary
-        self.new_name = new_name
-    
-    def get_changed_module(self, resource=None, pymodule=None):
-        source_code = self._get_source(resource, pymodule)
-        change_collector = sourceutils.ChangeCollector(source_code)
-        for occurrence in self.occurrences_finder.find_occurrences(resource, pymodule):
-            if self.whole_primary and occurrence.is_a_fixed_primary():
-                continue
-            if self.whole_primary:
-                start, end = occurrence.get_primary_range()
-            else:
-                start, end = occurrence.get_word_range()
-            change_collector.add_change(start, end, self.new_name)
-        return change_collector.get_changed()
-    
-    def _get_source(self, resource, pymodule):
-        if resource is not None:
-            return resource.read()
+def rename_in_module(occurrences_finder, new_name, resource=None,
+                     pymodule=None, replace_primary=False):
+    if resource is not None:
+        source_code = resource.read()
+    else:
+        source_code = pymodule.source_code
+    change_collector = sourceutils.ChangeCollector(source_code)
+    for occurrence in occurrences_finder.find_occurrences(resource, pymodule):
+        if replace_primary and occurrence.is_a_fixed_primary():
+            continue
+        if replace_primary:
+            start, end = occurrence.get_primary_range()
         else:
-            return pymodule.source_code
-
+            start, end = occurrence.get_word_range()
+        change_collector.add_change(start, end, new_name)
+    return change_collector.get_changed()

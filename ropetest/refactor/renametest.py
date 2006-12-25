@@ -1,6 +1,7 @@
 import unittest
 import rope.base.codeanalyze
-import rope.refactor.rename
+from rope.refactor import rename
+import rope.refactor.occurrences
 import rope.base.project
 import ropetest
 
@@ -266,9 +267,10 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1.write('a = 10\nprint (1+a)\n')
         pymod = self.pycore.get_module('mod1')
         old_pyname = pymod.get_attribute('a')
-        rename_in_module = rope.refactor.rename.RenameInModule(
-            self.pycore, [old_pyname], 'a', 'new_var', replace_primary=True)
-        refactored = rename_in_module.get_changed_module(pymodule=pymod)
+        finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
+            self.pycore, 'a', [old_pyname])
+        refactored = rename.rename_in_module(
+            finder, 'new_var', pymodule=pymod, replace_primary=True)
         self.assertEquals('new_var = 10\nprint (1+new_var)\n', refactored)
     
     def test_renaming_for_loop_variable(self):
@@ -319,7 +321,7 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('def a_func(new_param):\n    print new_param\n'
                           'a_func  (new_param=hey)\n', refactored)
     
-    def test_renaming_variables_in_init_do_pys(self):
+    def test_renaming_variables_in_init_dot_pys(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
@@ -329,7 +331,7 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('new_var = 10\n', init_dot_py.read())
         self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
     
-    def test_renaming_variables_in_init_do_pys2(self):
+    def test_renaming_variables_in_init_dot_pys2(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
@@ -340,7 +342,7 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('new_var = 10\n', init_dot_py.read())
         self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
     
-    def test_renaming_variables_in_init_do_pys3(self):
+    def test_renaming_variables_in_init_dot_pys3(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
@@ -350,6 +352,30 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('new_var = 10\n', init_dot_py.read())
         self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
     
-
+    def test_renaming_resources_using_rename_module_refactoring(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('a_var = 1')
+        mod2.write('import mod1\nmy_var = mod1.a_var\n')
+        renamer = rename.RenameRefactoring(self.pycore, mod1)
+        renamer.get_changes('newmod').do()
+        self.assertEquals('import newmod\nmy_var = newmod.a_var\n', mod2.read())
+    
+    def test_renaming_resources_using_rename_module_refactoring_for_packages(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1.write('import pkg\nmy_pkg = pkg')
+        renamer = rename.RenameRefactoring(self.pycore, pkg)
+        renamer.get_changes('newpkg').do()
+        self.assertEquals('import newpkg\nmy_pkg = newpkg', mod1.read())
+    
+    def test_renaming_resources_using_rename_module_refactoring_for_init_dot_py(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1.write('import pkg\nmy_pkg = pkg')
+        renamer = rename.RenameRefactoring(self.pycore, pkg.get_child('__init__.py'))
+        renamer.get_changes('newpkg').do()
+        self.assertEquals('import newpkg\nmy_pkg = newpkg', mod1.read())
+    
 if __name__ == '__main__':
     unittest.main()

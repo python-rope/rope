@@ -2,7 +2,7 @@ import compiler
 
 import rope.base.pynames
 from rope.refactor.importutils import importinfo
-from rope.refactor.importutils import visitors
+from rope.refactor.importutils import actions
 
 
 class ModuleImports(object):
@@ -26,7 +26,7 @@ class ModuleImports(object):
     
     def remove_unused_imports(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
-        visitor = visitors.RemovingVisitor(self.pycore, can_select)
+        visitor = actions.RemovingVisitor(self.pycore, can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
     
@@ -34,7 +34,7 @@ class ModuleImports(object):
         all_import_statements = self.get_import_statements()
         result = []
         can_select = _OneTimeSelector(self._get_unbound_names(defined_pyobject))
-        visitor = visitors.FilteringVisitor(self.pycore, can_select)
+        visitor = actions.FilteringVisitor(self.pycore, can_select)
         for import_statement in all_import_statements:
             new_import = import_statement.accept(visitor)
             if new_import is not None and not new_import.is_empty():
@@ -55,7 +55,7 @@ class ModuleImports(object):
         return ''.join(result)
     
     def add_import(self, import_info):
-        visitor = visitors.AddingVisitor(self.pycore, import_info)
+        visitor = actions.AddingVisitor(self.pycore, import_info)
         for import_statement in self.get_import_statements():
             if import_statement.accept(visitor):
                 break
@@ -67,13 +67,13 @@ class ModuleImports(object):
             all_imports.append(importinfo.ImportStatement(import_info, last_line, last_line))
     
     def filter_names(self, can_select):
-        visitor = visitors.RemovingVisitor(self.pycore, can_select)
+        visitor = actions.RemovingVisitor(self.pycore, can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
     
     def expand_stars(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
-        visitor = visitors.ExpandStarsVisitor(self.pycore, can_select)
+        visitor = actions.ExpandStarsVisitor(self.pycore, can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
     
@@ -81,7 +81,7 @@ class ModuleImports(object):
         imports = self.get_import_statements()
         added_imports = []
         for import_stmt in imports:
-            visitor = visitors.AddingVisitor(self.pycore, import_stmt.import_info)
+            visitor = actions.AddingVisitor(self.pycore, import_stmt.import_info)
             for added_import in added_imports:
                 if added_import.accept(visitor):
                     import_stmt.empty_import()
@@ -89,14 +89,14 @@ class ModuleImports(object):
                 added_imports.append(import_stmt)
     
     def get_relative_to_absolute_list(self):
-        visitor = rope.refactor.importutils.visitors.RelativeToAbsoluteVisitor(
+        visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
             self.pycore, self.pymodule.get_resource().get_parent())
         for import_stmt in self.get_import_statements():
             import_stmt.accept(visitor)
         return visitor.to_be_absolute
 
     def get_self_import_fix_and_rename_list(self):
-        visitor = rope.refactor.importutils.visitors.SelfImportVisitor(
+        visitor = rope.refactor.importutils.actions.SelfImportVisitor(
             self.pycore, self.pymodule.get_resource().get_parent(),
             self.pymodule.get_resource())
         for import_stmt in self.get_import_statements():

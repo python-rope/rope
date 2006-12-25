@@ -117,14 +117,17 @@ class RefactoringDialog(object):
 
 class RenameDialog(RefactoringDialog):
     
-    def __init__(self, context, title, is_local=False):
+    def __init__(self, context, title, is_local=False, current_module=False):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         super(RenameDialog, self).__init__(_get_refactoring(context), title)
         self.is_local = is_local
+        offset = editor.get_current_offset()
+        if current_module:
+            offset = None
         self.renamer = rope.refactor.rename.RenameRefactoring(
             context.get_core().get_open_project().get_pycore(), 
-            resource, editor.get_current_offset())
+            resource, offset)
     
     def _get_changes(self):
         new_name = self.new_name_entry.get()
@@ -145,6 +148,9 @@ class RenameDialog(RefactoringDialog):
 
 def rename(context):
     RenameDialog(context, 'Rename Refactoring').show()
+
+def rename_module(context):
+    RenameDialog(context, 'Rename Current Module Refactoring', current_module=True).show()
 
 def local_rename(context):
     RenameDialog(context, 'Rename Refactoring', True).show()
@@ -313,15 +319,18 @@ class _ModuleViewHandle(TreeViewHandle):
 
 class MoveDialog(RefactoringDialog):
     
-    def __init__(self, context):
+    def __init__(self, context, current_module=False):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
         super(MoveDialog, self).__init__(_get_refactoring(context),
                                          'Move Refactoring')
+        offset = editor.get_current_offset()
+        if current_module:
+            offset = None
         self.mover = rope.refactor.move.MoveRefactoring(
             context.get_core().get_open_project().get_pycore(), 
-            resource, editor.get_current_offset())
+            resource, offset)
     
     def _get_changes(self):
         destination = self.project.get_pycore().find_module(self.new_name_entry.get())
@@ -359,6 +368,9 @@ class MoveDialog(RefactoringDialog):
 
 def move(context):
     MoveDialog(context).show()
+
+def move_module(context):
+    MoveDialog(context, current_module=True).show()
 
 class _Parameter(object):
     
@@ -672,6 +684,14 @@ actions.append(SimpleAction('Inline Argument Default',
 actions.append(SimpleAction('Transform Module to Package', 
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
                             MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1), 
+                            ['python']))
+actions.append(SimpleAction('Rename Current Module', 
+                            ConfirmAllEditorsAreSaved(rename_module), None,
+                            MenuAddress(['Refactor', 'Rename Current Module'], None, 1), 
+                            ['python']))
+actions.append(SimpleAction('Move Current Module', 
+                            ConfirmAllEditorsAreSaved(move_module), None,
+                            MenuAddress(['Refactor', 'Move Current Module'], None, 1), 
                             ['python']))
 actions.append(SimpleAction('Organize Imports', 
                             ConfirmAllEditorsAreSaved(organize_imports), 'C-O',

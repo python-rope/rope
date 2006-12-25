@@ -1,6 +1,7 @@
 import unittest
 import rope.base.exceptions
 import rope.base.project
+from rope.refactor import move
 import ropetest
 
 
@@ -160,6 +161,30 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod2.write('import mod1\ndef a_func():\n    var = mod1.a_var\n')
         self.refactoring.move(self.mod2, self.mod2.read().index('a_func') + 1, self.mod1)
         self.assertEquals('\n\ndef a_func():\n    var = a_var\na_var = 1\n', self.mod1.read())
+    
+    def test_moving_resources_using_move_module_refactoring(self):
+        self.mod1.write('a_var = 1')
+        self.mod2.write('import mod1\nmy_var = mod1.a_var\n')
+        mover = move.MoveRefactoring(self.pycore, self.mod1)
+        mover.get_changes(self.pkg).do()
+        self.assertEquals('import pkg.mod1\nmy_var = pkg.mod1.a_var\n', self.mod2.read())
+        self.assertTrue(self.pkg.get_child('mod1.py') is not None)
+    
+    def test_moving_resources_using_move_module_refactoring_for_packages(self):
+        self.mod1.write('import pkg\nmy_pkg = pkg')
+        pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
+        mover = move.MoveRefactoring(self.pycore, self.pkg)
+        mover.get_changes(pkg2).do()
+        self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
+        self.assertTrue(pkg2.get_child('pkg') is not None)
+    
+    def test_moving_resources_using_move_module_refactoring_for_init_dot_py(self):
+        self.mod1.write('import pkg\nmy_pkg = pkg')
+        pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
+        mover = move.MoveRefactoring(self.pycore, self.pkg.get_child('__init__.py'))
+        mover.get_changes(pkg2).do()
+        self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
+        self.assertTrue(pkg2.get_child('pkg') is not None)
     
     # TODO: moving fields
     def xxx_test_moving_fields(self):

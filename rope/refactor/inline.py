@@ -3,10 +3,12 @@ import re
 import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
+import rope.refactor.functionutils
 from rope.base import codeanalyze
 from rope.refactor import sourceutils
+from rope.refactor import rename
+from rope.refactor import occurrences
 from rope.refactor.change import ChangeSet, ChangeContents
-import rope.refactor.functionutils
 
 
 class InlineRefactoring(object):
@@ -131,9 +133,10 @@ class _VariableInliner(_Inliner):
         definition = definition_with_assignment[definition_with_assignment.\
                                                 index('=') + 1:].strip()
 
-        changed_source = rope.refactor.rename.RenameInModule(
-            self.pycore, [self.pyname], self.name, definition,
-            replace_primary=True).get_changed_module(pymodule=self.pymodule)
+        occurrence_finder = occurrences.FilteredOccurrenceFinder(
+            self.pycore, self.name, [self.pyname])
+        changed_source = rename.rename_in_module(
+            occurrence_finder, definition, pymodule=self.pymodule, replace_primary=True)
         if changed_source is None:
             changed_source = self.pymodule.source_code
         lines = codeanalyze.SourceLinesAdapter(changed_source)
@@ -253,8 +256,10 @@ class _DefinitionGenerator(object):
         scope = self.pyfunction.get_scope()
         source = self.pymodule.source_code
         lines = self.pymodule.lines
-        start_line = codeanalyze.LogicalLineFinder(lines).\
-                     get_logical_line_in(scope.get_start())[1] + 1
+        line_finder = codeanalyze.LogicalLineFinder(lines)
+        start_line = line_finder.get_logical_line_in(scope.get_start())[1] + 1
+        if self.pyfunction._get_ast().doc is not None:
+            start_line = line_finder.get_logical_line_in(start_line)[1] + 1
         start_offset = lines.get_line_start(start_line)
         end_offset = min(lines.get_line_end(scope.get_end()) + 1, len(source))
         body = source[start_offset:end_offset]

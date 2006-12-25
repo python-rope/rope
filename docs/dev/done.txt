@@ -3,6 +3,9 @@
 ===========
 
 
+- Moving/renaming current module/package : December 25, 2006
+
+
 - Removing imports from the same module : December 22, 2006
 
 

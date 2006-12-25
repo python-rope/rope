@@ -222,13 +222,6 @@ Preventing Unnecessary Recomputations
 * Updating global `PyCore` after performing changes
 
 
-Gradual Implementation
-----------------------
-
-Since this would be a big refactoring we need to divide this
-refactoring into a few smaller tasks.
-
-
 Simple Implementation
 ---------------------
 

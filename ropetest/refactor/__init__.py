@@ -7,6 +7,7 @@ import ropetest.refactor.movetest
 import ropetest.refactor.inlinetest
 import ropetest.refactor.change_signature_test
 import rope.refactor.introduce_parameter
+import ropetest.refactor.importutilstest
 from rope.refactor import Undo
 from rope.base.exceptions import RefactoringException
 from rope.base.project import Project
@@ -544,6 +545,7 @@ def suite():
     result.addTests(unittest.makeSuite(LocalToFieldTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.change_signature_test.ChangeSignatureTest))
     result.addTests(unittest.makeSuite(IntroduceParameterTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.importutilstest.ImportUtilsTest))
     return result
 
 

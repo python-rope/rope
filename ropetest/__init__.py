@@ -9,7 +9,6 @@ import ropetest.outlinetest
 import ropetest.formattertest
 import ropetest.objectinfertest
 import ropetest.runmodtest
-import ropetest.importutilstest
 
 
 def suite():
@@ -23,7 +22,6 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.formattertest.FormatterTest))
     result.addTests(ropetest.objectinfertest.suite())
     result.addTests(ropetest.runmodtest.suite())
-    result.addTests(unittest.makeSuite(ropetest.importutilstest.ImportUtilsTest))
     return result
 
 

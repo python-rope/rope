@@ -2,18 +2,27 @@ import rope.base.codeanalyze
 import rope.base.pyobjects
 import rope.refactor.importutils
 import rope.base.exceptions
+from rope.refactor import rename
+from rope.refactor import occurrences
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
 
 
 class MoveRefactoring(object):
+    """A class for moving modules, packages, global functions and classes."""
     
-    def __init__(self, pycore, resource, offset):
+    def __init__(self, pycore, resource, offset=None):
         self.pycore = pycore
-        self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
-        if self.pyname is None:
-            raise rope.base.exceptions.RefactoringException(
-                'Move works on classes,functions or modules.')
+        if offset is not None:
+            self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
+            if self.pyname is None:
+                raise rope.base.exceptions.RefactoringException(
+                    'Move works on classes,functions or modules.')
+        else:
+            if not resource.is_folder() and resource.get_name() == '__init__.py':
+                resource = resource.get_parent()
+            dummy_pymodule = self.pycore.get_string_module('')
+            self.pyname = rope.base.pynames.ImportedModule(dummy_pymodule, resource=resource)
     
     def get_changes(self, dest_resource):
         moving_object = self.pyname.get_object()
@@ -72,10 +81,10 @@ class _Mover(object):
         return pymodule, False
 
     def _rename_in_module(self, pymodule, new_name, imports=False):
-        rename_in_module = rope.refactor.rename.RenameInModule(
-            self.pycore, [self.old_pyname], self.old_name,
-            new_name, replace_primary=True, imports=imports)
-        source = rename_in_module.get_changed_module(pymodule=pymodule)
+        occurrence_finder = occurrences.FilteredOccurrenceFinder(
+            self.pycore, self.old_name, [self.old_pyname], imports=imports)
+        source = rename.rename_in_module(occurrence_finder, new_name,
+                                         pymodule=pymodule, replace_primary=True)
         if source is None:
             return pymodule, False
         else:

@@ -62,7 +62,7 @@ def goto_last_edit_location(context):
     
 
 core = rope.ui.core.Core.get_core()
-core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all'])
+core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
 
 actions.append(SimpleAction('Emacs Set Mark', set_mark, 'C-space',
@@ -76,7 +76,7 @@ actions.append(SimpleAction('Paste', paste, 'C-y',
 actions.append(SimpleAction('Goto Line', goto_line, None,
                             MenuAddress(['Edit', 'Goto Line'], 'g'), ['all']))
 actions.append(SimpleAction('Goto Last Edit Location', goto_last_edit_location, 'C-q',
-                            MenuAddress(['Edit', 'Goto Last Edit Location'], 'e'), ['all']))
+                            MenuAddress(['Edit', 'Goto Last Edit Location'], 'e'), ['all', 'none']))
 actions.append(SimpleAction('Undo', undo, 'C-x u',
                             MenuAddress(['Edit', 'Undo'], 'u', 1), ['all']))
 actions.append(SimpleAction('Redo', redo, 'C-x r',
