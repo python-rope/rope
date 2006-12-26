@@ -39,7 +39,7 @@ class _Project(object):
         in.
         
         """
-        for observer in self.observers:
+        for observer in list(self.observers):
             observer.validate(folder)
 
     def add_observer(self, observer):
@@ -253,6 +253,8 @@ class Folder(Resource):
         result = []
         content = os.listdir(path)
         for name in content:
+            if name.endswith('.pyc') or name == '.svn' or name.endswith('~'):
+                continue
             if self.get_path() != '':
                 resource_name = self.get_path() + '/' + name
             else:

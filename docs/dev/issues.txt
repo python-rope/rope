@@ -83,7 +83,7 @@ To Be Discussed
 
 * `Python's Implicit Interfaces`_
 * Removing `PythonRefactoring` facade
-* Rope's preference saving system: format, location
+* `Rope's preference system`_: format, location
 * Indexing source files for faster occurrence finding
 * Having a persistant format for PyNames and PyObjects for saving
   hard to compute information like class hierarchies
@@ -91,12 +91,41 @@ To Be Discussed
 * Undo Unification
 
 
-Refactoring Import Utils
+Rope's Preference System
 ========================
 
-The special thing about `importutils` module is that it is used by
-other refactorings on an already changed module.  Most of the time
-its methods return the changed source code of a module.
+This might show what rope needs::
+
+  class Preferences(object):
+      
+      def get_preference(self, name):
+          pass
+      
+  
+  class FilePreferences(object):
+  
+      def __init__(self, path):
+          self.path = path
+      
+      def get_preference(self, name):
+          pass
+
+
+Issues
+------
+
+* format
+
+  * human readable?
+  * python (like emacs and lisp)
+  * simple equals
+
+* types
+
+  * strings
+  * lists?
+
+* changable by rope?
 
 
 Having Virtual `PyModule`\s
@@ -145,7 +174,7 @@ Consequences
 
   One of the difficulties of having a set of main and many local
   `PyModule`\s is that when we compute some information in local
-  ones this information might be no longer valid in global pymodules.
+  ones these information might be no longer valid in global pymodules.
   
 
 * Not convincing uses
@@ -231,36 +260,12 @@ really hurt if we actually use it but it won't change if we don't.
 So actually it is a extract class refactorings.
 
 
-Updating Changed Files
-======================
-
-:Motives:
-  * Forcing rope to update its files when using rope as a library
-  * Moving folders should not be performed recursively (for VCS's)
-:Goals:
-  * Adding `Project.validate`
-  * Holding last changed time for files
-
-Todo:
-
-* Using last changed time in `Project.validate`
-* Preventing multiple observer calls for the same resource
-
-Decisions to make:
-
-* Set of changes
-
-  * Calling observers only once after a set of related changes
-  * Change transactions for `ChangeSet`\s
-  * Merging `resource_removed`\s
-
-
 Inline Method
 =============
 
 * Which of the variables should be renamed?
 * What to do about parameter assignments?
-* What to do about staticmethod an classmethods decorators
+* What to do about staticmethod and classmethod decorators
 * Moving used imports and importing defining module globals
 * Inlining generators
 * Inner functions

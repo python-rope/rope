@@ -1,11 +1,8 @@
-Small Stories
-=============
+Having Ignored File Patterns
+============================
 
-- Method inlining and pydocs
-- Move current module
-- Moving ``__init__.py``
-- Rename current module
-- Renaming ``__init__.py``
+- Ignoring ``*.pyc``, ``*~`` and ``.svn ``
+
 
 
 Remaining Stories

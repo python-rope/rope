@@ -102,6 +102,9 @@ Stories
 * ``global`` keyword issues for pycore
 
 
+* Adding ignored file patterns in projects; ``*.pyc *~ .svn ...``
+
+
 * Sorting imports; standard, third party, project
 
 
@@ -112,9 +115,6 @@ Stories
 
 
 * Find occurances
-
-
-* Adding ignored file patterns in projects; ``*.pyc *~ .svn ...``
 
 
 * Moving fields/methods to attribute classes
