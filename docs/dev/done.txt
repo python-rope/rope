@@ -3,6 +3,15 @@
 ===========
 
 
+- Basic support for builtin typs : December 29, 2006
+
+
+- Find occurrences; ``C-G`` : December 26, 2006
+
+
+- Ignoring ``*.pyc``, ``*~`` and ``.svn`` : December 26, 2006
+
+
 - Moving/renaming current module/package : December 25, 2006
 
 

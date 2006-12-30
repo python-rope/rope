@@ -658,6 +658,21 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self.assist.get_doc(code, len(code) - 2, mod2)
         self.assertTrue(result.endswith('hey'))
         
+    def test_finding_occurrences(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod.write('a_var = 1\n')
+        result = self.assist.find_occurrences(mod, 1)
+        self.assertEquals([(mod, 0)], result)
+
+    def test_finding_occurrences_in_more_than_one_module(self):
+        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1.write('a_var = 1\n')
+        mod2.write('import mod1\nmy_var = mod1.a_var')
+        result = self.assist.find_occurrences(mod1, 1)
+        self.assertEquals(2, len(result))
+        self.assertTrue((mod1, 0) in result and (mod2, mod2.read().index('a_var')) in result)
+
 
 class TemplateTest(unittest.TestCase):
 

@@ -28,6 +28,7 @@ Base Stories
 * Introduce redirection
 * Changing signature in class hierarchies
 * Handling builtin functions and types
+* Moving fields/methods to attribute classes
 
 
 IDE And UI Stories
@@ -75,7 +76,7 @@ IDE And UI Stories
 * Auto-completing function parameter names when calling
 * Code contexts; context_finder.get_context(text, offset)
   This can be used when proposing code assists.
-* Formating Code
+* Formating code
 * Local history
 * Show PyDoc reST highlighting
 * Better list and tree navigation
@@ -105,16 +106,13 @@ Stories
 * Adding ignored file patterns in projects; ``*.pyc *~ .svn ...``
 
 
-* Sorting imports; standard, third party, project
-
-
 * Commanding buffer
 
 
+* Sorting imports; standard, third party, project
+
+
+* Transforming to ``from w.x.y import z`` for long imports
+
+
 > Public Release 0.4m4 : December 31, 2006
-
-
-* Find occurances
-
-
-* Moving fields/methods to attribute classes

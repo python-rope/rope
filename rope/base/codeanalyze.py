@@ -6,6 +6,8 @@ import token
 import rope.base.pyobjects
 import rope.base.pynames
 import rope.base.exceptions
+from rope.base import builtins
+from rope.base import evaluate
 
 
 class WordRangeFinder(object):
@@ -312,116 +314,6 @@ class WordRangeFinder(object):
         return operation
 
 
-class StatementEvaluator(object):
-
-    def __init__(self, scope):
-        self.scope = scope
-        self.result = None
-
-    def visitName(self, node):
-        self.result = self.scope.lookup(node.name)
-    
-    def visitGetattr(self, node):
-        pyname = StatementEvaluator.get_statement_result(self.scope, node.expr)
-        if pyname is not None:
-            try:
-                self.result = pyname.get_object().get_attribute(node.attrname)
-            except rope.base.exceptions.AttributeNotFoundException:
-                self.result = None
-
-    def visitCallFunc(self, node):
-        pyname = StatementEvaluator.get_statement_result(self.scope, node.node)
-        if pyname is None:
-            return
-        pyobject = pyname.get_object()
-        if pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
-            self.result = rope.base.pynames.AssignedName(
-                pyobject=rope.base.pyobjects.PyObject(type_=pyobject))
-        elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
-            self.result = rope.base.pynames.AssignedName(
-                pyobject=pyobject._get_returned_object())
-        elif '__call__' in pyobject.get_attributes():
-            call_function = pyobject.get_attribute('__call__')
-            self.result = rope.base.pynames.AssignedName(
-                pyobject=call_function.get_object()._get_returned_object())
-    
-    def visitAdd(self, node):
-        pass
-
-    def visitAnd(self, node):
-        pass
-
-    def visitBackquote(self, node):
-        pass
-
-    def visitBitand(self, node):
-        pass
-
-    def visitBitor(self, node):
-        pass
-
-    def visitXor(self, node):
-        pass
-
-    def visitCompare(self, node):
-        pass
-    
-    def visitDict(self, node):
-        pass
-    
-    def visitFloorDiv(self, node):
-        pass
-    
-    def visitList(self, node):
-        pass
-    
-    def visitListComp(self, node):
-        pass
-
-    def visitMul(self, node):
-        pass
-    
-    def visitNot(self, node):
-        pass
-    
-    def visitOr(self, node):
-        pass
-    
-    def visitPower(self, node):
-        pass
-    
-    def visitRightShift(self, node):
-        pass
-    
-    def visitLeftShift(self, node):
-        pass
-    
-    def visitSlice(self, node):
-        pass
-    
-    def visitSliceobj(self, node):
-        pass
-    
-    def visitTuple(self, node):
-        pass
-    
-    def visitSubscript(self, node):
-        pass
-
-    @staticmethod
-    def get_statement_result(scope, node):
-        evaluator = StatementEvaluator(scope)
-        compiler.walk(node, evaluator)
-        return evaluator.result
-    
-    @staticmethod
-    def get_string_result(scope, string):
-        evaluator = StatementEvaluator(scope)
-        node = compiler.parse(string)
-        compiler.walk(node, evaluator)
-        return evaluator.result
-
-
 class ScopeNameFinder(object):
     
     def __init__(self, pymodule):
@@ -506,7 +398,7 @@ class ScopeNameFinder(object):
         #ast = compiler.parse(name)
         # parenthesizing for handling cases like 'a_var.\nattr'
         ast = compiler.parse('(%s)' % name)
-        result = StatementEvaluator.get_statement_result(holding_scope, ast)
+        result = evaluate.StatementEvaluator.get_statement_result(holding_scope, ast)
         return result
 
 

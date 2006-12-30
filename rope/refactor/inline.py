@@ -105,7 +105,7 @@ class _VariableInliner(_Inliner):
         self.resource = self.pymodule.get_resource()
     
     def check_exceptional_conditions(self):
-        if len(self.pyname.assigned_asts) != 1:
+        if len(self.pyname.assignments) != 1:
             raise rope.base.exceptions.RefactoringException(
                 'Local variable should be assigned once or inlining.')
 
@@ -116,7 +116,8 @@ class _VariableInliner(_Inliner):
         return changes
 
     def _get_changed_module(self):
-        definition_line = self.pyname.assigned_asts[0].lineno
+        assignment = self.pyname.assignments[0]
+        definition_line = assignment.ast_node.lineno
         lines = self.pymodule.lines
         start, end = codeanalyze.LogicalLineFinder(lines).\
                      get_logical_line_in(definition_line)
@@ -127,7 +128,7 @@ class _VariableInliner(_Inliner):
                 line = line[:-1]
             definition_lines.append(line)
         definition_with_assignment = ' '.join(definition_lines)
-        if self._is_tuple_assignment(definition_with_assignment):
+        if assignment.index is not None:
             raise rope.base.exceptions.RefactoringException(
                 'Cannot inline tuple assignments.')
         definition = definition_with_assignment[definition_with_assignment.\
@@ -144,14 +145,6 @@ class _VariableInliner(_Inliner):
                  changed_source[lines.get_line_end(end) + 1:]
         return source
     
-    def _is_tuple_assignment(self, line):
-        try:
-            comma = line.index(',')
-            assign = line.index('=')
-            return comma < assign
-        except ValueError:
-            return False
-
 
 class _InlineFunctionCallsForModule(object):
     

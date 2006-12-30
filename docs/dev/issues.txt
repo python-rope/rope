@@ -50,7 +50,6 @@ Possible Plans
 * Change method signature
 * Introduce parameter
 * Enhancing refactorings and testing
-* Move field/methods
 
 Exploring and analyzing possible solutions for:
 
@@ -494,8 +493,8 @@ approach seems hard due to problems that might arise for updating
 
 The second approach seems easier to implement.  We can save collected
 type information somewhere outside `PyName`\s.  Each time we need a
-`PyName`\'s object we use that data store it.  In this approach we
-should find someway of storing collected data that it can be used even
+`PyName`\'s object we use the stored data.  In this approach we
+should find someway of storing collected data so it can be used even
 if there are some small changes in a resource.  The simplest way of
 saving collected data is the ``(file, lineno)`` tuple.  The other is
 the hierarchical representation and in this approach we save the data
@@ -667,14 +666,6 @@ Better Dialogs
 
 Many dialogs look very similar.  They can be factored.  Continue using
 `rope.ui.uihelpers` module and extend it.
-
-
-Not Resetting the Whole Editor
-------------------------------
-
-After actions like extract method, we reset the whole editor.  This is
-slow and makes the undo difficult.  Find someway of solving this.  I
-might be able to use `difflib` module.
 
 
 Isolating Text Widget Features

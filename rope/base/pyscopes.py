@@ -14,7 +14,7 @@ class Scope(object):
     
     def get_names(self):
         """Return the names defined in this scope"""
-        return self.pyobject.get_attributes()
+        return self.pyobject.get_attributes() 
 
     def get_name(self, name):
         """Return name `PyName` defined in this scope"""
@@ -69,6 +69,7 @@ class GlobalScope(Scope):
     def __init__(self, pycore, module):
         super(GlobalScope, self).__init__(pycore, module, None)
         self.scope_finder = None
+        self.names = module._get_concluded_data()
 
     def get_start(self):
         return 1
@@ -80,7 +81,16 @@ class GlobalScope(Scope):
         try:
             return self.pyobject.get_attribute(name)
         except rope.base.exceptions.AttributeNotFoundException:
+            if name in self.builtin_names:
+                return self.builtin_names[name]
             raise rope.base.exceptions.NameNotFoundException('name %s not found' % name)
+    
+    def get_names(self):
+        if self.names.get() is None:
+            result = dict(super(GlobalScope, self).get_names())
+            result.update(self.builtin_names)
+            self.names.set(result)
+        return self.names.get()
 
     def get_inner_scope_for_line(self, lineno, indents=None):
         return self._get_scope_finder().get_holding_scope(self, lineno, indents)
@@ -93,6 +103,19 @@ class GlobalScope(Scope):
             self.scope_finder = _HoldingScopeFinder(self.pyobject)
         return self.scope_finder
 
+    def _get_builtin_names(self):
+        if GlobalScope._builtin_names is None:
+            builtins = {
+                'list': rope.base.builtins.BuiltinName(rope.base.builtins.List()),
+                'dict': rope.base.builtins.BuiltinName(rope.base.builtins.Dict()),
+                'tuple': rope.base.builtins.BuiltinName(rope.base.builtins.Tuple()),
+                'set': rope.base.builtins.BuiltinName(rope.base.builtins.Set())}
+            self._builtin_names = builtins
+        return self._builtin_names
+    
+    _builtin_names = None
+    builtin_names = property(_get_builtin_names)
+    
 
 class FunctionScope(Scope):
     

@@ -30,7 +30,7 @@ class AssignedName(PyName):
         self.lineno = lineno
         self.module = module
         self.is_being_inferred = False
-        self.assigned_asts = []
+        self.assignments = []
         self.pyobject = _get_concluded_data(module)
         self.pyobject.set(pyobject)
     
@@ -52,9 +52,53 @@ class AssignedName(PyName):
     
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
-        if self.lineno is None and self.assigned_asts:
-            self.lineno = self.assigned_asts[0].lineno
+        if self.lineno is None and self.assignments:
+            self.lineno = self.assignments[0].ast_node.lineno
         return (self.module, self.lineno)
+
+
+class _Assignment(object):
+    
+    def __init__(self, ast_node, index=None):
+        self.ast_node = ast_node
+        self.index = index
+
+
+class ForName(PyName):
+    
+    def __init__(self, assignment=None, module=None):
+        self.module = module
+        self.pyobject = _get_concluded_data(module)
+        self.assignment = assignment
+    
+    def get_object(self):
+        if self.pyobject.get() is None:
+            object_infer = self.module.pycore._get_object_infer()
+            inferred_object = object_infer.infer_for_object(self)
+            self.pyobject.set(inferred_object)
+        if self.pyobject.get() is None:
+            self.pyobject.set(rope.base.pyobjects.PyObject(
+                              rope.base.pyobjects.PyObject.get_base_type('Unknown')))
+        return self.pyobject.get()
+    
+    def get_definition_location(self):
+        return (self.module, self.assignment.ast_node.lineno)
+
+
+class ParameterName(PyName):
+    
+    def __init__(self, pyfunction, index):
+        self.pyfunction = pyfunction
+        self.index = index
+        self.pyobject = _get_concluded_data(self.pyfunction.get_module())
+    
+    def get_object(self):
+        if self.pyobject.get() is None:
+            self.pyobject.set(self.pyfunction._get_parameter(self.index))
+        return self.pyobject.get()
+    
+    def get_definition_location(self):
+        return (self.pyfunction.get_module(), self.pyfunction._get_ast().lineno)
 
 
 class ImportedModule(PyName):
@@ -125,22 +169,6 @@ class ImportedName(PyName):
     
     def get_definition_location(self):
         return self._get_imported_pyname().get_definition_location()
-
-
-class ParameterName(PyName):
-    
-    def __init__(self, pyfunction, index):
-        self.pyfunction = pyfunction
-        self.index = index
-        self.pyobject = _get_concluded_data(self.pyfunction.get_module())
-    
-    def get_object(self):
-        if self.pyobject.get() is None:
-            self.pyobject.set(self.pyfunction._get_parameter(self.index))
-        return self.pyobject.get()
-    
-    def get_definition_location(self):
-        return (self.pyfunction.get_module(), self.pyfunction._get_ast().lineno)
 
 
 class StarImport(object):

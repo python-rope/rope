@@ -239,6 +239,51 @@ def comment_region(context):
         _comment_line(editor, i, action)
 
 
+class _OccurrenceListHandle(EnhancedListHandle):
+
+    def __init__(self, toplevel, core, focus_set):
+        self.toplevel = toplevel
+        self.editor_manager = core.get_editor_manager()
+        self.focus_set = focus_set
+
+    def entry_to_string(self, entry):
+        return entry[0].get_path() + ' : ' + str(entry[1])
+
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def selected(self, selected):
+        editor = self.editor_manager.get_resource_editor(selected[0]).get_editor()
+        editor.set_insert(editor.get_index(selected[1]))
+        self.focus_set()
+
+    def focus_went_out(self):
+        pass
+
+
+def find_occurrences(context):
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Code Assist Proposals')
+    resource = context.resource
+    offset = context.editor.get_current_offset()
+    result = context.editingtools.codeassist.find_occurrences(resource, offset)
+    enhanced_list = None
+    def focus_set():
+        enhanced_list.list.focus_set()
+        toplevel.grab_set()
+    enhanced_list = EnhancedList(
+        toplevel, _OccurrenceListHandle(toplevel, context.get_core(), focus_set),
+        title='Occurrences')
+    for occurrence in result:
+        enhanced_list.add_entry(occurrence)
+    def close(event):
+        toplevel.destroy()
+    toplevel.bind('<Escape>', close)
+    toplevel.bind('<Control-g>', close)
+    enhanced_list.list.focus_set()
+    toplevel.grab_set()
+
+
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Code'], 'o'), ['python', 'rest'])
@@ -252,6 +297,8 @@ actions.append(SimpleAction('Show Doc', do_show_doc, 'F2',
                             MenuAddress(['Code', 'Show Doc'], 's'), ['python']))
 actions.append(SimpleAction('Quick Outline', do_quick_outline, 'C-o',
                             MenuAddress(['Code', 'Quick Outline'], 'q'), ['python']))
+actions.append(SimpleAction('Find Occurrences', find_occurrences, 'C-G',
+                            MenuAddress(['Code', 'Find Occurrences'], 'f'), ['python']))
 
 actions.append(SimpleAction('Correct Line Indentation',
                             do_correct_line_indentation, 'C-i',

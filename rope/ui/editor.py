@@ -286,6 +286,7 @@ class GraphicalEditor(object):
             self.text.mark_set(INSERT, textIndex)
         else:
             self.text.mark_set(INSERT, textIndex._getIndex())
+        self.text.see(INSERT)
 
     def get(self, start=None, end=None):
         startIndex = INSERT

@@ -387,6 +387,31 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'a_dict = {1: 1}\nvalues = a_dict.values()\nvalues.count(1)\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_variable_on_the_last_line_of_a_function(self):
+        code = 'def f():\n    a_var = {}\n    a_var.keys()\n'
+        start = code.rindex('a_var')
+        end = code.index('.keys')
+        refactored = self.do_extract_variable(code, start, end, 'new_var')
+        expected = 'def f():\n    a_var = {}\n    new_var = a_var\n    new_var.keys()\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_variable_on_the_indented_function_statement(self):
+        code = 'def f():\n    if True:\n        a_var = 1 + 2\n'
+        start = code.index('1')
+        end = code.index('2') + 1
+        refactored = self.do_extract_variable(code, start, end, 'new_var')
+        expected = 'def f():\n    if True:\n        new_var = 1 + 2\n        a_var = new_var\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_method_on_the_last_line_of_a_function(self):
+        code = 'def f():\n    a_var = {}\n    a_var.keys()\n'
+        start = code.rindex('a_var')
+        end = code.index('.keys')
+        refactored = self.do_extract_method(code, start, end, 'new_f')
+        expected = 'def f():\n    a_var = {}\n    new_f(a_var).keys()\n\n' \
+                   'def new_f(a_var):\n    return a_var\n'
+        self.assertEquals(expected, refactored)
+
     @testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_raising_exception_when_on_incomplete_variables(self):
         code = 'a_var = 10 + 20\n'

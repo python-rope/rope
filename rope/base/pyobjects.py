@@ -3,6 +3,8 @@ import compiler
 import rope.base.pyscopes
 from rope.base.exceptions import (RopeException, AttributeNotFoundException)
 from rope.base.pynames import *
+from rope.base import pynames
+import rope.base.evaluate
 
 
 class PyObject(object):
@@ -214,7 +216,7 @@ class PyClass(PyDefinedObject):
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
-            base = rope.base.codeanalyze.StatementEvaluator.\
+            base = rope.base.evaluate.StatementEvaluator.\
                    get_statement_result(self.parent.get_scope(), base_name)
             if base:
                 result.append(base.get_object())
@@ -370,14 +372,55 @@ class _AssignVisitor(object):
         self.assigned_ast = node.expr
         for child_node in node.nodes:
             compiler.walk(child_node, self)
-
-    def visitAssName(self, node):
-        old_pyname = self.scope_visitor.names.get(node.name, None)
+    
+    def _assigned(self, name, assignment=None):
+        old_pyname = self.scope_visitor.names.get(name, None)
         if old_pyname is None or not isinstance(old_pyname, AssignedName):
-            self.scope_visitor.names[node.name] = AssignedName(
+            self.scope_visitor.names[name] = AssignedName(
                 module=self.scope_visitor.get_module())
-        if self.assigned_ast:
-            self.scope_visitor.names[node.name].assigned_asts.append(self.assigned_ast)
+        if assignment is not None:
+            self.scope_visitor.names[name].assignments.append(assignment)
+        
+    def visitAssName(self, node):
+        assignment = None
+        if self.assigned_ast is not None:
+            assignment = pynames._Assignment(self.assigned_ast)
+        self._assigned(node.name, assignment)
+    
+    def visitAssTuple(self, node):
+        names = _AssignedNameCollector.get_assigned_names(node)
+        for index, name in enumerate(names):
+            assignment = None
+            if self.assigned_ast is not None:
+                assignment = pynames._Assignment(self.assigned_ast, index)
+            self._assigned(name, assignment)
+
+class _ForAssignVisitor(_AssignVisitor):
+    
+    def __init__(self, scope_visitor, assigned):
+        super(_ForAssignVisitor, self).__init__(scope_visitor)
+        self.assigned_ast = assigned
+
+    def _assigned(self, name, assignment=None):
+        self.scope_visitor.names[name] = ForName(
+            assignment=assignment, module=self.scope_visitor.get_module())
+        if assignment is not None:
+            self.scope_visitor.names[name].assignment = assignment
+        
+
+class _AssignedNameCollector(object):
+    
+    def __init__(self):
+        self.names = []
+    
+    def visitAssName(self, node):
+        self.names.append(node.name)
+    
+    @staticmethod
+    def get_assigned_names(node):
+        visitor = _AssignedNameCollector()
+        compiler.walk(node, visitor)
+        return visitor.names
 
 
 class _ScopeVisitor(object):
@@ -405,9 +448,15 @@ class _ScopeVisitor(object):
         compiler.walk(node, _AssignVisitor(self))
     
     def visitFor(self, node):
-        self.visitAssign(node.assign)
+        visitor = _ForAssignVisitor(self, node.list)
+        compiler.walk(node.assign, visitor)
+#        names = _AssignedNameCollector.get_assigned_names(node.assign)
+#        for name in names:
+#            self.names[name] = ForName(pynames._Assignment(node.list),
+#                                       module=self.get_module(),
+#                                       lineno=node.lineno)
         compiler.walk(node.body, self)
-    
+        
     def visitImport(self, node):
         for import_pair in node.names:
             module_name, alias = import_pair
@@ -476,7 +525,8 @@ class _ClassInitVisitor(_AssignVisitor):
             if node.attrname not in self.scope_visitor.names:
                 self.scope_visitor.names[node.attrname] = AssignedName(
                     lineno=node.lineno, module=self.scope_visitor.get_module())
-            self.scope_visitor.names[node.attrname].assigned_asts.append(self.assigned_ast)
+            self.scope_visitor.names[node.attrname].assignments.append(
+                pynames._Assignment(self.assigned_ast))
     
     def visitAssName(self, node):
         pass

@@ -269,6 +269,79 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(pymod.get_attribute('a_func').get_object(),
                           pymod.get_attribute('a_var').get_object())
 
+    def test_list_objects_and_dynamicoi(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return arg\n' \
+               'a_var = a_func([C()])[0]\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_for_loops_and_dynamicoi(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return arg\n' \
+               'for c in a_func([C()]):\n    a_var = c\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_dict_objects_and_dynamicoi(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C(object):\n    pass\n' \
+               'def a_func(arg):\n    return arg\n' \
+               'a_var = a_func({1: C()})[1]\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_dict_keys_and_dynamicoi(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C(object):\n    pass\n' \
+               'def a_func(arg):\n    return arg\n' \
+               'a_var = a_func({C(): 1}).keys()[0]\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_dict_keys_and_dynamicoi(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'def a_func(arg):\n    return arg\n' \
+               'a, b = a_func((C1(), C2()))\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_sets_and_dynamicoi(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C(object):\n    pass\n' \
+               'def a_func(arg):\n    return arg\n' \
+               'a_var = a_func(set([C()])).pop()\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
 
 class CartesianProductDynamicOITest(unittest.TestCase):
 

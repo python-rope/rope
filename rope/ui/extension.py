@@ -65,10 +65,15 @@ class ActionContext(object):
     def _get_active_editor_resource(self):
         return self.get_active_editor().get_file()
     
+    def _get_active_editor_editor(self):
+        return self.get_active_editor().get_editor()
+    
     def _get_editing_context(self):
         return self.get_active_editor().get_editor().get_editing_context().editingtools
     
     project = property(_get_open_project)
+    fileeditor = property(get_active_editor)
+    editor = property(_get_active_editor_editor)
     resource = property(_get_active_editor_resource)
     editingtools = property(_get_editing_context)
 

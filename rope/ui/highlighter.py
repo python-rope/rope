@@ -138,7 +138,7 @@ class NoHighlighting(Highlighting):
     def get_styles(self):
         return {}
 
-    def highlights(self, editor, startIndex, endIndex):
+    def highlights(self, editor, start_index, end_index):
         if False:
             yield None
 

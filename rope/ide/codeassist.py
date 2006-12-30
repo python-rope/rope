@@ -8,6 +8,7 @@ from rope.base.exceptions import RopeException
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
                                    WordRangeFinder, ScopeNameFinder,
                                    SourceLinesAdapter)
+from rope.refactor import occurrences
 
 
 class RopeSyntaxError(RopeException):
@@ -325,6 +326,19 @@ class PythonCodeAssist(object):
             else:
                 return _trim_docstring(pyobject._get_ast().doc)
         return None
+    
+    def find_occurrences(self, resource, offset):
+        name = rope.base.codeanalyze.get_name_at(resource, offset)
+        pyname = rope.base.codeanalyze.get_pyname_at(self.project.get_pycore(),
+                                                     resource, offset)
+        finder = occurrences.FilteredOccurrenceFinder(
+            self.project.get_pycore(), name, [pyname])
+        result = []
+        for resource in self.project.get_pycore().get_python_files():
+            for occurrence in finder.find_occurrences(resource):
+                result.append((resource, occurrence.get_word_range()[0]))
+        return result
+
 
 def _get_class_docstring(pyclass):
     node = pyclass._get_ast()

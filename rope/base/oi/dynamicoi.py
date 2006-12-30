@@ -9,6 +9,7 @@ import tempfile
 import threading
 
 import rope.base.pyobjects
+from rope.base import builtins
 
 
 class DynamicObjectInference(object):
@@ -29,7 +30,7 @@ class DynamicObjectInference(object):
 
     def infer_parameter_objects(self, pyobject):
         organizer = self._find_organizer(pyobject)
-        if organizer:
+        if organizer and organizer.args is not None:
             pyobjects = [parameter.to_pyobject(self.pycore.project)
                          for parameter in organizer.args]
             return pyobjects
@@ -105,6 +106,8 @@ class _ObjectPersistedForm(object):
             return _PersistedFunction(*data[1:])
         if type_ == 'class':
             return _PersistedClass(*data[1:])
+        if type_ == 'builtin':
+            return _PersistedBuiltin(*data[1:])
         if type_ == 'instance':
             return _PersistedClass(is_instance=True, *data[1:])
         return _PersistedUnknown()
@@ -119,6 +122,32 @@ class _PersistedNone(_ObjectPersistedForm):
 class _PersistedUnknown(_ObjectPersistedForm):
 
     def to_pyobject(self, project):
+        return None
+
+
+class _PersistedBuiltin(_ObjectPersistedForm):
+    
+    def __init__(self, name, *data):
+        self.name = name
+        self.data = data
+
+    def to_pyobject(self, project):
+        if self.name == 'list':
+            holding = _ObjectPersistedForm.create_persistent_object(self.data[0])
+            return builtins.List(holding.to_pyobject(project))
+        if self.name == 'dict':
+            keys = _ObjectPersistedForm.create_persistent_object(self.data[0])
+            values = _ObjectPersistedForm.create_persistent_object(self.data[1])
+            return builtins.Dict(keys.to_pyobject(project), values.to_pyobject(project))
+        if self.name == 'tuple':
+            objects = []
+            for holding in self.data:
+                objects.append(_ObjectPersistedForm.
+                               create_persistent_object(holding).to_pyobject(project))
+            return builtins.Tuple(*objects)
+        if self.name == 'set':
+            holding = _ObjectPersistedForm.create_persistent_object(self.data[0])
+            return builtins.Set(holding.to_pyobject(project))
         return None
 
 

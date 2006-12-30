@@ -60,23 +60,17 @@ def __rope_start_everything():
             for argname in code.co_varnames[:code.co_argcount]:
                 try:
                     args.append(self._object_to_persisted_form(frame.f_locals[argname]))
-                except TypeError:
-                    args.append(('unknown'))
-                except AttributeError:
+                except (TypeError, AttributeError):
                     args.append(('unknown'))
             try:
                 returned = self._object_to_persisted_form(arg)
-            except TypeError:
-                pass
-            except AttributeError:
+            except (TypeError, AttributeError):
                 pass
             try:
                 data = (self._object_to_persisted_form(frame.f_code),
                         args, returned)
                 self.sender.send_data(data)
-            except TypeError, e:
-                pass
-            except AttributeError, e:
+            except (TypeError, Error):
                 pass
             return self.on_function_call
         
@@ -98,8 +92,43 @@ def __rope_start_everything():
             return ('function', os.path.abspath(object_.co_filename), object_.co_firstlineno)
     
         def _get_persisted_class(self, object_, type_):
-            return (type_, os.path.abspath(inspect.getsourcefile(object_)),
-                    object_.__name__)
+            try:
+                return (type_, os.path.abspath(inspect.getsourcefile(object_)),
+                        object_.__name__)
+            except (TypeError, AttributeError):
+                return ('unknown')
+    
+        def _get_persisted_builtin(self, object_):
+            if isinstance(object_, list):
+                holding = None
+                if len(object_) > 0:
+                    holding = object_[0]
+                return ('builtin', 'list', self._object_to_persisted_form(holding))
+            if isinstance(object_, dict):
+                keys = None
+                values = None
+                if len(object_) > 0:
+                    keys = object_.keys()[0]
+                    values = object_[keys]
+                return ('builtin', 'dict',
+                        self._object_to_persisted_form(keys),
+                        self._object_to_persisted_form(values))
+            if isinstance(object_, tuple):
+                objects = []
+                if len(object_) < 3:
+                    for holding in object_:
+                        objects.append(self._object_to_persisted_form(holding))
+                else:
+                    objects.append(self._object_to_persisted_form(object_[0]))
+                return tuple(['builtin', 'tuple'] + objects)
+            if isinstance(object_, set):
+                holding = None
+                if len(object_) > 0:
+                    for o in object_:
+                        holding = o
+                        break
+                return ('builtin', 'set', self._object_to_persisted_form(holding))
+            return ('unknown')
     
         def _object_to_persisted_form(self, object_):
             if object_ == None:
@@ -112,9 +141,12 @@ def __rope_start_everything():
                 return self._get_persisted_code(object_.im_func.func_code)
             if isinstance(object_, types.ModuleType):
                 return ('module', os.path.abspath(object_.__file__))
+            if isinstance(object_, (list, dict, tuple, set)):
+                return self._get_persisted_builtin(object_)
             if isinstance(object_, (types.TypeType, types.ClassType)):
                 return self._get_persisted_class(object_, 'class')
             return self._get_persisted_class(type(object_), 'instance')
+    
     
     send_info = sys.argv[1]
     project_root = sys.argv[2]
