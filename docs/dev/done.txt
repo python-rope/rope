@@ -3,7 +3,7 @@
 ===========
 
 
-- Basic support for builtin typs : December 29, 2006
+- Basic support for builtin types : December 29, 2006
 
 
 - Find occurrences; ``C-G`` : December 26, 2006

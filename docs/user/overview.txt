@@ -63,6 +63,7 @@ C-o            show quick outline
 C-i            correct line indentation
 C-c c          comment current line
 C-c C-c        comment region lines
+C-G            find occurrences
 -------------  --------------------------
 M-R            rename refactoring
 M-M            extract method

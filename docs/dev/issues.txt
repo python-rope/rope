@@ -433,34 +433,23 @@ Possible alternatives:
 * Using static type inference algorithms
 
 
-Supporting Built-in Types
--------------------------
+Storing Different Return Types For Different Set Of Arguments
+-------------------------------------------------------------
 
-The main motive for supporting built-in types are `list`, `dict` and
-`set`.  We try to start with the simplest of these; `list` types.
+Goals:
 
+* Better type inference for function return values and parameters
+* Better builtin type construction
 
-Supporting `list`
-`````````````````
+Problems:
 
-It is relatively easy to support `list` as being a type with some
-functions, but the main motive for supporting `list`\s is providing
-meaningful return values from its functions such as `__index__` or
-providing correct variables in for loops.  To do these we assume that
-every list only contains one type of objects.
+* Needs more memory
+* Slower object infers
 
-* How should we infer the type an iterator holds?
+Implementation issues:
 
-One way of doing this is object inference of `list.append` or other
-insertion functions.  But the difficulty here is we should infer
-the parameters of these functions for each instance in program source
-rather than for the list type in whole.  This analysis should be
-performed at runtime.
-
-* `ObjectInfer.infer_holding_type` for `iterator`\s
-* Addition of a flag to types that indicates the distinction of
-  instances.
-* Can we support `iterator` types, too?
+* `runmod` does not need to be changed
+* Type of parameters and variables inside function
 
 
 Rejecting Smalltalk `RefactoringBrowser` Approach

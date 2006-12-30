@@ -1,39 +1,9 @@
-Supporting Lists, Dicts And Sets
-================================
-
-- ``l = [C(), C()]``
-- ``a_var = l.pop()``
-- ``a_var = l[x]``
-- ``a_list = l[x:y]``
-- ``__iter__``
-- ``for x in l:``
-- lists and DOI
-- ``d[x]``
-- ``d.pop``
-- ``d.keys``
-- ``d.values``
-- ``d.iterkeys``
-- ``d.itervalues``
-- ``for x in d``
-- ``d.copy``
-- dicts and DOI
-- ``a, b = a_tuple``
-- ``a, b = a_list``
-- ``d.items``
-- ``for x, y in l:``
-- ``a = (C1(), C2())``
-- tuples and DOI
-- add builtin names to global scopes
-- sets
-
-
 Remaining Stories
 =================
 
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * Definition location for variables inside loops
-* Change relative imports to ``2.5`` style
 * Extract constant
 * What to do if a file is removed while editing
 * Allowing non-existent resources?

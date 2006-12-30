@@ -20,8 +20,10 @@ How to Help Rope?
 * Use rope.
 * Report bugs and request features in `rope project page`_.
 * Submit patches for bugs or new features.
+* Discuss your ideas in `rope-developers`_ mailing list.
 
 .. _rope project page: http://sf.net/projects/rope
+.. _`rope-developers`: rope-developers@lists.sourceforge.net
 
 
 Rope Structure

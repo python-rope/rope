@@ -41,6 +41,7 @@ Features implemented so far:
   * Quick outline
   * Show PyDoc
   * Proposing templates in completions
+  * Find occurrences
   * Import tools
   
     * Change relative imports to absolute
@@ -70,6 +71,7 @@ Features implemented so far:
   * Function argument dynamic object inference
   * Following assignments
   * Simple function return value object inference
+  * Basic type inference for built-in container types
 
 
 Download

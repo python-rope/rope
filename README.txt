@@ -18,7 +18,13 @@ New Features
 
 Features added in this release:
 
-* 
+* Basic support for builtin types
+* Find occurrences; ``C-G``
+* Removing imports from the same module
+* Goto last edit location; ``C-q``
+* Trying ``utf-8`` if default don't work
+* Comment line and region; ``C-c c``, ``C-c C-c``
+* Ignoring ``*.pyc``, ``*~`` and ``.svn``
 
 
 Getting Started
