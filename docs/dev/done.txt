@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.4m4 : December 31, 2006
+
+
 - Basic support for builtin types : December 29, 2006
 
 

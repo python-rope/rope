@@ -1,3 +1,3 @@
 """rope, a python refactoring library and IDE"""
 
-VERSION = '0.4m4'
+VERSION = '0.4m5'

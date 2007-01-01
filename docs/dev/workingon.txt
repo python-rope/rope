@@ -1,9 +1,17 @@
+Small Stories
+=============
+
+- ``break`` and ``continue`` in extract method
+- Handling writes followed by reads in extract method
+
+* Exploring module running
+
+
 Remaining Stories
 =================
 
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
-* Definition location for variables inside loops
 * Extract constant
 * What to do if a file is removed while editing
 * Allowing non-existent resources?
@@ -13,7 +21,6 @@ Remaining Stories
 * Better `ropetest` package structure
 * Decide when to use `difflib` in `Editor.set_text`
 * Handling `AssList` for inline variable and encapsulate field
-* ``break`` and ``continue`` in extract method
 
 * Considering logical lines in `rope.codeanalyze`
 * Reporting unhandled exceptions as error dialogs in the GUI

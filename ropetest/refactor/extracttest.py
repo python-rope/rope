@@ -323,6 +323,40 @@ class ExtractMethodTest(unittest.TestCase):
                    '    def new_func(self):\n        return 2\n'
         self.assertEquals(expected, refactored)
 
+    def test_breaks_and_continues_inside_loops(self):
+        code = 'def a_func():\n    for i in range(10):\n        continue\n'
+        start = code.index('for')
+        end = len(code) - 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'def a_func():\n    new_func()\n\n' \
+                   'def new_func():\n    for i in range(10):\n        continue\n'
+        self.assertEquals(expected, refactored)
+
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    def test_breaks_and_continues_outside_loops(self):
+        code = 'def a_func():\n    for i in range(10):\n        a = i\n        continue\n'
+        start = code.index('a = i')
+        end = len(code) - 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+
+    def test_variable_writes_followed_by_variable_reads_after_extraction(self):
+        code = 'def a_func():\n    a = 1\n    a = 2\n    b = a\n'
+        start = code.index('a = 1')
+        end = code.index('a = 2') - 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'def a_func():\n    new_func()\n    a = 2\n    b = a\n\n' \
+                   'def new_func():\n    a = 1\n'
+        self.assertEquals(expected, refactored)
+
+    def test_variable_writes_followed_by_variable_reads_inside_extraction(self):
+        code = 'def a_func():\n    a = 1\n    a = 2\n    b = a\n'
+        start = code.index('a = 2')
+        end = len(code) - 1
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'def a_func():\n    a = 1\n    new_func()\n\n' \
+                   'def new_func():\n    a = 2\n    b = a\n'
+        self.assertEquals(expected, refactored)
+
     def test_extract_variable(self):
         code = 'a_var = 10 + 20\n'
         start = code.index('10')

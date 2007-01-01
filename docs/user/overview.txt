@@ -56,7 +56,7 @@ C-y            paste
 C-x C-s        save
 C-x s          save all
 -------------  --------------------------
-M-/            code-assist
+M-/            code-assist(auto-complete)
 F3             go to definition location
 F2             show doc
 C-o            show quick outline

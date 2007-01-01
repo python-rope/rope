@@ -62,7 +62,7 @@ Status
 
 Now that rope supports many basic refactorings it seems necessary to
 put more time on enhancing old refactorings and finishing remaining
-stories.  So from till ``0.4`` we will:
+stories.  So till ``0.4`` we will:
 
 * Enhance old refactorings
 * Do remaining stories
@@ -117,6 +117,9 @@ Issues
 
   * human readable?
   * python (like emacs and lisp)
+  
+    - push or pull model for configurations
+  
   * simple equals
 
 * types

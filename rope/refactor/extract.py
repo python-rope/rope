@@ -125,7 +125,11 @@ class _ExtractPerformer(object):
         try:
             if _ReturnOrYieldFinder.does_it_return(
                 self.source_code[self.parts.region[0]:self.parts.region[1]]):
-                raise RefactoringException('Extracted piece should not contain return statements')
+                raise RefactoringException('Extracted piece should not contain return statements.')
+            if _UnmatchedBreakOrContinueFinder.has_errors(
+                self.source_code[self.parts.region[0]:self.parts.region[1]]):
+                raise RefactoringException(
+                    'A break/continue without matching having a for/while loop.')
         except SyntaxError:
             raise RefactoringException('Extracted piece should contain complete statements.')
 
@@ -390,19 +394,24 @@ class _FunctionInformationCollector(object):
         self.written = set()
         self.read = set()
         self.postread = set()
+        self.postwritten = set()
         self.host_function = True
     
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
-            self.read.add(name)
+            if name not in self.written:
+                self.read.add(name)
         if self.end < lineno:
-            self.postread.add(name)
+            if name not in self.postwritten:
+                self.postread.add(name)
     
     def _written_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
             self.written.add(name)
         if self.start > lineno:
             self.prewritten.add(name)
+        if self.end < lineno:
+            self.postwritten.add(name)
         
     def visitFunction(self, node):
         if not self.is_global and self.host_function:
@@ -437,7 +446,8 @@ class _VariableReadsAndWritesFinder(object):
         self.written.add(node.name)
     
     def visitName(self, node):
-        self.read.add(node.name)
+        if node.name not in self.written:
+            self.read.add(node.name)
     
     def visitFunction(self, node):
         self.written.add(node.name)
@@ -475,6 +485,11 @@ class _ReturnOrYieldFinder(object):
     
     def __init__(self):
         self.returns = False
+        self.loop_count = 0
+    
+    def check_loop(self):
+        if self.loop_count < 1:
+            self.error = True
 
     def visitReturn(self, node):
         self.returns = True
@@ -498,6 +513,54 @@ class _ReturnOrYieldFinder(object):
         visitor = _ReturnOrYieldFinder()
         compiler.walk(ast, visitor)
         return visitor.returns
+
+
+class _UnmatchedBreakOrContinueFinder(object):
+    
+    def __init__(self):
+        self.error = False
+        self.loop_count = 0
+    
+    def visitFor(self, node):
+        self.loop_encountered(node)
+
+    def visitWhile(self, node):
+        self.loop_encountered(node)
+    
+    def loop_encountered(self, node):
+        self.loop_count += 1
+        compiler.walk(node.body, self)
+        self.loop_count -= 1
+        if node.else_:
+            compiler.walk(node.else_, self)
+    
+    def visitBreak(self, node):
+        self.check_loop()
+    
+    def visitContinue(self, node):
+        self.check_loop()
+
+    def check_loop(self):
+        if self.loop_count < 1:
+            self.error = True
+
+    def visitFunction(self, node):
+        pass
+    
+    def visitClass(self, node):
+        pass
+    
+    @staticmethod
+    def has_errors(code):
+        if code.strip() == '':
+            return False
+        min_indents = sourceutils.find_minimum_indents(code)
+        indented_code = sourceutils.indent_lines(code, -min_indents)
+        ast = _parse_text(indented_code)
+        visitor = _UnmatchedBreakOrContinueFinder()
+        compiler.walk(ast, visitor)
+        return visitor.error
+
 
 def _parse_text(body):
     if isinstance(body, unicode):

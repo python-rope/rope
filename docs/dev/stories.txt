@@ -106,6 +106,9 @@ Stories
 * Adding ignored file patterns in projects; ``*.pyc *~ .svn ...``
 
 
+> Public Release 0.4m5 : January 7, 2007
+
+
 * Commanding buffer
 
 
@@ -113,6 +116,3 @@ Stories
 
 
 * Transforming to ``from w.x.y import z`` for long imports
-
-
-> Public Release 0.4m4 : December 31, 2006
