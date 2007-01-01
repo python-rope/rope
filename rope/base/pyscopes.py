@@ -104,18 +104,23 @@ class GlobalScope(Scope):
         return self.scope_finder
 
     def _get_builtin_names(self):
-        if GlobalScope._builtin_names is None:
-            builtins = {
-                'list': rope.base.builtins.BuiltinName(rope.base.builtins.List()),
-                'dict': rope.base.builtins.BuiltinName(rope.base.builtins.Dict()),
-                'tuple': rope.base.builtins.BuiltinName(rope.base.builtins.Tuple()),
-                'set': rope.base.builtins.BuiltinName(rope.base.builtins.Set())}
-            self._builtin_names = builtins
-        return self._builtin_names
+        return get_builtin_names()
     
     _builtin_names = None
     builtin_names = property(_get_builtin_names)
-    
+
+def get_builtin_names():
+    if GlobalScope._builtin_names is None:
+        builtins = {
+            'list': rope.base.builtins.BuiltinName(rope.base.builtins.get_list_type()),
+            'dict': rope.base.builtins.BuiltinName(rope.base.builtins.get_dict_type()),
+            'tuple': rope.base.builtins.BuiltinName(rope.base.builtins.get_tuple_type()),
+            'set': rope.base.builtins.BuiltinName(rope.base.builtins.get_set_type()),
+            'str': rope.base.builtins.BuiltinName(rope.base.builtins.get_str_type()),
+            'unicode': rope.base.builtins.BuiltinName(rope.base.builtins.get_str_type())}
+        GlobalScope._builtin_names = builtins
+    return GlobalScope._builtin_names
+
 
 class FunctionScope(Scope):
     

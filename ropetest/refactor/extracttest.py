@@ -179,6 +179,13 @@ class ExtractMethodTest(unittest.TestCase):
         expected = "print 'one'\n\ndef new_func():\n    print 'two'\n\nnew_func()\nprint 'three'\n"
         self.assertEquals(expected, refactored)
 
+    def test_extract_global_function_inside_ifs(self):
+        code = 'if True:\n    a = 10\n'
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+        expected = 'if True:\n\n    def new_func():\n        a = 10\n\n    new_func()\n'
+        self.assertEquals(expected, refactored)
+
     def test_extract_function_while_inner_function_reads(self):
         code = "def a_func():\n    a_var = 10\n    " \
                "def inner_func():\n        print a_var\n    return inner_func\n"

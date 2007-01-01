@@ -1,6 +1,7 @@
 import unittest
 
 from rope.base.project import Project
+import rope.base.builtins
 from ropetest import testutils
 
 class ObjectInferTest(unittest.TestCase):
@@ -330,17 +331,15 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
-    def test_sets_and_dynamicoi(self):
+    def test_strs_and_dynamicoi(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
-        code = 'class C(object):\n    pass\n' \
-               'def a_func(arg):\n    return arg\n' \
-               'a_var = a_func(set([C()])).pop()\n'
+        code = 'def a_func(arg):\n    return arg\n' \
+               'a_var = a_func("hey")\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
         a_var = pymod.get_attribute('a_var').get_object()
-        self.assertEquals(c_class, a_var.get_type())
+        self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
 
 
 class CartesianProductDynamicOITest(unittest.TestCase):

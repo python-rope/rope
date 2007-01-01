@@ -29,11 +29,13 @@ class ObjectInfer(object):
             pass
 
     def _infer_assignment_object(self, assignment, pyobject):
-        if assignment.index is not None and isinstance(pyobject, builtins.Tuple):
-            holdings = pyobject.get_holding_objects()
+        if assignment.index is not None and isinstance(pyobject.get_type(),
+                                                       builtins.Tuple):
+            holdings = pyobject.get_type().get_holding_objects()
             return holdings[min(len(holdings) - 1, assignment.index)]
-        if assignment.index is not None and isinstance(pyobject, builtins.List):
-            return pyobject.holding
+        if assignment.index is not None and isinstance(pyobject.get_type(),
+                                                       builtins.List):
+            return pyobject.get_type().holding
         return pyobject
     
     def _infer_pyname_for_assign_node(self, assign_node, pymodule):

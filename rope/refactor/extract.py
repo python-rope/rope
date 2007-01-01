@@ -166,17 +166,11 @@ class _ExtractPerformer(object):
         result.append(self.source_code[self.parts.scope[1]:])
         return ''.join(result)
 
-    def _get_scope_indents(self):
-        if self._is_global():
-            return 0
-        else:
-            return self._get_indents(self.holding_scope.get_start()) + 4
-    
     def _get_function_indents(self):
         if self._is_global():
-            return 4
+            return self.first_line_indents
         else:
-            return self._get_scope_indents()
+            return self._get_indents(self.holding_scope.get_start())
     
     def _get_function_definition(self):
         args = self._find_function_arguments()
@@ -184,10 +178,10 @@ class _ExtractPerformer(object):
         function_indents = self._get_function_indents()
         result = []
         result.append('%sdef %s:\n' %
-                      (' ' * self._get_indents(self.holding_scope.get_start()),
+                      (' ' * function_indents,
                        self._get_function_signature(args)))
         unindented_body = self._get_unindented_function_body(returns)
-        function_body = sourceutils.indent_lines(unindented_body, function_indents)
+        function_body = sourceutils.indent_lines(unindented_body, function_indents + 4)
         result.append(function_body)
         definition = ''.join(result)
         

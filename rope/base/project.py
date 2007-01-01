@@ -96,7 +96,7 @@ class Project(_Project):
               have a look at `rope.base.fscommands`
 
         """
-        self.root = project_root
+        self.root = os.path.expanduser(project_root)
         if not os.path.exists(self.root):
             os.mkdir(self.root)
         elif not os.path.isdir(self.root):

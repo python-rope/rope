@@ -450,11 +450,6 @@ class _ScopeVisitor(object):
     def visitFor(self, node):
         visitor = _ForAssignVisitor(self, node.list)
         compiler.walk(node.assign, visitor)
-#        names = _AssignedNameCollector.get_assigned_names(node.assign)
-#        for name in names:
-#            self.names[name] = ForName(pynames._Assignment(node.list),
-#                                       module=self.get_module(),
-#                                       lineno=node.lineno)
         compiler.walk(node.body, self)
         
     def visitImport(self, node):

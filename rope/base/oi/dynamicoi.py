@@ -8,8 +8,10 @@ import marshal
 import tempfile
 import threading
 
-import rope.base.pyobjects
+import rope
+from rope.base import pyobjects
 from rope.base import builtins
+from rope.base import pyscopes
 
 
 class DynamicObjectInference(object):
@@ -132,22 +134,25 @@ class _PersistedBuiltin(_ObjectPersistedForm):
         self.data = data
 
     def to_pyobject(self, project):
+        if self.name == 'str':
+            return builtins.get_str()
         if self.name == 'list':
             holding = _ObjectPersistedForm.create_persistent_object(self.data[0])
-            return builtins.List(holding.to_pyobject(project))
+            return builtins.get_list(holding.to_pyobject(project))
         if self.name == 'dict':
             keys = _ObjectPersistedForm.create_persistent_object(self.data[0])
             values = _ObjectPersistedForm.create_persistent_object(self.data[1])
-            return builtins.Dict(keys.to_pyobject(project), values.to_pyobject(project))
+            return builtins.get_dict(keys.to_pyobject(project),
+                                     values.to_pyobject(project))
         if self.name == 'tuple':
             objects = []
             for holding in self.data:
                 objects.append(_ObjectPersistedForm.
                                create_persistent_object(holding).to_pyobject(project))
-            return builtins.Tuple(*objects)
+            return builtins.get_tuple(*objects)
         if self.name == 'set':
             holding = _ObjectPersistedForm.create_persistent_object(self.data[0])
-            return builtins.Set(holding.to_pyobject(project))
+            return builtins.get_set(holding)
         return None
 
 
@@ -184,9 +189,9 @@ class _PersistedClass(_ObjectPersistedForm):
         if self.name in module_scope.get_names():
             suspected_pyobject = module_scope.get_name(self.name).get_object()
         if suspected_pyobject is not None and \
-           suspected_pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
+           suspected_pyobject.get_type() == pyobjects.PyObject.get_base_type('Type'):
             if self.is_instance:
-                return rope.base.pyobjects.PyObject(suspected_pyobject)
+                return pyobjects.PyObject(suspected_pyobject)
             else:
                 return suspected_pyobject
         else:
@@ -254,8 +259,11 @@ class PythonFileRunner(object):
         self.receiving_thread.start()
     
     def _receive_information(self):
+        #temp = open('/dev/shm/info', 'w')
         for data in self.receiver.receive_data():
             self.analyze_data(data)
+            #temp.write(str(data) + '\n')
+        #temp.close()
         for observer in self.observers:
             observer()
 

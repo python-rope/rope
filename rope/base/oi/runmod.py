@@ -44,15 +44,13 @@ def __rope_start_everything():
             def global_trace(frame, event, arg):
                 # HACK: Ignoring out to in calls
                 # XXX: This might ignore some information
-                if self._is_code_inside_project(frame.f_code):
+                if self._is_an_interesting_call(frame):
                     return self.on_function_call
             sys.settrace(global_trace)
             threading.settrace(global_trace)
 
         def on_function_call(self, frame, event, arg):
             if event != 'return':
-                return
-            if not self._is_an_interesting_call(frame):
                 return
             args = []
             returned = ('unknown')
@@ -70,26 +68,30 @@ def __rope_start_everything():
                 data = (self._object_to_persisted_form(frame.f_code),
                         args, returned)
                 self.sender.send_data(data)
-            except (TypeError, Error):
+            except (TypeError):
                 pass
             return self.on_function_call
         
         def _is_an_interesting_call(self, frame):
             #if frame.f_code.co_name in ['?', '<module>']:
             #    return False
+            #return not frame.f_back or not self._is_code_inside_project(frame.f_back.f_code)
+
             if not self._is_code_inside_project(frame.f_code) and \
-               (not frame.f_back or not self._is_code_inside_project(frame.f_back)):
+               (not frame.f_back or not self._is_code_inside_project(frame.f_back.f_code)):
                 return False
             return True
         
         def _is_code_inside_project(self, code):
             source = code.co_filename
-            #source = inspect.getsourcefile(code)
-            return source and source.endswith('.py') and \
+            return source and source.endswith('.py') and os.path.exists(source) and \
                    os.path.abspath(source).startswith(self.project_root)
     
         def _get_persisted_code(self, object_):
-            return ('function', os.path.abspath(object_.co_filename), object_.co_firstlineno)
+            source = object_.co_filename
+            if not os.path.exists(source):
+                raise TypeError('no source')
+            return ('function', os.path.abspath(source), object_.co_firstlineno)
     
         def _get_persisted_class(self, object_, type_):
             try:
@@ -99,6 +101,8 @@ def __rope_start_everything():
                 return ('unknown')
     
         def _get_persisted_builtin(self, object_):
+            if isinstance(object_, (str, unicode)):
+                return ('builtin', 'str')
             if isinstance(object_, list):
                 holding = None
                 if len(object_) > 0:
@@ -141,7 +145,7 @@ def __rope_start_everything():
                 return self._get_persisted_code(object_.im_func.func_code)
             if isinstance(object_, types.ModuleType):
                 return ('module', os.path.abspath(object_.__file__))
-            if isinstance(object_, (list, dict, tuple, set)):
+            if isinstance(object_, (str, unicode, list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
             if isinstance(object_, (types.TypeType, types.ClassType)):
                 return self._get_persisted_class(object_, 'class')

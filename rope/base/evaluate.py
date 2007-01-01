@@ -36,6 +36,11 @@ class StatementEvaluator(object):
             self.result = rope.base.pynames.AssignedName(
                 pyobject=call_function.get_object()._get_returned_object())
     
+    def visitConst(self, node):
+        if isinstance(node.value, (str, unicode)):
+            self.result = rope.base.pynames.AssignedName(
+                pyobject=rope.base.builtins.get_str())
+            
     def visitAdd(self, node):
         pass
     
@@ -65,7 +70,7 @@ class StatementEvaluator(object):
             keys = self._get_object_for_node(item[0])
             values = self._get_object_for_node(item[1])
         self.result = rope.base.pynames.AssignedName(
-            pyobject=rope.base.builtins.Dict(keys, values))
+            pyobject=rope.base.builtins.get_dict(keys, values))
     
     def visitFloorDiv(self, node):
         pass
@@ -75,7 +80,7 @@ class StatementEvaluator(object):
         if node.nodes:
             holding = self._get_object_for_node(node.nodes[0])
         self.result = rope.base.pynames.AssignedName(
-            pyobject=rope.base.builtins.List(holding))
+            pyobject=rope.base.builtins.get_list(holding))
     
     def visitListComp(self, node):
         pass
@@ -113,7 +118,7 @@ class StatementEvaluator(object):
         else:
             objects.append(self._get_object_for_node(node.nodes[0]))
         self.result = rope.base.pynames.AssignedName(
-            pyobject=rope.base.builtins.Tuple(*objects))
+            pyobject=rope.base.builtins.get_tuple(*objects))
 
     def _get_object_for_node(self, stmt):
         pyname = StatementEvaluator.get_statement_result(self.scope, stmt)
