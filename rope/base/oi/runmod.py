@@ -53,13 +53,13 @@ def __rope_start_everything():
             if event != 'return':
                 return
             args = []
-            returned = ('unknown')
+            returned = ('unknown',)
             code = frame.f_code
             for argname in code.co_varnames[:code.co_argcount]:
                 try:
                     args.append(self._object_to_persisted_form(frame.f_locals[argname]))
                 except (TypeError, AttributeError):
-                    args.append(('unknown'))
+                    args.append(('unknown',))
             try:
                 returned = self._object_to_persisted_form(arg)
             except (TypeError, AttributeError):
@@ -98,7 +98,7 @@ def __rope_start_everything():
                 return (type_, os.path.abspath(inspect.getsourcefile(object_)),
                         object_.__name__)
             except (TypeError, AttributeError):
-                return ('unknown')
+                return ('unknown',)
     
         def _get_persisted_builtin(self, object_):
             if isinstance(object_, (str, unicode)):
@@ -132,11 +132,11 @@ def __rope_start_everything():
                         holding = o
                         break
                 return ('builtin', 'set', self._object_to_persisted_form(holding))
-            return ('unknown')
+            return ('unknown',)
     
         def _object_to_persisted_form(self, object_):
             if object_ == None:
-                return ('none')
+                return ('none',)
             if isinstance(object_, types.CodeType):
                 return self._get_persisted_code(object_)
             if isinstance(object_, types.FunctionType):

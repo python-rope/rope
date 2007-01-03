@@ -73,8 +73,8 @@ stories.  So till ``0.4`` we will:
 Hot Topics
 ==========
 
-* `Having Virtual PyModules`_
-* `Library Movement`_
+* `Having virtual PyModules`_
+* `Storing different return types for different set of arguments`_
 
 
 To Be Discussed
@@ -82,12 +82,87 @@ To Be Discussed
 
 * `Python's Implicit Interfaces`_
 * Removing `PythonRefactoring` facade
-* `Rope's preference system`_: format, location
+* `Rope's preference system`_
 * Indexing source files for faster occurrence finding
-* Having a persistant format for PyNames and PyObjects for saving
-  hard to compute information like class hierarchies
+* Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
 * Undo Unification
+
+
+Storing Different Return Types For Different Set Of Arguments
+=============================================================
+
+Goals:
+
+* Better type inference for function return values and parameters
+* Better builtin type construction
+
+Problems:
+
+* Needs more memory
+* Slower module running
+* Slower object infers
+
+
+Sample Implementation
+---------------------
+
+Many places that use `PyFunction._get_returned_object` don't calculate
+argument types.  Change `rope.base.evalute` to do that.  What's more
+`PyFunction` caches ``returned_object`` which will no longer work if
+we perform this refactoring.  We can store its matching arguments to
+solve this problem.
+
+* Transforming `PyObject`\s to textual form for lookups
+* Change `PyFunction._get_returned_object` to get a parameter list
+* Change `dynamicoi` to store return value for each set of parameters
+* Change `ObjectInfer.infer_returned_object` and
+  `DynamicOI.infer_returned_object` to get parameters
+* `PyFunction`'s ``returned_object`` cache is no longer useful
+* Change calls to `_get_returned_object` in the `rope.base.evaluate`
+
+
+Needed Transformations:
+
+* Compiled -> Textual
+* Textual -> PyObject
+* PyObject -> Textual
+
+
+Considerations For A New Textual Form
+-------------------------------------
+
+Although textual forms are currently used only for transferring
+running data, it can be used for saving `PyObject`\s, too.  This
+might be useful if we want to save some of the collected information
+to a file.
+
+A textual form should:
+
+* be stored
+* have maximum immunity to changes
+* represent all kinds of objects
+
+The current textual form:
+
+* ('module', file)
+* ('function', file, lineno, (*args), returned)
+* ('class', file, name)
+* ('instance', file, name)
+* ('builtin', type, *args)
+* ('none')
+* ('unknown')
+
+Lot's of optimizations is possible.  But they make things more
+complicated.  For example By adding a file indexing form:
+
+* ('file', file, index)
+
+We can replace all files in above forms to use the integer indices
+specified with file command.  The main problem with this approach is
+that file indices might change across different runs.
+
+We can also remove 'none' and 'unknown' with and empty string.
 
 
 Rope's Preference System
@@ -115,7 +190,7 @@ Issues
 
 * format
 
-  * human readable?
+  * human readable? yes
   * python (like emacs and lisp)
   
     - push or pull model for configurations
@@ -271,12 +346,6 @@ Inline Method
 * Moving used imports and importing defining module globals
 * Inlining generators
 * Inner functions
-
-
-Library Movement
-================
-
-* Adding `read` and `write` to `rope.base.fscommands`?
 
 
 Using ASTs For Transformations
@@ -436,25 +505,6 @@ Possible alternatives:
 * Using static type inference algorithms
 
 
-Storing Different Return Types For Different Set Of Arguments
--------------------------------------------------------------
-
-Goals:
-
-* Better type inference for function return values and parameters
-* Better builtin type construction
-
-Problems:
-
-* Needs more memory
-* Slower object infers
-
-Implementation issues:
-
-* `runmod` does not need to be changed
-* Type of parameters and variables inside function
-
-
 Rejecting Smalltalk `RefactoringBrowser` Approach
 -------------------------------------------------
 
@@ -466,6 +516,10 @@ Apart from that if we use a wrapper for a function using python
 runtime mechanisms it is possible to find out from which line
 a function is called, but we cannot always find the offset in that
 file from which this function is called.
+
+Although we cannot find the exact offset an occurrence happens we
+can know the suspected lines and that will help us shorten the
+scope for searching for occurrences considerably.
 
 If we solve these problems we can can use a strategy for finding
 occurrences.  Also Think of other ways of collecting type information.
@@ -686,3 +740,21 @@ A Good Keybinding
 -----------------
 
 Rope should have a good emacs-ish keybinding.
+
+* New ...; C-x n ...
+
+  * C-x n m: new module
+  * C-x n p: new package
+  * C-x n f: new file
+  * C-x n d: new directory
+
+* Version control; C-x v ...
+* Refactorings; C-c r ...
+
+  * C-x r r: rename
+  * C-x r m: extract method
+  * C-x r i: inline
+  * C-x r l: extract local
+  * C-x r c: change signature
+
+* Help; C-h ...

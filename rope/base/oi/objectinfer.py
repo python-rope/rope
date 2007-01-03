@@ -72,9 +72,10 @@ class ObjectInfer(object):
 
     def infer_returned_object(self, pyobject):
         """Infers the `PyObject` this callable `PyObject` returns after calling"""
-        dynamically_inferred_object = self.pycore.dynamicoi.infer_returned_object(pyobject)
-        if dynamically_inferred_object is not None:
-            return dynamically_inferred_object
+        dynamically_inferred = self.pycore.dynamicoi.\
+                               infer_returned_object(pyobject)
+        if dynamically_inferred is not None:
+            return dynamically_inferred
         scope = pyobject.get_scope()
         if not scope._get_returned_asts():
             return

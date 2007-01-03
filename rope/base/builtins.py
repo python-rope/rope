@@ -29,7 +29,7 @@ class List(pyobjects.PyObject):
         self.holding = holding
         self.attributes = {
             '__getitem__': BuiltinName(BuiltinFunction(self.holding)),
-            '__getslice__': BuiltinName(BuiltinFunction(self)),
+            '__getslice__': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             'pop': BuiltinName(BuiltinFunction(self.holding)),
             '__iter__': BuiltinName(BuiltinFunction(Iterator(self.holding))),
             'append': BuiltinName(BuiltinFunction()),
@@ -66,7 +66,7 @@ class Dict(pyobjects.PyObject):
             'itervalues': BuiltinName(Iterator(self.values)),
             'items': BuiltinName(List(item)),
             'iteritems': BuiltinName(Iterator(item)),
-            'copy': BuiltinName(BuiltinFunction(self)),
+            'copy': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             'clear': BuiltinName(BuiltinFunction()),
             'has_key': BuiltinName(BuiltinFunction()),
             'popitem': BuiltinName(BuiltinFunction()),
@@ -90,7 +90,7 @@ class Tuple(pyobjects.PyObject):
             first = objects[0]
         self.attributes = {
             '__getitem__': BuiltinName(BuiltinFunction(first)),
-            '__getslice__': BuiltinName(BuiltinFunction(self)),
+            '__getslice__': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             '__iter__': BuiltinName(BuiltinFunction(Iterator(first)))}
     
     def get_holding_objects(self):
@@ -112,13 +112,13 @@ class Set(pyobjects.PyObject):
             'pop': BuiltinName(BuiltinFunction(self.holding)),
             '__iter__': BuiltinName(BuiltinFunction(Iterator(self.holding))),
             'add': BuiltinName(BuiltinFunction()),
-            'copy': BuiltinName(BuiltinFunction(self)),
-            'difference': BuiltinName(BuiltinFunction(self)),
-            'intersection': BuiltinName(BuiltinFunction(self)),
+            'copy': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
+            'difference': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
+            'intersection': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             'difference_update': BuiltinName(BuiltinFunction()),
-            'symmetric_difference': BuiltinName(BuiltinFunction(self)),
+            'symmetric_difference': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             'symmetric_difference_update': BuiltinName(BuiltinFunction()),
-            'union': BuiltinName(BuiltinFunction(self)),
+            'union': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             'discard': BuiltinName(BuiltinFunction()),
             'remove': BuiltinName(BuiltinFunction()),
             'issuperset': BuiltinName(BuiltinFunction()),
@@ -137,17 +137,18 @@ class Str(pyobjects.PyObject):
     
     def __init__(self):
         super(Str, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        self_object = pyobjects.PyObject(self)
         self.attributes = {
-            '__getitem__': BuiltinName(BuiltinFunction(self)),
-            '__getslice__': BuiltinName(BuiltinFunction(self)),
-            '__iter__': BuiltinName(BuiltinFunction(Iterator(self))),
-            'captialize': BuiltinName(BuiltinFunction(self)),
-            'center': BuiltinName(BuiltinFunction(self)),
+            '__getitem__': BuiltinName(BuiltinFunction(self_object)),
+            '__getslice__': BuiltinName(BuiltinFunction(self_object)),
+            '__iter__': BuiltinName(BuiltinFunction(Iterator(self_object))),
+            'captialize': BuiltinName(BuiltinFunction(self_object)),
+            'center': BuiltinName(BuiltinFunction(self_object)),
             'count': BuiltinName(BuiltinFunction()),
-            'decode': BuiltinName(BuiltinFunction(self)),
-            'encode': BuiltinName(BuiltinFunction(self)),
+            'decode': BuiltinName(BuiltinFunction(self_object)),
+            'encode': BuiltinName(BuiltinFunction(self_object)),
             'endswith': BuiltinName(BuiltinFunction()),
-            'expandtabs': BuiltinName(BuiltinFunction(self)),
+            'expandtabs': BuiltinName(BuiltinFunction(self_object)),
             'find': BuiltinName(BuiltinFunction()),
             'index': BuiltinName(BuiltinFunction()),
             'isalnum': BuiltinName(BuiltinFunction()),
@@ -157,25 +158,25 @@ class Str(pyobjects.PyObject):
             'isspace': BuiltinName(BuiltinFunction()),
             'istitle': BuiltinName(BuiltinFunction()),
             'isupper': BuiltinName(BuiltinFunction()),
-            'join': BuiltinName(BuiltinFunction(self)),
-            'ljust': BuiltinName(BuiltinFunction(self)),
-            'lower': BuiltinName(BuiltinFunction(self)),
-            'lstrip': BuiltinName(BuiltinFunction(self)),
-            'replace': BuiltinName(BuiltinFunction(self)),
+            'join': BuiltinName(BuiltinFunction(self_object)),
+            'ljust': BuiltinName(BuiltinFunction(self_object)),
+            'lower': BuiltinName(BuiltinFunction(self_object)),
+            'lstrip': BuiltinName(BuiltinFunction(self_object)),
+            'replace': BuiltinName(BuiltinFunction(self_object)),
             'rfind': BuiltinName(BuiltinFunction()),
             'rindex': BuiltinName(BuiltinFunction()),
-            'rjust': BuiltinName(BuiltinFunction(self)),
-            'rsplit': BuiltinName(BuiltinFunction(self)),
-            'rstrip': BuiltinName(BuiltinFunction(self)),
-            'split': BuiltinName(BuiltinFunction(self)),
-            'splitlines': BuiltinName(BuiltinFunction(self)),
-            'startswith': BuiltinName(BuiltinFunction(self)),
-            'strip': BuiltinName(BuiltinFunction(self)),
-            'swapcase': BuiltinName(BuiltinFunction(self)),
-            'title': BuiltinName(BuiltinFunction(self)),
-            'translate': BuiltinName(BuiltinFunction(self)),
-            'upper': BuiltinName(BuiltinFunction(self)),
-            'zfill': BuiltinName(BuiltinFunction(self))}
+            'rjust': BuiltinName(BuiltinFunction(self_object)),
+            'rsplit': BuiltinName(BuiltinFunction(get_list(self_object))),
+            'rstrip': BuiltinName(BuiltinFunction(self_object)),
+            'split': BuiltinName(BuiltinFunction(get_list(self_object))),
+            'splitlines': BuiltinName(BuiltinFunction(get_list(self_object))),
+            'startswith': BuiltinName(BuiltinFunction(self_object)),
+            'strip': BuiltinName(BuiltinFunction(self_object)),
+            'swapcase': BuiltinName(BuiltinFunction(self_object)),
+            'title': BuiltinName(BuiltinFunction(self_object)),
+            'translate': BuiltinName(BuiltinFunction(self_object)),
+            'upper': BuiltinName(BuiltinFunction(self_object)),
+            'zfill': BuiltinName(BuiltinFunction(self_object))}
     
     def get_attributes(self):
         return self.attributes

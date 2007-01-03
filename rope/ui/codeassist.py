@@ -290,7 +290,7 @@ core._add_menu_cascade(MenuAddress(['Code'], 'o'), ['python', 'rest'])
 actions = []
 
 actions.append(SimpleAction('Code Assist', do_code_assist, 'M-slash',
-                            MenuAddress(['Code', 'Code Assist'], 'c'), ['python']))
+                            MenuAddress(['Code', 'Code Assist (Auto-Complete)'], 'c'), ['python']))
 actions.append(SimpleAction('Goto Definition', do_goto_definition, 'F3',
                             MenuAddress(['Code', 'Goto Definition'], 'g'), ['python']))
 actions.append(SimpleAction('Show Doc', do_show_doc, 'F2',

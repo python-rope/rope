@@ -19,6 +19,7 @@ class DynamicObjectInference(object):
     def __init__(self, pycore):
         self.pycore = pycore
         self.files = {}
+        self.to_pyobject = _TextualToPyObject(self.pycore.project)
     
     def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Return a PythonFileRunner for controlling the process"""
@@ -28,12 +29,12 @@ class DynamicObjectInference(object):
     def infer_returned_object(self, pyobject):
         organizer = self._find_organizer(pyobject)
         if organizer:
-            return organizer.returned.to_pyobject(self.pycore.project)
+            return self.to_pyobject.transform(organizer.returned)
 
     def infer_parameter_objects(self, pyobject):
         organizer = self._find_organizer(pyobject)
         if organizer and organizer.args is not None:
-            pyobjects = [parameter.to_pyobject(self.pycore.project)
+            pyobjects = [self.to_pyobject.transform(parameter)
                          for parameter in organizer.args]
             return pyobjects
     
@@ -54,9 +55,7 @@ class DynamicObjectInference(object):
             self.files[path] = {}
         if lineno not in self.files[path]:
             self.files[path][lineno] = _CallInformationOrganizer()
-        returned = _ObjectPersistedForm.create_persistent_object(data[2])
-        args = [_ObjectPersistedForm.create_persistent_object(arg) for arg in data[1]]
-        self.files[path][lineno].add_call_information(args, returned)
+        self.files[path][lineno].add_call_information(data[1], data[2])
 
 
 class _CallInformationOrganizer(object):
@@ -66,146 +65,98 @@ class _CallInformationOrganizer(object):
         self.returned = None
     
     def add_call_information(self, args, returned):
-        if self.returned is None or \
-           not isinstance(returned, (_PersistedNone, _PersistedUnknown)):
-            self.returned = returned
-        if self.returned is None or args and \
-           not isinstance(args[0], (_PersistedNone, _PersistedUnknown)):
+        if self.returned is None or (args and args[0][0] not in ('unknown', 'none')):
             self.args = args
+        if self.returned is None or returned[0] not in ('unknown', 'none'):
+            self.returned = returned
 
 
-class _ObjectPersistedForm(object):
+class _TextualToPyObject(object):
     
-    def _get_pymodule(self, project, path):
-        root = os.path.abspath(project.get_root_address())
-        if path.startswith(root):
-            relative_path = path[len(root):]
-            if relative_path.startswith('/') or relative_path.startswith(os.sep):
-                relative_path = relative_path[1:]
-            resource = project.get_resource(relative_path)
-        else:
-            resource = project.get_out_of_project_resource(path)
-        return project.get_pycore().resource_to_pyobject(resource)
+    def __init__(self, project):
+        self.project = project
     
-    def _get_pyobject_at(self, project, path, lineno):
-        scope = self._get_pymodule(project, path).get_scope()
-        inner_scope = scope.get_inner_scope_for_line(lineno)
-        return inner_scope.pyobject
+    def transform(self, textual):
+        """Transform an object from textual form to `PyObject`"""
+        type = textual[0]
+        method = getattr(self, type + '_to_pyobject')
+        return method(textual)
 
-    # TODO: Implement __eq__ for subclasses
-    def __eq__(self, object_):
-        if type(object) != type(self):
-            return False
-
-    @staticmethod
-    def create_persistent_object(data):
-        type_ = data[0]
-        if type_ == 'none':
-            return _PersistedNone()
-        if type_ == 'module':
-            return _PersistedModule(*data[1:])
-        if type_ == 'function':
-            return _PersistedFunction(*data[1:])
-        if type_ == 'class':
-            return _PersistedClass(*data[1:])
-        if type_ == 'builtin':
-            return _PersistedBuiltin(*data[1:])
-        if type_ == 'instance':
-            return _PersistedClass(is_instance=True, *data[1:])
-        return _PersistedUnknown()
-
-
-class _PersistedNone(_ObjectPersistedForm):
-
-    def to_pyobject(self, project):
-        return None
-
-
-class _PersistedUnknown(_ObjectPersistedForm):
-
-    def to_pyobject(self, project):
-        return None
-
-
-class _PersistedBuiltin(_ObjectPersistedForm):
+    def module_to_pyobject(self, textual):
+        path = textual[1]
+        return self._get_pymodule(path)
     
-    def __init__(self, name, *data):
-        self.name = name
-        self.data = data
-
-    def to_pyobject(self, project):
-        if self.name == 'str':
+    def builtin_to_pyobject(self, textual):
+        name = textual[1]
+        if name == 'str':
             return builtins.get_str()
-        if self.name == 'list':
-            holding = _ObjectPersistedForm.create_persistent_object(self.data[0])
-            return builtins.get_list(holding.to_pyobject(project))
-        if self.name == 'dict':
-            keys = _ObjectPersistedForm.create_persistent_object(self.data[0])
-            values = _ObjectPersistedForm.create_persistent_object(self.data[1])
-            return builtins.get_dict(keys.to_pyobject(project),
-                                     values.to_pyobject(project))
-        if self.name == 'tuple':
+        if name == 'list':
+            holding = self.transform(textual[2])
+            return builtins.get_list(holding)
+        if name == 'dict':
+            keys = self.transform(textual[2])
+            values = self.transform(textual[3])
+            return builtins.get_dict(keys, values)
+        if name == 'tuple':
             objects = []
-            for holding in self.data:
-                objects.append(_ObjectPersistedForm.
-                               create_persistent_object(holding).to_pyobject(project))
+            for holding in textual[2:]:
+                objects.append(self.transform(holding))
             return builtins.get_tuple(*objects)
-        if self.name == 'set':
-            holding = _ObjectPersistedForm.create_persistent_object(self.data[0])
+        if name == 'set':
+            holding = self.transform(textual[2])
             return builtins.get_set(holding)
         return None
-
-
-class _PersistedModule(_ObjectPersistedForm):
     
-    def __init__(self, path):
-        self.path = path
+    def unknown_to_pyobject(self, textual):
+        return None
     
-    def to_pyobject(self, project):
-        return self._get_pymodule(project, self.path)
-
-
-class _PersistedFunction(_ObjectPersistedForm):
+    def none_to_pyobject(self, textual):
+        return None
     
-    def __init__(self, path, lineno):
-        self.path = path
-        self.lineno = lineno
+    def function_to_pyobject(self, textual):
+        return self._get_pyobject_at(textual[1], textual[2])
     
-    def to_pyobject(self, project):
-        return self._get_pyobject_at(project, self.path, self.lineno)
-
-
-class _PersistedClass(_ObjectPersistedForm):
-    
-    def __init__(self, path, name, is_instance=False):
-        self.path = path
-        self.name = name
-        self.is_instance = is_instance
-    
-    def to_pyobject(self, project):
-        pymodule = self._get_pymodule(project, self.path)
+    def class_to_pyobject(self, textual):
+        path, name = textual[1:]
+        pymodule = self._get_pymodule(path)
         module_scope = pymodule.get_scope()
         suspected_pyobject = None
-        if self.name in module_scope.get_names():
-            suspected_pyobject = module_scope.get_name(self.name).get_object()
+        if name in module_scope.get_names():
+            suspected_pyobject = module_scope.get_name(name).get_object()
         if suspected_pyobject is not None and \
            suspected_pyobject.get_type() == pyobjects.PyObject.get_base_type('Type'):
-            if self.is_instance:
-                return pyobjects.PyObject(suspected_pyobject)
-            else:
-                return suspected_pyobject
+            return suspected_pyobject
         else:
-            lineno = self._find_occurrence(pymodule.get_resource().read())
+            lineno = self._find_occurrence(name, pymodule.get_resource().read())
             if lineno is not None:
                 inner_scope = module_scope.get_inner_scope_for_line(lineno)
                 return inner_scope.pyobject
     
-    def _find_occurrence(self, source):
-        pattern = re.compile(r'^\s*class\s*' + self.name + r'\b')
+    def instance_to_pyobject(self, textual):
+        return pyobjects.PyObject(self.class_to_pyobject(textual))
+    
+    def _find_occurrence(self, name, source):
+        pattern = re.compile(r'^\s*class\s*' + name + r'\b')
         lines = source.split('\n')
         for i in range(len(lines)):
             if pattern.match(lines[i]):
                 return i + 1
+
+    def _get_pymodule(self, path):
+        root = os.path.abspath(self.project.get_root_address())
+        if path.startswith(root):
+            relative_path = path[len(root):]
+            if relative_path.startswith('/') or relative_path.startswith(os.sep):
+                relative_path = relative_path[1:]
+            resource = self.project.get_resource(relative_path)
+        else:
+            resource = self.project.get_out_of_project_resource(path)
+        return self.project.get_pycore().resource_to_pyobject(resource)
+    
+    def _get_pyobject_at(self, path, lineno):
+        scope = self._get_pymodule(path).get_scope()
+        inner_scope = scope.get_inner_scope_for_line(lineno)
+        return inner_scope.pyobject
 
 
 class PythonFileRunner(object):

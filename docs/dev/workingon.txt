@@ -1,15 +1,11 @@
 Small Stories
 =============
 
-- adding builtin `str` and `unicode`
-- handling extract method indented module region
-- difference between builtin types and their instances
+- removing `dynamicoi._ObjectPersistedForm`
 
 * docs for builtin functions
 * exploring module running
 
-  * check the reason for speed difference; is it caused by fifo and
-    socket issues?
   * check the amount useful information transfered
   * possible techniques: compression
 
