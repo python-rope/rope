@@ -42,8 +42,8 @@ def __rope_start_everything():
                 self.sender = _FileSender(send_info)
         
             def global_trace(frame, event, arg):
-                # HACK: Ignoring out to in calls
-                # XXX: This might ignore some information
+                # HACK: Ignoring out->in calls
+                # This might lose some information
                 if self._is_an_interesting_call(frame):
                     return self.on_function_call
             sys.settrace(global_trace)
@@ -66,7 +66,7 @@ def __rope_start_everything():
                 pass
             try:
                 data = (self._object_to_persisted_form(frame.f_code),
-                        args, returned)
+                        tuple(args), returned)
                 self.sender.send_data(data)
             except (TypeError):
                 pass

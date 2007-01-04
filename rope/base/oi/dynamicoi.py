@@ -1,8 +1,8 @@
 import os
 import re
+import socket
 import subprocess
 import sys
-import socket
 import cPickle as pickle
 import marshal
 import tempfile
@@ -17,36 +17,38 @@ from rope.base import pyscopes
 class DynamicObjectInference(object):
     
     def __init__(self, pycore):
+        self.info = pycore.call_info
+        self.to_pyobject = _TextualToPyObject(pycore.project)
+    
+    def infer_returned_object(self, pyobject, args):
+        organizer = self.info.find_organizer(pyobject)
+        if organizer:
+            return self.to_pyobject.transform(organizer.get_returned_object())
+
+    def infer_parameter_objects(self, pyobject):
+        organizer = self.info.find_organizer(pyobject)
+        if organizer and organizer.args is not None:
+            pyobjects = [self.to_pyobject.transform(parameter)
+                         for parameter in organizer.get_parameters()]
+            return pyobjects
+    
+    def infer_assigned_object(self, pyname):
+        pass
+    
+    def infer_for_object(self, pyname):
+        pass
+
+
+class CallInformationCollector(object):
+    
+    def __init__(self, pycore):
         self.pycore = pycore
         self.files = {}
-        self.to_pyobject = _TextualToPyObject(self.pycore.project)
     
     def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Return a PythonFileRunner for controlling the process"""
         return PythonFileRunner(self.pycore, resource, args, stdin,
                                 stdout, self._data_received)
-    
-    def infer_returned_object(self, pyobject):
-        organizer = self._find_organizer(pyobject)
-        if organizer:
-            return self.to_pyobject.transform(organizer.returned)
-
-    def infer_parameter_objects(self, pyobject):
-        organizer = self._find_organizer(pyobject)
-        if organizer and organizer.args is not None:
-            pyobjects = [self.to_pyobject.transform(parameter)
-                         for parameter in organizer.args]
-            return pyobjects
-    
-    def _find_organizer(self, pyobject):
-        resource = pyobject.get_module().get_resource()
-        if resource is None:
-            return
-        path = os.path.abspath(resource._get_real_path())
-        lineno = pyobject._get_ast().lineno
-        if path in self.files and lineno in self.files[path]:
-            organizer = self.files[path][lineno]
-            return organizer
     
     def _data_received(self, data):
         path = data[0][1]
@@ -57,19 +59,81 @@ class DynamicObjectInference(object):
             self.files[path][lineno] = _CallInformationOrganizer()
         self.files[path][lineno].add_call_information(data[1], data[2])
 
+    def find_organizer(self, pyobject):
+        resource = pyobject.get_module().get_resource()
+        if resource is None:
+            return
+        path = os.path.abspath(resource._get_real_path())
+        lineno = pyobject._get_ast().lineno
+        if path in self.files and lineno in self.files[path]:
+            organizer = self.files[path][lineno]
+            return organizer
+    
 
 class _CallInformationOrganizer(object):
     
     def __init__(self):
         self.args = None
         self.returned = None
+        self.info = {}
     
     def add_call_information(self, args, returned):
+        self.info[args] = returned
         if self.returned is None or (args and args[0][0] not in ('unknown', 'none')):
             self.args = args
         if self.returned is None or returned[0] not in ('unknown', 'none'):
             self.returned = returned
+    
+    def get_parameters(self):
+        return self.args
 
+    def get_returned_object(self, arguments=None):
+        return self.returned
+
+
+class _PyObjectToTextual(object):
+    
+    def __init__(self, project):
+        pass
+    
+    def transform(self, pyobject):
+        """Transform a `PyObject` to textual form"""
+        if pyobject is None:
+            return ('none')
+        type = type(pyobject)
+        method = getattr(self, type + '_to_textual')
+        return method(textual)
+
+    def PyObject_to_textual(self, pyobject):
+        pass
+
+    def PyFunction_to_textual(self, pyobject):
+        pass
+    
+    def PyClass_to_textual(self, pyobject):
+        pass
+    
+    def PyModule_to_textual(self, pyobject):
+        pass
+    
+    def PyPackage_to_textual(self, pyobject):
+        pass
+    
+    def List_to_textual(self, pyobject):
+        pass
+    
+    def Dict_to_textual(self, pyobject):
+        pass
+    
+    def Tuple_to_textual(self, pyobject):
+        pass
+    
+    def Set_to_textual(self, pyobject):
+        pass
+    
+    def Str_to_textual(self, pyobject):
+        pass
+    
 
 class _TextualToPyObject(object):
     

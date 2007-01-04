@@ -14,9 +14,9 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
+        self.call_info = rope.base.oi.dynamicoi.CallInformationCollector(self)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self.refactoring = rope.refactor.PythonRefactoring(self)
-        self.dynamicoi = rope.base.oi.dynamicoi.DynamicObjectInference(self)
         self.classes = None
         observer = rope.base.project.ResourceObserver(
             self._invalidate_resource_cache, self._invalidate_resource_cache)
@@ -190,7 +190,7 @@ class PyCore(object):
             module._invalidate_concluded_data()
 
     def run_module(self, resource, args=None, stdin=None, stdout=None):
-        runner = self.dynamicoi.run_module(resource, args, stdin, stdout)
+        runner = self.call_info.run_module(resource, args, stdin, stdout)
         runner.add_finishing_observer(self._invalidate_all_concluded_data)
         runner.run()
         return runner

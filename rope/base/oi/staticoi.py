@@ -1,0 +1,84 @@
+import rope.base.pyobjects
+
+
+class StaticObjectInference(object):
+
+    def __init__(self):
+        pass
+    
+    def infer_assigned_object(self, pyname):
+        if not pyname.assignments:
+            return
+        for assignment in reversed(pyname.assignments):
+            result = self._infer_assignment(assignment, pyname.module)
+            if result is not None:
+                return result
+    
+    def _infer_assignment(self, assignment, pymodule):
+        try:
+            pyname = self._infer_pyname_for_assign_node(
+                assignment.ast_node, pymodule)
+            if pyname is None:
+                return None
+            return self._infer_assignment_object(assignment, pyname.get_object())
+        except rope.base.pyobjects.rope.base.pyobjects.IsBeingInferredException:
+            pass
+
+    def _infer_assignment_object(self, assignment, pyobject):
+        if assignment.index is not None and isinstance(pyobject.get_type(),
+                                                       rope.base.builtins.Tuple):
+            holdings = pyobject.get_type().get_holding_objects()
+            return holdings[min(len(holdings) - 1, assignment.index)]
+        if assignment.index is not None and isinstance(pyobject.get_type(),
+                                                       rope.base.builtins.List):
+            return pyobject.get_type().holding
+        return pyobject
+    
+    def _infer_pyname_for_assign_node(self, assign_node, pymodule):
+        try:
+            lineno = 1
+            if hasattr(assign_node, 'lineno') and assign_node.lineno is not None:
+                lineno = assign_node.lineno
+            holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+            return rope.base.pyobjects.rope.base.evaluate.StatementEvaluator.\
+                   get_statement_result(holding_scope, assign_node)
+        except rope.base.pyobjects.rope.base.pyobjects.IsBeingInferredException:
+            pass
+        
+
+    def infer_for_object(self, pyname):
+        """Infers the `PyObject` this `PyName` references"""
+        list_pyname = self._infer_pyname_for_assign_node(
+            pyname.assignment.ast_node, pyname.module)
+        resulting_pyname = self._call_function(
+            self._call_function(list_pyname, '__iter__'), 'next')
+        if resulting_pyname is None:
+            return None
+        return self._infer_assignment_object(pyname.assignment,
+                                             resulting_pyname.get_object())
+    
+    def _call_function(self, pyname, function_name):
+        if pyname is None:
+            return
+        pyobject = pyname.get_object()
+        if function_name in pyobject.get_attributes():
+            call_function = pyobject.get_attribute(function_name)
+            return rope.base.pyobjects.rope.base.pynames.AssignedName(
+                pyobject=call_function.get_object().get_returned_object())
+
+    def infer_returned_object(self, pyobject, args):
+        scope = pyobject.get_scope()
+        if not scope._get_returned_asts():
+            return
+        for returned_node in reversed(scope._get_returned_asts()):
+            try:
+                resulting_pyname = rope.base.pyobjects.rope.base.evaluate.StatementEvaluator.\
+                                   get_statement_result(scope, returned_node)
+                if resulting_pyname is None:
+                    return None
+                return resulting_pyname.get_object()
+            except rope.base.pyobjects.rope.base.pyobjects.IsBeingInferredException:
+                pass
+    
+    def infer_parameter_objects(self, pyobject):
+        pass

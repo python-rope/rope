@@ -30,17 +30,17 @@ class StatementEvaluator(object):
             result = None
             if '__new__' in pyobject.get_attributes():
                 new_function = pyobject.get_attribute('__new__').get_object()
-                result = new_function._get_returned_object(args)
+                result = new_function.get_returned_object(args)
             if result is None:
                 result = rope.base.pyobjects.PyObject(pyobject)
             self.result = rope.base.pynames.AssignedName(pyobject=result)
         elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
             self.result = rope.base.pynames.AssignedName(
-                pyobject=pyobject._get_returned_object(args))
+                pyobject=pyobject.get_returned_object(args))
         elif '__call__' in pyobject.get_attributes():
             call_function = pyobject.get_attribute('__call__')
             self.result = rope.base.pynames.AssignedName(
-                pyobject=call_function.get_object()._get_returned_object(args))
+                pyobject=call_function.get_object().get_returned_object(args))
     
     def visitConst(self, node):
         if isinstance(node.value, (str, unicode)):
@@ -143,7 +143,7 @@ class StatementEvaluator(object):
         if function_name in pyobject.get_attributes():
             call_function = pyobject.get_attribute(function_name)
             self.result = rope.base.pynames.AssignedName(
-                pyobject=call_function.get_object()._get_returned_object())
+                pyobject=call_function.get_object().get_returned_object())
 
     @staticmethod
     def get_statement_result(scope, node):

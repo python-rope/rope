@@ -1,23 +1,19 @@
 Storing Different Return Types For Different Set Of Arguments
 =============================================================
 
-- lists
-- tuples
-- sets
-- dicts
+- renaming `_get_returned_object` to `get_returned_object`
+- change `dynamicoi` to store return value for each set of parameters
 
-* keywords
-* Transforming `PyObject`\s to textual form for lookups
-* Change `dynamicoi` to store return value for each set of parameters
+* transforming `PyObject`\s to textual form for lookups
+* keywords and `Arguments` objects
 * `PyFunction`'s ``returned_object`` cache is no longer useful
-* Change calls to `_get_returned_object` in the `rope.base.evaluate`
-* Renaming `_get_returned_object` to `get_returned_object`
+* ignoring ``*args`` and ``**kwds`` in runmod
 
+* Handling the return type of generator functions
 
 Possible Refactorings
 =====================
 
-* Refactoring `rope.base.oi`; add `ObjectInferenceStrategy`
 * Refactoring `rope.refactor`; remove `PythonRefactoring`
 
 

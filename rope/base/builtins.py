@@ -223,7 +223,7 @@ class BuiltinFunction(pyobjects.PyObject):
         self.returned = returned
         self.function = function
     
-    def _get_returned_object(self, args=None):
+    def get_returned_object(self, args=None):
         if self.function is not None:
             return self.function(args)
         return self.returned
@@ -241,16 +241,16 @@ class Iterator(pyobjects.PyObject):
     def get_attributes(self):
         return self.attributes
 
-    def _get_returned_object(self):
+    def get_returned_object(self):
         return self.holding
 
 def _infer_sequence_type(seq):
     if '__iter__' in seq.get_attributes():
         iter = seq.get_attribute('__iter__').get_object().\
-               _get_returned_object()
+               get_returned_object()
         if 'next' in iter.get_attributes():
             holding = iter.get_attribute('next').get_object().\
-                      _get_returned_object()
+                      get_returned_object()
             return holding
     
 

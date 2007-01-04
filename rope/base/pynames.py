@@ -41,7 +41,7 @@ class AssignedName(PyName):
             self.is_being_inferred = True
             try:
                 object_infer = self.module.pycore._get_object_infer()
-                inferred_object = object_infer.infer_object(self)
+                inferred_object = object_infer.infer_assigned_object(self)
                 self.pyobject.set(inferred_object)
             finally:
                 self.is_being_inferred = False
@@ -94,7 +94,7 @@ class ParameterName(PyName):
     
     def get_object(self):
         if self.pyobject.get() is None:
-            self.pyobject.set(self.pyfunction._get_parameter(self.index))
+            self.pyobject.set(self.pyfunction.get_parameter(self.index))
         return self.pyobject.get()
     
     def get_definition_location(self):

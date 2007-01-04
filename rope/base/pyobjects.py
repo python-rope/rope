@@ -167,19 +167,19 @@ class PyFunction(PyDefinedObject):
             self.parameter_pynames.set(result)
         return self.parameter_pynames.get()
     
-    def _get_parameter(self, index):
+    def get_parameter(self, index):
         if not self.parameter_pyobjects.get():
             self.parameter_pyobjects.set(self._get_parameter_pyobjects())
         return self.parameter_pyobjects.get()[index]
     
-    def _get_returned_object(self, args=None):
+    def get_returned_object(self, args=None):
         if self.is_being_inferred:
             raise IsBeingInferredException('Circular assignments')
         if self.returned_object.get() is None:
             self.is_being_inferred = True
             try:
                 object_infer = self.pycore._get_object_infer()
-                inferred_object = object_infer.infer_returned_object(self)
+                inferred_object = object_infer.infer_returned_object(self, args)
                 self.returned_object.set(inferred_object)
             finally:
                 self.is_being_inferred = False
