@@ -172,7 +172,7 @@ class PyFunction(PyDefinedObject):
             self.parameter_pyobjects.set(self._get_parameter_pyobjects())
         return self.parameter_pyobjects.get()[index]
     
-    def _get_returned_object(self):
+    def _get_returned_object(self, args=None):
         if self.is_being_inferred:
             raise IsBeingInferredException('Circular assignments')
         if self.returned_object.get() is None:

@@ -73,20 +73,28 @@ stories.  So till ``0.4`` we will:
 Hot Topics
 ==========
 
-* `Having virtual PyModules`_
+* `Removing PythonRefactoring facade`_
 * `Storing different return types for different set of arguments`_
+* `Having virtual PyModules`_
 
 
 To Be Discussed
 ===============
 
 * `Python's Implicit Interfaces`_
-* Removing `PythonRefactoring` facade
 * `Rope's preference system`_
 * Indexing source files for faster occurrence finding
 * Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
 * Undo Unification
+
+
+Making `ObjectInfer` More Extensible
+====================================
+
+We need to refactor `objectinfer` module.  Because we need
+to calculate argument types for inferring the return value of a
+function only when using dynamic OI.
 
 
 Storing Different Return Types For Different Set Of Arguments
@@ -102,6 +110,14 @@ Problems:
 * Needs more memory
 * Slower module running
 * Slower object infers
+
+Implementation Problems:
+
+* When we want to find out the return value of a function we have to
+  find out the value of parameters, too.  This seems useless because
+  when performing static object inference or when there are only one
+  function call to choose the result from we don't need the parameter
+  objects.
 
 
 Sample Implementation
@@ -160,7 +176,9 @@ complicated.  For example By adding a file indexing form:
 
 We can replace all files in above forms to use the integer indices
 specified with file command.  The main problem with this approach is
-that file indices might change across different runs.
+that file indices might change across different runs.  If transfering
+efficiency is really a problem we can add a filter for sending and
+receiving that converts the two forms.
 
 We can also remove 'none' and 'unknown' with and empty string.
 
@@ -434,6 +452,17 @@ Adding the new refactoring class.  Duplications:
 * Duplicate parameters
 * We have the same refactoring class for inlines, extracts and
   renames but we have to call their constructors separately.
+
+
+Removing `PythonRefactoring` Facade
+-----------------------------------
+
+* Changing uses of `PythonRefactoring` to use `rope.refactor` modules
+* Adding a place for saving undo information
+* What to do with import utils
+* Documenting the refactorings `rope.refactor` submodules provide
+* Updating references to `PythonRefactoring` and
+  `PyCore.get_refactoring` to use the new objects.
 
 
 Moving Fields/Methods

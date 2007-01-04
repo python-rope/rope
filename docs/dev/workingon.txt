@@ -1,18 +1,30 @@
-Small Stories
-=============
+Storing Different Return Types For Different Set Of Arguments
+=============================================================
 
-- removing `dynamicoi._ObjectPersistedForm`
+- lists
+- tuples
+- sets
+- dicts
 
-* docs for builtin functions
-* exploring module running
+* keywords
+* Transforming `PyObject`\s to textual form for lookups
+* Change `dynamicoi` to store return value for each set of parameters
+* `PyFunction`'s ``returned_object`` cache is no longer useful
+* Change calls to `_get_returned_object` in the `rope.base.evaluate`
+* Renaming `_get_returned_object` to `get_returned_object`
 
-  * check the amount useful information transfered
-  * possible techniques: compression
+
+Possible Refactorings
+=====================
+
+* Refactoring `rope.base.oi`; add `ObjectInferenceStrategy`
+* Refactoring `rope.refactor`; remove `PythonRefactoring`
 
 
 Remaining Stories
 =================
 
+* docs for builtin functions
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * Extract constant

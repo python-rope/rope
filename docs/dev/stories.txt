@@ -103,7 +103,7 @@ Stories
 * ``global`` keyword issues for pycore
 
 
-* Adding ignored file patterns in projects; ``*.pyc *~ .svn ...``
+* Saving preferences
 
 
 > Public Release 0.4m5 : January 7, 2007
@@ -112,7 +112,7 @@ Stories
 * Commanding buffer
 
 
-* Sorting imports; standard, third party, project
-
-
 * Transforming to ``from w.x.y import z`` for long imports
+
+
+* Sorting imports; standard, third party, project

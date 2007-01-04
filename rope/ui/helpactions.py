@@ -12,7 +12,7 @@ _no_project = NoProject()
 def show_about_dialog(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('About Rope')
-    text = 'rope, a python refactoring IDE ...\n' + \
+    text = rope.__doc__ + ' ...\n' + \
            'version ' + rope.VERSION + '\n\n' + \
            'Copyright (C) 2006 Ali Gholami Rudi\n\n' + \
            'This program is free software; you can redistribute it and/or modify it\n' + \
