@@ -49,6 +49,12 @@ Features implemented so far:
     * Expand ``from ... import *`` imports
     * Remove unused, duplicate and self imports (organize imports)
 
+* Object Inference
+
+  * A dynamic object inference approach
+  * A simple static type inference approach
+  * Handling built-in container types
+
 * Auto-completion
 
   * Global and local variables and imports
@@ -64,14 +70,6 @@ Features implemented so far:
   * Correcting indentation
   * Project tree view
   * Basic UI plug-in support
-
-* Object Inference
-
-  * Simple dynamic object inference
-  * Function argument dynamic object inference
-  * Following assignments
-  * Simple function return value object inference
-  * Basic type inference for built-in container types
 
 
 Download

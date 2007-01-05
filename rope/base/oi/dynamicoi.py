@@ -11,7 +11,6 @@ import threading
 import rope
 from rope.base import pyobjects
 from rope.base import builtins
-from rope.base import pyscopes
 
 
 class DynamicObjectInference(object):
@@ -90,7 +89,12 @@ class _CallInformationOrganizer(object):
     def get_returned_object(self, pyfunction, args):
         if len(self.info) <= 1 or args is None:
             return self._get_default_returned()
-        arguments = args.get_arguments(pyfunction.parameters)
+        parameters = list(pyfunction.parameters)
+        if pyfunction._get_ast().flags & 0x4:
+            del parameters[-1]
+        if pyfunction._get_ast().flags & 0x8:
+            del parameters[-1]
+        arguments = args.get_arguments(parameters)
         textual_args = tuple([self.to_textual.transform(arg) for arg in arguments])
         if textual_args in self.info:
             return self.info[textual_args]
@@ -104,69 +108,6 @@ class _CallInformationOrganizer(object):
             default = returned
         return default
 
-
-class _PyObjectToTextual(object):
-    
-    def __init__(self, project):
-        self.project = project
-    
-    def transform(self, pyobject):
-        """Transform a `PyObject` to textual form"""
-        if pyobject is None:
-            return ('none',)
-        object_type = type(pyobject)
-        method = getattr(self, object_type.__name__ + '_to_textual')
-        return method(pyobject)
-
-    def PyObject_to_textual(self, pyobject):
-        if type(pyobject.get_type()) != pyobjects.PyObject:
-            result = self.transform(pyobject.get_type())
-            if result[0] == 'class':
-                return ('instance',) + result[1:]
-            return result
-        return ('unknown',)
-
-    def PyFunction_to_textual(self, pyobject):
-        return ('function', self._get_pymodule_path(pyobject.get_module()),
-                pyobject._get_ast().lineno)
-    
-    def PyClass_to_textual(self, pyobject):
-        return ('class', self._get_pymodule_path(pyobject.get_module()),
-                pyobject._get_ast().name)
-    
-    def PyModule_to_textual(self, pyobject):
-        return ('module', self._get_pymodule_path(pyobject))
-    
-    def PyPackage_to_textual(self, pyobject):
-        return ('module', self._get_pymodule_path(pyobject))
-    
-    def List_to_textual(self, pyobject):
-        return ('builtin', 'list', self.transform(pyobject.holding))
-    
-    def Dict_to_textual(self, pyobject):
-        return ('builtin', 'dict', self.transform(pyobject.keys),
-                self.transform(pyobject.values))
-    
-    def Tuple_to_textual(self, pyobject):
-        objects = [self.transform(holding) for holding in pyobject.get_holding_objects()]
-        return tuple(['builtin', 'tuple'] + objects)
-    
-    def Set_to_textual(self, pyobject):
-        return ('builtin', 'set', self.transform(pyobject.holding))
-    
-    def Str_to_textual(self, pyobject):
-        return ('builtin', 'str')
-    
-    def _get_pymodule_path(self, pymodule):
-        resource = pymodule.get_resource()
-        resource_path = resource.get_path()
-        if os.path.isabs(resource_path):
-            return resource_path
-        path = os.path.abspath(os.path.normpath(os.path.join(
-                                                self.project.get_root_address(),
-                                                resource_path)))
-        return path
-    
 
 class _TextualToPyObject(object):
     
@@ -256,6 +197,68 @@ class _TextualToPyObject(object):
         return inner_scope.pyobject
 
 
+class _PyObjectToTextual(object):
+    
+    def __init__(self, project):
+        self.project = project
+    
+    def transform(self, pyobject):
+        """Transform a `PyObject` to textual form"""
+        if pyobject is None:
+            return ('none',)
+        object_type = type(pyobject)
+        method = getattr(self, object_type.__name__ + '_to_textual')
+        return method(pyobject)
+
+    def PyObject_to_textual(self, pyobject):
+        if type(pyobject.get_type()) != pyobjects.PyObject:
+            result = self.transform(pyobject.get_type())
+            if result[0] == 'class':
+                return ('instance',) + result[1:]
+            return result
+        return ('unknown',)
+
+    def PyFunction_to_textual(self, pyobject):
+        return ('function', self._get_pymodule_path(pyobject.get_module()),
+                pyobject._get_ast().lineno)
+    
+    def PyClass_to_textual(self, pyobject):
+        return ('class', self._get_pymodule_path(pyobject.get_module()),
+                pyobject._get_ast().name)
+    
+    def PyModule_to_textual(self, pyobject):
+        return ('module', self._get_pymodule_path(pyobject))
+    
+    def PyPackage_to_textual(self, pyobject):
+        return ('module', self._get_pymodule_path(pyobject))
+    
+    def List_to_textual(self, pyobject):
+        return ('builtin', 'list', self.transform(pyobject.holding))
+    
+    def Dict_to_textual(self, pyobject):
+        return ('builtin', 'dict', self.transform(pyobject.keys),
+                self.transform(pyobject.values))
+    
+    def Tuple_to_textual(self, pyobject):
+        objects = [self.transform(holding) for holding in pyobject.get_holding_objects()]
+        return tuple(['builtin', 'tuple'] + objects)
+    
+    def Set_to_textual(self, pyobject):
+        return ('builtin', 'set', self.transform(pyobject.holding))
+    
+    def Str_to_textual(self, pyobject):
+        return ('builtin', 'str')
+    
+    def _get_pymodule_path(self, pymodule):
+        resource = pymodule.get_resource()
+        resource_path = resource.get_path()
+        if os.path.isabs(resource_path):
+            return resource_path
+        return os.path.abspath(
+            os.path.normpath(os.path.join(self.project.get_root_address(),
+                                          resource_path)))
+
+
 class PythonFileRunner(object):
     """A class for running python project files"""
 
@@ -270,6 +273,7 @@ class PythonFileRunner(object):
         self.stdout = stdout
     
     def run(self):
+        """Execute the process"""
         env = dict(os.environ)
         source_folders = []
         file_path = self.file._get_real_path()
@@ -288,15 +292,16 @@ class PythonFileRunner(object):
                 os.path.abspath(self.file._get_real_path())]
         if self.args is not None:
             args.extend(self.args)
-        self.process = subprocess.Popen(executable=sys.executable, args=args,
-                                        cwd=os.path.split(file_path)[0], stdin=self.stdin,
-                                        stdout=self.stdout, stderr=self.stdout, env=env)
+        self.process = subprocess.Popen(
+            executable=sys.executable, args=args,
+            cwd=os.path.split(file_path)[0], stdin=self.stdin,
+            stdout=self.stdout, stderr=self.stdout, env=env)
     
     def _init_data_receiving(self):
         if self.analyze_data is None:
             return
-        # Disabling FIFO data transfer due to blocking for running
-        # unittests.
+        # Disabling FIFO data transfer due to blocking when running
+        # unittests in the GUI.
         # XXX: Handle FIFO data transfer for rope.ui.testview
         if True or os.name == 'nt':
             self.receiver = _SocketReceiver()
@@ -322,7 +327,7 @@ class PythonFileRunner(object):
             self.receiving_thread.join()
 
     def kill_process(self):
-        """Stop the process. This does *not* work on windows."""
+        """Stop the process"""
         if os.name != 'nt':
             os.kill(self.process.pid, 9)
         else:
@@ -330,6 +335,7 @@ class PythonFileRunner(object):
             ctypes.windll.kernel32.TerminateProcess(int(self.process._handle), -1)
     
     def add_finishing_observer(self, observer):
+        """Notify this observer when execution finishes"""
         self.observers.append(observer)
 
 

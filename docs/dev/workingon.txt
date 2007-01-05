@@ -1,29 +1,26 @@
+Removing `PythonRefactoring`
+============================
+
+* Changing uses of `PythonRefactoring` to use `rope.refactor` modules
+* Adding a place for saving undo information
+* What to do with import utils
+* Documenting the refactorings `rope.refactor` submodules provide
+* Updating references to `PythonRefactoring` and
+  `PyCore.get_refactoring` to use the new objects.
+
+
 Storing Different Return Types For Different Set Of Arguments
 =============================================================
 
-- transforming `PyObject`\s to textual form for lookups
-- keywords and `Arguments` objects
-- testing different return types
-- `PyFunction`'s ``returned_object`` cache is no longer useful
-
-* ignoring ``*args`` and ``**kwds`` in runmod
-* better parameter type inference using multiple call information
-
-* caching calculated parameters and returned object
-* handling the return type of generator functions
-* fixing multiple function definition problems
-* move refactoring and ``x.y.z.x.y.w`` style imports
-
-
-Possible Refactorings
-=====================
-
-* Refactoring `rope.refactor`; remove `PythonRefactoring`
+- ignoring ``*args`` and ``**kwds`` in runmod
 
 
 Remaining Stories
 =================
 
+* Caching calculated parameters and returned object in `PyFunction`\s
+* Handling the return type of generator functions
+* Fixing multiple function definition problems
 * Docs for builtin functions
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow

@@ -332,7 +332,7 @@ actions.append(SimpleAction('Save Editor', save_editor, 'C-x C-s',
 actions.append(SimpleAction('Save All Editors', save_all, 'C-x s',
                             MenuAddress(['File', 'Save All'], 'a', 3)))
 actions.append(SimpleAction('Close Editor', close_editor, 'C-x k',
-                            MenuAddress(['File', 'Close Editor'], 'c', 3)))
+                            MenuAddress(['File', 'Close Editor'], 'd', 3)))
 
 actions.append(SimpleAction('Exit', exit_rope, 'C-x C-c',
                             MenuAddress(['File', 'Exit'], 'x', 4)))

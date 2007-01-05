@@ -404,12 +404,43 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
+    def test_ignoring_star_args(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'def a_func(p, *args):\n    if p == C1:\n        return C1()\n' \
+               '    else:\n        return C2()\n' \
+               'a = a_func(C1, 1)\nb = a_func(C2, 2)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_ignoring_double_star_args(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'def a_func(p, *kwds, **args):\n    if p == C1:\n        return C1()\n' \
+               '    else:\n        return C2()\n' \
+               'a = a_func(C1, kwd=1)\nb = a_func(C2, kwd=2)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
 
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ObjectInferTest))
     result.addTests(unittest.makeSuite(DynamicOITest))
-    result.addTests(unittest.makeSuite(CartesianProductDynamicOITest))
     return result
 
 if __name__ == '__main__':

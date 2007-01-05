@@ -52,7 +52,6 @@ class StaticObjectInference(object):
         
 
     def infer_for_object(self, pyname):
-        """Infers the `PyObject` this `PyName` references"""
         list_pyname = self._infer_pyname_for_assign_node(
             pyname.assignment.ast_node, pyname.module)
         resulting_pyname = self._call_function(

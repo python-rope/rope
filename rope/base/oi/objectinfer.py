@@ -17,7 +17,7 @@ class ObjectInfer(object):
                 return result
     
     def infer_for_object(self, pyname):
-        """Infer the `PyObject` this for variable `PyName` references"""
+        """Infer the `PyObject` this for loop variable `PyName` references"""
         for oi in self.ois:
             result = oi.infer_for_object(pyname)
             if result is not None:

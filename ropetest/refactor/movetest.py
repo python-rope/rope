@@ -186,22 +186,6 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
         self.assertTrue(pkg2.get_child('pkg') is not None)
     
-    # TODO: moving fields
-    def xxx_test_moving_fields(self):
-        a_class = 'class A(object):\n' \
-                  '    def __init__(self):\n' \
-                  '        self.b = B()\n' \
-                  '        self.attr = 1\n'
-        b_class = 'class B(object):\n    pass\n'
-        self.mod1.write(a_class + b_class)
-        self.refactoring.move(self.mod1, self.mod1.read().index('attr') + 1, 'b')
-        
-        a_class2 = 'class A(object):\n' \
-                   '    def __init__(self):\n' \
-                   '        self.b = B()\n' \
-                   '        self.b.attr = 1\n'
-        self.assertEquals(a_class2 + b_class, self.mod1.read())
-
 
 if __name__ == '__main__':
     unittest.main()

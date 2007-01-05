@@ -356,8 +356,8 @@ def _get_function_docstring(node):
     return signature + _trim_docstring(node.doc)
 
 def _get_function_signature(node):
-    has_args = node.flags & 4
-    has_kwds = node.flags & 8
+    has_args = node.flags & 0x4
+    has_kwds = node.flags & 0x8
     normal_arg_count = len(node.argnames)
     if has_kwds:
         normal_arg_count -= 1

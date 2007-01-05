@@ -73,9 +73,8 @@ stories.  So till ``0.4`` we will:
 Hot Topics
 ==========
 
-* `Removing PythonRefactoring facade`_
 * `Storing different return types for different set of arguments`_
-* `Having virtual PyModules`_
+* `Removing PythonRefactoring facade`_
 
 
 To Be Discussed
@@ -84,6 +83,7 @@ To Be Discussed
 * Faster occurrence finding
 * `Python's Implicit Interfaces`_
 * `Rope's preference system`_
+* `Having virtual PyModules`_
 * Indexing source files for faster occurrence finding
 * Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
@@ -122,10 +122,10 @@ A textual form should:
 The current textual form:
 
 * ('module', file)
-* ('function', file, lineno, (*args), returned)
+* ('function', file, lineno, (args), returned)
 * ('class', file, name)
 * ('instance', file, name)
-* ('builtin', type, *args)
+* ('builtin', type, args)
 * ('none')
 * ('unknown')
 
@@ -221,9 +221,9 @@ Consequences
 
 * Inefficiency because of multiple changes while refactoring
 
-  If in a refactoring we perform ``3`` changes we might also need to
+  If in a refactoring we perform 3 changes we might also need to
   recompute the information calculated in some of the `PyModule`\s
-  ``3`` times.  This seems inefficient.
+  3 times.  This seems inefficient.
 
 * Inefficiency due to missing computed information computed locally
 
@@ -243,7 +243,7 @@ Consequences
 * Lots of changes
   
   This refactoring needs lots of changes to `PyCore` and modules that
-  use it.  Some of these changes need to change the design very much.
+  use it.
 
 * Complex design
 
@@ -337,7 +337,7 @@ code.
 
 Using ASTs for transforming programs requires making a new AST tree
 or altering the old one and writing AST trees.  We can use the latter
-in the formatter, too but it seems a lot of work.
+in the formatter too but it seems a lot of work.
 
 
 What Rope Assumes...
