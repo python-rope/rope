@@ -3,6 +3,7 @@ import unittest
 from rope.base.project import Project
 import rope.base.builtins
 from ropetest import testutils
+from rope.base.oi import dynamicoi
 
 class ObjectInferTest(unittest.TestCase):
 
@@ -217,7 +218,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(pymod.get_attribute('AClass').get_object(),
                           pymod.get_attribute('a_var').get_object().get_type())
 
-    def test_function_arguement_dti(self):
+    def test_function_argument_dti(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         code = 'def a_func(arg):\n    pass\n' \
                'a_func(a_func)\n'
@@ -249,7 +250,7 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(pyscope.get_scopes()[0].get_name('AClass').get_object(),
                           pyscope.get_name('a_var').get_object())
 
-    def test_function_arguement_dti(self):
+    def test_function_argument_dti2(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         code = 'def a_func(arg, a_builtin_type):\n    pass\n' \
                'a_func(a_func, [])\n'
@@ -341,38 +342,67 @@ class DynamicOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
 
-
-class CartesianProductDynamicOITest(unittest.TestCase):
-
-    def setUp(self):
-        super(CartesianProductDynamicOITest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
-        self.pycore = self.project.get_pycore()
-        common = self.pycore.create_module(self.project.get_root_folder(), 'common')
-        common.write('class AClass(object):\n    pass\n\n'
-                     'class AnotherClass(object):\n    pass\n')
-
-    def tearDown(self):
-        testutils.remove_recursively(self.project_root)
-        super(CartesianProductDynamicOITest, self).tearDown()
-    
-    def xxx_test_simple_case(self):
-        code = 'from common import AClass, AnotherClass\n\n' \
-               'def a_func(arg):\n' \
-               '    if isinstance(arg, AnotherClass):\n        return AClass\n' \
-               '    else:\n        return AnotherClass\n' \
-               'a_var = a_func(AnotherClass)\n' \
-               'another_var = a_func(AClass)\n'
+    def test_textual_transformations(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C(object):\n    pass\ndef f():\n    pass\na_var = C()\n' \
+               'a_list = [C()]\na_str = "hey"\n'
+        mod.write(code)
+        to_pyobject = dynamicoi._TextualToPyObject(self.project)
+        to_textual = dynamicoi._PyObjectToTextual(self.project)
+        pymod = self.pycore.resource_to_pyobject(mod)
+        def complex_to_textual(pyobject):
+            return to_textual.transform(
+                to_pyobject.transform(to_textual.transform(pyobject)))
+        for name in ('C', 'f', 'a_var', 'a_list', 'a_str'):
+            var = pymod.get_attribute(name).get_object()
+            self.assertEquals(to_textual.transform(var), complex_to_textual(var))
+        self.assertEquals(to_textual.transform(pymod), complex_to_textual(pymod))
+
+    def test_arguments_with_keywords(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'def a_func(arg):\n    return arg\n' \
+               'a = a_func(arg=C1())\nb = a_func(arg=C2())\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        self.assertEquals(pymod.get_attribute('AnotherClass').get_object(),
-                          pymod.get_attribute('a_var').get_object())
-        self.assertEquals(pymod.get_attribute('AClass').get_object(),
-                          pymod.get_attribute('another_var').get_object())
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_a_function_with_different_returns(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'def a_func(arg):\n    return arg\n' \
+               'a = a_func(C1())\nb = a_func(C2())\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_a_function_with_different_returns2(self):
+        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'def a_func(p):\n    if p == C1:\n        return C1()\n' \
+               '    else:\n        return C2()\n' \
+               'a = a_func(C1)\nb = a_func(C2)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
 
 def suite():

@@ -23,11 +23,12 @@ class DynamicObjectInference(object):
     def infer_returned_object(self, pyobject, args):
         organizer = self.info.find_organizer(pyobject)
         if organizer:
-            return self.to_pyobject.transform(organizer.get_returned_object())
+            return self.to_pyobject.transform(organizer.get_returned_object(
+                                              pyobject, args))
 
     def infer_parameter_objects(self, pyobject):
         organizer = self.info.find_organizer(pyobject)
-        if organizer and organizer.args is not None:
+        if organizer is not None:
             pyobjects = [self.to_pyobject.transform(parameter)
                          for parameter in organizer.get_parameters()]
             return pyobjects
@@ -44,6 +45,7 @@ class CallInformationCollector(object):
     def __init__(self, pycore):
         self.pycore = pycore
         self.files = {}
+        self.to_textual = _PyObjectToTextual(pycore.project)
     
     def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Return a PythonFileRunner for controlling the process"""
@@ -56,7 +58,7 @@ class CallInformationCollector(object):
         if path not in self.files:
             self.files[path] = {}
         if lineno not in self.files[path]:
-            self.files[path][lineno] = _CallInformationOrganizer()
+            self.files[path][lineno] = _CallInformationOrganizer(self.to_textual)
         self.files[path][lineno].add_call_information(data[1], data[2])
 
     def find_organizer(self, pyobject):
@@ -72,67 +74,98 @@ class CallInformationCollector(object):
 
 class _CallInformationOrganizer(object):
     
-    def __init__(self):
-        self.args = None
-        self.returned = None
+    def __init__(self, to_textual):
         self.info = {}
+        self.to_textual = to_textual
     
     def add_call_information(self, args, returned):
         self.info[args] = returned
-        if self.returned is None or (args and args[0][0] not in ('unknown', 'none')):
-            self.args = args
-        if self.returned is None or returned[0] not in ('unknown', 'none'):
-            self.returned = returned
     
     def get_parameters(self):
-        return self.args
+        for args in self.info.keys():
+            if len(args) > 0 and args[0] not in ('unknown', 'none'):
+                return args
+        return self.info.keys()[0]
 
-    def get_returned_object(self, arguments=None):
-        return self.returned
+    def get_returned_object(self, pyfunction, args):
+        if len(self.info) <= 1 or args is None:
+            return self._get_default_returned()
+        arguments = args.get_arguments(pyfunction.parameters)
+        textual_args = tuple([self.to_textual.transform(arg) for arg in arguments])
+        if textual_args in self.info:
+            return self.info[textual_args]
+        return self._get_default_returned()
+    
+    def _get_default_returned(self):
+        default = ('unknown')
+        for returned in self.info.values():
+            if returned not in ('unknown', 'none'):
+                return returned
+            default = returned
+        return default
 
 
 class _PyObjectToTextual(object):
     
     def __init__(self, project):
-        pass
+        self.project = project
     
     def transform(self, pyobject):
         """Transform a `PyObject` to textual form"""
         if pyobject is None:
-            return ('none')
-        type = type(pyobject)
-        method = getattr(self, type + '_to_textual')
-        return method(textual)
+            return ('none',)
+        object_type = type(pyobject)
+        method = getattr(self, object_type.__name__ + '_to_textual')
+        return method(pyobject)
 
     def PyObject_to_textual(self, pyobject):
-        pass
+        if type(pyobject.get_type()) != pyobjects.PyObject:
+            result = self.transform(pyobject.get_type())
+            if result[0] == 'class':
+                return ('instance',) + result[1:]
+            return result
+        return ('unknown',)
 
     def PyFunction_to_textual(self, pyobject):
-        pass
+        return ('function', self._get_pymodule_path(pyobject.get_module()),
+                pyobject._get_ast().lineno)
     
     def PyClass_to_textual(self, pyobject):
-        pass
+        return ('class', self._get_pymodule_path(pyobject.get_module()),
+                pyobject._get_ast().name)
     
     def PyModule_to_textual(self, pyobject):
-        pass
+        return ('module', self._get_pymodule_path(pyobject))
     
     def PyPackage_to_textual(self, pyobject):
-        pass
+        return ('module', self._get_pymodule_path(pyobject))
     
     def List_to_textual(self, pyobject):
-        pass
+        return ('builtin', 'list', self.transform(pyobject.holding))
     
     def Dict_to_textual(self, pyobject):
-        pass
+        return ('builtin', 'dict', self.transform(pyobject.keys),
+                self.transform(pyobject.values))
     
     def Tuple_to_textual(self, pyobject):
-        pass
+        objects = [self.transform(holding) for holding in pyobject.get_holding_objects()]
+        return tuple(['builtin', 'tuple'] + objects)
     
     def Set_to_textual(self, pyobject):
-        pass
+        return ('builtin', 'set', self.transform(pyobject.holding))
     
     def Str_to_textual(self, pyobject):
-        pass
+        return ('builtin', 'str')
+    
+    def _get_pymodule_path(self, pymodule):
+        resource = pymodule.get_resource()
+        resource_path = resource.get_path()
+        if os.path.isabs(resource_path):
+            return resource_path
+        path = os.path.abspath(os.path.normpath(os.path.join(
+                                                self.project.get_root_address(),
+                                                resource_path)))
+        return path
     
 
 class _TextualToPyObject(object):

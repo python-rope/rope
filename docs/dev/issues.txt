@@ -81,20 +81,13 @@ Hot Topics
 To Be Discussed
 ===============
 
+* Faster occurrence finding
 * `Python's Implicit Interfaces`_
 * `Rope's preference system`_
 * Indexing source files for faster occurrence finding
 * Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
 * Undo Unification
-
-
-Making `ObjectInfer` More Extensible
-====================================
-
-We need to refactor `objectinfer` module.  Because we need
-to calculate argument types for inferring the return value of a
-function only when using dynamic OI.
 
 
 Storing Different Return Types For Different Set Of Arguments
@@ -110,39 +103,6 @@ Problems:
 * Needs more memory
 * Slower module running
 * Slower object infers
-
-Implementation Problems:
-
-* When we want to find out the return value of a function we have to
-  find out the value of parameters, too.  This seems useless because
-  when performing static object inference or when there are only one
-  function call to choose the result from we don't need the parameter
-  objects.
-
-
-Sample Implementation
----------------------
-
-Many places that use `PyFunction._get_returned_object` don't calculate
-argument types.  Change `rope.base.evalute` to do that.  What's more
-`PyFunction` caches ``returned_object`` which will no longer work if
-we perform this refactoring.  We can store its matching arguments to
-solve this problem.
-
-* Transforming `PyObject`\s to textual form for lookups
-* Change `PyFunction._get_returned_object` to get a parameter list
-* Change `dynamicoi` to store return value for each set of parameters
-* Change `ObjectInfer.infer_returned_object` and
-  `DynamicOI.infer_returned_object` to get parameters
-* `PyFunction`'s ``returned_object`` cache is no longer useful
-* Change calls to `_get_returned_object` in the `rope.base.evaluate`
-
-
-Needed Transformations:
-
-* Compiled -> Textual
-* Textual -> PyObject
-* PyObject -> Textual
 
 
 Considerations For A New Textual Form

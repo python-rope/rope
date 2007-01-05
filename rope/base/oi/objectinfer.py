@@ -1,7 +1,5 @@
 from rope.base.pyobjects import *
-from rope.base import builtins
 import rope.base.codeanalyze
-import rope.base.evaluate
 import rope.base.oi.staticoi
 
 
@@ -34,7 +32,7 @@ class ObjectInfer(object):
     
     def infer_parameter_objects(self, pyobject):
         """Infer the `PyObject`\s of parameters of this callable `PyObject`"""
-        for oi in self.ois:
+        for oi in reversed(self.ois):
             result = oi.infer_parameter_objects(pyobject)
             if result is not None:
                 return result

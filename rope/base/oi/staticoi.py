@@ -1,4 +1,9 @@
-import rope.base.pyobjects
+import compiler.ast
+
+from rope.base import pyobjects
+from rope.base import pynames
+from rope.base import builtins
+from rope.base import evaluate
 
 
 class StaticObjectInference(object):
@@ -21,16 +26,16 @@ class StaticObjectInference(object):
             if pyname is None:
                 return None
             return self._infer_assignment_object(assignment, pyname.get_object())
-        except rope.base.pyobjects.rope.base.pyobjects.IsBeingInferredException:
+        except pyobjects.IsBeingInferredException:
             pass
 
     def _infer_assignment_object(self, assignment, pyobject):
         if assignment.index is not None and isinstance(pyobject.get_type(),
-                                                       rope.base.builtins.Tuple):
+                                                       builtins.Tuple):
             holdings = pyobject.get_type().get_holding_objects()
             return holdings[min(len(holdings) - 1, assignment.index)]
         if assignment.index is not None and isinstance(pyobject.get_type(),
-                                                       rope.base.builtins.List):
+                                                       builtins.List):
             return pyobject.get_type().holding
         return pyobject
     
@@ -40,9 +45,9 @@ class StaticObjectInference(object):
             if hasattr(assign_node, 'lineno') and assign_node.lineno is not None:
                 lineno = assign_node.lineno
             holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-            return rope.base.pyobjects.rope.base.evaluate.StatementEvaluator.\
+            return evaluate.StatementEvaluator.\
                    get_statement_result(holding_scope, assign_node)
-        except rope.base.pyobjects.rope.base.pyobjects.IsBeingInferredException:
+        except pyobjects.IsBeingInferredException:
             pass
         
 
@@ -63,7 +68,7 @@ class StaticObjectInference(object):
         pyobject = pyname.get_object()
         if function_name in pyobject.get_attributes():
             call_function = pyobject.get_attribute(function_name)
-            return rope.base.pyobjects.rope.base.pynames.AssignedName(
+            return pynames.AssignedName(
                 pyobject=call_function.get_object().get_returned_object())
 
     def infer_returned_object(self, pyobject, args):
@@ -72,13 +77,40 @@ class StaticObjectInference(object):
             return
         for returned_node in reversed(scope._get_returned_asts()):
             try:
-                resulting_pyname = rope.base.pyobjects.rope.base.evaluate.StatementEvaluator.\
+                resulting_pyname = evaluate.StatementEvaluator.\
                                    get_statement_result(scope, returned_node)
                 if resulting_pyname is None:
                     return None
                 return resulting_pyname.get_object()
-            except rope.base.pyobjects.rope.base.pyobjects.IsBeingInferredException:
+            except pyobjects.IsBeingInferredException:
                 pass
     
     def infer_parameter_objects(self, pyobject):
-        pass
+        objects = []
+        if pyobject.parent.get_type() == pyobjects.PyObject.get_base_type('Type'):
+            if not pyobject.decorators:
+                objects.append(pyobjects.PyObject(pyobject.parent))
+            elif self._is_staticmethod_decorator(pyobject.decorators.nodes[0]):
+                objects.append(pyobjects.PyObject(
+                               pyobjects.PyObject.get_base_type('Unknown')))
+            elif self._is_classmethod_decorator(pyobject.decorators.nodes[0]):
+                objects.append(pyobject.parent)
+            elif pyobject.parameters[0] == 'self':
+                objects.append(pyobjects.PyObject(pyobject.parent))
+            else:
+                objects.append(pyobjects.PyObject(
+                               pyobjects.PyObject.get_base_type('Unknown')))
+        else:
+            objects.append(pyobjects.PyObject(
+                           pyobjects.PyObject.get_base_type('Unknown')))
+        for parameter in pyobject.parameters[1:]:
+            objects.append(pyobjects.PyObject(
+                           pyobjects.PyObject.get_base_type('Unknown')))
+        return objects
+
+    def _is_staticmethod_decorator(self, node):
+        return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'
+    
+    def _is_classmethod_decorator(self, node):
+        return isinstance(node, compiler.ast.Name) and node.name == 'classmethod'
+    

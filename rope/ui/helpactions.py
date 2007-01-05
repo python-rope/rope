@@ -14,7 +14,7 @@ def show_about_dialog(context):
     toplevel.title('About Rope')
     text = rope.__doc__ + ' ...\n' + \
            'version ' + rope.VERSION + '\n\n' + \
-           'Copyright (C) 2006 Ali Gholami Rudi\n\n' + \
+           'Copyright (C) 2006-2007 Ali Gholami Rudi\n\n' + \
            'This program is free software; you can redistribute it and/or modify it\n' + \
            'under the terms of GNU General Public License as published by the \n' + \
            'Free Software Foundation; either version 2 of the license, or (at your \n' + \

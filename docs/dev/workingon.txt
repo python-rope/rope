@@ -1,15 +1,19 @@
 Storing Different Return Types For Different Set Of Arguments
 =============================================================
 
-- renaming `_get_returned_object` to `get_returned_object`
-- change `dynamicoi` to store return value for each set of parameters
+- transforming `PyObject`\s to textual form for lookups
+- keywords and `Arguments` objects
+- testing different return types
+- `PyFunction`'s ``returned_object`` cache is no longer useful
 
-* transforming `PyObject`\s to textual form for lookups
-* keywords and `Arguments` objects
-* `PyFunction`'s ``returned_object`` cache is no longer useful
 * ignoring ``*args`` and ``**kwds`` in runmod
+* better parameter type inference using multiple call information
 
-* Handling the return type of generator functions
+* caching calculated parameters and returned object
+* handling the return type of generator functions
+* fixing multiple function definition problems
+* move refactoring and ``x.y.z.x.y.w`` style imports
+
 
 Possible Refactorings
 =====================
@@ -20,7 +24,7 @@ Possible Refactorings
 Remaining Stories
 =================
 
-* docs for builtin functions
+* Docs for builtin functions
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * Extract constant

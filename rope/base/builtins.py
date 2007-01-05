@@ -255,10 +255,9 @@ def _infer_sequence_type(seq):
     
 
 def _create_builtin(args, creator):
-    passed_pyname = args.get_arguments(['sequence'])[0]
-    if passed_pyname is None:
+    passed = args.get_arguments(['sequence'])[0]
+    if passed is None:
         return None
-    passed = passed_pyname.get_object()
     holding = _infer_sequence_type(passed)
     if holding is not None:
         return creator(holding)

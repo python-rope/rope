@@ -109,7 +109,6 @@ class PyFunction(PyDefinedObject):
         self.decorators = self.ast_node.decorators
         self.is_being_inferred = False
         self.are_args_being_inferred = False
-        self.returned_object = self.get_module()._get_concluded_data()
         self.parameter_pyobjects = self.get_module()._get_concluded_data()
         self.parameter_pynames = self.get_module()._get_concluded_data()
 
@@ -133,31 +132,7 @@ class PyFunction(PyDefinedObject):
             pyobjects = object_infer.infer_parameter_objects(self)
         finally:
             self.are_args_being_inferred = False
-        
-        if pyobjects is None:
-            pyobjects = []
-            if self.parent.get_type() == PyObject.get_base_type('Type'):
-                if not self.decorators:
-                    pyobjects.append(PyObject(self.parent))
-                elif self._is_staticmethod_decorator(self.decorators.nodes[0]):
-                    pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
-                elif self._is_classmethod_decorator(self.decorators.nodes[0]):
-                    pyobjects.append(self.parent)
-                elif self.parameters[0] == 'self':
-                    pyobjects.append(PyObject(self.parent))
-                else:
-                    pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
-            else:
-                pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
-            for parameter in self.parameters[1:]:
-                pyobjects.append(PyObject(PyObject.get_base_type('Unknown')))
         return pyobjects
-    
-    def _is_staticmethod_decorator(self, node):
-        return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'
-    
-    def _is_classmethod_decorator(self, node):
-        return isinstance(node, compiler.ast.Name) and node.name == 'classmethod'
     
     def get_parameters(self):
         if self.parameter_pynames.get() is None:
@@ -175,17 +150,16 @@ class PyFunction(PyDefinedObject):
     def get_returned_object(self, args=None):
         if self.is_being_inferred:
             raise IsBeingInferredException('Circular assignments')
-        if self.returned_object.get() is None:
-            self.is_being_inferred = True
-            try:
-                object_infer = self.pycore._get_object_infer()
-                inferred_object = object_infer.infer_returned_object(self, args)
-                self.returned_object.set(inferred_object)
-            finally:
-                self.is_being_inferred = False
-        if self.returned_object.get() is None:
-            self.returned_object.set(PyObject(PyObject.get_base_type('Unknown')))
-        return self.returned_object.get()
+        self.is_being_inferred = True
+        try:
+            object_infer = self.pycore._get_object_infer()
+            inferred_object = object_infer.infer_returned_object(self, args)
+            result = inferred_object
+        finally:
+            self.is_being_inferred = False
+        if result is None:
+            return PyObject(PyObject.get_base_type('Unknown'))
+        return result
 
 
 class PyClass(PyDefinedObject):

@@ -168,6 +168,12 @@ class Arguments(object):
     def get_arguments(self, parameters):
         result = [None] * len(parameters)
         for index, arg in enumerate(self.args):
-            result[index] = StatementEvaluator.get_statement_result(self.scope, arg)
+            if isinstance(arg, compiler.ast.Keyword) and arg.name in parameters:
+                pyname = StatementEvaluator.get_statement_result(self.scope, arg.expr)
+                if pyname is not None:
+                    result[parameters.index(arg.name)] = pyname.get_object()
+            else:
+                pyname = StatementEvaluator.get_statement_result(self.scope, arg)
+                if pyname is not None:
+                    result[index] = pyname.get_object()
         return result
-    
