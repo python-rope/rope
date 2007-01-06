@@ -35,19 +35,19 @@ class StatementRangeFinderTest(unittest.TestCase):
     def test_get_last_open_parens(self):
         finder = self.get_range_finder('a = 10', 1)
         self.assertTrue(finder.last_open_parens() is None)
-        
+
     def test_get_last_open_parens2(self):
         finder = self.get_range_finder('a = (10 +', 1)
         self.assertEquals((1, 4), finder.last_open_parens())
-        
+
     def test_is_line_continued(self):
         finder = self.get_range_finder('a = 10', 1)
         self.assertFalse(finder.is_line_continued())
-        
+
     def test_is_line_continued2(self):
         finder = self.get_range_finder('a = (10 +', 1)
         self.assertTrue(finder.is_line_continued())
-        
+
     def test_source_lines_simple(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')
         self.assertEquals('line1', to_lines.get_line(1))
@@ -78,7 +78,7 @@ class StatementRangeFinderTest(unittest.TestCase):
         to_lines = SourceLinesAdapter('line1')
         self.assertEquals(1, to_lines.get_line_number(5))
 
-        
+
 class WordRangeFinderTest(unittest.TestCase):
 
     def setUp(self):
@@ -102,32 +102,32 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_attribute_accesses(self):
         word_finder = WordRangeFinder('a_var.an_attr')
         self.assertEquals('a_var.an_attr', word_finder.get_primary_at(10))
-    
+
     def test_word_finder_on_word_beginning(self):
         code = 'print a_var\n'
         word_finder = WordRangeFinder(code)
         self.assertEquals('a_var', word_finder.get_word_at(code.index('a_var')))
-    
+
     def test_word_finder_on_primary_beginning(self):
         code = 'print a_var\n'
         word_finder = WordRangeFinder(code)
         self.assertEquals('a_var', word_finder.get_primary_at(code.index('a_var')))
-    
+
     def test_word_finder_on_word_ending(self):
         code = 'print a_var\n'
         word_finder = WordRangeFinder(code)
         self.assertEquals('a_var', word_finder.get_word_at(code.index('a_var') + 5))
-    
+
     def test_word_finder_on_primary_ending(self):
         code = 'print a_var\n'
         word_finder = WordRangeFinder(code)
         self.assertEquals('a_var', word_finder.get_primary_at(code.index('a_var') + 5))
-    
+
     def test_word_finder_on_primaries_with_dots_inside_parens(self):
         code = '(a_var.\nattr)'
         word_finder = WordRangeFinder(code)
         self.assertEquals('a_var.\nattr', word_finder.get_primary_at(code.index('attr') + 1))
-    
+
     def test_strings(self):
         word_finder = WordRangeFinder('"a string".split()')
         self.assertEquals('"a string".split', word_finder.get_primary_at(14))
@@ -150,7 +150,7 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder('AClass(a_param, another_param, "a string").a_func()')
         self.assertEquals('AClass(a_param, another_param, "a string").a_func',
                           word_finder.get_primary_at(44))
-    
+
     def test_param_expressions(self):
         word_finder = WordRangeFinder('AClass(an_object.an_attr).a_func()')
         self.assertEquals('an_object.an_attr',
@@ -221,7 +221,7 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder('var1 + "# var2".\n  var3')
         self.assertEquals('"# var2".\n  var3',
                           word_finder.get_primary_at(21))
-    
+
     def test_import_statement_finding(self):
         code = 'import mod\na_var = 10\n'
         word_finder = WordRangeFinder(code)
@@ -247,7 +247,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         name_finder = ScopeNameFinder(scope.pyobject)
         self.assertEquals(scope.get_name('a_var'), name_finder.get_pyname_at(len(code) - 3))
-        
+
     def test_class_variable_attribute_in_class_body(self):
         code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
         scope = self.pycore.get_string_scope(code)
@@ -275,7 +275,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         name_finder = ScopeNameFinder(scope.pyobject)
         a_class_pyname = scope.get_name('Sample').get_object().get_attribute('AClass')
-        self.assertEquals(a_class_pyname, 
+        self.assertEquals(a_class_pyname,
                           name_finder.get_pyname_at(code.index('AClass') + 2))
 
     def test_class_method_in_class_body_but_not_indexed(self):
@@ -339,10 +339,10 @@ class LogicalLineFinderTest(unittest.TestCase):
 
     def tearDown(self):
         super(LogicalLineFinderTest, self).tearDown()
-    
+
     def _get_logical_line_finder(self, code):
         return LogicalLineFinder(SourceLinesAdapter(code))
-    
+
     def test_normal_lines(self):
         code = 'a_var = 10'
         line_finder = self._get_logical_line_finder(code)

@@ -16,7 +16,7 @@ def do_correct_line_indentation(context):
         context.get_active_editor().get_editor().correct_line_indentation()
 
 class _OutlineViewHandle(TreeViewHandle):
-    
+
     def __init__(self, editor, toplevel):
         self.editor = editor
         self.toplevel = toplevel
@@ -163,7 +163,7 @@ def _get_template_information(editor, result, proposal):
     cancel_button.grid(row=len(template.variables()) + 1, column=1)
     frame.grid()
 
-    
+
 def do_goto_definition(context):
     editor = context.get_active_editor().get_editor()
     resource, lineno = context.editingtools.codeassist.get_definition_location(

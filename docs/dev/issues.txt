@@ -50,10 +50,10 @@ Possible Plans
 * Change method signature
 * Introduce parameter
 * Enhancing refactorings and testing
+* Handling built-in types
 
 Exploring and analyzing possible solutions for:
 
-* Handling built-in types
 * Implicit interfaces
 
 
@@ -73,7 +73,6 @@ stories.  So till ``0.4`` we will:
 Hot Topics
 ==========
 
-* `Storing different return types for different set of arguments`_
 * `Removing PythonRefactoring facade`_
 
 
@@ -90,75 +89,22 @@ To Be Discussed
 * Undo Unification
 
 
-Storing Different Return Types For Different Set Of Arguments
-=============================================================
-
-Goals:
-
-* Better type inference for function return values and parameters
-* Better builtin type construction
-
-Problems:
-
-* Needs more memory
-* Slower module running
-* Slower object infers
-
-
-Considerations For A New Textual Form
--------------------------------------
-
-Although textual forms are currently used only for transferring
-running data, it can be used for saving `PyObject`\s, too.  This
-might be useful if we want to save some of the collected information
-to a file.
-
-A textual form should:
-
-* be stored
-* have maximum immunity to changes
-* represent all kinds of objects
-
-The current textual form:
-
-* ('module', file)
-* ('function', file, lineno, (args), returned)
-* ('class', file, name)
-* ('instance', file, name)
-* ('builtin', type, args)
-* ('none')
-* ('unknown')
-
-Lot's of optimizations is possible.  But they make things more
-complicated.  For example By adding a file indexing form:
-
-* ('file', file, index)
-
-We can replace all files in above forms to use the integer indices
-specified with file command.  The main problem with this approach is
-that file indices might change across different runs.  If transfering
-efficiency is really a problem we can add a filter for sending and
-receiving that converts the two forms.
-
-We can also remove 'none' and 'unknown' with and empty string.
-
-
 Rope's Preference System
 ========================
 
 This might show what rope needs::
 
   class Preferences(object):
-      
+
       def get_preference(self, name):
           pass
-      
-  
+
+
   class FilePreferences(object):
-  
+
       def __init__(self, path):
           self.path = path
-      
+
       def get_preference(self, name):
           pass
 
@@ -170,9 +116,9 @@ Issues
 
   * human readable? yes
   * python (like emacs and lisp)
-  
+
     - push or pull model for configurations
-  
+
   * simple equals
 
 * types
@@ -230,7 +176,7 @@ Consequences
   One of the difficulties of having a set of main and many local
   `PyModule`\s is that when we compute some information in local
   ones these information might be no longer valid in global pymodules.
-  
+
 
 * Not convincing uses
 
@@ -241,7 +187,7 @@ Consequences
   basic refactorings.
 
 * Lots of changes
-  
+
   This refactoring needs lots of changes to `PyCore` and modules that
   use it.
 
@@ -256,38 +202,38 @@ A Bit in Details
 
 If we change all refactoring modules to work on a pymodule we would
 probably be able to have a structure like this::
-  
+
   class PythonProjectFiles(object):
-      
+
       def resource_to_pyobject(self, resource):
           pass
-      
+
       def get_module(self, module_name):
           pass
-  
-  
+
+
   class ChangedPythonProjectFiles(PythonProjectFiles):
-      
+
       def resource_to_pyobject(self, resource):
           pass
-      
+
       def get_module(self, module_name):
           pass
-      
+
       def file_changed(self, resource, new_content):
           pass
-      
+
       def move_resource(self, resource, new_location):
           pass
 
       def get_changes(self):
           pass
-          
+
 
 This way we can perform any number of refactorings in sequence.  But
 it seems as if we should break `PyCore` into two separate classes.
 What's more after this change we would probably be able to remove
-`rope.refactor.change`.  Maybe we can add `Change...` interfaces to 
+`rope.refactor.change`.  Maybe we can add `Change...` interfaces to
 `ChangedPythonProjectFiles`.
 
 One of the main obstacles for doing this change is that all of the
@@ -378,16 +324,16 @@ A Common Refactoring Interface
 ::
 
   class Refactoring(object):
-      
+
       def __init__(self, *args, **kwds):
       """Getting immediate informations"""
-      
+
       def get_changes(self, *args, **kwds):
       """Calculate the changes caused by this refactoring.
-      
+
       It is passed user provided information.
       """
-      
+
       # Other functions for getting information after construction
       # for helping IDE's.
 
@@ -457,7 +403,7 @@ of an attribute.
 
 Maybe we can have separate methods for moving each of above
 groups.::
-  
+
   move_module(resource, resource)
   move_global(pyobject, resource)
   move_attribute(pyobject, pyobject)
@@ -475,7 +421,7 @@ many situations that they are of no use:
 
 * A simple dynamic type inference saves the return types of methods
 * We use a simple static type inference that:
-  
+
   * Follows assignments
   * Checks the returned ASTs
   * Uses method return value and parameter information gained by DOI
@@ -536,6 +482,44 @@ the hierarchical representation and in this approach we save the data
 like ``file.class.method``.
 
 
+Considerations For A New Textual Form
+-------------------------------------
+
+Although textual forms are currently used only for transferring
+running data, it can be used for saving `PyObject`\s, too.  This
+might be useful if we want to save some of the collected information
+to a file.
+
+A textual form should:
+
+* be stored
+* have maximum immunity to changes
+* represent all kinds of objects
+
+The current textual form:
+
+* ('module', file)
+* ('function', file, lineno, (args), returned)
+* ('class', file, name)
+* ('instance', file, name)
+* ('builtin', type, args)
+* ('none')
+* ('unknown')
+
+Lot's of optimizations is possible.  But they make things more
+complicated.  For example By adding a file indexing form:
+
+* ('file', file, index)
+
+We can replace all files in above forms to use the integer indices
+specified with file command.  The main problem with this approach is
+that file indices might change across different runs.  If transfering
+efficiency is really a problem we can add a filter for sending and
+receiving that converts the two forms.
+
+We can also remove 'none' and 'unknown' with and empty string.
+
+
 Returned Types Or Objects
 -------------------------
 
@@ -562,20 +546,20 @@ use a specific protocol or interface.  There are lots of such examples
 in standard library.
 
 For example::
-  
+
   class A(object):
-      
+
       def a_method(self):
           pass
-  
+
   class B(object):
-      
+
       def a_method(self):
           pass
-    
+
   def a_func(arg):
       arg.a_method()
-  
+
   a_func(A())
   a_func(B())
 
@@ -583,7 +567,7 @@ Here although there is no inheritance relations between `A` and `B`,
 renaming `A.a_method` should force `B.a_method` to be renamed too.
 
 Or as another example::
-  
+
   a_var = A()
   a_var.a_method()
 
@@ -612,22 +596,22 @@ Actually each function defines an interface for each of its parameters
 and the members of this interface are the objects that are passed as
 that arguement.  Another thing to keep in mind is that implicit
 interfaces are extended by inheritance relation, too.  For example::
-  
+
   class C(A):
-      
+
       def a_method(self):
           pass
-  
+
   def a_func(arg):
       arg.a_method()
-  
+
   another_func(C())
 
 Renaming `arg.a_method` not only should rename `C.a_method` but also it
 it should rename `A.a_method`.
 
 We should be careful about situations like::
-  
+
   def a_func(arg):
       if isinstance(arg, A):
           arg.do_something()
@@ -635,7 +619,7 @@ We should be careful about situations like::
           arg.do_some_other_thing()
 
 The other issue is what to do for situations like this::
-  
+
   def a_func(obj1, obj2):
       result = obj1.f(obj2)
       result.g()

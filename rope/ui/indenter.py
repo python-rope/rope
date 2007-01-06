@@ -34,7 +34,7 @@ class TextIndenter(object):
             self._set_line_indents(lineno, len(last_line))
         else:
             self.correct_indentation(lineno)
-    
+
     def insert_tab(self, index):
         """Inserts a tab in the given index"""
         self.editor.insert(index, ' ' * 4)
@@ -67,7 +67,7 @@ class NormalIndenter(TextIndenter):
         if lineno > 1:
             prev_indents = self._count_line_indents(lineno - 1)
         self._set_line_indents(lineno, prev_indents)
-        
+
 
 class PythonCodeIndenter(TextIndenter):
     def __init__(self, editor):

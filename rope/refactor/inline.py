@@ -12,7 +12,7 @@ from rope.refactor.change import ChangeSet, ChangeContents
 
 
 class InlineRefactoring(object):
-    
+
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
@@ -28,19 +28,19 @@ class InlineRefactoring(object):
             raise rope.base.exceptions.RefactoringException(
                 'Inline refactoring should be performed on a method/local variable.')
         self.performer.check_exceptional_conditions()
-    
+
     def get_changes(self):
         return self.performer.get_changes()
-    
+
     def _is_variable(self):
         return isinstance(self.pyname, rope.base.pynames.AssignedName)
 
     def _is_method(self):
         return isinstance(self.pyname.get_object(), rope.base.pyobjects.PyFunction)
-    
+
 
 class _Inliner(object):
-    
+
     def __init__(self, pycore, name, pyname):
         self.pycore = pycore
         self.name = name
@@ -53,7 +53,7 @@ class _Inliner(object):
         pass
 
 class _MethodInliner(_Inliner):
-    
+
     def __init__(self, *args, **kwds):
         super(_MethodInliner, self).__init__(*args, **kwds)
         self.pyfunction = self.pyname.get_object()
@@ -62,7 +62,7 @@ class _MethodInliner(_Inliner):
         self.occurrence_finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
             self.pycore, self.name, [self.pyname])
         self.definition_generator = _DefinitionGenerator(self.pycore, self.pyfunction)
-    
+
     def _get_scope_range(self):
         scope = self.pyfunction.get_scope()
         lines = self.pymodule.lines
@@ -70,7 +70,7 @@ class _MethodInliner(_Inliner):
         end_offset = min(lines.get_line_end(scope.get_end()) + 1,
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
-    
+
     def get_changes(self):
         changes = ChangeSet()
         self._change_defining_file(changes)
@@ -84,7 +84,7 @@ class _MethodInliner(_Inliner):
             self.definition_generator,
             start_offset, end_offset).get_changed_module()
         changes.add_change(ChangeContents(self.resource, result))
-    
+
     def _change_other_files(self, changes):
         for file in self.pycore.get_python_files():
             if file == self.resource:
@@ -95,15 +95,15 @@ class _MethodInliner(_Inliner):
                 self.definition_generator).get_changed_module()
             if result is not None:
                 changes.add_change(ChangeContents(file, result))
-    
+
 
 class _VariableInliner(_Inliner):
-    
+
     def __init__(self, *args, **kwds):
         super(_VariableInliner, self).__init__(*args, **kwds)
         self.pymodule = self.pyname.get_definition_location()[0]
         self.resource = self.pymodule.get_resource()
-    
+
     def check_exceptional_conditions(self):
         if len(self.pyname.assignments) != 1:
             raise rope.base.exceptions.RefactoringException(
@@ -144,10 +144,10 @@ class _VariableInliner(_Inliner):
         source = changed_source[:lines.get_line_start(start)] + \
                  changed_source[lines.get_line_end(end) + 1:]
         return source
-    
+
 
 class _InlineFunctionCallsForModule(object):
-    
+
     def __init__(self, occurrence_finder, resource, definition_generator,
                  skip_start=0, skip_end=0):
         self.pycore = occurrence_finder.pycore
@@ -197,12 +197,12 @@ class _InlineFunctionCallsForModule(object):
                     line_end, end,self.source[line_start:start] + name +
                     self.source[end_parens:end])
         return change_collector.get_changed()
-    
+
     def _get_pymodule(self):
         if self._pymodule is None:
             self._pymodule = self.pycore.resource_to_pyobject(self.resource)
         return self._pymodule
-    
+
     def _get_source(self):
         if self._source is None:
             if self.resource is not None:
@@ -215,7 +215,7 @@ class _InlineFunctionCallsForModule(object):
         if self._lines is None:
             self._lines = self.pymodule.lines
         return self._lines
-    
+
     def _find_end_parens(self, source, start):
         index = start
         open_count = 0
@@ -235,7 +235,7 @@ class _InlineFunctionCallsForModule(object):
 
 
 class _DefinitionGenerator(object):
-    
+
     def __init__(self, pycore, pyfunction):
         self.pycore = pycore
         self.pyfunction = pyfunction
@@ -244,7 +244,7 @@ class _DefinitionGenerator(object):
         self.definition_info = self._get_definition_info()
         self.definition_params = self._get_definition_params()
         self._calculated_definitions = {}
-    
+
     def _get_function_body(self):
         scope = self.pyfunction.get_scope()
         source = self.pymodule.source_code
@@ -257,10 +257,10 @@ class _DefinitionGenerator(object):
         end_offset = min(lines.get_line_end(scope.get_end()) + 1, len(source))
         body = source[start_offset:end_offset]
         return sourceutils.indent_lines(body, -sourceutils.find_minimum_indents(body))
-    
+
     def _get_definition_info(self):
         return rope.refactor.functionutils.DefinitionInfo.read(self.pyfunction)
-    
+
     def _get_definition_params(self):
         definition_info = self.definition_info
         paramdict = dict([pair for pair in definition_info.args_with_defaults])
@@ -269,17 +269,17 @@ class _DefinitionGenerator(object):
             raise rope.base.exceptions.RefactoringException(
                 'Cannot functions with list and keyword arguements.')
         return paramdict
-    
+
     def get_function_name(self):
         return self.pyfunction._get_ast().name
-    
+
     def get_definition(self, call, returns=False):
         # caching already calculated definitions
         key = (call, returns)
         if key not in self._calculated_definitions:
             self._calculated_definitions[key] = self._calculate_definition(call, returns)
         return self._calculated_definitions[key]
-    
+
     def _calculate_definition(self, call, returns):
         call_info = rope.refactor.functionutils.CallInfo.read(
             self.definition_info, call)
@@ -305,7 +305,7 @@ class _DefinitionGenerator(object):
         else:
             return_replacement = None
         return self._replace_returns_with(source, return_replacement)
-    
+
     def _replace_returns_with(self, source, replacement):
         result = []
         last_changed = 0
@@ -331,7 +331,7 @@ class _DefinitionGenerator(object):
                             result.append('pass')
         result.append(source[last_changed:])
         return ''.join(result)
-    
+
     @classmethod
     def _get_return_pattern(cls):
         if not hasattr(cls, '_return_pattern'):

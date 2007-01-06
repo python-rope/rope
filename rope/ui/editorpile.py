@@ -25,7 +25,7 @@ class EditorPile(object):
         if editor.get_editor().is_modified():
             new_title = '*' + new_title
         self.buttons[editor]['text'] = new_title
-    
+
     def _editor_was_changed(self, resource, offset):
         self.last_edited_location = (resource, offset)
 
@@ -85,7 +85,7 @@ class EditorPile(object):
             self.buttons[self.editors[0]].invoke()
         else:
             self.core._editor_changed()
-    
+
     def get_editor_list(self):
         if not self.editors:
             return []

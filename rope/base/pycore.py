@@ -29,13 +29,13 @@ class PyCore(object):
         if module is None:
             raise ModuleNotFoundException('Module %s not found' % name)
         return self.resource_to_pyobject(module)
-    
+
     def get_relative_module(self, name, current_folder, level):
         module = self.find_relative_module(name, current_folder, level)
         if module is None:
             raise ModuleNotFoundException('Module %s not found' % name)
         return self.resource_to_pyobject(module)
-    
+
     def get_string_module(self, module_content, resource=None):
         """Returns a `PyObject` object for the given module_content"""
         return PyModule(self, module_content, resource)
@@ -92,7 +92,7 @@ class PyCore(object):
             result.append(module.get_child(packages[-1] + '.py'))
             return result
         return None
-    
+
     def get_python_path_folders(self):
         result = []
         for src in sys.path:
@@ -102,17 +102,17 @@ class PyCore(object):
             except rope.base.exceptions.RopeException:
                 pass
         return result
-    
+
     def find_module(self, module_name, current_folder=None):
         """Returns a resource corresponding to the given module
-        
+
         returns None if it can not be found
         """
         module_resource_list = self._find_module_resource_list(module_name,
                                                                current_folder)
         if module_resource_list is not None:
             return module_resource_list[-1]
-    
+
     def find_relative_module(self, module_name, current_folder, level):
         for i in range(level - 1):
             current_folder = current_folder.get_parent()
@@ -122,7 +122,7 @@ class PyCore(object):
             module = self._find_module_in_source_folder(current_folder, module_name)
             if module is not None:
                 return module[-1]
-    
+
     def _find_module_resource_list(self, module_name, current_folder=None):
         """Returns a list of lists of `Folder`s and `File`s for the given module"""
         for src in self.get_source_folders():
@@ -142,7 +142,7 @@ class PyCore(object):
     def get_source_folders(self):
         """Returns project source folders"""
         return self._find_source_folders(self.project.get_root_folder())
-    
+
     def resource_to_pyobject(self, resource):
         if resource in self.module_map:
             return self.module_map[resource]
@@ -153,7 +153,7 @@ class PyCore(object):
         self.module_map[resource] = result
         self.observer.add_resource(resource)
         return result
-    
+
     def get_python_files(self):
         """Returns all python files available in the project"""
         return [resource for resource in self.project.get_files()
@@ -178,13 +178,13 @@ class PyCore(object):
         for resource in folder.get_folders():
             result.extend(self._find_source_folders(resource))
         return result
-    
+
     def _get_object_infer(self):
         return self.object_infer
-    
+
     def get_refactoring(self):
         return self.refactoring
-    
+
     def _invalidate_all_concluded_data(self):
         for module in self.module_map.values():
             module._invalidate_concluded_data()
@@ -194,7 +194,7 @@ class PyCore(object):
         runner.add_finishing_observer(self._invalidate_all_concluded_data)
         runner.run()
         return runner
-    
+
     def get_subclasses(self, pyclass):
         if self.classes is None:
             classes = []

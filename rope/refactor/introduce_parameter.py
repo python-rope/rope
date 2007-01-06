@@ -7,7 +7,7 @@ from rope.base import exceptions
 
 
 class IntroduceParameter(object):
-    
+
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
         self.resource = resource
@@ -18,15 +18,15 @@ class IntroduceParameter(object):
             raise exceptions.RefactoringException(
                 'Introduce parameter should be performed inside functions')
         self.pyfunction = scope.pyobject
-    
+
     def _get_primary(self):
         word_finder = codeanalyze.WordRangeFinder(self.resource.read())
         return word_finder.get_primary_at(self.offset)
-    
+
     def _get_name_and_pyname(self):
         return (codeanalyze.get_name_at(self.resource, self.offset),
                 codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset))
-    
+
     def get_changes(self, new_parameter):
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
         definition_info.args_with_defaults.append((new_parameter,

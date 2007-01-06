@@ -5,7 +5,7 @@ import rope.base.codeanalyze
 
 
 class Highlighting(object):
-    
+
     def __init__(self):
         self.pattern = None
 
@@ -41,7 +41,7 @@ class Highlighting(object):
                 return current + 1
             current -= 1
         return 0
-    
+
     def _get_line_end(self, text, index):
         current = index
         while current < len(text):
@@ -49,12 +49,12 @@ class Highlighting(object):
                 return current
             current += 1
         return len(text)
-    
+
     def _get_pattern(self):
         if not self.pattern:
             self.pattern = self._make_pattern()
         return self.pattern
-    
+
 
 class HighlightingStyle(object):
 
@@ -72,7 +72,7 @@ class PythonHighlighting(Highlighting):
     @staticmethod
     def any(name, list):
         return "(?P<%s>" % name + "|".join(list) + ")"
-    
+
     def _make_pattern(self):
         keyword_pattern = r"\b" + PythonHighlighting.any("keyword", keyword.kwlist) + r"\b"
         import __builtin__
@@ -99,7 +99,7 @@ class PythonHighlighting(Highlighting):
                 'comment': HighlightingStyle(color='#008000', italic=True),
                 'builtin': HighlightingStyle(color='#908080'),
                 'definition': HighlightingStyle(color='purple', bold=True)}
-    
+
     def get_suspected_region_after_change(self, text, change_start, change_end):
         start, end = super(PythonHighlighting, self).\
                      get_suspected_region_after_change(text, change_start, change_end)
@@ -109,7 +109,7 @@ class PythonHighlighting(Highlighting):
             block_end = self._find_block_end(text, change_end)
             return (block_start, block_end)
         return (start, end)
-    
+
     def _find_block_start(self, text, index):
         block_start_pattern = rope.base.codeanalyze.StatementRangeFinder.get_block_start_patterns()
         index = self._get_line_start(text, index)
@@ -144,7 +144,7 @@ class NoHighlighting(Highlighting):
 
 
 class ReSTHighlighting(Highlighting):
-    
+
     def _make_pattern(self):
         title_pattern = r'(?P<overline>^(([^\w\s\d]+)\n))?' + \
                         '(?P<title>.+)\n' + \
@@ -174,34 +174,34 @@ class ReSTHighlighting(Highlighting):
                         hyperlink_definition_pattern, footnote_pattern,
                         comment_pattern)
         return re.compile('|'.join(all_patterns), re.M)
-    
+
     def get_styles(self):
-        return {'title' : HighlightingStyle(color='purple', bold=True),
-                'underline' : HighlightingStyle(color='blue', bold=True),
-                'overline' : HighlightingStyle(color='blue', bold=True),
-                'listsign' : HighlightingStyle(color='blue', bold=True),
-                'directive' : HighlightingStyle(color='#00AAAA'),
-                'emphasis' : HighlightingStyle(color='#000033', italic=True),
-                'strongemphasis' : HighlightingStyle(color='#330022', bold=True),
-                'literal' : HighlightingStyle(color='#605050'),
-                'interpreted' : HighlightingStyle(color='#208820'),
-                'pre_role' : HighlightingStyle(color='#409000'),
-                'post_role' : HighlightingStyle(color='#409000'),
-                'hyperlink_target' : HighlightingStyle(color='#002299'),
-                'hyperlink' : HighlightingStyle(color='#2200FF'),
-                'hyperlink_definition' : HighlightingStyle(color='#2222FF'),
-                'field' : HighlightingStyle(color='#005555'),
-                'anonymous_hyperlink' : HighlightingStyle(color='#003355'),
-                'literal_block' : HighlightingStyle(color='#605050'),
-                'comment' : HighlightingStyle(color='#AA5050'),
-                'footnote' : HighlightingStyle(color='#2222FF'),
-                'escaped' : HighlightingStyle()}
+        return {'title': HighlightingStyle(color='purple', bold=True),
+                'underline': HighlightingStyle(color='blue', bold=True),
+                'overline': HighlightingStyle(color='blue', bold=True),
+                'listsign': HighlightingStyle(color='blue', bold=True),
+                'directive': HighlightingStyle(color='#00AAAA'),
+                'emphasis': HighlightingStyle(color='#000033', italic=True),
+                'strongemphasis': HighlightingStyle(color='#330022', bold=True),
+                'literal': HighlightingStyle(color='#605050'),
+                'interpreted': HighlightingStyle(color='#208820'),
+                'pre_role': HighlightingStyle(color='#409000'),
+                'post_role': HighlightingStyle(color='#409000'),
+                'hyperlink_target': HighlightingStyle(color='#002299'),
+                'hyperlink': HighlightingStyle(color='#2200FF'),
+                'hyperlink_definition': HighlightingStyle(color='#2222FF'),
+                'field': HighlightingStyle(color='#005555'),
+                'anonymous_hyperlink': HighlightingStyle(color='#003355'),
+                'literal_block': HighlightingStyle(color='#605050'),
+                'comment': HighlightingStyle(color='#AA5050'),
+                'footnote': HighlightingStyle(color='#2222FF'),
+                'escaped': HighlightingStyle()}
 
     def get_suspected_region_after_change(self, text, change_start, change_end):
         start = self._find_paragraph_start(text, change_start)
         end = self._find_paragraph_end(text, change_end)
         return (start, end)
-    
+
     def _find_paragraph_start(self, text, index):
         index = self._get_line_start(text, index)
         while index > 0:

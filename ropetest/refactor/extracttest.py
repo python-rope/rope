@@ -20,7 +20,7 @@ class ExtractMethodTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(ExtractMethodTest, self).tearDown()
-        
+
     def do_extract_method(self, source_code, start, end, extracted):
         testmod = self.pycore.create_module(self.project.get_root_folder(), 'testmod')
         testmod.write(source_code)
@@ -36,7 +36,7 @@ class ExtractMethodTest(unittest.TestCase):
     def _convert_line_range_to_offset(self, code, start, end):
         lines = rope.base.codeanalyze.SourceLinesAdapter(code)
         return lines.get_line_start(start), lines.get_line_end(end)
-    
+
     def test_simple_extract_function(self):
         code = "def a_func():\n    print 'one'\n    print 'two'\n"
         start, end = self._convert_line_range_to_offset(code, 2, 2)
@@ -259,7 +259,7 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'def a_func(arg):\n    if True:\n        new_func(arg)\n\n' \
                    'def new_func(arg):\n    if True:\n        print arg\n'
         self.assertEquals(expected, refactored)
-    
+
     def test_extract_method_and_multi_line_headers(self):
         code = 'def a_func(\n           arg):\n    print arg\n'
         start, end = self._convert_line_range_to_offset(code, 3, 3)
@@ -267,7 +267,7 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'def a_func(\n           arg):\n    new_func(arg)\n\n' \
                    'def new_func(arg):\n    print arg\n'
         self.assertEquals(expected, refactored)
-    
+
     def test_single_line_extract_function(self):
         code = 'a_var = 10 + 20\n'
         start = code.index('10')

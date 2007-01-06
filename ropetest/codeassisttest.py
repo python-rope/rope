@@ -15,7 +15,7 @@ class CodeAssistTest(unittest.TestCase):
         os.mkdir(self.project_root)
         self.project = Project(self.project_root)
         self.assist = PythonCodeAssist(self.project)
-        
+
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(CodeAssistTest, self).tearDown()
@@ -73,9 +73,9 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_throwing_exception_in_case_of_syntax_errors(self):
         code = 'sample (sdf+)\n'
-        self.assertRaises(RopeSyntaxError, 
+        self.assertRaises(RopeSyntaxError,
                           lambda: self.assist.assist(code, len(code)))
-    
+
     def test_ignoring_errors_in_current_line(self):
         code = 'def my_func():\n    return 2\nt = '
         result = self.assist.assist(code, len(code))
@@ -111,12 +111,12 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('Exception', 'builtin', result)
         self.assert_completion_not_in_result('zip', 'builtin', result)
-        
+
     def test_including_matching_builtins_functions(self):
         code = 'my_var = zi'
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('zip', 'builtin', result)
-        
+
     def test_including_keywords(self):
         code = 'fo'
         result = self.assist.assist(code, len(code))
@@ -364,7 +364,7 @@ class CodeAssistTest(unittest.TestCase):
         code = 'def f(a_var):\n    pass\na_var = 10\nif True:\n    print a_var\n'
         result = self.assist.get_definition_location(code, len(code) - 3)
         self.assertEquals((None, 3), result)
-        
+
     def test_code_assists_in_parens(self):
         code = 'def a_func(a_var):\n    pass\na_var = 10\na_func(a_'
         result = self.assist.assist(code, len(code))
@@ -449,7 +449,7 @@ class CodeAssistTest(unittest.TestCase):
         mod.write('"""a module"""\n')
         src = 'import mod\nmod'
         self.assertEquals('a module', self.assist.get_doc(src, len(src) - 1))
-    
+
     # TODO: should comment till the end of scope rather and not block
     def xxx_test_not_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'
@@ -521,7 +521,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         samplemod = self.pycore.create_module(self.project.get_root_folder(), 'samplemod')
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
                         "\n\ndef sample_func():\n    pass\nsample_var = 10\n" + \
-                        "\ndef _underlined_func():\n    pass\n\n" )
+                        "\ndef _underlined_func():\n    pass\n\n")
         package = self.pycore.create_package(self.project.get_root_folder(), 'package')
         nestedmod = self.pycore.create_module(package, 'nestedmod')
 
@@ -648,7 +648,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         code = 'import mod1\nmod1.a_func\n'
         result = self.assist.get_definition_location(code, len(code) - 2, mod2)
         self.assertEquals((mod1, 1), result)
-        
+
     def test_get_doc_on_relative_imports(self):
         pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
         mod1 = self.pycore.create_module(pkg, 'mod1')
@@ -657,7 +657,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         code = 'import mod1\nmod1.a_func\n'
         result = self.assist.get_doc(code, len(code) - 2, mod2)
         self.assertTrue(result.endswith('hey'))
-        
+
     def test_finding_occurrences(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         mod.write('a_var = 1\n')
@@ -686,7 +686,7 @@ class TemplateTest(unittest.TestCase):
 
     def test_substitution(self):
         template = Template('Name = ${name}\nAge = ${age}\n')
-        self.assertEquals('Name = Ali\nAge = 20\n', 
+        self.assertEquals('Name = Ali\nAge = 20\n',
                           template.substitute({'name': 'Ali', 'age': '20'}))
 
     def test_underlined_variables(self):

@@ -59,7 +59,7 @@ def goto_line(context):
 
 def goto_last_edit_location(context):
     context.get_core().get_editor_manager().goto_last_edit_location()
-    
+
 
 core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])

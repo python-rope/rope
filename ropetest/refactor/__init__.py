@@ -29,7 +29,7 @@ class IntroduceFactoryTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(IntroduceFactoryTest, self).tearDown()
-    
+
     def test_adding_the_method(self):
         code = 'class AClass(object):\n    an_attr = 10\n'
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
@@ -93,7 +93,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.refactoring.undo()
         self.assertEquals(code1, mod1.read())
         self.assertEquals(code2, mod2.read())
-    
+
     def test_using_on_an_occurance_outside_the_main_module(self):
         mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
         mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
@@ -337,7 +337,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(1 + a_var.get_attr())\n',
             self.mod1.read())
-    
+
     def test_appending_to_class_end(self):
         self.mod1.write(self.a_class + 'a_var = A()\n')
         self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
@@ -356,7 +356,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.mod1.write(self.a_class + 'a_var = A()\na_var.attr = a_var.attr * 2\n')
         self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(
-            self.encapsulated + 
+            self.encapsulated +
             'a_var = A()\na_var.set_attr(a_var.get_attr() * 2)\n',
             self.mod1.read())
 
@@ -393,7 +393,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals(
             'import mod\na_var = mod.A()\na, b = a_var.get_attr(), 1\n',
             self.mod1.read())
-    
+
     def test_changing_augmented_assignments(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr += 1\n')
         self.mod.write(self.a_class)
@@ -401,7 +401,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() + 1)\n',
             self.mod1.read())
-    
+
     def test_changing_augmented_assignments2(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr <<= 1\n')
         self.mod.write(self.a_class)
@@ -409,7 +409,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() << 1)\n',
             self.mod1.read())
-    
+
 
 class LocalToFieldTest(unittest.TestCase):
 
@@ -425,7 +425,7 @@ class LocalToFieldTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(LocalToFieldTest, self).tearDown()
-    
+
     def test_simple_local_to_field(self):
         code = 'class A(object):\n    def a_func(self):\n' \
                '        var = 10\n'
@@ -435,7 +435,7 @@ class LocalToFieldTest(unittest.TestCase):
         expected = 'class A(object):\n    def a_func(self):\n' \
                    '        self.var = 10\n'
         self.assertEquals(expected, self.mod.read())
-    
+
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_when_performed_on_a_global_var(self):
         self.mod.write('var = 10\n')
@@ -475,7 +475,7 @@ class LocalToFieldTest(unittest.TestCase):
         expected = 'class A(object):\n    def a_func(myself):\n' \
                    '        myself.var = 10\n'
         self.assertEquals(expected, self.mod.read())
-    
+
 class IntroduceParameterTest(unittest.TestCase):
 
     def setUp(self):
@@ -489,11 +489,11 @@ class IntroduceParameterTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(IntroduceParameterTest, self).tearDown()
-    
+
     def _introduce_parameter(self, offset, name):
         rope.refactor.introduce_parameter.IntroduceParameter(
             self.pycore, self.mod, offset).get_changes(name).do()
-    
+
     def test_simple_case(self):
         self.mod.write('var = 1\ndef f():\n    b = var\n')
         offset = self.mod.read().rindex('var')

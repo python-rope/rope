@@ -8,7 +8,7 @@ class HighlightTest(unittest.TestCase):
     def setUp(self):
         self.highlighting = PythonHighlighting()
         unittest.TestCase.setUp(self)
-    
+
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
@@ -63,7 +63,7 @@ class HighlightTest(unittest.TestCase):
         self.assertFalse(expected)
 
     def test_get_styles(self):
-        self.assertEquals(True, self.highlighting.get_styles().has_key('keyword'))
+        self.assertEquals(True, 'keyword' in self.highlighting.get_styles())
         self.assertTrue(isinstance(self.highlighting.get_styles()['keyword'], HighlightingStyle))
 
     def test_following_keywords(self):
@@ -80,7 +80,7 @@ class HighlightTest(unittest.TestCase):
         text = 'def func(args):'
         highs = [(0, 3, 'defkeyword'), (4, 8, 'definition')]
         self._assertOutcomesEquals(text, highs)
-        
+
     def test_class_definition(self):
         self.assertTrue('definition' in self.highlighting.get_styles())
         text = 'class Sample(object):'
@@ -104,13 +104,13 @@ class HighlightTest(unittest.TestCase):
         highs = [(8, 13, 'keyword')]
         not_highs = [(0, 5, 'keyword'), (16, 21, 'keyword')]
         self._assertOutcomesEquals(text, highs, not_highs, start=8, end=15)
-        
+
     def test_highlighting_builtins(self):
         self.assertTrue('builtin' in self.highlighting.get_styles())
         text = 'a = None'
         highs = [(4, 8, 'builtin')]
         self._assertOutcomesEquals(text, highs)
-    
+
     def test_suspected_region_for_triples(self):
         text = '"""\nhello\n"""'
         suspected = self.highlighting.get_suspected_region_after_change(text, 11, 12)
@@ -127,16 +127,16 @@ class ReSTHighlightTest(unittest.TestCase):
     def setUp(self):
         self.highlighting = ReSTHighlighting()
         unittest.TestCase.setUp(self)
-    
+
     def tearDown(self):
         unittest.TestCase.tearDown(self)
-    
+
     def in_highlights(self, text, expected):
         highlights = []
         for result in self.highlighting.highlights(text, 0, len(text)):
             highlights.append(result)
         return expected in highlights
-    
+
     def test_highlighting_section_titles(self):
         self.assertTrue('title' in self.highlighting.get_styles())
         self.assertTrue(self.in_highlights('My Title\n========\n', (0, 8, 'title')))
@@ -212,7 +212,7 @@ class ReSTHighlightTest(unittest.TestCase):
                                            (0, 9, 'hyperlink_definition')))
 
     def test_hyperlink_definition2(self):
-        self.assertTrue(self.in_highlights('.. _rope homepage: http://rope.sf.net\n', 
+        self.assertTrue(self.in_highlights('.. _rope homepage: http://rope.sf.net\n',
                                            (0, 18, 'hyperlink_definition')))
 
     def test_highlights_in_lists(self):
@@ -259,12 +259,12 @@ class ReSTHighlightTest(unittest.TestCase):
         code = 'here ::\n  line1\n    line2\nnormal\n'
         self.assertTrue(self.in_highlights(code, (code.index('::'), code.index('normal'),
                                                   'literal_block')))
-    
+
     def test_comments(self):
         self.assertTrue('comment' in self.highlighting.get_styles())
         code = '.. this is a comment\nnormal\n'
         self.assertTrue(self.in_highlights(code, (0, code.index('normal'), 'comment')))
-        
+
     def test_comments2(self):
         code = 'normal\n\n.. this is a comment\n indented\n  comments\nnormal\n'
         self.assertTrue(self.in_highlights(code, (code.index('..'),
@@ -288,7 +288,7 @@ class ReSTHighlightTest(unittest.TestCase):
         code = '.. [2] this is a footnote\nnormal\n'
         self.assertTrue(self.in_highlights(code, (0, code.index(']') + 2,
                                                   'footnote')))
-        
+
     def test_footnote2(self):
         code = 'normal\n\n.. [hey] this is a footnote\n indented\n  footnote\nnormal\n'
         self.assertTrue(self.in_highlights(code, (code.index('..'),

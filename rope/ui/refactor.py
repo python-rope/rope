@@ -11,10 +11,10 @@ from rope.ui.uihelpers import EnhancedListHandle, VolatileList
 
 
 class ConfirmAllEditorsAreSaved(object):
-    
+
     def __init__(self, callback):
         self.callback = callback
-    
+
     def __call__(self, context):
         fileeditor = context.get_active_editor()
         editors = context.get_core().get_editor_manager().editors
@@ -48,21 +48,21 @@ class ConfirmAllEditorsAreSaved(object):
 
 
 class PreviewAndCommitChanges(object):
-    
+
     def __init__(self, refactoring, changes):
         self.refactoring = refactoring
         self.changes = changes
-    
+
     def preview(self):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Preview Changes')
-        
+
         def description(change):
             return change.get_description()
         description_list = DescriptionList(toplevel, 'Changes', description)
         for change in self.changes.changes:
             description_list.add_entry(change)
-        
+
         frame = Tkinter.Frame(toplevel)
         def ok(event=None):
             toplevel.destroy()
@@ -77,24 +77,24 @@ class PreviewAndCommitChanges(object):
         toplevel.bind('<Control-g>', lambda event: cancel())
         cancel_button.grid(row=1, column=1)
         frame.grid()
-    
+
     def commit(self):
         self.refactoring.add_and_commit_changes(self.changes)
 
 
 class RefactoringDialog(object):
-    
+
     def __init__(self, refactoring, title):
         self.refactoring = refactoring
         self.title = title
-    
+
     def show(self):
         self.toplevel = Tkinter.Toplevel()
         self.toplevel.title(self.title)
         self.toplevel.bind('<Escape>', lambda event: self._cancel())
         self.toplevel.bind('<Control-g>', lambda event: self._cancel())
         frame = self._get_dialog_frame()
-    
+
         ok_button = Tkinter.Button(self.toplevel, text='Done', command=self._ok)
         preview_button = Tkinter.Button(self.toplevel, text='Preview', command=self._preview)
         cancel_button = Tkinter.Button(self.toplevel, text='Cancel', command=self._cancel)
@@ -102,21 +102,21 @@ class RefactoringDialog(object):
         preview_button.grid(row=1, column=1)
         cancel_button.grid(row=1, column=2)
         frame.grid(row=0, columnspan=3)
-    
+
     def _ok(self, event=None):
         PreviewAndCommitChanges(self.refactoring, self._get_changes()).commit()
         self.toplevel.destroy()
-        
+
     def _preview(self, event=None):
         PreviewAndCommitChanges(self.refactoring, self._get_changes()).preview()
         self.toplevel.destroy()
-    
+
     def _cancel(self, event=None):
         self.toplevel.destroy()
-    
+
 
 class RenameDialog(RefactoringDialog):
-    
+
     def __init__(self, context, title, is_local=False, current_module=False):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
@@ -126,9 +126,9 @@ class RenameDialog(RefactoringDialog):
         if current_module:
             offset = None
         self.renamer = rope.refactor.rename.RenameRefactoring(
-            context.get_core().get_open_project().get_pycore(), 
+            context.get_core().get_open_project().get_pycore(),
             resource, offset)
-    
+
     def _get_changes(self):
         new_name = self.new_name_entry.get()
         return self.renamer.get_changes(new_name, in_file=self.is_local)
@@ -163,17 +163,17 @@ def transform_module_to_package(context):
         _get_refactoring(context).transform_module_to_package(resource)
 
 class ExtractDialog(RefactoringDialog):
-    
+
     def __init__(self, context, do_extract, kind):
         editor = context.get_active_editor().get_editor()
         super(ExtractDialog, self).__init__(_get_refactoring(context),
                                             'Extract ' + kind)
         self.do_extract = do_extract
         self.kind = kind
-    
+
     def _get_changes(self):
         return self.do_extract(self.new_name_entry.get())
-    
+
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='New %s Name :' % self.kind)
@@ -208,32 +208,32 @@ def extract_variable(context):
 
 
 class IntroduceFactoryDialog(RefactoringDialog):
-    
+
     def __init__(self, context):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         super(IntroduceFactoryDialog, self).__init__(
             _get_refactoring(context), 'Introduce Factory Method Refactoring')
         self.introducer = rope.refactor.introduce_factory.IntroduceFactoryRefactoring(
-            context.get_core().get_open_project().get_pycore(), 
+            context.get_core().get_open_project().get_pycore(),
             resource, editor.get_current_offset())
-    
+
     def _get_changes(self):
         return self.introducer.get_changes(
             self.new_name_entry.get(), global_factory=self.global_factory_val.get())
-    
+
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='Factory Method Name :')
         self.new_name_entry = Tkinter.Entry(frame)
-        
+
         self.global_factory_val = Tkinter.BooleanVar(False)
         static_factory_button = Tkinter.Radiobutton(frame, variable=self.global_factory_val,
                                                     value=False, text='Use static method')
         global_factory_button = Tkinter.Radiobutton(frame, variable=self.global_factory_val,
                                                     value=True, text='Use global function')
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
-        
+
         label.grid(row=0, column=0)
         self.new_name_entry.grid(row=0, column=1)
         static_factory_button.grid(row=1, column=0)
@@ -280,10 +280,10 @@ def redo_refactoring(context):
         _confirm_action('Redoing Refactoring',
                         'Redo refactoring might change many files. Proceed?',
                         redo)
-    
+
 
 class _ModuleViewHandle(TreeViewHandle):
-    
+
     def __init__(self, project, toplevel, do_select):
         self.project = project
         self.toplevel = toplevel
@@ -297,11 +297,11 @@ class _ModuleViewHandle(TreeViewHandle):
             return result
         else:
             return resource.get_name()[:-3]
-    
+
     def get_children(self, resource):
         if resource.is_folder():
             return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and 
+                    if not child.get_name().startswith('.') and
                     (child.is_folder() or child.get_name().endswith('.py'))]
         else:
             return []
@@ -309,7 +309,7 @@ class _ModuleViewHandle(TreeViewHandle):
     def selected(self, resource):
         self.toplevel.destroy()
         self.do_select(resource)
-    
+
     def canceled(self):
         self.toplevel.destroy()
 
@@ -318,7 +318,7 @@ class _ModuleViewHandle(TreeViewHandle):
 
 
 class MoveDialog(RefactoringDialog):
-    
+
     def __init__(self, context, current_module=False):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
@@ -329,13 +329,13 @@ class MoveDialog(RefactoringDialog):
         if current_module:
             offset = None
         self.mover = rope.refactor.move.MoveRefactoring(
-            context.get_core().get_open_project().get_pycore(), 
+            context.get_core().get_open_project().get_pycore(),
             resource, offset)
-    
+
     def _get_changes(self):
         destination = self.project.get_pycore().find_module(self.new_name_entry.get())
         return self.mover.get_changes(destination)
-    
+
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='Destination Module :')
@@ -373,7 +373,7 @@ def move_module(context):
     MoveDialog(context, current_module=True).show()
 
 class _Parameter(object):
-    
+
     def __init__(self, name):
         self.name = name
         self.is_added = False
@@ -392,22 +392,22 @@ def _get_parameter_index(definition_info, name):
         index += 1
     if definition_info.keywords_arg is not None and \
        definition_info.keywords_arg == name:
-        return index            
+        return index
 
 class _ParameterListHandle(EnhancedListHandle):
-    
+
     def __init__(self, definition_info):
         self.definition_info = definition_info
-    
+
     def entry_to_string(self, parameter):
         return parameter.name
-    
+
     def selected(self, parameter):
         pass
 
 
 class ChangeMethodSignatureDialog(RefactoringDialog):
-    
+
     def __init__(self, context):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
@@ -415,11 +415,11 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         super(ChangeMethodSignatureDialog, self).__init__(
             _get_refactoring(context), 'Change Method Signature Refactoring')
         self.signature = rope.refactor.change_signature.ChangeSignature(
-            context.get_core().get_open_project().get_pycore(), 
+            context.get_core().get_open_project().get_pycore(),
             resource, editor.get_current_offset())
         self.definition_info = self.signature.get_definition_info()
         self.to_be_removed = []
-    
+
     def _get_changes(self):
         changers = []
         parameters = self.param_list.get_entries()
@@ -441,7 +441,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
                         for param in parameters if not param.name.startswith('*')]
         changers.append(rope.refactor.change_signature.ArgumentReorderer(new_ordering))
         return self.signature.apply_changers(changers)
-    
+
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='Change Method Signature :')
@@ -458,7 +458,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         if self.definition_info.keywords_arg is not None:
             self.param_list.add_entry(
                 _Parameter('**' + self.definition_info.keywords_arg))
-        
+
         move_up = Tkinter.Button(frame, text='Move Up', width=20,
                                  command=lambda: self.param_list.move_up())
         move_down = Tkinter.Button(frame, text='Move Down', width=20,
@@ -477,10 +477,10 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         frame.grid()
         frame.focus_set()
         return frame
-    
+
     def _remove(self):
         self.to_be_removed.append(self.param_list.remove_entry())
-    
+
     def _add(self):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Add New Parameter')
@@ -523,7 +523,7 @@ def change_signature(context):
     ChangeMethodSignatureDialog(context).show()
 
 class InlineArgumentDefaultDialog(RefactoringDialog):
-    
+
     def __init__(self, context):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
@@ -531,15 +531,15 @@ class InlineArgumentDefaultDialog(RefactoringDialog):
         super(InlineArgumentDefaultDialog, self).__init__(
             _get_refactoring(context), 'Inline Argument Default')
         self.signature = rope.refactor.change_signature.ChangeSignature(
-            context.get_core().get_open_project().get_pycore(), 
+            context.get_core().get_open_project().get_pycore(),
             resource, editor.get_current_offset())
         self.definition_info = self.signature.get_definition_info()
-    
+
     def _get_changes(self):
         selected = self.param_list.get_active_entry()
         index = _get_parameter_index(self.definition_info, selected.name)
         return self.signature.inline_default(index)
-    
+
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='Change Method Signature :')
@@ -558,13 +558,13 @@ def inline_argument_default(context):
     InlineArgumentDefaultDialog(context).show()
 
 class IntroduceParameterDialog(RefactoringDialog):
-    
+
     def __init__(self, context, title):
         editor = context.get_active_editor().get_editor()
         super(IntroduceParameterDialog, self).__init__(_get_refactoring(context), title)
         self.renamer = rope.refactor.introduce_parameter.IntroduceParameter(
             context.project.get_pycore(), context.resource, editor.get_current_offset())
-    
+
     def _get_changes(self):
         new_name = self.new_name_entry.get()
         return self.renamer.get_changes(new_name)
@@ -623,7 +623,7 @@ def inline(context):
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
         _get_refactoring(context).inline(resource, editor.get_current_offset())
-    
+
 def encapsulate_field(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
@@ -631,7 +631,7 @@ def encapsulate_field(context):
         editor = fileeditor.get_editor()
         _get_refactoring(context).encapsulate_field(
             resource, editor.get_current_offset())
-    
+
 def convert_local_to_field(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
@@ -657,61 +657,61 @@ actions.append(SimpleAction('Extract Local Variable', ConfirmAllEditorsAreSaved(
                             MenuAddress(['Refactor', 'Extract Local Variable'], 'l'), ['python']))
 actions.append(SimpleAction('Rename in File', ConfirmAllEditorsAreSaved(local_rename), None,
                             MenuAddress(['Refactor', 'Rename in File'], 'e'), ['python']))
-actions.append(SimpleAction('Change Method Signature', 
+actions.append(SimpleAction('Change Method Signature',
                             ConfirmAllEditorsAreSaved(change_signature), 'M-C',
                             MenuAddress(['Refactor', 'Change Method Signature'], 'c'),
                             ['python']))
-actions.append(SimpleAction('Introduce Factory Method', 
+actions.append(SimpleAction('Introduce Factory Method',
                             ConfirmAllEditorsAreSaved(introduce_factory), None,
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'f', 1),
                             ['python']))
-actions.append(SimpleAction('Encapsulate Field', 
+actions.append(SimpleAction('Encapsulate Field',
                             ConfirmAllEditorsAreSaved(encapsulate_field), None,
                             MenuAddress(['Refactor', 'Encapsulate Field'], 's', 1),
                             ['python']))
-actions.append(SimpleAction('Introduce Parameter', 
+actions.append(SimpleAction('Introduce Parameter',
                             ConfirmAllEditorsAreSaved(introduce_parameter), None,
                             MenuAddress(['Refactor', 'Introduce Parameter'], None, 1),
                             ['python']))
-actions.append(SimpleAction('Convert Local Variable to Field', 
+actions.append(SimpleAction('Convert Local Variable to Field',
                             ConfirmAllEditorsAreSaved(convert_local_to_field), None,
                             MenuAddress(['Refactor', 'Convert Local Variable to Field'], 'b', 1),
                             ['python']))
-actions.append(SimpleAction('Inline Argument Default', 
+actions.append(SimpleAction('Inline Argument Default',
                             ConfirmAllEditorsAreSaved(inline_argument_default), None,
                             MenuAddress(['Refactor', 'Inline Argument Default'], 'g', 1),
                             ['python']))
-actions.append(SimpleAction('Transform Module to Package', 
+actions.append(SimpleAction('Transform Module to Package',
                             ConfirmAllEditorsAreSaved(transform_module_to_package), None,
-                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1), 
+                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1),
                             ['python']))
-actions.append(SimpleAction('Rename Current Module', 
+actions.append(SimpleAction('Rename Current Module',
                             ConfirmAllEditorsAreSaved(rename_module), None,
-                            MenuAddress(['Refactor', 'Rename Current Module'], None, 1), 
+                            MenuAddress(['Refactor', 'Rename Current Module'], None, 1),
                             ['python']))
-actions.append(SimpleAction('Move Current Module', 
+actions.append(SimpleAction('Move Current Module',
                             ConfirmAllEditorsAreSaved(move_module), None,
-                            MenuAddress(['Refactor', 'Move Current Module'], None, 1), 
+                            MenuAddress(['Refactor', 'Move Current Module'], None, 1),
                             ['python']))
-actions.append(SimpleAction('Organize Imports', 
+actions.append(SimpleAction('Organize Imports',
                             ConfirmAllEditorsAreSaved(organize_imports), 'C-O',
                             MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
-actions.append(SimpleAction('Expand Star Imports', 
+actions.append(SimpleAction('Expand Star Imports',
                             ConfirmAllEditorsAreSaved(expand_star_imports), None,
                             MenuAddress(['Refactor', 'Expand Star Imports'], 'p', 2),
                             ['python']))
-actions.append(SimpleAction('Transform Relatives to Absolute', 
+actions.append(SimpleAction('Transform Relatives to Absolute',
                             ConfirmAllEditorsAreSaved(transform_relatives_to_absolute), None,
                             MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2),
                             ['python']))
-actions.append(SimpleAction('Transform Froms to Imports', 
+actions.append(SimpleAction('Transform Froms to Imports',
                             ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
                             MenuAddress(['Refactor', 'Transform Froms to Imports'], 'r', 2),
                             ['python']))
-actions.append(SimpleAction('Undo Refactoring', 
+actions.append(SimpleAction('Undo Refactoring',
                             ConfirmAllEditorsAreSaved(undo_refactoring), None,
                             MenuAddress(['Refactor', 'Undo Refactoring'], 'u', 3), ['python']))
-actions.append(SimpleAction('Undo Last Refactoring', 
+actions.append(SimpleAction('Undo Last Refactoring',
                             ConfirmAllEditorsAreSaved(redo_refactoring), None,
                             MenuAddress(['Refactor', 'Redo Refactoring'], 'd', 3), ['python']))
 

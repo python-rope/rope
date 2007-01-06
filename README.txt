@@ -18,7 +18,7 @@ New Features
 
 Features added in this release:
 
-* 
+*
 
 
 Getting Started

@@ -24,16 +24,16 @@ def create_fscommands(root):
 
 
 class FileSystemCommands(object):
-    
+
     def create_file(self, path):
         open(path, 'w').close()
-    
+
     def create_folder(self, path):
         os.mkdir(path)
-    
+
     def move(self, path, new_location):
         shutil.move(path, new_location)
-    
+
     def remove(self, path):
         if os.path.isfile(path):
             os.remove(path)
@@ -42,36 +42,36 @@ class FileSystemCommands(object):
 
 
 class SubversionCommands(object):
-    
+
     def __init__(self):
         self.normal_actions = FileSystemCommands()
         self.client = pysvn.Client()
-    
+
     def create_file(self, path):
         self.normal_actions.create_file(path)
         self.client.add(path, force=True)
-    
+
     def create_folder(self, path):
         self.normal_actions.create_folder(path)
         self.client.add(path, force=True)
-    
+
     def move(self, path, new_location):
         self.client.move(path, new_location, force=True)
-    
+
     def remove(self, path):
         self.client.remove(path, force=True)
 
 
 class FileAccess(object):
-    
+
     def read(self, path):
         """Read the content of the file at `path`.
-        
+
         Returns a `Unicode` object
         """
         source_bytes = open(path).read()
         return self._file_data_to_unicode(source_bytes)
-    
+
     def _file_data_to_unicode(self, data):
         encoding = self._conclude_file_encoding(data)
         if encoding is not None:
@@ -81,22 +81,22 @@ class FileAccess(object):
         except UnicodeDecodeError:
             # Using ``utf-8`` if guessed encoding fails
             return unicode(data, 'utf-8')
-    
+
     def _find_line_end(self, source_bytes, start):
         try:
             return source_bytes.index('\n', start)
         except ValueError:
             return len(source_bytes)
-    
+
     def _get_second_line_end(self, source_bytes):
         line1_end = self._find_line_end(source_bytes, 0)
         if line1_end != len(source_bytes):
             return self._find_line_end(source_bytes, line1_end)
         else:
             return line1_end
-    
+
     encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
-    
+
     def _conclude_file_encoding(self, source_bytes):
         first_two_lines = source_bytes[:self._get_second_line_end(source_bytes)]
         match = FileAccess.encoding_pattern.search(first_two_lines)
@@ -105,7 +105,7 @@ class FileAccess(object):
 
     def write(self, path, contents):
         """Write the `contents` to the file at `path`.
-        
+
         contents should be a `Unicode` object.
         """
         file_ = open(path, 'w')

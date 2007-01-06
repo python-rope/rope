@@ -4,28 +4,28 @@ from rope.refactor.importutils import importinfo
 
 
 class ImportInfoVisitor(object):
-    
+
     def dispatch(self, import_):
         method = getattr(self, 'visit' + import_.import_info.__class__.__name__)
         return method(import_, import_.import_info)
 
     def visitEmptyImport(self, import_stmt, import_info):
         pass
-    
+
     def visitNormalImport(self, import_stmt, import_info):
         pass
-    
+
     def visitFromImport(self, import_stmt, import_info):
         pass
-    
+
 
 class RelativeToAbsoluteVisitor(ImportInfoVisitor):
-    
+
     def __init__(self, pycore, current_folder):
         self.to_be_absolute = []
         self.pycore = pycore
         self.current_folder = current_folder
-    
+
     def visitNormalImport(self, import_stmt, import_info):
         self.to_be_absolute.extend(self._get_relative_to_absolute_list(import_info))
         new_pairs = []
@@ -39,7 +39,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         if not import_info._are_name_and_alias_lists_equal(
             new_pairs, import_info.names_and_aliases):
             import_stmt.import_info = importinfo.NormalImport(new_pairs)
-    
+
     def _get_relative_to_absolute_list(self, import_info):
         result = []
         for name, alias in import_info.names_and_aliases:
@@ -52,7 +52,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
             if absolute_name != name:
                 result.append((name, absolute_name))
         return result
-    
+
     def visitFromImport(self, import_stmt, import_info):
         if import_info.level == 0:
             resource = self.pycore.find_module(import_info.module_name,
@@ -67,15 +67,15 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
             import_stmt.import_info = importinfo.FromImport(
                 absolute_name, 0, import_info.names_and_aliases,
                 self.current_folder, self.pycore)
-    
+
 
 class FilteringVisitor(ImportInfoVisitor):
-    
+
     def __init__(self, pycore, can_select):
         self.to_be_absolute = []
         self.pycore = pycore
         self.can_select = self._transform_can_select(can_select)
-    
+
     def _transform_can_select(self, can_select):
         def can_select_name_and_alias(name, alias):
             imported = name
@@ -83,7 +83,7 @@ class FilteringVisitor(ImportInfoVisitor):
                 imported = alias
             return can_select(imported)
         return can_select_name_and_alias
-    
+
     def visitNormalImport(self, import_stmt, import_info):
         new_pairs = []
         for name, alias in import_info.names_and_aliases:
@@ -108,12 +108,12 @@ class FilteringVisitor(ImportInfoVisitor):
 
 
 class RemovingVisitor(ImportInfoVisitor):
-    
+
     def __init__(self, pycore, can_select):
         self.to_be_absolute = []
         self.pycore = pycore
         self.filtering = FilteringVisitor(pycore, can_select)
-    
+
     def dispatch(self, import_):
         result = self.filtering.dispatch(import_)
         if result is not None:
@@ -121,11 +121,11 @@ class RemovingVisitor(ImportInfoVisitor):
 
 
 class AddingVisitor(ImportInfoVisitor):
-    
+
     def __init__(self, pycore, import_info):
         self.pycore = pycore
         self.import_info = import_info
-    
+
     def visitNormalImport(self, import_stmt, import_info):
         if not isinstance(self.import_info, import_info.__class__):
             return False
@@ -144,7 +144,7 @@ class AddingVisitor(ImportInfoVisitor):
         if self.import_info._are_name_and_alias_lists_equal(
             import_info.names_and_aliases, self.import_info.names_and_aliases):
             return True
-    
+
     def visitFromImport(self, import_stmt, import_info):
         if isinstance(self.import_info, import_info.__class__) and \
            import_info.module_name == self.import_info.module_name and \
@@ -165,7 +165,7 @@ class AddingVisitor(ImportInfoVisitor):
 
 
 class ExpandStarsVisitor(ImportInfoVisitor):
-    
+
     def __init__(self, pycore, can_select):
         self.pycore = pycore
         self.filtering = FilteringVisitor(pycore, can_select)
@@ -187,14 +187,14 @@ class ExpandStarsVisitor(ImportInfoVisitor):
 
 
 class SelfImportVisitor(ImportInfoVisitor):
-    
+
     def __init__(self, pycore, current_folder, resource):
         self.pycore = pycore
         self.current_folder = current_folder
         self.resource = resource
         self.to_be_fixed = set()
         self.to_be_renamed = set()
-    
+
     def visitNormalImport(self, import_stmt, import_info):
         new_pairs = []
         for name, alias in import_info.names_and_aliases:
@@ -209,7 +209,7 @@ class SelfImportVisitor(ImportInfoVisitor):
         if not import_info._are_name_and_alias_lists_equal(
             new_pairs, import_info.names_and_aliases):
             import_stmt.import_info = importinfo.NormalImport(new_pairs)
-    
+
     def visitFromImport(self, import_stmt, import_info):
         if import_info.level == 0:
             resource = self.pycore.find_module(import_info.module_name,

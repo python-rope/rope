@@ -96,7 +96,7 @@ class ChangeSignatureTest(unittest.TestCase):
                                     self.mod.read().index('a_func') + 1)
         signature.normalize().do()
         self.assertEquals('def a_func(p1, **kwds):\n    pass\na_func(1, p2=2)\n', self.mod.read())
-    
+
     def test_removing_arguments(self):
         self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.pycore, self.mod,
@@ -162,7 +162,7 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.remove(1).do()
         self.assertEquals('def a_func(p1):\n    pass\na_func(*[1, 2, 3])\n',
                           self.mod.read())
-    
+
     def test_adding_arguments_for_normal_args_changing_definition(self):
         self.mod.write('def a_func():\n    pass\n')
         signature = ChangeSignature(self.pycore, self.mod,
@@ -231,7 +231,7 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.normalize().do()
         self.assertEquals('def a_func(*args, **kwds):\n    pass\na_func(3, 1, 2, a=1, c=3, b=2)\n',
                           self.mod.read())
-    
+
     def test_change_order_for_only_one_parameter(self):
         self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.pycore, self.mod,
@@ -263,7 +263,7 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.reorder([0, 2, 1]).do()
         self.assertEquals('def a_func(p1, p3=0, p2=0):\n    pass\na_func(1, p2=2)\n',
                           self.mod.read())
-    
+
     def test_doing_multiple_changes(self):
         changers = []
         self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')

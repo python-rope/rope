@@ -38,7 +38,7 @@ Useful Classes
 
 The `rope.base.fscommands` module implements the basic file system
 operations that rope needs to perform.  The main reason for the
-existence this module is supporting version control systems.  Have a 
+existence this module is supporting version control systems.  Have a
 look at `FileSystemCommands` and `SubversionCommands` in the same module.
 If you need other version control systems you can write a new class
 providing this interface.  `rope.base.project.Project` accepts a
@@ -54,7 +54,7 @@ project in parallel (for example in IDEs).  To force rope to
 invalidate cached information about resources that have been
 removed or changed outside rope you should call `Project.validate`.
 You should pass a resource to this method.  For example::
-  
+
   project.validate(project.get_root_folder())
 
 validates all files and directories in the project.
@@ -93,7 +93,7 @@ Here is a sample session.::
   u'new_var = 10\n'
   >>> mod2.read()
   u'import mod1\nprint mod1.new_var\n'
-  
+
   # Undoing rename refactoring
   >>> refactoring.undo()
   >>> mod1.read()

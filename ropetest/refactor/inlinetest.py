@@ -18,36 +18,36 @@ class InlineTest(unittest.TestCase):
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(InlineTest, self).tearDown()
-    
+
     def _inline(self, code, offset):
         self.mod.write(code)
         self.refactoring.inline(self.mod, offset)
         return self.mod.read()
-    
+
     def test_simple_case(self):
         code = 'a_var = 10\nanother_var = a_var\n'
         refactored = self._inline(code, code.index('a_var') + 1)
-        self.assertEquals('another_var = 10\n', refactored)        
+        self.assertEquals('another_var = 10\n', refactored)
 
     def test_empty_case(self):
         code = 'a_var = 10\n'
         refactored = self._inline(code, code.index('a_var') + 1)
-        self.assertEquals('', refactored)        
+        self.assertEquals('', refactored)
 
     def test_long_definition(self):
         code = 'a_var = 10 + (10 + 10)\nanother_var = a_var\n'
         refactored = self._inline(code, code.index('a_var') + 1)
-        self.assertEquals('another_var = 10 + (10 + 10)\n', refactored)        
+        self.assertEquals('another_var = 10 + (10 + 10)\n', refactored)
 
     def test_explicit_continuation(self):
         code = 'a_var = (10 +\n 10)\nanother_var = a_var\n'
         refactored = self._inline(code, code.index('a_var') + 1)
-        self.assertEquals('another_var = (10 + 10)\n', refactored)        
+        self.assertEquals('another_var = (10 + 10)\n', refactored)
 
     def test_implicit_continuation(self):
         code = 'a_var = 10 +\\\n       10\nanother_var = a_var\n'
         refactored = self._inline(code, code.index('a_var') + 1)
-        self.assertEquals('another_var = 10 + 10\n', refactored)        
+        self.assertEquals('another_var = 10 + 10\n', refactored)
 
     def test_inlining_at_the_end_of_input(self):
         code = 'a = 1\nb = a'
@@ -124,7 +124,7 @@ class InlineTest(unittest.TestCase):
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('import mod\nprint 1\n', mod1.read())
         self.assertEquals('class A(object):\n    var = 10\n', self.mod.read())
-    
+
     def test_replacing_calls_with_function_definition_in_defining_module(self):
         self.mod.write('def a_func():\n    print 1\na_func()\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
@@ -140,7 +140,7 @@ class InlineTest(unittest.TestCase):
                        '    def a_func(self):\n        print 1\nA().a_func()')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('class A(object):\n    var = 10\nprint 1\n', self.mod.read())
-    
+
     def test_parameters_with_the_same_name_as_passed(self):
         self.mod.write('def a_func(var):\n    print var\nvar = 1\na_func(var)\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
@@ -216,7 +216,7 @@ class InlineTest(unittest.TestCase):
                    '        self.var = 1\n' \
                    '        print self.var\n'
         self.assertEquals(expected, self.mod.read())
-    
+
     def test_passing_first_arguments_for_methods2(self):
         a_class = 'class A(object):\n' \
                   '    def __init__(self):\n' \
@@ -233,7 +233,7 @@ class InlineTest(unittest.TestCase):
                    'an_a = A()\n' \
                    'print 1, an_a.var\n'
         self.assertEquals(expected, self.mod.read())
-    
+
     # XXX: Handling ``AClass.a_method(a_var, param)``
     def xxx_test_passing_first_arguments_for_methods3(self):
         a_class = 'class A(object):\n' \
@@ -251,8 +251,8 @@ class InlineTest(unittest.TestCase):
                    'an_a = A()\n' \
                    'print 1, an_a.var\n'
         self.assertEquals(expected, self.mod.read())
-    
-    # XXX: The decorator should be removed, too 
+
+    # XXX: The decorator should be removed, too
     def xxx_test_static_methods(self):
         a_class = 'class A(object):\n' \
                   '    var = 10\n' \
@@ -270,7 +270,7 @@ class InlineTest(unittest.TestCase):
                   'print 1\n' \
                   'print 2\n'
         self.assertEquals(expected, self.mod.read())
-    
+
     def test_simple_return_values_and_inlining_functions(self):
         self.mod.write('def a_func():\n    return 1\na = a_func()\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
@@ -331,7 +331,7 @@ class InlineTest(unittest.TestCase):
     def test_recursive_functions(self):
         self.mod.write('def a_func(var):\n    a_func(var)\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
-    
+
     # TODO: inlining on function parameters
     def xxx_test_inlining_function_default_parameters(self):
         self.mod.write('def a_func(p1=1):\n    pass\na_func()\n')

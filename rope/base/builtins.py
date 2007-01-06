@@ -23,7 +23,7 @@ def _create_builtin_getter(cls):
 
 
 class List(pyobjects.PyObject):
-    
+
     def __init__(self, holding=None):
         super(List, self).__init__(pyobjects.PyObject.get_base_type('Type'))
         self.holding = holding
@@ -41,10 +41,10 @@ class List(pyobjects.PyObject):
             'remove': BuiltinName(BuiltinFunction()),
             'reverse': BuiltinName(BuiltinFunction()),
             'sort': BuiltinName(BuiltinFunction())}
-    
+
     def _new_list(self, args):
         return _create_builtin(args, get_list)
-    
+
     def get_attributes(self):
         return self.attributes
 
@@ -53,7 +53,7 @@ get_list_type = _create_builtin_type_getter(List)
 
 
 class Dict(pyobjects.PyObject):
-    
+
     def __init__(self, keys=None, values=None):
         super(Dict, self).__init__(pyobjects.PyObject.get_base_type('Type'))
         self.keys = keys
@@ -77,23 +77,23 @@ class Dict(pyobjects.PyObject):
             'popitem': BuiltinName(BuiltinFunction()),
             'setdefault': BuiltinName(BuiltinFunction()),
             'update': BuiltinName(BuiltinFunction())}
-    
+
     def get_attributes(self):
         return self.attributes
-    
+
     def _new_dict(self, args):
         def do_create(holding):
             type = holding.get_type()
             if isinstance(type, Tuple) and len(type.get_holding_objects()) == 2:
                 return get_dict(*type.get_holding_objects())
         return _create_builtin(args, do_create)
-    
+
 get_dict = _create_builtin_getter(Dict)
 get_dict_type = _create_builtin_type_getter(Dict)
 
 
 class Tuple(pyobjects.PyObject):
-    
+
     def __init__(self, *objects):
         super(Tuple, self).__init__(pyobjects.PyObject.get_base_type('Type'))
         self.objects = objects
@@ -105,17 +105,17 @@ class Tuple(pyobjects.PyObject):
             '__getslice__': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             '__new__': BuiltinName(BuiltinFunction(function=self._new_tuple)),
             '__iter__': BuiltinName(BuiltinFunction(Iterator(first)))}
-    
+
     def get_holding_objects(self):
         return self.objects
-    
+
     def get_attributes(self):
         return self.attributes
 
     def _new_tuple(self, args):
         return _create_builtin(args, get_tuple)
 
-    
+
 get_tuple = _create_builtin_getter(Tuple)
 get_tuple_type = _create_builtin_type_getter(Tuple)
 
@@ -143,19 +143,19 @@ class Set(pyobjects.PyObject):
             'issubset': BuiltinName(BuiltinFunction()),
             'clear': BuiltinName(BuiltinFunction()),
             'update': BuiltinName(BuiltinFunction())}
-    
+
     def get_attributes(self):
         return self.attributes
-    
+
     def _new_set(self, args):
         return _create_builtin(args, get_set)
-    
+
 get_set = _create_builtin_getter(Set)
 get_set_type = _create_builtin_type_getter(Set)
 
 
 class Str(pyobjects.PyObject):
-    
+
     def __init__(self):
         super(Str, self).__init__(pyobjects.PyObject.get_base_type('Type'))
         self_object = pyobjects.PyObject(self)
@@ -198,7 +198,7 @@ class Str(pyobjects.PyObject):
             'translate': BuiltinName(BuiltinFunction(self_object)),
             'upper': BuiltinName(BuiltinFunction(self_object)),
             'zfill': BuiltinName(BuiltinFunction(self_object))}
-    
+
     def get_attributes(self):
         return self.attributes
 
@@ -207,22 +207,22 @@ get_str_type = _create_builtin_type_getter(Str)
 
 
 class BuiltinName(pynames.PyName):
-    
+
     def __init__(self, pyobject):
         self.pyobject = pyobject
-    
+
     def get_object(self):
         return self.pyobject
 
 
 class BuiltinFunction(pyobjects.PyObject):
-    
+
     def __init__(self, returned=None, function=None):
         super(BuiltinFunction, self).__init__(
             pyobjects.PyObject.get_base_type('Function'))
         self.returned = returned
         self.function = function
-    
+
     def get_returned_object(self, args=None):
         if self.function is not None:
             return self.function(args)
@@ -237,7 +237,7 @@ class Iterator(pyobjects.PyObject):
         self.attributes = {
             'next': BuiltinName(BuiltinFunction(self.holding)),
             '__iter__': BuiltinName(BuiltinFunction(self))}
-    
+
     def get_attributes(self):
         return self.attributes
 
@@ -252,7 +252,7 @@ def _infer_sequence_type(seq):
             holding = iter.get_attribute('next').get_object().\
                       get_returned_object()
             return holding
-    
+
 
 def _create_builtin(args, creator):
     passed = args.get_arguments(['sequence'])[0]

@@ -131,7 +131,7 @@ class GraphicalEditor(object):
                 return 'break'
             line_starting = self.text.get('insert linestart', 'insert')
             current_char = self.text.get(INSERT)
-            if line_starting.isspace() and (not current_char.isspace() 
+            if line_starting.isspace() and (not current_char.isspace()
                                             or current_char == '' or current_char == '\n'):
                 self.indenter.deindent(self.get_current_line_number())
                 return 'break'
@@ -186,7 +186,7 @@ class GraphicalEditor(object):
             first_non_space += 1
         self.text.mark_set(INSERT, '%d.%d' % (lineno, first_non_space))
         self.text.see(INSERT)
-    
+
     def _editor_modified(self, event):
         if self.modified_flag:
             self.modified_flag = False
@@ -194,10 +194,10 @@ class GraphicalEditor(object):
             self.modified_flag = True
         for observer in self.modification_observers:
             observer()
-    
+
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)
-    
+
     def add_change_observer(self, observer):
         self.change_observers.append(observer)
 
@@ -253,7 +253,7 @@ class GraphicalEditor(object):
             if line.startswith('-'):
                 self.text.delete('%s.0' % current_line, '%s.0' % (current_line + 1))
                 continue
-    
+
     def get_start(self):
         return GraphicalTextIndex(self, '1.0')
 
@@ -298,7 +298,7 @@ class GraphicalEditor(object):
         if end is not None:
             endIndex = end._getIndex()
         return self.text.get(startIndex, endIndex)
-    
+
     def insert(self, textIndex, text):
         self.text.insert(textIndex._getIndex(), text)
 
@@ -312,7 +312,7 @@ class GraphicalEditor(object):
         if end is not None:
             endIndex = end._getIndex()
         self.text.delete(startIndex, endIndex)
-        
+
     def _get_next_word_index_old(self):
         result = INSERT
         while self.text.compare(result, '!=', 'end-1c') and \
@@ -343,21 +343,21 @@ class GraphicalEditor(object):
     def next_word(self):
         self.text.mark_set(INSERT, self._get_next_word_index())
         self.text.see(INSERT)
-    
+
     def _change_next_word(self, function):
         next_word = self.text.index(self._get_next_word_index())
         while self.text.compare('insert', '<', 'end -1c') and \
               not self.text.get(INSERT).isalnum() and \
               self.text.compare('insert', '<', next_word):
             self.text.mark_set(INSERT, 'insert +1c')
-        
+
         if self.text.compare('insert', '!=', next_word):
             word = self.text.get(INSERT, next_word)
             self.text.delete(INSERT, next_word)
             self.text.insert(INSERT, function(word))
             self.text.mark_set(INSERT, next_word)
         self.text.see(INSERT)
-    
+
     def upper_next_word(self):
         self._change_next_word(str.upper)
 
@@ -429,7 +429,7 @@ class GraphicalEditor(object):
 
     def goto_start(self):
         self.set_insert(self.get_start())
-    
+
     def goto_end(self):
         self.set_insert(self.get_end())
 
@@ -477,7 +477,7 @@ class GraphicalEditor(object):
             self.text.see(INSERT)
         except TclError:
             pass
-    
+
     def kill_line(self):
         if self.text.compare('insert', '>=', 'end -1c'):
             return
@@ -595,7 +595,7 @@ class GraphicalEditor(object):
 
     def get_current_offset(self):
         return self.get_offset(INSERT)
-    
+
     def _get_offset1(self, index):
         # adding up line lengths
         result = self._get_column_from_index(index)
@@ -605,7 +605,7 @@ class GraphicalEditor(object):
             result += self._get_column_from_index(current_pos) + 1
             current_pos = str(self.text.index(current_pos + ' +1l lineend'))
         return result
-    
+
     def _get_offset2(self, index):
         # walking the whole text
         text = self.get_text()
@@ -622,7 +622,7 @@ class GraphicalEditor(object):
                 break
             current_pos += 1
         return current_pos
-    
+
     def _get_offset3(self, index):
         # using binary search
         text = self.get_text()
@@ -640,10 +640,10 @@ class GraphicalEditor(object):
                 start = mid + 1
                 start_index = mid_index + '+1c'
         return start
-    
+
     def get_offset(self, get_offset):
         return self._get_offset3(get_offset)
-    
+
     def set_status_bar_manager(self, manager):
         self.status_bar_manager = manager
 
@@ -712,7 +712,7 @@ class _TextChangeInspector(object):
             self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
         return result
-    
+
     def _delete(self, *args):
         start = self.text.index(args[0])
         result = self.old_delete(*args)
@@ -732,7 +732,7 @@ class _TextChangeInspector(object):
             self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
         return result
-    
+
     def _edit(self, *args):
         if len(args) < 1 or args[0] not in ['undo', 'redo']:
             return self.old_edit(*args)
@@ -750,10 +750,10 @@ class _TextChangeInspector(object):
             self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
         return result
-    
+
     def get_changed_region(self):
         return self.changed_region
-    
+
     def is_changed(self):
         return self.changed_region is not None
 
@@ -796,6 +796,6 @@ class GraphicalLineEditor(object):
         else:
             self.editor.text.delete('%d.0' % line_number,
                                     '%d.%d' % (line_number, -count))
-    
+
     def insert_to_line(self, line_number, text):
         self.editor.text.insert('%d.0' % line_number, text)

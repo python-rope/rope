@@ -11,13 +11,13 @@ class BuiltinTypesTest(unittest.TestCase):
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
-    
+
     project_root = 'sample_project'
 
     def tearDown(self):
         ropetest.testutils.remove_recursively(self.project_root)
         super(BuiltinTypesTest, self).tearDown()
-    
+
     def test_simple_case(self):
         self.mod.write('l = []\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)

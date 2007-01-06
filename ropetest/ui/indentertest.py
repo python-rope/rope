@@ -6,12 +6,12 @@ from ropetest.ui.mockeditortest import GraphicalEditorFactory, MockEditorFactory
 class PythonCodeIndenterTest(unittest.TestCase):
 
     __factory = MockEditorFactory()
-    
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.editor = self.__factory.create()
         self.indenter = PythonCodeIndenter(self.editor)
-    
+
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
@@ -64,7 +64,7 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.editor.set_text('def f():\n    pass\n    f()')
         self.indenter.correct_indentation(3)
         self.assertEquals('def f():\n    pass\nf()', self.editor.get_text())
-        
+
     def test_explicit_line_continuation(self):
         self.editor.set_text('c = a + \\\nb')
         self.indenter.correct_indentation(2)
@@ -109,12 +109,12 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.editor.set_text('try:\n    print "hello"\n    except Exception:')
         self.indenter.correct_indentation(3)
         self.assertEquals('try:\n    print "hello"\nexcept Exception:', self.editor.get_text())
-    
+
     def test_deindenting_when_encountering_finally(self):
         self.editor.set_text('try:\n    print "hello"\n    finally:')
         self.indenter.correct_indentation(3)
         self.assertEquals('try:\n    print "hello"\nfinally:', self.editor.get_text())
-    
+
     def test_deindenting_after_return(self):
         self.editor.set_text('def f():\n    return "hello"\n    b\n')
         self.indenter.correct_indentation(3)
@@ -274,7 +274,7 @@ class PythonCodeIndenterTest(unittest.TestCase):
         indenter = NormalIndenter(self.editor)
         indenter.correct_indentation(1)
         self.assertEquals('line1\n', self.editor.get_text())
-    
+
     # TODO: More work on the effects of current and previous lines
     def xxx_test_else_after_break(self):
         self.editor.set_text('for i in range(1):\n' +
@@ -287,12 +287,12 @@ class PythonCodeIndenterTest(unittest.TestCase):
                           '        break\n' +
                           '    else:\n',
                           self.editor.get_text())
-            
+
     def test_line_break_after_inner_parens(self):
         self.editor.set_text('a_func(a_func(\na_var)')
         self.indenter.correct_indentation(2)
         self.assertEquals('a_func(a_func(\n       a_var)', self.editor.get_text())
-    
+
 
 if __name__ == '__main__':
     unittest.main()

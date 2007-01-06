@@ -54,7 +54,7 @@ class TextEditorTest(unittest.TestCase):
 
     def testReading(self):
         self.assertEquals('s', self.editor.get())
-        
+
     def testReadingAnyIndex(self):
         self.assertEquals('a', self.editor.get(self.editor.get_index(1)))
 
@@ -81,7 +81,7 @@ class TextEditorTest(unittest.TestCase):
         self.editor.insert(self.editor.get_end(), '\nanother piece of text')
         self.assertEquals('sample text\nanother piece of text', self.editor.get_text())
         self.assertEquals('text',
-                          self.editor.get(self.editor.get_relative(self.editor.get_end(), -4), 
+                          self.editor.get(self.editor.get_relative(self.editor.get_end(), -4),
                                           self.editor.get_end()))
         self.assertEquals('a', self.editor.get(self.editor.get_index(12)))
 
@@ -92,12 +92,12 @@ class TextEditorTest(unittest.TestCase):
         self.editor.delete()
         self.editor.delete()
         self.assertEquals('amp text', self.editor.get_text())
-    
+
     def testDeletingFromTheMiddle(self):
-        self.editor.delete(self.editor.get_index(1), 
+        self.editor.delete(self.editor.get_index(1),
                                 self.editor.get_index(7))
         self.assertEquals('stext', self.editor.get_text())
-        self.editor.delete(self.editor.get_index(2), 
+        self.editor.delete(self.editor.get_index(2),
                                 self.editor.get_end())
         self.assertEquals('st', self.editor.get_text())
 

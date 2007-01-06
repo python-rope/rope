@@ -115,29 +115,29 @@ Renaming attributes
 -------------------
 
 Consider we have::
-  
+
   class AClass(object):
-      
+
       def __init__(self):
           self.an_attr = 1
-      
+
       def a_method(self, arg):
           print self.an_attr, arg
-  
+
   a_var = AClass()
   a_var.a_method(a_var.an_attr)
 
 After renaming ``an_attr`` to ``new_attr`` and ``a_method`` to
 ``new_method`` we'll have::
-  
+
   class AClass(object):
-      
+
       def __init__(self):
           self.new_attr = 1
-      
+
       def new_method(self, arg):
           print self.new_attr, arg
-  
+
   a_var = AClass()
   a_var.new_method(a_var.new_attr)
 
@@ -146,19 +146,19 @@ Renaming Function Keyword Parameters
 ------------------------------------
 
 We have::
-  
+
   def a_func(a_param):
       print a_param
-  
+
   a_func(a_param=10)
   a_func(10)
 
 After performing rename refactoring on any occurance of ``a_param``
 we will have::
-  
+
   def a_func(new_param):
       print new_param
-  
+
   a_func(new_param=10)
   a_func(10)
 
@@ -167,25 +167,25 @@ Renaming modules
 ----------------
 
 Consider the project tree is something like::
-  
+
   root/
     mod1.py
     mod2.py
 
 ``mod1.py`` contains::
-  
+
   import mod2
   from mod2 import AClass
-  
+
   mod2.a_func()
   a_var = AClass()
 
 After performing rename refactoring one of the ``mod2`` occurances in
 `mod1` we'll get::
-  
+
   import newmod
   from newmod import AClass
-  
+
   newmod.a_func()
   a_var = AClass()
 
@@ -201,19 +201,19 @@ Extract Method
 The position of the mark would be region start and the current
 cursor position would be region end. (You can set the mark as in
 emacs copy and paste with ``C-space``). ::
-  
+
   def a_func():
       a = 1
       b = 2 * a
       c = ${region_start}a * 2 + b * 3${region_end}
-  
+
 After performing extract method we'll have::
 
   def a_func():
       a = 1
       b = 2 * a
       c = new_func(a, b)
-  
+
   def new_func(a, b):
       return a * 2 + b * 3
 
@@ -253,21 +253,21 @@ Basic Type Inference
 ====================
 
 ::
-  
+
   class AClass(object):
-      
+
       def __init__(self):
           self.an_attr = 1
-      
+
       def call_a_func(self):
           return a_func()
-  
+
   def a_func():
       return a_func()
-  
+
   a_var = a_func()
   a_var.${codeassist}
-  
+
   another_var = a_var
   another_var.${codeassist}
   another_var.call_a_func().${codeassist}
@@ -291,7 +291,7 @@ assists and some of the refactorings perform much better.
   def f1(param):
       param.${codeassist}
       f2(param).${codeassist}
-  
+
   def f2(param):
       param.${codeassist}
       return param
@@ -301,17 +301,17 @@ and there is actually no information about the return type of `f2` or
 the parameter `param` of `f1`.
 
 ``mod2.py``::
-  
+
   import mod1
-  
+
   class A(object):
-      
+
       def a_method(self):
           pass
-  
+
   a_var = A()
   mod1.f1(a_var)
-  
+
 After running `mod2` module using rope's `Run Module`, we get good
 code assists in `mod1`.
 

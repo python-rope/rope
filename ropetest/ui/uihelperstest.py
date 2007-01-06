@@ -105,7 +105,7 @@ class UIHelpersTest(unittest.TestCase):
         tree_viewer.expand(0)
         self.assertEquals('  element a00', tree_viewer.list.get(0, 1)[0])
 
-    
+
 if __name__ == '__main__':
     unittest.main()
 

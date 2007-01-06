@@ -5,7 +5,7 @@ import rope.base.codeanalyze
 
 class OccurrenceFinder(object):
     """For finding textual occurrences of a name"""
-    
+
     def __init__(self, pycore, name):
         self.pycore = pycore
         self.name = name
@@ -17,7 +17,7 @@ class OccurrenceFinder(object):
         self.string_pattern = OccurrenceFinder.any(
             'string', [sq3string, dq3string, sqstring, dqstring])
         self.pattern = self._get_occurrence_pattern(self.name)
-    
+
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
         tools = _OccurrenceToolsCreator(self.pycore, resource, pymodule)
@@ -45,44 +45,44 @@ class OccurrenceFinder(object):
 
 
 class Occurrence(object):
-    
+
     def __init__(self, tools, offset):
         self.tools = tools
         self.offset = offset
-    
+
     def get_word_range(self):
         start = self.tools.word_finder._find_word_start(self.offset - 1)
         end = self.tools.word_finder._find_word_end(self.offset - 1) + 1
         return (start, end)
-    
+
     def get_primary_range(self):
         start = self.tools.word_finder._find_primary_start(self.offset - 1)
         end = self.tools.word_finder._find_word_end(self.offset - 1) + 1
         return (start, end)
-    
+
     def get_pyname(self):
         return self.tools.name_finder.get_pyname_at(self.offset)
-    
+
     def is_in_import_statement(self):
         return (self.tools.word_finder.is_from_statement(self.offset) or
                 self.tools.word_finder.is_import_statement(self.offset))
-    
+
     def is_called(self):
         return self.tools.word_finder.is_a_function_being_called(self.offset)
-    
+
     def is_defined(self):
         return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
-    
+
     def is_a_fixed_primary(self):
         return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset) or \
                self.tools.word_finder.is_a_name_after_from_import(self.offset)
-    
+
     def is_written(self):
         return self.tools.word_finder.is_assigned_here(self.offset)
 
 
 class FilteredOccurrenceFinder(object):
-    
+
     def __init__(self, pycore, name, pynames, only_calls=False, imports=True):
         self.pycore = pycore
         self.pynames = pynames
@@ -90,7 +90,7 @@ class FilteredOccurrenceFinder(object):
         self.only_calls = only_calls
         self.imports = imports
         self.occurrence_finder = OccurrenceFinder(pycore, name)
-    
+
     def find_occurrences(self, resource=None, pymodule=None):
         for occurrence in self.occurrence_finder.find_occurrences(
             resource, pymodule):
@@ -110,13 +110,13 @@ class FilteredOccurrenceFinder(object):
 
     def _are_pynames_the_same(self, pyname1, pyname2):
         return pyname1 == pyname2 or \
-               (pyname1 is not None and pyname2 is not None and 
+               (pyname1 is not None and pyname2 is not None and
                 pyname1.get_object() == pyname2.get_object() and
                 pyname1.get_definition_location() == pyname2.get_definition_location())
-    
+
 
 class _OccurrenceToolsCreator(object):
-    
+
     def __init__(self, pycore, resource=None, pymodule=None):
         self.pycore = pycore
         self.resource = resource
@@ -124,14 +124,14 @@ class _OccurrenceToolsCreator(object):
         self._name_finder = None
         self._source_code = None
         self._word_finder = None
-    
+
     def get_name_finder(self):
         if self._name_finder is None:
             if self.pymodule is None:
                 self.pymodule = self.pycore.resource_to_pyobject(self.resource)
             self._name_finder = rope.base.codeanalyze.ScopeNameFinder(self.pymodule)
         return self._name_finder
-    
+
     def get_source_code(self):
         if self._source_code is None:
             if self.resource is not None:
@@ -139,7 +139,7 @@ class _OccurrenceToolsCreator(object):
             else:
                 self._source_code = self.pymodule.source_code
         return self._source_code
-    
+
     def get_word_finder(self):
         if self._word_finder is None:
             self._word_finder = rope.base.codeanalyze.WordRangeFinder(
@@ -149,4 +149,4 @@ class _OccurrenceToolsCreator(object):
     name_finder = property(get_name_finder)
     word_finder = property(get_word_finder)
     source_code = property(get_source_code)
-    
+

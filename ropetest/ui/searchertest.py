@@ -12,7 +12,7 @@ class SearchingTest(unittest.TestCase):
         self.editor = self.__factory.create()
         self.editor.set_text('sample text')
         self.searcher = Searcher(self.editor)
-    
+
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
@@ -161,7 +161,7 @@ class SearchingTest(unittest.TestCase):
         self.searcher.append_keyword('a')
         self.searcher.append_keyword('b')
         self.assertEquals(self.editor.get_index(3), self.searcher.get_match().end)
-        
+
     def test_uppercase_in_keyword(self):
         self.editor.set_text(' ab aB')
         self.searcher.start_searching()
@@ -196,14 +196,14 @@ class SearchingTest(unittest.TestCase):
 class PlaceholderStatusBarManager(object):
     def __init__(self):
         self.status_text = {}
-        
+
     def get_status(self, kind):
-        if not self.status_text.has_key(kind):
+        if kind not in self.status_text:
             raise StatusBarException('StatusText <%s> does not exist' % kind)
         return self.status_text[kind]
 
     def create_status(self, kind):
-        if self.status_text.has_key(kind):
+        if kind in self.status_text:
             raise StatusBarException('StatusText <%s> already exists' % kind)
         self.status_text[kind] = PlaceholderStatusText(self, kind)
         self.status_text[kind].set_text('')
@@ -220,7 +220,7 @@ class PlaceholderStatusText(object):
         self.kind = kind
         self.width = 0
         self.text = ''
-    
+
     def set_width(self, width):
         self.width = width
 
@@ -232,7 +232,6 @@ class PlaceholderStatusText(object):
 
     def remove(self):
         self.manager.remove_status(self)
-
 
 
 if __name__ == '__main__':

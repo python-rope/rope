@@ -12,7 +12,7 @@ class StatementEvaluator(object):
 
     def visitName(self, node):
         self.result = self.scope.lookup(node.name)
-    
+
     def visitGetattr(self, node):
         pyname = StatementEvaluator.get_statement_result(self.scope, node.expr)
         if pyname is not None:
@@ -31,7 +31,8 @@ class StatementEvaluator(object):
             if '__new__' in pyobject.get_attributes():
                 new_function = pyobject.get_attribute('__new__').get_object()
                 result = new_function.get_returned_object(args)
-            if result is None:
+            if result is None or \
+               result.get_type() == rope.base.pyobjects.PyObject.get_base_type('Unknown'):
                 result = rope.base.pyobjects.PyObject(pyobject)
             self.result = rope.base.pynames.AssignedName(pyobject=result)
         elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
@@ -41,15 +42,15 @@ class StatementEvaluator(object):
             call_function = pyobject.get_attribute('__call__')
             self.result = rope.base.pynames.AssignedName(
                 pyobject=call_function.get_object().get_returned_object(args))
-    
+
     def visitConst(self, node):
         if isinstance(node.value, (str, unicode)):
             self.result = rope.base.pynames.AssignedName(
                 pyobject=rope.base.builtins.get_str())
-            
+
     def visitAdd(self, node):
         pass
-    
+
     def visitAnd(self, node):
         pass
 
@@ -67,7 +68,7 @@ class StatementEvaluator(object):
 
     def visitCompare(self, node):
         pass
-    
+
     def visitDict(self, node):
         keys = None
         values = None
@@ -77,44 +78,44 @@ class StatementEvaluator(object):
             values = self._get_object_for_node(item[1])
         self.result = rope.base.pynames.AssignedName(
             pyobject=rope.base.builtins.get_dict(keys, values))
-    
+
     def visitFloorDiv(self, node):
         pass
-    
+
     def visitList(self, node):
         holding = None
         if node.nodes:
             holding = self._get_object_for_node(node.nodes[0])
         self.result = rope.base.pynames.AssignedName(
             pyobject=rope.base.builtins.get_list(holding))
-    
+
     def visitListComp(self, node):
         pass
 
     def visitMul(self, node):
         pass
-    
+
     def visitNot(self, node):
         pass
-    
+
     def visitOr(self, node):
         pass
-    
+
     def visitPower(self, node):
         pass
-    
+
     def visitRightShift(self, node):
         pass
-    
+
     def visitLeftShift(self, node):
         pass
-    
+
     def visitSlice(self, node):
         self._call_function(node.expr, '__getslice__')
-    
+
     def visitSliceobj(self, node):
         pass
-    
+
     def visitTuple(self, node):
         objects = []
         if len(node.nodes) < 4:
@@ -132,7 +133,7 @@ class StatementEvaluator(object):
         if pyname is not None:
             pyobject = pyname.get_object()
         return pyobject
-    
+
     def visitSubscript(self, node):
         self._call_function(node.expr, '__getitem__')
 
@@ -150,7 +151,7 @@ class StatementEvaluator(object):
         evaluator = StatementEvaluator(scope)
         compiler.walk(node, evaluator)
         return evaluator.result
-    
+
     @staticmethod
     def get_string_result(scope, string):
         evaluator = StatementEvaluator(scope)
@@ -160,7 +161,7 @@ class StatementEvaluator(object):
 
 
 class Arguments(object):
-    
+
     def __init__(self, args, scope):
         self.args = args
         self.scope = scope

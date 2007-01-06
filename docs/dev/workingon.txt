@@ -1,18 +1,14 @@
 Removing `PythonRefactoring`
 ============================
 
-* Changing uses of `PythonRefactoring` to use `rope.refactor` modules
-* Adding a place for saving undo information
-* What to do with import utils
-* Documenting the refactorings `rope.refactor` submodules provide
-* Updating references to `PythonRefactoring` and
+* changing uses of `PythonRefactoring` to use `rope.refactor` modules
+* adding a place for saving undo information
+* what to do with import utils
+* documenting the refactorings `rope.refactor` submodules provide
+* updating references to `PythonRefactoring` and
   `PyCore.get_refactoring` to use the new objects.
 
-
-Storing Different Return Types For Different Set Of Arguments
-=============================================================
-
-- ignoring ``*args`` and ``**kwds`` in runmod
+* do something about long lines
 
 
 Remaining Stories

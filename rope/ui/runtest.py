@@ -6,12 +6,12 @@ import os
 import xmlrpclib
 
 class TestResultProxy(unittest.TestResult):
-    
+
     def __init__(self, port, count):
         super(TestResultProxy, self).__init__()
         self.remote = xmlrpclib.Server(('http://localhost:' + port))
         self.remote.set_test_count(count)
-    
+
     def startTest(self, test):
         super(TestResultProxy, self).startTest(test)
         self.remote.start_test(str(test))
@@ -27,7 +27,7 @@ class TestResultProxy(unittest.TestResult):
     def addFailure(self, test, err):
         super(TestResultProxy, self).addFailure(test, err)
         self.remote.add_failure(str(test), self._exc_info_to_string(err, test))
-    
+
     def stopTest(self, test):
         super(TestResultProxy, self).stopTest(test)
         self.remote.stop_test(str(test))

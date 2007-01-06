@@ -4,14 +4,14 @@ from rope.base import codeanalyze
 
 
 class _FunctionParser(object):
-    
+
     def __init__(self, call, is_method):
         self.call = call
         self.is_method = is_method
         self.word_finder = rope.base.codeanalyze.WordRangeFinder(self.call)
         self.last_parens = self.call.rindex(')')
         self.first_parens = self.word_finder._find_parens_start(self.last_parens)
-    
+
     def get_parameters(self):
         keywords = []
         args = []
@@ -39,24 +39,24 @@ class _FunctionParser(object):
         args.reverse()
         keywords.reverse()
         return args, keywords
-    
+
     def get_instance(self):
         if self.is_called_as_a_method():
             return self.word_finder.get_primary_at(
                 self.call.rindex('.', 0, self.first_parens) - 1)
-            
+
     def get_function_name(self):
         if self.is_called_as_a_method():
             return self.word_finder.get_word_at(self.first_parens - 1)
         else:
             return self.word_finder.get_primary_at(self.first_parens - 1)
-            
+
     def is_called_as_a_method(self):
         return self.is_method and '.' in self.call[:self.first_parens]
 
 
 class DefinitionInfo(object):
-    
+
     def __init__(self, function_name, is_method, args_with_defaults, args_arg,
                  keywords_arg):
         self.function_name = function_name
@@ -64,7 +64,7 @@ class DefinitionInfo(object):
         self.args_with_defaults = args_with_defaults
         self.args_arg = args_arg
         self.keywords_arg = keywords_arg
-    
+
     def to_string(self):
         params = []
         for arg, default in self.args_with_defaults:
@@ -77,7 +77,7 @@ class DefinitionInfo(object):
         if self.keywords_arg:
             params.append('**' + self.keywords_arg)
         return '%s(%s)' % (self.function_name, ', '.join(params))
-    
+
     @staticmethod
     def _read(pyfunction, code):
         scope = pyfunction.get_scope()
@@ -119,7 +119,7 @@ class DefinitionInfo(object):
 
 
 class CallInfo(object):
-    
+
     def __init__(self, function_name, args, keywords, args_arg,
                  keywords_arg, is_method_call):
         self.function_name = function_name
@@ -128,7 +128,7 @@ class CallInfo(object):
         self.args_arg = args_arg
         self.keywords_arg = keywords_arg
         self.is_method_call = is_method_call
-        
+
     def to_string(self):
         function = self.function_name
         if self.is_method_call:
@@ -163,7 +163,7 @@ class CallInfo(object):
                          keywords_arg, info.is_called_as_a_method())
 
 class ArgumentMapping(object):
-    
+
     def __init__(self, definition_info, call_info):
         self.call_info = call_info
         self.param_dict = {}
@@ -183,7 +183,7 @@ class ArgumentMapping(object):
                     break
             else:
                 self.keyword_args.append((name, value))
-    
+
     def to_call_info(self, definition_info):
         args = []
         keywords = []

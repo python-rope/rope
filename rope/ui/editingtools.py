@@ -19,7 +19,7 @@ class EditingTools(object):
         pass
 
     def create_highlighting(self):
-        pass    
+        pass
 
 
 class PythonEditingTools(EditingTools):
@@ -34,7 +34,7 @@ class PythonEditingTools(EditingTools):
 
     def create_highlighting(self):
         return rope.ui.highlighter.PythonHighlighting()
-    
+
     def _get_code_assist(self):
         if self._code_assist is None:
             self._code_assist = rope.ide.codeassist.PythonCodeAssist(self.project)
@@ -44,7 +44,7 @@ class PythonEditingTools(EditingTools):
         if self._outline is None:
             self._outline = rope.ide.outline.PythonOutline(self.project)
         return self._outline
-    
+
     codeassist = property(_get_code_assist)
     outline = property(_get_outline)
 
@@ -56,7 +56,7 @@ class ReSTEditingTools(EditingTools):
 
     def create_highlighting(self):
         return rope.ui.highlighter.ReSTHighlighting()
-    
+
 
 class NormalEditingTools(EditingTools):
 
@@ -65,4 +65,4 @@ class NormalEditingTools(EditingTools):
 
     def create_highlighting(self):
         return rope.ui.highlighter.NoHighlighting()
-    
+

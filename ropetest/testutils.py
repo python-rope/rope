@@ -14,7 +14,7 @@ def remove_recursively(path):
             else:
                 break
     else:
-        _remove_recursively(path)        
+        _remove_recursively(path)
 
 def _remove_recursively(path):
     if not os.path.exists(path):

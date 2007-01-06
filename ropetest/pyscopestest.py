@@ -35,7 +35,7 @@ class PyCoreScopesTest(unittest.TestCase):
                                              '    class SampleClass(object):\n        pass\n')
         self.assertEquals(1, len(scope.get_scopes()))
         sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(PyObject.get_base_type('Type'), 
+        self.assertEquals(PyObject.get_base_type('Type'),
                           scope.get_scopes()[0].
                           get_name('SampleClass').get_object().get_type())
 
@@ -111,20 +111,20 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_assists_inside_fors(self):
         scope = self.pycore.get_string_scope('for i in range(10):\n    a_var = i\n')
         self.assertTrue('a_var' in scope.get_names())
-    
+
     def test_first_parameter_of_a_method(self):
         code = 'class AClass(object):\n    def a_func(self, param):\n        pass\n'
         a_class = self.pycore.get_string_module(code).get_attribute('AClass'). get_object()
         function_scope = a_class.get_attribute('a_func').get_object().get_scope()
         self.assertEquals(a_class, function_scope.get_name('self').get_object().get_type())
         self.assertNotEquals(a_class, function_scope.get_name('param').get_object().get_type())
-        
+
     def test_first_parameter_of_static_methods(self):
         code = 'class AClass(object):\n    @staticmethod\n    def a_func(param):\n        pass\n'
         a_class = self.pycore.get_string_module(code).get_attribute('AClass'). get_object()
         function_scope = a_class.get_attribute('a_func').get_object().get_scope()
         self.assertNotEquals(a_class, function_scope.get_name('param').get_object().get_type())
-        
+
     def test_first_parameter_of_class_methods(self):
         code = 'class AClass(object):\n    @classmethod\n    def a_func(cls):\n        pass\n'
         a_class = self.pycore.get_string_module(code).get_attribute('AClass'). get_object()

@@ -10,11 +10,11 @@ from rope.refactor.change import (ChangeSet, ChangeContents)
 
 
 class IntroduceFactoryRefactoring(object):
-    
+
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
         self.offset = offset
-        
+
         self.old_pyname = \
             rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.old_pyname is None or \
@@ -69,7 +69,7 @@ class IntroduceFactoryRefactoring(object):
                               '    return %s(*args, **kwds)\n' % self.old_name)
         return '\n' + sourceutils.indent_lines(
             unindented_factory, self._get_scope_indents(lines, class_scope) + 4)
-    
+
     def _get_scope_indents(self, lines, scope):
         return sourceutils.get_indents(lines, scope.get_start())
 
@@ -78,7 +78,7 @@ class IntroduceFactoryRefactoring(object):
             return factory_name
         else:
             return self.old_name + '.' + factory_name
-    
+
     def _change_occurrences_in_other_modules(self, changes,
                                              factory_name, global_factory):
         changed_name = self._get_new_function_name(factory_name, global_factory)
@@ -86,7 +86,7 @@ class IntroduceFactoryRefactoring(object):
         new_import = import_tools.get_import_for_module(self.pymodule)
         if global_factory:
             changed_name = new_import.names_and_aliases[0][0] + '.' + factory_name
-        
+
         for file_ in self.pycore.get_python_files():
             if file_ == self.resource:
                 continue

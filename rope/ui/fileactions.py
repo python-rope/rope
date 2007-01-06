@@ -15,7 +15,7 @@ def close_project(context):
     context.get_core()._close_project_dialog()
 
 class _FolderViewHandle(TreeViewHandle):
-    
+
     def __init__(self, core, toplevel, do_select):
         self.core = core
         self.toplevel = toplevel
@@ -26,11 +26,11 @@ class _FolderViewHandle(TreeViewHandle):
         if result == '':
             result = 'project root'
         return result
-    
+
     def get_children(self, resource):
         if resource.is_folder():
             return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and 
+                    if not child.get_name().startswith('.') and
                     child.is_folder()]
         else:
             return []
@@ -38,7 +38,7 @@ class _FolderViewHandle(TreeViewHandle):
     def selected(self, resource):
         self.toplevel.destroy()
         self.do_select(resource)
-    
+
     def canceled(self):
         self.toplevel.destroy()
 
@@ -51,13 +51,13 @@ def _check_if_project_is_open(core):
                                message='No project is open')
         return False
     return True
-    
+
 def _create_resource_dialog(core, creation_callback,
                             resource_name='File', parent_name='Parent Folder'):
     """Ask user about the parent folder and the name of the resource to be created
-    
+
     creation_callback is a function accepting the parent and the name
-    
+
     """
     if not _check_if_project_is_open(core):
         return
@@ -81,7 +81,7 @@ def _create_resource_dialog(core, creation_callback,
     parent_browse = Tkinter.Button(create_dialog, text='...', command=show_directory_view)
     resource_label = Tkinter.Label(create_dialog, text=('New ' + resource_name))
     resource_entry = Tkinter.Entry(create_dialog)
-        
+
     def do_create_resource():
         parent_folder = core.project.get_resource(parent_entry.get())
         creation_callback(parent_folder, resource_entry.get())
@@ -156,10 +156,10 @@ class FileFinder(object):
         self.last_keyword = starting
         self.last_result = result
         return result
-    
+
     def _is_init_dot_py(self, file):
         return file.get_name() == '__init__.py'
-    
+
     def _compare_files(self, file1, file2):
         if self._is_init_dot_py(file1) or self._is_init_dot_py(file2):
             if self._is_init_dot_py(file1) and not self._is_init_dot_py(file2):
@@ -240,18 +240,18 @@ def find_file(context):
     _find_file_dialog(context.get_core())
 
 class _ResourceViewHandle(TreeViewHandle):
-    
+
     def __init__(self, core, toplevel):
         self.core = core
         self.toplevel = toplevel
 
     def entry_to_string(self, resource):
         return resource.get_name()
-    
+
     def get_children(self, resource):
         if resource.is_folder():
             return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and 
+                    if not child.get_name().startswith('.') and
                     not child.get_name().endswith('.pyc')]
         else:
             return []
@@ -260,7 +260,7 @@ class _ResourceViewHandle(TreeViewHandle):
         if not resource.is_folder():
             self.core.editor_manager.get_resource_editor(resource)
             self.toplevel.destroy()
-    
+
     def canceled(self):
         self.toplevel.destroy()
 

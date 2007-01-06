@@ -23,7 +23,7 @@ class ObjectInferTest(unittest.TestCase):
         sample_class = scope.get_name('Sample').get_object()
         a_var = scope.get_name('a_var').get_object()
         self.assertEquals(sample_class, a_var.get_type())
-        
+
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
                                              'def a_func():\n    a_var = Sample()\n')
@@ -31,7 +31,7 @@ class ObjectInferTest(unittest.TestCase):
         a_var = scope.get_name('a_func').get_object().\
                 get_scope().get_name('a_var').get_object()
         self.assertEquals(sample_class, a_var.get_type())
-        
+
     def test_simple_type_inferencing_classes_in_class_methods(self):
         code = 'class Sample(object):\n    pass\n' \
                'class Another(object):\n' \
@@ -42,7 +42,7 @@ class ObjectInferTest(unittest.TestCase):
         a_var = another_class.get_attribute('a_method').\
                 get_object().get_scope().get_name('a_var').get_object()
         self.assertEquals(sample_class, a_var.get_type())
-        
+
     def test_simple_type_inferencing_class_attributes(self):
         code = 'class Sample(object):\n    pass\n' \
                'class Another(object):\n' \
@@ -67,7 +67,7 @@ class ObjectInferTest(unittest.TestCase):
         mod_scope = self.project.get_pycore().get_string_scope(mod)
         sample_class = mod_scope.get_name('Sample')
         copied_sample = mod_scope.get_name('copied_sample')
-        self.assertEquals(sample_class.get_object(), 
+        self.assertEquals(sample_class.get_object(),
                           copied_sample.get_object())
 
     def test_following_chained_assignments_avoiding_circles(self):
@@ -77,7 +77,7 @@ class ObjectInferTest(unittest.TestCase):
         mod_scope = self.project.get_pycore().get_string_scope(mod)
         sample_class = mod_scope.get_name('Sample')
         sample_class_var = mod_scope.get_name('sample_class')
-        self.assertEquals(sample_class.get_object(), 
+        self.assertEquals(sample_class.get_object(),
                           sample_class_var.get_object())
 
     def test_function_returned_object_static_type_inference1(self):
@@ -259,7 +259,7 @@ class DynamicOITest(unittest.TestCase):
         pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
         self.assertEquals(pyscope.get_name('a_func').get_object(),
                           pyscope.get_scopes()[0].get_name('arg').get_object())
-        
+
     def test_dti_and_concluded_data_invalidation(self):
         mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
         code = 'def a_func(arg):\n    return arg\n' \

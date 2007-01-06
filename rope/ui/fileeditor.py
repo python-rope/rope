@@ -26,22 +26,22 @@ class FileEditor(object):
         self.readonly = readonly
         #if readonly:
         #    self.editor.getWidget()['state'] = Tkinter.DISABLED
-    
+
     def _register_observers(self):
         self.observer = FilteredResourceObserver(
             ResourceObserver(self._file_was_modified, self._file_was_removed),
             [self.file])
         if self.project is not None:
             self.project.add_observer(self.observer)
-    
+
     def _remove_observers(self):
         if self.project is not None:
             self.project.remove_observer(self.observer)
-    
+
     def _editor_was_modified(self):
         for observer in list(self.modification_observers):
             observer(self)
-    
+
     def _file_was_removed(self, file, new_file=None):
         self._remove_observers()
         # XXX: file was removed while we were editing it.  What to do?
@@ -50,12 +50,12 @@ class FileEditor(object):
         self.file = new_file
         self._register_observers()
         self._editor_was_modified()
-    
+
     def _file_was_modified(self, file_):
         if not self.saving:
             self.editor.set_text(file_.read())
             self.editor.saving_editor()
-    
+
     def add_modification_observer(self, observer):
         self.modification_observers.append(observer)
 
@@ -78,7 +78,7 @@ class FileEditor(object):
 
     def get_file(self):
         return self.file
-    
+
     def close(self):
         self._remove_observers()
 

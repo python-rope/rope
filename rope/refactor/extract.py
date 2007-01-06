@@ -9,15 +9,15 @@ from rope.refactor.change import ChangeSet, ChangeContents
 
 
 class _ExtractRefactoring(object):
-    
+
     def __init__(self, pycore, resource, start_offset, end_offset):
         self.pycore = pycore
         self.resource = resource
         self.start_offset = start_offset
         self.end_offset = end_offset
-    
+
 class ExtractMethodRefactoring(_ExtractRefactoring):
-    
+
     def get_changes(self, extracted_name):
         info = _ExtractingPartOffsets(self.pycore, self.resource,
                                    self.start_offset, self.end_offset)
@@ -33,11 +33,11 @@ class ExtractMethodRefactoring(_ExtractRefactoring):
 
 
 class ExtractVariableRefactoring(_ExtractRefactoring):
-    
+
     def get_changes(self, extracted_name):
         info = _ExtractingPartOffsets(self.pycore, self.resource,
                                    self.start_offset, self.end_offset)
-        new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info, 
+        new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info,
                                                 extracted_name, True).extract()
         changes = ChangeSet()
         changes.add_change(ChangeContents(self.resource, new_contents))
@@ -46,9 +46,9 @@ class ExtractVariableRefactoring(_ExtractRefactoring):
 
 class _ExtractPerformer(object):
     """Perform extract method/variable refactoring
-    
+
     We devide program source code into these parts::
-      
+
       [...]
         scope_start
             [before_line]
@@ -60,37 +60,37 @@ class _ExtractPerformer(object):
         scope_end
             [after_scope]
       [...]
-    
+
     For extract function the new method is inserted in start_line,
     while in extract method it is inserted in scope_end.
-    
+
     Note that start and end are in the same line for one line
     extractions, so start_line and end_line are in the same line,
     too.
-    
+
     The parts marked as before_line, call and after_scope are
     used in refactoring and we use `ExtractInfo` to find the
     new contents of these parts.
 
     """
-    
+
     def __init__(self, pycore, resource, parts, extracted_name, extract_variable=False):
         self.source_code = source_code = resource.read()
         self.extracted_name = extracted_name
         self.extract_variable = extract_variable
         self.parts = parts
-        
+
         self.lines = parts.lines
-        
+
         self.first_line_indents = self._get_indents(self.parts.region_linenos[0])
         self.scope = pycore.get_string_scope(source_code, resource)
         self.holding_scope = self._find_holding_scope(self.parts.region_linenos[0])
-        
+
         self.extract_info = self._create_extract_info()
-        
+
         self._check_exceptional_conditions()
         self.info_collector = self._create_info_collector()
-    
+
     def _create_extract_info(self):
         if self.extract_variable:
             return _ExtractedVariablePieces(self)
@@ -103,7 +103,7 @@ class _ExtractPerformer(object):
            holding_scope.get_start() == start_line:
             holding_scope = holding_scope.parent
         return holding_scope
-    
+
     def _is_global(self):
         return self.holding_scope.pyobject.get_type() == \
                rope.base.pyobjects.PyObject.get_base_type('Module')
@@ -112,7 +112,7 @@ class _ExtractPerformer(object):
         return self.holding_scope.parent is not None and \
                self.holding_scope.parent.pyobject.get_type() == \
                rope.base.pyobjects.PyObject.get_base_type('Type')
-    
+
     def _check_exceptional_conditions(self):
         if self.holding_scope.pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
             raise RefactoringException('Can not extract methods in class body')
@@ -171,7 +171,7 @@ class _ExtractPerformer(object):
             return self.first_line_indents
         else:
             return self._get_indents(self.holding_scope.get_start())
-    
+
     def _get_function_definition(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
@@ -184,7 +184,7 @@ class _ExtractPerformer(object):
         function_body = sourceutils.indent_lines(unindented_body, function_indents + 4)
         result.append(function_body)
         definition = ''.join(result)
-        
+
         return definition + '\n'
 
     def _get_one_line_definition(self):
@@ -196,7 +196,7 @@ class _ExtractPerformer(object):
             else:
                 lines.append(line.strip())
         return ' '.join(lines)
-    
+
     def _get_function_signature(self, args):
         args = list(args)
         if self._is_method():
@@ -204,7 +204,7 @@ class _ExtractPerformer(object):
                 args.remove('self')
             args.insert(0, 'self')
         return self.extracted_name + '(%s)' % self._get_comma_form(args)
-    
+
     def _get_function_call(self, args):
         prefix = ''
         if self._is_method():
@@ -220,13 +220,13 @@ class _ExtractPerformer(object):
             for name in names[1:]:
                 result += ', ' + name
         return result
-    
+
     def _get_indents(self, lineno):
         return sourceutils.get_indents(self.lines, lineno)
 
 
 class _OneLineExtractPerformer(_ExtractPerformer):
-    
+
     def __init__(self, *args, **kwds):
         super(_OneLineExtractPerformer, self).__init__(*args, **kwds)
 
@@ -237,7 +237,7 @@ class _OneLineExtractPerformer(_ExtractPerformer):
             raise RefactoringException('Should extract complete statements.')
         if self.extract_variable and not self.parts.is_one_line_extract():
             raise RefactoringException('Extract variable should not span multiple lines.')
-    
+
     def _get_call(self):
         args = self._find_function_arguments()
         return self._get_function_call(args)
@@ -250,16 +250,16 @@ class _OneLineExtractPerformer(_ExtractPerformer):
         read = _VariableReadsAndWritesFinder.find_reads_for_one_liners(
             function_definition)
         return list(self.info_collector.prewritten.intersection(read))
-    
+
     def _find_function_returns(self):
         return []
-        
+
     def _get_unindented_function_body(self, returns):
         return 'return ' + self._get_one_line_definition()
-    
+
 
 class _MultiLineExtractPerformer(_ExtractPerformer):
-    
+
     def __init__(self, *args, **kwds):
         super(_MultiLineExtractPerformer, self).__init__(*args, **kwds)
 
@@ -268,7 +268,7 @@ class _MultiLineExtractPerformer(_ExtractPerformer):
         if self.parts.region[0] != self.parts.region_lines[0] or \
            self.parts.region[1] != self.parts.region_lines[1]:
             raise RefactoringException('Extracted piece should contain complete statements.')
-    
+
     def _get_call(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
@@ -279,10 +279,10 @@ class _MultiLineExtractPerformer(_ExtractPerformer):
 
     def _find_function_arguments(self):
         return list(self.info_collector.prewritten.intersection(self.info_collector.read))
-    
+
     def _find_function_returns(self):
         return list(self.info_collector.written.intersection(self.info_collector.postread))
-        
+
     def _get_unindented_function_body(self, returns):
         extracted_body = self.source_code[self.parts.region[0]:self.parts.region[1]]
         unindented_body = sourceutils.indent_lines(
@@ -290,21 +290,21 @@ class _MultiLineExtractPerformer(_ExtractPerformer):
         if returns:
             unindented_body += '\nreturn %s' % self._get_comma_form(returns)
         return unindented_body
-    
+
 
 class _ExtractedMethodPieces(object):
-    
+
     def __init__(self, performer):
         self.performer = performer
-    
+
     def get_before_line(self):
         if self.performer._is_global():
             return '\n%s\n' % self.performer._get_function_definition()
         return ''
-    
+
     def get_call(self):
         return self.performer._get_call()
-    
+
     def get_after_scope(self):
         if not self.performer._is_global():
             return '\n%s' % self.performer._get_function_definition()
@@ -312,53 +312,53 @@ class _ExtractedMethodPieces(object):
 
 
 class _ExtractedVariablePieces(object):
-    
+
     def __init__(self, performer):
         self.performer = performer
-    
+
     def get_before_line(self):
         result = ' ' * self.performer.first_line_indents + \
                  self.performer.extracted_name + ' = ' + \
                  self.performer._get_one_line_definition() + '\n'
         return result
-    
+
     def get_call(self):
         return self.performer.extracted_name
-    
+
     def get_after_scope(self):
         return ''
 
 
 class _ExtractingPartOffsets(object):
-    
+
     def __init__(self, pycore, resource, start_offset, end_offset):
         self.source_code = source_code = resource.read()
-        
+
         pymodule = pycore.resource_to_pyobject(resource)
         self.lines = pymodule.lines
         self.line_finder = codeanalyze.LogicalLineFinder(self.lines)
-        
+
         self.region = (self._choose_closest_line_end(start_offset),
                        self._choose_closest_line_end(end_offset, end=True))
-        
+
         self.region_linenos = (
             self.line_finder.get_logical_line_in(self.lines.get_line_number(self.region[0]))[0],
             self.line_finder.get_logical_line_in(self.lines.get_line_number(self.region[1]))[1])
 
         self.region_lines = (self.lines.get_line_start(self.region_linenos[0]),
                              self.lines.get_line_end(self.region_linenos[1]))
-        
+
         holding_scope = self._find_holding_scope(pymodule.get_scope(), self.region_linenos[0])
         self.scope = (self.lines.get_line_start(holding_scope.get_start()),
                       self.lines.get_line_end(holding_scope.get_end()) + 1)
-        
+
     def _find_holding_scope(self, scope, start_line):
         holding_scope = scope.get_inner_scope_for_line(start_line)
         if holding_scope.get_kind() != 'Module' and \
            holding_scope.get_start() == start_line:
             holding_scope = holding_scope.parent
         return holding_scope
-    
+
     def _choose_closest_line_end(self, offset, end=False):
         lineno = self.lines.get_line_number(offset)
         line_start = self.lines.get_line_start(lineno)
@@ -371,15 +371,15 @@ class _ExtractingPartOffsets(object):
         elif self.source_code[offset:line_end].strip() == '':
             return min(line_end, len(self.source_code))
         return offset
-    
+
     def is_one_line_extract(self):
         return self.region != self.region_lines and \
-               (self.line_finder.get_logical_line_in(self.region_linenos[0]) == 
+               (self.line_finder.get_logical_line_in(self.region_linenos[0]) ==
                 self.line_finder.get_logical_line_in(self.region_linenos[1]))
 
 
 class _FunctionInformationCollector(object):
-    
+
     def __init__(self, start, end, is_global):
         self.start = start
         self.end = end
@@ -390,7 +390,7 @@ class _FunctionInformationCollector(object):
         self.postread = set()
         self.postwritten = set()
         self.host_function = True
-    
+
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
             if name not in self.written:
@@ -398,7 +398,7 @@ class _FunctionInformationCollector(object):
         if self.end < lineno:
             if name not in self.postwritten:
                 self.postread.add(name)
-    
+
     def _written_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
             self.written.add(name)
@@ -406,7 +406,7 @@ class _FunctionInformationCollector(object):
             self.prewritten.add(name)
         if self.end < lineno:
             self.postwritten.add(name)
-        
+
     def visitFunction(self, node):
         if not self.is_global and self.host_function:
             self.host_function = False
@@ -422,27 +422,27 @@ class _FunctionInformationCollector(object):
 
     def visitAssName(self, node):
         self._written_variable(node.name, node.lineno)
-    
+
     def visitName(self, node):
         self._read_variable(node.name, node.lineno)
-    
+
     def visitClass(self, node):
         self._written_variable(node.name, node.lineno)
-    
+
 
 class _VariableReadsAndWritesFinder(object):
-    
+
     def __init__(self):
         self.written = set()
         self.read = set()
-    
+
     def visitAssName(self, node):
         self.written.add(node.name)
-    
+
     def visitName(self, node):
         if node.name not in self.written:
             self.read.add(node.name)
-    
+
     def visitFunction(self, node):
         self.written.add(node.name)
         visitor = _VariableReadsAndWritesFinder()
@@ -451,7 +451,7 @@ class _VariableReadsAndWritesFinder(object):
 
     def visitClass(self, node):
         self.written.add(node.name)
-    
+
     @staticmethod
     def find_reads_and_writes(code):
         if code.strip() == '':
@@ -476,11 +476,11 @@ class _VariableReadsAndWritesFinder(object):
 
 
 class _ReturnOrYieldFinder(object):
-    
+
     def __init__(self):
         self.returns = False
         self.loop_count = 0
-    
+
     def check_loop(self):
         if self.loop_count < 1:
             self.error = True
@@ -493,10 +493,10 @@ class _ReturnOrYieldFinder(object):
 
     def visitFunction(self, node):
         pass
-    
+
     def visitClass(self, node):
         pass
-    
+
     @staticmethod
     def does_it_return(code):
         if code.strip() == '':
@@ -510,27 +510,27 @@ class _ReturnOrYieldFinder(object):
 
 
 class _UnmatchedBreakOrContinueFinder(object):
-    
+
     def __init__(self):
         self.error = False
         self.loop_count = 0
-    
+
     def visitFor(self, node):
         self.loop_encountered(node)
 
     def visitWhile(self, node):
         self.loop_encountered(node)
-    
+
     def loop_encountered(self, node):
         self.loop_count += 1
         compiler.walk(node.body, self)
         self.loop_count -= 1
         if node.else_:
             compiler.walk(node.else_, self)
-    
+
     def visitBreak(self, node):
         self.check_loop()
-    
+
     def visitContinue(self, node):
         self.check_loop()
 
@@ -540,10 +540,10 @@ class _UnmatchedBreakOrContinueFinder(object):
 
     def visitFunction(self, node):
         pass
-    
+
     def visitClass(self, node):
         pass
-    
+
     @staticmethod
     def has_errors(code):
         if code.strip() == '':

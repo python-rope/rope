@@ -66,7 +66,7 @@ class CoreTest(unittest.TestCase):
         editor1 = Core.get_core().open_file(self.projectMaker.get_sample_file_name())
         editor2 = Core.get_core().open_file(self.projectMaker.get_sample_file_name())
         self.assertTrue(editor1 is editor2)
-    
+
     def test_closing_editor(self):
         editor = Core.get_core().open_file(self.projectMaker.get_sample_file_name())
         self.assertEquals(Core.get_core().get_active_editor(), editor)

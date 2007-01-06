@@ -8,14 +8,14 @@ from rope.ui.indenter import PythonCodeIndenter
 
 class GraphicalEditorTest(unittest.TestCase):
     '''This class only tests features that are specific to GraphicalEditor; see mockeditortest'''
-    
+
     __factory = GraphicalEditorFactory(Tkinter.Frame())
-    
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.editor = self.__factory.create(get_sample_editingcontext())
         self.editor.set_text('sample text')
-    
+
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 

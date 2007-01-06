@@ -8,7 +8,7 @@ from ropetest.projecttest import SampleProjectMaker
 from ropetest.ui.mockeditortest import get_sample_editingcontext
 
 class FileEditorTest(unittest.TestCase):
-    
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.projectMaker = SampleProjectMaker()
@@ -18,11 +18,11 @@ class FileEditorTest(unittest.TestCase):
         get_sample_editingcontext()
         self.editor = FileEditor(self.project, self.project.get_resource(self.fileName),
                                  GraphicalEditorFactory(Tkinter.Frame()))
-    
+
     def tearDown(self):
         self.projectMaker.remove_all()
         unittest.TestCase.tearDown(self)
-        
+
     def test_creation(self):
         self.assertEquals(self.projectMaker.get_sample_file_contents(),
                           self.editor.get_editor().get_text())

@@ -27,7 +27,7 @@ class PythonFileRunnerTest(unittest.TestCase):
                        "output = open('output.txt', 'w')\n" \
                        "output.write(get_text())\noutput.close()\n"
         file.write(file_content)
-        
+
     def get_output_file_content(self, file_path):
         try:
             output_path = ''
@@ -103,7 +103,7 @@ class PythonFileRunnerTest(unittest.TestCase):
             self.assertEquals('input text\n', self.get_output_file_content(file_path))
         finally:
             os.remove(temp_file_name)
-        
+
     def test_setting_process_output(self):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path,

@@ -27,10 +27,10 @@ class _ASTWriter(object):
 
     def __init__(self):
         self.output = ''
-    
+
     def visitAssName(self, node):
         self.output += node.name + ' = '
-    
+
     def visitConst(self, node):
         self.output += str(node.value) + '\n'
 

@@ -6,30 +6,30 @@ from rope.refactor.importutils import actions
 
 
 class ModuleImports(object):
-    
+
     def __init__(self, pycore, pymodule):
         self.pycore = pycore
         self.pymodule = pymodule
         self.import_statements = None
-    
+
     def get_import_statements(self):
         if self.import_statements is None:
             self.import_statements = _GlobalImportFinder(self.pymodule,
                                                          self.pycore).\
                                      find_import_statements()
         return self.import_statements
-    
+
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
         compiler.walk(self.pymodule._get_ast(), visitor)
         return visitor.unbound
-    
+
     def remove_unused_imports(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         visitor = actions.RemovingVisitor(self.pycore, can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
-    
+
     def get_used_imports(self, defined_pyobject):
         all_import_statements = self.get_import_statements()
         result = []
@@ -53,7 +53,7 @@ class ModuleImports(object):
                 result.append(import_statement.get_import_statement() + '\n')
         result.extend(lines[last_index:])
         return ''.join(result)
-    
+
     def add_import(self, import_info):
         visitor = actions.AddingVisitor(self.pycore, import_info)
         for import_statement in self.get_import_statements():
@@ -65,18 +65,18 @@ class ModuleImports(object):
             if all_imports:
                 last_line = all_imports[-1].end_line
             all_imports.append(importinfo.ImportStatement(import_info, last_line, last_line))
-    
+
     def filter_names(self, can_select):
         visitor = actions.RemovingVisitor(self.pycore, can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
-    
+
     def expand_stars(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         visitor = actions.ExpandStarsVisitor(self.pycore, can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
-    
+
     def remove_duplicates(self):
         imports = self.get_import_statements()
         added_imports = []
@@ -87,7 +87,7 @@ class ModuleImports(object):
                     import_stmt.empty_import()
             else:
                 added_imports.append(import_stmt)
-    
+
     def get_relative_to_absolute_list(self):
         visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
             self.pycore, self.pymodule.get_resource().get_parent())
@@ -105,23 +105,23 @@ class ModuleImports(object):
 
 
 class _OneTimeSelector(object):
-    
+
     def __init__(self, names):
         self.names = names
         self.selected_names = set()
-    
+
     def __call__(self, imported_primary):
         if self._can_name_be_added(imported_primary):
             for name in self._get_dotted_tokens(imported_primary):
                 self.selected_names.add(name)
             return True
         return False
-    
+
     def _get_dotted_tokens(self, imported_primary):
         tokens = imported_primary.split('.')
         for i in range(len(tokens)):
             yield '.'.join(tokens[:i + 1])
-    
+
     def _can_name_be_added(self, imported_primary):
         for name in self._get_dotted_tokens(imported_primary):
             if name in self.names and name not in self.selected_names:
@@ -130,27 +130,27 @@ class _OneTimeSelector(object):
 
 
 class _UnboundNameFinder(object):
-    
+
     def __init__(self, pyobject):
         self.pyobject = pyobject
-    
+
     def _visit_child_scope(self, node):
         pyobject = self.pyobject.get_module().get_scope().\
                    get_inner_scope_for_line(node.lineno).pyobject
         visitor = _LocalUnboundNameFinder(pyobject, self)
         for child in node.getChildNodes():
             compiler.walk(child, visitor)
-    
+
     def visitFunction(self, node):
         self._visit_child_scope(node)
 
     def visitClass(self, node):
         self._visit_child_scope(node)
-    
+
     def visitName(self, node):
         if self._get_root()._is_node_interesting(node) and not self.is_bound(node.name):
             self.add_unbound(node.name)
-    
+
     def visitGetattr(self, node):
         result = []
         while isinstance(node, compiler.ast.Getattr):
@@ -166,16 +166,16 @@ class _UnboundNameFinder(object):
 
     def _get_root(self):
         pass
-    
+
     def is_bound(self, name):
         pass
-    
+
     def add_unbound(self, name):
         pass
-    
+
 
 class _GlobalUnboundNameFinder(_UnboundNameFinder):
-    
+
     def __init__(self, pymodule, wanted_pyobject):
         super(_GlobalUnboundNameFinder, self).__init__(pymodule)
         self.unbound = set()
@@ -187,16 +187,16 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
         wanted_scope = wanted_pyobject.get_scope()
         self.start = wanted_scope.get_start()
         self.end = wanted_scope.get_end() + 1
-    
+
     def _get_root(self):
         return self
-    
+
     def is_bound(self, primary):
         name = primary.split('.')[0]
         if name in self.names:
             return True
         return False
-    
+
     def add_unbound(self, name):
         names = name.split('.')
         for i in range(len(names)):
@@ -209,27 +209,27 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
 
 
 class _LocalUnboundNameFinder(_UnboundNameFinder):
-    
+
     def __init__(self, pyobject, parent):
         super(_LocalUnboundNameFinder, self).__init__(pyobject)
         self.parent = parent
-    
+
     def _get_root(self):
         return self.parent._get_root()
-    
+
     def is_bound(self, primary):
         name = primary.split('.')[0]
         if name in self.pyobject.get_scope().get_names() or \
            self.parent.is_bound(name):
             return True
         return False
-    
+
     def add_unbound(self, name):
         self.parent.add_unbound(name)
 
 
 class _GlobalImportFinder(object):
-    
+
     def __init__(self, pymodule, pycore):
         self.current_folder = None
         if pymodule.get_resource():
@@ -238,14 +238,14 @@ class _GlobalImportFinder(object):
         self.pycore = pycore
         self.imports = []
         self.lines = self.pymodule.lines
-    
+
     def visit_import(self, node, end_line):
         start_line = node.lineno
         import_statement = importinfo.ImportStatement(
             importinfo.NormalImport(node.names),start_line, end_line,
             self._get_text(start_line, end_line))
         self.imports.append(import_statement)
-    
+
     def _get_text(self, start_line, end_line):
         result = []
         for index in range(start_line, end_line):
@@ -261,7 +261,7 @@ class _GlobalImportFinder(object):
         start_line = node.lineno
         self.imports.append(importinfo.ImportStatement(import_info, node.lineno, end_line,
                                                        self._get_text(start_line, end_line)))
-    
+
     def find_import_statements(self):
         nodes = self.pymodule._get_ast().node.nodes
         for index, node in enumerate(nodes):

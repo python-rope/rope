@@ -36,10 +36,10 @@ class Core(object):
             context.key_binding = []
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
         self.project = None
-    
+
     def _load_actions(self):
         """Load extension modules.
-        
+
         The modules that are loaded here use `Core.register_action`
         to register their `Action` s.
         """
@@ -73,7 +73,7 @@ class Core(object):
         self._bind_key('<Any-KeyRelease>', show_current_line_number)
         self._bind_key('<Any-Button>', show_current_line_number)
         self._bind_key('<FocusIn>', show_current_line_number)
-    
+
     def _get_matching_contexts(self, contexts):
         contexts = list(contexts)
         result = set()
@@ -86,7 +86,7 @@ class Core(object):
             if name in editingcontexts.contexts:
                 result.add(editingcontexts.contexts[name])
         return result
-    
+
     def _bind_key(self, key, function, active_contexts=['all']):
         if not key.startswith('<'):
             key = self._emacs_to_tk(key)
@@ -95,7 +95,7 @@ class Core(object):
             context.key_binding.append((key, function))
         if editingcontexts.none in active_contexts:
             self.root.bind(key, function)
-    
+
     def _emacs_to_tk(self, key):
         result = []
         for token in key.split(' '):
@@ -106,7 +106,7 @@ class Core(object):
         widget = graphical_editor.getWidget()
         for (key, function) in graphical_editor.get_editing_context().key_binding:
             widget.bind(key, function)
-    
+
     def _change_editor_dialog(self, event=None):
         toplevel = Toplevel()
         toplevel.title('Change Editor')
@@ -193,7 +193,7 @@ class Core(object):
             return self.close_active_editor()
         toplevel = Toplevel()
         toplevel.title('Closing Unsaved Editor')
-        label = Label(toplevel, text='Closing Unsaved Editor for <%s>' % 
+        label = Label(toplevel, text='Closing Unsaved Editor for <%s>' %
                       active_editor.get_file().get_path())
         def save():
             active_editor.save()
@@ -263,9 +263,9 @@ class Core(object):
         if self.project:
             self.close_project()
         self.project = Project(projectRoot)
-    
+
     def _close_project_dialog(self, exit_=False):
-        modified_editors = [editor for editor in self.editor_manager.editors 
+        modified_editors = [editor for editor in self.editor_manager.editors
                            if editor.get_editor().is_modified()]
         if not modified_editors:
             self.close_project()
@@ -326,7 +326,7 @@ class Core(object):
 
     def get_editor_manager(self):
         return self.editor_manager
-    
+
     def register_action(self, action):
         """Register a `rope.ui.extension.Action`"""
         callback = self._make_callback(action)
@@ -338,19 +338,19 @@ class Core(object):
             if key:
                 menu.address[-1] = menu.address[-1].ljust(31) + key
             self._add_menu_command(menu, callback, action.get_active_contexts())
-    
+
     def _add_menu_command(self, menu, callback, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)
         for context in active_contexts:
             context.menu_manager.add_menu_command(menu, callback)
-    
+
     def _make_callback(self, action):
         def callback(event=None):
             action.do(ActionContext(self))
             if event:
                 return 'break'
         return callback
-    
+
     def _editor_changed(self):
         active_editor = self.editor_manager.active_editor
         if active_editor:

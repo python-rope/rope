@@ -7,19 +7,19 @@ from rope.base.exceptions import RopeException
 
 
 class _Project(object):
-    
+
     def __init__(self, fscommands):
         self.fscommands = fscommands
         self.robservers = {}
         self.observers = set()
-    
+
     def get_resource(self, resource_name):
         """Get a resource in a project.
-        
+
         `resource_name` is the path of a resource in a project.  It
         is the path of a resource relative to project root.  Project
         root folder address is an empty string.
-        
+
         """
         path = self._get_resource_path(resource_name)
         if not os.path.exists(path):
@@ -30,25 +30,25 @@ class _Project(object):
             return Folder(self, resource_name)
         else:
             raise RopeException('Unknown resource ' + resource_name)
-    
+
     def validate(self, folder):
         """Validate files and folders contained in this folder
-        
+
         This method asks all registered to validate all of the files
         and folders contained in this folder that they are interested
         in.
-        
+
         """
         for observer in list(self.observers):
             observer.validate(folder)
 
     def add_observer(self, observer):
         """Register a `ResourceObserver`
-        
+
         See `FilteredResourceObserver`.
         """
         self.observers.add(observer)
-    
+
     def remove_observer(self, observer):
         """Remove a registered `ResourceObserver`"""
         if observer in self.observers:
@@ -89,7 +89,7 @@ class Project(_Project):
 
     def __init__(self, project_root, fscommands=None):
         """A rope project
-        
+
         :parameters:
             - `project_root`: the address of the root folder of the project
             - `fscommands`: implements the file system operations rope uses
@@ -134,18 +134,18 @@ class Project(_Project):
 
     def get_out_of_project_resource(self, path):
         return self.no_project.get_resource(path)
-    
+
 
 class NoProject(_Project):
     """A null object for holding out of project files"""
-    
+
     def __init__(self):
         fscommands = rope.base.fscommands.FileSystemCommands()
         super(NoProject, self).__init__(fscommands)
-    
+
     def _get_resource_path(self, name):
         return os.path.abspath(name)
-    
+
     def get_resource(self, name):
         return super(NoProject, self).get_resource(os.path.abspath(name))
 
@@ -156,15 +156,15 @@ class Resource(object):
     def __init__(self, project, name):
         self.project = project
         self.name = name
-        
+
     def _get_observers(self):
         return self.project.observers
-    
+
     observers = property(_get_observers)
 
     def get_path(self):
         """Return the path of this resource relative to the project root
-        
+
         The path is the list of parent directories separated by '/' followed
         by the resource name.
         """
@@ -173,7 +173,7 @@ class Resource(object):
     def get_name(self):
         """Return the name of this resource"""
         return self.name.split('/')[-1]
-    
+
     def move(self, new_location):
         """Move resource to new_lcation"""
         destination = self._get_destination_for_move(new_location)
@@ -182,16 +182,16 @@ class Resource(object):
         new_resource = self.project.get_resource(destination)
         for observer in list(self.observers):
             observer.resource_removed(self, new_resource)
-    
+
     def remove(self):
         """Remove resource from the project"""
         self.project.remove_recursively(self._get_real_path())
         for observer in list(self.observers):
             observer.resource_removed(self)
-    
+
     def is_folder(self):
         """Return true if the resource is a folder"""
-    
+
     def exists(self):
         return os.path.exists(self._get_real_path())
 
@@ -202,7 +202,7 @@ class Resource(object):
     def _get_real_path(self):
         """Return the file system path of this resource"""
         return self.project._get_resource_path(self.name)
-    
+
     def _get_destination_for_move(self, destination):
         dest_path = self.project._get_resource_path(destination)
         if os.path.isdir(dest_path):
@@ -211,10 +211,10 @@ class Resource(object):
             else:
                 return self.get_name()
         return destination
-    
+
     def __eq__(self, obj):
         return self.__class__ == obj.__class__ and self.name == obj.name
-    
+
     def __hash__(self):
         return hash(self.name)
 
@@ -225,10 +225,10 @@ class File(Resource):
     def __init__(self, project, name):
         super(File, self).__init__(project, name)
         self.file_access = rope.base.fscommands.FileAccess()
-    
+
     def read(self):
         return self.file_access.read(self._get_real_path())
-    
+
     def write(self, contents):
         self.file_access.write(self._get_real_path(), contents)
         for observer in list(self.observers):
@@ -290,7 +290,7 @@ class Folder(Resource):
         else:
             child_path = name
         return self.project.get_resource(child_path)
-    
+
     def has_child(self, name):
         try:
             self.get_child(name)
@@ -311,7 +311,7 @@ class Folder(Resource):
             if resource.is_folder():
                 result.append(resource)
         return result
-    
+
     def contains(self, resource):
         return self != resource and resource.get_path().startswith(self.get_path())
 
@@ -323,7 +323,7 @@ class Folder(Resource):
 
 class ResourceObserver(object):
     """Provides the interface observing resources
-    
+
     `ResourceObserver` s can be registered using `Resource.add_observer`.
     But most of the time what is needed is `FilteredResourceObserver`
     since ResourceObserver report all changes passed to them and they
@@ -332,44 +332,44 @@ class ResourceObserver(object):
     contents.  You can use `FilteredResourceObserver` if you are
     interested in changes only to a list of resources.  And you want
     changes to be reported on individual resources.
-    
+
     """
-    
+
     def __init__(self, changed, removed):
         self.changed = changed
         self.removed = removed
-    
+
     def resource_changed(self, resource):
         """It is called when the resource changes"""
         self.changed(resource)
-    
+
     def resource_removed(self, resource, new_resource=None):
         """It is called when a resource no longer exists
-        
+
         `new_resource` is the destination if we know it, otherwise it
         is None.
-        
+
         """
         self.removed(resource, new_resource)
 
     def validate(self, resource):
         """Validate the existence of this resource and its children.
-        
+
         This function is called when rope need to update its resource
         cache about the files that might have been changed or removed
         by other processes.
-        
+
         """
 
 
 class FilteredResourceObserver(object):
     """A useful decorator for `ResourceObserver`
-    
+
     Most resource observers have a list of resources and are
     interested only in changes to those files.  This class satisfies
     this need.  It dispatches resource changed and removed messages.
     It performs these tasks:
-    
+
     * Changes to files and folders are analyzed to check whether any
       of the interesting resources are changed or not.  If they are,
       it reports these changes to `resource_observer` passed to the
@@ -379,13 +379,13 @@ class FilteredResourceObserver(object):
       them to `resource_observer`.
     * When validating a folder it validates all of the interesting
       files in that folder.
-    
+
     Since most resource observers have are interested in a list of
     resources that change over time, `add_resource` and
     `remove_resource` might be useful.
-    
+
     """
-    
+
     def __init__(self, resource_observer, initial_resources=None, timekeeper=None):
         self.observer = resource_observer
         self.resources = {}
@@ -396,16 +396,16 @@ class FilteredResourceObserver(object):
         if initial_resources is not None:
             for resource in initial_resources:
                 self.add_resource(resource)
-    
+
     def add_resource(self, resource):
         """Add a resource to the list of interesting resources"""
         self.resources[resource] = self.timekeeper.getmtime(resource)
-    
+
     def remove_resource(self, resource):
         """Add a resource to the list of interesting resources"""
         if resource in self.resources:
             del self.resources[resource]
-    
+
     def resource_changed(self, resource):
         changes = _Changes()
         self._update_changes_caused_by_changed(changes, resource)
@@ -416,7 +416,7 @@ class FilteredResourceObserver(object):
             changes.add_changed(changed)
         if self._is_parent_changed(changed):
             changes.add_changed(changed.get_parent())
-    
+
     def _update_changes_caused_by_removed(self, changes, resource,
                                           new_resource=None):
         if resource in self.resources:
@@ -431,15 +431,15 @@ class FilteredResourceObserver(object):
         if new_resource is not None:
             if self._is_parent_changed(new_resource):
                 changes.add_changed(new_resource.get_parent())
-    
+
     def _is_parent_changed(self, child):
         return child.get_parent() in self.resources
-    
+
     def resource_removed(self, resource, new_resource=None):
         changes = _Changes()
         self._update_changes_caused_by_removed(changes, resource, new_resource)
         self._perform_changes(changes)
-    
+
     def validate(self, resource):
         moved = self._search_resource_moves(resource)
         changed = self._search_resource_changes(resource)
@@ -451,7 +451,7 @@ class FilteredResourceObserver(object):
             if file in self.resources:
                 self._update_changes_caused_by_changed(changes, file)
         self._perform_changes(changes)
-    
+
     def _perform_changes(self, changes):
         for resource in changes.changes:
             self.observer.resource_changed(resource)
@@ -489,7 +489,7 @@ class FilteredResourceObserver(object):
 
     def _is_changed(self, resource):
         return self.resources[resource] != self.timekeeper.getmtime(resource)
-    
+
     def _calculate_new_resource(self, main, new_main, resource):
         if new_main is None:
             return None
@@ -498,21 +498,21 @@ class FilteredResourceObserver(object):
 
 
 class Timekeeper(object):
-    
+
     def getmtime(self, resource):
         """Return the modification time of a `Resource`."""
         return os.path.getmtime(resource._get_real_path())
 
 
 class _Changes(object):
-    
+
     def __init__(self):
         self.changes = set()
         self.moves = {}
 
     def add_changed(self, resource):
         self.changes.add(resource)
-    
+
     def add_removed(self, resource, new_resource=None):
         self.moves[resource] = new_resource
 

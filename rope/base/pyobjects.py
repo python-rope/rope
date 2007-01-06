@@ -13,12 +13,12 @@ class PyObject(object):
         if type_ is None:
             type_ = self
         self.type = type_
-    
+
     def get_attributes(self):
         if self.type is self:
             return {}
         return self.type.get_attributes()
-    
+
     def get_attribute(self, name):
         if name not in self.get_attributes():
             raise AttributeNotFoundException('Attribute %s not found' % name)
@@ -50,7 +50,7 @@ class PyDefinedObject(PyObject):
         self.structural_attributes = None
         self.concluded_attributes = self.get_module()._get_concluded_data()
         self.attributes = self.get_module()._get_concluded_data()
-    
+
     def _get_structural_attributes(self):
         if self.structural_attributes is None:
             self.structural_attributes = self._create_structural_attributes()
@@ -68,25 +68,25 @@ class PyDefinedObject(PyObject):
             result.update(self._get_structural_attributes())
             self.attributes.set(result)
         return self.attributes.get()
-    
+
     def get_attribute(self, name):
         if name in self._get_structural_attributes():
             return self._get_structural_attributes()[name]
         if name in self._get_concluded_attributes():
             return self._get_concluded_attributes()[name]
         raise AttributeNotFoundException('Attribute %s not found' % name)
-    
+
     def get_scope(self):
         if self.scope == None:
             self.scope = self._create_scope()
         return self.scope
-    
+
     def get_module(self):
         current_object = self
         while current_object.parent is not None:
             current_object = current_object.parent
         return current_object
-    
+
     def _create_structural_attributes(self):
         return {}
 
@@ -95,7 +95,7 @@ class PyDefinedObject(PyObject):
 
     def _get_ast(self):
         return self.ast_node
-    
+
     def _create_scope(self):
         pass
 
@@ -114,13 +114,13 @@ class PyFunction(PyDefinedObject):
 
     def _create_structural_attributes(self):
         return {}
-    
+
     def _create_concluded_attributes(self):
         return {}
 
     def _create_scope(self):
         return rope.base.pyscopes.FunctionScope(self.pycore, self)
-    
+
     def _get_parameter_pyobjects(self):
         if self.are_args_being_inferred:
             raise IsBeingInferredException('Circular assignments')
@@ -133,7 +133,7 @@ class PyFunction(PyDefinedObject):
         finally:
             self.are_args_being_inferred = False
         return pyobjects
-    
+
     def get_parameters(self):
         if self.parameter_pynames.get() is None:
             result = {}
@@ -141,12 +141,12 @@ class PyFunction(PyDefinedObject):
                 result[name] = ParameterName(self, index)
             self.parameter_pynames.set(result)
         return self.parameter_pynames.get()
-    
+
     def get_parameter(self, index):
         if not self.parameter_pyobjects.get():
             self.parameter_pyobjects.set(self._get_parameter_pyobjects())
         return self.parameter_pyobjects.get()[index]
-    
+
     def get_returned_object(self, args=None):
         if self.is_being_inferred:
             raise IsBeingInferredException('Circular assignments')
@@ -169,7 +169,7 @@ class PyClass(PyDefinedObject):
                                       pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = None
-    
+
     def get_superclasses(self):
         if self._superclasses is None:
             self._superclasses = self._get_bases()
@@ -186,7 +186,7 @@ class PyClass(PyDefinedObject):
         for base in reversed(self.get_superclasses()):
             result.update(base.get_attributes())
         return result
-    
+
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
@@ -201,34 +201,34 @@ class PyClass(PyDefinedObject):
 
 
 class _ConcludedData(object):
-    
+
     def __init__(self):
         self.data_ = None
-    
+
     def set(self, data):
         self.data_ = data
-    
+
     def get(self):
         return self.data_
-    
+
     data = property(get, set)
-    
+
     def _invalidate(self):
         self.data = None
-    
+
     def __str__(self):
         return '<' + str(self.data) + '>'
 
 
 class _PyModule(PyDefinedObject):
-    
+
     def __init__(self, pycore, ast_node, resource):
         self.dependant_modules = set()
         self.resource = resource
         self.concluded_data = []
         super(_PyModule, self).__init__(PyObject.get_base_type('Module'),
                                         pycore, ast_node, None)
-    
+
     def _get_concluded_data(self):
         new_data = _ConcludedData()
         self.concluded_data.append(new_data)
@@ -237,7 +237,7 @@ class _PyModule(PyDefinedObject):
     def _add_dependant(self, pymodule):
         if pymodule.get_resource():
             self.dependant_modules.add(pymodule)
-    
+
     def _invalidate_concluded_data(self):
         dependant_modules = set(self.dependant_modules)
         self.dependant_modules.clear()
@@ -260,25 +260,25 @@ class PyModule(_PyModule):
         ast_node = compiler.parse(source_code.rstrip(' \t'))
         self.star_imports = []
         super(PyModule, self).__init__(pycore, ast_node, resource)
-    
+
     def _get_lines(self):
         if self._lines is None:
             self._lines = rope.base.codeanalyze.SourceLinesAdapter(self.source_code)
         return self._lines
-    
+
     lines = property(_get_lines, doc="return a `SourceLinesAdapter`")
-    
+
     def _create_concluded_attributes(self):
         result = {}
         for star_import in self.star_imports:
             result.update(star_import.get_names())
         return result
-    
+
     def _create_structural_attributes(self):
         visitor = _GlobalVisitor(self.pycore, self)
         compiler.walk(self.ast_node, visitor)
         return visitor.names
-    
+
     def _create_scope(self):
         return rope.base.pyscopes.GlobalScope(self.pycore, self)
 
@@ -326,10 +326,10 @@ class PyPackage(_PyModule):
             return self.resource.get_child('__init__.py')
         else:
             return None
-    
+
     def _create_scope(self):
         return self.get_module().get_scope()
-    
+
     def get_module(self):
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
@@ -341,12 +341,12 @@ class _AssignVisitor(object):
     def __init__(self, scope_visitor):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
-    
+
     def visitAssign(self, node):
         self.assigned_ast = node.expr
         for child_node in node.nodes:
             compiler.walk(child_node, self)
-    
+
     def _assigned(self, name, assignment=None):
         old_pyname = self.scope_visitor.names.get(name, None)
         if old_pyname is None or not isinstance(old_pyname, AssignedName):
@@ -354,13 +354,13 @@ class _AssignVisitor(object):
                 module=self.scope_visitor.get_module())
         if assignment is not None:
             self.scope_visitor.names[name].assignments.append(assignment)
-        
+
     def visitAssName(self, node):
         assignment = None
         if self.assigned_ast is not None:
             assignment = pynames._Assignment(self.assigned_ast)
         self._assigned(node.name, assignment)
-    
+
     def visitAssTuple(self, node):
         names = _AssignedNameCollector.get_assigned_names(node)
         for index, name in enumerate(names):
@@ -370,7 +370,7 @@ class _AssignVisitor(object):
             self._assigned(name, assignment)
 
 class _ForAssignVisitor(_AssignVisitor):
-    
+
     def __init__(self, scope_visitor, assigned):
         super(_ForAssignVisitor, self).__init__(scope_visitor)
         self.assigned_ast = assigned
@@ -380,16 +380,16 @@ class _ForAssignVisitor(_AssignVisitor):
             assignment=assignment, module=self.scope_visitor.get_module())
         if assignment is not None:
             self.scope_visitor.names[name].assignment = assignment
-        
+
 
 class _AssignedNameCollector(object):
-    
+
     def __init__(self):
         self.names = []
-    
+
     def visitAssName(self, node):
         self.names.append(node.name)
-    
+
     @staticmethod
     def get_assigned_names(node):
         visitor = _AssignedNameCollector()
@@ -409,7 +409,7 @@ class _ScopeVisitor(object):
             return self.owner_object.get_module()
         else:
             return None
-    
+
     def visitClass(self, node):
         self.names[node.name] = DefinedName(PyClass(self.pycore,
                                                     node, self.owner_object))
@@ -420,12 +420,12 @@ class _ScopeVisitor(object):
 
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
-    
+
     def visitFor(self, node):
         visitor = _ForAssignVisitor(self, node.list)
         compiler.walk(node.assign, visitor)
         compiler.walk(node.body, self)
-        
+
     def visitImport(self, node):
         for import_pair in node.names:
             module_name, alias = import_pair
@@ -454,7 +454,7 @@ class _GlobalVisitor(_ScopeVisitor):
 
     def __init__(self, pycore, owner_object):
         super(_GlobalVisitor, self).__init__(pycore, owner_object)
-    
+
 
 class _ClassVisitor(_ScopeVisitor):
 
@@ -478,7 +478,7 @@ class _FunctionVisitor(_ScopeVisitor):
     def __init__(self, pycore, owner_object):
         super(_FunctionVisitor, self).__init__(pycore, owner_object)
         self.returned_asts = []
-    
+
     def visitReturn(self, node):
         self.returned_asts.append(node.value)
 
@@ -488,7 +488,7 @@ class _ClassInitVisitor(_AssignVisitor):
     def __init__(self, scope_visitor, self_name):
         super(_ClassInitVisitor, self).__init__(scope_visitor)
         self.self_name = self_name
-    
+
     def visitAssAttr(self, node):
         if isinstance(node.expr, compiler.ast.Name) and node.expr.name == self.self_name:
             if node.attrname not in self.scope_visitor.names:
@@ -496,7 +496,7 @@ class _ClassInitVisitor(_AssignVisitor):
                     lineno=node.lineno, module=self.scope_visitor.get_module())
             self.scope_visitor.names[node.attrname].assignments.append(
                 pynames._Assignment(self.assigned_ast))
-    
+
     def visitAssName(self, node):
         pass
 

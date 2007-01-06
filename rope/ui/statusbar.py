@@ -8,20 +8,20 @@ class StatusBarException(rope.base.exceptions.RopeUIException):
 
 
 class StatusText(object):
-    
+
     def __init__(self, status_bar_manager, kind, label):
         self.manager = status_bar_manager
         self.kind = kind
         self.label = label
         self.width = 0
-    
+
     def set_width(self, width):
         self.width = width
         #        self.label['width'] = width
 
     def set_text(self, text):
         self.label['text'] = text.ljust(self.width)
-        
+
     def get_text(self):
         return self.label['text']
 
@@ -31,18 +31,18 @@ class StatusText(object):
 
 class StatusBarManager(object):
     """Manages the status bar"""
-    
+
     def __init__(self, status_bar):
         self.status_bar = status_bar
         self.status_text = {}
-    
+
     def get_status(self, kind):
-        if not self.status_text.has_key(kind):
+        if kind not in self.status_text:
             raise StatusBarException('StatusText <%s> does not exist' % kind)
         return self.status_text[kind]
 
     def create_status(self, kind):
-        if self.status_text.has_key(kind):
+        if kind in self.status_text:
             raise StatusBarException('StatusText <%s> already exists' % kind)
         label = Label(self.status_bar, text=' ', height=1,
                       relief=RIDGE, font=('Courier', 12))

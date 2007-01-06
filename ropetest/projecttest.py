@@ -13,7 +13,7 @@ class SampleProjectMaker(object):
         self.sampleFile = 'sample.txt'
         self.sampleFolder = 'ASampleFolder'
         self.sample_content = 'sample text\n'
-        
+
     def make_project(self):
         self.remove_all()
         self.sampleFilePath = os.path.join(self.projectRoot, self.sampleFile)
@@ -61,7 +61,7 @@ class ProjectTest(unittest.TestCase):
     def test_project_file_reading(self):
         projectFile = self.project.get_resource(self.projectMaker.get_sample_file_name())
         self.assertEquals(self.projectMaker.get_sample_file_contents(), projectFile.read())
-    
+
     @testutils.assert_raises(RopeException)
     def test_getting_not_existing_project_file(self):
         projectFile = self.project.get_resource('DoesNotExistFile.txt')
@@ -147,13 +147,13 @@ class ProjectTest(unittest.TestCase):
         self.project.get_resource(self.projectMaker.get_sample_file_name()).remove()
         self.assertFalse(os.path.exists(os.path.join(self.project.get_root_address(),
                                                      self.projectMaker.get_sample_file_name())))
-                          
+
     def test_removing_files_invalidating_in_project_resource_pool(self):
         root_folder = self.project.get_root_folder()
         my_file = root_folder.create_file('my_file.txt')
         my_file.remove()
         self.assertFalse(root_folder.has_child('my_file.txt'))
-                          
+
     def test_removing_directories(self):
         self.assertTrue(os.path.exists(os.path.join(self.project.get_root_address(),
                                                     self.projectMaker.get_sample_folder_name())))
@@ -209,7 +209,7 @@ class ProjectTest(unittest.TestCase):
     def testget_children(self):
         children = self.project.get_resource(self.projectMaker.get_sample_folder_name()).get_children()
         self.assertEquals([], children)
-    
+
     def test_nonempty_get_children(self):
         file_name = 'nestedfile.txt'
         filePath = self.projectMaker.get_sample_folder_name() + '/' + file_name
@@ -236,7 +236,7 @@ class ProjectTest(unittest.TestCase):
         files = self.project.get_root_folder().get_files()
         self.assertEquals(1, len(files))
         self.assertTrue(self.project.get_resource(self.projectMaker.get_sample_file_name()) in files)
-        
+
     def test_getting_folders(self):
         folders = self.project.get_root_folder().get_folders()
         self.assertEquals(1, len(folders))
@@ -250,7 +250,7 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(2, len(files))
         self.assertTrue(self.project.get_resource('top/file2.txt') in files)
         self.assertEquals(0, len(parent.get_folders()))
-        
+
     def test_nested_folder_get_folders(self):
         parent = self.project.get_root_folder().create_folder('top')
         parent.create_folder('dir1')
@@ -259,7 +259,7 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(2, len(folders))
         self.assertTrue(self.project.get_resource('top/dir1') in folders)
         self.assertEquals(0, len(parent.get_files()))
-        
+
     def testRootFolder(self):
         rootFolder = self.project.get_root_folder()
         self.assertEquals(2, len(rootFolder.get_children()))
@@ -329,9 +329,9 @@ class ProjectTest(unittest.TestCase):
         folder = self.project.get_root_folder()
         folder.create_file('myfile.txt')
         folder.create_folder('myfolder')
-        self.assertEquals(self.project.get_resource('myfile.txt'), 
+        self.assertEquals(self.project.get_resource('myfile.txt'),
                           folder.get_child('myfile.txt'))
-        self.assertEquals(self.project.get_resource('myfolder'), 
+        self.assertEquals(self.project.get_resource('myfolder'),
                           folder.get_child('myfolder'))
 
     def test_folder_get_child_nested(self):
@@ -353,7 +353,7 @@ class ProjectTest(unittest.TestCase):
         my_file.move('my_other_file.txt')
         self.assertFalse(my_file.exists())
         root_folder.get_child('my_other_file.txt')
-                          
+
     def test_moving_folders(self):
         root_folder = self.project.get_root_folder()
         my_folder = root_folder.create_folder('my_folder')
@@ -362,7 +362,7 @@ class ProjectTest(unittest.TestCase):
         self.assertFalse(root_folder.has_child('my_folder'))
         self.assertFalse(my_file.exists())
         self.assertTrue(root_folder.get_child('new_folder') is not None)
-                          
+
     def test_moving_destination_folders(self):
         root_folder = self.project.get_root_folder()
         my_folder = root_folder.create_folder('my_folder')
@@ -371,14 +371,14 @@ class ProjectTest(unittest.TestCase):
         self.assertFalse(root_folder.has_child('my_file.txt'))
         self.assertFalse(my_file.exists())
         my_folder.get_child('my_file.txt')
-                          
+
     def test_moving_files_and_resource_objects(self):
         root_folder = self.project.get_root_folder()
         my_file = root_folder.create_file('my_file.txt')
         old_hash = hash(my_file)
         my_file.move('my_other_file.txt')
         self.assertEquals(old_hash, hash(my_file))
-                          
+
     def test_file_encoding_reading(self):
         sample_file = self.project.get_root_folder().create_file('my_file.txt')
         contents = u'# -*- coding: utf-8 -*-\n#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
@@ -408,7 +408,7 @@ class ProjectTest(unittest.TestCase):
         file.write(contents.encode('utf-8-sig'))
         file.close()
         self.assertEquals(contents, sample_file.read())
-    
+
 
 class ResourceObserverTest(unittest.TestCase):
 
@@ -534,7 +534,7 @@ class ResourceObserverTest(unittest.TestCase):
         timekeeper.setmtime(my_file, 1)
         self.project.validate(self.project.get_root_folder())
         self.assertEquals(1, sample_observer.change_count)
-    
+
     def test_validation_and_changing_files2(self):
         my_file = self.project.get_root_folder().create_file('my_file.txt')
         sample_observer = _SampleObserver()
@@ -547,7 +547,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEquals(1, sample_observer.change_count)
         self.project.validate(self.project.get_root_folder())
         self.assertEquals(1, sample_observer.change_count)
-    
+
     def test_not_reporting_multiple_changes_to_folders(self):
         root = self.project.get_root_folder()
         file1 = root.create_file('file1.txt')
@@ -560,7 +560,7 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEquals(0, sample_observer.change_count)
         self.project.validate(self.project.get_root_folder())
         self.assertEquals(3, sample_observer.change_count)
-    
+
     def _write_file(self, path):
         my_file = open(path, 'w')
         my_file.write('\n')
@@ -568,19 +568,19 @@ class ResourceObserverTest(unittest.TestCase):
 
 
 class _MockTimeKeepter(object):
-    
+
     def __init__(self):
         self.times = {}
-    
+
     def setmtime(self, resource, time):
         self.times[resource] = time
-    
+
     def getmtime(self, resource):
         return self.times.get(resource, 0)
 
 
 class _SampleObserver(object):
-    
+
     def __init__(self):
         self.change_count = 0
         self.last_changed = None
@@ -589,7 +589,7 @@ class _SampleObserver(object):
     def resource_changed(self, resource):
         self.last_changed = resource
         self.change_count += 1
-    
+
     def resource_removed(self, resource, new_resource=None):
         self.last_moved = (resource, new_resource)
         self.change_count += 1
@@ -624,7 +624,7 @@ class OutOfProjectTest(unittest.TestCase):
         os.mkdir(sample_folder_path)
         sample_folder = self.project.get_out_of_project_resource(sample_folder_path)
         self.assertEquals([], sample_folder.get_children())
-        
+
         sample_file_path = os.path.join(sample_folder_path, 'sample.txt')
         file(sample_file_path, 'w').close()
         sample_resource = self.project.get_out_of_project_resource(sample_file_path)
@@ -643,14 +643,14 @@ class OutOfProjectTest(unittest.TestCase):
         os.mkdir(sample_folder_path)
         sample_folder = self.project.get_out_of_project_resource(sample_folder_path)
         self.assertEquals([], sample_folder.get_children())
-        
+
         sample_file_path = os.path.join(sample_folder_path, 'sample.txt')
         file(sample_file_path, 'w').close()
         sample_resource = self.project.get_out_of_project_resource(sample_file_path)
         self.assertTrue(sample_folder.has_child('sample.txt'))
         self.assertFalse(sample_folder.has_child('doesnothave.txt'))
         self.assertEquals(sample_resource, sample_folder.get_child('sample.txt'))
-    
+
 
 def suite():
     result = unittest.TestSuite()

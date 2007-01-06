@@ -30,10 +30,10 @@ class MockEditor(object):
         self.content = ''
         self.insertIndex = MockTextIndex(self, 0)
         self.status_bar_manager = None
-    
+
     def get_text(self):
         return self.content
-    
+
     def set_text(self, text):
         self.content = text
 
@@ -70,11 +70,11 @@ class MockEditor(object):
         if sindex == self.get_end():
             return ''
         else:
-            return self.content[sindex._getIndex() : eindex._getIndex()]
+            return self.content[sindex._getIndex():eindex._getIndex()]
 
     def insert(self, textIndex, text):
-        self.content = self.content[0 : textIndex._getIndex()] \
-            + text + self.content[textIndex._getIndex() :]
+        self.content = self.content[0:textIndex._getIndex()] \
+            + text + self.content[textIndex._getIndex():]
 
     def delete(self, start = None, end = None):
         startIndex = self.insertIndex._getIndex()
@@ -119,7 +119,7 @@ class MockTextIndex(object):
     def __cmp__(self, index):
         assert self.editor == index.editor
         return self.index - index.index
-    
+
     def _getIndex(self):
         return self.index
 

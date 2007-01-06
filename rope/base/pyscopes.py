@@ -11,10 +11,10 @@ class Scope(object):
         self.pyobject = pyobject
         self.parent = parent_scope
         self.scopes = None
-    
+
     def get_names(self):
         """Return the names defined in this scope"""
-        return self.pyobject.get_attributes() 
+        return self.pyobject.get_attributes()
 
     def get_name(self, name):
         """Return name `PyName` defined in this scope"""
@@ -24,7 +24,7 @@ class Scope(object):
 
     def get_scopes(self):
         """Return the subscopes of this scope.
-        
+
         The returned scopes should be sorted by the order they appear
         """
         if self.scopes == None:
@@ -39,7 +39,7 @@ class Scope(object):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
         block_objects.sort(cmp=block_compare)
         return [block.get_scope() for block in block_objects]
-    
+
     def _get_global_scope(self):
         current = self
         while current.parent is not None:
@@ -48,14 +48,14 @@ class Scope(object):
 
     def get_start(self):
         return self.pyobject._get_ast().lineno
-    
+
     def get_end(self):
         global_scope = self._get_global_scope()
         return global_scope._get_scope_finder().find_scope_end(self)
 
     def get_kind(self):
         pass
-    
+
     def lookup(self, name):
         if name in self.get_names():
             return self.get_names()[name]
@@ -76,7 +76,7 @@ class GlobalScope(Scope):
 
     def get_kind(self):
         return 'Module'
-    
+
     def get_name(self, name):
         try:
             return self.pyobject.get_attribute(name)
@@ -84,7 +84,7 @@ class GlobalScope(Scope):
             if name in self.builtin_names:
                 return self.builtin_names[name]
             raise rope.base.exceptions.NameNotFoundException('name %s not found' % name)
-    
+
     def get_names(self):
         if self.names.get() is None:
             result = dict(super(GlobalScope, self).get_names())
@@ -94,10 +94,10 @@ class GlobalScope(Scope):
 
     def get_inner_scope_for_line(self, lineno, indents=None):
         return self._get_scope_finder().get_holding_scope(self, lineno, indents)
-    
+
     def get_inner_scope_for_offset(self, offset):
         return self._get_scope_finder().get_holding_scope_for_offset(self, offset)
-    
+
     def _get_scope_finder(self):
         if self.scope_finder is None:
             self.scope_finder = _HoldingScopeFinder(self.pyobject)
@@ -105,7 +105,7 @@ class GlobalScope(Scope):
 
     def _get_builtin_names(self):
         return get_builtin_names()
-    
+
     _builtin_names = None
     builtin_names = property(_get_builtin_names)
 
@@ -123,18 +123,18 @@ def get_builtin_names():
 
 
 class FunctionScope(Scope):
-    
+
     def __init__(self, pycore, pyobject):
         super(FunctionScope, self).__init__(pycore, pyobject,
                                             pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
-    
+
     def _get_names(self):
         if self.names == None:
             self._visit_function()
         return self.names
-    
+
     def _visit_function(self):
         if self.names == None:
             new_visitor = rope.base.pyobjects._FunctionVisitor(self.pycore,
@@ -144,12 +144,12 @@ class FunctionScope(Scope):
             self.names = self.pyobject.get_parameters()
             self.names.update(new_visitor.names)
             self.returned_asts = new_visitor.returned_asts
-    
+
     def _get_returned_asts(self):
         if self.names == None:
             self._visit_function()
         return self.returned_asts
-    
+
     def get_names(self):
         return self._get_names()
 
@@ -171,7 +171,7 @@ class ClassScope(Scope):
     def __init__(self, pycore, pyobject):
         super(ClassScope, self).__init__(pycore, pyobject,
                                          pyobject.parent.get_scope())
-    
+
     def get_names(self):
         return {}
 
@@ -184,10 +184,10 @@ class _HoldingScopeFinder(object):
     def __init__(self, pymodule):
         self.source_code = pymodule.source_code
         self.lines = pymodule.lines
-    
+
     def get_indents(self, lineno):
         return rope.base.codeanalyze.count_line_indents(self.lines.get_line(lineno))
-    
+
     def get_location(self, offset):
         current_pos = 0
         lineno = 1
@@ -198,7 +198,7 @@ class _HoldingScopeFinder(object):
 
     def _get_scope_indents(self, scope):
         return self.get_indents(scope.get_start())
-    
+
     def get_holding_scope(self, module_scope, lineno, line_indents=None):
         line_indents = line_indents
         if line_indents is None:
@@ -229,10 +229,10 @@ class _HoldingScopeFinder(object):
                     lineno == scopes[-1].get_start())):
             scopes.pop()
         return scopes[-1]
-    
+
     def get_holding_scope_for_offset(self, scope, offset):
-        return self.get_holding_scope(scope, self.lines.get_line_number(offset))        
-    
+        return self.get_holding_scope(scope, self.lines.get_line_number(offset))
+
     def find_scope_end(self, scope):
         if not scope.parent:
             return self.lines.length()

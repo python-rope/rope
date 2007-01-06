@@ -2,16 +2,16 @@ from rope.base import codeanalyze
 
 
 class ChangeCollector(object):
-    
+
     def __init__(self, text):
         self.text = text
         self.changes = []
-    
+
     def add_change(self, start, end, new_text=None):
         if new_text is None:
             new_text = self.text[start:end]
         self.changes.append((start, end, new_text))
-    
+
     def get_changed(self):
         if not self.changes:
             return None

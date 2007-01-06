@@ -10,7 +10,7 @@ class StaticObjectInference(object):
 
     def __init__(self):
         pass
-    
+
     def infer_assigned_object(self, pyname):
         if not pyname.assignments:
             return
@@ -18,7 +18,7 @@ class StaticObjectInference(object):
             result = self._infer_assignment(assignment, pyname.module)
             if result is not None:
                 return result
-    
+
     def _infer_assignment(self, assignment, pymodule):
         try:
             pyname = self._infer_pyname_for_assign_node(
@@ -38,7 +38,7 @@ class StaticObjectInference(object):
                                                        builtins.List):
             return pyobject.get_type().holding
         return pyobject
-    
+
     def _infer_pyname_for_assign_node(self, assign_node, pymodule):
         try:
             lineno = 1
@@ -49,7 +49,7 @@ class StaticObjectInference(object):
                    get_statement_result(holding_scope, assign_node)
         except pyobjects.IsBeingInferredException:
             pass
-        
+
 
     def infer_for_object(self, pyname):
         list_pyname = self._infer_pyname_for_assign_node(
@@ -60,7 +60,7 @@ class StaticObjectInference(object):
             return None
         return self._infer_assignment_object(pyname.assignment,
                                              resulting_pyname.get_object())
-    
+
     def _call_function(self, pyname, function_name):
         if pyname is None:
             return
@@ -83,7 +83,7 @@ class StaticObjectInference(object):
                 return resulting_pyname.get_object()
             except pyobjects.IsBeingInferredException:
                 pass
-    
+
     def infer_parameter_objects(self, pyobject):
         objects = []
         if pyobject.parent.get_type() == pyobjects.PyObject.get_base_type('Type'):
@@ -109,7 +109,7 @@ class StaticObjectInference(object):
 
     def _is_staticmethod_decorator(self, node):
         return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'
-    
+
     def _is_classmethod_decorator(self, node):
         return isinstance(node, compiler.ast.Name) and node.name == 'classmethod'
-    
+

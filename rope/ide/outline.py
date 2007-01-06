@@ -8,7 +8,7 @@ class OutlineNode(object):
 
     def get_line_number(self):
         pass
-    
+
     def get_children(self):
         pass
 
@@ -26,15 +26,15 @@ class NoOutline(object):
 
 
 class PythonASTOutlineNode(OutlineNode):
-    
+
     def __init__(self, ast_node):
         self.name = ast_node.name
         self.ast_node = ast_node
         self.children = None
-        
+
     def get_name(self):
         return self.name
-    
+
     def get_line_number(self):
         return self.ast_node.lineno
 
@@ -48,15 +48,15 @@ class PythonASTOutlineNode(OutlineNode):
 
     def __cmp__(self, obj):
         return cmp(self.get_line_number(), obj.get_line_number())
-            
+
 class _ASTDefinedVisitor(object):
 
     def __init__(self):
         self.result = []
-    
+
     def visitFunction(self, node):
         self.result.append(PythonASTOutlineNode(node))
-    
+
     def visitClass(self, node):
         self.result.append(PythonASTOutlineNode(node))
 
@@ -71,7 +71,7 @@ class PythonOutline(Outline):
 
     def __init__(self, project):
         self.project = project
-    
+
     # Note: We don't use PyNames anymore; we don't need imported names
     def _old_get_root_nodes(self, source_code):
         mod = self.project.get_pycore().get_string_module(source_code)
@@ -87,14 +87,14 @@ class PythonOutline(Outline):
 # Note: This class is no longer used because right now we are not interested
 #       in inherited names that this class exposes
 class PythonOutlineNode(OutlineNode):
-    
+
     def __init__(self, name, pyname):
         self.name = name
         self.pyname = pyname
-        
+
     def get_name(self):
         return self.name
-    
+
     def get_line_number(self):
         return self.pyname.get_definition_location()[1]
 

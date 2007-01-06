@@ -10,10 +10,10 @@ class EnhancedListHandle(object):
 
     def entry_to_string(self, obj):
         return str(object)
-    
+
     def selected(self, obj):
         pass
-    
+
     def canceled(self):
         pass
 
@@ -45,7 +45,7 @@ class EnhancedList(object):
         self.list.grid(row=1, column=0, sticky=N+E+W+S)
         scrollbar.grid(row=1, column=1, sticky=N+E+W+S)
         self.frame.grid(sticky=N+E+W+S)
-        
+
 
     def _focus_out(self, event):
         self.handle.focus_went_out()
@@ -80,13 +80,13 @@ class EnhancedList(object):
         self.list.selection_set(index)
         self.list.activate(index)
         self.list.see(index)
-    
+
     def add_entry(self, entry):
         self.entries.append(entry)
         self.list.insert(END, self.handle.entry_to_string(entry))
         if len(self.entries) == 1:
             self.list.selection_set(0)
- 
+
     def clear(self):
         self.entries = []
         self.list.delete(0, END)
@@ -98,7 +98,7 @@ class VolatileList(EnhancedList):
         super(VolatileList, self).__init__(*args, **kwds)
         self.list.bind('<Alt-p>', lambda event: self.move_up())
         self.list.bind('<Alt-n>', lambda event: self.move_down())
-    
+
     def insert_entry(self, entry, index=None):
         if index == None:
             index = self.get_active_index()
@@ -106,67 +106,67 @@ class VolatileList(EnhancedList):
         self.list.insert(index, self.handle.entry_to_string(entry))
         if len(self.entries) == 1:
             self.list.selection_set(0)
-    
+
     def remove_entry(self, index=None):
         if index == None:
             index = self.get_active_index()
         result = self.entries[index]
         self.list.delete(index)
         return self.entries.pop(index)
-    
+
     def get_active_index(self):
         selection = self.list.curselection()
         if selection:
             return int(selection[0])
         return 0
-    
+
     def get_active_entry(self):
         if self.entries:
             return self.entries[self.get_active_index()]
-        
+
     def get_entries(self):
         return list(self.entries)
-    
+
     def move_up(self):
         index = self.get_active_index()
         if index > 0:
             entry = self.remove_entry(index)
             self.insert_entry(entry, index - 1)
             self._activate(index - 1)
-    
+
     def move_down(self):
         index = self.get_active_index()
         if index < len(self.entries) - 1:
             entry = self.remove_entry(index)
             self.insert_entry(entry, index + 1)
             self._activate(index + 1)
-    
+
     def update(self):
         index = self.get_active_index()
         if index > 0:
             entry = self.remove_entry(index)
             self.insert_entry(entry, index)
             self._activate(index)
-    
+
 
 class _DescriptionListHandle(EnhancedListHandle):
-    
+
     def __init__(self, text, description):
         self.text = text
         self.description = description
-    
+
     def entry_to_string(self, obj):
         return str(obj)
-    
+
     def selected(self, obj):
         self.text['state'] = Tkinter.NORMAL
         self.text.delete('0.0', Tkinter.END)
         self.text.insert('0.0', self._get_description(obj))
         self.text['state'] = Tkinter.DISABLED
-    
+
     def _get_description(self, obj):
         return self.description(obj)
-    
+
     def canceled(self):
         pass
 
@@ -175,13 +175,13 @@ class DescriptionList(object):
 
     def __init__(self, parent, title, description):
         frame = Tkinter.Frame(parent)
-        
+
         description_text = ScrolledText.ScrolledText(frame, height=12, width=80)
         self.handle = _DescriptionListHandle(description_text, description)
         self.list = EnhancedList(frame, self.handle, title)
         description_text.grid(row=0, column=1, sticky=N+E+W+S)
         frame.grid()
-    
+
     def add_entry(self, obj):
         self.list.add_entry(obj)
         if self.list.list.size() == 1:
@@ -192,13 +192,13 @@ class TreeViewHandle(object):
 
     def entry_to_string(self, obj):
         return str(obj)
-    
+
     def get_children(self, obj):
         return []
 
     def selected(self, obj):
         pass
-    
+
     def canceled(self):
         pass
 
@@ -262,7 +262,7 @@ class TreeView(object):
         self.list.see(index)
         self.list.activate(index)
         self.list.see(index)
-        
+
     def _select_prev(self, event):
         selection = self.list.curselection()
         if selection:
@@ -313,7 +313,7 @@ class TreeView(object):
             self.list.delete(index)
             self.list.insert(index, new_text)
             self._select_entry(old_selection)
-            
+
     def add_entry(self, entry, index=None, level=0):
         if index == None:
             index = self.list.size()
@@ -323,12 +323,12 @@ class TreeView(object):
         if len(self.nodes) == 1:
             self._select_entry(1)
         self._update_entry_text(index)
- 
+
     def remove(self, entry_number):
         self.collapse(entry_number)
         self.nodes.pop(entry_number)
         self.list.delete(entry_number)
- 
+
     def clear(self):
         self.nodes = []
         self.list.delete(0, END)

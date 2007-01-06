@@ -5,7 +5,7 @@ from rope.refactor.change import (ChangeSet, ChangeContents,
 
 
 class ConvertLocalToFieldRefactoring(object):
-    
+
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
         self.resource = resource
@@ -18,14 +18,14 @@ class ConvertLocalToFieldRefactoring(object):
             raise rope.base.exceptions.RefactoringException(
                 'Convert local variable to field should be performed on \n'
                 'the a local variable of a method.')
-        
+
         pymodule, lineno = pyname.get_definition_location()
         function_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         class_scope = function_scope.parent
         if name in class_scope.pyobject.get_attributes():
             raise rope.base.exceptions.RefactoringException(
                 'The field %s already exists' % name)
-        
+
         new_name = self._get_field_name(function_scope.pyobject, name)
         changes = RenameRefactoring(self.pycore, self.resource, self.offset).\
                   get_changes(new_name, in_file=True)
@@ -35,7 +35,7 @@ class ConvertLocalToFieldRefactoring(object):
         self_name = pyfunction.parameters[0]
         new_name = self_name + '.' + name
         return new_name
-    
+
     def _is_a_method_local(self, pyname):
         pymodule, lineno = pyname.get_definition_location()
         holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)

@@ -43,7 +43,7 @@ Features implemented so far:
   * Proposing templates in completions
   * Find occurrences
   * Import tools
-  
+
     * Change relative imports to absolute
     * Change from imports to normal imports
     * Expand ``from ... import *`` imports

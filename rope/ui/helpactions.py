@@ -23,7 +23,7 @@ def show_about_dialog(context):
            'but WITHOUT ANY WARRANTY; without even the implied warranty of\n' + \
            'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n' + \
            'GNU General Public License for more details.\n'
-    label = Tkinter.Label(toplevel, text=text, height=16, width=70, 
+    label = Tkinter.Label(toplevel, text=text, height=16, width=70,
                           justify=Tkinter.LEFT, relief=Tkinter.GROOVE)
     def ok():
         toplevel.destroy()

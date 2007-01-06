@@ -5,7 +5,7 @@ import sys
 import rope.base.codeanalyze
 import rope.base.pyobjects
 from rope.base.exceptions import RopeException
-from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter, 
+from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
                                    SourceLinesAdapter)
 from rope.refactor import occurrences
@@ -24,11 +24,11 @@ class CodeAssistProposal(object):
 
 class CompletionProposal(CodeAssistProposal):
     """A completion proposal
-    
+
     The `kind` instance variable shows the kind of the proposal and
     can be ``global``, ``local``, ``builtin``, ``attribute``,
     ``keyword``, and ``template``.
-    
+
     The `type` instance variable shows the type of the proposal and
     can be ``variable``, ``class``, ``function``, ``imported`` ,
     ``paramter`` and `None`.
@@ -54,7 +54,7 @@ class TemplateProposal(CodeAssistProposal):
 
 class Template(object):
     """Templates reported by CodeAssist
-    
+
     Variables in templates are in the format ${variable}. To put
     a dollar sign in the template put $$. To set the place of the
     cursor use ${cursor}.
@@ -73,7 +73,7 @@ class Template(object):
             if new_var not in result and new_var != 'cursor':
                 result.append(new_var)
         return result
-    
+
     def _substitute(self, input_string, mapping):
         import string
         single_dollar = re.compile('((?<=[^\$])|^)\$((?=[^{\$])|$)')
@@ -97,12 +97,12 @@ class Template(object):
 
 class Proposals(object):
     """A CodeAssist result.
-    
+
     Attribute:
     completions -- A list of CompletionProposals
     templates -- A list of TemplateProposals
     start_offset -- completion start offset
-    
+
     """
 
     def __init__(self, completions=[], templates=[], start_offset=0):
@@ -142,7 +142,7 @@ class _CodeCompletionCollector(object):
             self.lines[line] = '#' # + lines[line]
         self.lines.append('\n')
         self._fix_uncomplete_try_blocks()
-    
+
     def _fix_uncomplete_try_blocks(self):
         block_start = self.lineno
         last_indents = self.current_indents
@@ -159,7 +159,7 @@ class _CodeCompletionCollector(object):
                    not self.lines[block_end].strip().startswith('except '):
                     self.lines.insert(block_end, ' ' * indents + 'finally:')
                     self.lines.insert(block_end + 1, ' ' * indents + '    pass')
-    
+
     def _find_matching_deindent(self, line_number):
         indents = self._get_line_indents(self.lines[line_number])
         current_line = line_number + 1
@@ -195,7 +195,7 @@ class _CodeCompletionCollector(object):
                     kind = 'global'
                 result[name] = CompletionProposal(
                     name, kind, self._get_pyname_type(pyname))
-    
+
     def _get_pyname_type(self, pyname):
         if isinstance(pyname, rope.base.pynames.AssignedName):
             return 'variable'
@@ -218,7 +218,7 @@ class _CodeCompletionCollector(object):
         except SyntaxError, e:
             raise RopeSyntaxError(e)
         result = {}
-        inner_scope = module_scope.get_inner_scope_for_line(self.lineno, 
+        inner_scope = module_scope.get_inner_scope_for_line(self.lineno,
                                                             self.current_indents)
         if self.expression.strip() != '':
             result.update(self._get_dotted_completions(module_scope, inner_scope))
@@ -326,7 +326,7 @@ class PythonCodeAssist(object):
             else:
                 return _trim_docstring(pyobject._get_ast().doc)
         return None
-    
+
     def find_occurrences(self, resource, offset):
         name = rope.base.codeanalyze.get_name_at(resource, offset)
         pyname = rope.base.codeanalyze.get_pyname_at(self.project.get_pycore(),
@@ -352,7 +352,7 @@ def _get_class_docstring(pyclass):
 
 def _get_function_docstring(node):
     signature = _get_function_signature(node)
-        
+
     return signature + _trim_docstring(node.doc)
 
 def _get_function_signature(node):
@@ -422,7 +422,7 @@ class ProposalSorter(object):
 
     def __init__(self, code_assist_proposals):
         self.proposals = code_assist_proposals
-    
+
     def get_sorted_proposal_list(self):
         local_proposals = []
         global_proposals = []
@@ -448,7 +448,7 @@ class ProposalSorter(object):
         result.extend(template_proposals)
         result.extend(others)
         return result
-    
+
     def _pyname_proposal_cmp(self, proposal1, proposal2):
         preference = ['class', 'function', 'variable',
                       'parameter', 'imported', None]
@@ -456,7 +456,7 @@ class ProposalSorter(object):
             return cmp(preference.index(proposal1.type),
                        preference.index(proposal2.type))
         return self._compare_names_with_under_lines(proposal1.name, proposal2.name)
-    
+
     def _compare_names_with_under_lines(self, name1, name2):
         def underline_count(name):
             result = 0

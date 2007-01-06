@@ -1,6 +1,6 @@
 
 class SearchingState(object):
-    
+
     def append_keyword(self, searcher, postfix):
         """Appends postfix to the keyword"""
 
@@ -11,7 +11,7 @@ class SearchingState(object):
         """Go to the next match"""
 
 class ForwardSearching(SearchingState):
-    
+
     def append_keyword(self, searcher, postfix):
         start = searcher.editor.get_relative(searcher.editor.get_insert(), -len(searcher.keyword))
         searcher.keyword += postfix
@@ -33,7 +33,7 @@ class ForwardSearching(SearchingState):
         return True
 
 class BackwardSearching(SearchingState):
-    
+
     def append_keyword(self, searcher, postfix):
         searcher.keyword += postfix
         start = searcher.editor.get_relative(searcher.editor.get_insert(), +len(searcher.keyword))
@@ -69,7 +69,7 @@ class NotSearching(SearchingState):
         return False
 
 class Match(object):
-    
+
     def __init__(self, start, end, side='right'):
         self.start = start
         self.end = end

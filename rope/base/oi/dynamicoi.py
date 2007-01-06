@@ -14,11 +14,11 @@ from rope.base import builtins
 
 
 class DynamicObjectInference(object):
-    
+
     def __init__(self, pycore):
         self.info = pycore.call_info
         self.to_pyobject = _TextualToPyObject(pycore.project)
-    
+
     def infer_returned_object(self, pyobject, args):
         organizer = self.info.find_organizer(pyobject)
         if organizer:
@@ -31,26 +31,26 @@ class DynamicObjectInference(object):
             pyobjects = [self.to_pyobject.transform(parameter)
                          for parameter in organizer.get_parameters()]
             return pyobjects
-    
+
     def infer_assigned_object(self, pyname):
         pass
-    
+
     def infer_for_object(self, pyname):
         pass
 
 
 class CallInformationCollector(object):
-    
+
     def __init__(self, pycore):
         self.pycore = pycore
         self.files = {}
         self.to_textual = _PyObjectToTextual(pycore.project)
-    
+
     def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Return a PythonFileRunner for controlling the process"""
         return PythonFileRunner(self.pycore, resource, args, stdin,
                                 stdout, self._data_received)
-    
+
     def _data_received(self, data):
         path = data[0][1]
         lineno = data[0][2]
@@ -69,17 +69,17 @@ class CallInformationCollector(object):
         if path in self.files and lineno in self.files[path]:
             organizer = self.files[path][lineno]
             return organizer
-    
+
 
 class _CallInformationOrganizer(object):
-    
+
     def __init__(self, to_textual):
         self.info = {}
         self.to_textual = to_textual
-    
+
     def add_call_information(self, args, returned):
         self.info[args] = returned
-    
+
     def get_parameters(self):
         for args in self.info.keys():
             if len(args) > 0 and args[0] not in ('unknown', 'none'):
@@ -99,7 +99,7 @@ class _CallInformationOrganizer(object):
         if textual_args in self.info:
             return self.info[textual_args]
         return self._get_default_returned()
-    
+
     def _get_default_returned(self):
         default = ('unknown')
         for returned in self.info.values():
@@ -110,10 +110,10 @@ class _CallInformationOrganizer(object):
 
 
 class _TextualToPyObject(object):
-    
+
     def __init__(self, project):
         self.project = project
-    
+
     def transform(self, textual):
         """Transform an object from textual form to `PyObject`"""
         type = textual[0]
@@ -123,7 +123,7 @@ class _TextualToPyObject(object):
     def module_to_pyobject(self, textual):
         path = textual[1]
         return self._get_pymodule(path)
-    
+
     def builtin_to_pyobject(self, textual):
         name = textual[1]
         if name == 'str':
@@ -144,16 +144,16 @@ class _TextualToPyObject(object):
             holding = self.transform(textual[2])
             return builtins.get_set(holding)
         return None
-    
+
     def unknown_to_pyobject(self, textual):
         return None
-    
+
     def none_to_pyobject(self, textual):
         return None
-    
+
     def function_to_pyobject(self, textual):
         return self._get_pyobject_at(textual[1], textual[2])
-    
+
     def class_to_pyobject(self, textual):
         path, name = textual[1:]
         pymodule = self._get_pymodule(path)
@@ -169,10 +169,10 @@ class _TextualToPyObject(object):
             if lineno is not None:
                 inner_scope = module_scope.get_inner_scope_for_line(lineno)
                 return inner_scope.pyobject
-    
+
     def instance_to_pyobject(self, textual):
         return pyobjects.PyObject(self.class_to_pyobject(textual))
-    
+
     def _find_occurrence(self, name, source):
         pattern = re.compile(r'^\s*class\s*' + name + r'\b')
         lines = source.split('\n')
@@ -190,7 +190,7 @@ class _TextualToPyObject(object):
         else:
             resource = self.project.get_out_of_project_resource(path)
         return self.project.get_pycore().resource_to_pyobject(resource)
-    
+
     def _get_pyobject_at(self, path, lineno):
         scope = self._get_pymodule(path).get_scope()
         inner_scope = scope.get_inner_scope_for_line(lineno)
@@ -198,10 +198,10 @@ class _TextualToPyObject(object):
 
 
 class _PyObjectToTextual(object):
-    
+
     def __init__(self, project):
         self.project = project
-    
+
     def transform(self, pyobject):
         """Transform a `PyObject` to textual form"""
         if pyobject is None:
@@ -221,34 +221,34 @@ class _PyObjectToTextual(object):
     def PyFunction_to_textual(self, pyobject):
         return ('function', self._get_pymodule_path(pyobject.get_module()),
                 pyobject._get_ast().lineno)
-    
+
     def PyClass_to_textual(self, pyobject):
         return ('class', self._get_pymodule_path(pyobject.get_module()),
                 pyobject._get_ast().name)
-    
+
     def PyModule_to_textual(self, pyobject):
         return ('module', self._get_pymodule_path(pyobject))
-    
+
     def PyPackage_to_textual(self, pyobject):
         return ('module', self._get_pymodule_path(pyobject))
-    
+
     def List_to_textual(self, pyobject):
         return ('builtin', 'list', self.transform(pyobject.holding))
-    
+
     def Dict_to_textual(self, pyobject):
         return ('builtin', 'dict', self.transform(pyobject.keys),
                 self.transform(pyobject.values))
-    
+
     def Tuple_to_textual(self, pyobject):
         objects = [self.transform(holding) for holding in pyobject.get_holding_objects()]
         return tuple(['builtin', 'tuple'] + objects)
-    
+
     def Set_to_textual(self, pyobject):
         return ('builtin', 'set', self.transform(pyobject.holding))
-    
+
     def Str_to_textual(self, pyobject):
         return ('builtin', 'str')
-    
+
     def _get_pymodule_path(self, pymodule):
         resource = pymodule.get_resource()
         resource_path = resource.get_path()
@@ -271,7 +271,7 @@ class PythonFileRunner(object):
         self.args = args
         self.stdin = stdin
         self.stdout = stdout
-    
+
     def run(self):
         """Execute the process"""
         env = dict(os.environ)
@@ -296,7 +296,7 @@ class PythonFileRunner(object):
             executable=sys.executable, args=args,
             cwd=os.path.split(file_path)[0], stdin=self.stdin,
             stdout=self.stdout, stderr=self.stdout, env=env)
-    
+
     def _init_data_receiving(self):
         if self.analyze_data is None:
             return
@@ -310,7 +310,7 @@ class PythonFileRunner(object):
         self.receiving_thread = threading.Thread(target=self._receive_information)
         self.receiving_thread.setDaemon(True)
         self.receiving_thread.start()
-    
+
     def _receive_information(self):
         #temp = open('/dev/shm/info', 'w')
         for data in self.receiver.receive_data():
@@ -333,23 +333,23 @@ class PythonFileRunner(object):
         else:
             import ctypes
             ctypes.windll.kernel32.TerminateProcess(int(self.process._handle), -1)
-    
+
     def add_finishing_observer(self, observer):
         """Notify this observer when execution finishes"""
         self.observers.append(observer)
 
 
 class _MessageReceiver(object):
-    
+
     def receive_data(self):
         pass
-    
+
     def get_send_info(self):
         pass
 
 
 class _SocketReceiver(_MessageReceiver):
-    
+
     def __init__(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.data_port = 3037
@@ -360,10 +360,10 @@ class _SocketReceiver(_MessageReceiver):
             except socket.error, e:
                 self.data_port += 1
         self.server_socket.listen(1)
-    
+
     def get_send_info(self):
         return str(self.data_port)
-        
+
     def receive_data(self):
         conn, addr = self.server_socket.accept()
         self.server_socket.close()
@@ -378,22 +378,22 @@ class _SocketReceiver(_MessageReceiver):
 
 
 class _FIFOReceiver(_MessageReceiver):
-    
+
     def __init__(self):
         # XXX: this is unsecure and might cause race conditions
         self.file_name = self._get_file_name()
         os.mkfifo(self.file_name)
-    
+
     def _get_file_name(self):
         prefix = tempfile.gettempdir() + '/__rope_'
         i = 0
         while os.path.exists(prefix + str(i).rjust(4, '0')):
             i += 1
         return prefix + str(i).rjust(4, '0')
-    
+
     def get_send_info(self):
         return self.file_name
-        
+
     def receive_data(self):
         my_file = open(self.file_name, 'rb')
         while True:

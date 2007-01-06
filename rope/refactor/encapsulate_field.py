@@ -6,7 +6,7 @@ from rope.refactor.change import ChangeSet, ChangeContents
 
 
 class EncapsulateFieldRefactoring(object):
-    
+
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
         self.name = rope.base.codeanalyze.get_name_at(resource, offset)
@@ -15,7 +15,7 @@ class EncapsulateFieldRefactoring(object):
             raise rope.base.exceptions.RefactoringException(
                 'Encapsulate field should be performed on class attributes.')
         self.resource = self.pyname.get_definition_location()[0].get_resource()
-    
+
     def _is_an_attribute(self, pyname):
         if pyname is not None and isinstance(pyname, rope.base.pynames.AssignedName):
             defining_pymodule, defining_line = self.pyname.get_definition_location()
@@ -26,12 +26,12 @@ class EncapsulateFieldRefactoring(object):
                (parent is not None and parent.get_kind() == 'Class'):
                 return True
         return False
-    
+
     def encapsulate_field(self):
         changes = ChangeSet()
         rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
                                                       [self.pyname])
-        
+
         self._change_holding_module(changes, rename_in_module)
         for file in self.pycore.get_python_files():
             if file == self.resource:
@@ -40,7 +40,7 @@ class EncapsulateFieldRefactoring(object):
             if result is not None:
                 changes.add_change(ChangeContents(file, result))
         return changes
-    
+
     def _get_defining_class_scope(self):
         defining_pymodule, defining_line = self.pyname.get_definition_location()
         defining_scope = defining_pymodule.get_scope().get_inner_scope_for_line(defining_line)
@@ -69,7 +69,7 @@ class EncapsulateFieldRefactoring(object):
 
 
 class GetterSetterRenameInModule(object):
-    
+
     def __init__(self, pycore, name, pynames):
         self.pycore = pycore
         self.name = name
@@ -77,14 +77,14 @@ class GetterSetterRenameInModule(object):
                                   FilteredOccurrenceFinder(pycore, name, pynames)
         self.getter = 'get_' + name
         self.setter = 'set_' + name
-    
+
     def get_changed_module(self, resource=None, pymodule=None, skip_start=0, skip_end=0):
         return _FindChangesForModule(self, resource, pymodule,
                                      skip_start, skip_end).get_changed_module()
 
 
 class _FindChangesForModule(object):
-    
+
     def __init__(self, occurrence_finder, resource, pymodule, skip_start, skip_end):
         self.pycore = occurrence_finder.pycore
         self.occurrences_finder = occurrence_finder.occurrences_finder
@@ -99,7 +99,7 @@ class _FindChangesForModule(object):
         self.set_index = None
         self.skip_start = skip_start
         self.skip_end = skip_end
-        
+
     def get_changed_module(self):
         result = []
         line_finder = None
@@ -113,7 +113,7 @@ class _FindChangesForModule(object):
             result.append(self.source[self.last_modified:start])
             if self._is_assigned_in_a_tuple_assignment(occurrence):
                 raise rope.base.exceptions.RefactoringException(
-                    'Cannot handle tuple assignments in encapsulate field.') 
+                    'Cannot handle tuple assignments in encapsulate field.')
             if occurrence.is_written():
                 assignment_type = word_finder.get_assignment_type(start)
                 if assignment_type == '=':
@@ -126,7 +126,7 @@ class _FindChangesForModule(object):
                     line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
                 current_line = self.lines.get_line_number(start)
                 start_line, end_line = line_finder.get_logical_line_in(current_line)
-                self.last_set = self.lines.get_line_end(end_line)                
+                self.last_set = self.lines.get_line_end(end_line)
                 end = self.source.index('=', end) + 1
                 self.set_index = len(result)
             else:
@@ -137,7 +137,7 @@ class _FindChangesForModule(object):
             result.append(self.source[self.last_modified:])
             return ''.join(result)
         return None
-    
+
     def _manage_writes(self, offset, result):
         if self.last_set is not None and self.last_set <= offset:
             result.append(self.source[self.last_modified:self.last_set])
@@ -146,17 +146,17 @@ class _FindChangesForModule(object):
             result.append(set_value + ')')
             self.last_modified = self.last_set
             self.last_set = None
-    
+
     def _is_assigned_in_a_tuple_assignment(self, occurance):
         line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
         offset = occurance.get_word_range()[0]
         lineno = self.lines.get_line_number(offset)
         start_line, end_line = line_finder.get_logical_line_in(lineno)
         start_offset = self.lines.get_line_start(start_line)
-        
+
         line = self.source[start_offset:self.lines.get_line_end(end_line)]
         word_finder = rope.base.codeanalyze.WordRangeFinder(line)
-        
+
         relative_offset = offset - start_offset
         relative_primary_start = occurance.get_primary_range()[0] - start_offset
         relative_primary_end = occurance.get_primary_range()[1] - start_offset
@@ -191,6 +191,6 @@ class _FindChangesForModule(object):
                 self.pymodule = self.pycore.resource_to_pyobject(self.resource)
             self._lines = self.pymodule.lines
         return self._lines
-    
+
     source = property(_get_source)
     lines = property(_get_lines)
