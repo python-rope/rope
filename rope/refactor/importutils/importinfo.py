@@ -1,31 +1,48 @@
 class ImportStatement(object):
 
-    def __init__(self, import_info, start_line, end_line, main_statement=None):
+    def __init__(self, import_info, start_line, end_line,
+                 main_statement=None, blank_lines=0):
         self.start_line = start_line
         self.end_line = end_line
         self.main_statement = main_statement
         self._import_info = None
         self.import_info = import_info
-        self.is_changed = False
+        self._is_changed = False
+        self.new_start = None
+        self.blank_lines = blank_lines
 
     def _get_import_info(self):
         return self._import_info
 
     def _set_import_info(self, new_import):
         if new_import is not None and not new_import == self._import_info:
-            self.is_changed = True
+            self._is_changed = True
             self._import_info = new_import
 
     import_info = property(_get_import_info, _set_import_info)
 
     def get_import_statement(self):
-        if self.is_changed or self.main_statement is None:
+        if self._is_changed or self.main_statement is None:
             return self.import_info.get_import_statement()
         else:
             return self.main_statement
 
     def empty_import(self):
         self.import_info = ImportInfo.get_empty_import()
+    
+    def move(self, lineno, blank_lines=0):
+        self.new_start = lineno
+        self.blank_lines = blank_lines
+
+    def get_old_location(self):
+        return self.start_line, self.end_line
+
+    def get_new_start(self):
+        return self.new_start
+
+    def is_changed(self):
+        return self._is_changed or (self.new_start is not None or
+                                    self.new_start != self.start_line)
 
     def accept(self, visitor):
         return visitor.dispatch(self)
@@ -121,6 +138,14 @@ class FromImport(ImportInfo):
                                           self.current_folder)
         else:
             return self.pycore.get_relative_module(
+                self.module_name, self.current_folder, self.level)
+
+    def get_imported_resource(self):
+        if self.level == 0:
+            return self.pycore.find_module(self.module_name,
+                                           current_folder=self.current_folder)
+        else:
+            return self.pycore.find_relative_module(
                 self.module_name, self.current_folder, self.level)
 
     def get_import_statement(self):

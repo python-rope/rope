@@ -14,7 +14,7 @@ class StatementEvaluator(object):
         self.result = self.scope.lookup(node.name)
 
     def visitGetattr(self, node):
-        pyname = StatementEvaluator.get_statement_result(self.scope, node.expr)
+        pyname = get_statement_result(self.scope, node.expr)
         if pyname is not None:
             try:
                 self.result = pyname.get_object().get_attribute(node.attrname)
@@ -128,7 +128,7 @@ class StatementEvaluator(object):
             pyobject=rope.base.builtins.get_tuple(*objects))
 
     def _get_object_for_node(self, stmt):
-        pyname = StatementEvaluator.get_statement_result(self.scope, stmt)
+        pyname = get_statement_result(self.scope, stmt)
         pyobject = None
         if pyname is not None:
             pyobject = pyname.get_object()
@@ -146,18 +146,18 @@ class StatementEvaluator(object):
             self.result = rope.base.pynames.AssignedName(
                 pyobject=call_function.get_object().get_returned_object())
 
-    @staticmethod
-    def get_statement_result(scope, node):
-        evaluator = StatementEvaluator(scope)
-        compiler.walk(node, evaluator)
-        return evaluator.result
 
-    @staticmethod
-    def get_string_result(scope, string):
-        evaluator = StatementEvaluator(scope)
-        node = compiler.parse(string)
-        compiler.walk(node, evaluator)
-        return evaluator.result
+def get_statement_result(scope, node):
+    evaluator = StatementEvaluator(scope)
+    compiler.walk(node, evaluator)
+    return evaluator.result
+
+
+def get_string_result(scope, string):
+    evaluator = StatementEvaluator(scope)
+    node = compiler.parse(string)
+    compiler.walk(node, evaluator)
+    return evaluator.result
 
 
 class Arguments(object):
@@ -170,11 +170,14 @@ class Arguments(object):
         result = [None] * len(parameters)
         for index, arg in enumerate(self.args):
             if isinstance(arg, compiler.ast.Keyword) and arg.name in parameters:
-                pyname = StatementEvaluator.get_statement_result(self.scope, arg.expr)
+                pyname = self._evaluate(arg.expr)
                 if pyname is not None:
                     result[parameters.index(arg.name)] = pyname.get_object()
             else:
-                pyname = StatementEvaluator.get_statement_result(self.scope, arg)
+                pyname = self._evaluate(arg)
                 if pyname is not None:
                     result[index] = pyname.get_object()
         return result
+
+    def _evaluate(self, ast_node):
+        return get_statement_result(self.scope, ast_node)

@@ -103,12 +103,12 @@ class ImportTools(object):
         return True
 
     def organize_imports(self, pymodule):
-        module_with_imports = self.get_module_with_imports(pymodule)
-        module_with_imports.remove_unused_imports()
-        module_with_imports.remove_duplicates()
-        before_removing_self_import = module_with_imports.get_changed_source()
-        to_be_fixed, to_be_renamed = module_with_imports.get_self_import_fix_and_rename_list()
-        source = module_with_imports.get_changed_source()
+        module_imports = self.get_module_with_imports(pymodule)
+        module_imports.remove_unused_imports()
+        module_imports.remove_duplicates()
+        before_removing_self_import = module_imports.get_changed_source()
+        to_be_fixed, to_be_renamed = module_imports.get_self_import_fix_and_rename_list()
+        source = module_imports.get_changed_source()
         if source is not None:
             pymodule = self.pycore.get_string_module(source, pymodule.get_resource())
         for name in to_be_fixed:
@@ -123,7 +123,7 @@ class ImportTools(object):
 
     def _rename_in_module(self, pymodule, name, new_name, till_dot=False):
         old_name = name.split('.')[-1]
-        old_pyname = rope.base.evaluate.StatementEvaluator.get_string_result(
+        old_pyname = rope.base.evaluate.get_string_result(
             pymodule.get_scope(), name)
         occurrence_finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
             self.pycore, old_name, [old_pyname], imports=False)
@@ -143,3 +143,8 @@ class ImportTools(object):
         if source is not None:
             pymodule = self.pycore.get_string_module(source, pymodule.get_resource())
         return pymodule
+
+    def sort_imports(self, pymodule):
+        module_imports = self.get_module_with_imports(pymodule)
+        module_imports.sort_imports()
+        return module_imports.get_changed_source()

@@ -160,7 +160,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write('a_var = 1\n')
         self.mod2.write('import mod1\ndef a_func():\n    var = mod1.a_var\n')
         self.refactoring.move(self.mod2, self.mod2.read().index('a_func') + 1, self.mod1)
-        self.assertEquals('\n\ndef a_func():\n    var = a_var\na_var = 1\n', self.mod1.read())
+        self.assertEquals('def a_func():\n    var = a_var\na_var = 1\n', self.mod1.read())
 
     def test_moving_resources_using_move_module_refactoring(self):
         self.mod1.write('a_var = 1')

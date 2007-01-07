@@ -45,8 +45,7 @@ class StaticObjectInference(object):
             if hasattr(assign_node, 'lineno') and assign_node.lineno is not None:
                 lineno = assign_node.lineno
             holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-            return evaluate.StatementEvaluator.\
-                   get_statement_result(holding_scope, assign_node)
+            return evaluate.get_statement_result(holding_scope, assign_node)
         except pyobjects.IsBeingInferredException:
             pass
 
@@ -76,8 +75,8 @@ class StaticObjectInference(object):
             return
         for returned_node in reversed(scope._get_returned_asts()):
             try:
-                resulting_pyname = evaluate.StatementEvaluator.\
-                                   get_statement_result(scope, returned_node)
+                resulting_pyname = evaluate.get_statement_result(scope,
+                                                                 returned_node)
                 if resulting_pyname is None:
                     return None
                 return resulting_pyname.get_object()

@@ -1,7 +1,7 @@
 import rope.base.codeanalyze
 import rope.base.pyobjects
-import rope.refactor.importutils
 import rope.base.exceptions
+from rope.refactor import importutils
 from rope.refactor import rename
 from rope.refactor import occurrences
 from rope.refactor.change import (ChangeSet, ChangeContents,
@@ -43,7 +43,7 @@ class _Mover(object):
         self.old_pyname = pyname
         self.old_name = old_name
         self.new_name = new_name
-        self.import_tools = rope.refactor.importutils.ImportTools(self.pycore)
+        self.import_tools = importutils.ImportTools(self.pycore)
         self._check_exceptional_conditions()
 
     def _check_exceptional_conditions(self):
@@ -97,7 +97,7 @@ class _GlobalMover(_Mover):
         old_name = pyname.get_object()._get_ast().name
         pymodule = pyname.get_object().get_module()
         source = pymodule.get_resource()
-        new_name = rope.refactor.importutils.get_module_name(
+        new_name = importutils.get_module_name(
             pycore, destination) + '.' + old_name
         if destination.is_folder() and destination.has_child('__init__.py'):
             destination = destination.get_child('__init__.py')
@@ -252,14 +252,14 @@ class _ModuleMover(_Mover):
             old_name = source.get_name()
         else:
             old_name = source.get_name()[:-3]
-        package = rope.refactor.importutils.get_module_name(pycore, destination)
+        package = importutils.get_module_name(pycore, destination)
         if package:
             new_name = package + '.' + old_name
         else:
             new_name = old_name
         super(_ModuleMover, self).__init__(pycore, source, destination,
                                            pyname, old_name, new_name)
-        self.new_import = rope.refactor.importutils.NormalImport([(self.new_name, None)])
+        self.new_import = importutils.NormalImport([(self.new_name, None)])
 
     def _check_exceptional_conditions(self):
         moving_pyobject = self.old_pyname.get_object()

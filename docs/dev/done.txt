@@ -3,6 +3,9 @@
 ===========
 
 
+- Sorting imports; standard, third party, project : January 7, 2007
+
+
 - Enhanced dynamic object inference : January 5, 2007
 
 

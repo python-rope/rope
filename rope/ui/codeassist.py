@@ -281,7 +281,6 @@ def find_occurrences(context):
     toplevel.bind('<Escape>', close)
     toplevel.bind('<Control-g>', close)
     enhanced_list.list.focus_set()
-    toplevel.grab_set()
 
 
 # Registering code assist actions

@@ -73,6 +73,7 @@ stories.  So till ``0.4`` we will:
 Hot Topics
 ==========
 
+* `Local History`_
 * `Removing PythonRefactoring facade`_
 
 
@@ -86,7 +87,43 @@ To Be Discussed
 * Indexing source files for faster occurrence finding
 * Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
-* Undo Unification
+* Undo unification
+
+
+Local History
+=============
+
+Goals:
+
+* Better undoing mechanisms
+* Undoing unrelated refactorings in any order
+* Undoing file operations performed by editing
+* Undoing individual files
+* Moving undo information from `PythonRefactoring` to `Project`
+* Finding changes to a file
+* Saving undo information across sessions?
+* Supporting virtual `PyModule`\s?
+
+Issues:
+
+* Unanticipated changes
+* Having version control systems in parallel
+
+
+Removing `PythonRefactoring` Facade
+===================================
+
+If we remove `PythonRefactoring`, we need a place for storing
+refactoring undo information.  We can move it either to projects
+or ask the UI for handling its undo information.  The former is
+discussed in `Local History`_ section.
+
+* Changing uses of `PythonRefactoring` to use `rope.refactor` modules
+* Adding a place for saving undo information
+* What to do with import utils
+* Documenting the refactorings `rope.refactor` submodules provide
+* Updating references to `PythonRefactoring` and
+  `PyCore.get_refactoring` to use the new objects.
 
 
 Rope's Preference System
@@ -315,7 +352,6 @@ Decisions to Make
 * Unifying refactoring interfaces
 * Introducing factories for refactorings;
   Reduce the dependence to `rope.refactor` modules
-* Removing `rope.refactor.PythonRefactoring`
 
 
 A Common Refactoring Interface
@@ -335,7 +371,7 @@ A Common Refactoring Interface
       """
 
       # Other functions for getting information after construction
-      # for helping IDE's.
+      # for helping IDEs.
 
 
 Note that the arguments of `__init__` and `get_changes` are not the
@@ -358,17 +394,6 @@ Adding the new refactoring class.  Duplications:
 * Duplicate parameters
 * We have the same refactoring class for inlines, extracts and
   renames but we have to call their constructors separately.
-
-
-Removing `PythonRefactoring` Facade
------------------------------------
-
-* Changing uses of `PythonRefactoring` to use `rope.refactor` modules
-* Adding a place for saving undo information
-* What to do with import utils
-* Documenting the refactorings `rope.refactor` submodules provide
-* Updating references to `PythonRefactoring` and
-  `PyCore.get_refactoring` to use the new objects.
 
 
 Moving Fields/Methods

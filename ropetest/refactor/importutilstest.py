@@ -201,7 +201,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_with_imports(pymod)
         module_with_imports.remove_unused_imports()
-        self.assertEquals('\n', module_with_imports.get_changed_source())
+        self.assertEquals('', module_with_imports.get_changed_source())
 
     def test_simple_removing_unused_imports_for_froms(self):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
@@ -217,7 +217,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_with_imports(pymod)
         module_with_imports.remove_unused_imports()
-        self.assertEquals('\n', module_with_imports.get_changed_source())
+        self.assertEquals('', module_with_imports.get_changed_source())
 
     def test_simple_removing_unused_imports_for_nested_modules(self):
         self.mod1.write('def a_func():\n    pass\n')
@@ -252,7 +252,7 @@ class ImportUtilsTest(unittest.TestCase):
         new_import = self.import_tools.get_import_for_module(
             self.pycore.resource_to_pyobject(self.mod1))
         module_with_imports.add_import(new_import)
-        self.assertEquals('import pkg1.mod1\n\n', module_with_imports.get_changed_source())
+        self.assertEquals('import pkg1.mod1\n', module_with_imports.get_changed_source())
 
     def test_adding_from_imports(self):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
@@ -614,6 +614,46 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals('a_var = 1\nprint a_var\n',
                           self.import_tools.organize_imports(pymod))
+
+    def test_sorting_empty_imports(self):
+        self.mod.write('')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('', self.import_tools.sort_imports(pymod))
+
+    def test_sorting_one_import(self):
+        self.mod.write('import pkg1.mod1\n\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import pkg1.mod1\n\n\n', self.import_tools.sort_imports(pymod))
+
+    def test_sorting_imports_alphabetically(self):
+        self.mod.write('import pkg2.mod2\nimport pkg1.mod1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import pkg1.mod1\nimport pkg2.mod2\n\n\n',
+                          self.import_tools.sort_imports(pymod))
+
+    def test_sorting_imports_and_froms(self):
+        self.mod.write('import pkg2.mod2\nfrom pkg1 import mod1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import pkg2.mod2\nfrom pkg1 import mod1\n\n\n',
+                          self.import_tools.sort_imports(pymod))
+
+    def test_sorting_imports_and_standard_modles(self):
+        self.mod.write('import pkg1\nimport sys\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import sys\n\nimport pkg1\n\n\n',
+                          self.import_tools.sort_imports(pymod))
+
+    def test_sorting_only_standard_modles(self):
+        self.mod.write('import sys\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import sys\n\n\n',
+                          self.import_tools.sort_imports(pymod))
+
+    def test_sorting_third_party(self):
+        self.mod.write('import pkg1\nimport a_third_party\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import a_third_party\n\nimport pkg1\n\n\n',
+                          self.import_tools.sort_imports(pymod))
 
 
 if __name__ == '__main__':

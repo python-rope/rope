@@ -1,3 +1,6 @@
+import os
+import sys
+
 from rope.base import pyobjects
 from rope.base import exceptions
 from rope.refactor.importutils import importinfo
@@ -54,12 +57,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         return result
 
     def visitFromImport(self, import_stmt, import_info):
-        if import_info.level == 0:
-            resource = self.pycore.find_module(import_info.module_name,
-                                               current_folder=self.current_folder)
-        else:
-            resource = self.pycore.find_relative_module(
-                import_info.module_name, self.current_folder, import_info.level)
+        resource = import_info.get_imported_resource()
         if resource is None:
             return None
         absolute_name = importinfo.get_module_name(self.pycore, resource)
@@ -211,12 +209,7 @@ class SelfImportVisitor(ImportInfoVisitor):
             import_stmt.import_info = importinfo.NormalImport(new_pairs)
 
     def visitFromImport(self, import_stmt, import_info):
-        if import_info.level == 0:
-            resource = self.pycore.find_module(import_info.module_name,
-                                               current_folder=self.current_folder)
-        else:
-            resource = self.pycore.find_relative_module(
-                import_info.module_name, self.current_folder, import_info.level)
+        resource = import_info.get_imported_resource()
         if resource is None:
             return
         if resource == self.resource:
@@ -249,3 +242,51 @@ class SelfImportVisitor(ImportInfoVisitor):
                 if alias is not None:
                     self.to_be_renamed.add((alias, name))
         import_stmt.empty_import()
+
+
+class SortingVisitor(ImportInfoVisitor):
+
+    def __init__(self, pycore, current_folder):
+        self.pycore = pycore
+        self.current_folder = current_folder
+        self.standard = set()
+        self.third_party = set()
+        self.in_project = set()
+
+    def visitNormalImport(self, import_stmt, import_info):
+        if import_info.names_and_aliases:
+            name, alias = import_info.names_and_aliases[0]
+            resource = self.pycore.find_module(
+                name, current_folder=self.current_folder)
+            self._check_imported_resource(import_stmt, resource, name)
+
+    def visitFromImport(self, import_stmt, import_info):
+        resource = import_info.get_imported_resource()
+        self._check_imported_resource(import_stmt, resource,
+                                      import_info.module_name)
+
+    def _check_imported_resource(self, import_stmt, resource, imported_name):
+        if resource is not None and resource.project == self.pycore.project:
+            self.in_project.add(import_stmt)
+        else:
+            if imported_name.split('.')[0] in SortingVisitor.standard_modules():
+                self.standard.add(import_stmt)
+            else:
+                self.third_party.add(import_stmt)
+
+    @classmethod
+    def standard_modules(cls):
+        if not hasattr(cls, '_standard_modules'):
+            result = set(sys.builtin_module_names)
+            lib_path = os.path.join(
+                sys.prefix, 'lib%spython%s' % (os.sep, sys.version[:3]))
+            for name in os.listdir(lib_path):
+                path = os.path.join(lib_path, name)
+                if os.path.isdir(path):
+                    if '-' not in name:
+                        result.add(name)
+                else:
+                    if name.endswith('.py'):
+                        result.add(name[:-3])
+            cls._standard_modules = result
+        return cls._standard_modules

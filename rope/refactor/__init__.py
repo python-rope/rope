@@ -184,6 +184,14 @@ class ImportOrganizer(object):
             changes.add_change(ChangeContents(resource, result))
             self.refactoring.add_and_commit_changes(changes)
 
+    def sort_imports(self, resource):
+        pymodule = self.pycore.resource_to_pyobject(resource)
+        result = self.import_tools.sort_imports(pymodule)
+        if result is not None:
+            changes = ChangeSet()
+            changes.add_change(ChangeContents(resource, result))
+            self.refactoring.add_and_commit_changes(changes)
+
 
 class Undo(object):
 

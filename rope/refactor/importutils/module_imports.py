@@ -42,17 +42,58 @@ class ModuleImports(object):
         return result
 
     def get_changed_source(self):
-        lines = self.pymodule.source_code.splitlines(True)
+        imports = [stmt for stmt in self.get_import_statements()
+                   if stmt.is_changed()]
+        after_removing = self._remove_imports(imports)
+        
         result = []
         last_index = 0
-        for import_statement in self.get_import_statements():
-            start = import_statement.start_line - 1
-            result.extend(lines[last_index:start])
-            last_index = import_statement.end_line - 1
-            if not import_statement.import_info.is_empty():
-                result.append(import_statement.get_import_statement() + '\n')
-        result.extend(lines[last_index:])
+        for stmt in sorted(imports, self._compare_import_locations):
+            start = self._get_import_location(stmt)
+            result.extend(after_removing[last_index:start - 1])
+            last_index = self._first_non_blank_line(after_removing, start - 1)
+            if not stmt.import_info.is_empty():
+                result.append(stmt.get_import_statement() + '\n')
+                for i in range(stmt.blank_lines):
+                    result.append('\n')
+        result.extend(after_removing[last_index:])
         return ''.join(result)
+
+    def _get_import_location(self, stmt):
+        start = stmt.get_new_start()
+        if start is None:
+            start = stmt.get_old_location()[0]
+        return start
+
+    def _compare_import_locations(self, stmt1, stmt2):
+        def get_location(stmt):
+            if stmt.get_new_start() is not None:
+                return stmt.get_new_start()
+            else:
+                return stmt.get_old_location()[0]
+        return cmp(get_location(stmt1), get_location(stmt2))
+
+    def _remove_imports(self, imports):
+        lines = self.pymodule.source_code.splitlines(True)
+        after_removing = []
+        last_index = 0
+        for stmt in imports:
+            start, end = stmt.get_old_location()
+            after_removing.extend(lines[last_index:start - 1])
+            last_index = end - 1
+            for i in range(start, end):
+                after_removing.append('')
+        after_removing.extend(lines[last_index:])
+        return after_removing
+    
+    def _first_non_blank_line(self, lines, lineno):
+        result = lineno
+        for line in lines[lineno:]:
+            if line.strip() == '':
+                result += 1
+            else:
+                break
+        return result
 
     def add_import(self, import_info):
         visitor = actions.AddingVisitor(self.pycore, import_info)
@@ -64,7 +105,8 @@ class ModuleImports(object):
             last_line = 1
             if all_imports:
                 last_line = all_imports[-1].end_line
-            all_imports.append(importinfo.ImportStatement(import_info, last_line, last_line))
+            all_imports.append(importinfo.ImportStatement(
+                               import_info, last_line, last_line))
 
     def filter_names(self, can_select):
         visitor = actions.RemovingVisitor(self.pycore, can_select)
@@ -90,18 +132,56 @@ class ModuleImports(object):
 
     def get_relative_to_absolute_list(self):
         visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
-            self.pycore, self.pymodule.get_resource().get_parent())
+            self.pycore, self._current_folder())
         for import_stmt in self.get_import_statements():
             import_stmt.accept(visitor)
         return visitor.to_be_absolute
 
     def get_self_import_fix_and_rename_list(self):
         visitor = rope.refactor.importutils.actions.SelfImportVisitor(
-            self.pycore, self.pymodule.get_resource().get_parent(),
-            self.pymodule.get_resource())
+            self.pycore, self._current_folder(), self.pymodule.get_resource())
         for import_stmt in self.get_import_statements():
             import_stmt.accept(visitor)
         return visitor.to_be_fixed, visitor.to_be_renamed
+
+    def _current_folder(self):
+        return self.pymodule.get_resource().get_parent()
+
+    def sort_imports(self):
+        all_import_statements = self.get_import_statements()
+        visitor = actions.SortingVisitor(self.pycore, self._current_folder())
+        for import_statement in all_import_statements:
+            import_statement.accept(visitor)
+        last_index = 1
+        if all_import_statements:
+            last_index = all_import_statements[0].start_line
+        in_projects = sorted(visitor.in_project, self._compare_imports)
+        third_party = sorted(visitor.third_party, self._compare_imports)
+        standards = sorted(visitor.standard, self._compare_imports)
+        blank_lines = 1
+        if not in_projects and not third_party:
+            blank_lines = 2
+        last_index = self._move_imports(standards, last_index, blank_lines)
+        last_index = self._move_imports(third_party, last_index, blank_lines)
+        last_index = self._move_imports(in_projects, last_index, 2)
+
+    def _compare_imports(self, stmt1, stmt2):
+        str1 = stmt1.get_import_statement()
+        str2 = stmt2.get_import_statement()
+        if str1.startswith('from ') and not str2.startswith('from '):
+            return 1
+        if not str1.startswith('from ') and str2.startswith('from '):
+            return -1
+        return cmp(str1, str2)
+
+    def _move_imports(self, imports, index, blank_lines):
+        if imports:
+            for stmt in imports[:-1]:
+                stmt.move(index)
+                index += 1
+            imports[-1].move(index, blank_lines)
+            index += 1
+        return index
 
 
 class _OneTimeSelector(object):
@@ -243,8 +323,19 @@ class _GlobalImportFinder(object):
         start_line = node.lineno
         import_statement = importinfo.ImportStatement(
             importinfo.NormalImport(node.names),start_line, end_line,
-            self._get_text(start_line, end_line))
+            self._get_text(start_line, end_line),
+            blank_lines=self._count_empty_lines_after(start_line))
         self.imports.append(import_statement)
+    
+    def _count_empty_lines_after(self, lineno):
+        result = 0
+        for current in range(lineno + 1, self.lines.length()):
+            line = self.lines.get_line(current)
+            if line.strip() == '':
+                result += 1
+            else:
+                break
+        return result
 
     def _get_text(self, start_line, end_line):
         result = []
@@ -259,8 +350,10 @@ class _GlobalImportFinder(object):
         import_info = importinfo.FromImport(node.modname, level, node.names,
                                             self.current_folder, self.pycore)
         start_line = node.lineno
-        self.imports.append(importinfo.ImportStatement(import_info, node.lineno, end_line,
-                                                       self._get_text(start_line, end_line)))
+        self.imports.append(importinfo.ImportStatement(
+                            import_info, node.lineno, end_line,
+                            self._get_text(start_line, end_line),
+                            blank_lines=self._count_empty_lines_after(start_line)))
 
     def find_import_statements(self):
         nodes = self.pymodule._get_ast().node.nodes

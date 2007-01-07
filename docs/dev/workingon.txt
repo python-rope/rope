@@ -1,19 +1,28 @@
-Removing `PythonRefactoring`
-============================
+Sorting imports; standard, third party, project
+===============================================
 
-* changing uses of `PythonRefactoring` to use `rope.refactor` modules
-* adding a place for saving undo information
-* what to do with import utils
-* documenting the refactorings `rope.refactor` submodules provide
-* updating references to `PythonRefactoring` and
-  `PyCore.get_refactoring` to use the new objects.
+- alphabetical
+- from imports
+- standard
+- Preventing unlimited insertion of blank lines
+- Holding the number of blank lines after each import statement
+- Third party imports
+- Refactor `importutils`
 
-* do something about long lines
+* Adding sort imports to organize imports?
+* Handling `super` and `range` functions
+
+
+Local History
+=============
+
+* Adding `rope.base.history` module
 
 
 Remaining Stories
 =================
 
+* Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s
 * Handling the return type of generator functions
 * Fixing multiple function definition problems

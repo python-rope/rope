@@ -190,8 +190,8 @@ class PyClass(PyDefinedObject):
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
-            base = rope.base.evaluate.StatementEvaluator.\
-                   get_statement_result(self.parent.get_scope(), base_name)
+            base = rope.base.evaluate.get_statement_result(
+                self.parent.get_scope(), base_name)
             if base:
                 result.append(base.get_object())
         return result

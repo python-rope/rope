@@ -398,7 +398,7 @@ class ScopeNameFinder(object):
         #ast = compiler.parse(name)
         # parenthesizing for handling cases like 'a_var.\nattr'
         ast = compiler.parse('(%s)' % name)
-        result = evaluate.StatementEvaluator.get_statement_result(holding_scope, ast)
+        result = evaluate.get_statement_result(holding_scope, ast)
         return result
 
 
