@@ -221,6 +221,46 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
+    def test_range_builtin_function(self):
+        self.mod.write('l = range(1)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        l = pymod.get_attribute('l').get_object()
+        self.assertTrue('append' in l.get_attributes())
+
+    def test_reversed_builtin_function(self):
+        self.mod.write('class C(object):\n    pass\nl = [C()]\n'
+                       'for x in reversed(l):\n    a_var = x\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_sorted_builtin_function(self):
+        self.mod.write('class C(object):\n    pass\nl = [C()]\n'
+                       'a_var = sorted(l).pop()\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_super_builtin_function(self):
+        self.mod.write(
+            'class C(object):\n    pass\n'
+            'class A(object):\n    def a_f(self):\n        return C()\n'
+            'class B(A):\n    def b_f(self):\n        return super(B, self).a_f()\n'
+            'a_var = B.b_f()\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_file_builtin_type(self):
+        self.mod.write('for line in open("file.txt"):\n    a_var = line\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(rope.base.builtins.get_str_type(),
+                          a_var.get_type())
+
 
 if __name__ == '__main__':
     unittest.main()

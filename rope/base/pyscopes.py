@@ -1,8 +1,9 @@
 import compiler
 
+import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
-import rope.base.exceptions
+
 
 class Scope(object):
 
@@ -104,22 +105,11 @@ class GlobalScope(Scope):
         return self.scope_finder
 
     def _get_builtin_names(self):
-        return get_builtin_names()
+        return rope.base.builtins.builtins
 
     _builtin_names = None
     builtin_names = property(_get_builtin_names)
 
-def get_builtin_names():
-    if GlobalScope._builtin_names is None:
-        builtins = {
-            'list': rope.base.builtins.BuiltinName(rope.base.builtins.get_list_type()),
-            'dict': rope.base.builtins.BuiltinName(rope.base.builtins.get_dict_type()),
-            'tuple': rope.base.builtins.BuiltinName(rope.base.builtins.get_tuple_type()),
-            'set': rope.base.builtins.BuiltinName(rope.base.builtins.get_set_type()),
-            'str': rope.base.builtins.BuiltinName(rope.base.builtins.get_str_type()),
-            'unicode': rope.base.builtins.BuiltinName(rope.base.builtins.get_str_type())}
-        GlobalScope._builtin_names = builtins
-    return GlobalScope._builtin_names
 
 
 class FunctionScope(Scope):
@@ -245,4 +235,3 @@ class _HoldingScopeFinder(object):
                 else:
                     end = l
         return end
-

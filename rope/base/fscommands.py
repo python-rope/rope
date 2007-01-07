@@ -69,7 +69,7 @@ class FileAccess(object):
 
         Returns a `Unicode` object
         """
-        source_bytes = open(path).read()
+        source_bytes = open(path, 'U').read()
         return self._file_data_to_unicode(source_bytes)
 
     def _file_data_to_unicode(self, data):

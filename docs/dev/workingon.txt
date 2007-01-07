@@ -1,16 +1,10 @@
-Sorting imports; standard, third party, project
-===============================================
+Supporting More Builtins
+========================
 
-- alphabetical
-- from imports
-- standard
-- Preventing unlimited insertion of blank lines
-- Holding the number of blank lines after each import statement
-- Third party imports
-- Refactor `importutils`
-
-* Adding sort imports to organize imports?
-* Handling `super` and `range` functions
+- `open`, `file`
+- `range` builtin function
+- `reversed` and `sorted` builtin function
+- `super` builtin function
 
 
 Local History
@@ -22,6 +16,7 @@ Local History
 Remaining Stories
 =================
 
+* Adding sorting imports to organize imports?
 * Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s
 * Handling the return type of generator functions

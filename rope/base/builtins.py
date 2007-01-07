@@ -2,8 +2,9 @@
 functions.
 """
 
-from rope.base import pyobjects
 from rope.base import pynames
+from rope.base import pyobjects
+from rope.base import evaluate
 
 
 def _create_builtin_type_getter(cls):
@@ -244,6 +245,37 @@ class Iterator(pyobjects.PyObject):
     def get_returned_object(self):
         return self.holding
 
+
+class File(pyobjects.PyObject):
+    
+    def __init__(self):
+        super(File, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        self_object = pyobjects.PyObject(self)
+        str_object = get_str()
+        str_list = get_list(get_str())
+        self.attributes = {
+            '__iter__': BuiltinName(BuiltinFunction(Iterator(str_object))),
+            'close': BuiltinName(BuiltinFunction()),
+            'flush': BuiltinName(BuiltinFunction()),
+            'lineno': BuiltinName(BuiltinFunction()),
+            'isatty': BuiltinName(BuiltinFunction()),
+            'next': BuiltinName(BuiltinFunction(str_object)),
+            'read': BuiltinName(BuiltinFunction(str_object)),
+            'readline': BuiltinName(BuiltinFunction(str_object)),
+            'readlines': BuiltinName(BuiltinFunction(str_list)),
+            'seek': BuiltinName(BuiltinFunction()),
+            'tell': BuiltinName(BuiltinFunction()),
+            'truncate': BuiltinName(BuiltinFunction()),
+            'write': BuiltinName(BuiltinFunction()),
+            'writelines': BuiltinName(BuiltinFunction())}
+
+    def get_attributes(self):
+        return self.attributes
+
+get_file = _create_builtin_getter(File)
+get_file_type = _create_builtin_type_getter(File)
+
+
 def _infer_sequence_type(seq):
     if '__iter__' in seq.get_attributes():
         iter = seq.get_attribute('__iter__').get_object().\
@@ -261,3 +293,35 @@ def _create_builtin(args, creator):
     holding = _infer_sequence_type(passed)
     if holding is not None:
         return creator(holding)
+
+
+def _range_function(args):
+    return get_list()
+
+def _reversed_function(args):
+    return _create_builtin(args, Iterator)
+
+def _sorted_function(args):
+    return _create_builtin(args, List)
+
+def _super_function(args):
+    passed_class, passed_self = args.get_arguments(['type', 'self'])
+    if passed_self is None:
+        return passed_class
+    else:
+        return passed_self
+
+
+builtins = {
+    'list': BuiltinName(get_list_type()),
+    'dict': BuiltinName(get_dict_type()),
+    'tuple': BuiltinName(get_tuple_type()),
+    'set': BuiltinName(get_set_type()),
+    'str': BuiltinName(get_str_type()),
+    'file': BuiltinName(get_file_type()),
+    'open': BuiltinName(get_file_type()),
+    'unicode': BuiltinName(get_str_type()),
+    'range': BuiltinName(BuiltinFunction(function=_range_function)),
+    'reversed': BuiltinName(BuiltinFunction(function=_reversed_function)),
+    'sorted': BuiltinName(BuiltinFunction(function=_sorted_function)),
+    'super': BuiltinName(BuiltinFunction(function=_super_function))}

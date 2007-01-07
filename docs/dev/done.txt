@@ -3,6 +3,12 @@
 ===========
 
 
+- Builtin functions: super, sorted, reversed, range : January 7, 2007
+
+
+- Support for file/open builtin type : January 7, 2007
+
+
 - Sorting imports; standard, third party, project : January 7, 2007
 
 

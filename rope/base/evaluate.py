@@ -1,7 +1,8 @@
 import compiler
-import rope.base.pyobjects
-import rope.base.pynames
+
 import rope.base.exceptions
+import rope.base.pynames
+import rope.base.pyobjects
 
 
 class StatementEvaluator(object):
