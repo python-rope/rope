@@ -255,7 +255,7 @@ class Core(object):
             parent = project.get_resource(file_name[: last_slash])
             file_name = file_name[last_slash + 1:]
         except ValueError:
-            parent = self.project.get_root_folder()
+            parent = self.project.root
         parent.create_file(file_name)
         return self.open_file(file_name)
 
@@ -309,7 +309,7 @@ class Core(object):
             parent = project.get_resource(folder_name[:last_slash])
             folder_name = folder_name[last_slash + 1:]
         except ValueError:
-            parent = self.project.get_root_folder()
+            parent = self.project.root
         parent.create_folder(folder_name)
 
     def exit(self):

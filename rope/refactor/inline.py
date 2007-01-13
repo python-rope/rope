@@ -5,9 +5,9 @@ import rope.base.pynames
 import rope.base.pyobjects
 import rope.refactor.functionutils
 from rope.base import codeanalyze
-from rope.refactor import sourceutils
-from rope.refactor import rename
 from rope.refactor import occurrences
+from rope.refactor import rename
+from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents
 
 

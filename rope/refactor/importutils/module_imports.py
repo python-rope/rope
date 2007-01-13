@@ -183,6 +183,15 @@ class ModuleImports(object):
             index += 1
         return index
 
+    def handle_long_imports(self, maxdots, maxlength):
+        visitor = actions.LongImportVisitor(
+            self._current_folder(), self.pycore, maxdots, maxlength)
+        for import_statement in self.get_import_statements():
+            import_statement.accept(visitor)
+        for import_info in visitor.new_imports:
+            self.add_import(import_info)
+        return visitor.to_be_renamed
+
 
 class _OneTimeSelector(object):
 

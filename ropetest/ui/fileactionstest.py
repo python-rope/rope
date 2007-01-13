@@ -18,7 +18,7 @@ class FileFinderTest(unittest.TestCase):
         self.file2 = 'abb'
         self.file3 = 'abc'
         self.file4 = 'b'
-        self.parent = self.project.get_root_folder().create_folder('parent')
+        self.parent = self.project.root.create_folder('parent')
         self.parent.create_file(self.file1)
         self.parent.create_file(self.file2)
         self.parent.create_file(self.file3)
@@ -59,14 +59,14 @@ class FileFinderTest(unittest.TestCase):
 
     def test_showing_packages_init_files(self):
         pycore = self.project.get_pycore()
-        pkg = pycore.create_package(self.project.get_root_folder(), 'pkg')
+        pkg = pycore.create_package(self.project.root, 'pkg')
         result = self.finder.find_files_starting_with('pk')
         self.assertEquals(1, len(result))
         self.assertEquals(pkg.get_child('__init__.py'), result[0])
 
     def test_putting_packages_last(self):
         pycore = self.project.get_pycore()
-        pkg = pycore.create_package(self.project.get_root_folder(), 'aaa')
+        pkg = pycore.create_package(self.project.root, 'aaa')
         result = self.finder.find_files_starting_with('a')
         self.assertEquals(4, len(result))
         self.assertEquals(pkg.get_child('__init__.py'), result[-1])

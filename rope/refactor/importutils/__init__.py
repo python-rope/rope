@@ -6,13 +6,11 @@ refactorings or as a separate task.
 """
 
 
-import rope.base.pynames
-from rope.refactor import rename
-from rope.refactor import occurrences
+import rope.base.evaluate
+from rope.refactor import occurrences, rename
+from rope.refactor.importutils import module_imports
 from rope.refactor.importutils.importinfo import \
      (NormalImport, FromImport, get_module_name)
-from rope.refactor.importutils import module_imports
-import rope.base.evaluate
 
 
 class ImportTools(object):
@@ -35,20 +33,20 @@ class ImportTools(object):
     def transform_froms_to_normal_imports(self, pymodule):
         resource = pymodule.get_resource()
         pymodule = self._clean_up_imports(pymodule)
-        module_with_imports = self.get_module_with_imports(pymodule)
-        for import_stmt in module_with_imports.get_import_statements():
+        module_imports = self.get_module_with_imports(pymodule)
+        for import_stmt in module_imports.get_import_statements():
             if not self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
                 continue
             pymodule = self._from_to_normal(pymodule, import_stmt)
 
         # Adding normal imports in place of froms
-        module_with_imports = self.get_module_with_imports(pymodule)
-        for import_stmt in module_with_imports.get_import_statements():
+        module_imports = self.get_module_with_imports(pymodule)
+        for import_stmt in module_imports.get_import_statements():
             if self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
                 import_stmt.import_info = \
                     NormalImport(((import_stmt.import_info.module_name, None),))
-        module_with_imports.remove_duplicates()
-        return module_with_imports.get_changed_source()
+        module_imports.remove_duplicates()
+        return module_imports.get_changed_source()
 
     def _from_to_normal(self, pymodule, import_stmt):
         resource = pymodule.get_resource()
@@ -119,7 +117,7 @@ class ImportTools(object):
                 return before_removing_self_import
         for name, new_name in to_be_renamed:
             pymodule = self._rename_in_module(pymodule, name, new_name)
-        return pymodule.source_code
+        return self.sort_imports(pymodule)
 
     def _rename_in_module(self, pymodule, name, new_name, till_dot=False):
         old_name = name.split('.')[-1]
@@ -148,3 +146,16 @@ class ImportTools(object):
         module_imports = self.get_module_with_imports(pymodule)
         module_imports.sort_imports()
         return module_imports.get_changed_source()
+
+    def handle_long_imports(self, pymodule, maxdots=2, maxlength=27):
+        # adding new from imports
+        module_imports = self.get_module_with_imports(pymodule)
+        to_be_fixed = module_imports.handle_long_imports(maxdots, maxlength)
+        # performing the renaming
+        pymodule = self.pycore.get_string_module(
+            module_imports.get_changed_source(),
+            resource=pymodule.get_resource())
+        for name in to_be_fixed:
+            pymodule = self._rename_in_module(pymodule, name, name.split('.')[-1])
+        # organizing imports
+        return self.organize_imports(pymodule)

@@ -74,7 +74,7 @@ def _create_resource_dialog(core, creation_callback,
         toplevel.title('Select ' + parent_name)
         tree_handle = _FolderViewHandle(core, toplevel, do_select)
         tree_view = TreeView(toplevel, tree_handle, title='Resources')
-        tree_view.add_entry(core.project.get_root_folder())
+        tree_view.add_entry(core.project.root)
         tree_view.list.focus_set()
         toplevel.grab_set()
 
@@ -274,7 +274,7 @@ def _show_resource_view(core):
     toplevel.title('Resources')
     tree_handle = _ResourceViewHandle(core, toplevel)
     tree_view = TreeView(toplevel, tree_handle, title='Resources')
-    for child in tree_handle.get_children(core.project.get_root_folder()):
+    for child in tree_handle.get_children(core.project.root):
         tree_view.add_entry(child)
     tree_view.list.focus_set()
     toplevel.grab_set()
@@ -283,7 +283,7 @@ def project_tree(context):
     _show_resource_view(context.get_core())
 
 def refresh_project(context):
-    context.project.validate(context.project.get_root_folder())
+    context.project.validate(context.project.root)
 
 def change_editor(context):
     context.get_core()._change_editor_dialog()

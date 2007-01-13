@@ -1,8 +1,8 @@
 import os
 import re
 
-import rope.base.pycore
 import rope.base.fscommands
+import rope.base.pycore
 from rope.base.exceptions import RopeException
 
 
@@ -96,34 +96,31 @@ class Project(_Project):
               have a look at `rope.base.fscommands`
 
         """
-        self.root = os.path.expanduser(project_root)
-        if not os.path.exists(self.root):
-            os.mkdir(self.root)
-        elif not os.path.isdir(self.root):
+        self._address = os.path.expanduser(project_root)
+        if not os.path.exists(self._address):
+            os.mkdir(self._address)
+        elif not os.path.isdir(self._address):
             raise RopeException('Project root exists and is not a directory')
         if fscommands is None:
-            fscommands = rope.base.fscommands.create_fscommands(self.root)
+            fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)
         self.pycore = rope.base.pycore.PyCore(self)
         self.no_project = NoProject()
 
-    def get_root_folder(self):
-        return self.get_resource('')
+    root = property(lambda self: self.get_resource(''))
 
-    def get_root_address(self):
-        return self.root
+    address = property(lambda self: self._address)
 
     def get_files(self):
-        return self._get_files_recursively(self.get_root_folder())
+        return self._get_files_recursively(self.root)
 
     def _get_resource_path(self, name):
-        return os.path.join(self.root, *name.split('/'))
+        return os.path.join(self._address, *name.split('/'))
 
     def _get_files_recursively(self, folder):
         result = []
         for file in folder.get_files():
-            if not file.get_name().endswith('.pyc'):
-                result.append(file)
+            result.append(file)
         for folder in folder.get_folders():
             if not folder.get_name().startswith('.'):
                 result.extend(self._get_files_recursively(folder))

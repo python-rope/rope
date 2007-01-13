@@ -1,13 +1,11 @@
-from rope.base.pyobjects import *
-import rope.base.codeanalyze
-import rope.base.oi.staticoi
+from rope.base.oi import dynamicoi, staticoi
 
 
 class ObjectInfer(object):
 
     def __init__(self, pycore):
-        self.ois = [rope.base.oi.staticoi.StaticObjectInference(),
-                    rope.base.oi.dynamicoi.DynamicObjectInference(pycore)]
+        self.ois = [staticoi.StaticObjectInference(),
+                    dynamicoi.DynamicObjectInference(pycore)]
 
     def infer_assigned_object(self, pyname):
         """Infer the `PyObject` this `PyName` references"""

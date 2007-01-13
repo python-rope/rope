@@ -16,7 +16,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.refactoring = self.project.get_pycore().get_refactoring()
-        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
@@ -82,7 +82,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def a_func(param, *args):\n    pass\na_func(*[1, 2, 3])\n', self.mod.read())
 
     def test_normalizing_functions_from_other_modules(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('def a_func(param):\n    pass\n')
         self.mod.write('import mod1\nmod1.a_func(param=1)\n')
         signature = ChangeSignature(self.pycore, mod1,

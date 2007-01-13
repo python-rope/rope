@@ -21,7 +21,7 @@ class RenameRefactoringTest(unittest.TestCase):
         super(RenameRefactoringTest, self).tearDown()
 
     def do_local_rename(self, source_code, offset, new_name):
-        testmod = self.pycore.create_module(self.project.get_root_folder(), 'testmod')
+        testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
         self.refactoring.local_rename(testmod, offset, new_name)
         return testmod.read()
@@ -80,8 +80,8 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals(expected, refactored)
 
     def test_renaming_functions_parameters_and_occurances_in_other_modules(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('def a_func(a_param):\n    print a_param\n')
         mod2.write('from mod1 import a_func\na_func(a_param=10)\n')
         self.refactoring.rename(mod1, mod1.read().index('a_param') + 1, 'new_param')
@@ -131,45 +131,45 @@ class RenameRefactoringTest(unittest.TestCase):
                           refactored)
 
     def test_renaming_functions_across_modules(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('import mod1\nmod1.a_func()\n')
         self.refactoring.rename(mod1, len(mod1.read()) - 5, 'new_func')
         self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod1.read())
         self.assertEquals('import mod1\nmod1.new_func()\n', mod2.read())
 
     def test_renaming_functions_across_modules_from_import(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('from mod1 import a_func\na_func()\n')
         self.refactoring.rename(mod1, len(mod1.read()) - 5, 'new_func')
         self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod1.read())
         self.assertEquals('from mod1 import new_func\nnew_func()\n', mod2.read())
 
     def test_renaming_functions_from_another_module(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('import mod1\nmod1.a_func()\n')
         self.refactoring.rename(mod2, len(mod2.read()) - 5, 'new_func')
         self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod1.read())
         self.assertEquals('import mod1\nmod1.new_func()\n', mod2.read())
 
     def test_applying_all_changes_together(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('import mod2\nmod2.a_func()\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('def a_func():\n    pass\na_func()\n')
         self.refactoring.rename(mod2, len(mod2.read()) - 5, 'new_func')
         self.assertEquals('import mod2\nmod2.new_func()\n', mod1.read())
         self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod2.read())
 
     def test_renaming_modules(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('def a_func():\n    pass\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('from mod1 import a_func\n')
         self.refactoring.rename(mod2, mod2.read().index('mod1') + 1, 'newmod')
         self.assertTrue(not mod1.exists() and
@@ -177,7 +177,7 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('from newmod import a_func\n', mod2.read())
 
     def test_renaming_packages(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod1 = self.pycore.create_module(pkg, 'mod1')
         mod1.write('def a_func():\n    pass\n')
         mod2 = self.pycore.create_module(pkg, 'mod2')
@@ -188,9 +188,9 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('from newpkg.mod1 import a_func\n', new_mod2.read())
 
     def test_module_dependencies(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('class AClass(object):\n    pass\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
         self.pycore.resource_to_pyobject(mod2).get_attributes()['mod1']
         mod1.write('def AClass():\n    return 0\n')
@@ -200,10 +200,10 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('import mod1\na_var = mod1.a_func()\n', mod2.read())
 
     def test_renaming_class_attributes(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('class AClass(object):\n    def __init__(self):\n'
                    '        self.an_attr = 10\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('import mod1\na_var = mod1.AClass()\nanother_var = a_var.an_attr')
 
         self.refactoring.rename(mod1, mod1.read().index('an_attr'), 'attr')
@@ -213,10 +213,10 @@ class RenameRefactoringTest(unittest.TestCase):
                           mod2.read())
 
     def test_renaming_class_attributes2(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('class AClass(object):\n    def __init__(self):\n'
                    '        an_attr = 10\n        self.an_attr = 10\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('import mod1\na_var = mod1.AClass()\nanother_var = a_var.an_attr')
 
         self.refactoring.rename(mod1, mod1.read().rindex('an_attr'), 'attr')
@@ -226,7 +226,7 @@ class RenameRefactoringTest(unittest.TestCase):
                           mod2.read())
 
     def test_renaming_methods_in_subclasses(self):
-        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod = self.pycore.create_module(self.project.root, 'mod1')
         mod.write('class A(object):\n    def a_method(self):\n        pass\n'
                   'class B(A):\n    def a_method(self):\n        pass\n')
 
@@ -235,7 +235,7 @@ class RenameRefactoringTest(unittest.TestCase):
                           'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
 
     def test_renaming_methods_in_sibling_classes(self):
-        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod = self.pycore.create_module(self.project.root, 'mod1')
         mod.write('class A(object):\n    def a_method(self):\n        pass\n'
                   'class B(A):\n    def a_method(self):\n        pass\n'
                   'class C(A):\n    def a_method(self):\n        pass\n')
@@ -246,16 +246,16 @@ class RenameRefactoringTest(unittest.TestCase):
                   'class C(A):\n    def new_method(self):\n        pass\n', mod.read())
 
     def test_undoing_refactorings(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('def a_func():\n    pass\na_func()\n')
         self.refactoring.rename(mod1, len(mod1.read()) - 5, 'new_func')
         self.refactoring.undo()
         self.assertEquals('def a_func():\n    pass\na_func()\n', mod1.read())
 
     def test_undoing_renaming_modules(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('def a_func():\n    pass\n')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('from mod1 import a_func\n')
         self.refactoring.rename(mod2, 6, 'newmod')
         self.refactoring.undo()
@@ -263,7 +263,7 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('from mod1 import a_func\n', mod2.read())
 
     def test_rename_in_module_renaming_one_letter_names_for_expressions(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('a = 10\nprint (1+a)\n')
         pymod = self.pycore.get_module('mod1')
         old_pyname = pymod.get_attribute('a')
@@ -322,20 +322,20 @@ class RenameRefactoringTest(unittest.TestCase):
                           'a_func  (new_param=hey)\n', refactored)
 
     def test_renaming_variables_in_init_dot_pys(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
-        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('import pkg\nprint pkg.a_var\n')
         self.refactoring.rename(mod, mod.read().index('a_var') + 1, 'new_var')
         self.assertEquals('new_var = 10\n', init_dot_py.read())
         self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
 
     def test_renaming_variables_in_init_dot_pys2(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
-        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('import pkg\nprint pkg.a_var\n')
         self.refactoring.rename(
             init_dot_py, init_dot_py.read().index('a_var') + 1, 'new_var')
@@ -343,18 +343,18 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
 
     def test_renaming_variables_in_init_dot_pys3(self):
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
-        mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('import pkg\nprint pkg.a_var\n')
         self.refactoring.rename(mod, mod.read().index('a_var') + 1, 'new_var')
         self.assertEquals('new_var = 10\n', init_dot_py.read())
         self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
 
     def test_renaming_resources_using_rename_module_refactoring(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
-        mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('a_var = 1')
         mod2.write('import mod1\nmy_var = mod1.a_var\n')
         renamer = rename.RenameRefactoring(self.pycore, mod1)
@@ -362,16 +362,16 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('import newmod\nmy_var = newmod.a_var\n', mod2.read())
 
     def test_renaming_resources_using_rename_module_refactoring_for_packages(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod1.write('import pkg\nmy_pkg = pkg')
         renamer = rename.RenameRefactoring(self.pycore, pkg)
         renamer.get_changes('newpkg').do()
         self.assertEquals('import newpkg\nmy_pkg = newpkg', mod1.read())
 
     def test_renaming_resources_using_rename_module_refactoring_for_init_dot_py(self):
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
-        pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod1.write('import pkg\nmy_pkg = pkg')
         renamer = rename.RenameRefactoring(self.pycore, pkg.get_child('__init__.py'))
         renamer.get_changes('newpkg').do()

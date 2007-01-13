@@ -1,8 +1,8 @@
 import compiler
 
-import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
+from rope.base import exceptions
 
 
 class Scope(object):
@@ -20,7 +20,7 @@ class Scope(object):
     def get_name(self, name):
         """Return name `PyName` defined in this scope"""
         if name not in self.get_names():
-            raise rope.base.exceptions.NameNotFoundException('name %s not found' % name)
+            raise exceptions.NameNotFoundException('name %s not found' % name)
         return self.get_names()[name]
 
     def get_scopes(self):
@@ -81,10 +81,10 @@ class GlobalScope(Scope):
     def get_name(self, name):
         try:
             return self.pyobject.get_attribute(name)
-        except rope.base.exceptions.AttributeNotFoundException:
+        except exceptions.AttributeNotFoundException:
             if name in self.builtin_names:
                 return self.builtin_names[name]
-            raise rope.base.exceptions.NameNotFoundException('name %s not found' % name)
+            raise exceptions.NameNotFoundException('name %s not found' % name)
 
     def get_names(self):
         if self.names.get() is None:
@@ -107,7 +107,6 @@ class GlobalScope(Scope):
     def _get_builtin_names(self):
         return rope.base.builtins.builtins
 
-    _builtin_names = None
     builtin_names = property(_get_builtin_names)
 
 
@@ -128,7 +127,7 @@ class FunctionScope(Scope):
     def _visit_function(self):
         if self.names == None:
             new_visitor = rope.base.pyobjects._FunctionVisitor(self.pycore,
-                                                          self.pyobject)
+                                                               self.pyobject)
             for n in self.pyobject._get_ast().getChildNodes():
                 compiler.walk(n, new_visitor)
             self.names = self.pyobject.get_parameters()
@@ -144,7 +143,8 @@ class FunctionScope(Scope):
         return self._get_names()
 
     def _create_scopes(self):
-        block_objects = [pyname.get_object() for pyname in self._get_names().values()
+        block_objects = [pyname.get_object()
+                         for pyname in self._get_names().values()
                          if isinstance(pyname, rope.base.pynames.DefinedName)]
         def block_compare(x, y):
             return cmp(x._get_ast().lineno, y._get_ast().lineno)
@@ -199,7 +199,8 @@ class _HoldingScopeFinder(object):
               (current_scope.get_kind() == 'Module' or
                self._get_scope_indents(current_scope) <= line_indents):
             scopes.append(current_scope)
-            if current_scope.get_start() == lineno and current_scope.get_kind() != 'Module':
+            if current_scope.get_start() == lineno and \
+               current_scope.get_kind() != 'Module':
                 return current_scope
             new_scope = None
             for scope in current_scope.get_scopes():

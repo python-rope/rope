@@ -96,7 +96,7 @@ class PythonHighlighting(Highlighting):
         return {'keyword': HighlightingStyle(color='blue', bold=True),
                 'defkeyword': HighlightingStyle(color='blue', bold=True),
                 'string': HighlightingStyle(color='#004080'),
-                'comment': HighlightingStyle(color='#008000', italic=True),
+                'comment': HighlightingStyle(color='#108010'),
                 'builtin': HighlightingStyle(color='#908080'),
                 'definition': HighlightingStyle(color='purple', bold=True)}
 
@@ -181,7 +181,7 @@ class ReSTHighlighting(Highlighting):
                 'overline': HighlightingStyle(color='blue', bold=True),
                 'listsign': HighlightingStyle(color='blue', bold=True),
                 'directive': HighlightingStyle(color='#00AAAA'),
-                'emphasis': HighlightingStyle(color='#000033', italic=True),
+                'emphasis': HighlightingStyle(color='#000033'),
                 'strongemphasis': HighlightingStyle(color='#330022', bold=True),
                 'literal': HighlightingStyle(color='#605050'),
                 'interpreted': HighlightingStyle(color='#208820'),

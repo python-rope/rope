@@ -1,8 +1,8 @@
 import unittest
 
 from rope.base.project import Project
-from ropetest import testutils
 from rope.refactor.importutils import ImportTools
+from ropetest import testutils
 
 
 class ImportUtilsTest(unittest.TestCase):
@@ -15,12 +15,16 @@ class ImportUtilsTest(unittest.TestCase):
         self.pycore = self.project.get_pycore()
         self.import_tools = ImportTools(self.pycore)
 
-        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
-        self.pkg1 = self.pycore.create_package(self.project.get_root_folder(), 'pkg1')
+        self.mod = self.pycore.create_module(self.project.root, 'mod')
+        self.pkg1 = self.pycore.create_package(self.project.root, 'pkg1')
         self.mod1 = self.pycore.create_module(self.pkg1, 'mod1')
-        self.pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
+        self.pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
         self.mod2 = self.pycore.create_module(self.pkg2, 'mod2')
         self.mod3 = self.pycore.create_module(self.pkg2, 'mod3')
+        p1 = self.pycore.create_package(self.project.root, 'p1')
+        p2 = self.pycore.create_package(p1, 'p2')
+        p3 = self.pycore.create_package(p2, 'p3')
+        m1 = self.pycore.create_module(p3, 'm1')
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
@@ -654,6 +658,36 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals('import a_third_party\n\nimport pkg1\n\n\n',
                           self.import_tools.sort_imports(pymod))
+
+    def test_simple_handling_long_imports(self):
+        self.mod.write('import pkg1.mod1\n\n\nm = pkg1.mod1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'import pkg1.mod1\n\n\nm = pkg1.mod1\n',
+            self.import_tools.handle_long_imports(pymod, maxdots=2))
+
+    def test_handling_long_imports_for_many_dots(self):
+        self.mod.write('import p1.p2.p3.m1\n\n\nm = p1.p2.p3.m1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from p1.p2.p3 import m1\n\n\nm = m1\n',
+            self.import_tools.handle_long_imports(pymod, maxdots=2))
+
+    def test_handling_long_imports_for_their_length(self):
+        self.mod.write('import p1.p2.p3.m1\n\n\nm = p1.p2.p3.m1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'import p1.p2.p3.m1\n\n\nm = p1.p2.p3.m1\n',
+            self.import_tools.handle_long_imports(pymod, maxdots=3,
+                                                  maxlength=20))
+
+    def test_handling_long_imports_for_many_dots(self):
+        self.mod.write('import p1.p2.p3.m1\n\n\nm = p1.p2.p3.m1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from p1.p2.p3 import m1\n\n\nm = m1\n',
+            self.import_tools.handle_long_imports(pymod, maxdots=3,
+                                                  maxlength=10))
 
 
 if __name__ == '__main__':

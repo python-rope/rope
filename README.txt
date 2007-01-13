@@ -18,7 +18,33 @@ New Features
 
 Features added in this release:
 
-*
+* Builtin functions: super, sorted, reversed, range, open
+* Sorting imports according to :PEP:`8` in organize imports
+* Support for builtin file type
+* Enhanced dynamic object inference
+* Handling long imports
+
+Organize imports now sorts imports two.  It will sort imports according
+to :PEP:`8`::
+
+  [standard imports]
+
+  [third-party imports]
+
+  [project imports]
+
+
+  [the rest of module]
+
+Dynamic object inference has been enhanced to two infer the returned
+objects of functions based on their parameters.
+
+"Handle long imports" command trys to make long imports look better
+by transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to
+``from pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be
+identified either by having lots of dots or being very long.  The
+default configuration considers imports with more than 2 dots or
+with length more than 27 characters to be long.
 
 
 Getting Started

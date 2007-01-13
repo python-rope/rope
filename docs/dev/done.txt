@@ -3,7 +3,10 @@
 ===========
 
 
-- Builtin functions: super, sorted, reversed, range : January 7, 2007
+- Handling long imports : January 11, 2007
+
+
+- Builtin functions : super, sorted, reversed, range : January 7, 2007
 
 
 - Support for file/open builtin type : January 7, 2007

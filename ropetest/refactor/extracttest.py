@@ -22,13 +22,13 @@ class ExtractMethodTest(unittest.TestCase):
         super(ExtractMethodTest, self).tearDown()
 
     def do_extract_method(self, source_code, start, end, extracted):
-        testmod = self.pycore.create_module(self.project.get_root_folder(), 'testmod')
+        testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
         self.refactoring.extract_method(testmod, start, end, extracted)
         return testmod.read()
 
     def do_extract_variable(self, source_code, start, end, extracted):
-        testmod = self.pycore.create_module(self.project.get_root_folder(), 'testmod')
+        testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
         self.refactoring.extract_variable(testmod, start, end, extracted)
         return testmod.read()

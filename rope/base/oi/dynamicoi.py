@@ -181,7 +181,7 @@ class _TextualToPyObject(object):
                 return i + 1
 
     def _get_pymodule(self, path):
-        root = os.path.abspath(self.project.get_root_address())
+        root = os.path.abspath(self.project.address)
         if path.startswith(root):
             relative_path = path[len(root):]
             if relative_path.startswith('/') or relative_path.startswith(os.sep):
@@ -255,7 +255,7 @@ class _PyObjectToTextual(object):
         if os.path.isabs(resource_path):
             return resource_path
         return os.path.abspath(
-            os.path.normpath(os.path.join(self.project.get_root_address(),
+            os.path.normpath(os.path.join(self.project.address,
                                           resource_path)))
 
 
@@ -288,7 +288,7 @@ class PythonFileRunner(object):
         if self.receiver:
             send_info = self.receiver.get_send_info()
         args = [sys.executable, runmod_path, send_info,
-                os.path.abspath(self.pycore.project.get_root_address()),
+                os.path.abspath(self.pycore.project.address),
                 os.path.abspath(self.file._get_real_path())]
         if self.args is not None:
             args.extend(self.args)

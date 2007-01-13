@@ -1,5 +1,6 @@
 import difflib
 
+
 class Change(object):
 
     def do(self):

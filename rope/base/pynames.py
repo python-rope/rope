@@ -1,5 +1,6 @@
 import rope.base.pyobjects
-from rope.base.exceptions import (ModuleNotFoundException, AttributeNotFoundException)
+from rope.base.exceptions import (ModuleNotFoundException,
+                                  AttributeNotFoundException)
 
 
 class PyName(object):

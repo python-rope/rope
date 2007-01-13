@@ -1,10 +1,10 @@
 import compiler
 
-import rope.base.pyscopes
-from rope.base.exceptions import (RopeException, AttributeNotFoundException)
-from rope.base.pynames import *
-from rope.base import pynames
 import rope.base.evaluate
+import rope.base.pyscopes
+from rope.base import pynames
+from rope.base.exceptions import RopeException, AttributeNotFoundException
+from rope.base.pynames import *
 
 
 class PyObject(object):

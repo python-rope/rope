@@ -5,6 +5,7 @@ from distutils.core import setup
 
 import rope
 
+
 def make_temps():
     if not os.path.exists('scripts'):
         os.mkdir('scripts')
@@ -27,18 +28,19 @@ def remove_temps():
 
 make_temps()
 
-classifiers=['Development Status :: 3 - Alpha',
-             'Operating System :: OS Independent',
-             'Environment :: X11 Applications',
-             'Environment :: Win32 (MS Windows)',
-             # Have not been tested on MacOS
-             # 'Environment :: MacOS X',
-             'Intended Audience :: Developers',
-             'License :: OSI Approved :: GNU General Public License (GPL)',
-             'Natural Language :: English',
-             'Programming Language :: Python',
-             'Topic :: Software Development',
-             'Topic :: Text Editors :: Integrated Development Environments (IDE)']
+classifiers=[
+    'Development Status :: 3 - Alpha',
+    'Operating System :: OS Independent',
+    'Environment :: X11 Applications',
+    'Environment :: Win32 (MS Windows)',
+    # Have not been tested on MacOS
+    # 'Environment :: MacOS X',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: GNU General Public License (GPL)',
+    'Natural Language :: English',
+    'Programming Language :: Python',
+    'Topic :: Software Development',
+    'Topic :: Text Editors :: Integrated Development Environments (IDE)']
 
 long_description = """
 Rope is a python refactoring IDE and library.
@@ -55,6 +57,7 @@ setup(name='rope',
                 'rope.refactor.importutils', 'rope.ide', 'rope.ui'],
       package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
       scripts=['scripts/rope'],
+      license='GNU GPL',
       classifiers=classifiers)
 
 remove_temps()

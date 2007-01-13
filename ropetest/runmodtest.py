@@ -19,7 +19,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         super(PythonFileRunnerTest, self).tearDown()
 
     def make_sample_python_file(self, file_path, get_text_function_source=None):
-        self.project.get_root_folder().create_file(file_path)
+        self.project.root.create_file(file_path)
         file = self.project.get_resource(file_path)
         if not get_text_function_source:
             get_text_function_source = "def get_text():\n    return 'run'\n\n"
@@ -77,7 +77,7 @@ class PythonFileRunnerTest(unittest.TestCase):
         self.assertEquals('', self.get_output_file_content(file_path))
 
     def test_running_nested_files(self):
-        self.project.get_root_folder().create_folder('src')
+        self.project.root.create_folder('src')
         file_path = 'src/sample.py'
         self.make_sample_python_file(file_path)
         file_resource = self.project.get_resource(file_path)
@@ -123,10 +123,10 @@ class PythonFileRunnerTest(unittest.TestCase):
             os.remove(temp_file_name)
 
     def test_setting_pythonpath(self):
-        src = self.project.get_root_folder().create_folder('src')
+        src = self.project.root.create_folder('src')
         src.create_file('sample.py')
         src.get_child('sample.py').write('def f():\n    pass\n')
-        self.project.get_root_folder().create_folder('test')
+        self.project.root.create_folder('test')
         file_path = 'test/test.py'
         self.make_sample_python_file(file_path,
                                      "def get_text():\n"

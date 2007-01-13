@@ -47,7 +47,7 @@ Features implemented so far:
     * Change relative imports to absolute
     * Change from imports to normal imports
     * Expand ``from ... import *`` imports
-    * Remove unused, duplicate and self imports (organize imports)
+    * Remove unused and duplicate imports and sort them (organize imports)
 
 * Object Inference
 

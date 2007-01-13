@@ -4,17 +4,18 @@ This package contains modules that perform python
 refactorings.
 
 """
-import rope.refactor.importutils.module_imports
+import rope.refactor.importutils
 from rope.refactor.change import (ChangeSet, ChangeContents,
                                   MoveResource, CreateFolder)
-from rope.refactor.rename import RenameRefactoring
+from rope.refactor.encapsulate_field import EncapsulateFieldRefactoring
 from rope.refactor.extract import (ExtractMethodRefactoring,
                                    ExtractVariableRefactoring)
-from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
-from rope.refactor.move import MoveRefactoring
+from rope.refactor.importutils import module_imports
 from rope.refactor.inline import InlineRefactoring
-from rope.refactor.encapsulate_field import EncapsulateFieldRefactoring
+from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.localtofield import ConvertLocalToFieldRefactoring
+from rope.refactor.move import MoveRefactoring
+from rope.refactor.rename import RenameRefactoring
 
 
 class PythonRefactoring(object):
@@ -140,57 +141,38 @@ class ImportOrganizer(object):
         result = module_with_imports.get_changed_source()
         return result
 
-    def organize_imports(self, resource):
-        source = resource.read()
-        pymodule = self.pycore.get_string_module(source, resource)
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
-        module_with_imports.remove_unused_imports()
-        module_with_imports.remove_duplicates()
-        source = module_with_imports.get_changed_source()
-        if source is not None:
-            changes = ChangeSet()
-            changes.add_change(ChangeContents(resource, source))
-            self.refactoring.add_and_commit_changes(changes)
-
-    def organize_imports(self, resource):
+    def _perform_command_on_import_tools(self, method, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
-        result = self.import_tools.organize_imports(pymodule)
-        if result is not None:
+        before_performing = pymodule.source_code
+        result = method(pymodule)
+        if result is not None and result != before_performing:
             changes = ChangeSet()
             changes.add_change(ChangeContents(resource, result))
             self.refactoring.add_and_commit_changes(changes)
 
+    def organize_imports(self, resource):
+        return self._perform_command_on_import_tools(
+            self.import_tools.organize_imports, resource)
+
     def expand_star_imports(self, resource):
         source = self._perform_command_on_module_with_imports(
-            resource, rope.refactor.importutils.module_imports.ModuleImports.expand_stars)
+            resource, module_imports.ModuleImports.expand_stars)
         if source is not None:
             changes = ChangeSet()
             changes.add_change(ChangeContents(resource, source))
             self.refactoring.add_and_commit_changes(changes)
 
     def transform_froms_to_imports(self, resource):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        result = self.import_tools.transform_froms_to_normal_imports(pymodule)
-        if result is not None:
-            changes = ChangeSet()
-            changes.add_change(ChangeContents(resource, result))
-            self.refactoring.add_and_commit_changes(changes)
+        return self._perform_command_on_import_tools(
+            self.import_tools.transform_froms_to_normal_imports, resource)
 
     def transform_relatives_to_absolute(self, resource):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        result = self.import_tools.transform_relative_imports_to_absolute(pymodule)
-        if result is not None:
-            changes = ChangeSet()
-            changes.add_change(ChangeContents(resource, result))
-            self.refactoring.add_and_commit_changes(changes)
+        return self._perform_command_on_import_tools(
+            self.import_tools.transform_relative_imports_to_absolute, resource)
 
-    def sort_imports(self, resource):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        result = self.import_tools.sort_imports(pymodule)
-        if result is not None:
-            changes = ChangeSet()
-            changes.add_change(ChangeContents(resource, result))
-            self.refactoring.add_and_commit_changes(changes)
+    def handle_long_imports(self, resource):
+        return self._perform_command_on_import_tools(
+            self.import_tools.handle_long_imports, resource)
 
 
 class Undo(object):

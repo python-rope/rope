@@ -1,6 +1,6 @@
 import rope.base.codeanalyze
-import rope.base.pyobjects
 import rope.base.exceptions
+import rope.base.pyobjects
 from rope.refactor import importutils
 from rope.refactor import rename
 from rope.refactor import occurrences

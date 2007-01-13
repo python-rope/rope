@@ -10,7 +10,7 @@ class BuiltinTypesTest(unittest.TestCase):
         ropetest.testutils.remove_recursively(self.project_root)
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
-        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     project_root = 'sample_project'
 

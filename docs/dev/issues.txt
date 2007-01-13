@@ -52,10 +52,6 @@ Possible Plans
 * Enhancing refactorings and testing
 * Handling built-in types
 
-Exploring and analyzing possible solutions for:
-
-* Implicit interfaces
-
 
 Status
 ------
@@ -85,9 +81,25 @@ To Be Discussed
 * `Rope's preference system`_
 * `Having virtual PyModules`_
 * Indexing source files for faster occurrence finding
+* Faster module running
 * Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
 * Undo unification
+
+
+Handling builtin `property`
+===========================
+
+Problems:
+
+* Class scopes does not reference class methods
+* Properties are overwritten in assignments
+
+We can add a new `Property` builtin type and when exploring attributes
+of a class we prevent `PyNames` with `Property` objects from being
+overwritten.  But the problem here is that we don't want the
+`PyObject`\s of `PyName`\s to be calculated for all attributes of a
+class.
 
 
 Local History
@@ -108,6 +120,16 @@ Issues:
 
 * Unanticipated changes
 * Having version control systems in parallel
+* Saving removed files and folders
+* Memory inefficiency
+
+Each project change consists of a few basic changes.
+
+* change file contents
+* move resource
+* create file
+* create folder
+* remove resource
 
 
 Removing `PythonRefactoring` Facade
@@ -124,6 +146,7 @@ discussed in `Local History`_ section.
 * Documenting the refactorings `rope.refactor` submodules provide
 * Updating references to `PythonRefactoring` and
   `PyCore.get_refactoring` to use the new objects.
+* Managing `importutils` actions
 
 
 Rope's Preference System
@@ -749,11 +772,18 @@ Rope should have a good emacs-ish keybinding.
 * Version control; C-x v ...
 * Refactorings; C-c r ...
 
-  * C-x r r: rename
-  * C-x r m: extract method
-  * C-x r i: inline
-  * C-x r l: extract local
-  * C-x r c: change signature
+  * C-c r r: rename
+  * C-c r m: extract method
+  * C-c r i: inline
+  * C-c r l: extract local
+  * C-c r c: change signature
 
 * Import actions; C-c i ...
+
+  * C-c i o: organize
+  * C-c i x: expand stars
+  * C-c i a: relatives to absolutes
+  * C-c i f: froms to imports
+  * C-c i s: sort
+
 * Help; C-h ...

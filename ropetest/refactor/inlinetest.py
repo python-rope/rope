@@ -13,7 +13,7 @@ class InlineTest(unittest.TestCase):
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.refactoring = self.project.get_pycore().get_refactoring()
-        self.mod = self.pycore.create_module(self.project.get_root_folder(), 'mod')
+        self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
@@ -105,21 +105,21 @@ class InlineTest(unittest.TestCase):
 
     def test_replacing_calls_with_function_definition_in_other_modules(self):
         self.mod.write('def a_func():\n    print 1\n')
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('import mod\nmod.a_func()\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('import mod\nprint 1\n', mod1.read())
 
     def test_replacing_calls_with_function_definition_in_other_modules2(self):
         self.mod.write('def a_func():\n    print 1\n')
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('import mod\nif True:\n    mod.a_func()\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('import mod\nif True:\n    print 1\n', mod1.read())
 
     def test_replacing_calls_with_method_definition_in_other_modules(self):
         self.mod.write('class A(object):\n    var = 10\n    def a_func(self):\n        print 1\n')
-        mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('import mod\nmod.A().a_func()\n')
         self.refactoring.inline(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('import mod\nprint 1\n', mod1.read())

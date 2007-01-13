@@ -1,7 +1,5 @@
-from rope.refactor.rename import RenameRefactoring
 import rope.base.codeanalyze
-from rope.refactor.change import (ChangeSet, ChangeContents,
-                                  MoveResource, CreateFolder)
+from rope.refactor.rename import RenameRefactoring
 
 
 class ConvertLocalToFieldRefactoring(object):

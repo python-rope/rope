@@ -73,4 +73,3 @@ from https://svn.sourceforge.net/svnroot/rope
 * Use four spaces for indentation.
 * Include good unit-tests if possible.
 * Rope test suite should pass after patching (``python runtests.py``).
-

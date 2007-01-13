@@ -1,10 +1,10 @@
 import re
 import sys
 
-import rope.base.project
-import rope.base.oi.objectinfer
-import rope.refactor
 import rope.base.oi.dynamicoi
+import rope.base.oi.objectinfer
+import rope.base.project
+import rope.refactor
 from rope.base.exceptions import ModuleNotFoundException
 from rope.base.pyobjects import *
 
@@ -141,7 +141,7 @@ class PyCore(object):
 
     def get_source_folders(self):
         """Returns project source folders"""
-        return self._find_source_folders(self.project.get_root_folder())
+        return self._find_source_folders(self.project.root)
 
     def resource_to_pyobject(self, resource):
         if resource in self.module_map:

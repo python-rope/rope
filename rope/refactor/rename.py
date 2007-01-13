@@ -1,7 +1,7 @@
 import rope.base.codeanalyze
+import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
-import rope.base.exceptions
 from rope.refactor import occurrences
 from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents, MoveResource

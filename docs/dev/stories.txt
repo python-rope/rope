@@ -106,10 +106,7 @@ Stories
 * Saving preferences
 
 
-> Public Release 0.4m5 : January 14, 2007
-
-
 * Commanding buffer
 
 
-* Transforming to ``from w.x.y import z`` for long imports
+> Public Release 0.4m5 : January 14, 2007

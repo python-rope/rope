@@ -617,13 +617,13 @@ def transform_relatives_to_absolute(context):
     if import_organizer:
         import_organizer.transform_relatives_to_absolute(file_editor.get_file())
 
-def sort_imports(context):
+def handle_long_imports(context):
     if not context.get_active_editor():
         return
     file_editor = context.get_active_editor()
     import_organizer = _get_refactoring(context).get_import_organizer()
     if import_organizer:
-        import_organizer.sort_imports(file_editor.get_file())
+        import_organizer.handle_long_imports(file_editor.get_file())
 
 def inline(context):
     if context.get_active_editor():
@@ -716,9 +716,9 @@ actions.append(SimpleAction('Transform Froms to Imports',
                             ConfirmAllEditorsAreSaved(transform_froms_to_imports), None,
                             MenuAddress(['Refactor', 'Transform Froms to Imports'], 'r', 2),
                             ['python']))
-actions.append(SimpleAction('Sort Imports',
-                            ConfirmAllEditorsAreSaved(sort_imports), None,
-                            MenuAddress(['Refactor', 'Sort Imports'], None, 2),
+actions.append(SimpleAction('Handle Long Imports',
+                            ConfirmAllEditorsAreSaved(handle_long_imports), None,
+                            MenuAddress(['Refactor', 'Handle Long Imports'], None, 2),
                             ['python']))
 actions.append(SimpleAction('Undo Refactoring',
                             ConfirmAllEditorsAreSaved(undo_refactoring), None,

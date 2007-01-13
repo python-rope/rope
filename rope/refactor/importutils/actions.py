@@ -1,8 +1,7 @@
 import os
 import sys
 
-from rope.base import pyobjects
-from rope.base import exceptions
+from rope.base import pyobjects, exceptions
 from rope.refactor.importutils import importinfo
 
 
@@ -290,3 +289,30 @@ class SortingVisitor(ImportInfoVisitor):
                         result.add(name[:-3])
             cls._standard_modules = result
         return cls._standard_modules
+
+
+class LongImportVisitor(ImportInfoVisitor):
+
+    def __init__(self, current_folder, pycore, maxdots, maxlength):
+        self.maxdots = maxdots
+        self.maxlength = maxlength
+        self.to_be_renamed = set()
+        self.current_folder = current_folder
+        self.pycore = pycore
+        self.new_imports = []
+
+    def visitNormalImport(self, import_stmt, import_info):
+        new_pairs = []
+        for name, alias in import_info.names_and_aliases:
+            if alias is None and self._is_long(name):
+                self.to_be_renamed.add(name)
+                last_dot = name.rindex('.')
+                from_ = name[:last_dot]
+                imported = name[last_dot + 1:]
+                self.new_imports.append(
+                    importinfo.FromImport(from_, 0, ((imported, None), ),
+                                          self.current_folder, self.pycore))
+
+    def _is_long(self, name):
+        return name.count('.') > self.maxdots or \
+               ('.' in name and len(name) > self.maxlength)

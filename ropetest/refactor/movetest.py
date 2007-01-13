@@ -14,10 +14,10 @@ class MoveRefactoringTest(unittest.TestCase):
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.refactoring = self.project.get_pycore().get_refactoring()
-        self.mod1 = self.pycore.create_module(self.project.get_root_folder(), 'mod1')
-        self.mod2 = self.pycore.create_module(self.project.get_root_folder(), 'mod2')
-        self.mod3 = self.pycore.create_module(self.project.get_root_folder(), 'mod3')
-        self.pkg = self.pycore.create_package(self.project.get_root_folder(), 'pkg')
+        self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        self.mod3 = self.pycore.create_module(self.project.root, 'mod3')
+        self.pkg = self.pycore.create_package(self.project.root, 'pkg')
         self.mod4 = self.pycore.create_module(self.pkg, 'mod4')
         self.mod5 = self.pycore.create_module(self.pkg, 'mod5')
 
@@ -66,7 +66,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
     @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringException)
     def test_folder_destination(self):
-        folder = self.project.get_root_folder().create_folder('folder')
+        folder = self.project.root.create_folder('folder')
         self.mod1.write('class AClass(object):\n    pass\n')
         self.refactoring.move(self.mod1, self.mod1.read().index('AClass') + 1, folder)
 
@@ -113,21 +113,21 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_modules_and_removing_out_of_date_imports(self):
         self.mod2.write('import pkg.mod4\nprint pkg.mod4')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
-                              self.project.get_root_folder())
+                              self.project.root)
         self.assertEquals('import mod4\nprint mod4', self.mod2.read())
         self.assertTrue(self.pycore.find_module('mod4') is not None)
 
     def test_moving_modules_and_removing_out_of_date_froms(self):
         self.mod2.write('from pkg import mod4\nprint mod4')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
-                              self.project.get_root_folder())
+                              self.project.root)
         self.assertEquals('import mod4\nprint mod4', self.mod2.read())
 
     def test_moving_modules_and_removing_out_of_date_froms2(self):
         self.mod4.write('a_var = 10')
         self.mod2.write('from pkg.mod4 import a_var\nprint a_var\n')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
-                              self.project.get_root_folder())
+                              self.project.root)
         self.assertEquals('from mod4 import a_var\nprint a_var\n',
                           self.mod2.read())
 
@@ -135,12 +135,12 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod4.write('import mod5\nprint mod5\n')
         self.mod2.write('import pkg.mod4\nprint pkg.mod4')
         self.refactoring.move(self.mod2, self.mod2.read().index('mod4') + 1,
-                              self.project.get_root_folder())
+                              self.project.root)
         moved = self.pycore.find_module('mod4')
         self.assertEquals('import pkg.mod5\nprint pkg.mod5\n', moved.read())
 
     def test_moving_packages(self):
-        pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
+        pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
         self.mod1.write('import pkg.mod4\nprint pkg.mod4')
         self.refactoring.move(self.mod1, self.mod1.read().index('pkg') + 1, pkg2)
         self.assertFalse(self.pkg.exists())
@@ -172,7 +172,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_resources_using_move_module_refactoring_for_packages(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
-        pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
+        pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
         mover = move.MoveRefactoring(self.pycore, self.pkg)
         mover.get_changes(pkg2).do()
         self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
@@ -180,7 +180,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_resources_using_move_module_refactoring_for_init_dot_py(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
-        pkg2 = self.pycore.create_package(self.project.get_root_folder(), 'pkg2')
+        pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
         mover = move.MoveRefactoring(self.pycore, self.pkg.get_child('__init__.py'))
         mover.get_changes(pkg2).do()
         self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())

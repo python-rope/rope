@@ -1,22 +1,26 @@
-Supporting More Builtins
-========================
+Handling Long Imports
+=====================
 
-- `open`, `file`
-- `range` builtin function
-- `reversed` and `sorted` builtin function
-- `super` builtin function
+- Transforming to ``from w.x.y import z`` for long imports
+- Shortening based on the number of dots or its length
+- Adding to UI
+- Not making any changes when there are actually no changes
 
 
-Local History
+Small Stories
 =============
 
-* Adding `rope.base.history` module
+- `Project.get_root_folder()` -> `Project.root`
+- `Project.get_root_address()` -> `Project.address`
+- Reorganize projecttest
+- Adding sorting imports to organize imports
 
 
 Remaining Stories
 =================
 
-* Adding sorting imports to organize imports?
+* Showing properties in quick outline
+* Default maxlength and maxdots for handling long imports
 * Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s
 * Handling the return type of generator functions
@@ -33,16 +37,15 @@ Remaining Stories
 * Better `ropetest` package structure
 * Decide when to use `difflib` in `Editor.set_text`
 * Handling `AssList` for inline variable and encapsulate field
-
 * Considering logical lines in `rope.codeanalyze`
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Extract method and return statements
 * Import addition when adding a relative with an absolute import
 * Caching `PyCore.classes`
-* Handling `Scope.lookup` for ::
+* Handling `ClassScope.lookup` for ::
 
-    class A(object):
+    class C(object):
         a_var = 10
         another_var = a_var
 
