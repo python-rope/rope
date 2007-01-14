@@ -40,6 +40,9 @@ class PythonRefactoring(object):
     you should use `add_and_commit_changes` to use refactoring undo/
     redo.
 
+    Note: This class will probably be removed sometime before ``0.4``
+    release.
+
     """
 
     def __init__(self, pycore):

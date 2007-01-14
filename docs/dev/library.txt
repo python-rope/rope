@@ -18,6 +18,7 @@ To be done?:
 * Limiting memory usage; throwing away calculated information when low
   on memory
 * Documenting published interfaces
+* Removing `PythonRefactoring` facade
 
 If you need other features, send a feature request.  Have a look at
 ``docs/dev/contributing.txt``.

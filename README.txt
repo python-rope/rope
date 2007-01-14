@@ -24,8 +24,8 @@ Features added in this release:
 * Enhanced dynamic object inference
 * Handling long imports
 
-Organize imports now sorts imports two.  It will sort imports according
-to :PEP:`8`::
+Organize imports now sorts imports, too.  It will sort imports
+according to :PEP:`8`::
 
   [standard imports]
 
@@ -36,15 +36,15 @@ to :PEP:`8`::
 
   [the rest of module]
 
-Dynamic object inference has been enhanced to two infer the returned
+Dynamic object inference has been enhanced to infer the returned
 objects of functions based on their parameters.
 
-"Handle long imports" command trys to make long imports look better
-by transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to
-``from pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be
-identified either by having lots of dots or being very long.  The
-default configuration considers imports with more than 2 dots or
-with length more than 27 characters to be long.
+"Handle long imports" command trys to make long imports look better by
+transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to ``from
+pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
+either by having lots of dots or being very long.  The default
+configuration considers imported modules with more than 2 dots or with
+length more than 27 characters to be long.
 
 
 Getting Started
@@ -88,7 +88,7 @@ may use them.
 Get Involved!
 =============
 
-Read `docs/dev/contributing.txt`_.
+See `docs/dev/contributing.txt`_.
 
 
 Bug Reports

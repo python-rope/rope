@@ -1,26 +1,14 @@
-Handling Long Imports
-=====================
+Remaining Small Stories
+=======================
 
-- Transforming to ``from w.x.y import z`` for long imports
-- Shortening based on the number of dots or its length
-- Adding to UI
-- Not making any changes when there are actually no changes
+* Default maxlength and maxdots for handling long imports
+* Handling `ClassScope.lookup` for ::
 
-
-Small Stories
-=============
-
-- `Project.get_root_folder()` -> `Project.root`
-- `Project.get_root_address()` -> `Project.address`
-- Reorganize projecttest
-- Adding sorting imports to organize imports
-
-
-Remaining Stories
-=================
+    class C(object):
+        a_var = 10
+        another_var = a_var
 
 * Showing properties in quick outline
-* Default maxlength and maxdots for handling long imports
 * Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s
 * Handling the return type of generator functions
@@ -43,12 +31,6 @@ Remaining Stories
 * Extract method and return statements
 * Import addition when adding a relative with an absolute import
 * Caching `PyCore.classes`
-* Handling `ClassScope.lookup` for ::
-
-    class C(object):
-        a_var = 10
-        another_var = a_var
-
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`
 * Goto definition for ``"# comment.\na_var"``

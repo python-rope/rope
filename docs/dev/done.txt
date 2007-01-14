@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.4m5 : January 14, 2007
+
+
 - Handling long imports : January 11, 2007
 
 

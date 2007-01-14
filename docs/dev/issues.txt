@@ -136,9 +136,9 @@ Removing `PythonRefactoring` Facade
 ===================================
 
 If we remove `PythonRefactoring`, we need a place for storing
-refactoring undo information.  We can move it either to projects
-or ask the UI for handling its undo information.  The former is
-discussed in `Local History`_ section.
+refactoring undo information.  We can move it either to projects or
+ask the UI for handling its undo information.  The former is discussed
+in `Local History`_ section.
 
 * Changing uses of `PythonRefactoring` to use `rope.refactor` modules
 * Adding a place for saving undo information
@@ -222,29 +222,29 @@ Consequences
 * Complexity of implementation
 
   After a change the internal representation of project should be
-  updated.  This requires for example changes to
-  `Folder.get_children` and `File.read`.
+  updated.  This requires for example changes to `Folder.get_children`
+  and `File.read`.
 
 * Inefficiency because of multiple changes while refactoring
 
   If in a refactoring we perform 3 changes we might also need to
-  recompute the information calculated in some of the `PyModule`\s
-  3 times.  This seems inefficient.
+  recompute the information calculated in some of the `PyModule`\s 3
+  times.  This seems inefficient.
 
 * Inefficiency due to missing computed information computed locally
 
   One of the difficulties of having a set of main and many local
-  `PyModule`\s is that when we compute some information in local
-  ones these information might be no longer valid in global pymodules.
+  `PyModule`\s is that when we compute some information in local ones
+  these information might be no longer valid in global pymodules.
 
 
 * Not convincing uses
 
-  Right know the only need for performing multiple refactorings is
-  for changing imports after performing a refactoring and it has been
-  handled using some kind of virtual `PyModule` already.  We could
-  not think of any good refactoring that needs to perform multiple
-  basic refactorings.
+  Right know the only need for performing multiple refactorings is for
+  changing imports after performing a refactoring and it has been
+  handled using some kind of virtual `PyModule` already.  We could not
+  think of any good refactoring that needs to perform multiple basic
+  refactorings.
 
 * Lots of changes
 
@@ -297,12 +297,12 @@ What's more after this change we would probably be able to remove
 `ChangedPythonProjectFiles`.
 
 One of the main obstacles for doing this change is that all of the
-`PyObjects` have a reference to the `PyCore` and ask them about
-other modules.  This causes problems because we want all of the
-`PyObjects` to use a local `PyCore`.
+`PyObjects` have a reference to the `PyCore` and ask them about other
+modules.  This causes problems because we want all of the `PyObjects`
+to use a local `PyCore`.
 
-What's more computed information might be valid in a local scope
-but might be invalid in the rest of project.
+What's more computed information might be valid in a local scope but
+might be invalid in the rest of project.
 
 
 Preventing Unnecessary Recomputations
@@ -317,8 +317,8 @@ Simple Implementation
 
 A simple implementation would be possible by using plain and new
 `PythonProjectFiles` from the beginning.  But the performance might
-really hurt if we actually use it but it won't change if we don't.
-So actually it is a extract class refactorings.
+really hurt if we actually use it but it won't change if we don't.  So
+actually it is a extract class refactorings.
 
 
 Inline Method
@@ -341,9 +341,9 @@ information to AST nodes, we would be able to use them for all of the
 tasks that we do right now using direct operations on program source
 code.
 
-Using ASTs for transforming programs requires making a new AST tree
-or altering the old one and writing AST trees.  We can use the latter
-in the formatter too but it seems a lot of work.
+Using ASTs for transforming programs requires making a new AST tree or
+altering the old one and writing AST trees.  We can use the latter in
+the formatter too but it seems a lot of work.
 
 
 What Rope Assumes...
