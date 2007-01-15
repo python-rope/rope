@@ -138,9 +138,10 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result('my_var', 'local', result)
 
     def test_not_including_class_body_variables(self):
-        code = 'class C(object):\n    my_var = 20\n    def f(self):\n        a = 20\n        my_'
+        code = 'class C(object):\n    my_var = 20\n' \
+               '    def f(self):\n        a = 20\n        my_'
         result = self.assist.assist(code, len(code))
-        self.assert_completion_not_in_result('my_var', 'local', result)
+        self.assert_completion_not_in_result('my_var', 'attribute', result)
 
     def test_nested_functions(self):
         code = "def my_func():\n    func_var = 20\n    def inner_func():\n        a = 20\n        func"
@@ -450,7 +451,7 @@ class CodeAssistTest(unittest.TestCase):
         src = 'import mod\nmod'
         self.assertEquals('a module', self.assist.get_doc(src, len(src) - 1))
 
-    # TODO: should comment till the end of scope rather and not block
+    # TODO: should comment till the end of scope and not block
     def xxx_test_not_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'
         result = self.assist.assist(code, code.index('a_v') + 3)

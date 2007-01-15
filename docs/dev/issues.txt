@@ -101,6 +101,11 @@ overwritten.  But the problem here is that we don't want the
 `PyObject`\s of `PyName`\s to be calculated for all attributes of a
 class.
 
+Another easier approach seems possible, too.  We only change static OI
+to give up when it encounters a property assigned to an attribute.
+When that happens, we can get the value it holds by getting the return
+value of the getting function for that property.
+
 
 Local History
 =============

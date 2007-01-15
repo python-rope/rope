@@ -134,6 +134,26 @@ class ObjectInferTest(unittest.TestCase):
         a_var = sample_class.get_attribute('a_var').get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
+    def test_getting_property_attributes(self):
+        src = 'class A(object):\n    pass\n' \
+              'def f(*args):\n    return A()\n' \
+              'class B(object):\n    p = property(f)\n' \
+              'a_var = B().p\n'
+        pymod = self.pycore.get_string_module(src)
+        a_class = pymod.get_attribute('A').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(a_class, a_var.get_type())
+
+    def test_getting_property_attributes_with_method_getters(self):
+        src = 'class A(object):\n    pass\n' \
+              'class B(object):\n    def p_get(self):\n        return A()\n' \
+              '    p = property(p_get)\n' \
+              'a_var = B().p\n'
+        pymod = self.pycore.get_string_module(src)
+        a_class = pymod.get_attribute('A').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(a_class, a_var.get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 

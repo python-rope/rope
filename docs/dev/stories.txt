@@ -113,6 +113,3 @@ Stories
 
 
 * Removing `PythonRefactoring` facade
-
-
-* Handling builtin `property`

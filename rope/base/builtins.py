@@ -276,6 +276,30 @@ get_file = _create_builtin_getter(File)
 get_file_type = _create_builtin_type_getter(File)
 
 
+class Property(pyobjects.PyObject):
+
+    def __init__(self, fget=None, fset=None, fdel=None, fdoc=None):
+        super(Property, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        self._fget = fget
+        self.attributes = {
+            'fget': BuiltinName(BuiltinFunction()),
+            'fset': BuiltinName(BuiltinFunction()),
+            'fdel': BuiltinName(BuiltinFunction()),
+            '__new__': BuiltinName(BuiltinFunction(function=_property_function))}
+
+    def get_property_object(self):
+        if self._fget:
+            return self._fget.get_returned_object()
+
+    def get_attributes(self):
+        return self.attributes
+
+
+def _property_function(args):
+    parameters = args.get_arguments(['fget', 'fset', 'fdel', 'fdoc'])
+    return pyobjects.PyObject(Property(parameters[0]))
+
+
 def _infer_sequence_type(seq):
     if '__iter__' in seq.get_attributes():
         iter = seq.get_attribute('__iter__').get_object().\
@@ -324,4 +348,5 @@ builtins = {
     'range': BuiltinName(BuiltinFunction(function=_range_function)),
     'reversed': BuiltinName(BuiltinFunction(function=_reversed_function)),
     'sorted': BuiltinName(BuiltinFunction(function=_sorted_function)),
-    'super': BuiltinName(BuiltinFunction(function=_super_function))}
+    'super': BuiltinName(BuiltinFunction(function=_super_function)),
+    'property': BuiltinName(BuiltinFunction(function=_property_function))}

@@ -14,9 +14,6 @@ class CoreTest(unittest.TestCase):
         Core.get_core().close_project()
         self._make_sample_project()
         self.sample_file2 = 'samplefile2.txt'
-        file_ = open(self.sample_file, 'w')
-        file_.write('sample text')
-        file_.close()
         Core.get_core().open_project(self.project_root)
         self.textEditor = Core.get_core().open_file(self.sample_file)
         self.project = Core.get_core().get_open_project()

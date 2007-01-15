@@ -44,7 +44,7 @@ class PyCoreScopesTest(unittest.TestCase):
                                              '    def f(self):\n        var = 10\n')
         self.assertEquals(1, len(scope.get_scopes()))
         sample_class_scope = scope.get_scopes()[0]
-        self.assertEquals(0, len(sample_class_scope.get_names()))
+        self.assertEquals(1, len(sample_class_scope.get_names()))
         self.assertEquals(1, len(sample_class_scope.get_scopes()))
         f_in_class = sample_class_scope.get_scopes()[0]
         self.assertTrue('var' in f_in_class.get_names())
@@ -137,6 +137,18 @@ class PyCoreScopesTest(unittest.TestCase):
         a_class = self.pycore.get_string_module(code).get_attribute('AClass'). get_object()
         function_scope = a_class.get_attribute('a_func').get_object().get_scope()
         self.assertEquals(a_class, function_scope.get_name('self').get_object().get_type())
+
+    def test_inside_class_scope_attribute_lookup(self):
+        scope = self.pycore.get_string_scope(
+            'class C(object):\n'
+            '    an_attr = 1\n'
+            '    def a_func(self):\n        pass')
+        self.assertEquals(1, len(scope.get_scopes()))
+        c_scope = scope.get_scopes()[0]
+        self.assertEquals(2, len(c_scope.get_names()))
+        self.assertTrue(c_scope.lookup('an_attr') is not None)
+        f_in_c = c_scope.get_scopes()[0]
+        self.assertTrue(f_in_c.lookup('an_attr') is None)
 
 
 def suite():

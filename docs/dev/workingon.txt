@@ -1,13 +1,23 @@
-Remaining Small Stories
-=======================
+Handling Builtin `property`
+===========================
 
-* Default maxlength and maxdots for handling long imports
-* Handling `ClassScope.lookup` for ::
+- Adding builtin `Property` type
+- Handling properties in static object inference
+- Fixing class scope lookup
+- Testing properties with methods
+- Handling `ClassScope.lookup` for ::
 
     class C(object):
         a_var = 10
         another_var = a_var
 
+* Handle lambdas
+
+
+Remaining Small Stories
+=======================
+
+* Default maxlength and maxdots for handling long imports
 * Showing properties in quick outline
 * Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s

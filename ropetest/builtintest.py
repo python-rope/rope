@@ -261,6 +261,12 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(rope.base.builtins.get_str_type(),
                           a_var.get_type())
 
+    def test_file_builtin_type(self):
+        self.mod.write('p = property()\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        p_var = pymod.get_attribute('p').get_object()
+        self.assertTrue('fget' in p_var.get_attributes())
+
 
 if __name__ == '__main__':
     unittest.main()

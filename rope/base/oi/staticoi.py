@@ -21,11 +21,11 @@ class StaticObjectInference(object):
 
     def _infer_assignment(self, assignment, pymodule):
         try:
-            pyname = self._infer_pyname_for_assign_node(
+            pyobject = self._infer_pyobject_for_assign_node(
                 assignment.ast_node, pymodule)
-            if pyname is None:
+            if pyobject is None:
                 return None
-            return self._infer_assignment_object(assignment, pyname.get_object())
+            return self._infer_assignment_object(assignment, pyobject)
         except pyobjects.IsBeingInferredException:
             pass
 
@@ -39,35 +39,37 @@ class StaticObjectInference(object):
             return pyobject.get_type().holding
         return pyobject
 
-    def _infer_pyname_for_assign_node(self, assign_node, pymodule):
+    def _infer_pyobject_for_assign_node(self, assign_node, pymodule):
         try:
             lineno = 1
             if hasattr(assign_node, 'lineno') and assign_node.lineno is not None:
                 lineno = assign_node.lineno
             holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-            return evaluate.get_statement_result(holding_scope, assign_node)
+            pyname = evaluate.get_statement_result(holding_scope, assign_node)
+            if pyname is not None:
+                result = pyname.get_object()
+                if isinstance(result.get_type(), builtins.Property) and \
+                   holding_scope.get_kind() == 'Class':
+                    return result.get_type().get_property_object()
+                return result
         except pyobjects.IsBeingInferredException:
             pass
 
 
     def infer_for_object(self, pyname):
-        list_pyname = self._infer_pyname_for_assign_node(
+        list_pyobject = self._infer_pyobject_for_assign_node(
             pyname.assignment.ast_node, pyname.module)
-        resulting_pyname = self._call_function(
-            self._call_function(list_pyname, '__iter__'), 'next')
-        if resulting_pyname is None:
+        resulting_pyobject = self._call_function(
+            self._call_function(list_pyobject, '__iter__'), 'next')
+        if resulting_pyobject is None:
             return None
         return self._infer_assignment_object(pyname.assignment,
-                                             resulting_pyname.get_object())
+                                             resulting_pyobject)
 
-    def _call_function(self, pyname, function_name):
-        if pyname is None:
-            return
-        pyobject = pyname.get_object()
-        if function_name in pyobject.get_attributes():
-            call_function = pyobject.get_attribute(function_name)
-            return pynames.AssignedName(
-                pyobject=call_function.get_object().get_returned_object())
+    def _call_function(self, pyfunction, function_name):
+        if function_name in pyfunction.get_attributes():
+            call_function = pyfunction.get_attribute(function_name)
+            return call_function.get_object().get_returned_object()
 
     def infer_returned_object(self, pyobject, args):
         scope = pyobject.get_scope()

@@ -61,8 +61,11 @@ class Scope(object):
         if name in self.get_names():
             return self.get_names()[name]
         if self.parent is not None:
-            return self.parent.lookup(name)
+            return self.parent._propagated_lookup(name)
         return None
+
+    def _propagated_lookup(self, name):
+        return self.lookup(name)
 
 
 class GlobalScope(Scope):
@@ -162,11 +165,11 @@ class ClassScope(Scope):
         super(ClassScope, self).__init__(pycore, pyobject,
                                          pyobject.parent.get_scope())
 
-    def get_names(self):
-        return {}
-
     def get_kind(self):
         return 'Class'
+
+    def _propagated_lookup(self, name):
+        return self.parent._propagated_lookup(name)
 
 
 class _HoldingScopeFinder(object):
