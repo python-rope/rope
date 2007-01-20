@@ -300,6 +300,21 @@ def _property_function(args):
     return pyobjects.PyObject(Property(parameters[0]))
 
 
+class Lambda(pyobjects.PyObject):
+
+    def __init__(self, node, scope):
+        super(Lambda, self).__init__(pyobjects.PyObject.get_base_type('Function'))
+        self.node = node
+        self.scope = scope
+
+    def get_returned_object(self, args=None):
+        return evaluate.get_statement_result(
+            self.scope, self.node.code).get_object()
+
+    def get_pattributes(self):
+        return {}
+
+
 def _infer_sequence_type(seq):
     if '__iter__' in seq.get_attributes():
         iter = seq.get_attribute('__iter__').get_object().\

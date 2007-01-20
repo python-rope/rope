@@ -10,6 +10,7 @@ import ropetest.formattertest
 import ropetest.objectinfertest
 import ropetest.runmodtest
 import ropetest.builtintest
+import ropetest.historytest
 
 
 def suite():
@@ -24,6 +25,7 @@ def suite():
     result.addTests(ropetest.objectinfertest.suite())
     result.addTests(ropetest.runmodtest.suite())
     result.addTests(unittest.makeSuite(ropetest.builtintest.BuiltinTypesTest))
+    result.addTests(unittest.makeSuite(ropetest.historytest.HistoryTest))
     return result
 
 

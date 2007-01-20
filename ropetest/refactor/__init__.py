@@ -1,18 +1,18 @@
 import unittest
 
 import rope.base.codeanalyze
-import ropetest.refactor.renametest
-import ropetest.refactor.extracttest
-import ropetest.refactor.movetest
-import ropetest.refactor.inlinetest
-import ropetest.refactor.change_signature_test
 import rope.refactor.introduce_parameter
+import ropetest.refactor.change_signature_test
+import ropetest.refactor.extracttest
 import ropetest.refactor.importutilstest
-from rope.refactor import Undo
+import ropetest.refactor.inlinetest
+import ropetest.refactor.movetest
+import ropetest.refactor.renametest
 from rope.base.exceptions import RefactoringException
 from rope.base.project import Project
-from rope.refactor.change import *
-
+from rope.refactor.encapsulate_field import EncapsulateFieldRefactoring
+from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
+from rope.refactor.localtofield import ConvertLocalToFieldRefactoring
 from ropetest import testutils
 
 
@@ -24,11 +24,17 @@ class IntroduceFactoryTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
         self.pycore = self.project.get_pycore()
-        self.refactoring = self.project.get_pycore().get_refactoring()
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(IntroduceFactoryTest, self).tearDown()
+
+    def _perform_introduce_factory(self, resource, offset, factory_name,
+                                   global_factory=False):
+        factory_introducer = IntroduceFactoryRefactoring(self.project,
+                                                         resource, offset)
+        changes = factory_introducer.get_changes(factory_name, global_factory)
+        self.project.do(changes)
 
     def test_adding_the_method(self):
         code = 'class AClass(object):\n    an_attr = 10\n'
@@ -37,7 +43,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         expected = 'class AClass(object):\n    an_attr = 10\n\n' \
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
-        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_the_main_module(self):
@@ -48,7 +54,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'\
                    'a_var = AClass.create()'
-        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_with_arguments(self):
@@ -60,7 +66,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n' \
                    'a_var = AClass.create(10)\n'
-        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_other_modules(self):
@@ -68,7 +74,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
-        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
@@ -80,7 +86,7 @@ class IntroduceFactoryTest(unittest.TestCase):
     def test_raising_exception_for_non_classes(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('def a_func():\n    pass\n')
-        self.refactoring.introduce_factory(mod, mod.read().index('a_func') + 1, 'create')
+        self._perform_introduce_factory(mod, mod.read().index('a_func') + 1, 'create')
 
     def test_undoing_introduce_factory(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -89,8 +95,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod1.write(code1)
         code2 = 'from mod1 import AClass\na_var = AClass()\n'
         mod2.write(code2)
-        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
-        self.refactoring.undo()
+        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        self.project.history.undo()
         self.assertEquals(code1, mod1.read())
         self.assertEquals(code2, mod2.read())
 
@@ -99,7 +105,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
-        self.refactoring.introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
+        self._perform_introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
@@ -120,7 +126,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '        @staticmethod\n        def create(*args, **kwds):\n'\
                    '            return AClass(*args, **kwds)\n'\
                    '    return AClass.create()\n'
-        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_adding_factory_for_global_factories(self):
@@ -130,8 +136,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         expected = 'class AClass(object):\n    an_attr = 10\n\n' \
                    'def create(*args, **kwds):\n' \
                    '    return AClass(*args, **kwds)\n'
-        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
-                                           'create', global_factory=True)
+        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1,
+                                        'create', global_factory=True)
         self.assertEquals(expected, mod.read())
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringException)
@@ -142,7 +148,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                '    return AClass()\n'
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write(code)
-        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1,
                                            'create', global_factory=True)
 
     def test_changing_occurances_in_the_main_module_for_global_factories(self):
@@ -153,7 +159,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    'def create(*args, **kwds):\n' \
                    '    return AClass(*args, **kwds)\n'\
                    'a_var = create()'
-        self.refactoring.introduce_factory(mod, mod.read().index('AClass') + 1,
+        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1,
                                            'create', global_factory=True)
         self.assertEquals(expected, mod.read())
 
@@ -162,7 +168,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
-        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1,
+        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1,
                                            'create', global_factory=True)
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                     'def create(*args, **kwds):\n' \
@@ -176,7 +182,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('from mod1 import AClass\npair = AClass(), AClass\n')
-        self.refactoring.introduce_factory(mod1, mod1.read().index('AClass') + 1,
+        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1,
                                            'create', global_factory=True)
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                     'def create(*args, **kwds):\n' \
@@ -195,15 +201,19 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '        return AClass(*args, **kwds)\n' \
                    'a_class = AClass\n' \
                    'a_var = a_class()'
-        self.refactoring.introduce_factory(mod, mod.read().index('a_class') + 1, 'create')
+        self._perform_introduce_factory(mod, mod.read().index('a_class') + 1, 'create')
         self.assertEquals(expected, mod.read())
+
+    def _transform_module_to_package(self, resource):
+        self.project.do(rope.refactor.TransformModuleToPackage(
+                        self.project, resource).get_changes())
 
     def test_transform_module_to_package(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('import mod2\nfrom mod2 import AClass\n')
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('class AClass(object):\n    pass\n')
-        self.refactoring.transform_module_to_package(mod2)
+        self._transform_module_to_package(mod2)
         mod2 = self.project.get_resource('mod2')
         root_folder = self.project.root
         self.assertFalse(root_folder.has_child('mod2.py'))
@@ -213,10 +223,10 @@ class IntroduceFactoryTest(unittest.TestCase):
     def test_transform_module_to_package_undoing(self):
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod = self.pycore.create_module(pkg, 'mod')
-        self.refactoring.transform_module_to_package(mod)
+        self._transform_module_to_package(mod)
         self.assertFalse(pkg.has_child('mod.py'))
         self.assertTrue(pkg.get_child('mod').has_child('__init__.py'))
-        self.refactoring.undo()
+        self.project.history.undo()
         self.assertTrue(pkg.has_child('mod.py'))
         self.assertFalse(pkg.has_child('mod'))
 
@@ -226,67 +236,10 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod1.write('import mod2\nfrom mod2 import AClass\n')
         mod2 = self.pycore.create_module(pkg, 'mod2')
         mod2.write('class AClass(object):\n    pass\n')
-        self.refactoring.transform_module_to_package(mod1)
+        self._transform_module_to_package(mod1)
         new_init = self.project.get_resource('pkg/mod1/__init__.py')
         self.assertEquals('import pkg.mod2\nfrom pkg.mod2 import AClass\n',
                           new_init.read())
-
-class RefactoringUndoTest(unittest.TestCase):
-
-    def setUp(self):
-        super(RefactoringUndoTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
-        self.file = self.project.root.create_file('file.txt')
-        self.undo = Undo()
-
-    def tearDown(self):
-        testutils.remove_recursively(self.project_root)
-        super(RefactoringUndoTest, self).tearDown()
-
-    def test_simple_undo(self):
-        change = ChangeContents(self.file, '1')
-        change.do()
-        self.assertEquals('1', self.file.read())
-        self.undo.add_change(change)
-        self.undo.undo()
-        self.assertEquals('', self.file.read())
-
-    def test_simple_redo(self):
-        change = ChangeContents(self.file, '1')
-        change.do()
-        self.undo.add_change(change)
-        self.undo.undo()
-        self.undo.redo()
-        self.assertEquals('1', self.file.read())
-
-    def test_simple_re_undo(self):
-        change = ChangeContents(self.file, '1')
-        change.do()
-        self.undo.add_change(change)
-        self.undo.undo()
-        self.undo.redo()
-        self.undo.undo()
-        self.assertEquals('', self.file.read())
-
-    def test_multiple_undos(self):
-        change = ChangeContents(self.file, '1')
-        change.do()
-        self.undo.add_change(change)
-        change = ChangeContents(self.file, '2')
-        change.do()
-        self.undo.add_change(change)
-        self.undo.undo()
-        self.assertEquals('1', self.file.read())
-        change = ChangeContents(self.file, '3')
-        change.do()
-        self.undo.add_change(change)
-        self.undo.undo()
-        self.assertEquals('1', self.file.read())
-        self.undo.redo()
-        self.assertEquals('3', self.file.read())
-
 
 class EncapsulateFieldTest(unittest.TestCase):
 
@@ -296,7 +249,6 @@ class EncapsulateFieldTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
         self.pycore = self.project.get_pycore()
-        self.refactoring = self.project.get_pycore().get_refactoring()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
         self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
         self.a_class = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n'
@@ -310,51 +262,56 @@ class EncapsulateFieldTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         super(EncapsulateFieldTest, self).tearDown()
 
+    def _perform_encapsulate_field(self, resource, offset):
+        changes = EncapsulateFieldRefactoring(self.project, resource, offset).\
+                  encapsulate_field()
+        self.project.do(changes)
+
     def test_adding_getters_and_setters(self):
         code = self.a_class
         self.mod.write(code)
-        self.refactoring.encapsulate_field(self.mod, code.index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, code.index('attr') + 1)
         self.assertEquals(self.encapsulated, self.mod.read())
 
     def test_changing_getters_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
                           self.mod1.read())
 
     def test_changing_setters_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals('import mod\na_var = mod.A()\na_var.set_attr(1)\n',
                           self.mod1.read())
 
     def test_changing_getters_in_setters(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1 + a_var.attr\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(1 + a_var.get_attr())\n',
             self.mod1.read())
 
     def test_appending_to_class_end(self):
         self.mod1.write(self.a_class + 'a_var = A()\n')
-        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(self.encapsulated + 'a_var = A()\n',
                           self.mod1.read())
 
     def test_performing_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(self.encapsulated, self.mod.read())
         self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
                           self.mod1.read())
 
     def test_changing_main_module_occurances(self):
         self.mod1.write(self.a_class + 'a_var = A()\na_var.attr = a_var.attr * 2\n')
-        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(
             self.encapsulated +
             'a_var = A()\na_var.set_attr(a_var.get_attr() * 2)\n',
@@ -363,25 +320,25 @@ class EncapsulateFieldTest(unittest.TestCase):
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_when_performed_on_non_attributes(self):
         self.mod1.write('attr = 10')
-        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_on_tuple_assignments(self):
         self.mod.write(self.a_class)
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\na_var.attr, b = 1, 2\n')
-        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_on_tuple_assignments2(self):
         self.mod.write(self.a_class)
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\nb, a_var.attr = 1, 2\n')
-        self.refactoring.encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
     def test_tuple_assignments_and_function_calls(self):
         self.mod1.write('import mod\ndef func(a1=0, a2=0):\n    pass\n'
                         'a_var = mod.A()\nfunc(a_var.attr, a2=2)\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals('import mod\ndef func(a1=0, a2=0):\n    pass\n'
                           'a_var = mod.A()\nfunc(a_var.get_attr(), a2=2)\n',
                           self.mod1.read())
@@ -389,7 +346,7 @@ class EncapsulateFieldTest(unittest.TestCase):
     def test_tuple_assignments(self):
         self.mod1.write('import mod\na_var = mod.A()\na, b = a_var.attr, 1\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na, b = a_var.get_attr(), 1\n',
             self.mod1.read())
@@ -397,7 +354,7 @@ class EncapsulateFieldTest(unittest.TestCase):
     def test_changing_augmented_assignments(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr += 1\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() + 1)\n',
             self.mod1.read())
@@ -405,7 +362,7 @@ class EncapsulateFieldTest(unittest.TestCase):
     def test_changing_augmented_assignments2(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr <<= 1\n')
         self.mod.write(self.a_class)
-        self.refactoring.encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() << 1)\n',
             self.mod1.read())
@@ -419,19 +376,23 @@ class LocalToFieldTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
         self.pycore = self.project.get_pycore()
-        self.refactoring = self.project.get_pycore().get_refactoring()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(LocalToFieldTest, self).tearDown()
 
+    def _perform_convert_local_variable_to_field(self, resource, offset):
+        changes = ConvertLocalToFieldRefactoring(
+            self.project, resource, offset).get_changes()
+        self.project.do(changes)
+
     def test_simple_local_to_field(self):
         code = 'class A(object):\n    def a_func(self):\n' \
                '        var = 10\n'
         self.mod.write(code)
-        self.refactoring.convert_local_variable_to_field(self.mod,
-                                                         code.index('var') + 1)
+        self._perform_convert_local_variable_to_field(self.mod,
+                                                      code.index('var') + 1)
         expected = 'class A(object):\n    def a_func(self):\n' \
                    '        self.var = 10\n'
         self.assertEquals(expected, self.mod.read())
@@ -439,7 +400,7 @@ class LocalToFieldTest(unittest.TestCase):
     @testutils.assert_raises(RefactoringException)
     def test_raising_exception_when_performed_on_a_global_var(self):
         self.mod.write('var = 10\n')
-        self.refactoring.convert_local_variable_to_field(
+        self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().index('var') + 1)
 
     @testutils.assert_raises(RefactoringException)
@@ -447,7 +408,7 @@ class LocalToFieldTest(unittest.TestCase):
         code = 'class A(object):\n    def a_func(self):\n' \
                '        self.var = 10\n'
         self.mod.write(code)
-        self.refactoring.convert_local_variable_to_field(
+        self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().index('var') + 1)
 
     @testutils.assert_raises(RefactoringException)
@@ -455,7 +416,7 @@ class LocalToFieldTest(unittest.TestCase):
         code = 'class A(object):\n    def a_func(self, var):\n' \
                '        a = var\n'
         self.mod.write(code)
-        self.refactoring.convert_local_variable_to_field(
+        self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().index('var') + 1)
 
     @testutils.assert_raises(RefactoringException)
@@ -463,18 +424,19 @@ class LocalToFieldTest(unittest.TestCase):
         code = 'class A(object):\n    def __init__(self):\n        self.var = 1\n' \
                '    def a_func(self):\n        var = 10\n'
         self.mod.write(code)
-        self.refactoring.convert_local_variable_to_field(
+        self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().rindex('var') + 1)
 
     def test_local_to_field_with_self_renamed(self):
         code = 'class A(object):\n    def a_func(myself):\n' \
                '        var = 10\n'
         self.mod.write(code)
-        self.refactoring.convert_local_variable_to_field(self.mod,
+        self._perform_convert_local_variable_to_field(self.mod,
                                                          code.index('var') + 1)
         expected = 'class A(object):\n    def a_func(myself):\n' \
                    '        myself.var = 10\n'
         self.assertEquals(expected, self.mod.read())
+
 
 class IntroduceParameterTest(unittest.TestCase):
 
@@ -492,7 +454,7 @@ class IntroduceParameterTest(unittest.TestCase):
 
     def _introduce_parameter(self, offset, name):
         rope.refactor.introduce_parameter.IntroduceParameter(
-            self.pycore, self.mod, offset).get_changes(name).do()
+            self.project, self.mod, offset).get_changes(name).do()
 
     def test_simple_case(self):
         self.mod.write('var = 1\ndef f():\n    b = var\n')
@@ -539,7 +501,6 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.refactor.extracttest.ExtractMethodTest))
     result.addTests(unittest.makeSuite(IntroduceFactoryTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.movetest.MoveRefactoringTest))
-    result.addTests(unittest.makeSuite(RefactoringUndoTest))
     result.addTests(ropetest.refactor.inlinetest.suite())
     result.addTests(unittest.makeSuite(EncapsulateFieldTest))
     result.addTests(unittest.makeSuite(LocalToFieldTest))

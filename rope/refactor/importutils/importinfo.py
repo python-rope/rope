@@ -29,7 +29,7 @@ class ImportStatement(object):
 
     def empty_import(self):
         self.import_info = ImportInfo.get_empty_import()
-    
+
     def move(self, lineno, blank_lines=0):
         self.new_start = lineno
         self.blank_lines = blank_lines

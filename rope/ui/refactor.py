@@ -1,13 +1,21 @@
 import Tkinter
 
-import rope.refactor.importutils
 import rope.refactor.change_signature
+import rope.refactor.encapsulate_field
+import rope.refactor.extract
+import rope.refactor.importutils
+import rope.refactor.inline
 import rope.refactor.introduce_parameter
+import rope.refactor.localtofield
+import rope.refactor.move
+import rope.refactor.rename
 import rope.ui.core
-from rope.ui.menubar import MenuAddress
+from rope.refactor import ImportOrganizer
 from rope.ui.extension import SimpleAction
-from rope.ui.uihelpers import TreeViewHandle, TreeView, DescriptionList
-from rope.ui.uihelpers import EnhancedListHandle, VolatileList
+from rope.ui.menubar import MenuAddress
+from rope.ui.uihelpers import (TreeViewHandle, TreeView,
+                               DescriptionList, EnhancedListHandle,
+                               VolatileList)
 
 
 class ConfirmAllEditorsAreSaved(object):
@@ -49,8 +57,8 @@ class ConfirmAllEditorsAreSaved(object):
 
 class PreviewAndCommitChanges(object):
 
-    def __init__(self, refactoring, changes):
-        self.refactoring = refactoring
+    def __init__(self, project, changes):
+        self.project = project
         self.changes = changes
 
     def preview(self):
@@ -79,13 +87,13 @@ class PreviewAndCommitChanges(object):
         frame.grid()
 
     def commit(self):
-        self.refactoring.add_and_commit_changes(self.changes)
+        self.project.do(self.changes)
 
 
 class RefactoringDialog(object):
 
-    def __init__(self, refactoring, title):
-        self.refactoring = refactoring
+    def __init__(self, project, title):
+        self.project = project
         self.title = title
 
     def show(self):
@@ -104,11 +112,11 @@ class RefactoringDialog(object):
         frame.grid(row=0, columnspan=3)
 
     def _ok(self, event=None):
-        PreviewAndCommitChanges(self.refactoring, self._get_changes()).commit()
+        PreviewAndCommitChanges(self.project, self._get_changes()).commit()
         self.toplevel.destroy()
 
     def _preview(self, event=None):
-        PreviewAndCommitChanges(self.refactoring, self._get_changes()).preview()
+        PreviewAndCommitChanges(self.project, self._get_changes()).preview()
         self.toplevel.destroy()
 
     def _cancel(self, event=None):
@@ -120,14 +128,13 @@ class RenameDialog(RefactoringDialog):
     def __init__(self, context, title, is_local=False, current_module=False):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
-        super(RenameDialog, self).__init__(_get_refactoring(context), title)
+        super(RenameDialog, self).__init__(context.project, title)
         self.is_local = is_local
         offset = editor.get_current_offset()
         if current_module:
             offset = None
         self.renamer = rope.refactor.rename.RenameRefactoring(
-            context.get_core().get_open_project().get_pycore(),
-            resource, offset)
+            context.project, resource, offset)
 
     def _get_changes(self):
         new_name = self.new_name_entry.get()
@@ -160,13 +167,16 @@ def transform_module_to_package(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        _get_refactoring(context).transform_module_to_package(resource)
+        changes = rope.refactor.TransformModuleToPackage(
+            context.project, resource).get_changes()
+        self.project.do(changes)
+
 
 class ExtractDialog(RefactoringDialog):
 
     def __init__(self, context, do_extract, kind):
         editor = context.get_active_editor().get_editor()
-        super(ExtractDialog, self).__init__(_get_refactoring(context),
+        super(ExtractDialog, self).__init__(context.project,
                                             'Extract ' + kind)
         self.do_extract = do_extract
         self.kind = kind
@@ -192,8 +202,8 @@ def extract_method(context):
         resource = context.get_active_editor().get_file()
         start_offset, end_offset = editor.get_region_offset()
         return rope.refactor.extract.ExtractMethodRefactoring(
-            context.get_core().get_open_project().get_pycore(),
-            resource, start_offset, end_offset).get_changes(new_name)
+            context.project, resource, start_offset,
+            end_offset).get_changes(new_name)
     ExtractDialog(context, do_extract, 'Method').show()
 
 def extract_variable(context):
@@ -202,8 +212,8 @@ def extract_variable(context):
         resource = context.get_active_editor().get_file()
         start_offset, end_offset = editor.get_region_offset()
         return rope.refactor.extract.ExtractVariableRefactoring(
-            context.get_core().get_open_project().get_pycore(),
-            resource, start_offset, end_offset).get_changes(new_name)
+            context.project, resource, start_offset,
+            end_offset).get_changes(new_name)
     ExtractDialog(context, do_extract, 'Variable').show()
 
 
@@ -213,10 +223,9 @@ class IntroduceFactoryDialog(RefactoringDialog):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         super(IntroduceFactoryDialog, self).__init__(
-            _get_refactoring(context), 'Introduce Factory Method Refactoring')
+            context.project, 'Introduce Factory Method Refactoring')
         self.introducer = rope.refactor.introduce_factory.IntroduceFactoryRefactoring(
-            context.get_core().get_open_project().get_pycore(),
-            resource, editor.get_current_offset())
+            context.project, resource, editor.get_current_offset())
 
     def _get_changes(self):
         return self.introducer.get_changes(
@@ -269,14 +278,14 @@ def _confirm_action(title, message, action):
 def undo_refactoring(context):
     if context.project:
         def undo():
-            context.project.get_pycore().get_refactoring().undo()
+            context.project.history.undo()
         _confirm_action('Undoing Refactoring',
                         'Undo refactoring might change many files. Proceed?',
                         undo)
 def redo_refactoring(context):
     if context.project:
         def redo():
-            context.project.get_pycore().get_refactoring().redo()
+            context.project.history.redo()
         _confirm_action('Redoing Refactoring',
                         'Redo refactoring might change many files. Proceed?',
                         redo)
@@ -323,14 +332,13 @@ class MoveDialog(RefactoringDialog):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
-        super(MoveDialog, self).__init__(_get_refactoring(context),
+        super(MoveDialog, self).__init__(context.project,
                                          'Move Refactoring')
         offset = editor.get_current_offset()
         if current_module:
             offset = None
         self.mover = rope.refactor.move.MoveRefactoring(
-            context.get_core().get_open_project().get_pycore(),
-            resource, offset)
+            context.project, resource, offset)
 
     def _get_changes(self):
         destination = self.project.get_pycore().find_module(self.new_name_entry.get())
@@ -413,10 +421,9 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
         super(ChangeMethodSignatureDialog, self).__init__(
-            _get_refactoring(context), 'Change Method Signature Refactoring')
+            context.project, 'Change Method Signature Refactoring')
         self.signature = rope.refactor.change_signature.ChangeSignature(
-            context.get_core().get_open_project().get_pycore(),
-            resource, editor.get_current_offset())
+            context.project, resource, editor.get_current_offset())
         self.definition_info = self.signature.get_definition_info()
         self.to_be_removed = []
 
@@ -529,10 +536,9 @@ class InlineArgumentDefaultDialog(RefactoringDialog):
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
         super(InlineArgumentDefaultDialog, self).__init__(
-            _get_refactoring(context), 'Inline Argument Default')
+            context.project, 'Inline Argument Default')
         self.signature = rope.refactor.change_signature.ChangeSignature(
-            context.get_core().get_open_project().get_pycore(),
-            resource, editor.get_current_offset())
+            context.project, resource, editor.get_current_offset())
         self.definition_info = self.signature.get_definition_info()
 
     def _get_changes(self):
@@ -561,9 +567,9 @@ class IntroduceParameterDialog(RefactoringDialog):
 
     def __init__(self, context, title):
         editor = context.get_active_editor().get_editor()
-        super(IntroduceParameterDialog, self).__init__(_get_refactoring(context), title)
+        super(IntroduceParameterDialog, self).__init__(context.project, title)
         self.renamer = rope.refactor.introduce_parameter.IntroduceParameter(
-            context.project.get_pycore(), context.resource, editor.get_current_offset())
+            context.project, context.resource, editor.get_current_offset())
 
     def _get_changes(self):
         new_name = self.new_name_entry.get()
@@ -585,71 +591,68 @@ class IntroduceParameterDialog(RefactoringDialog):
 def introduce_parameter(context):
     IntroduceParameterDialog(context, 'Introduce Parameter').show()
 
-def organize_imports(context):
+
+def _import_action(context, method):
     if not context.get_active_editor():
         return
     file_editor = context.get_active_editor()
-    import_organizer = _get_refactoring(context).get_import_organizer()
+    import_organizer = ImportOrganizer(context.project)
     if import_organizer:
-        import_organizer.organize_imports(file_editor.get_file())
+        changes = method(import_organizer, file_editor.get_file())
+        if changes is not None:
+            context.project.do(changes)
+
+
+def organize_imports(context):
+    _import_action(context, ImportOrganizer.organize_imports)
+
 
 def expand_star_imports(context):
-    if not context.get_active_editor():
-        return
-    file_editor = context.get_active_editor()
-    import_organizer = _get_refactoring(context).get_import_organizer()
-    if import_organizer:
-        import_organizer.expand_star_imports(file_editor.get_file())
+    _import_action(context, ImportOrganizer.expand_star_imports)
+
 
 def transform_froms_to_imports(context):
-    if not context.get_active_editor():
-        return
-    file_editor = context.get_active_editor()
-    import_organizer = _get_refactoring(context).get_import_organizer()
-    if import_organizer:
-        import_organizer.transform_froms_to_imports(file_editor.get_file())
+    _import_action(context, ImportOrganizer.transform_froms_to_imports)
+
 
 def transform_relatives_to_absolute(context):
-    if not context.get_active_editor():
-        return
-    file_editor = context.get_active_editor()
-    import_organizer = _get_refactoring(context).get_import_organizer()
-    if import_organizer:
-        import_organizer.transform_relatives_to_absolute(file_editor.get_file())
+    _import_action(context, ImportOrganizer.transform_relatives_to_absolute)
+
 
 def handle_long_imports(context):
-    if not context.get_active_editor():
-        return
-    file_editor = context.get_active_editor()
-    import_organizer = _get_refactoring(context).get_import_organizer()
-    if import_organizer:
-        import_organizer.handle_long_imports(file_editor.get_file())
+    _import_action(context, ImportOrganizer.handle_long_imports)
+
 
 def inline(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        _get_refactoring(context).inline(resource, editor.get_current_offset())
+        changes = rope.refactor.inline.InlineRefactoring(
+            context.project, resource,
+            editor.get_current_offset()).get_changes()
+        context.project.do(changes)
+
 
 def encapsulate_field(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        _get_refactoring(context).encapsulate_field(
-            resource, editor.get_current_offset())
+        changes = rope.refactor.encapsulate_field.EncapsulateFieldRefactoring(
+            context.project, resource, editor.get_current_offset()).get_changes()
+        context.project.do(context)
+
 
 def convert_local_to_field(context):
     if context.get_active_editor():
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        _get_refactoring(context).convert_local_variable_to_field(
-            resource, editor.get_current_offset())
-
-def _get_refactoring(context):
-    return context.project.get_pycore().get_refactoring()
+        changes = rope.refactor.localtofield.ConvertLocalToFieldRefactoring(
+            context.project, resource,
+            editor.get_current_offset()).get_changes()
+        context.project.do(context)
 
 
 actions = []

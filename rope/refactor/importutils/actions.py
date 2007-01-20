@@ -3,13 +3,17 @@ import sys
 
 from rope.base import pyobjects, exceptions
 from rope.refactor.importutils import importinfo
+from rope.base import exceptions
 
 
 class ImportInfoVisitor(object):
 
     def dispatch(self, import_):
-        method = getattr(self, 'visit' + import_.import_info.__class__.__name__)
-        return method(import_, import_.import_info)
+        try:
+            method = getattr(self, 'visit' + import_.import_info.__class__.__name__)
+            return method(import_, import_.import_info)
+        except exceptions.ModuleNotFoundException:
+            pass
 
     def visitEmptyImport(self, import_stmt, import_info):
         pass

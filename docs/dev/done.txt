@@ -3,6 +3,9 @@
 ===========
 
 
+- Handling lambdas : January 16, 2007
+
+
 - Handling builtin `property` : January 14, 2007
 
 

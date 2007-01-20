@@ -3,15 +3,18 @@ import re
 
 import rope.base.fscommands
 import rope.base.pycore
+import rope.base.history
 from rope.base.exceptions import RopeException
+from rope.refactor import change
 
 
 class _Project(object):
 
     def __init__(self, fscommands):
-        self.fscommands = fscommands
-        self.robservers = {}
         self.observers = set()
+        self.file_access = rope.base.fscommands.FileAccess()
+        self._history = rope.base.history.History()
+        self.operations = change._ResourceOperations(self, fscommands)
 
     def get_resource(self, resource_name):
         """Get a resource in a project.
@@ -54,34 +57,10 @@ class _Project(object):
         if observer in self.observers:
             self.observers.remove(observer)
 
-    def _create_file(self, file_name):
-        file_path = self._get_resource_path(file_name)
-        if os.path.exists(file_path):
-            if os.path.isfile(file_path):
-                raise RopeException('File already exists')
-            else:
-                raise RopeException('A folder with the same name'
-                                    ' as this file already exists')
-        try:
-            self.fscommands.create_file(file_path)
-        except IOError, e:
-            raise RopeException(e)
-
-    def _create_folder(self, folder_name):
-        folder_path = self._get_resource_path(folder_name)
-        if os.path.exists(folder_path):
-            if not os.path.isdir(folder_path):
-                raise RopeException('A file with the same name as'
-                                    ' this folder already exists')
-            else:
-                raise RopeException('Folder already exists')
-        self.fscommands.create_folder(folder_path)
-
     def _get_resource_path(self, name):
         pass
 
-    def remove_recursively(self, path):
-        self.fscommands.remove(path)
+    history = property(lambda self: self._history)
 
 
 class Project(_Project):
@@ -132,6 +111,14 @@ class Project(_Project):
     def get_out_of_project_resource(self, path):
         return self.no_project.get_resource(path)
 
+    def do(self, changes):
+        """Apply the changes in a `ChangeSet`
+
+        Most of the time you call this function for committing the
+        changes for a refactoring.
+        """
+        self.history.do(changes)
+
 
 class NoProject(_Project):
     """A null object for holding out of project files"""
@@ -150,14 +137,9 @@ class NoProject(_Project):
 class Resource(object):
     """Represents files and folders in a project"""
 
-    def __init__(self, project, name):
+    def __init__(self, project, path):
         self.project = project
-        self.name = name
-
-    def _get_observers(self):
-        return self.project.observers
-
-    observers = property(_get_observers)
+        self._path = path
 
     def get_path(self):
         """Return the path of this resource relative to the project root
@@ -165,40 +147,35 @@ class Resource(object):
         The path is the list of parent directories separated by '/' followed
         by the resource name.
         """
-        return self.name
+        return self._path
 
     def get_name(self):
         """Return the name of this resource"""
-        return self.name.split('/')[-1]
+        return self.path.split('/')[-1]
 
     def move(self, new_location):
-        """Move resource to new_lcation"""
-        destination = self._get_destination_for_move(new_location)
-        self.project.fscommands.move(self._get_real_path(),
-                                     self.project._get_resource_path(destination))
-        new_resource = self.project.get_resource(destination)
-        for observer in list(self.observers):
-            observer.resource_removed(self, new_resource)
+        """Move resource to `new_location`"""
+        self._perform_change(change.MoveResource(self, new_location),
+                             'Moving <%s> to <%s>' % (self.path, new_location))
 
     def remove(self):
         """Remove resource from the project"""
-        self.project.remove_recursively(self._get_real_path())
-        for observer in list(self.observers):
-            observer.resource_removed(self)
+        self._perform_change(change.RemoveResource(self),
+                             'Removing <%s>' % self.path)
 
     def is_folder(self):
         """Return true if the resource is a folder"""
 
     def exists(self):
-        return os.path.exists(self._get_real_path())
+        return os.path.exists(self.real_path)
 
     def get_parent(self):
-        parent = '/'.join(self.name.split('/')[0:-1])
+        parent = '/'.join(self.path.split('/')[0:-1])
         return self.project.get_resource(parent)
 
     def _get_real_path(self):
         """Return the file system path of this resource"""
-        return self.project._get_resource_path(self.name)
+        return self.project._get_resource_path(self.path)
 
     def _get_destination_for_move(self, destination):
         dest_path = self.project._get_resource_path(destination)
@@ -210,10 +187,19 @@ class Resource(object):
         return destination
 
     def __eq__(self, obj):
-        return self.__class__ == obj.__class__ and self.name == obj.name
+        return self.__class__ == obj.__class__ and self.path == obj.path
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(self.path)
+
+    name = property(get_name)
+    path = property(get_path)
+    real_path = property(_get_real_path)
+
+    def _perform_change(self, change_, description):
+        changes = change.ChangeSet(description)
+        changes.add_change(change_)
+        self.project.do(changes)
 
 
 class File(Resource):
@@ -221,15 +207,13 @@ class File(Resource):
 
     def __init__(self, project, name):
         super(File, self).__init__(project, name)
-        self.file_access = rope.base.fscommands.FileAccess()
 
     def read(self):
-        return self.file_access.read(self._get_real_path())
+        return self.project.file_access.read(self.real_path)
 
     def write(self, contents):
-        self.file_access.write(self._get_real_path(), contents)
-        for observer in list(self.observers):
-            observer.resource_changed(self)
+        self._perform_change(change.ChangeContents(self, contents),
+                             'Writing file <%s>' % self.path)
 
     def is_folder(self):
         return False
@@ -246,44 +230,34 @@ class Folder(Resource):
 
     def get_children(self):
         """Return the children of this folder"""
-        path = self._get_real_path()
+        path = self.real_path
         result = []
         content = os.listdir(path)
         for name in content:
             if name.endswith('.pyc') or name == '.svn' or name.endswith('~'):
                 continue
-            if self.get_path() != '':
-                resource_name = self.get_path() + '/' + name
+            if self.path != '':
+                resource_name = self.path + '/' + name
             else:
                 resource_name = name
             result.append(self.project.get_resource(resource_name))
         return result
 
     def create_file(self, file_name):
-        if self.get_path():
-            file_path = self.get_path() + '/' + file_name
-        else:
-            file_path = file_name
-        self.project._create_file(file_path)
-        child = self.get_child(file_name)
-        for observer in list(self.observers):
-            observer.resource_changed(child)
-        return child
+        self._perform_change(
+            change.CreateFile(self, file_name),
+            'Creating file <%s>' % (self.path + '/' + file_name))
+        return self.get_child(file_name)
 
     def create_folder(self, folder_name):
-        if self.get_path():
-            folder_path = self.get_path() + '/' + folder_name
-        else:
-            folder_path = folder_name
-        self.project._create_folder(folder_path)
-        child = self.get_child(folder_name)
-        for observer in list(self.observers):
-            observer.resource_changed(child)
-        return child
+        self._perform_change(
+            change.CreateFolder(self, folder_name),
+            'Creating golder <%s>' % (self.path + '/' + folder_name))
+        return self.get_child(folder_name)
 
     def get_child(self, name):
-        if self.get_path():
-            child_path = self.get_path() + '/' + name
+        if self.path:
+            child_path = self.path + '/' + name
         else:
             child_path = name
         return self.project.get_resource(child_path)
@@ -310,12 +284,7 @@ class Folder(Resource):
         return result
 
     def contains(self, resource):
-        return self != resource and resource.get_path().startswith(self.get_path())
-
-    def _child_changed(self, child):
-        if child != self:
-            for observer in list(self.observers):
-                observer.resource_changed(self)
+        return self != resource and resource.path.startswith(self.path)
 
 
 class ResourceObserver(object):
@@ -490,15 +459,15 @@ class FilteredResourceObserver(object):
     def _calculate_new_resource(self, main, new_main, resource):
         if new_main is None:
             return None
-        diff = resource.get_path()[:len(main.get_path())]
-        return new_main.get_path() + diff
+        diff = resource.path[:len(main.path)]
+        return new_main.path + diff
 
 
 class Timekeeper(object):
 
     def getmtime(self, resource):
         """Return the modification time of a `Resource`."""
-        return os.path.getmtime(resource._get_real_path())
+        return os.path.getmtime(resource.real_path)
 
 
 class _Changes(object):

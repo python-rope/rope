@@ -16,7 +16,6 @@ class PyCore(object):
         self.module_map = {}
         self.call_info = rope.base.oi.dynamicoi.CallInformationCollector(self)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
-        self.refactoring = rope.refactor.PythonRefactoring(self)
         self.classes = None
         observer = rope.base.project.ResourceObserver(
             self._invalidate_resource_cache, self._invalidate_resource_cache)
@@ -181,9 +180,6 @@ class PyCore(object):
 
     def _get_object_infer(self):
         return self.object_infer
-
-    def get_refactoring(self):
-        return self.refactoring
 
     def _invalidate_all_concluded_data(self):
         for module in self.module_map.values():

@@ -1,6 +1,8 @@
 import unittest
+
 import rope.base.project
 import ropetest
+from rope.base import pyobjects
 
 
 class BuiltinTypesTest(unittest.TestCase):
@@ -266,6 +268,13 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         p_var = pymod.get_attribute('p').get_object()
         self.assertTrue('fget' in p_var.get_attributes())
+
+    def test_lambda_functions(self):
+        self.mod.write('l = lambda: 1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        l_var = pymod.get_attribute('l').get_object()
+        self.assertEquals(pyobjects.PyObject.get_base_type('Function'),
+                          l_var.get_type())
 
 
 if __name__ == '__main__':

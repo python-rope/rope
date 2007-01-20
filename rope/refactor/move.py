@@ -11,10 +11,11 @@ from rope.refactor.change import (ChangeSet, ChangeContents,
 class MoveRefactoring(object):
     """A class for moving modules, packages, global functions and classes."""
 
-    def __init__(self, pycore, resource, offset=None):
-        self.pycore = pycore
+    def __init__(self, project, resource, offset=None):
+        self.pycore = project.pycore
         if offset is not None:
-            self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
+            self.pyname = rope.base.codeanalyze.get_pyname_at(
+                self.pycore, resource, offset)
             if self.pyname is None:
                 raise rope.base.exceptions.RefactoringException(
                     'Move works on classes,functions or modules.')
@@ -22,7 +23,8 @@ class MoveRefactoring(object):
             if not resource.is_folder() and resource.get_name() == '__init__.py':
                 resource = resource.get_parent()
             dummy_pymodule = self.pycore.get_string_module('')
-            self.pyname = rope.base.pynames.ImportedModule(dummy_pymodule, resource=resource)
+            self.pyname = rope.base.pynames.ImportedModule(
+                dummy_pymodule, resource=resource)
 
     def get_changes(self, dest_resource):
         moving_object = self.pyname.get_object()
@@ -65,20 +67,27 @@ class _Mover(object):
     def _remove_old_pyname_imports(self, pymodule):
         old_source = pymodule.source_code
         module_with_imports = self.import_tools.get_module_with_imports(pymodule)
-        def can_select(name):
-            try:
-                if name == self.old_name and \
-                   pymodule.get_attribute(name).get_object() == self.old_pyname.get_object():
-                    return False
-            except rope.base.exceptions.AttributeNotFoundException:
-                pass
-            return True
+        class CanSelect(object):
+            changed = False
+            old_name = self.old_name
+            old_pyname = self.old_pyname
+            def __call__(self, name):
+                try:
+                    if name == self.old_name and \
+                       pymodule.get_attribute(name).get_object() == \
+                       self.old_pyname.get_object():
+                        self.changed = True
+                        return False
+                except rope.base.exceptions.AttributeNotFoundException:
+                    pass
+                return True
+        can_select = CanSelect()
         module_with_imports.filter_names(can_select)
         new_source = module_with_imports.get_changed_source()
         if old_source != new_source:
-            pymodule = self.pycore.get_string_module(new_source, pymodule.get_resource())
-            return pymodule, True
-        return pymodule, False
+            pymodule = self.pycore.get_string_module(new_source,
+                                                     pymodule.get_resource())
+        return pymodule, can_select.changed
 
     def _rename_in_module(self, pymodule, new_name, imports=False):
         occurrence_finder = occurrences.FilteredOccurrenceFinder(
@@ -125,7 +134,7 @@ class _GlobalMover(_Mover):
         return pyobject.get_scope().parent == pyobject.get_module().get_scope()
 
     def move(self):
-        changes = ChangeSet()
+        changes = ChangeSet('Moving global <%s>' % self.old_name)
         self._change_destination_module(changes)
         self._change_source_module(changes)
         self._change_other_modules(changes)
@@ -268,7 +277,7 @@ class _ModuleMover(_Mover):
                 'Move destination for modules should be packages.')
 
     def move(self):
-        changes = ChangeSet()
+        changes = ChangeSet('Moving module <%s>' % self.old_name)
         self._change_other_modules(changes)
         self._change_moving_module(changes)
         return changes
@@ -289,7 +298,7 @@ class _ModuleMover(_Mover):
             if is_changed:
                 changes.add_change(ChangeContents(self.source, source))
         changes.add_change(MoveResource(self.source,
-                                        self.destination.get_path()))
+                                        self.destination.path))
 
     def _change_other_modules(self, changes):
         for module in self.pycore.get_python_files():

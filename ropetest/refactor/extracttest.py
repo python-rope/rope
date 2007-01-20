@@ -1,10 +1,10 @@
 import unittest
+
 import rope.base.codeanalyze
-import rope.refactor.rename
 import rope.base.exceptions
 import rope.base.project
-
 import ropetest.testutils as testutils
+from rope.refactor import extract
 
 
 class ExtractMethodTest(unittest.TestCase):
@@ -15,7 +15,6 @@ class ExtractMethodTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
-        self.refactoring = self.project.get_pycore().get_refactoring()
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
@@ -24,13 +23,15 @@ class ExtractMethodTest(unittest.TestCase):
     def do_extract_method(self, source_code, start, end, extracted):
         testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
-        self.refactoring.extract_method(testmod, start, end, extracted)
+        self.project.do(extract.ExtractMethodRefactoring(
+                        self.project, testmod, start, end).get_changes(extracted))
         return testmod.read()
 
     def do_extract_variable(self, source_code, start, end, extracted):
         testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
-        self.refactoring.extract_variable(testmod, start, end, extracted)
+        self.project.do(extract.ExtractVariableRefactoring(
+                        self.project, testmod, start, end).get_changes(extracted))
         return testmod.read()
 
     def _convert_line_range_to_offset(self, code, start, end):

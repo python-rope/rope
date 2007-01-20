@@ -68,7 +68,7 @@ def _create_resource_dialog(core, creation_callback,
     parent_entry = Tkinter.Entry(create_dialog)
     def do_select(folder):
         parent_entry.delete(0, Tkinter.END)
-        parent_entry.insert(0, folder.get_path())
+        parent_entry.insert(0, folder.path)
     def show_directory_view():
         toplevel = Tkinter.Toplevel()
         toplevel.title('Select ' + parent_name)
@@ -166,10 +166,10 @@ class FileFinder(object):
                 return 1
             if not self._is_init_dot_py(file1) and self._is_init_dot_py(file2):
                 return -1
-            return cmp(file1.get_path(), file2.get_path())
+            return cmp(file1.path, file2.path)
         if file1.get_name() != file2.get_name():
             return cmp(file1.get_name(), file2.get_name())
-        return cmp(file1.get_path(), file2.get_path())
+        return cmp(file1.path, file2.path)
 
 
 def _find_file_dialog(core):
@@ -193,7 +193,7 @@ def _find_file_dialog(core):
             result = file_finder.find_files_starting_with(name.get())
         found.delete(0, Tkinter.END)
         for file_ in result:
-            found.insert(Tkinter.END, file_.get_path())
+            found.insert(Tkinter.END, file_.path)
         if result:
             found.selection_set(0)
     def open_selected():

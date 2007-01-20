@@ -1,17 +1,33 @@
-Handling Builtin `property`
-===========================
+Project History
+===============
 
-- Adding builtin `Property` type
-- Handling properties in static object inference
-- Fixing class scope lookup
-- Testing properties with methods
-- Handling `ClassScope.lookup` for ::
+- Handling Lambdas
+- Remove `Resource.observers`
+- Renaming `Resource._get_real_path()` to `Resource.real_path`
+- Undoing `MoveResource` when moving a file to a folder
+- Adding `historytest` to `runtests`
+- Removing `rope.ui.refactor._get_refactoring`
+- Removing `PythonRefactoring` occurrences
+- Changing refactorings to get project instead of pycore
+- Forcing `ChangeSets` to have a description
+- Import addition removes spaces after imports
 
-    class C(object):
-        a_var = 10
-        another_var = a_var
-
-* Handle lambdas
+* Adding imports eats the blank lines after it
+* Returning None from builtin:312 and builtins:292
+* evaluate:184 builtins:329
+* inline:41 inline:26 refactor:633 None and get_pyname
+* Moving `rope.refactor.change` to `rope.base`
+* Performing import actions after moving modules
+* Updating docs
+* Limiting the number of changes in the undo list
+* Showing the description of a change when undoing/redoing
+* Undo/redo list underflow
+* Undoing `Resource.remove()`
+* Renaming `Resource.get_path()` to `Resource.path`?
+* Renaming `Resource.get_name()` to `Resource.name`?
+* Separating undos; Editing history and file history
+* Docs for properties
+* Lambdas as functions
 
 
 Remaining Small Stories

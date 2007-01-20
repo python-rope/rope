@@ -70,9 +70,9 @@ class GUITestRunner(object):
         self.process = None
         self.is_stopped = False
         self.toplevel = Tkinter.Toplevel()
-        self.toplevel.title('Running Unit Tests in <%s>' % resource.get_path())
+        self.toplevel.title('Running Unit Tests in <%s>' % resource.path)
         label = Tkinter.Label(self.toplevel,
-                              text='Running Unit Tests in <%s>' % resource.get_path())
+                              text='Running Unit Tests in <%s>' % resource.path)
         label.grid(row=0)
         self.test_name = Tkinter.Label(self.toplevel, width=80)
         self.test_name.grid(row=1)
@@ -119,7 +119,7 @@ class GUITestRunner(object):
             run_test_py = self.project.get_out_of_project_resource(
                 inspect.getsourcefile(rope.ui.runtest))
             self.process = self.project.get_pycore().run_module(
-                run_test_py, args=[str(rpc_port), self.resource._get_real_path()])
+                run_test_py, args=[str(rpc_port), self.resource.real_path])
             while not self.result._is_finished() and not self.is_stopped:
                 server.handle_request()
         finally:

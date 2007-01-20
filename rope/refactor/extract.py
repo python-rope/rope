@@ -10,11 +10,12 @@ from rope.refactor.change import ChangeSet, ChangeContents
 
 class _ExtractRefactoring(object):
 
-    def __init__(self, pycore, resource, start_offset, end_offset):
-        self.pycore = pycore
+    def __init__(self, project, resource, start_offset, end_offset):
+        self.pycore = project.pycore
         self.resource = resource
         self.start_offset = start_offset
         self.end_offset = end_offset
+
 
 class ExtractMethodRefactoring(_ExtractRefactoring):
 
@@ -27,7 +28,7 @@ class ExtractMethodRefactoring(_ExtractRefactoring):
         else:
             new_contents = _MultiLineExtractPerformer(self.pycore, self.resource, info,
                                                       extracted_name).extract()
-        changes = ChangeSet()
+        changes = ChangeSet('Extract method <%s>' % extracted_name)
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 
@@ -39,7 +40,7 @@ class ExtractVariableRefactoring(_ExtractRefactoring):
                                    self.start_offset, self.end_offset)
         new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info,
                                                 extracted_name, True).extract()
-        changes = ChangeSet()
+        changes = ChangeSet('Extract variable <%s>' % extracted_name)
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
 

@@ -11,8 +11,8 @@ from rope.refactor.change import (ChangeSet, ChangeContents)
 
 class IntroduceFactoryRefactoring(object):
 
-    def __init__(self, pycore, resource, offset):
-        self.pycore = pycore
+    def __init__(self, project, resource, offset):
+        self.pycore = project.pycore
         self.offset = offset
 
         self.old_pyname = \
@@ -26,7 +26,7 @@ class IntroduceFactoryRefactoring(object):
         self.resource = self.pymodule.get_resource()
 
     def get_changes(self, factory_name, global_factory=False):
-        changes = ChangeSet()
+        changes = ChangeSet('Introduce factory method <%s>' % factory_name)
         self._change_occurrences_in_other_modules(changes, factory_name,
                                                   global_factory)
         self._change_resource(changes, factory_name, global_factory)

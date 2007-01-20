@@ -13,17 +13,19 @@ from rope.refactor.change import ChangeSet, ChangeContents
 
 class InlineRefactoring(object):
 
-    def __init__(self, pycore, resource, offset):
-        self.pycore = pycore
+    def __init__(self, project, resource, offset):
+        self.pycore = project.pycore
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
         if self.name is None:
             raise rope.base.exceptions.RefactoringException(
                 'Inline refactoring should be performed on a method/local variable.')
         if self._is_variable():
-            self.performer = _VariableInliner(pycore, self.name, self.pyname)
+            self.performer = _VariableInliner(self.pycore, self.name,
+                                              self.pyname)
         elif self._is_method():
-            self.performer = _MethodInliner(pycore, self.name, self.pyname)
+            self.performer = _MethodInliner(self.pycore, self.name,
+                                            self.pyname)
         else:
             raise rope.base.exceptions.RefactoringException(
                 'Inline refactoring should be performed on a method/local variable.')
@@ -72,7 +74,7 @@ class _MethodInliner(_Inliner):
         return (start_offset, end_offset)
 
     def get_changes(self):
-        changes = ChangeSet()
+        changes = ChangeSet('Inline method <%s>' % self.name)
         self._change_defining_file(changes)
         self._change_other_files(changes)
         return changes
@@ -111,7 +113,7 @@ class _VariableInliner(_Inliner):
 
     def get_changes(self):
         source = self._get_changed_module()
-        changes = ChangeSet()
+        changes = ChangeSet('Inline variable <%s>' % self.name)
         changes.add_change(ChangeContents(self.resource, source))
         return changes
 
@@ -174,7 +176,7 @@ class _InlineFunctionCallsForModule(object):
             if not occurrence.is_called():
                     raise rope.base.exceptions.RefactoringException(
                         'Reference to inlining function other than function call'
-                        ' in <file: %s, offset: %d>' % (self.resource.get_path(),
+                        ' in <file: %s, offset: %d>' % (self.resource.path,
                                                         start))
             end_parens = self._find_end_parens(self.source,
                                                self.source.index('(', end))

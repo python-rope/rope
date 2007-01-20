@@ -67,7 +67,8 @@ class StaticObjectInference(object):
                                              resulting_pyobject)
 
     def _call_function(self, pyfunction, function_name):
-        if function_name in pyfunction.get_attributes():
+        if pyfunction is not None and \
+           function_name in pyfunction.get_attributes():
             call_function = pyfunction.get_attribute(function_name)
             return call_function.get_object().get_returned_object()
 

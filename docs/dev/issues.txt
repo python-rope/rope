@@ -87,26 +87,6 @@ To Be Discussed
 * Undo unification
 
 
-Handling builtin `property`
-===========================
-
-Problems:
-
-* Class scopes does not reference class methods
-* Properties are overwritten in assignments
-
-We can add a new `Property` builtin type and when exploring attributes
-of a class we prevent `PyNames` with `Property` objects from being
-overwritten.  But the problem here is that we don't want the
-`PyObject`\s of `PyName`\s to be calculated for all attributes of a
-class.
-
-Another easier approach seems possible, too.  We only change static OI
-to give up when it encounters a property assigned to an attribute.
-When that happens, we can get the value it holds by getting the return
-value of the getting function for that property.
-
-
 Local History
 =============
 
@@ -125,12 +105,55 @@ Issues:
 
 * Unanticipated changes
 * Having version control systems in parallel
-* Saving removed files and folders
 * Memory inefficiency
+* Saving removed files and folders
 
 Each project change consists of a few basic changes.
 
 * change file contents
+* move resource
+* create file
+* create folder
+* remove resource
+
+A sample implementation is::
+
+  class History(object):
+
+      def __init__(self):
+          self.undo_list = []
+
+      def do(self, change):
+          pass
+
+      def undo(self):
+          pass
+
+      def redo(self):
+          pass
+
+There is a big question.  Can we do this?::
+
+  change = history.get_change()
+  change.undo()
+
+Or maybe this::
+
+  change = history.get_change()
+  history.do(change)
+  history.undo(change)
+  history.redo(change)
+
+Now what if we call undo with a change that is not done, yet.  Another
+problem is how to gain undo information before committing.
+
+Changes should be changed not to use `Resource` operations since
+resource operations should be undoable themselves.
+
+We can move all file related operations in one place.  The operations
+include:
+
+* write file
 * move resource
 * create file
 * create folder
@@ -147,7 +170,6 @@ in `Local History`_ section.
 
 * Changing uses of `PythonRefactoring` to use `rope.refactor` modules
 * Adding a place for saving undo information
-* What to do with import utils
 * Documenting the refactorings `rope.refactor` submodules provide
 * Updating references to `PythonRefactoring` and
   `PyCore.get_refactoring` to use the new objects.

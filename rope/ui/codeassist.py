@@ -247,7 +247,7 @@ class _OccurrenceListHandle(EnhancedListHandle):
         self.focus_set = focus_set
 
     def entry_to_string(self, entry):
-        return entry[0].get_path() + ' : ' + str(entry[1])
+        return entry[0].path + ' : ' + str(entry[1])
 
     def canceled(self):
         self.toplevel.destroy()

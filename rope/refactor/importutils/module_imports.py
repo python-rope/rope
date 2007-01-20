@@ -45,7 +45,7 @@ class ModuleImports(object):
         imports = [stmt for stmt in self.get_import_statements()
                    if stmt.is_changed()]
         after_removing = self._remove_imports(imports)
-        
+
         result = []
         last_index = 0
         for stmt in sorted(imports, self._compare_import_locations):
@@ -54,8 +54,9 @@ class ModuleImports(object):
             last_index = self._first_non_blank_line(after_removing, start - 1)
             if not stmt.import_info.is_empty():
                 result.append(stmt.get_import_statement() + '\n')
-                for i in range(stmt.blank_lines):
-                    result.append('\n')
+                if self._first_non_blank_line(after_removing, last_index) < \
+                   len(after_removing):
+                    result.append('\n' * stmt.blank_lines)
         result.extend(after_removing[last_index:])
         return ''.join(result)
 
@@ -103,10 +104,14 @@ class ModuleImports(object):
         else:
             all_imports = self.get_import_statements()
             last_line = 1
+            blank_lines = 0
             if all_imports:
                 last_line = all_imports[-1].end_line
+                all_imports[-1].move(last_line)
+                blank_lines = all_imports[-1].blank_lines
             all_imports.append(importinfo.ImportStatement(
-                               import_info, last_line, last_line))
+                               import_info, last_line, last_line,
+                               blank_lines=blank_lines))
 
     def filter_names(self, can_select):
         visitor = actions.RemovingVisitor(self.pycore, can_select)

@@ -4,12 +4,13 @@ from rope.refactor.rename import RenameRefactoring
 
 class ConvertLocalToFieldRefactoring(object):
 
-    def __init__(self, pycore, resource, offset):
-        self.pycore = pycore
+    def __init__(self, project, resource, offset):
+        self.project = project
+        self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
 
-    def convert_local_variable_to_field(self):
+    def get_changes(self):
         name = rope.base.codeanalyze.get_name_at(self.resource, self.offset)
         pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset)
         if not self._is_a_method_local(pyname):
@@ -25,7 +26,7 @@ class ConvertLocalToFieldRefactoring(object):
                 'The field %s already exists' % name)
 
         new_name = self._get_field_name(function_scope.pyobject, name)
-        changes = RenameRefactoring(self.pycore, self.resource, self.offset).\
+        changes = RenameRefactoring(self.project, self.resource, self.offset).\
                   get_changes(new_name, in_file=True)
         return changes
 

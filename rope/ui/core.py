@@ -194,7 +194,7 @@ class Core(object):
         toplevel = Toplevel()
         toplevel.title('Closing Unsaved Editor')
         label = Label(toplevel, text='Closing Unsaved Editor for <%s>' %
-                      active_editor.get_file().get_path())
+                      active_editor.get_file().path)
         def save():
             active_editor.save()
             self.close_active_editor()
@@ -279,7 +279,7 @@ class Core(object):
         int_vars = []
         for i, editor in enumerate(modified_editors):
             int_var = IntVar()
-            button = Checkbutton(toplevel, text=editor.get_file().get_path(),
+            button = Checkbutton(toplevel, text=editor.get_file().path,
                                  variable=int_var, onvalue=1, offvalue=0)
             int_vars.append(int_var)
             button.grid(row=i+1, columnspan=2)

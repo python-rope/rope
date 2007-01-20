@@ -10,19 +10,19 @@ from rope.refactor.change import ChangeContents, ChangeSet
 
 class ChangeSignature(object):
 
-    def __init__(self, pycore, resource, offset):
-        self.pycore = pycore
+    def __init__(self, project, resource, offset):
+        self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
         self.name = codeanalyze.get_name_at(resource, offset)
-        self.pyname = codeanalyze.get_pyname_at(pycore, resource, offset)
+        self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.pyname is None or self.pyname.get_object() is None or \
            not isinstance(self.pyname.get_object(), rope.base.pyobjects.PyFunction):
             raise rope.base.exceptions.RefactoringException(
                 'Change method signature should be performed on functions')
 
     def _change_calls(self, call_changer):
-        changes = ChangeSet()
+        changes = ChangeSet('Changing signature of <%s>' % self.name)
         finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
             self.pycore, self.name, [self.pyname])
         for file in self.pycore.get_python_files():

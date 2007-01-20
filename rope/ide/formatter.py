@@ -11,6 +11,8 @@ import compiler
 #
 #  So a formatter would be added some time in the future,
 #  maybe by rope's contributing users.
+
+
 class Formatter(object):
 
     def format(self, source_code):

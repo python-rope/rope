@@ -2,21 +2,20 @@ import rope.base.codeanalyze
 import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.refactor import occurrences
-from rope.refactor import sourceutils
+from rope.refactor import occurrences, sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents, MoveResource
 
 
 class RenameRefactoring(object):
 
-    def __init__(self, pycore, resource, offset=None):
+    def __init__(self, project, resource, offset=None):
         """If `offset` is None `resource` will be renamed"""
-        self.pycore = pycore
+        self.pycore = project.pycore
         self.resource = resource
         if offset is not None:
             self.old_name = rope.base.codeanalyze.get_name_at(self.resource, offset)
-            self.old_pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, resource,
-                                                                  offset)
+            self.old_pyname = rope.base.codeanalyze.get_pyname_at(
+                self.pycore, resource, offset)
             if self.old_pyname is None:
                 raise rope.base.exceptions.RefactoringException(
                     'Rename refactoring should be performed on python identifiers.')
@@ -43,10 +42,13 @@ class RenameRefactoring(object):
            self._is_renaming_a_function_local_name():
             in_file = True
         files = self._get_interesting_files(in_file)
-        changes = ChangeSet()
+        changes = ChangeSet('Renaming <%s> to <%s>' %
+                            (self.old_name, new_name))
         for file_ in files:
-            occurance_finder = occurrences.FilteredOccurrenceFinder(self.pycore, self.old_name, old_pynames)
-            new_content = rename_in_module(occurance_finder, new_name, resource=file_)
+            occurance_finder = occurrences.FilteredOccurrenceFinder(
+                self.pycore, self.old_name, old_pynames)
+            new_content = rename_in_module(occurance_finder, new_name,
+                                           resource=file_)
             if new_content is not None:
                 changes.add_change(ChangeContents(file_, new_content))
 
@@ -117,7 +119,7 @@ class RenameRefactoring(object):
         resource = pyobject.get_resource()
         if not resource.is_folder():
             new_name = new_name + '.py'
-        parent_path = resource.get_parent().get_path()
+        parent_path = resource.get_parent().path
         if parent_path == '':
             new_location = new_name
         else:

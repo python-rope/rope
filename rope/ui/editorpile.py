@@ -53,7 +53,7 @@ class EditorPile(object):
         self.editors.append(editor)
         title = Radiobutton(self.editor_list, text=file_.get_name(),
                             variable=self.active_file_path,
-                            value=file_.get_path(), indicatoron=0, bd=2,
+                            value=file_.path, indicatoron=0, bd=2,
                             command=lambda: self.activate_editor(editor),
                             selectcolor='#99A', relief=GROOVE)
         self.buttons[editor] = title

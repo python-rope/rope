@@ -147,6 +147,10 @@ class StatementEvaluator(object):
             self.result = rope.base.pynames.AssignedName(
                 pyobject=call_function.get_object().get_returned_object())
 
+    def visitLambda(self, node):
+        self.result = rope.base.pynames.AssignedName(
+            pyobject=rope.base.builtins.Lambda(node, self.scope))
+
 
 def get_statement_result(scope, node):
     evaluator = StatementEvaluator(scope)

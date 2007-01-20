@@ -7,10 +7,11 @@ from rope.refactor.change import ChangeSet, ChangeContents
 
 class EncapsulateFieldRefactoring(object):
 
-    def __init__(self, pycore, resource, offset):
-        self.pycore = pycore
+    def __init__(self, project, resource, offset):
+        self.pycore = project.pycore
         self.name = rope.base.codeanalyze.get_name_at(resource, offset)
-        self.pyname = rope.base.codeanalyze.get_pyname_at(pycore, resource, offset)
+        self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore,
+                                                          resource, offset)
         if not self._is_an_attribute(self.pyname):
             raise rope.base.exceptions.RefactoringException(
                 'Encapsulate field should be performed on class attributes.')
@@ -28,7 +29,7 @@ class EncapsulateFieldRefactoring(object):
         return False
 
     def encapsulate_field(self):
-        changes = ChangeSet()
+        changes = ChangeSet('Encapsulate field <%s>' % self.name)
         rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
                                                       [self.pyname])
 

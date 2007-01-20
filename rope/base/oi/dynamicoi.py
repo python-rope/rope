@@ -64,7 +64,7 @@ class CallInformationCollector(object):
         resource = pyobject.get_module().get_resource()
         if resource is None:
             return
-        path = os.path.abspath(resource._get_real_path())
+        path = os.path.abspath(resource.real_path)
         lineno = pyobject._get_ast().lineno
         if path in self.files and lineno in self.files[path]:
             organizer = self.files[path][lineno]
@@ -251,7 +251,7 @@ class _PyObjectToTextual(object):
 
     def _get_pymodule_path(self, pymodule):
         resource = pymodule.get_resource()
-        resource_path = resource.get_path()
+        resource_path = resource.path
         if os.path.isabs(resource_path):
             return resource_path
         return os.path.abspath(
@@ -276,12 +276,12 @@ class PythonFileRunner(object):
         """Execute the process"""
         env = dict(os.environ)
         source_folders = []
-        file_path = self.file._get_real_path()
+        file_path = self.file.real_path
         for folder in self.pycore.get_source_folders():
-            source_folders.append(os.path.abspath(folder._get_real_path()))
+            source_folders.append(os.path.abspath(folder.real_path))
         env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)
-        runmod_path = self.pycore.find_module('rope.base.oi.runmod')._get_real_path()
+        runmod_path = self.pycore.find_module('rope.base.oi.runmod').real_path
         self.receiver = None
         self._init_data_receiving()
         send_info = '-'
@@ -289,7 +289,7 @@ class PythonFileRunner(object):
             send_info = self.receiver.get_send_info()
         args = [sys.executable, runmod_path, send_info,
                 os.path.abspath(self.pycore.project.address),
-                os.path.abspath(self.file._get_real_path())]
+                os.path.abspath(self.file.real_path)]
         if self.args is not None:
             args.extend(self.args)
         self.process = subprocess.Popen(

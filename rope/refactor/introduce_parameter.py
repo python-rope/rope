@@ -8,8 +8,8 @@ from rope.base import exceptions
 
 class IntroduceParameter(object):
 
-    def __init__(self, pycore, resource, offset):
-        self.pycore = pycore
+    def __init__(self, project, resource, offset):
+        self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
         self.pymodule = self.pycore.resource_to_pyobject(self.resource)
@@ -36,7 +36,7 @@ class IntroduceParameter(object):
         change_collector.add_change(start, header_end, definition_info.to_string())
         self._change_function_occurances(change_collector, header_end,
                                          end, new_parameter)
-        changes = change.ChangeSet()
+        changes = change.ChangeSet('Introduce parameter <%s>' % new_parameter)
         changes.add_change(change.ChangeContents(self.resource,
                                                  change_collector.get_changed()))
         return changes

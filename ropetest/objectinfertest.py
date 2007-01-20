@@ -154,6 +154,14 @@ class ObjectInferTest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(a_class, a_var.get_type())
 
+    def test_lambda_functions(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    pass\n'
+            'l = lambda: C()\na_var = l()')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 

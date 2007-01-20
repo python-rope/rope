@@ -256,7 +256,8 @@ class ImportUtilsTest(unittest.TestCase):
         new_import = self.import_tools.get_import_for_module(
             self.pycore.resource_to_pyobject(self.mod1))
         module_with_imports.add_import(new_import)
-        self.assertEquals('import pkg1.mod1\n', module_with_imports.get_changed_source())
+        self.assertEquals('import pkg1.mod1\n',
+                          module_with_imports.get_changed_source())
 
     def test_adding_from_imports(self):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
