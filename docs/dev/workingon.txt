@@ -1,45 +1,33 @@
 Project History
 ===============
 
-- Handling Lambdas
-- Remove `Resource.observers`
-- Renaming `Resource._get_real_path()` to `Resource.real_path`
-- Undoing `MoveResource` when moving a file to a folder
-- Adding `historytest` to `runtests`
-- Removing `rope.ui.refactor._get_refactoring`
-- Removing `PythonRefactoring` occurrences
-- Changing refactorings to get project instead of pycore
-- Forcing `ChangeSets` to have a description
-- Import addition removes spaces after imports
+- Renaming `Resource.get_path()` to `Resource.path`
+- Returning None from builtin:312 and builtins:292
+- None variable inline:41 inline:26 refactor:633
+- Renaming `Resource.get_name()` to `Resource.name`
+- Renaming `Resource.get_parent()` to `Resource.parent`
+
+* Limiting the number of changes in the undo list
+* Undo/redo list underflow
+* Showing the description of a change when undoing/redoing
+* Separating undos; Editing history and file history
 
 * Adding imports eats the blank lines after it
-* Returning None from builtin:312 and builtins:292
-* evaluate:184 builtins:329
-* inline:41 inline:26 refactor:633 None and get_pyname
 * Moving `rope.refactor.change` to `rope.base`
-* Performing import actions after moving modules
-* Updating docs
-* Limiting the number of changes in the undo list
-* Showing the description of a change when undoing/redoing
-* Undo/redo list underflow
-* Undoing `Resource.remove()`
-* Renaming `Resource.get_path()` to `Resource.path`?
-* Renaming `Resource.get_name()` to `Resource.name`?
-* Separating undos; Editing history and file history
-* Docs for properties
-* Lambdas as functions
 
 
 Remaining Small Stories
 =======================
 
+* Undoing `RemoveResource`; It's not used by refactorings
+* Lambdas as functions; consider their parameters
 * Default maxlength and maxdots for handling long imports
 * Showing properties in quick outline
 * Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s
 * Handling the return type of generator functions
 * Fixing multiple function definition problems
-* Docs for builtin functions
+* Docs for builtin functions and properties
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * Extract constant

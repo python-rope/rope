@@ -38,8 +38,8 @@ class FileFinderTest(unittest.TestCase):
     def test_absolute_finding(self):
         result = self.finder.find_files_starting_with('aa')
         self.assertEquals(1, len(result))
-        self.assertEquals(self.file1, result[0].get_name())
-        self.assertEquals(self.file2, self.finder.find_files_starting_with('abb')[0].get_name())
+        self.assertEquals(self.file1, result[0].name)
+        self.assertEquals(self.file2, self.finder.find_files_starting_with('abb')[0].name)
 
     def test_specialized_finding(self):
         result = self.finder.find_files_starting_with('ab')

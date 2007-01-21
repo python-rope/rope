@@ -10,6 +10,7 @@ Done:
 * Updating files that are changed outside rope
 * Better support for other version control systems
 * Considering tabs to be 8 spaces
+* Removing `PythonRefactoring` facade
 
 To be done?:
 
@@ -18,7 +19,6 @@ To be done?:
 * Limiting memory usage; throwing away calculated information when low
   on memory
 * Documenting published interfaces
-* Removing `PythonRefactoring` facade
 
 If you need other features, send a feature request.  Have a look at
 ``docs/dev/contributing.txt``.

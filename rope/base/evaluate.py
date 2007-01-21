@@ -27,16 +27,16 @@ class StatementEvaluator(object):
         if pyobject is None:
             return
         args = Arguments(node.args, self.scope)
-        if pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
+        if pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
             result = None
             if '__new__' in pyobject.get_attributes():
                 new_function = pyobject.get_attribute('__new__').get_object()
                 result = new_function.get_returned_object(args)
             if result is None or \
-               result.get_type() == rope.base.pyobjects.PyObject.get_base_type('Unknown'):
+               result.get_type() == rope.base.pyobjects.get_base_type('Unknown'):
                 result = rope.base.pyobjects.PyObject(pyobject)
             self.result = rope.base.pynames.AssignedName(pyobject=result)
-        elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
+        elif pyobject.get_type() == rope.base.pyobjects.get_base_type('Function'):
             self.result = rope.base.pynames.AssignedName(
                 pyobject=pyobject.get_returned_object(args))
         elif '__call__' in pyobject.get_attributes():
@@ -153,6 +153,11 @@ class StatementEvaluator(object):
 
 
 def get_statement_result(scope, node):
+    """Evaluate a `compiler.ast` node and return a PyName
+
+    Returns `None` if the expression cannot be evaluated.
+
+    """
     evaluator = StatementEvaluator(scope)
     compiler.walk(node, evaluator)
     return evaluator.result

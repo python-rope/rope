@@ -17,7 +17,7 @@ class InlineRefactoring(object):
         self.pycore = project.pycore
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
-        if self.name is None:
+        if self.pyname is None:
             raise rope.base.exceptions.RefactoringException(
                 'Inline refactoring should be performed on a method/local variable.')
         if self._is_variable():

@@ -114,7 +114,7 @@ class PyCore(object):
 
     def find_relative_module(self, module_name, current_folder, level):
         for i in range(level - 1):
-            current_folder = current_folder.get_parent()
+            current_folder = current_folder.parent
         if module_name == '':
             return current_folder
         else:
@@ -156,7 +156,7 @@ class PyCore(object):
     def get_python_files(self):
         """Returns all python files available in the project"""
         return [resource for resource in self.project.get_files()
-                if resource.get_name().endswith('.py')]
+                if resource.name.endswith('.py')]
 
     def _is_package(self, folder):
         if folder.has_child('__init__.py') and \
@@ -171,7 +171,7 @@ class PyCore(object):
                 return [folder]
         result = []
         for resource in folder.get_files():
-            if resource.get_name().endswith('.py'):
+            if resource.name.endswith('.py'):
                 result.append(folder)
                 break
         for resource in folder.get_folders():

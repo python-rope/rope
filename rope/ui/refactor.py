@@ -300,18 +300,18 @@ class _ModuleViewHandle(TreeViewHandle):
 
     def entry_to_string(self, resource):
         if resource.is_folder():
-            result = resource.get_name()
+            result = resource.name
             if result == '':
                 result = 'project root'
             return result
         else:
-            return resource.get_name()[:-3]
+            return resource.name[:-3]
 
     def get_children(self, resource):
         if resource.is_folder():
             return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and
-                    (child.is_folder() or child.get_name().endswith('.py'))]
+                    if not child.name.startswith('.') and
+                    (child.is_folder() or child.name.endswith('.py'))]
         else:
             return []
 

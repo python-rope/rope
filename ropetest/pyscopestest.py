@@ -1,6 +1,6 @@
 import unittest
 
-from rope.base.pycore import PyObject
+from rope.base.pycore import get_base_type
 from rope.base.project import Project
 from ropetest import testutils
 
@@ -21,7 +21,7 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_simple_scope(self):
         scope = self.pycore.get_string_scope('def sample_func():\n    pass\n')
         sample_func = scope.get_name('sample_func').get_object()
-        self.assertEquals(PyObject.get_base_type('Function'), sample_func.get_type())
+        self.assertEquals(get_base_type('Function'), sample_func.get_type())
 
     def test_simple_function_scope(self):
         scope = self.pycore.get_string_scope('def sample_func():\n    a = 10\n')
@@ -35,7 +35,7 @@ class PyCoreScopesTest(unittest.TestCase):
                                              '    class SampleClass(object):\n        pass\n')
         self.assertEquals(1, len(scope.get_scopes()))
         sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(PyObject.get_base_type('Type'),
+        self.assertEquals(get_base_type('Type'),
                           scope.get_scopes()[0].
                           get_name('SampleClass').get_object().get_type())
 
@@ -78,7 +78,7 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_scope_lookup(self):
         scope = self.pycore.get_string_scope('var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
         self.assertTrue(scope.lookup('var2') is None)
-        self.assertEquals(PyObject.get_base_type('Function'),
+        self.assertEquals(get_base_type('Function'),
                           scope.lookup('sample_func').get_object().get_type())
         sample_func_scope = scope.get_scopes()[0]
         self.assertTrue(sample_func_scope.lookup('var1') is not None)

@@ -81,6 +81,11 @@ class InlineTest(unittest.TestCase):
         code = 'a_var, another_var = (20, 30)\n'
         refactored = self._inline(code, code.index('a_var') + 1)
 
+    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    def test_on_unknown_vars(self):
+        code = 'a_var = another_var\n'
+        refactored = self._inline(code, code.index('another_var') + 1)
+
     def test_attribute_inlining(self):
         code = 'class A(object):\n    def __init__(self):\n' \
                '        self.an_attr = 3\n        range(self.an_attr)\n'

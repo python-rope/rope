@@ -162,7 +162,7 @@ class _TextualToPyObject(object):
         if name in module_scope.get_names():
             suspected_pyobject = module_scope.get_name(name).get_object()
         if suspected_pyobject is not None and \
-           suspected_pyobject.get_type() == pyobjects.PyObject.get_base_type('Type'):
+           suspected_pyobject.get_type() == pyobjects.get_base_type('Type'):
             return suspected_pyobject
         else:
             lineno = self._find_occurrence(name, pymodule.get_resource().read())

@@ -88,25 +88,25 @@ class StaticObjectInference(object):
 
     def infer_parameter_objects(self, pyobject):
         objects = []
-        if pyobject.parent.get_type() == pyobjects.PyObject.get_base_type('Type'):
+        if pyobject.parent.get_type() == pyobjects.get_base_type('Type'):
             if not pyobject.decorators:
                 objects.append(pyobjects.PyObject(pyobject.parent))
             elif self._is_staticmethod_decorator(pyobject.decorators.nodes[0]):
                 objects.append(pyobjects.PyObject(
-                               pyobjects.PyObject.get_base_type('Unknown')))
+                               pyobjects.get_base_type('Unknown')))
             elif self._is_classmethod_decorator(pyobject.decorators.nodes[0]):
                 objects.append(pyobject.parent)
             elif pyobject.parameters[0] == 'self':
                 objects.append(pyobjects.PyObject(pyobject.parent))
             else:
                 objects.append(pyobjects.PyObject(
-                               pyobjects.PyObject.get_base_type('Unknown')))
+                               pyobjects.get_base_type('Unknown')))
         else:
             objects.append(pyobjects.PyObject(
-                           pyobjects.PyObject.get_base_type('Unknown')))
+                           pyobjects.get_base_type('Unknown')))
         for parameter in pyobject.parameters[1:]:
             objects.append(pyobjects.PyObject(
-                           pyobjects.PyObject.get_base_type('Unknown')))
+                           pyobjects.get_base_type('Unknown')))
         return objects
 
     def _is_staticmethod_decorator(self, node):

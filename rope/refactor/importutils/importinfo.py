@@ -177,19 +177,19 @@ class EmptyImport(ImportInfo):
 
 def get_module_name(pycore, resource):
     if resource.is_folder():
-        module_name = resource.get_name()
-        source_folder = resource.get_parent()
-    elif resource.get_name() == '__init__.py':
-        module_name = resource.get_parent().get_name()
-        source_folder = resource.get_parent().get_parent()
+        module_name = resource.name
+        source_folder = resource.parent
+    elif resource.name == '__init__.py':
+        module_name = resource.parent.name
+        source_folder = resource.parent.parent
     else:
-        module_name = resource.get_name()[:-3]
-        source_folder = resource.get_parent()
+        module_name = resource.name[:-3]
+        source_folder = resource.parent
 
     source_folders = pycore.get_source_folders()
     source_folders.extend(pycore.get_python_path_folders())
-    while source_folder != source_folder.get_parent() and \
+    while source_folder != source_folder.parent and \
           source_folder not in source_folders:
-        module_name = source_folder.get_name() + '.' + module_name
-        source_folder = source_folder.get_parent()
+        module_name = source_folder.name + '.' + module_name
+        source_folder = source_folder.parent
     return module_name

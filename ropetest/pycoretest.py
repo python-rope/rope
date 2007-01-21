@@ -1,7 +1,8 @@
 import os
 import unittest
 
-from rope.base.pycore import PyObject, ModuleNotFoundException
+from rope.base.pycore import (PyObject, ModuleNotFoundException,
+                              get_base_type)
 from rope.base.project import Project
 from ropetest import testutils
 
@@ -22,37 +23,37 @@ class PyCoreTest(unittest.TestCase):
     def test_simple_module(self):
         self.pycore.create_module(self.project.root, 'mod')
         result = self.pycore.get_module('mod')
-        self.assertEquals(PyObject.get_base_type('Module'), result.type)
+        self.assertEquals(get_base_type('Module'), result.type)
         self.assertEquals(0, len(result.get_attributes()))
 
     def test_nested_modules(self):
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod = self.pycore.create_module(pkg, 'mod')
         package = self.pycore.get_module('pkg')
-        self.assertEquals(PyObject.get_base_type('Module'), package.get_type())
+        self.assertEquals(get_base_type('Module'), package.get_type())
         self.assertEquals(1, len(package.get_attributes()))
         module = package.get_attribute('mod').get_object()
-        self.assertEquals(PyObject.get_base_type('Module'), module.get_type())
+        self.assertEquals(get_base_type('Module'), module.get_type())
 
     def test_package(self):
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod = self.pycore.create_module(pkg, 'mod')
         result = self.pycore.get_module('pkg')
-        self.assertEquals(PyObject.get_base_type('Module'), result.type)
+        self.assertEquals(get_base_type('Module'), result.type)
 
     def test_simple_class(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('class SampleClass(object):\n    pass\n')
         mod_element = self.pycore.get_module('mod')
         result = mod_element.get_attribute('SampleClass').get_object()
-        self.assertEquals(PyObject.get_base_type('Type'), result.get_type())
+        self.assertEquals(get_base_type('Type'), result.get_type())
 
     def test_simple_function(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('def sample_function():\n    pass\n')
         mod_element = self.pycore.get_module('mod')
         result = mod_element.get_attribute('sample_function').get_object()
-        self.assertEquals(PyObject.get_base_type('Function'), result.get_type())
+        self.assertEquals(get_base_type('Function'), result.get_type())
 
     def test_class_methods(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
@@ -61,7 +62,7 @@ class PyCoreTest(unittest.TestCase):
         sample_class = mod_element.get_attribute('SampleClass').get_object()
         self.assertEquals(1, len(sample_class.get_attributes()))
         method = sample_class.get_attribute('sample_method').get_object()
-        self.assertEquals(PyObject.get_base_type('Function'), method.get_type())
+        self.assertEquals(get_base_type('Function'), method.get_type())
 
     def test_global_variables(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
@@ -89,7 +90,7 @@ class PyCoreTest(unittest.TestCase):
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element.get_attribute('SampleClass').get_object()
         var = sample_class.get_attribute('InnerClass').get_object()
-        self.assertEquals(PyObject.get_base_type('Type'), var.get_type())
+        self.assertEquals(get_base_type('Type'), var.get_type())
 
     @testutils.assert_raises(ModuleNotFoundException)
     def test_non_existant_module(self):
@@ -101,7 +102,7 @@ class PyCoreTest(unittest.TestCase):
         mod.write('import mod1\n')
         module = self.pycore.get_module('mod2')
         imported_sys = module.get_attribute('mod1').get_object()
-        self.assertEquals(PyObject.get_base_type('Module'), imported_sys.get_type())
+        self.assertEquals(get_base_type('Module'), imported_sys.get_type())
 
     def test_imported_as_names(self):
         self.pycore.create_module(self.project.root, 'mod1')
@@ -109,12 +110,12 @@ class PyCoreTest(unittest.TestCase):
         mod.write('import mod1 as my_import\n')
         module = self.pycore.get_module('mod2')
         imported_mod = module.get_attribute('my_import').get_object()
-        self.assertEquals(PyObject.get_base_type('Module'), imported_mod.get_type())
+        self.assertEquals(get_base_type('Module'), imported_mod.get_type())
 
     def test_get_string_module(self):
         mod = self.pycore.get_string_module('class Sample(object):\n    pass\n')
         sample_class = mod.get_attribute('Sample').get_object()
-        self.assertEquals(PyObject.get_base_type('Type'), sample_class.get_type())
+        self.assertEquals(get_base_type('Type'), sample_class.get_type())
 
     # FIXME: Extra spaces seem to cause problems
     def test_get_string_module_with_extra_spaces(self):
@@ -130,7 +131,7 @@ class PyCoreTest(unittest.TestCase):
     # FIXME: Not found modules
     def xxx_test_not_found_module_is_module(self):
         mod = self.pycore.get_string_module('import doesnotexist\n')
-        self.assertEquals(PyObject.get_base_type('Module'),
+        self.assertEquals(get_base_type('Module'),
                           mod.get_attribute('doesnotexist').
                           get_object().get_type())
 
@@ -144,7 +145,7 @@ class PyCoreTest(unittest.TestCase):
                                              'class Derived(Base):\n    pass\n')
         derived = mod.get_attribute('Derived').get_object()
         self.assertTrue('method' in derived.get_attributes())
-        self.assertEquals(PyObject.get_base_type('Function'),
+        self.assertEquals(get_base_type('Function'),
                           derived.get_attribute('method').get_object().get_type())
 
     def test_inheriting_multiple_base_class_attributes(self):
@@ -433,19 +434,19 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_simple_import(self):
         mod = self.pycore.get_string_module('import samplemod\n')
         samplemod = mod.get_attribute('samplemod').get_object()
-        self.assertEquals(PyObject.get_base_type('Module'), samplemod.get_type())
+        self.assertEquals(get_base_type('Module'), samplemod.get_type())
 
     def test_from_import_class(self):
         mod = self.pycore.get_string_module('from samplemod import SampleClass\n')
         result = mod.get_attribute('SampleClass').get_object()
-        self.assertEquals(PyObject.get_base_type('Type'), result.get_type())
+        self.assertEquals(get_base_type('Type'), result.get_type())
         self.assertTrue('sample_func' not in mod.get_attributes())
 
     def test_from_import_star(self):
         mod = self.pycore.get_string_module('from samplemod import *\n')
-        self.assertEquals(PyObject.get_base_type('Type'),
+        self.assertEquals(get_base_type('Type'),
                           mod.get_attribute('SampleClass').get_object().get_type())
-        self.assertEquals(PyObject.get_base_type('Function'),
+        self.assertEquals(get_base_type('Function'),
                           mod.get_attribute('sample_func').get_object().get_type())
         self.assertTrue(mod.get_attribute('sample_var') is not None)
 
@@ -464,7 +465,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_package_import_mod(self):
         mod = self.pycore.get_string_module('from package import nestedmod\n')
-        self.assertEquals(PyObject.get_base_type('Module'),
+        self.assertEquals(get_base_type('Module'),
                           mod.get_attribute('nestedmod').get_object().get_type())
 
     def test_from_package_import_star(self):
@@ -477,7 +478,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_import_function(self):
         scope = self.pycore.get_string_scope('def f():\n    from samplemod import SampleClass\n')
-        self.assertEquals(PyObject.get_base_type('Type'),
+        self.assertEquals(get_base_type('Type'),
                           scope.get_scopes()[0].get_name('SampleClass').
                           get_object().get_type())
 
@@ -581,14 +582,14 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_from_import_nonexistant_module(self):
         mod = self.pycore.get_string_module('from doesnotexistmod import DoesNotExistClass\n')
         self.assertTrue('DoesNotExistClass' in mod.get_attributes())
-        self.assertEquals(PyObject.get_base_type('Unknown'),
+        self.assertEquals(get_base_type('Unknown'),
                           mod.get_attribute('DoesNotExistClass').
                           get_object().get_type())
 
     def test_from_import_nonexistant_name(self):
         mod = self.pycore.get_string_module('from samplemod import DoesNotExistClass\n')
         self.assertTrue('DoesNotExistClass' in mod.get_attributes())
-        self.assertEquals(PyObject.get_base_type('Unknown'),
+        self.assertEquals(get_base_type('Unknown'),
                           mod.get_attribute('DoesNotExistClass').
                           get_object().get_type())
 

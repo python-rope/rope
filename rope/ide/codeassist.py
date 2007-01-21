@@ -319,9 +319,9 @@ class PythonCodeAssist(object):
             return None
         pyobject = element.get_object()
         if isinstance(pyobject, rope.base.pyobjects.PyDefinedObject):
-            if pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Function'):
+            if pyobject.get_type() == rope.base.pyobjects.get_base_type('Function'):
                 return _get_function_docstring(pyobject._get_ast())
-            elif pyobject.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type'):
+            elif pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
                 return _get_class_docstring(pyobject)
             else:
                 return _trim_docstring(pyobject._get_ast().doc)

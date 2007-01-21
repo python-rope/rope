@@ -273,8 +273,14 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('l = lambda: 1\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         l_var = pymod.get_attribute('l').get_object()
-        self.assertEquals(pyobjects.PyObject.get_base_type('Function'),
+        self.assertEquals(pyobjects.get_base_type('Function'),
                           l_var.get_type())
+
+    def test_lambdas_that_return_unknown(self):
+        self.mod.write('a_var = (lambda: None)()\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertTrue(a_var is not None)
 
 
 if __name__ == '__main__':

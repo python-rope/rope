@@ -26,7 +26,7 @@ def _create_builtin_getter(cls):
 class List(pyobjects.PyObject):
 
     def __init__(self, holding=None):
-        super(List, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(List, self).__init__(pyobjects.get_base_type('Type'))
         self.holding = holding
         self.attributes = {
             '__getitem__': BuiltinName(BuiltinFunction(self.holding)),
@@ -56,7 +56,7 @@ get_list_type = _create_builtin_type_getter(List)
 class Dict(pyobjects.PyObject):
 
     def __init__(self, keys=None, values=None):
-        super(Dict, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(Dict, self).__init__(pyobjects.get_base_type('Type'))
         self.keys = keys
         self.values = values
         item = get_tuple(self.keys, self.values)
@@ -96,7 +96,7 @@ get_dict_type = _create_builtin_type_getter(Dict)
 class Tuple(pyobjects.PyObject):
 
     def __init__(self, *objects):
-        super(Tuple, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(Tuple, self).__init__(pyobjects.get_base_type('Type'))
         self.objects = objects
         first = None
         if objects:
@@ -124,7 +124,7 @@ get_tuple_type = _create_builtin_type_getter(Tuple)
 class Set(pyobjects.PyObject):
 
     def __init__(self, holding=None):
-        super(Set, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(Set, self).__init__(pyobjects.get_base_type('Type'))
         self.holding = holding
         self.attributes = {
             'pop': BuiltinName(BuiltinFunction(self.holding)),
@@ -158,7 +158,7 @@ get_set_type = _create_builtin_type_getter(Set)
 class Str(pyobjects.PyObject):
 
     def __init__(self):
-        super(Str, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(Str, self).__init__(pyobjects.get_base_type('Type'))
         self_object = pyobjects.PyObject(self)
         self.attributes = {
             '__getitem__': BuiltinName(BuiltinFunction(self_object)),
@@ -220,7 +220,7 @@ class BuiltinFunction(pyobjects.PyObject):
 
     def __init__(self, returned=None, function=None):
         super(BuiltinFunction, self).__init__(
-            pyobjects.PyObject.get_base_type('Function'))
+            pyobjects.get_base_type('Function'))
         self.returned = returned
         self.function = function
 
@@ -233,7 +233,7 @@ class BuiltinFunction(pyobjects.PyObject):
 class Iterator(pyobjects.PyObject):
 
     def __init__(self, holding=None):
-        super(Iterator, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(Iterator, self).__init__(pyobjects.get_base_type('Type'))
         self.holding = holding
         self.attributes = {
             'next': BuiltinName(BuiltinFunction(self.holding)),
@@ -249,7 +249,7 @@ class Iterator(pyobjects.PyObject):
 class File(pyobjects.PyObject):
     
     def __init__(self):
-        super(File, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(File, self).__init__(pyobjects.get_base_type('Type'))
         self_object = pyobjects.PyObject(self)
         str_object = get_str()
         str_list = get_list(get_str())
@@ -279,7 +279,7 @@ get_file_type = _create_builtin_type_getter(File)
 class Property(pyobjects.PyObject):
 
     def __init__(self, fget=None, fset=None, fdel=None, fdoc=None):
-        super(Property, self).__init__(pyobjects.PyObject.get_base_type('Type'))
+        super(Property, self).__init__(pyobjects.get_base_type('Type'))
         self._fget = fget
         self.attributes = {
             'fget': BuiltinName(BuiltinFunction()),
@@ -303,13 +303,17 @@ def _property_function(args):
 class Lambda(pyobjects.PyObject):
 
     def __init__(self, node, scope):
-        super(Lambda, self).__init__(pyobjects.PyObject.get_base_type('Function'))
+        super(Lambda, self).__init__(pyobjects.get_base_type('Function'))
         self.node = node
         self.scope = scope
 
     def get_returned_object(self, args=None):
-        return evaluate.get_statement_result(
-            self.scope, self.node.code).get_object()
+        result = evaluate.get_statement_result(
+            self.scope, self.node.code)
+        if result is not None:
+            return result.get_object()
+        else:
+            return pyobjects.PyObject(pyobjects.get_base_type('Unknown'))
 
     def get_pattributes(self):
         return {}
@@ -332,6 +336,8 @@ def _create_builtin(args, creator):
     holding = _infer_sequence_type(passed)
     if holding is not None:
         return creator(holding)
+    else:
+        return creator()
 
 
 def _range_function(args):

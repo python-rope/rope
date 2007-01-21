@@ -120,7 +120,7 @@ class Core(object):
         found.config(yscrollcommand=scrollbar.set)
         editor_list = self.editor_manager.get_editor_list()
         for editor in editor_list:
-            found.insert(END, editor.get_file().get_name())
+            found.insert(END, editor.get_file().name)
         if len(editor_list) >= 2:
             found.selection_set(0)
         def name_changed(event):
@@ -129,7 +129,7 @@ class Core(object):
             found.select_clear(0, END)
             found_index = -1
             for index, editor in enumerate(editor_list):
-                if editor.get_file().get_name().startswith(name.get()):
+                if editor.get_file().name.startswith(name.get()):
                     found_index = index
                     break
             if found_index != -1:

@@ -28,7 +28,7 @@ class PyObject(object):
         return self.type
 
     @staticmethod
-    def get_base_type(name):
+    def _get_base_type(name):
         if not hasattr(PyObject, 'types'):
             PyObject.types = {}
             base_type = PyObject(None)
@@ -37,6 +37,10 @@ class PyObject(object):
             PyObject.types['Function'] = PyObject(base_type)
             PyObject.types['Unknown'] = PyObject(base_type)
         return PyObject.types[name]
+
+
+def get_base_type(name):
+    return PyObject._get_base_type(name)
 
 
 class PyDefinedObject(PyObject):
@@ -103,7 +107,7 @@ class PyDefinedObject(PyObject):
 class PyFunction(PyDefinedObject):
 
     def __init__(self, pycore, ast_node, parent):
-        super(PyFunction, self).__init__(PyObject.get_base_type('Function'),
+        super(PyFunction, self).__init__(get_base_type('Function'),
                                          pycore, ast_node, parent)
         self.parameters = self.ast_node.argnames
         self.decorators = self.ast_node.decorators
@@ -158,14 +162,14 @@ class PyFunction(PyDefinedObject):
         finally:
             self.is_being_inferred = False
         if result is None:
-            return PyObject(PyObject.get_base_type('Unknown'))
+            return PyObject(get_base_type('Unknown'))
         return result
 
 
 class PyClass(PyDefinedObject):
 
     def __init__(self, pycore, ast_node, parent):
-        super(PyClass, self).__init__(PyObject.get_base_type('Type'),
+        super(PyClass, self).__init__(get_base_type('Type'),
                                       pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = None
@@ -192,7 +196,8 @@ class PyClass(PyDefinedObject):
         for base_name in self.ast_node.bases:
             base = rope.base.evaluate.get_statement_result(
                 self.parent.get_scope(), base_name)
-            if base:
+            if base is not None and \
+               base.get_object().get_type() == get_base_type('Type'):
                 result.append(base.get_object())
         return result
 
@@ -226,7 +231,7 @@ class _PyModule(PyDefinedObject):
         self.dependant_modules = set()
         self.resource = resource
         self.concluded_data = []
-        super(_PyModule, self).__init__(PyObject.get_base_type('Module'),
+        super(_PyModule, self).__init__(get_base_type('Module'),
                                         pycore, ast_node, None)
 
     def _get_concluded_data(self):
@@ -314,10 +319,10 @@ class PyPackage(_PyModule):
         result = {}
         for child in self.resource.get_children():
             if child.is_folder():
-                result[child.get_name()] = child
-            elif child.get_name().endswith('.py') and \
-                 child.get_name() != '__init__.py':
-                name = child.get_name()[:-3]
+                result[child.name] = child
+            elif child.name.endswith('.py') and \
+                 child.name != '__init__.py':
+                name = child.name[:-3]
                 result[name] = child
         return result
 

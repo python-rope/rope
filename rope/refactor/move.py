@@ -20,15 +20,15 @@ class MoveRefactoring(object):
                 raise rope.base.exceptions.RefactoringException(
                     'Move works on classes,functions or modules.')
         else:
-            if not resource.is_folder() and resource.get_name() == '__init__.py':
-                resource = resource.get_parent()
+            if not resource.is_folder() and resource.name == '__init__.py':
+                resource = resource.parent
             dummy_pymodule = self.pycore.get_string_module('')
             self.pyname = rope.base.pynames.ImportedModule(
                 dummy_pymodule, resource=resource)
 
     def get_changes(self, dest_resource):
         moving_object = self.pyname.get_object()
-        if moving_object.get_type() == rope.base.pyobjects.PyObject.get_base_type('Module'):
+        if moving_object.get_type() == rope.base.pyobjects.get_base_type('Module'):
             mover = _ModuleMover(self.pycore, self.pyname, dest_resource)
         else:
             mover = _GlobalMover(self.pycore, self.pyname, dest_resource)
@@ -258,9 +258,9 @@ class _ModuleMover(_Mover):
     def __init__(self, pycore, pyname, destination):
         source = pyname.get_object().get_resource()
         if source.is_folder():
-            old_name = source.get_name()
+            old_name = source.name
         else:
-            old_name = source.get_name()[:-3]
+            old_name = source.name[:-3]
         package = importutils.get_module_name(pycore, destination)
         if package:
             new_name = package + '.' + old_name

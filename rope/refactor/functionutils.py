@@ -88,7 +88,7 @@ class DefinitionInfo(object):
                      get_parameters()[parameter_names[0]].get_object().get_type()) and \
                      parent is not None and \
                      (parent.pyobject.get_type() ==
-                      rope.base.pyobjects.PyObject.get_base_type('Type'))
+                      rope.base.pyobjects.get_base_type('Type'))
         info = _FunctionParser(code, is_method)
         args, keywords = info.get_parameters()
         args_arg = None

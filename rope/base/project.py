@@ -1,5 +1,4 @@
 import os
-import re
 
 import rope.base.fscommands
 import rope.base.pycore
@@ -101,7 +100,7 @@ class Project(_Project):
         for file in folder.get_files():
             result.append(file)
         for folder in folder.get_folders():
-            if not folder.get_name().startswith('.'):
+            if not folder.name.startswith('.'):
                 result.extend(self._get_files_recursively(folder))
         return result
 
@@ -141,18 +140,6 @@ class Resource(object):
         self.project = project
         self._path = path
 
-    def get_path(self):
-        """Return the path of this resource relative to the project root
-
-        The path is the list of parent directories separated by '/' followed
-        by the resource name.
-        """
-        return self._path
-
-    def get_name(self):
-        """Return the name of this resource"""
-        return self.path.split('/')[-1]
-
     def move(self, new_location):
         """Move resource to `new_location`"""
         self._perform_change(change.MoveResource(self, new_location),
@@ -173,6 +160,18 @@ class Resource(object):
         parent = '/'.join(self.path.split('/')[0:-1])
         return self.project.get_resource(parent)
 
+    def _get_path(self):
+        """Return the path of this resource relative to the project root
+
+        The path is the list of parent directories separated by '/' followed
+        by the resource name.
+        """
+        return self._path
+
+    def _get_name(self):
+        """Return the name of this resource"""
+        return self.path.split('/')[-1]
+
     def _get_real_path(self):
         """Return the file system path of this resource"""
         return self.project._get_resource_path(self.path)
@@ -181,20 +180,21 @@ class Resource(object):
         dest_path = self.project._get_resource_path(destination)
         if os.path.isdir(dest_path):
             if destination != '':
-                return destination + '/' + self.get_name()
+                return destination + '/' + self.name
             else:
-                return self.get_name()
+                return self.name
         return destination
+
+    parent = property(get_parent)
+    name = property(_get_name)
+    path = property(_get_path)
+    real_path = property(_get_real_path)
 
     def __eq__(self, obj):
         return self.__class__ == obj.__class__ and self.path == obj.path
 
     def __hash__(self):
         return hash(self.path)
-
-    name = property(get_name)
-    path = property(get_path)
-    real_path = property(_get_real_path)
 
     def _perform_change(self, change_, description):
         changes = change.ChangeSet(description)
@@ -381,7 +381,7 @@ class FilteredResourceObserver(object):
         if changed in self.resources:
             changes.add_changed(changed)
         if self._is_parent_changed(changed):
-            changes.add_changed(changed.get_parent())
+            changes.add_changed(changed.parent)
 
     def _update_changes_caused_by_removed(self, changes, resource,
                                           new_resource=None):
@@ -393,13 +393,13 @@ class FilteredResourceObserver(object):
                     new_file = self._calculate_new_resource(resource, new_resource, file)
                     changes.add_removed(file, new_file)
         if self._is_parent_changed(resource):
-            changes.add_changed(resource.get_parent())
+            changes.add_changed(resource.parent)
         if new_resource is not None:
             if self._is_parent_changed(new_resource):
-                changes.add_changed(new_resource.get_parent())
+                changes.add_changed(new_resource.parent)
 
     def _is_parent_changed(self, child):
-        return child.get_parent() in self.resources
+        return child.parent in self.resources
 
     def resource_removed(self, resource, new_resource=None):
         changes = _Changes()

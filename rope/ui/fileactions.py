@@ -22,7 +22,7 @@ class _FolderViewHandle(TreeViewHandle):
         self.do_select = do_select
 
     def entry_to_string(self, resource):
-        result = resource.get_name()
+        result = resource.name
         if result == '':
             result = 'project root'
         return result
@@ -30,7 +30,7 @@ class _FolderViewHandle(TreeViewHandle):
     def get_children(self, resource):
         if resource.is_folder():
             return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and
+                    if not child.name.startswith('.') and
                     child.is_folder()]
         else:
             return []
@@ -147,10 +147,10 @@ class FileFinder(object):
             files = self.project.get_files()
         result = []
         for file_ in files:
-            if file_.get_name().startswith(starting):
+            if file_.name.startswith(starting):
                 result.append(file_)
-            elif file_.get_name() == '__init__.py' and \
-                 file_.get_parent().get_name().startswith(starting):
+            elif file_.name == '__init__.py' and \
+                 file_.parent.name.startswith(starting):
                 result.append(file_)
         result.sort(cmp=self._compare_files)
         self.last_keyword = starting
@@ -158,7 +158,7 @@ class FileFinder(object):
         return result
 
     def _is_init_dot_py(self, file):
-        return file.get_name() == '__init__.py'
+        return file.name == '__init__.py'
 
     def _compare_files(self, file1, file2):
         if self._is_init_dot_py(file1) or self._is_init_dot_py(file2):
@@ -167,8 +167,8 @@ class FileFinder(object):
             if not self._is_init_dot_py(file1) and self._is_init_dot_py(file2):
                 return -1
             return cmp(file1.path, file2.path)
-        if file1.get_name() != file2.get_name():
-            return cmp(file1.get_name(), file2.get_name())
+        if file1.name != file2.name:
+            return cmp(file1.name, file2.name)
         return cmp(file1.path, file2.path)
 
 
@@ -246,13 +246,13 @@ class _ResourceViewHandle(TreeViewHandle):
         self.toplevel = toplevel
 
     def entry_to_string(self, resource):
-        return resource.get_name()
+        return resource.name
 
     def get_children(self, resource):
         if resource.is_folder():
             return [child for child in resource.get_children()
-                    if not child.get_name().startswith('.') and
-                    not child.get_name().endswith('.pyc')]
+                    if not child.name.startswith('.') and
+                    not child.name.endswith('.pyc')]
         else:
             return []
 

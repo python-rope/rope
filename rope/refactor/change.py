@@ -219,8 +219,8 @@ def _get_destination_for_move(resource, destination):
     dest_path = resource.project._get_resource_path(destination)
     if os.path.isdir(dest_path):
         if destination != '':
-            return destination + '/' + resource.get_name()
+            return destination + '/' + resource.name
         else:
-            return resource.get_name()
+            return resource.name
     return destination
 

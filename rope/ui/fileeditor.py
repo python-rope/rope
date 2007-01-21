@@ -10,9 +10,9 @@ class FileEditor(object):
         self.file = file_
         self.project = project
         editingcontext = None
-        if self.file.get_name().endswith('.py'):
+        if self.file.name.endswith('.py'):
             editingcontext = editingcontexts.python
-        elif self.file.get_name().endswith('.txt'):
+        elif self.file.name.endswith('.txt'):
             editingcontext = editingcontexts.rest
         else:
             editingcontext = editingcontexts.others

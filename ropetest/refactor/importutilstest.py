@@ -626,38 +626,38 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('', self.import_tools.sort_imports(pymod))
 
     def test_sorting_one_import(self):
-        self.mod.write('import pkg1.mod1\n\n')
+        self.mod.write('import pkg1.mod1\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertEquals('import pkg1.mod1\n\n\n', self.import_tools.sort_imports(pymod))
+        self.assertEquals('import pkg1.mod1\n', self.import_tools.sort_imports(pymod))
 
     def test_sorting_imports_alphabetically(self):
         self.mod.write('import pkg2.mod2\nimport pkg1.mod1\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertEquals('import pkg1.mod1\nimport pkg2.mod2\n\n\n',
+        self.assertEquals('import pkg1.mod1\nimport pkg2.mod2\n',
                           self.import_tools.sort_imports(pymod))
 
     def test_sorting_imports_and_froms(self):
         self.mod.write('import pkg2.mod2\nfrom pkg1 import mod1\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertEquals('import pkg2.mod2\nfrom pkg1 import mod1\n\n\n',
+        self.assertEquals('import pkg2.mod2\nfrom pkg1 import mod1\n',
                           self.import_tools.sort_imports(pymod))
 
     def test_sorting_imports_and_standard_modles(self):
         self.mod.write('import pkg1\nimport sys\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertEquals('import sys\n\nimport pkg1\n\n\n',
+        self.assertEquals('import sys\n\nimport pkg1\n',
                           self.import_tools.sort_imports(pymod))
 
     def test_sorting_only_standard_modles(self):
         self.mod.write('import sys\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertEquals('import sys\n\n\n',
+        self.assertEquals('import sys\n',
                           self.import_tools.sort_imports(pymod))
 
     def test_sorting_third_party(self):
         self.mod.write('import pkg1\nimport a_third_party\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertEquals('import a_third_party\n\nimport pkg1\n\n\n',
+        self.assertEquals('import a_third_party\n\nimport pkg1\n',
                           self.import_tools.sort_imports(pymod))
 
     def test_simple_handling_long_imports(self):

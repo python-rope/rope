@@ -21,7 +21,7 @@ class EditorPile(object):
     def _editor_was_modified(self, editor):
         if editor not in self.buttons:
             return
-        new_title = editor.get_file().get_name()
+        new_title = editor.get_file().name
         if editor.get_editor().is_modified():
             new_title = '*' + new_title
         self.buttons[editor]['text'] = new_title
@@ -51,7 +51,7 @@ class EditorPile(object):
         editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
         editor.add_change_observer(self._editor_was_changed)
         self.editors.append(editor)
-        title = Radiobutton(self.editor_list, text=file_.get_name(),
+        title = Radiobutton(self.editor_list, text=file_.name,
                             variable=self.active_file_path,
                             value=file_.path, indicatoron=0, bd=2,
                             command=lambda: self.activate_editor(editor),

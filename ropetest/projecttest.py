@@ -152,17 +152,17 @@ class ProjectTest(unittest.TestCase):
 
     def test_file_get_name(self):
         file = self.project.get_resource(self.sample_file)
-        self.assertEquals(self.sample_file, file.get_name())
+        self.assertEquals(self.sample_file, file.name)
         file_name = 'nestedFile.txt'
         parent = self.project.get_resource(self.sample_folder)
         filePath = self.sample_folder + '/' + file_name
         parent.create_file(file_name)
         nestedFile = self.project.get_resource(filePath)
-        self.assertEquals(file_name, nestedFile.get_name())
+        self.assertEquals(file_name, nestedFile.name)
 
     def test_folder_get_name(self):
         folder = self.project.get_resource(self.sample_folder)
-        self.assertEquals(self.sample_folder, folder.get_name())
+        self.assertEquals(self.sample_folder, folder.name)
 
     def test_file_get_path(self):
         file = self.project.get_resource(self.sample_file)
@@ -240,12 +240,12 @@ class ProjectTest(unittest.TestCase):
         root_folder = self.project.root
         self.assertEquals(2, len(root_folder.get_children()))
         self.assertEquals('', root_folder.path)
-        self.assertEquals('', root_folder.get_name())
+        self.assertEquals('', root_folder.name)
 
     def testGetAllFiles(self):
         files = self.project.get_files()
         self.assertEquals(1, len(files))
-        self.assertEquals(self.sample_file, files[0].get_name())
+        self.assertEquals(self.sample_file, files[0].name)
 
     def testMultifileGetAllFiles(self):
         fileName = 'nestedFile.txt'
@@ -253,7 +253,7 @@ class ProjectTest(unittest.TestCase):
         parent.create_file(fileName)
         files = self.project.get_files()
         self.assertEquals(2, len(files))
-        self.assertTrue(fileName == files[0].get_name() or fileName == files[1].get_name())
+        self.assertTrue(fileName == files[0].name or fileName == files[1].name)
 
     def test_ignoring_dot_star_folders_in_get_files(self):
         root = self.project.address

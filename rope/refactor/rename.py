@@ -20,14 +20,14 @@ class RenameRefactoring(object):
                 raise rope.base.exceptions.RefactoringException(
                     'Rename refactoring should be performed on python identifiers.')
         else:
-            if not resource.is_folder() and resource.get_name() == '__init__.py':
-                resource = resource.get_parent()
+            if not resource.is_folder() and resource.name == '__init__.py':
+                resource = resource.parent
             dummy_pymodule = self.pycore.get_string_module('')
             self.old_pyname = rope.base.pynames.ImportedModule(dummy_pymodule, resource=resource)
             if resource.is_folder():
-                self.old_name = resource.get_name()
+                self.old_name = resource.name
             else:
-                self.old_name = resource.get_name()[:-3]
+                self.old_name = resource.name[:-3]
 
     def get_old_name(self):
         return self.old_name
@@ -69,7 +69,7 @@ class RenameRefactoring(object):
                isinstance(self.old_pyname, rope.base.pynames.AssignedName)
 
     def _is_renaming_a_module(self):
-        if self.old_pyname.get_object().get_type() == rope.base.pycore.PyObject.get_base_type('Module'):
+        if self.old_pyname.get_object().get_type() == rope.base.pycore.get_base_type('Module'):
             return True
         return False
 
@@ -90,8 +90,8 @@ class RenameRefactoring(object):
     def _is_a_class_method(self):
         pyname = self.old_pyname
         return isinstance(pyname, rope.base.pynames.DefinedName) and \
-               pyname.get_object().get_type() == rope.base.pyobjects.PyObject.get_base_type('Function') and \
-               pyname.get_object().parent.get_type() == rope.base.pyobjects.PyObject.get_base_type('Type')
+               pyname.get_object().get_type() == rope.base.pyobjects.get_base_type('Function') and \
+               pyname.get_object().parent.get_type() == rope.base.pyobjects.get_base_type('Type')
 
     def _get_superclasses_defining_method(self, pyclass, attr_name):
         result = set()
@@ -119,7 +119,7 @@ class RenameRefactoring(object):
         resource = pyobject.get_resource()
         if not resource.is_folder():
             new_name = new_name + '.py'
-        parent_path = resource.get_parent().path
+        parent_path = resource.parent.path
         if parent_path == '':
             new_location = new_name
         else:

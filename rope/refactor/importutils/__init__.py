@@ -25,7 +25,7 @@ class ImportTools(object):
     def get_from_import_for_module(self, module, name):
         module_name = get_module_name(self.pycore, module.get_resource())
         return FromImport(module_name, 0, ((name, None),),
-                          module.get_resource().get_parent(), self.pycore)
+                          module.get_resource().parent, self.pycore)
 
     def get_module_with_imports(self, module):
         return module_imports.ModuleImports(self.pycore, module)

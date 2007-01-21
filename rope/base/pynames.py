@@ -48,7 +48,7 @@ class AssignedName(PyName):
                 self.is_being_inferred = False
         if self.pyobject.get() is None:
             self.pyobject.set(rope.base.pyobjects.PyObject(rope.base.pyobjects.
-                                                      PyObject.get_base_type('Unknown')))
+                                                      get_base_type('Unknown')))
         return self.pyobject.get()
 
     def get_definition_location(self):
@@ -79,7 +79,7 @@ class ForName(PyName):
             self.pyobject.set(inferred_object)
         if self.pyobject.get() is None:
             self.pyobject.set(rope.base.pyobjects.PyObject(
-                              rope.base.pyobjects.PyObject.get_base_type('Unknown')))
+                              rope.base.pyobjects.get_base_type('Unknown')))
         return self.pyobject.get()
 
     def get_definition_location(self):
@@ -115,7 +115,7 @@ class ImportedModule(PyName):
         resource = self.importing_module.get_module().get_resource()
         if resource is None:
             return None
-        return resource.get_parent()
+        return resource.parent
 
     def _get_pymodule(self):
         if self.pymodule.get() is None:
@@ -138,7 +138,7 @@ class ImportedModule(PyName):
 
     def get_object(self):
         if self._get_pymodule() is None:
-            return rope.base.pyobjects.PyObject(rope.base.pyobjects.PyObject.get_base_type('Unknown'))
+            return rope.base.pyobjects.PyObject(rope.base.pyobjects.get_base_type('Unknown'))
         return self._get_pymodule()
 
     def get_definition_location(self):

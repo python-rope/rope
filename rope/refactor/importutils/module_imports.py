@@ -48,13 +48,15 @@ class ModuleImports(object):
 
         result = []
         last_index = 0
-        for stmt in sorted(imports, self._compare_import_locations):
+        sorted_imports = sorted(imports, self._compare_import_locations)
+        for stmt in sorted_imports:
             start = self._get_import_location(stmt)
             result.extend(after_removing[last_index:start - 1])
             last_index = self._first_non_blank_line(after_removing, start - 1)
             if not stmt.import_info.is_empty():
                 result.append(stmt.get_import_statement() + '\n')
-                if self._first_non_blank_line(after_removing, last_index) < \
+                if stmt != sorted_imports[-1] or \
+                   self._first_non_blank_line(after_removing, last_index) < \
                    len(after_removing):
                     result.append('\n' * stmt.blank_lines)
         result.extend(after_removing[last_index:])
@@ -150,7 +152,7 @@ class ModuleImports(object):
         return visitor.to_be_fixed, visitor.to_be_renamed
 
     def _current_folder(self):
-        return self.pymodule.get_resource().get_parent()
+        return self.pymodule.get_resource().parent
 
     def sort_imports(self):
         all_import_statements = self.get_import_statements()
@@ -242,7 +244,8 @@ class _UnboundNameFinder(object):
         self._visit_child_scope(node)
 
     def visitName(self, node):
-        if self._get_root()._is_node_interesting(node) and not self.is_bound(node.name):
+        if self._get_root()._is_node_interesting(node) and \
+           not self.is_bound(node.name):
             self.add_unbound(node.name)
 
     def visitGetattr(self, node):
@@ -253,7 +256,8 @@ class _UnboundNameFinder(object):
         if isinstance(node, compiler.ast.Name):
             result.append(node.name)
             primary = '.'.join(reversed(result))
-            if self._get_root()._is_node_interesting(node) and not self.is_bound(primary):
+            if self._get_root()._is_node_interesting(node) and \
+               not self.is_bound(primary):
                 self.add_unbound(primary)
         else:
             compiler.walk(node, self)
@@ -327,7 +331,7 @@ class _GlobalImportFinder(object):
     def __init__(self, pymodule, pycore):
         self.current_folder = None
         if pymodule.get_resource():
-            self.current_folder = pymodule.get_resource().get_parent()
+            self.current_folder = pymodule.get_resource().parent
             self.pymodule = pymodule
         self.pycore = pycore
         self.imports = []

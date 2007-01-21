@@ -3,6 +3,9 @@
 ===========
 
 
+- Removing `PythonRefactoring` facade : January 19, 2007
+
+
 - Handling lambdas : January 16, 2007
 
 

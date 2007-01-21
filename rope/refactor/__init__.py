@@ -60,8 +60,8 @@ class TransformModuleToPackage(object):
         new_content = self._transform_relatives_to_absolute(self.resource)
         if new_content is not None:
             changes.add_change(ChangeContents(self.resource, new_content))
-        parent = self.resource.get_parent()
-        name = self.resource.get_name()[:-3]
+        parent = self.resource.parent
+        name = self.resource.name[:-3]
         changes.add_change(CreateFolder(parent, name))
         new_path = parent.path + '/%s/__init__.py' % name
         changes.add_change(MoveResource(self.resource, new_path))
