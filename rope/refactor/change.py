@@ -1,7 +1,7 @@
 import difflib
 import os
 
-from rope.base.exceptions import RopeException
+from rope.base.exceptions import RopeError
 
 
 class Change(object):
@@ -195,23 +195,23 @@ class _ResourceOperations(object):
         file_path = self.project._get_resource_path(file_name)
         if os.path.exists(file_path):
             if os.path.isfile(file_path):
-                raise RopeException('File already exists')
+                raise RopeError('File already exists')
             else:
-                raise RopeException('A folder with the same name'
+                raise RopeError('A folder with the same name'
                                     ' as this file already exists')
         try:
             self.fscommands.create_file(file_path)
         except IOError, e:
-            raise RopeException(e)
+            raise RopeError(e)
 
     def _create_folder(self, folder_name):
         folder_path = self.project._get_resource_path(folder_name)
         if os.path.exists(folder_path):
             if not os.path.isdir(folder_path):
-                raise RopeException('A file with the same name as'
+                raise RopeError('A file with the same name as'
                                     ' this folder already exists')
             else:
-                raise RopeException('Folder already exists')
+                raise RopeError('Folder already exists')
         self.fscommands.create_folder(folder_path)
 
 

@@ -15,7 +15,7 @@ class IntroduceParameter(object):
         self.pymodule = self.pycore.resource_to_pyobject(self.resource)
         scope = self.pymodule.get_scope().get_inner_scope_for_offset(offset)
         if scope.get_kind() != 'Function':
-            raise exceptions.RefactoringException(
+            raise exceptions.RefactoringError(
                 'Introduce parameter should be performed inside functions')
         self.pyfunction = scope.pyobject
 

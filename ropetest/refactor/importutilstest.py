@@ -249,6 +249,15 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from mod import a_var as myvar\na_var = myvar\n',
                           module_with_imports.get_changed_source())
 
+    def test_not_removing_imports_that_conflict_with_class_names(self):
+        code = 'import pkg1\nclass A(object):\n    pkg1 = 0\n' \
+               '    def f(self):\n        a_var = pkg1\n'
+        self.mod.write(code)
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals(code, module_with_imports.get_changed_source())
+
     def test_adding_imports(self):
         self.mod.write('\n')
         pymod = self.pycore.get_module('mod')
@@ -658,6 +667,12 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('import pkg1\nimport a_third_party\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals('import a_third_party\n\nimport pkg1\n',
+                          self.import_tools.sort_imports(pymod))
+
+    def test_sorting_only_third_parties(self):
+        self.mod.write('import a_third_party\na_var = 1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import a_third_party\n\n\na_var = 1\n',
                           self.import_tools.sort_imports(pymod))
 
     def test_simple_handling_long_imports(self):

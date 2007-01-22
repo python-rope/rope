@@ -3,7 +3,7 @@ import re
 
 import rope.base.pyobjects
 from rope.base import codeanalyze
-from rope.base.exceptions import RefactoringException
+from rope.base.exceptions import RefactoringError
 from rope.refactor import sourceutils
 from rope.refactor.change import ChangeSet, ChangeContents
 
@@ -116,23 +116,23 @@ class _ExtractPerformer(object):
 
     def _check_exceptional_conditions(self):
         if self.holding_scope.pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
-            raise RefactoringException('Can not extract methods in class body')
+            raise RefactoringError('Can not extract methods in class body')
         if self.parts.region[1] > self.parts.scope[1]:
-            raise RefactoringException('Bad range selected for extract method')
+            raise RefactoringError('Bad range selected for extract method')
         end_line = self.parts.region_linenos[1]
         end_scope = self.scope.get_inner_scope_for_line(end_line)
         if end_scope != self.holding_scope and end_scope.get_end() != end_line:
-            raise RefactoringException('Bad range selected for extract method')
+            raise RefactoringError('Bad range selected for extract method')
         try:
             if _ReturnOrYieldFinder.does_it_return(
                 self.source_code[self.parts.region[0]:self.parts.region[1]]):
-                raise RefactoringException('Extracted piece should not contain return statements.')
+                raise RefactoringError('Extracted piece should not contain return statements.')
             if _UnmatchedBreakOrContinueFinder.has_errors(
                 self.source_code[self.parts.region[0]:self.parts.region[1]]):
-                raise RefactoringException(
+                raise RefactoringError(
                     'A break/continue without matching having a for/while loop.')
         except SyntaxError:
-            raise RefactoringException('Extracted piece should contain complete statements.')
+            raise RefactoringError('Extracted piece should contain complete statements.')
 
     def _is_on_a_word(self, offset):
         prev = self.source_code[offset]
@@ -235,9 +235,9 @@ class _OneLineExtractPerformer(_ExtractPerformer):
         super(_OneLineExtractPerformer, self)._check_exceptional_conditions()
         if (self.parts.region[0] > 0 and self._is_on_a_word(self.parts.region[0] - 1)) or \
            (self.parts.region[1] < len(self.source_code) and self._is_on_a_word(self.parts.region[1] - 1)):
-            raise RefactoringException('Should extract complete statements.')
+            raise RefactoringError('Should extract complete statements.')
         if self.extract_variable and not self.parts.is_one_line_extract():
-            raise RefactoringException('Extract variable should not span multiple lines.')
+            raise RefactoringError('Extract variable should not span multiple lines.')
 
     def _get_call(self):
         args = self._find_function_arguments()
@@ -268,7 +268,7 @@ class _MultiLineExtractPerformer(_ExtractPerformer):
         super(_MultiLineExtractPerformer, self)._check_exceptional_conditions()
         if self.parts.region[0] != self.parts.region_lines[0] or \
            self.parts.region[1] != self.parts.region_lines[1]:
-            raise RefactoringException('Extracted piece should contain complete statements.')
+            raise RefactoringError('Extracted piece should contain complete statements.')
 
     def _get_call(self):
         args = self._find_function_arguments()

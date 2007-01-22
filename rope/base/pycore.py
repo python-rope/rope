@@ -5,7 +5,7 @@ import rope.base.oi.dynamicoi
 import rope.base.oi.objectinfer
 import rope.base.project
 import rope.refactor
-from rope.base.exceptions import ModuleNotFoundException
+from rope.base.exceptions import ModuleNotFoundError
 from rope.base.pyobjects import *
 
 
@@ -26,13 +26,13 @@ class PyCore(object):
         """Returns a `PyObject` if the module was found."""
         module = self.find_module(name, current_folder)
         if module is None:
-            raise ModuleNotFoundException('Module %s not found' % name)
+            raise ModuleNotFoundError('Module %s not found' % name)
         return self.resource_to_pyobject(module)
 
     def get_relative_module(self, name, current_folder, level):
         module = self.find_relative_module(name, current_folder, level)
         if module is None:
-            raise ModuleNotFoundException('Module %s not found' % name)
+            raise ModuleNotFoundError('Module %s not found' % name)
         return self.resource_to_pyobject(module)
 
     def get_string_module(self, module_content, resource=None):
@@ -98,7 +98,7 @@ class PyCore(object):
             try:
                 src_folder = self.project.get_out_of_project_resource(src)
                 result.append(src_folder)
-            except rope.base.exceptions.RopeException:
+            except rope.base.exceptions.RopeError:
                 pass
         return result
 

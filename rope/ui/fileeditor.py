@@ -64,7 +64,7 @@ class FileEditor(object):
 
     def save(self):
         if self.readonly:
-            raise rope.base.exceptions.RopeUIException(
+            raise rope.base.exceptions.RopeUIError(
                 'File is opened in readonly mode!')
         self.saving = True
         try:

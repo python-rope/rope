@@ -3,7 +3,7 @@ import os
 import rope.base.fscommands
 import rope.base.pycore
 import rope.base.history
-from rope.base.exceptions import RopeException
+from rope.base.exceptions import RopeError
 from rope.refactor import change
 
 
@@ -12,7 +12,7 @@ class _Project(object):
     def __init__(self, fscommands):
         self.observers = set()
         self.file_access = rope.base.fscommands.FileAccess()
-        self._history = rope.base.history.History()
+        self._history = rope.base.history.History(maxundos=100)
         self.operations = change._ResourceOperations(self, fscommands)
 
     def get_resource(self, resource_name):
@@ -25,13 +25,13 @@ class _Project(object):
         """
         path = self._get_resource_path(resource_name)
         if not os.path.exists(path):
-            raise RopeException('Resource %s does not exist' % resource_name)
+            raise RopeError('Resource %s does not exist' % resource_name)
         elif os.path.isfile(path):
             return File(self, resource_name)
         elif os.path.isdir(path):
             return Folder(self, resource_name)
         else:
-            raise RopeException('Unknown resource ' + resource_name)
+            raise RopeError('Unknown resource ' + resource_name)
 
     def validate(self, folder):
         """Validate files and folders contained in this folder
@@ -78,7 +78,7 @@ class Project(_Project):
         if not os.path.exists(self._address):
             os.mkdir(self._address)
         elif not os.path.isdir(self._address):
-            raise RopeException('Project root exists and is not a directory')
+            raise RopeError('Project root exists and is not a directory')
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)
@@ -266,7 +266,7 @@ class Folder(Resource):
         try:
             self.get_child(name)
             return True
-        except RopeException:
+        except RopeError:
             return False
 
     def get_files(self):
@@ -288,9 +288,9 @@ class Folder(Resource):
 
 
 class ResourceObserver(object):
-    """Provides the interface observing resources
+    """Provides the interface for observing resources
 
-    `ResourceObserver` s can be registered using `Resource.add_observer`.
+    `ResourceObserver`\s can be registered using `Resource.add_observer`.
     But most of the time what is needed is `FilteredResourceObserver`
     since ResourceObserver report all changes passed to them and they
     don't report changes to all of the resources.  For example if a
@@ -352,7 +352,8 @@ class FilteredResourceObserver(object):
 
     """
 
-    def __init__(self, resource_observer, initial_resources=None, timekeeper=None):
+    def __init__(self, resource_observer, initial_resources=None,
+                 timekeeper=None):
         self.observer = resource_observer
         self.resources = {}
         if timekeeper is not None:
@@ -390,7 +391,8 @@ class FilteredResourceObserver(object):
         if resource.is_folder():
             for file in list(self.resources):
                 if resource.contains(file):
-                    new_file = self._calculate_new_resource(resource, new_resource, file)
+                    new_file = self._calculate_new_resource(resource,
+                                                            new_resource, file)
                     changes.add_removed(file, new_file)
         if self._is_parent_changed(resource):
             changes.add_changed(resource.parent)

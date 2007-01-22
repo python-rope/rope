@@ -3,7 +3,7 @@
 =========================
 
 By ``0.4`` release *rope* would probably be ready for being used as a
-library.  Features that need to be added include:
+library.  Features that might be added include:
 
 Done:
 
@@ -55,7 +55,7 @@ invalidate cached information about resources that have been
 removed or changed outside rope you should call `Project.validate`.
 You should pass a resource to this method.  For example::
 
-  project.validate(project.get_root_folder())
+  project.validate(project.root)
 
 validates all files and directories in the project.
 
@@ -70,13 +70,12 @@ Here is a sample session.::
   >>> project = Project('.')
 
   # Working with files to create a module
-  >>> root = project.get_root_folder()
-  >>> mod1 = root.create_file('mod1.py')
+  >>> mod1 = project.root.create_file('mod1.py')
   >>> mod1.write('a_var = 10\n')
 
   # Creating modules and packages using `PyCore` objects
   >>> pycore = project.get_pycore()
-  >>> pkg = pycore.create_package(root, 'pkg')
+  >>> pkg = pycore.create_package(project.root, 'pkg')
   >>> mod2 = pycore.create_module(pkg, 'mod2')
   >>> mod2.write('import mod1\nprint mod1.a_var\n')
 

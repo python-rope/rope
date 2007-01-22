@@ -17,7 +17,7 @@ class RenameRefactoring(object):
             self.old_pyname = rope.base.codeanalyze.get_pyname_at(
                 self.pycore, resource, offset)
             if self.old_pyname is None:
-                raise rope.base.exceptions.RefactoringException(
+                raise rope.base.exceptions.RefactoringError(
                     'Rename refactoring should be performed on python identifiers.')
         else:
             if not resource.is_folder() and resource.name == '__init__.py':

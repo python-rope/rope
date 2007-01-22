@@ -20,7 +20,7 @@ class Scope(object):
     def get_name(self, name):
         """Return name `PyName` defined in this scope"""
         if name not in self.get_names():
-            raise exceptions.NameNotFoundException('name %s not found' % name)
+            raise exceptions.NameNotFoundError('name %s not found' % name)
         return self.get_names()[name]
 
     def get_scopes(self):
@@ -31,6 +31,31 @@ class Scope(object):
         if self.scopes == None:
             self.scopes = self._create_scopes()
         return self.scopes
+
+    def lookup(self, name):
+        if name in self.get_names():
+            return self.get_names()[name]
+        if self.parent is not None:
+            return self.parent._propagated_lookup(name)
+        return None
+
+    def get_propagated_names(self):
+        """Return the names defined in this scope that are visible from
+        scopes contained in this scope
+
+        This method returns the same dictionary returned by
+        `get_names()` except for `ClassScope` which returns an empty
+        dict.
+
+        """
+        return self.get_names()
+
+    def _propagated_lookup(self, name):
+        if name in self.get_propagated_names():
+            return self.get_propagated_names()[name]
+        if self.parent is not None:
+            return self.parent._propagated_lookup(name)
+        return None
 
     def _create_scopes(self):
         block_objects = [pyname.get_object() for pyname in
@@ -57,16 +82,6 @@ class Scope(object):
     def get_kind(self):
         pass
 
-    def lookup(self, name):
-        if name in self.get_names():
-            return self.get_names()[name]
-        if self.parent is not None:
-            return self.parent._propagated_lookup(name)
-        return None
-
-    def _propagated_lookup(self, name):
-        return self.lookup(name)
-
 
 class GlobalScope(Scope):
 
@@ -84,10 +99,10 @@ class GlobalScope(Scope):
     def get_name(self, name):
         try:
             return self.pyobject.get_attribute(name)
-        except exceptions.AttributeNotFoundException:
+        except exceptions.AttributeNotFoundError:
             if name in self.builtin_names:
                 return self.builtin_names[name]
-            raise exceptions.NameNotFoundException('name %s not found' % name)
+            raise exceptions.NameNotFoundError('name %s not found' % name)
 
     def get_names(self):
         if self.names.get() is None:
@@ -168,8 +183,8 @@ class ClassScope(Scope):
     def get_kind(self):
         return 'Class'
 
-    def _propagated_lookup(self, name):
-        return self.parent._propagated_lookup(name)
+    def get_propagated_names(self):
+        return {}
 
 
 class _HoldingScopeFinder(object):

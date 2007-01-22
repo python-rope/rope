@@ -18,7 +18,7 @@ class ChangeSignature(object):
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.pyname is None or self.pyname.get_object() is None or \
            not isinstance(self.pyname.get_object(), rope.base.pyobjects.PyFunction):
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Change method signature should be performed on functions')
 
     def _change_calls(self, call_changer):
@@ -146,7 +146,7 @@ class ArgumentAdder(_ArgumentChanger):
     def change_definition_info(self, definition_info):
         for pair in definition_info.args_with_defaults:
             if pair[0] == self.name:
-                raise rope.base.exceptions.RefactoringException(
+                raise rope.base.exceptions.RefactoringError(
                     'Adding duplicate parameter: <%s>.' % self.name)
         definition_info.args_with_defaults.insert(self.index,
                                                   (self.name, self.default))

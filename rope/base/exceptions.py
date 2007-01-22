@@ -1,23 +1,27 @@
-class RopeException(Exception):
+class RopeError(Exception):
     """Base exception for rope"""
 
 
-class ModuleNotFoundException(RopeException):
+class ModuleNotFoundError(RopeError):
     """Module not found exception"""
 
 
-class AttributeNotFoundException(RopeException):
+class AttributeNotFoundError(RopeError):
     """Attribute not found exception"""
 
 
-class NameNotFoundException(RopeException):
+class NameNotFoundError(RopeError):
     """Attribute not found exception"""
 
 
-class RefactoringException(RopeException):
+class RefactoringError(RopeError):
     """Errors for performing a refactoring"""
 
 
-class RopeUIException(RopeException):
+class HistoryError(RopeError):
+    """Errors for history undo/redo operations"""
+
+
+class RopeUIError(RopeError):
     """Base exception for user interface parts of rope"""
 

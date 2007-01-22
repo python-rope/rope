@@ -169,6 +169,8 @@ class ModuleImports(object):
         if not in_projects and not third_party:
             blank_lines = 2
         last_index = self._move_imports(standards, last_index, blank_lines)
+        if not in_projects:
+            blank_lines = 2
         last_index = self._move_imports(third_party, last_index, blank_lines)
         last_index = self._move_imports(in_projects, last_index, 2)
 
@@ -265,7 +267,7 @@ class _UnboundNameFinder(object):
     def _get_root(self):
         pass
 
-    def is_bound(self, name):
+    def is_bound(self, name, propagated=False):
         pass
 
     def add_unbound(self, name):
@@ -289,7 +291,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
     def _get_root(self):
         return self
 
-    def is_bound(self, primary):
+    def is_bound(self, primary, propagated=False):
         name = primary.split('.')[0]
         if name in self.names:
             return True
@@ -315,10 +317,13 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
     def _get_root(self):
         return self.parent._get_root()
 
-    def is_bound(self, primary):
+    def is_bound(self, primary, propagated=False):
         name = primary.split('.')[0]
-        if name in self.pyobject.get_scope().get_names() or \
-           self.parent.is_bound(name):
+        if propagated:
+            names = self.pyobject.get_scope().get_propagated_names()
+        else:
+            names = self.pyobject.get_scope().get_names()
+        if name in names or self.parent.is_bound(name, propagated=True):
             return True
         return False
 

@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from rope.base.pycore import (PyObject, ModuleNotFoundException,
+from rope.base.pycore import (PyObject, ModuleNotFoundError,
                               get_base_type)
 from rope.base.project import Project
 from ropetest import testutils
@@ -92,7 +92,7 @@ class PyCoreTest(unittest.TestCase):
         var = sample_class.get_attribute('InnerClass').get_object()
         self.assertEquals(get_base_type('Type'), var.get_type())
 
-    @testutils.assert_raises(ModuleNotFoundException)
+    @testutils.assert_raises(ModuleNotFoundError)
     def test_non_existant_module(self):
         self.pycore.get_module('doesnotexistmodule')
 

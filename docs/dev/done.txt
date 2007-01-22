@@ -3,10 +3,13 @@
 ===========
 
 
+- Undoing everything; Project history : January 21, 2007
+
+
 - Removing `PythonRefactoring` facade : January 19, 2007
 
 
-- Handling lambdas : January 16, 2007
+- Basic lambdas handling : January 16, 2007
 
 
 - Handling builtin `property` : January 14, 2007

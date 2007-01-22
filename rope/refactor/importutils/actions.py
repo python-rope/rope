@@ -12,7 +12,7 @@ class ImportInfoVisitor(object):
         try:
             method = getattr(self, 'visit' + import_.import_info.__class__.__name__)
             return method(import_, import_.import_info)
-        except exceptions.ModuleNotFoundException:
+        except exceptions.ModuleNotFoundError:
             pass
 
     def visitEmptyImport(self, import_stmt, import_info):
@@ -231,7 +231,7 @@ class SelfImportVisitor(ImportInfoVisitor):
                     self.to_be_fixed.add(imported)
                 else:
                     new_pairs.append((name, alias))
-            except exceptions.AttributeNotFoundException:
+            except exceptions.AttributeNotFoundError:
                 new_pairs.append((name, alias))
         if not import_info._are_name_and_alias_lists_equal(
             new_pairs, import_info.names_and_aliases):

@@ -365,7 +365,7 @@ class ScopeNameFinder(object):
             name = self.word_finder.get_primary_at(offset).strip()
             try:
                 return class_scope.pyobject.get_attribute(name)
-            except rope.base.exceptions.AttributeNotFoundException:
+            except rope.base.exceptions.AttributeNotFoundError:
                 return None
         # function header
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):

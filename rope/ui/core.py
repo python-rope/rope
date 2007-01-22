@@ -1,7 +1,7 @@
 import tkFileDialog
 from Tkinter import *
 
-from rope.base.exceptions import RopeException
+from rope.base.exceptions import RopeError
 from rope.base.project import Project
 import rope.ui.editor
 import rope.ui.statusbar
@@ -228,7 +228,7 @@ class Core(object):
 
     def open_file(self, fileName):
         if self.project is None:
-            raise RopeException('No project is open')
+            raise RopeError('No project is open')
         file_ = self.project.get_resource(fileName)
         return self.editor_manager.get_resource_editor(file_)
 
@@ -249,7 +249,7 @@ class Core(object):
 
     def create_file(self, file_name):
         if self.project is None:
-            raise RopeException('No project is open')
+            raise RopeError('No project is open')
         try:
             last_slash = file_name.rindex('/')
             parent = project.get_resource(file_name[: last_slash])

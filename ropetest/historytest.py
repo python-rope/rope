@@ -1,8 +1,9 @@
 import unittest
 
-from rope.base import project
-from ropetest import testutils
+import rope.base.history
+from rope.base import exceptions, project
 from rope.refactor.change import *
+from ropetest import testutils
 
 
 class HistoryTest(unittest.TestCase):
@@ -76,6 +77,26 @@ class HistoryTest(unittest.TestCase):
         self.assertEquals('1', my_file.read())
         self.history.redo()
         self.assertEquals('3', my_file.read())
+
+    @testutils.assert_raises(exceptions.HistoryError)
+    def test_undo_list_underflow(self):
+        self.history.undo()
+
+    @testutils.assert_raises(exceptions.HistoryError)
+    def test_redo_list_underflow(self):
+        self.history.redo()
+
+    @testutils.assert_raises(exceptions.HistoryError)
+    def test_undo_limit(self):
+        my_file = self.project.root.create_file('my_file.txt')
+        history = rope.base.history.History(maxundos=1)
+        history.do(ChangeContents(my_file, '1'))
+        history.do(ChangeContents(my_file, '2'))
+        try:
+            history.undo()
+            history.undo()
+        finally:
+            self.assertEquals('1', my_file.read())
 
 
 if __name__ == '__main__':

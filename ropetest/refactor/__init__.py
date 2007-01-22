@@ -8,7 +8,7 @@ import ropetest.refactor.importutilstest
 import ropetest.refactor.inlinetest
 import ropetest.refactor.movetest
 import ropetest.refactor.renametest
-from rope.base.exceptions import RefactoringException
+from rope.base.exceptions import RefactoringError
 from rope.base.project import Project
 from rope.refactor.encapsulate_field import EncapsulateFieldRefactoring
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
@@ -82,7 +82,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_for_non_classes(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('def a_func():\n    pass\n')
@@ -140,7 +140,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                                         'create', global_factory=True)
         self.assertEquals(expected, mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_for_global_factory_for_nested_classes(self):
         code = 'def create_var():\n'\
                '    class AClass(object):\n'\
@@ -317,18 +317,18 @@ class EncapsulateFieldTest(unittest.TestCase):
             'a_var = A()\na_var.set_attr(a_var.get_attr() * 2)\n',
             self.mod1.read())
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_non_attributes(self):
         self.mod1.write('attr = 10')
         self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments(self):
         self.mod.write(self.a_class)
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\na_var.attr, b = 1, 2\n')
         self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments2(self):
         self.mod.write(self.a_class)
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\nb, a_var.attr = 1, 2\n')
@@ -397,13 +397,13 @@ class LocalToFieldTest(unittest.TestCase):
                    '        self.var = 10\n'
         self.assertEquals(expected, self.mod.read())
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_a_global_var(self):
         self.mod.write('var = 10\n')
         self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().index('var') + 1)
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_field(self):
         code = 'class A(object):\n    def a_func(self):\n' \
                '        self.var = 10\n'
@@ -411,7 +411,7 @@ class LocalToFieldTest(unittest.TestCase):
         self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().index('var') + 1)
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_a_parameter(self):
         code = 'class A(object):\n    def a_func(self, var):\n' \
                '        a = var\n'
@@ -419,7 +419,7 @@ class LocalToFieldTest(unittest.TestCase):
         self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().index('var') + 1)
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_there_is_a_field_with_the_same_name(self):
         code = 'class A(object):\n    def __init__(self):\n        self.var = 1\n' \
                '    def a_func(self):\n        var = 10\n'
@@ -474,7 +474,7 @@ class IntroduceParameterTest(unittest.TestCase):
         self._introduce_parameter(offset, 'p1')
         self.assertEquals('def f(p1=var):\n    b = p1 + c\n', self.mod.read())
 
-    @testutils.assert_raises(RefactoringException)
+    @testutils.assert_raises(RefactoringError)
     def test_failing_when_not_inside(self):
         self.mod.write('var = 10\nb = var\n')
         offset = self.mod.read().rindex('var')

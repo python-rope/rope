@@ -60,7 +60,7 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.normalize().do()
         self.assertEquals('def a_func(p1, p2):\n    pass\na_func(1, 2)', self.mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exceptions_for_non_functions(self):
         self.mod.write('a_var = 10')
         signature = ChangeSignature(self.project, self.mod,
@@ -202,7 +202,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def a_func(p1=0, p2=0):\n    pass\na_func(p2=1)\n',
                           self.mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringException)
+    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_adding_duplicate_parameter_and_raising_exceptions(self):
         self.mod.write('def a_func(p1):\n    pass\n')
         signature = ChangeSignature(self.project, self.mod,

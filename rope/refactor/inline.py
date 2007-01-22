@@ -18,7 +18,7 @@ class InlineRefactoring(object):
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
         if self.pyname is None:
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Inline refactoring should be performed on a method/local variable.')
         if self._is_variable():
             self.performer = _VariableInliner(self.pycore, self.name,
@@ -27,7 +27,7 @@ class InlineRefactoring(object):
             self.performer = _MethodInliner(self.pycore, self.name,
                                             self.pyname)
         else:
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Inline refactoring should be performed on a method/local variable.')
         self.performer.check_exceptional_conditions()
 
@@ -108,7 +108,7 @@ class _VariableInliner(_Inliner):
 
     def check_exceptional_conditions(self):
         if len(self.pyname.assignments) != 1:
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Local variable should be assigned once or inlining.')
 
     def get_changes(self):
@@ -131,7 +131,7 @@ class _VariableInliner(_Inliner):
             definition_lines.append(line)
         definition_with_assignment = ' '.join(definition_lines)
         if assignment.index is not None:
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Cannot inline tuple assignments.')
         definition = definition_with_assignment[definition_with_assignment.\
                                                 index('=') + 1:].strip()
@@ -171,10 +171,10 @@ class _InlineFunctionCallsForModule(object):
                 if occurrence.is_defined():
                     continue
                 else:
-                    raise rope.base.exceptions.RefactoringException(
+                    raise rope.base.exceptions.RefactoringError(
                         'Cannot inline functions that reference themselves')
             if not occurrence.is_called():
-                    raise rope.base.exceptions.RefactoringException(
+                    raise rope.base.exceptions.RefactoringError(
                         'Reference to inlining function other than function call'
                         ' in <file: %s, offset: %d>' % (self.resource.path,
                                                         start))
@@ -268,7 +268,7 @@ class _DefinitionGenerator(object):
         paramdict = dict([pair for pair in definition_info.args_with_defaults])
         if definition_info.args_arg is not None or \
            definition_info.keywords_arg is not None:
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Cannot functions with list and keyword arguements.')
         return paramdict
 
@@ -322,7 +322,7 @@ class _DefinitionGenerator(object):
                         while current < len(source) and source[current] != '\n':
                             current += 1
                         if current != len(source) and source[current:].strip() != '':
-                            raise rope.base.exceptions.RefactoringException(
+                            raise rope.base.exceptions.RefactoringError(
                                 'Cannot inline functions with statements after return statement.')
                     else:
                         current = match.end('return')

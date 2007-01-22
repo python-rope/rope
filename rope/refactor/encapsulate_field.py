@@ -13,7 +13,7 @@ class EncapsulateFieldRefactoring(object):
         self.pyname = rope.base.codeanalyze.get_pyname_at(self.pycore,
                                                           resource, offset)
         if not self._is_an_attribute(self.pyname):
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Encapsulate field should be performed on class attributes.')
         self.resource = self.pyname.get_definition_location()[0].get_resource()
 
@@ -113,7 +113,7 @@ class _FindChangesForModule(object):
             self._manage_writes(start, result)
             result.append(self.source[self.last_modified:start])
             if self._is_assigned_in_a_tuple_assignment(occurrence):
-                raise rope.base.exceptions.RefactoringException(
+                raise rope.base.exceptions.RefactoringError(
                     'Cannot handle tuple assignments in encapsulate field.')
             if occurrence.is_written():
                 assignment_type = word_finder.get_assignment_type(start)

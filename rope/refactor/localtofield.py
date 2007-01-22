@@ -14,7 +14,7 @@ class ConvertLocalToFieldRefactoring(object):
         name = rope.base.codeanalyze.get_name_at(self.resource, self.offset)
         pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset)
         if not self._is_a_method_local(pyname):
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Convert local variable to field should be performed on \n'
                 'the a local variable of a method.')
 
@@ -22,7 +22,7 @@ class ConvertLocalToFieldRefactoring(object):
         function_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         class_scope = function_scope.parent
         if name in class_scope.pyobject.get_attributes():
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'The field %s already exists' % name)
 
         new_name = self._get_field_name(function_scope.pyobject, name)

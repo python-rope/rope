@@ -3,7 +3,7 @@ import compiler
 import rope.base.evaluate
 import rope.base.pyscopes
 from rope.base import pynames
-from rope.base.exceptions import RopeException, AttributeNotFoundException
+from rope.base.exceptions import RopeError, AttributeNotFoundError
 from rope.base.pynames import *
 
 
@@ -21,7 +21,7 @@ class PyObject(object):
 
     def get_attribute(self, name):
         if name not in self.get_attributes():
-            raise AttributeNotFoundException('Attribute %s not found' % name)
+            raise AttributeNotFoundError('Attribute %s not found' % name)
         return self.get_attributes()[name]
 
     def get_type(self):
@@ -78,7 +78,7 @@ class PyDefinedObject(PyObject):
             return self._get_structural_attributes()[name]
         if name in self._get_concluded_attributes():
             return self._get_concluded_attributes()[name]
-        raise AttributeNotFoundException('Attribute %s not found' % name)
+        raise AttributeNotFoundError('Attribute %s not found' % name)
 
     def get_scope(self):
         if self.scope == None:
@@ -127,7 +127,7 @@ class PyFunction(PyDefinedObject):
 
     def _get_parameter_pyobjects(self):
         if self.are_args_being_inferred:
-            raise IsBeingInferredException('Circular assignments')
+            raise IsBeingInferredError('Circular assignments')
         if len(self.parameters) == 0:
             return {}
         self.are_args_being_inferred = True
@@ -153,7 +153,7 @@ class PyFunction(PyDefinedObject):
 
     def get_returned_object(self, args=None):
         if self.is_being_inferred:
-            raise IsBeingInferredException('Circular assignments')
+            raise IsBeingInferredError('Circular assignments')
         self.is_being_inferred = True
         try:
             object_infer = self.pycore._get_object_infer()
@@ -293,7 +293,8 @@ class PyPackage(_PyModule):
     def __init__(self, pycore, resource=None):
         self.resource = resource
         if resource is not None and resource.has_child('__init__.py'):
-            ast_node = pycore.resource_to_pyobject(resource.get_child('__init__.py'))._get_ast()
+            ast_node = pycore.resource_to_pyobject(
+                resource.get_child('__init__.py'))._get_ast()
         else:
             ast_node = compiler.parse('\n')
         super(PyPackage, self).__init__(pycore, ast_node, resource)
@@ -506,6 +507,6 @@ class _ClassInitVisitor(_AssignVisitor):
         pass
 
 
-class IsBeingInferredException(RopeException):
+class IsBeingInferredError(RopeError):
     pass
 

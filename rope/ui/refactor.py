@@ -12,47 +12,11 @@ import rope.refactor.rename
 import rope.ui.core
 from rope.refactor import ImportOrganizer
 from rope.ui.extension import SimpleAction
+from rope.ui.actionhelpers import ConfirmAllEditorsAreSaved
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView,
                                DescriptionList, EnhancedListHandle,
                                VolatileList)
-
-
-class ConfirmAllEditorsAreSaved(object):
-
-    def __init__(self, callback):
-        self.callback = callback
-
-    def __call__(self, context):
-        fileeditor = context.get_active_editor()
-        editors = context.get_core().get_editor_manager().editors
-        is_modified = False
-        for editor in editors:
-            if editor.get_editor().is_modified():
-                is_modified = True
-                break
-        if not is_modified:
-            return self.callback(context)
-        toplevel = Tkinter.Toplevel()
-        toplevel.title('Save All')
-        frame = Tkinter.Frame(toplevel)
-        label = Tkinter.Label(frame, text='All editors should be saved before refactorings.')
-        label.grid(row=0, column=0, columnspan=2)
-        def ok(event=None):
-            context.get_core().save_all_editors()
-            toplevel.destroy()
-            self.callback(context)
-        def cancel(event=None):
-            toplevel.destroy()
-        ok_button = Tkinter.Button(frame, text='Save All', command=ok)
-        cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-        ok_button.grid(row=1, column=0)
-        toplevel.bind('<Return>', lambda event: ok())
-        toplevel.bind('<Escape>', lambda event: cancel())
-        toplevel.bind('<Control-g>', lambda event: cancel())
-        cancel_button.grid(row=1, column=1)
-        frame.grid()
-        ok_button.focus_set()
 
 
 class PreviewAndCommitChanges(object):
@@ -253,43 +217,6 @@ class IntroduceFactoryDialog(RefactoringDialog):
 
 def introduce_factory(context):
     IntroduceFactoryDialog(context).show()
-
-def _confirm_action(title, message, action):
-    toplevel = Tkinter.Toplevel()
-    toplevel.title(title)
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text=message)
-    label.grid(row=0, column=0, columnspan=2)
-    def ok(event=None):
-        action()
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-    ok_button = Tkinter.Button(frame, text='OK', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    toplevel.bind('<Return>', lambda event: ok())
-    toplevel.bind('<Escape>', lambda event: cancel())
-    toplevel.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    ok_button.focus_set()
-
-def undo_refactoring(context):
-    if context.project:
-        def undo():
-            context.project.history.undo()
-        _confirm_action('Undoing Refactoring',
-                        'Undo refactoring might change many files. Proceed?',
-                        undo)
-def redo_refactoring(context):
-    if context.project:
-        def redo():
-            context.project.history.redo()
-        _confirm_action('Redoing Refactoring',
-                        'Redo refactoring might change many files. Proceed?',
-                        redo)
-
 
 class _ModuleViewHandle(TreeViewHandle):
 
@@ -723,12 +650,6 @@ actions.append(SimpleAction('Handle Long Imports',
                             ConfirmAllEditorsAreSaved(handle_long_imports), None,
                             MenuAddress(['Refactor', 'Handle Long Imports'], None, 2),
                             ['python']))
-actions.append(SimpleAction('Undo Refactoring',
-                            ConfirmAllEditorsAreSaved(undo_refactoring), None,
-                            MenuAddress(['Refactor', 'Undo Refactoring'], 'u', 3), ['python']))
-actions.append(SimpleAction('Undo Last Refactoring',
-                            ConfirmAllEditorsAreSaved(redo_refactoring), None,
-                            MenuAddress(['Refactor', 'Redo Refactoring'], 'd', 3), ['python']))
 
 core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Refactor'], 't'), ['python'])

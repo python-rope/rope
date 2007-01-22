@@ -1,6 +1,6 @@
 import rope.base.pyobjects
-from rope.base.exceptions import (ModuleNotFoundException,
-                                  AttributeNotFoundException)
+from rope.base.exceptions import (ModuleNotFoundError,
+                                  AttributeNotFoundError)
 
 
 class PyName(object):
@@ -37,7 +37,7 @@ class AssignedName(PyName):
 
     def get_object(self):
         if self.is_being_inferred:
-            raise rope.base.pyobjects.IsBeingInferredException('Circular assignments')
+            raise rope.base.pyobjects.IsBeingInferredError('Circular assignments')
         if self.pyobject.get() is None and self.module is not None:
             self.is_being_inferred = True
             try:
@@ -104,7 +104,8 @@ class ParameterName(PyName):
 
 class ImportedModule(PyName):
 
-    def __init__(self, importing_module, module_name=None, level=0, resource=None):
+    def __init__(self, importing_module, module_name=None,
+                 level=0, resource=None):
         self.importing_module = importing_module
         self.module_name = module_name
         self.level = level
@@ -122,23 +123,26 @@ class ImportedModule(PyName):
             pycore = self.importing_module.pycore
             if self.resource is not None:
                 self.pymodule.set(pycore.resource_to_pyobject(self.resource))
+                self.pymodule.get()._add_dependant(self.importing_module)
             elif self.module_name is not None:
                 try:
                     if self.level == 0:
-                        self.pymodule.set(pycore.get_module(self.module_name,
-                                                            self._get_current_folder()))
+                        self.pymodule.set(
+                            pycore.get_module(self.module_name,
+                                              self._get_current_folder()))
                     else:
-                        self.pymodule.set(pycore.get_relative_module(self.module_name,
-                                                                     self._get_current_folder(),
-                                                                     self.level))
-                    self.pymodule.get()._add_dependant(self.importing_module)
-                except ModuleNotFoundException:
+                        self.pymodule.set(pycore.get_relative_module(
+                                          self.module_name,
+                                          self._get_current_folder(),
+                                          self.level))
+                except ModuleNotFoundError:
                     pass
         return self.pymodule.get()
 
     def get_object(self):
         if self._get_pymodule() is None:
-            return rope.base.pyobjects.PyObject(rope.base.pyobjects.get_base_type('Unknown'))
+            return rope.base.pyobjects.PyObject(
+                rope.base.pyobjects.get_base_type('Unknown'))
         return self._get_pymodule()
 
     def get_definition_location(self):
@@ -159,7 +163,7 @@ class ImportedName(PyName):
             try:
                 self.imported_pyname.set(self.imported_module.get_object()\
                                          .get_attribute(self.imported_name))
-            except AttributeNotFoundException:
+            except AttributeNotFoundError:
                 pass
         if self.imported_pyname.get() is None:
             self.imported_pyname.set(AssignedName())

@@ -19,7 +19,7 @@ class StatementEvaluator(object):
         if pyname is not None:
             try:
                 self.result = pyname.get_object().get_attribute(node.attrname)
-            except rope.base.exceptions.AttributeNotFoundException:
+            except rope.base.exceptions.AttributeNotFoundError:
                 self.result = None
 
     def visitCallFunc(self, node):

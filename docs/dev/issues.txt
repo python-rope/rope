@@ -70,7 +70,6 @@ Hot Topics
 ==========
 
 * `Local History`_
-* `Removing PythonRefactoring facade`_
 
 
 To Be Discussed
@@ -115,65 +114,6 @@ Each project change consists of a few basic changes.
 * create file
 * create folder
 * remove resource
-
-A sample implementation is::
-
-  class History(object):
-
-      def __init__(self):
-          self.undo_list = []
-
-      def do(self, change):
-          pass
-
-      def undo(self):
-          pass
-
-      def redo(self):
-          pass
-
-There is a big question.  Can we do this?::
-
-  change = history.get_change()
-  change.undo()
-
-Or maybe this::
-
-  change = history.get_change()
-  history.do(change)
-  history.undo(change)
-  history.redo(change)
-
-Now what if we call undo with a change that is not done, yet.  Another
-problem is how to gain undo information before committing.
-
-Changes should be changed not to use `Resource` operations since
-resource operations should be undoable themselves.
-
-We can move all file related operations in one place.  The operations
-include:
-
-* write file
-* move resource
-* create file
-* create folder
-* remove resource
-
-
-Removing `PythonRefactoring` Facade
-===================================
-
-If we remove `PythonRefactoring`, we need a place for storing
-refactoring undo information.  We can move it either to projects or
-ask the UI for handling its undo information.  The former is discussed
-in `Local History`_ section.
-
-* Changing uses of `PythonRefactoring` to use `rope.refactor` modules
-* Adding a place for saving undo information
-* Documenting the refactorings `rope.refactor` submodules provide
-* Updating references to `PythonRefactoring` and
-  `PyCore.get_refactoring` to use the new objects.
-* Managing `importutils` actions
 
 
 Rope's Preference System
@@ -396,14 +336,6 @@ Designing Refactorings to Be Used in IDEs
 * Making adding new refactorings easier
 
 
-Decisions to Make
------------------
-
-* Unifying refactoring interfaces
-* Introducing factories for refactorings;
-  Reduce the dependence to `rope.refactor` modules
-
-
 A Common Refactoring Interface
 ------------------------------
 
@@ -433,17 +365,6 @@ Finding Available Refactorings
 
 The question we need to answer before proceeding is to decide
 whether this belongs to UI or core.
-
-
-Making Adding New Refactorings Easier
--------------------------------------
-
-Adding a new refactoring requires changing `Refactoring` facade and
-Adding the new refactoring class.  Duplications:
-
-* Duplicate parameters
-* We have the same refactoring class for inlines, extracts and
-  renames but we have to call their constructors separately.
 
 
 Moving Fields/Methods
@@ -495,16 +416,18 @@ Currently rope's object inference mechanisms are simple and there are
 many situations that they are of no use:
 
 * A simple dynamic type inference saves the return types of methods
+  based on their parameters
 * We use a simple static type inference that:
 
   * Follows assignments
   * Checks the returned ASTs
   * Uses method return value and parameter information gained by DOI
+  * Supports builtin types and containers in a limited way
 
 We are very interested in supporting:
 
-* Builtin types
 * Implicit interfaces
+* Better support for container types based on insertions to them
 
 Possible alternatives:
 
@@ -605,12 +528,11 @@ Well, it depends on the type of the objects that is returned.  If it
 is an instance of a class then only the type matters.  If it is a
 function, module or class then the object is important.
 
-Indeed you should make some difference between the objects that we
+Indeed we should make some difference between the objects that we
 only care about their types and the objects that their individual
-characters is important to us.  Right now the latter group contains
-only functions, classes and modules but this list will probably be
-extended when we start holding information for individual objects like
-lists and dicts.
+instance is important to us.  Right now the latter group contains
+only functions, classes, modules, lists, dicts and sets but this
+list will be probably extended.
 
 
 Python's Implicit Interfaces

@@ -141,10 +141,11 @@ class CodeAssistTest(unittest.TestCase):
         code = 'class C(object):\n    my_var = 20\n' \
                '    def f(self):\n        a = 20\n        my_'
         result = self.assist.assist(code, len(code))
-        self.assert_completion_not_in_result('my_var', 'attribute', result)
+        self.assert_completion_not_in_result('my_var', 'local', result)
 
     def test_nested_functions(self):
-        code = "def my_func():\n    func_var = 20\n    def inner_func():\n        a = 20\n        func"
+        code = 'def my_func():\n    func_var = 20\n    ' \
+               'def inner_func():\n        a = 20\n        func'
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('func_var', 'local', result)
 

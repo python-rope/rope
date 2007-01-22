@@ -46,8 +46,8 @@ M-c            capitalize word
 M-u            upcase word
 C-s            start searching
 C-q            last edit location
-C-x C-u        undo
-C-x C-r        redo
+C-x u          undo editing
+C-x r          redo editing
 C-space        set mark
 C-w            cut region
 M-w            copy region
@@ -55,6 +55,8 @@ C-x C-x        swap mark and insert
 C-y            paste
 C-x C-s        save
 C-x s          save all
+C-x U          undo project change
+C-x R          redo project change
 -------------  --------------------------
 M-/            code-assist(auto-complete)
 F3             go to definition location
@@ -314,6 +316,33 @@ the parameter `param` of `f1`.
 
 After running `mod2` module using rope's `Run Module`, we get good
 code assists in `mod1`.
+
+
+Sorting Imports
+---------------
+
+Organize imports now sorts imports, too.  It will sort imports
+according to :PEP:`8`::
+
+  [standard imports]
+
+  [third-party imports]
+
+  [project imports]
+
+
+  [the rest of module]
+
+
+Handling Long Imports
+---------------------
+
+"Handle long imports" command trys to make long imports look better by
+transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to ``from
+pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
+either by having lots of dots or being very long.  The default
+configuration considers imported modules with more than 2 dots or with
+length more than 27 characters to be long.
 
 
 Outline

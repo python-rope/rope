@@ -110,6 +110,3 @@ Stories
 
 
 * ``global`` keyword issues for pycore
-
-
-* Undoing everything

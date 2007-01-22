@@ -3,7 +3,7 @@ from Tkinter import *
 import rope.base.exceptions
 
 
-class StatusBarException(rope.base.exceptions.RopeUIException):
+class StatusBarException(rope.base.exceptions.RopeUIError):
     pass
 
 

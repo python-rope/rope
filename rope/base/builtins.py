@@ -323,7 +323,7 @@ def _infer_sequence_type(seq):
     if '__iter__' in seq.get_attributes():
         iter = seq.get_attribute('__iter__').get_object().\
                get_returned_object()
-        if 'next' in iter.get_attributes():
+        if iter is not None and 'next' in iter.get_attributes():
             holding = iter.get_attribute('next').get_object().\
                       get_returned_object()
             return holding

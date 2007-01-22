@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from rope.ui.core import Core, RopeException
+from rope.ui.core import Core, RopeError
 from ropetest import testutils
 
 
@@ -49,7 +49,7 @@ class CoreTest(unittest.TestCase):
         try:
             Core.get_core().open_file(self.sample_file2)
             self.fail('Should have thrown exception; file doesn\'t exist')
-        except RopeException:
+        except RopeError:
             pass
 
     def test_making_new_files(self):
@@ -61,7 +61,7 @@ class CoreTest(unittest.TestCase):
         try:
             editor = Core.get_core().create_file(self.sample_file)
             self.fail('Show have throws exception; file already exists')
-        except RopeException:
+        except RopeError:
             pass
 
     def test_creating_folders(self):

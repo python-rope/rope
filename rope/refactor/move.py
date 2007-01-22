@@ -17,7 +17,7 @@ class MoveRefactoring(object):
             self.pyname = rope.base.codeanalyze.get_pyname_at(
                 self.pycore, resource, offset)
             if self.pyname is None:
-                raise rope.base.exceptions.RefactoringException(
+                raise rope.base.exceptions.RefactoringError(
                     'Move works on classes,functions or modules.')
         else:
             if not resource.is_folder() and resource.name == '__init__.py':
@@ -78,7 +78,7 @@ class _Mover(object):
                        self.old_pyname.get_object():
                         self.changed = True
                         return False
-                except rope.base.exceptions.AttributeNotFoundException:
+                except rope.base.exceptions.AttributeNotFoundError:
                     pass
                 return True
         can_select = CanSelect()
@@ -120,14 +120,14 @@ class _GlobalMover(_Mover):
     def _check_exceptional_conditions(self):
         if self.old_pyname is None or \
            not isinstance(self.old_pyname.get_object(), rope.base.pyobjects.PyDefinedObject):
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Move refactoring should be performed on a class/function.')
         moving_pyobject = self.old_pyname.get_object()
         if not self._is_global(moving_pyobject):
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Move refactoring should be performed on a global class/function.')
         if self.destination.is_folder():
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Move destination for non-modules should not be folders.')
 
     def _is_global(self, pyobject):
@@ -273,7 +273,7 @@ class _ModuleMover(_Mover):
     def _check_exceptional_conditions(self):
         moving_pyobject = self.old_pyname.get_object()
         if not self.destination.is_folder():
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Move destination for modules should be packages.')
 
     def move(self):

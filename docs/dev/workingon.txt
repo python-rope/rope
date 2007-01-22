@@ -1,16 +1,12 @@
 Project History
 ===============
 
-- Renaming `Resource.get_path()` to `Resource.path`
-- Returning None from builtin:312 and builtins:292
-- None variable inline:41 inline:26 refactor:633
-- Renaming `Resource.get_name()` to `Resource.name`
-- Renaming `Resource.get_parent()` to `Resource.parent`
-
-* Limiting the number of changes in the undo list
-* Undo/redo list underflow
-* Showing the description of a change when undoing/redoing
-* Separating undos; Editing history and file history
+- Undo/redo list underflow
+- Limiting the number of changes in the undo list
+- Not proposing class variable in methods as local variables
+- Separating undos; Editing history and file history
+- Fixed an old defect for invalidating resources in `PyCore`
+- Showing the description of a change when undoing/redoing
 
 * Adding imports eats the blank lines after it
 * Moving `rope.refactor.change` to `rope.base`

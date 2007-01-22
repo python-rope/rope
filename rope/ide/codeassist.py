@@ -4,14 +4,14 @@ import sys
 
 import rope.base.codeanalyze
 import rope.base.pyobjects
-from rope.base.exceptions import RopeException
+from rope.base.exceptions import RopeError
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
                                    SourceLinesAdapter)
 from rope.refactor import occurrences
 
 
-class RopeSyntaxError(RopeException):
+class RopeSyntaxError(RopeError):
     pass
 
 
@@ -185,10 +185,15 @@ class _CodeCompletionCollector(object):
                         name, 'attribute', self._get_pyname_type(pyname))
         return result
 
-    def _get_undotted_completions(self, scope, result):
+    def _get_undotted_completions(self, scope, result, propagated=False):
         if scope.parent != None:
-            self._get_undotted_completions(scope.parent, result)
-        for name, pyname in scope.get_names().iteritems():
+            self._get_undotted_completions(scope.parent, result,
+                                           propagated=True)
+        if propagated:
+            names = scope.get_propagated_names()
+        else:
+            names = scope.get_names()
+        for name, pyname in names.iteritems():
             if name.startswith(self.starting):
                 kind = 'local'
                 if scope.get_kind() == 'Module':
@@ -297,8 +302,10 @@ class PythonCodeAssist(object):
         if offset > len(source_code):
             return Proposals()
         word_finder = WordRangeFinder(source_code)
-        expression, starting, starting_offset = word_finder.get_splitted_primary_before(offset)
-        completions = self._get_code_completions(source_code, offset, expression, starting, resource)
+        expression, starting, starting_offset = \
+            word_finder.get_splitted_primary_before(offset)
+        completions = self._get_code_completions(
+            source_code, offset, expression, starting, resource)
         templates = []
         if expression.strip() == '' and starting.strip() != '':
             completions.update(self._get_matching_builtins(starting))

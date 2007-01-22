@@ -19,7 +19,7 @@ class IntroduceFactoryRefactoring(object):
             rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.old_pyname is None or \
            self.old_pyname.get_object().get_type() != rope.base.pyobjects.get_base_type('Type'):
-            raise rope.base.exceptions.RefactoringException(
+            raise rope.base.exceptions.RefactoringError(
                 'Introduce factory should be performed on a class.')
         self.old_name = self.old_pyname.get_object()._get_ast().name
         self.pymodule = self.old_pyname.get_object().get_module()
@@ -60,7 +60,7 @@ class IntroduceFactoryRefactoring(object):
                             factory_name, global_factory):
         if global_factory:
             if self._get_scope_indents(lines, class_scope) > 0:
-                raise rope.base.exceptions.RefactoringException(
+                raise rope.base.exceptions.RefactoringError(
                     'Cannot make global factory method for nested classes.')
             return ('\ndef %s(*args, **kwds):\n    return %s(*args, **kwds)\n' %
                     (factory_name, self.old_name))

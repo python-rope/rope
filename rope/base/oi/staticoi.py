@@ -26,7 +26,7 @@ class StaticObjectInference(object):
             if pyobject is None:
                 return None
             return self._infer_assignment_object(assignment, pyobject)
-        except pyobjects.IsBeingInferredException:
+        except pyobjects.IsBeingInferredError:
             pass
 
     def _infer_assignment_object(self, assignment, pyobject):
@@ -52,7 +52,7 @@ class StaticObjectInference(object):
                    holding_scope.get_kind() == 'Class':
                     return result.get_type().get_property_object()
                 return result
-        except pyobjects.IsBeingInferredException:
+        except pyobjects.IsBeingInferredError:
             pass
 
 
@@ -83,7 +83,7 @@ class StaticObjectInference(object):
                 if resulting_pyname is None:
                     return None
                 return resulting_pyname.get_object()
-            except pyobjects.IsBeingInferredException:
+            except pyobjects.IsBeingInferredError:
                 pass
 
     def infer_parameter_objects(self, pyobject):
