@@ -107,6 +107,3 @@ Stories
 
 
 * Commanding buffer
-
-
-* ``global`` keyword issues for pycore

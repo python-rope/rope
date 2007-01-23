@@ -39,28 +39,34 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('new_var = 20\n', refactored)
 
     def test_variable_renaming_only_in_its_scope(self):
-        refactored = self._local_rename('a_var = 20\ndef a_func():\n    a_var = 10\n',
-                                          32, 'new_var')
-        self.assertEquals('a_var = 20\ndef a_func():\n    new_var = 10\n', refactored)
+        refactored = self._local_rename(
+            'a_var = 20\ndef a_func():\n    a_var = 10\n', 32, 'new_var')
+        self.assertEquals('a_var = 20\ndef a_func():\n    new_var = 10\n',
+                          refactored)
 
     def test_not_renaming_dot_name(self):
-        refactored = self._local_rename("replace = True\n'aaa'.replace('a', 'b')\n", 1, 'new_var')
+        refactored = self._local_rename(
+            "replace = True\n'aaa'.replace('a', 'b')\n", 1, 'new_var')
         self.assertEquals("new_var = True\n'aaa'.replace('a', 'b')\n", refactored)
 
     def test_renaming_multiple_names_in_the_same_line(self):
-        refactored = self._local_rename('a_var = 10\na_var = 10 + a_var / 2\n', 2, 'new_var')
+        refactored = self._local_rename(
+            'a_var = 10\na_var = 10 + a_var / 2\n', 2, 'new_var')
         self.assertEquals('new_var = 10\nnew_var = 10 + new_var / 2\n', refactored)
 
     def test_renaming_names_when_getting_some_attribute(self):
-        refactored = self._local_rename("a_var = 'a b c'\na_var.split('\\n')\n", 2, 'new_var')
+        refactored = self._local_rename(
+            "a_var = 'a b c'\na_var.split('\\n')\n", 2, 'new_var')
         self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n", refactored)
 
     def test_renaming_names_when_getting_some_attribute2(self):
-        refactored = self._local_rename("a_var = 'a b c'\na_var.split('\\n')\n", 20, 'new_var')
+        refactored = self._local_rename(
+            "a_var = 'a b c'\na_var.split('\\n')\n", 20, 'new_var')
         self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n", refactored)
 
     def test_renaming_function_parameters1(self):
-        refactored = self._local_rename("def f(a_param):\n    print a_param\n", 8, 'new_param')
+        refactored = self._local_rename(
+            "def f(a_param):\n    print a_param\n", 8, 'new_param')
         self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
 
     def test_renaming_function_parameters2(self):
@@ -384,6 +390,21 @@ class RenameRefactoringTest(unittest.TestCase):
         renamer = rename.RenameRefactoring(self.project, pkg.get_child('__init__.py'))
         renamer.get_changes('newpkg').do()
         self.assertEquals('import newpkg\nmy_pkg = newpkg', mod1.read())
+
+    def test_renaming_global_variables(self):
+        code = 'a_var = 1\ndef a_func():\n    global a_var\n    var = a_var\n'
+        refactored = self._local_rename(code, code.index('a_var'), 'new_var')
+        self.assertEquals(
+            'new_var = 1\ndef a_func():\n    global new_var\n    var = new_var\n',
+            refactored)
+
+    def test_renaming_global_variables2(self):
+        code = 'a_var = 1\ndef a_func():\n    global a_var\n    var = a_var\n'
+        refactored = self._local_rename(code, code.rindex('a_var'), 'new_var')
+        self.assertEquals(
+            'new_var = 1\ndef a_func():\n    global new_var\n    var = new_var\n',
+            refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,7 +2,7 @@ import rope.base.codeanalyze
 from rope.refactor import occurrences
 
 from rope.refactor import sourceutils
-from rope.refactor.change import ChangeSet, ChangeContents
+from rope.base.change import ChangeSet, ChangeContents
 
 
 class EncapsulateFieldRefactoring(object):

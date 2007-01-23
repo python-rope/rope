@@ -437,15 +437,18 @@ class _ScopeVisitor(object):
             module_name, alias = import_pair
             first_package = module_name.split('.')[0]
             if alias is not None:
-                self.names[alias] = ImportedModule(self.get_module(), module_name)
+                self.names[alias] = ImportedModule(self.get_module(),
+                                                   module_name)
             else:
-                self.names[first_package] = ImportedModule(self.get_module(), first_package)
+                self.names[first_package] = ImportedModule(self.get_module(),
+                                                           first_package)
 
     def visitFrom(self, node):
         level = 0
         if hasattr(node, 'level'):
             level = node.level
-        imported_module = ImportedModule(self.get_module(), node.modname, level)
+        imported_module = ImportedModule(self.get_module(),
+                                         node.modname, level)
         if node.names[0][0] == '*':
             self.owner_object.star_imports.append(StarImport(imported_module))
         else:
@@ -454,6 +457,16 @@ class _ScopeVisitor(object):
                 if alias is not None:
                     imported = alias
                 self.names[imported] = ImportedName(imported_module, name)
+
+    def visitGlobal(self, node):
+        module = self.get_module()
+        for name in node.names:
+            if module is not None:
+                try:
+                    pyname = module.get_attribute(name)
+                except AttributeNotFoundError:
+                    pyname = pynames.AssignedName(node.lineno)
+            self.names[name] = pyname
 
 
 class _GlobalVisitor(_ScopeVisitor):

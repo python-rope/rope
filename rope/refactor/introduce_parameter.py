@@ -1,9 +1,6 @@
-from rope.refactor import functionutils
-from rope.base import codeanalyze
-from rope.refactor import sourceutils
-from rope.refactor import occurrences
-from rope.refactor import change
-from rope.base import exceptions
+import rope.base.change
+from rope.base import codeanalyze, exceptions
+from rope.refactor import functionutils, sourceutils, occurrences
 
 
 class IntroduceParameter(object):
@@ -36,8 +33,8 @@ class IntroduceParameter(object):
         change_collector.add_change(start, header_end, definition_info.to_string())
         self._change_function_occurances(change_collector, header_end,
                                          end, new_parameter)
-        changes = change.ChangeSet('Introduce parameter <%s>' % new_parameter)
-        changes.add_change(change.ChangeContents(self.resource,
+        changes = rope.base.change.ChangeSet('Introduce parameter <%s>' % new_parameter)
+        changes.add_change(rope.base.change.ChangeContents(self.resource,
                                                  change_collector.get_changed()))
         return changes
 

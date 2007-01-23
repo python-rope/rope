@@ -3,6 +3,9 @@
 ===========
 
 
+- Handling ``global`` keywords : January 22, 2007
+
+
 - Undoing everything; Project history : January 21, 2007
 
 

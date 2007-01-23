@@ -1,11 +1,8 @@
 import rope.base.codeanalyze
 import rope.base.exceptions
 import rope.base.pyobjects
-from rope.refactor import importutils
-from rope.refactor import rename
-from rope.refactor import occurrences
-from rope.refactor.change import (ChangeSet, ChangeContents,
-                                  MoveResource, CreateFolder)
+from rope.base.change import ChangeSet, ChangeContents, MoveResource
+from rope.refactor import importutils, rename, occurrences
 
 
 class MoveRefactoring(object):

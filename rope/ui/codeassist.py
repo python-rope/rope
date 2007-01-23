@@ -91,8 +91,9 @@ def do_code_assist(context):
         editor.get_text(), editor.get_current_offset(), context.resource)
     toplevel = Tkinter.Toplevel()
     toplevel.title('Code Assist Proposals')
-    enhanced_list = EnhancedList(toplevel, _CompletionListHandle(editor, toplevel, result),
-                                 title='Code Assist Proposals')
+    enhanced_list = EnhancedList(
+        toplevel, _CompletionListHandle(editor, toplevel, result),
+        title='Code Assist Proposals')
     proposals = rope.ide.codeassist.ProposalSorter(result).get_sorted_proposal_list()
     for proposal in proposals:
         enhanced_list.add_entry(proposal)

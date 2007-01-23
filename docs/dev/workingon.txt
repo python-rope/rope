@@ -1,15 +1,10 @@
-Project History
-===============
+Remaining Small Stories
+=======================
 
-- Undo/redo list underflow
-- Limiting the number of changes in the undo list
-- Not proposing class variable in methods as local variables
-- Separating undos; Editing history and file history
-- Fixed an old defect for invalidating resources in `PyCore`
-- Showing the description of a change when undoing/redoing
+- Moving `rope.refactor.change` to `rope.base`
+- Handling ``global`` keyword
 
 * Adding imports eats the blank lines after it
-* Moving `rope.refactor.change` to `rope.base`
 
 
 Remaining Small Stories

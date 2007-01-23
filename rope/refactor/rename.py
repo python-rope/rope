@@ -3,7 +3,7 @@ import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.refactor import occurrences, sourceutils
-from rope.refactor.change import ChangeSet, ChangeContents, MoveResource
+from rope.base.change import ChangeSet, ChangeContents, MoveResource
 
 
 class RenameRefactoring(object):
@@ -23,7 +23,8 @@ class RenameRefactoring(object):
             if not resource.is_folder() and resource.name == '__init__.py':
                 resource = resource.parent
             dummy_pymodule = self.pycore.get_string_module('')
-            self.old_pyname = rope.base.pynames.ImportedModule(dummy_pymodule, resource=resource)
+            self.old_pyname = rope.base.pynames.ImportedModule(
+                dummy_pymodule, resource=resource)
             if resource.is_folder():
                 self.old_name = resource.name
             else:
@@ -36,8 +37,6 @@ class RenameRefactoring(object):
         old_pynames = self._get_old_pynames(in_file)
         if not old_pynames:
             return None
-        # HACK: Do a local rename for names defined in function scopes.
-        # XXX: This might cause problems for global keyword usages.
         if not in_file and len(old_pynames) == 1 and \
            self._is_renaming_a_function_local_name():
             in_file = True
@@ -97,7 +96,8 @@ class RenameRefactoring(object):
         result = set()
         for superclass in pyclass.get_superclasses():
             if attr_name in superclass.get_attributes():
-                result.update(self._get_superclasses_defining_method(superclass, attr_name))
+                result.update(self._get_superclasses_defining_method(
+                              superclass, attr_name))
         if not result:
             return set([pyclass])
         return result
@@ -105,14 +105,17 @@ class RenameRefactoring(object):
     def _get_all_methods_in_subclasses(self, pyclass, attr_name):
         result = set([pyclass.get_attribute(attr_name)])
         for subclass in self.pycore.get_subclasses(pyclass):
-            result.update(self._get_all_methods_in_subclasses(subclass, attr_name))
+            result.update(self._get_all_methods_in_subclasses(subclass,
+                                                              attr_name))
         return result
 
     def _get_all_methods_in_hierarchy(self, pyclass, attr_name):
-        superclasses = self._get_superclasses_defining_method(pyclass, attr_name)
+        superclasses = self._get_superclasses_defining_method(pyclass,
+                                                              attr_name)
         methods = set()
         for superclass in superclasses:
-            methods.update(self._get_all_methods_in_subclasses(superclass, attr_name))
+            methods.update(self._get_all_methods_in_subclasses(
+                           superclass, attr_name))
         return methods
 
     def _rename_module(self, pyobject, new_name):

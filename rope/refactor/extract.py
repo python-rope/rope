@@ -5,7 +5,7 @@ import rope.base.pyobjects
 from rope.base import codeanalyze
 from rope.base.exceptions import RefactoringError
 from rope.refactor import sourceutils
-from rope.refactor.change import ChangeSet, ChangeContents
+from rope.base.change import ChangeSet, ChangeContents
 
 
 class _ExtractRefactoring(object):

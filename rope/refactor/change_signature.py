@@ -5,7 +5,7 @@ import rope.base.exceptions
 import rope.base.pyobjects
 from rope.base import codeanalyze
 from rope.refactor import sourceutils, functionutils
-from rope.refactor.change import ChangeContents, ChangeSet
+from rope.base.change import ChangeContents, ChangeSet
 
 
 class ChangeSignature(object):

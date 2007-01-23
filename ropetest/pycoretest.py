@@ -410,6 +410,14 @@ class PyCoreTest(unittest.TestCase):
         mod.write(contents)
         self.pycore.get_module('mod')
 
+    def test_file_encoding_reading(self):
+        contents = 'a_var = 1\ndef a_func():\n    global a_var\n'
+        mod = self.pycore.get_string_module(contents)
+        global_var = mod.get_attribute('a_var')
+        func_scope = mod.get_attribute('a_func').get_object().get_scope()
+        local_var = func_scope.get_name('a_var')
+        self.assertEquals(global_var, local_var)
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 

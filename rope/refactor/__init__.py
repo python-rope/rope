@@ -43,7 +43,7 @@ a refactoring.  These are the things an IDE does in each step:
 
 """
 import rope.refactor.importutils
-from rope.refactor.change import ChangeSet, ChangeContents, MoveResource, CreateFolder
+from rope.base.change import ChangeSet, ChangeContents, MoveResource, CreateFolder
 from rope.refactor.importutils import module_imports
 
 

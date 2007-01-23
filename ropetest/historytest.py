@@ -2,7 +2,7 @@ import unittest
 
 import rope.base.history
 from rope.base import exceptions, project
-from rope.refactor.change import *
+from rope.base.change import *
 from ropetest import testutils
 
 

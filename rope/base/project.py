@@ -1,10 +1,10 @@
 import os
 
+import rope.base.change
 import rope.base.fscommands
-import rope.base.pycore
 import rope.base.history
+import rope.base.pycore
 from rope.base.exceptions import RopeError
-from rope.refactor import change
 
 
 class _Project(object):
@@ -13,7 +13,7 @@ class _Project(object):
         self.observers = set()
         self.file_access = rope.base.fscommands.FileAccess()
         self._history = rope.base.history.History(maxundos=100)
-        self.operations = change._ResourceOperations(self, fscommands)
+        self.operations = rope.base.change._ResourceOperations(self, fscommands)
 
     def get_resource(self, resource_name):
         """Get a resource in a project.
@@ -142,12 +142,12 @@ class Resource(object):
 
     def move(self, new_location):
         """Move resource to `new_location`"""
-        self._perform_change(change.MoveResource(self, new_location),
+        self._perform_change(rope.base.change.MoveResource(self, new_location),
                              'Moving <%s> to <%s>' % (self.path, new_location))
 
     def remove(self):
         """Remove resource from the project"""
-        self._perform_change(change.RemoveResource(self),
+        self._perform_change(rope.base.change.RemoveResource(self),
                              'Removing <%s>' % self.path)
 
     def is_folder(self):
@@ -197,7 +197,7 @@ class Resource(object):
         return hash(self.path)
 
     def _perform_change(self, change_, description):
-        changes = change.ChangeSet(description)
+        changes = rope.base.change.ChangeSet(description)
         changes.add_change(change_)
         self.project.do(changes)
 
@@ -212,7 +212,7 @@ class File(Resource):
         return self.project.file_access.read(self.real_path)
 
     def write(self, contents):
-        self._perform_change(change.ChangeContents(self, contents),
+        self._perform_change(rope.base.change.ChangeContents(self, contents),
                              'Writing file <%s>' % self.path)
 
     def is_folder(self):
@@ -245,13 +245,13 @@ class Folder(Resource):
 
     def create_file(self, file_name):
         self._perform_change(
-            change.CreateFile(self, file_name),
+            rope.base.change.CreateFile(self, file_name),
             'Creating file <%s>' % (self.path + '/' + file_name))
         return self.get_child(file_name)
 
     def create_folder(self, folder_name):
         self._perform_change(
-            change.CreateFolder(self, folder_name),
+            rope.base.change.CreateFolder(self, folder_name),
             'Creating golder <%s>' % (self.path + '/' + folder_name))
         return self.get_child(folder_name)
 
