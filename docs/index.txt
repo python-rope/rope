@@ -59,7 +59,7 @@ Features implemented so far:
 
   * Global and local variables and imports
   * Builtins and keywords
-  * Attributes of objects with known type
+  * Attributes of objects with known types
 
 * Editing and IDE tools
 

@@ -103,7 +103,7 @@ Stories
 * Saving preferences
 
 
-> Public Release 0.4rc1 : January 28, 2007
-
-
 * Commanding buffer
+
+
+> Public Release 0.4rc1 : January 28, 2007

@@ -11,8 +11,8 @@ import rope.refactor.move
 import rope.refactor.rename
 import rope.ui.core
 from rope.refactor import ImportOrganizer
-from rope.ui.extension import SimpleAction
 from rope.ui.actionhelpers import ConfirmAllEditorsAreSaved
+from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView,
                                DescriptionList, EnhancedListHandle,
@@ -568,7 +568,7 @@ def encapsulate_field(context):
         editor = fileeditor.get_editor()
         changes = rope.refactor.encapsulate_field.EncapsulateFieldRefactoring(
             context.project, resource, editor.get_current_offset()).get_changes()
-        context.project.do(context)
+        context.project.do(changes)
 
 
 def convert_local_to_field(context):
@@ -579,7 +579,7 @@ def convert_local_to_field(context):
         changes = rope.refactor.localtofield.ConvertLocalToFieldRefactoring(
             context.project, resource,
             editor.get_current_offset()).get_changes()
-        context.project.do(context)
+        context.project.do(changes)
 
 
 actions = []

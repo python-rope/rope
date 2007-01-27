@@ -10,20 +10,22 @@ Overview
 Right now most of rope's development efforts are toward developing
 core parts and not the UI.  Because of this UI parts don't look very
 user friendly and there is no documentation or help for the UI
-parts.  This tutorial tries to demonstrate how to use rope for basic
-programming tasks.  This tutorial attempts to give a fast overview of
-rope and some of its basic features.
+parts.  For this reason I think the best way for learning more about
+rope is using it and trying its menu items.
 
-For finding more about rope features and keybinding have a look at
-`README.txt`_ file.
-
-.. _README.txt: ../README.txt
+This tutorial merely tries to demonstrate how to use rope for basic
+editing tasks.  This tutorial attempts to give a fast overview of
+rope and some of its basic features.  It covers things like opening
+projects, creating and editing files.  Read `where to go next`_
+section for more information.
 
 
 Starting Rope
 =============
 
-Simply run the rope.py included in the root of the package.
+Simply run the ``rope.py`` included in the root of the package::
+
+  python rope.py
 
 
 Creating And Opening Projects
@@ -122,7 +124,7 @@ between open editors you can use ``C-x b``.
 Closing An Editor
 =================
 
-Use ``C-x k`` to close the active editor.
+Use ``C-x k`` to close active editor.
 
 
 Emacs Keybindings
@@ -131,6 +133,7 @@ Emacs Keybindings
 *rope* uses emacs keybindings most of the time.  For example in most of
 the dialogs like ``code assist`` or ``outline`` you can use ``C-n``
 and ``C-p`` to move over the items.
+
 
 Copying And Cutting
 -------------------
@@ -143,3 +146,54 @@ cutting.
 For pasting move the cursor to the place you want to paste and press
 ``Ctrl-y``.
 
+
+Undoing Actions
+===============
+
+Rope comes with two kinds of undo/redos.
+
+* Undo/redoing editing
+
+  You can undo/redo the editing changes using ``C-x u``/``C-x r``.
+
+* Undo/redoing project changes
+
+  Project changes are the changes made to the files in the project.
+  These changes consist of things like saving files, creating files/
+  folders and refactoring.  You can undo/redo project changes using
+  ``C-x U``/``C-x R``.
+
+
+ReStructuredText Files
+======================
+
+All ``*.txt`` files are considered to be in `ReST` format and are
+highlighted.
+
+
+Editing Python Files
+====================
+
+Rope considers all ``*.py`` files to be python files.  It highlights
+them and makes features like auto-completion, goto definition,
+show doc, quick outline, refactorings and ... available.
+
+
+Where To Go Next
+================
+
+The best way to learn about rope features is to use the features.
+Have a look and try menu items.  The default keybinding for each
+menu item is written in front of them.  For example `Code` menu
+contains the entry `Code Assist (Auto-Complete)  M-slash`.  This means
+you can use rope's auto-complete feature by pressing `alt` and
+`/` keys.  Note that some of the menu items disappear when you're
+not editing a file suitable for performing that action.  For example
+code assist command is only active when editing a python file.
+
+Have a look at `overview.txt`_ for an overview of some of rope's
+features.  If you really want to see what rope can do, have a
+look at the unit tests in the `ropetest` package.
+
+
+.. _overview.txt: overview.html

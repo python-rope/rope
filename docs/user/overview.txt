@@ -77,8 +77,8 @@ C-O            organize imports
 =============  ==========================
 
 
-Code Assist
-===========
+Code Assist(Auto Complete)
+==========================
 
 You can complete names as you type by using code assist (``M-/``).
 The two capital letters in the left shows the type of the proposal.
@@ -103,8 +103,10 @@ You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
 templates.  If you want to add more or edit these you can edit
 `rope.ide.codeassist.PythonCodeAssist._get_default_templates` method.
 
+
 Show PyDoc
 ----------
+
 
 Goto Definition
 ---------------
@@ -219,9 +221,29 @@ After performing extract method we'll have::
   def new_func(a, b):
       return a * 2 + b * 3
 
+For multi-line extractions if we have::
+
+  def a_func():
+      a = 1
+      ${region_start}b = 2 * a
+      c = a * 2 + b * 3${region_end}
+      print b, c
+
+After performing extract method we'll have::
+
+  def a_func():
+      a = 1
+      b, c = new_func(a)
+      print b, c
+
+  def new_func(a):
+      b = 2 * a
+      c = a * 2 + b * 3
+      return b, c
+
 
 Change Method Signature
-=======================
+-----------------------
 
 In the change method signature dialog these shortcuts work:
 
@@ -251,6 +273,33 @@ defaults, ``*args``, ``**keywords``).  Rope won't complain if you
 don't but python will.
 
 
+Sorting Imports
+---------------
+
+Organize imports now sorts imports, too.  It will sort imports
+according to :PEP:`8`::
+
+  [standard imports]
+
+  [third-party imports]
+
+  [project imports]
+
+
+  [the rest of module]
+
+
+Handling Long Imports
+---------------------
+
+"Handle long imports" command trys to make long imports look better by
+transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to ``from
+pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
+either by having lots of dots or being very long.  The default
+configuration considers imported modules with more than 2 dots or with
+length more than 27 characters to be long.
+
+
 Basic Type Inference
 ====================
 
@@ -265,7 +314,7 @@ Basic Type Inference
           return a_func()
 
   def a_func():
-      return a_func()
+      return AClass()
 
   a_var = a_func()
   a_var.${codeassist}
@@ -273,6 +322,19 @@ Basic Type Inference
   another_var = a_var
   another_var.${codeassist}
   another_var.call_a_func().${codeassist}
+
+
+Basic support for builtin types::
+
+  a_list = [AClass(), AClass()]
+  for x in a_list:
+      x.${codeassist}
+  a_list.pop().${codeassist}
+
+  a_dict = ['text': AClass()]
+  for key, value in a_dict.items():
+      key.${codeassist}
+      value.${codeassist}
 
 
 Dynamic Type Inference
@@ -318,31 +380,62 @@ After running `mod2` module using rope's `Run Module`, we get good
 code assists in `mod1`.
 
 
-Sorting Imports
----------------
+Builtin Container Types
+-----------------------
 
-Organize imports now sorts imports, too.  It will sort imports
-according to :PEP:`8`::
+Builtin types can be handled in a limited way, too::
 
-  [standard imports]
+  class A(object):
 
-  [third-party imports]
+      def a_method(self):
+          pass
 
-  [project imports]
+  def f1():
+      result = []
+      result.append(A())
+      return result
+
+  returned = f()
+  returned[0].${codeassist}
+
+Test the the proposed completions after running this module.
 
 
-  [the rest of module]
+Guessing Function Returned Value Based On Parameters
+----------------------------------------------------
+
+``mod1.py``::
+
+  class C1(object):
+
+      def c1_func(self):
+          pass
+
+  class C2(object):
+
+      def c2_func(self):
+          pass
 
 
-Handling Long Imports
----------------------
+  def func(arg):
+      if isinstance(arg, C1):
+          return C2()
+      else:
+          return C1()
 
-"Handle long imports" command trys to make long imports look better by
-transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to ``from
-pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
-either by having lots of dots or being very long.  The default
-configuration considers imported modules with more than 2 dots or with
-length more than 27 characters to be long.
+  func(C1())
+  func(C2())
+
+After running `mod1` module test rope's DOI this way:
+
+``mod2.py``::
+
+  import mod1
+
+  arg = mod1.C1()
+  a_var = mod1.func(arg)
+  a_var.${codeassist}
+  mod1.func(mod1.C2()).${codeassist}
 
 
 Outline

@@ -156,7 +156,7 @@ class Resource(object):
     def exists(self):
         return os.path.exists(self.real_path)
 
-    def get_parent(self):
+    def _get_parent(self):
         parent = '/'.join(self.path.split('/')[0:-1])
         return self.project.get_resource(parent)
 
@@ -185,7 +185,7 @@ class Resource(object):
                 return self.name
         return destination
 
-    parent = property(get_parent)
+    parent = property(_get_parent)
     name = property(_get_name)
     path = property(_get_path)
     real_path = property(_get_real_path)
@@ -212,6 +212,11 @@ class File(Resource):
         return self.project.file_access.read(self.real_path)
 
     def write(self, contents):
+        try:
+            if contents == self.read():
+                return
+        except IOError:
+            pass
         self._perform_change(rope.base.change.ChangeContents(self, contents),
                              'Writing file <%s>' % self.path)
 

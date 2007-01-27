@@ -1,15 +1,18 @@
+File History
+============
+
+- Including the changes that a dependency depends on
+- Changed folders for undoing change
+- Changed folders for dependants
+- Adding a UI dialog
+- What if the change to be undone is not in the undo_list
+- Not adding save files when the file has not been changed
+
+
 Remaining Small Stories
 =======================
-
-- Moving `rope.refactor.change` to `rope.base`
-- Handling ``global`` keyword
 
 * Adding imports eats the blank lines after it
-
-
-Remaining Small Stories
-=======================
-
 * Undoing `RemoveResource`; It's not used by refactorings
 * Lambdas as functions; consider their parameters
 * Default maxlength and maxdots for handling long imports

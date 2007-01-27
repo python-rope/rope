@@ -9,7 +9,7 @@ def do_nothing(*args, **kws):
 class EnhancedListHandle(object):
 
     def entry_to_string(self, obj):
-        return str(object)
+        return str(obj)
 
     def selected(self, obj):
         pass
@@ -91,6 +91,16 @@ class EnhancedList(object):
         self.entries = []
         self.list.delete(0, END)
 
+    def get_active_index(self):
+        selection = self.list.curselection()
+        if selection:
+            return int(selection[0])
+        return 0
+
+    def get_active_entry(self):
+        if self.entries:
+            return self.entries[self.get_active_index()]
+
 
 class VolatileList(EnhancedList):
 
@@ -113,16 +123,6 @@ class VolatileList(EnhancedList):
         result = self.entries[index]
         self.list.delete(index)
         return self.entries.pop(index)
-
-    def get_active_index(self):
-        selection = self.list.curselection()
-        if selection:
-            return int(selection[0])
-        return 0
-
-    def get_active_entry(self):
-        if self.entries:
-            return self.entries[self.get_active_index()]
 
     def get_entries(self):
         return list(self.entries)
@@ -187,6 +187,8 @@ class DescriptionList(object):
         if self.list.list.size() == 1:
             self.handle.selected(obj)
 
+    def get_selected(self):
+        return self.list.get_active_entry()
 
 class TreeViewHandle(object):
 

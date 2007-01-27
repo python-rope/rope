@@ -25,7 +25,7 @@ def suite():
     result.addTests(ropetest.objectinfertest.suite())
     result.addTests(ropetest.runmodtest.suite())
     result.addTests(unittest.makeSuite(ropetest.builtintest.BuiltinTypesTest))
-    result.addTests(unittest.makeSuite(ropetest.historytest.HistoryTest))
+    result.addTests(ropetest.historytest.suite())
     return result
 
 

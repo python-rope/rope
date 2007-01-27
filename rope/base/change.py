@@ -15,6 +15,9 @@ class Change(object):
     def get_description(self):
         return str(self)
 
+    def get_changed_resources(self):
+        return []
+
 
 class ChangeSet(Change):
 
@@ -48,7 +51,19 @@ class ChangeSet(Change):
         self.changes.append(change)
 
     def get_description(self):
+        result = self.description + ':\n\n\n' + \
+                 '\n------\n'.join([change.get_description()
+                                    for change in self.changes])
+        return result
+
+    def __str__(self):
         return self.description
+
+    def get_changed_resources(self):
+        result = set()
+        for change in self.changes:
+            result.update(change.get_changed_resources())
+        return result
 
 
 class ChangeContents(Change):
@@ -75,6 +90,9 @@ class ChangeContents(Change):
                                      self.new_content.splitlines(True)))
         return ''.join(result)
 
+    def get_changed_resources(self):
+        return [self.resource]
+
 
 class MoveResource(Change):
 
@@ -83,20 +101,24 @@ class MoveResource(Change):
         self.new_location = _get_destination_for_move(resource, new_location)
         self.old_location = resource.path
         self.operations = resource.project.operations
+        self.old_resource = resource
+        self.new_resource = None
 
     def do(self):
-        resource = self.project.get_resource(self.old_location)
-        self.operations.move(resource, self.new_location)
+        self.operations.move(self.old_resource, self.new_location)
+        self.new_resource = self.project.get_resource(self.new_location)
 
     def undo(self):
-        resource = self.project.get_resource(self.new_location)
-        self.operations.move(resource, self.old_location)
+        self.operations.move(self.new_resource, self.old_location)
 
     def __str__(self):
         return 'Move <%s>' % self.old_location
 
     def get_description(self):
         return 'Move <%s> to <%s>' % (self.old_location, self.new_location)
+
+    def get_changed_resources(self):
+        return [self.old_resource, self.new_resource]
 
 
 class _CreateResource(Change):
@@ -112,6 +134,9 @@ class _CreateResource(Change):
 
     def __str__(self):
         return 'Create <%s>' % (self.parent.path + '/' + self.name)
+
+    def get_changed_resources(self):
+        return [self.new_resource]
 
 
 class CreateFolder(_CreateResource):
@@ -143,6 +168,9 @@ class RemoveResource(Change):
 
     def __str__(self):
         return 'Remove <%s>' % (self.resource.path)
+
+    def get_changed_resources(self):
+        return [self.resource]
 
 
 class _ResourceOperations(object):

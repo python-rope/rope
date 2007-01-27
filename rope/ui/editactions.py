@@ -4,6 +4,7 @@ import rope.ui.core
 from rope.ui.actionhelpers import ConfirmAllEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
+from rope.ui import uihelpers
 
 
 def set_mark(context):
@@ -61,7 +62,7 @@ def undo_project(context):
             history.undo()
         _confirm_action(
             'Undoing Project Change',
-            'Undoing <%s>\n\n' % history.undo_list[-1].get_description() +
+            'Undoing <%s>\n\n' % str(history.undo_list[-1]) +
             'Undo project might change many files. Proceed?', undo)
 
 def redo_project(context):
@@ -73,7 +74,7 @@ def redo_project(context):
             history.redo()
         _confirm_action(
             'Redoing Project Change',
-            'Redoing <%s>\n\n' % history.redo_list[-1].get_description() +
+            'Redoing <%s>\n\n' % str(history.redo_list[-1]) +
             'Redo project might change many files. Proceed?', redo)
 
 def forward_search(context):
@@ -109,6 +110,43 @@ def goto_last_edit_location(context):
     context.get_core().get_editor_manager().goto_last_edit_location()
 
 
+def show_history(context):
+    if context.project is None:
+        return
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('File History')
+    frame = Tkinter.Frame(toplevel)
+    list_frame = Tkinter.Frame(frame)
+    enhanced_list = uihelpers.DescriptionList(
+        list_frame, 'Undo History', lambda change: change.get_description())
+    for change in reversed(context.project.history.undo_list):
+        enhanced_list.add_entry(change)
+    list_frame.grid(row=0, column=0, columnspan=2)
+    def undo(event=None):
+        change = enhanced_list.get_selected()
+        if change is None:
+            return
+        def undo():
+            context.project.history.undo(change)
+        _confirm_action(
+            'Undoing Project Change',
+            'Undoing <%s>\n\n' % str(change) +
+            'Undo project might change many files. Proceed?', undo)
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+    undo_button = Tkinter.Button(frame, text='Undo', command=undo)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    undo_button.grid(row=1, column=0)
+    toplevel.bind('<Return>', lambda event: undo())
+    toplevel.bind('<Escape>', lambda event: cancel())
+    toplevel.bind('<Control-g>', lambda event: cancel())
+    toplevel.bind('<Alt-u>', lambda event: undo())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    undo_button.focus_set()
+
+
 core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
@@ -139,6 +177,11 @@ actions.append(
     SimpleAction('Redo Project',
                  ConfirmAllEditorsAreSaved(redo_project), 'C-x R',
                  MenuAddress(['Edit', 'Redo Last Project Change'], 'o', 2),
+                 ['all', 'none']))
+actions.append(
+    SimpleAction('Project History',
+                 ConfirmAllEditorsAreSaved(show_history), None,
+                 MenuAddress(['Edit', 'Project History'], 'h', 2),
                  ['all', 'none']))
 
 actions.append(SimpleAction('Forward Search', forward_search, 'C-s',
