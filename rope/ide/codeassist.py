@@ -420,9 +420,9 @@ class _GetDefinitionLocation(object):
         element = scope_finder.get_pyname_at(self.offset)
         if element is not None:
             module, lineno = element.get_definition_location()
-            return module.get_module().get_resource(), lineno
-        else:
-            return (None, None)
+            if module is not None:
+                return module.get_module().get_resource(), lineno
+        return (None, None)
 
 
 class ProposalSorter(object):

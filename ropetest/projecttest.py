@@ -242,12 +242,12 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals('', root_folder.path)
         self.assertEquals('', root_folder.name)
 
-    def testGetAllFiles(self):
+    def test_get_all_files(self):
         files = self.project.get_files()
         self.assertEquals(1, len(files))
         self.assertEquals(self.sample_file, files[0].name)
 
-    def testMultifileGetAllFiles(self):
+    def test_multifile_get_all_files(self):
         fileName = 'nestedFile.txt'
         parent = self.project.get_resource(self.sample_folder)
         parent.create_file(fileName)
@@ -541,6 +541,21 @@ class ResourceObserverTest(unittest.TestCase):
         my_file = open(path, 'w')
         my_file.write('\n')
         my_file.close()
+
+    def test_moving_and_being_interested_about_a_folder_and_a_child(self):
+        my_folder = self.project.root.create_folder('my_folder')
+        my_file = my_folder.create_file('my_file.txt')
+        sample_observer = _SampleObserver()
+        filtered_observer = FilteredResourceObserver(
+            sample_observer, [my_folder, my_file])
+        self.project.add_observer(filtered_observer)
+        my_folder.move('new_folder')
+        self.assertEquals(2, sample_observer.change_count)
+
+    def test_contains_for_folders(self):
+        folder1 = self.project.root.create_folder('folder')
+        folder2 = self.project.root.create_folder('folder2')
+        self.assertFalse(folder1.contains(folder2))
 
 
 class _MockTimeKeepter(object):

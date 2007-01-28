@@ -69,8 +69,6 @@ stories.  So till ``0.4`` we will:
 Hot Topics
 ==========
 
-* `Local History`_
-
 
 To Be Discussed
 ===============

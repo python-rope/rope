@@ -2,11 +2,8 @@ import rope.base.codeanalyze
 import rope.base.exceptions
 import rope.base.pyobjects
 import rope.refactor.importutils
-from rope.refactor import rename
-from rope.refactor import occurrences
-from rope.refactor import sourceutils
-
 from rope.base.change import (ChangeSet, ChangeContents)
+from rope.refactor import rename, occurrences, sourceutils
 
 
 class IntroduceFactoryRefactoring(object):
@@ -34,13 +31,15 @@ class IntroduceFactoryRefactoring(object):
 
     def _change_resource(self, changes, factory_name, global_factory):
         class_scope = self.old_pyname.get_object().get_scope()
-        occurrence_finder = occurrences.FilteredOccurrenceFinder(
-            self.pycore, self.old_name, [self.old_pyname], only_calls=True)
-        source_code = rename.rename_in_module(
-            occurrence_finder, self._get_new_function_name(factory_name, global_factory),
-            pymodule=self.pymodule)
+        source_code = self._rename_occurrences(
+            self.resource,
+            self._get_new_function_name(factory_name, global_factory),
+            global_factory)
         if source_code is None:
             source_code = self.pymodule.source_code
+        else:
+            self.pymodule = self.pycore.get_string_module(
+                source_code, resource=self.resource)
         lines = self.pymodule.lines
         start = self._get_insertion_offset(class_scope, lines)
         result = source_code[:start]
@@ -90,10 +89,7 @@ class IntroduceFactoryRefactoring(object):
         for file_ in self.pycore.get_python_files():
             if file_ == self.resource:
                 continue
-            occurrence_finder = occurrences.FilteredOccurrenceFinder(
-                self.pycore, self.old_name, [self.old_pyname], only_calls=True)
-            changed_code = rename.rename_in_module(occurrence_finder, changed_name, resource=file_,
-                                                   replace_primary=global_factory)
+            changed_code = self._rename_occurrences(file_, changed_name, global_factory)
             if changed_code is not None:
                 if global_factory:
                     new_pymodule = self.pycore.get_string_module(changed_code, self.resource)
@@ -101,3 +97,11 @@ class IntroduceFactoryRefactoring(object):
                     module_with_imports.add_import(new_import)
                     changed_code = module_with_imports.get_changed_source()
                 changes.add_change(ChangeContents(file_, changed_code))
+
+    def _rename_occurrences(self, file_, changed_name, global_factory):
+        occurrence_finder = occurrences.FilteredOccurrenceFinder(
+            self.pycore, self.old_name, [self.old_pyname], only_calls=True)
+        changed_code = rename.rename_in_module(
+            occurrence_finder, changed_name, resource=file_,
+            replace_primary=global_factory)
+        return changed_code

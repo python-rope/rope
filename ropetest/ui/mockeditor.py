@@ -1,5 +1,6 @@
 from rope.ui.editor import EditorFactory
 
+
 class MockEditorFactory(EditorFactory):
 
     def create(self, *args, **kws):

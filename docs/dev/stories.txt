@@ -91,6 +91,8 @@ IDE And UI Stories
 
 * View type hierarchy
 * Open Type; C-T
+* Saving preferences
+* Commanding buffer
 
 
 Stories
@@ -98,12 +100,3 @@ Stories
 
 
 > Public Release 0.4 : February 4, 2007
-
-
-* Saving preferences
-
-
-* Commanding buffer
-
-
-> Public Release 0.4rc1 : January 28, 2007

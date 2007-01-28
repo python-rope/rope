@@ -5,6 +5,7 @@ import rope.refactor.encapsulate_field
 import rope.refactor.extract
 import rope.refactor.importutils
 import rope.refactor.inline
+import rope.refactor.introduce_factory
 import rope.refactor.introduce_parameter
 import rope.refactor.localtofield
 import rope.refactor.move
@@ -90,7 +91,7 @@ class RefactoringDialog(object):
 class RenameDialog(RefactoringDialog):
 
     def __init__(self, context, title, is_local=False, current_module=False):
-        resource = context.get_active_editor().get_file()
+        resource = context.resource
         editor = context.get_active_editor().get_editor()
         super(RenameDialog, self).__init__(context.project, title)
         self.is_local = is_local
@@ -163,7 +164,7 @@ class ExtractDialog(RefactoringDialog):
 def extract_method(context):
     def do_extract(new_name):
         editor = context.get_active_editor().get_editor()
-        resource = context.get_active_editor().get_file()
+        resource = context.resource
         start_offset, end_offset = editor.get_region_offset()
         return rope.refactor.extract.ExtractMethodRefactoring(
             context.project, resource, start_offset,

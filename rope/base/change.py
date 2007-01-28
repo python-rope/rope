@@ -52,8 +52,9 @@ class ChangeSet(Change):
 
     def get_description(self):
         result = self.description + ':\n\n\n' + \
-                 '\n------\n'.join([change.get_description()
-                                    for change in self.changes])
+                 '\n------\n'.join(
+            [(str(change) + ':\n\n' + change.get_description())
+             for change in self.changes])
         return result
 
     def __str__(self):

@@ -29,7 +29,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         super(IntroduceFactoryTest, self).tearDown()
 
-    def _perform_introduce_factory(self, resource, offset, factory_name,
+    def _introduce_factory(self, resource, offset, factory_name,
                                    global_factory=False):
         factory_introducer = IntroduceFactoryRefactoring(self.project,
                                                          resource, offset)
@@ -43,7 +43,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         expected = 'class AClass(object):\n    an_attr = 10\n\n' \
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
-        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_the_main_module(self):
@@ -54,7 +54,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'\
                    'a_var = AClass.create()'
-        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_with_arguments(self):
@@ -66,7 +66,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n' \
                    'a_var = AClass.create(10)\n'
-        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_other_modules(self):
@@ -74,7 +74,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
-        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        self._introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
@@ -86,7 +86,7 @@ class IntroduceFactoryTest(unittest.TestCase):
     def test_raising_exception_for_non_classes(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('def a_func():\n    pass\n')
-        self._perform_introduce_factory(mod, mod.read().index('a_func') + 1, 'create')
+        self._introduce_factory(mod, mod.read().index('a_func') + 1, 'create')
 
     def test_undoing_introduce_factory(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -95,7 +95,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod1.write(code1)
         code2 = 'from mod1 import AClass\na_var = AClass()\n'
         mod2.write(code2)
-        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
+        self._introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
         self.project.history.undo()
         self.assertEquals(code1, mod1.read())
         self.assertEquals(code2, mod2.read())
@@ -105,7 +105,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
-        self._perform_introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
+        self._introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                    '    @staticmethod\n    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
@@ -126,7 +126,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '        @staticmethod\n        def create(*args, **kwds):\n'\
                    '            return AClass(*args, **kwds)\n'\
                    '    return AClass.create()\n'
-        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
+        self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_adding_factory_for_global_factories(self):
@@ -136,7 +136,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         expected = 'class AClass(object):\n    an_attr = 10\n\n' \
                    'def create(*args, **kwds):\n' \
                    '    return AClass(*args, **kwds)\n'
-        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1,
+        self._introduce_factory(mod, mod.read().index('AClass') + 1,
                                         'create', global_factory=True)
         self.assertEquals(expected, mod.read())
 
@@ -148,7 +148,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                '    return AClass()\n'
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write(code)
-        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1,
+        self._introduce_factory(mod, mod.read().index('AClass') + 1,
                                            'create', global_factory=True)
 
     def test_changing_occurances_in_the_main_module_for_global_factories(self):
@@ -159,7 +159,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    'def create(*args, **kwds):\n' \
                    '    return AClass(*args, **kwds)\n'\
                    'a_var = create()'
-        self._perform_introduce_factory(mod, mod.read().index('AClass') + 1,
+        self._introduce_factory(mod, mod.read().index('AClass') + 1,
                                            'create', global_factory=True)
         self.assertEquals(expected, mod.read())
 
@@ -168,7 +168,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
-        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1,
+        self._introduce_factory(mod1, mod1.read().index('AClass') + 1,
                                            'create', global_factory=True)
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                     'def create(*args, **kwds):\n' \
@@ -182,7 +182,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('from mod1 import AClass\npair = AClass(), AClass\n')
-        self._perform_introduce_factory(mod1, mod1.read().index('AClass') + 1,
+        self._introduce_factory(mod1, mod1.read().index('AClass') + 1,
                                            'create', global_factory=True)
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                     'def create(*args, **kwds):\n' \
@@ -201,8 +201,16 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '        return AClass(*args, **kwds)\n' \
                    'a_class = AClass\n' \
                    'a_var = a_class()'
-        self._perform_introduce_factory(mod, mod.read().index('a_class') + 1, 'create')
+        self._introduce_factory(mod, mod.read().index('a_class') + 1, 'create')
         self.assertEquals(expected, mod.read())
+
+    def test_changing_occurrences_in_the_same_module_with_conflicting_ranges(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('class C(object):\n'
+                  '    def create(self):\n        return C()\n')
+        self._introduce_factory(mod, mod.read().index('C'), 'create_c', True)
+        self.assertTrue(mod.read().startswith(
+                        'class C(object):\n    def create(self):\n        return create_c()\n'))
 
     def _transform_module_to_package(self, resource):
         self.project.do(rope.refactor.TransformModuleToPackage(
@@ -241,6 +249,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEquals('import pkg.mod2\nfrom pkg.mod2 import AClass\n',
                           new_init.read())
 
+
 class EncapsulateFieldTest(unittest.TestCase):
 
     def setUp(self):
@@ -264,7 +273,7 @@ class EncapsulateFieldTest(unittest.TestCase):
 
     def _perform_encapsulate_field(self, resource, offset):
         changes = EncapsulateFieldRefactoring(self.project, resource, offset).\
-                  encapsulate_field()
+                  get_changes()
         self.project.do(changes)
 
     def test_adding_getters_and_setters(self):

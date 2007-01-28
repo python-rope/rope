@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.4rc1 : January 28, 2007
+
+
 - Project History; Undoing refactorings in any order : January 25, 2007
 
 

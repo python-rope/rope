@@ -28,7 +28,7 @@ class EncapsulateFieldRefactoring(object):
                 return True
         return False
 
-    def encapsulate_field(self):
+    def get_changes(self):
         changes = ChangeSet('Encapsulate field <%s>' % self.name)
         rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
                                                       [self.pyname])

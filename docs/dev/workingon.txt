@@ -1,17 +1,8 @@
-File History
-============
-
-- Including the changes that a dependency depends on
-- Changed folders for undoing change
-- Changed folders for dependants
-- Adding a UI dialog
-- What if the change to be undone is not in the undo_list
-- Not adding save files when the file has not been changed
-
-
 Remaining Small Stories
 =======================
 
+* Saving diffs in `ChangeContents`
+* Inlining one line return functions with returns
 * Adding imports eats the blank lines after it
 * Undoing `RemoveResource`; It's not used by refactorings
 * Lambdas as functions; consider their parameters

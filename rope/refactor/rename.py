@@ -9,7 +9,7 @@ from rope.base.change import ChangeSet, ChangeContents, MoveResource
 class RenameRefactoring(object):
 
     def __init__(self, project, resource, offset=None):
-        """If `offset` is None `resource` will be renamed"""
+        """If `offset` is None, the `resource` itself will be renamed"""
         self.pycore = project.pycore
         self.resource = resource
         if offset is not None:

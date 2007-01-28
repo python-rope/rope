@@ -257,7 +257,7 @@ class Folder(Resource):
     def create_folder(self, folder_name):
         self._perform_change(
             rope.base.change.CreateFolder(self, folder_name),
-            'Creating golder <%s>' % (self.path + '/' + folder_name))
+            'Creating folder <%s>' % (self.path + '/' + folder_name))
         return self.get_child(folder_name)
 
     def get_child(self, name):
@@ -289,7 +289,9 @@ class Folder(Resource):
         return result
 
     def contains(self, resource):
-        return self != resource and resource.path.startswith(self.path)
+        if self == resource:
+            return False
+        return self.path == '' or resource.path.startswith(self.path + '/')
 
 
 class ResourceObserver(object):
@@ -466,8 +468,8 @@ class FilteredResourceObserver(object):
     def _calculate_new_resource(self, main, new_main, resource):
         if new_main is None:
             return None
-        diff = resource.path[:len(main.path)]
-        return new_main.path + diff
+        diff = resource.path[len(main.path):]
+        return resource.project.get_resource(new_main.path + diff)
 
 
 class Timekeeper(object):

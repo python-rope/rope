@@ -18,7 +18,25 @@ New Features
 
 Features added in this release:
 
-* 
+* Project History; Undoing refactorings in any order
+* Handling ``global`` keywords
+* Undoing everything
+* Removing `PythonRefactoring` facade
+* Basic ``lambda`` handling
+* Handling builtin `property`
+
+The "Undo/Redo Refactoring" menu item has been removed from refactor
+menu.  Instead a new "Undo/Redo Project Change" has been added to the
+edit menu.  The new actions undo every change to a project; like saving
+files, creating files and folders and refactorings.  Also a "Project
+History" action has been added to edit menu.  In its dialog you can
+see and select changes to be undone in any order.  Note that undoing
+changes in project history undoes the changes it depends on, too.
+
+`rope.refactor.PythonRefactoring` facade has been removed.  You can
+use `rope.refactor` sub-modules for performing refactorings.  Also
+you can commit the changes using `Project.do()`.  Also the
+`Project.history` has been added for undoing and redoing changes.
 
 
 Getting Started
