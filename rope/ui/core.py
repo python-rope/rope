@@ -1,14 +1,15 @@
 import tkFileDialog
+import tkMessageBox
 from Tkinter import *
 
+import rope.ui.editor
+import rope.ui.editorpile
+import rope.ui.statusbar
 from rope.base.exceptions import RopeError
 from rope.base.project import Project
-import rope.ui.editor
-import rope.ui.statusbar
-import rope.ui.editorpile
-from rope.ui import editingcontexts, editingtools
-from rope.ui.menubar import MenuBarManager, MenuAddress
+from rope.ui import editingcontexts
 from rope.ui.extension import ActionContext
+from rope.ui.menubar import MenuBarManager
 
 
 class Core(object):
@@ -346,10 +347,28 @@ class Core(object):
 
     def _make_callback(self, action):
         def callback(event=None):
-            action.do(ActionContext(self))
+            try:
+                action.do(ActionContext(self))
+            except RopeError, e:
+                self._report_error(e)
             if event:
                 return 'break'
         return callback
+
+    def _report_error(self, e):
+        toplevel = Toplevel()
+        toplevel.title('RopeError Was Raised')
+        label = Label(toplevel, text=str(e))
+        def ok(event=None):
+            toplevel.destroy()
+            return 'break'
+        ok_button = Button(toplevel, text='OK', command=ok)
+        label.grid(row=0)
+        toplevel.bind('<Control-g>', lambda event: ok())
+        toplevel.bind('<Escape>', lambda event: ok())
+        toplevel.bind('<Return>', lambda event: ok())
+        ok_button.grid(row=1)
+        toplevel.focus_set()
 
     def _editor_changed(self):
         active_editor = self.editor_manager.active_editor

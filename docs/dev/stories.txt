@@ -13,13 +13,13 @@ the `IDE and UI stories`_ are extremely welcome. Have a look at
 Base Stories
 ============
 
-* Python C extensions
-* User specified source folders
-* Zip imports
 * Updating similarly named variables and methods in rename refactoring
 * Packages should be filtered; only allowing imported submodules
 * Extract superclass
 * Collapse hierarchy
+* Python C extensions
+* User specified source folders
+* Zip imports
 * Finding similar statements when extracting variable/method
 * Pull up method
 * Push down method

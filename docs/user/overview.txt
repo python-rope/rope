@@ -459,3 +459,13 @@ assumes all files are under version control when these conditions are
 met.  Also don't forget to commit your changes yourself, rope doesn't
 do that yet.
 
+
+Project History
+===============
+
+The "Undo/Redo Project Change" in the edit menu undoes every change
+made to the files in a project; like saving files, creating files and
+folders and refactorings.  Also in "Project History" dialog you can
+see and select changes to be undone in any order.  Note that undoing
+changes in project history undoes the changes it depends on, too.
+

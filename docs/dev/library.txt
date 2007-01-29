@@ -2,30 +2,12 @@
  Using Rope As A Library
 =========================
 
-By ``0.4`` release *rope* would probably be ready for being used as a
-library.  Features that might be added include:
-
-Done:
-
-* Updating files that are changed outside rope
-* Better support for other version control systems
-* Considering tabs to be 8 spaces
-* Removing `PythonRefactoring` facade
-
-To be done?:
-
-* Having a list of ignored file and folder patterns
-* Extending and having more control on file reading and writing
-* Limiting memory usage; throwing away calculated information when low
-  on memory
-* Documenting published interfaces
-
 If you need other features, send a feature request.  Have a look at
 ``docs/dev/contributing.txt``.
 
 
-Useful Classes
-==============
+Useful Modules And Classes
+==========================
 
 * `rope.base.project.Project`
 * `rope.base.pycore.PyCore`
@@ -33,8 +15,60 @@ Useful Classes
 * `rope.ide.codeassist.PythonCodeAssist`
 
 
+`rope.base.project.Project`
+===========================
+
+You can create a project by::
+
+  project = Project(root_address)
+
+Where the `root_address` is the root folder of your project.
+Other interesting methods and attributes that a project
+provides:
+
+* `get_resource()`:
+  For getting a resource(that is file or folder) inside a project.
+  Uses '/'s for separating directories.  For instance
+  ``project.get_resource('my_folder/my_file.txt')`` returns the
+  ``${projectroot}/my_folder/my_file.txt`` file as a
+  `rope.base.project.File` object.
+* `root`:
+  Returns project root folder resource.
+* `get_pycore()`:
+  Returns a `rope.base.pycore.PyCore` object.
+
+See code documentation and unit-tests for more.
+
+
+`Project.do`
+------------
+
+For committing changes returned by refactorings.
+
+
+`Project.history`
+-----------------
+
+A `rope.base.history.History` object.  You can use its `undo` and
+`redo` methods for undoing or redoing changes.
+
+
+`Project.validate`
+------------------
+
+When using rope as a library you probably change the files in that
+project in parallel (for example in IDEs).  To force rope to
+invalidate cached information about resources that have been
+removed or changed outside rope you should call `Project.validate`.
+You should pass a resource to this method.  For example::
+
+  project.validate(project.root)
+
+validates all files and directories in the project.
+
+
 `rope.base.fscommands`
-======================
+----------------------
 
 The `rope.base.fscommands` module implements the basic file system
 operations that rope needs to perform.  The main reason for the
@@ -46,18 +80,36 @@ providing this interface.  `rope.base.project.Project` accepts a
 use your new class.
 
 
-`rope.base.project.Project.validate`
-====================================
+`rope.base.pycore.PyCore`
+=========================
 
-When using rope as a library you probably change the files in that
-project in parallel (for example in IDEs).  To force rope to
-invalidate cached information about resources that have been
-removed or changed outside rope you should call `Project.validate`.
-You should pass a resource to this method.  For example::
+Provides useful methods for managing python modules and packages.
+Each project has a `PyCore` that can be accessed using
+`Project.pycore` attribute.
 
-  project.validate(project.root)
+`PyCore.run_module()` runs a resource.  When running it collects
+type information to do dynamic object inference.  For this reason
+modules run much slower.
 
-validates all files and directories in the project.
+
+Refactorings
+============
+
+Have a look at `rope.refactor` package and its sub-modules.  For
+example for performing a move refactoring you can create a
+`MoveRefactoring` object like this::
+
+  mover = MoveRefactoring(project, resource, offset)
+
+Where `resource` and `offset` is the location to perform the
+refactoring.
+
+Then you can commit the changes by it using `get_changes()` method::
+
+  project.do(mover.get_changes(destination))
+
+Where `destination` module/package is the destination for move refactoring.
+Othe refactorings classes have a similar interface.
 
 
 A Sample Session

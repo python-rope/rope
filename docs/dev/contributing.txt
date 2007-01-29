@@ -38,7 +38,10 @@ Rope package structure::
     ui
 
 Have a look at ``__init__.py`` of packages for finding their
-description.
+description.  Also have a look at `library.txt`_ for a few
+examples.
+
+.. _`library.txt`: library.html
 
 
 Wish List

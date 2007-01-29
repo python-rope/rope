@@ -109,7 +109,7 @@ class _VariableInliner(_Inliner):
     def check_exceptional_conditions(self):
         if len(self.pyname.assignments) != 1:
             raise rope.base.exceptions.RefactoringError(
-                'Local variable should be assigned once or inlining.')
+                'Local variable should be assigned once for inlining.')
 
     def get_changes(self):
         source = self._get_changed_module()

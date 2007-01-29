@@ -1,8 +1,8 @@
 Remaining Small Stories
 =======================
 
-* Saving diffs in `ChangeContents`
-* Inlining one line return functions with returns
+* Saving only diffs in `ChangeContents`
+* Inlining functions with only one return statements
 * Adding imports eats the blank lines after it
 * Undoing `RemoveResource`; It's not used by refactorings
 * Lambdas as functions; consider their parameters
@@ -28,7 +28,7 @@ Remaining Small Stories
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Extract method and return statements
-* Import addition when adding a relative with an absolute import
+* Import addition when adding a relative to an absolute import
 * Caching `PyCore.classes`
 * `rope.exceptions` should only contain user exceptions that are
   thrown from public classes like `Project`, `PyCore`, `Refactoring`

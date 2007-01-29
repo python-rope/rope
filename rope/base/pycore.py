@@ -186,6 +186,12 @@ class PyCore(object):
             module._invalidate_concluded_data()
 
     def run_module(self, resource, args=None, stdin=None, stdout=None):
+        """Run `resource` module
+
+        Returns a `rope.base.oi.dynamicoi.PythonFileRunner` object for
+        controlling the process.
+
+        """
         runner = self.call_info.run_module(resource, args, stdin, stdout)
         runner.add_finishing_observer(self._invalidate_all_concluded_data)
         runner.run()
