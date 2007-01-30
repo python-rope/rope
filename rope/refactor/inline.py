@@ -5,10 +5,8 @@ import rope.base.pynames
 import rope.base.pyobjects
 import rope.refactor.functionutils
 from rope.base import codeanalyze
-from rope.refactor import occurrences
-from rope.refactor import rename
-from rope.refactor import sourceutils
 from rope.base.change import ChangeSet, ChangeContents
+from rope.refactor import occurrences, rename, sourceutils
 
 
 class InlineRefactoring(object):
@@ -53,6 +51,7 @@ class _Inliner(object):
 
     def get_changes(self):
         pass
+
 
 class _MethodInliner(_Inliner):
 
@@ -123,13 +122,8 @@ class _VariableInliner(_Inliner):
         lines = self.pymodule.lines
         start, end = codeanalyze.LogicalLineFinder(lines).\
                      get_logical_line_in(definition_line)
-        definition_lines = []
-        for line_number in range(start, end + 1):
-            line = lines.get_line(line_number).strip()
-            if line.endswith('\\'):
-                line = line[:-1]
-            definition_lines.append(line)
-        definition_with_assignment = ' '.join(definition_lines)
+        definition_with_assignment = _join_lines(
+            [lines.get_line(n) for n in range(start, end + 1)])
         if assignment.index is not None:
             raise rope.base.exceptions.RefactoringError(
                 'Cannot inline tuple assignments.')
@@ -146,6 +140,17 @@ class _VariableInliner(_Inliner):
         source = changed_source[:lines.get_line_start(start)] + \
                  changed_source[lines.get_line_end(end) + 1:]
         return source
+
+
+def _join_lines(lines):
+    definition_lines = []
+    for unchanged_line in lines:
+        line = unchanged_line.strip()
+        if line.endswith('\\'):
+            line = line[:-1].strip()
+        definition_lines.append(line)
+    joined = ' '.join(definition_lines)
+    return joined
 
 
 class _InlineFunctionCallsForModule(object):
@@ -174,10 +179,9 @@ class _InlineFunctionCallsForModule(object):
                     raise rope.base.exceptions.RefactoringError(
                         'Cannot inline functions that reference themselves')
             if not occurrence.is_called():
-                    raise rope.base.exceptions.RefactoringError(
-                        'Reference to inlining function other than function call'
-                        ' in <file: %s, offset: %d>' % (self.resource.path,
-                                                        start))
+                raise rope.base.exceptions.RefactoringError(
+                    'Reference to inlining function other than function call'
+                    ' in <file: %s, offset: %d>' % (self.resource.path, start))
             end_parens = self._find_end_parens(self.source,
                                                self.source.index('(', end))
             lineno = self.lines.get_line_number(start)
@@ -188,17 +192,19 @@ class _InlineFunctionCallsForModule(object):
             returns = self.source[line_start:start].strip() != '' or \
                       self.source[end_parens:line_end].strip() != ''
             indents = sourceutils.get_indents(self.lines, start_line)
-            definition = self.generator.get_definition(self.source[start:end_parens],
-                                                       returns=returns)
+            definition = self.generator.get_definition(
+                self.source[start:end_parens], returns=returns)
             end = min(line_end + 1, len(self.source))
             change_collector.add_change(
                 line_start, end, sourceutils.fix_indentation(definition, indents))
             if returns:
-                name = self.generator.get_function_name() + '_result'
+                name = self.generator.get_returned()
                 change_collector.add_change(
-                    line_end, end,self.source[line_start:start] + name +
+                    line_end, end, self.source[line_start:start] + name +
                     self.source[end_parens:end])
-        return change_collector.get_changed()
+        result = change_collector.get_changed()
+        if result is not None and result != self.source:
+            return result
 
     def _get_pymodule(self):
         if self._pymodule is None:
@@ -246,6 +252,7 @@ class _DefinitionGenerator(object):
         self.definition_info = self._get_definition_info()
         self.definition_params = self._get_definition_params()
         self._calculated_definitions = {}
+        self.returned = None
 
     def _get_function_body(self):
         scope = self.pyfunction.get_scope()
@@ -302,28 +309,24 @@ class _DefinitionGenerator(object):
             pyname = pymodule.get_attribute(name)
             inliner = _VariableInliner(self.pycore, name, pyname)
             source = inliner._get_changed_module()
-        if returns:
-            return_replacement = self.get_function_name() + '_result' + ' ='
-        else:
-            return_replacement = None
-        return self._replace_returns_with(source, return_replacement)
+        return self._replace_returns_with(source, returns)
 
-    def _replace_returns_with(self, source, replacement):
+    def get_returned(self):
+        return self.returned
+
+    def _replace_returns_with(self, source, returns):
         result = []
         last_changed = 0
         for match in _DefinitionGenerator._get_return_pattern().finditer(source):
             for key, value in match.groupdict().items():
                 if value and key == 'return':
                     result.append(source[last_changed:match.start('return')])
-                    if replacement is not None:
-                        result.append(replacement)
-                        last_changed = match.end('return')
-                        current = last_changed
-                        while current < len(source) and source[current] != '\n':
-                            current += 1
-                        if current != len(source) and source[current:].strip() != '':
-                            raise rope.base.exceptions.RefactoringError(
-                                'Cannot inline functions with statements after return statement.')
+                    if returns:
+                        self._check_nothing_after_return(source,
+                                                         match.end('return'))
+                        self.returned = _join_lines(
+                            source[match.end('return'): len(source)].splitlines())
+                        last_changed = len(source)
                     else:
                         current = match.end('return')
                         while current < len(source) and source[current] in ' \t':
@@ -333,6 +336,15 @@ class _DefinitionGenerator(object):
                             result.append('pass')
         result.append(source[last_changed:])
         return ''.join(result)
+
+    def _check_nothing_after_return(self, source, offset):
+        lines = codeanalyze.SourceLinesAdapter(source)
+        lineno = lines.get_line_number(offset)
+        logical_lines = codeanalyze.LogicalLineFinder(lines)
+        lineno = logical_lines.get_logical_line_in(lineno)[1]
+        if source[lines.get_line_end(lineno):len(source)].strip() != '':
+            raise rope.base.exceptions.RefactoringError(
+                'Cannot inline functions with statements after return statement.')
 
     @classmethod
     def _get_return_pattern(cls):

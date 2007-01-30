@@ -286,7 +286,7 @@ class InlineTest(unittest.TestCase):
     def test_simple_return_values_and_inlining_functions(self):
         self.mod.write('def a_func():\n    return 1\na = a_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('a_func_result = 1\na = a_func_result\n',
+        self.assertEquals('a = 1\n',
                           self.mod.read())
 
     def test_simple_return_values_and_inlining_lonely_functions(self):
@@ -326,7 +326,7 @@ class InlineTest(unittest.TestCase):
         self.mod.write('def a_func(param1, param2):\n    return param1 + param2\n'
                        'range(a_func(20, param2=abs(10)))\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('a_func_result = 20 + abs(10)\nrange(a_func_result)\n',
+        self.assertEquals('range(20 + abs(10))\n',
                           self.mod.read())
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
@@ -368,7 +368,13 @@ class InlineTest(unittest.TestCase):
                        "a = A()\nname = a.get_name()\n")
         self._inline2(self.mod, self.mod.read().rindex('get_name') + 1)
         self.assertEquals("class A(object):\n    name = 'hey'\n"
-                          "a = A()\nget_name_result = a.name\nname = get_name_result\n",
+                          "a = A()\nname = a.name\n",
+                          self.mod.read())
+
+    def test_simple_returns_with_backslashes(self):
+        self.mod.write('def a_func():\n    return 1\\\n        + 2\na = a_func()\n')
+        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        self.assertEquals('a = 1 + 2\n',
                           self.mod.read())
 
 

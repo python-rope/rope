@@ -1,8 +1,18 @@
+Refactoring
+===========
+
+- Better inlining for functions with returns
+- Backslashed returns for inlines
+
+* When running `inlinetest` modules we get
+  ``Exception exceptions.SystemError: 'error return without exception set'
+    in <generator object at 0xb7173aec> ignored``
+
+
 Remaining Small Stories
 =======================
 
 * Saving only diffs in `ChangeContents`
-* Inlining functions with only one return statements
 * Adding imports eats the blank lines after it
 * Undoing `RemoveResource`; It's not used by refactorings
 * Lambdas as functions; consider their parameters
