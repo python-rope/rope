@@ -281,16 +281,20 @@ class SortingVisitor(ImportInfoVisitor):
     def standard_modules(cls):
         if not hasattr(cls, '_standard_modules'):
             result = set(sys.builtin_module_names)
-            lib_path = os.path.join(
-                sys.prefix, 'lib%spython%s' % (os.sep, sys.version[:3]))
-            for name in os.listdir(lib_path):
-                path = os.path.join(lib_path, name)
-                if os.path.isdir(path):
-                    if '-' not in name:
-                        result.add(name)
-                else:
-                    if name.endswith('.py'):
-                        result.add(name[:-3])
+            if os.name != 'nt':
+                lib_path = os.path.join(
+                    sys.prefix, 'lib%spython%s' % (os.sep, sys.version[:3]))
+            else:
+                lib_path = os.path.join(sys.prefix, 'lib%s' % os.sep)
+            if os.path.exists(lib_path):
+                for name in os.listdir(lib_path):
+                    path = os.path.join(lib_path, name)
+                    if os.path.isdir(path):
+                        if '-' not in name:
+                            result.add(name)
+                    else:
+                        if name.endswith('.py'):
+                            result.add(name[:-3])
             cls._standard_modules = result
         return cls._standard_modules
 

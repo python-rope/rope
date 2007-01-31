@@ -66,6 +66,7 @@ Features implemented so far:
   * Unit-test running view
   * Python and reST highlighting
   * Multiple editers
+  * Project file history
   * Basic SVN support using pysvn
   * Correcting indentation
   * Project tree view

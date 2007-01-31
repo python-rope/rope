@@ -1,8 +1,7 @@
 Refactoring
 ===========
 
-- Better inlining for functions with returns
-- Backslashed returns for inlines
+- Fix import folder searching for windows
 
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'
