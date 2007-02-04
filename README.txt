@@ -16,9 +16,16 @@ outline views.  It is written in python and uses Tkinter library.
 New Features
 ============
 
-Features added in this release:
+Some of the features added since ``0.3`` release:
 
-*
+* Project History; Undoing refactorings in any order
+* Handling many builtin types and functions
+* Sorting imports in organize imports
+* Enhanced dynamic object inference
+* Introduce parameter refactoring
+* Updating files that have been changed outside rope
+* Change method signature refactoring
+* Inline method refactoring
 
 
 Getting Started

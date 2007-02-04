@@ -97,6 +97,3 @@ IDE And UI Stories
 
 Stories
 =======
-
-
-> Public Release 0.4 : February 4, 2007

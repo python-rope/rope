@@ -1,16 +1,10 @@
-Refactoring
-===========
-
-- Fix import folder searching for windows
+Remaining Small Stories
+=======================
 
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'
     in <generator object at 0xb7173aec> ignored``
-
-
-Remaining Small Stories
-=======================
-
+* Let ``C-F`` remove extra spaces
 * Saving only diffs in `ChangeContents`
 * Adding imports eats the blank lines after it
 * Undoing `RemoveResource`; It's not used by refactorings

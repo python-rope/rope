@@ -3,6 +3,12 @@
 ===========
 
 
+> Public Release 0.4 : February 4, 2007
+
+
+- Reporting some of the refactoring problems in the UI : February 1, 2007
+
+
 > Public Release 0.4rc1 : January 28, 2007
 
 
