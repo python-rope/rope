@@ -1,14 +1,18 @@
 import Tkinter
 
 
-class ConfirmAllEditorsAreSaved(object):
+class ConfirmEditorsAreSaved(object):
 
-    def __init__(self, callback):
+    def __init__(self, callback, all=True):
         self.callback = callback
+        self.all = all
 
     def __call__(self, context):
-        fileeditor = context.get_active_editor()
-        editors = context.get_core().get_editor_manager().editors
+        fileeditor = context.fileeditor
+        if self.all:
+            editors = context.get_core().get_editor_manager().editors
+        else:
+            editors = [context.fileeditor]
         is_modified = False
         for editor in editors:
             if editor.get_editor().is_modified():
@@ -19,7 +23,9 @@ class ConfirmAllEditorsAreSaved(object):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Save All')
         frame = Tkinter.Frame(toplevel)
-        label = Tkinter.Label(frame, text='All editors should be saved before refactorings.')
+        label = Tkinter.Label(
+            frame, text='These editors should be saved before this refactoring:\n* ' +
+            '\n* '.join([fileeditor.file.path for fileeditor in editors]))
         label.grid(row=0, column=0, columnspan=2)
         def ok(event=None):
             context.get_core().save_all_editors()

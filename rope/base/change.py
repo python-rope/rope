@@ -227,7 +227,7 @@ class _ResourceOperations(object):
                 raise RopeError('File already exists')
             else:
                 raise RopeError('A folder with the same name'
-                                    ' as this file already exists')
+                                ' as this file already exists')
         try:
             self.fscommands.create_file(file_path)
         except IOError, e:
@@ -238,7 +238,7 @@ class _ResourceOperations(object):
         if os.path.exists(folder_path):
             if not os.path.isdir(folder_path):
                 raise RopeError('A file with the same name as'
-                                    ' this folder already exists')
+                                ' this folder already exists')
             else:
                 raise RopeError('Folder already exists')
         self.fscommands.create_folder(folder_path)

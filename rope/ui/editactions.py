@@ -1,7 +1,7 @@
 import Tkinter
 
 import rope.ui.core
-from rope.ui.actionhelpers import ConfirmAllEditorsAreSaved
+from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui import uihelpers
@@ -170,17 +170,17 @@ actions.append(SimpleAction('Redo', redo_editing, 'C-x r',
                             MenuAddress(['Edit', 'Redo Editing'], 'r', 1), ['all']))
 actions.append(
     SimpleAction('Undo Project',
-                 ConfirmAllEditorsAreSaved(undo_project), 'C-x U',
+                 ConfirmEditorsAreSaved(undo_project), 'C-x U',
                  MenuAddress(['Edit', 'Undo Last Project Change'], 'd', 2),
                  ['all', 'none']))
 actions.append(
     SimpleAction('Redo Project',
-                 ConfirmAllEditorsAreSaved(redo_project), 'C-x R',
+                 ConfirmEditorsAreSaved(redo_project), 'C-x R',
                  MenuAddress(['Edit', 'Redo Last Project Change'], 'o', 2),
                  ['all', 'none']))
 actions.append(
     SimpleAction('Project History',
-                 ConfirmAllEditorsAreSaved(show_history), None,
+                 ConfirmEditorsAreSaved(show_history), None,
                  MenuAddress(['Edit', 'Project History'], 'h', 2),
                  ['all', 'none']))
 

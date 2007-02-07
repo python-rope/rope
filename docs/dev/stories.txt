@@ -14,7 +14,6 @@ Base Stories
 ============
 
 * Updating similarly named variables and methods in rename refactoring
-* Packages should be filtered; only allowing imported submodules
 * Extract superclass
 * Collapse hierarchy
 * Python C extensions
@@ -27,7 +26,6 @@ Base Stories
 * Analyzing function decorators
 * Introduce redirection
 * Changing signature in class hierarchies
-* Handling builtin functions and types
 * Moving fields/methods to attribute classes
 
 
@@ -77,7 +75,6 @@ IDE And UI Stories
 * Code contexts; context_finder.get_context(text, offset)
   This can be used when proposing code assists.
 * Formating code
-* Local history
 * Show PyDoc reST highlighting
 * Better list and tree navigation
   Add filter texts and selection texts to trees and lists.
@@ -93,7 +90,11 @@ IDE And UI Stories
 * Open Type; C-T
 * Saving preferences
 * Commanding buffer
+* Saving history across sessions
 
 
 Stories
 =======
+
+
+> Public Release 0.5m1 : February 18, 2007

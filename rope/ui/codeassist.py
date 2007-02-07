@@ -1,14 +1,16 @@
-import Tkinter
 import ScrolledText
+import Tkinter
 
-from rope.base import codeanalyze
+import rope.ide.codeassist
 import rope.ui.core
 import rope.ui.testview
-import rope.ide.codeassist
-from rope.ui.menubar import MenuAddress
+from rope.base import codeanalyze
+from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
+from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
                                EnhancedListHandle)
+from rope.ide import formatter
 
 
 def do_correct_line_indentation(context):
@@ -283,6 +285,11 @@ def find_occurrences(context):
     toplevel.bind('<Control-g>', close)
     enhanced_list.list.focus_set()
 
+def do_format_code(context):
+    editor = context.editor
+    result = formatter.Formatter().format(editor.get_text())
+    editor.set_text(result, reset_editor=False)
+
 
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
@@ -304,6 +311,11 @@ actions.append(SimpleAction('Correct Line Indentation',
                             do_correct_line_indentation, 'C-i',
                             MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1),
                             ['python', 'rest']))
+actions.append(SimpleAction('Format Code',
+                            do_format_code, 'C-F',
+                            MenuAddress(['Code', 'Remove Extra Spaces And Lines'], None, 1),
+                            ['python']))
+
 actions.append(SimpleAction('Comment Line', comment_line, 'C-c c',
                             MenuAddress(['Code', 'Comment Line'], 'e', 1),
                             ['python']))

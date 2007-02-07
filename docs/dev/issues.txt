@@ -25,45 +25,63 @@ This is only a rough plan.  For example we might have more release
 candidates before the ``x.y`` release.
 
 
-Version 0.4
+Version 0.5
 ===========
 
-From November 6, 2006 till February 4, 2007
+From February 4, 2007 till May 6, 2007
 
 
 Release Goals
 -------------
 
-Metaphor: Enhance features and make rope extensible
-
-
-Release Goals
--------------
-
-* Rope library
+Metaphor: ...
 
 
 Possible Plans
 --------------
 
-* Inline method
-* Change method signature
-* Introduce parameter
-* Enhancing refactorings and testing
-* Handling built-in types
+
+Discussion
+----------
+
+Now that we handle many kinds of refactorings and we have achieved
+many of rope's initial goals we can think of extending it.
+
+There are many places to extend rope.  Some of them are:
+
+* More advanced refactorings
+* Enhancing old refactorings
+* Refactoring scripts
+* Dynamic type inference(faster, new ways)
+* Static type inference(new, better ways)
+* Implicit interfaces
+* Better occurence finding approach
+* Exclusion principle for occurrence finding
+* Indexing files for occurrence finding
+* Changing structure refactorings; for example: ``a = b -> a(b.c)``
+* Better library interface
 
 
-Status
-------
+Enhancing Old Refactorings
+--------------------------
 
-Now that rope supports many basic refactorings it seems necessary to
-put more time on enhancing old refactorings and finishing remaining
-stories.  So till ``0.4`` we will:
+* Extracting methods from pieces with only one return/yield statement
+* Finding similar statements to the extracted piece
+* Moving field/method
+* Inlining a single occurrence
+* Performing change method signature in class hierarchies
+* Asking whether to encapsulate field in the class itself
+* Moving initialization to constructor in local variable to field
+* Adding an option to remove old parameter in inline argument default
+* Renaming similarly named variables
+* Renaming textual matches
+* Performing import action only on one import statement
 
-* Enhance old refactorings
-* Do remaining stories
-* Test
-* Explore better OI; supporting builtins and implicit interfaces
+
+Call For Help
+-------------
+
+We need developers for working on the IDE and UI.
 
 
 Hot Topics
@@ -74,6 +92,7 @@ To Be Discussed
 ===============
 
 * Faster occurrence finding
+* `Allowing non-existent resources`_
 * `Python's Implicit Interfaces`_
 * `Rope's preference system`_
 * `Having virtual PyModules`_
@@ -81,7 +100,34 @@ To Be Discussed
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
-* Undo unification
+* Finding available refactorings
+
+
+Better Occurrencd Finding
+=========================
+
+The current implementation for finding occurrences of a `PyName` is to
+test every textual occurrence of the same name has the same `PyName`
+or not.  This approach does not work when a name is repeated many
+times in the source.  For example renaming `self`\s are very time
+consuming.
+
+Maybe we can use one of these solutions:
+
+* Checking pyname equallity only once for each scope
+
+  This way we check each name only once for each scope.  But this is
+  not applicable for attributes.
+
+* Limiting the places to search for a name
+
+  For example for renaming a parameter we search the body of that
+  function and the keyword arguments passed to functions.  As
+  another example function parameters never appear as attributes
+  and class variables and methods never are referenced directly
+  except in class body.
+
+Or maybe we can use a strategy object for searching.
 
 
 Local History
@@ -112,6 +158,20 @@ Each project change consists of a few basic changes.
 * create file
 * create folder
 * remove resource
+
+
+Allowing Non-Existent Resources
+===============================
+
+Instead of doing::
+
+  parent = project.get_resource('my_folder')
+  new_file = parent.create_file('my_file.txt')
+
+We can do::
+
+  new_file = project.get_file('my_folder/my_file.txt')
+  new_file.create(create_directories=False)
 
 
 Rope's Preference System
@@ -323,46 +383,6 @@ the source code.  In futures some of this restrictions might be removed.
 * Either all files should be under version control or none.
 * All ``*.txt`` files are considered in reST formats.
 * XXX
-
-
-Designing Refactorings to Be Used in IDEs
-=========================================
-
-* Finding available refactorings
-* A better facade
-* Better refactoring categoriztion
-* Making adding new refactorings easier
-
-
-A Common Refactoring Interface
-------------------------------
-
-::
-
-  class Refactoring(object):
-
-      def __init__(self, *args, **kwds):
-      """Getting immediate informations"""
-
-      def get_changes(self, *args, **kwds):
-      """Calculate the changes caused by this refactoring.
-
-      It is passed user provided information.
-      """
-
-      # Other functions for getting information after construction
-      # for helping IDEs.
-
-
-Note that the arguments of `__init__` and `get_changes` are not the
-same for all refactorings.
-
-
-Finding Available Refactorings
-------------------------------
-
-The question we need to answer before proceeding is to decide
-whether this belongs to UI or core.
 
 
 Moving Fields/Methods

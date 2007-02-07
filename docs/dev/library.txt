@@ -109,7 +109,7 @@ Then you can commit the changes by it using `get_changes()` method::
   project.do(mover.get_changes(destination))
 
 Where `destination` module/package is the destination for move refactoring.
-Othe refactorings classes have a similar interface.
+Other refactorings classes have a similar interface.
 
 
 A Sample Session

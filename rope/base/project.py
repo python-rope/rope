@@ -241,11 +241,7 @@ class Folder(Resource):
         for name in content:
             if name.endswith('.pyc') or name == '.svn' or name.endswith('~'):
                 continue
-            if self.path != '':
-                resource_name = self.path + '/' + name
-            else:
-                resource_name = name
-            result.append(self.project.get_resource(resource_name))
+            result.append(self.get_child(name))
         return result
 
     def create_file(self, file_name):
