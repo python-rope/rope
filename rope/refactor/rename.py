@@ -2,8 +2,8 @@ import rope.base.codeanalyze
 import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.refactor import occurrences, sourceutils
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
+from rope.refactor import occurrences, sourceutils
 
 
 class RenameRefactoring(object):

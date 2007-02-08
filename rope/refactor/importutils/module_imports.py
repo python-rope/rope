@@ -11,12 +11,13 @@ class ModuleImports(object):
         self.pycore = pycore
         self.pymodule = pymodule
         self.import_statements = None
+        self.separating_lines = 0
 
     def get_import_statements(self):
         if self.import_statements is None:
-            self.import_statements = _GlobalImportFinder(self.pymodule,
-                                                         self.pycore).\
-                                     find_import_statements()
+            finder = _GlobalImportFinder(self.pymodule, self.pycore)
+            self.import_statements = finder.find_import_statements()
+            self.separating_lines = finder.get_separating_line_count()
         return self.import_statements
 
     def _get_unbound_names(self, defined_pyobject):
@@ -42,23 +43,22 @@ class ModuleImports(object):
         return result
 
     def get_changed_source(self):
-        imports = [stmt for stmt in self.get_import_statements()
-                   if stmt.is_changed()]
+        imports = self.get_import_statements()
         after_removing = self._remove_imports(imports)
+        imports = [stmt for stmt in imports if not stmt.import_info.is_empty()]
 
         result = []
-        last_index = 0
+        last_index = self._first_non_blank_line(after_removing, 0)
         sorted_imports = sorted(imports, self._compare_import_locations)
         for stmt in sorted_imports:
             start = self._get_import_location(stmt)
             result.extend(after_removing[last_index:start - 1])
             last_index = self._first_non_blank_line(after_removing, start - 1)
-            if not stmt.import_info.is_empty():
-                result.append(stmt.get_import_statement() + '\n')
-                if stmt != sorted_imports[-1] or \
-                   self._first_non_blank_line(after_removing, last_index) < \
-                   len(after_removing):
-                    result.append('\n' * stmt.blank_lines)
+            if stmt != sorted_imports[0]:
+                result.append('\n' * stmt.blank_lines)
+            result.append(stmt.get_import_statement() + '\n')
+        if sorted_imports and last_index < len(after_removing):
+            result.append('\n' * self.separating_lines)
         result.extend(after_removing[last_index:])
         return ''.join(result)
 
@@ -165,14 +165,11 @@ class ModuleImports(object):
         in_projects = sorted(visitor.in_project, self._compare_imports)
         third_party = sorted(visitor.third_party, self._compare_imports)
         standards = sorted(visitor.standard, self._compare_imports)
-        blank_lines = 1
-        if not in_projects and not third_party:
-            blank_lines = 2
-        last_index = self._move_imports(standards, last_index, blank_lines)
-        if not in_projects:
-            blank_lines = 2
-        last_index = self._move_imports(third_party, last_index, blank_lines)
-        last_index = self._move_imports(in_projects, last_index, 2)
+        blank_lines = 0
+        last_index = self._move_imports(standards, last_index, 0)
+        last_index = self._move_imports(third_party, last_index, 1)
+        last_index = self._move_imports(in_projects, last_index, 1)
+        self.separating_lines = 2
 
     def _compare_imports(self, stmt1, stmt2):
         str1 = stmt1.get_import_statement()
@@ -185,11 +182,12 @@ class ModuleImports(object):
 
     def _move_imports(self, imports, index, blank_lines):
         if imports:
-            for stmt in imports[:-1]:
-                stmt.move(index)
-                index += 1
-            imports[-1].move(index, blank_lines)
+            imports[0].move(index, blank_lines)
             index += 1
+            if len(imports) > 1:
+                for stmt in imports[1:]:
+                    stmt.move(index)
+                    index += 1
         return index
 
     def handle_long_imports(self, maxdots, maxlength):
@@ -347,9 +345,19 @@ class _GlobalImportFinder(object):
         import_statement = importinfo.ImportStatement(
             importinfo.NormalImport(node.names),start_line, end_line,
             self._get_text(start_line, end_line),
-            blank_lines=self._count_empty_lines_after(start_line))
+            blank_lines=self._count_empty_lines_before(start_line))
         self.imports.append(import_statement)
     
+    def _count_empty_lines_before(self, lineno):
+        result = 0
+        for current in range(lineno - 1, 0, -1):
+            line = self.lines.get_line(current)
+            if line.strip() == '':
+                result += 1
+            else:
+                break
+        return result
+
     def _count_empty_lines_after(self, lineno):
         result = 0
         for current in range(lineno + 1, self.lines.length()):
@@ -359,6 +367,11 @@ class _GlobalImportFinder(object):
             else:
                 break
         return result
+
+    def get_separating_line_count(self):
+        if not self.imports:
+            return 0
+        return self._count_empty_lines_after(self.imports[-1].start_line)
 
     def _get_text(self, start_line, end_line):
         result = []
@@ -376,7 +389,7 @@ class _GlobalImportFinder(object):
         self.imports.append(importinfo.ImportStatement(
                             import_info, node.lineno, end_line,
                             self._get_text(start_line, end_line),
-                            blank_lines=self._count_empty_lines_after(start_line)))
+                            blank_lines=self._count_empty_lines_before(start_line)))
 
     def find_import_statements(self):
         nodes = self.pymodule._get_ast().node.nodes

@@ -584,79 +584,78 @@ def convert_local_to_field(context):
 
 
 actions = []
-actions.append(SimpleAction('Rename Refactoring', ConfirmEditorsAreSaved(rename), 'M-R',
+actions.append(SimpleAction('rename', ConfirmEditorsAreSaved(rename), 'C-c r r',
                             MenuAddress(['Refactor', 'Rename'], 'n'), ['python']))
-actions.append(SimpleAction('Extract Method',
-                            ConfirmEditorsAreSaved(extract_method, all=False), 'M-M',
+actions.append(SimpleAction('extract_method',
+                            ConfirmEditorsAreSaved(extract_method, all=False), 'C-c r m',
                             MenuAddress(['Refactor', 'Extract Method'], 'x'), ['python']))
-actions.append(SimpleAction('Move Refactoring', ConfirmEditorsAreSaved(move), 'M-V',
+actions.append(SimpleAction('move', ConfirmEditorsAreSaved(move), 'C-c r v',
                             MenuAddress(['Refactor', 'Move'], 'm'), ['python']))
-actions.append(SimpleAction('Inline', ConfirmEditorsAreSaved(inline), 'M-I',
+actions.append(SimpleAction('inline', ConfirmEditorsAreSaved(inline), 'C-c r i',
                             MenuAddress(['Refactor', 'Inline'], 'i'), ['python']))
-actions.append(SimpleAction('Extract Local Variable',
-                            ConfirmEditorsAreSaved(extract_variable, all=False), 'M-L',
+actions.append(SimpleAction('extract_local_variable',
+                            ConfirmEditorsAreSaved(extract_variable, all=False), 'C-c r l',
                             MenuAddress(['Refactor', 'Extract Local Variable'], 'l'), ['python']))
-actions.append(SimpleAction('Rename in File',
-                            ConfirmEditorsAreSaved(local_rename, all=False), None,
+actions.append(SimpleAction('rename_in_file',
+                            ConfirmEditorsAreSaved(local_rename, all=False), 'C-c r e',
                             MenuAddress(['Refactor', 'Rename in File'], 'e'), ['python']))
-actions.append(SimpleAction('Change Method Signature',
-                            ConfirmEditorsAreSaved(change_signature), 'M-C',
+actions.append(SimpleAction('change_signature',
+                            ConfirmEditorsAreSaved(change_signature), 'C-c r c',
                             MenuAddress(['Refactor', 'Change Method Signature'], 'c'),
                             ['python']))
-actions.append(SimpleAction('Introduce Factory Method',
-                            ConfirmEditorsAreSaved(introduce_factory), None,
+actions.append(SimpleAction('introduce_factory',
+                            ConfirmEditorsAreSaved(introduce_factory), 'C-c r f',
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'f', 1),
                             ['python']))
-actions.append(SimpleAction('Encapsulate Field',
-                            ConfirmEditorsAreSaved(encapsulate_field), None,
+actions.append(SimpleAction('encapsulate_field',
+                            ConfirmEditorsAreSaved(encapsulate_field), 'C-c r s',
                             MenuAddress(['Refactor', 'Encapsulate Field'], 's', 1),
                             ['python']))
-actions.append(SimpleAction('Introduce Parameter',
-                            ConfirmEditorsAreSaved(introduce_parameter), None,
+actions.append(SimpleAction('introduce_parameter',
+                            ConfirmEditorsAreSaved(introduce_parameter), 'C-c r p',
                             MenuAddress(['Refactor', 'Introduce Parameter'], None, 1),
                             ['python']))
-actions.append(SimpleAction('Convert Local Variable to Field',
+actions.append(SimpleAction('local_to_field',
                             ConfirmEditorsAreSaved(convert_local_to_field), None,
                             MenuAddress(['Refactor', 'Convert Local Variable to Field'], 'b', 1),
                             ['python']))
-actions.append(SimpleAction('Inline Argument Default',
+actions.append(SimpleAction('inline_argument_default',
                             ConfirmEditorsAreSaved(inline_argument_default), None,
                             MenuAddress(['Refactor', 'Inline Argument Default'], 'g', 1),
                             ['python']))
-actions.append(SimpleAction('Transform Module to Package',
+actions.append(SimpleAction('module_to_package',
                             ConfirmEditorsAreSaved(transform_module_to_package), None,
                             MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1),
                             ['python']))
-actions.append(SimpleAction('Rename Current Module',
-                            ConfirmEditorsAreSaved(rename_module), None,
+actions.append(SimpleAction('rename_current_module',
+                            ConfirmEditorsAreSaved(rename_module), 'C-c r 1 r',
                             MenuAddress(['Refactor', 'Rename Current Module'], None, 1),
                             ['python']))
-actions.append(SimpleAction('Move Current Module',
-                            ConfirmEditorsAreSaved(move_module), None,
+actions.append(SimpleAction('move_current_module',
+                            ConfirmEditorsAreSaved(move_module), 'C-c r 1 v',
                             MenuAddress(['Refactor', 'Move Current Module'], None, 1),
                             ['python']))
-actions.append(SimpleAction('Organize Imports',
-                            ConfirmEditorsAreSaved(organize_imports, all=False), 'C-O',
+actions.append(SimpleAction('organize_imports',
+                            ConfirmEditorsAreSaved(organize_imports, all=False), 'C-c i o',
                             MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
-actions.append(SimpleAction('Expand Star Imports',
-                            ConfirmEditorsAreSaved(expand_star_imports, all=False), None,
+actions.append(SimpleAction('expand_star_imports',
+                            ConfirmEditorsAreSaved(expand_star_imports, all=False), 'C-c i x',
                             MenuAddress(['Refactor', 'Expand Star Imports'], 'p', 2),
                             ['python']))
-actions.append(SimpleAction('Transform Relatives to Absolute',
-                            ConfirmEditorsAreSaved(transform_relatives_to_absolute, all=False), None,
+actions.append(SimpleAction('relatives_to_absolute',
+                            ConfirmEditorsAreSaved(transform_relatives_to_absolute, all=False), 'C-c i a',
                             MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2),
                             ['python']))
-actions.append(SimpleAction('Transform Froms to Imports',
-                            ConfirmEditorsAreSaved(transform_froms_to_imports, all=False), None,
+actions.append(SimpleAction('froms_to_imports',
+                            ConfirmEditorsAreSaved(transform_froms_to_imports, all=False), 'C-c i n',
                             MenuAddress(['Refactor', 'Transform Froms to Imports'], 'r', 2),
                             ['python']))
-actions.append(SimpleAction('Handle Long Imports',
-                            ConfirmEditorsAreSaved(handle_long_imports, all=False), None,
+actions.append(SimpleAction('handle_long_imports',
+                            ConfirmEditorsAreSaved(handle_long_imports, all=False), 'C-c i l',
                             MenuAddress(['Refactor', 'Handle Long Imports'], None, 2),
                             ['python']))
 
-core = rope.ui.core.Core.get_core()
+core = rope.ui.core.get_core()
 core._add_menu_cascade(MenuAddress(['Refactor'], 't'), ['python'])
 for action in actions:
     core.register_action(action)
-

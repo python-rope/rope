@@ -19,13 +19,10 @@ Base Stories
 * Python C extensions
 * User specified source folders
 * Zip imports
-* Finding similar statements when extracting variable/method
 * Pull up method
 * Push down method
-* Replace method with method object refactoring
 * Analyzing function decorators
 * Introduce redirection
-* Changing signature in class hierarchies
 * Moving fields/methods to attribute classes
 
 
@@ -57,7 +54,6 @@ IDE And UI Stories
   * Fixed places for StatusTexts
 
 * Indenting a range of file
-* Better multi-sequence key event handling
 * Auto completion type
 
   * Inserting or overwriting
@@ -76,8 +72,6 @@ IDE And UI Stories
   This can be used when proposing code assists.
 * Formating code
 * Show PyDoc reST highlighting
-* Better list and tree navigation
-  Add filter texts and selection texts to trees and lists.
 * Enhancing module running
 
   * Showing running status in the GUI
@@ -88,13 +82,73 @@ IDE And UI Stories
 
 * View type hierarchy
 * Open Type; C-T
-* Saving preferences
-* Commanding buffer
-* Saving history across sessions
 
 
 Stories
 =======
 
+> Public Release 0.5 : May 6, 2007
+
+
+* Saving history across sessions
+
+
+* Better UI list and tree navigation
+  Add filter texts and selection texts to trees and lists.
+
+
+* Handling the return type of ``yield`` keyword
+
+
+* Handling the type of object after ``with/as`` statements
+
+
+* Finding similar statements when extracting variable/method
+
+
+* Extracting methods from pieces with only one return/yield statement
+
+
+* Moving field/method
+
+
+* Inlining a single occurrence
+
+
+* Performing change method signature in class hierarchies
+
+
+* Asking whether to encapsulate field in the class itself
+
+
+* Moving initialization to constructor in local variable to field
+
+
+* Adding an option to remove old parameter in inline argument default
+
+
+* Renaming similarly named variables
+
+
+* Renaming textual matches
+
+
+* Performing import action only on one import statement
+
+
+* Changing signature in class hierarchies
+
+
+* Commanding buffer
+
 
 > Public Release 0.5m1 : February 18, 2007
+
+
+* Replace method with method object refactoring
+
+
+* Having two keybindings emacs/normal
+
+
+* Saving font preferences

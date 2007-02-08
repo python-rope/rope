@@ -705,6 +705,14 @@ class ImportUtilsTest(unittest.TestCase):
             self.import_tools.handle_long_imports(pymod, maxdots=3,
                                                   maxlength=10))
 
+    def test_empty_removing_unused_imports_and_eating_blank_lines(self):
+        self.mod.write('import pkg1\nimport pkg2\n\n\nprint pkg1\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_with_imports(pymod)
+        module_with_imports.remove_unused_imports()
+        self.assertEquals('import pkg1\n\n\nprint pkg1\n',
+                          module_with_imports.get_changed_source())
+
 
 if __name__ == '__main__':
     unittest.main()

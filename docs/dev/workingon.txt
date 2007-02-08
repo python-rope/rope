@@ -1,49 +1,56 @@
-Basic Formatting
-===============
+Saving Preferences
+==================
 
-- Removing extra spaces
-- Removing more than two blank lines
-- ``C-F``
-- Removing extra lines at the end of the file
-- Insert a new line if does not end with one
-- `ConfirmEditorsAreSaved` takes an all keyword
+- `KeyBinder` class for binding keys to a widget
+- Any key that was not expected should return to editor
+- Refactor `_KeyLevel`; separate root
+- Showing current keys in status bar when waiting for more keys
+- Having only one `KeyBinder` for each editing context
+- Setting default keys to be emacs keys
+- Adding ``dot_rope.py`` module for holding the default ``.rope.py``
+- Adding ``~/.rope`` file
+- Constructing menus after reading ``.rope``
+
+* Adding a ``Edit "~/.rope"`` action
+* "C-x C-p" or "C-x p f"
+* Renaming `rope.ui.codeassist` to `rope.ui.codeactions`
+* Better names for actions
+* Confirm saving editor shows all buffers rather than the changed ones
 
 
 Remaining Small Stories
 =======================
 
-* Supporting two keybinding modes
+High Priorities:
+
+* Separating UI and functional tests from unit tests
+* Should we stop when transforming local variable to fields when there
+  the field already exists?
+* Lambdas as functions; consider their parameters
+* Docs for builtin functions and properties
+* Goto definition for ``"# comment.\na_var"``
+
+Others:
+
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'
     in <generator object at 0xb7173aec> ignored``
 * Only saving diffs in `ChangeContents`
-* Adding imports eats the blank lines after it
 * Undoing `RemoveResource`; It's not used by refactorings
-* Lambdas as functions; consider their parameters
-* Default maxlength and maxdots for handling long imports
 * Decide when to use `difflib` in `Editor.set_text` based on the
   number of changes
 * Showing properties in quick outline
 * Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s
-* Handling the return type of generator functions
 * Fixing multiple function definition problems
-* Docs for builtin functions and properties
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * Extract constant
 * What to do if a file is removed while editing
 * Problems for inside list comprehension assists
-* Performing actions on individual functions or imports
 * `PyClass.superclasses` should be concluded data
 * Better `ropetest` package structure
 * Handling `AssList` for inline variable and encapsulate field
-* Considering logical lines in `rope.codeanalyze`
 * Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
-* Extract method and return statements
 * Import addition when adding a relative to an absolute import
-* Caching `PyCore.classes`
-* `rope.exceptions` should only contain user exceptions that are
-  thrown from public classes like `Project`, `PyCore`, `Refactoring`
-* Goto definition for ``"# comment.\na_var"``

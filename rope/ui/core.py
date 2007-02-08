@@ -1,9 +1,11 @@
+import os
+
 import tkFileDialog
-import tkMessageBox
 from Tkinter import *
 
 import rope.ui.editor
 import rope.ui.editorpile
+import rope.ui.keybinder
 import rope.ui.statusbar
 from rope.base.exceptions import RopeError
 from rope.base.project import Project
@@ -34,15 +36,18 @@ class Core(object):
         line_status.set_width(8)
 
         for context in editingcontexts.contexts.values():
-            context.key_binding = []
+            context.key_binding = rope.ui.keybinder.KeyBinder(
+                self.status_bar_manager)
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
         self.project = None
+        self.rebound_keys = {}
+        self.actions = []
 
     def _load_actions(self):
         """Load extension modules.
 
         The modules that are loaded here use `Core.register_action`
-        to register their `Action` s.
+        to register their `Action`\s.
         """
         import rope.ui.fileactions
         import rope.ui.editactions
@@ -71,9 +76,34 @@ class Core(object):
                 line_text = '%d: %d' % (editor.get_current_line_number(),
                                         editor.get_current_column_number())
             line_status.set_text(line_text)
-        self._bind_key('<Any-KeyRelease>', show_current_line_number)
-        self._bind_key('<Any-Button>', show_current_line_number)
-        self._bind_key('<FocusIn>', show_current_line_number)
+        self.root.bind('<Any-KeyRelease>', show_current_line_number)
+        self.root.bind('<Any-Button>', show_current_line_number)
+        self.root.bind('<FocusIn>', show_current_line_number)
+        for action in self.actions:
+            callback = self._make_callback(action)
+            key = self._get_action_key(action)
+            if key:
+                self._bind_key(key, callback, action.get_active_contexts())
+
+    def _get_action_key(self, action):
+        key = action.get_default_key()
+        if action.get_name() in self.rebound_keys:
+            key = self.rebound_keys[action.get_name()]
+        return key
+
+    def _init_menus(self):
+        for action in self.actions:
+            callback = self._make_callback(action)
+            menu = action.get_menu()
+            key = self._get_action_key(action)
+            if menu:
+                if key:
+                    menu.address[-1] = menu.address[-1].ljust(32) + key
+                self._add_menu_command(menu, callback, action.get_active_contexts())
+
+    def _bind_none_context_keys(self):
+        context = editingcontexts.none
+        context.key_binding.bind(self.root)
 
     def _get_matching_contexts(self, contexts):
         contexts = list(contexts)
@@ -89,24 +119,13 @@ class Core(object):
         return result
 
     def _bind_key(self, key, function, active_contexts=['all']):
-        if not key.startswith('<'):
-            key = self._emacs_to_tk(key)
         active_contexts = self._get_matching_contexts(active_contexts)
         for context in active_contexts:
-            context.key_binding.append((key, function))
-        if editingcontexts.none in active_contexts:
-            self.root.bind(key, function)
-
-    def _emacs_to_tk(self, key):
-        result = []
-        for token in key.split(' '):
-            result.append('<%s>' % token.replace('M-', 'Alt-').replace('C-', 'Control-'))
-        return ''.join(result)
+            context.key_binding.add_key(key, function)
 
     def _set_key_binding(self, graphical_editor):
-        widget = graphical_editor.getWidget()
-        for (key, function) in graphical_editor.get_editing_context().key_binding:
-            widget.bind(key, function)
+        context = graphical_editor.get_editing_context()
+        context.key_binding.bind(graphical_editor.getWidget())
 
     def _change_editor_dialog(self, event=None):
         toplevel = Toplevel()
@@ -215,8 +234,11 @@ class Core(object):
         save_button.focus_set()
 
     def run(self):
-        self._init_key_binding()
         self._load_actions()
+        self._load_dot_rope()
+        self._init_key_binding()
+        self._bind_none_context_keys()
+        self._init_menus()
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
         self.main.rowconfigure(0, weight=1)
@@ -226,6 +248,15 @@ class Core(object):
         self.main.pack(fill=BOTH, expand=1)
         self.main.pack_propagate(0)
         self.root.mainloop()
+
+    def _load_dot_rope(self):
+        dot_rope = os.path.expanduser('~/.rope')
+        if os.path.exists(dot_rope):
+            run_globals = {}
+            run_globals.update({'__name__': '__main__',
+                                '__builtins__': __builtins__,
+                                '__file__': dot_rope})
+            execfile(dot_rope, run_globals)
 
     def open_file(self, fileName):
         if self.project is None:
@@ -330,15 +361,10 @@ class Core(object):
 
     def register_action(self, action):
         """Register a `rope.ui.extension.Action`"""
-        callback = self._make_callback(action)
-        menu = action.get_menu()
-        key = action.get_default_key()
-        if key:
-            self._bind_key(key, callback, action.get_active_contexts())
-        if menu:
-            if key:
-                menu.address[-1] = menu.address[-1].ljust(31) + key
-            self._add_menu_command(menu, callback, action.get_active_contexts())
+        self.actions.append(action)
+
+    def rebind_action(self, name, key):
+        self.rebound_keys[name] = key
 
     def _add_menu_command(self, menu, callback, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)
@@ -384,3 +410,6 @@ class Core(object):
             Core._core = Core()
         return Core._core
 
+
+def get_core():
+    return Core.get_core()

@@ -146,47 +146,52 @@ def show_history(context):
     frame.grid()
     undo_button.focus_set()
 
+def swap_mark_and_insert(context):
+    context.editor.swap_mark_and_insert()
+
 
 core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
 
-actions.append(SimpleAction('Emacs Set Mark', set_mark, 'C-space',
+actions.append(SimpleAction('set_mark', set_mark, 'C-space',
                             MenuAddress(['Edit', 'Emacs Set Mark'], 's'), ['all']))
-actions.append(SimpleAction('Emacs Copy', copy, 'M-w',
+actions.append(SimpleAction('copy', copy, 'M-w',
                             MenuAddress(['Edit', 'Emacs Copy'], 'c'), ['all']))
-actions.append(SimpleAction('Emacs Cut', cut, 'C-w',
+actions.append(SimpleAction('cut', cut, 'C-w',
                             MenuAddress(['Edit', 'Emacs Cut'], 't'), ['all']))
-actions.append(SimpleAction('Paste', paste, 'C-y',
+actions.append(SimpleAction('paste', paste, 'C-y',
                             MenuAddress(['Edit', 'Emacs Paste'], 'p'), ['all']))
-actions.append(SimpleAction('Goto Line', goto_line, None,
+actions.append(SimpleAction('goto_line', goto_line, 'C-x g',
                             MenuAddress(['Edit', 'Goto Line'], 'g'), ['all']))
-actions.append(SimpleAction('Goto Last Edit Location', goto_last_edit_location, 'C-q',
+actions.append(SimpleAction('goto_last_edit_location', goto_last_edit_location, 'C-x C-q',
                             MenuAddress(['Edit', 'Goto Last Edit Location'], 'e'), ['all', 'none']))
+actions.append(SimpleAction('swap_mark_and_insert', swap_mark_and_insert, 'C-x C-x',
+                            None, ['all']))
 
-actions.append(SimpleAction('Undo', undo_editing, 'C-x u',
+actions.append(SimpleAction('undo', undo_editing, 'C-x u',
                             MenuAddress(['Edit', 'Undo Editing'], 'u', 1), ['all']))
-actions.append(SimpleAction('Redo', redo_editing, 'C-x r',
+actions.append(SimpleAction('redo', redo_editing, 'C-x r',
                             MenuAddress(['Edit', 'Redo Editing'], 'r', 1), ['all']))
 actions.append(
-    SimpleAction('Undo Project',
-                 ConfirmEditorsAreSaved(undo_project), 'C-x U',
+    SimpleAction('undo_project',
+                 ConfirmEditorsAreSaved(undo_project), 'C-x p u',
                  MenuAddress(['Edit', 'Undo Last Project Change'], 'd', 2),
                  ['all', 'none']))
 actions.append(
-    SimpleAction('Redo Project',
-                 ConfirmEditorsAreSaved(redo_project), 'C-x R',
+    SimpleAction('redo_project',
+                 ConfirmEditorsAreSaved(redo_project), 'C-x p r',
                  MenuAddress(['Edit', 'Redo Last Project Change'], 'o', 2),
                  ['all', 'none']))
 actions.append(
-    SimpleAction('Project History',
-                 ConfirmEditorsAreSaved(show_history), None,
+    SimpleAction('project_history',
+                 ConfirmEditorsAreSaved(show_history), 'C-x p h',
                  MenuAddress(['Edit', 'Project History'], 'h', 2),
                  ['all', 'none']))
 
-actions.append(SimpleAction('Forward Search', forward_search, 'C-s',
+actions.append(SimpleAction('search_forward', forward_search, 'C-s',
                             MenuAddress(['Edit', 'Forward Search'], 'f', 3), ['all']))
-actions.append(SimpleAction('Backward Search', backward_search, 'C-r',
+actions.append(SimpleAction('search_backward', backward_search, 'C-r',
                             MenuAddress(['Edit', 'Backward Search'], 'b', 3), ['all']))
 
 for action in actions:

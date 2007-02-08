@@ -304,37 +304,37 @@ core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['File'], 'i'), ['all', 'none'])
 actions = []
 
-actions.append(SimpleAction('Open Project', open_project, 'C-x C-p',
+actions.append(SimpleAction('open_project', open_project, 'C-x C-p',
                             MenuAddress(['File', 'Open Project...'], 'o')))
-actions.append(SimpleAction('Close Project', close_project, None,
+actions.append(SimpleAction('close_project', close_project, 'C-x p k',
                             MenuAddress(['File', 'Close Project'], 'l')))
 
-actions.append(SimpleAction('Create File', create_file, None,
+actions.append(SimpleAction('create_file', create_file, 'C-x n f',
                             MenuAddress(['File', 'New File...'], 'n', 1)))
-actions.append(SimpleAction('Create Folder', create_folder, None,
+actions.append(SimpleAction('create_folder', create_folder, 'C-x n d',
                             MenuAddress(['File', 'New Folder...'], 'e', 1)))
-actions.append(SimpleAction('Create Module', create_module, None,
+actions.append(SimpleAction('create_module', create_module, 'C-x n m',
                             MenuAddress(['File', 'New Module...'], 'm', 1)))
-actions.append(SimpleAction('Create Package', create_package, None,
+actions.append(SimpleAction('create_package', create_package, 'C-x n p',
                             MenuAddress(['File', 'New Package...'], 'p', 1)))
 
-actions.append(SimpleAction('Find File', find_file, 'C-x C-f',
+actions.append(SimpleAction('find_file', find_file, 'C-x C-f',
                             MenuAddress(['File', 'Find File...'], 'f', 2)))
-actions.append(SimpleAction('Project Tree', project_tree, 'M-Q r',
+actions.append(SimpleAction('project_tree', project_tree, 'C-x p t',
                             MenuAddress(['File', 'Project Tree'], 't', 2)))
-actions.append(SimpleAction('Refresh Project', refresh_project, 'F5',
+actions.append(SimpleAction('refresh_project', refresh_project, 'C-x p r',
                             MenuAddress(['File', 'Refresh Project'], 'r', 2)))
 
-actions.append(SimpleAction('Change Editor', change_editor, 'C-x b',
+actions.append(SimpleAction('change_buffer', change_editor, 'C-x b',
                             MenuAddress(['File', 'Change Editor...'], 'c', 3)))
-actions.append(SimpleAction('Save Editor', save_editor, 'C-x C-s',
+actions.append(SimpleAction('save_buffer', save_editor, 'C-x C-s',
                             MenuAddress(['File', 'Save Editor'], 's', 3)))
-actions.append(SimpleAction('Save All Editors', save_all, 'C-x s',
+actions.append(SimpleAction('save_all_buffers', save_all, 'C-x s',
                             MenuAddress(['File', 'Save All'], 'a', 3)))
-actions.append(SimpleAction('Close Editor', close_editor, 'C-x k',
+actions.append(SimpleAction('close_buffer', close_editor, 'C-x k',
                             MenuAddress(['File', 'Close Editor'], 'd', 3)))
 
-actions.append(SimpleAction('Exit', exit_rope, 'C-x C-c',
+actions.append(SimpleAction('exit', exit_rope, 'C-x C-c',
                             MenuAddress(['File', 'Exit'], 'x', 4)))
 
 for action in actions:

@@ -1,8 +1,8 @@
-import Tkinter
-
 import rope.base.exceptions
+import rope.ui.uihelpers
 from rope.base.project import ResourceObserver, FilteredResourceObserver
 from rope.ui import editingcontexts
+
 
 class FileEditor(object):
 
@@ -64,7 +64,7 @@ class FileEditor(object):
 
     def save(self):
         if self.readonly:
-            raise rope.base.exceptions.RopeUIError(
+            raise rope.ui.uihelpers.RopeUIError(
                 'File is opened in readonly mode!')
         self.saving = True
         try:

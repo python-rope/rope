@@ -16,65 +16,98 @@ Keybinding
 ==========
 
 The keybinding will be customizable in future.  Some of these bindings
-are chosen from emacs and some from eclipse.  ('C' stands for Control
-key and 'M' for Meta(Alt) key.)
+are chosen from emacs and some from eclipse.  ("C" stands for Control
+key and "M" for Meta(Alt) key.)
 
-=============  ==========================
-key            binding
-=============  ==========================
-C-x C-p        open/new project
-C-x C-n        new file
-C-x C-f        find file
-C-x b          change active editor
-C-x k          close active editor
-C-x C-c        exit
-M-X p          run active editor
-M-X t          run unit-tests
-M-Q r          show project tree
-F5             refresh project
--------------  --------------------------
-C-f            forward character
-C-b            backward character
-C-n            next line
-C-p            previous line
-M-f            next word
-M-b            previous word
-C-v            next page
-M-v            previous page
-M-l            downcase word
-M-c            capitalize word
-M-u            upcase word
-C-s            start searching
-C-q            last edit location
-C-x u          undo editing
-C-x r          redo editing
-C-space        set mark
-C-w            cut region
-M-w            copy region
-C-x C-x        swap mark and insert
-C-y            paste
-C-x C-s        save
-C-x s          save all
-C-x U          undo project change
-C-x R          redo project change
--------------  --------------------------
-M-/            code-assist(auto-complete)
-F3             go to definition location
-F2             show doc
-C-o            show quick outline
-C-i            correct line indentation
-C-c c          comment current line
-C-c C-c        comment region lines
-C-G            find occurrences
--------------  --------------------------
-M-R            rename refactoring
-M-M            extract method
-M-V            move refactoring
-M-I            inline refactoring
-M-C            change method signature
-M-L            extract local variable
-C-O            organize imports
-=============  ==========================
+==========================  =============  =============
+binding                     emacs binding  normal
+==========================  =============  =============
+open/new project            C-x C-p        C-x C-p
+close project               C-x p k        C-x C-p
+show project tree           C-x p t        M-Q r
+refresh project             C-x p r        F5
+--------------------------  -------------  -------------  
+new module                  C-x n m
+new package                 C-x n p
+new file                    C-x n f
+new directory               C-x n d
+find file                   C-x C-f        C-R
+change active editor        C-x b          C-x b
+close active editor         C-x k          C-w
+exit                        C-x C-c
+run active editor           C-c x p        M-X p
+run unit-tests              C-c x t        M-X t
+--------------------------  -------------  -------------  
+forward character           C-f
+backward character          C-b
+next line                   C-n
+previous line               C-p
+next word                   M-f
+previous word               M-b
+next page                   C-v
+previous page               M-v
+downcase word               M-l
+capitalize word             M-c
+upcase word                 M-u
+start searching             C-s            C-f
+start reverse searching     C-r
+last edit location          C-x C-q        C-q
+goto line                   C-x C-g        C-g
+--------------------------  -------------  -------------
+set mark                    C-space
+cut region                  C-w            C-x
+copy region                 M-w            C-c
+swap mark and insert        C-x C-x
+paste                       C-y            C-v
+undo editing                C-x u          C-z
+redo editing                C-x r          C-Z
+--------------------------  -------------  -------------
+save                        C-x C-s        C-s
+save all                    C-x s          C-S
+undo project change         C-x C-u
+redo project change         C-x C-r
+project history             C-x p h
+--------------------------  -------------  -------------
+code-assist(auto-complete)  M-/            C-space
+go to definition location   C-c C-g        F3
+show doc                    C-c C-d        F2
+show quick outline          C-c C-o        C-o
+correct line indentation    C-i            C-i
+remove extra spaces         C-c C-f        C-F
+comment current line        C-c c          C-c c
+comment region lines        C-c C-c        C-c C-c
+find occurrences            C-c C-s        C-G
+--------------------------  -------------  -------------
+rename refactoring          C-c r r        M-R
+extract method              C-c r m        M-M
+move refactoring            C-c r v        M-V
+inline refactoring          C-c r i        M-I
+change method signature     C-c r c        M-C
+extract local variable      C-c r l        M-L
+introduce factory           C-c r f
+encapsulate field           C-c r s
+introduce parameter         C-c r p
+rename in file              C-c r e
+convert local to field
+inline argument default
+module to package
+rename current module
+move current package
+--------------------------  -------------  -------------
+organize imports            C-c i o        C-O
+expand star imports         C-c i x
+relatives to absolutes      C-c i a
+froms to normals            C-c i n
+handle long imports         C-c i l
+--------------------------  -------------  -------------
+about                       C-h a
+README                      C-h r
+features                    C-h f
+overview                    C-h o
+tutorial                    C-h t
+using as library            C-h l
+contributing                C-h c
+==========================  =============  =============
 
 
 Code Assist(Auto Complete)

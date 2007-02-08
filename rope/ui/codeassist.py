@@ -288,7 +288,8 @@ def find_occurrences(context):
 def do_format_code(context):
     editor = context.editor
     result = formatter.Formatter().format(editor.get_text())
-    editor.set_text(result, reset_editor=False)
+    if result != editor.get_text():
+        editor.set_text(result, reset_editor=False)
 
 
 # Registering code assist actions
@@ -296,35 +297,35 @@ core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Code'], 'o'), ['python', 'rest'])
 actions = []
 
-actions.append(SimpleAction('Code Assist', do_code_assist, 'M-slash',
+actions.append(SimpleAction('code_assist', do_code_assist, 'M-slash',
                             MenuAddress(['Code', 'Code Assist (Auto-Complete)'], 'c'), ['python']))
-actions.append(SimpleAction('Goto Definition', do_goto_definition, 'F3',
+actions.append(SimpleAction('goto_definition', do_goto_definition, 'C-c C-g',
                             MenuAddress(['Code', 'Goto Definition'], 'g'), ['python']))
-actions.append(SimpleAction('Show Doc', do_show_doc, 'F2',
+actions.append(SimpleAction('show_doc', do_show_doc, 'C-c C-d',
                             MenuAddress(['Code', 'Show Doc'], 's'), ['python']))
-actions.append(SimpleAction('Quick Outline', do_quick_outline, 'C-o',
+actions.append(SimpleAction('quick_outline', do_quick_outline, 'C-c C-o',
                             MenuAddress(['Code', 'Quick Outline'], 'q'), ['python']))
-actions.append(SimpleAction('Find Occurrences', find_occurrences, 'C-G',
+actions.append(SimpleAction('find_occurrences', find_occurrences, 'C-c C-s',
                             MenuAddress(['Code', 'Find Occurrences'], 'f'), ['python']))
 
-actions.append(SimpleAction('Correct Line Indentation',
+actions.append(SimpleAction('correct_line_indentation',
                             do_correct_line_indentation, 'C-i',
                             MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1),
                             ['python', 'rest']))
-actions.append(SimpleAction('Format Code',
-                            do_format_code, 'C-F',
+actions.append(SimpleAction('format_code',
+                            do_format_code, 'C-c C-f',
                             MenuAddress(['Code', 'Remove Extra Spaces And Lines'], None, 1),
                             ['python']))
 
-actions.append(SimpleAction('Comment Line', comment_line, 'C-c c',
+actions.append(SimpleAction('comment_line', comment_line, 'C-c c',
                             MenuAddress(['Code', 'Comment Line'], 'e', 1),
                             ['python']))
-actions.append(SimpleAction('Comment Region', comment_region, 'C-c C-c',
+actions.append(SimpleAction('comment_region', comment_region, 'C-c C-c',
                             MenuAddress(['Code', 'Comment Region'], 'n', 1),
                             ['python']))
-actions.append(SimpleAction('Run Module', do_run_module, 'M-X p',
+actions.append(SimpleAction('run_module', do_run_module, 'C-c x p',
                             MenuAddress(['Code', 'Run Module'], 'm', 2), ['python']))
-actions.append(SimpleAction('Run Unit Tests', run_tests, 'M-X t',
+actions.append(SimpleAction('run_unit_tests', run_tests, 'C-c x t',
                             MenuAddress(['Code', 'Run Unit Tests'], 't', 2), ['python']))
 
 for action in actions:

@@ -75,22 +75,22 @@ core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Help'], 'p'), ['all', 'none'])
 actions = []
 
-actions.append(SimpleAction('HelpReadme', show_readme, None,
+actions.append(SimpleAction('readme', show_readme, 'C-h r',
                             MenuAddress(['Help', 'Readme'], 'r')))
-actions.append(SimpleAction('HelpFeatures', show_features, None,
+actions.append(SimpleAction('features', show_features, 'C-h f',
                             MenuAddress(['Help', 'Features'], 'f')))
-actions.append(SimpleAction('HelpOverview', show_overview, None,
+actions.append(SimpleAction('overview', show_overview, 'C-h o',
                             MenuAddress(['Help', 'Overview'], 'o')))
-actions.append(SimpleAction('HelpTutorial', show_tutorial, None,
+actions.append(SimpleAction('tutorial', show_tutorial, 'C-h t',
                             MenuAddress(['Help', 'Tutorial'], 't')))
 
-actions.append(SimpleAction('HelpContributing', show_contributing, None,
+actions.append(SimpleAction('contributing', show_contributing, 'C-h c',
                             MenuAddress(['Help', 'Contributing'], 'n', 1)))
-actions.append(SimpleAction('HelpLibrary', show_library, None,
+actions.append(SimpleAction('library', show_library, 'C-h l',
                             MenuAddress(['Help', 'Using Rope As A Library'],
                                         'l', 1)))
 
-actions.append(SimpleAction('About', show_about_dialog, None,
+actions.append(SimpleAction('about', show_about_dialog, 'C-h a',
                             MenuAddress(['Help', 'About Rope'], 'a', 2)))
 
 for action in actions:

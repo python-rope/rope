@@ -72,11 +72,10 @@ class ChangeContents(Change):
     def __init__(self, resource, new_content):
         self.resource = resource
         self.new_content = new_content
-        self.old_content = None
+        self.old_content = self.resource.read()
         self.operations = self.resource.project.operations
 
     def do(self):
-        self.old_content = self.resource.read()
         self.operations.write_file(self.resource, self.new_content)
 
     def undo(self):
@@ -88,7 +87,7 @@ class ChangeContents(Change):
     def get_description(self):
         differ = difflib.Differ()
         result = list(differ.compare(self.resource.read().splitlines(True),
-                                     self.new_content.splitlines(True)))
+                                     self.old_content.splitlines(True)))
         return ''.join(result)
 
     def get_changed_resources(self):

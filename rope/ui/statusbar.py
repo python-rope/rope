@@ -1,9 +1,10 @@
 from Tkinter import *
 
 import rope.base.exceptions
+import rope.ui.uihelpers
 
 
-class StatusBarException(rope.base.exceptions.RopeUIError):
+class StatusBarException(rope.ui.uihelpers.RopeUIError):
     pass
 
 
@@ -23,7 +24,7 @@ class StatusText(object):
         self.label['text'] = text.ljust(self.width)
 
     def get_text(self):
-        return self.label['text']
+        return self.label['text'].rstrip()
 
     def remove(self):
         self.manager.remove_status(self)

@@ -34,11 +34,12 @@ From February 4, 2007 till May 6, 2007
 Release Goals
 -------------
 
-Metaphor: ...
+Metaphor: Enhance old refactorings
 
-
-Possible Plans
---------------
+* In this release we will try to enhance old refactorings and move
+  toward being more stable.
+* New language features will be supported.
+* The UI will be enhanced.
 
 
 Discussion
@@ -54,34 +55,9 @@ There are many places to extend rope.  Some of them are:
 * Refactoring scripts
 * Dynamic type inference(faster, new ways)
 * Static type inference(new, better ways)
-* Implicit interfaces
-* Better occurence finding approach
 * Exclusion principle for occurrence finding
-* Indexing files for occurrence finding
 * Changing structure refactorings; for example: ``a = b -> a(b.c)``
 * Better library interface
-
-
-Enhancing Old Refactorings
---------------------------
-
-* Extracting methods from pieces with only one return/yield statement
-* Finding similar statements to the extracted piece
-* Moving field/method
-* Inlining a single occurrence
-* Performing change method signature in class hierarchies
-* Asking whether to encapsulate field in the class itself
-* Moving initialization to constructor in local variable to field
-* Adding an option to remove old parameter in inline argument default
-* Renaming similarly named variables
-* Renaming textual matches
-* Performing import action only on one import statement
-
-
-Call For Help
--------------
-
-We need developers for working on the IDE and UI.
 
 
 Hot Topics
@@ -91,7 +67,7 @@ Hot Topics
 To Be Discussed
 ===============
 
-* Faster occurrence finding
+* `Better occurrence finding`_
 * `Allowing non-existent resources`_
 * `Python's Implicit Interfaces`_
 * `Rope's preference system`_
@@ -103,11 +79,63 @@ To Be Discussed
 * Finding available refactorings
 
 
+Supporting Many Keybindings
+===========================
+
+The simplest way to support multiple keybindings is to change
+`Action.get_default_key` to return a `dict` rather than a `str`.  The
+problem is this approach makes changing keybindings harder.::
+
+  action = SimpleAction('rename', rename,
+                        {'normal': 'M-R', 'emacs': 'C-c r r'},
+                        MenuAddress(['Refactor', 'Rename'], 'n'),
+                        ['python'])
+  core.register_action(action)
+
+An alternative is to separate `Action`\s from keys.  This way we can
+assign keys to actions separately.  The disadvantage is that we have
+to mention an `Action`'s name many times.::
+
+  action = SimpleAction('rename', rename,
+                        MenuAddress(['Refactor', 'Rename'], 'n'),
+                        ['python'])
+  core.register_action(action)
+  core.bind_key('rename', 'normal', 'M-R')
+  core.bind_key('rename', 'emacs', 'C-c r r')
+
+Or maybe we can move this approach an step further by separating menu
+address, too::
+
+  action = SimpleAction('rename', rename, ['python'])
+  core.register_action(action)
+  core.bind_key('rename', 'normal', 'M-R')
+  core.bind_key('rename', 'emacs', 'C-c r r')
+  core.bind_menu('rename', MenuAddress(['Refactor', 'Rename'], 'n'))
+
+One consideration to have in mind is that menus should be constructed
+after the keybinding has been defined.  One way to solve this problem
+is to collect all information about `Action`\s and later construct
+the menu.
+
+Yet another approach is not to change anything.  Each `Action` has a
+default keybinding.  Other bindings can override that default binding
+for example::
+
+  action = SimpleAction('rename', rename, 'C-c r r',
+                        MenuAddress(['Refactor', 'Rename'], 'n'),
+                        ['python'])
+  core.register_action(action)
+  core.bind_key('rename', 'M-R')
+
+So we can let emacs keybinding be the default binding and change that
+if we want to use other bindings.
+
+
 Better Occurrencd Finding
 =========================
 
 The current implementation for finding occurrences of a `PyName` is to
-test every textual occurrence of the same name has the same `PyName`
+test every textual occurrence of that name has the same `PyName`
 or not.  This approach does not work when a name is repeated many
 times in the source.  For example renaming `self`\s are very time
 consuming.
@@ -117,7 +145,8 @@ Maybe we can use one of these solutions:
 * Checking pyname equallity only once for each scope
 
   This way we check each name only once for each scope.  But this is
-  not applicable for attributes.
+  not applicable for attributes.  What's more `PyName`\s seem to
+  cache their types already.
 
 * Limiting the places to search for a name
 
@@ -125,7 +154,23 @@ Maybe we can use one of these solutions:
   function and the keyword arguments passed to functions.  As
   another example function parameters never appear as attributes
   and class variables and methods never are referenced directly
-  except in class body.
+  except in class body.  The search locations include:
+
+  * module bodies
+  * class bodies
+  * function bodies
+
+  Access methods include:
+
+  * function call keyword
+  * normal name access
+  * attribute access
+
+* Excluding unimported modules
+
+  This does not seem to be a good solution.  One reason is that
+  the imports might be indirect.  So we have to put a long time
+  for creating imports trees.
 
 Or maybe we can use a strategy object for searching.
 
@@ -217,6 +262,12 @@ Issues
 Having Virtual `PyModule`\s
 ===========================
 
+For doing this we actually need to support `VirtualProject`\s.
+Because a refactoring changes the files in a project.  The
+`VirtualProject` should compute the changed project tree and
+act as a normal `Project`.
+
+
 What Do We Gain?
 ----------------
 
@@ -282,68 +333,11 @@ Consequences
   many of them at the same time seems to be hard.
 
 
-A Bit in Details
-----------------
-
-If we change all refactoring modules to work on a pymodule we would
-probably be able to have a structure like this::
-
-  class PythonProjectFiles(object):
-
-      def resource_to_pyobject(self, resource):
-          pass
-
-      def get_module(self, module_name):
-          pass
-
-
-  class ChangedPythonProjectFiles(PythonProjectFiles):
-
-      def resource_to_pyobject(self, resource):
-          pass
-
-      def get_module(self, module_name):
-          pass
-
-      def file_changed(self, resource, new_content):
-          pass
-
-      def move_resource(self, resource, new_location):
-          pass
-
-      def get_changes(self):
-          pass
-
-
-This way we can perform any number of refactorings in sequence.  But
-it seems as if we should break `PyCore` into two separate classes.
-What's more after this change we would probably be able to remove
-`rope.refactor.change`.  Maybe we can add `Change...` interfaces to
-`ChangedPythonProjectFiles`.
-
-One of the main obstacles for doing this change is that all of the
-`PyObjects` have a reference to the `PyCore` and ask them about other
-modules.  This causes problems because we want all of the `PyObjects`
-to use a local `PyCore`.
-
-What's more computed information might be valid in a local scope but
-might be invalid in the rest of project.
-
-
 Preventing Unnecessary Recomputations
 -------------------------------------
 
 * Using copy on write
 * Updating global `PyCore` after performing changes
-
-
-Simple Implementation
----------------------
-
-A simple implementation would be possible by using plain and new
-`PythonProjectFiles` from the beginning.  But the performance might
-really hurt if we actually use it but it won't change if we don't.  So
-actually it is a extract class refactorings.
 
 
 Inline Method
@@ -433,8 +427,8 @@ Better Object Inference
 Currently rope's object inference mechanisms are simple and there are
 many situations that they are of no use:
 
-* A simple dynamic type inference saves the return types of methods
-  based on their parameters
+* A dynamic type inference saves the return types of methods based on
+  their parameters
 * We use a simple static type inference that:
 
   * Follows assignments
@@ -515,7 +509,7 @@ A textual form should:
 The current textual form:
 
 * ('module', file)
-* ('function', file, lineno, (args), returned)
+* ('function', file, lineno)
 * ('class', file, name)
 * ('instance', file, name)
 * ('builtin', type, args)
@@ -540,7 +534,7 @@ Returned Types Or Objects
 -------------------------
 
 Should we care only about the type of the returned object or we should
-consider the object itself too?
+consider the object itself, too?
 
 Well, it depends on the type of the objects that is returned.  If it
 is an instance of a class then only the type matters.  If it is a
@@ -714,43 +708,3 @@ Defining the Responsibilities of `Core`
 
 * Providing an interface to the plug-ins
 * Providing methods for controlling rope?
-
-
-Handling Multi-key Keyboard Shortcuts
--------------------------------------
-
-Unfortunately `Tk` has problems for handling multi-key keyboard
-shortcuts.  We can develop another independant keybinding system that
-uses `Tk` to solve these problems.
-
-
-A Good Keybinding
------------------
-
-Rope should have a good emacs-ish keybinding.
-
-* New ...; C-x n ...
-
-  * C-x n m: new module
-  * C-x n p: new package
-  * C-x n f: new file
-  * C-x n d: new directory
-
-* Version control; C-x v ...
-* Refactorings; C-c r ...
-
-  * C-c r r: rename
-  * C-c r m: extract method
-  * C-c r i: inline
-  * C-c r l: extract local
-  * C-c r c: change signature
-
-* Import actions; C-c i ...
-
-  * C-c i o: organize
-  * C-c i x: expand stars
-  * C-c i a: relatives to absolutes
-  * C-c i f: froms to imports
-  * C-c i s: sort
-
-* Help; C-h ...

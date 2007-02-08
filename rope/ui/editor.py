@@ -81,14 +81,6 @@ class GraphicalEditor(object):
             self.delete_prev_word()
             return 'break'
         self.text.bind('<Alt-BackSpace>', delete_prev_word_listener)
-        def do_undo(event):
-            self.undo()
-            return 'break'
-        def do_redo(event):
-            self.redo()
-            return 'break'
-        self.text.bind('<Control-x><u>', do_undo)
-        self.text.bind('<Control-x><r>', do_redo)
         def do_goto_start(event):
             self.goto_start()
             self.text.see(INSERT)
@@ -103,10 +95,6 @@ class GraphicalEditor(object):
                 self.get_searcher().cancel_searching()
         self.text.bind('<Control-g>', escape)
         self.text.bind('<Escape>', escape)
-        def do_swap_mark_and_insert(event):
-            self.swap_mark_and_insert()
-            return 'break'
-        self.text.bind('<Control-x><Control-x>', do_swap_mark_and_insert)
         def go_next_page(event):
             self.next_page()
             return 'break'
@@ -139,9 +127,6 @@ class GraphicalEditor(object):
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
-        def ignore(event):
-            return 'break'
-        self.text.bind('<Control-x>', ignore)
         self.text.bind('<Alt-l>', lambda event: self.lower_next_word())
         self.text.bind('<Alt-u>', lambda event: self.upper_next_word())
         self.text.bind('<Alt-c>', lambda event: self.capitalize_next_word())

@@ -2,9 +2,16 @@ import ScrolledText
 import Tkinter
 from Tkinter import *
 
+import rope.base.exceptions
+
+
+class RopeUIError(rope.base.exceptions.RopeError):
+    """Base exception for user interface parts of rope"""
+
 
 def do_nothing(*args, **kws):
     pass
+
 
 class EnhancedListHandle(object):
 
@@ -354,5 +361,3 @@ class TreeView(object):
         for i in range(node.children_count):
             self.remove(entry_number + 1)
         self._update_entry_text(entry_number)
-
-

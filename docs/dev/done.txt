@@ -3,6 +3,15 @@
 ===========
 
 
+- Handling multi-key keyboard shortcuts : February 8, 2007
+
+
+- Fixing removing imports that eat the blank lines : February 8, 2007
+
+
+- Removing extra spaces and lines; ``C-F`` : February 7, 2007
+
+
 > Public Release 0.4 : February 4, 2007
 
 
