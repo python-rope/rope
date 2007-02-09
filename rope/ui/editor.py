@@ -136,6 +136,12 @@ class GraphicalEditor(object):
         self.text.bind('<Control-k>', kill_line)
 
     def get_region_offset(self):
+        start, end = self._get_region_index()
+        start_offset = self.get_offset(start)
+        end_offset = self.get_offset(end)
+        return (start_offset, end_offset)
+
+    def _get_region_index(self):
         start = ''
         end = ''
         try:
@@ -150,9 +156,7 @@ class GraphicalEditor(object):
                 start = end
         if self.text.compare(start, '>', end):
             start, end = end, start
-        start_offset = self.get_offset(start)
-        end_offset = self.get_offset(end)
-        return (start_offset, end_offset)
+        return start, end
 
     def _focus_went_out(self):
         if self.searcher.is_searching():
@@ -428,10 +432,7 @@ class GraphicalEditor(object):
         self.text.mark_unset('mark')
 
     def _select_region(self):
-        start = 'mark'
-        end = INSERT
-        if self.text.compare(start, '>', end):
-            start, end = end, start
+        start, end = self._get_region_index()
         self.text.tag_add(SEL, start, end)
 
     def copy_region(self):
@@ -447,7 +448,7 @@ class GraphicalEditor(object):
             self._select_region()
             self.text.event_generate('<<Cut>>')
             self.text.see(INSERT)
-        except TclError:
+        except TclError, e:
             pass
 
     def paste(self):

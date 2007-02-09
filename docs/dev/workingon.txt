@@ -1,21 +1,11 @@
 Saving Preferences
 ==================
 
-- `KeyBinder` class for binding keys to a widget
-- Any key that was not expected should return to editor
-- Refactor `_KeyLevel`; separate root
-- Showing current keys in status bar when waiting for more keys
-- Having only one `KeyBinder` for each editing context
-- Setting default keys to be emacs keys
-- Adding ``dot_rope.py`` module for holding the default ``.rope.py``
-- Adding ``~/.rope`` file
-- Constructing menus after reading ``.rope``
+- Adding normal keybinding
+- Writing ``~/.rope`` if it does not exist
+- Renaming `rope.ui.codeassist` to `rope.ui.codeactions`
 
 * Adding a ``Edit "~/.rope"`` action
-* "C-x C-p" or "C-x p f"
-* Renaming `rope.ui.codeassist` to `rope.ui.codeactions`
-* Better names for actions
-* Confirm saving editor shows all buffers rather than the changed ones
 
 
 Remaining Small Stories

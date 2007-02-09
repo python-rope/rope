@@ -148,7 +148,4 @@ Stories
 * Replace method with method object refactoring
 
 
-* Having two keybindings emacs/normal
-
-
 * Saving font preferences

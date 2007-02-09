@@ -129,7 +129,7 @@ def _emacs_to_tk(sequence):
         key = tokens[-1]
         modifier = ''
         if len(tokens) > 1:
-            modifier = tokens[0] + '-'
+            modifier = '-'.join(token.capitalize() for token in tokens[:-1]) + '-'
         modifier = modifier.replace('M-', 'Alt-').replace('C-', 'Control-')
         if key.isdigit():
             key = 'KeyPress-' + key

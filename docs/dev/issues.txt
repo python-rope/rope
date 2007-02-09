@@ -79,58 +79,6 @@ To Be Discussed
 * Finding available refactorings
 
 
-Supporting Many Keybindings
-===========================
-
-The simplest way to support multiple keybindings is to change
-`Action.get_default_key` to return a `dict` rather than a `str`.  The
-problem is this approach makes changing keybindings harder.::
-
-  action = SimpleAction('rename', rename,
-                        {'normal': 'M-R', 'emacs': 'C-c r r'},
-                        MenuAddress(['Refactor', 'Rename'], 'n'),
-                        ['python'])
-  core.register_action(action)
-
-An alternative is to separate `Action`\s from keys.  This way we can
-assign keys to actions separately.  The disadvantage is that we have
-to mention an `Action`'s name many times.::
-
-  action = SimpleAction('rename', rename,
-                        MenuAddress(['Refactor', 'Rename'], 'n'),
-                        ['python'])
-  core.register_action(action)
-  core.bind_key('rename', 'normal', 'M-R')
-  core.bind_key('rename', 'emacs', 'C-c r r')
-
-Or maybe we can move this approach an step further by separating menu
-address, too::
-
-  action = SimpleAction('rename', rename, ['python'])
-  core.register_action(action)
-  core.bind_key('rename', 'normal', 'M-R')
-  core.bind_key('rename', 'emacs', 'C-c r r')
-  core.bind_menu('rename', MenuAddress(['Refactor', 'Rename'], 'n'))
-
-One consideration to have in mind is that menus should be constructed
-after the keybinding has been defined.  One way to solve this problem
-is to collect all information about `Action`\s and later construct
-the menu.
-
-Yet another approach is not to change anything.  Each `Action` has a
-default keybinding.  Other bindings can override that default binding
-for example::
-
-  action = SimpleAction('rename', rename, 'C-c r r',
-                        MenuAddress(['Refactor', 'Rename'], 'n'),
-                        ['python'])
-  core.register_action(action)
-  core.bind_key('rename', 'M-R')
-
-So we can let emacs keybinding be the default binding and change that
-if we want to use other bindings.
-
-
 Better Occurrencd Finding
 =========================
 

@@ -1,6 +1,7 @@
 import Tkinter
 
 import rope.ui.core
+import rope.base.project
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
@@ -155,13 +156,13 @@ core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
 
 actions.append(SimpleAction('set_mark', set_mark, 'C-space',
-                            MenuAddress(['Edit', 'Emacs Set Mark'], 's'), ['all']))
+                            MenuAddress(['Edit', 'Set Mark'], 's'), ['all']))
 actions.append(SimpleAction('copy', copy, 'M-w',
-                            MenuAddress(['Edit', 'Emacs Copy'], 'c'), ['all']))
+                            MenuAddress(['Edit', 'Copy'], 'c'), ['all']))
 actions.append(SimpleAction('cut', cut, 'C-w',
-                            MenuAddress(['Edit', 'Emacs Cut'], 't'), ['all']))
+                            MenuAddress(['Edit', 'Cut'], 't'), ['all']))
 actions.append(SimpleAction('paste', paste, 'C-y',
-                            MenuAddress(['Edit', 'Emacs Paste'], 'p'), ['all']))
+                            MenuAddress(['Edit', 'Paste'], 'p'), ['all']))
 actions.append(SimpleAction('goto_line', goto_line, 'C-x g',
                             MenuAddress(['Edit', 'Goto Line'], 'g'), ['all']))
 actions.append(SimpleAction('goto_last_edit_location', goto_last_edit_location, 'C-x C-q',

@@ -51,7 +51,7 @@ class Core(object):
         """
         import rope.ui.fileactions
         import rope.ui.editactions
-        import rope.ui.codeassist
+        import rope.ui.codeactions
         import rope.ui.refactor
         import rope.ui.helpactions
 
@@ -250,13 +250,19 @@ class Core(object):
         self.root.mainloop()
 
     def _load_dot_rope(self):
-        dot_rope = os.path.expanduser('~/.rope')
-        if os.path.exists(dot_rope):
-            run_globals = {}
-            run_globals.update({'__name__': '__main__',
-                                '__builtins__': __builtins__,
-                                '__file__': dot_rope})
-            execfile(dot_rope, run_globals)
+        dot_rope = os.path.expanduser('~%s.rope' % os.path.sep)
+        if not os.path.exists(dot_rope):
+            import rope.ui.dot_rope
+            import inspect
+            text = inspect.getsource(rope.ui.dot_rope)
+            output = open(dot_rope, 'w')
+            output.write(text)
+            output.close()
+        run_globals = {}
+        run_globals.update({'__name__': '__main__',
+                            '__builtins__': __builtins__,
+                            '__file__': dot_rope})
+        execfile(dot_rope, run_globals)
 
     def open_file(self, fileName):
         if self.project is None:

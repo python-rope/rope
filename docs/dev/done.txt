@@ -3,6 +3,9 @@
 ===========
 
 
+- Having two keybindings emacs/normal : February 9, 2007
+
+
 - Handling multi-key keyboard shortcuts : February 8, 2007
 
 

@@ -22,8 +22,8 @@ key and "M" for Meta(Alt) key.)
 ==========================  =============  =============
 binding                     emacs binding  normal
 ==========================  =============  =============
-open/new project            C-x C-p        C-x C-p
-close project               C-x p k        C-x C-p
+open/new project            C-x C-p        C-P
+close project               C-x p k
 show project tree           C-x p t        M-Q r
 refresh project             C-x p r        F5
 --------------------------  -------------  -------------  
@@ -32,9 +32,9 @@ new package                 C-x n p
 new file                    C-x n f
 new directory               C-x n d
 find file                   C-x C-f        C-R
-change active editor        C-x b          C-x b
+change active editor        C-x b          C-E
 close active editor         C-x k          C-w
-exit                        C-x C-c
+exit                        C-x C-c        C-W
 run active editor           C-c x p        M-X p
 run unit-tests              C-c x t        M-X t
 --------------------------  -------------  -------------  
@@ -50,7 +50,7 @@ downcase word               M-l
 capitalize word             M-c
 upcase word                 M-u
 start searching             C-s            C-f
-start reverse searching     C-r
+start reverse searching     C-r            C-F
 last edit location          C-x C-q        C-q
 goto line                   C-x C-g        C-g
 --------------------------  -------------  -------------
@@ -60,12 +60,12 @@ copy region                 M-w            C-c
 swap mark and insert        C-x C-x
 paste                       C-y            C-v
 undo editing                C-x u          C-z
-redo editing                C-x r          C-Z
+redo editing                C-x r          C-y
 --------------------------  -------------  -------------
 save                        C-x C-s        C-s
 save all                    C-x s          C-S
-undo project change         C-x C-u
-redo project change         C-x C-r
+undo project change         C-x C-u        C-Z
+redo project change         C-x C-r        C-Y
 project history             C-x p h
 --------------------------  -------------  -------------
 code-assist(auto-complete)  M-/            C-space
@@ -74,8 +74,8 @@ show doc                    C-c C-d        F2
 show quick outline          C-c C-o        C-o
 correct line indentation    C-i            C-i
 remove extra spaces         C-c C-f        C-F
-comment current line        C-c c          C-c c
-comment region lines        C-c C-c        C-c C-c
+comment current line        C-c c          C-3
+comment region lines        C-c C-c
 find occurrences            C-c C-s        C-G
 --------------------------  -------------  -------------
 rename refactoring          C-c r r        M-R

@@ -642,11 +642,11 @@ actions.append(SimpleAction('expand_star_imports',
                             ConfirmEditorsAreSaved(expand_star_imports, all=False), 'C-c i x',
                             MenuAddress(['Refactor', 'Expand Star Imports'], 'p', 2),
                             ['python']))
-actions.append(SimpleAction('relatives_to_absolute',
+actions.append(SimpleAction('relative_to_absolute',
                             ConfirmEditorsAreSaved(transform_relatives_to_absolute, all=False), 'C-c i a',
                             MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2),
                             ['python']))
-actions.append(SimpleAction('froms_to_imports',
+actions.append(SimpleAction('from_to_import',
                             ConfirmEditorsAreSaved(transform_froms_to_imports, all=False), 'C-c i n',
                             MenuAddress(['Refactor', 'Transform Froms to Imports'], 'r', 2),
                             ['python']))
