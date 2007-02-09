@@ -42,6 +42,7 @@ class Core(object):
         self.project = get_no_project()
         self.rebound_keys = {}
         self.actions = []
+        self.prefs = {}
 
     def _load_actions(self):
         """Load extension modules.
@@ -54,6 +55,13 @@ class Core(object):
         import rope.ui.codeactions
         import rope.ui.refactor
         import rope.ui.helpactions
+
+    def set(self, key, value):
+        """Set a preference
+
+        Set the preference for `key` to `value`.
+        """
+        self.prefs[key] = value
 
     def _add_menu_cascade(self, menu_address, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)

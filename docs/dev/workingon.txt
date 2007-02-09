@@ -1,15 +1,11 @@
-Saving Preferences
-==================
+Saving Font Preferences
+=======================
 
-- Allowing changes to be saved in no project
-- `PyCoreTest.test_not_leaking_for_vars_inside_parent_scope`;
-  For-loop variables leak in the parent scope
-- Singleton `NoProject`
-- Adding a ``Edit "~/.rope"`` action; ``C-x c``
-- Changing UI modules to default to `NoProject` rather than `None`
-- Providing code assists in `NoProject`
+- Convert every `os.path.sep` to ``/`` in `NoProject`
+- Adding `Core.set()`
+- Setting editor font
 
-* Convert every `os.path.sep` to ``/`` in `NoProject`
+* Adding evaluate region?
 
 
 Remaining Small Stories

@@ -146,6 +146,3 @@ Stories
 
 
 * Replace method with method object refactoring
-
-
-* Saving font preferences

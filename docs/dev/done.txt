@@ -3,6 +3,9 @@
 ===========
 
 
+- Changing editor font in ``~/.rope`` : February 9, 2007
+
+
 - Having two keybindings emacs/normal : February 9, 2007
 
 

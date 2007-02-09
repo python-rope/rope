@@ -167,26 +167,6 @@ We can do::
   new_file.create(create_folders=False)
 
 
-Rope's Preference System
-========================
-
-This might show what rope needs::
-
-  class Preferences(object):
-
-      def get_preference(self, name):
-          pass
-
-
-  class FilePreferences(object):
-
-      def __init__(self, path):
-          self.path = path
-
-      def get_preference(self, name):
-          pass
-
-
 Having Virtual `PyModule`\s
 ===========================
 

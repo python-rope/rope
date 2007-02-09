@@ -127,10 +127,12 @@ class NoProject(_Project):
         super(NoProject, self).__init__(fscommands)
 
     def _get_resource_path(self, name):
-        return os.path.abspath(name)
+        real_name = os.path.abspath(name).replace('/', os.path.sep)
+        return os.path.abspath(real_name)
 
     def get_resource(self, name):
-        return super(NoProject, self).get_resource(os.path.abspath(name))
+        universal_name = os.path.abspath(name).replace(os.path.sep, '/')
+        return super(NoProject, self).get_resource(universal_name)
 
     def get_files(self):
         return []

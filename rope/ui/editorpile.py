@@ -45,9 +45,10 @@ class EditorPile(object):
             if editor.get_file() == file_:
                 self.buttons[editor].invoke()
                 return editor
+        font = self.core.prefs.get('font', None)
         editor = rope.ui.fileeditor.FileEditor(
             self.core.get_open_project(), file_,
-            rope.ui.editor.GraphicalEditorFactory(self.editor_frame),
+            rope.ui.editor.GraphicalEditorFactory(self.editor_frame, font=font),
             readonly=readonly, mode=mode)
         editor.get_editor().set_status_bar_manager(self.core.status_bar_manager)
         editor.add_change_observer(self._editor_was_changed)

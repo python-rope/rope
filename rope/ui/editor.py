@@ -12,12 +12,12 @@ import rope.ui.tkhelpers
 
 class GraphicalEditor(object):
 
-    def __init__(self, parent, editorcontext):
-        font = None
-        if os.name == 'posix':
-            font = tkFont.Font(family='Typewriter', size=14)
-        else:
-            font = tkFont.Font(family='Courier', size=13)
+    def __init__(self, parent, editorcontext, font=None):
+        if font is None:
+            if os.name == 'posix':
+                font = tkFont.Font(family='Typewriter', size=14)
+            else:
+                font = tkFont.Font(family='Courier', size=13)
         self.text = ScrolledText.ScrolledText(parent, bg='white', font=font,
                                  undo=True, maxundo=100, highlightcolor='#99A')
         self.change_inspector = _TextChangeInspector(self, self._text_changed)
@@ -754,11 +754,13 @@ class EditorFactory(object):
 
 class GraphicalEditorFactory(EditorFactory):
 
-    def __init__(self, frame):
+    def __init__(self, frame, **kwds):
         self.frame = frame
+        self.kwds = kwds
 
-    def create(self, *args, **kws):
-        return GraphicalEditor(self.frame, *args, **kws)
+    def create(self, *args, **kwds):
+        kwds.update(self.kwds)
+        return GraphicalEditor(self.frame, *args, **kwds)
 
 
 class GraphicalLineEditor(object):

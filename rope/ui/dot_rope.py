@@ -10,6 +10,10 @@ import rope.ui.core
 
 core = rope.ui.core.get_core()
 
+# Setting editor font
+#core.set('font', ('Courier', 14))
+
+# If you don't like emacs keybinding, change this to False
 i_like_emacs = True
 if not i_like_emacs:
     core.rebind_action('open_project', 'C-P')
@@ -41,6 +45,7 @@ if not i_like_emacs:
     core.rebind_action('project_history', None)
     core.rebind_action('search_forward', 'C-f')
     core.rebind_action('search_backward', 'C-F')
+    core.rebind_action('edit_dot_rope', None)
 
     core.rebind_action('code_assist', 'C-space')
     core.rebind_action('goto_definition', 'F3')
