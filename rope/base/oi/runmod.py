@@ -135,7 +135,7 @@ def __rope_start_everything():
             return ('unknown',)
 
         def _object_to_persisted_form(self, object_):
-            if object_ == None:
+            if object_ is None:
                 return ('none',)
             if isinstance(object_, types.CodeType):
                 return self._get_persisted_code(object_)

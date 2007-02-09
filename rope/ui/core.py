@@ -8,7 +8,7 @@ import rope.ui.editorpile
 import rope.ui.keybinder
 import rope.ui.statusbar
 from rope.base.exceptions import RopeError
-from rope.base.project import Project
+from rope.base.project import Project, get_no_project
 from rope.ui import editingcontexts
 from rope.ui.extension import ActionContext
 from rope.ui.menubar import MenuBarManager
@@ -39,7 +39,7 @@ class Core(object):
             context.key_binding = rope.ui.keybinder.KeyBinder(
                 self.status_bar_manager)
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
-        self.project = None
+        self.project = get_no_project()
         self.rebound_keys = {}
         self.actions = []
 
@@ -252,22 +252,17 @@ class Core(object):
     def _load_dot_rope(self):
         dot_rope = os.path.expanduser('~%s.rope' % os.path.sep)
         if not os.path.exists(dot_rope):
-            import rope.ui.dot_rope
-            import inspect
-            text = inspect.getsource(rope.ui.dot_rope)
-            output = open(dot_rope, 'w')
-            output.write(text)
-            output.close()
+            write_dot_rope(dot_rope)
         run_globals = {}
         run_globals.update({'__name__': '__main__',
                             '__builtins__': __builtins__,
                             '__file__': dot_rope})
         execfile(dot_rope, run_globals)
 
-    def open_file(self, fileName):
-        if self.project is None:
+    def open_file(self, file_name):
+        if self.project is get_no_project():
             raise RopeError('No project is open')
-        file_ = self.project.get_resource(fileName)
+        file_ = self.project.get_resource(file_name)
         return self.editor_manager.get_resource_editor(file_)
 
     def activate_editor(self, editor):
@@ -286,7 +281,7 @@ class Core(object):
             editor.save()
 
     def create_file(self, file_name):
-        if self.project is None:
+        if self.project is  get_no_project():
             raise RopeError('No project is open')
         try:
             last_slash = file_name.rindex('/')
@@ -339,7 +334,7 @@ class Core(object):
     def close_project(self):
         while self.editor_manager.active_editor is not None:
             self.close_active_editor()
-        self.project = None
+        self.project = get_no_project()
 
     def create_folder(self, folder_name):
         try:
@@ -409,13 +404,25 @@ class Core(object):
         else:
             self.root['menu'] = editingcontexts.none.menu
 
+    _core = None
+
     @staticmethod
     def get_core():
         """Get the singleton instance of Core"""
-        if not hasattr(Core, '_core'):
-            Core._core = Core()
-        return Core._core
+        result = Core._core
+        if result is None:
+            result = Core._core = Core()
+        return result
 
 
 def get_core():
     return Core.get_core()
+
+
+def write_dot_rope(dot_rope):
+    import rope.ui.dot_rope
+    import inspect
+    text = inspect.getsource(rope.ui.dot_rope)
+    output = open(dot_rope, 'w')
+    output.write(text)
+    output.close()

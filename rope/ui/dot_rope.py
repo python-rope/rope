@@ -1,4 +1,10 @@
 # The default ~/.rope file for *rope*.
+#
+# You can edit this file using rope itself.
+#
+# Note: Since this file is not inside a project you cannot perform
+#   refactorings on it.
+#
 import rope.ui.core
 
 

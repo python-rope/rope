@@ -28,7 +28,7 @@ class Scope(object):
 
         The returned scopes should be sorted by the order they appear
         """
-        if self.scopes == None:
+        if self.scopes is None:
             self.scopes = self._create_scopes()
         return self.scopes
 
@@ -138,12 +138,12 @@ class FunctionScope(Scope):
         self.returned_asts = None
 
     def _get_names(self):
-        if self.names == None:
+        if self.names is None:
             self._visit_function()
         return self.names
 
     def _visit_function(self):
-        if self.names == None:
+        if self.names is None:
             new_visitor = rope.base.pyobjects._FunctionVisitor(self.pycore,
                                                                self.pyobject)
             for n in self.pyobject._get_ast().getChildNodes():
@@ -153,7 +153,7 @@ class FunctionScope(Scope):
             self.returned_asts = new_visitor.returned_asts
 
     def _get_returned_asts(self):
-        if self.names == None:
+        if self.names is None:
             self._visit_function()
         return self.returned_asts
 

@@ -14,6 +14,7 @@ class _Project(object):
         self.file_access = rope.base.fscommands.FileAccess()
         self._history = rope.base.history.History(maxundos=100)
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
+        self.pycore = rope.base.pycore.PyCore(self)
 
     def get_resource(self, resource_name):
         """Get a resource in a project.
@@ -56,6 +57,17 @@ class _Project(object):
         if observer in self.observers:
             self.observers.remove(observer)
 
+    def do(self, changes):
+        """Apply the changes in a `ChangeSet`
+
+        Most of the time you call this function for committing the
+        changes for a refactoring.
+        """
+        self.history.do(changes)
+
+    def get_pycore(self):
+        return self.pycore
+
     def _get_resource_path(self, name):
         pass
 
@@ -82,8 +94,6 @@ class Project(_Project):
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)
-        self.pycore = rope.base.pycore.PyCore(self)
-        self.no_project = NoProject()
 
     root = property(lambda self: self.get_resource(''))
 
@@ -104,26 +114,16 @@ class Project(_Project):
                 result.extend(self._get_files_recursively(folder))
         return result
 
-    def get_pycore(self):
-        return self.pycore
-
-    def get_out_of_project_resource(self, path):
-        return self.no_project.get_resource(path)
-
-    def do(self, changes):
-        """Apply the changes in a `ChangeSet`
-
-        Most of the time you call this function for committing the
-        changes for a refactoring.
-        """
-        self.history.do(changes)
-
 
 class NoProject(_Project):
-    """A null object for holding out of project files"""
+    """A null object for holding out of project files.
+
+    This class is singleton use `get_no_project` global function
+    """
 
     def __init__(self):
         fscommands = rope.base.fscommands.FileSystemCommands()
+        self.root = None
         super(NoProject, self).__init__(fscommands)
 
     def _get_resource_path(self, name):
@@ -131,6 +131,17 @@ class NoProject(_Project):
 
     def get_resource(self, name):
         return super(NoProject, self).get_resource(os.path.abspath(name))
+
+    def get_files(self):
+        return []
+
+    _no_project = None
+
+
+def get_no_project():
+    if NoProject._no_project is None:
+        NoProject._no_project = NoProject()
+    return NoProject._no_project
 
 
 class Resource(object):

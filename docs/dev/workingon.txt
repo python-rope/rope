@@ -1,11 +1,15 @@
 Saving Preferences
 ==================
 
-- Adding normal keybinding
-- Writing ``~/.rope`` if it does not exist
-- Renaming `rope.ui.codeassist` to `rope.ui.codeactions`
+- Allowing changes to be saved in no project
+- `PyCoreTest.test_not_leaking_for_vars_inside_parent_scope`;
+  For-loop variables leak in the parent scope
+- Singleton `NoProject`
+- Adding a ``Edit "~/.rope"`` action; ``C-x c``
+- Changing UI modules to default to `NoProject` rather than `None`
+- Providing code assists in `NoProject`
 
-* Adding a ``Edit "~/.rope"`` action
+* Convert every `os.path.sep` to ``/`` in `NoProject`
 
 
 Remaining Small Stories

@@ -1,13 +1,13 @@
-import sys
 import os.path
+import sys
+
 import Tkinter
 
-from rope.base.project import NoProject
 import rope.ui.core
-from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
+from rope.ui.menubar import MenuAddress
+from rope.base import project
 
-_no_project = NoProject()
 
 def show_about_dialog(context):
     toplevel = Tkinter.Toplevel()
@@ -40,12 +40,13 @@ def show_about_dialog(context):
 def show_doc(context, name):
     rope_package = (os.path.dirname(sys.modules['rope'].__file__))
     # Checking whether rope is installed or not
+    no_project = project.get_no_project()
     if 'docs' in os.listdir(rope_package):
         root = rope_package
-        resource = _no_project.get_resource(root + '/docs/' + name.split('/')[-1])
+        resource = no_project.get_resource(root + '/docs/' + name.split('/')[-1])
     else:
         root = os.path.dirname(rope_package)
-        resource = _no_project.get_resource(root + '/' + name)
+        resource = no_project.get_resource(root + '/' + name)
     editor_manager = context.get_core().get_editor_manager()
     editor_manager.get_resource_editor(resource, readonly=True)
 

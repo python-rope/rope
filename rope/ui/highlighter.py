@@ -14,7 +14,7 @@ class Highlighting(object):
 
     def highlights(self, text, start, end):
         """Generates highlighted ranges as (start, end, style) tuples"""
-        if end == None:
+        if end is None:
             end = len(text)
         for match in self._get_pattern().finditer(text[start:end]):
             for key, value in match.groupdict().items():

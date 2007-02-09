@@ -1,16 +1,16 @@
+import marshal
 import os
 import re
 import socket
 import subprocess
 import sys
-import cPickle as pickle
-import marshal
 import tempfile
 import threading
 
-import rope
-from rope.base import pyobjects
-from rope.base import builtins
+import cPickle as pickle
+
+from rope.base import pyobjects, builtins
+import rope.base.project
 
 
 class DynamicObjectInference(object):
@@ -188,7 +188,7 @@ class _TextualToPyObject(object):
                 relative_path = relative_path[1:]
             resource = self.project.get_resource(relative_path)
         else:
-            resource = self.project.get_out_of_project_resource(path)
+            resource = rope.base.project.get_no_project().get_resource(path)
         return self.project.get_pycore().resource_to_pyobject(resource)
 
     def _get_pyobject_at(self, path, lineno):

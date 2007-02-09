@@ -134,7 +134,7 @@ class AddingVisitor(ImportInfoVisitor):
         if len(import_info.names_and_aliases) == len(self.import_info.names_and_aliases) == 1:
             imported1 = import_info.names_and_aliases[0]
             imported2 = self.import_info.names_and_aliases[0]
-            if imported1[1] == imported2[1] == None:
+            if imported1[1] == imported2[1] is None:
                 if imported1[0].startswith(imported2[0] + '.'):
                     return True
                 if imported2[0].startswith(imported1[0] + '.'):

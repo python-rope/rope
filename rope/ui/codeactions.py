@@ -299,7 +299,7 @@ actions = []
 
 actions.append(SimpleAction('code_assist', do_code_assist, 'M-slash',
                             MenuAddress(['Code', 'Code Assist (Auto-Complete)'], 'c'), ['python']))
-actions.append(SimpleAction('goto_definition', do_goto_definition, 'C-c C-g',
+actions.append(SimpleAction('goto_definition', do_goto_definition, 'C-c g',
                             MenuAddress(['Code', 'Goto Definition'], 'g'), ['python']))
 actions.append(SimpleAction('show_doc', do_show_doc, 'C-c C-d',
                             MenuAddress(['Code', 'Show Doc'], 's'), ['python']))

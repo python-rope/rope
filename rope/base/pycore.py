@@ -96,7 +96,7 @@ class PyCore(object):
         result = []
         for src in sys.path:
             try:
-                src_folder = self.project.get_out_of_project_resource(src)
+                src_folder = rope.base.project.get_no_project().get_resource(src)
                 result.append(src_folder)
             except rope.base.exceptions.RopeError:
                 pass
@@ -140,6 +140,8 @@ class PyCore(object):
 
     def get_source_folders(self):
         """Returns project source folders"""
+        if self.project.root is None:
+            return []
         return self._find_source_folders(self.project.root)
 
     def resource_to_pyobject(self, resource):

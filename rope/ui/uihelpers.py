@@ -117,7 +117,7 @@ class VolatileList(EnhancedList):
         self.list.bind('<Alt-n>', lambda event: self.move_down())
 
     def insert_entry(self, entry, index=None):
-        if index == None:
+        if index is None:
             index = self.get_active_index()
         self.entries.insert(index, entry)
         self.list.insert(index, self.handle.entry_to_string(entry))
@@ -125,7 +125,7 @@ class VolatileList(EnhancedList):
             self.list.selection_set(0)
 
     def remove_entry(self, index=None):
-        if index == None:
+        if index is None:
             index = self.get_active_index()
         result = self.entries[index]
         self.list.delete(index)
@@ -324,7 +324,7 @@ class TreeView(object):
             self._select_entry(old_selection)
 
     def add_entry(self, entry, index=None, level=0):
-        if index == None:
+        if index is None:
             index = self.list.size()
         self.nodes.insert(index, _TreeNodeInformation(entry, level=level))
         self.list.insert(index, 4 * level * '  ' +

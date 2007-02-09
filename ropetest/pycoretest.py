@@ -418,6 +418,23 @@ class PyCoreTest(unittest.TestCase):
         local_var = func_scope.get_name('a_var')
         self.assertEquals(global_var, local_var)
 
+    def test_not_leaking_for_vars_inside_parent_scope(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('class C(object):\n    def f(self):\n'
+                  '        for my_var1, my_var2 in []:\n            pass\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        self.assertFalse('my_var1' in c_class.get_attributes())
+        self.assertFalse('my_var2' in c_class.get_attributes())
+
+    def test_not_leaking_for_vars_inside_parent_scope2(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('class C(object):\n    def f(self):\n'
+                  '        for my_var in []:\n            pass\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        self.assertFalse('my_var' in c_class.get_attributes())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 

@@ -6,6 +6,7 @@ import socket
 import Tkinter
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
+import rope.base.project
 from rope.ui.uihelpers import DescriptionList
 import rope.ui.runtest
 
@@ -116,7 +117,7 @@ class GUITestRunner(object):
                 pass
         try:
             server.register_instance(self.result)
-            run_test_py = self.project.get_out_of_project_resource(
+            run_test_py = rope.base.project.get_no_project().get_resource(
                 inspect.getsourcefile(rope.ui.runtest))
             self.process = self.project.get_pycore().run_module(
                 run_test_py, args=[str(rpc_port), self.resource.real_path])

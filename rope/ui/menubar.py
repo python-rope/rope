@@ -72,7 +72,7 @@ class _MenuCascade(_MenuItem):
         return -1
 
     def _find_location(self, name, group):
-        if group == None:
+        if group is None:
             group = 0
         index = 0
         current_group = 0

@@ -6,13 +6,14 @@ from rope.ui import editingcontexts
 
 class FileEditor(object):
 
-    def __init__(self, project, file_, editor_factory, readonly=False):
+    def __init__(self, project, file_, editor_factory,
+                 readonly=False, mode=None):
         self.file = file_
         self.project = project
         editingcontext = None
-        if self.file.name.endswith('.py'):
+        if self.file.name.endswith('.py') or mode == 'python':
             editingcontext = editingcontexts.python
-        elif self.file.name.endswith('.txt'):
+        elif self.file.name.endswith('.txt') or mode == 'rest':
             editingcontext = editingcontexts.rest
         else:
             editingcontext = editingcontexts.others

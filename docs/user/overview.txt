@@ -69,7 +69,7 @@ redo project change         C-x C-r        C-Y
 project history             C-x p h
 --------------------------  -------------  -------------
 code-assist(auto-complete)  M-/            C-space
-go to definition location   C-c C-g        F3
+go to definition location   C-c g          F3
 show doc                    C-c C-d        F2
 show quick outline          C-c C-o        C-o
 correct line indentation    C-i            C-i

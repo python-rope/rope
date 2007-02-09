@@ -81,7 +81,7 @@ class PyDefinedObject(PyObject):
         raise AttributeNotFoundError('Attribute %s not found' % name)
 
     def get_scope(self):
-        if self.scope == None:
+        if self.scope is None:
             self.scope = self._create_scope()
         return self.scope
 
@@ -375,6 +375,7 @@ class _AssignVisitor(object):
                 assignment = pynames._Assignment(self.assigned_ast, index)
             self._assigned(name, assignment)
 
+
 class _ForAssignVisitor(_AssignVisitor):
 
     def __init__(self, scope_visitor, assigned):
@@ -485,7 +486,8 @@ class _ClassVisitor(_ScopeVisitor):
         self.names[node.name] = DefinedName(pyobject)
         if len(node.argnames) > 0:
             new_visitor = _ClassInitVisitor(self, node.argnames[0])
-            compiler.walk(node, new_visitor)
+            for child in node.getChildNodes():
+                compiler.walk(child, new_visitor)
 
     def visitClass(self, node):
         self.names[node.name] = DefinedName(PyClass(self.pycore, node,
@@ -517,6 +519,15 @@ class _ClassInitVisitor(_AssignVisitor):
                 pynames._Assignment(self.assigned_ast))
 
     def visitAssName(self, node):
+        pass
+
+    def visitFunction(self, node):
+        pass
+
+    def visitClass(self, node):
+        pass
+
+    def visitFor(self, node):
         pass
 
 

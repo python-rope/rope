@@ -164,7 +164,7 @@ Instead of doing::
 We can do::
 
   new_file = project.get_file('my_folder/my_file.txt')
-  new_file.create(create_directories=False)
+  new_file.create(create_folders=False)
 
 
 Rope's Preference System
@@ -185,26 +185,6 @@ This might show what rope needs::
 
       def get_preference(self, name):
           pass
-
-
-Issues
-------
-
-* format
-
-  * human readable? yes
-  * python (like emacs and lisp)
-
-    - push or pull model for configurations
-
-  * simple equals
-
-* types
-
-  * strings
-  * lists?
-
-* changable by rope?
 
 
 Having Virtual `PyModule`\s

@@ -46,7 +46,7 @@ class _FolderViewHandle(TreeViewHandle):
         pass
 
 def _check_if_project_is_open(core):
-    if not core.project:
+    if core.project is rope.base.project.get_no_project():
         tkMessageBox.showerror(parent=core.root, title='No Open Project',
                                message='No project is open')
         return False

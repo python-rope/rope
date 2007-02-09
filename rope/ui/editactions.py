@@ -1,4 +1,5 @@
 import Tkinter
+import os.path
 
 import rope.ui.core
 import rope.base.project
@@ -112,7 +113,7 @@ def goto_last_edit_location(context):
 
 
 def show_history(context):
-    if context.project is None:
+    if not context.project:
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('File History')
@@ -149,6 +150,14 @@ def show_history(context):
 
 def swap_mark_and_insert(context):
     context.editor.swap_mark_and_insert()
+
+
+_no_project = rope.base.project.NoProject()
+def edit_dot_rope(context):
+    resource = _no_project.get_resource(
+        os.path.expanduser('~%s.rope' % os.path.sep))
+    editor_manager = context.get_core().get_editor_manager()
+    editor_manager.get_resource_editor(resource, mode='python')
 
 
 core = rope.ui.core.Core.get_core()
@@ -194,6 +203,10 @@ actions.append(SimpleAction('search_forward', forward_search, 'C-s',
                             MenuAddress(['Edit', 'Forward Search'], 'f', 3), ['all']))
 actions.append(SimpleAction('search_backward', backward_search, 'C-r',
                             MenuAddress(['Edit', 'Backward Search'], 'b', 3), ['all']))
+
+actions.append(SimpleAction('edit_dot_rope', edit_dot_rope, 'C-x c',
+                            MenuAddress(['Edit', 'Edit ~/.rope'], None, 4), ['all', 'none']))
+
 
 for action in actions:
     core.register_action(action)
