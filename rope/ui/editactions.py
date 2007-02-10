@@ -159,7 +159,7 @@ def edit_dot_rope(context):
     editor_manager.get_resource_editor(resource, mode='python')
 
 
-class FindCommandHandle(object):
+class FindCommandHandle(uihelpers.FindItemHandle):
 
     def __init__(self, core):
         self.core = core

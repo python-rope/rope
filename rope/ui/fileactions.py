@@ -164,6 +164,9 @@ class FindFileHandle(object):
     def to_string(self, resource):
         return resource.path
 
+    def to_name(self, resource):
+        return resource.name
+
     def _is_init_dot_py(self, file):
         return file.name == '__init__.py'
 

@@ -562,7 +562,8 @@ class GraphicalEditor(object):
 
     def search(self, keyword, start, case=True, forwards=True):
         found = self.text.search(keyword, start._getIndex(),
-                                 nocase=int(not case), backwards=int(not forwards))
+                                 nocase=int(not case),
+                                 backwards=int(not forwards))
         if not found:
             return None
         return GraphicalTextIndex(self, found)

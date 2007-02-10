@@ -6,8 +6,10 @@ from ropetest.ui.mockeditortest import MockEditorFactory
 
 
 class SearchingTest(unittest.TestCase):
+
     __factory = MockEditorFactory()
 #    __factory = GraphicalEditorFactory()
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.editor = self.__factory.create()
@@ -192,6 +194,32 @@ class SearchingTest(unittest.TestCase):
             self.fail('Should have failed')
         except StatusBarException:
             pass
+
+    def test_starting_last_search_when_calling_next_with_no_keyword(self):
+        self.searcher.start_searching()
+        self.searcher.append_keyword('t')
+        self.searcher.append_keyword('e')
+        self.searcher.append_keyword('x')
+        self.assertEquals(self.editor.get_index(7), self.searcher.get_match().start)
+        self.assertEquals(self.editor.get_index(10), self.searcher.get_match().end)
+        self.searcher.end_searching()
+        self.editor.set_insert(self.editor.get_start())
+        self.searcher.start_searching()
+        self.searcher.next_match()
+        self.assertEquals(self.editor.get_index(7), self.searcher.get_match().start)
+        self.assertEquals(self.editor.get_index(10), self.searcher.get_match().end)
+
+    def test_showing_failed_when_the_search_is_failing(self):
+        self.editor.status_bar_manager = PlaceholderStatusBarManager()
+        manager = self.editor.status_bar_manager
+        self.searcher.start_searching()
+        self.searcher.append_keyword('a')
+        self.assertFalse(manager.get_status('search').get_text().
+                         lower().startswith('fail'))
+        self.searcher.append_keyword('a')
+        self.searcher.append_keyword('a')
+        self.assertTrue(manager.get_status('search').get_text().
+                        lower().startswith('fail'))
 
 
 class PlaceholderStatusBarManager(object):

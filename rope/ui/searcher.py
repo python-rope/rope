@@ -1,4 +1,3 @@
-
 class SearchingState(object):
 
     def append_keyword(self, searcher, postfix):
@@ -88,6 +87,8 @@ class Searcher(object):
         self.keyword = ''
         self.searching_state = NotSearching()
         self.current_match = None
+        self.history = ''
+        self.failing = False
 
     def start_searching(self):
         self.keyword = ''
@@ -97,7 +98,7 @@ class Searcher(object):
         self.status_text = None
         if self.editor.status_bar_manager:
             self.status_text = self.editor.status_bar_manager.create_status('search')
-            self.status_text.set_width(33)
+            self.status_text.set_width(35)
         self.update_status_text()
 
     def _finish_searching(self):
@@ -105,8 +106,10 @@ class Searcher(object):
             self.status_text.remove()
         self.searching_state = NotSearching()
         self.editor.highlight_match(self.current_match)
+        self.failing = False
 
     def end_searching(self):
+        self.history = self.keyword
         self.current_match = Match(self.editor.get_insert(), self.editor.get_insert())
         self._finish_searching()
 
@@ -117,8 +120,12 @@ class Searcher(object):
         if self.status_text:
             direction = ''
             if isinstance(self.searching_state, BackwardSearching):
-                direction = ' backward'
-            self.status_text.set_text('searching%s: <%s>' % (direction, self.keyword))
+                direction = 'Backward '
+            failing = ''
+            if self.failing:
+                failing = 'Failing '
+            self.status_text.set_text('%s%sSearch: <%s>' %
+                                      (failing, direction, self.keyword))
 
     def append_keyword(self, postfix):
         self.searching_state.append_keyword(self, postfix)
@@ -142,6 +149,8 @@ class Searcher(object):
         self.update_status_text()
 
     def next_match(self):
+        if not self.keyword:
+            self.keyword = self.history
         self.searching_state.next_match(self)
         self.update_status_text()
 
@@ -155,6 +164,9 @@ class Searcher(object):
                 found_end = self.editor.get_relative(found, len(self.keyword))
                 self.current_match = Match(found, found_end, insert_side)
                 self.editor.highlight_match(self.current_match)
+                self.failing = False
+            else:
+                self.failing = True
         else:
             self.current_match = Match(self.starting_index, self.starting_index)
             self.editor.highlight_match(self.current_match)

@@ -134,13 +134,4 @@ Stories
 > Public Release 0.5m1 : February 18, 2007
 
 
-* Enhancing searching
-
-  * End the search when some other key sequence is typed
-  * C-s C-s should start the last search
-  * Search history; BackSpace should go back to the matches found before
-  * Starting from begining when end of file is reached
-  * Showing failed searches
-
-
 * Replace method with method object refactoring

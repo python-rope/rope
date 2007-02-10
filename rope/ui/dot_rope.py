@@ -46,6 +46,7 @@ if not i_like_emacs:
     core.rebind_action('search_forward', 'C-f')
     core.rebind_action('search_backward', 'C-F')
     core.rebind_action('edit_dot_rope', None)
+    core.rebind_action('execute_command', None)
 
     core.rebind_action('code_assist', 'C-space')
     core.rebind_action('goto_definition', 'F3')

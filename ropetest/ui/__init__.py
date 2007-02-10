@@ -9,7 +9,6 @@ import ropetest.ui.searchertest
 import ropetest.ui.statusbartest
 import ropetest.ui.uihelperstest
 import ropetest.ui.indentertest
-import ropetest.ui.fileactionstest
 
 
 def suite():
@@ -23,7 +22,6 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.ui.indentertest.PythonCodeIndenterTest))
     result.addTests(unittest.makeSuite(ropetest.ui.statusbartest.StatusBarTest))
     result.addTests(unittest.makeSuite(ropetest.ui.uihelperstest.UIHelpersTest))
-    result.addTests(unittest.makeSuite(ropetest.ui.fileactionstest.FileFinderTest))
     return result
 
 

@@ -375,6 +375,9 @@ class FindItemHandle(object):
     def to_string(self, item):
         pass
 
+    def to_name(self, item):
+        return self.to_string(item)
+
 
 class _FindListViewAdapter(object):
 
@@ -411,21 +414,22 @@ def find_item_dialog(handle, title='Find', matches='Matches'):
             result = handle.find_matches(name.get())
         found.clear()
         for item in result:
-            found.insert_entry(item)
+            found.insert_entry(item, len(found.get_entries()))
     def complete_name(event):
         if not found.get_entries():
             return
-        result = handle.to_string(found.get_entries()[0])
+        result = handle.to_name(found.get_entries()[0])
         for item in found.get_entries():
             common_index = 0
-            for a, b in zip(result, handle.to_string(item)):
+            for a, b in zip(result, handle.to_name(item)):
                 if a == b:
                     common_index += 1
                 else:
                     break
+        if len(name.get()) < common_index:
             result = result[:common_index]
-        name.delete('0', Tkinter.END)
-        name.insert('0', result)
+            name.delete('0', Tkinter.END)
+            name.insert('0', result)
     name.bind('<Any-KeyRelease>', name_changed)
     name.bind('<Return>',
               lambda event: list_handle.selected(found.get_active_entry()))

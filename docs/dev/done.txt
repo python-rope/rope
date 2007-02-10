@@ -3,6 +3,9 @@
 ===========
 
 
+- Enhancing searching : February 10, 2007
+
+
 - Execute command; ``M-x`` : February 10, 2007
 
 

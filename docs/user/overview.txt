@@ -62,6 +62,9 @@ paste                       C-y            C-v
 undo editing                C-x u          C-z
 redo editing                C-x r          C-y
 --------------------------  -------------  -------------
+Execute Command             M-x
+Edit ~/.rope                C-x c
+--------------------------  -------------  -------------
 save                        C-x C-s        C-s
 save all                    C-x s          C-S
 undo project change         C-x C-u        C-Z
