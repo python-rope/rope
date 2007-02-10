@@ -10,7 +10,7 @@ import rope.ui.core
 
 core = rope.ui.core.get_core()
 
-# Setting editor font
+# Changing editor font
 #core.set('font', ('Courier', 14))
 
 # If you don't like emacs keybinding, change this to False

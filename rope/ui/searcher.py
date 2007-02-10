@@ -10,6 +10,7 @@ class SearchingState(object):
     def next_match(self, searcher):
         """Go to the next match"""
 
+
 class ForwardSearching(SearchingState):
 
     def append_keyword(self, searcher, postfix):
@@ -32,6 +33,7 @@ class ForwardSearching(SearchingState):
     def is_searching(self, searcher):
         return True
 
+
 class BackwardSearching(SearchingState):
 
     def append_keyword(self, searcher, postfix):
@@ -53,6 +55,7 @@ class BackwardSearching(SearchingState):
     def is_searching(self, searcher):
         return True
 
+
 class NotSearching(SearchingState):
     """A null object for when not searching"""
 
@@ -68,12 +71,14 @@ class NotSearching(SearchingState):
     def is_searching(self, searcher):
         return False
 
+
 class Match(object):
 
     def __init__(self, start, end, side='right'):
         self.start = start
         self.end = end
         self.side = side
+
 
 class Searcher(object):
     """A class for searching TextEditors"""

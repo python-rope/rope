@@ -390,6 +390,9 @@ class Core(object):
                 return 'break'
         return callback
 
+    def perform_action(self, action):
+        self._make_callback(action)()
+
     def _report_error(self, e):
         toplevel = Toplevel()
         toplevel.title('RopeError Was Raised')

@@ -1,11 +1,8 @@
-Saving Font Preferences
-=======================
+Commanding Buffer
+=================
 
-- Convert every `os.path.sep` to ``/`` in `NoProject`
-- Adding `Core.set()`
-- Setting editor font
-
-* Adding evaluate region?
+- Refactor uihelpers.find_item
+- Completion in find item dialog
 
 
 Remaining Small Stories

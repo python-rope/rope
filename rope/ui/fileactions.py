@@ -5,7 +5,7 @@ import rope.base.project
 import rope.ui.core
 from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
-from rope.ui.uihelpers import TreeViewHandle, TreeView
+from rope.ui.uihelpers import TreeViewHandle, TreeView, find_item_dialog
 
 
 def open_project(context):
@@ -131,14 +131,15 @@ def create_package(context):
     _create_resource_dialog(context.get_core(), do_create_package, 'Package', 'Source Folder')
 
 
-class FileFinder(object):
+class FindFileHandle(object):
 
-    def __init__(self, project):
-        self.project = project
+    def __init__(self, context):
+        self.core = context.core
+        self.project = context.project
         self.last_keyword = None
         self.last_result = None
 
-    def find_files_starting_with(self, starting):
+    def find_matches(self, starting):
         """Returns the Files in the project whose names starts with starting"""
         files = []
         if self.last_keyword is not None and starting.startswith(self.last_keyword):
@@ -157,6 +158,12 @@ class FileFinder(object):
         self.last_result = result
         return result
 
+    def selected(self, resource):
+        self.core.open_file(resource.path)
+
+    def to_string(self, resource):
+        return resource.path
+
     def _is_init_dot_py(self, file):
         return file.name == '__init__.py'
 
@@ -172,72 +179,11 @@ class FileFinder(object):
         return cmp(file1.path, file2.path)
 
 
-def _find_file_dialog(core):
-    if not _check_if_project_is_open(core):
-        return
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Find Project File')
-    find_dialog = Tkinter.Frame(toplevel)
-    name_label = Tkinter.Label(find_dialog, text='Name')
-    name = Tkinter.Entry(find_dialog)
-    found_label = Tkinter.Label(find_dialog, text='Matching Files')
-    found = Tkinter.Listbox(find_dialog, selectmode=Tkinter.SINGLE, width=48, height=15)
-    scrollbar = Tkinter.Scrollbar(find_dialog, orient=Tkinter.VERTICAL)
-    scrollbar['command'] = found.yview
-    found.config(yscrollcommand=scrollbar.set)
-    file_finder = FileFinder(core.project)
-    def name_changed(event):
-        if name.get() == '':
-            result = ()
-        else:
-            result = file_finder.find_files_starting_with(name.get())
-        found.delete(0, Tkinter.END)
-        for file_ in result:
-            found.insert(Tkinter.END, file_.path)
-        if result:
-            found.selection_set(0)
-    def open_selected():
-        selection = found.curselection()
-        if selection:
-            resource_name = found.get(selection[0])
-            core.open_file(resource_name)
-            toplevel.destroy()
-    def cancel():
-        toplevel.destroy()
-    name.bind('<Any-KeyRelease>', name_changed)
-    name.bind('<Return>', lambda event: open_selected())
-    name.bind('<Escape>', lambda event: cancel())
-    name.bind('<Control-g>', lambda event: cancel())
-    found.bind('<Return>', lambda event: open_selected())
-    found.bind('<Control-g>', lambda event: cancel())
-    def select_prev(event):
-        active = found.index(Tkinter.ACTIVE)
-        if active - 1 >= 0:
-            found.select_clear(0, Tkinter.END)
-            found.selection_set(active - 1)
-            found.activate(active - 1)
-            found.see(active - 1)
-    found.bind('<Control-p>', select_prev)
-    def select_next(event):
-        active = found.index(Tkinter.ACTIVE)
-        if active + 1 < found.size():
-            found.select_clear(0, Tkinter.END)
-            found.selection_set(active + 1)
-            found.activate(active + 1)
-            found.see(active + 1)
-    found.bind('<Control-n>', select_next)
-    name_label.grid(row=0, column=0, columnspan=2)
-    name.grid(row=1, column=0, columnspan=2)
-    found_label.grid(row=2, column=0, columnspan=2)
-    found.grid(row=3, column=0, columnspan=1)
-    scrollbar.grid(row=3, column=1, columnspan=1, sticky=Tkinter.N + Tkinter.S)
-    find_dialog.grid()
-    name.focus_set()
-    toplevel.grab_set()
-    core.root.wait_window(toplevel)
-
 def find_file(context):
-    _find_file_dialog(context.get_core())
+    if not _check_if_project_is_open(context.core):
+        return
+    find_item_dialog(FindFileHandle(context), title='Find Project File',
+                     matches='Matching Files')
 
 class _ResourceViewHandle(TreeViewHandle):
 

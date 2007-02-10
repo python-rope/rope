@@ -30,7 +30,7 @@ class EnhancedListHandle(object):
 
 class EnhancedList(object):
 
-    def __init__(self, parent, handle, title="List"):
+    def __init__(self, parent, handle, title="List", get_focus=True):
         self.handle = handle
         self.entries = []
         self.frame = Frame(parent)
@@ -47,12 +47,12 @@ class EnhancedList(object):
         self.list.bind('<Up>', self._select_prev)
         self.list.bind('<Control-n>', self._select_next)
         self.list.bind('<Down>', self._select_next)
-        self.list.focus_set()
+        if get_focus:
+            self.list.focus_set()
         label.grid(row=0, column=0, columnspan=2)
         self.list.grid(row=1, column=0, sticky=N+E+W+S)
         scrollbar.grid(row=1, column=1, sticky=N+E+W+S)
         self.frame.grid(sticky=N+E+W+S)
-
 
     def _focus_out(self, event):
         self.handle.focus_went_out()
@@ -196,6 +196,7 @@ class DescriptionList(object):
 
     def get_selected(self):
         return self.list.get_active_entry()
+
 
 class TreeViewHandle(object):
 
@@ -361,3 +362,79 @@ class TreeView(object):
         for i in range(node.children_count):
             self.remove(entry_number + 1)
         self._update_entry_text(entry_number)
+
+
+class FindItemHandle(object):
+
+    def find_matches(self, starting):
+        pass
+
+    def selected(self, item):
+        pass
+
+    def to_string(self, item):
+        pass
+
+
+class _FindListViewAdapter(object):
+
+    def __init__(self, toplevel, handle):
+        self.toplevel = toplevel
+        self.handle = handle
+
+    def entry_to_string(self, obj):
+        return self.handle.to_string(obj)
+
+    def selected(self, obj):
+        self.toplevel.destroy()
+        self.handle.selected(obj)
+
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def focus_went_out(self):
+        pass
+
+
+def find_item_dialog(handle, title='Find', matches='Matches'):
+    toplevel = Tkinter.Toplevel()
+    toplevel.title(title)
+    find_dialog = Tkinter.Frame(toplevel)
+    name_label = Tkinter.Label(toplevel, text='Name')
+    name = Tkinter.Entry(toplevel)
+    list_handle = _FindListViewAdapter(toplevel, handle)
+    found = VolatileList(find_dialog, list_handle, matches, get_focus=False)
+    def name_changed(event):
+        if name.get() == '':
+            result = []
+        else:
+            result = handle.find_matches(name.get())
+        found.clear()
+        for item in result:
+            found.insert_entry(item)
+    def complete_name(event):
+        if not found.get_entries():
+            return
+        result = handle.to_string(found.get_entries()[0])
+        for item in found.get_entries():
+            common_index = 0
+            for a, b in zip(result, handle.to_string(item)):
+                if a == b:
+                    common_index += 1
+                else:
+                    break
+            result = result[:common_index]
+        name.delete('0', Tkinter.END)
+        name.insert('0', result)
+    name.bind('<Any-KeyRelease>', name_changed)
+    name.bind('<Return>',
+              lambda event: list_handle.selected(found.get_active_entry()))
+    name.bind('<Escape>', lambda event: list_handle.canceled())
+    name.bind('<Control-g>', lambda event: list_handle.canceled())
+    name.bind('<Alt-slash>', complete_name)
+    name.bind('<Control-space>', complete_name)
+    name_label.grid(row=0, column=0, columnspan=2)
+    name.grid(row=1, column=0, columnspan=2)
+    find_dialog.grid(row=2, column=0, columnspan=2)
+    name.focus_set()
+    toplevel.grab_set()

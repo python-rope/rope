@@ -152,12 +152,32 @@ def swap_mark_and_insert(context):
     context.editor.swap_mark_and_insert()
 
 
-_no_project = rope.base.project.NoProject()
 def edit_dot_rope(context):
-    resource = _no_project.get_resource(
+    resource = rope.base.project.get_no_project().get_resource(
         os.path.expanduser('~%s.rope' % os.path.sep))
     editor_manager = context.get_core().get_editor_manager()
     editor_manager.get_resource_editor(resource, mode='python')
+
+
+class FindCommandHandle(object):
+
+    def __init__(self, core):
+        self.core = core
+
+    def find_matches(self, starting):
+        return [action for action in self.core.actions
+                if action.get_name().startswith(starting)]
+
+    def selected(self, action):
+        self.core.perform_action(action)
+
+    def to_string(self, action):
+        return action.get_name()
+
+
+def execute_command(context):
+    uihelpers.find_item_dialog(FindCommandHandle(context.core),
+                               'Execute Command', 'Matched Commands')
 
 
 core = rope.ui.core.Core.get_core()
@@ -204,8 +224,10 @@ actions.append(SimpleAction('search_forward', forward_search, 'C-s',
 actions.append(SimpleAction('search_backward', backward_search, 'C-r',
                             MenuAddress(['Edit', 'Backward Search'], 'b', 3), ['all']))
 
+actions.append(SimpleAction('execute_command', execute_command, 'M-x',
+                            MenuAddress(['Edit', 'Execute Command'], 'x', 4), ['all', 'none']))
 actions.append(SimpleAction('edit_dot_rope', edit_dot_rope, 'C-x c',
-                            MenuAddress(['Edit', 'Edit ~/.rope'], None, 4), ['all', 'none']))
+                            MenuAddress(['Edit', 'Edit ~/.rope'], '.', 4), ['all', 'none']))
 
 
 for action in actions:
