@@ -10,6 +10,7 @@ import rope.refactor.introduce_parameter
 import rope.refactor.localtofield
 import rope.refactor.move
 import rope.refactor.rename
+import rope.refactor.method_object
 import rope.ui.core
 from rope.refactor import ImportOrganizer
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
@@ -155,6 +156,8 @@ class ExtractDialog(RefactoringDialog):
         label.grid(row=0, column=0)
         self.new_name_entry = Tkinter.Entry(frame)
         self.new_name_entry.grid(row=0, column=1)
+        self.new_name_entry.insert(0, 'extracted')
+        self.new_name_entry.select_range(0, Tkinter.END)
 
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
         self.new_name_entry.focus_set()
@@ -200,12 +203,16 @@ class IntroduceFactoryDialog(RefactoringDialog):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='Factory Method Name :')
         self.new_name_entry = Tkinter.Entry(frame)
+        self.new_name_entry.insert(0, 'create')
+        self.new_name_entry.select_range(0, Tkinter.END)
 
         self.global_factory_val = Tkinter.BooleanVar(False)
-        static_factory_button = Tkinter.Radiobutton(frame, variable=self.global_factory_val,
-                                                    value=False, text='Use static method')
-        global_factory_button = Tkinter.Radiobutton(frame, variable=self.global_factory_val,
-                                                    value=True, text='Use global function')
+        static_factory_button = Tkinter.Radiobutton(
+            frame, variable=self.global_factory_val,
+            value=False, text='Use static method')
+        global_factory_button = Tkinter.Radiobutton(
+            frame, variable=self.global_factory_val,
+            value=True, text='Use global function')
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
 
         label.grid(row=0, column=0)
@@ -454,8 +461,10 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         name_entry.focus_set()
         toplevel.grab_set()
 
+
 def change_signature(context):
     ChangeMethodSignatureDialog(context).show()
+
 
 class InlineArgumentDefaultDialog(RefactoringDialog):
 
@@ -508,7 +517,7 @@ class IntroduceParameterDialog(RefactoringDialog):
         label = Tkinter.Label(frame, text='New Parameter Name :')
         label.grid(row=0, column=0)
         self.new_name_entry = Tkinter.Entry(frame)
-        #self.new_name_entry.insert(0, '')
+        self.new_name_entry.insert(0, 'new_parameter')
         self.new_name_entry.select_range(0, Tkinter.END)
         self.new_name_entry.grid(row=0, column=1, columnspan=2)
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
@@ -583,6 +592,36 @@ def convert_local_to_field(context):
         context.project.do(changes)
 
 
+class MethodObjectDialog(RefactoringDialog):
+
+    def __init__(self, context):
+        editor = context.get_active_editor().get_editor()
+        super(MethodObjectDialog, self).__init__(
+            context.project, 'Replace Method With Method Object Refactoring')
+        self.renamer = rope.refactor.method_object.MethodObject(
+            context.project, context.resource, editor.get_current_offset())
+
+    def _get_changes(self):
+        new_name = self.new_name_entry.get()
+        return self.renamer.get_changes(new_name)
+
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(frame, text='New Class Name :')
+        label.grid(row=0, column=0)
+        self.new_name_entry = Tkinter.Entry(frame)
+        self.new_name_entry.insert(0, '_MethodObject')
+        self.new_name_entry.select_range(0, Tkinter.END)
+        self.new_name_entry.grid(row=0, column=1, columnspan=2)
+        self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.new_name_entry.focus_set()
+        return frame
+
+
+def method_object(context):
+    MethodObjectDialog(context).show()
+
+
 actions = []
 actions.append(SimpleAction('rename', ConfirmEditorsAreSaved(rename), 'C-c r r',
                             MenuAddress(['Refactor', 'Rename'], 'n'), ['python']))
@@ -614,6 +653,10 @@ actions.append(SimpleAction('encapsulate_field',
 actions.append(SimpleAction('introduce_parameter',
                             ConfirmEditorsAreSaved(introduce_parameter), 'C-c r p',
                             MenuAddress(['Refactor', 'Introduce Parameter'], None, 1),
+                            ['python']))
+actions.append(SimpleAction('method_object',
+                            ConfirmEditorsAreSaved(method_object), 'C-c r j',
+                            MenuAddress(['Refactor', 'Method To Method Object'], 'j', 1),
                             ['python']))
 actions.append(SimpleAction('local_to_field',
                             ConfirmEditorsAreSaved(convert_local_to_field), None,

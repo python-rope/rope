@@ -435,6 +435,14 @@ class PyCoreTest(unittest.TestCase):
         c_class = pymod.get_attribute('C').get_object()
         self.assertFalse('my_var' in c_class.get_attributes())
 
+    def test_not_leaking_tuple_assigned_names_inside_parent_scope(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('class C(object):\n    def f(self):\n'
+                  '        var1, var2 = range(2)\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        self.assertFalse('var1' in c_class.get_attributes())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 

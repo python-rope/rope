@@ -165,7 +165,7 @@ class FindCommandHandle(uihelpers.FindItemHandle):
         self.core = core
 
     def find_matches(self, starting):
-        return [action for action in self.core.actions
+        return [action for action in self.core.get_available_actions()
                 if action.get_name().startswith(starting)]
 
     def selected(self, action):

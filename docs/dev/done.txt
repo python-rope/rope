@@ -3,6 +3,9 @@
 ===========
 
 
+- Replace method with method object : February 12, 2007
+
+
 - Enhancing searching : February 10, 2007
 
 

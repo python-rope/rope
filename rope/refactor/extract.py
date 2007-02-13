@@ -3,9 +3,9 @@ import re
 
 import rope.base.pyobjects
 from rope.base import codeanalyze
+from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.refactor import sourceutils
-from rope.base.change import ChangeSet, ChangeContents
 
 
 class _ExtractRefactoring(object):
@@ -13,15 +13,25 @@ class _ExtractRefactoring(object):
     def __init__(self, project, resource, start_offset, end_offset):
         self.pycore = project.pycore
         self.resource = resource
-        self.start_offset = start_offset
-        self.end_offset = end_offset
+        self.start_offset = self._fix_start(resource.read(), start_offset)
+        self.end_offset = self._fix_end(resource.read(), end_offset)
+
+    def _fix_start(self, source, offset):
+        while offset < len(source) and source[offset].isspace():
+            offset += 1
+        return offset
+
+    def _fix_end(self, source, offset):
+        while offset > 0 and source[offset - 1].isspace():
+            offset -= 1
+        return offset
 
 
 class ExtractMethodRefactoring(_ExtractRefactoring):
 
     def get_changes(self, extracted_name):
         info = _ExtractingPartOffsets(self.pycore, self.resource,
-                                   self.start_offset, self.end_offset)
+                                      self.start_offset, self.end_offset)
         if info.is_one_line_extract():
             new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info,
                                                     extracted_name).extract()
@@ -423,6 +433,11 @@ class _FunctionInformationCollector(object):
 
     def visitAssName(self, node):
         self._written_variable(node.name, node.lineno)
+
+    def visitAssign(self, node):
+        compiler.walk(node.expr, self)
+        for child in node.nodes:
+            compiler.walk(child, self)
 
     def visitName(self, node):
         self._read_variable(node.name, node.lineno)

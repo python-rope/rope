@@ -86,8 +86,8 @@ class ChangeContents(Change):
 
     def get_description(self):
         differ = difflib.Differ()
-        result = list(differ.compare(self.resource.read().splitlines(True),
-                                     self.old_content.splitlines(True)))
+        result = list(differ.compare(self.old_content.splitlines(True),
+                                     self.new_content.splitlines(True)))
         return ''.join(result)
 
     def get_changed_resources(self):

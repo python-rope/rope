@@ -1,10 +1,12 @@
 import unittest
 
-from ropetest import testutils
+from rope.base import exceptions
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    SourceLinesAdapter, WordRangeFinder,
-                                   ScopeNameFinder, LogicalLineFinder)
+                                   ScopeNameFinder, LogicalLineFinder,
+                                   get_block_start)
 from rope.base.project import Project
+from ropetest import testutils
 
 
 class StatementRangeFinderTest(unittest.TestCase):
@@ -243,7 +245,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         super(ScopeNameFinderTest, self).tearDown()
 
     # FIXME: in normal scopes the interpreter raises `UnboundLocalName`
-    # exception, but no in class bodies
+    # exception, but not in class bodies
     def xxx_test_global_name_in_class_body(self):
         code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
         scope = self.pycore.get_string_scope(code)
@@ -333,6 +335,13 @@ class ScopeNameFinderTest(unittest.TestCase):
         found_pyname = name_finder.get_pyname_at(mod1.read().index('pkg2') + 1)
         self.assertEquals(pkg2_pyobject, found_pyname.get_object())
 
+    @testutils.assert_raises(exceptions.RopeError)
+    def test_get_pyname_at_on_language_keywords(self):
+        code = 'def a_func(a_func):\n    pass\n'
+        pymod = self.pycore.get_string_module(code)
+        name_finder = ScopeNameFinder(pymod)
+        name_finder.get_pyname_at(code.index('pass'))
+
 
 class LogicalLineFinderTest(unittest.TestCase):
 
@@ -375,6 +384,15 @@ class LogicalLineFinderTest(unittest.TestCase):
         code = 'if True:\n    if True:\n        if True:\n            pass\n    a = 10\n'
         line_finder = self._get_logical_line_finder(code)
         self.assertEquals((5, 5), line_finder.get_logical_line_in(5))
+
+    def test_list_comprehensions_and_fors(self):
+        code = 'a_list = [i\n    for i in range(10)]\n'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((1, 2), line_finder.get_logical_line_in(2))
+
+    def test_fors_and_block_start(self):
+        code = 'l = range(10)\nfor i in l:\n    print i\n'
+        self.assertEquals(2, get_block_start(SourceLinesAdapter(code),2 ))
 
 
 def suite():

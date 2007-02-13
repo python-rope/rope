@@ -1,7 +1,38 @@
+Refactoring
+===========
+
+- Replace Method With Method Object:
+
+  - Multi-line function header
+  - Simple parameters
+  - ``self`` parameter
+  - Using parameters in ``__call__`` body
+  - Args_arg, kwds_arg
+  - Check performing on things other than functions
+  - Adding to UI
+  - Changing the caller
+  - Nested and class methods
+
+- Using `functionutils.DefinitionInfo` in show doc
+- Get pyname on keywords
+- Proposing `functionutils.DefinitionInfo.arg` while none exists
+- Extract method and  ``a = 1 + a\n`` and ``a += 1\n``
+- ``core.set('show_menu_bar', False)``
+- ``core.set('show_status_bar', False)``
+- ``core.set('show_buffer_list_bar', False)``
+- Only showing active actions in current context in execute command
+- ``C-g`` and code assist dialog
+- Problems for inside list comprehension assists
+
+* Showing pysvn urls in docs
+* Changing ``C-a C-a`` to move to the first character in the line
+* Changing open project dialog
+
+
 Remaining Small Stories
 =======================
 
-High Priorities:
+Main:
 
 * Separating UI and functional tests from unit tests
 * Should we stop when transforming local variable to fields when there
@@ -27,7 +58,6 @@ Others:
 * Importing star and removing self imports; stack overflow
 * Extract constant
 * What to do if a file is removed while editing
-* Problems for inside list comprehension assists
 * `PyClass.superclasses` should be concluded data
 * Better `ropetest` package structure
 * Handling `AssList` for inline variable and encapsulate field

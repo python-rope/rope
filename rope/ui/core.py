@@ -24,7 +24,6 @@ class Core(object):
         for context in editingcontexts.contexts.values():
             context.menu = Menu(self.root, relief=RAISED, borderwidth=1)
             context.menu_manager = MenuBarManager(context.menu)
-        self.root['menu'] = editingcontexts.none.menu
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
         self.editor_panel = Frame(self.main, borderwidth=0)
@@ -108,22 +107,29 @@ class Core(object):
                 if key:
                     menu.address[-1] = menu.address[-1].ljust(32) + key
                 self._add_menu_command(menu, callback, action.get_active_contexts())
+        self._editor_changed()
 
     def _bind_none_context_keys(self):
         context = editingcontexts.none
         context.key_binding.bind(self.root)
 
     def _get_matching_contexts(self, contexts):
-        contexts = list(contexts)
+        result = set()
+        for name in self._get_matching_context_names(contexts):
+            if name in editingcontexts.contexts:
+                result.add(editingcontexts.contexts[name])
+        return result
+
+    def _get_matching_context_names(self, contexts):
+        contexts = set(contexts)
         result = set()
         if 'all' in contexts:
             contexts.remove('all')
-            for name, context in editingcontexts.contexts.iteritems():
+            for name in editingcontexts.contexts.keys():
                 if name != 'none':
-                    result.add(context)
+                    result.add(name)
         for name in contexts:
-            if name in editingcontexts.contexts:
-                result.add(editingcontexts.contexts[name])
+                result.add(name)
         return result
 
     def _bind_key(self, key, function, active_contexts=['all']):
@@ -247,12 +253,14 @@ class Core(object):
         self._init_key_binding()
         self._bind_none_context_keys()
         self._init_menus()
+        self.editor_manager.show(self.prefs.get('show_buffer_list', True))
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
         self.main.rowconfigure(0, weight=1)
         self.main.columnconfigure(0, weight=1)
         self.editor_panel.pack(fill=BOTH, expand=1)
-        self.status_bar.pack(fill=BOTH, side=BOTTOM)
+        if self.prefs.get('show_status_bar', True):
+            self.status_bar.pack(fill=BOTH, side=BOTTOM)
         self.main.pack(fill=BOTH, expand=1)
         self.main.pack_propagate(0)
         self.root.mainloop()
@@ -410,10 +418,25 @@ class Core(object):
 
     def _editor_changed(self):
         active_editor = self.editor_manager.active_editor
+        if not self.prefs.get('show_menu_bar', True):
+            self.root['menu'] = None
+            return
         if active_editor:
             self.root['menu'] = active_editor.get_editor().get_editing_context().menu
         else:
             self.root['menu'] = editingcontexts.none.menu
+
+    def get_available_actions(self):
+        """Return the applicable actions in current context"""
+        context = 'none'
+        active_editor = self.editor_manager.active_editor
+        if active_editor:
+            context = active_editor.get_editor().get_editing_context().name
+        for action in self.actions:
+            action_contexts = self._get_matching_context_names(
+                action.get_active_contexts())
+            if context in action_contexts:
+                yield action
 
     _core = None
 

@@ -490,6 +490,28 @@ class ExtractMethodTest(unittest.TestCase):
         end = code.rindex(')') + 1
         refactored = self.do_extract_method(code, start, end, 'new_func')
 
+    def test_extract_method_and_extra_blank_lines(self):
+        code = '\nprint 1\n'
+        refactored = self.do_extract_method(code, 0, len(code), 'new_f')
+        expected = '\n\ndef new_f():\n    print 1\n\nnew_f()\n'
+        self.assertEquals(expected, refactored)
+
+    def test_variable_writes_in_the_same_line_as_variable_read(self):
+        code = 'a = 1\na = 1 + a\n'
+        start = code.index('\n') + 1
+        end = len(code)
+        refactored = self.do_extract_method(code, start, end, 'new_f')
+        expected = 'a = 1\n\ndef new_f(a):\n    a = 1 + a\n\nnew_f(a)\n'
+        self.assertEquals(expected, refactored)
+
+    def test_variable_writes_in_the_same_line_as_variable_read2(self):
+        code = 'a = 1\na += 1\n'
+        start = code.index('\n') + 1
+        end = len(code)
+        refactored = self.do_extract_method(code, start, end, 'new_f')
+        expected = 'a = 1\n\ndef new_f(a):\n    a += 1\n\nnew_f(a)\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

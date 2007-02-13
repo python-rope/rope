@@ -77,6 +77,7 @@ class DefinitionInfo(object):
         if self.keywords_arg:
             params.append('**' + self.keywords_arg)
         return '%s(%s)' % (self.function_name, ', '.join(params))
+        
 
     @staticmethod
     def _read(pyfunction, code):
@@ -102,7 +103,7 @@ class DefinitionInfo(object):
         args_with_defaults = [(name, None) for name in args]
         args_with_defaults.extend(keywords)
         return DefinitionInfo(info.get_function_name(), is_method,
-                               args_with_defaults, args_arg, keywords_arg)
+                              args_with_defaults, args_arg, keywords_arg)
 
     @staticmethod
     def read(pyfunction):

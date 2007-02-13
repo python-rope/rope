@@ -397,9 +397,16 @@ class ScopeNameFinder(object):
     def get_pyname_in_scope(self, holding_scope, name):
         #ast = compiler.parse(name)
         # parenthesizing for handling cases like 'a_var.\nattr'
-        ast = compiler.parse('(%s)' % name)
+        try:
+            ast = compiler.parse('(%s)' % name)
+        except SyntaxError:
+            raise BadIdentifierError('Not a python identifier selected.')
         result = evaluate.get_statement_result(holding_scope, ast)
         return result
+
+
+class BadIdentifierError(rope.base.exceptions.RopeError):
+    pass
 
 
 def get_pyname_at(pycore, resource, offset):
@@ -510,7 +517,7 @@ class LogicalLineFinder(object):
         self.lines = lines
 
     def get_logical_line_in(self, line_number):
-        block_start = StatementRangeFinder.get_block_start(
+        block_start = get_block_start(
             self.lines, line_number,
             count_line_indents(self.lines.get_line(line_number)))
         readline = LinesToReadline(self.lines, block_start)
@@ -575,7 +582,8 @@ class StatementRangeFinder(object):
 
     def analyze(self):
         last_statement = 1
-        for current_line_number in range(self.get_block_start(self.lines, self.lineno),
+        for current_line_number in range(get_block_start(self.lines,
+                                                         self.lineno),
                                          self.lineno + 1):
             if not self.explicit_continuation and self.open_count == 0 and self.in_string == '':
                 last_statement = current_line_number
@@ -607,23 +615,43 @@ class StatementRangeFinder(object):
     def get_line_indents(self, line_number):
         return count_line_indents(self.lines.get_line(line_number))
 
-    @staticmethod
-    def get_block_start(lines, lineno, maximum_indents=80):
-        """Aproximating block start"""
-        pattern = StatementRangeFinder.get_block_start_patterns()
-        for i in reversed(range(1, lineno + 1)):
-            match = pattern.search(lines.get_line(i))
-            if match is not None and \
-               count_line_indents(lines.get_line(i)) <= maximum_indents:
-                return i
-        return 1
+    _block_start_pattern = None
 
-    @classmethod
-    def get_block_start_patterns(cls):
-        if not hasattr(cls, '__block_start_pattern'):
-            pattern = '^\\s*(((def|class|if|elif|except|for|while|with)\\s)|((try|else|finally|except)\\s*:))'
-            cls.__block_start_pattern = re.compile(pattern, re.M)
-        return cls.__block_start_pattern
+
+def get_block_start(lines, lineno, maximum_indents=80):
+    """Aproximate block start"""
+    pattern = get_block_start_patterns()
+    for i in range(lineno, 0, -1):
+        match = pattern.search(lines.get_line(i))
+        if match is not None and \
+           count_line_indents(lines.get_line(i)) <= maximum_indents:
+            striped = match.string.lstrip()
+            # Maybe we're in a list comprehension
+            if i > 1 and striped.startswith('if') or striped.startswith('for'):
+                bracs = 0
+                for j in range(i, min(i + 5, lines.length() + 1)):
+                    for c in lines.get_line(j):
+                        if c == '#':
+                            break
+                        if c == '[':
+                            bracs += 1
+                        if c == ']':
+                            bracs -= 1
+                            if bracs < 0:
+                                break
+                    if bracs < 0:
+                        break
+                if bracs < 0:
+                    continue
+            return i
+    return 1
+
+def get_block_start_patterns():
+    if not StatementRangeFinder._block_start_pattern:
+        pattern = '^\\s*(((def|class|if|elif|except|for|while|with)\\s)|'\
+                  '((try|else|finally|except)\\s*:))'
+        StatementRangeFinder._block_start_pattern = re.compile(pattern, re.M)
+    return StatementRangeFinder._block_start_pattern
 
 
 # XXX: Should we use it

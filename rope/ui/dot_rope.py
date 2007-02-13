@@ -13,6 +13,16 @@ core = rope.ui.core.get_core()
 # Changing editor font
 #core.set('font', ('Courier', 14))
 
+# Hiding menu bar
+#core.set('show_menu_bar', False)
+
+# Hiding status bar
+#core.set('show_status_bar', False)
+
+# Hiding buffer list
+#core.set('show_buffer_list', False)
+
+
 # If you don't like emacs keybinding, change this to False
 i_like_emacs = True
 if not i_like_emacs:
@@ -69,6 +79,7 @@ if not i_like_emacs:
     core.rebind_action('introduce_factory', None)
     core.rebind_action('encapsulate_field', None)
     core.rebind_action('introduce_parameter', None)
+    core.rebind_action('method_object', None)
     core.rebind_action('rename_current_module', None)
     core.rebind_action('move_current_module', None)
     core.rebind_action('organize_imports', 'C-O')

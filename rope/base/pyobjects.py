@@ -518,6 +518,10 @@ class _ClassInitVisitor(_AssignVisitor):
             self.scope_visitor.names[node.attrname].assignments.append(
                 pynames._Assignment(self.assigned_ast))
 
+    def visitAssTuple(self, node):
+        for child in node.getChildNodes():
+            compiler.walk(child, self)
+
     def visitAssName(self, node):
         pass
 

@@ -30,12 +30,14 @@ class EnhancedListHandle(object):
 
 class EnhancedList(object):
 
-    def __init__(self, parent, handle, title="List", get_focus=True):
+    def __init__(self, parent, handle, title="List", get_focus=True,
+                 height=14, width=50):
         self.handle = handle
         self.entries = []
         self.frame = Frame(parent)
         label = Label(self.frame, text=title)
-        self.list = Listbox(self.frame, selectmode=SINGLE)
+        self.list = Listbox(self.frame, selectmode=SINGLE,
+                            height=height, width=width)
         scrollbar = Scrollbar(self.frame, orient=VERTICAL)
         scrollbar['command'] = self.list.yview
         self.list.config(yscrollcommand=scrollbar.set)

@@ -8,7 +8,7 @@ from rope.base.exceptions import RopeError
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
                                    SourceLinesAdapter)
-from rope.refactor import occurrences
+from rope.refactor import occurrences, functionutils
 
 
 class RopeSyntaxError(RopeError):
@@ -147,7 +147,7 @@ class _CodeCompletionCollector(object):
         block_start = self.lineno
         last_indents = self.current_indents
         while block_start > 0:
-            block_start = rope.base.codeanalyze.StatementRangeFinder.get_block_start(
+            block_start = rope.base.codeanalyze.get_block_start(
                 ArrayLinesAdapter(self.lines), block_start) - 1
             if self.lines[block_start].strip().startswith('try:'):
                 indents = self._get_line_indents(self.lines[block_start])
@@ -327,7 +327,7 @@ class PythonCodeAssist(object):
         pyobject = element.get_object()
         if isinstance(pyobject, rope.base.pyobjects.PyDefinedObject):
             if pyobject.get_type() == rope.base.pyobjects.get_base_type('Function'):
-                return _get_function_docstring(pyobject._get_ast())
+                return _get_function_docstring(pyobject)
             elif pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
                 return _get_class_docstring(pyobject)
             else:
@@ -354,29 +354,17 @@ def _get_class_docstring(pyclass):
     if '__init__' in pyclass.get_attributes():
         init = pyclass.get_attribute('__init__').get_object()
         if isinstance(init, rope.base.pyobjects.PyDefinedObject):
-            doc += '\n\n' + _get_function_docstring(init._get_ast())
+            doc += '\n\n' + _get_function_docstring(init)
     return doc
 
-def _get_function_docstring(node):
-    signature = _get_function_signature(node)
+def _get_function_docstring(pyfunction):
+    signature = _get_function_signature(pyfunction)
 
-    return signature + _trim_docstring(node.doc)
+    return signature + '\n\n' + _trim_docstring(pyfunction._get_ast().doc)
 
-def _get_function_signature(node):
-    has_args = node.flags & 0x4
-    has_kwds = node.flags & 0x8
-    normal_arg_count = len(node.argnames)
-    if has_kwds:
-        normal_arg_count -= 1
-    if has_args:
-        normal_arg_count -= 1
-    signature = node.name + '(' + ', '.join(node.argnames[:normal_arg_count])
-    if has_args:
-        signature += ', *%s' % node.argnames[normal_arg_count]
-    if has_kwds:
-        signature += ', **%s' % node.argnames[-1]
-    signature += ')\n\n'
-    return signature
+def _get_function_signature(pyfunction):
+    info = functionutils.DefinitionInfo.read(pyfunction)
+    return info.to_string()
 
 def _trim_docstring(docstring):
     """The sample code from :PEP:`257`"""

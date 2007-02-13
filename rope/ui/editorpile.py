@@ -9,14 +9,17 @@ class EditorPile(object):
         self.core = core
         self.editor_list = Frame(editor_panel, borderwidth=0)
         self.editor_frame = Frame(editor_panel, borderwidth=0, relief=RIDGE)
-        self.editor_list.pack(fill=BOTH, side=TOP)
-        self.editor_frame.pack(fill=BOTH, expand=1)
-        self.editor_frame.pack_propagate(0)
         self.editors = []
         self.buttons = {}
         self.active_file_path = StringVar('')
         self.active_editor = None
         self.last_edited_location = None
+
+    def show(self, show_list=True):
+        if show_list:
+            self.editor_list.pack(fill=BOTH, side=TOP)
+        self.editor_frame.pack(fill=BOTH, expand=1)
+        self.editor_frame.pack_propagate(0)
 
     def _editor_was_modified(self, editor):
         if editor not in self.buttons:

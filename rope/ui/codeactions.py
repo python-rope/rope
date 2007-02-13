@@ -93,9 +93,9 @@ def do_code_assist(context):
         editor.get_text(), editor.get_current_offset(), context.resource)
     toplevel = Tkinter.Toplevel()
     toplevel.title('Code Assist Proposals')
+    handle = _CompletionListHandle(editor, toplevel, result)
     enhanced_list = EnhancedList(
-        toplevel, _CompletionListHandle(editor, toplevel, result),
-        title='Code Assist Proposals')
+        toplevel, handle, title='Code Assist Proposals')
     proposals = rope.ide.codeassist.ProposalSorter(result).get_sorted_proposal_list()
     for proposal in proposals:
         enhanced_list.add_entry(proposal)
@@ -122,6 +122,7 @@ def do_code_assist(context):
                 enhanced_list.add_entry(proposal)
     enhanced_list.list.focus_set()
     enhanced_list.list.bind('<Any-KeyPress>', key_pressed)
+    enhanced_list.list.bind('<Control-g>', lambda event: handle.canceled())
     toplevel.grab_set()
 
 def _get_template_information(editor, result, proposal):

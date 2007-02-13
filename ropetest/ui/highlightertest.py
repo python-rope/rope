@@ -3,6 +3,7 @@ import unittest
 from rope.ui.highlighter import (PythonHighlighting, HighlightingStyle,
                                  ReSTHighlighting, NoHighlighting)
 
+
 class HighlightTest(unittest.TestCase):
 
     def setUp(self):

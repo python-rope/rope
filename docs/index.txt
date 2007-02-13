@@ -31,6 +31,7 @@ Features implemented so far:
   * Encapsulate field
   * Transform module to package
   * Convert local variable to field
+  * Replace method with method object
   * Inline argument default value
   * Previewing refactorings
   * Undo/redo refactorings
@@ -67,10 +68,11 @@ Features implemented so far:
   * Python and reST highlighting
   * Multiple editers
   * Project file history
-  * Basic SVN support using pysvn
+  * Basic SVN support using pysvn library
+  * Configurable keybinding
+  * Basic UI plug-in support
   * Correcting indentation
   * Project tree view
-  * Basic UI plug-in support
 
 
 Download
