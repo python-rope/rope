@@ -1,5 +1,6 @@
 from rope.ui import editingtools
 
+
 class EditingContext(object):
 
     def __init__(self, name, core):

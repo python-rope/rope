@@ -7,7 +7,7 @@ in 4 steps:
 1. Collect some data for performing the refactoring and use them
    to construct a refactoring class.  Like::
 
-     renamer = RenameRefactoring(project, resource, offset)
+     renamer = Rename(project, resource, offset)
 
 2. Some refactorings give you useful information about the
    refactoring after their construction.  Like::
@@ -30,7 +30,7 @@ a refactoring.  These are the things an IDE does in each step:
 
 1. Construct a refactoring object by giving it information like
    resource, offset and ... .  Some of the refactoring problems
-   (like performing rename refactoring on keywords) can be
+   (like performing rename refactoring on language keywords) can be
    reported here.
 2. Print some information about the refactoring and ask the user
    about the information that are necessary for completing the
@@ -47,7 +47,7 @@ from rope.base.change import ChangeSet, ChangeContents, MoveResource, CreateFold
 from rope.refactor.importutils import module_imports
 
 
-class TransformModuleToPackage(object):
+class ModuleToPackage(object):
 
     def __init__(self, project, resource):
         self.project = project

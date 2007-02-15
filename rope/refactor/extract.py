@@ -27,7 +27,7 @@ class _ExtractRefactoring(object):
         return offset
 
 
-class ExtractMethodRefactoring(_ExtractRefactoring):
+class ExtractMethod(_ExtractRefactoring):
 
     def get_changes(self, extracted_name):
         info = _ExtractingPartOffsets(self.pycore, self.resource,
@@ -43,7 +43,7 @@ class ExtractMethodRefactoring(_ExtractRefactoring):
         return changes
 
 
-class ExtractVariableRefactoring(_ExtractRefactoring):
+class ExtractVariable(_ExtractRefactoring):
 
     def get_changes(self, extracted_name):
         info = _ExtractingPartOffsets(self.pycore, self.resource,

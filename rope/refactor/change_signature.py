@@ -1,11 +1,10 @@
 import copy
 
-import rope.refactor.occurrences
 import rope.base.exceptions
-import rope.base.pyobjects
-from rope.base import codeanalyze
-from rope.refactor import sourceutils, functionutils
+import rope.refactor.occurrences
+from rope.base import pyobjects, codeanalyze
 from rope.base.change import ChangeContents, ChangeSet
+from rope.refactor import sourceutils, functionutils, rename
 
 
 class ChangeSignature(object):
@@ -17,14 +16,20 @@ class ChangeSignature(object):
         self.name = codeanalyze.get_name_at(resource, offset)
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.pyname is None or self.pyname.get_object() is None or \
-           not isinstance(self.pyname.get_object(), rope.base.pyobjects.PyFunction):
+           not isinstance(self.pyname.get_object(), pyobjects.PyFunction):
             raise rope.base.exceptions.RefactoringError(
                 'Change method signature should be performed on functions')
 
-    def _change_calls(self, call_changer):
+    def _change_calls(self, call_changer, in_hierarchy=False):
         changes = ChangeSet('Changing signature of <%s>' % self.name)
+        if in_hierarchy and self.is_method():
+            pyfunction = self.pyname.get_object()
+            pyclass = pyfunction.parent
+            pynames = rename.get_all_methods_in_hierarchy(pyclass, self.name)
+        else:
+            pynames = [self.pyname]
         finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
-            self.pycore, self.name, [self.pyname])
+            self.pycore, self.name, pynames)
         for file in self.pycore.get_python_files():
             change_calls = _ChangeCallsInModule(
                 self.pycore, finder, file, call_changer)
@@ -32,6 +37,10 @@ class ChangeSignature(object):
             if changed_file is not None:
                 changes.add_change(ChangeContents(file, changed_file))
         return changes
+
+    def is_method(self):
+        pyfunction = self.pyname.get_object()
+        return isinstance(pyfunction.parent, pyobjects.PyClass)
 
     def get_definition_info(self):
         return functionutils.DefinitionInfo.read(self.pyname.get_object())
@@ -61,10 +70,10 @@ class ChangeSignature(object):
                                     [ArgumentReorderer(new_ordering)])
         return self._change_calls(changer)
 
-    def apply_changers(self, changers):
+    def apply_changers(self, changers, in_hierarchy=False):
         function_changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(), changers)
-        return self._change_calls(function_changer)
+        return self._change_calls(function_changer, in_hierarchy)
 
 
 class _FunctionChangers(object):

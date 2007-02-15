@@ -26,7 +26,7 @@ class MoveRefactoringTest(unittest.TestCase):
         super(MoveRefactoringTest, self).tearDown()
 
     def _move(self, resource, offset, dest_resource):
-        changes = move.MoveRefactoring(self.project, resource, offset).\
+        changes = move.Move(self.project, resource, offset).\
                   get_changes(dest_resource)
         self.project.do(changes)
 
@@ -170,7 +170,7 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_resources_using_move_module_refactoring(self):
         self.mod1.write('a_var = 1')
         self.mod2.write('import mod1\nmy_var = mod1.a_var\n')
-        mover = move.MoveRefactoring(self.project, self.mod1)
+        mover = move.Move(self.project, self.mod1)
         mover.get_changes(self.pkg).do()
         self.assertEquals('import pkg.mod1\nmy_var = pkg.mod1.a_var\n', self.mod2.read())
         self.assertTrue(self.pkg.get_child('mod1.py') is not None)
@@ -178,7 +178,7 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_resources_using_move_module_refactoring_for_packages(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
         pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
-        mover = move.MoveRefactoring(self.project, self.pkg)
+        mover = move.Move(self.project, self.pkg)
         mover.get_changes(pkg2).do()
         self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
         self.assertTrue(pkg2.get_child('pkg') is not None)
@@ -186,7 +186,7 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_resources_using_move_module_refactoring_for_init_dot_py(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
         pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
-        mover = move.MoveRefactoring(self.project, self.pkg.get_child('__init__.py'))
+        mover = move.Move(self.project, self.pkg.get_child('__init__.py'))
         mover.get_changes(pkg2).do()
         self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
         self.assertTrue(pkg2.get_child('pkg') is not None)
@@ -194,7 +194,7 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_module_refactoring_and_star_imports(self):
         self.mod1.write('a_var = 1')
         self.mod2.write('from mod1 import *\na = a_var\n')
-        mover = move.MoveRefactoring(self.project, self.mod1)
+        mover = move.Move(self.project, self.mod1)
         mover.get_changes(self.pkg).do()
         self.assertEquals('from pkg.mod1 import *\na = a_var\n', self.mod2.read())
 
@@ -203,7 +203,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod4.write('a_var = 1')
         self.mod2.write('from pkg import mod4\n'
                         'import os\n\n\nprint mod4.a_var\n')
-        mover = move.MoveRefactoring(self.project, self.mod4)
+        mover = move.Move(self.project, self.mod4)
         mover.get_changes(self.project.root).do()
         self.assertEquals('import os\nimport mod4\n\n\n'
                           'print mod4.a_var\n', self.mod2.read())

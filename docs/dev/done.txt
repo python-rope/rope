@@ -3,6 +3,12 @@
 ===========
 
 
+- Performing change signature in class hierarchies : February 14, 2007
+
+
+- Supporting builtin `zip` and `enumerate` : February 14, 2007
+
+
 - Replace method with method object : February 12, 2007
 
 
@@ -12,7 +18,7 @@
 - Execute command; ``M-x`` : February 10, 2007
 
 
-- Changing editor font in ``~/.rope`` : February 9, 2007
+- Changing editor font and keybinding in ``~/.rope`` : February 9, 2007
 
 
 - Having two keybindings emacs/normal : February 9, 2007

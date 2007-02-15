@@ -99,12 +99,13 @@ class RenameDialog(RefactoringDialog):
         offset = editor.get_current_offset()
         if current_module:
             offset = None
-        self.renamer = rope.refactor.rename.RenameRefactoring(
+        self.renamer = rope.refactor.rename.Rename(
             context.project, resource, offset)
 
     def _get_changes(self):
         new_name = self.new_name_entry.get()
-        return self.renamer.get_changes(new_name, in_file=self.is_local)
+        return self.renamer.get_changes(new_name, in_file=self.is_local,
+                                        in_hierarchy=self.in_hierarchy.get())
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
@@ -115,6 +116,12 @@ class RenameDialog(RefactoringDialog):
         self.new_name_entry.select_range(0, Tkinter.END)
         self.new_name_entry.grid(row=0, column=1, columnspan=2)
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.in_hierarchy = Tkinter.IntVar(frame, value=0)
+        in_hierarchy = Tkinter.Checkbutton(
+            frame, text='Do for all matching methods in class hierarchy',
+            variable=self.in_hierarchy)
+        if self.renamer.is_method():
+            in_hierarchy.grid(row=1, columnspan=2, sticky=Tkinter.N)
         self.new_name_entry.focus_set()
         return frame
 
@@ -133,7 +140,7 @@ def transform_module_to_package(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        changes = rope.refactor.TransformModuleToPackage(
+        changes = rope.refactor.ModuleToPackage(
             context.project, resource).get_changes()
         self.project.do(changes)
 
@@ -169,7 +176,7 @@ def extract_method(context):
         editor = context.get_active_editor().get_editor()
         resource = context.resource
         start_offset, end_offset = editor.get_region_offset()
-        return rope.refactor.extract.ExtractMethodRefactoring(
+        return rope.refactor.extract.ExtractMethod(
             context.project, resource, start_offset,
             end_offset).get_changes(new_name)
     ExtractDialog(context, do_extract, 'Method').show()
@@ -179,7 +186,7 @@ def extract_variable(context):
         editor = context.get_active_editor().get_editor()
         resource = context.get_active_editor().get_file()
         start_offset, end_offset = editor.get_region_offset()
-        return rope.refactor.extract.ExtractVariableRefactoring(
+        return rope.refactor.extract.ExtractVariable(
             context.project, resource, start_offset,
             end_offset).get_changes(new_name)
     ExtractDialog(context, do_extract, 'Variable').show()
@@ -272,7 +279,7 @@ class MoveDialog(RefactoringDialog):
         offset = editor.get_current_offset()
         if current_module:
             offset = None
-        self.mover = rope.refactor.move.MoveRefactoring(
+        self.mover = rope.refactor.move.Move(
             context.project, resource, offset)
 
     def _get_changes(self):
@@ -382,7 +389,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         new_ordering = [_get_parameter_index(definition_info, param.name)
                         for param in parameters if not param.name.startswith('*')]
         changers.append(rope.refactor.change_signature.ArgumentReorderer(new_ordering))
-        return self.signature.apply_changers(changers)
+        return self.signature.apply_changers(changers, in_hierarchy=self.in_hierarchy.get())
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
@@ -416,6 +423,12 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         move_down.grid(row=1, column=1, sticky=Tkinter.N)
         remove.grid(row=2, column=1, sticky=Tkinter.N)
         add.grid(row=3, column=1, sticky=Tkinter.N)
+        self.in_hierarchy = Tkinter.IntVar(frame, value=0)
+        in_hierarchy = Tkinter.Checkbutton(
+            frame, text='Do for all matching methods in class hierarchy',
+            variable=self.in_hierarchy)
+        if self.signature.is_method():
+            in_hierarchy.grid(row=4, column=1, sticky=Tkinter.N)
         frame.grid()
         frame.focus_set()
         return frame
@@ -565,7 +578,7 @@ def inline(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        changes = rope.refactor.inline.InlineRefactoring(
+        changes = rope.refactor.inline.Inline(
             context.project, resource,
             editor.get_current_offset()).get_changes()
         context.project.do(changes)
@@ -576,7 +589,7 @@ def encapsulate_field(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        changes = rope.refactor.encapsulate_field.EncapsulateFieldRefactoring(
+        changes = rope.refactor.encapsulate_field.EncapsulateField(
             context.project, resource, editor.get_current_offset()).get_changes()
         context.project.do(changes)
 
@@ -586,7 +599,7 @@ def convert_local_to_field(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        changes = rope.refactor.localtofield.ConvertLocalToFieldRefactoring(
+        changes = rope.refactor.localtofield.LocalToField(
             context.project, resource,
             editor.get_current_offset()).get_changes()
         context.project.do(changes)
@@ -667,7 +680,7 @@ actions.append(SimpleAction('inline_argument_default',
                             MenuAddress(['Refactor', 'Inline Argument Default'], 'g', 1),
                             ['python']))
 actions.append(SimpleAction('module_to_package',
-                            ConfirmEditorsAreSaved(transform_module_to_package), None,
+                            ConfirmEditorsAreSaved(transform_module_to_package), 'C-c r 1 p',
                             MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1),
                             ['python']))
 actions.append(SimpleAction('rename_current_module',

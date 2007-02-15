@@ -5,7 +5,7 @@ import rope.base.project
 import rope.refactor.occurrences
 import ropetest
 from rope.refactor import rename
-from rope.refactor.rename import RenameRefactoring
+from rope.refactor.rename import Rename
 
 
 class RenameRefactoringTest(unittest.TestCase):
@@ -24,14 +24,14 @@ class RenameRefactoringTest(unittest.TestCase):
     def _local_rename(self, source_code, offset, new_name):
         testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
-        changes = RenameRefactoring(self.project, testmod, offset).\
+        changes = Rename(self.project, testmod, offset).\
                   get_changes(new_name, in_file=True)
         self.project.do(changes)
         return testmod.read()
 
-    def _rename(self, resource, offset, new_name):
-        changes = RenameRefactoring(self.project, resource, offset).\
-                  get_changes(new_name)
+    def _rename(self, resource, offset, new_name, in_hierarchy=False):
+        changes = Rename(self.project, resource, offset).\
+                  get_changes(new_name, in_hierarchy=in_hierarchy)
         self.project.do(changes)
 
     def test_simple_global_variable_renaming(self):
@@ -244,7 +244,8 @@ class RenameRefactoringTest(unittest.TestCase):
         mod.write('class A(object):\n    def a_method(self):\n        pass\n'
                   'class B(A):\n    def a_method(self):\n        pass\n')
 
-        self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method')
+        self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method',
+                     in_hierarchy=True)
         self.assertEquals('class A(object):\n    def new_method(self):\n        pass\n'
                           'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
 
@@ -254,10 +255,21 @@ class RenameRefactoringTest(unittest.TestCase):
                   'class B(A):\n    def a_method(self):\n        pass\n'
                   'class C(A):\n    def a_method(self):\n        pass\n')
 
-        self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method')
+        self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method',
+                     in_hierarchy=True)
         self.assertEquals('class A(object):\n    def new_method(self):\n        pass\n'
                   'class B(A):\n    def new_method(self):\n        pass\n'
                   'class C(A):\n    def new_method(self):\n        pass\n', mod.read())
+
+    def test_not_renaming_methods_in_hierarchies(self):
+        mod = self.pycore.create_module(self.project.root, 'mod1')
+        mod.write('class A(object):\n    def a_method(self):\n        pass\n'
+                  'class B(A):\n    def a_method(self):\n        pass\n')
+
+        self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method',
+                     in_hierarchy=False)
+        self.assertEquals('class A(object):\n    def a_method(self):\n        pass\n'
+                          'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
 
     def test_undoing_refactorings(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -371,7 +383,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('a_var = 1')
         mod2.write('import mod1\nmy_var = mod1.a_var\n')
-        renamer = rename.RenameRefactoring(self.project, mod1)
+        renamer = rename.Rename(self.project, mod1)
         renamer.get_changes('newmod').do()
         self.assertEquals('import newmod\nmy_var = newmod.a_var\n', mod2.read())
 
@@ -379,7 +391,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod1.write('import pkg\nmy_pkg = pkg')
-        renamer = rename.RenameRefactoring(self.project, pkg)
+        renamer = rename.Rename(self.project, pkg)
         renamer.get_changes('newpkg').do()
         self.assertEquals('import newpkg\nmy_pkg = newpkg', mod1.read())
 
@@ -387,7 +399,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         mod1.write('import pkg\nmy_pkg = pkg')
-        renamer = rename.RenameRefactoring(self.project, pkg.get_child('__init__.py'))
+        renamer = rename.Rename(self.project, pkg.get_child('__init__.py'))
         renamer.get_changes('newpkg').do()
         self.assertEquals('import newpkg\nmy_pkg = newpkg', mod1.read())
 

@@ -5,7 +5,7 @@ from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences
 
 
-class MoveRefactoring(object):
+class Move(object):
     """A class for moving modules, packages, global functions and classes."""
 
     def __init__(self, project, resource, offset=None):

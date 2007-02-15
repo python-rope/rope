@@ -25,7 +25,7 @@ binding                     emacs binding  normal
 open/new project            C-x C-p        C-P
 close project               C-x p k
 show project tree           C-x p t        M-Q r
-refresh project             C-x p r        F5
+validate project files      C-x p v        F5
 --------------------------  -------------  -------------  
 new module                  C-x n m
 new package                 C-x n p
@@ -88,6 +88,7 @@ inline refactoring          C-c r i        M-I
 change method signature     C-c r c        M-C
 extract local variable      C-c r l        M-L
 introduce factory           C-c r f
+method to method object     C-c r j
 encapsulate field           C-c r s
 introduce parameter         C-c r p
 rename in file              C-c r e
@@ -230,6 +231,7 @@ After performing rename refactoring one of the ``mod2`` occurances in
   a_var = AClass()
 
 and the new project tree would be::
+
   root/
     mod1.py
     newmod.py

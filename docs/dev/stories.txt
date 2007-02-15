@@ -29,8 +29,6 @@ Base Stories
 IDE And UI Stories
 ==================
 
-* Configuring keys
-* Configuring fonts
 * Showing syntactical errors
 * Editor folding
 * Variable indentation and tab size
@@ -40,11 +38,6 @@ IDE And UI Stories
 * Replacement; M-%
 * Remembering last open project
 * Go to matching parenthesis
-* Enhancing editor
-
-  * Select all; C-x h
-  * Fixed places for StatusTexts
-
 * Indenting a range of file
 * Auto completion type
 
@@ -72,14 +65,17 @@ IDE And UI Stories
   * Customizing CWD and parameters
   * Running last run
 
-* View type hierarchy
-* Open Type; C-T
-
 
 Stories
 =======
 
 > Public Release 0.5 : May 6, 2007
+
+
+* View type hierarchy
+
+
+* Open Type; ``C-T``
 
 
 * Saving history across sessions
@@ -92,10 +88,10 @@ Stories
 * Handling the return type of ``yield`` keyword
 
 
-* Handling the type of object after ``with/as`` statements
-
-
 * Finding similar statements when extracting variable/method
+
+
+* Encapsulate field using properties
 
 
 * Extracting methods from pieces with only one return/yield statement
@@ -105,9 +101,6 @@ Stories
 
 
 * Inlining a single occurrence
-
-
-* Performing change method signature in class hierarchies
 
 
 * Asking whether to encapsulate field in the class itself
@@ -128,7 +121,7 @@ Stories
 * Performing import action only on one import statement
 
 
-* Changing signature in class hierarchies
+* Handling the type of object after ``with/as`` statements
 
 
 > Public Release 0.5m1 : February 18, 2007

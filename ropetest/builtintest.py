@@ -282,6 +282,60 @@ class BuiltinTypesTest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertTrue(a_var is not None)
 
+    def test_builtin_zip_function(self):
+        self.mod.write(
+            'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+            'c1_list = [C1()]\nc2_list = [C2()]\n'
+            'a, b = zip(c1_list, c2_list)[0]')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_builtin_zip_function_with_more_than_two_args(self):
+        self.mod.write(
+            'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+            'c1_list = [C1()]\nc2_list = [C2()]\n'
+            'a, b, c = zip(c1_list, c2_list, c1_list)[0]')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        c_var = pymod.get_attribute('c').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, c_var.get_type())
+
+    def test_wrong_arguments_to_zip_function(self):
+        self.mod.write(
+            'class C1(object):\n    pass\nc1_list = [C1()]\n'
+            'a, b = zip(c1_list, 1)[0]')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+
+    def test_enumerate_builtin_function(self):
+        self.mod.write('class C(object):\n    pass\nl = [C()]\n'
+                       'for i, x in enumerate(l):\n    a_var = x\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_enumerate_builtin_function(self):
+        self.mod.write('class C(object):\n    pass\nl = [C()]\n'
+                       'for i, x in enumerate(l):\n    a_var = x\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
 
 if __name__ == '__main__':
     unittest.main()

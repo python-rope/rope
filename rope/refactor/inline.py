@@ -9,7 +9,7 @@ from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import occurrences, rename, sourceutils
 
 
-class InlineRefactoring(object):
+class Inline(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore

@@ -94,8 +94,9 @@ class _CallInformationOrganizer(object):
             del parameters[-1]
         if pyfunction._get_ast().flags & 0x8:
             del parameters[-1]
-        arguments = args.get_arguments(parameters)
-        textual_args = tuple([self.to_textual.transform(arg) for arg in arguments])
+        arguments = args.get_arguments(parameters)[:len(parameters)]
+        textual_args = tuple([self.to_textual.transform(arg)
+                              for arg in arguments])
         if textual_args in self.info:
             return self.info[textual_args]
         return self._get_default_returned()

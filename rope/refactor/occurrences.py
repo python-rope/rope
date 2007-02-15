@@ -149,4 +149,3 @@ class _OccurrenceToolsCreator(object):
     name_finder = property(get_name_finder)
     word_finder = property(get_word_finder)
     source_code = property(get_source_code)
-

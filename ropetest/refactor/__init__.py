@@ -10,9 +10,9 @@ import ropetest.refactor.movetest
 import ropetest.refactor.renametest
 from rope.base.exceptions import RefactoringError
 from rope.base.project import Project
-from rope.refactor.encapsulate_field import EncapsulateFieldRefactoring
+from rope.refactor.encapsulate_field import EncapsulateField
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
-from rope.refactor.localtofield import ConvertLocalToFieldRefactoring
+from rope.refactor.localtofield import LocalToField
 from rope.refactor.method_object import MethodObject
 from ropetest import testutils
 
@@ -25,43 +25,40 @@ class MethodObjectTest(unittest.TestCase):
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
         self.pycore = self.project.get_pycore()
+        self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
         super(MethodObjectTest, self).tearDown()
 
     def test_empty_method(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def func():\n    pass\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.assertEquals(
             'class _New(object):\n\n    def __call__(self):\n        pass\n',
             replacer.get_new_class('_New'))
 
     def test_trivial_return(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def func():\n    return 1\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.assertEquals(
             'class _New(object):\n\n    def __call__(self):\n        return 1\n',
             replacer.get_new_class('_New'))
 
     def test_multi_line_header(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def func(\n    ):\n    return 1\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.assertEquals(
             'class _New(object):\n\n    def __call__(self):\n        return 1\n',
             replacer.get_new_class('_New'))
 
     def test_a_single_parameter(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def func(param):\n    return 1\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.assertEquals(
             'class _New(object):\n\n'
             '    def __init__(self, param):\n        self.param = param\n\n'
@@ -69,21 +66,19 @@ class MethodObjectTest(unittest.TestCase):
             replacer.get_new_class('_New'))
 
     def test_self_parameter(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def func(self):\n    return 1\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.assertEquals(
             'class _New(object):\n\n'
             '    def __init__(self, host):\n        self.self = host\n\n'
             '    def __call__(self):\n        return 1\n',
             replacer.get_new_class('_New'))
 
-    def test_self_parameter(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
+    def test_simple_using_passed_parameters(self):
         code = 'def func(param):\n    return param\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.assertEquals(
             'class _New(object):\n\n'
             '    def __init__(self, param):\n        self.param = param\n\n'
@@ -91,11 +86,10 @@ class MethodObjectTest(unittest.TestCase):
             replacer.get_new_class('_New'))
 
     def test_self_keywords_and_args_parameters(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def func(arg, *args, **kwds):\n' \
                '    result = arg + args[0] + kwds[arg]\n    return result\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.assertEquals(
             'class _New(object):\n\n'
             '    def __init__(self, arg, args, kwds):\n'
@@ -107,28 +101,25 @@ class MethodObjectTest(unittest.TestCase):
 
     @testutils.assert_raises(RefactoringError)
     def test_performing_on_not_a_function(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'my_var = 10\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('my_var'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('my_var'))
 
     def test_changing_the_module(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def func():\n    return 1\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.project.do(replacer.get_changes('_New'))
         self.assertEquals(
             'def func():\n    return _New()()\n\n\n'
             'class _New(object):\n\n    def __call__(self):\n        return 1\n',
-            mod.read())
+            self.mod.read())
 
     def test_changing_the_module_and_class_methods(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C(object):\n\n    def a_func(self):\n        return 1\n\n' \
                '    def another_func(self):\n        pass\n'
-        mod.write(code)
-        replacer = MethodObject(self.project, mod, code.index('func'))
+        self.mod.write(code)
+        replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.project.do(replacer.get_changes('_New'))
         self.assertEquals(
             'class C(object):\n\n    def a_func(self):\n        return _New(self)()\n\n'
@@ -136,7 +127,7 @@ class MethodObjectTest(unittest.TestCase):
             'class _New(object):\n\n'
             '    def __init__(self, host):\n        self.self = host\n\n'
             '    def __call__(self):\n        return 1\n',
-            mod.read())
+            self.mod.read())
 
 
 class IntroduceFactoryTest(unittest.TestCase):
@@ -336,7 +327,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                         'class C(object):\n    def create(self):\n        return create_c()\n'))
 
     def _transform_module_to_package(self, resource):
-        self.project.do(rope.refactor.TransformModuleToPackage(
+        self.project.do(rope.refactor.ModuleToPackage(
                         self.project, resource).get_changes())
 
     def test_transform_module_to_package(self):
@@ -395,7 +386,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         super(EncapsulateFieldTest, self).tearDown()
 
     def _perform_encapsulate_field(self, resource, offset):
-        changes = EncapsulateFieldRefactoring(self.project, resource, offset).\
+        changes = EncapsulateField(self.project, resource, offset).\
                   get_changes()
         self.project.do(changes)
 
@@ -515,7 +506,7 @@ class LocalToFieldTest(unittest.TestCase):
         super(LocalToFieldTest, self).tearDown()
 
     def _perform_convert_local_variable_to_field(self, resource, offset):
-        changes = ConvertLocalToFieldRefactoring(
+        changes = LocalToField(
             self.project, resource, offset).get_changes()
         self.project.do(changes)
 
@@ -551,8 +542,9 @@ class LocalToFieldTest(unittest.TestCase):
         self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().index('var') + 1)
 
-    @testutils.assert_raises(RefactoringError)
-    def test_raising_exception_when_there_is_a_field_with_the_same_name(self):
+    # NOTE: This situation happens alot and is normally not an error
+    #@testutils.assert_raises(RefactoringError)
+    def test_not_raising_exception_when_there_is_a_field_with_the_same_name(self):
         code = 'class A(object):\n    def __init__(self):\n        self.var = 1\n' \
                '    def a_func(self):\n        var = 10\n'
         self.mod.write(code)

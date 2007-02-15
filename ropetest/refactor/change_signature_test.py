@@ -284,6 +284,19 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.apply_changers(changers).do()
         self.assertEquals('def a_func(p2, p3):\n    pass\na_func(2, 3)\n', self.mod.read())
 
+    def test_changing_signature_in_subclasses(self):
+        self.mod.write(
+            'class A(object):\n    def a_method(self):\n        pass\n'
+            'class B(A):\n    def a_method(self):\n        pass\n')
+        signature = ChangeSignature(self.project, self.mod,
+                                    self.mod.read().index('a_method') + 1)
+        signature.apply_changers([change_signature.ArgumentAdder(1, 'p1')],
+                                 in_hierarchy=True).do()
+        self.assertEquals(
+            'class A(object):\n    def a_method(self, p1):\n        pass\n'
+            'class B(A):\n    def a_method(self, p1):\n        pass\n',
+            self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()

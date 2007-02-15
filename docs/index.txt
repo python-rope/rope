@@ -50,29 +50,25 @@ Features implemented so far:
     * Expand ``from ... import *`` imports
     * Remove unused and duplicate imports and sort them (organize imports)
 
+* Editing and IDE tools
+
+  * Python and reST highlighting
+  * Multiple editers
+  * Auto-completion
+  * Project file history
+  * Basic SVN support using pysvn_ library
+  * An emacs like keybinding
+  * Configurable keybinding
+  * Basic UI plug-in support
+  * Correcting indentation
+  * Project tree view
+  * Unit-test running view
+
 * Object Inference
 
   * A dynamic object inference approach
   * A simple static type inference approach
   * Handling built-in container types
-
-* Auto-completion
-
-  * Global and local variables and imports
-  * Builtins and keywords
-  * Attributes of objects with known types
-
-* Editing and IDE tools
-
-  * Unit-test running view
-  * Python and reST highlighting
-  * Multiple editers
-  * Project file history
-  * Basic SVN support using pysvn library
-  * Configurable keybinding
-  * Basic UI plug-in support
-  * Correcting indentation
-  * Project tree view
 
 
 Download
@@ -95,4 +91,4 @@ rope is under the terms of GNU GPL(GNU General Public License).
 
 .. _project download page: http://sf.net/projects/rope/files
 .. _sourceforge.net project page: http://sf.net/projects/rope
-
+.. _pysvn: http://pysvn.tigris.org

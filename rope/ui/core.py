@@ -267,13 +267,16 @@ class Core(object):
 
     def _load_dot_rope(self):
         dot_rope = os.path.expanduser('~%s.rope' % os.path.sep)
-        if not os.path.exists(dot_rope):
-            write_dot_rope(dot_rope)
-        run_globals = {}
-        run_globals.update({'__name__': '__main__',
-                            '__builtins__': __builtins__,
-                            '__file__': dot_rope})
-        execfile(dot_rope, run_globals)
+        try:
+            if not os.path.exists(dot_rope):
+                write_dot_rope(dot_rope)
+            run_globals = {}
+            run_globals.update({'__name__': '__main__',
+                                '__builtins__': __builtins__,
+                                '__file__': dot_rope})
+            execfile(dot_rope, run_globals)
+        except IOError, e:
+            print 'Unable to load <~.rope> file: ' + e
 
     def open_file(self, file_name):
         if self.project is get_no_project():

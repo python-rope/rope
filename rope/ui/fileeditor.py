@@ -46,10 +46,9 @@ class FileEditor(object):
     def _file_was_removed(self, file, new_file=None):
         self._remove_observers()
         # XXX: file was removed while we were editing it.  What to do?
-        if new_file is None:
-            return
-        self.file = new_file
-        self._register_observers()
+        if new_file is not None:
+            self.file = new_file
+            self._register_observers()
         self._editor_was_modified()
 
     def _file_was_modified(self, file_):

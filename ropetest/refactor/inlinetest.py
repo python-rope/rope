@@ -2,7 +2,7 @@ import unittest
 
 import rope.base.exceptions
 import rope.base.project
-from rope.refactor.inline import InlineRefactoring
+from rope.refactor.inline import Inline
 from ropetest import testutils
 
 
@@ -26,7 +26,7 @@ class InlineTest(unittest.TestCase):
         return self.mod.read()
 
     def _inline2(self, resource, offset):
-        changes = InlineRefactoring(self.project, resource,
+        changes = Inline(self.project, resource,
                                     offset).get_changes()
         self.project.do(changes)
         return self.mod.read()

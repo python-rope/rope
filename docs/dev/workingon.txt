@@ -1,32 +1,49 @@
-Refactoring
-===========
+Small Stories
+=============
 
-- Replace Method With Method Object:
+- Controlling rename in hierarchies
+- Change Signature And Class Hierarchies
 
-  - Multi-line function header
-  - Simple parameters
-  - ``self`` parameter
-  - Using parameters in ``__call__`` body
-  - Args_arg, kwds_arg
-  - Check performing on things other than functions
-  - Adding to UI
-  - Changing the caller
-  - Nested and class methods
+  - Adding a keyword argument for telling whether to search hierarchies
+  - What if its not a method
+  - Adding an option to the UI
 
-- Using `functionutils.DefinitionInfo` in show doc
-- Get pyname on keywords
-- Proposing `functionutils.DefinitionInfo.arg` while none exists
-- Extract method and  ``a = 1 + a\n`` and ``a += 1\n``
-- ``core.set('show_menu_bar', False)``
-- ``core.set('show_status_bar', False)``
-- ``core.set('show_buffer_list_bar', False)``
-- Only showing active actions in current context in execute command
-- ``C-g`` and code assist dialog
-- Problems for inside list comprehension assists
+- `enumerate` builtin function
+- `zip` builtin function
+- Renaming "refresh_project" to "validate_project"
+- Handling wrong arguments to `zip`
+- Adding ``!`` mark in buffer title when it is removed while editing
+- Not stopping in local to field when field already exists
 
-* Showing pysvn urls in docs
+- Mass renaming refactoring classes
+
+  - `ConvertLocalToFieldRefactoring` to `LocalToField`
+  - `MoveRefactoring` to `Move`
+  - `RenameRefactoring` to `Rename`
+  - `InlineRefactoring` to `Inline`
+  - `ExtractMethodRefactoring` to `ExtractMethod`
+  - `ExtractVariable` to `ExtractVariable`
+  - `EncapsulateFieldRefactoring` to `EncapsulateField`
+  - `TransformModuleToPackage` to `ModuleToPackage`
+
+* Reporting multiple definition problems
+* Consider doing `Change`\s sometime in the future and their fields
+
+* Showing properties in quick outline
+* Docs for builtin functions and properties
+* Lambdas as functions; consider their parameters
+* Saving a file that does not exist; Allowing nonexistent resources
 * Changing ``C-a C-a`` to move to the first character in the line
 * Changing open project dialog
+* Handling codetags
+* Unifying builtin lists and iterators?
+
+
+For ``0.5m1``
+=============
+
+* Document the renaming of refactoring classes.
+* Include changes in ``setup.py`` for cheeseshop.
 
 
 Remaining Small Stories
@@ -35,14 +52,11 @@ Remaining Small Stories
 Main:
 
 * Separating UI and functional tests from unit tests
-* Should we stop when transforming local variable to fields when there
-  the field already exists?
-* Lambdas as functions; consider their parameters
-* Docs for builtin functions and properties
 * Goto definition for ``"# comment.\na_var"``
 
 Others:
 
+* Comments should be indented
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'
     in <generator object at 0xb7173aec> ignored``
@@ -50,17 +64,12 @@ Others:
 * Undoing `RemoveResource`; It's not used by refactorings
 * Decide when to use `difflib` in `Editor.set_text` based on the
   number of changes
-* Showing properties in quick outline
-* Comments should be indented
 * Caching calculated parameters and returned object in `PyFunction`\s
-* Fixing multiple function definition problems
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * Extract constant
-* What to do if a file is removed while editing
 * `PyClass.superclasses` should be concluded data
 * Better `ropetest` package structure
 * Handling `AssList` for inline variable and encapsulate field
-* Reporting unhandled exceptions as error dialogs in the GUI
 * Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Import addition when adding a relative to an absolute import

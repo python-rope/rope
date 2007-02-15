@@ -27,6 +27,8 @@ class EditorPile(object):
         new_title = editor.get_file().name
         if editor.get_editor().is_modified():
             new_title = '*' + new_title
+        if not editor.get_file().exists():
+            new_title = '! ' + new_title
         self.buttons[editor]['text'] = new_title
 
     def _editor_was_changed(self, resource, offset):

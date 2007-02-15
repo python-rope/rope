@@ -177,7 +177,7 @@ class Arguments(object):
         self.scope = scope
 
     def get_arguments(self, parameters):
-        result = [None] * len(parameters)
+        result = [None] * max(len(parameters), len(self.args))
         for index, arg in enumerate(self.args):
             if isinstance(arg, compiler.ast.Keyword) and arg.name in parameters:
                 pyname = self._evaluate(arg.expr)

@@ -97,9 +97,9 @@ Refactorings
 
 Have a look at `rope.refactor` package and its sub-modules.  For
 example for performing a move refactoring you can create a
-`MoveRefactoring` object like this::
+`Move` object like this::
 
-  mover = MoveRefactoring(project, resource, offset)
+  mover = Move(project, resource, offset)
 
 Where `resource` and `offset` is the location to perform the
 refactoring.
@@ -135,8 +135,8 @@ Here is a sample session.::
   >>> assert mod2 == pycore.find_module('pkg.mod2')
 
   # Performing rename refactoring on `mod1.a_var`
-  >>> from rope.refactor.rename import RenameRefactoring
-  >>> changes = RenameRefactoring(pycore, mod1, 1).get_changes('new_var')
+  >>> from rope.refactor.rename import Rename
+  >>> changes = Rename(pycore, mod1, 1).get_changes('new_var')
   >>> project.do(changes)
   >>> mod1.read()
   u'new_var = 10\n'

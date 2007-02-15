@@ -1,8 +1,8 @@
 import rope.base.codeanalyze
-from rope.refactor.rename import RenameRefactoring
+from rope.refactor.rename import Rename
 
 
-class ConvertLocalToFieldRefactoring(object):
+class LocalToField(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
@@ -20,15 +20,19 @@ class ConvertLocalToFieldRefactoring(object):
 
         pymodule, lineno = pyname.get_definition_location()
         function_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+        # Not checking redefinition
+        #self._check_redefinition(name, function_scope)
+
+        new_name = self._get_field_name(function_scope.pyobject, name)
+        changes = Rename(self.project, self.resource, self.offset).\
+                  get_changes(new_name, in_file=True)
+        return changes
+
+    def _check_redefinition(self, name, function_scope):
         class_scope = function_scope.parent
         if name in class_scope.pyobject.get_attributes():
             raise rope.base.exceptions.RefactoringError(
                 'The field %s already exists' % name)
-
-        new_name = self._get_field_name(function_scope.pyobject, name)
-        changes = RenameRefactoring(self.project, self.resource, self.offset).\
-                  get_changes(new_name, in_file=True)
-        return changes
 
     def _get_field_name(self, pyfunction, name):
         self_name = pyfunction.parameters[0]

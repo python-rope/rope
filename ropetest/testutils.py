@@ -26,9 +26,7 @@ def _remove_recursively(path):
 
 def run_only_for_25(func):
     """Should be used as a decorator for a unittest.TestCase test method"""
-    major = sys.version_info[0]
-    minor = sys.version_info[1]
-    if major > 2 or minor > 4:
+    if sys.version_info >= (2, 5, 0):
         return func
     else:
         def do_nothing(self):

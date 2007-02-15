@@ -1,9 +1,10 @@
 import unittest
 
-import rope.ui.editingtools
-from rope.ui import editingcontexts, editingtools
-from ropetest.ui.mockeditor import *
+from rope.ui import editingcontexts
 from rope.ui.editor import *
+from ropetest.ui.mockeditor import *
+from rope.ui import core
+
 
 class TextEditorTest(unittest.TestCase):
 
@@ -159,8 +160,11 @@ class TextEditorTest(unittest.TestCase):
         line_editor = self.editor.line_editor()
         self.assertEquals(1, line_editor.length())
 
+
 def get_sample_editingcontext():
+    editingcontexts.init_contexts(core.get_core())
     return editingcontexts.others
+
 
 def suite():
     result = unittest.TestSuite()

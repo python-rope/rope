@@ -57,7 +57,6 @@ There are many places to extend rope.  Some of them are:
 * Static type inference(new, better ways)
 * Exclusion principle for occurrence finding
 * Changing structure refactorings; for example: ``a = b -> a(b.c)``
-* Better library interface
 
 
 Hot Topics
@@ -69,8 +68,7 @@ To Be Discussed
 
 * `Better occurrence finding`_
 * `Allowing non-existent resources`_
-* `Python's Implicit Interfaces`_
-* `Rope's preference system`_
+* `Python's implicit interfaces`_
 * `Having virtual PyModules`_
 * Indexing source files for faster occurrence finding
 * Faster module running
@@ -79,7 +77,40 @@ To Be Discussed
 * Finding available refactorings
 
 
-Better Occurrencd Finding
+Multiple Function/Class Definitions
+===================================
+
+Multiple function definitions are known to make lots of mysterious
+problems when performing refactorings.  We should report that to
+the user somehow.
+
+Note: Maybe we should care about redefining any `DefinedObject`.
+
+* Allowing multiple name definitions
+
+  The current implementation doesn't and there aren't good reasons
+  for supporting them.  Anyway, for supporting multiple definitions
+  with the same name we can hold a list rather than a single `PyName`
+  in `PyObject`\s.
+
+* Raising an exception:
+
+  This does not seem to be a good approach.  The existence a
+  duplicate function causes problems only on some conditions and
+  many tasks work as expected.
+
+* Only printing a warning
+
+  The thing is that the rope library cannot write anything to the
+  output.  The `ui` can but not the `base`.
+
+* Maybe we can think of a way for issuing warnings rope encounters
+
+  The warnings seem to belong to the IDE rather than the base.  But
+  the problem is that many warnings are seen in the base package.
+
+
+Better Occurrence Finding
 =========================
 
 The current implementation for finding occurrences of a `PyName` is to
@@ -121,36 +152,6 @@ Maybe we can use one of these solutions:
   for creating imports trees.
 
 Or maybe we can use a strategy object for searching.
-
-
-Local History
-=============
-
-Goals:
-
-* Better undoing mechanisms
-* Undoing unrelated refactorings in any order
-* Undoing file operations performed by editing
-* Undoing individual files
-* Moving undo information from `PythonRefactoring` to `Project`
-* Finding changes to a file
-* Saving undo information across sessions?
-* Supporting virtual `PyModule`\s?
-
-Issues:
-
-* Unanticipated changes
-* Having version control systems in parallel
-* Memory inefficiency
-* Saving removed files and folders
-
-Each project change consists of a few basic changes.
-
-* change file contents
-* move resource
-* create file
-* create folder
-* remove resource
 
 
 Allowing Non-Existent Resources
@@ -246,17 +247,6 @@ Preventing Unnecessary Recomputations
 
 * Using copy on write
 * Updating global `PyCore` after performing changes
-
-
-Inline Method
-=============
-
-* Which of the variables should be renamed?
-* What to do about parameter assignments?
-* What to do about staticmethod and classmethod decorators
-* Moving used imports and importing defining module globals
-* Inlining generators
-* Inner functions
 
 
 Using ASTs For Transformations
@@ -576,21 +566,6 @@ of pynames.
 
 `objectinfer` should be changed to find all of the objects that can
 be inferred.
-
-
-Refactoring `rope.codeanalyze` Module
-=====================================
-
-Merging `WordRangeFinder` and `StatementRangeFinder`.  Physical source
-divisions:
-
-* scope
-* block
-* logical line
-* primary
-
-After this refactoring, many places of rope can be refactored.  The
-logical line is very useful in many places for instance.
 
 
 The GUI Mess; Working More on the UI Parts

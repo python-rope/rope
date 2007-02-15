@@ -23,14 +23,14 @@ class ExtractMethodTest(unittest.TestCase):
     def do_extract_method(self, source_code, start, end, extracted):
         testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
-        self.project.do(extract.ExtractMethodRefactoring(
+        self.project.do(extract.ExtractMethod(
                         self.project, testmod, start, end).get_changes(extracted))
         return testmod.read()
 
     def do_extract_variable(self, source_code, start, end, extracted):
         testmod = self.pycore.create_module(self.project.root, 'testmod')
         testmod.write(source_code)
-        self.project.do(extract.ExtractVariableRefactoring(
+        self.project.do(extract.ExtractVariable(
                         self.project, testmod, start, end).get_changes(extracted))
         return testmod.read()
 

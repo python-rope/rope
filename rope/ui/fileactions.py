@@ -231,7 +231,7 @@ def _show_resource_view(core):
 def project_tree(context):
     _show_resource_view(context.get_core())
 
-def refresh_project(context):
+def validate_project(context):
     context.project.validate(context.project.root)
 
 def change_editor(context):
@@ -271,8 +271,8 @@ actions.append(SimpleAction('find_file', find_file, 'C-x C-f',
                             MenuAddress(['File', 'Find File...'], 'f', 2)))
 actions.append(SimpleAction('project_tree', project_tree, 'C-x p t',
                             MenuAddress(['File', 'Project Tree'], 't', 2)))
-actions.append(SimpleAction('refresh_project', refresh_project, 'C-x p r',
-                            MenuAddress(['File', 'Refresh Project'], 'r', 2)))
+actions.append(SimpleAction('validate_project', validate_project, 'C-x p v',
+                            MenuAddress(['File', 'Validate Project Files'], 'v', 2)))
 
 actions.append(SimpleAction('change_buffer', change_editor, 'C-x b',
                             MenuAddress(['File', 'Change Editor...'], 'c', 3)))

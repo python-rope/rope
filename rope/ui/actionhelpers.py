@@ -23,9 +23,10 @@ class ConfirmEditorsAreSaved(object):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Save All')
         frame = Tkinter.Frame(toplevel)
-        label = Tkinter.Label(
-            frame, text='These editors should be saved before this refactoring:\n* ' +
-            '\n* '.join([fileeditor.file.path for fileeditor in editors]))
+        message = 'These editors should be saved before performing this action:\n* '
+        label = Tkinter.Label(frame, text=message +
+                              '\n* '.join([fileeditor.file.path
+                                           for fileeditor in editors]))
         label.grid(row=0, column=0, columnspan=2)
         def ok(event=None):
             context.get_core().save_all_editors()

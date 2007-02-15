@@ -5,7 +5,7 @@ from rope.refactor import sourceutils
 from rope.base.change import ChangeSet, ChangeContents
 
 
-class EncapsulateFieldRefactoring(object):
+class EncapsulateField(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore

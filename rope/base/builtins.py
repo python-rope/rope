@@ -66,12 +66,12 @@ class Dict(pyobjects.PyObject):
             '__new__': BuiltinName(BuiltinFunction(function=self._new_dict)),
             'pop': BuiltinName(BuiltinFunction(self.values)),
             'get': BuiltinName(BuiltinFunction(self.keys)),
-            'keys': BuiltinName(List(self.keys)),
-            'values': BuiltinName(List(self.values)),
-            'iterkeys': BuiltinName(Iterator(self.keys)),
-            'itervalues': BuiltinName(Iterator(self.values)),
-            'items': BuiltinName(List(item)),
-            'iteritems': BuiltinName(Iterator(item)),
+            'keys': BuiltinName(BuiltinFunction(List(self.keys))),
+            'values': BuiltinName(BuiltinFunction(List(self.values))),
+            'iterkeys': BuiltinName(BuiltinFunction(Iterator(self.keys))),
+            'itervalues': BuiltinName(BuiltinFunction(Iterator(self.values))),
+            'items': BuiltinName(BuiltinFunction(List(item))),
+            'iteritems': BuiltinName(BuiltinFunction(Iterator(item))),
             'copy': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             'clear': BuiltinName(BuiltinFunction()),
             'has_key': BuiltinName(BuiltinFunction()),
@@ -332,8 +332,9 @@ def _infer_sequence_type(seq):
 def _create_builtin(args, creator):
     passed = args.get_arguments(['sequence'])[0]
     if passed is None:
-        return None
-    holding = _infer_sequence_type(passed)
+        holding = None
+    else:
+        holding = _infer_sequence_type(passed)
     if holding is not None:
         return creator(holding)
     else:
@@ -356,6 +357,27 @@ def _super_function(args):
     else:
         return passed_self
 
+def _zip_function(args):
+    args = args.get_arguments(['sequence'])
+    objects = []
+    for seq in args:
+        if seq is None:
+            holding = None
+        else:
+            holding = _infer_sequence_type(seq)
+        objects.append(holding)
+    tuple = get_tuple(*objects)
+    return get_list(tuple)
+
+def _enumerate_function(args):
+    passed = args.get_arguments(['sequence'])[0]
+    if passed is None:
+        holding = None
+    else:
+        holding = _infer_sequence_type(passed)
+    tuple = get_tuple(None, holding)
+    return Iterator(tuple)
+
 
 builtins = {
     'list': BuiltinName(get_list_type()),
@@ -370,4 +392,6 @@ builtins = {
     'reversed': BuiltinName(BuiltinFunction(function=_reversed_function)),
     'sorted': BuiltinName(BuiltinFunction(function=_sorted_function)),
     'super': BuiltinName(BuiltinFunction(function=_super_function)),
-    'property': BuiltinName(BuiltinFunction(function=_property_function))}
+    'property': BuiltinName(BuiltinFunction(function=_property_function)),
+    'zip': BuiltinName(BuiltinFunction(function=_zip_function)),
+    'enumerate': BuiltinName(BuiltinFunction(function=_enumerate_function))}
