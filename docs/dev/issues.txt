@@ -70,6 +70,7 @@ To Be Discussed
 * `Allowing non-existent resources`_
 * `Python's implicit interfaces`_
 * `Having virtual PyModules`_
+* `Redefining Function/Class Definitions`_
 * Indexing source files for faster occurrence finding
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
@@ -77,8 +78,8 @@ To Be Discussed
 * Finding available refactorings
 
 
-Multiple Function/Class Definitions
-===================================
+Redefining Function/Class Definitions
+=====================================
 
 Multiple function definitions are known to make lots of mysterious
 problems when performing refactorings.  We should report that to
@@ -149,7 +150,7 @@ Maybe we can use one of these solutions:
 
   This does not seem to be a good solution.  One reason is that
   the imports might be indirect.  So we have to put a long time
-  for creating imports trees.
+  for creating import trees.
 
 Or maybe we can use a strategy object for searching.
 
@@ -279,12 +280,6 @@ the source code.  In futures some of this restrictions might be removed.
 
 Moving Fields/Methods
 =====================
-
-* How tell that a pyname is a class attribute?
-
-  * An attribute should be defined in a class or a method in a class
-  * The holding class for a pyname should consider it as one of its
-    attributes
 
 * Moving defined objects
 

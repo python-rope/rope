@@ -1,9 +1,9 @@
 import os
 import unittest
+import sys
 
-from rope.base.pycore import (PyObject, ModuleNotFoundError,
-                              get_base_type)
 from rope.base.project import Project
+from rope.base.pycore import ModuleNotFoundError, get_base_type
 from ropetest import testutils
 
 
@@ -117,7 +117,6 @@ class PyCoreTest(unittest.TestCase):
         sample_class = mod.get_attribute('Sample').get_object()
         self.assertEquals(get_base_type('Type'), sample_class.get_type())
 
-    # FIXME: Extra spaces seem to cause problems
     def test_get_string_module_with_extra_spaces(self):
         mod = self.pycore.get_string_module('a = 10\n    ')
 
@@ -442,6 +441,45 @@ class PyCoreTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(mod)
         c_class = pymod.get_attribute('C').get_object()
         self.assertFalse('var1' in c_class.get_attributes())
+
+    def test_not_leaking_tuple_assigned_names_inside_parent_scope(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('class C(object):\n    def f(self):\n'
+                  '        var1, var2 = range(2)\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        c_class = pymod.get_attribute('C').get_object()
+        self.assertFalse('var1' in c_class.get_attributes())
+
+    @testutils.run_only_for_25
+    def test_with_statement_variables(self):
+        code = 'import threading\nwith threading.lock() as var:    pass\n'
+        if sys.version_info < (2, 6, 0):
+            code = 'from __future__ import with_statement\n' + code
+        pymod = self.pycore.get_string_module(code)
+        self.assertTrue('var' in pymod.get_attributes())
+
+    @testutils.run_only_for_25
+    def test_with_statement_variables_and_tuple_assignment(self):
+        code = 'class A(object):\n    def __enter__(self):        return (1, 2)\n'\
+               '    def __exit__(self, type, value, tb):\n        pass\n'\
+               'with A() as (a, b):    pass\n'
+        if sys.version_info < (2, 6, 0):
+            code = 'from __future__ import with_statement\n' + code
+        pymod = self.pycore.get_string_module(code)
+        self.assertTrue('a' in pymod.get_attributes())
+        self.assertTrue('b' in pymod.get_attributes())
+
+    @testutils.run_only_for_25
+    def test_with_statement_variable_type(self):
+        code = 'class A(object):\n    def __enter__(self):        return self\n'\
+               '    def __exit__(self, type, value, tb):\n        pass\n'\
+               'with A() as var:    pass\n'
+        if sys.version_info < (2, 6, 0):
+            code = 'from __future__ import with_statement\n' + code
+        pymod = self.pycore.get_string_module(code)
+        a_class = pymod.get_attribute('A').get_object()
+        var = pymod.get_attribute('var').get_object()
+        self.assertEquals(a_class, var.get_type())
 
 
 class PyCoreInProjectsTest(unittest.TestCase):

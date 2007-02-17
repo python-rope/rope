@@ -364,42 +364,75 @@ class _AssignVisitor(object):
     def visitAssName(self, node):
         assignment = None
         if self.assigned_ast is not None:
-            assignment = pynames._Assignment(self.assigned_ast)
+            assignment = pynames._Assigned(self.assigned_ast)
         self._assigned(node.name, assignment)
 
     def visitAssTuple(self, node):
-        names = _AssignedNameCollector.get_assigned_names(node)
-        for index, name in enumerate(names):
+        names = _NodeNameCollector.get_assigned_names(node)
+        for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
-                assignment = pynames._Assignment(self.assigned_ast, index)
+                assignment = pynames._Assigned(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
+    def visitAssAttr(self, node):
+        pass
 
-class _ForAssignVisitor(_AssignVisitor):
+    def visitSubscript(self, node):
+        pass
 
-    def __init__(self, scope_visitor, assigned):
-        super(_ForAssignVisitor, self).__init__(scope_visitor)
-        self.assigned_ast = assigned
-
-    def _assigned(self, name, assignment=None):
-        self.scope_visitor.names[name] = ForName(
-            assignment=assignment, module=self.scope_visitor.get_module())
-        if assignment is not None:
-            self.scope_visitor.names[name].assignment = assignment
+    def visitSlice(self, node):
+        pass
 
 
-class _AssignedNameCollector(object):
+class _NodeNameCollector(object):
 
-    def __init__(self):
+    def __init__(self, levels=None):
         self.names = []
+        self.levels = levels
+        self.index = 0
+
+    def _add_name(self, name):
+        new_levels = []
+        if self.levels is not None:
+            new_levels = list(self.levels)
+            new_levels.append(self.index)
+        self.index += 1
+        if name is not None:
+            self.names.append((name, new_levels))
 
     def visitAssName(self, node):
-        self.names.append(node.name)
+        self._add_name(node.name)
+
+    def visitName(self, node):
+        self._add_name(node.name)
+
+    def visitTuple(self, node):
+        new_levels = []
+        if self.levels is not None:
+            new_levels = list(self.levels)
+            new_levels.append(self.index)
+        self.index += 1
+        visitor = _NodeNameCollector(new_levels)
+        for child in node.getChildNodes():
+            compiler.walk(child, visitor)
+        self.names.extend(visitor.names)
+
+    def visitAssTuple(self, node):
+        self.visitTuple(node)
+
+    def visitAssAttr(self, node):
+        self._add_name(None)
+
+    def visitSubscript(self, node):
+        self._add_name(None)
+
+    def visitSlice(self, node):
+        self._add_name(None)
 
     @staticmethod
     def get_assigned_names(node):
-        visitor = _AssignedNameCollector()
+        visitor = _NodeNameCollector()
         compiler.walk(node, visitor)
         return visitor.names
 
@@ -428,9 +461,23 @@ class _ScopeVisitor(object):
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
 
+    def _assign_evaluated_object(self, assigned_vars, assigned,
+                                 evaluation, lineno):
+        names = _NodeNameCollector.get_assigned_names(assigned_vars)
+        for name, levels in names:
+            assignment = pynames._Assigned(assigned, levels)
+            self.names[name] = EvaluatedName(
+                assignment=assignment, module=self.get_module(),
+                lineno=lineno, evaluation=evaluation)
+
     def visitFor(self, node):
-        visitor = _ForAssignVisitor(self, node.list)
-        compiler.walk(node.assign, visitor)
+        self._assign_evaluated_object(
+            node.assign, node.list, '.__iter__().next()', node.lineno)
+        compiler.walk(node.body, self)
+
+    def visitWith(self, node):
+        self._assign_evaluated_object(
+            node.vars, node.expr, '.__enter__()', node.lineno)
         compiler.walk(node.body, self)
 
     def visitImport(self, node):
@@ -516,7 +563,7 @@ class _ClassInitVisitor(_AssignVisitor):
                 self.scope_visitor.names[node.attrname] = AssignedName(
                     lineno=node.lineno, module=self.scope_visitor.get_module())
             self.scope_visitor.names[node.attrname].assignments.append(
-                pynames._Assignment(self.assigned_ast))
+                pynames._Assigned(self.assigned_ast))
 
     def visitAssTuple(self, node):
         for child in node.getChildNodes():
@@ -532,6 +579,9 @@ class _ClassInitVisitor(_AssignVisitor):
         pass
 
     def visitFor(self, node):
+        pass
+
+    def visitWith(self, node):
         pass
 
 

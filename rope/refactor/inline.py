@@ -124,7 +124,7 @@ class _VariableInliner(_Inliner):
                      get_logical_line_in(definition_line)
         definition_with_assignment = _join_lines(
             [lines.get_line(n) for n in range(start, end + 1)])
-        if assignment.index is not None:
+        if assignment.levels:
             raise rope.base.exceptions.RefactoringError(
                 'Cannot inline tuple assignments.')
         definition = definition_with_assignment[definition_with_assignment.\

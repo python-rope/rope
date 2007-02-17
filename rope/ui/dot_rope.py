@@ -1,6 +1,9 @@
 # The default ~/.rope file for *rope*.
 #
-# You can edit this file using rope itself.
+# You can edit this file to change some of rope's preferences.  If
+# you like you can edit this file using rope itself.
+# (``edit_dot_rope`` in execute command or ``Edit ~/.rope`` in
+# ``Edit`` menu.)
 #
 # Note: Since this file is not inside a project you cannot perform
 #   refactorings on it.
@@ -13,14 +16,15 @@ core = rope.ui.core.get_core()
 # Changing editor font
 #core.set('font', ('Courier', 14))
 
+
 # Hiding menu bar
 #core.set('show_menu_bar', False)
 
-# Hiding status bar
-#core.set('show_status_bar', False)
-
 # Hiding buffer list
 #core.set('show_buffer_list', False)
+
+# Hiding status bar
+#core.set('show_status_bar', False)
 
 
 # If you don't like emacs keybinding, change this to False

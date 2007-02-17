@@ -3,6 +3,9 @@
 ===========
 
 
+- Handling ``with`` statements : February 15, 2007
+
+
 - Performing change signature in class hierarchies : February 14, 2007
 
 

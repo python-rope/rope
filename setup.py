@@ -29,7 +29,7 @@ def remove_temps():
 make_temps()
 
 classifiers=[
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 4 - Beta',
     'Operating System :: OS Independent',
     'Environment :: X11 Applications',
     'Environment :: Win32 (MS Windows)',
@@ -43,7 +43,9 @@ classifiers=[
     'Topic :: Text Editors :: Integrated Development Environments (IDE)']
 
 long_description = """
-Rope is a python refactoring IDE and library.
+Rope is a python refactoring IDE and library.  The IDE uses the
+library for providing features like refactoring, code assist, and
+auto-completion.  The IDE uses `Tkinter` library.
 """
 
 setup(name='rope',

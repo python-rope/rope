@@ -47,35 +47,44 @@ class AssignedName(PyName):
             finally:
                 self.is_being_inferred = False
         if self.pyobject.get() is None:
-            self.pyobject.set(rope.base.pyobjects.PyObject(rope.base.pyobjects.
-                                                      get_base_type('Unknown')))
+            self.pyobject.set(rope.base.pyobjects.PyObject(
+                              rope.base.pyobjects.get_base_type('Unknown')))
         return self.pyobject.get()
 
     def get_definition_location(self):
         """Returns a (module, lineno) tuple"""
         if self.lineno is None and self.assignments:
-            self.lineno = self.assignments[0].ast_node.lineno
+            self.lineno = self.assignments[0].get_lineno()
         return (self.module, self.lineno)
 
 
-class _Assignment(object):
+class _Assigned(object):
 
-    def __init__(self, ast_node, index=None):
+    def __init__(self, ast_node, levels=None):
         self.ast_node = ast_node
-        self.index = index
+        if levels == None:
+            self.levels = []
+        else:
+            self.levels = levels
+
+    def get_lineno(self):
+        return self.ast_node.lineno
 
 
-class ForName(PyName):
+class EvaluatedName(PyName):
 
-    def __init__(self, assignment=None, module=None):
+    def __init__(self, assignment=None, module=None, evaluation= '',
+                 lineno=None):
         self.module = module
         self.pyobject = _get_concluded_data(module)
         self.assignment = assignment
+        self.lineno = lineno
+        self.evaluation = evaluation
 
     def get_object(self):
         if self.pyobject.get() is None:
             object_infer = self.module.pycore._get_object_infer()
-            inferred_object = object_infer.infer_for_object(self)
+            inferred_object = object_infer.evaluate_object(self)
             self.pyobject.set(inferred_object)
         if self.pyobject.get() is None:
             self.pyobject.set(rope.base.pyobjects.PyObject(
@@ -83,7 +92,7 @@ class ForName(PyName):
         return self.pyobject.get()
 
     def get_definition_location(self):
-        return (self.module, self.assignment.ast_node.lineno)
+        return (self.module, self.lineno)
 
 
 class ParameterName(PyName):

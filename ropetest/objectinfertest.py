@@ -162,6 +162,43 @@ class ObjectInferTest(unittest.TestCase):
         a_var = mod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
+    def test_mixing_subscript_with_tuple_assigns(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    attr = 0\n'
+            'd = {}\nd[0], b = (0, C())\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('b').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_mixing_ass_attr_with_tuple_assignment(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    attr = 0\n'
+            'c = C()\nc.attr, b = (0, C())\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('b').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_mixing_slice_with_tuple_assigns(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    attr = 0\n'
+            'd = [None] * 3\nd[0:2], b = ((0,), C())\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('b').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_nested_tuple_assignments(self):
+        mod = self.pycore.get_string_module(
+            'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+            'a, (b, c) = (C1(), (C2(), C1()))\n')
+        c1_class = mod.get_attribute('C1').get_object()
+        c2_class = mod.get_attribute('C2').get_object()
+        a_var = mod.get_attribute('a').get_object()
+        b_var = mod.get_attribute('b').get_object()
+        c_var = mod.get_attribute('c').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, c_var.get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 

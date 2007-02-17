@@ -32,12 +32,6 @@ class DynamicObjectInference(object):
                          for parameter in organizer.get_parameters()]
             return pyobjects
 
-    def infer_assigned_object(self, pyname):
-        pass
-
-    def infer_for_object(self, pyname):
-        pass
-
 
 class CallInformationCollector(object):
 

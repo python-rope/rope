@@ -251,4 +251,3 @@ def _get_destination_for_move(resource, destination):
         else:
             return resource.name
     return destination
-

@@ -1,49 +1,45 @@
 Small Stories
 =============
 
-- Controlling rename in hierarchies
-- Change Signature And Class Hierarchies
+- Handling with statements
 
-  - Adding a keyword argument for telling whether to search hierarchies
-  - What if its not a method
-  - Adding an option to the UI
+  - With variable
+  - handling with variable type
+  - Duplication between `_ForAssignVisitor` and `_WithAssignVisitor`
+    and `AssignVisitor`
+  - Duplication between `ForName` and `WithName`
 
-- `enumerate` builtin function
-- `zip` builtin function
-- Renaming "refresh_project" to "validate_project"
-- Handling wrong arguments to `zip`
-- Adding ``!`` mark in buffer title when it is removed while editing
-- Not stopping in local to field when field already exists
+- Mixed assignment; ``self.a, b = (1, 2)``
+- Mixed assignment; ``a[0], b = (1, 2)``
+- Mixed assignment; ``a[0:1], b = (1, 2)``
+- Assigning nested tuples; ``a, (b, c) = (1, (2, 3))``
 
-- Mass renaming refactoring classes
+* Using tuples instead of _Assigned
+* Checking the vars and function parameters in the defining scope::
 
-  - `ConvertLocalToFieldRefactoring` to `LocalToField`
-  - `MoveRefactoring` to `Move`
-  - `RenameRefactoring` to `Rename`
-  - `InlineRefactoring` to `Inline`
-  - `ExtractMethodRefactoring` to `ExtractMethod`
-  - `ExtractVariable` to `ExtractVariable`
-  - `EncapsulateFieldRefactoring` to `EncapsulateField`
-  - `TransformModuleToPackage` to `ModuleToPackage`
+    def a_func(param):
+        print param
+    a_func('hey')
 
+    class C(object):
+        d = {}
+        def __init__(self):
+            self.d['hey'] = a_func
+
+    d = {}
+    d['hey'] = C()
+
+* Moving `ObjectInfer.infer_assign_object()` and `evaluate_object()`
 * Reporting multiple definition problems
-* Consider doing `Change`\s sometime in the future and their fields
-
-* Showing properties in quick outline
-* Docs for builtin functions and properties
-* Lambdas as functions; consider their parameters
-* Saving a file that does not exist; Allowing nonexistent resources
-* Changing ``C-a C-a`` to move to the first character in the line
-* Changing open project dialog
-* Handling codetags
-* Unifying builtin lists and iterators?
+* Extracting ``long_description`` in ``setup.py`` from ``README.txt``
+* Sorting names in from import list
 
 
 For ``0.5m1``
 =============
 
-* Document the renaming of refactoring classes.
-* Include changes in ``setup.py`` for cheeseshop.
+* Document the new name of refactoring classes
+* Include changes in ``setup.py`` for cheeseshop
 
 
 Remaining Small Stories
@@ -53,6 +49,12 @@ Main:
 
 * Separating UI and functional tests from unit tests
 * Goto definition for ``"# comment.\na_var"``
+* Showing properties in quick outline
+* Docs for builtin functions and properties
+* Lambdas as functions; consider their parameters
+* Changing ``C-a C-a`` to move to the first character in the line
+* Changing open project dialog
+* Saving a file that doesn't exist; Allowing nonexistent resources
 
 Others:
 

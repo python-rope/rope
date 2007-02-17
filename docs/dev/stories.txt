@@ -21,7 +21,6 @@ Base Stories
 * Zip imports
 * Pull up method
 * Push down method
-* Analyzing function decorators
 * Introduce redirection
 * Moving fields/methods to attribute classes
 
@@ -38,6 +37,7 @@ IDE And UI Stories
 * Replacement; M-%
 * Remembering last open project
 * Go to matching parenthesis
+* Handling codetags
 * Indenting a range of file
 * Auto completion type
 
@@ -121,7 +121,7 @@ Stories
 * Performing import action only on one import statement
 
 
-* Handling the type of object after ``with/as`` statements
+* Analyzing function decorators
 
 
 > Public Release 0.5m1 : February 18, 2007
