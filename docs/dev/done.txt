@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.5m1 : February 18, 2007
+
+
 - Handling ``with`` statements : February 15, 2007
 
 
@@ -33,7 +36,7 @@
 - Fixing removing imports that eat the blank lines : February 8, 2007
 
 
-- Removing extra spaces and lines; ``C-F`` : February 7, 2007
+- Removing extra spaces and lines; ``C-c C-f`` : February 7, 2007
 
 
 > Public Release 0.4 : February 4, 2007
@@ -488,4 +491,3 @@
 
 - Highlighting keywords : March 21, 2006
   Only python files(``*.py``) should be highlighted.
-

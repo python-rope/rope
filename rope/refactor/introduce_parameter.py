@@ -15,6 +15,10 @@ class IntroduceParameter(object):
             raise exceptions.RefactoringError(
                 'Introduce parameter should be performed inside functions')
         self.pyfunction = scope.pyobject
+        self.name, self.pyname = self._get_name_and_pyname()
+        if self.pyname is None:
+            raise exceptions.RefactoringError(
+                'Cannot find the definition of <%s>', self.name)
 
     def _get_primary(self):
         word_finder = codeanalyze.WordRangeFinder(self.resource.read())
@@ -53,8 +57,8 @@ class IntroduceParameter(object):
 
     def _change_function_occurances(self, change_collector, function_start,
                                     function_end, new_name):
-        name, pyname = self._get_name_and_pyname()
-        finder = occurrences.FilteredOccurrenceFinder(self.pycore, name, [pyname])
+        finder = occurrences.FilteredOccurrenceFinder(self.pycore, self.name,
+                                                      [self.pyname])
         for occurrence in finder.find_occurrences(resource=self.resource):
             start, end = occurrence.get_primary_range()
             if function_start <= start < function_end:

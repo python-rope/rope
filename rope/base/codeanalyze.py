@@ -391,8 +391,8 @@ class ScopeNameFinder(object):
                     dot_count += 1
                 else:
                     break
-        return rope.base.pynames.ImportedModule(self.module_scope.pyobject,
-                                           module_name[dot_count:], dot_count)
+        return rope.base.pynames.ImportedModule(
+            self.module_scope.pyobject, module_name[dot_count:], dot_count)
 
     def get_pyname_in_scope(self, holding_scope, name):
         #ast = compiler.parse(name)

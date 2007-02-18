@@ -26,7 +26,7 @@ open/new project            C-x C-p        C-P
 close project               C-x p k
 show project tree           C-x p t        M-Q r
 validate project files      C-x p v        F5
---------------------------  -------------  -------------  
+--------------------------  -------------  -------------
 new module                  C-x n m
 new package                 C-x n p
 new file                    C-x n f
@@ -37,7 +37,7 @@ close active editor         C-x k          C-w
 exit                        C-x C-c        C-W
 run active editor           C-c x p        M-X p
 run unit-tests              C-c x t        M-X t
---------------------------  -------------  -------------  
+--------------------------  -------------  -------------
 forward character           C-f
 backward character          C-b
 next line                   C-n
@@ -101,7 +101,7 @@ move current package
 organize imports            C-c i o        C-O
 expand star imports         C-c i x
 relatives to absolutes      C-c i a
-froms to normals            C-c i n
+froms to imports            C-c i i
 handle long imports         C-c i l
 --------------------------  -------------  -------------
 about                       C-h a

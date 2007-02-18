@@ -6,9 +6,10 @@
 Overview
 ========
 
-`rope`_ is a python refactoring IDE and library.  Its main goal is to
-provide features like refactoring, auto-completion, code assist and
-outline views.  It is written in python and uses Tkinter library.
+`rope`_ is a python refactoring IDE and library.  The IDE uses the
+library for providing features like refactoring, code assist, and
+auto-completion.  It is written in python.  The IDE uses `Tkinter`
+library.
 
 .. _`rope`: http://rope.sf.net/
 
@@ -16,7 +17,37 @@ outline views.  It is written in python and uses Tkinter library.
 New Features
 ============
 
-* 
+* Replace method with method object refactoring
+* Changing editor font and keybinding in ``~/.rope``
+* Handling ``with`` statements
+* Having two keybindings emacs/normal
+* Performing change signature in class hierarchies
+* Supporting builtin `zip` and `enumerate`
+* Execute command; ``M-x``
+* Removing extra spaces and lines; ``C-c C-f``
+
+From this release, rope reads preferences from ``~/.rope`` file.  You
+can edit this file to do things like changing the keybindings and
+changing the font.  The good thing about this file is that it is in
+python.  So you can do anything you like there before rope starts.
+For example you can register your own `Actions` (see
+`rope.ui.extension` module for more information) there.  You can
+edit ``~/.rope`` using rope itself, too. (``Edit ~/.rope`` in ``Edit``
+menu or ``edit_dot_rope`` action in execute_command.)
+
+One of the main problems new users of rope had was that rope used
+emacs keybinding and those not familiar with it had a hard time working
+with rope.  This release adds a normal keybinding.  You can use it
+by editing ``edit_to_rope`` file and setting ``i_like_emacs`` variable
+to `False`.  The emacs keybinding has been enhanced very much.  But
+be careful! Once you get used to it, you'll be addicted to rope!
+
+The names of some the refactoring classes have been changed.  Those
+who used rope library probably have to update their code.  The base
+parts of rope has been enhanced maybe as much as the UI parts.
+Introduce Method object refactoring has been added.  Some of the old
+refactorings have been enhanced and the occurrence finding got notably
+faster.
 
 
 Getting Started
@@ -82,4 +113,3 @@ Have a look at ``COPYING`` file for more information.
 .. _`docs/index.txt`: docs/index.html
 .. _`docs/dev/contributing.txt`: docs/dev/contributing.html
 .. _`docs/dev/library.txt`: docs/dev/library.html
-

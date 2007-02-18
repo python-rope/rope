@@ -58,6 +58,8 @@ class ObjectInfer(object):
             if lineno is None and hasattr(assign_node, 'lineno') and \
                assign_node.lineno is not None:
                 lineno = assign_node.lineno
+            if lineno is None:
+                lineno = 1
             holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
             pyname = evaluate.get_statement_result(holding_scope, assign_node)
             if pyname is not None:

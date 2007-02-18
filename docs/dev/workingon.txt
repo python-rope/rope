@@ -1,19 +1,16 @@
 Small Stories
 =============
 
-- Handling with statements
+- Reducing the number of times `PyName.get_object()` gets called in
+  `FilteredOccurrenceFinder`.
+- Extracting ``long_description`` in ``setup.py`` from ``README.txt``
+- Refactor `importutils` package
 
-  - With variable
-  - handling with variable type
-  - Duplication between `_ForAssignVisitor` and `_WithAssignVisitor`
-    and `AssignVisitor`
-  - Duplication between `ForName` and `WithName`
+  - Rename long methods
+  - Rename action names(ui, importutils, dot_rope.py, overview)
 
-- Mixed assignment; ``self.a, b = (1, 2)``
-- Mixed assignment; ``a[0], b = (1, 2)``
-- Mixed assignment; ``a[0:1], b = (1, 2)``
-- Assigning nested tuples; ``a, (b, c) = (1, (2, 3))``
-
+* Separate change from query in `importutils`
+* Can't we use inline methon for move method?
 * Using tuples instead of _Assigned
 * Checking the vars and function parameters in the defining scope::
 
@@ -31,15 +28,6 @@ Small Stories
 
 * Moving `ObjectInfer.infer_assign_object()` and `evaluate_object()`
 * Reporting multiple definition problems
-* Extracting ``long_description`` in ``setup.py`` from ``README.txt``
-* Sorting names in from import list
-
-
-For ``0.5m1``
-=============
-
-* Document the new name of refactoring classes
-* Include changes in ``setup.py`` for cheeseshop
 
 
 Remaining Small Stories

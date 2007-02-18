@@ -97,9 +97,6 @@ Stories
 * Extracting methods from pieces with only one return/yield statement
 
 
-* Moving field/method
-
-
 * Inlining a single occurrence
 
 
@@ -118,10 +115,19 @@ Stories
 * Renaming textual matches
 
 
-* Performing import action only on one import statement
-
-
 * Analyzing function decorators
 
 
-> Public Release 0.5m1 : February 18, 2007
+* Performing import action only on one import statement
+
+
+> Public Release 0.5m2 : March 4, 2007
+
+
+* Moving methods
+
+
+* Sorting names in from import list
+
+
+* Extract class

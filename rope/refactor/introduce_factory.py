@@ -93,7 +93,7 @@ class IntroduceFactoryRefactoring(object):
             if changed_code is not None:
                 if global_factory:
                     new_pymodule = self.pycore.get_string_module(changed_code, self.resource)
-                    module_with_imports = import_tools.get_module_with_imports(new_pymodule)
+                    module_with_imports = import_tools.get_module_imports(new_pymodule)
                     module_with_imports.add_import(new_import)
                     changed_code = module_with_imports.get_changed_source()
                 changes.add_change(ChangeContents(file_, changed_code))

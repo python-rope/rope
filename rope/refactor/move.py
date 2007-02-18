@@ -49,7 +49,7 @@ class _Mover(object):
         pass
 
     def _add_imports_to_module(self, pymodule, new_imports):
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        module_with_imports = self.import_tools.get_module_imports(pymodule)
         for new_import in new_imports:
             module_with_imports.add_import(new_import)
         return module_with_imports.get_changed_source()
@@ -63,7 +63,7 @@ class _Mover(object):
 
     def _remove_old_pyname_imports(self, pymodule):
         old_source = pymodule.source_code
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        module_with_imports = self.import_tools.get_module_imports(pymodule)
         class CanSelect(object):
             changed = False
             old_name = self.old_name
@@ -170,7 +170,7 @@ class _GlobalMover(_Mover):
         pymodule, has_changed = self._remove_old_pyname_imports(pymodule)
         pymodule, has_changed = self._add_imports_to_module2(pymodule, imports)
 
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        module_with_imports = self.import_tools.get_module_imports(pymodule)
         source = pymodule.source_code
         if module_with_imports.get_import_statements():
             start = pymodule.lines.get_line_end(
@@ -196,10 +196,10 @@ class _GlobalMover(_Mover):
         pymodule = self.pycore.get_string_module(moving, self.source)
         pymodule, has_changed = self._add_imports_to_module2(pymodule, new_imports)
 
-        source = self.import_tools.transform_relative_imports_to_absolute(pymodule)
+        source = self.import_tools.relatives_to_absolutes(pymodule)
         if source is not None:
             pymodule = self.pycore.get_string_module(source, self.source)
-        source = self.import_tools.transform_froms_to_normal_imports(pymodule)
+        source = self.import_tools.froms_to_imports(pymodule)
         module_with_imports = self._get_module_with_imports(source, self.source)
         imports = [import_stmt.import_info
                    for import_stmt in module_with_imports.get_import_statements()]
@@ -212,7 +212,7 @@ class _GlobalMover(_Mover):
 
     def _get_module_with_imports(self, source_code, resource):
         pymodule = self.pycore.get_string_module(source_code, resource)
-        return self.import_tools.get_module_with_imports(pymodule)
+        return self.import_tools.get_module_imports(pymodule)
 
     def _get_moving_element(self):
         lines = self.pycore.resource_to_pyobject(self.source).lines
@@ -224,7 +224,7 @@ class _GlobalMover(_Mover):
 
     def _get_used_imports_by_the_moving_element(self):
         pymodule = self.pycore.resource_to_pyobject(self.source)
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        module_with_imports = self.import_tools.get_module_imports(pymodule)
         return module_with_imports.get_used_imports(self.old_pyname.get_object())
 
     def _change_other_modules(self, changes):
@@ -283,7 +283,7 @@ class _ModuleMover(_Mover):
         if not self.source.is_folder():
             is_changed = False
             pymodule = self.pycore.resource_to_pyobject(self.source)
-            source = self.import_tools.transform_relative_imports_to_absolute(pymodule)
+            source = self.import_tools.relatives_to_absolutes(pymodule)
             if source is not None:
                 pymodule = self.pycore.get_string_module(source, self.source)
                 is_changed = True

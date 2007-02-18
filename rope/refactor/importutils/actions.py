@@ -3,7 +3,6 @@ import sys
 
 from rope.base import pyobjects, exceptions
 from rope.refactor.importutils import importinfo
-from rope.base import exceptions
 
 
 class ImportInfoVisitor(object):

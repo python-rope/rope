@@ -155,6 +155,22 @@ Maybe we can use one of these solutions:
 Or maybe we can use a strategy object for searching.
 
 
+Reducing `PyName.get_object()` Calls
+====================================
+
+For finding occurrences of a `PyName` we use `FilteredOccurrenceFinder`.
+For deciding whether two `PyName`\s are the same or not it it compares
+`PyName.get_object()`\s and this methods performs type inference.  We
+can probably remove such calls most of the time.  But more testing is
+required to decide about that.  So this will be delayed till ``0.5m2``.
+
+The only place that comparing objects seem needed is when we are
+comparing `ImportedModule`\s and `ImportedName`\s.  Maybe we can
+eliminate the need for comparing imported names by addin a new
+`get_imported_pyname` to them.  But it seems to cause problems when
+we are importing an already imported name.
+
+
 Allowing Non-Existent Resources
 ===============================
 

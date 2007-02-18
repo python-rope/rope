@@ -70,7 +70,7 @@ class ModuleToPackage(object):
     def _transform_relatives_to_absolute(self, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
         import_tools = rope.refactor.importutils.ImportTools(self.pycore)
-        return import_tools.transform_relative_imports_to_absolute(pymodule)
+        return import_tools.relatives_to_absolutes(pymodule)
 
 
 class ImportOrganizer(object):
@@ -82,7 +82,7 @@ class ImportOrganizer(object):
 
     def _perform_command_on_module_with_imports(self, resource, method):
         pymodule = self.pycore.resource_to_pyobject(resource)
-        module_with_imports = self.import_tools.get_module_with_imports(pymodule)
+        module_with_imports = self.import_tools.get_module_imports(pymodule)
         method(module_with_imports)
         result = module_with_imports.get_changed_source()
         return result
@@ -109,13 +109,13 @@ class ImportOrganizer(object):
             changes.add_change(ChangeContents(resource, source))
             return changes
 
-    def transform_froms_to_imports(self, resource):
+    def froms_to_imports(self, resource):
         return self._perform_command_on_import_tools(
-            self.import_tools.transform_froms_to_normal_imports, resource)
+            self.import_tools.froms_to_imports, resource)
 
-    def transform_relatives_to_absolute(self, resource):
+    def relatives_to_absolutes(self, resource):
         return self._perform_command_on_import_tools(
-            self.import_tools.transform_relative_imports_to_absolute, resource)
+            self.import_tools.relatives_to_absolutes, resource)
 
     def handle_long_imports(self, resource):
         return self._perform_command_on_import_tools(

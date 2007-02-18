@@ -27,7 +27,7 @@ core = rope.ui.core.get_core()
 #core.set('show_status_bar', False)
 
 
-# If you don't like emacs keybinding, change this to False
+# If you don't like emacs keybindings, change this to False
 i_like_emacs = True
 if not i_like_emacs:
     core.rebind_action('open_project', 'C-P')
@@ -89,8 +89,8 @@ if not i_like_emacs:
     core.rebind_action('move_current_module', None)
     core.rebind_action('organize_imports', 'C-O')
     core.rebind_action('expand_star_imports', None)
-    core.rebind_action('relative_to_absolute', None)
-    core.rebind_action('from_to_import', None)
+    core.rebind_action('relatives_to_absolutes', None)
+    core.rebind_action('froms_to_imports', None)
     core.rebind_action('handle_long_imports', None)
 
     core.rebind_action('readme', None)

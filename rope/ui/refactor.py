@@ -562,11 +562,11 @@ def expand_star_imports(context):
 
 
 def transform_froms_to_imports(context):
-    _import_action(context, ImportOrganizer.transform_froms_to_imports)
+    _import_action(context, ImportOrganizer.froms_to_imports)
 
 
 def transform_relatives_to_absolute(context):
-    _import_action(context, ImportOrganizer.transform_relatives_to_absolute)
+    _import_action(context, ImportOrganizer.relatives_to_absolutes)
 
 
 def handle_long_imports(context):
@@ -655,6 +655,7 @@ actions.append(SimpleAction('change_signature',
                             ConfirmEditorsAreSaved(change_signature), 'C-c r c',
                             MenuAddress(['Refactor', 'Change Method Signature'], 'c'),
                             ['python']))
+
 actions.append(SimpleAction('introduce_factory',
                             ConfirmEditorsAreSaved(introduce_factory), 'C-c r f',
                             MenuAddress(['Refactor', 'Introduce Factory Method'], 'f', 1),
@@ -679,10 +680,6 @@ actions.append(SimpleAction('inline_argument_default',
                             ConfirmEditorsAreSaved(inline_argument_default), None,
                             MenuAddress(['Refactor', 'Inline Argument Default'], 'g', 1),
                             ['python']))
-actions.append(SimpleAction('module_to_package',
-                            ConfirmEditorsAreSaved(transform_module_to_package), 'C-c r 1 p',
-                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1),
-                            ['python']))
 actions.append(SimpleAction('rename_current_module',
                             ConfirmEditorsAreSaved(rename_module), 'C-c r 1 r',
                             MenuAddress(['Refactor', 'Rename Current Module'], None, 1),
@@ -691,6 +688,11 @@ actions.append(SimpleAction('move_current_module',
                             ConfirmEditorsAreSaved(move_module), 'C-c r 1 v',
                             MenuAddress(['Refactor', 'Move Current Module'], None, 1),
                             ['python']))
+actions.append(SimpleAction('module_to_package',
+                            ConfirmEditorsAreSaved(transform_module_to_package), 'C-c r 1 p',
+                            MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1),
+                            ['python']))
+
 actions.append(SimpleAction('organize_imports',
                             ConfirmEditorsAreSaved(organize_imports, all=False), 'C-c i o',
                             MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
@@ -698,12 +700,12 @@ actions.append(SimpleAction('expand_star_imports',
                             ConfirmEditorsAreSaved(expand_star_imports, all=False), 'C-c i x',
                             MenuAddress(['Refactor', 'Expand Star Imports'], 'p', 2),
                             ['python']))
-actions.append(SimpleAction('relative_to_absolute',
+actions.append(SimpleAction('relatives_to_absolutes',
                             ConfirmEditorsAreSaved(transform_relatives_to_absolute, all=False), 'C-c i a',
                             MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2),
                             ['python']))
-actions.append(SimpleAction('from_to_import',
-                            ConfirmEditorsAreSaved(transform_froms_to_imports, all=False), 'C-c i n',
+actions.append(SimpleAction('froms_to_imports',
+                            ConfirmEditorsAreSaved(transform_froms_to_imports, all=False), 'C-c i i',
                             MenuAddress(['Refactor', 'Transform Froms to Imports'], 'r', 2),
                             ['python']))
 actions.append(SimpleAction('handle_long_imports',

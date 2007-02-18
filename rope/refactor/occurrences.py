@@ -1,6 +1,6 @@
 import re
 
-import rope.base.codeanalyze
+from rope.base import pynames, codeanalyze
 
 
 class OccurrenceFinder(object):
@@ -109,10 +109,15 @@ class FilteredOccurrenceFinder(object):
         return False
 
     def _are_pynames_the_same(self, pyname1, pyname2):
-        return pyname1 == pyname2 or \
-               (pyname1 is not None and pyname2 is not None and
-                pyname1.get_object() == pyname2.get_object() and
-                pyname1.get_definition_location() == pyname2.get_definition_location())
+        if pyname1 is None or pyname2 is None:
+            return False
+        if pyname1 == pyname2:
+            return True
+        if type(pyname1) not in (pynames.ImportedModule, pynames.ImportedName) and \
+           type(pyname2) not in (pynames.ImportedModule, pynames.ImportedName):
+            return False
+        return pyname1.get_object() == pyname2.get_object() and \
+               pyname1.get_definition_location() == pyname2.get_definition_location()
 
 
 class _OccurrenceToolsCreator(object):
@@ -129,7 +134,7 @@ class _OccurrenceToolsCreator(object):
         if self._name_finder is None:
             if self.pymodule is None:
                 self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-            self._name_finder = rope.base.codeanalyze.ScopeNameFinder(self.pymodule)
+            self._name_finder = codeanalyze.ScopeNameFinder(self.pymodule)
         return self._name_finder
 
     def get_source_code(self):
@@ -142,7 +147,7 @@ class _OccurrenceToolsCreator(object):
 
     def get_word_finder(self):
         if self._word_finder is None:
-            self._word_finder = rope.base.codeanalyze.WordRangeFinder(
+            self._word_finder = codeanalyze.WordRangeFinder(
                 self.get_source_code())
         return self._word_finder
 

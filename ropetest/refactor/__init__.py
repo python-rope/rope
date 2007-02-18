@@ -592,6 +592,7 @@ class IntroduceParameterTest(unittest.TestCase):
         self._introduce_parameter(offset, 'p1')
         self.assertEquals('var = 1\ndef f(p1=var):\n    b = p1\n', self.mod.read())
 
+    @testutils.assert_raises(RefactoringError)
     def test_unknown_variables(self):
         self.mod.write('def f():\n    b = var + c\n')
         offset = self.mod.read().rindex('var')

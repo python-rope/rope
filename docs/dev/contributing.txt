@@ -8,7 +8,7 @@ Get Involved!
 
 Rope was started because of the lack of good refactoring tools for
 python.  But after observing python IDE limitations we grew bigger
-ideas in our head.
+ideas in our heads.
 
 If you want to have more a powerful python IDE and have big ideas
 in your head, you are welcome to get involved.
