@@ -1,33 +1,5 @@
-Small Stories
-=============
-
-- Reducing the number of times `PyName.get_object()` gets called in
-  `FilteredOccurrenceFinder`.
-- Extracting ``long_description`` in ``setup.py`` from ``README.txt``
-- Refactor `importutils` package
-
-  - Rename long methods
-  - Rename action names(ui, importutils, dot_rope.py, overview)
-
-* Separate change from query in `importutils`
-* Can't we use inline methon for move method?
-* Using tuples instead of _Assigned
-* Checking the vars and function parameters in the defining scope::
-
-    def a_func(param):
-        print param
-    a_func('hey')
-
-    class C(object):
-        d = {}
-        def __init__(self):
-            self.d['hey'] = a_func
-
-    d = {}
-    d['hey'] = C()
-
-* Moving `ObjectInfer.infer_assign_object()` and `evaluate_object()`
-* Reporting multiple definition problems
+Moving Methods
+==============
 
 
 Remaining Small Stories
@@ -47,6 +19,8 @@ Main:
 Others:
 
 * Comments should be indented
+* In the ``README.txt`` mention how to change the keybinding
+* Sorting names in from import list
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'
     in <generator object at 0xb7173aec> ignored``

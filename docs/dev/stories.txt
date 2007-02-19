@@ -112,22 +112,25 @@ Stories
 * Renaming similarly named variables
 
 
+* Inlining static methods
+
+
 * Renaming textual matches
 
 
 * Analyzing function decorators
 
 
-* Performing import action only on one import statement
+* Performing import actions only on one import statement
+
+
+* Extract class
 
 
 > Public Release 0.5m2 : March 4, 2007
 
 
+* Extended rename
+
+
 * Moving methods
-
-
-* Sorting names in from import list
-
-
-* Extract class

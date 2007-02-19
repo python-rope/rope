@@ -62,6 +62,8 @@ There are many places to extend rope.  Some of them are:
 Hot Topics
 ==========
 
+* `Extended rename`_
+
 
 To Be Discussed
 ===============
@@ -76,6 +78,79 @@ To Be Discussed
 * Saving hard to compute information like class hierarchies to files
 * Using a modification of `compiler` AST for simplifying refactorings
 * Finding available refactorings
+
+
+Extended Rename
+===============
+
+We want to customize these parameters when performing rename
+refactoring:
+
+* The region or files to apply rename
+* Should we replace primaries
+* Performing only on calls
+* Change imports
+* Change definition
+
+After adding it we should be able to remove local rename.
+Refactorings that can be done using extended rename:
+
+* Introduce parameter
+* Move field
+* Local variable to field
+* ...
+
+Issues:
+
+* How specify a region in a file
+
+  * Using physical scopes; The mark should be on a defined object
+  * Store the last place of mark for each editor;  the region
+    between the two last marks is the region
+
+* The defaults should be local rename?
+* The keybinding; ``C-c r e`` or ``C-u C-c r r``
+* Do we rename modules and packages, too
+* What about defined objects
+* Using another name
+
+  * ``Extended Rename``; ``C-c r e``
+  * ``Alternative Rename``; ``C-c r a``
+  * ``Other Rename``; ``C-c r o``
+  * ``Local Rename``; ``C-c r e``
+  * ``Fix Occurrences``; ``C-c r x``
+  * ``Alter Occurrences``; ``C-c r a``
+  * ``Change Occurrences``; ``C-c r o``
+  * ``Modify Occurrences``; ``C-c r o``
+  * ``Replace Occurrences``; ``C-c r o``
+  * ``Switch Occurrences``; ``C-c r w``
+
+
+Move Method Refactoring
+=======================
+
+Regardless of the difficulties for getting the destination, we'll be
+able to put the new method in the destination class and then change
+the main method to redirect calls to it.  Then we can perform inline
+method refactoring on the main method to change the occurrences.
+
+
+Checking Varible And Function Usages In Their Defining Scopes
+=============================================================
+
+::
+
+    def a_func(param):
+        print param
+    a_func('hey')
+
+    class C(object):
+        d = {}
+        def __init__(self):
+            self.d['hey'] = a_func
+
+    d = {}
+    d['hey'] = C()
 
 
 Redefining Function/Class Definitions
@@ -153,22 +228,6 @@ Maybe we can use one of these solutions:
   for creating import trees.
 
 Or maybe we can use a strategy object for searching.
-
-
-Reducing `PyName.get_object()` Calls
-====================================
-
-For finding occurrences of a `PyName` we use `FilteredOccurrenceFinder`.
-For deciding whether two `PyName`\s are the same or not it it compares
-`PyName.get_object()`\s and this methods performs type inference.  We
-can probably remove such calls most of the time.  But more testing is
-required to decide about that.  So this will be delayed till ``0.5m2``.
-
-The only place that comparing objects seem needed is when we are
-comparing `ImportedModule`\s and `ImportedName`\s.  Maybe we can
-eliminate the need for comparing imported names by addin a new
-`get_imported_pyname` to them.  But it seems to cause problems when
-we are importing an already imported name.
 
 
 Allowing Non-Existent Resources
@@ -292,38 +351,6 @@ the source code.  In futures some of this restrictions might be removed.
 * Either all files should be under version control or none.
 * All ``*.txt`` files are considered in reST formats.
 * XXX
-
-
-Moving Fields/Methods
-=====================
-
-* Moving defined objects
-
-  * If self is used renaming it and passing it as a second argument?
-  * Moving used imports
-
-Move refactoring should support moving:
-
-=======================  =============
-source                   destination
-=======================  =============
-module                   module
-global class/function    module
-class fields/methods     attribute
-static functions         class
-=======================  =============
-
-The problem of destination might be solved by passing a `PyName`
-or a `PyObject` instead of a `Resource`.  Maybe we can take a
-class as the destination for moving fields and methods instead
-of an attribute.
-
-Maybe we can have separate methods for moving each of above
-groups.::
-
-  move_module(resource, resource)
-  move_global(pyobject, resource)
-  move_attribute(pyobject, pyobject)
 
 
 Object Inference Issues

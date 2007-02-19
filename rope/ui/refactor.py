@@ -637,12 +637,12 @@ def method_object(context):
 
 actions = []
 actions.append(SimpleAction('rename', ConfirmEditorsAreSaved(rename), 'C-c r r',
-                            MenuAddress(['Refactor', 'Rename'], 'n'), ['python']))
+                            MenuAddress(['Refactor', 'Rename'], 'r'), ['python']))
 actions.append(SimpleAction('extract_method',
                             ConfirmEditorsAreSaved(extract_method, all=False), 'C-c r m',
-                            MenuAddress(['Refactor', 'Extract Method'], 'x'), ['python']))
+                            MenuAddress(['Refactor', 'Extract Method'], 'm'), ['python']))
 actions.append(SimpleAction('move', ConfirmEditorsAreSaved(move), 'C-c r v',
-                            MenuAddress(['Refactor', 'Move'], 'm'), ['python']))
+                            MenuAddress(['Refactor', 'Move'], 'v'), ['python']))
 actions.append(SimpleAction('inline', ConfirmEditorsAreSaved(inline), 'C-c r i',
                             MenuAddress(['Refactor', 'Inline'], 'i'), ['python']))
 actions.append(SimpleAction('extract_local_variable',
@@ -666,7 +666,7 @@ actions.append(SimpleAction('encapsulate_field',
                             ['python']))
 actions.append(SimpleAction('introduce_parameter',
                             ConfirmEditorsAreSaved(introduce_parameter), 'C-c r p',
-                            MenuAddress(['Refactor', 'Introduce Parameter'], None, 1),
+                            MenuAddress(['Refactor', 'Introduce Parameter'], 'p', 1),
                             ['python']))
 actions.append(SimpleAction('method_object',
                             ConfirmEditorsAreSaved(method_object), 'C-c r j',
@@ -698,7 +698,7 @@ actions.append(SimpleAction('organize_imports',
                             MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
 actions.append(SimpleAction('expand_star_imports',
                             ConfirmEditorsAreSaved(expand_star_imports, all=False), 'C-c i x',
-                            MenuAddress(['Refactor', 'Expand Star Imports'], 'p', 2),
+                            MenuAddress(['Refactor', 'Expand Star Imports'], 'x', 2),
                             ['python']))
 actions.append(SimpleAction('relatives_to_absolutes',
                             ConfirmEditorsAreSaved(transform_relatives_to_absolute, all=False), 'C-c i a',
@@ -706,7 +706,7 @@ actions.append(SimpleAction('relatives_to_absolutes',
                             ['python']))
 actions.append(SimpleAction('froms_to_imports',
                             ConfirmEditorsAreSaved(transform_froms_to_imports, all=False), 'C-c i i',
-                            MenuAddress(['Refactor', 'Transform Froms to Imports'], 'r', 2),
+                            MenuAddress(['Refactor', 'Transform Froms to Imports'], None, 2),
                             ['python']))
 actions.append(SimpleAction('handle_long_imports',
                             ConfirmEditorsAreSaved(handle_long_imports, all=False), 'C-c i l',

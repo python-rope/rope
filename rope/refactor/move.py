@@ -323,4 +323,3 @@ class _ModuleMover(_Mover):
             source = pymodule.source_code
         if is_changed:
             return source
-

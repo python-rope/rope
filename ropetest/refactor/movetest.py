@@ -198,8 +198,7 @@ class MoveRefactoringTest(unittest.TestCase):
         mover.get_changes(self.pkg).do()
         self.assertEquals('from pkg.mod1 import *\na = a_var\n', self.mod2.read())
 
-    # XXX: Removing imports, removes blanks lines after it
-    def xxx_test_moving_module_refactoring_and_not_changing_other_modules(self):
+    def test_moving_module_refactoring_and_not_removing_blanks_after_imports(self):
         self.mod4.write('a_var = 1')
         self.mod2.write('from pkg import mod4\n'
                         'import os\n\n\nprint mod4.a_var\n')

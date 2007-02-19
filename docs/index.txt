@@ -9,7 +9,7 @@ Overview
 ========
 
 *rope* is a python refactoring IDE and library.  The IDE uses the
-library for providing features like refactoring, code assist, and
+library to provide features like refactoring, code assist, and
 auto-completion.  It is written in python.  The IDE uses `Tkinter`
 library.
 
