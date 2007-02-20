@@ -1,6 +1,37 @@
 Moving Methods
 ==============
 
+- `sourceutils.get_body()`
+- Add a `create_move()`
+- Passing parameters
+- Passing the main object whenever needed
+- Arg with default parameter
+- Passing args and keywords args
+- Getting new method
+- Getting old method
+- Making the change
+- If both classes are in the same file
+
+* Adding to the UI
+* Adding methods to a function with ``pass`` body
+* Destination attribute
+* Exceptional conditions
+* Refactor similarities between method_object and move for
+  renaming ``self``\s and method signature
+* What to do about pydocs?
+* Separate `MoveModule` and `MoveGlobal`
+
+* Inlining the last method of a class
+* Do `get_body()` and `get_body_region()` belong to `PyFunction`?
+* Does `get_definition_info()` belong to `PyFunction`?
+* Moving static and class methods
+* Moving methods with decorators
+* Decorators and method refactorings
+* Changing `rope.refactor` to use `sourceutils.add_methods` wherever possible
+* Unifying ``x.get_type() == get_base_type('y')``, ``isinstance(x, PyY)``
+* ``M-a`` and ``M-e``
+* Finding unused variables
+
 
 Remaining Small Stories
 =======================

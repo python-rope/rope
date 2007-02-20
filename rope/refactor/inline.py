@@ -254,19 +254,6 @@ class _DefinitionGenerator(object):
         self._calculated_definitions = {}
         self.returned = None
 
-    def _get_function_body(self):
-        scope = self.pyfunction.get_scope()
-        source = self.pymodule.source_code
-        lines = self.pymodule.lines
-        line_finder = codeanalyze.LogicalLineFinder(lines)
-        start_line = line_finder.get_logical_line_in(scope.get_start())[1] + 1
-        if self.pyfunction._get_ast().doc is not None:
-            start_line = line_finder.get_logical_line_in(start_line)[1] + 1
-        start_offset = lines.get_line_start(start_line)
-        end_offset = min(lines.get_line_end(scope.get_end()) + 1, len(source))
-        body = source[start_offset:end_offset]
-        return sourceutils.indent_lines(body, -sourceutils.find_minimum_indents(body))
-
     def _get_definition_info(self):
         return rope.refactor.functionutils.DefinitionInfo.read(self.pyfunction)
 
@@ -303,7 +290,7 @@ class _DefinitionGenerator(object):
             if name != value:
                 header += name + ' = ' + value + '\n'
                 to_be_inlined.append(name)
-        source = header + self._get_function_body()
+        source = header + sourceutils.get_body(self.pyfunction)
         for name in to_be_inlined:
             pymodule = self.pycore.get_string_module(source, self.resource)
             pyname = pymodule.get_attribute(name)

@@ -73,6 +73,7 @@ To Be Discussed
 * `Python's implicit interfaces`_
 * `Having virtual PyModules`_
 * `Redefining Function/Class Definitions`_
+* `Better status bar`_
 * Indexing source files for faster occurrence finding
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
@@ -91,6 +92,7 @@ refactoring:
 * Performing only on calls
 * Change imports
 * Change definition
+* Only reads or writes
 
 After adding it we should be able to remove local rename.
 Refactorings that can be done using extended rename:
@@ -124,15 +126,6 @@ Issues:
   * ``Modify Occurrences``; ``C-c r o``
   * ``Replace Occurrences``; ``C-c r o``
   * ``Switch Occurrences``; ``C-c r w``
-
-
-Move Method Refactoring
-=======================
-
-Regardless of the difficulties for getting the destination, we'll be
-able to put the new method in the destination class and then change
-the main method to redirect calls to it.  Then we can perform inline
-method refactoring on the main method to change the occurrences.
 
 
 Checking Varible And Function Usages In Their Defining Scopes
@@ -608,6 +601,21 @@ be inferred.
 
 The GUI Mess; Working More on the UI Parts
 ==========================================
+
+
+Better Status Bar
+-----------------
+
+* line
+* mode
+* file
+* readonly status
+* changed status
+
+Temporaries:
+
+* search
+* keys
 
 
 Better Dialogs

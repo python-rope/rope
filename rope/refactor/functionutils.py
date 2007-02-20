@@ -66,6 +66,9 @@ class DefinitionInfo(object):
         self.keywords_arg = keywords_arg
 
     def to_string(self):
+        return '%s(%s)' % (self.function_name, self.arguments_to_string())
+
+    def arguments_to_string(self, from_index=0):
         params = []
         for arg, default in self.args_with_defaults:
             if default is not None:
@@ -76,8 +79,7 @@ class DefinitionInfo(object):
             params.append('*' + self.args_arg)
         if self.keywords_arg:
             params.append('**' + self.keywords_arg)
-        return '%s(%s)' % (self.function_name, ', '.join(params))
-        
+        return ', '.join(params[from_index:])
 
     @staticmethod
     def _read(pyfunction, code):

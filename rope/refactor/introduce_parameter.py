@@ -33,27 +33,27 @@ class IntroduceParameter(object):
         definition_info.args_with_defaults.append((new_parameter,
                                                    self._get_primary()))
         change_collector = sourceutils.ChangeCollector(self.resource.read())
-        start, header_end, end = self._get_function_offsets()
-        change_collector.add_change(start, header_end, definition_info.to_string())
-        self._change_function_occurances(change_collector, header_end,
-                                         end, new_parameter)
+        header_start, header_end = self._get_header_offsets()
+        body_start, body_end = sourceutils.get_body_region(self.pyfunction)
+        change_collector.add_change(header_start, header_end,
+                                    definition_info.to_string())
+        self._change_function_occurances(change_collector, body_start,
+                                         body_end, new_parameter)
         changes = rope.base.change.ChangeSet('Introduce parameter <%s>' % new_parameter)
         changes.add_change(rope.base.change.ChangeContents(self.resource,
                                                  change_collector.get_changed()))
         return changes
 
-    def _get_function_offsets(self):
+    def _get_header_offsets(self):
         lines = self.pymodule.lines
         line_finder = codeanalyze.LogicalLineFinder(lines)
         start_line = self.pyfunction.get_scope().get_start()
-        header_end_line = line_finder.get_logical_line_in(start_line)[1]
-        end_line = self.pyfunction.get_scope().get_end()
+        end_line = line_finder.get_logical_line_in(start_line)[1]
         start = lines.get_line_start(start_line)
-        header_end = lines.get_line_end(header_end_line)
-        start = self.pymodule.source_code.find('def', start) + 4
-        header_end = self.pymodule.source_code.rfind(':', start, header_end)
         end = lines.get_line_end(end_line)
-        return start, header_end, end
+        start = self.pymodule.source_code.find('def', start) + 4
+        end = self.pymodule.source_code.rfind(':', start, end)
+        return start, end
 
     def _change_function_occurances(self, change_collector, function_start,
                                     function_end, new_name):

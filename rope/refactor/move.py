@@ -1,8 +1,123 @@
-import rope.base.codeanalyze
 import rope.base.exceptions
-import rope.base.pyobjects
+from rope.base import pyobjects, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
-from rope.refactor import importutils, rename, occurrences
+from rope.refactor import (importutils, rename, occurrences,
+                           sourceutils, functionutils)
+
+
+def create_move(project, resource, offset=None):
+    """A factory for creating Move objects"""
+    if offset is None:
+        return Move(project, resource)
+    pyname = codeanalyze.get_pyname_at(project.pycore, resource, offset)
+    if pyname is None:
+        raise rope.base.exceptions.RefactoringError(
+            'Move only works on classes, functions, modules and methods.')
+    pyobject = pyname.get_object()
+    if isinstance(pyobject, pyobjects.PyModule) or \
+       isinstance(pyobject, pyobjects.PyPackage):
+        return Move(project, pyobject.get_resource())
+    if isinstance(pyobject, pyobjects.PyFunction) and \
+       isinstance(pyobject.parent, pyobjects.PyClass):
+        return MoveMethod(project, resource, offset)
+    return Move(project, resource, offset)
+
+
+class MoveMethod(object):
+
+    def __init__(self, project, resource, offset):
+        self.pycore = project.pycore
+        pyname = codeanalyze.get_pyname_at(project.pycore, resource, offset)
+        self.method_name = codeanalyze.get_name_at(resource, offset)
+        self.pyfunction = pyname.get_object()
+
+    def get_changes(self, dest_attr, new_name):
+        changes = ChangeSet('Moving method <%s>' % self.method_name)
+        resource1, start1, end1, new_content1 = \
+            self._get_changes_made_by_old_class(dest_attr, new_name)
+        collector1 = sourceutils.ChangeCollector(resource1.read())
+        collector1.add_change(start1, end1, new_content1)
+
+        resource2, start2, end2, new_content2 = \
+            self._get_changes_made_by_new_class(dest_attr, new_name)
+        if resource1 == resource2:
+            collector1.add_change(start2, end2, new_content2)
+        else:
+            collector2 = sourceutils.ChangeCollector(resource2.read())
+            collector2.add_change(start2, end2, new_content2)
+            changes.add_change(ChangeContents(resource2,
+                                              collector2.get_changed()))
+        changes.add_change(ChangeContents(resource1,
+                                          collector1.get_changed()))
+        return changes
+
+    def _get_changes_made_by_old_class(self, dest_attr, new_name):
+        pymodule = self.pyfunction.get_module()
+        indents = sourceutils.get_indents(
+            pymodule.lines, self.pyfunction.get_scope().get_start())
+        body = 'return self.%s.%s(%s)\n' % (dest_attr, new_name,
+                                            self._get_passed_arguments_string())
+        region = sourceutils.get_body_region(self.pyfunction)
+        return (pymodule.get_resource(), region[0], region[1],
+                sourceutils.fix_indentation(body, indents + 4))
+
+    def _get_changes_made_by_new_class(self, dest_attr, new_name):
+        old_pyclass = self.pyfunction.parent
+        pyclass = old_pyclass.get_attribute(dest_attr).get_object().get_type()
+        pymodule = pyclass.get_module()
+        resource = pyclass.get_module().get_resource()
+        insertion_point = min(pymodule.lines.get_line_end(
+                              pyclass.get_scope().get_end()) + 1,
+                              len(pymodule.source_code))
+        indents = sourceutils.get_indents(pymodule.lines,
+                                          pyclass.get_scope().get_start())
+        body = '\n\n' + sourceutils.fix_indentation(self.get_new_method(new_name),
+                                                    indents + 4)
+        return resource, insertion_point, insertion_point, body
+
+    def get_new_method(self, name):
+        return '%s\n    %s' % (self._get_new_header(name), self._get_body())
+
+    def _get_unchanged_body(self):
+        body = sourceutils.get_body(self.pyfunction)
+        indented_body = sourceutils.fix_indentation(body, 4)
+        return body
+
+    def _get_body(self, host='host'):
+        self_name = self._get_self_name()
+        body = self_name + ' = None\n' + self._get_unchanged_body()
+        pymodule = self.pycore.get_string_module(body)
+        finder = occurrences.FilteredOccurrenceFinder(
+            self.pycore, self_name, [pymodule.get_attribute(self_name)])
+        result = rename.rename_in_module(finder, host, pymodule=pymodule)
+        return result[result.index('\n') + 1:]
+
+    def _get_self_name(self):
+        definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
+        return definition_info.args_with_defaults[0][0]
+
+    def _get_new_header(self, name):
+        header = 'def %s(self' % name
+        if self._is_host_used():
+            header += ', host'
+        definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
+        others = definition_info.arguments_to_string(1)
+        if others:
+            header += ', ' + others
+        return header + '):'
+
+    def _get_passed_arguments_string(self):
+        result = ''
+        if self._is_host_used():
+            result = 'self'
+        definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
+        others = definition_info.arguments_to_string(1)
+        if others:
+            result += ', ' + others
+        return result
+
+    def _is_host_used(self):
+        return self._get_body('__old_self') != self._get_unchanged_body()
 
 
 class Move(object):
@@ -11,7 +126,7 @@ class Move(object):
     def __init__(self, project, resource, offset=None):
         self.pycore = project.pycore
         if offset is not None:
-            self.pyname = rope.base.codeanalyze.get_pyname_at(
+            self.pyname = codeanalyze.get_pyname_at(
                 self.pycore, resource, offset)
             if self.pyname is None:
                 raise rope.base.exceptions.RefactoringError(
@@ -25,11 +140,11 @@ class Move(object):
 
     def get_changes(self, dest_resource):
         moving_object = self.pyname.get_object()
-        if moving_object.get_type() == rope.base.pyobjects.get_base_type('Module'):
-            mover = _ModuleMover(self.pycore, self.pyname, dest_resource)
+        if moving_object.get_type() == pyobjects.get_base_type('Module'):
+            mover = MoveModule(self.pycore, self.pyname, dest_resource)
         else:
-            mover = _GlobalMover(self.pycore, self.pyname, dest_resource)
-        return mover.move()
+            mover = MoveGlobal(self.pycore, self.pyname, dest_resource)
+        return mover.get_changes()
 
 
 class _Mover(object):
@@ -97,7 +212,8 @@ class _Mover(object):
             return self.pycore.get_string_module(source, pymodule.get_resource()), True
 
 
-class _GlobalMover(_Mover):
+class MoveGlobal(_Mover):
+    """For moving global function and classes"""
 
     def __init__(self, pycore, pyname, destination):
         old_name = pyname.get_object()._get_ast().name
@@ -108,7 +224,7 @@ class _GlobalMover(_Mover):
         if destination.is_folder() and destination.has_child('__init__.py'):
             destination = destination.get_child('__init__.py')
 
-        super(_GlobalMover, self).__init__(pycore, source, destination,
+        super(MoveGlobal, self).__init__(pycore, source, destination,
                                            pyname, old_name, new_name)
         self.new_import = self.import_tools.get_import_for_module(
             self.pycore.resource_to_pyobject(self.destination))
@@ -116,7 +232,7 @@ class _GlobalMover(_Mover):
 
     def _check_exceptional_conditions(self):
         if self.old_pyname is None or \
-           not isinstance(self.old_pyname.get_object(), rope.base.pyobjects.PyDefinedObject):
+           not isinstance(self.old_pyname.get_object(), pyobjects.PyDefinedObject):
             raise rope.base.exceptions.RefactoringError(
                 'Move refactoring should be performed on a class/function.')
         moving_pyobject = self.old_pyname.get_object()
@@ -130,7 +246,7 @@ class _GlobalMover(_Mover):
     def _is_global(self, pyobject):
         return pyobject.get_scope().parent == pyobject.get_module().get_scope()
 
-    def move(self):
+    def get_changes(self):
         changes = ChangeSet('Moving global <%s>' % self.old_name)
         self._change_destination_module(changes)
         self._change_source_module(changes)
@@ -206,7 +322,7 @@ class _GlobalMover(_Mover):
         start = 1
         if module_with_imports.get_import_statements():
             start = module_with_imports.get_import_statements()[-1].end_line
-        lines = rope.base.codeanalyze.SourceLinesAdapter(source)
+        lines = codeanalyze.SourceLinesAdapter(source)
         moving = source[lines.get_line_start(start):]
         return moving, imports
 
@@ -250,7 +366,8 @@ class _GlobalMover(_Mover):
                 changes.add_change(ChangeContents(file_, source))
 
 
-class _ModuleMover(_Mover):
+class MoveModule(_Mover):
+    """For moving modules and packages"""
 
     def __init__(self, pycore, pyname, destination):
         source = pyname.get_object().get_resource()
@@ -263,7 +380,7 @@ class _ModuleMover(_Mover):
             new_name = package + '.' + old_name
         else:
             new_name = old_name
-        super(_ModuleMover, self).__init__(pycore, source, destination,
+        super(MoveModule, self).__init__(pycore, source, destination,
                                            pyname, old_name, new_name)
         self.new_import = importutils.NormalImport([(self.new_name, None)])
 
@@ -273,7 +390,7 @@ class _ModuleMover(_Mover):
             raise rope.base.exceptions.RefactoringError(
                 'Move destination for modules should be packages.')
 
-    def move(self):
+    def get_changes(self):
         changes = ChangeSet('Moving module <%s>' % self.old_name)
         self._change_other_modules(changes)
         self._change_moving_module(changes)

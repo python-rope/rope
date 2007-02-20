@@ -23,7 +23,7 @@ class MethodObject(object):
 
     def get_changes(self, new_class_name):
         collector = sourceutils.ChangeCollector(self.pymodule.source_code)
-        start, end = self._get_body_region()
+        start, end = sourceutils.get_body_region(self.pyfunction)
         indents = sourceutils.get_indents(
             self.pymodule.lines, self.pyfunction.get_scope().get_start()) + 4
         new_contents = ' ' * indents + 'return %s(%s)()\n' % \
@@ -45,7 +45,7 @@ class MethodObject(object):
         return min(end + 1, len(self.pymodule.source_code))
 
     def _get_body(self):
-        body = self._get_unchanged_body()
+        body = sourceutils.get_body(self.pyfunction)
         for param in self._get_parameter_names():
             body = param + ' = 1\n' + body
             pymod = self.pycore.get_string_module(body, self.resource)
@@ -57,20 +57,6 @@ class MethodObject(object):
             body = result[result.index('\n') + 1:]
         return body
 
-    def _get_unchanged_body(self):
-        start, end = self._get_body_region()
-        return sourceutils.fix_indentation(
-            self.pymodule.source_code[start:end], 0)
-
-    def _get_body_region(self):
-        scope = self.pyfunction.get_scope()
-        lines = self.pymodule.lines
-        logical_lines = codeanalyze.LogicalLineFinder(lines)
-        start_line = logical_lines.get_logical_line_in(scope.get_start())[1] + 1
-        start = lines.get_line_start(start_line)
-        end = min(lines.get_line_end(scope.get_end()) + 1,
-                  len(self.pymodule.source_code))
-        return start, end
 
     def _get_init(self):
         params = self._get_parameter_names()

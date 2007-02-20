@@ -8,9 +8,9 @@ import rope.refactor.inline
 import rope.refactor.introduce_factory
 import rope.refactor.introduce_parameter
 import rope.refactor.localtofield
+import rope.refactor.method_object
 import rope.refactor.move
 import rope.refactor.rename
-import rope.refactor.method_object
 import rope.ui.core
 from rope.refactor import ImportOrganizer
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
@@ -279,7 +279,7 @@ class MoveDialog(RefactoringDialog):
         offset = editor.get_current_offset()
         if current_module:
             offset = None
-        self.mover = rope.refactor.move.Move(
+        self.mover = rope.refactor.move.create_move(
             context.project, resource, offset)
 
     def _get_changes(self):

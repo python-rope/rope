@@ -30,6 +30,7 @@ class ChangeCollector(object):
 def get_indents(lines, lineno):
     return codeanalyze.count_line_indents(lines.get_line(lineno))
 
+
 def find_minimum_indents(source_code):
     result = 80
     lines = source_code.split('\n')
@@ -38,6 +39,7 @@ def find_minimum_indents(source_code):
             continue
         result = min(result, codeanalyze.count_line_indents(line))
     return result
+
 
 def indent_lines(source_code, amount):
     if amount == 0:
@@ -60,6 +62,7 @@ def fix_indentation(code, new_indents):
     min_indents = find_minimum_indents(code)
     return indent_lines(code, new_indents - min_indents)
 
+
 def add_methods(pymodule, class_scope, methods_sources):
     source_code = pymodule.source_code
     lines = pymodule.lines
@@ -68,11 +71,33 @@ def add_methods(pymodule, class_scope, methods_sources):
         insertion_line = class_scope.get_scopes()[-1].get_end()
     insertion_offset = lines.get_line_end(insertion_line)
     methods = '\n\n' + '\n\n'.join(methods_sources)
-    unindented_methods = indent_lines(methods, -find_minimum_indents(methods))
-    indented_methods = indent_lines(unindented_methods,
-                                    get_indents(lines, class_scope.get_start()) + 4)
+    indented_methods = fix_indentation(
+        methods, get_indents(lines, class_scope.get_start()) + 4)
     result = []
     result.append(source_code[:insertion_offset])
     result.append(indented_methods)
     result.append(source_code[insertion_offset:])
     return ''.join(result)
+
+
+def get_body(pyfunction):
+    """Return unindented function body"""
+    scope = pyfunction.get_scope()
+    pymodule = pyfunction.get_module()
+    start, end = get_body_region(pyfunction)
+    return fix_indentation(pymodule.source_code[start:end], 0)
+
+
+def get_body_region(pyfunction):
+    """Return the start and end offsets of function body"""
+    scope = pyfunction.get_scope()
+    pymodule = pyfunction.get_module()
+    lines = pymodule.lines
+    logical_lines = codeanalyze.LogicalLineFinder(lines)
+    start_line = logical_lines.get_logical_line_in(scope.get_start())[1] + 1
+    if pyfunction._get_ast().doc is not None:
+        start_line = logical_lines.get_logical_line_in(start_line)[1] + 1
+    start = lines.get_line_start(start_line)
+    end = min(lines.get_line_end(scope.get_end()) + 1,
+              len(pymodule.source_code))
+    return start, end
