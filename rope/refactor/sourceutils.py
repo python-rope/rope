@@ -88,14 +88,14 @@ def get_body(pyfunction):
     return fix_indentation(pymodule.source_code[start:end], 0)
 
 
-def get_body_region(pyfunction):
+def get_body_region(defined):
     """Return the start and end offsets of function body"""
-    scope = pyfunction.get_scope()
-    pymodule = pyfunction.get_module()
+    scope = defined.get_scope()
+    pymodule = defined.get_module()
     lines = pymodule.lines
     logical_lines = codeanalyze.LogicalLineFinder(lines)
     start_line = logical_lines.get_logical_line_in(scope.get_start())[1] + 1
-    if pyfunction._get_ast().doc is not None:
+    if defined._get_ast().doc is not None:
         start_line = logical_lines.get_logical_line_in(start_line)[1] + 1
     start = lines.get_line_start(start_line)
     end = min(lines.get_line_end(scope.get_end()) + 1,

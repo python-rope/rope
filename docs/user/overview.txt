@@ -94,9 +94,9 @@ introduce parameter         C-c r p
 rename in file              C-c r e
 convert local to field
 inline argument default
-module to package
-rename current module
-move current package
+module to package           C-c r 1 p
+rename current module       C-c r 1 r
+move current package        C-c r 1 v
 --------------------------  -------------  -------------
 organize imports            C-c i o        C-O
 expand star imports         C-c i x

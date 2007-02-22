@@ -377,6 +377,18 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('a = 1 + 2\n',
                           self.mod.read())
 
+    def test_a_function_with_pass_body(self):
+        self.mod.write('def a_func():\n    print(1)\na = a_func()\n')
+        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        self.assertEquals('print(1)\na = None\n', self.mod.read())
+
+    def test_inlining_the_last_method_of_a_class(self):
+        self.mod.write('class A(object):\n'
+                       '    def a_func(self):\n        pass\n')
+        self._inline2(self.mod, self.mod.read().rindex('a_func') + 1)
+        self.assertEquals('class A(object):\n    pass\n',
+                          self.mod.read())
+
 
 def suite():
     result = unittest.TestSuite()

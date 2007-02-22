@@ -283,20 +283,28 @@ class MoveDialog(RefactoringDialog):
             context.project, resource, offset)
 
     def _get_changes(self):
-        destination = self.project.get_pycore().find_module(self.new_name_entry.get())
-        return self.mover.get_changes(destination)
+        destination = None
+        if isinstance(self.mover, rope.refactor.move.MoveMethod):
+            destination = self.destination_entry.get()
+            new_method = self.new_method_entry.get()
+            return self.mover.get_changes(destination, new_method)
+        else:
+            destination = self.project.get_pycore().find_module(self.destination_entry.get())
+            return self.mover.get_changes(destination)
 
     def _get_dialog_frame(self):
+        if isinstance(self.mover, rope.refactor.move.MoveMethod):
+            return self._get_method_frame()
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='Destination Module :')
         label.grid(row=0, column=0)
-        self.new_name_entry = Tkinter.Entry(frame)
-        self.new_name_entry.grid(row=0, column=1)
+        self.destination_entry = Tkinter.Entry(frame)
+        self.destination_entry.grid(row=0, column=1)
         def do_select(resource):
             name = rope.refactor.importutils.get_module_name(
                 self.project.get_pycore(), resource)
-            self.new_name_entry.delete(0, Tkinter.END)
-            self.new_name_entry.insert(0, name)
+            self.destination_entry.delete(0, Tkinter.END)
+            self.destination_entry.insert(0, name)
         def browse():
             toplevel = Tkinter.Toplevel()
             toplevel.title('Choose Destination Module')
@@ -307,14 +315,38 @@ class MoveDialog(RefactoringDialog):
             tree_view.list.focus_set()
             toplevel.grab_set()
 
+        self._bind_keys(self.destination_entry)
         browse_button = Tkinter.Button(frame, text='...', command=browse)
         browse_button.grid(row=0, column=2)
-        self.new_name_entry.bind('<Return>', lambda event: self._ok())
-        self.new_name_entry.bind('<Escape>', lambda event: self._cancel())
-        self.new_name_entry.bind('<Control-g>', lambda event: self._cancel())
         frame.grid()
-        self.new_name_entry.focus_set()
+        self.destination_entry.focus_set()
         return frame
+
+    def _bind_keys(self, widget):
+        widget.bind('<Return>', lambda event: self._ok())
+        widget.bind('<Escape>', lambda event: self._cancel())
+        widget.bind('<Control-g>', lambda event: self._cancel())
+
+    def _get_method_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        dest_label = Tkinter.Label(frame, text='Destination Attribute :')
+        dest_label.grid(row=0, column=0)
+        self.destination_entry = Tkinter.Entry(frame)
+        self.destination_entry.grid(row=0, column=1)
+
+        new_method_label = Tkinter.Label(frame, text='New Method Name :')
+        new_method_label.grid(row=1, column=0)
+        self.new_method_entry = Tkinter.Entry(frame)
+        self.new_method_entry.grid(row=1, column=1)
+        self.new_method_entry.insert(0, self.mover.get_method_name())
+        self.new_method_entry.select_range(0, Tkinter.END)
+
+        for widget in [self.destination_entry, self.new_method_entry]:
+            self._bind_keys(widget)
+        frame.grid()
+        self.destination_entry.focus_set()
+        return frame
+
 
 def move(context):
     MoveDialog(context).show()

@@ -29,6 +29,10 @@ Getting Started
 * Using as a library: `docs/dev/library.txt`_
 * Contributing: `docs/dev/contributing.txt`_
 
+If you don't like rope's default emacs-like keybinding, edit the
+default ``~/.rope`` file (created the first time you start rope) and
+change `i_like_emacs` variable to `False`.
+
 
 Project Road Map
 ================

@@ -85,7 +85,7 @@ class Rename(object):
     def _get_old_pynames(self, in_file, in_hierarchy):
         if self.old_pyname is None:
             return []
-        if self.is_method() and not in_file and in_hierarchy:
+        if self.is_method() and in_hierarchy:
             return get_all_methods_in_hierarchy(self.old_pyname.get_object().
                                                 parent, self.old_name)
         else:

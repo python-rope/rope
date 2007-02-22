@@ -62,7 +62,7 @@ There are many places to extend rope.  Some of them are:
 Hot Topics
 ==========
 
-* `Extended rename`_
+* `Change occurrences`_
 
 
 To Be Discussed
@@ -72,7 +72,7 @@ To Be Discussed
 * `Allowing non-existent resources`_
 * `Python's implicit interfaces`_
 * `Having virtual PyModules`_
-* `Redefining Function/Class Definitions`_
+* `Redefining function/class definitions`_
 * `Better status bar`_
 * Indexing source files for faster occurrence finding
 * Faster module running
@@ -81,37 +81,44 @@ To Be Discussed
 * Finding available refactorings
 
 
-Extended Rename
-===============
+Change Occurrences
+==================
 
 We want to customize these parameters when performing rename
 refactoring:
 
-* The region or files to apply rename
+* The region rename
 * Should we replace primaries
 * Performing only on calls
-* Change imports
-* Change definition
-* Only reads or writes
+* It is completely side-effect free
+* Only reads or writes?
+* Change imports?
+* Change definitions?
 
-After adding it we should be able to remove local rename.
-Refactorings that can be done using extended rename:
+Refactorings that can be done:
 
 * Introduce parameter
-* Move field
 * Local variable to field
+* Handle long imports
+* Change references to a name to another name
+* Changing imported module
+* Encapsulate field
+* Introduce factory
 * ...
 
 Issues:
 
+* Removing local rename?
 * How specify a region in a file
 
+  * Always use the current scope
   * Using physical scopes; The mark should be on a defined object
   * Store the last place of mark for each editor;  the region
     between the two last marks is the region
+  * ``C-u # C-r r o`` where # is the number of scopes outside
+    current scope
 
 * The defaults should be local rename?
-* The keybinding; ``C-c r e`` or ``C-u C-c r r``
 * Do we rename modules and packages, too
 * What about defined objects
 * Using another name
@@ -128,8 +135,8 @@ Issues:
   * ``Switch Occurrences``; ``C-c r w``
 
 
-Checking Varible And Function Usages In Their Defining Scopes
-=============================================================
+Checking Variable And Function Usages In Their Defining Scopes
+==============================================================
 
 ::
 
@@ -190,7 +197,7 @@ consuming.
 
 Maybe we can use one of these solutions:
 
-* Checking pyname equallity only once for each scope
+* Checking pyname equality only once for each scope
 
   This way we check each name only once for each scope.  But this is
   not applicable for attributes.  What's more `PyName`\s seem to

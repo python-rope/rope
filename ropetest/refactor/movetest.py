@@ -4,6 +4,7 @@ import rope.base.exceptions
 import rope.base.project
 import ropetest
 from rope.refactor import move
+from ropetest import testutils
 
 
 class MoveRefactoringTest(unittest.TestCase):
@@ -275,6 +276,16 @@ class MoveRefactoringTest(unittest.TestCase):
                           '    return host.attr\n',
                           mover.get_new_method('new_method'))
 
+    def test_moving_methods_getting_new_method_for_multi_line_methods(self):
+        code = 'class A(object):\n' \
+               '    def a_method(self):\n        a = 2\n        return a\n'
+        self.mod1.write(code)
+        mover = move.create_move(self.project, self.mod1,
+                                 code.index('a_method'))
+        self.assertEquals(
+            'def new_method(self):\n    a = 2\n    return a\n',
+            mover.get_new_method('new_method'))
+
     def test_moving_methods_getting_old_method_for_constant_methods(self):
         self.mod2.write('class B(object):\n    pass\n')
         code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
@@ -302,7 +313,6 @@ class MoveRefactoringTest(unittest.TestCase):
             self.mod2.read())
 
     def test_moving_methods_getting_getting_changes_for_goal_class(self):
-        self.mod2.write('class B(object):\n    var = 1\n')
         code = 'class B(object):\n    var = 1\n\n' \
                'class A(object):\n    attr = B()\n' \
                '    def a_method(self):\n        return 1\n'
@@ -316,6 +326,50 @@ class MoveRefactoringTest(unittest.TestCase):
             'class A(object):\n    attr = B()\n'
             '    def a_method(self):\n        return self.attr.new_method()\n',
             self.mod1.read())
+
+    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
+    def test_moving_methods_and_nonexistent_attributes(self):
+        code = 'class A(object):\n' \
+               '    def a_method(self):\n        return 1\n'
+        self.mod1.write(code)
+        mover = move.create_move(self.project, self.mod1,
+                                 code.index('a_method'))
+        mover.get_changes('x', 'new_method')
+
+    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
+    def test_unknown_attribute_type(self):
+        code = 'class A(object):\n    attr = 1\n' \
+               '    def a_method(self):\n        return 1\n'
+        self.mod1.write(code)
+        mover = move.create_move(self.project, self.mod1,
+                                 code.index('a_method'))
+        mover.get_changes('attr', 'new_method')
+
+    def test_moving_methods_and_moving_used_imports(self):
+        self.mod2.write('class B(object):\n    var = 1\n')
+        code = 'import sys\nimport mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
+               '    def a_method(self):\n        return sys.version\n'
+        self.mod1.write(code)
+        mover = move.create_move(self.project, self.mod1,
+                                 code.index('a_method'))
+        mover.get_changes('attr', 'new_method').do()
+        self.assertEquals(
+            'import sys\n'
+            'class B(object):\n    var = 1\n\n\n'
+            '    def new_method(self):\n        return sys.version\n',
+            self.mod2.read())
+
+    def test_moving_methods_getting_getting_changes_for_goal_class(self):
+        self.mod2.write('class B(object):\n    pass\n')
+        code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
+               '    def a_method(self):\n        return 1\n'
+        self.mod1.write(code)
+        mover = move.create_move(self.project, self.mod1,
+                                 code.index('a_method'))
+        mover.get_changes('attr', 'new_method').do()
+        self.assertEquals(
+            'class B(object):\n\n    def new_method(self):\n        return 1\n',
+            self.mod2.read())
 
 
 if __name__ == '__main__':

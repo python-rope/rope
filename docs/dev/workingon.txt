@@ -1,70 +1,65 @@
-Moving Methods
-==============
+Small Stories
+=============
 
-- `sourceutils.get_body()`
-- Add a `create_move()`
-- Passing parameters
-- Passing the main object whenever needed
-- Arg with default parameter
-- Passing args and keywords args
-- Getting new method
-- Getting old method
-- Making the change
-- If both classes are in the same file
+- Moving Methods
 
-* Adding to the UI
-* Adding methods to a function with ``pass`` body
-* Destination attribute
-* Exceptional conditions
-* Refactor similarities between method_object and move for
-  renaming ``self``\s and method signature
-* What to do about pydocs?
-* Separate `MoveModule` and `MoveGlobal`
+  - Adding to the UI
+  - Separating `MoveModule` and `MoveGlobal`
+  - Nonexistent attribute
+  - Unknown attribute type
+  - Adding imports? Only when moving to another module
+  - Adding methods to a class with ``pass`` body
 
-* Inlining the last method of a class
+- Default name for new method
+- Inlining the last method of a class
+- In the ``README.txt`` mention how to change the keybinding
+
+* A completing text widget for dialogs; `Completing(name, list, handle)`
 * Do `get_body()` and `get_body_region()` belong to `PyFunction`?
 * Does `get_definition_info()` belong to `PyFunction`?
 * Moving static and class methods
-* Moving methods with decorators
+* Inlining methods with decorators
 * Decorators and method refactorings
-* Changing `rope.refactor` to use `sourceutils.add_methods` wherever possible
 * Unifying ``x.get_type() == get_base_type('y')``, ``isinstance(x, PyY)``
-* ``M-a`` and ``M-e``
 * Finding unused variables
+* Document how to move fields
+* Adding codeassist templates in ``~/.rope``?
 
 
 Remaining Small Stories
 =======================
 
-Main:
+Base:
 
-* Separating UI and functional tests from unit tests
-* Goto definition for ``"# comment.\na_var"``
-* Showing properties in quick outline
 * Docs for builtin functions and properties
 * Lambdas as functions; consider their parameters
-* Changing ``C-a C-a`` to move to the first character in the line
-* Changing open project dialog
-* Saving a file that doesn't exist; Allowing nonexistent resources
-
-Others:
-
-* Comments should be indented
-* In the ``README.txt`` mention how to change the keybinding
 * Sorting names in from import list
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'
     in <generator object at 0xb7173aec> ignored``
 * Only saving diffs in `ChangeContents`
 * Undoing `RemoveResource`; It's not used by refactorings
-* Decide when to use `difflib` in `Editor.set_text` based on the
-  number of changes
 * Caching calculated parameters and returned object in `PyFunction`\s
 * Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * Extract constant
 * `PyClass.superclasses` should be concluded data
-* Better `ropetest` package structure
 * Handling `AssList` for inline variable and encapsulate field
-* Better move dialog; complete modules names; use `editor._CompletionListHandle`
 * Import addition when adding a relative to an absolute import
+
+UI and IDE:
+
+* Goto definition for ``"# comment.\na_var"``
+* Showing properties in quick outline
+* Changing ``C-a C-a`` to move to the first character in the line
+* ``M-a`` and ``M-e``
+* Changing open project dialog
+* Comments should be indented
+* Decide when to use `difflib` in `Editor.set_text` based on the
+  number of changes
+* Better move dialog; complete modules names; use `editor._CompletionListHandle`
+
+Others:
+
+* Separating UI and functional tests from unit tests
+* Better `ropetest` package structure

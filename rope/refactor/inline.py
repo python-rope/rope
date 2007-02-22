@@ -83,8 +83,31 @@ class _MethodInliner(_Inliner):
         result = _InlineFunctionCallsForModule(
             self.occurrence_finder, self.resource,
             self.definition_generator,
-            start_offset, end_offset).get_changed_module()
+            start_offset, end_offset,
+            self._get_method_replacement()).get_changed_module()
         changes.add_change(ChangeContents(self.resource, result))
+
+    def _get_method_replacement(self):
+        if self._is_the_last_method_of_a_class():
+            indents = sourceutils.get_indents(
+                self.pymodule.lines, self.pyfunction.get_scope().get_start())
+            return ' ' * indents + 'pass\n'
+        return ''
+
+    def _is_the_last_method_of_a_class(self):
+        pyclass = self.pyfunction.parent
+        if not isinstance(pyclass, rope.base.pyobjects.PyClass):
+            return False
+        class_start, class_end = sourceutils.get_body_region(pyclass)
+        source = self.pymodule.source_code
+        lines = self.pymodule.lines
+        scope = self.pyfunction.get_scope()
+        func_start = lines.get_line_start(scope.get_start())
+        func_end = lines.get_line_end(scope.get_end())
+        if source[class_start:func_start].strip() == '' and \
+           source[func_end:class_end].strip() == '':
+            return True
+        return False
 
     def _change_other_files(self, changes):
         for file in self.pycore.get_python_files():
@@ -156,7 +179,7 @@ def _join_lines(lines):
 class _InlineFunctionCallsForModule(object):
 
     def __init__(self, occurrence_finder, resource, definition_generator,
-                 skip_start=0, skip_end=0):
+                 skip_start=0, skip_end=0, replacement=''):
         self.pycore = occurrence_finder.pycore
         self.occurrence_finder = occurrence_finder
         self.generator = definition_generator
@@ -166,10 +189,12 @@ class _InlineFunctionCallsForModule(object):
         self._source = None
         self.skip_start = skip_start
         self.skip_end = skip_end
+        self.replacement = replacement
 
     def get_changed_module(self):
         change_collector = sourceutils.ChangeCollector(self.source)
-        change_collector.add_change(self.skip_start, self.skip_end, '')
+        change_collector.add_change(self.skip_start, self.skip_end,
+                                    self.replacement)
         for occurrence in self.occurrence_finder.find_occurrences(self.resource):
             start, end = occurrence.get_primary_range()
             if self.skip_start <= start < self.skip_end:
@@ -199,6 +224,8 @@ class _InlineFunctionCallsForModule(object):
                 line_start, end, sourceutils.fix_indentation(definition, indents))
             if returns:
                 name = self.generator.get_returned()
+                if name is None:
+                    name = 'None'
                 change_collector.add_change(
                     line_end, end, self.source[line_start:start] + name +
                     self.source[end_parens:end])

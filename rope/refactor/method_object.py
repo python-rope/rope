@@ -47,7 +47,7 @@ class MethodObject(object):
     def _get_body(self):
         body = sourceutils.get_body(self.pyfunction)
         for param in self._get_parameter_names():
-            body = param + ' = 1\n' + body
+            body = param + ' = None\n' + body
             pymod = self.pycore.get_string_module(body, self.resource)
             pyname = pymod.get_attribute(param)
             finder = occurrences.FilteredOccurrenceFinder(
@@ -56,7 +56,6 @@ class MethodObject(object):
                                              pymodule=pymod)
             body = result[result.index('\n') + 1:]
         return body
-
 
     def _get_init(self):
         params = self._get_parameter_names()

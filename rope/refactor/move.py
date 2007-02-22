@@ -1,29 +1,44 @@
-import rope.base.exceptions
-from rope.base import pyobjects, codeanalyze
+from rope.base import pyobjects, codeanalyze, exceptions, pynames
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import (importutils, rename, occurrences,
                            sourceutils, functionutils)
 
 
 def create_move(project, resource, offset=None):
-    """A factory for creating Move objects"""
+    """A factory for creating Move objects
+
+    Based on `resource` and `offset`, return one of `MoveModule`,
+    `MoveGlobal` or `MoveMethod` for performing move refactoring.
+
+    """
     if offset is None:
-        return Move(project, resource)
+        return MoveModule(project, resource)
     pyname = codeanalyze.get_pyname_at(project.pycore, resource, offset)
     if pyname is None:
-        raise rope.base.exceptions.RefactoringError(
+        raise exceptions.RefactoringError(
             'Move only works on classes, functions, modules and methods.')
     pyobject = pyname.get_object()
     if isinstance(pyobject, pyobjects.PyModule) or \
        isinstance(pyobject, pyobjects.PyPackage):
-        return Move(project, pyobject.get_resource())
+        return MoveModule(project, pyobject.get_resource())
     if isinstance(pyobject, pyobjects.PyFunction) and \
        isinstance(pyobject.parent, pyobjects.PyClass):
         return MoveMethod(project, resource, offset)
-    return Move(project, resource, offset)
+    if isinstance(pyobject, pyobjects.PyDefinedObject) and \
+       isinstance(pyobject.parent, pyobjects.PyModule):
+        return MoveGlobal(project, resource, offset)
+    raise exceptions.RefactoringError(
+        'Move only works on global classes/functions, modules and methods.')
 
 
 class MoveMethod(object):
+    """For moving methods
+
+    It makes a new method in the destination class and changes
+    the body of the old method to call the new method.  You can
+    inline the old method to change all of its occurrences.
+
+    """
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
@@ -32,6 +47,13 @@ class MoveMethod(object):
         self.pyfunction = pyname.get_object()
 
     def get_changes(self, dest_attr, new_name):
+        """Return the changes needed for this refactoring
+
+        :parameters:
+            - `dest_attr`: the name of the destination attribute
+            - `new_name`: the name of the new method
+
+        """
         changes = ChangeSet('Moving method <%s>' % self.method_name)
         resource1, start1, end1, new_content1 = \
             self._get_changes_made_by_old_class(dest_attr, new_name)
@@ -45,11 +67,26 @@ class MoveMethod(object):
         else:
             collector2 = sourceutils.ChangeCollector(resource2.read())
             collector2.add_change(start2, end2, new_content2)
-            changes.add_change(ChangeContents(resource2,
-                                              collector2.get_changed()))
+            result = collector2.get_changed()
+            import_tools = importutils.ImportTools(self.pycore)
+            new_imports = self._get_used_imports(import_tools)
+            if new_imports:
+                goal_pymodule = self.pycore.get_string_module(result, resource2)
+                result = _add_imports_to_module(import_tools, goal_pymodule,
+                                                new_imports)
+            changes.add_change(ChangeContents(resource2, result))
+                
         changes.add_change(ChangeContents(resource1,
                                           collector1.get_changed()))
         return changes
+
+    def get_method_name(self):
+        return self.method_name
+
+    def _get_used_imports(self, import_tools):
+        module_imports = import_tools.get_module_imports(
+            self.pyfunction.get_module())
+        return module_imports.get_used_imports(self.pyfunction)
 
     def _get_changes_made_by_old_class(self, dest_attr, new_name):
         pymodule = self.pyfunction.get_module()
@@ -63,25 +100,33 @@ class MoveMethod(object):
 
     def _get_changes_made_by_new_class(self, dest_attr, new_name):
         old_pyclass = self.pyfunction.parent
+        if dest_attr not in old_pyclass.get_attributes():
+            raise exceptions.RefactoringError(
+                'Destination attribute <%s> not found' % dest_attr)
         pyclass = old_pyclass.get_attribute(dest_attr).get_object().get_type()
+        if not isinstance(pyclass, pyobjects.PyClass):
+            raise exceptions.RefactoringError(
+                'Unknown class type for attribute <%s>' % dest_attr)
         pymodule = pyclass.get_module()
         resource = pyclass.get_module().get_resource()
-        insertion_point = min(pymodule.lines.get_line_end(
-                              pyclass.get_scope().get_end()) + 1,
-                              len(pymodule.source_code))
+        start, end = sourceutils.get_body_region(pyclass)
+        pre_blanks = '\n'
+        if pymodule.source_code[start:end].strip() != 'pass':
+            pre_blanks = '\n\n'
+            start = end
         indents = sourceutils.get_indents(pymodule.lines,
                                           pyclass.get_scope().get_start())
-        body = '\n\n' + sourceutils.fix_indentation(self.get_new_method(new_name),
-                                                    indents + 4)
-        return resource, insertion_point, insertion_point, body
+        body = pre_blanks + sourceutils.fix_indentation(
+            self.get_new_method(new_name), indents + 4)
+        return resource, start, end, body
 
     def get_new_method(self, name):
-        return '%s\n    %s' % (self._get_new_header(name), self._get_body())
+        return '%s\n%s' % (
+            self._get_new_header(name),
+            sourceutils.fix_indentation(self._get_body(), 4))
 
     def _get_unchanged_body(self):
-        body = sourceutils.get_body(self.pyfunction)
-        indented_body = sourceutils.fix_indentation(body, 4)
-        return body
+        return sourceutils.get_body(self.pyfunction)
 
     def _get_body(self, host='host'):
         self_name = self._get_self_name()
@@ -120,61 +165,18 @@ class MoveMethod(object):
         return self._get_body('__old_self') != self._get_unchanged_body()
 
 
-class Move(object):
-    """A class for moving modules, packages, global functions and classes."""
-
-    def __init__(self, project, resource, offset=None):
-        self.pycore = project.pycore
-        if offset is not None:
-            self.pyname = codeanalyze.get_pyname_at(
-                self.pycore, resource, offset)
-            if self.pyname is None:
-                raise rope.base.exceptions.RefactoringError(
-                    'Move works on classes,functions or modules.')
-        else:
-            if not resource.is_folder() and resource.name == '__init__.py':
-                resource = resource.parent
-            dummy_pymodule = self.pycore.get_string_module('')
-            self.pyname = rope.base.pynames.ImportedModule(
-                dummy_pymodule, resource=resource)
-
-    def get_changes(self, dest_resource):
-        moving_object = self.pyname.get_object()
-        if moving_object.get_type() == pyobjects.get_base_type('Module'):
-            mover = MoveModule(self.pycore, self.pyname, dest_resource)
-        else:
-            mover = MoveGlobal(self.pycore, self.pyname, dest_resource)
-        return mover.get_changes()
-
-
 class _Mover(object):
 
-    def __init__(self, pycore, source, destination,
-                 pyname, old_name, new_name):
+    def __init__(self, pycore, source, pyname, old_name):
         self.pycore = pycore
         self.source = source
-        self.destination = destination
         self.old_pyname = pyname
         self.old_name = old_name
-        self.new_name = new_name
         self.import_tools = importutils.ImportTools(self.pycore)
         self._check_exceptional_conditions()
 
     def _check_exceptional_conditions(self):
         pass
-
-    def _add_imports_to_module(self, pymodule, new_imports):
-        module_with_imports = self.import_tools.get_module_imports(pymodule)
-        for new_import in new_imports:
-            module_with_imports.add_import(new_import)
-        return module_with_imports.get_changed_source()
-
-    def _add_imports_to_module2(self, pymodule, new_imports):
-        source = self._add_imports_to_module(pymodule, new_imports)
-        if source is None:
-            return pymodule, False
-        else:
-            return self.pycore.get_string_module(source, pymodule.get_resource()), True
 
     def _remove_old_pyname_imports(self, pymodule):
         old_source = pymodule.source_code
@@ -190,7 +192,7 @@ class _Mover(object):
                        self.old_pyname.get_object():
                         self.changed = True
                         return False
-                except rope.base.exceptions.AttributeNotFoundError:
+                except exceptions.AttributeNotFoundError:
                     pass
                 return True
         can_select = CanSelect()
@@ -211,61 +213,69 @@ class _Mover(object):
         else:
             return self.pycore.get_string_module(source, pymodule.get_resource()), True
 
+    def get_changes(self, dest):
+        raise NotImplementedError()
+
 
 class MoveGlobal(_Mover):
     """For moving global function and classes"""
 
-    def __init__(self, pycore, pyname, destination):
+    def __init__(self, project, resource, offset):
+        pycore = project.pycore
+        pyname = codeanalyze.get_pyname_at(pycore, resource, offset)
         old_name = pyname.get_object()._get_ast().name
         pymodule = pyname.get_object().get_module()
         source = pymodule.get_resource()
-        new_name = importutils.get_module_name(
-            pycore, destination) + '.' + old_name
-        if destination.is_folder() and destination.has_child('__init__.py'):
-            destination = destination.get_child('__init__.py')
 
-        super(MoveGlobal, self).__init__(pycore, source, destination,
-                                           pyname, old_name, new_name)
-        self.new_import = self.import_tools.get_import_for_module(
-            self.pycore.resource_to_pyobject(self.destination))
+        super(MoveGlobal, self).__init__(pycore, source, pyname, old_name)
         scope = pyname.get_object().get_scope()
 
     def _check_exceptional_conditions(self):
         if self.old_pyname is None or \
            not isinstance(self.old_pyname.get_object(), pyobjects.PyDefinedObject):
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 'Move refactoring should be performed on a class/function.')
         moving_pyobject = self.old_pyname.get_object()
         if not self._is_global(moving_pyobject):
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 'Move refactoring should be performed on a global class/function.')
-        if self.destination.is_folder():
-            raise rope.base.exceptions.RefactoringError(
-                'Move destination for non-modules should not be folders.')
 
     def _is_global(self, pyobject):
         return pyobject.get_scope().parent == pyobject.get_module().get_scope()
 
-    def get_changes(self):
+    def get_changes(self, dest):
+        if dest.is_folder() and dest.has_child('__init__.py'):
+            dest = dest.get_child('__init__.py')
+        if dest.is_folder():
+            raise exceptions.RefactoringError(
+                'Move destination for non-modules should not be folders.')
         changes = ChangeSet('Moving global <%s>' % self.old_name)
-        self._change_destination_module(changes)
-        self._change_source_module(changes)
-        self._change_other_modules(changes)
+        self._change_destination_module(changes, dest)
+        self._change_source_module(changes, dest)
+        self._change_other_modules(changes, dest)
         return changes
 
-    def _change_source_module(self, changes):
+    def _new_name(self, dest):
+        return importutils.get_module_name(self.pycore, dest) + '.' + self.old_name
+
+    def _new_import(self, dest):
+        return self.import_tools.get_import_for_module(
+            self.pycore.resource_to_pyobject(dest))
+
+    def _change_source_module(self, changes, dest):
         uses_moving = False
         # Changing occurrences
         pymodule = self.pycore.resource_to_pyobject(self.source)
-        pymodule, has_changed = self._rename_in_module(pymodule, self.new_name)
+        pymodule, has_changed = self._rename_in_module(
+            pymodule, self._new_name(dest))
         if has_changed:
             uses_moving = True
         source = self._get_moved_moving_source(pymodule)
         if uses_moving:
             pymodule = self.pycore.get_string_module(source, self.source)
             # Adding new import
-            source = self._add_imports_to_module(pymodule, [self.new_import])
-
+            source = _add_imports_to_module(self.import_tools, pymodule,
+                                            [self._new_import(dest)])
         changes.add_change(ChangeContents(self.source, source))
 
     def _get_moved_moving_source(self, pymodule):
@@ -277,9 +287,9 @@ class MoveGlobal(_Mover):
         source = source[:start] + source[end + 1:]
         return source
 
-    def _change_destination_module(self, changes):
+    def _change_destination_module(self, changes, dest):
         # Changing occurrences
-        pymodule = self.pycore.resource_to_pyobject(self.destination)
+        pymodule = self.pycore.resource_to_pyobject(dest)
         pymodule, has_changed = self._rename_in_module(pymodule, self.old_name)
 
         moving, imports = self._get_moving_element_with_imports()
@@ -299,15 +309,16 @@ class MoveGlobal(_Mover):
 
         # Organizing imports
         source = result
-        pymodule = self.pycore.get_string_module(source, self.destination)
+        pymodule = self.pycore.get_string_module(source, dest)
         source = self.import_tools.organize_imports(pymodule)
-        changes.add_change(ChangeContents(self.destination, source))
+        changes.add_change(ChangeContents(dest, source))
 
     def _get_moving_element_with_imports(self):
         moving = self._get_moving_element()
         source_pymodule = self.pycore.resource_to_pyobject(self.source)
         new_imports = self._get_used_imports_by_the_moving_element()
-        new_imports.append(self.import_tools.get_from_import_for_module(source_pymodule, '*'))
+        new_imports.append(self.import_tools.
+                           get_from_import_for_module(source_pymodule, '*'))
 
         pymodule = self.pycore.get_string_module(moving, self.source)
         pymodule, has_changed = self._add_imports_to_module2(pymodule, new_imports)
@@ -343,15 +354,16 @@ class MoveGlobal(_Mover):
         module_with_imports = self.import_tools.get_module_imports(pymodule)
         return module_with_imports.get_used_imports(self.old_pyname.get_object())
 
-    def _change_other_modules(self, changes):
+    def _change_other_modules(self, changes, dest):
         for file_ in self.pycore.get_python_files():
-            if file_ in (self.source, self.destination):
+            if file_ in (self.source, dest):
                 continue
             is_changed = False
             should_import = False
             pymodule = self.pycore.resource_to_pyobject(file_)
             # Changing occurrences
-            pymodule, has_changed = self._rename_in_module(pymodule, self.new_name)
+            pymodule, has_changed = self._rename_in_module(
+                pymodule, self._new_name(dest))
             if has_changed:
                 should_import = True
                 is_changed = True
@@ -361,42 +373,59 @@ class MoveGlobal(_Mover):
                 is_changed = True
             # Adding new import
             if should_import:
-                source = self._add_imports_to_module(pymodule, [self.new_import])
+                source = _add_imports_to_module(self.import_tools, pymodule,
+                                                [self._new_import(dest)])
             if is_changed:
                 changes.add_change(ChangeContents(file_, source))
+
+    def _add_imports_to_module2(self, pymodule, new_imports):
+        source = _add_imports_to_module(self.import_tools, pymodule,
+                                        new_imports)
+        if source is None:
+            return pymodule, False
+        else:
+            return self.pycore.get_string_module(source, pymodule.get_resource()), True
 
 
 class MoveModule(_Mover):
     """For moving modules and packages"""
 
-    def __init__(self, pycore, pyname, destination):
+    def __init__(self, project, resource):
+        pycore = project.pycore
+        if not resource.is_folder() and resource.name == '__init__.py':
+            resource = resource.parent
+        dummy_pymodule = pycore.get_string_module('')
+        pyname = pynames.ImportedModule(
+            dummy_pymodule, resource=resource)
         source = pyname.get_object().get_resource()
         if source.is_folder():
             old_name = source.name
         else:
             old_name = source.name[:-3]
-        package = importutils.get_module_name(pycore, destination)
-        if package:
-            new_name = package + '.' + old_name
-        else:
-            new_name = old_name
-        super(MoveModule, self).__init__(pycore, source, destination,
-                                           pyname, old_name, new_name)
-        self.new_import = importutils.NormalImport([(self.new_name, None)])
+        super(MoveModule, self).__init__(pycore, source, pyname, old_name)
 
-    def _check_exceptional_conditions(self):
+    def get_changes(self, dest):
         moving_pyobject = self.old_pyname.get_object()
-        if not self.destination.is_folder():
-            raise rope.base.exceptions.RefactoringError(
+        if not dest.is_folder():
+            raise exceptions.RefactoringError(
                 'Move destination for modules should be packages.')
-
-    def get_changes(self):
         changes = ChangeSet('Moving module <%s>' % self.old_name)
-        self._change_other_modules(changes)
-        self._change_moving_module(changes)
+        self._change_other_modules(changes, dest)
+        self._change_moving_module(changes, dest)
         return changes
 
-    def _change_moving_module(self, changes):
+    def _new_import(self, dest):
+        return importutils.NormalImport([(self._new_name(dest), None)])
+
+    def _new_name(self, dest):
+        package = importutils.get_module_name(self.pycore, dest)
+        if package:
+            new_name = package + '.' + self.old_name
+        else:
+            new_name = self.old_name
+        return new_name
+
+    def _change_moving_module(self, changes, dest):
         if not self.source.is_folder():
             is_changed = False
             pymodule = self.pycore.resource_to_pyobject(self.source)
@@ -404,29 +433,30 @@ class MoveModule(_Mover):
             if source is not None:
                 pymodule = self.pycore.get_string_module(source, self.source)
                 is_changed = True
-            source = self._change_occurrences_in_module(pymodule)
+            source = self._change_occurrences_in_module(
+                pymodule, self._new_import(dest), self._new_name(dest))
             if source is not None:
                 is_changed = True
             else:
                 source = pymodule.source_code
             if is_changed:
                 changes.add_change(ChangeContents(self.source, source))
-        changes.add_change(MoveResource(self.source,
-                                        self.destination.path))
+        changes.add_change(MoveResource(self.source, dest.path))
 
-    def _change_other_modules(self, changes):
+    def _change_other_modules(self, changes, dest):
         for module in self.pycore.get_python_files():
-            if module in (self.source, self.destination):
+            if module in (self.source, dest):
                 continue
             pymodule = self.pycore.resource_to_pyobject(module)
-            source = self._change_occurrences_in_module(pymodule)
+            source = self._change_occurrences_in_module(
+                pymodule, self._new_import(dest), self._new_name(dest))
             if source is not None:
                 changes.add_change(ChangeContents(module, source))
 
-    def _change_occurrences_in_module(self, pymodule):
+    def _change_occurrences_in_module(self, pymodule, new_import, new_name):
         is_changed = False
         should_import = False
-        pymodule, has_changed = self._rename_in_module(pymodule, self.new_name,
+        pymodule, has_changed = self._rename_in_module(pymodule, new_name,
                                                        imports=True)
         if has_changed:
             is_changed = True
@@ -435,8 +465,16 @@ class MoveModule(_Mover):
             should_import = True
             is_changed = True
         if should_import:
-            source = self._add_imports_to_module(pymodule, [self.new_import])
+            source = _add_imports_to_module(self.import_tools, pymodule,
+                                            [new_import])
         else:
             source = pymodule.source_code
         if is_changed:
             return source
+
+
+def _add_imports_to_module(import_tools, pymodule, new_imports):
+    module_with_imports = import_tools.get_module_imports(pymodule)
+    for new_import in new_imports:
+        module_with_imports.add_import(new_import)
+    return module_with_imports.get_changed_source()

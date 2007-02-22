@@ -3,6 +3,9 @@
 ===========
 
 
+- Moving methods : February 21, 2007
+
+
 > Public Release 0.5m1 : February 18, 2007
 
 

@@ -24,7 +24,7 @@ Features implemented so far:
   * Rename class/function/module/package/method/variable/keyword arg
   * Extract method
   * Extract variable
-  * Move class/function/module/package
+  * Move class/function/module/package/method
   * Inline method/local variable
   * Change method signature
   * Introduce factory method
