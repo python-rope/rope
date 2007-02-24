@@ -18,6 +18,7 @@ class StatusText(object):
 
     def set_width(self, width):
         self.width = width
+        self.set_text(self.get_text())
         #        self.label['width'] = width
 
     def set_text(self, text):

@@ -60,7 +60,7 @@ class _MethodInliner(_Inliner):
         self.pyfunction = self.pyname.get_object()
         self.pymodule = self.pyfunction.get_module()
         self.resource = self.pyfunction.get_module().get_resource()
-        self.occurrence_finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
+        self.occurrence_finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, self.name, [self.pyname])
         self.definition_generator = _DefinitionGenerator(self.pycore, self.pyfunction)
 
@@ -153,7 +153,7 @@ class _VariableInliner(_Inliner):
         definition = definition_with_assignment[definition_with_assignment.\
                                                 index('=') + 1:].strip()
 
-        occurrence_finder = occurrences.FilteredOccurrenceFinder(
+        occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.name, [self.pyname])
         changed_source = rename.rename_in_module(
             occurrence_finder, definition, pymodule=self.pymodule, replace_primary=True)

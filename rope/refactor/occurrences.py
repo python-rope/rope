@@ -81,7 +81,7 @@ class Occurrence(object):
         return self.tools.word_finder.is_assigned_here(self.offset)
 
 
-class FilteredOccurrenceFinder(object):
+class FilteredFinder(object):
 
     def __init__(self, pycore, name, pynames, only_calls=False, imports=True):
         self.pycore = pycore

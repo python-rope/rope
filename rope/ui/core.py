@@ -27,10 +27,14 @@ class Core(object):
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
         self.editor_panel = Frame(self.main, borderwidth=0)
-        self.editor_manager = rope.ui.editorpile.EditorPile(self.editor_panel, self)
-
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
+
         self.status_bar_manager = rope.ui.statusbar.StatusBarManager(self.status_bar)
+        buffer_status = self.status_bar_manager.create_status('buffer')
+        buffer_status.set_width(40)
+        self.editor_manager = rope.ui.editorpile.EditorPile(self.editor_panel, self,
+                                                            buffer_status)
+
         line_status = self.status_bar_manager.create_status('line')
         line_status.set_width(8)
 

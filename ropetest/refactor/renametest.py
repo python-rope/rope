@@ -293,7 +293,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1.write('a = 10\nprint (1+a)\n')
         pymod = self.pycore.get_module('mod1')
         old_pyname = pymod.get_attribute('a')
-        finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
+        finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, 'a', [old_pyname])
         refactored = rename.rename_in_module(
             finder, 'new_var', pymodule=pymod, replace_primary=True)
@@ -416,6 +416,57 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals(
             'new_var = 1\ndef a_func():\n    global new_var\n    var = new_var\n',
             refactored)
+
+
+class ChangeOccurrencesTest(unittest.TestCase):
+
+    def setUp(self):
+        super(ChangeOccurrencesTest, self).setUp()
+        ropetest.testutils.remove_recursively('sample_project')
+        self.project = rope.base.project.Project('sample_project')
+        self.mod = self.project.get_pycore().create_module(
+            self.project.root, 'mod')
+
+    def tearDown(self):
+        ropetest.testutils.remove_recursively('sample_project')
+        super(ChangeOccurrencesTest, self).tearDown()
+
+    def test_simple_case(self):
+        self.mod.write('a_var = 1\nprint(a_var)\n')
+        changer = rename.ChangeOccurrences(self.project, self.mod,
+                                           self.mod.read().index('a_var'))
+        changer.get_changes('new_var').do()
+        self.assertEquals('new_var = 1\nprint(new_var)\n', self.mod.read())
+
+    def test_only_performing_inside_scopes(self):
+        self.mod.write('a_var = 1\nnew_var = 2\ndef f():\n    print(a_var)\n')
+        changer = rename.ChangeOccurrences(self.project, self.mod,
+                                           self.mod.read().rindex('a_var'))
+        changer.get_changes('new_var').do()
+        self.assertEquals('a_var = 1\nnew_var = 2\ndef f():\n    print(new_var)\n',
+                          self.mod.read())
+
+    def test_only_performing_on_calls(self):
+        self.mod.write('def f1():\n    pass\ndef f2():\n    pass\ng = f1\na = f1()\n')
+        changer = rename.ChangeOccurrences(self.project, self.mod,
+                                           self.mod.read().rindex('f1'))
+        changer.get_changes('f2', only_calls=True).do()
+        self.assertEquals('def f1():\n    pass\ndef f2():\n    pass\ng = f1\na = f2()\n',
+                          self.mod.read())
+
+    def test_only_performing_on_reads(self):
+        self.mod.write('a = 1\nb = 2\nprint(a)\n')
+        changer = rename.ChangeOccurrences(self.project, self.mod,
+                                           self.mod.read().rindex('a'))
+        changer.get_changes('b', writes=False).do()
+        self.assertEquals('a = 1\nb = 2\nprint(b)\n', self.mod.read())
+
+
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(RenameRefactoringTest))
+    result.addTests(unittest.makeSuite(ChangeOccurrencesTest))
+    return result
 
 
 if __name__ == '__main__':

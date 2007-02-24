@@ -392,7 +392,8 @@ class _FindListViewAdapter(object):
 
     def selected(self, obj):
         self.toplevel.destroy()
-        self.handle.selected(obj)
+        if obj is not None:
+            self.handle.selected(obj)
 
     def canceled(self):
         self.toplevel.destroy()

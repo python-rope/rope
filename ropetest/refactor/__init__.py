@@ -622,7 +622,7 @@ class IntroduceParameterTest(unittest.TestCase):
 
 def suite():
     result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(ropetest.refactor.renametest.RenameRefactoringTest))
+    result.addTests(ropetest.refactor.renametest.suite())
     result.addTests(unittest.makeSuite(ropetest.refactor.extracttest.ExtractMethodTest))
     result.addTests(unittest.makeSuite(IntroduceFactoryTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.movetest.MoveRefactoringTest))

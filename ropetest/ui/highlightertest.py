@@ -296,6 +296,12 @@ class ReSTHighlightTest(unittest.TestCase):
                                                   code.rindex(']') + 2,
                                                   'footnote')))
 
+    def test_suspected_region_lists(self):
+        text = '* 0\n* 1\n* 2\n* 3\n'
+        suspected = self.highlighting.get_suspected_region_after_change(
+            text, text.index('2'), text.index('2') + 1)
+        self.assertEquals((text.index('* 1'), text.index('* 3') - 1), suspected)
+
 
 def suite():
     result = unittest.TestSuite()

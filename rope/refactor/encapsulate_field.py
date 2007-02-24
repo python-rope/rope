@@ -75,7 +75,7 @@ class GetterSetterRenameInModule(object):
         self.pycore = pycore
         self.name = name
         self.occurrences_finder = rope.refactor.occurrences.\
-                                  FilteredOccurrenceFinder(pycore, name, pynames)
+                                  FilteredFinder(pycore, name, pynames)
         self.getter = 'get_' + name
         self.setter = 'set_' + name
 

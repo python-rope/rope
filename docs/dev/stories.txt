@@ -22,7 +22,6 @@ Base Stories
 * Pull up method
 * Push down method
 * Introduce redirection
-* Moving fields/methods to attribute classes
 
 
 IDE And UI Stories
@@ -128,6 +127,3 @@ Stories
 
 
 * Performing import actions only on one import statement
-
-
-* Change occurrences

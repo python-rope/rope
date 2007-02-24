@@ -207,7 +207,7 @@ class ReSTHighlighting(Highlighting):
         while index > 0:
             new_index = self._get_line_start(text, index - 1)
             line = text[new_index:index]
-            if line.strip() == '':
+            if line.strip() == '' or self._is_list(line):
                 return new_index
             index = new_index
         return 0
@@ -216,8 +216,16 @@ class ReSTHighlighting(Highlighting):
         index = self._get_line_end(text, index)
         while index < len(text) - 1:
             new_index = self._get_line_end(text, index + 1)
-            line = text[index:new_index]
+            line = text[index + 1:new_index]
             if line.strip() == '':
                 return new_index
+            if self._is_list(line):
+                return index
             index = new_index
         return len(text)
+
+    def _is_list(self, line):
+        for mark in '*-+':
+            if line.startswith('%s ' % mark):
+                return True
+        return False

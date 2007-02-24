@@ -339,7 +339,7 @@ class PythonCodeAssist(object):
         name = rope.base.codeanalyze.get_name_at(resource, offset)
         pyname = rope.base.codeanalyze.get_pyname_at(self.project.get_pycore(),
                                                      resource, offset)
-        finder = occurrences.FilteredOccurrenceFinder(
+        finder = occurrences.FilteredFinder(
             self.project.get_pycore(), name, [pyname])
         result = []
         for resource in self.project.get_pycore().get_python_files():

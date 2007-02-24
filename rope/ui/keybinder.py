@@ -113,7 +113,7 @@ class _RootKeyLevel(_KeyLevel):
         def call_back(event=None):
             try:
                 status_text = self.status_bar.create_status('key')
-                status_text.set_width(6)
+                status_text.set_width(8)
             except statusbar.StatusBarException:
                 status_text = self.status_bar.get_status('key')
             status_text.set_text(key)

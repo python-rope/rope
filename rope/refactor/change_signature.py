@@ -28,7 +28,7 @@ class ChangeSignature(object):
             pynames = rename.get_all_methods_in_hierarchy(pyclass, self.name)
         else:
             pynames = [self.pyname]
-        finder = rope.refactor.occurrences.FilteredOccurrenceFinder(
+        finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, self.name, pynames)
         for file in self.pycore.get_python_files():
             change_calls = _ChangeCallsInModule(

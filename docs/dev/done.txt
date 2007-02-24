@@ -3,6 +3,12 @@
 ===========
 
 
+- Better status bar : February 23, 2007
+
+
+- Change occurrences : February 23, 2007
+
+
 - Moving methods : February 21, 2007
 
 

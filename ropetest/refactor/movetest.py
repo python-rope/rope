@@ -1,8 +1,7 @@
 import unittest
 
-import rope.base.exceptions
 import rope.base.project
-import ropetest
+from rope.base import exceptions
 from rope.refactor import move
 from ropetest import testutils
 
@@ -12,7 +11,7 @@ class MoveRefactoringTest(unittest.TestCase):
     def setUp(self):
         super(MoveRefactoringTest, self).setUp()
         self.project_root = 'sampleproject'
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -23,7 +22,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod5 = self.pycore.create_module(self.pkg, 'mod5')
 
     def tearDown(self):
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         super(MoveRefactoringTest, self).tearDown()
 
     def _move(self, resource, offset, dest_resource):
@@ -70,13 +69,13 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('class AClass(object):\n    pass\na_var = AClass()\n',
                           self.mod2.read())
 
-    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringError)
+    @testutils.assert_raises(exceptions.RefactoringError)
     def test_folder_destination(self):
         folder = self.project.root.create_folder('folder')
         self.mod1.write('class AClass(object):\n    pass\n')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1, folder)
 
-    @ropetest.testutils.assert_raises(rope.base.exceptions.RefactoringError)
+    @testutils.assert_raises(exceptions.RefactoringError)
     def test_raising_exception_for_moving_non_global_elements(self):
         self.mod1.write('def a_func():\n    class AClass(object):\n        pass\n')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
@@ -327,7 +326,7 @@ class MoveRefactoringTest(unittest.TestCase):
             '    def a_method(self):\n        return self.attr.new_method()\n',
             self.mod1.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
+    @testutils.assert_raises(exceptions.RefactoringError)
     def test_moving_methods_and_nonexistent_attributes(self):
         code = 'class A(object):\n' \
                '    def a_method(self):\n        return 1\n'
@@ -336,7 +335,7 @@ class MoveRefactoringTest(unittest.TestCase):
                                  code.index('a_method'))
         mover.get_changes('x', 'new_method')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
+    @testutils.assert_raises(exceptions.RefactoringError)
     def test_unknown_attribute_type(self):
         code = 'class A(object):\n    attr = 1\n' \
                '    def a_method(self):\n        return 1\n'

@@ -68,6 +68,8 @@ class RefactoringDialog(object):
         self.toplevel.bind('<Escape>', lambda event: self._cancel())
         self.toplevel.bind('<Control-g>', lambda event: self._cancel())
         frame = self._get_dialog_frame()
+        frame['border'] = 2
+        frame['relief'] = Tkinter.GROOVE
 
         ok_button = Tkinter.Button(self.toplevel, text='Done', command=self._ok)
         preview_button = Tkinter.Button(self.toplevel, text='Preview', command=self._preview)
@@ -667,6 +669,52 @@ def method_object(context):
     MethodObjectDialog(context).show()
 
 
+class ChangeOccurrencesDialog(RefactoringDialog):
+
+    def __init__(self, context):
+        resource = context.resource
+        editor = context.get_active_editor().get_editor()
+        super(ChangeOccurrencesDialog, self).__init__(context.project,
+                                                      'Change Occurrences')
+        offset = editor.get_current_offset()
+        self.renamer = rope.refactor.rename.ChangeOccurrences(
+            context.project, resource, offset)
+
+    def _get_changes(self):
+        new_name = self.new_name_entry.get()
+        return self.renamer.get_changes(
+            new_name, only_calls=self.only_calls.get(),
+            reads=self.reads.get(), writes=self.writes.get())
+
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(frame, text='Replace Occurrences With :')
+        label.grid(row=0, column=0)
+        self.new_name_entry = Tkinter.Entry(frame)
+        self.new_name_entry.insert(0, self.renamer.get_old_name())
+        self.new_name_entry.select_range(0, Tkinter.END)
+        self.new_name_entry.grid(row=0, column=1, columnspan=2)
+        self.new_name_entry.bind('<Return>', lambda event: self._ok())
+        self.only_calls = Tkinter.IntVar(frame, value=0)
+        self.reads = Tkinter.IntVar(frame, value=1)
+        self.writes = Tkinter.IntVar(frame, value=1)
+        only_calls_button = Tkinter.Checkbutton(
+            frame, text='Do only for calls', variable=self.only_calls)
+        reads_button = Tkinter.Checkbutton(
+            frame, text='Reads', variable=self.reads)
+        writes_button = Tkinter.Checkbutton(
+            frame, text='Writes', variable=self.writes)
+        only_calls_button.grid(row=1, column=0, sticky=Tkinter.W)
+        reads_button.grid(row=2, column=0, sticky=Tkinter.W)
+        writes_button.grid(row=2, column=1, sticky=Tkinter.W)
+        self.new_name_entry.focus_set()
+        return frame
+
+
+def change_occurrences(context):
+    ChangeOccurrencesDialog(context).show()
+
+
 actions = []
 actions.append(SimpleAction('rename', ConfirmEditorsAreSaved(rename), 'C-c r r',
                             MenuAddress(['Refactor', 'Rename'], 'r'), ['python']))
@@ -703,6 +751,10 @@ actions.append(SimpleAction('introduce_parameter',
 actions.append(SimpleAction('method_object',
                             ConfirmEditorsAreSaved(method_object), 'C-c r j',
                             MenuAddress(['Refactor', 'Method To Method Object'], 'j', 1),
+                            ['python']))
+actions.append(SimpleAction('change_occurrences',
+                            ConfirmEditorsAreSaved(change_occurrences, all=False), 'C-c r o',
+                            MenuAddress(['Refactor', 'Change Occurrences'], None, 1),
                             ['python']))
 actions.append(SimpleAction('local_to_field',
                             ConfirmEditorsAreSaved(convert_local_to_field), None,

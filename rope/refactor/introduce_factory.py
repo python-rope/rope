@@ -99,7 +99,7 @@ class IntroduceFactoryRefactoring(object):
                 changes.add_change(ChangeContents(file_, changed_code))
 
     def _rename_occurrences(self, file_, changed_name, global_factory):
-        occurrence_finder = occurrences.FilteredOccurrenceFinder(
+        occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, [self.old_pyname], only_calls=True)
         changed_code = rename.rename_in_module(
             occurrence_finder, changed_name, resource=file_,

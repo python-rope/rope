@@ -48,15 +48,18 @@ Discussion
 Now that we handle many kinds of refactorings and we have achieved
 many of rope's initial goals we can think of extending it.
 
-There are many places to extend rope.  Some of them are:
+There are many places to extend rope.  There are two main places
+that can be enhanced.  One is occurrence finding mechanisms and the
+other is object inference.  Among the features that are going to be
+added implicit interfaces and changing structure refactorings are the
+most promising ones.
 
-* More advanced refactorings
-* Enhancing old refactorings
-* Refactoring scripts
-* Dynamic type inference(faster, new ways)
-* Static type inference(new, better ways)
-* Exclusion principle for occurrence finding
-* Changing structure refactorings; for example: ``a = b -> a(b.c)``
+* Occurrence finding
+* DOI
+* SOI
+* Implicit interfaces
+* Changing strucutre refactorings; for example: ``a = b -> a.set(b)``
+* Advanced refactorings
 
 
 Hot Topics
@@ -73,7 +76,6 @@ To Be Discussed
 * `Python's implicit interfaces`_
 * `Having virtual PyModules`_
 * `Redefining function/class definitions`_
-* `Better status bar`_
 * Indexing source files for faster occurrence finding
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
@@ -84,31 +86,6 @@ To Be Discussed
 Change Occurrences
 ==================
 
-We want to customize these parameters when performing rename
-refactoring:
-
-* The region rename
-* Should we replace primaries
-* Performing only on calls
-* It is completely side-effect free
-* Only reads or writes?
-* Change imports?
-* Change definitions?
-
-Refactorings that can be done:
-
-* Introduce parameter
-* Local variable to field
-* Handle long imports
-* Change references to a name to another name
-* Changing imported module
-* Encapsulate field
-* Introduce factory
-* ...
-
-Issues:
-
-* Removing local rename?
 * How specify a region in a file
 
   * Always use the current scope
@@ -117,22 +94,6 @@ Issues:
     between the two last marks is the region
   * ``C-u # C-r r o`` where # is the number of scopes outside
     current scope
-
-* The defaults should be local rename?
-* Do we rename modules and packages, too
-* What about defined objects
-* Using another name
-
-  * ``Extended Rename``; ``C-c r e``
-  * ``Alternative Rename``; ``C-c r a``
-  * ``Other Rename``; ``C-c r o``
-  * ``Local Rename``; ``C-c r e``
-  * ``Fix Occurrences``; ``C-c r x``
-  * ``Alter Occurrences``; ``C-c r a``
-  * ``Change Occurrences``; ``C-c r o``
-  * ``Modify Occurrences``; ``C-c r o``
-  * ``Replace Occurrences``; ``C-c r o``
-  * ``Switch Occurrences``; ``C-c r w``
 
 
 Checking Variable And Function Usages In Their Defining Scopes
@@ -183,7 +144,7 @@ Note: Maybe we should care about redefining any `DefinedObject`.
 * Maybe we can think of a way for issuing warnings rope encounters
 
   The warnings seem to belong to the IDE rather than the base.  But
-  the problem is that many warnings are seen in the base package.
+  the problem is that most warnings are encountered in the base package.
 
 
 Better Occurrence Finding
@@ -610,19 +571,17 @@ The GUI Mess; Working More on the UI Parts
 ==========================================
 
 
-Better Status Bar
------------------
+Version Control Commands
+------------------------
 
-* line
-* mode
-* file
-* readonly status
-* changed status
-
-Temporaries:
-
-* search
-* keys
+* Commit; ``C-x v c``
+* Update; ``C-x v u``
+* Diff; ``C-x v d``
+* Log; ``C-x v l``
+* Revert; ``C-x v r``
+* Remove; ``C-x v v``
+* Status; ``C-x v s``
+* Add; ``C-x v a``
 
 
 Better Dialogs

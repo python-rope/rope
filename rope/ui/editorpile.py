@@ -5,8 +5,9 @@ import rope.ui.fileeditor
 
 class EditorPile(object):
 
-    def __init__(self, editor_panel, core):
+    def __init__(self, editor_panel, core, status):
         self.core = core
+        self.status = status
         self.editor_list = Frame(editor_panel, borderwidth=0)
         self.editor_frame = Frame(editor_panel, borderwidth=0, relief=RIDGE)
         self.editors = []
@@ -30,6 +31,7 @@ class EditorPile(object):
         if not editor.get_file().exists():
             new_title = '! ' + new_title
         self.buttons[editor]['text'] = new_title
+        self._update_buffer_status()
 
     def _editor_was_changed(self, resource, offset):
         self.last_edited_location = (resource, offset)
@@ -43,6 +45,7 @@ class EditorPile(object):
         self.active_editor = editor
         self.editors.remove(editor)
         self.editors.insert(0, editor)
+        self._update_buffer_status()
         self.core._editor_changed()
 
     def get_resource_editor(self, file_, readonly=False, mode=None):
@@ -91,6 +94,7 @@ class EditorPile(object):
         if self.editors:
             self.buttons[self.editors[0]].invoke()
         else:
+            self._update_buffer_status()
             self.core._editor_changed()
 
     def get_editor_list(self):
@@ -104,3 +108,21 @@ class EditorPile(object):
         if self.last_edited_location is not None:
             self.get_resource_editor(self.last_edited_location[0])
             self.active_editor.get_editor().set_insert(self.last_edited_location[1])
+
+    def _update_buffer_status(self):
+        if self.active_editor is not None:
+            editor = self.active_editor
+            mode1 = '-'
+            if editor.get_editor().is_modified():
+                mode1 = '*'
+            mode2 = mode1
+            if editor.readonly:
+                mode2 = '%'
+            if not editor.get_file().exists():
+                mode2 = '!'
+            text = '%s%s  %s  (%s) ' % (
+                mode1, mode2, editor.get_file().path,
+                editor.get_editor().get_editing_context().name)
+            self.status.set_text(text)
+        else:
+            self.status.set_text('')

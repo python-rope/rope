@@ -132,7 +132,7 @@ class MoveMethod(object):
         self_name = self._get_self_name()
         body = self_name + ' = None\n' + self._get_unchanged_body()
         pymodule = self.pycore.get_string_module(body)
-        finder = occurrences.FilteredOccurrenceFinder(
+        finder = occurrences.FilteredFinder(
             self.pycore, self_name, [pymodule.get_attribute(self_name)])
         result = rename.rename_in_module(finder, host, pymodule=pymodule)
         return result[result.index('\n') + 1:]
@@ -204,7 +204,7 @@ class _Mover(object):
         return pymodule, can_select.changed
 
     def _rename_in_module(self, pymodule, new_name, imports=False):
-        occurrence_finder = occurrences.FilteredOccurrenceFinder(
+        occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, [self.old_pyname], imports=imports)
         source = rename.rename_in_module(occurrence_finder, new_name,
                                          pymodule=pymodule, replace_primary=True)
