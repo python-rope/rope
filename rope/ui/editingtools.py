@@ -5,9 +5,9 @@ import rope.ide.outline
 import rope.refactor
 
 
-def get_editingtools_for_context(editing_context, project):
+def get_editingtools_for_context(editing_context, project, prefs):
     if editing_context.name == 'python':
-        return PythonEditingTools(project)
+        return PythonEditingTools(project, prefs)
     if editing_context.name == 'rest':
         return ReSTEditingTools()
     return NormalEditingTools()
@@ -24,8 +24,9 @@ class EditingTools(object):
 
 class PythonEditingTools(EditingTools):
 
-    def __init__(self, project):
+    def __init__(self, project, prefs):
         self.project = project
+        self.prefs = prefs
         self._code_assist = None
         self._outline = None
 
@@ -38,6 +39,8 @@ class PythonEditingTools(EditingTools):
     def _get_code_assist(self):
         if self._code_assist is None:
             self._code_assist = rope.ide.codeassist.PythonCodeAssist(self.project)
+            for name, template in self.prefs.get('templates', []):
+                self._code_assist.add_template(name, template)
         return self._code_assist
 
     def _get_outline(self):

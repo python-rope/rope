@@ -9,7 +9,7 @@ import rope.ui.keybinder
 import rope.ui.statusbar
 from rope.base.exceptions import RopeError
 from rope.base.project import Project, get_no_project
-from rope.ui import editingcontexts
+from rope.ui import editingcontexts, prefs
 from rope.ui.extension import ActionContext
 from rope.ui.menubar import MenuBarManager
 
@@ -45,7 +45,7 @@ class Core(object):
         self.project = get_no_project()
         self.rebound_keys = {}
         self.actions = []
-        self.prefs = {}
+        self.prefs = prefs.Prefs()
 
     def _load_actions(self):
         """Load extension modules.
@@ -64,7 +64,19 @@ class Core(object):
 
         Set the preference for `key` to `value`.
         """
-        self.prefs[key] = value
+        self.prefs.set(key, value)
+
+    def add(self, key, value):
+        """Add an entry to a list preference
+
+        Add `value` to the list of entries for the `key` preference.
+
+        """
+        self.prefs.add(key, value)
+
+    def get_prefs(self):
+        """Return a `rope.ui.pref.Prefs` object"""
+        return self.prefs
 
     def _add_menu_cascade(self, menu_address, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)

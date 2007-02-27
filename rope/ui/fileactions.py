@@ -199,16 +199,23 @@ class _ResourceViewHandle(TreeViewHandle):
 
     def get_children(self, resource):
         if resource.is_folder():
-            return [child for child in resource.get_children()
-                    if not child.name.startswith('.') and
-                    not child.name.endswith('.pyc')]
+            result = [child for child in resource.get_children()
+                      if not child.name.startswith('.') and
+                      not child.name.endswith('.pyc')]
+            result.sort(self._compare_files)
+            return result
         else:
             return []
+
+    def _compare_files(self, file1, file2):
+        return cmp((not file1.is_folder(), file1.name),
+                   (not file2.is_folder(), file2.name))
 
     def selected(self, resource):
         if not resource.is_folder():
             self.core.editor_manager.get_resource_editor(resource)
-            self.toplevel.destroy()
+        else:
+            return True
 
     def canceled(self):
         self.toplevel.destroy()
@@ -216,17 +223,17 @@ class _ResourceViewHandle(TreeViewHandle):
     def focus_went_out(self):
         pass
 
+
 def _show_resource_view(core):
     if not _check_if_project_is_open(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('Resources')
     tree_handle = _ResourceViewHandle(core, toplevel)
-    tree_view = TreeView(toplevel, tree_handle, title='Resources')
+    tree_view = TreeView(toplevel, tree_handle, title='Resources',
+                         height=25, width=45)
     for child in tree_handle.get_children(core.project.root):
         tree_view.add_entry(child)
-    tree_view.list.focus_set()
-    toplevel.grab_set()
 
 def project_tree(context):
     _show_resource_view(context.get_core())

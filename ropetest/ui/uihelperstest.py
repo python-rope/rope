@@ -50,24 +50,24 @@ class UIHelpersTest(unittest.TestCase):
         handle = SampleListHandle()
         enhanced_list = EnhancedList(self.parent, handle)
         enhanced_list.add_entry(1)
-        self.assertEquals('element 1', enhanced_list.list.get(0, 1)[0])
+        self.assertEquals('element 1', enhanced_list.list.get(0))
 
     def test_tree_view(self):
         handle = SampleTreeHandle()
         tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
-        self.assertTrue(tree_viewer.list.get(0, 1)[0].endswith('element a'))
+        self.assertTrue(tree_viewer.get(0).endswith('element a'))
 
     def test_tree_view_expanding(self):
         handle = SampleTreeHandle()
         tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
         tree_viewer.expand(0)
-        self.assertEquals(4, tree_viewer.list.size())
-        self.assertTrue(tree_viewer.list.get(0, 1)[0].endswith('element a'))
-        self.assertTrue(tree_viewer.list.get(1, 4)[0].endswith('element a0'))
-        self.assertTrue(tree_viewer.list.get(1, 4)[1].endswith('element a1'))
-        self.assertTrue(tree_viewer.list.get(1, 4)[2].endswith('element a2'))
+        self.assertEquals(4, tree_viewer.size())
+        self.assertTrue(tree_viewer.get(0).endswith('element a'))
+        self.assertTrue(tree_viewer.get(1).endswith('element a0'))
+        self.assertTrue(tree_viewer.get(2).endswith('element a1'))
+        self.assertTrue(tree_viewer.get(3).endswith('element a2'))
 
     def test_tree_view_multi_expanding(self):
         handle = SampleTreeHandle()
@@ -75,35 +75,45 @@ class UIHelpersTest(unittest.TestCase):
         tree_viewer.add_entry('a')
         tree_viewer.expand(0)
         tree_viewer.expand(0)
-        self.assertEquals(4, tree_viewer.list.size())
+        self.assertEquals(4, tree_viewer.size())
 
     def test_tree_view_shrinking(self):
         handle = SampleTreeHandle()
         tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
         tree_viewer.expand(0)
-        self.assertEquals(4, tree_viewer.list.size())
+        self.assertEquals(4, tree_viewer.size())
         tree_viewer.collapse(0)
-        self.assertEquals(1, tree_viewer.list.size())
-        self.assertTrue(tree_viewer.list.get(0, 1)[0].endswith('element a'))
+        self.assertEquals(1, tree_viewer.size())
+        self.assertTrue(tree_viewer.get(0).endswith('element a'))
 
     def test_expansion_signs(self):
         handle = SampleTreeHandle()
         tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a')
-        self.assertEquals('+ element a', tree_viewer.list.get(0, 1)[0])
+        self.assertEquals('+ element a', tree_viewer.get(0))
         tree_viewer.expand(0)
-        self.assertEquals('- element a', tree_viewer.list.get(0, 1)[0])
+        self.assertEquals('- element a', tree_viewer.get(0))
         tree_viewer.collapse(0)
-        self.assertEquals('+ element a', tree_viewer.list.get(0, 1)[0])
+        self.assertEquals('+ element a', tree_viewer.get(0))
 
     def test_expansion_signs_for_leaves(self):
         handle = SampleTreeHandle()
         tree_viewer = TreeView(self.parent, handle)
         tree_viewer.add_entry('a00')
-        self.assertEquals('  element a00', tree_viewer.list.get(0, 1)[0])
+        self.assertEquals('  element a00', tree_viewer.get(0))
         tree_viewer.expand(0)
-        self.assertEquals('  element a00', tree_viewer.list.get(0, 1)[0])
+        self.assertEquals('  element a00', tree_viewer.get(0))
+
+    def test_expansion_signs(self):
+        handle = SampleTreeHandle()
+        tree_viewer = TreeView(self.parent, handle)
+        tree_viewer.add_entry('a')
+        self.assertEquals('+ element a', tree_viewer.get(0))
+        tree_viewer.toggle(0)
+        self.assertEquals('- element a', tree_viewer.get(0))
+        tree_viewer.toggle(0)
+        self.assertEquals('+ element a', tree_viewer.get(0))
 
 
 if __name__ == '__main__':

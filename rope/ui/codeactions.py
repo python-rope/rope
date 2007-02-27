@@ -8,7 +8,7 @@ from rope.base import codeanalyze
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
-from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
+from rope.ui.uihelpers import (TreeView, TreeViewHandle, VolatileList,
                                EnhancedListHandle)
 from rope.ide import formatter
 
@@ -50,7 +50,6 @@ def do_quick_outline(context):
                          title='Quick Outline')
     for node in context.editingtools.outline.get_root_nodes(editor.get_text()):
         tree_view.add_entry(node)
-    tree_view.list.focus_set()
     toplevel.grab_set()
 
 class _CompletionListHandle(EnhancedListHandle):
@@ -94,7 +93,7 @@ def do_code_assist(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('Code Assist Proposals')
     handle = _CompletionListHandle(editor, toplevel, result)
-    enhanced_list = EnhancedList(
+    enhanced_list = VolatileList(
         toplevel, handle, title='Code Assist Proposals')
     proposals = rope.ide.codeassist.ProposalSorter(result).get_sorted_proposal_list()
     for proposal in proposals:
@@ -274,8 +273,7 @@ def find_occurrences(context):
     enhanced_list = None
     def focus_set():
         enhanced_list.list.focus_set()
-        toplevel.grab_set()
-    enhanced_list = EnhancedList(
+    enhanced_list = VolatileList(
         toplevel, _OccurrenceListHandle(toplevel, context.get_core(), focus_set),
         title='Occurrences')
     for occurrence in result:

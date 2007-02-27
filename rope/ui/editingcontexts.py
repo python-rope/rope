@@ -9,7 +9,8 @@ class EditingContext(object):
 
     def _get_editing_tools(self):
         project = self.core.get_open_project()
-        return editingtools.get_editingtools_for_context(self, project)
+        return editingtools.get_editingtools_for_context(
+            self, project, self.core.get_prefs())
 
     editingtools = property(_get_editing_tools)
 

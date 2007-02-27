@@ -347,6 +347,12 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('def a_func(new_param):\n    print new_param\n'
                           'a_func  (new_param=hey)\n', refactored)
 
+    def test_renaming_parameter_like_objects_after_keywords(self):
+        code = 'def a_func(param):\n    print(param)\ndict(param=hey)\n'
+        refactored = self._local_rename(code, code.find('param') + 1, 'new_param')
+        self.assertEquals('def a_func(new_param):\n    print(new_param)\n'
+                          'dict(param=hey)\n', refactored)
+
     def test_renaming_variables_in_init_dot_pys(self):
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         init_dot_py = pkg.get_child('__init__.py')

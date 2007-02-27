@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from rope.ide.codeassist import PythonCodeAssist, RopeSyntaxError, Template, ProposalSorter
 from rope.base.project import Project
+from rope.ide.codeassist import PythonCodeAssist, RopeSyntaxError, Template, ProposalSorter
 from ropetest import testutils
 
 
@@ -508,6 +508,45 @@ class CodeAssistTest(unittest.TestCase):
         code = 'a_var = 10\ntry:\n    try:\n        a_v'
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('a_var', 'global', result)
+
+    def test_proposing_function_keywords_when_calling(self):
+        code = 'def f(p):\n    pass\nf(p'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('p=', 'parameter_keyword', result)
+
+    def test_proposing_function_keywords_when_calling_for_non_functions(self):
+        code = 'f = 1\nf(p'
+        result = self.assist.assist(code, len(code))
+
+    def test_proposing_function_keywords_when_calling_extra_spaces(self):
+        code = 'def f(p):\n    pass\nf( p'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('p=', 'parameter_keyword', result)
+
+    def test_proposing_function_keywords_when_calling_on_second_argument(self):
+        code = 'def f(p1, p2):\n    pass\nf(1, p'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('p2=', 'parameter_keyword', result)
+
+    def test_proposing_function_keywords_when_calling_not_proposing_args(self):
+        code = 'def f(p1, *args):\n    pass\nf(1, a'
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_not_in_result('args=', 'parameter_keyword', result)
+
+    def test_proposing_function_keywords_when_calling_with_no_nothing_after_parens(self):
+        code = 'def f(p):\n    pass\nf('
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('p=', 'parameter_keyword', result)
+
+    def test_proposing_function_keywords_when_calling_with_no_nothing_after_parens(self):
+        code = 'def f(p):\n    pass\ndef g():\n    h = f\n    f('
+        result = self.assist.assist(code, len(code))
+        self.assert_completion_in_result('p=', 'parameter_keyword', result)
+
+    def test_codeassists_before_opening_of_parens(self):
+        code = 'def f(p):\n    pass\na_var = 1\nf(1)\n'
+        result = self.assist.assist(code, code.rindex('f') + 1)
+        self.assert_completion_not_in_result('a_var', 'global', result)
 
 
 class CodeAssistInProjectsTest(unittest.TestCase):

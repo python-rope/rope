@@ -3,10 +3,11 @@ import re
 import sys
 
 import rope.base.codeanalyze
-import rope.base.pyobjects
+from rope.base import pyobjects, pynames
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
-                                   SourceLinesAdapter)
+                                   SourceLinesAdapter, get_pyname_at,
+                                   BadIdentifierError)
 from rope.base.exceptions import RopeError
 from rope.refactor import occurrences, functionutils
 
@@ -27,7 +28,7 @@ class CompletionProposal(CodeAssistProposal):
 
     The `kind` instance variable shows the kind of the proposal and
     can be ``global``, ``local``, ``builtin``, ``attribute``,
-    ``keyword``, and ``template``.
+    ``keyword``, ``parameter_keyword``, and ``template``.
 
     The `type` instance variable shows the type of the proposal and
     can be ``variable``, ``class``, ``function``, ``imported`` ,
@@ -39,6 +40,12 @@ class CompletionProposal(CodeAssistProposal):
         super(CompletionProposal, self).__init__(name)
         self.kind = kind
         self.type = type
+
+    def __str__(self):
+        return '%s (%s, %s)' % (self.name, self.kind, self.type)
+
+    def __repr__(self):
+        return str(self)
 
 
 class TemplateProposal(CodeAssistProposal):
@@ -66,7 +73,9 @@ class Template(object):
     var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>[a-zA-Z][\w]*)}')
 
     def variables(self):
-        """Returns the list of variables sorted by their order of occurence in the template"""
+        """Returns the list of variables sorted by their order
+        of occurence in the template
+        """
         result = []
         for match in self.var_pattern.finditer(self.template):
             new_var = match.group('variable')
@@ -117,7 +126,9 @@ class _CodeCompletionCollector(object):
         self.project = project
         self.expression = expression
         self.starting = starting
+        self.offset = offset
         self.pycore = self.project.get_pycore()
+        self.unchanged_source = source_code
         self.lines = source_code.split('\n')
         self.source_code = source_code
         self.resource = resource
@@ -133,7 +144,6 @@ class _CodeCompletionCollector(object):
     def _comment_current_statement(self):
         range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines),
                                             self.lineno)
-        range_finder.analyze()
         start = range_finder.get_statement_start() - 1
         end = range_finder.get_block_end() - 1
         last_indents = self._get_line_indents(self.lines[start])
@@ -202,24 +212,24 @@ class _CodeCompletionCollector(object):
                     name, kind, self._get_pyname_type(pyname))
 
     def _get_pyname_type(self, pyname):
-        if isinstance(pyname, rope.base.pynames.AssignedName):
+        if isinstance(pyname, pynames.AssignedName):
             return 'variable'
-        if isinstance(pyname, rope.base.pynames.DefinedName):
+        if isinstance(pyname, pynames.DefinedName):
             pyobject = pyname.get_object()
-            if isinstance(pyobject, rope.base.pyobjects.PyFunction):
+            if isinstance(pyobject, pyobjects.PyFunction):
                 return 'function'
             else:
                 return 'class'
-        if isinstance(pyname, rope.base.pynames.ImportedName) or \
-           isinstance(pyname, rope.base.pynames.ImportedModule):
+        if isinstance(pyname, pynames.ImportedName) or \
+           isinstance(pyname, pynames.ImportedModule):
             return 'imported'
-        if isinstance(pyname, rope.base.pynames.ParameterName):
+        if isinstance(pyname, pynames.ParameterName):
             return 'parameter'
 
     def get_code_completions(self):
         try:
-            module_scope = self.pycore.get_string_scope(self.source_code,
-                                                        self.resource)
+            module_scope = get_pymodule(self.pycore, self.source_code,
+                                        self.resource).get_scope()
         except SyntaxError, e:
             raise RopeSyntaxError(e)
         result = {}
@@ -228,8 +238,45 @@ class _CodeCompletionCollector(object):
         if self.expression.strip() != '':
             result.update(self._get_dotted_completions(module_scope, inner_scope))
         else:
+            result.update(self._get_keyword_parameters(module_scope.pyobject, inner_scope))
             self._get_undotted_completions(inner_scope, result)
         return result
+
+    def _get_keyword_parameters(self, pymodule, scope):
+        offset = self.offset
+        if offset == 0:
+            return {}
+        word_finder = WordRangeFinder(self.unchanged_source)
+        lines = SourceLinesAdapter(self.unchanged_source)
+        lineno = lines.get_line_number(offset)
+        stop_line = StatementRangeFinder(lines, lineno).get_statement_start()
+        stop = lines.get_line_start(stop_line)
+        if word_finder.is_on_function_call_keyword(offset - 1, stop):
+            name_finder = ScopeNameFinder(pymodule)
+            function_parens = word_finder.find_parens_start_from_inside(offset - 1, stop)
+            primary = word_finder.get_primary_at(function_parens - 1)
+            try:
+                function_pyname = ScopeNameFinder.get_pyname_in_scope(scope, primary)
+            except BadIdentifierError, e:
+                return {}
+            if function_pyname is not None:
+                pyobject = function_pyname.get_object()
+                if isinstance(pyobject, pyobjects.PyFunction):
+                    pass
+                elif pyobject.get_type() == pyobjects.get_base_type('Type') and \
+                     '__init__' in pyobject.get_attributes():
+                    pyobject = pyobject.get_attribute('__init__').get_object()
+                elif '__call__' in pyobject.get_attributes():
+                    pyobject = pyobject.get_attribute('__call__').get_object()
+                if isinstance(pyobject, pyobjects.PyFunction):
+                    function_info = functionutils.DefinitionInfo.read(pyobject)
+                    result = {}
+                    for name, default in function_info.args_with_defaults:
+                        if name.startswith(self.starting):
+                            result[name + '='] = CompletionProposal(
+                                name + '=', 'parameter_keyword')
+                    return result
+        return {}
 
 
 class PythonCodeAssist(object):
@@ -239,29 +286,40 @@ class PythonCodeAssist(object):
         import keyword
         self.keywords = keyword.kwlist
         self.templates = []
-        self.templates.extend(self._get_default_templates())
+        self.templates.extend(PythonCodeAssist._get_default_templates())
 
     builtins = [str(name) for name in dir(__builtin__)
                 if not name.startswith('_')]
 
-    def _get_default_templates(self):
-        result = []
-        result.append(TemplateProposal('main', Template("if __name__ == '__main__':\n    ${cursor}\n")))
+    @staticmethod
+    def _get_default_templates():
+        templates = {}
+        templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
         test_case_template = \
-            ("import unittest\n\n"
-             "class ${class}(unittest.TestCase):\n\n"
-             "    def setUp(self):\n        super(${class}, self).setUp()\n\n"
-             "    def tearDown(self):\n        super(${class}, self).tearDown()\n\n"
-             "    def test_${aspect1}(self):\n        pass${cursor}\n\n\n"
-             "if __name__ == '__main__':\n"
-             "    unittest.main()\n")
-        result.append(TemplateProposal('testcase', Template(test_case_template)))
-        result.append(TemplateProposal('hash', Template('\n    def __hash__(self):\n' + \
-                                                        '        return 1${cursor}\n')))
-        result.append(TemplateProposal('eq', Template('\n    def __eq__(self, obj):\n' + \
-                                                      '        ${cursor}return obj is self\n')))
-        result.append(TemplateProposal('super', Template('super(${class}, self)')))
+            ('import unittest\n\n'
+             'class ${class}(unittest.TestCase):\n\n'
+             '    def setUp(self):\n        super(${class}, self).setUp()\n\n'
+             '    def tearDown(self):\n        super(${class}, self).tearDown()\n\n'
+             '    def test_${aspect1}(self):\n        pass${cursor}\n\n\n'
+             'if __name__ == \'__main__\':\n'
+             '    unittest.main()\n')
+        templates['testcase'] = Template(test_case_template)
+        templates['hash'] = Template('\n    def __hash__(self):\n' +
+                                     '        return 1${cursor}\n')
+        templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
+                                   '        ${cursor}return obj is self\n')
+        templates['super'] = Template('super(${class}, self)')
+        templates.update(PythonCodeAssist.default_templates)
+        result = []
+        for name, template in templates.items():
+            result.append(TemplateProposal(name, template))
         return result
+
+    default_templates = {}
+
+    @staticmethod
+    def add_default_template(name, definition):
+        PythonCodeAssist.default_templates[name] = Template(definition)
 
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
@@ -295,8 +353,8 @@ class PythonCodeAssist(object):
         return result
 
     def _get_code_completions(self, source_code, offset, expression, starting, resource):
-        collector = _CodeCompletionCollector(self.project, source_code,
-                                             offset, expression, starting, resource)
+        collector = _CodeCompletionCollector(self.project, source_code, offset,
+                                             expression, starting, resource)
         return collector.get_code_completions()
 
     def assist(self, source_code, offset, resource=None):
@@ -320,16 +378,16 @@ class PythonCodeAssist(object):
                                       offset, resource).get_definition_location()
 
     def get_doc(self, source_code, offset, resource=None):
-        pymodule = self.project.pycore.get_string_module(source_code, resource)
+        pymodule = get_pymodule(self.project.pycore, source_code, resource)
         scope_finder = ScopeNameFinder(pymodule)
         element = scope_finder.get_pyname_at(offset)
         if element is None:
             return None
         pyobject = element.get_object()
-        if isinstance(pyobject, rope.base.pyobjects.PyDefinedObject):
-            if pyobject.get_type() == rope.base.pyobjects.get_base_type('Function'):
+        if isinstance(pyobject, pyobjects.PyDefinedObject):
+            if pyobject.get_type() == pyobjects.get_base_type('Function'):
                 return _get_function_docstring(pyobject)
-            elif pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
+            elif pyobject.get_type() == pyobjects.get_base_type('Type'):
                 return _get_class_docstring(pyobject)
             else:
                 return _trim_docstring(pyobject._get_ast().doc)
@@ -348,13 +406,18 @@ class PythonCodeAssist(object):
         return result
 
 
+def get_pymodule(pycore, source_code, resource):
+    if resource and resource.exists() and source_code == resource.read():
+        return pycore.resource_to_pyobject(resource)
+    return pycore.get_string_module(source_code, resource=resource)
+
 def _get_class_docstring(pyclass):
     node = pyclass._get_ast()
     doc = 'class %s\n\n' % node.name + _trim_docstring(node.doc)
 
     if '__init__' in pyclass.get_attributes():
         init = pyclass.get_attribute('__init__').get_object()
-        if isinstance(init, rope.base.pyobjects.PyDefinedObject):
+        if isinstance(init, pyobjects.PyDefinedObject):
             doc += '\n\n' + _get_function_docstring(init)
     return doc
 
@@ -371,7 +434,7 @@ def _trim_docstring(docstring):
     """The sample code from :PEP:`257`"""
     if not docstring:
         return ''
-    # Convert tabs to spaces (following the normal Python rules)
+    # Convert tabs to spaces (following normal Python rules)
     # and split into a list of lines:
     lines = docstring.expandtabs().splitlines()
     # Determine minimum indentation (first line doesn't count):
@@ -421,6 +484,7 @@ class ProposalSorter(object):
 
     def get_sorted_proposal_list(self):
         local_proposals = []
+        parameter_keyword_proposals = []
         global_proposals = []
         attribute_proposals = []
         others = []
@@ -431,14 +495,18 @@ class ProposalSorter(object):
                 local_proposals.append(proposal)
             elif proposal.kind == 'attribute':
                 attribute_proposals.append(proposal)
+            elif proposal.kind == 'parameter_keyword':
+                parameter_keyword_proposals.append(proposal)
             else:
                 others.append(proposal)
         template_proposals = self.proposals.templates
         local_proposals.sort(self._pyname_proposal_cmp)
+        parameter_keyword_proposals.sort(self._pyname_proposal_cmp)
         global_proposals.sort(self._pyname_proposal_cmp)
         attribute_proposals.sort(self._pyname_proposal_cmp)
         result = []
         result.extend(local_proposals)
+        result.extend(parameter_keyword_proposals)
         result.extend(global_proposals)
         result.extend(attribute_proposals)
         result.extend(template_proposals)

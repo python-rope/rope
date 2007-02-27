@@ -100,3 +100,8 @@ if not i_like_emacs:
     core.rebind_action('contributing', None)
     core.rebind_action('library', None)
     core.rebind_action('about', None)
+
+
+# Add your python templates
+core.add('templates', ('hello', "print 'My name is ${name}'\n"))
+core.add('templates', ('field', "self.${field}${cursor} = ${field}\n"))

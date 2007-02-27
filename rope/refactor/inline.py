@@ -290,7 +290,7 @@ class _DefinitionGenerator(object):
         if definition_info.args_arg is not None or \
            definition_info.keywords_arg is not None:
             raise rope.base.exceptions.RefactoringError(
-                'Cannot functions with list and keyword arguements.')
+                'Cannot inline functions with list and keyword arguements.')
         return paramdict
 
     def get_function_name(self):

@@ -19,7 +19,6 @@ class StatementRangeFinderTest(unittest.TestCase):
 
     def get_range_finder(self, code, line):
         result = StatementRangeFinder(ArrayLinesAdapter(code.split('\n')), line)
-        result.analyze()
         return result
 
     def test_simple_statement_finding(self):
@@ -196,6 +195,11 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder('a_var = ')
         self.assertEquals(('', '', 8),
                           word_finder.get_splitted_primary_before(8))
+
+    def test_empty_splitted_statement5(self):
+        word_finder = WordRangeFinder('a.')
+        self.assertEquals(('a', '', 2),
+                          word_finder.get_splitted_primary_before(2))
 
     def test_operators_inside_parens(self):
         word_finder = WordRangeFinder('(a_var + another_var).reverse()')

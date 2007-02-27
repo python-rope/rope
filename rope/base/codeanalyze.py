@@ -5,6 +5,7 @@ import token
 
 import rope.base.pyobjects
 import rope.base.pynames
+from rope.base import pyobjects, pynames
 import rope.base.exceptions
 from rope.base import builtins
 from rope.base import evaluate
@@ -136,17 +137,20 @@ class WordRangeFinder(object):
         """
         if offset == 0:
             return ('', '', 0)
-        word_start = self._find_atom_start(offset - 1)
-        real_start = self._find_primary_start(offset - 1)
+        end = offset - 1
+        word_start = self._find_atom_start(end)
+        real_start = self._find_primary_start(end)
         if self.source_code[word_start:offset].strip() == '':
-            word_start = offset
-        if self.source_code[real_start:offset].strip() == '':
-            real_start = offset
+            word_start = end
+        if self.source_code[real_start:word_start].strip() == '':
+            real_start = word_start
+        if real_start == word_start == end and not self._is_id_char(end):
+            return ('', '', offset)
         if real_start == word_start:
             return ('', self.source_code[word_start:offset], word_start)
         else:
-            if self.source_code[offset - 1] == '.':
-                return (self.source_code[real_start:offset - 1], '', offset)
+            if self.source_code[end] == '.':
+                return (self.source_code[real_start:end], '', offset)
             last_dot_position = word_start
             if self.source_code[word_start] != '.':
                 last_dot_position = self._find_last_non_space_char(word_start - 1)
@@ -282,10 +286,23 @@ class WordRangeFinder(object):
             return False
         return True
 
-    def find_parens_start_from_inside(self, offset):
+    def is_on_function_call_keyword(self, offset, stop_searching=0):
+        current_offset = offset
+        if self._is_id_char(current_offset):
+            current_offset = self._find_word_start(current_offset) - 1
+        current_offset = self._find_last_non_space_char(current_offset)
+        if current_offset <= stop_searching or \
+           self.source_code[current_offset] not in '(,':
+            return False
+        parens_start = self.find_parens_start_from_inside(offset, stop_searching)
+        if stop_searching < parens_start:
+            return True
+        return False
+
+    def find_parens_start_from_inside(self, offset, stop_searching=0):
         current_offset = offset
         opens = 1
-        while current_offset > 0:
+        while current_offset > stop_searching:
             if self.source_code[current_offset] == '(':
                 opens -= 1
             if opens == 0:
@@ -348,14 +365,9 @@ class ScopeNameFinder(object):
         # function keyword parameter
         if self.word_finder.is_function_keyword_parameter(offset):
             keyword_name = self.word_finder.get_word_at(offset)
-            function_parens = self.word_finder.find_parens_start_from_inside(offset)
-            function_pyname = self.get_pyname_at(function_parens - 1)
-            if function_pyname is not None:
-                function_pyobject = function_pyname.get_object()
-                if function_pyobject.get_type() == \
-                   rope.base.pyobjects.get_base_type('Type'):
-                    function_pyobject = function_pyobject.get_attribute('__init__').get_object()
-                return function_pyobject.get_parameters().get(keyword_name, None)
+            pyobject = self.get_enclosing_function(offset)
+            if isinstance(pyobject, pyobjects.PyFunction):
+                return pyobject.get_parameters().get(keyword_name, None)
 
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
@@ -380,6 +392,23 @@ class ScopeNameFinder(object):
         result = self.get_pyname_in_scope(holding_scope, name)
         return result
 
+    def get_enclosing_function(self, offset):
+        function_parens = self.word_finder.find_parens_start_from_inside(offset)
+        try:
+            function_pyname = self.get_pyname_at(function_parens - 1)
+        except BadIdentifierError:
+            function_pyname = None
+        if function_pyname is not None:
+            pyobject = function_pyname.get_object()
+            if isinstance(pyobject, pyobjects.PyFunction):
+                return pyobject
+            elif pyobject.get_type() == pyobjects.get_base_type('Type') and \
+                 '__init__' in pyobject.get_attributes():
+                return pyobject.get_attribute('__init__').get_object()
+            elif '__call__' in pyobject.get_attributes():
+                return pyobject.get_attribute('__call__').get_object()
+        return None
+
     def _find_module(self, module_name):
         current_folder = None
         if self.module_scope.pyobject.get_resource():
@@ -394,7 +423,8 @@ class ScopeNameFinder(object):
         return rope.base.pynames.ImportedModule(
             self.module_scope.pyobject, module_name[dot_count:], dot_count)
 
-    def get_pyname_in_scope(self, holding_scope, name):
+    @staticmethod
+    def get_pyname_in_scope(holding_scope, name):
         #ast = compiler.parse(name)
         # parenthesizing for handling cases like 'a_var.\nattr'
         try:
@@ -551,6 +581,7 @@ class StatementRangeFinder(object):
         self.open_count = 0
         self.explicit_continuation = False
         self.open_parens = []
+        self._analyze()
 
     def _analyze_line(self, current_line_number):
         current_line = self.lines.get_line(current_line_number)
@@ -580,7 +611,7 @@ class StatementRangeFinder(object):
         else:
             self.explicit_continuation = False
 
-    def analyze(self):
+    def _analyze(self):
         last_statement = 1
         for current_line_number in range(get_block_start(self.lines,
                                                          self.lineno),

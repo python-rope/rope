@@ -1,27 +1,33 @@
 Small Stories
 =============
 
-- Change occurrences
+- Enhancing `CodeAssist`
 
-  - Find file and entering when nothing is selected
-  - Renaming `FilteredOccurrenceFinder` to `FilteredFinder`
-  - Considering ``*`` to be block starts in reST mode
-  - `get_old_name()` should return a primary
-  - Only calls
-  - Reads and writes
+  - ``a_func(${cursor}``
+  - ``a_func(1, ${cursor}``
+  - What if it is not a function
+  - Not proposing ``**`` and ``*`` args
+  - New `parameter_keyword` proposal kind
+  - Better order for `parameter_keyword` when sorting
+  - Auto-completing function parameter names when calling
+  - Not mistaking over ``return (x, y)`` or ``print (x, y)``
+  - Code assist on ``function${cursor}(...)``
 
-- ``--  docs/dev/workingon.txt  (rest)``
+- Better file browsing in large projects
+- Not recompiling current buffer for each codeassist
+- Changing `uihelpers.TreeView` to use `uihelpers.EnhancedList`
+- Page up and page down in lists
+- Adding codeassist templates in ``~/.rope``
+- Adding `rope.ui.prefs` module
 
-* A completing text widget for dialogs; `Completing(name, list, handle)`
-* Version control commands support; commiting, updating, ...
+* Faster find file in large projects
+* Searching inside `EnhancedList`\s
+* Supporting templates in other modes, too
 * Moving static and class methods
 * Inlining methods with decorators
 * Decorators and method refactorings
 * Unifying ``x.get_type() == get_base_type('y')``, ``isinstance(x, PyY)``
-* Finding unused variables
 * Document how to move fields
-* Adding codeassist templates in ``~/.rope``? Should we access
-  codeassist directly or use core
 
 
 Remaining Small Stories
@@ -47,6 +53,7 @@ Base:
 
 UI and IDE:
 
+* A completing text widget for dialogs; `Completing(name, list, handle)`
 * Goto definition for ``"# comment.\na_var"``
 * Showing properties in quick outline
 * Changing ``C-a C-a`` to move to the first character in the line

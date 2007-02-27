@@ -73,7 +73,7 @@ class EnhancedList(object):
         if selection:
             active = int(selection[0])
             if active - 1 >= 0:
-                self._activate(active - 1)
+                self.activate(active - 1)
         return 'break'
 
     def _select_next(self, event):
@@ -81,10 +81,10 @@ class EnhancedList(object):
         if selection:
             active = int(selection[0])
             if active + 1 < self.list.size():
-                self._activate(active + 1)
+                self.activate(active + 1)
         return 'break'
 
-    def _activate(self, index):
+    def activate(self, index):
         self.list.select_clear(0, END)
         self.list.selection_set(index)
         self.list.activate(index)
@@ -117,10 +117,26 @@ class VolatileList(EnhancedList):
         super(VolatileList, self).__init__(*args, **kwds)
         self.list.bind('<Alt-p>', lambda event: self.move_up())
         self.list.bind('<Alt-n>', lambda event: self.move_down())
+        self.list.bind('<Control-v>', self._next_page)
+        self.list.bind('<Next>', self._next_page)
+        self.list.bind('<Alt-v>', self._prev_page)
+        self.list.bind('<Prior>', self._prev_page)
+
+    def _next_page(self, event):
+        height = self.list['height']
+        next = min(len(self.entries) - 1, self.get_active_index() + height)
+        self.activate(next)
+        return 'break'
+
+    def _prev_page(self, event):
+        height = self.list['height']
+        next = max(0, self.get_active_index() - height)
+        self.activate(next)
+        return 'break'
 
     def insert_entry(self, entry, index=None):
         if index is None:
-            index = self.get_active_index()
+            index = len(self.entries)
         self.entries.insert(index, entry)
         self.list.insert(index, self.handle.entry_to_string(entry))
         if len(self.entries) == 1:
@@ -141,21 +157,21 @@ class VolatileList(EnhancedList):
         if index > 0:
             entry = self.remove_entry(index)
             self.insert_entry(entry, index - 1)
-            self._activate(index - 1)
+            self.activate(index - 1)
 
     def move_down(self):
         index = self.get_active_index()
         if index < len(self.entries) - 1:
             entry = self.remove_entry(index)
             self.insert_entry(entry, index + 1)
-            self._activate(index + 1)
+            self.activate(index + 1)
 
     def update(self):
         index = self.get_active_index()
         if index > 0:
             entry = self.remove_entry(index)
             self.insert_entry(entry, index)
-            self._activate(index)
+            self.activate(index)
 
 
 class _DescriptionListHandle(EnhancedListHandle):
@@ -187,7 +203,7 @@ class DescriptionList(object):
 
         description_text = ScrolledText.ScrolledText(frame, height=12, width=80)
         self.handle = _DescriptionListHandle(description_text, description)
-        self.list = EnhancedList(frame, self.handle, title)
+        self.list = VolatileList(frame, self.handle, title)
         description_text.grid(row=0, column=1, sticky=N+E+W+S)
         frame.grid()
 
@@ -209,7 +225,8 @@ class TreeViewHandle(object):
         return []
 
     def selected(self, obj):
-        pass
+        """Return True if you want the node to be expanded/collapsed"""
+        return True
 
     def canceled(self):
         pass
@@ -227,84 +244,13 @@ class _TreeNodeInformation(object):
         self.level = level
 
 
-class TreeView(object):
+class _TreeViewListAdapter(object):
 
-    def __init__(self, parent, handle, title='Tree'):
+    def __init__(self, tree_view, handle):
+        self.tree_view = tree_view
         self.handle = handle
-        self.nodes = []
-        self.frame = Frame(parent)
-        label = Label(self.frame, text=title)
-        self.list = Listbox(self.frame, selectmode=SINGLE, height=12, width=32)
-        scrollbar = Scrollbar(self.frame, orient=VERTICAL)
-        scrollbar['command'] = self.list.yview
-        self.list.config(yscrollcommand=scrollbar.set)
-        self.list.bind('<Return>', self._open_selected)
-        self.list.bind('<space>', self._open_selected)
-        self.list.bind('<Escape>', self._cancel)
-        self.list.bind('<Control-g>', self._cancel)
-        self.list.bind('<FocusOut>', self._focus_out)
-        self.list.bind('<Control-p>', self._select_prev)
-        self.list.bind('<Up>', self._select_prev)
-        self.list.bind('<Control-n>', self._select_next)
-        self.list.bind('<Down>', self._select_next)
-        self.list.bind('<e>', self._expand_item)
-        self.list.bind('<plus>', self._expand_item)
-        self.list.bind('<c>', self._collapse_item)
-        self.list.bind('<minus>', self._collapse_item)
-        label.grid(row=0, column=0, columnspan=2)
-        self.list.grid(row=1, column=0, sticky=N+E+W+S)
-        scrollbar.grid(row=1, column=1, sticky=N+E+W+S)
-        self.frame.grid(sticky=N+E+W+S)
 
-    def _focus_out(self, event):
-        self.handle.focus_went_out()
-
-    def _open_selected(self, event):
-        selection = self.list.curselection()
-        if selection:
-            selected = int(selection[0])
-            self.handle.selected(self.nodes[selected].entry)
-
-    def _cancel(self, event):
-        self.handle.canceled()
-
-    def _select_entry(self, index):
-        self.list.select_clear(0, END)
-        self.list.selection_set(index)
-        self.list.see(index)
-        self.list.activate(index)
-        self.list.see(index)
-
-    def _select_prev(self, event):
-        selection = self.list.curselection()
-        if selection:
-            active = int(selection[0])
-            if active - 1 >= 0:
-                self._select_entry(active - 1)
-        return 'break'
-
-    def _select_next(self, event):
-        selection = self.list.curselection()
-        if selection:
-            active = int(selection[0])
-            if active + 1 < self.list.size():
-                self._select_entry(active + 1)
-        return 'break'
-
-    def _expand_item(self, event):
-        selection = self.list.curselection()
-        if selection:
-            active = int(selection[0])
-            self.expand(active)
-
-    def _collapse_item(self, event):
-        selection = self.list.curselection()
-        if selection:
-            active = int(selection[0])
-            self.collapse(active)
-
-    def _update_entry_text(self, index):
-        node = self.nodes[index]
+    def entry_to_string(self, node):
         entry = node.entry
         if len(self.handle.get_children(entry)) > 0:
             if node.expanded:
@@ -316,37 +262,59 @@ class TreeView(object):
         level = node.level
         new_text = 4 * level * ' ' + expansion_sign + \
                    ' ' + self.handle.entry_to_string(entry)
-        old_text = self.list.get(index)
-        if old_text != new_text:
-            old_selection = 0
-            selection = self.list.curselection()
-            if selection:
-                old_selection = int(selection[0])
-            self.list.delete(index)
-            self.list.insert(index, new_text)
-            self._select_entry(old_selection)
+        return new_text
+
+    def selected(self, node):
+        if self.handle.selected(node.entry):
+            index = self.tree_view.list.get_entries().index(node)
+            self.tree_view.toggle(entry_number=index)
+
+    def canceled(self):
+        self.handle.canceled()
+
+    def focus_went_out(self):
+        self.handle.focus_went_out()
+
+
+class TreeView(object):
+
+    def __init__(self, parent, handle, title='Tree', height=12, width=32):
+        self.handle = handle
+        self.frame = Frame(parent)
+        label = Label(self.frame, text=title)
+        self.adapter = _TreeViewListAdapter(self, handle)
+        self.list = VolatileList(parent, self.adapter,
+                                 title, height=height, width=width)
+        self.list.list.bind('<Control-g>', lambda event: self.adapter.canceled())
+        self.list.list.bind('<e>', self._expand_item)
+        self.list.list.bind('<plus>', self._expand_item)
+        self.list.list.bind('<c>', self._collapse_item)
+        self.list.list.bind('<minus>', self._collapse_item)
+
+    def _expand_item(self, event):
+        self.expand(self.list.get_active_index())
+
+    def _collapse_item(self, event):
+        self.collapse(self.list.get_active_index())
+
+    def _update_entry_text(self, index):
+        node = self.list.entries[index]
+        self.list.remove_entry(index)
+        self.list.insert_entry(node, index)
+        self.list.activate(index)
 
     def add_entry(self, entry, index=None, level=0):
-        if index is None:
-            index = self.list.size()
-        self.nodes.insert(index, _TreeNodeInformation(entry, level=level))
-        self.list.insert(index, 4 * level * '  ' +
-                         self.handle.entry_to_string(entry))
-        if len(self.nodes) == 1:
-            self._select_entry(1)
-        self._update_entry_text(index)
+        self.list.insert_entry(_TreeNodeInformation(entry, level=level), index)
 
     def remove(self, entry_number):
         self.collapse(entry_number)
-        self.nodes.pop(entry_number)
-        self.list.delete(entry_number)
+        self.list.remove_entry(entry_number)
 
     def clear(self):
-        self.nodes = []
-        self.list.delete(0, END)
+        self.list.clear()
 
     def expand(self, entry_number):
-        node = self.nodes[entry_number]
+        node = self.list.get_entries()[entry_number]
         if node.expanded:
             return
         new_children = self.handle.get_children(node.entry)
@@ -357,13 +325,26 @@ class TreeView(object):
         self._update_entry_text(entry_number)
 
     def collapse(self, entry_number):
-        node = self.nodes[entry_number]
+        node = self.list.get_entries()[entry_number]
         if not node.expanded:
             return
         node.expanded = False
         for i in range(node.children_count):
             self.remove(entry_number + 1)
         self._update_entry_text(entry_number)
+
+    def toggle(self, entry_number):
+        node = self.list.get_entries()[entry_number]
+        if not node.expanded:
+            self.expand(entry_number)
+        else:
+            self.collapse(entry_number)
+
+    def size(self):
+        return len(self.list.get_entries())
+
+    def get(self, index):
+        return self.adapter.entry_to_string(self.list.get_entries()[index])
 
 
 class FindItemHandle(object):

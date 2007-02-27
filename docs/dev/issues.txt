@@ -58,7 +58,7 @@ most promising ones.
 * DOI
 * SOI
 * Implicit interfaces
-* Changing strucutre refactorings; for example: ``a = b -> a.set(b)``
+* Changing strucutre refactorings; like ``a = b`` -> ``a.set(b)``
 * Advanced refactorings
 
 
@@ -79,21 +79,16 @@ To Be Discussed
 * Indexing source files for faster occurrence finding
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
-* Using a modification of `compiler` AST for simplifying refactorings
 * Finding available refactorings
 
 
-Change Occurrences
-==================
+Marking Errors And Warnings In GUI
+==================================
 
-* How specify a region in a file
-
-  * Always use the current scope
-  * Using physical scopes; The mark should be on a defined object
-  * Store the last place of mark for each editor;  the region
-    between the two last marks is the region
-  * ``C-u # C-r r o`` where # is the number of scopes outside
-    current scope
+* Syntax error
+* Multiple definition warning
+* Codetag
+* Adding `show_errors`, `show_warnings` and `show_tags` config
 
 
 Checking Variable And Function Usages In Their Defining Scopes

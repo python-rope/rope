@@ -105,7 +105,6 @@ class PythonCodeIndenter(TextIndenter):
     def _get_base_indentation(self, lineno):
         range_finder = codeanalyze.StatementRangeFinder(
             self.line_editor, self._get_last_non_empty_line(lineno))
-        range_finder.analyze()
         start = range_finder.get_statement_start()
         if not range_finder.is_line_continued():
             changes = self._get_indentation_changes_caused_by_prev_stmt(

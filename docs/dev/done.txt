@@ -3,6 +3,12 @@
 ===========
 
 
+- Registering templates in ``~/.rope`` : February 26, 2007
+
+
+- Auto-completing function keyword arguments when calling : February 26, 2007
+
+
 - Better status bar : February 23, 2007
 
 

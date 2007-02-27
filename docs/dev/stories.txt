@@ -27,7 +27,6 @@ Base Stories
 IDE And UI Stories
 ==================
 
-* Showing syntactical errors
 * Editor folding
 * Variable indentation and tab size
 * Having multiple clipboards
@@ -43,7 +42,6 @@ IDE And UI Stories
   * Inserting or overwriting
   * Inserting common prefixes
 
-* Showing function signature when calling
 * ReST
 
   * highlighting inside pydocs
@@ -51,10 +49,6 @@ IDE And UI Stories
   * outlines
   * codeassists
 
-* Auto-completing function parameter names when calling
-* Code contexts; context_finder.get_context(text, offset)
-  This can be used when proposing code assists.
-* Formating code
 * Show PyDoc reST highlighting
 * Enhancing module running
 
@@ -63,6 +57,9 @@ IDE And UI Stories
   * Getting input
   * Customizing CWD and parameters
   * Running last run
+
+* Formating code
+* Showing function signature when calling
 
 
 Stories
@@ -102,6 +99,12 @@ Stories
 * Moving initialization to constructor in local variable to field
 
 
+* Inlining a single occurrence
+
+
+* Performing import actions only on one import statement
+
+
 * Adding an option to remove old parameter in inline argument default
 
 
@@ -120,10 +123,7 @@ Stories
 * Extract class
 
 
+* Showing the first syntax error
+
+
 > Public Release 0.5m2 : March 4, 2007
-
-
-* Inlining a single occurrence
-
-
-* Performing import actions only on one import statement

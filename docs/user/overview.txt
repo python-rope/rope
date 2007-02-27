@@ -127,6 +127,7 @@ In the first column:
 * T: ``template``
 * K: ``keyword``
 * B: ``built-in``
+* P: ``parameter_keyword``
 
 In the second column if present:
 
@@ -137,8 +138,8 @@ In the second column if present:
 * I: ``imported``
 
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
-templates.  If you want to add more or edit these you can edit
-`rope.ide.codeassist.PythonCodeAssist._get_default_templates` method.
+templates.  If you want to add more you can edit your ``~/.rope``
+file. (For more information see the default ``~/.rope`` file.)
 
 
 Show PyDoc
