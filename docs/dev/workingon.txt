@@ -1,24 +1,7 @@
 Small Stories
 =============
 
-- Enhancing `CodeAssist`
-
-  - ``a_func(${cursor}``
-  - ``a_func(1, ${cursor}``
-  - What if it is not a function
-  - Not proposing ``**`` and ``*`` args
-  - New `parameter_keyword` proposal kind
-  - Better order for `parameter_keyword` when sorting
-  - Auto-completing function parameter names when calling
-  - Not mistaking over ``return (x, y)`` or ``print (x, y)``
-  - Code assist on ``function${cursor}(...)``
-
-- Better file browsing in large projects
-- Not recompiling current buffer for each codeassist
-- Changing `uihelpers.TreeView` to use `uihelpers.EnhancedList`
-- Page up and page down in lists
-- Adding codeassist templates in ``~/.rope``
-- Adding `rope.ui.prefs` module
+- Allowing */? in find file
 
 * Faster find file in large projects
 * Searching inside `EnhancedList`\s

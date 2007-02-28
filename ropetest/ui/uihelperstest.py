@@ -13,6 +13,7 @@ class SampleListHandle(EnhancedListHandle):
     def entry_to_string(self, integer_obj):
         return 'element ' + str(integer_obj)
 
+
 class SampleTreeHandle(TreeViewHandle):
 
     def __init__(self):

@@ -1,10 +1,11 @@
 import Tkinter
 import tkMessageBox
+import re
 
 import rope.base.project
 import rope.ui.core
-from rope.ui.menubar import MenuAddress
 from rope.ui.extension import SimpleAction
+from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import TreeViewHandle, TreeView, find_item_dialog
 
 
@@ -131,6 +132,25 @@ def create_package(context):
     _create_resource_dialog(context.get_core(), do_create_package, 'Package', 'Source Folder')
 
 
+class _NormalSelector(object):
+
+    def __init__(self, pattern):
+        self.pattern = pattern
+
+    def can_select(self, input_str):
+        return input_str.startswith(self.pattern)
+
+
+class _RESelector(object):
+
+    def __init__(self, pattern):
+        self.pattern = re.compile((pattern + '*').replace('?', '.').
+                                  replace('*', '.*'))
+
+    def can_select(self, input_str):
+        return self.pattern.match(input_str)
+
+
 class FindFileHandle(object):
 
     def __init__(self, context):
@@ -146,17 +166,24 @@ class FindFileHandle(object):
             files = self.last_result
         else:
             files = self.project.get_files()
+            files.sort(cmp=self._compare_files)
         result = []
+        selector = self._create_selector(starting)
         for file_ in files:
-            if file_.name.startswith(starting):
+            if selector.can_select(file_.name):
                 result.append(file_)
             elif file_.name == '__init__.py' and \
-                 file_.parent.name.startswith(starting):
+                 selector.can_select(file_.parent.name):
                 result.append(file_)
-        result.sort(cmp=self._compare_files)
         self.last_keyword = starting
         self.last_result = result
         return result
+
+    def _create_selector(self, pattern):
+        if '?' in pattern or '*' in pattern:
+            return _RESelector(pattern)
+        else:
+            return _NormalSelector(pattern)
 
     def selected(self, resource):
         self.core.open_file(resource.path)
