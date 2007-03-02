@@ -28,7 +28,7 @@ class EnhancedListHandle(object):
         pass
 
 
-class EnhancedList(object):
+class _BaseList(object):
 
     def __init__(self, parent, handle, title="List", get_focus=True,
                  height=14, width=50):
@@ -111,12 +111,10 @@ class EnhancedList(object):
             return self.entries[self.get_active_index()]
 
 
-class VolatileList(EnhancedList):
+class EnhancedList(_BaseList):
 
     def __init__(self, *args, **kwds):
-        super(VolatileList, self).__init__(*args, **kwds)
-        self.list.bind('<Alt-p>', lambda event: self.move_up())
-        self.list.bind('<Alt-n>', lambda event: self.move_down())
+        super(EnhancedList, self).__init__(*args, **kwds)
         self.list.bind('<Control-v>', self._next_page)
         self.list.bind('<Next>', self._next_page)
         self.list.bind('<Alt-v>', self._prev_page)
@@ -152,6 +150,27 @@ class VolatileList(EnhancedList):
     def get_entries(self):
         return list(self.entries)
 
+    def update(self):
+        index = self.get_active_index()
+        if index > 0:
+            entry = self.remove_entry(index)
+            self.insert_entry(entry, index)
+            self.activate(index)
+
+
+class VolatileList(EnhancedList):
+    """This is like an `EnhancedList` except you can move entries in it.
+    
+    You can use ``M-p`` and ``M-n`` or `move_up` and `move_down` methods
+    to move entries in the list
+    
+    """
+
+    def __init__(self, *args, **kwds):
+        super(VolatileList, self).__init__(*args, **kwds)
+        self.list.bind('<Alt-p>', lambda event: self.move_up())
+        self.list.bind('<Alt-n>', lambda event: self.move_down())
+
     def move_up(self):
         index = self.get_active_index()
         if index > 0:
@@ -165,13 +184,6 @@ class VolatileList(EnhancedList):
             entry = self.remove_entry(index)
             self.insert_entry(entry, index + 1)
             self.activate(index + 1)
-
-    def update(self):
-        index = self.get_active_index()
-        if index > 0:
-            entry = self.remove_entry(index)
-            self.insert_entry(entry, index)
-            self.activate(index)
 
 
 class _DescriptionListHandle(EnhancedListHandle):
@@ -203,7 +215,7 @@ class DescriptionList(object):
 
         description_text = ScrolledText.ScrolledText(frame, height=12, width=80)
         self.handle = _DescriptionListHandle(description_text, description)
-        self.list = VolatileList(frame, self.handle, title)
+        self.list = EnhancedList(frame, self.handle, title)
         description_text.grid(row=0, column=1, sticky=N+E+W+S)
         frame.grid()
 
@@ -283,7 +295,7 @@ class TreeView(object):
         self.frame = Frame(parent)
         label = Label(self.frame, text=title)
         self.adapter = _TreeViewListAdapter(self, handle)
-        self.list = VolatileList(parent, self.adapter,
+        self.list = EnhancedList(parent, self.adapter,
                                  title, height=height, width=width)
         self.list.list.bind('<Control-g>', lambda event: self.adapter.canceled())
         self.list.list.bind('<e>', self._expand_item)
@@ -390,7 +402,7 @@ def find_item_dialog(handle, title='Find', matches='Matches'):
     name_label = Tkinter.Label(toplevel, text='Name')
     name = Tkinter.Entry(toplevel)
     list_handle = _FindListViewAdapter(toplevel, handle)
-    found = VolatileList(find_dialog, list_handle, matches, get_focus=False)
+    found = EnhancedList(find_dialog, list_handle, matches, get_focus=False)
     def name_changed(event):
         if name.get() == '':
             result = []

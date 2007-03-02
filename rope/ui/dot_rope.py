@@ -103,5 +103,5 @@ if not i_like_emacs:
 
 
 # Add your python templates
-core.add('templates', ('hello', "print 'My name is ${name}'\n"))
-core.add('templates', ('field', "self.${field}${cursor} = ${field}\n"))
+core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
+core.add('templates', ('set_field', "self.${field}${cursor} = ${field}\n"))

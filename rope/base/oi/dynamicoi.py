@@ -9,8 +9,8 @@ import threading
 
 import cPickle as pickle
 
-from rope.base import pyobjects, builtins
 import rope.base.project
+from rope.base import pyobjects, builtins
 
 
 class DynamicObjectInference(object):

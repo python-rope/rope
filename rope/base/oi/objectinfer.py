@@ -3,6 +3,12 @@ from rope.base.oi import dynamicoi, staticoi
 
 
 class ObjectInfer(object):
+    """A class for inferring objects
+
+    For more information see the documentation in `rope.base.oi`
+    package.
+
+    """
 
     def __init__(self, pycore):
         self.ois = [staticoi.StaticObjectInference(),

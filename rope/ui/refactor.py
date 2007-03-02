@@ -18,7 +18,7 @@ from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView,
                                DescriptionList, EnhancedListHandle,
-                               VolatileList)
+                               VolatileList, EnhancedList)
 
 
 class PreviewAndCommitChanges(object):
@@ -534,7 +534,7 @@ class InlineArgumentDefaultDialog(RefactoringDialog):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='Change Method Signature :')
         label.grid(row=0, column=0)
-        self.param_list = VolatileList(
+        self.param_list = EnhancedList(
             frame, _ParameterListHandle(self.definition_info),
             "Choose which to inline:")
         for pair in self.definition_info.args_with_defaults:

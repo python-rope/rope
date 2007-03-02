@@ -296,7 +296,7 @@ class PythonCodeAssist(object):
         templates = {}
         templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
         test_case_template = \
-            ('import unittest\n\n'
+            ('import unittest\n\n\n'
              'class ${class}(unittest.TestCase):\n\n'
              '    def setUp(self):\n        super(${class}, self).setUp()\n\n'
              '    def tearDown(self):\n        super(${class}, self).tearDown()\n\n'

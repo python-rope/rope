@@ -59,8 +59,18 @@ class AssignedName(PyName):
 
 
 class _Assigned(object):
+    """An assigned expression"""
 
     def __init__(self, ast_node, levels=None):
+        """The `level` is `None` for simple assignments and is
+        a list of numbers for tuple assignments for example in::
+
+           a, (b, c) = x
+
+        The levels for for `a` is ``[0]``, for `b` is ``[1, 0]`` and for
+        `c` is ``[1, 1]``.
+
+        """
         self.ast_node = ast_node
         if levels == None:
             self.levels = []
@@ -72,9 +82,18 @@ class _Assigned(object):
 
 
 class EvaluatedName(PyName):
+    """A `PyName` that will be assigned an expression"""
 
     def __init__(self, assignment=None, module=None, evaluation= '',
                  lineno=None):
+        """
+        `evaluation` is a `str` that specifies what to do with the
+        `assignment`.  For example for a for object the evaluation is
+        '.__iter__().next()'.  That means first call the `__iter__()`
+        method and then call `next()` from the resulting object.  As
+        another example for with variables it is '.__enter__()'
+
+        """
         self.module = module
         self.pyobject = _get_concluded_data(module)
         self.assignment = assignment
@@ -170,7 +189,7 @@ class ImportedName(PyName):
     def _get_imported_pyname(self):
         if self.imported_pyname.get() is None:
             try:
-                self.imported_pyname.set(self.imported_module.get_object()\
+                self.imported_pyname.set(self.imported_module.get_object()
                                          .get_attribute(self.imported_name))
             except AttributeNotFoundError:
                 pass

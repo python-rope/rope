@@ -65,8 +65,6 @@ most promising ones.
 Hot Topics
 ==========
 
-* `Change occurrences`_
-
 
 To Be Discussed
 ===============
@@ -82,6 +80,32 @@ To Be Discussed
 * Finding available refactorings
 
 
+Better Concluded Data
+=====================
+
+The main problem is when using star imports, after a module has been
+invalidated its concluded data still exist.  This does not seem to
+be a major memory leak, since these `_ConcludedData`\s are invalidated
+and contain `None`.
+
+* Using weak references for holding concluded data
+* Changing `ImportedName` not to store the imported object in a
+  concluded data.  This might slow things a bit.
+* Changing `StarImport` to use a mock concluded data for its
+  `ImportedModule` and `ImportedName`\s
+
+The other suggestion here is that currently `ImportedName`\s store
+object information in the concluded data of the importing module
+while they can get concluded data from imported module.  The problem
+happens when the imported module gets deleted.
+
+Note that concluded attributes are:
+
+* PyClass: superclass attributes
+* PyModule: star imports
+* PyPackage: ``__init__.py`` attributes
+
+
 Marking Errors And Warnings In GUI
 ==================================
 
@@ -89,6 +113,35 @@ Marking Errors And Warnings In GUI
 * Multiple definition warning
 * Codetag
 * Adding `show_errors`, `show_warnings` and `show_tags` config
+* When to analyze the code?
+
+  * When the user asks
+  * When saving
+
+* Saving error/warning information
+* Showing description
+* Marking the occurrence in the buffer
+
+Before ``0.5m2`` we can handle codetags.  They are cheap and do not
+need to be saved somewhere.  Keys:
+
+* ``C-,``, ``C-.``
+* ``C-c a p``, ``C-c a n``
+* ``C-c t p``, ``C-c t n``
+* ``C-c e p``, ``C-c e n``
+* ``C-c w p``, ``C-c w n``
+* ``C-c n p``, ``C-c n n``
+
+* Using notes instead of annotations?
+
+An alternative to going prev/next place is to pop up a list and
+select the one that is interesting.
+
+* ``C-c a p``, ``C-c a n``: prev/next annotation
+* ``C-c a t``: show tags
+* ``C-c a w``: show warnings
+* ``C-c a e``: show errors
+* ``C-c a a``: show all
 
 
 Checking Variable And Function Usages In Their Defining Scopes
@@ -112,9 +165,9 @@ Checking Variable And Function Usages In Their Defining Scopes
 Redefining Function/Class Definitions
 =====================================
 
-Multiple function definitions are known to make lots of mysterious
-problems when performing refactorings.  We should report that to
-the user somehow.
+Multiple function definitions are known to cause lots of mysterious
+problems when performing refactorings.  We should somehow report that
+to the user.
 
 Note: Maybe we should care about redefining any `DefinedObject`.
 

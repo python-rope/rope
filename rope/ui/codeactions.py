@@ -8,9 +8,9 @@ from rope.base import codeanalyze
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
-from rope.ui.uihelpers import (TreeView, TreeViewHandle, VolatileList,
+from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
                                EnhancedListHandle)
-from rope.ide import formatter
+from rope.ide import formatter, notes
 
 
 def do_correct_line_indentation(context):
@@ -93,7 +93,7 @@ def do_code_assist(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('Code Assist Proposals')
     handle = _CompletionListHandle(editor, toplevel, result)
-    enhanced_list = VolatileList(
+    enhanced_list = EnhancedList(
         toplevel, handle, title='Code Assist Proposals')
     proposals = rope.ide.codeassist.ProposalSorter(result).get_sorted_proposal_list()
     for proposal in proposals:
@@ -273,7 +273,7 @@ def find_occurrences(context):
     enhanced_list = None
     def focus_set():
         enhanced_list.list.focus_set()
-    enhanced_list = VolatileList(
+    enhanced_list = EnhancedList(
         toplevel, _OccurrenceListHandle(toplevel, context.get_core(), focus_set),
         title='Occurrences')
     for occurrence in result:
@@ -291,6 +291,41 @@ def do_format_code(context):
         editor.set_text(result, reset_editor=False)
 
 
+class _CodetagListHandle(EnhancedListHandle):
+
+    def __init__(self, toplevel, core):
+        self.toplevel = toplevel
+        self.editor_manager = core.get_editor_manager()
+        self.resource = self.editor_manager.active_editor.get_file()
+
+    def entry_to_string(self, entry):
+        return str(entry[0]) + ': ' + entry[1]
+
+    def canceled(self):
+        self.toplevel.destroy()
+
+    def selected(self, selected):
+        editor = self.editor_manager.get_resource_editor(self.resource).get_editor()
+        editor.goto_line(selected[0])
+
+    def focus_went_out(self):
+        pass
+
+
+def show_codetags(context):
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Codetag List')
+    tags = notes.Codetags().tags(context.resource.read())
+    enhanced_list = EnhancedList(
+        toplevel, _CodetagListHandle(toplevel, context.get_core()),
+        title='Codetags')
+    for tag in tags:
+        enhanced_list.add_entry(tag)
+    def close(event):
+        toplevel.destroy()
+    enhanced_list.list.focus_set()
+
+
 # Registering code assist actions
 core = rope.ui.core.Core.get_core()
 core._add_menu_cascade(MenuAddress(['Code'], 'o'), ['python', 'rest'])
@@ -306,6 +341,8 @@ actions.append(SimpleAction('quick_outline', do_quick_outline, 'C-c C-o',
                             MenuAddress(['Code', 'Quick Outline'], 'q'), ['python']))
 actions.append(SimpleAction('find_occurrences', find_occurrences, 'C-c C-s',
                             MenuAddress(['Code', 'Find Occurrences'], 'f'), ['python']))
+actions.append(SimpleAction('show_codetags', show_codetags, 'C-c a c',
+                            MenuAddress(['Code', 'Show Codetags'], None), ['python']))
 
 actions.append(SimpleAction('correct_line_indentation',
                             do_correct_line_indentation, 'C-i',

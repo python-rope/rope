@@ -1,8 +1,13 @@
-Small Stories
-=============
+Codetags
+========
 
-- Allowing */? in find file
+- Added `rope.ide.notes` module
+- Added `ropetest.ide` package
 
+* Adding `notestest` to testsuite
+* New View or Source menu item
+
+* Completion in module entries
 * Faster find file in large projects
 * Searching inside `EnhancedList`\s
 * Supporting templates in other modes, too
@@ -45,7 +50,6 @@ UI and IDE:
 * Comments should be indented
 * Decide when to use `difflib` in `Editor.set_text` based on the
   number of changes
-* Better move dialog; complete modules names; use `editor._CompletionListHandle`
 
 Others:
 
