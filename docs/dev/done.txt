@@ -3,6 +3,9 @@
 ===========
 
 
+- Showing codetag/error/warning list : March 3, 2007
+
+
 - Registering templates in ``~/.rope`` : February 26, 2007
 
 

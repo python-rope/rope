@@ -291,7 +291,7 @@ def do_format_code(context):
         editor.set_text(result, reset_editor=False)
 
 
-class _CodetagListHandle(EnhancedListHandle):
+class _AnnotationListHandle(EnhancedListHandle):
 
     def __init__(self, toplevel, core):
         self.toplevel = toplevel
@@ -312,18 +312,36 @@ class _CodetagListHandle(EnhancedListHandle):
         pass
 
 
-def show_codetags(context):
+def _show_annotations(context, name, items):
     toplevel = Tkinter.Toplevel()
-    toplevel.title('Codetag List')
-    tags = notes.Codetags().tags(context.resource.read())
+    toplevel.title('%s List' % name)
     enhanced_list = EnhancedList(
-        toplevel, _CodetagListHandle(toplevel, context.get_core()),
-        title='Codetags')
-    for tag in tags:
-        enhanced_list.add_entry(tag)
+        toplevel, _AnnotationListHandle(toplevel, context.get_core()),
+        title='%ss' % name)
+    for item in items:
+        enhanced_list.add_entry(item)
     def close(event):
         toplevel.destroy()
     enhanced_list.list.focus_set()
+
+def show_codetags(context):
+    tags = notes.Codetags().tags(context.resource.read())
+    _show_annotations(context, 'Codetag', tags)
+
+def show_errors(context):
+    tags = notes.Errors().errors(context.resource.read())
+    _show_annotations(context, 'Error', tags)
+
+def show_warnings(context):
+    tags = notes.Warnings().warnings(context.resource.read())
+    _show_annotations(context, 'Warning', tags)
+
+def show_all(context):
+    result = notes.Codetags().tags(context.resource.read())
+    result.extend(notes.Warnings().warnings(context.resource.read()))
+    result.extend(notes.Errors().errors(context.resource.read()))
+    result.sort()
+    _show_annotations(context, 'Annotation', result)
 
 
 # Registering code assist actions
@@ -341,28 +359,35 @@ actions.append(SimpleAction('quick_outline', do_quick_outline, 'C-c C-o',
                             MenuAddress(['Code', 'Quick Outline'], 'q'), ['python']))
 actions.append(SimpleAction('find_occurrences', find_occurrences, 'C-c C-s',
                             MenuAddress(['Code', 'Find Occurrences'], 'f'), ['python']))
-actions.append(SimpleAction('show_codetags', show_codetags, 'C-c a c',
-                            MenuAddress(['Code', 'Show Codetags'], None), ['python']))
+
+actions.append(SimpleAction('show_codetags', show_codetags, 'C-c a t',
+                            MenuAddress(['Code', 'Show Codetags'], None, 1), ['python']))
+actions.append(SimpleAction('show_errors', show_errors, 'C-c a e',
+                            MenuAddress(['Code', 'Show Errors'], None, 1), ['python']))
+actions.append(SimpleAction('show_warnings', show_warnings, 'C-c a w',
+                            MenuAddress(['Code', 'Show Warnings'], None, 1), ['python']))
+actions.append(SimpleAction('show_annotations', show_all, 'C-c a a',
+                            MenuAddress(['Code', 'Show All Annotations'], None, 1), ['python']))
 
 actions.append(SimpleAction('correct_line_indentation',
                             do_correct_line_indentation, 'C-i',
-                            MenuAddress(['Code', 'Correct Line Indentation'], 'i', 1),
+                            MenuAddress(['Code', 'Correct Line Indentation'], 'i', 2),
                             ['python', 'rest']))
 actions.append(SimpleAction('format_code',
                             do_format_code, 'C-c C-f',
-                            MenuAddress(['Code', 'Remove Extra Spaces And Lines'], None, 1),
+                            MenuAddress(['Code', 'Remove Extra Spaces And Lines'], None, 2),
                             ['python']))
 
 actions.append(SimpleAction('comment_line', comment_line, 'C-c c',
-                            MenuAddress(['Code', 'Comment Line'], 'e', 1),
+                            MenuAddress(['Code', 'Comment Line'], 'e', 2),
                             ['python']))
 actions.append(SimpleAction('comment_region', comment_region, 'C-c C-c',
-                            MenuAddress(['Code', 'Comment Region'], 'n', 1),
+                            MenuAddress(['Code', 'Comment Region'], 'n', 2),
                             ['python']))
 actions.append(SimpleAction('run_module', do_run_module, 'C-c x p',
-                            MenuAddress(['Code', 'Run Module'], 'm', 2), ['python']))
+                            MenuAddress(['Code', 'Run Module'], 'm', 3), ['python']))
 actions.append(SimpleAction('run_unit_tests', run_tests, 'C-c x t',
-                            MenuAddress(['Code', 'Run Unit Tests'], 't', 2), ['python']))
+                            MenuAddress(['Code', 'Run Unit Tests'], 't', 3), ['python']))
 
 for action in actions:
     core.register_action(action)

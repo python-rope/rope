@@ -11,6 +11,7 @@ import ropetest.objectinfertest
 import ropetest.runmodtest
 import ropetest.builtintest
 import ropetest.historytest
+import ropetest.notestest
 
 
 def suite():
@@ -26,6 +27,7 @@ def suite():
     result.addTests(ropetest.runmodtest.suite())
     result.addTests(unittest.makeSuite(ropetest.builtintest.BuiltinTypesTest))
     result.addTests(ropetest.historytest.suite())
+    result.addTests(unittest.makeSuite(ropetest.notestest.AnnotationsTest))
     return result
 
 

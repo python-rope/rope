@@ -44,6 +44,7 @@ class _BaseList(object):
         self.list.bind('<Return>', self._open_selected)
         self.list.bind('<space>', self._open_selected)
         self.list.bind('<Escape>', self._cancel)
+        self.list.bind('<Control-g>', self._cancel)
         self.list.bind('<FocusOut>', self._focus_out)
         self.list.bind('<Control-p>', self._select_prev)
         self.list.bind('<Up>', self._select_prev)

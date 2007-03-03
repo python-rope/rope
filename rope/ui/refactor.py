@@ -757,12 +757,12 @@ actions.append(SimpleAction('change_occurrences',
                             MenuAddress(['Refactor', 'Change Occurrences'], None, 1),
                             ['python']))
 actions.append(SimpleAction('local_to_field',
-                            ConfirmEditorsAreSaved(convert_local_to_field), None,
-                            MenuAddress(['Refactor', 'Convert Local Variable to Field'], 'b', 1),
+                            ConfirmEditorsAreSaved(convert_local_to_field), 'C-c r b',
+                            MenuAddress(['Refactor', 'Local Variable to Field'], 'b', 1),
                             ['python']))
 actions.append(SimpleAction('inline_argument_default',
-                            ConfirmEditorsAreSaved(inline_argument_default), None,
-                            MenuAddress(['Refactor', 'Inline Argument Default'], 'g', 1),
+                            ConfirmEditorsAreSaved(inline_argument_default), 'C-c r d',
+                            MenuAddress(['Refactor', 'Inline Argument Default'], 'd', 1),
                             ['python']))
 actions.append(SimpleAction('rename_current_module',
                             ConfirmEditorsAreSaved(rename_module), 'C-c r 1 r',

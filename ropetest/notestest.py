@@ -5,31 +5,69 @@ from rope.ide import notes
 from ropetest import testutils
 
 
-class CodetagsTest(unittest.TestCase):
+class AnnotationsTest(unittest.TestCase):
 
     def setUp(self):
-        super(CodetagsTest, self).setUp()
+        super(AnnotationsTest, self).setUp()
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
         self.project = Project(self.project_root)
+        self.tags = notes.Codetags()
 
     def tearDown(self):
         testutils.remove_recursively(self.project_root)
-        super(CodetagsTest, self).tearDown()
+        super(AnnotationsTest, self).tearDown()
 
-    def test_empty_input(self):
-        tags = notes.Codetags()
-        self.assertEquals([], tags.tags(''))
+    def test_tags_empty_input(self):
+        self.assertEquals([], self.tags.tags(''))
 
-    def test_trivial_case(self):
-        tags = notes.Codetags()
-        self.assertEquals([(1, 'TODO: todo')], tags.tags('# TODO: todo\n'))
+    def test_tags_trivial_case(self):
+        self.assertEquals([(1, 'TODO: todo')], self.tags.tags('# TODO: todo\n'))
 
     def test_two_codetags(self):
-        tags = notes.Codetags()
         self.assertEquals(
             [(1, 'XXX: todo'), (3, 'FIXME: fix me')],
-             tags.tags('# XXX: todo\n\n# FIXME: fix me\n'))
+             self.tags.tags('# XXX: todo\n\n# FIXME: fix me\n'))
+
+    def test_errors_empty_input(self):
+        errors = notes.Errors()
+        self.assertEquals([], errors.errors(''))
+
+    def test_errors_trival_error(self):
+        errors = notes.Errors()
+        self.assertEquals([(1, 'invalid syntax')],
+                          errors.errors('error input\n'))
+
+    def test_warnings_empty_input(self):
+        warnings = notes.Warnings()
+        self.assertEquals([], warnings.warnings(''))
+
+    def test_warnings_redefining_functions_in_global_scope(self):
+        warnings = notes.Warnings()
+        self.assertEquals([(3, 'Rebinding defined name <f>')],
+                          warnings.warnings('def f():\n    pass\nf = 1\n'))
+
+    def test_warnings_redefining_classes_in_global_scope(self):
+        warnings = notes.Warnings()
+        self.assertEquals([(3, 'Rebinding defined name <C>')],
+                          warnings.warnings('class C(object):\n    pass\nC = 1\n'))
+
+    def test_warnings_redefining_nested_scopes(self):
+        warnings = notes.Warnings()
+        self.assertEquals(
+            [(4, 'Rebinding defined name <g>')], warnings.warnings(
+            'def f():\n    def g():\n        pass\n    g = 1\n'))
+
+    def test_warnings_not_redefining_in_nested_scopes(self):
+        warnings = notes.Warnings()
+        self.assertEquals([], warnings.warnings(
+                          'def f():\n    def g():\n        pass\ng = 1\n'))
+
+    def test_warnings_redefining_functions_by_functions(self):
+        warnings = notes.Warnings()
+        self.assertEquals([(3, 'Rebinding defined name <f>')],
+                          warnings.warnings('def f():\n    pass\n'
+                                            'def f():\n    pass\n'))
 
 
 if __name__ == '__main__':
