@@ -1,19 +1,7 @@
-Codetags
-========
-
-- Redefining names by other definitions
-- Nested scopes
-- Redefinition warnings
-- `SyntaxWarning` warnings
-- Handling `SyntaxWarning`\s when looking for errors
-- Warnings ``C-c a w``
-- Errors ``C-c a e``
-- All ``C-c a a``
-- Adding `notestest` to testsuite
-- Show all annotations
+Small Stories
+=============
 
 * New View or Source menu item
-
 * Completion in module entries
 * Faster find file in large projects
 * Searching inside `EnhancedList`\s

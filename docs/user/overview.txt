@@ -80,6 +80,10 @@ remove extra spaces         C-c C-f        C-F
 comment current line        C-c c          C-3
 comment region lines        C-c C-c
 find occurrences            C-c C-s        C-G
+show codetags               C-c a t
+show errors                 C-c a e
+show warnings               C-c a w
+show all annotations        C-c a a
 --------------------------  -------------  -------------
 rename refactoring          C-c r r        M-R
 extract method              C-c r m        M-M
@@ -92,8 +96,8 @@ method to method object     C-c r j
 encapsulate field           C-c r s
 introduce parameter         C-c r p
 rename in file              C-c r e
-convert local to field
-inline argument default
+local to field              C-c r b
+inline argument default     C-c r d
 module to package           C-c r 1 p
 rename current module       C-c r 1 r
 move current package        C-c r 1 v

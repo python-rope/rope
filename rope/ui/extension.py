@@ -81,7 +81,7 @@ class ActionContext(object):
 class SimpleAction(Action):
     """A simple `Action`"""
 
-    def __init__(self, name, command, default_key, menu_address,
+    def __init__(self, name, command, default_key=None, menu_address=None,
                  active_contexts=['all', 'none']):
         self.name = name
         self.command = command

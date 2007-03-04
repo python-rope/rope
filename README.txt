@@ -17,7 +17,29 @@ library.
 New Features
 ============
 
-*
+* Moving methods; ``C-c r v``
+* Showing codetag/error/warning list; ``C-c a t/e/w/a``
+* Adding templates in ``~/.rope``
+* Auto-completing function keyword arguments when calling
+* Change occurrences; ``C-c r o``
+* Better status bar
+
+Move method refactoring has been added.  In this refactoring a method
+of a class is moved to the class of one of its attributes.  The old
+method will call the new method.  If you want to change all
+of the occurrences of the old method to use the new method you can
+inline it.
+
+Change occurrences refactoring is a special refactoring.  It replaces
+occurrences of something with what you want.  This refactoring is
+different from rename refactoring; It only changes the scope
+it was invoked from.  Second it does not rename anything it only
+replaces occurrences and has not side-effects.  This refactoring
+can be used to perform some non-standard refactorings.
+
+You can define you're own templates in ``~/.rope``.  See examples
+in the default ``~/.rope`` file. (`rope.ui.dot_rope` module; It
+will be copied to ``~/.rope`` if none already exists.)
 
 
 Getting Started

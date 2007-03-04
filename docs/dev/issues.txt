@@ -109,10 +109,7 @@ Note that concluded attributes are:
 Marking Errors And Warnings In GUI
 ==================================
 
-* Syntax error
-* Multiple definition warning
-* Codetag
-* Adding `show_errors`, `show_warnings` and `show_tags` config
+* Marking the occurrence in the buffer
 * When to analyze the code?
 
   * When the user asks
@@ -120,28 +117,12 @@ Marking Errors And Warnings In GUI
 
 * Saving error/warning information
 * Showing description
-* Marking the occurrence in the buffer
 
 Before ``0.5m2`` we can handle codetags.  They are cheap and do not
 need to be saved somewhere.  Keys:
 
 * ``C-,``, ``C-.``
 * ``C-c a p``, ``C-c a n``
-* ``C-c t p``, ``C-c t n``
-* ``C-c e p``, ``C-c e n``
-* ``C-c w p``, ``C-c w n``
-* ``C-c n p``, ``C-c n n``
-
-* Using notes instead of annotations?
-
-An alternative to going prev/next place is to pop up a list and
-select the one that is interesting.
-
-* ``C-c a p``, ``C-c a n``: prev/next annotation
-* ``C-c a t``: show tags
-* ``C-c a w``: show warnings
-* ``C-c a e``: show errors
-* ``C-c a a``: show all
 
 
 Checking Variable And Function Usages In Their Defining Scopes
@@ -160,39 +141,6 @@ Checking Variable And Function Usages In Their Defining Scopes
 
     d = {}
     d['hey'] = C()
-
-
-Redefining Function/Class Definitions
-=====================================
-
-Multiple function definitions are known to cause lots of mysterious
-problems when performing refactorings.  We should somehow report that
-to the user.
-
-Note: Maybe we should care about redefining any `DefinedObject`.
-
-* Allowing multiple name definitions
-
-  The current implementation doesn't and there aren't good reasons
-  for supporting them.  Anyway, for supporting multiple definitions
-  with the same name we can hold a list rather than a single `PyName`
-  in `PyObject`\s.
-
-* Raising an exception:
-
-  This does not seem to be a good approach.  The existence a
-  duplicate function causes problems only on some conditions and
-  many tasks work as expected.
-
-* Only printing a warning
-
-  The thing is that the rope library cannot write anything to the
-  output.  The `ui` can but not the `base`.
-
-* Maybe we can think of a way for issuing warnings rope encounters
-
-  The warnings seem to belong to the IDE rather than the base.  But
-  the problem is that most warnings are encountered in the base package.
 
 
 Better Occurrence Finding
