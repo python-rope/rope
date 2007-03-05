@@ -125,6 +125,7 @@ Here is a sample session.::
   >>> mod1 = project.root.create_file('mod1.py')
   >>> mod1.write('a_var = 10\n')
 
+  # Alternatively you can use `PyCore` objects.
   # Creating modules and packages using `PyCore` objects
   >>> pycore = project.get_pycore()
   >>> pkg = pycore.create_package(project.root, 'pkg')

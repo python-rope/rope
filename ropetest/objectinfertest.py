@@ -199,6 +199,18 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
         self.assertEquals(c1_class, c_var.get_type())
 
+    # TODO: Simple SOI
+    def xxx_test_static_oi_for_simple_function_calls(self):
+        code = 'class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n'
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write(code)
+        pymod = self.pycore.resource_to_pyobject(mod)
+        # Perform SOI
+        c_class = pymod.get_attribute('C').get_object()
+        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        p_object = f_scope.get_name('p').get_object()
+        self.assertEquals(c_class, p_object)
+
 
 class DynamicOITest(unittest.TestCase):
 

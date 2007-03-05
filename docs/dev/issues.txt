@@ -34,12 +34,7 @@ From February 4, 2007 till May 6, 2007
 Release Goals
 -------------
 
-Metaphor: Enhance old refactorings
-
-* In this release we will try to enhance old refactorings and move
-  toward being more stable.
-* New language features will be supported.
-* The UI will be enhanced.
+Metaphor: Better static object inference
 
 
 Discussion
@@ -78,6 +73,93 @@ To Be Discussed
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
 * Finding available refactorings
+* Getting ready for Python 3.0
+
+
+Better SOI
+==========
+
+To improve our static object inference mechanisms I propose to change
+`PyFunction`\s.  These changes will allow the analysis of source code
+without changing the base parts.
+
+The idea is to add a method like `called_with_params()`.  This
+method saves the params for future use.  The SOI algorithm walks
+through the input AST for a few times and calls this function with
+other inferred objects.
+
+This approach can be enhanced to work for builtin container types, too.
+We can force a `PyFunction` to save its information only for its object
+or for its type.  This can be dont with passing the object to
+`called_with_params()` method.
+
+We also have to change `PyFunction` methods like `get_returned_object`,
+`get_parameters` and `get_parameter` to adapt to the new situation.
+
+I don't know how often and when to scan a module for
+SOI.  Maybe before ``0.5`` release, rope only performs SOI when
+when the user askes; just like DOI.  Performing it automatically
+requires it to be efficient.  So leter, after implementing it,
+we'll decide about that.
+
+* Should we use the collected information in `PyFunction` itself or
+  in `staticoi` module.
+* Merging common parts in SOI and DOI for holding parameters and
+  returned objects; Adding function info db?
+
+
+Function Scopes
+---------------
+
+Another issue for implementing this feature is that function scope
+variable types are dependant on the type of the parameters and
+should change.  This issue seem to have some relations with implicit
+interfaces.
+
+The problem gets worse when there are defined objects in a function
+scope.  Maybe we can change pynames to support function scopes.
+
+The other issue is that we should consider unknown pyobjects as not
+yet type inferred.  The current implementation uses unknown
+pyobjects when it cannot infer the object a name references.  This
+won't work since in the next iteration of our SOI we might find
+the correct type of a name.
+
+
+Static Returned Object Inference
+--------------------------------
+
+Since we're passed the object parameters hold, we can perform a
+better returned object SOI.  We can do that by giving parameters
+the passed objects and infer the object of local names once more.
+
+* Parameterizing function scope names to their parameters
+* Caching old result
+* Merging information with DOI
+
+
+Implementation
+--------------
+
+
+`SOIVisitor`::
+
+  SOIVisitor(object):
+
+    def visitCallFunc(self, node):
+        pyfunction = evaluate.get_statement_result(self.scope, node.node)
+        args = evaluate.Arguments(node.args, self.scope)
+        pyfunction.called_with_params(args)
+
+`SOIVisitor` for per object storing::
+
+  SOIVisitor(object):
+
+    def visitCallFunc(self, node):
+        pyfunction = evaluate.get_statement_result(self.scope, node.node)
+        args = evaluate.Arguments(node.args, self.scope)
+        object = self._get_object(node)
+        pyfunction.called_with_params(args, object=object)
 
 
 Better Concluded Data
@@ -116,11 +198,6 @@ Marking Errors And Warnings In GUI
   * When saving
 
 * Saving error/warning information
-* Showing description
-
-Before ``0.5m2`` we can handle codetags.  They are cheap and do not
-need to be saved somewhere.  Keys:
-
 * ``C-,``, ``C-.``
 * ``C-c a p``, ``C-c a n``
 

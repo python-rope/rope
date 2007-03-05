@@ -142,8 +142,9 @@ In the second column if present:
 * I: ``imported``
 
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
-templates.  If you want to add more you can edit your ``~/.rope``
-file. (For more information see the default ``~/.rope`` file.)
+templates.  You can define your own templates in ``~/.rope``.  See
+examples in the default ``~/.rope`` file. (`rope.ui.dot_rope`
+module; It will be copied to ``~/.rope`` if none already exists.)
 
 
 Show PyDoc
@@ -242,6 +243,16 @@ and the new project tree would be::
     newmod.py
 
 
+Move Method Refactoring
+-----------------------
+
+It happens when you perform move refactoring on a method of a class.
+In this refactoring a method of a class is moved to the class of one
+of its attributes.  The old method will call the new method.  If you
+want to change all of the occurrences of the old method to use the new
+method you can inline it afterwards.
+
+
 Extract Method
 --------------
 
@@ -314,6 +325,17 @@ While reordering arguments you should consider the python
 language order for argument types (i.e. : normal args, args with
 defaults, ``*args``, ``**keywords``).  Rope won't complain if you
 don't but python will.
+
+
+Change Occurrences Refactoring
+------------------------------
+
+Change occurrences refactoring is a special refactoring.  It replaces
+occurrences of something with what you want.  This refactoring is
+different from rename refactoring; It only changes the scope
+it was invoked from.  Second it does not rename anything it only
+replaces occurrences and has no side-effects.  This refactoring
+can be used to perform some non-standard refactorings.
 
 
 Sorting Imports

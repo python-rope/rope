@@ -1,6 +1,8 @@
 Small Stories
 =============
 
+* Repeating last command
+* Line break algorithm for rest mode; ``C-q``
 * New View or Source menu item
 * Completion in module entries
 * Faster find file in large projects

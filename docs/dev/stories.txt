@@ -123,3 +123,6 @@ Stories
 
 
 > Public Release 0.5m3 : March 18, 2007
+
+
+* Enhanced static object inference
