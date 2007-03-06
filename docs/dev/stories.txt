@@ -110,10 +110,16 @@ Stories
 * Renaming similarly named variables
 
 
+* Moving static and class methods
+
+
 * Inlining static methods
 
 
-* Renaming textual matches
+* Basic code formatting; correcting blank lines
+
+
+* Repeating last command; ``C-x z``
 
 
 * Analyzing function decorators
@@ -122,7 +128,25 @@ Stories
 * Extract class
 
 
+* Searching inside `EnhancedList`\s
+
+
+* Supporting templates in text modes
+
+
+* Line break algorithm for rest mode; ``C-q``
+
+
+* Renaming textual matches
+
+
+* Enhancing open project dialog
+
+
 > Public Release 0.5m3 : March 18, 2007
 
 
-* Enhanced static object inference
+* Enhanced returned object static object inference
+
+
+* Enhanced parameter static object inference

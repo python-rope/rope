@@ -1,9 +1,10 @@
 import os
-import unittest
 import sys
+import unittest
 
 from rope.base.project import Project
-from rope.base.pycore import ModuleNotFoundError, get_base_type
+from rope.base.pycore import ModuleNotFoundError
+from rope.base.pyobjects import get_base_type
 from ropetest import testutils
 
 

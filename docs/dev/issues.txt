@@ -90,7 +90,7 @@ other inferred objects.
 
 This approach can be enhanced to work for builtin container types, too.
 We can force a `PyFunction` to save its information only for its object
-or for its type.  This can be dont with passing the object to
+or for its type.  This can be done by passing the object to
 `called_with_params()` method.
 
 We also have to change `PyFunction` methods like `get_returned_object`,
@@ -138,28 +138,51 @@ the passed objects and infer the object of local names once more.
 * Merging information with DOI
 
 
-Implementation
---------------
+Merging DOI And SOI Information
+-------------------------------
+
+There are a few problems for this merge.  The first problem is that
+for DOI we have both the parameters and the returned value.  But for
+SOI we only have the parameters.  We can calculate the returned
+object but that increases analysis time considerably.
+
+The other problems is that we can delay the call to
+`Arguments.get_args()` till we really need it.  In that case we need
+to invalidated them if necessary, since `Argument` objects hold a
+scope.
+
+Alternatively if we call `Arguments.get_args()` when we're
+performing the analysis, we can transform the `PyObject`\s to
+persisted form and then save them in our DOI object db.  This does not
+need to be invalidated but requires evaluating parameters which is an
+expensive task.
+
+Another problem is we want to support per object data holding.  Can
+we enhance our textual form to handle it or should we give up.  This
+issue exists for DOI, too.
 
 
-`SOIVisitor`::
+Holding Per Name Information
+----------------------------
 
-  SOIVisitor(object):
+We can change our type DB to add new feature.::
 
-    def visitCallFunc(self, node):
-        pyfunction = evaluate.get_statement_result(self.scope, node.node)
-        args = evaluate.Arguments(node.args, self.scope)
-        pyfunction.called_with_params(args)
+  objectdb.add_per_object(pyname, function_name, parameters)
 
-`SOIVisitor` for per object storing::
+Our main problem is how to tell the difference between `PyName`\s.
+Our object DB will save the information based on the definition
+location and the name of the passed pyname. (What to do for
+``self.x, x = d``?)
 
-  SOIVisitor(object):
 
-    def visitCallFunc(self, node):
-        pyfunction = evaluate.get_statement_result(self.scope, node.node)
-        args = evaluate.Arguments(node.args, self.scope)
-        object = self._get_object(node)
-        pyfunction.called_with_params(args, object=object)
+Invalidating Object DB Data
+---------------------------
+
+As the time passes and modules change, much of rope's object DB
+data will be out of date.  How are we going to detect and delete
+these data.  When this DB is queried, it can ignore out of date data
+and when saving the db to disk or when loading it it can delete the
+out of date information.
 
 
 Better Concluded Data

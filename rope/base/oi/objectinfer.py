@@ -11,8 +11,9 @@ class ObjectInfer(object):
     """
 
     def __init__(self, pycore):
-        self.ois = [staticoi.StaticObjectInference(),
-                    dynamicoi.DynamicObjectInference(pycore)]
+        self.soi = staticoi.StaticObjectInference(pycore)
+        self.doi = dynamicoi.DynamicObjectInference(pycore)
+        self.ois = [self.soi, self.doi]
 
     def infer_returned_object(self, pyobject, args):
         """Infer the `PyObject` this callable `PyObject` returns after calling"""

@@ -3,10 +3,11 @@ import sys
 
 import rope.base.oi.dynamicoi
 import rope.base.oi.objectinfer
+import rope.base.oi.staticoi
 import rope.base.project
-import rope.refactor
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.pyobjects import *
+from rope.base.pyobjects import PyModule, PyPackage
+import rope.base.oi.callinfo
 
 
 class PyCore(object):
@@ -14,7 +15,7 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
-        self.call_info = rope.base.oi.dynamicoi.CallInformationCollector(self)
+        self.call_info = rope.base.oi.callinfo.CallInfoManager(self)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self.classes = None
         observer = rope.base.project.ResourceObserver(
@@ -194,10 +195,20 @@ class PyCore(object):
         controlling the process.
 
         """
-        runner = self.call_info.run_module(resource, args, stdin, stdout)
+        runner = self.object_infer.doi.run_module(resource, args, stdin, stdout)
         runner.add_finishing_observer(self._invalidate_all_concluded_data)
         runner.run()
         return runner
+
+    def analyze_module(self, resource):
+        """Analyze `resource` module for static object inference
+
+        This function forces rope to analyze this module to concluded
+        information about function calls.
+
+        """
+        pymodule = self.resource_to_pyobject(resource)
+        self.object_infer.soi.analyze_module(pymodule)
 
     def get_subclasses(self, pyclass):
         if self.classes is None:

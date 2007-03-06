@@ -1,7 +1,7 @@
 import unittest
 
-from rope.base.pycore import get_base_type
 from rope.base.project import Project
+from rope.base.pyobjects import get_base_type
 from ropetest import testutils
 
 

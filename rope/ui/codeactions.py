@@ -212,6 +212,10 @@ def do_run_module(context):
 def run_tests(context):
     rope.ui.testview.run_unit_test(context.project, context.resource)
 
+def run_soi(context):
+    pycore = context.project.pycore
+    pycore.analyze_module(context.resource)
+
 def comment_line(context):
     editor = context.get_active_editor().get_editor()
     line_number = editor.get_current_line_number()
@@ -388,6 +392,8 @@ actions.append(SimpleAction('run_module', do_run_module, 'C-c x p',
                             MenuAddress(['Code', 'Run Module'], 'm', 3), ['python']))
 actions.append(SimpleAction('run_unit_tests', run_tests, 'C-c x t',
                             MenuAddress(['Code', 'Run Unit Tests'], 't', 3), ['python']))
+actions.append(SimpleAction('run_soi', run_soi, 'C-c x s',
+                            MenuAddress(['Code', 'Run SOI On Module'], None, 3), ['python']))
 
 for action in actions:
     core.register_action(action)

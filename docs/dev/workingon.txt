@@ -1,15 +1,29 @@
-Small Stories
-=============
+Better Parameter SOI
+====================
 
-* Repeating last command
-* Line break algorithm for rest mode; ``C-q``
-* New View or Source menu item
+- Adding ``Run Static Object Inference for this module``; ``C-c x s``
+- Analyzing calls inside calls
+- Changing SOI to use dynamic oi mechanisms
+- Adding `rope.base.oi.callinfo` module
+- Methods of classes and `Arguments`
+- The first parameter passed to a parameter is ignored
+
+* Not ignoring the first argument for builtin types
+* Using sqlite3 to prevent holding information in memory
+* Mock db for testing
+* Adding `PyName.get_real_object()` which might return `None`
+* Preventing OI recursions
+* What to do for builtin functions
+* Update `rope.base.oi` docs
+
+* Enhancing object textual form to include new types
+* Goto definition for builtins raises exception
+* `evalutate.get...` was changed to `rope.base.evaluate.get...` in moving
+* Move failed to import old module
+
+* ``enable_doi`` config
 * Completion in module entries
 * Faster find file in large projects
-* Searching inside `EnhancedList`\s
-* Supporting templates in other modes, too
-* Moving static and class methods
-* Inlining methods with decorators
 * Decorators and method refactorings
 * Unifying ``x.get_type() == get_base_type('y')``, ``isinstance(x, PyY)``
 * Document how to move fields
@@ -43,7 +57,6 @@ UI and IDE:
 * Showing properties in quick outline
 * Changing ``C-a C-a`` to move to the first character in the line
 * ``M-a`` and ``M-e``
-* Changing open project dialog
 * Comments should be indented
 * Decide when to use `difflib` in `Editor.set_text` based on the
   number of changes

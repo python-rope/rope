@@ -16,7 +16,7 @@ class StatementEvaluator(object):
 
     def visitGetattr(self, node):
         pyname = get_statement_result(self.scope, node.expr)
-        if pyname is not None:
+        if pyname is not None and pyname.get_object() is not None:
             try:
                 self.result = pyname.get_object().get_attribute(node.attrname)
             except rope.base.exceptions.AttributeNotFoundError:
@@ -26,23 +26,28 @@ class StatementEvaluator(object):
         pyobject = self._get_object_for_node(node.node)
         if pyobject is None:
             return
-        args = Arguments(node.args, self.scope)
+        def _get_returned(pyobject):
+            args = create_arguments(pyobject, node, self.scope)
+            return pyobject.get_returned_object(args)
         if pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
             result = None
             if '__new__' in pyobject.get_attributes():
                 new_function = pyobject.get_attribute('__new__').get_object()
-                result = new_function.get_returned_object(args)
+                result = _get_returned(new_function)
             if result is None or \
                result.get_type() == rope.base.pyobjects.get_base_type('Unknown'):
                 result = rope.base.pyobjects.PyObject(pyobject)
             self.result = rope.base.pynames.AssignedName(pyobject=result)
-        elif pyobject.get_type() == rope.base.pyobjects.get_base_type('Function'):
-            self.result = rope.base.pynames.AssignedName(
-                pyobject=pyobject.get_returned_object(args))
+            return
+
+        pyfunction = None
+        if pyobject.get_type() == rope.base.pyobjects.get_base_type('Function'):
+            pyfunction = pyobject
         elif '__call__' in pyobject.get_attributes():
-            call_function = pyobject.get_attribute('__call__')
+            pyfunction = pyobject.get_attribute('__call__').get_object()
+        if pyfunction is not None:
             self.result = rope.base.pynames.AssignedName(
-                pyobject=call_function.get_object().get_returned_object(args))
+                pyobject=_get_returned(pyfunction))
 
     def visitConst(self, node):
         if isinstance(node.value, (str, unicode)):
@@ -171,6 +176,12 @@ def get_string_result(scope, string):
 
 
 class Arguments(object):
+    """A class for evaluating parameters passed to a function
+
+    Always use the `create_argument` factory.  It handles when the
+    first argument is implicit
+
+    """
 
     def __init__(self, args, scope):
         self.args = args
@@ -191,3 +202,15 @@ class Arguments(object):
 
     def _evaluate(self, ast_node):
         return get_statement_result(self.scope, ast_node)
+
+
+def create_arguments(pyfunction, call_func_node, scope):
+    """A factory for creating `Arguments`'"""
+    args = call_func_node.args
+    called = call_func_node.node
+    if isinstance(pyfunction, rope.base.pyobjects.PyFunction) and \
+       isinstance(pyfunction.parent, rope.base.pyobjects.PyClass) and \
+       isinstance(called, compiler.ast.Getattr):
+        args = list(args)
+        args.insert(0, called.expr)
+    return Arguments(args, scope)

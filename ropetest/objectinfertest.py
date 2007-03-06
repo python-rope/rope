@@ -2,8 +2,9 @@ import unittest
 
 from rope.base.project import Project
 import rope.base.builtins
+from rope.base.oi import callinfo
 from ropetest import testutils
-from rope.base.oi import dynamicoi
+
 
 class ObjectInferTest(unittest.TestCase):
 
@@ -199,17 +200,57 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
         self.assertEquals(c1_class, c_var.get_type())
 
-    # TODO: Simple SOI
-    def xxx_test_static_oi_for_simple_function_calls(self):
+
+class NewStaticOITest(unittest.TestCase):
+
+    def setUp(self):
+        super(NewStaticOITest, self).setUp()
+        self.project_root = 'sampleproject'
+        testutils.remove_recursively(self.project_root)
+        self.project = Project(self.project_root)
+        self.pycore = self.project.get_pycore()
+        self.mod = self.pycore.create_module(self.project.root, 'mod')
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(NewStaticOITest, self).tearDown()
+
+    def test_static_oi_for_simple_function_calls(self):
         code = 'class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n'
-        mod = self.pycore.create_module(self.project.root, 'mod')
-        mod.write(code)
-        pymod = self.pycore.resource_to_pyobject(mod)
-        # Perform SOI
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod.get_attribute('C').get_object()
         f_scope = pymod.get_attribute('f').get_object().get_scope()
-        p_object = f_scope.get_name('p').get_object()
-        self.assertEquals(c_class, p_object)
+        p_type = f_scope.get_name('p').get_object().get_type()
+        self.assertEquals(c_class, p_type)
+
+    def test_static_oi_not_failing_when_callin_callables(self):
+        code = 'class C(object):\n    pass\nC()\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+
+    def test_static_oi_for_nested_calls(self):
+        code = 'class C(object):\n    pass\ndef f(p):\n    pass\n' \
+               'def g(p):\n    return p\nf(g(C()))\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        p_type = f_scope.get_name('p').get_object().get_type()
+        self.assertEquals(c_class, p_type)
+
+    def test_static_oi_class_methods(self):
+        code = 'class C(object):\n    def f(self, p):\n        pass\n' \
+               'C().f(C())'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        f_scope = c_class.get_attribute('f').get_object().get_scope()
+        p_type = f_scope.get_name('p').get_object().get_type()
+        self.assertEquals(c_class, p_type)
 
 
 class DynamicOITest(unittest.TestCase):
@@ -394,7 +435,7 @@ class DynamicOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
-    def test_dict_keys_and_dynamicoi(self):
+    def test_dict_keys_and_dynamicoi2(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'def a_func(arg):\n    return arg\n' \
@@ -424,8 +465,8 @@ class DynamicOITest(unittest.TestCase):
         code = 'class C(object):\n    pass\ndef f():\n    pass\na_var = C()\n' \
                'a_list = [C()]\na_str = "hey"\n'
         mod.write(code)
-        to_pyobject = dynamicoi._TextualToPyObject(self.project)
-        to_textual = dynamicoi._PyObjectToTextual(self.project)
+        to_pyobject = callinfo._TextualToPyObject(self.project)
+        to_textual = callinfo._PyObjectToTextual(self.project)
         pymod = self.pycore.resource_to_pyobject(mod)
         def complex_to_textual(pyobject):
             return to_textual.transform(
@@ -518,6 +559,7 @@ def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ObjectInferTest))
     result.addTests(unittest.makeSuite(DynamicOITest))
+    result.addTests(unittest.makeSuite(NewStaticOITest))
     return result
 
 if __name__ == '__main__':

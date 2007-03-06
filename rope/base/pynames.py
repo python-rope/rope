@@ -124,6 +124,9 @@ class ParameterName(PyName):
     def get_object(self):
         if self.pyobject.get() is None:
             self.pyobject.set(self.pyfunction.get_parameter(self.index))
+        if self.pyobject.get() is None:
+            self.pyobject.set(rope.base.pyobjects.PyObject(
+                              rope.base.pyobjects.get_base_type('Unknown')))
         return self.pyobject.get()
 
     def get_definition_location(self):
