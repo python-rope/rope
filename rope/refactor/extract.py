@@ -116,16 +116,15 @@ class _ExtractPerformer(object):
         return holding_scope
 
     def _is_global(self):
-        return self.holding_scope.pyobject.get_type() == \
-               rope.base.pyobjects.get_base_type('Module')
+        return isinstance(self.holding_scope.pyobject,
+                          rope.base.pyobjects.AbstractModule)
 
     def _is_method(self):
         return self.holding_scope.parent is not None and \
-               self.holding_scope.parent.pyobject.get_type() == \
-               rope.base.pyobjects.get_base_type('Type')
+               self.holding_scope.parent.get_kind() == 'Class'
 
     def _check_exceptional_conditions(self):
-        if self.holding_scope.pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
+        if self.holding_scope.get_kind() == 'Class':
             raise RefactoringError('Can not extract methods in class body')
         if self.parts.region[1] > self.parts.scope[1]:
             raise RefactoringError('Bad range selected for extract method')

@@ -99,12 +99,19 @@ class EvaluatedName(PyName):
         self.assignment = assignment
         self.lineno = lineno
         self.evaluation = evaluation
+        self.is_being_inferred = False
 
     def get_object(self):
+        if self.is_being_inferred:
+            raise rope.base.pyobjects.IsBeingInferredError('Circular evaluations')
         if self.pyobject.get() is None:
-            object_infer = self.module.pycore._get_object_infer()
-            inferred_object = object_infer.evaluate_object(self)
-            self.pyobject.set(inferred_object)
+            self.is_being_inferred = True
+            try:
+                object_infer = self.module.pycore._get_object_infer()
+                inferred_object = object_infer.evaluate_object(self)
+                self.pyobject.set(inferred_object)
+            finally:
+                self.is_being_inferred = False
         if self.pyobject.get() is None:
             self.pyobject.set(rope.base.pyobjects.PyObject(
                               rope.base.pyobjects.get_base_type('Unknown')))
@@ -215,7 +222,8 @@ class StarImport(object):
 
     def get_names(self):
         if self.names.get() is None:
-            if isinstance(self.imported_module.get_object(), rope.base.pyobjects.PyPackage):
+            if isinstance(self.imported_module.get_object(),
+                          rope.base.pyobjects.PyPackage):
                 return {}
             result = {}
             for name, pyname in self.imported_module.get_object().get_attributes().iteritems():

@@ -342,19 +342,18 @@ class ScopeNameFinder(object):
     def _is_defined_in_class_body(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \
            holding_scope.parent is not None and \
-           holding_scope.parent.pyobject.get_type() == \
-           rope.base.pyobjects.get_base_type('Type') and \
+           holding_scope.parent.get_kind() == 'Class' and \
            self.word_finder.is_a_class_or_function_name_in_header(offset):
             return True
         if lineno != holding_scope.get_start() and \
-           holding_scope.pyobject.get_type() == rope.base.pyobjects.get_base_type('Type') and \
+           holding_scope.get_kind() == 'Class' and \
            self.word_finder._is_name_assigned_in_class_body(offset):
             return True
         return False
 
     def _is_function_name_in_function_header(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \
-           holding_scope.pyobject.get_type() == rope.base.pyobjects.get_base_type('Function') and \
+           holding_scope.get_kind() == 'Function' and \
            self.word_finder.is_a_class_or_function_name_in_header(offset):
             return True
         return False
@@ -400,9 +399,9 @@ class ScopeNameFinder(object):
             function_pyname = None
         if function_pyname is not None:
             pyobject = function_pyname.get_object()
-            if isinstance(pyobject, pyobjects.PyFunction):
+            if isinstance(pyobject, pyobjects.AbstractFunction):
                 return pyobject
-            elif pyobject.get_type() == pyobjects.get_base_type('Type') and \
+            elif isinstance(pyobject, pyobjects.AbstractClass) and \
                  '__init__' in pyobject.get_attributes():
                 return pyobject.get_attribute('__init__').get_object()
             elif '__call__' in pyobject.get_attributes():

@@ -15,7 +15,7 @@ class IntroduceFactoryRefactoring(object):
         self.old_pyname = \
             rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
         if self.old_pyname is None or \
-           self.old_pyname.get_object().get_type() != rope.base.pyobjects.get_base_type('Type'):
+           not isinstance(self.old_pyname.get_object(), rope.base.pyobjects.PyClass):
             raise rope.base.exceptions.RefactoringError(
                 'Introduce factory should be performed on a class.')
         self.old_name = self.old_pyname.get_object()._get_ast().name

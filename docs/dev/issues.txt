@@ -60,6 +60,8 @@ most promising ones.
 Hot Topics
 ==========
 
+* `Better SOI`_
+
 
 To Be Discussed
 ===============
@@ -79,33 +81,62 @@ To Be Discussed
 Better SOI
 ==========
 
-To improve our static object inference mechanisms I propose to change
-`PyFunction`\s.  These changes will allow the analysis of source code
-without changing the base parts.
-
-The idea is to add a method like `called_with_params()`.  This
-method saves the params for future use.  The SOI algorithm walks
-through the input AST for a few times and calls this function with
-other inferred objects.
-
-This approach can be enhanced to work for builtin container types, too.
-We can force a `PyFunction` to save its information only for its object
-or for its type.  This can be done by passing the object to
-`called_with_params()` method.
-
-We also have to change `PyFunction` methods like `get_returned_object`,
-`get_parameters` and `get_parameter` to adapt to the new situation.
+To improve our static object inference mechanisms I propose to add a
+new feature to rope to perform enhanced SOI.  Rope actually analyzes
+all function calls in a module and saves the information in
+`rope.base.oi.callinfo.CallInforManager` class.
 
 I don't know how often and when to scan a module for
 SOI.  Maybe before ``0.5`` release, rope only performs SOI when
 when the user askes; just like DOI.  Performing it automatically
-requires it to be efficient.  So leter, after implementing it,
+requires it to be efficient.  So later, after implementing it,
 we'll decide about that.
 
-* Should we use the collected information in `PyFunction` itself or
-  in `staticoi` module.
-* Merging common parts in SOI and DOI for holding parameters and
-  returned objects; Adding function info db?
+
+Using New Concluded Data
+------------------------
+
+The other issue is that we should consider unknown pyobjects as not
+yet type inferred.  The current implementation uses unknown
+pyobjects when it cannot infer the object a name references.  This
+won't work since in the next iteration of our SOI we might find
+the correct type of a name.
+
+The problem is how to force `PyName`\s to use the new calculated data
+instead of their old concluded data.  This might be possible by
+adding a `PyName.get_real_object()` method that might return `None`
+(as opposed to `PyName.get_object()` which never returns `None`).
+`None` pyobjects mean that we don't know the real object this
+`PyName` holds.
+
+Alternatively we can check the type of `PyName.get_object()`, if it
+was equal to ``get_base_type('Unknown')`` we know that the type of
+this pyname is not known.
+
+Both of these approaches rely on the fact that once the type of a
+`PyName` is inferred, it does not change.  That might be a correct
+assumption for normal names but for local names that rely on
+function parameters that is not true.  Retrying SOI everytime
+names with unknown objects are encountered seem unefficient, too.
+
+
+Eliminating `get_base_type`
+---------------------------
+
+There are some methods that basic types objects should implement.
+I propose to add new classes for preventing direct access to
+`get_base_type`.
+
+We can use ``isinstance(x, Function)`` instead of
+``x.get_type() == get_base_type('Function')``.
+
+As you see the only reason for the existence of these new classes is
+documentation.  The other advantage is better distinction between
+between defined objects and others.  Actually these new classes
+should have been interfaces but currently python does not support
+them.
+
+These changes will ease adding docs to builtin types.
 
 
 Function Scopes
@@ -119,12 +150,6 @@ interfaces.
 The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
 
-The other issue is that we should consider unknown pyobjects as not
-yet type inferred.  The current implementation uses unknown
-pyobjects when it cannot infer the object a name references.  This
-won't work since in the next iteration of our SOI we might find
-the correct type of a name.
-
 
 Static Returned Object Inference
 --------------------------------
@@ -133,33 +158,13 @@ Since we're passed the object parameters hold, we can perform a
 better returned object SOI.  We can do that by giving parameters
 the passed objects and infer the object of local names once more.
 
-* Parameterizing function scope names to their parameters
+Actually we have to perform two things.  We have to ask scope
+`PyName`\s to forget their concluded data and change the
+parameters to return what we want.
+
+* Parameterizing function scope names to their parameters objects
 * Caching old result
 * Merging information with DOI
-
-
-Merging DOI And SOI Information
--------------------------------
-
-There are a few problems for this merge.  The first problem is that
-for DOI we have both the parameters and the returned value.  But for
-SOI we only have the parameters.  We can calculate the returned
-object but that increases analysis time considerably.
-
-The other problems is that we can delay the call to
-`Arguments.get_args()` till we really need it.  In that case we need
-to invalidated them if necessary, since `Argument` objects hold a
-scope.
-
-Alternatively if we call `Arguments.get_args()` when we're
-performing the analysis, we can transform the `PyObject`\s to
-persisted form and then save them in our DOI object db.  This does not
-need to be invalidated but requires evaluating parameters which is an
-expensive task.
-
-Another problem is we want to support per object data holding.  Can
-we enhance our textual form to handle it or should we give up.  This
-issue exists for DOI, too.
 
 
 Holding Per Name Information
@@ -169,10 +174,13 @@ We can change our type DB to add new feature.::
 
   objectdb.add_per_object(pyname, function_name, parameters)
 
-Our main problem is how to tell the difference between `PyName`\s.
-Our object DB will save the information based on the definition
+Our main problem is how to save the `PyName`\s.
+Our object DB can save the information based on the definition
 location and the name of the passed pyname. (What to do for
 ``self.x, x = d``?)
+
+* Forcing `create_arguments` to pass the implicit object for
+  builtin functions.
 
 
 Invalidating Object DB Data

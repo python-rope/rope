@@ -1,21 +1,29 @@
 Better Parameter SOI
 ====================
 
-- Adding ``Run Static Object Inference for this module``; ``C-c x s``
-- Analyzing calls inside calls
-- Changing SOI to use dynamic oi mechanisms
-- Adding `rope.base.oi.callinfo` module
-- Methods of classes and `Arguments`
-- The first parameter passed to a parameter is ignored
+- Preventing OI recursions
 
+* Eliminating `get_base_type()`
+* Using `AbstractXxx.get_doc()`
+* What to do about 'Unknown' base type
+* Docs for builtin functions and properties
+* Cleaning up `pyobjects`
+* Checking `PyDefinedObject._get_ast()` usages
+* Renaming `PyDefinedObject._get_ast()` to `get_ast()`
+
+* Is throwing `IsBeingInferredException` a good thing?  Can't we
+  return something instead?
+* Duplication between `AssignedName` and `EvaluatedName`, `PyFunction`
+  for inferring objects
 * Not ignoring the first argument for builtin types
-* Using sqlite3 to prevent holding information in memory
-* Mock db for testing
-* Adding `PyName.get_real_object()` which might return `None`
-* Preventing OI recursions
 * What to do for builtin functions
-* Update `rope.base.oi` docs
 
+* Adding `object` base object
+* Adding `object` and `type` builtins
+* Showing the pydoc of superclass methods in show pydoc if it overrides them
+* Update `rope.base.oi` docs
+* Invalidating old concluded data
+* Using sqlite3 to prevent holding information in memory? mocks?
 * Enhancing object textual form to include new types
 * Goto definition for builtins raises exception
 * `evalutate.get...` was changed to `rope.base.evaluate.get...` in moving
@@ -34,7 +42,6 @@ Remaining Small Stories
 
 Base:
 
-* Docs for builtin functions and properties
 * Lambdas as functions; consider their parameters
 * Sorting names in from import list
 * When running `inlinetest` modules we get

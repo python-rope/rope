@@ -10,10 +10,10 @@ class Highlighting(object):
         self.pattern = None
 
     def get_styles(self):
-        """Returns the dictionary of styles used in highlighting texts by this highlighting"""
+        """Return the dictionary of styles used in highlighting texts by this highlighting"""
 
     def highlights(self, text, start, end):
-        """Generates highlighted ranges as (start, end, style) tuples"""
+        """Generate highlighted ranges as (start, end, style) tuples"""
         if end is None:
             end = len(text)
         for match in self._get_pattern().finditer(text[start:end]):
@@ -24,7 +24,7 @@ class Highlighting(object):
                     yield (start + a, start + b, key)
 
     def get_suspected_region_after_change(self, text, change_start, change_end):
-        """Returns the range that needs to be updated after a change"""
+        """Return the range that needs to be updated after a change"""
         start = min(change_start, len(text) - 1)
         start = self._get_line_start(text, start)
         start = max(0, start - 2)
@@ -32,7 +32,7 @@ class Highlighting(object):
         return (start, end)
 
     def _make_pattern(self):
-        """Returns highlighting patterns"""
+        """Return highlighting patterns"""
 
     def _get_line_start(self, text, index):
         current = index - 1

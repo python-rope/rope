@@ -25,26 +25,25 @@ class StaticObjectInference(object):
 
     def infer_parameter_objects(self, pyobject):
         objects = []
-        if pyobject.parent.get_type() == pyobjects.get_base_type('Type'):
+        if pyobject.parent is not None and isinstance(pyobject.parent, pyobjects.PyClass):
             if not pyobject.decorators:
                 objects.append(pyobjects.PyObject(pyobject.parent))
             elif self._is_staticmethod_decorator(pyobject.decorators.nodes[0]):
-                objects.append(pyobjects.PyObject(
-                               pyobjects.get_base_type('Unknown')))
+                objects.append(self._get_unknown())
             elif self._is_classmethod_decorator(pyobject.decorators.nodes[0]):
                 objects.append(pyobject.parent)
             elif pyobject.parameters[0] == 'self':
                 objects.append(pyobjects.PyObject(pyobject.parent))
             else:
-                objects.append(pyobjects.PyObject(
-                               pyobjects.get_base_type('Unknown')))
+                objects.append(self._get_unknown())
         else:
-            objects.append(pyobjects.PyObject(
-                           pyobjects.get_base_type('Unknown')))
+            objects.append(self._get_unknown())
         for parameter in pyobject.parameters[1:]:
-            objects.append(pyobjects.PyObject(
-                           pyobjects.get_base_type('Unknown')))
+            objects.append(self._get_unknown())
         return objects
+
+    def _get_unknown(self):
+        return pyobjects.PyObject(pyobjects.get_base_type('Unknown'))
 
     def _is_staticmethod_decorator(self, node):
         return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'

@@ -87,11 +87,9 @@ class DefinitionInfo(object):
         parent = scope.parent
         parameter_names = pyfunction.parameters
         is_method = len(parameter_names) > 0 and \
-                    (parent.pyobject == pyfunction.
+                    (parent is not None and parent.pyobject == pyfunction.
                      get_parameters()[parameter_names[0]].get_object().get_type()) and \
-                     parent is not None and \
-                     (parent.pyobject.get_type() ==
-                      rope.base.pyobjects.get_base_type('Type'))
+                     (isinstance(parent.pyobject, rope.base.pyobjects.PyClass))
         info = _FunctionParser(code, is_method)
         args, keywords = info.get_parameters()
         args_arg = None

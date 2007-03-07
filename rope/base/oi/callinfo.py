@@ -104,12 +104,11 @@ class _TextualToPyObject(object):
         path, name = textual[1:]
         pymodule = self._get_pymodule(path)
         module_scope = pymodule.get_scope()
-        suspected_pyobject = None
+        suspected = None
         if name in module_scope.get_names():
-            suspected_pyobject = module_scope.get_name(name).get_object()
-        if suspected_pyobject is not None and \
-           suspected_pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
-            return suspected_pyobject
+            suspected = module_scope.get_name(name).get_object()
+        if suspected is not None and isinstance(suspected, pyobjects.PyClass):
+            return suspected
         else:
             lineno = self._find_occurrence(name, pymodule.get_resource().read())
             if lineno is not None:

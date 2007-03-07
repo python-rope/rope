@@ -263,7 +263,7 @@ class _CodeCompletionCollector(object):
                 pyobject = function_pyname.get_object()
                 if isinstance(pyobject, pyobjects.PyFunction):
                     pass
-                elif pyobject.get_type() == pyobjects.get_base_type('Type') and \
+                elif isinstance(pyobject, pyobjects.AbstractClass) and \
                      '__init__' in pyobject.get_attributes():
                     pyobject = pyobject.get_attribute('__init__').get_object()
                 elif '__call__' in pyobject.get_attributes():
@@ -385,9 +385,9 @@ class PythonCodeAssist(object):
             return None
         pyobject = element.get_object()
         if isinstance(pyobject, pyobjects.PyDefinedObject):
-            if pyobject.get_type() == pyobjects.get_base_type('Function'):
+            if isinstance(pyobject, pyobjects.PyFunction):
                 return _get_function_docstring(pyobject)
-            elif pyobject.get_type() == pyobjects.get_base_type('Type'):
+            elif isinstance(pyobject, pyobjects.PyClass):
                 return _get_class_docstring(pyobject)
             else:
                 return _trim_docstring(pyobject._get_ast().doc)

@@ -252,6 +252,14 @@ class NewStaticOITest(unittest.TestCase):
         p_type = f_scope.get_name('p').get_object().get_type()
         self.assertEquals(c_class, p_type)
 
+    def test_static_oi_preventing_soi_maximum_recursion_exceptions(self):
+        code = 'item = {}\nfor item in item.keys():\n    pass\n'
+        self.mod.write(code)
+        try:
+            self.pycore.analyze_module(self.mod)
+        except RuntimeError, e:
+            self.fail(str(e))
+
 
 class DynamicOITest(unittest.TestCase):
 

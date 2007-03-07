@@ -29,7 +29,7 @@ class StatementEvaluator(object):
         def _get_returned(pyobject):
             args = create_arguments(pyobject, node, self.scope)
             return pyobject.get_returned_object(args)
-        if pyobject.get_type() == rope.base.pyobjects.get_base_type('Type'):
+        if isinstance(pyobject, rope.base.pyobjects.AbstractClass):
             result = None
             if '__new__' in pyobject.get_attributes():
                 new_function = pyobject.get_attribute('__new__').get_object()
@@ -41,7 +41,7 @@ class StatementEvaluator(object):
             return
 
         pyfunction = None
-        if pyobject.get_type() == rope.base.pyobjects.get_base_type('Function'):
+        if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
             pyfunction = pyobject
         elif '__call__' in pyobject.get_attributes():
             pyfunction = pyobject.get_attribute('__call__').get_object()

@@ -24,10 +24,10 @@ def _create_builtin_getter(cls):
     return _get_builtin
 
 
-class List(pyobjects.PyObject):
+class List(pyobjects.AbstractClass):
 
     def __init__(self, holding=None):
-        super(List, self).__init__(pyobjects.get_base_type('Type'))
+        super(List, self).__init__()
         self.holding = holding
         self.attributes = {
             '__getitem__': BuiltinName(BuiltinFunction(self.holding)),
@@ -54,10 +54,10 @@ get_list = _create_builtin_getter(List)
 get_list_type = _create_builtin_type_getter(List)
 
 
-class Dict(pyobjects.PyObject):
+class Dict(pyobjects.AbstractClass):
 
     def __init__(self, keys=None, values=None):
-        super(Dict, self).__init__(pyobjects.get_base_type('Type'))
+        super(Dict, self).__init__()
         self.keys = keys
         self.values = values
         item = get_tuple(self.keys, self.values)
@@ -94,10 +94,10 @@ get_dict = _create_builtin_getter(Dict)
 get_dict_type = _create_builtin_type_getter(Dict)
 
 
-class Tuple(pyobjects.PyObject):
+class Tuple(pyobjects.AbstractClass):
 
     def __init__(self, *objects):
-        super(Tuple, self).__init__(pyobjects.get_base_type('Type'))
+        super(Tuple, self).__init__()
         self.objects = objects
         first = None
         if objects:
@@ -122,10 +122,10 @@ get_tuple = _create_builtin_getter(Tuple)
 get_tuple_type = _create_builtin_type_getter(Tuple)
 
 
-class Set(pyobjects.PyObject):
+class Set(pyobjects.AbstractClass):
 
     def __init__(self, holding=None):
-        super(Set, self).__init__(pyobjects.get_base_type('Type'))
+        super(Set, self).__init__()
         self.holding = holding
         self.attributes = {
             'pop': BuiltinName(BuiltinFunction(self.holding)),
@@ -156,10 +156,10 @@ get_set = _create_builtin_getter(Set)
 get_set_type = _create_builtin_type_getter(Set)
 
 
-class Str(pyobjects.PyObject):
+class Str(pyobjects.AbstractClass):
 
     def __init__(self):
-        super(Str, self).__init__(pyobjects.get_base_type('Type'))
+        super(Str, self).__init__()
         self_object = pyobjects.PyObject(self)
         self.attributes = {
             '__getitem__': BuiltinName(BuiltinFunction(self_object)),
@@ -217,11 +217,10 @@ class BuiltinName(pynames.PyName):
         return self.pyobject
 
 
-class BuiltinFunction(pyobjects.PyObject):
+class BuiltinFunction(pyobjects.AbstractFunction):
 
     def __init__(self, returned=None, function=None):
-        super(BuiltinFunction, self).__init__(
-            pyobjects.get_base_type('Function'))
+        super(BuiltinFunction, self).__init__()
         self.returned = returned
         self.function = function
 
@@ -231,10 +230,10 @@ class BuiltinFunction(pyobjects.PyObject):
         return self.returned
 
 
-class Iterator(pyobjects.PyObject):
+class Iterator(pyobjects.AbstractClass):
 
     def __init__(self, holding=None):
-        super(Iterator, self).__init__(pyobjects.get_base_type('Type'))
+        super(Iterator, self).__init__()
         self.holding = holding
         self.attributes = {
             'next': BuiltinName(BuiltinFunction(self.holding)),
@@ -247,10 +246,10 @@ class Iterator(pyobjects.PyObject):
         return self.holding
 
 
-class File(pyobjects.PyObject):
+class File(pyobjects.AbstractClass):
     
     def __init__(self):
-        super(File, self).__init__(pyobjects.get_base_type('Type'))
+        super(File, self).__init__()
         self_object = pyobjects.PyObject(self)
         str_object = get_str()
         str_list = get_list(get_str())
@@ -277,10 +276,10 @@ get_file = _create_builtin_getter(File)
 get_file_type = _create_builtin_type_getter(File)
 
 
-class Property(pyobjects.PyObject):
+class Property(pyobjects.AbstractClass):
 
     def __init__(self, fget=None, fset=None, fdel=None, fdoc=None):
-        super(Property, self).__init__(pyobjects.get_base_type('Type'))
+        super(Property, self).__init__()
         self._fget = fget
         self.attributes = {
             'fget': BuiltinName(BuiltinFunction()),
@@ -301,10 +300,10 @@ def _property_function(args):
     return pyobjects.PyObject(Property(parameters[0]))
 
 
-class Lambda(pyobjects.PyObject):
+class Lambda(pyobjects.AbstractFunction):
 
     def __init__(self, node, scope):
-        super(Lambda, self).__init__(pyobjects.get_base_type('Function'))
+        super(Lambda, self).__init__()
         self.node = node
         self.scope = scope
 

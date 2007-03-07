@@ -40,13 +40,65 @@ class PyObject(object):
 
 
 def get_base_type(name):
+    """Return the base type with name `name`
+
+    There was a long discussion about removing this function and
+    instead adding a few classes that do nothing but document these
+    base types and the methods the objects of these types should
+    provide.  The problem is that Python does not have something to
+    act like an interface (or protocol or abstract data type) that
+    does the task of documenting and can be used to check if an
+    object uses that interface or not.  Currently We can use classes
+    for that purpose but classes with empty methods that probably
+    lead to multiple inheritance does not look to me to be a good
+    idea in a dynamically typed language like python.
+
+    """
     return PyObject._get_base_type(name)
 
 
-class PyDefinedObject(PyObject):
+class AbstractClass(PyObject):
 
-    def __init__(self, type_, pycore, ast_node, parent):
-        super(PyDefinedObject, self).__init__(type_)
+    def __init__(self):
+        super(AbstractClass, self).__init__(get_base_type('Type'))
+
+    def get_doc(self):
+        pass
+
+    def get_superclasses(self):
+        return []
+
+
+class AbstractFunction(PyObject):
+
+    def __init__(self):
+        super(AbstractFunction, self).__init__(get_base_type('Function'))
+
+    def get_doc(self):
+        pass
+
+    def get_param_names(self):
+        return []
+
+    def get_returned_object(self):
+        return PyObject(get_base_type('Unknown'))
+
+
+class AbstractModule(PyObject):
+
+    def __init__(self, doc=None):
+        super(AbstractModule, self).__init__(get_base_type('Module'))
+
+    def get_doc(self):
+        pass
+
+    def get_resource(self):
+        pass
+
+
+class PyDefinedObject(object):
+
+    def __init__(self, pycore, ast_node, parent):
         self.pycore = pycore
         self.ast_node = ast_node
         self.scope = None
@@ -104,11 +156,11 @@ class PyDefinedObject(PyObject):
         pass
 
 
-class PyFunction(PyDefinedObject):
+class PyFunction(PyDefinedObject, AbstractFunction):
 
     def __init__(self, pycore, ast_node, parent):
-        super(PyFunction, self).__init__(get_base_type('Function'),
-                                         pycore, ast_node, parent)
+        AbstractFunction.__init__(self)
+        PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parameters = self.ast_node.argnames
         self.decorators = self.ast_node.decorators
         self.is_being_inferred = False
@@ -166,11 +218,11 @@ class PyFunction(PyDefinedObject):
         return result
 
 
-class PyClass(PyDefinedObject):
+class PyClass(PyDefinedObject, AbstractClass):
 
     def __init__(self, pycore, ast_node, parent):
-        super(PyClass, self).__init__(get_base_type('Type'),
-                                      pycore, ast_node, parent)
+        AbstractClass.__init__(self)
+        PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = None
 
@@ -225,14 +277,14 @@ class _ConcludedData(object):
         return '<' + str(self.data) + '>'
 
 
-class _PyModule(PyDefinedObject):
+class _PyModule(PyDefinedObject, AbstractModule):
 
     def __init__(self, pycore, ast_node, resource):
         self.dependant_modules = set()
         self.resource = resource
         self.concluded_data = []
-        super(_PyModule, self).__init__(get_base_type('Module'),
-                                        pycore, ast_node, None)
+        AbstractModule.__init__(self)
+        PyDefinedObject.__init__(self, pycore, ast_node, None)
 
     def _get_concluded_data(self):
         new_data = _ConcludedData()
@@ -587,4 +639,3 @@ class _ClassInitVisitor(_AssignVisitor):
 
 class IsBeingInferredError(RopeError):
     pass
-

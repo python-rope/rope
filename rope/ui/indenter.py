@@ -70,6 +70,7 @@ class NormalIndenter(TextIndenter):
 
 
 class PythonCodeIndenter(TextIndenter):
+
     def __init__(self, editor):
         super(PythonCodeIndenter, self).__init__(editor)
 

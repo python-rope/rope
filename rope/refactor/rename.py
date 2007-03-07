@@ -77,7 +77,7 @@ class Rename(object):
                isinstance(self.old_pyname, pynames.AssignedName)
 
     def _is_renaming_a_module(self):
-        if self.old_pyname.get_object().get_type() == pyobjects.get_base_type('Module'):
+        if isinstance(self.old_pyname.get_object(), pyobjects.AbstractModule):
             return True
         return False
 
@@ -98,8 +98,8 @@ class Rename(object):
     def is_method(self):
         pyname = self.old_pyname
         return isinstance(pyname, pynames.DefinedName) and \
-               pyname.get_object().get_type() == pyobjects.get_base_type('Function') and \
-               pyname.get_object().parent.get_type() == pyobjects.get_base_type('Type')
+               isinstance(pyname.get_object(), pyobjects.PyFunction) and \
+               isinstance(pyname.get_object().parent, pyobjects.PyClass)
 
     def _rename_module(self, pyobject, new_name):
         resource = pyobject.get_resource()
