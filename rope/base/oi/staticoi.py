@@ -16,7 +16,7 @@ class StaticObjectInference(object):
             # This is not thread safe and might cause problems if `args`
             # is not a good call example
             pyobject._set_parameter_pyobjects(
-                args.get_arguments(self._get_normal_params(pyobject)))
+                args.get_arguments(pyobject.get_param_names(special_args=False)))
         scope = pyobject.get_scope()
         if not scope._get_returned_asts():
             return
@@ -36,27 +36,15 @@ class StaticObjectInference(object):
             if not pyobject.decorators:
                 objects.append(pyobjects.PyObject(pyobject.parent))
             elif self._is_staticmethod_decorator(pyobject.decorators.nodes[0]):
-                objects.append(self._get_unknown())
+                objects.append(pyobjects.get_unknown())
             elif self._is_classmethod_decorator(pyobject.decorators.nodes[0]):
                 objects.append(pyobject.parent)
             elif pyobject.get_param_names()[0] == 'self':
                 objects.append(pyobjects.PyObject(pyobject.parent))
-        params = self._get_normal_params(pyobject)
+        params = pyobject.get_param_names(special_args=False)
         for parameter in params[len(objects):]:
-            objects.append(self._get_unknown())
+            objects.append(pyobjects.get_unknown())
         return objects
-
-    def _get_normal_params(self, pyobject):
-        node = pyobject._get_ast()
-        params = list(node.argnames)
-        if node.flags & compiler.consts.CO_VARKEYWORDS:
-            del params[-1]
-        if node.flags & compiler.consts.CO_VARARGS:
-            del params[-1]
-        return params
-
-    def _get_unknown(self):
-        return pyobjects.PyObject(pyobjects.get_base_type('Unknown'))
 
     def _is_staticmethod_decorator(self, node):
         return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'
@@ -67,7 +55,7 @@ class StaticObjectInference(object):
     def analyze_module(self, pymodule):
         """Analyze `pymodule` for static object inference"""
         visitor = SOIVisitor(self.pycore, pymodule)
-        compiler.walk(pymodule._get_ast(), visitor)
+        compiler.walk(pymodule.get_ast(), visitor)
 
 
 class SOIVisitor(object):

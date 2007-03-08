@@ -260,7 +260,7 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('for line in open("file.txt"):\n    a_var = line\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         a_var = pymod.get_attribute('a_var').get_object()
-        self.assertEquals(rope.base.builtins.get_str_type(),
+        self.assertEquals(builtins.get_str_type(),
                           a_var.get_type())
 
     def test_file_builtin_type(self):
@@ -338,9 +338,9 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_builtin_class_get_name(self):
         self.assertEquals('object',
-                          rope.base.builtins.builtins['object'].get_object().get_name())
+                          builtins.builtins['object'].get_object().get_name())
         self.assertEquals('property',
-                          rope.base.builtins.builtins['property'].get_object().get_name())
+                          builtins.builtins['property'].get_object().get_name())
 
     def test_star_args_and_double_star_args(self):
         self.mod.write('def func(p, *args, **kwds):\n    pass\n')
@@ -350,6 +350,18 @@ class BuiltinTypesTest(unittest.TestCase):
         kwds = func_scope.get_name('kwds').get_object()
         self.assertTrue(isinstance(args.get_type(), builtins.List))
         self.assertTrue(isinstance(kwds.get_type(), builtins.Dict))
+
+    def test_simple_list_comprehension_test(self):
+        self.mod.write('a_var = [i for i in range(10)]\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertTrue(isinstance(a_var.get_type(), builtins.List))
+
+    def test_simple_list_generator_expression(self):
+        self.mod.write('a_var = (i for i in range(10))\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertTrue(isinstance(a_var.get_type(), builtins.Iterator))
 
 
 if __name__ == '__main__':

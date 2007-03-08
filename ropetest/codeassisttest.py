@@ -456,6 +456,30 @@ class CodeAssistTest(unittest.TestCase):
         src = 'print(object)\n'
         self.assertTrue(self.assist.get_doc(src, src.index('obj')) is not None)
 
+    def test_get_pydoc_for_methods_should_include_class_name(self):
+        src = 'class AClass(object):\n    def a_method(self):\n'\
+              '        """hey"""\n        pass\n'
+        doc = self.assist.get_doc(src, src.index('a_method') + 1)
+        doc.index('AClass.a_method')
+        doc.index('hey')
+
+    def test_get_pydoc_for_methods_should_include_methods_from_super_classes(self):
+        src = 'class A(object):\n    def a_method(self):\n' \
+              '        """hey1"""\n        pass\n' \
+              'class B(A):\n    def a_method(self):\n' \
+              '        """hey2"""\n        pass\n'
+        doc = self.assist.get_doc(src, src.rindex('a_method') + 1)
+        doc.index('A.a_method')
+        doc.index('hey1')
+        doc.index('B.a_method')
+        doc.index('hey2')
+
+    def test_get_pydoc_for_classes_should_name_super_classes(self):
+        src = 'class A(object):\n    pass\n' \
+              'class B(A):\n    pass\n'
+        doc = self.assist.get_doc(src, src.rindex('B') + 1)
+        doc.index('B(A)')
+
     # TODO: should comment till the end of scope and not block
     def xxx_test_not_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'

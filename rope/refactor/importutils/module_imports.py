@@ -22,7 +22,7 @@ class ModuleImports(object):
 
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
-        compiler.walk(self.pymodule._get_ast(), visitor)
+        compiler.walk(self.pymodule.get_ast(), visitor)
         return visitor.unbound
 
     def remove_unused_imports(self):
@@ -392,7 +392,7 @@ class _GlobalImportFinder(object):
                             blank_lines=self._count_empty_lines_before(start_line)))
 
     def find_import_statements(self):
-        nodes = self.pymodule._get_ast().node.nodes
+        nodes = self.pymodule.get_ast().node.nodes
         for index, node in enumerate(nodes):
             if isinstance(node, (compiler.ast.Import, compiler.ast.From)):
                 end_line = self.lines.length() + 1

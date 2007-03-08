@@ -1,14 +1,13 @@
 import __builtin__
 import re
-import sys
 
 import rope.base.codeanalyze
 from rope.base import pyobjects, pynames
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
-                                   SourceLinesAdapter, get_pyname_at,
-                                   BadIdentifierError)
+                                   SourceLinesAdapter, BadIdentifierError)
 from rope.base.exceptions import RopeError
+from rope.ide import pydoc
 from rope.refactor import occurrences, functionutils
 
 
@@ -390,13 +389,7 @@ class PythonCodeAssist(object):
         if element is None:
             return None
         pyobject = element.get_object()
-        if isinstance(pyobject, pyobjects.AbstractFunction):
-            return _get_function_docstring(pyobject)
-        elif isinstance(pyobject, pyobjects.AbstractClass):
-            return _get_class_docstring(pyobject)
-        elif isinstance(pyobject, pyobjects.AbstractModule):
-            return _trim_docstring(pyobject.get_doc())
-        return None
+        return pydoc.get_doc(pyobject)
 
     def find_occurrences(self, resource, offset):
         name = rope.base.codeanalyze.get_name_at(resource, offset)
@@ -415,54 +408,6 @@ def get_pymodule(pycore, source_code, resource):
     if resource and resource.exists() and source_code == resource.read():
         return pycore.resource_to_pyobject(resource)
     return pycore.get_string_module(source_code, resource=resource)
-
-def _get_class_docstring(pyclass):
-    doc = 'class %s\n\n' % pyclass.get_name() + _trim_docstring(pyclass.get_doc())
-
-    if '__init__' in pyclass.get_attributes():
-        init = pyclass.get_attribute('__init__').get_object()
-        if isinstance(init, pyobjects.AbstractFunction):
-            doc += '\n\n' + _get_function_docstring(init)
-    return doc
-
-def _get_function_docstring(pyfunction):
-    signature = _get_function_signature(pyfunction)
-
-    return signature + '\n\n' + _trim_docstring(pyfunction.get_doc())
-
-def _get_function_signature(pyfunction):
-    if isinstance(pyfunction, pyobjects.PyFunction):
-        info = functionutils.DefinitionInfo.read(pyfunction)
-        return info.to_string()
-    else:
-        return '%s(%s)' % (pyfunction.get_name(),
-                           ', '.join(pyfunction.get_param_names()))
-
-def _trim_docstring(docstring):
-    """The sample code from :PEP:`257`"""
-    if not docstring:
-        return ''
-    # Convert tabs to spaces (following normal Python rules)
-    # and split into a list of lines:
-    lines = docstring.expandtabs().splitlines()
-    # Determine minimum indentation (first line doesn't count):
-    indent = sys.maxint
-    for line in lines[1:]:
-        stripped = line.lstrip()
-        if stripped:
-            indent = min(indent, len(line) - len(stripped))
-    # Remove indentation (first line is special):
-    trimmed = [lines[0].strip()]
-    if indent < sys.maxint:
-        for line in lines[1:]:
-            trimmed.append(line[indent:].rstrip())
-    # Strip off trailing and leading blank lines:
-    while trimmed and not trimmed[-1]:
-        trimmed.pop()
-    while trimmed and not trimmed[0]:
-        trimmed.pop(0)
-    # Return a single string:
-    return '\n'.join(trimmed)
 
 
 class _GetDefinitionLocation(object):

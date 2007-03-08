@@ -24,7 +24,8 @@ class ObjectInfer(object):
         result = self.soi.infer_returned_object(pyobject, args)
         if result is not None:
             if args and pyobject.get_module().get_resource() is not None:
-                params = args.get_arguments(self.soi._get_normal_params(pyobject))
+                params = args.get_arguments(
+                    pyobject.get_param_names(special_args=False))
                 self.call_info.function_called(pyobject, params, result)
             return result
         return self.call_info.get_returned(pyobject, args)

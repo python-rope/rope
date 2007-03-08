@@ -862,6 +862,14 @@ class ClassHierarchyTest(unittest.TestCase):
         b_class = pymod.get_attribute('B').get_object()
         self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
 
+    def test_get_subclasses_for_in_string_definitions(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('"""\nclass B(A):\n    pass\n"""\n'
+                  'class A(object):\n    pass\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        a_class = pymod.get_attribute('A').get_object()
+        self.assertEquals([], self.pycore.get_subclasses(a_class))
+
 
 def suite():
     result = unittest.TestSuite()

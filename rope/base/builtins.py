@@ -294,6 +294,8 @@ class Iterator(pyobjects.AbstractClass):
     def get_returned_object(self):
         return self.holding
 
+get_iterator = _create_builtin_getter(Iterator)
+
 
 class File(BuiltinClass):
 
@@ -345,7 +347,7 @@ class Property(BuiltinClass):
             '__new__': BuiltinName(BuiltinFunction(function=_property_function))}
 
     def get_property_object(self):
-        if self._fget:
+        if isinstance(self._fget, pyobjects.AbstractFunction):
             return self._fget.get_returned_object()
 
     def get_attributes(self):
@@ -370,7 +372,7 @@ class Lambda(pyobjects.AbstractFunction):
         if result is not None:
             return result.get_object()
         else:
-            return pyobjects.PyObject(pyobjects.get_base_type('Unknown'))
+            return pyobjects.get_unknown()
 
     def get_pattributes(self):
         return {}

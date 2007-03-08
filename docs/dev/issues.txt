@@ -99,20 +99,30 @@ The problem is that for indicating an unknown `PyName` rope
 sometimes uses ``PyObject(get_base_type('Unknown'))`` and sometimes
 sometimes uses `None`\s.  I propose to remove one of these two.
 
+`StatementEvaluator`:
+  Indicates pynames holding unknown objects by using `None` value.
 
-Refactoring The Way `CallInfoManager` Works
--------------------------------------------
+`PyName.get_object()`:
+  Uses unknown objects.
 
-Probably we should move callinfo to the ObjectInfer.
+`AbstractFunction.get_returned_object`:
+  Uses `None` value.
 
-* If the return type for the exact parameter exists return it
-* If it does not exist
+* Are all unknowns equal? If not should we compare `PyName.
+  get_objects()` occurrence finder? Parameters return
+  different unknowns. Is ``pyobject == PyObject(pyobject.get_type())``
 
-  * Try to determine the output statically
-  * SOI was succesful save the result in callinfo
-  * Otherwise return the default returned
+  I think `PyName`\s are reference objects and `PyObject`\s are value
+  objects.  (Is this rule going to be violated after per object data?)
 
-* Not overwriting the returned type with `called_with_params`
+  * `PyName` are reference objects
+  * `PyDefinedObject`\s are reference objects?
+  * `PyObject`\s are value objects
+  * All unknowns are not equal?
+
+I propose to add a new singleton `PyObject(get_base_type('Unknown'))`
+object.  We can add `pyobjects.get_unknown()` function.
+
 
 
 Static Returned Object Inference
@@ -134,11 +144,6 @@ One dirty way of making this work is setting `PyFunction.
 parameter_objects` manually.  But this is not thread safe and
 might have other unwanted effects.
 
-* Parameterizing function scope names to their parameters objects
-* Caching old result
-* Saving information in callinfo
-* Not giving inaccurate information
-
 
 Holding Per Name Information
 ----------------------------
@@ -149,42 +154,6 @@ We can change our type DB to add this feature.::
 
 * Forcing `create_arguments` to pass the implicit object for
   builtin functions.
-
-
-Using New Concluded Data
-------------------------
-
-The other issue is that we should consider unknown pyobjects as not
-yet type inferred.  The current implementation uses unknown
-pyobjects when it cannot infer the object a name references.  This
-won't work since in the next iteration of our SOI we might find
-the correct type of a name.
-
-The problem is how to force `PyName`\s to use the new calculated data
-instead of their old concluded data.  This might be possible by
-adding a `PyName.get_real_object()` method that might return `None`
-(as opposed to `PyName.get_object()` which never returns `None`).
-`None` pyobjects mean that we don't know the real object this
-`PyName` holds.
-
-Alternatively we can check the type of `PyName.get_object()`, if it
-was equal to ``get_base_type('Unknown')`` we know that the type of
-this pyname is not known.
-
-Both of these approaches rely on the fact that once the type of a
-`PyName` is inferred, it does not change.  That might be a correct
-assumption for normal names but for local names that rely on
-function parameters that is not true.  Retrying SOI everytime
-names with unknown objects are encountered seem unefficient, too.
-
-To fix the inefficiency problem maybe we can invalidate the
-concluded data on the module that is going to be analyzed and the
-modules that rely on that.  Perhaps we have to do that for DOI, too.
-This approach seem to work better but does not solve the problem of
-function scopes.
-
-Currently analyze module is changed to invalidate concluded data
-both before and after analyzing modules.
 
 
 Function Scopes

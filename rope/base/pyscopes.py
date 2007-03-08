@@ -62,7 +62,7 @@ class Scope(object):
                          self.pyobject._get_structural_attributes().values()
                          if isinstance(pyname, rope.base.pynames.DefinedName)]
         def block_compare(x, y):
-            return cmp(x._get_ast().lineno, y._get_ast().lineno)
+            return cmp(x.get_ast().lineno, y.get_ast().lineno)
         block_objects.sort(cmp=block_compare)
         return [block.get_scope() for block in block_objects]
 
@@ -73,7 +73,7 @@ class Scope(object):
         return current
 
     def get_start(self):
-        return self.pyobject._get_ast().lineno
+        return self.pyobject.get_ast().lineno
 
     def get_end(self):
         global_scope = self._get_global_scope()
@@ -146,7 +146,7 @@ class FunctionScope(Scope):
         if self.names is None:
             new_visitor = rope.base.pyobjects._FunctionVisitor(self.pycore,
                                                                self.pyobject)
-            for n in self.pyobject._get_ast().getChildNodes():
+            for n in self.pyobject.get_ast().getChildNodes():
                 compiler.walk(n, new_visitor)
             self.names = self.pyobject.get_parameters()
             self.names.update(new_visitor.names)
@@ -165,7 +165,7 @@ class FunctionScope(Scope):
                          for pyname in self._get_names().values()
                          if isinstance(pyname, rope.base.pynames.DefinedName)]
         def block_compare(x, y):
-            return cmp(x._get_ast().lineno, y._get_ast().lineno)
+            return cmp(x.get_ast().lineno, y.get_ast().lineno)
         block_objects.sort(cmp=block_compare)
         result = [block.get_scope() for block in block_objects]
         return result

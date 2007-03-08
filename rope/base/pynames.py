@@ -22,7 +22,7 @@ class DefinedName(PyName):
         return self.pyobject
 
     def get_definition_location(self):
-        return (self.pyobject.get_module(), self.pyobject._get_ast().lineno)
+        return (self.pyobject.get_module(), self.pyobject.get_ast().lineno)
 
 
 class AssignedName(PyName):
@@ -47,8 +47,7 @@ class AssignedName(PyName):
             finally:
                 self.is_being_inferred = False
         if self.pyobject.get() is None:
-            self.pyobject.set(rope.base.pyobjects.PyObject(
-                              rope.base.pyobjects.get_base_type('Unknown')))
+            self.pyobject.set(rope.base.pyobjects.get_unknown())
         return self.pyobject.get()
 
     def get_definition_location(self):
@@ -113,8 +112,7 @@ class EvaluatedName(PyName):
             finally:
                 self.is_being_inferred = False
         if self.pyobject.get() is None:
-            self.pyobject.set(rope.base.pyobjects.PyObject(
-                              rope.base.pyobjects.get_base_type('Unknown')))
+            self.pyobject.set(rope.base.pyobjects.get_unknown())
         return self.pyobject.get()
 
     def get_definition_location(self):
@@ -130,12 +128,11 @@ class ParameterName(PyName):
     def get_object(self):
         result = self.pyfunction.get_parameter(self.index)
         if result is None:
-            result = rope.base.pyobjects.PyObject(
-                rope.base.pyobjects.get_base_type('Unknown'))
+            result = rope.base.pyobjects.get_unknown()
         return result
 
     def get_definition_location(self):
-        return (self.pyfunction.get_module(), self.pyfunction._get_ast().lineno)
+        return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)
 
 
 class ImportedModule(PyName):
@@ -178,8 +175,7 @@ class ImportedModule(PyName):
 
     def get_object(self):
         if self._get_pymodule() is None:
-            return rope.base.pyobjects.PyObject(
-                rope.base.pyobjects.get_base_type('Unknown'))
+            return rope.base.pyobjects.get_unknown()
         return self._get_pymodule()
 
     def get_definition_location(self):

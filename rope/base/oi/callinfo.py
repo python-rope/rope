@@ -59,7 +59,7 @@ class CallInfoManager(object):
         if resource is None:
             return
         path = os.path.abspath(resource.real_path)
-        lineno = pyobject._get_ast().lineno
+        lineno = pyobject.get_ast().lineno
         if path in self.files and lineno in self.files[path]:
             organizer = self.files[path][lineno]
             return organizer
@@ -176,11 +176,7 @@ class _CallInformationOrganizer(object):
     def get_exact_returned(self, pyfunction, args):
         if len(self.info) == 0 or args is None:
             return ('unknown',)
-        parameters = list(pyfunction.get_param_names())
-        if pyfunction._get_ast().flags & compiler.consts.CO_VARKEYWORDS:
-            del parameters[-1]
-        if pyfunction._get_ast().flags & compiler.consts.CO_VARARGS:
-            del parameters[-1]
+        parameters = list(pyfunction.get_param_names(special_args=False))
         arguments = args.get_arguments(parameters)[:len(parameters)]
         textual_args = tuple([self.to_textual.transform(arg)
                               for arg in arguments])
@@ -218,7 +214,7 @@ class _PyObjectToTextual(object):
 
     def PyFunction_to_textual(self, pyobject):
         return ('function', self._get_pymodule_path(pyobject.get_module()),
-                pyobject._get_ast().lineno)
+                pyobject.get_ast().lineno)
 
     def PyClass_to_textual(self, pyobject):
         return ('class', self._get_pymodule_path(pyobject.get_module()),

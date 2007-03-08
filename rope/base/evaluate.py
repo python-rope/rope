@@ -35,7 +35,7 @@ class StatementEvaluator(object):
                 new_function = pyobject.get_attribute('__new__').get_object()
                 result = _get_returned(new_function)
             if result is None or \
-               result.get_type() == rope.base.pyobjects.get_base_type('Unknown'):
+               result == rope.base.pyobjects.get_unknown():
                 result = rope.base.pyobjects.PyObject(pyobject)
             self.result = rope.base.pynames.AssignedName(pyobject=result)
             return
@@ -96,7 +96,12 @@ class StatementEvaluator(object):
             pyobject=rope.base.builtins.get_list(holding))
 
     def visitListComp(self, node):
-        pass
+        self.result = rope.base.pynames.AssignedName(
+            pyobject=rope.base.builtins.get_list())
+
+    def visitGenExpr(self, node):
+        self.result = rope.base.pynames.AssignedName(
+            pyobject=rope.base.builtins.get_iterator())
 
     def visitMul(self, node):
         pass

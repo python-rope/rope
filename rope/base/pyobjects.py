@@ -1,4 +1,4 @@
-import compiler
+import compiler.consts
 
 import rope.base.evaluate
 import rope.base.pyscopes
@@ -27,34 +27,83 @@ class PyObject(object):
     def get_type(self):
         return self.type
 
+    def __eq__(self, obj):
+        """Check the equality of two `PyObject`\s
+
+        Currently it is assumed that two instances(The direct instances
+        of `PyObject` are equal if their types are equal.  For every
+        other object like defineds or builtins we assume objects are
+        reference objects.
+
+        """
+        if self.__class__ != obj.__class__:
+            return False
+        if type(self) == PyObject:
+            if self != self.type:
+                self.type == obj.type
+            else:
+                return self.type is obj.type
+        return self is obj
+
+    def __hash__(self):
+        """See docs for `__eq__()` method"""
+        if type(self) == PyObject:
+            return hash(self.type) + 1
+        else:
+            return super(PyObject, self).__hash__()
+
+    _types = None
+    _unknown = None
+
     @staticmethod
     def _get_base_type(name):
-        if not hasattr(PyObject, 'types'):
-            PyObject.types = {}
+        if PyObject._types is None:
+            PyObject._types = {}
             base_type = PyObject(None)
-            PyObject.types['Type'] = base_type
-            PyObject.types['Module'] = PyObject(base_type)
-            PyObject.types['Function'] = PyObject(base_type)
-            PyObject.types['Unknown'] = PyObject(base_type)
-        return PyObject.types[name]
+            PyObject._types['Type'] = base_type
+            PyObject._types['Module'] = PyObject(base_type)
+            PyObject._types['Function'] = PyObject(base_type)
+            PyObject._types['Unknown'] = PyObject(base_type)
+        return PyObject._types[name]
 
 
 def get_base_type(name):
-    """Return the base type with name `name`
+    """Return the base type with name `name`.
 
-    There was a long discussion about removing this function and
-    instead adding a few classes that do nothing but document these
-    base types and the methods the objects of these types should
-    provide.  The problem is that Python does not have something to
-    act like an interface (or protocol or abstract data type) that
-    does the task of documenting and can be used to check if an
-    object uses that interface or not.  Currently We can use classes
-    for that purpose but classes with empty methods that probably
-    lead to multiple inheritance does not look to me to be a good
-    idea in a dynamically typed language like python.
+    The base types are Type, Function, Module and Unknown.  It was
+    used to check the type of a `PyObject` but currently its use
+    is discouraged.  Use classes defined in this module instead.
+    For example instead of
+    ``pyobject.get_type() == get_base_type('Function')`` use
+    ``isinstance(pyobject, AbstractFunction)`` instead.
+
+    You can use `AbstractClass` for classs, `AbstractFunction` for
+    functions, and `AbstractModule` for modules.  You can also use
+    `PyFunction` and `PyClass` for testing if an object is
+    defined somewhere and rope can access its source.  These classes
+    provide more methods.
 
     """
     return PyObject._get_base_type(name)
+
+
+def get_unknown():
+    """Return a pyobject whose type is unknown
+
+    Note that two unknown objects are equal.  So for example you can
+    write::
+
+      if pyname.get_object() == get_unknown():
+          print 'Object of pyname is not known'
+
+    Rope could have used `None` for indicating unknown objects but
+    we had to check that in many places.  So actually this method
+    returns a null object.
+
+    """
+    if PyObject._unknown is None:
+        PyObject._unknown = PyObject(get_base_type('Unknown'))
+    return PyObject._unknown
 
 
 class AbstractClass(PyObject):
@@ -83,11 +132,11 @@ class AbstractFunction(PyObject):
     def get_doc(self):
         pass
 
-    def get_param_names(self):
+    def get_param_names(self, special_args=True):
         return []
 
     def get_returned_object(self):
-        return PyObject(get_base_type('Unknown'))
+        return get_unknown()
 
 
 class AbstractModule(PyObject):
@@ -150,7 +199,7 @@ class PyDefinedObject(object):
         return current_object
 
     def get_doc(self):
-        return self._get_ast().doc
+        return self.get_ast().doc
 
     def _create_structural_attributes(self):
         return {}
@@ -158,7 +207,7 @@ class PyDefinedObject(object):
     def _create_concluded_attributes(self):
         return {}
 
-    def _get_ast(self):
+    def get_ast(self):
         return self.ast_node
 
     def _create_scope(self):
@@ -201,9 +250,9 @@ class PyFunction(PyDefinedObject, AbstractFunction):
 
     def _set_parameter_pyobjects(self, pyobjects):
         if len(pyobjects) < len(self.parameters):
-            if self._get_ast().flags & 0x4:
+            if self.get_ast().flags & compiler.consts.CO_VARARGS:
                 pyobjects.append(rope.base.builtins.get_list())
-            if self._get_ast().flags & 0x8:
+            if self.get_ast().flags & compiler.consts.CO_VARKEYWORDS:
                 pyobjects.append(rope.base.builtins.get_dict())
         self.parameter_pyobjects.set(pyobjects)
 
@@ -231,14 +280,21 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         finally:
             self.is_being_inferred = False
         if result is None:
-            return PyObject(get_base_type('Unknown'))
+            return get_unknown()
         return result
 
     def get_name(self):
-        return self._get_ast().name
+        return self.get_ast().name
 
-    def get_param_names(self):
-        return self.parameters
+    def get_param_names(self, special_args=True):
+        result = list(self.parameters)
+        if not special_args:
+            node = self.get_ast()
+            if node.flags & compiler.consts.CO_VARKEYWORDS:
+                del result[-1]
+            if node.flags & compiler.consts.CO_VARARGS:
+                del result[-1]
+        return result
 
 
 class PyClass(PyDefinedObject, AbstractClass):
@@ -255,7 +311,7 @@ class PyClass(PyDefinedObject, AbstractClass):
         return self._superclasses
 
     def get_name(self):
-        return self._get_ast().name
+        return self.get_ast().name
 
     def _create_structural_attributes(self):
         new_visitor = _ClassVisitor(self.pycore, self)
@@ -372,7 +428,7 @@ class PyPackage(_PyModule):
         self.resource = resource
         if resource is not None and resource.has_child('__init__.py'):
             ast_node = pycore.resource_to_pyobject(
-                resource.get_child('__init__.py'))._get_ast()
+                resource.get_child('__init__.py')).get_ast()
         else:
             ast_node = compiler.parse('\n')
         super(PyPackage, self).__init__(pycore, ast_node, resource)

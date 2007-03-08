@@ -6,7 +6,7 @@ import rope.base.oi.objectinfer
 import rope.base.oi.staticoi
 import rope.base.project
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.pyobjects import PyModule, PyPackage
+from rope.base.pyobjects import PyModule, PyPackage, PyClass
 import rope.base.oi.callinfo
 
 
@@ -221,7 +221,8 @@ class PyCore(object):
                 source = pyscope.pyobject.source_code
                 for match in pattern.finditer(source):
                     holding_scope = pyscope.get_inner_scope_for_offset(match.start())
-                    classes.append(holding_scope.pyobject)
+                    if isinstance(holding_scope.pyobject, PyClass):
+                        classes.append(holding_scope.pyobject)
             self.classes = classes
         return [class_ for class_ in self.classes
                 if pyclass in class_.get_superclasses()]

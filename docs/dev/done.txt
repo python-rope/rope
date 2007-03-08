@@ -3,6 +3,9 @@
 ===========
 
 
+- Enhancing show pydoc to include docs from superclasses : March 8, 2007
+
+
 - Enhanced returned object static object inference : March 8, 2007
 
 
