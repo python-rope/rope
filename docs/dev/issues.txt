@@ -70,19 +70,18 @@ To Be Discussed
 * `Allowing non-existent resources`_
 * `Python's implicit interfaces`_
 * `Having virtual PyModules`_
-* `Redefining function/class definitions`_
+* `Getting ready for Python 3.0`_
 * Indexing source files for faster occurrence finding
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
 * Finding available refactorings
-* Getting ready for Python 3.0
 
 
 Better SOI
 ==========
 
 To improve our static object inference mechanisms I propose to add a
-new feature to rope to perform enhanced SOI.  Rope actually analyzes
+new feature to rope to perform enhanced SOI.  Rope analyzes
 all function calls in a module and saves the information in
 `rope.base.oi.callinfo.CallInforManager` class.
 
@@ -91,6 +90,65 @@ SOI.  Maybe before ``0.5`` release, rope only performs SOI when
 when the user askes; just like DOI.  Performing it automatically
 requires it to be efficient.  So later, after implementing it,
 we'll decide about that.
+
+
+Either Removing 'Unknown's or `None`\s
+--------------------------------------
+
+The problem is that for indicating an unknown `PyName` rope
+sometimes uses ``PyObject(get_base_type('Unknown'))`` and sometimes
+sometimes uses `None`\s.  I propose to remove one of these two.
+
+
+Refactoring The Way `CallInfoManager` Works
+-------------------------------------------
+
+Probably we should move callinfo to the ObjectInfer.
+
+* If the return type for the exact parameter exists return it
+* If it does not exist
+
+  * Try to determine the output statically
+  * SOI was succesful save the result in callinfo
+  * Otherwise return the default returned
+
+* Not overwriting the returned type with `called_with_params`
+
+
+Static Returned Object Inference
+--------------------------------
+
+This, if implemented, will complete our last piece of iterative
+static object inference.  The goal is to say what a function might
+return when we have the parameters passed to it.
+
+Since we're passed the object parameters hold, we can perform a
+better returned object SOI.  We can do that by giving parameters
+the passed objects and infer the object of local names once more.
+
+Actually we have to perform two things.  We have to ask scope
+`PyName`\s to forget their concluded data and change the
+parameters to return what we want.
+
+One dirty way of making this work is setting `PyFunction.
+parameter_objects` manually.  But this is not thread safe and
+might have other unwanted effects.
+
+* Parameterizing function scope names to their parameters objects
+* Caching old result
+* Saving information in callinfo
+* Not giving inaccurate information
+
+
+Holding Per Name Information
+----------------------------
+
+We can change our type DB to add this feature.::
+
+  objectdb.add_per_object(scope, name, function_name, parameters)
+
+* Forcing `create_arguments` to pass the implicit object for
+  builtin functions.
 
 
 Using New Concluded Data
@@ -119,24 +177,14 @@ assumption for normal names but for local names that rely on
 function parameters that is not true.  Retrying SOI everytime
 names with unknown objects are encountered seem unefficient, too.
 
+To fix the inefficiency problem maybe we can invalidate the
+concluded data on the module that is going to be analyzed and the
+modules that rely on that.  Perhaps we have to do that for DOI, too.
+This approach seem to work better but does not solve the problem of
+function scopes.
 
-Eliminating `get_base_type`
----------------------------
-
-There are some methods that basic types objects should implement.
-I propose to add new classes for preventing direct access to
-`get_base_type`.
-
-We can use ``isinstance(x, Function)`` instead of
-``x.get_type() == get_base_type('Function')``.
-
-As you see the only reason for the existence of these new classes is
-documentation.  The other advantage is better distinction between
-between defined objects and others.  Actually these new classes
-should have been interfaces but currently python does not support
-them.
-
-These changes will ease adding docs to builtin types.
+Currently analyze module is changed to invalidate concluded data
+both before and after analyzing modules.
 
 
 Function Scopes
@@ -149,38 +197,6 @@ interfaces.
 
 The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
-
-
-Static Returned Object Inference
---------------------------------
-
-Since we're passed the object parameters hold, we can perform a
-better returned object SOI.  We can do that by giving parameters
-the passed objects and infer the object of local names once more.
-
-Actually we have to perform two things.  We have to ask scope
-`PyName`\s to forget their concluded data and change the
-parameters to return what we want.
-
-* Parameterizing function scope names to their parameters objects
-* Caching old result
-* Merging information with DOI
-
-
-Holding Per Name Information
-----------------------------
-
-We can change our type DB to add new feature.::
-
-  objectdb.add_per_object(pyname, function_name, parameters)
-
-Our main problem is how to save the `PyName`\s.
-Our object DB can save the information based on the definition
-location and the name of the passed pyname. (What to do for
-``self.x, x = d``?)
-
-* Forcing `create_arguments` to pass the implicit object for
-  builtin functions.
 
 
 Invalidating Object DB Data
@@ -293,6 +309,25 @@ Maybe we can use one of these solutions:
   for creating import trees.
 
 Or maybe we can use a strategy object for searching.
+
+
+Getting ready for Python 3.0
+============================
+
+* Changing print to function in tests
+* Not supporting old relative imports
+* `iter.__next__()` instead of `iter.next()`
+* Supporting `bytes`, `input`
+* Removing nonexistent dict methods and methods that will return sets
+* Chaning imports after library reorganization
+* Show function annotations in pydocs
+* ``nonlocal``
+* ``except xxx as yyy``
+* ``...``
+* Supporting keyword only arguments
+* Set literals and comprehension ``{1, 2, 3}`` and ``{x for x in range(10)}``
+* Renamed function attributes; ``f.func_whatever`` to ``f.__whatever``
+* Use new function signature
 
 
 Allowing Non-Existent Resources

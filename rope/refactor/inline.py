@@ -294,7 +294,7 @@ class _DefinitionGenerator(object):
         return paramdict
 
     def get_function_name(self):
-        return self.pyfunction._get_ast().name
+        return self.pyfunction.get_name()
 
     def get_definition(self, call, returns=False):
         # caching already calculated definitions

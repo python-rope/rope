@@ -138,8 +138,7 @@ class MoveMethod(object):
         return result[result.index('\n') + 1:]
 
     def _get_self_name(self):
-        definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
-        return definition_info.args_with_defaults[0][0]
+        return self.pyfunction.get_param_names()[0]
 
     def _get_new_header(self, name):
         header = 'def %s(self' % name
@@ -223,7 +222,7 @@ class MoveGlobal(_Mover):
     def __init__(self, project, resource, offset):
         pycore = project.pycore
         pyname = codeanalyze.get_pyname_at(pycore, resource, offset)
-        old_name = pyname.get_object()._get_ast().name
+        old_name = pyname.get_object().get_name()
         pymodule = pyname.get_object().get_module()
         source = pymodule.get_resource()
 

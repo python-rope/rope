@@ -2,7 +2,7 @@ import unittest
 
 import rope.base.project
 import ropetest
-from rope.base import pyobjects
+from rope.base import pyobjects, builtins
 
 
 class BuiltinTypesTest(unittest.TestCase):
@@ -335,6 +335,21 @@ class BuiltinTypesTest(unittest.TestCase):
         c_class = pymod.get_attribute('C').get_object()
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
+
+    def test_builtin_class_get_name(self):
+        self.assertEquals('object',
+                          rope.base.builtins.builtins['object'].get_object().get_name())
+        self.assertEquals('property',
+                          rope.base.builtins.builtins['property'].get_object().get_name())
+
+    def test_star_args_and_double_star_args(self):
+        self.mod.write('def func(p, *args, **kwds):\n    pass\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        func_scope = pymod.get_attribute('func').get_object().get_scope()
+        args = func_scope.get_name('args').get_object()
+        kwds = func_scope.get_name('kwds').get_object()
+        self.assertTrue(isinstance(args.get_type(), builtins.List))
+        self.assertTrue(isinstance(kwds.get_type(), builtins.Dict))
 
 
 if __name__ == '__main__':

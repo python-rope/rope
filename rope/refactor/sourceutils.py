@@ -95,7 +95,7 @@ def get_body_region(defined):
     lines = pymodule.lines
     logical_lines = codeanalyze.LogicalLineFinder(lines)
     start_line = logical_lines.get_logical_line_in(scope.get_start())[1] + 1
-    if defined._get_ast().doc is not None:
+    if defined.get_doc() is not None:
         start_line = logical_lines.get_logical_line_in(start_line)[1] + 1
     start = lines.get_line_start(start_line)
     end = min(lines.get_line_end(scope.get_end()) + 1,

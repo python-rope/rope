@@ -1,3 +1,4 @@
+import compiler.consts
 import os
 import re
 
@@ -13,11 +14,17 @@ class CallInfoManager(object):
         self.to_textual = _PyObjectToTextual(pycore.project)
         self.to_pyobject = _TextualToPyObject(pycore.project)
 
-    def get_returned_object(self, pyobject, args):
+    def get_returned(self, pyobject, args):
         organizer = self.find_organizer(pyobject)
         if organizer:
-            return self.to_pyobject.transform(organizer.get_returned_object(
+            return self.to_pyobject.transform(organizer.get_returned(
                                               pyobject, args))
+
+    def get_exact_returned(self, pyobject, args):
+        organizer = self.find_organizer(pyobject)
+        if organizer:
+            return self.to_pyobject.transform(
+                organizer.get_exact_returned(pyobject, args))
 
     def get_parameter_objects(self, pyobject):
         organizer = self.find_organizer(pyobject)
@@ -29,11 +36,14 @@ class CallInfoManager(object):
     def doi_data_received(self, data):
         self._save_data(data[0], data[1], data[2])
 
-    def function_called(self, pyfunction, params):
+    def function_called(self, pyfunction, params, returned=None):
         function_text = self.to_textual.transform(pyfunction)
         params_text = tuple([self.to_textual.transform(param)
                              for param in params])
-        self._save_data(function_text, params_text)
+        returned_text = ('unknown',)
+        if returned is not None:
+            returned_text = self.to_textual.transform(returned)
+        self._save_data(function_text, params_text, returned_text)
 
     def _save_data(self, function, args, returned=('unknown',)):
         path = function[1]
@@ -157,28 +167,32 @@ class _CallInformationOrganizer(object):
                 return args
         return self.info.keys()[0]
 
-    def get_returned_object(self, pyfunction, args):
-        if len(self.info) <= 1 or args is None:
-            return self._get_default_returned()
-        parameters = list(pyfunction.parameters)
-        if pyfunction._get_ast().flags & 0x4:
+    def get_returned(self, pyfunction, args):
+        result = self.get_exact_returned(pyfunction, args)
+        if result != ('unknown',):
+            return result
+        return self._get_default_returned()
+
+    def get_exact_returned(self, pyfunction, args):
+        if len(self.info) == 0 or args is None:
+            return ('unknown',)
+        parameters = list(pyfunction.get_param_names())
+        if pyfunction._get_ast().flags & compiler.consts.CO_VARKEYWORDS:
             del parameters[-1]
-        if pyfunction._get_ast().flags & 0x8:
+        if pyfunction._get_ast().flags & compiler.consts.CO_VARARGS:
             del parameters[-1]
         arguments = args.get_arguments(parameters)[:len(parameters)]
         textual_args = tuple([self.to_textual.transform(arg)
                               for arg in arguments])
-        if textual_args in self.info:
+        if self.info.get(textual_args, ('unknown',)) != ('unknown',):
             return self.info[textual_args]
-        return self._get_default_returned()
+        return ('unknown',)
 
     def _get_default_returned(self):
-        default = ('unknown')
         for returned in self.info.values():
-            if returned not in ('unknown', 'none'):
+            if returned[0] not in ('unknown'):
                 return returned
-            default = returned
-        return default
+        return ('unknown',)
 
 
 class _PyObjectToTextual(object):
@@ -208,7 +222,7 @@ class _PyObjectToTextual(object):
 
     def PyClass_to_textual(self, pyobject):
         return ('class', self._get_pymodule_path(pyobject.get_module()),
-                pyobject._get_ast().name)
+                pyobject.get_name())
 
     def PyModule_to_textual(self, pyobject):
         return ('module', self._get_pymodule_path(pyobject))

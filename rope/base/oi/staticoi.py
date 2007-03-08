@@ -1,4 +1,5 @@
 import compiler.ast
+import compiler.consts
 
 import rope.base
 from rope.base import pyobjects, evaluate
@@ -10,6 +11,12 @@ class StaticObjectInference(object):
         self.pycore = pycore
 
     def infer_returned_object(self, pyobject, args):
+        if args:
+            # HACK: Setting parameter objects manually
+            # This is not thread safe and might cause problems if `args`
+            # is not a good call example
+            pyobject._set_parameter_pyobjects(
+                args.get_arguments(self._get_normal_params(pyobject)))
         scope = pyobject.get_scope()
         if not scope._get_returned_asts():
             return
@@ -32,15 +39,21 @@ class StaticObjectInference(object):
                 objects.append(self._get_unknown())
             elif self._is_classmethod_decorator(pyobject.decorators.nodes[0]):
                 objects.append(pyobject.parent)
-            elif pyobject.parameters[0] == 'self':
+            elif pyobject.get_param_names()[0] == 'self':
                 objects.append(pyobjects.PyObject(pyobject.parent))
-            else:
-                objects.append(self._get_unknown())
-        else:
-            objects.append(self._get_unknown())
-        for parameter in pyobject.parameters[1:]:
+        params = self._get_normal_params(pyobject)
+        for parameter in params[len(objects):]:
             objects.append(self._get_unknown())
         return objects
+
+    def _get_normal_params(self, pyobject):
+        node = pyobject._get_ast()
+        params = list(node.argnames)
+        if node.flags & compiler.consts.CO_VARKEYWORDS:
+            del params[-1]
+        if node.flags & compiler.consts.CO_VARARGS:
+            del params[-1]
+        return params
 
     def _get_unknown(self):
         return pyobjects.PyObject(pyobjects.get_base_type('Unknown'))
@@ -78,4 +91,4 @@ class SOIVisitor(object):
             return
         args = evaluate.create_arguments(pyfunction, node, scope)
         self.pycore.call_info.function_called(
-            pyfunction, args.get_arguments(pyfunction.parameters))
+            pyfunction, args.get_arguments(pyfunction.get_param_names()))

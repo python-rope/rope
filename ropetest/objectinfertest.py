@@ -260,6 +260,39 @@ class NewStaticOITest(unittest.TestCase):
         except RuntimeError, e:
             self.fail(str(e))
 
+    def test_static_oi_for_infering_returned_types_from_functions_based_on_parameters(self):
+        code = 'class C(object):\n    pass\ndef func(p):\n    return p\n' \
+               'a_var = func(C())\n'
+        self.mod.write(code)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_a_function_with_different_returns(self):
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'def a_func(arg):\n    return arg\n' \
+               'a = a_func(C1())\nb = a_func(C2())\n'
+        self.mod.write(code)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    # TODO: Requires saving per object data
+    def xxx_test_static_oi_for_lists_depending_on_append_function(self):
+        code = 'class C(object):\n    pass\nl = list()\n' \
+               'l.append(C())\na_var = l[0]\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 
@@ -276,7 +309,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_simple_dti(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
-        code = 'def a_func(arg):\n    return arg\n' \
+        code = 'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(a_func)\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -287,7 +320,7 @@ class DynamicOITest(unittest.TestCase):
     def test_module_dti(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
-        code = 'import mod1\ndef a_func(arg):\n    return arg\n' \
+        code = 'import mod1\ndef a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(mod1)\n'
         mod2.write(code)
         self.pycore.run_module(mod2).wait_process()
@@ -300,7 +333,7 @@ class DynamicOITest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         code1 = 'class AClass(object):\n    pass\n'
         code2 = 'from mod1 import AClass\n' \
-               '\ndef a_func(arg):\n    return arg\n' \
+               '\ndef a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(AClass)\n'
         mod1.write(code1)
         mod2.write(code2)
@@ -314,7 +347,7 @@ class DynamicOITest(unittest.TestCase):
     def test_class_dti(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class AClass(object):\n    pass\n' \
-               '\ndef a_func(arg):\n    return arg\n' \
+               '\ndef a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(AClass)\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -325,7 +358,7 @@ class DynamicOITest(unittest.TestCase):
     def test_instance_dti(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class AClass(object):\n    pass\n' \
-               '\ndef a_func(arg):\n    return arg()\n' \
+               '\ndef a_func(arg):\n    return eval("arg()")\n' \
                'a_var = a_func(AClass)\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -335,7 +368,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_method_dti(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
-        code = 'class AClass(object):\n    def a_method(self, arg):\n        return arg()\n' \
+        code = 'class AClass(object):\n    def a_method(self, arg):\n        return eval("arg()")\n' \
                'an_instance = AClass()\n' \
                'a_var = an_instance.a_method(AClass)\n'
         mod.write(code)
@@ -356,7 +389,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_classes_with_the_same_name(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
-        code = 'def a_func(arg):\n    class AClass(object):\n        pass\n    return arg\n' \
+        code = 'def a_func(arg):\n    class AClass(object):\n        pass\n    return eval("arg")\n' \
                'class AClass(object):\n    pass\n' \
                'a_var = a_func(AClass)\n'
         mod.write(code)
@@ -368,7 +401,7 @@ class DynamicOITest(unittest.TestCase):
     def test_nested_classes(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'def a_func():\n    class AClass(object):\n        pass\n    return AClass\n' \
-               'def another_func(arg):\n    return arg\n' \
+               'def another_func(arg):\n    return eval("arg")\n' \
                'a_var = another_func(a_func())\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -388,7 +421,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dti_and_concluded_data_invalidation(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
-        code = 'def a_func(arg):\n    return arg\n' \
+        code = 'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func(a_func)\n'
         mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
@@ -399,7 +432,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_list_objects_and_dynamicoi(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
-        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return arg\n' \
+        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func([C()])[0]\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -410,7 +443,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_for_loops_and_dynamicoi(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
-        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return arg\n' \
+        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return eval("arg")\n' \
                'for c in a_func([C()]):\n    a_var = c\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -422,7 +455,7 @@ class DynamicOITest(unittest.TestCase):
     def test_dict_objects_and_dynamicoi(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C(object):\n    pass\n' \
-               'def a_func(arg):\n    return arg\n' \
+               'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func({1: C()})[1]\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -434,7 +467,7 @@ class DynamicOITest(unittest.TestCase):
     def test_dict_keys_and_dynamicoi(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C(object):\n    pass\n' \
-               'def a_func(arg):\n    return arg\n' \
+               'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func({C(): 1}).keys()[0]\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -446,7 +479,7 @@ class DynamicOITest(unittest.TestCase):
     def test_dict_keys_and_dynamicoi2(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
-               'def a_func(arg):\n    return arg\n' \
+               'def a_func(arg):\n    return eval("arg")\n' \
                'a, b = a_func((C1(), C2()))\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -460,7 +493,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_strs_and_dynamicoi(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
-        code = 'def a_func(arg):\n    return arg\n' \
+        code = 'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func("hey")\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -502,7 +535,7 @@ class DynamicOITest(unittest.TestCase):
     def test_a_function_with_different_returns(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
-               'def a_func(arg):\n    return arg\n' \
+               'def a_func(arg):\n    return eval("arg")\n' \
                'a = a_func(C1())\nb = a_func(C2())\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()

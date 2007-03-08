@@ -15,7 +15,7 @@ class DynamicObjectInference(object):
         self.info = pycore.call_info
 
     def infer_returned_object(self, pyobject, args):
-        return self.info.get_returned_object(pyobject, args)
+        return self.info.get_returned(pyobject, args)
 
     def infer_parameter_objects(self, pyobject):
         return self.info.get_parameter_objects(pyobject)

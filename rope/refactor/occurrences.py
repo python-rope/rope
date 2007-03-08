@@ -116,8 +116,8 @@ class FilteredFinder(object):
         if type(pyname1) not in (pynames.ImportedModule, pynames.ImportedName) and \
            type(pyname2) not in (pynames.ImportedModule, pynames.ImportedName):
             return False
-        return pyname1.get_object() == pyname2.get_object() and \
-               pyname1.get_definition_location() == pyname2.get_definition_location()
+        return pyname1.get_definition_location() == pyname2.get_definition_location() and \
+               pyname1.get_object() == pyname2.get_object()
 
 
 class _OccurrenceToolsCreator(object):

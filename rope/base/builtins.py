@@ -24,25 +24,43 @@ def _create_builtin_getter(cls):
     return _get_builtin
 
 
-class List(pyobjects.AbstractClass):
+class BuiltinClass(pyobjects.AbstractClass):
+
+    def __init__(self, builtin):
+        super(BuiltinClass, self).__init__()
+        self.builtin = builtin
+
+    def get_doc(self):
+        return self.builtin.__doc__
+
+    def get_name(self):
+        return self.builtin.__name__
+
+
+class List(BuiltinClass):
 
     def __init__(self, holding=None):
-        super(List, self).__init__()
+        super(List, self).__init__(list)
         self.holding = holding
-        self.attributes = {
-            '__getitem__': BuiltinName(BuiltinFunction(self.holding)),
-            '__getslice__': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
-            'pop': BuiltinName(BuiltinFunction(self.holding)),
-            '__iter__': BuiltinName(BuiltinFunction(Iterator(self.holding))),
-            '__new__': BuiltinName(BuiltinFunction(function=self._new_list)),
-            'append': BuiltinName(BuiltinFunction()),
-            'count': BuiltinName(BuiltinFunction()),
-            'extend': BuiltinName(BuiltinFunction()),
-            'index': BuiltinName(BuiltinFunction()),
-            'insert': BuiltinName(BuiltinFunction()),
-            'remove': BuiltinName(BuiltinFunction()),
-            'reverse': BuiltinName(BuiltinFunction()),
-            'sort': BuiltinName(BuiltinFunction())}
+        self.attributes = {}
+        def add(name, returned=None, function=None):
+            self.attributes[name] = BuiltinName(
+                BuiltinFunction(returned=returned, function=function,
+                                builtin=getattr(list, name)))
+
+        add('__getitem__', self.holding)
+        add('__getslice__', pyobjects.PyObject(self))
+        add('pop', self.holding)
+        add('__iter__', Iterator(self.holding))
+        add('__new__', function=self._new_list)
+        add('append')
+        add('count')
+        add('extend')
+        add('index')
+        add('insert')
+        add('remove')
+        add('reverse')
+        add('sort')
 
     def _new_list(self, args):
         return _create_builtin(args, get_list)
@@ -50,35 +68,40 @@ class List(pyobjects.AbstractClass):
     def get_attributes(self):
         return self.attributes
 
+
 get_list = _create_builtin_getter(List)
 get_list_type = _create_builtin_type_getter(List)
 
 
-class Dict(pyobjects.AbstractClass):
+class Dict(BuiltinClass):
 
     def __init__(self, keys=None, values=None):
-        super(Dict, self).__init__()
+        super(Dict, self).__init__(dict)
         self.keys = keys
         self.values = values
         item = get_tuple(self.keys, self.values)
-        self.attributes = {
-            '__getitem__': BuiltinName(BuiltinFunction(self.values)),
-            '__iter__': BuiltinName(BuiltinFunction(Iterator(self.keys))),
-            '__new__': BuiltinName(BuiltinFunction(function=self._new_dict)),
-            'pop': BuiltinName(BuiltinFunction(self.values)),
-            'get': BuiltinName(BuiltinFunction(self.keys)),
-            'keys': BuiltinName(BuiltinFunction(List(self.keys))),
-            'values': BuiltinName(BuiltinFunction(List(self.values))),
-            'iterkeys': BuiltinName(BuiltinFunction(Iterator(self.keys))),
-            'itervalues': BuiltinName(BuiltinFunction(Iterator(self.values))),
-            'items': BuiltinName(BuiltinFunction(List(item))),
-            'iteritems': BuiltinName(BuiltinFunction(Iterator(item))),
-            'copy': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
-            'clear': BuiltinName(BuiltinFunction()),
-            'has_key': BuiltinName(BuiltinFunction()),
-            'popitem': BuiltinName(BuiltinFunction()),
-            'setdefault': BuiltinName(BuiltinFunction()),
-            'update': BuiltinName(BuiltinFunction())}
+        self.attributes = {}
+        def add(name, returned=None, function=None):
+            self.attributes[name] = BuiltinName(
+                BuiltinFunction(returned=returned, function=function,
+                                builtin=getattr(dict, name)))
+        add('__getitem__', self.values)
+        add('__iter__', Iterator(self.keys))
+        add('__new__', function=self._new_dict)
+        add('pop', self.values)
+        add('get', self.keys)
+        add('keys', List(self.keys))
+        add('values', List(self.values))
+        add('iterkeys', Iterator(self.keys))
+        add('itervalues', Iterator(self.values))
+        add('items', List(item))
+        add('iteritems', Iterator(item))
+        add('copy', pyobjects.PyObject(self))
+        add('clear')
+        add('has_key')
+        add('popitem')
+        add('setdefault')
+        add('update')
 
     def get_attributes(self):
         return self.attributes
@@ -94,10 +117,10 @@ get_dict = _create_builtin_getter(Dict)
 get_dict_type = _create_builtin_type_getter(Dict)
 
 
-class Tuple(pyobjects.AbstractClass):
+class Tuple(BuiltinClass):
 
     def __init__(self, *objects):
-        super(Tuple, self).__init__()
+        super(Tuple, self).__init__(tuple)
         self.objects = objects
         first = None
         if objects:
@@ -122,32 +145,39 @@ get_tuple = _create_builtin_getter(Tuple)
 get_tuple_type = _create_builtin_type_getter(Tuple)
 
 
-class Set(pyobjects.AbstractClass):
+class Set(BuiltinClass):
 
     def __init__(self, holding=None):
-        super(Set, self).__init__()
+        super(Set, self).__init__(set)
         self.holding = holding
-        self.attributes = {
-            'pop': BuiltinName(BuiltinFunction(self.holding)),
-            '__iter__': BuiltinName(BuiltinFunction(Iterator(self.holding))),
-            '__new__': BuiltinName(BuiltinFunction(function=self._new_set)),
-            'add': BuiltinName(BuiltinFunction()),
-            'copy': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
-            'difference': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
-            'intersection': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
-            'difference_update': BuiltinName(BuiltinFunction()),
-            'symmetric_difference': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
-            'symmetric_difference_update': BuiltinName(BuiltinFunction()),
-            'union': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
-            'discard': BuiltinName(BuiltinFunction()),
-            'remove': BuiltinName(BuiltinFunction()),
-            'issuperset': BuiltinName(BuiltinFunction()),
-            'issubset': BuiltinName(BuiltinFunction()),
-            'clear': BuiltinName(BuiltinFunction()),
-            'update': BuiltinName(BuiltinFunction())}
+        self.attributes = {}
+        def add(name, returned=None, function=None):
+            self.attributes[name] = BuiltinName(
+                BuiltinFunction(returned=returned, function=function,
+                                builtin=getattr(set, name)))
+        add('pop', self.holding)
+        add('__iter__', Iterator(self.holding))
+        add('__new__', function=self._new_set)
+        add('add')
+        add('copy', pyobjects.PyObject(self))
+        add('difference', pyobjects.PyObject(self))
+        add('intersection', pyobjects.PyObject(self))
+        add('difference_update'),
+        add('symmetric_difference', pyobjects.PyObject(self))
+        add('symmetric_difference_update')
+        add('union', pyobjects.PyObject(self))
+        add('discard')
+        add('remove')
+        add('issuperset')
+        add('issubset')
+        add('clear')
+        add('update')
 
     def get_attributes(self):
         return self.attributes
+
+    def get_doc(self):
+        return set.__doc__
 
     def _new_set(self, args):
         return _create_builtin(args, get_set)
@@ -156,53 +186,61 @@ get_set = _create_builtin_getter(Set)
 get_set_type = _create_builtin_type_getter(Set)
 
 
-class Str(pyobjects.AbstractClass):
+class Str(BuiltinClass):
 
     def __init__(self):
-        super(Str, self).__init__()
+        super(Str, self).__init__(str)
         self_object = pyobjects.PyObject(self)
-        self.attributes = {
-            '__getitem__': BuiltinName(BuiltinFunction(self_object)),
-            '__getslice__': BuiltinName(BuiltinFunction(self_object)),
-            '__iter__': BuiltinName(BuiltinFunction(Iterator(self_object))),
-            'captialize': BuiltinName(BuiltinFunction(self_object)),
-            'center': BuiltinName(BuiltinFunction(self_object)),
-            'count': BuiltinName(BuiltinFunction()),
-            'decode': BuiltinName(BuiltinFunction(self_object)),
-            'encode': BuiltinName(BuiltinFunction(self_object)),
-            'endswith': BuiltinName(BuiltinFunction()),
-            'expandtabs': BuiltinName(BuiltinFunction(self_object)),
-            'find': BuiltinName(BuiltinFunction()),
-            'index': BuiltinName(BuiltinFunction()),
-            'isalnum': BuiltinName(BuiltinFunction()),
-            'isalpha': BuiltinName(BuiltinFunction()),
-            'isdigit': BuiltinName(BuiltinFunction()),
-            'islower': BuiltinName(BuiltinFunction()),
-            'isspace': BuiltinName(BuiltinFunction()),
-            'istitle': BuiltinName(BuiltinFunction()),
-            'isupper': BuiltinName(BuiltinFunction()),
-            'join': BuiltinName(BuiltinFunction(self_object)),
-            'ljust': BuiltinName(BuiltinFunction(self_object)),
-            'lower': BuiltinName(BuiltinFunction(self_object)),
-            'lstrip': BuiltinName(BuiltinFunction(self_object)),
-            'replace': BuiltinName(BuiltinFunction(self_object)),
-            'rfind': BuiltinName(BuiltinFunction()),
-            'rindex': BuiltinName(BuiltinFunction()),
-            'rjust': BuiltinName(BuiltinFunction(self_object)),
-            'rsplit': BuiltinName(BuiltinFunction(get_list(self_object))),
-            'rstrip': BuiltinName(BuiltinFunction(self_object)),
-            'split': BuiltinName(BuiltinFunction(get_list(self_object))),
-            'splitlines': BuiltinName(BuiltinFunction(get_list(self_object))),
-            'startswith': BuiltinName(BuiltinFunction(self_object)),
-            'strip': BuiltinName(BuiltinFunction(self_object)),
-            'swapcase': BuiltinName(BuiltinFunction(self_object)),
-            'title': BuiltinName(BuiltinFunction(self_object)),
-            'translate': BuiltinName(BuiltinFunction(self_object)),
-            'upper': BuiltinName(BuiltinFunction(self_object)),
-            'zfill': BuiltinName(BuiltinFunction(self_object))}
+        self.attributes = {}
+        def add(name, returned=None, function=None):
+            builtin = getattr(str, name, None)
+            self.attributes[name] = BuiltinName(
+                BuiltinFunction(returned=returned, function=function, builtin=builtin))
+        add('__getitem__', self_object)
+        add('__getslice__', self_object)
+        add('__iter__', Iterator(self_object))
+	add('captialize', self_object)
+        add('center', self_object)
+        add('count'),
+        add('decode', self_object)
+        add('encode', self_object)
+        add('endswith')
+        add('expandtabs', self_object)
+        add('find')
+        add('index')
+        add('isalnum')
+        add('isalpha')
+        add('isdigit')
+        add('islower')
+        add('isspace')
+        add('istitle')
+        add('isupper')
+        add('join', self_object)
+        add('ljust', self_object)
+        add('lower', self_object)
+        add('lstrip', self_object)
+        add('replace', self_object)
+        add('rfind')
+        add('rindex')
+        add('rjust', self_object)
+        add('rsplit', get_list(self_object))
+        add('rstrip', self_object)
+        add('split', get_list(self_object))
+        add('splitlines', get_list(self_object))
+        add('startswith', self_object)
+        add('strip', self_object)
+        add('swapcase', self_object)
+        add('title', self_object)
+        add('translate', self_object)
+        add('upper', self_object)
+        add('zfill', self_object)
 
     def get_attributes(self):
         return self.attributes
+
+    def get_doc(self):
+        return str.__doc__
+
 
 get_str = _create_builtin_getter(Str)
 get_str_type = _create_builtin_type_getter(Str)
@@ -216,18 +254,29 @@ class BuiltinName(pynames.PyName):
     def get_object(self):
         return self.pyobject
 
+    def get_definition_location(self):
+        return (None, None)
 
 class BuiltinFunction(pyobjects.AbstractFunction):
 
-    def __init__(self, returned=None, function=None):
+    def __init__(self, returned=None, function=None, builtin=None):
         super(BuiltinFunction, self).__init__()
         self.returned = returned
         self.function = function
+        self.builtin = builtin
 
     def get_returned_object(self, args=None):
         if self.function is not None:
             return self.function(args)
         return self.returned
+
+    def get_doc(self):
+        if self.builtin:
+            return self.builtin.__doc__
+
+    def get_name(self):
+        if self.builtin:
+            return self.builtin.__name__
 
 
 class Iterator(pyobjects.AbstractClass):
@@ -246,41 +295,49 @@ class Iterator(pyobjects.AbstractClass):
         return self.holding
 
 
-class File(pyobjects.AbstractClass):
-    
+class File(BuiltinClass):
+
     def __init__(self):
-        super(File, self).__init__()
+        super(File, self).__init__(file)
         self_object = pyobjects.PyObject(self)
         str_object = get_str()
         str_list = get_list(get_str())
-        self.attributes = {
-            '__iter__': BuiltinName(BuiltinFunction(Iterator(str_object))),
-            'close': BuiltinName(BuiltinFunction()),
-            'flush': BuiltinName(BuiltinFunction()),
-            'lineno': BuiltinName(BuiltinFunction()),
-            'isatty': BuiltinName(BuiltinFunction()),
-            'next': BuiltinName(BuiltinFunction(str_object)),
-            'read': BuiltinName(BuiltinFunction(str_object)),
-            'readline': BuiltinName(BuiltinFunction(str_object)),
-            'readlines': BuiltinName(BuiltinFunction(str_list)),
-            'seek': BuiltinName(BuiltinFunction()),
-            'tell': BuiltinName(BuiltinFunction()),
-            'truncate': BuiltinName(BuiltinFunction()),
-            'write': BuiltinName(BuiltinFunction()),
-            'writelines': BuiltinName(BuiltinFunction())}
+        self.attributes = {}
+        def add(name, returned=None, function=None):
+            builtin = getattr(file, name, None)
+            self.attributes[name] = BuiltinName(
+                BuiltinFunction(returned=returned, function=function, builtin=builtin))
+        add('__iter__')
+        add('close')
+        add('flush')
+        add('lineno')
+        add('isatty')
+        add('next', str_object)
+        add('read', str_object)
+        add('readline', str_object)
+        add('readlines', str_list)
+        add('seek')
+        add('tell')
+        add('truncate')
+        add('write')
+        add('writelines')
 
     def get_attributes(self):
         return self.attributes
+
+    def get_doc(self):
+        return file.__doc__
 
 get_file = _create_builtin_getter(File)
 get_file_type = _create_builtin_type_getter(File)
 
 
-class Property(pyobjects.AbstractClass):
+class Property(BuiltinClass):
 
     def __init__(self, fget=None, fset=None, fdel=None, fdoc=None):
-        super(Property, self).__init__()
+        super(Property, self).__init__(property)
         self._fget = fget
+        self._fdoc = fdoc
         self.attributes = {
             'fget': BuiltinName(BuiltinFunction()),
             'fset': BuiltinName(BuiltinFunction()),
@@ -317,6 +374,18 @@ class Lambda(pyobjects.AbstractFunction):
 
     def get_pattributes(self):
         return {}
+
+
+class BuiltinObject(BuiltinClass):
+
+    def __init__(self):
+        super(BuiltinObject, self).__init__(object)
+
+
+class BuiltinType(BuiltinClass):
+
+    def __init__(self):
+        super(BuiltinType, self).__init__(type)
 
 
 def _infer_sequence_type(seq):
@@ -388,10 +457,12 @@ builtins = {
     'file': BuiltinName(get_file_type()),
     'open': BuiltinName(get_file_type()),
     'unicode': BuiltinName(get_str_type()),
-    'range': BuiltinName(BuiltinFunction(function=_range_function)),
-    'reversed': BuiltinName(BuiltinFunction(function=_reversed_function)),
-    'sorted': BuiltinName(BuiltinFunction(function=_sorted_function)),
-    'super': BuiltinName(BuiltinFunction(function=_super_function)),
-    'property': BuiltinName(BuiltinFunction(function=_property_function)),
-    'zip': BuiltinName(BuiltinFunction(function=_zip_function)),
-    'enumerate': BuiltinName(BuiltinFunction(function=_enumerate_function))}
+    'range': BuiltinName(BuiltinFunction(function=_range_function, builtin=range)),
+    'reversed': BuiltinName(BuiltinFunction(function=_reversed_function, builtin=reversed)),
+    'sorted': BuiltinName(BuiltinFunction(function=_sorted_function, builtin=sorted)),
+    'super': BuiltinName(BuiltinFunction(function=_super_function, builtin=super)),
+    'property': BuiltinName(BuiltinFunction(function=_property_function, builtin=property)),
+    'zip': BuiltinName(BuiltinFunction(function=_zip_function, builtin=zip)),
+    'enumerate': BuiltinName(BuiltinFunction(function=_enumerate_function, builtin=enumerate)),
+    'object': BuiltinName(BuiltinObject()),
+    'type': BuiltinName(BuiltinType())}

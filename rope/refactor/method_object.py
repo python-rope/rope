@@ -73,12 +73,4 @@ class MethodObject(object):
         return '%s\n%s\n' % (header, body)
 
     def _get_parameter_names(self):
-        info = functionutils.DefinitionInfo.read(self.pyfunction)
-        result = []
-        for arg, default in info.args_with_defaults:
-            result.append(arg)
-        if info.args_arg:
-            result.append(info.args_arg)
-        if info.keywords_arg:
-            result.append(info.keywords_arg)
-        return result
+        return self.pyfunction.get_param_names()

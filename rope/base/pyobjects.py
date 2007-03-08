@@ -62,6 +62,9 @@ class AbstractClass(PyObject):
     def __init__(self):
         super(AbstractClass, self).__init__(get_base_type('Type'))
 
+    def get_name(self):
+        pass
+
     def get_doc(self):
         pass
 
@@ -73,6 +76,9 @@ class AbstractFunction(PyObject):
 
     def __init__(self):
         super(AbstractFunction, self).__init__(get_base_type('Function'))
+
+    def get_name(self):
+        pass
 
     def get_doc(self):
         pass
@@ -143,6 +149,9 @@ class PyDefinedObject(object):
             current_object = current_object.parent
         return current_object
 
+    def get_doc(self):
+        return self._get_ast().doc
+
     def _create_structural_attributes(self):
         return {}
 
@@ -166,7 +175,7 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         self.is_being_inferred = False
         self.are_args_being_inferred = False
         self.parameter_pyobjects = self.get_module()._get_concluded_data()
-        self.parameter_pynames = self.get_module()._get_concluded_data()
+        self.parameter_pynames = None
 
     def _create_structural_attributes(self):
         return {}
@@ -190,17 +199,25 @@ class PyFunction(PyDefinedObject, AbstractFunction):
             self.are_args_being_inferred = False
         return pyobjects
 
+    def _set_parameter_pyobjects(self, pyobjects):
+        if len(pyobjects) < len(self.parameters):
+            if self._get_ast().flags & 0x4:
+                pyobjects.append(rope.base.builtins.get_list())
+            if self._get_ast().flags & 0x8:
+                pyobjects.append(rope.base.builtins.get_dict())
+        self.parameter_pyobjects.set(pyobjects)
+
     def get_parameters(self):
-        if self.parameter_pynames.get() is None:
+        if self.parameter_pynames is None:
             result = {}
             for index, name in enumerate(self.parameters):
                 result[name] = ParameterName(self, index)
-            self.parameter_pynames.set(result)
-        return self.parameter_pynames.get()
+            self.parameter_pynames = result
+        return self.parameter_pynames
 
     def get_parameter(self, index):
         if not self.parameter_pyobjects.get():
-            self.parameter_pyobjects.set(self._get_parameter_pyobjects())
+            self._set_parameter_pyobjects(self._get_parameter_pyobjects())
         return self.parameter_pyobjects.get()[index]
 
     def get_returned_object(self, args=None):
@@ -217,6 +234,12 @@ class PyFunction(PyDefinedObject, AbstractFunction):
             return PyObject(get_base_type('Unknown'))
         return result
 
+    def get_name(self):
+        return self._get_ast().name
+
+    def get_param_names(self):
+        return self.parameters
+
 
 class PyClass(PyDefinedObject, AbstractClass):
 
@@ -230,6 +253,9 @@ class PyClass(PyDefinedObject, AbstractClass):
         if self._superclasses is None:
             self._superclasses = self._get_bases()
         return self._superclasses
+
+    def get_name(self):
+        return self._get_ast().name
 
     def _create_structural_attributes(self):
         new_visitor = _ClassVisitor(self.pycore, self)

@@ -126,15 +126,13 @@ class ParameterName(PyName):
     def __init__(self, pyfunction, index):
         self.pyfunction = pyfunction
         self.index = index
-        self.pyobject = _get_concluded_data(self.pyfunction.get_module())
 
     def get_object(self):
-        if self.pyobject.get() is None:
-            self.pyobject.set(self.pyfunction.get_parameter(self.index))
-        if self.pyobject.get() is None:
-            self.pyobject.set(rope.base.pyobjects.PyObject(
-                              rope.base.pyobjects.get_base_type('Unknown')))
-        return self.pyobject.get()
+        result = self.pyfunction.get_parameter(self.index)
+        if result is None:
+            result = rope.base.pyobjects.PyObject(
+                rope.base.pyobjects.get_base_type('Unknown'))
+        return result
 
     def get_definition_location(self):
         return (self.pyfunction.get_module(), self.pyfunction._get_ast().lineno)
@@ -161,7 +159,6 @@ class ImportedModule(PyName):
             pycore = self.importing_module.pycore
             if self.resource is not None:
                 self.pymodule.set(pycore.resource_to_pyobject(self.resource))
-                self.pymodule.get()._add_dependant(self.importing_module)
             elif self.module_name is not None:
                 try:
                     if self.level == 0:
@@ -175,6 +172,8 @@ class ImportedModule(PyName):
                                           self.level))
                 except ModuleNotFoundError:
                     pass
+            if self.pymodule.get() is not None:
+                self.pymodule.get()._add_dependant(self.importing_module)
         return self.pymodule.get()
 
     def get_object(self):

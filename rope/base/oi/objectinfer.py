@@ -13,14 +13,21 @@ class ObjectInfer(object):
     def __init__(self, pycore):
         self.soi = staticoi.StaticObjectInference(pycore)
         self.doi = dynamicoi.DynamicObjectInference(pycore)
+        self.call_info = pycore.call_info
         self.ois = [self.soi, self.doi]
 
     def infer_returned_object(self, pyobject, args):
         """Infer the `PyObject` this callable `PyObject` returns after calling"""
-        for oi in reversed(self.ois):
-            result = oi.infer_returned_object(pyobject, args)
-            if result is not None:
-                return result
+        result = self.call_info.get_exact_returned(pyobject, args)
+        if result is not None:
+            return result
+        result = self.soi.infer_returned_object(pyobject, args)
+        if result is not None:
+            if args and pyobject.get_module().get_resource() is not None:
+                params = args.get_arguments(self.soi._get_normal_params(pyobject))
+                self.call_info.function_called(pyobject, params, result)
+            return result
+        return self.call_info.get_returned(pyobject, args)
 
     def infer_parameter_objects(self, pyobject):
         """Infer the `PyObject`\s of parameters of this callable `PyObject`"""

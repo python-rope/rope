@@ -1,16 +1,32 @@
-Better Parameter SOI
-====================
+Better Returned Object SOI
+==========================
 
-- Preventing OI recursions
+- Problems for from import invalidation
+- Implementing `AbstractXxx.get_doc()`
+- Adding `object` and `type` builtins
+- Docs for builtin functions
+- Checking `PyDefinedObject._get_ast()` usages
+- Adding `AbstractClass.get_name()` and `AbstractFunction.get_name()`
+- Not using `PyFunction.parameters`
+- Handling ``*args`` and ``**kwds`` arguments
+- Returned object SOI
+- Returning different values with args
+- Fixing DOI tests that passed because of enhanced SOI
+- Saving back in our callinfo
 
-* Eliminating `get_base_type()`
-* Using `AbstractXxx.get_doc()`
+* Should `ParameterName` save information?
+
 * What to do about 'Unknown' base type
-* Docs for builtin functions and properties
-* Cleaning up `pyobjects`
-* Checking `PyDefinedObject._get_ast()` usages
-* Renaming `PyDefinedObject._get_ast()` to `get_ast()`
+* Either changing all `None` pynames to unknowns or the reverse
 
+* Removing occurrences of to ``pyfunction._get_ast().flags``
+* Not sending ``*args`` and ``**kwds`` in DOI
+* Not proposing invalid textuals in `_CallInformationOrganizer`
+* Cleaning up `rope.base.pyobjects`
+* Renaming `PyDefinedObject._get_ast()` to `get_ast()`
+* Is `rope.base` supposed to be thread safe?  which parts?
+
+* Evaluate function parameter defaults in staticoi?
 * Is throwing `IsBeingInferredException` a good thing?  Can't we
   return something instead?
 * Duplication between `AssignedName` and `EvaluatedName`, `PyFunction`
@@ -18,22 +34,17 @@ Better Parameter SOI
 * Not ignoring the first argument for builtin types
 * What to do for builtin functions
 
-* Adding `object` base object
-* Adding `object` and `type` builtins
+* Generator list comprehension support
 * Showing the pydoc of superclass methods in show pydoc if it overrides them
+* Showing superclass show pydoc
 * Update `rope.base.oi` docs
-* Invalidating old concluded data
 * Using sqlite3 to prevent holding information in memory? mocks?
 * Enhancing object textual form to include new types
-* Goto definition for builtins raises exception
-* `evalutate.get...` was changed to `rope.base.evaluate.get...` in moving
-* Move failed to import old module
 
 * ``enable_doi`` config
 * Completion in module entries
 * Faster find file in large projects
 * Decorators and method refactorings
-* Unifying ``x.get_type() == get_base_type('y')``, ``isinstance(x, PyY)``
 * Document how to move fields
 
 
@@ -64,6 +75,7 @@ UI and IDE:
 * Showing properties in quick outline
 * Changing ``C-a C-a`` to move to the first character in the line
 * ``M-a`` and ``M-e``
+* ``C-l`` and ``M-r``
 * Comments should be indented
 * Decide when to use `difflib` in `Editor.set_text` based on the
   number of changes

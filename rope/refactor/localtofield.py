@@ -35,7 +35,7 @@ class LocalToField(object):
                 'The field %s already exists' % name)
 
     def _get_field_name(self, pyfunction, name):
-        self_name = pyfunction.parameters[0]
+        self_name = pyfunction.get_param_names()[0]
         new_name = self_name + '.' + name
         return new_name
 

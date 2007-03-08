@@ -452,6 +452,10 @@ class CodeAssistTest(unittest.TestCase):
         src = 'import mod\nmod'
         self.assertEquals('a module', self.assist.get_doc(src, len(src) - 1))
 
+    def test_get_pydoc_for_builtins(self):
+        src = 'print(object)\n'
+        self.assertTrue(self.assist.get_doc(src, src.index('obj')) is not None)
+
     # TODO: should comment till the end of scope and not block
     def xxx_test_not_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'
@@ -538,7 +542,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('p=', 'parameter_keyword', result)
 
-    def test_proposing_function_keywords_when_calling_with_no_nothing_after_parens(self):
+    def test_proposing_function_keywords_when_calling_with_no_nothing_after_parens2(self):
         code = 'def f(p):\n    pass\ndef g():\n    h = f\n    f('
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('p=', 'parameter_keyword', result)

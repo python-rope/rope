@@ -208,7 +208,9 @@ class PyCore(object):
 
         """
         pymodule = self.resource_to_pyobject(resource)
+        pymodule._invalidate_concluded_data()
         self.object_infer.soi.analyze_module(pymodule)
+        pymodule._invalidate_concluded_data()
 
     def get_subclasses(self, pyclass):
         if self.classes is None:

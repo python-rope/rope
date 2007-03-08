@@ -216,7 +216,7 @@ class _CodeCompletionCollector(object):
             return 'variable'
         if isinstance(pyname, pynames.DefinedName):
             pyobject = pyname.get_object()
-            if isinstance(pyobject, pyobjects.PyFunction):
+            if isinstance(pyobject, pyobjects.AbstractFunction):
                 return 'function'
             else:
                 return 'class'
@@ -261,17 +261,23 @@ class _CodeCompletionCollector(object):
                 return {}
             if function_pyname is not None:
                 pyobject = function_pyname.get_object()
-                if isinstance(pyobject, pyobjects.PyFunction):
+                if isinstance(pyobject, pyobjects.AbstractFunction):
                     pass
                 elif isinstance(pyobject, pyobjects.AbstractClass) and \
                      '__init__' in pyobject.get_attributes():
                     pyobject = pyobject.get_attribute('__init__').get_object()
                 elif '__call__' in pyobject.get_attributes():
                     pyobject = pyobject.get_attribute('__call__').get_object()
-                if isinstance(pyobject, pyobjects.PyFunction):
-                    function_info = functionutils.DefinitionInfo.read(pyobject)
+                if isinstance(pyobject, pyobjects.AbstractFunction):
+                    param_names = []
+                    if isinstance(pyobject, pyobjects.PyFunction):
+                        function_info = functionutils.DefinitionInfo.read(pyobject)
+                        param_names.extend([name for name, default
+                                            in function_info.args_with_defaults])
+                    else:
+                        param_names = pyobject.get_param_names()
                     result = {}
-                    for name, default in function_info.args_with_defaults:
+                    for name in param_names:
                         if name.startswith(self.starting):
                             result[name + '='] = CompletionProposal(
                                 name + '=', 'parameter_keyword')
@@ -384,13 +390,12 @@ class PythonCodeAssist(object):
         if element is None:
             return None
         pyobject = element.get_object()
-        if isinstance(pyobject, pyobjects.PyDefinedObject):
-            if isinstance(pyobject, pyobjects.PyFunction):
-                return _get_function_docstring(pyobject)
-            elif isinstance(pyobject, pyobjects.PyClass):
-                return _get_class_docstring(pyobject)
-            else:
-                return _trim_docstring(pyobject._get_ast().doc)
+        if isinstance(pyobject, pyobjects.AbstractFunction):
+            return _get_function_docstring(pyobject)
+        elif isinstance(pyobject, pyobjects.AbstractClass):
+            return _get_class_docstring(pyobject)
+        elif isinstance(pyobject, pyobjects.AbstractModule):
+            return _trim_docstring(pyobject.get_doc())
         return None
 
     def find_occurrences(self, resource, offset):
@@ -412,23 +417,26 @@ def get_pymodule(pycore, source_code, resource):
     return pycore.get_string_module(source_code, resource=resource)
 
 def _get_class_docstring(pyclass):
-    node = pyclass._get_ast()
-    doc = 'class %s\n\n' % node.name + _trim_docstring(node.doc)
+    doc = 'class %s\n\n' % pyclass.get_name() + _trim_docstring(pyclass.get_doc())
 
     if '__init__' in pyclass.get_attributes():
         init = pyclass.get_attribute('__init__').get_object()
-        if isinstance(init, pyobjects.PyDefinedObject):
+        if isinstance(init, pyobjects.AbstractFunction):
             doc += '\n\n' + _get_function_docstring(init)
     return doc
 
 def _get_function_docstring(pyfunction):
     signature = _get_function_signature(pyfunction)
 
-    return signature + '\n\n' + _trim_docstring(pyfunction._get_ast().doc)
+    return signature + '\n\n' + _trim_docstring(pyfunction.get_doc())
 
 def _get_function_signature(pyfunction):
-    info = functionutils.DefinitionInfo.read(pyfunction)
-    return info.to_string()
+    if isinstance(pyfunction, pyobjects.PyFunction):
+        info = functionutils.DefinitionInfo.read(pyfunction)
+        return info.to_string()
+    else:
+        return '%s(%s)' % (pyfunction.get_name(),
+                           ', '.join(pyfunction.get_param_names()))
 
 def _trim_docstring(docstring):
     """The sample code from :PEP:`257`"""

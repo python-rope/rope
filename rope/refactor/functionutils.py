@@ -1,5 +1,6 @@
 import rope.base.exceptions
 import rope.base.pyobjects
+import compiler.consts
 from rope.base import codeanalyze
 
 
@@ -85,7 +86,7 @@ class DefinitionInfo(object):
     def _read(pyfunction, code):
         scope = pyfunction.get_scope()
         parent = scope.parent
-        parameter_names = pyfunction.parameters
+        parameter_names = pyfunction.get_param_names()
         is_method = len(parameter_names) > 0 and \
                     (parent is not None and parent.pyobject == pyfunction.
                      get_parameters()[parameter_names[0]].get_object().get_type()) and \

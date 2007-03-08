@@ -114,14 +114,16 @@ core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
 core.add('templates', ('set_field', "self.${field}${cursor} = ${field}\n"))
 
 
-# Adding you're own `Action`\s:
+# Adding your own `Action`\s:
 # If you're interested in adding your own actions to rope you can do so
-# like this.  For more information see `rope.ui.extension` module.
+# like this.
+# Plugins can use this interface for registering their actions.  For
+# more information see `rope.ui.extension` module.
 
 from rope.ui.extension import SimpleAction
 
 def say_hello(context):
-    print 'Hello Actions!'
+    print 'Hello Action!'
 
 hello_action = SimpleAction('hello_action', say_hello, 'C-h h')
 core.register_action(hello_action)

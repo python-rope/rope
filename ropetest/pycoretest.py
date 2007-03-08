@@ -126,7 +126,7 @@ class PyCoreTest(unittest.TestCase):
                                             ' *param3, **param4):\n    pass')
         sample_function = mod.get_attribute('sample_function')
         self.assertEquals(['param1', 'param2', 'param3', 'param4'],
-                          sample_function.get_object().parameters)
+                          sample_function.get_object().get_param_names())
 
     # FIXME: Not found modules
     def xxx_test_not_found_module_is_module(self):
@@ -353,7 +353,7 @@ class PyCoreTest(unittest.TestCase):
         string_module = self.pycore.get_string_module('from mod import a_func\n')
         self.assertEquals(None, string_module.get_resource())
 
-    def test_get_pyname_definition_location_class(self):
+    def test_get_pyname_definition_location_class2(self):
         mod = self.pycore.get_string_module('class AClass(object):\n    def __init__(self):\n' + \
                                             '        self.an_attr = 10\n')
         a_class = mod.get_attribute('AClass').get_object()
@@ -410,7 +410,7 @@ class PyCoreTest(unittest.TestCase):
         mod.write(contents)
         self.pycore.get_module('mod')
 
-    def test_file_encoding_reading(self):
+    def test_file_encoding_reading2(self):
         contents = 'a_var = 1\ndef a_func():\n    global a_var\n'
         mod = self.pycore.get_string_module(contents)
         global_var = mod.get_attribute('a_var')
@@ -434,14 +434,6 @@ class PyCoreTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(mod)
         c_class = pymod.get_attribute('C').get_object()
         self.assertFalse('my_var' in c_class.get_attributes())
-
-    def test_not_leaking_tuple_assigned_names_inside_parent_scope(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
-        mod.write('class C(object):\n    def f(self):\n'
-                  '        var1, var2 = range(2)\n')
-        pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
-        self.assertFalse('var1' in c_class.get_attributes())
 
     def test_not_leaking_tuple_assigned_names_inside_parent_scope(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
@@ -780,6 +772,21 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2_object = self.pycore.resource_to_pyobject(mod2)
         self.assertEquals(mod1_object.get_attribute('a_func').get_object(),
                           mod2_object.get_attribute('a_func').get_object())
+
+    def test_invalidating_cache_for_from_imports_after_resource_change(self):
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod2.write('def a_func():\n    print(1)\n')
+        mod1.write('from mod2 import a_func\na_func()\n')
+
+        pymod1 = self.pycore.get_module('mod1')
+        pymod2 = self.pycore.get_module('mod2')
+        self.assertEquals(pymod1.get_attribute('a_func').get_object(),
+                          pymod2.get_attribute('a_func').get_object())
+        mod2.write(mod2.read() + '\n')
+        pymod2 = self.pycore.get_module('mod2')
+        self.assertEquals(pymod1.get_attribute('a_func').get_object(),
+                          pymod2.get_attribute('a_func').get_object())
 
 
 class ClassHierarchyTest(unittest.TestCase):
