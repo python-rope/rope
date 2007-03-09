@@ -136,6 +136,7 @@ class FunctionScope(Scope):
                                             pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
+        self.is_generator = None
 
     def _get_names(self):
         if self.names is None:
@@ -151,11 +152,17 @@ class FunctionScope(Scope):
             self.names = self.pyobject.get_parameters()
             self.names.update(new_visitor.names)
             self.returned_asts = new_visitor.returned_asts
+            self.is_generator = new_visitor.generator
 
     def _get_returned_asts(self):
         if self.names is None:
             self._visit_function()
         return self.returned_asts
+
+    def _is_generator(self):
+        if self.is_generator is None:
+            self._get_returned_asts()
+        return self.is_generator
 
     def get_names(self):
         return self._get_names()
@@ -173,6 +180,12 @@ class FunctionScope(Scope):
     def get_kind(self):
         return 'Function'
 
+    def invalidate_data(self):
+        for pyname in self.get_names().values():
+            if isinstance(pyname, (rope.base.pynames.AssignedName,
+                                   rope.base.pynames.EvaluatedName)):
+                pyname.invalidate()
+                
 
 class ClassScope(Scope):
 

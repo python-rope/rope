@@ -88,72 +88,31 @@ all function calls in a module and saves the information in
 I don't know how often and when to scan a module for
 SOI.  Maybe before ``0.5`` release, rope only performs SOI when
 when the user askes; just like DOI.  Performing it automatically
-requires it to be efficient.  So later, after implementing it,
-we'll decide about that.
+requires it to be efficient.  So later, after using it for some
+time, we'll decide about that.
 
 
-Either Removing 'Unknown's or `None`\s
---------------------------------------
-
-The problem is that for indicating an unknown `PyName` rope
-sometimes uses ``PyObject(get_base_type('Unknown'))`` and sometimes
-sometimes uses `None`\s.  I propose to remove one of these two.
-
-`StatementEvaluator`:
-  Indicates pynames holding unknown objects by using `None` value.
-
-`PyName.get_object()`:
-  Uses unknown objects.
-
-`AbstractFunction.get_returned_object`:
-  Uses `None` value.
-
-* Are all unknowns equal? If not should we compare `PyName.
-  get_objects()` occurrence finder? Parameters return
-  different unknowns. Is ``pyobject == PyObject(pyobject.get_type())``
-
-  I think `PyName`\s are reference objects and `PyObject`\s are value
-  objects.  (Is this rule going to be violated after per object data?)
-
-  * `PyName` are reference objects
-  * `PyDefinedObject`\s are reference objects?
-  * `PyObject`\s are value objects
-  * All unknowns are not equal?
-
-I propose to add a new singleton `PyObject(get_base_type('Unknown'))`
-object.  We can add `pyobjects.get_unknown()` function.
-
-
-
-Static Returned Object Inference
---------------------------------
-
-This, if implemented, will complete our last piece of iterative
-static object inference.  The goal is to say what a function might
-return when we have the parameters passed to it.
+Returned Object SOI
+-------------------
 
 Since we're passed the object parameters hold, we can perform a
-better returned object SOI.  We can do that by giving parameters
-the passed objects and infer the object of local names once more.
+better returned object SOI.  We can do that by giving parameter
+objects passed and infer the object of local names once more.
 
 Actually we have to perform two things.  We have to ask scope
 `PyName`\s to forget their concluded data and change the
 parameters to return what we want.
 
-One dirty way of making this work is setting `PyFunction.
-parameter_objects` manually.  But this is not thread safe and
-might have other unwanted effects.
+So to make it we have:
 
+* Used `PyFunction._set_parameter_pyobjects()` to set the type
+  of parameters
+* Added `FunctionScope.invalidate_data()` to invalidate the
+  pyobjects `AssignedName`\s and `EvaluatedName`\s hold.
 
-Holding Per Name Information
-----------------------------
-
-We can change our type DB to add this feature.::
-
-  objectdb.add_per_object(scope, name, function_name, parameters)
-
-* Forcing `create_arguments` to pass the implicit object for
-  builtin functions.
+And after implementing these we thought of treating function
+scopes specially, since the names there cannot be accessed
+from outside.
 
 
 Function Scopes
@@ -164,18 +123,38 @@ variable types are dependant on the type of the parameters and
 should change.  This issue seem to have some relations with implicit
 interfaces.
 
+These two problems(in the above section) points us to treating
+function scopes specially.  Since function names are not accessible
+from outside that function, we can perform all calculations in a
+temporary place.
+
 The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
 
 
-Invalidating Object DB Data
----------------------------
+Holding Per Name Information
+============================
 
-As the time passes and modules change, much of rope's object DB
-data will be out of date.  How are we going to detect and delete
-these data.  When this DB is queried, it can ignore out of date data
-and when saving the db to disk or when loading it it can delete the
-out of date information.
+We can change our type DB to add this feature.::
+
+  objectdb.add_per_object(scope, name, function_name, parameters)
+
+* Forcing `create_arguments` to pass the implicit object for
+  builtin functions.
+* Not ignoring the first argument for builtin types
+
+
+Supporting Generator Functions
+==============================
+
+The good thing about functions is that they can have either returns
+or yields but they cannot have both.
+
+For supporting generators in SOI we can hold yielded asts and we can
+do the same as what we did for normal function returns.
+
+For DOI I don't know how to make that work.  Maybe we can pass
+iterators back to rope.
 
 
 Better Concluded Data

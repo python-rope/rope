@@ -13,12 +13,26 @@ class ChangeSignature(object):
         self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
-        self.name = codeanalyze.get_name_at(resource, offset)
-        self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        self._set_name_and_pyname()
         if self.pyname is None or self.pyname.get_object() is None or \
            not isinstance(self.pyname.get_object(), pyobjects.PyFunction):
             raise rope.base.exceptions.RefactoringError(
                 'Change method signature should be performed on functions')
+
+    def _set_name_and_pyname(self):
+        self.name = codeanalyze.get_name_at(self.resource, self.offset)
+        self.pyname = codeanalyze.get_pyname_at(self.pycore, self.resource,
+                                                self.offset)
+#        if self.pyname is None:
+#            return
+#        pyobject = self.pyname.get_object()
+#        if isinstance(pyobject, pyobjects.PyClass) and \
+#           '__init__' in pyobject.get_attributes():
+#            self.name = '__init__'
+#        if self.name == '__init__' and \
+#           isinstance(pyobject, pyobjects.PyFunction) and \
+#           isinstance(pyobject.parent, pyobjects.PyClass):
+#            print 'init'
 
     def _change_calls(self, call_changer, in_hierarchy=False):
         changes = ChangeSet('Changing signature of <%s>' % self.name)

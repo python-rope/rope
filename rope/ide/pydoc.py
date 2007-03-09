@@ -7,6 +7,7 @@ from rope.refactor import functionutils
 def get_doc(pyobject):
     return PyDocExtractor().get_doc(pyobject)
 
+
 class PyDocExtractor(object):
 
     def get_doc(self, pyobject):
@@ -18,12 +19,11 @@ class PyDocExtractor(object):
             return self._trim_docstring(pyobject.get_doc())
         return None
 
-
     def _get_class_docstring(self, pyclass):
         contents = self._trim_docstring(pyclass.get_doc(), 2)
         supers = [super.get_name() for super in pyclass.get_superclasses()]
-        doc = 'class %s(%s)\n\n' % (pyclass.get_name(), ', '.join(supers)) + contents
-              
+        doc = 'class %s(%s):\n\n' % (pyclass.get_name(), ', '.join(supers)) + contents
+
         if '__init__' in pyclass.get_attributes():
             init = pyclass.get_attribute('__init__').get_object()
             if isinstance(init, pyobjects.AbstractFunction):
@@ -32,18 +32,22 @@ class PyDocExtractor(object):
 
     def _get_function_docstring(self, pyfunction):
         functions = [pyfunction]
-        if isinstance(pyfunction.parent, pyobjects.PyClass):
+        if self._is_method(pyfunction):
             functions.extend(self._get_super_methods(pyfunction.parent,
                                                      pyfunction.get_name()))
         return '\n\n'.join([self._get_single_function_docstring(function)
                             for function in functions])
 
+    def _is_method(self, pyfunction):
+        return isinstance(pyfunction, pyobjects.PyFunction) and \
+               isinstance(pyfunction.parent, pyobjects.PyClass)
+
     def _get_single_function_docstring(self, pyfunction):
         signature = self._get_function_signature(pyfunction)
-        if isinstance(pyfunction.parent, pyobjects.PyClass):
+        if self._is_method(pyfunction):
             signature = pyfunction.parent.get_name() + '.' + signature
             self._get_super_methods(pyfunction.parent, pyfunction.get_name())
-        return signature + '\n\n' + self._trim_docstring(pyfunction.get_doc(),
+        return signature + ':\n\n' + self._trim_docstring(pyfunction.get_doc(),
                                                          indents=2)
 
     def _get_super_methods(self, pyclass, name):

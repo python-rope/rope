@@ -480,6 +480,11 @@ class CodeAssistTest(unittest.TestCase):
         doc = self.assist.get_doc(src, src.rindex('B') + 1)
         doc.index('B(A)')
 
+    def test_get_pydoc_for_builtin_functions(self):
+        src = 's = "hey"\ns.replace\n'
+        doc = self.assist.get_doc(src, src.rindex('replace') + 1)
+        self.assertTrue(doc is not None)
+
     # TODO: should comment till the end of scope and not block
     def xxx_test_not_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'

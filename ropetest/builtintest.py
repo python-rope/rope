@@ -260,10 +260,9 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('for line in open("file.txt"):\n    a_var = line\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         a_var = pymod.get_attribute('a_var').get_object()
-        self.assertEquals(builtins.get_str_type(),
-                          a_var.get_type())
+        self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
 
-    def test_file_builtin_type(self):
+    def test_file_builtin_type2(self):
         self.mod.write('p = property()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         p_var = pymod.get_attribute('p').get_object()
@@ -328,14 +327,6 @@ class BuiltinTypesTest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
-    def test_enumerate_builtin_function(self):
-        self.mod.write('class C(object):\n    pass\nl = [C()]\n'
-                       'for i, x in enumerate(l):\n    a_var = x\n')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
-        self.assertEquals(c_class, a_var.get_type())
-
     def test_builtin_class_get_name(self):
         self.assertEquals('object',
                           builtins.builtins['object'].get_object().get_name())
@@ -362,6 +353,14 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertTrue(isinstance(a_var.get_type(), builtins.Iterator))
+
+    def test_iter_builtin_function(self):
+        self.mod.write('class C(object):\n    pass\nl = [C()]\n'
+                       'for c in iter(l):\n    a_var = c\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
 
 
 if __name__ == '__main__':

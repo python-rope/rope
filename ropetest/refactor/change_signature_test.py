@@ -145,7 +145,7 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.remove(2).do()
         self.assertEquals('def a_func(p1, *args):\n    pass\na_func(1)\n', self.mod.read())
 
-    # XXX: What to do here?
+    # XXX: What to do here for star args?
     def xxx_test_removing_arguments_star_args2(self):
         self.mod.write('def a_func(p1, *args):\n    pass\na_func(2, 3, p1=1)\n')
         signature = ChangeSignature(self.project, self.mod,
@@ -153,7 +153,7 @@ class ChangeSignatureTest(unittest.TestCase):
         signature.remove(1).do()
         self.assertEquals('def a_func(p1):\n    pass\na_func(p1=1)\n', self.mod.read())
 
-    # XXX: What to do here?
+    # XXX: What to do here for star args?
     def xxx_test_removing_arguments_star_args3(self):
         self.mod.write('def a_func(p1, *args):\n    pass\na_func(*[1, 2, 3])\n')
         signature = ChangeSignature(self.project, self.mod,
@@ -295,6 +295,32 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals(
             'class A(object):\n    def a_method(self, p1):\n        pass\n'
             'class B(A):\n    def a_method(self, p1):\n        pass\n',
+            self.mod.read())
+
+    # TODO: changing signature for constructors
+    def xxx_test_changing_signature_for_constructors(self):
+        self.mod.write(
+            'class C(object):\n    def __init__(self, p):\n        pass\n'
+            'c = C(1)\n')
+        signature = ChangeSignature(self.project, self.mod,
+                                    self.mod.read().index('C') + 1)
+        signature.apply_changers([change_signature.ArgumentRemover(1)]).do()
+        self.assertEquals(
+            'class C(object):\n    def __init__(self):\n        pass\n'
+            'c = C()\n',
+            self.mod.read())
+
+    # TODO: changing signature for constructors
+    def xxx_test_changing_signature_for_constructors2(self):
+        self.mod.write(
+            'class C(object):\n    def __init__(self, p):\n        pass\n'
+            'c = C(1)\n')
+        signature = ChangeSignature(self.project, self.mod,
+                                    self.mod.read().index('__init__') + 1)
+        signature.apply_changers([change_signature.ArgumentRemover(1)]).do()
+        self.assertEquals(
+            'class C(object):\n    def __init__(self):\n        pass\n'
+            'c = C()\n',
             self.mod.read())
 
 

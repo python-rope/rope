@@ -1,32 +1,17 @@
 """Rope object inference package
 
-You can add new object inference mechanisms by implementing a
-class with `infer_returned_object` and `infer_parameter_objects`
-methods and changing `rope.base.oi.objectinfer.ObjectInfer.__init__()`
-to add your class.
-
-Note that rope askes two things from object inference objects:
+Rope askes two things from object inference objects:
 
 * The object returned from a function when a specific set of parameters
   are passed to it.
 * The objects passed to a function as parameters.
 
 Rope only needs these information since rope makes some
-simplifying assumptions about the program.  Actually a program
+simplifying assumptions about the program.  Rope assumes a program
 performs two main tasks: assignments and function calls.  Tracking
-assignments is simple and rope handles that.  The main problem are
-function calls.  There are two approaches currently used by rope for
-obtaining these information:
-
-* `rope.base.oi.staticoi.StaticObjectInference`
-
-  Currently it is very simple.  It cannot infer the parameters, since
-  it does not analyze the function calls.  For obtaining the returned
-  object it analyzes the expression returned from a function.  The
-  main problem with advanced algorithms is that they take very long
-  and for collecting useful data we have to analyze many modules
-  simultaneously.  Maybe a limited, simplified version would be
-  implemented in future.
+assignments is simple and rope handles that.  The main problem is
+function calls.  Rope uses these two approaches for obtaining these
+information:
 
 * `rope.base.oi.dynamicoi.DynamicObjectInference`:
 
@@ -36,5 +21,25 @@ obtaining these information:
   uses them.  The main problem with this approach is that it is
   quite slow; Not when looking up the information but when collecting
   them.
+
+* `rope.base.oi.staticoi.StaticObjectInference`
+
+  In ``0.5m3`` rope's SOI has been enhanced very much.  For Finding
+  the value returned by a function, it analyzes the body of the
+  function.  The good thing about it is that you don't have to run
+  anything like DOI, although for complex functions this approach
+  does not give good results.(Opposed to DOI in which rope does
+  not care about the function body at all)
+
+  But the main part of SOI is that it can analyze modules and
+  complete its information about functions.  This is done by
+  analyzing function calls in a module.  Currently SOI analyzes
+  modules only when the user asks.  That is mainly because analyzing
+  all modules is inefficient.
+
+  Note that by repeatedly performing SOI analysis on modules we do
+  an iterative object inference approach.  The results gets more
+  accurate.
+
 
 """

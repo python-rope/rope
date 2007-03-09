@@ -200,6 +200,22 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
         self.assertEquals(c1_class, c_var.get_type())
 
+    def test_handling_generator_functions(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    pass\ndef f():\n    yield C()\n'
+            'for c in f():\n    a_var = c\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_handling_generator_functions_for_strs(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('def f():\n    yield ""\n'
+                  'for s in f():\n    a_var = s\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
+
 
 class NewStaticOITest(unittest.TestCase):
 
@@ -282,12 +298,54 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
+    def test_not_reporting_out_of_date_information(self):
+        code = 'class C1(object):\n    pass\n' \
+               'def f(arg):\n    return C1()\na_var = f('')\n'
+        self.mod.write(code)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+
+        self.mod.write(code.replace('C1', 'C2'))
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c2_class, a_var.get_type())
+
+    def test_invalidating_concluded_data_in_a_function(self):
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod1.write('def func(arg):\n    temp = arg\n    return temp\n')
+        mod2.write('import mod1\n'
+                   'class C1(object):\n    pass\n'
+                   'class C2(object):\n    pass\n'
+                   'a_var = mod1.func(C1())\n')
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        c1_class = pymod2.get_attribute('C1').get_object()
+        a_var = pymod2.get_attribute('a_var').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+
+        mod2.write(mod2.read()[:mod2.read().rfind('C1()')] + 'C2())\n')
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        c2_class = pymod2.get_attribute('C2').get_object()
+        a_var = pymod2.get_attribute('a_var').get_object()
+        self.assertEquals(c2_class, a_var.get_type())
+
     # TODO: Requires saving per object data
     def xxx_test_static_oi_for_lists_depending_on_append_function(self):
         code = 'class C(object):\n    pass\nl = list()\n' \
                'l.append(C())\na_var = l[0]\n'
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_handling_generator_functions_for_strs(self):
+        self.mod.write('class C(object):\n    pass\ndef f(p):\n    yield p()\n'
+                       'for c in f(C):\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod.get_attribute('C').get_object()
         a_var = pymod.get_attribute('a_var').get_object()

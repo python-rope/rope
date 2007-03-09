@@ -29,9 +29,7 @@ IDE And UI Stories
 
 * Editor folding
 * Variable indentation and tab size
-* Having multiple clipboards
 * Auto-importing modules
-* Adding tool bar
 * Replacement; M-%
 * Remembering last open project
 * Go to matching parenthesis
@@ -58,7 +56,6 @@ IDE And UI Stories
   * Running last run
 
 * Formating code
-* Showing function signature when calling
 
 
 Stories
@@ -74,10 +71,6 @@ Stories
 
 
 * Saving history across sessions
-
-
-* Better UI list and tree navigation
-  Add filter texts and selection texts to trees and lists.
 
 
 * Handling the return type of ``yield`` keyword
@@ -137,13 +130,31 @@ Stories
 * Line break algorithm for rest mode; ``C-q``
 
 
+* Supporting modules without source code
+
+
+* Having multiple clipboards; ``M-y``
+
+
 * Renaming textual matches
+
+
+* Adding rename when unsure option
 
 
 * Enhancing open project dialog
 
 
-* Supporting generator functions
+* Inferring the object list comprehensions or generator expressions hold
 
 
 > Public Release 0.5m3 : March 18, 2007
+
+
+* Holding per name information for builtin containers
+
+
+* Handling change method signature for constructors
+
+
+* Supporting generator functions

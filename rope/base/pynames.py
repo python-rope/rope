@@ -30,24 +30,17 @@ class AssignedName(PyName):
     def __init__(self, lineno=None, module=None, pyobject=None):
         self.lineno = lineno
         self.module = module
-        self.is_being_inferred = False
         self.assignments = []
-        self.pyobject = _get_concluded_data(module)
+        self.pyobject = _Inferred(self._get_inferred,
+                                  _get_concluded_data(module))
         self.pyobject.set(pyobject)
 
+    def _get_inferred(self):
+        if self.module is not None:
+            object_infer = self.module.pycore._get_object_infer()
+            return object_infer.infer_assigned_object(self)
+
     def get_object(self):
-        if self.is_being_inferred:
-            raise rope.base.pyobjects.IsBeingInferredError('Circular assignments')
-        if self.pyobject.get() is None and self.module is not None:
-            self.is_being_inferred = True
-            try:
-                object_infer = self.module.pycore._get_object_infer()
-                inferred_object = object_infer.infer_assigned_object(self)
-                self.pyobject.set(inferred_object)
-            finally:
-                self.is_being_inferred = False
-        if self.pyobject.get() is None:
-            self.pyobject.set(rope.base.pyobjects.get_unknown())
         return self.pyobject.get()
 
     def get_definition_location(self):
@@ -55,6 +48,10 @@ class AssignedName(PyName):
         if self.lineno is None and self.assignments:
             self.lineno = self.assignments[0].get_lineno()
         return (self.module, self.lineno)
+
+    def invalidate(self):
+        """Forget the `PyObject` this `PyName` holds"""
+        self.pyobject.set(None)
 
 
 class _Assigned(object):
@@ -94,29 +91,25 @@ class EvaluatedName(PyName):
 
         """
         self.module = module
-        self.pyobject = _get_concluded_data(module)
         self.assignment = assignment
         self.lineno = lineno
         self.evaluation = evaluation
-        self.is_being_inferred = False
+        self.pyobject = _Inferred(self._get_inferred,
+                                  _get_concluded_data(module))
+
+    def _get_inferred(self):
+        object_infer = self.module.pycore._get_object_infer()
+        return object_infer.evaluate_object(self)
 
     def get_object(self):
-        if self.is_being_inferred:
-            raise rope.base.pyobjects.IsBeingInferredError('Circular evaluations')
-        if self.pyobject.get() is None:
-            self.is_being_inferred = True
-            try:
-                object_infer = self.module.pycore._get_object_infer()
-                inferred_object = object_infer.evaluate_object(self)
-                self.pyobject.set(inferred_object)
-            finally:
-                self.is_being_inferred = False
-        if self.pyobject.get() is None:
-            self.pyobject.set(rope.base.pyobjects.get_unknown())
         return self.pyobject.get()
 
     def get_definition_location(self):
         return (self.module, self.lineno)
+
+    def invalidate(self):
+        """Forget the `PyObject` this `PyName` holds"""
+        self.pyobject.set(None)
 
 
 class ParameterName(PyName):
@@ -189,18 +182,13 @@ class ImportedName(PyName):
     def __init__(self, imported_module, imported_name):
         self.imported_module = imported_module
         self.imported_name = imported_name
-        self.imported_pyname = _get_concluded_data(imported_module.importing_module)
 
     def _get_imported_pyname(self):
-        if self.imported_pyname.get() is None:
-            try:
-                self.imported_pyname.set(self.imported_module.get_object()
-                                         .get_attribute(self.imported_name))
-            except AttributeNotFoundError:
-                pass
-        if self.imported_pyname.get() is None:
-            self.imported_pyname.set(AssignedName())
-        return self.imported_pyname.get()
+        try:
+            return self.imported_module.get_object().get_attribute(
+                self.imported_name)
+        except AttributeNotFoundError:
+            return AssignedName()
 
     def get_object(self):
         return self._get_imported_pyname().get_object()
@@ -232,3 +220,37 @@ def _get_concluded_data(module):
     if module is None:
         return rope.base.pyobjects._ConcludedData()
     return module._get_concluded_data()
+
+
+class _Inferred(object):
+
+    def __init__(self, get_inferred, concluded=None):
+        self.get_inferred = get_inferred
+        self.concluded = concluded
+        self.is_being_inferred = False
+        if self.concluded is None:
+            self.temp = None
+
+    def get(self, *args, **kwds):
+        if self.is_being_inferred:
+            raise rope.base.pyobjects.IsBeingInferredError(
+                'Circular Object Inference')
+        if self.concluded is None or self.concluded.get() is None:
+            self.is_being_inferred = True
+            try:
+                self.set(self.get_inferred(*args, **kwds))
+            finally:
+                self.is_being_inferred = False
+        if self._get() is None:
+            self.set(rope.base.pyobjects.get_unknown())
+        return self._get()
+
+    def set(self, pyobject):
+        if self.concluded is not None:
+            self.concluded.set(pyobject)
+        self.temp = pyobject
+
+    def _get(self):
+        if self.concluded is not None:
+            return self.concluded.get()
+        return self.temp

@@ -70,12 +70,12 @@ class PyObject(object):
 def get_base_type(name):
     """Return the base type with name `name`.
 
-    The base types are Type, Function, Module and Unknown.  It was
-    used to check the type of a `PyObject` but currently its use
+    The base types are 'Type', 'Function', 'Module' and 'Unknown'.  It
+    was used to check the type of a `PyObject` but currently its use
     is discouraged.  Use classes defined in this module instead.
     For example instead of
     ``pyobject.get_type() == get_base_type('Function')`` use
-    ``isinstance(pyobject, AbstractFunction)`` instead.
+    ``isinstance(pyobject, AbstractFunction)``.
 
     You can use `AbstractClass` for classs, `AbstractFunction` for
     functions, and `AbstractModule` for modules.  You can also use
@@ -152,6 +152,7 @@ class AbstractModule(PyObject):
 
 
 class PyDefinedObject(object):
+    """Python defined names that rope can access their sources"""
 
     def __init__(self, pycore, ast_node, parent):
         self.pycore = pycore
@@ -221,9 +222,9 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parameters = self.ast_node.argnames
         self.decorators = self.ast_node.decorators
-        self.is_being_inferred = False
-        self.are_args_being_inferred = False
-        self.parameter_pyobjects = self.get_module()._get_concluded_data()
+        self.parameter_pyobjects = pynames._Inferred(
+            self._infer_parameters, self.get_module()._get_concluded_data())
+        self.returned = pynames._Inferred(self._infer_returned)
         self.parameter_pynames = None
 
     def _create_structural_attributes(self):
@@ -235,25 +236,25 @@ class PyFunction(PyDefinedObject, AbstractFunction):
     def _create_scope(self):
         return rope.base.pyscopes.FunctionScope(self.pycore, self)
 
-    def _get_parameter_pyobjects(self):
-        if self.are_args_being_inferred:
-            raise IsBeingInferredError('Circular assignments')
-        if len(self.parameters) == 0:
-            return {}
-        self.are_args_being_inferred = True
-        try:
-            object_infer = self.pycore._get_object_infer()
-            pyobjects = object_infer.infer_parameter_objects(self)
-        finally:
-            self.are_args_being_inferred = False
+    def _infer_parameters(self):
+        object_infer = self.pycore._get_object_infer()
+        pyobjects = object_infer.infer_parameter_objects(self)
+        self._handle_special_args(pyobjects)
         return pyobjects
 
-    def _set_parameter_pyobjects(self, pyobjects):
+    def _infer_returned(self, args=None):
+        object_infer = self.pycore._get_object_infer()
+        return object_infer.infer_returned_object(self, args)
+
+    def _handle_special_args(self, pyobjects):
         if len(pyobjects) < len(self.parameters):
             if self.get_ast().flags & compiler.consts.CO_VARARGS:
                 pyobjects.append(rope.base.builtins.get_list())
             if self.get_ast().flags & compiler.consts.CO_VARKEYWORDS:
                 pyobjects.append(rope.base.builtins.get_dict())
+
+    def _set_parameter_pyobjects(self, pyobjects):
+        self._handle_special_args(pyobjects)
         self.parameter_pyobjects.set(pyobjects)
 
     def get_parameters(self):
@@ -265,23 +266,10 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         return self.parameter_pynames
 
     def get_parameter(self, index):
-        if not self.parameter_pyobjects.get():
-            self._set_parameter_pyobjects(self._get_parameter_pyobjects())
         return self.parameter_pyobjects.get()[index]
 
     def get_returned_object(self, args=None):
-        if self.is_being_inferred:
-            raise IsBeingInferredError('Circular assignments')
-        self.is_being_inferred = True
-        try:
-            object_infer = self.pycore._get_object_infer()
-            inferred_object = object_infer.infer_returned_object(self, args)
-            result = inferred_object
-        finally:
-            self.is_being_inferred = False
-        if result is None:
-            return get_unknown()
-        return result
+        return self.returned.get(args)
 
     def get_name(self):
         return self.get_ast().name
@@ -680,9 +668,14 @@ class _FunctionVisitor(_ScopeVisitor):
     def __init__(self, pycore, owner_object):
         super(_FunctionVisitor, self).__init__(pycore, owner_object)
         self.returned_asts = []
+        self.generator = False
 
     def visitReturn(self, node):
         self.returned_asts.append(node.value)
+
+    def visitYield(self, node):
+        self.returned_asts.append(node.value)
+        self.generator = True
 
 
 class _ClassInitVisitor(_AssignVisitor):

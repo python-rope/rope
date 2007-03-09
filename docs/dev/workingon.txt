@@ -1,41 +1,30 @@
-Refactoring And Small Stories
-=============================
+Supporting Generator Functions
+==============================
 
-- Adding a ``special_args`` parameter to `AbstractFunction.get_param_names()`
-- Renaming `PyDefinedObject._get_ast()` to `get_ast()`
-- What if the function passed to a property is not a function
-- Simple handling of `ListComp` and `GenExpr`
-- Showing the pydoc of superclass methods in show pydoc if it overrides them
-- Refactor codeassist to put doc methods in a class
-- Showing superclass in show pydoc
+- Update `rope.base.oi` docs
+- Not proposing invalid textuals in `_CallInformationOrganizer`
+- Removing duplication between `AssignedName`, `EvaluatedName`
+  and `PyFunction` for inferring objects
+- `Iterator_to_textual` and the reverse
+- Adding `Generator` builtin
+- `iter` builtin function
+- Refactoring builtin module a bit
 
-* Not saving normal SOIed returned in callinfo
-* Should `ParameterName` save information?
-* Not proposing invalid textuals in `_CallInformationOrganizer`
+* Refactoring callinfo transformations
+* Transforming all `PyObject`\s to textuals; trying their super
+  classes till `PyObject`, giving up then.
+* Handling generators in DOI?
+* Returning a `Generator` for functions with unknown return type
+* Passing `iterators` in DOI?
 
-* Not sending ``*args`` and ``**kwds`` in DOI
-* Cleaning up `rope.base.pyobjects`
-
-* Is `rope.base` supposed to be thread safe?  which parts?
-* Evaluate function parameter defaults in staticoi?
+* Chaning `callinfo` to match not exactly the same but similar args
 * Is throwing `IsBeingInferredException` a good thing?  Can't we
-  return something instead?
-* Duplication between `AssignedName` and `EvaluatedName`, `PyFunction`
-  for inferring objects
-* Not ignoring the first argument for builtin types
-* What to do for builtin functions
+  return `get_unknown()` instead?
+* Evaluate function parameter defaults in staticoi?
 
-* Generator list comprehension support
-* Update `rope.base.oi` docs
-* Using sqlite3 to prevent holding information in memory? mocks?
-* Enhancing object textual form to include new types
-
-* Using `AbstractXxx` classes for the objects for which the source is not
-  available
-* Inferring the type list comprehensions or generator expressions hold
+* Using `sqlite3` to prevent holding information in memory? mocks?
+* Is `rope.base` supposed to be thread safe?  which parts?
 * Textual matches support; like grep?
-* Adding an option to rename refactoring to rename all occurrences of a name
-  regardless of whether they are the same pyname or not?
 * ``enable_doi`` config
 * Completion in module entries
 * Faster find file in large projects

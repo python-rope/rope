@@ -26,9 +26,13 @@ def _create_builtin_getter(cls):
 
 class BuiltinClass(pyobjects.AbstractClass):
 
-    def __init__(self, builtin):
+    def __init__(self, builtin, attributes):
         super(BuiltinClass, self).__init__()
         self.builtin = builtin
+        self.attributes = attributes
+
+    def get_attributes(self):
+        return self.attributes
 
     def get_doc(self):
         return self.builtin.__doc__
@@ -40,11 +44,10 @@ class BuiltinClass(pyobjects.AbstractClass):
 class List(BuiltinClass):
 
     def __init__(self, holding=None):
-        super(List, self).__init__(list)
         self.holding = holding
-        self.attributes = {}
+        attributes = {}
         def add(name, returned=None, function=None):
-            self.attributes[name] = BuiltinName(
+            attributes[name] = BuiltinName(
                 BuiltinFunction(returned=returned, function=function,
                                 builtin=getattr(list, name)))
 
@@ -53,20 +56,13 @@ class List(BuiltinClass):
         add('pop', self.holding)
         add('__iter__', Iterator(self.holding))
         add('__new__', function=self._new_list)
-        add('append')
-        add('count')
-        add('extend')
-        add('index')
-        add('insert')
-        add('remove')
-        add('reverse')
-        add('sort')
+        for method in ['append', 'count', 'extend', 'index', 'insert',
+                       'remove', 'reverse', 'sort']:
+            add(method)
+        super(List, self).__init__(list, attributes)
 
     def _new_list(self, args):
         return _create_builtin(args, get_list)
-
-    def get_attributes(self):
-        return self.attributes
 
 
 get_list = _create_builtin_getter(List)
@@ -76,13 +72,12 @@ get_list_type = _create_builtin_type_getter(List)
 class Dict(BuiltinClass):
 
     def __init__(self, keys=None, values=None):
-        super(Dict, self).__init__(dict)
         self.keys = keys
         self.values = values
         item = get_tuple(self.keys, self.values)
-        self.attributes = {}
+        attributes = {}
         def add(name, returned=None, function=None):
-            self.attributes[name] = BuiltinName(
+            attributes[name] = BuiltinName(
                 BuiltinFunction(returned=returned, function=function,
                                 builtin=getattr(dict, name)))
         add('__getitem__', self.values)
@@ -97,14 +92,10 @@ class Dict(BuiltinClass):
         add('items', List(item))
         add('iteritems', Iterator(item))
         add('copy', pyobjects.PyObject(self))
-        add('clear')
-        add('has_key')
-        add('popitem')
-        add('setdefault')
-        add('update')
-
-    def get_attributes(self):
-        return self.attributes
+        add('popitem', item)
+        for method in ['clear', 'has_key', 'setdefault', 'update']:
+            add(method)
+        super(Dict, self).__init__(dict, attributes)
 
     def _new_dict(self, args):
         def do_create(holding):
@@ -120,22 +111,19 @@ get_dict_type = _create_builtin_type_getter(Dict)
 class Tuple(BuiltinClass):
 
     def __init__(self, *objects):
-        super(Tuple, self).__init__(tuple)
         self.objects = objects
         first = None
         if objects:
             first = objects[0]
-        self.attributes = {
+        attributes = {
             '__getitem__': BuiltinName(BuiltinFunction(first)),
             '__getslice__': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             '__new__': BuiltinName(BuiltinFunction(function=self._new_tuple)),
             '__iter__': BuiltinName(BuiltinFunction(Iterator(first)))}
+        super(Tuple, self).__init__(tuple, attributes)
 
     def get_holding_objects(self):
         return self.objects
-
-    def get_attributes(self):
-        return self.attributes
 
     def _new_tuple(self, args):
         return _create_builtin(args, get_tuple)
@@ -148,36 +136,26 @@ get_tuple_type = _create_builtin_type_getter(Tuple)
 class Set(BuiltinClass):
 
     def __init__(self, holding=None):
-        super(Set, self).__init__(set)
         self.holding = holding
-        self.attributes = {}
+        attributes = {}
         def add(name, returned=None, function=None):
-            self.attributes[name] = BuiltinName(
+            attributes[name] = BuiltinName(
                 BuiltinFunction(returned=returned, function=function,
                                 builtin=getattr(set, name)))
         add('pop', self.holding)
         add('__iter__', Iterator(self.holding))
         add('__new__', function=self._new_set)
-        add('add')
-        add('copy', pyobjects.PyObject(self))
-        add('difference', pyobjects.PyObject(self))
-        add('intersection', pyobjects.PyObject(self))
-        add('difference_update'),
-        add('symmetric_difference', pyobjects.PyObject(self))
-        add('symmetric_difference_update')
-        add('union', pyobjects.PyObject(self))
-        add('discard')
-        add('remove')
-        add('issuperset')
-        add('issubset')
-        add('clear')
-        add('update')
 
-    def get_attributes(self):
-        return self.attributes
-
-    def get_doc(self):
-        return set.__doc__
+        self_methods = ['copy', 'difference', 'intersection',
+                        'symmetric_difference', 'union']
+        for method in self_methods:
+            add(method, pyobjects.PyObject(self))
+        normal_methods = ['add', 'symmetric_difference_update',
+                          'difference_update', 'discard', 'remove',
+                          'issuperset', 'issubset', 'clear', 'update']
+        for method in normal_methods:
+            add(method)
+        super(Set, self).__init__(set, attributes)
 
     def _new_set(self, args):
         return _create_builtin(args, get_set)
@@ -189,54 +167,29 @@ get_set_type = _create_builtin_type_getter(Set)
 class Str(BuiltinClass):
 
     def __init__(self):
-        super(Str, self).__init__(str)
         self_object = pyobjects.PyObject(self)
-        self.attributes = {}
+        attributes = {}
         def add(name, returned=None, function=None):
             builtin = getattr(str, name, None)
-            self.attributes[name] = BuiltinName(
+            attributes[name] = BuiltinName(
                 BuiltinFunction(returned=returned, function=function, builtin=builtin))
-        add('__getitem__', self_object)
-        add('__getslice__', self_object)
         add('__iter__', Iterator(self_object))
-	add('captialize', self_object)
-        add('center', self_object)
-        add('count'),
-        add('decode', self_object)
-        add('encode', self_object)
-        add('endswith')
-        add('expandtabs', self_object)
-        add('find')
-        add('index')
-        add('isalnum')
-        add('isalpha')
-        add('isdigit')
-        add('islower')
-        add('isspace')
-        add('istitle')
-        add('isupper')
-        add('join', self_object)
-        add('ljust', self_object)
-        add('lower', self_object)
-        add('lstrip', self_object)
-        add('replace', self_object)
-        add('rfind')
-        add('rindex')
-        add('rjust', self_object)
-        add('rsplit', get_list(self_object))
-        add('rstrip', self_object)
-        add('split', get_list(self_object))
-        add('splitlines', get_list(self_object))
-        add('startswith', self_object)
-        add('strip', self_object)
-        add('swapcase', self_object)
-        add('title', self_object)
-        add('translate', self_object)
-        add('upper', self_object)
-        add('zfill', self_object)
 
-    def get_attributes(self):
-        return self.attributes
+        self_methods = ['__getitem__', '__getslice__', 'captialize', 'center',
+                        'decode', 'encode', 'expandtabs', 'join', 'ljust',
+                        'lower', 'lstrip', 'replace', 'rjust', 'rstrip', 'strip',
+                        'swapcase', 'title', 'translate', 'upper', 'zfill']
+        for method in self_methods:
+            add(method, self_object)
+
+        for method in ['rsplit', 'split', 'splitlines']:
+            add(method, get_list(self_object))
+
+        for method in ['count', 'endswith', 'find', 'index', 'isalnum',
+                       'isalpha', 'isdigit', 'islower', 'isspace', 'istitle',
+                       'isupper', 'rfind', 'rindex', 'startswith']:
+            add(method)
+        super(Str, self).__init__(str, attributes)
 
     def get_doc(self):
         return str.__doc__
@@ -297,38 +250,47 @@ class Iterator(pyobjects.AbstractClass):
 get_iterator = _create_builtin_getter(Iterator)
 
 
-class File(BuiltinClass):
+class Generator(pyobjects.AbstractClass):
 
-    def __init__(self):
-        super(File, self).__init__(file)
-        self_object = pyobjects.PyObject(self)
-        str_object = get_str()
-        str_list = get_list(get_str())
-        self.attributes = {}
-        def add(name, returned=None, function=None):
-            builtin = getattr(file, name, None)
-            self.attributes[name] = BuiltinName(
-                BuiltinFunction(returned=returned, function=function, builtin=builtin))
-        add('__iter__')
-        add('close')
-        add('flush')
-        add('lineno')
-        add('isatty')
-        add('next', str_object)
-        add('read', str_object)
-        add('readline', str_object)
-        add('readlines', str_list)
-        add('seek')
-        add('tell')
-        add('truncate')
-        add('write')
-        add('writelines')
+    def __init__(self, holding=None):
+        super(Generator, self).__init__()
+        self.holding = holding
+        self.attributes = {
+            'next': BuiltinName(BuiltinFunction(self.holding)),
+            '__iter__': BuiltinName(BuiltinFunction(get_iterator(self.holding))),
+            'close': BuiltinName(BuiltinFunction()),
+            'send': BuiltinName(BuiltinFunction()),
+            'throw': BuiltinName(BuiltinFunction())}
 
     def get_attributes(self):
         return self.attributes
 
-    def get_doc(self):
-        return file.__doc__
+    def get_returned_object(self):
+        return self.holding
+
+get_generator = _create_builtin_getter(Generator)
+
+
+class File(BuiltinClass):
+
+    def __init__(self):
+        self_object = pyobjects.PyObject(self)
+        str_object = get_str()
+        str_list = get_list(get_str())
+        attributes = {}
+        def add(name, returned=None, function=None):
+            builtin = getattr(file, name, None)
+            attributes[name] = BuiltinName(
+                BuiltinFunction(returned=returned, function=function,
+                                builtin=builtin))
+        add('__iter__', get_iterator(str_object))
+        for method in ['next', 'read', 'readline', 'readlines']:
+            add(method, str_list)
+        for method in ['close', 'flush', 'lineno', 'isatty', 'seek', 'tell',
+                       'truncate', 'write', 'writelines']:
+            add(method)
+        super(File, self).__init__(file, attributes)
+
 
 get_file = _create_builtin_getter(File)
 get_file_type = _create_builtin_type_getter(File)
@@ -337,21 +299,18 @@ get_file_type = _create_builtin_type_getter(File)
 class Property(BuiltinClass):
 
     def __init__(self, fget=None, fset=None, fdel=None, fdoc=None):
-        super(Property, self).__init__(property)
         self._fget = fget
         self._fdoc = fdoc
-        self.attributes = {
+        attributes = {
             'fget': BuiltinName(BuiltinFunction()),
             'fset': BuiltinName(BuiltinFunction()),
             'fdel': BuiltinName(BuiltinFunction()),
             '__new__': BuiltinName(BuiltinFunction(function=_property_function))}
+        super(Property, self).__init__(property, attributes)
 
     def get_property_object(self):
         if isinstance(self._fget, pyobjects.AbstractFunction):
             return self._fget.get_returned_object()
-
-    def get_attributes(self):
-        return self.attributes
 
 
 def _property_function(args):
@@ -381,13 +340,13 @@ class Lambda(pyobjects.AbstractFunction):
 class BuiltinObject(BuiltinClass):
 
     def __init__(self):
-        super(BuiltinObject, self).__init__(object)
+        super(BuiltinObject, self).__init__(object, {})
 
 
 class BuiltinType(BuiltinClass):
 
     def __init__(self):
-        super(BuiltinType, self).__init__(type)
+        super(BuiltinType, self).__init__(type, {})
 
 
 def _infer_sequence_type(seq):
@@ -449,6 +408,14 @@ def _enumerate_function(args):
     tuple = get_tuple(None, holding)
     return Iterator(tuple)
 
+def _iter_function(args):
+    passed = args.get_arguments(['sequence'])[0]
+    if passed is None:
+        holding = None
+    else:
+        holding = _infer_sequence_type(passed)
+    return Iterator(holding)
+
 
 builtins = {
     'list': BuiltinName(get_list_type()),
@@ -467,4 +434,5 @@ builtins = {
     'zip': BuiltinName(BuiltinFunction(function=_zip_function, builtin=zip)),
     'enumerate': BuiltinName(BuiltinFunction(function=_enumerate_function, builtin=enumerate)),
     'object': BuiltinName(BuiltinObject()),
-    'type': BuiltinName(BuiltinType())}
+    'type': BuiltinName(BuiltinType()),
+    'iter': BuiltinName(BuiltinFunction(function=_iter_function, builtin=iter))}
