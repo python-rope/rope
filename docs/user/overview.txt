@@ -9,7 +9,10 @@ Overview
 ========
 
 The purpose of this file is to give an overview of some of rope's
-features.  It is incomplete.
+features.  It is incomplete.  Because rope is enhancing very fast
+some of the features shown here are old and do not show what rope
+can do in extremes.  So if you really want to feel the power of
+rope try its features and see its unit tests.
 
 
 Keybinding
@@ -37,6 +40,7 @@ close active editor         C-x k          C-w
 exit                        C-x C-c        C-W
 run active editor           C-c x p        M-X p
 run unit-tests              C-c x t        M-X t
+run SOI                     C-c x s
 --------------------------  -------------  -------------
 forward character           C-f
 backward character          C-b
@@ -150,13 +154,20 @@ module; It will be copied to ``~/.rope`` if none already exists.)
 Show PyDoc
 ----------
 
+Try it!
+
 
 Goto Definition
 ---------------
 
+Try it!
+
 
 Refactorings
 ============
+
+This section shows some random refactorings you can do using rope.
+
 
 Renaming attributes
 -------------------
@@ -365,8 +376,8 @@ configuration considers imported modules with more than 2 dots or with
 length more than 27 characters to be long.
 
 
-Basic Type Inference
-====================
+Basic Object Inference
+======================
 
 ::
 
@@ -382,28 +393,30 @@ Basic Type Inference
       return AClass()
 
   a_var = a_func()
-  a_var.${codeassist}
+  #a_var.${codeassist}
 
   another_var = a_var
-  another_var.${codeassist}
-  another_var.call_a_func().${codeassist}
+  #another_var.${codeassist}
+  #another_var.call_a_func().${codeassist}
 
 
 Basic support for builtin types::
 
   a_list = [AClass(), AClass()]
   for x in a_list:
-      x.${codeassist}
-  a_list.pop().${codeassist}
+      pass
+      #x.${codeassist}
+  #a_list.pop().${codeassist}
 
   a_dict = ['text': AClass()]
   for key, value in a_dict.items():
-      key.${codeassist}
-      value.${codeassist}
+      pass
+      #key.${codeassist}
+      #value.${codeassist}
 
 
-Dynamic Type Inference
-======================
+Dynamic Object Inference
+========================
 
 Dynamic type inference gets its needed information from running
 modules (``M-X p``) or unit tests (``M-X t``).  You open the module
@@ -418,11 +431,12 @@ assists and some of the refactorings perform much better.
 ``mod1.py``::
 
   def f1(param):
-      param.${codeassist}
-      f2(param).${codeassist}
+      pass
+      #param.${codeassist}
+      #f2(param).${codeassist}
 
   def f2(param):
-      param.${codeassist}
+      #param.${codeassist}
       return param
 
 Using code assist in specified places does not give any information
@@ -461,7 +475,7 @@ Builtin types can be handled in a limited way, too::
       return result
 
   returned = f()
-  returned[0].${codeassist}
+  #returned[0].${codeassist}
 
 Test the the proposed completions after running this module.
 

@@ -47,19 +47,24 @@ class ModuleImports(object):
         after_removing = self._remove_imports(imports)
         imports = [stmt for stmt in imports if not stmt.import_info.is_empty()]
 
+        first_non_blank = self._first_non_blank_line(after_removing, 0)
+        first_import = self._first_import_line() - 1
         result = []
-        last_index = self._first_non_blank_line(after_removing, 0)
+        # Writing module docs
+        result.extend(after_removing[first_non_blank:first_import])
+        # Writing imports
         sorted_imports = sorted(imports, self._compare_import_locations)
         for stmt in sorted_imports:
             start = self._get_import_location(stmt)
-            result.extend(after_removing[last_index:start - 1])
-            last_index = self._first_non_blank_line(after_removing, start - 1)
             if stmt != sorted_imports[0]:
                 result.append('\n' * stmt.blank_lines)
             result.append(stmt.get_import_statement() + '\n')
-        if sorted_imports and last_index < len(after_removing):
+        if sorted_imports and first_non_blank < len(after_removing):
             result.append('\n' * self.separating_lines)
-        result.extend(after_removing[last_index:])
+
+        # Writing the body
+        first_after_imports = self._first_non_blank_line(after_removing, first_import)
+        result.extend(after_removing[first_after_imports:])
         return ''.join(result)
 
     def _get_import_location(self, stmt):
@@ -159,17 +164,24 @@ class ModuleImports(object):
         visitor = actions.SortingVisitor(self.pycore, self._current_folder())
         for import_statement in all_import_statements:
             import_statement.accept(visitor)
-        last_index = 1
-        if all_import_statements:
-            last_index = all_import_statements[0].start_line
         in_projects = sorted(visitor.in_project, self._compare_imports)
         third_party = sorted(visitor.third_party, self._compare_imports)
         standards = sorted(visitor.standard, self._compare_imports)
         blank_lines = 0
+        last_index = self._first_import_line()
         last_index = self._move_imports(standards, last_index, 0)
         last_index = self._move_imports(third_party, last_index, 1)
         last_index = self._move_imports(in_projects, last_index, 1)
         self.separating_lines = 2
+
+    def _first_import_line(self):
+        last_index = 1
+        # Getting the line of the first import fails when the first
+        # import is not in the first non doc line of module
+        nodes = self.pymodule.get_ast().node
+        if nodes.getChildNodes():
+            last_index = nodes.getChildNodes()[0].lineno
+        return last_index
 
     def _compare_imports(self, stmt1, stmt2):
         str1 = stmt1.get_import_statement()

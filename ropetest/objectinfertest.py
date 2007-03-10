@@ -562,7 +562,7 @@ class DynamicOITest(unittest.TestCase):
     def test_textual_transformations(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C(object):\n    pass\ndef f():\n    pass\na_var = C()\n' \
-               'a_list = [C()]\na_str = "hey"\n'
+               'a_list = [C()]\na_str = "hey"\na_file = open("file.txt")\n'
         mod.write(code)
         to_pyobject = callinfo._TextualToPyObject(self.project)
         to_textual = callinfo._PyObjectToTextual(self.project)
@@ -570,10 +570,13 @@ class DynamicOITest(unittest.TestCase):
         def complex_to_textual(pyobject):
             return to_textual.transform(
                 to_pyobject.transform(to_textual.transform(pyobject)))
-        for name in ('C', 'f', 'a_var', 'a_list', 'a_str'):
+        for name in ('C', 'f', 'a_var', 'a_list', 'a_str', 'a_file'):
             var = pymod.get_attribute(name).get_object()
             self.assertEquals(to_textual.transform(var), complex_to_textual(var))
         self.assertEquals(to_textual.transform(pymod), complex_to_textual(pymod))
+        enumerate_func = rope.base.builtins.builtins['enumerate'].get_object()
+        self.assertEquals(to_textual.transform(enumerate_func),
+                          complex_to_textual(enumerate_func))
 
     def test_arguments_with_keywords(self):
         mod = self.pycore.create_module(self.project.root, 'mod')

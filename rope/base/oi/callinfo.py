@@ -112,8 +112,11 @@ class _TextualToPyObject(object):
     def transform(self, textual):
         """Transform an object from textual form to `PyObject`"""
         type = textual[0]
-        method = getattr(self, type + '_to_pyobject')
-        return method(textual)
+        try:
+            method = getattr(self, type + '_to_pyobject')
+            return method(textual)
+        except AttributeError:
+            return None
 
     def module_to_pyobject(self, textual):
         path = textual[1]
@@ -144,6 +147,11 @@ class _TextualToPyObject(object):
         if name == 'generator':
             holding = self.transform(textual[2])
             return rope.base.builtins.get_generator(holding)
+        if name == 'file':
+            return rope.base.builtins.get_file()
+        if name == 'function':
+            if textual[2] in rope.base.builtins.builtins:
+                return rope.base.builtins.builtins[textual[2]].get_object()
         return None
 
     def unknown_to_pyobject(self, textual):
@@ -209,8 +217,11 @@ class _PyObjectToTextual(object):
         if pyobject is None:
             return ('none',)
         object_type = type(pyobject)
-        method = getattr(self, object_type.__name__ + '_to_textual')
-        return method(pyobject)
+        try:
+            method = getattr(self, object_type.__name__ + '_to_textual')
+            return method(pyobject)
+        except AttributeError:
+            return ('unknown',)
 
     def PyObject_to_textual(self, pyobject):
         if type(pyobject.get_type()) != pyobjects.PyObject:
@@ -256,6 +267,12 @@ class _PyObjectToTextual(object):
 
     def Str_to_textual(self, pyobject):
         return ('builtin', 'str')
+
+    def File_to_textual(self, pyobject):
+        return ('builtin', 'file')
+
+    def BuiltinFunction_to_textual(self, pyobject):
+        return ('builtin', 'function', pyobject.get_name())
 
     def _get_pymodule_path(self, pymodule):
         resource = pymodule.get_resource()

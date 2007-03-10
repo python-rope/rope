@@ -2,10 +2,10 @@
 functions.
 
 """
+import __builtin__
+import inspect
 
-from rope.base import pynames
-from rope.base import pyobjects
-from rope.base import evaluate
+from rope.base import pynames, pyobjects, evaluate
 
 
 def _create_builtin_type_getter(cls):
@@ -436,3 +436,12 @@ builtins = {
     'object': BuiltinName(BuiltinObject()),
     'type': BuiltinName(BuiltinType()),
     'iter': BuiltinName(BuiltinFunction(function=_iter_function, builtin=iter))}
+
+
+for name in dir(__builtin__):
+    if name not in builtins:
+        obj = getattr(__builtin__, name)
+        if inspect.isclass(obj):
+            builtins[name] = BuiltinName(BuiltinClass(obj, {}))
+        else:
+            builtins[name] = BuiltinName(BuiltinFunction(builtin=obj))

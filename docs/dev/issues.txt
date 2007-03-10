@@ -95,7 +95,7 @@ time, we'll decide about that.
 Returned Object SOI
 -------------------
 
-Since we're passed the object parameters hold, we can perform a
+Since we're passed the objects parameters hold, we can perform a
 better returned object SOI.  We can do that by giving parameter
 objects passed and infer the object of local names once more.
 
@@ -142,19 +142,6 @@ We can change our type DB to add this feature.::
 * Forcing `create_arguments` to pass the implicit object for
   builtin functions.
 * Not ignoring the first argument for builtin types
-
-
-Supporting Generator Functions
-==============================
-
-The good thing about functions is that they can have either returns
-or yields but they cannot have both.
-
-For supporting generators in SOI we can hold yielded asts and we can
-do the same as what we did for normal function returns.
-
-For DOI I don't know how to make that work.  Maybe we can pass
-iterators back to rope.
 
 
 Better Concluded Data

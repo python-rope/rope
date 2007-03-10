@@ -1,23 +1,13 @@
-Supporting Generator Functions
-==============================
+Change Method Signature For Constructors
+========================================
 
-- Update `rope.base.oi` docs
-- Not proposing invalid textuals in `_CallInformationOrganizer`
-- Removing duplication between `AssignedName`, `EvaluatedName`
-  and `PyFunction` for inferring objects
-- `Iterator_to_textual` and the reverse
-- Adding `Generator` builtin
-- `iter` builtin function
-- Refactoring builtin module a bit
+- Transforming more `PyObject`\s to textuals
+- Organize import problems in builtins module
 
-* Refactoring callinfo transformations
-* Transforming all `PyObject`\s to textuals; trying their super
-  classes till `PyObject`, giving up then.
-* Handling generators in DOI?
 * Returning a `Generator` for functions with unknown return type
-* Passing `iterators` in DOI?
 
-* Chaning `callinfo` to match not exactly the same but similar args
+* Binding keys in show pydoc
+* Changing `callinfo` to match not exactly the same but similar args
 * Is throwing `IsBeingInferredException` a good thing?  Can't we
   return `get_unknown()` instead?
 * Evaluate function parameter defaults in staticoi?

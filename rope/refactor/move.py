@@ -1,3 +1,9 @@
+"""A module containing classes for move refactoring
+
+`create_move()` is a factory for creating move refactoring objects
+based on inputs.
+
+"""
 from rope.base import pyobjects, codeanalyze, exceptions, pynames
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import (importutils, rename, occurrences,

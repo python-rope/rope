@@ -3,6 +3,9 @@
 ===========
 
 
+- Supporting generator functions : March 9, 2007
+
+
 - Enhancing show pydoc to include docs from superclasses : March 8, 2007
 
 

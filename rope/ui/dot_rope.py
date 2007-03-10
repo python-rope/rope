@@ -76,6 +76,7 @@ if not i_like_emacs:
     core.rebind_action('comment_region', None)
     core.rebind_action('run_module', 'M-X p')
     core.rebind_action('run_unit_tests', 'M-X t')
+    core.rebind_action('run_soi', None)
 
     core.rebind_action('rename', 'M-R')
     core.rebind_action('move', 'M-V')

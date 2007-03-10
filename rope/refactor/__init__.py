@@ -40,7 +40,6 @@ a refactoring.  These are the things an IDE does in each step:
    by it.
 4. perform the refactoring.
 
-
 """
 import rope.refactor.importutils
 from rope.base.change import ChangeSet, ChangeContents, MoveResource, CreateFolder
