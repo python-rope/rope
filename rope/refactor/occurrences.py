@@ -63,6 +63,9 @@ class Occurrence(object):
     def get_pyname(self):
         return self.tools.name_finder.get_pyname_at(self.offset)
 
+    def get_primary_and_pyname(self):
+        return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
+
     def is_in_import_statement(self):
         return (self.tools.word_finder.is_from_statement(self.offset) or
                 self.tools.word_finder.is_import_statement(self.offset))
@@ -118,6 +121,22 @@ class FilteredFinder(object):
             return False
         return pyname1.get_definition_location() == pyname2.get_definition_location() and \
                pyname1.get_object() == pyname2.get_object()
+
+
+class MultipleFinders(object):
+
+    def __init__(self, finders):
+        self.finders = finders
+
+    def find_occurrences(self, resource=None, pymodule=None):
+        all_occurrences = []
+        for finder in self.finders:
+            all_occurrences.extend(finder.find_occurrences(resource, pymodule))
+        all_occurrences.sort(self._cmp_occurrences)
+        return all_occurrences
+
+    def _cmp_occurrences(self, o1, o2):
+        return cmp(o1.get_primary_range(), o2.get_primary_range())
 
 
 class _OccurrenceToolsCreator(object):

@@ -10,12 +10,14 @@ class StatementEvaluator(object):
     def __init__(self, scope):
         self.scope = scope
         self.result = None
+        self.old_result = None
 
     def visitName(self, node):
         self.result = self.scope.lookup(node.name)
 
     def visitGetattr(self, node):
         pyname = get_statement_result(self.scope, node.expr)
+        self.old_result = pyname
         if pyname is not None and pyname.get_object() is not None:
             try:
                 self.result = pyname.get_object().get_attribute(node.attrname)

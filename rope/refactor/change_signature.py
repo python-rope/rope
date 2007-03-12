@@ -1,10 +1,9 @@
 import copy
 
 import rope.base.exceptions
-import rope.refactor.occurrences
 from rope.base import pyobjects, codeanalyze
 from rope.base.change import ChangeContents, ChangeSet
-from rope.refactor import sourceutils, functionutils, rename
+from rope.refactor import occurrences, sourceutils, functionutils, rename
 
 
 class ChangeSignature(object):
@@ -23,16 +22,21 @@ class ChangeSignature(object):
         self.name = codeanalyze.get_name_at(self.resource, self.offset)
         self.pyname = codeanalyze.get_pyname_at(self.pycore, self.resource,
                                                 self.offset)
-#        if self.pyname is None:
-#            return
-#        pyobject = self.pyname.get_object()
-#        if isinstance(pyobject, pyobjects.PyClass) and \
-#           '__init__' in pyobject.get_attributes():
-#            self.name = '__init__'
-#        if self.name == '__init__' and \
-#           isinstance(pyobject, pyobjects.PyFunction) and \
-#           isinstance(pyobject.parent, pyobjects.PyClass):
-#            print 'init'
+        if self.pyname is None:
+            return
+        pyobject = self.pyname.get_object()
+        if isinstance(pyobject, pyobjects.PyClass) and \
+           '__init__' in pyobject.get_attributes():
+            self.pyname = pyobject.get_attribute('__init__')
+            self.name = '__init__'
+        pyobject = self.pyname.get_object()
+        self.others = None
+        if self.name == '__init__' and \
+           isinstance(pyobject, pyobjects.PyFunction) and \
+           isinstance(pyobject.parent, pyobjects.PyClass):
+            pyclass = pyobject.parent
+            self.others = (pyclass.get_name(),
+                           pyclass.parent.get_attribute(pyclass.get_name()))
 
     def _change_calls(self, call_changer, in_hierarchy=False):
         changes = ChangeSet('Changing signature of <%s>' % self.name)
@@ -42,8 +46,13 @@ class ChangeSignature(object):
             pynames = rename.get_all_methods_in_hierarchy(pyclass, self.name)
         else:
             pynames = [self.pyname]
-        finder = rope.refactor.occurrences.FilteredFinder(
-            self.pycore, self.name, pynames)
+        finder = occurrences.FilteredFinder(self.pycore, self.name, pynames)
+        if self.others:
+            name, pyname = self.others
+            constructor_finder = occurrences.FilteredFinder(
+                self.pycore, name, [pyname], only_calls=True)
+            finder = occurrences.MultipleFinders(
+                [finder, constructor_finder])
         for file in self.pycore.get_python_files():
             change_calls = _ChangeCallsInModule(
                 self.pycore, finder, file, call_changer)
@@ -111,8 +120,9 @@ class _FunctionChangers(object):
     def change_definition(self, call):
         return self.changed_definition_infos[-1].to_string()
 
-    def change_call(self, call):
-        call_info = functionutils.CallInfo.read(self.definition_info, call)
+    def change_call(self, primary, pyname, call):
+        call_info = functionutils.CallInfo.read(
+            primary, pyname, self.definition_info, call)
         mapping = functionutils.ArgumentMapping(self.definition_info, call_info)
 
         for definition_info, changer in zip(self.changed_definition_infos, self.changers):
@@ -209,38 +219,6 @@ class ArgumentReorderer(_ArgumentChanger):
         definition_info.args_with_defaults = new_args
 
 
-# XXX: This cannot be used because we need some way of changing
-# occurances inside function bodies.  By the way renaming
-# parameters is already supported by normal rename refactoring.
-# Supproting renaming parameters in change method signature
-# increases the compexity considerably.  So we leave that for now.
-class _XXXArgumentRenamer(_ArgumentChanger):
-
-    def __init__(self, index, new_name):
-        self.index = index
-        self.new_name = new_name
-
-    def change_definition_info(self, call_info):
-        if self.index < len(call_info.args_with_defaults):
-            call_info.args_with_defaults[self.index] = (
-                self.new_name, call_info.args_with_defaults[self.index][1])
-        elif self.index == len(call_info.args_with_defaults) and \
-           call_info.args_arg is not None:
-            call_info.args_arg = self.new_name
-        elif (self.index == len(call_info.args_with_defaults) and
-            call_info.args_arg is None and call_info.keywords_arg is not None) or \
-           (self.index == len(call_info.args_with_defaults) + 1 and
-            call_info.args_arg is not None and call_info.keywords_arg is not None):
-            call_info.keywords_arg = self.new_name
-
-    def change_argument_mapping(self, definition_info, mapping):
-        if self.index < len(definition_info.args_with_defaults):
-            old_name = definition_info.args_with_defaults[self.index][0]
-            if old_name != self.new_name and old_name in mapping.param_dict:
-                mapping.param_dict[self.new_name] = mapping.param_dict[old_name]
-                del mapping.param_dict[old_name]
-
-
 class _ChangeCallsInModule(object):
 
     def __init__(self, pycore, occurrence_finder, resource, call_changer):
@@ -261,8 +239,9 @@ class _ChangeCallsInModule(object):
             begin_parens =  self.source.index('(', end)
             end_parens = self._find_end_parens(self.source, begin_parens)
             if occurrence.is_called():
+                primary, pyname = occurrence.get_primary_and_pyname()
                 changed_call = self.call_changer.change_call(
-                    self.source[start:end_parens])
+                    primary, pyname, self.source[start:end_parens])
             else:
                 changed_call = self.call_changer.change_definition(
                     self.source[start:end_parens])

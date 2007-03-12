@@ -351,6 +351,15 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
+    # TODO: Returning a generator for functions that yield unknowns
+    def xxx_test_handling_generator_functions_when_unknown_type_is_yielded(self):
+        self.mod.write('class C(object):\n    pass\ndef f():\n    yield eval("C()")\n'
+                       'a_var = f()\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertTrue(isinstance(a_var.get_type(),
+                                   rope.base.builtins.Generator))
+
 
 class DynamicOITest(unittest.TestCase):
 

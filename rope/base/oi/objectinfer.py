@@ -86,7 +86,6 @@ class ObjectInfer(object):
         except pyobjects.IsBeingInferredError:
             pass
 
-
     def evaluate_object(self, pyname):
         pyobject = self._infer_pyobject_for_assign_node(
             pyname.assignment.ast_node, pyname.module, pyname.lineno)

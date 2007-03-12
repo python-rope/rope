@@ -47,7 +47,7 @@ class PyObject(object):
 
     def __hash__(self):
         """See docs for `__eq__()` method"""
-        if type(self) == PyObject:
+        if type(self) == PyObject and self != self.type:
             return hash(self.type) + 1
         else:
             return super(PyObject, self).__hash__()

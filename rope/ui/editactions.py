@@ -176,8 +176,9 @@ class FindCommandHandle(uihelpers.FindItemHandle):
 
 
 def execute_command(context):
-    uihelpers.find_item_dialog(FindCommandHandle(context.core),
-                               'Execute Command', 'Matched Commands')
+    uihelpers.find_item_dialog(
+        FindCommandHandle(context.core), 'Execute Command',
+        'Matched Commands', height=10, width=25)
 
 
 core = rope.ui.core.Core.get_core()

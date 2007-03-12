@@ -359,6 +359,9 @@ class ScopeNameFinder(object):
         return False
 
     def get_pyname_at(self, offset):
+        return self.get_primary_and_pyname_at(offset)[1]
+
+    def get_primary_and_pyname_at(self, offset):
         lineno = self.lines.get_line_number(offset)
         holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
         # function keyword parameter
@@ -366,7 +369,7 @@ class ScopeNameFinder(object):
             keyword_name = self.word_finder.get_word_at(offset)
             pyobject = self.get_enclosing_function(offset)
             if isinstance(pyobject, pyobjects.PyFunction):
-                return pyobject.get_parameters().get(keyword_name, None)
+                return (None, pyobject.get_parameters().get(keyword_name, None))
 
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
@@ -375,21 +378,20 @@ class ScopeNameFinder(object):
                 class_scope = holding_scope.parent
             name = self.word_finder.get_primary_at(offset).strip()
             try:
-                return class_scope.pyobject.get_attribute(name)
+                return (None, class_scope.pyobject.get_attribute(name))
             except rope.base.exceptions.AttributeNotFoundError:
-                return None
+                return (None, None)
         # function header
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
             name = self.word_finder.get_primary_at(offset).strip()
-            return holding_scope.parent.get_name(name)
+            return (None, holding_scope.parent.get_name(name))
         # from statement module
         if self.word_finder.is_from_statement_module(offset):
             module = self.word_finder.get_primary_at(offset)
             module_pyname = self._find_module(module)
-            return module_pyname
+            return (None, module_pyname)
         name = self.word_finder.get_primary_at(offset)
-        result = self.get_pyname_in_scope(holding_scope, name)
-        return result
+        return self.get_primary_and_pyname_in_scope(holding_scope, name)
 
     def get_enclosing_function(self, offset):
         function_parens = self.word_finder.find_parens_start_from_inside(offset)
@@ -424,14 +426,21 @@ class ScopeNameFinder(object):
 
     @staticmethod
     def get_pyname_in_scope(holding_scope, name):
+        return ScopeNameFinder.get_primary_and_pyname_in_scope(
+            holding_scope, name)[1]
+
+    # XXX: This might belong to `rope.base.evaluate` module
+    @staticmethod
+    def get_primary_and_pyname_in_scope(holding_scope, name):
         #ast = compiler.parse(name)
-        # parenthesizing for handling cases like 'a_var.\nattr'
         try:
+            # parenthesizing for handling cases like 'a_var.\nattr'
             ast = compiler.parse('(%s)' % name)
         except SyntaxError:
             raise BadIdentifierError('Not a python identifier selected.')
-        result = evaluate.get_statement_result(holding_scope, ast)
-        return result
+        evaluator = evaluate.StatementEvaluator(holding_scope)
+        compiler.walk(ast, evaluator)
+        return evaluator.old_result, evaluator.result
 
 
 class BadIdentifierError(rope.base.exceptions.RopeError):

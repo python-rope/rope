@@ -123,13 +123,14 @@ class DefinitionInfo(object):
 class CallInfo(object):
 
     def __init__(self, function_name, args, keywords, args_arg,
-                 keywords_arg, is_method_call):
+                 keywords_arg, is_method_call, is_constructor):
         self.function_name = function_name
         self.args = args
         self.keywords = keywords
         self.args_arg = args_arg
         self.keywords_arg = keywords_arg
         self.is_method_call = is_method_call
+        self.is_constructor = is_constructor
 
     def to_string(self):
         function = self.function_name
@@ -137,7 +138,7 @@ class CallInfo(object):
             function = self.args[0] + '.' + self.function_name
         params = []
         start = 0
-        if self.is_method_call:
+        if self.is_method_call or self.is_constructor:
             start = 1
         if self.args[start:]:
             params.extend(self.args[start:])
@@ -150,8 +151,14 @@ class CallInfo(object):
         return '%s(%s)' % (function, ', '.join(params))
 
     @staticmethod
-    def read(definition_info, code):
-        info = _FunctionParser(code, definition_info.is_method)
+    def read(primary, pyname, definition_info, code):
+        is_method_call = False
+        is_constructor = False
+        if CallInfo._is_instance(primary) and CallInfo._is_method(pyname):
+            is_method_call = True
+        if CallInfo._is_class(pyname):
+            is_constructor = True
+        info = _FunctionParser(code, is_method_call)
         args, keywords = info.get_parameters()
         args_arg = None
         keywords_arg = None
@@ -161,8 +168,31 @@ class CallInfo(object):
         if args and args[-1].startswith('*'):
             args_arg = args[-1][1:]
             del args[-1]
+        if is_constructor:
+            args.insert(0, definition_info.args_with_defaults[0][0])
         return CallInfo(info.get_function_name(), args, keywords, args_arg,
-                         keywords_arg, info.is_called_as_a_method())
+                        keywords_arg, is_method_call, is_constructor)
+
+    @staticmethod
+    def _is_instance(pyname):
+        return pyname is not None and \
+               isinstance(pyname.get_object().get_type(),
+                          rope.base.pyobjects.PyClass)
+
+    @staticmethod
+    def _is_method(pyname):
+        return pyname is not None and \
+               isinstance(pyname.get_object(),
+                          rope.base.pyobjects.PyFunction) and \
+               isinstance(pyname.get_object().parent,
+                          rope.base.pyobjects.PyClass)
+
+    @staticmethod
+    def _is_class(pyname):
+        return pyname is not None and \
+               isinstance(pyname.get_object(),
+                          rope.base.pyobjects.PyClass)
+
 
 class ArgumentMapping(object):
 
@@ -202,5 +232,5 @@ class ArgumentMapping(object):
         args.extend(self.args_arg)
         keywords.extend(self.keyword_args)
         return CallInfo(self.call_info.function_name, args, keywords,
-                         self.call_info.args_arg, self.call_info.keywords_arg,
-                         self.call_info.is_method_call)
+                        self.call_info.args_arg, self.call_info.keywords_arg,
+                        self.call_info.is_method_call, self.call_info.is_constructor)

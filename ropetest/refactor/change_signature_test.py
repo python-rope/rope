@@ -297,8 +297,18 @@ class ChangeSignatureTest(unittest.TestCase):
             'class B(A):\n    def a_method(self, p1):\n        pass\n',
             self.mod.read())
 
-    # TODO: changing signature for constructors
-    def xxx_test_changing_signature_for_constructors(self):
+    def test_differentiating_class_accesses_from_instance_accesses(self):
+        self.mod.write(
+            'class A(object):\n    def a_func(self, param):\n        pass\n'
+            'a_var = A()\nA.a_func(a_var, param=1)')
+        signature = ChangeSignature(self.project, self.mod,
+                                    self.mod.read().index('a_func') + 1)
+        signature.remove(1).do()
+        self.assertEquals(
+            'class A(object):\n    def a_func(self):\n        pass\n'
+            'a_var = A()\nA.a_func(a_var)', self.mod.read())
+
+    def test_changing_signature_for_constructors(self):
         self.mod.write(
             'class C(object):\n    def __init__(self, p):\n        pass\n'
             'c = C(1)\n')
@@ -310,8 +320,7 @@ class ChangeSignatureTest(unittest.TestCase):
             'c = C()\n',
             self.mod.read())
 
-    # TODO: changing signature for constructors
-    def xxx_test_changing_signature_for_constructors2(self):
+    def test_changing_signature_for_constructors2(self):
         self.mod.write(
             'class C(object):\n    def __init__(self, p):\n        pass\n'
             'c = C(1)\n')

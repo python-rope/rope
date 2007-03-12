@@ -14,7 +14,7 @@ class StaticObjectInference(object):
         if args:
             # HACK: Setting parameter objects manually
             # This is not thread safe and might cause problems if `args`
-            # is not a good call example
+            # is not a good call site
             pyobject.get_scope().invalidate_data()
             pyobject._set_parameter_pyobjects(
                 args.get_arguments(pyobject.get_param_names(special_args=False)))
@@ -27,6 +27,9 @@ class StaticObjectInference(object):
                                                                  returned_node)
                 if resulting_pyname is None:
                     return None
+                pyobject = resulting_pyname.get_object()
+                if pyobject == pyobjects.get_unknown():
+                    return
                 if not scope._is_generator():
                     return resulting_pyname.get_object()
                 else:

@@ -217,8 +217,9 @@ class _InlineFunctionCallsForModule(object):
             returns = self.source[line_start:start].strip() != '' or \
                       self.source[end_parens:line_end].strip() != ''
             indents = sourceutils.get_indents(self.lines, start_line)
+            primary, pyname = occurrence.get_primary_and_pyname()
             definition = self.generator.get_definition(
-                self.source[start:end_parens], returns=returns)
+                primary, pyname, self.source[start:end_parens], returns=returns)
             end = min(line_end + 1, len(self.source))
             change_collector.add_change(
                 line_start, end, sourceutils.fix_indentation(definition, indents))
@@ -296,16 +297,17 @@ class _DefinitionGenerator(object):
     def get_function_name(self):
         return self.pyfunction.get_name()
 
-    def get_definition(self, call, returns=False):
+    def get_definition(self, primary, pyname, call, returns=False):
         # caching already calculated definitions
         key = (call, returns)
         if key not in self._calculated_definitions:
-            self._calculated_definitions[key] = self._calculate_definition(call, returns)
+            self._calculated_definitions[key] = self._calculate_definition(
+                primary, pyname, call, returns)
         return self._calculated_definitions[key]
 
-    def _calculate_definition(self, call, returns):
+    def _calculate_definition(self, primary, pyname, call, returns):
         call_info = rope.refactor.functionutils.CallInfo.read(
-            self.definition_info, call)
+            primary, pyname, self.definition_info, call)
         paramdict = self.definition_params
         mapping = rope.refactor.functionutils.ArgumentMapping(self.definition_info,
                                                                call_info)

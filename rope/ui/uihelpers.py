@@ -396,14 +396,16 @@ class _FindListViewAdapter(object):
         pass
 
 
-def find_item_dialog(handle, title='Find', matches='Matches'):
+def find_item_dialog(handle, title='Find', matches='Matches',
+                     height=14, width=50):
     toplevel = Tkinter.Toplevel()
     toplevel.title(title)
     find_dialog = Tkinter.Frame(toplevel)
     name_label = Tkinter.Label(toplevel, text='Name')
     name = Tkinter.Entry(toplevel)
     list_handle = _FindListViewAdapter(toplevel, handle)
-    found = EnhancedList(find_dialog, list_handle, matches, get_focus=False)
+    found = EnhancedList(find_dialog, list_handle, matches, get_focus=False,
+                         height=height, width=width)
     def name_changed(event):
         if name.get() == '':
             result = []

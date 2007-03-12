@@ -127,7 +127,7 @@ Stories
 * Supporting templates in text modes
 
 
-* Line break algorithm for rest mode; ``C-q``
+* Line break algorithm for rest mode; ``M-q``
 
 
 * Supporting modules without source code
@@ -152,6 +152,3 @@ Stories
 
 
 * Holding per name information for builtin containers
-
-
-* Handling change method signature for constructors

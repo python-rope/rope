@@ -442,14 +442,14 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
             self.param_list.add_entry(
                 _Parameter('**' + self.definition_info.keywords_arg))
 
-        move_up = Tkinter.Button(frame, text='Move Up', width=20,
+        move_up = Tkinter.Button(frame, text='Move Up', width=20, underline=6,
                                  command=lambda: self.param_list.move_up())
-        move_down = Tkinter.Button(frame, text='Move Down', width=20,
+        move_down = Tkinter.Button(frame, text='Move Down', width=20, underline=8,
                                    command=lambda: self.param_list.move_down())
-        remove = Tkinter.Button(frame, text='Remove', width=20,
+        remove = Tkinter.Button(frame, text='Remove', width=20, underline=0,
                                 command=lambda: self._remove())
         add = Tkinter.Button(frame, text='Add New Parameter', width=20,
-                             command=lambda: self._add())
+                             underline=0, command=lambda: self._add())
         self.toplevel.bind('<Alt-r>', lambda event: self._remove())
         self.toplevel.bind('<Alt-a>', lambda event: self._add())
         param_frame.grid(row=0, column=0, rowspan=5)
