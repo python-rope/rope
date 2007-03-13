@@ -54,6 +54,18 @@ class AssignedName(PyName):
         self.pyobject.set(None)
 
 
+class UnboundName(PyName):
+    
+    def __init__(self, pyobject=None):
+        self.pyobject = pyobject
+
+    def get_object(self):
+        return self.pyobject
+
+    def get_definition_location(self):
+        return (None, None)
+
+
 class _Assigned(object):
     """An assigned expression"""
 

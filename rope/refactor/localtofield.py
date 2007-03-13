@@ -1,4 +1,5 @@
 import rope.base.codeanalyze
+from rope.base import pynames
 from rope.refactor.rename import Rename
 
 
@@ -43,7 +44,7 @@ class LocalToField(object):
         pymodule, lineno = pyname.get_definition_location()
         holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         parent = holding_scope.parent
-        return isinstance(pyname, rope.base.pynames.AssignedName) and \
+        return isinstance(pyname, pynames.AssignedName) and \
                pyname in holding_scope.get_names().values() and \
                holding_scope.get_kind() == 'Function' and \
                parent is not None and parent.get_kind() == 'Class'

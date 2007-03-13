@@ -198,9 +198,15 @@ def do_show_doc(context):
 
         def close(event=None):
             toplevel.destroy()
+        def next_page(event=None):
+            doc_text.event_generate('<Next>')
+        def prev_page(event=None):
+            doc_text.event_generate('<Prior>')
         toplevel.bind('<Escape>', close)
         toplevel.bind('<Control-g>', close)
         toplevel.bind('<FocusOut>', close)
+        toplevel.bind('<Control-v>', next_page)
+        toplevel.bind('<Alt-v>', prev_page)
         toplevel.grab_set()
         doc_text.focus_set()
 

@@ -107,7 +107,8 @@ class RenameDialog(RefactoringDialog):
     def _get_changes(self):
         new_name = self.new_name_entry.get()
         return self.renamer.get_changes(new_name, in_file=self.is_local,
-                                        in_hierarchy=self.in_hierarchy.get())
+                                        in_hierarchy=self.in_hierarchy.get(),
+                                        unsure=self.unsure.get())
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
@@ -119,11 +120,18 @@ class RenameDialog(RefactoringDialog):
         self.new_name_entry.grid(row=0, column=1, columnspan=2)
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
         self.in_hierarchy = Tkinter.IntVar(frame, value=0)
+        self.unsure = Tkinter.IntVar(frame, value=0)
         in_hierarchy = Tkinter.Checkbutton(
             frame, text='Do for all matching methods in class hierarchy',
             variable=self.in_hierarchy)
+        unsure = Tkinter.Checkbutton(
+            frame, text='Rename when unsure(Know what you\'re doing!)',
+            variable=self.unsure)
+        index = 1
         if self.renamer.is_method():
-            in_hierarchy.grid(row=1, columnspan=2, sticky=Tkinter.N)
+            in_hierarchy.grid(row=1, columnspan=2, sticky=Tkinter.W)
+            index += 1
+        unsure.grid(row=index, columnspan=2, sticky=Tkinter.W)
         self.new_name_entry.focus_set()
         return frame
 

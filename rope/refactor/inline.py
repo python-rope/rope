@@ -1,10 +1,8 @@
 import re
 
 import rope.base.exceptions
-import rope.base.pynames
-import rope.base.pyobjects
 import rope.refactor.functionutils
-from rope.base import codeanalyze
+from rope.base import pynames, pyobjects, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import occurrences, rename, sourceutils
 
@@ -33,10 +31,10 @@ class Inline(object):
         return self.performer.get_changes()
 
     def _is_variable(self):
-        return isinstance(self.pyname, rope.base.pynames.AssignedName)
+        return isinstance(self.pyname, pynames.AssignedName)
 
     def _is_method(self):
-        return isinstance(self.pyname.get_object(), rope.base.pyobjects.PyFunction)
+        return isinstance(self.pyname.get_object(), pyobjects.PyFunction)
 
 
 class _Inliner(object):
@@ -96,7 +94,7 @@ class _MethodInliner(_Inliner):
 
     def _is_the_last_method_of_a_class(self):
         pyclass = self.pyfunction.parent
-        if not isinstance(pyclass, rope.base.pyobjects.PyClass):
+        if not isinstance(pyclass, pyobjects.PyClass):
             return False
         class_start, class_end = sourceutils.get_body_region(pyclass)
         source = self.pymodule.source_code

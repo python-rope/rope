@@ -3,7 +3,10 @@
 ===========
 
 
-- Change method signature for constructors : March 11, 2007
+- Adding 'rename when unsure' option : March 13, 2007
+
+
+- Change signature for constructors : March 11, 2007
 
 
 - Supporting generator functions : March 9, 2007

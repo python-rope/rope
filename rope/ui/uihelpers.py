@@ -46,10 +46,12 @@ class _BaseList(object):
         self.list.bind('<Escape>', self._cancel)
         self.list.bind('<Control-g>', self._cancel)
         self.list.bind('<FocusOut>', self._focus_out)
+        self.list.bind('<FocusIn>', self._focus_in)
         self.list.bind('<Control-p>', self._select_prev)
         self.list.bind('<Up>', self._select_prev)
         self.list.bind('<Control-n>', self._select_next)
         self.list.bind('<Down>', self._select_next)
+        self.list['selectmode'] = Tkinter.SINGLE
         if get_focus:
             self.list.focus_set()
         label.grid(row=0, column=0, columnspan=2)
@@ -59,6 +61,9 @@ class _BaseList(object):
 
     def _focus_out(self, event):
         self.handle.focus_went_out()
+
+    def _focus_in(self, event):
+        self.activate(self.get_active_index())
 
     def _open_selected(self, event):
         selection = self.list.curselection()
@@ -102,6 +107,7 @@ class _BaseList(object):
         self.list.delete(0, END)
 
     def get_active_index(self):
+        self.list.select_set(Tkinter.ACTIVE)
         selection = self.list.curselection()
         if selection:
             return int(selection[0])

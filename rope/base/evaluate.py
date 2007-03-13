@@ -39,7 +39,7 @@ class StatementEvaluator(object):
             if result is None or \
                result == rope.base.pyobjects.get_unknown():
                 result = rope.base.pyobjects.PyObject(pyobject)
-            self.result = rope.base.pynames.AssignedName(pyobject=result)
+            self.result = rope.base.pynames.UnboundName(pyobject=result)
             return
 
         pyfunction = None
@@ -48,12 +48,12 @@ class StatementEvaluator(object):
         elif '__call__' in pyobject.get_attributes():
             pyfunction = pyobject.get_attribute('__call__').get_object()
         if pyfunction is not None:
-            self.result = rope.base.pynames.AssignedName(
+            self.result = rope.base.pynames.UnboundName(
                 pyobject=_get_returned(pyfunction))
 
     def visitConst(self, node):
         if isinstance(node.value, (str, unicode)):
-            self.result = rope.base.pynames.AssignedName(
+            self.result = rope.base.pynames.UnboundName(
                 pyobject=rope.base.builtins.get_str())
 
     def visitAdd(self, node):
@@ -84,7 +84,7 @@ class StatementEvaluator(object):
             item = node.items[0]
             keys = self._get_object_for_node(item[0])
             values = self._get_object_for_node(item[1])
-        self.result = rope.base.pynames.AssignedName(
+        self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_dict(keys, values))
 
     def visitFloorDiv(self, node):
@@ -94,15 +94,15 @@ class StatementEvaluator(object):
         holding = None
         if node.nodes:
             holding = self._get_object_for_node(node.nodes[0])
-        self.result = rope.base.pynames.AssignedName(
+        self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_list(holding))
 
     def visitListComp(self, node):
-        self.result = rope.base.pynames.AssignedName(
+        self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_list())
 
     def visitGenExpr(self, node):
-        self.result = rope.base.pynames.AssignedName(
+        self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_iterator())
 
     def visitMul(self, node):
@@ -137,7 +137,7 @@ class StatementEvaluator(object):
                 objects.append(pyobject)
         else:
             objects.append(self._get_object_for_node(node.nodes[0]))
-        self.result = rope.base.pynames.AssignedName(
+        self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_tuple(*objects))
 
     def _get_object_for_node(self, stmt):
@@ -156,11 +156,11 @@ class StatementEvaluator(object):
             return
         if function_name in pyobject.get_attributes():
             call_function = pyobject.get_attribute(function_name)
-            self.result = rope.base.pynames.AssignedName(
+            self.result = rope.base.pynames.UnboundName(
                 pyobject=call_function.get_object().get_returned_object())
 
     def visitLambda(self, node):
-        self.result = rope.base.pynames.AssignedName(
+        self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.Lambda(node, self.scope))
 
 

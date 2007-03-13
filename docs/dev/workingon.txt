@@ -1,27 +1,12 @@
-Small Stories And Refactorings
-==============================
+'Rename When Unsure' Option
+===========================
 
-* Not saving return value in callinfo when we're approximating?
-* Separating 'none' from 'unknown'
-* Should every unknown be calculated everytime?
-* When to forget old results?
-* Adding `None` builtin
-* Returning a `Generator` for functions with unknown return type;
+- Binding next/prev page keys in show pydoc
+- Adding `UnboundPyName`
 
-* Binding next/prev page keys in show pydoc
-* Changing `callinfo` to match not exactly the same but similar args
 * Is throwing `IsBeingInferredException` a good thing?  Can't we
   return `get_unknown()` instead?
 * Evaluate function parameter defaults in staticoi?
-
-* Using `sqlite3` to prevent holding information in memory? mocks?
-* Is `rope.base` supposed to be thread safe?  which parts?
-* Textual matches support; like grep?
-* ``enable_doi`` config
-* Completion in module entries
-* Faster find file in large projects
-* Decorators and method refactorings
-* Document how to move fields
 
 
 Remaining Small Stories
@@ -29,15 +14,13 @@ Remaining Small Stories
 
 Base:
 
-* Lambdas as functions; consider their parameters
+* ``enable_doi`` config
 * Sorting names in from import list
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'
     in <generator object at 0xb7173aec> ignored``
 * Only saving diffs in `ChangeContents`
 * Undoing `RemoveResource`; It's not used by refactorings
-* Caching calculated parameters and returned object in `PyFunction`\s
-* Allowing running code to call rope functions while rope is running?
 * Importing star and removing self imports; stack overflow
 * `PyClass.superclasses` should be concluded data
 * Handling `AssList` for inline variable and encapsulate field
@@ -45,6 +28,8 @@ Base:
 
 UI and IDE:
 
+* Completion in module entries
+* Faster find file in large projects
 * A completing text widget for dialogs; `Completing(name, list, handle)`
 * Goto definition for ``"# comment.\na_var"``
 * Showing properties in quick outline
@@ -54,6 +39,12 @@ UI and IDE:
 * Comments should be indented
 * Decide when to use `difflib` in `Editor.set_text` based on the
   number of changes
+
+Docs:
+
+* Document how to move fields
+* Describe why rope does not stop the user from performing wrong
+  refactorings
 
 Others:
 

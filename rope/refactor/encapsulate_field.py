@@ -1,8 +1,7 @@
 import rope.base.codeanalyze
-from rope.refactor import occurrences
-
-from rope.refactor import sourceutils
+from rope.base import pynames
 from rope.base.change import ChangeSet, ChangeContents
+from rope.refactor import sourceutils
 
 
 class EncapsulateField(object):
@@ -18,7 +17,7 @@ class EncapsulateField(object):
         self.resource = self.pyname.get_definition_location()[0].get_resource()
 
     def _is_an_attribute(self, pyname):
-        if pyname is not None and isinstance(pyname, rope.base.pynames.AssignedName):
+        if pyname is not None and isinstance(pyname, pynames.AssignedName):
             defining_pymodule, defining_line = self.pyname.get_definition_location()
             defining_scope = defining_pymodule.get_scope().\
                              get_inner_scope_for_line(defining_line)

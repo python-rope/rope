@@ -103,9 +103,6 @@ Stories
 * Renaming similarly named variables
 
 
-* Moving static and class methods
-
-
 * Inlining static methods
 
 
@@ -121,9 +118,6 @@ Stories
 * Extract class
 
 
-* Searching inside `EnhancedList`\s
-
-
 * Supporting templates in text modes
 
 
@@ -133,19 +127,25 @@ Stories
 * Supporting modules without source code
 
 
+* Lambdas as functions; consider their parameters
+
+
 * Having multiple clipboards; ``M-y``
 
 
 * Renaming textual matches
 
 
-* Adding rename when unsure option
-
-
 * Enhancing open project dialog
 
 
+* Searching inside `EnhancedList`\s
+
+
 * Inferring the object list comprehensions or generator expressions hold
+
+
+* Moving `staticmethod`\s
 
 
 > Public Release 0.5m3 : March 18, 2007

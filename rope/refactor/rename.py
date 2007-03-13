@@ -36,7 +36,8 @@ class Rename(object):
     def get_old_name(self):
         return self.old_name
 
-    def get_changes(self, new_name, in_file=False, in_hierarchy=False):
+    def get_changes(self, new_name, in_file=False, in_hierarchy=False,
+                    unsure=False):
         """Get the changes needed for this refactoring
 
         :parameters:
@@ -44,6 +45,10 @@ class Rename(object):
               passed resource.
             - `in_hierarchy`: when renaming a method this keyword forces
               to rename all matching methods in the hierarchy
+            - `unsure`: rename occurrence even if unsure.  Do not use it
+              unless you know what you're doing.  If `True`, all name
+              occurrences except those that we are sure are not what we
+              want are renamed.
 
         """
         old_pynames = self._get_old_pynames(in_file, in_hierarchy)
@@ -54,7 +59,7 @@ class Rename(object):
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
         finder = occurrences.FilteredFinder(self.pycore, self.old_name,
-                                            old_pynames)
+                                            old_pynames, unsure=unsure)
         for file_ in files:
             new_content = rename_in_module(finder, new_name, resource=file_)
             if new_content is not None:

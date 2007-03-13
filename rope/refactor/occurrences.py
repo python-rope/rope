@@ -1,6 +1,6 @@
 import re
 
-from rope.base import pynames, codeanalyze
+from rope.base import pynames, pyobjects, codeanalyze
 
 
 class OccurrenceFinder(object):
@@ -86,12 +86,14 @@ class Occurrence(object):
 
 class FilteredFinder(object):
 
-    def __init__(self, pycore, name, pynames, only_calls=False, imports=True):
+    def __init__(self, pycore, name, pynames, only_calls=False,
+                 imports=True, unsure=False):
         self.pycore = pycore
         self.pynames = pynames
         self.name = name
         self.only_calls = only_calls
         self.imports = imports
+        self.unsure = unsure
         self.occurrence_finder = OccurrenceFinder(pycore, name)
 
     def find_occurrences(self, resource=None, pymodule=None):
@@ -109,6 +111,9 @@ class FilteredFinder(object):
         for pyname in self.pynames:
             if self._are_pynames_the_same(pyname, new_pyname):
                 return True
+            elif self.unsure and self._unsure_match(pyname, new_pyname):
+                return True
+                
         return False
 
     def _are_pynames_the_same(self, pyname1, pyname2):
@@ -121,6 +126,13 @@ class FilteredFinder(object):
             return False
         return pyname1.get_definition_location() == pyname2.get_definition_location() and \
                pyname1.get_object() == pyname2.get_object()
+
+    def _unsure_match(self, pyname1, pyname2):
+        if pyname2 is None:
+            return True
+        if isinstance(pyname2, pynames.UnboundName) and \
+           pyname2.get_object() == pyobjects.get_unknown():
+            return True
 
 
 class MultipleFinders(object):

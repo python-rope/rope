@@ -211,7 +211,7 @@ class _CodeCompletionCollector(object):
                     name, kind, self._get_pyname_type(pyname))
 
     def _get_pyname_type(self, pyname):
-        if isinstance(pyname, pynames.AssignedName):
+        if isinstance(pyname, (pynames.AssignedName, pynames.UnboundName)):
             return 'variable'
         if isinstance(pyname, pynames.DefinedName):
             pyobject = pyname.get_object()

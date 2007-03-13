@@ -29,9 +29,9 @@ class RenameRefactoringTest(unittest.TestCase):
         self.project.do(changes)
         return testmod.read()
 
-    def _rename(self, resource, offset, new_name, in_hierarchy=False):
+    def _rename(self, resource, offset, new_name, **kwds):
         changes = Rename(self.project, resource, offset).\
-                  get_changes(new_name, in_hierarchy=in_hierarchy)
+                  get_changes(new_name, **kwds)
         self.project.do(changes)
 
     def test_simple_global_variable_renaming(self):
@@ -422,6 +422,30 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals(
             'new_var = 1\ndef a_func():\n    global new_var\n    var = new_var\n',
             refactored)
+
+    def test_renaming_when_unsure(self):
+        code = 'class C(object):\n    def a_func(self):\n        pass\n' \
+               'def f(arg):\n    arg.a_func()\n'
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1.write(code)
+        self._rename(mod1, code.index('a_func'), 'new_func', unsure=True)
+        self.assertEquals(
+            'class C(object):\n    def new_func(self):\n        pass\n' \
+            'def f(arg):\n    arg.new_func()\n',
+            mod1.read())
+
+    def test_renaming_when_unsure_not_renaming_knowns(self):
+        code = 'class C1(object):\n    def a_func(self):\n        pass\n' \
+               'class C2(object):\n    def a_func(self):\n        pass\n' \
+               'c1 = C1()\nc1.a_func()\nc2 = C2()\nc2.a_func()\n'
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1.write(code)
+        self._rename(mod1, code.index('a_func'), 'new_func', unsure=True)
+        self.assertEquals(
+            'class C1(object):\n    def new_func(self):\n        pass\n' \
+            'class C2(object):\n    def a_func(self):\n        pass\n' \
+            'c1 = C1()\nc1.new_func()\nc2 = C2()\nc2.a_func()\n',
+            mod1.read())
 
 
 class ChangeOccurrencesTest(unittest.TestCase):

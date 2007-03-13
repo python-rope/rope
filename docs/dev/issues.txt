@@ -71,6 +71,8 @@ To Be Discussed
 * `Python's implicit interfaces`_
 * `Having virtual PyModules`_
 * `Getting ready for Python 3.0`_
+* Decorators and method refactorings
+* Should `rope.base` be thread safe? which parts?
 * Indexing source files for faster occurrence finding
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
@@ -144,6 +146,19 @@ We can change our type DB to add this feature.::
 * Not ignoring the first argument for builtin types
 
 
+Enhancing `CallInfoManager`
+===========================
+
+* Not saving return value in callinfo when we're approximating?
+* Separating 'none' from 'unknown'
+* Should every unknown be calculated everytime?
+* When to forget old results?
+* Adding `None` builtin
+* Returning a `Generator` for functions with unknown return type;
+* Changing `callinfo` to match not exactly the same but similar args
+* Using `sqlite3` to prevent holding information in memory? mocks?
+
+
 Better Concluded Data
 =====================
 
@@ -182,24 +197,6 @@ Marking Errors And Warnings In GUI
 * Saving error/warning information
 * ``C-,``, ``C-.``
 * ``C-c a p``, ``C-c a n``
-
-
-Checking Variable And Function Usages In Their Defining Scopes
-==============================================================
-
-::
-
-    def a_func(param):
-        print param
-    a_func('hey')
-
-    class C(object):
-        d = {}
-        def __init__(self):
-            self.d['hey'] = a_func
-
-    d = {}
-    d['hey'] = C()
 
 
 Better Occurrence Finding
@@ -251,7 +248,7 @@ Getting ready for Python 3.0
 
 * Changing print to function in tests
 * Not supporting old relative imports
-* `iter.__next__()` instead of `iter.next()`
+* `iter.__next__()` instead of `iter.next()`?
 * Supporting `bytes`, `input`
 * Removing nonexistent dict methods and methods that will return sets
 * Chaning imports after library reorganization
@@ -261,7 +258,7 @@ Getting ready for Python 3.0
 * ``...``
 * Supporting keyword only arguments
 * Set literals and comprehension ``{1, 2, 3}`` and ``{x for x in range(10)}``
-* Renamed function attributes; ``f.func_whatever`` to ``f.__whatever``
+* Renamed function attributes; ``f.func_whatever`` to ``f.__whatever__``
 * Use new function signature
 
 
