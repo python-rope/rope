@@ -164,7 +164,8 @@ class RemoveResource(Change):
 
     # TODO: Undoing remove operations
     def undo(self):
-        pass
+        raise NotImplementedError(
+            'Undoing `RemoveResource` is not implemented yet.')
 
     def __str__(self):
         return 'Remove <%s>' % (self.resource.path)

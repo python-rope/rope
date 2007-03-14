@@ -1,8 +1,8 @@
 import os
 
-import tkFont
 import ScrolledText
-from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT
+import tkFont
+from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT, Toplevel, Text
 
 import rope.ide.codeassist
 import rope.ui.editingtools
@@ -18,8 +18,9 @@ class GraphicalEditor(object):
                 font = tkFont.Font(family='Typewriter', size=14)
             else:
                 font = tkFont.Font(family='Courier', size=13)
-        self.text = ScrolledText.ScrolledText(parent, bg='white', font=font,
-                                 undo=True, maxundo=100, highlightcolor='#99A')
+        self.text = ScrolledText.ScrolledText(
+            parent, bg='white', font=font, undo=True,
+            maxundo=100, highlightcolor='#99A')
         self.change_inspector = _TextChangeInspector(self, self._text_changed)
         self.searcher = rope.ui.searcher.Searcher(self)
         self._set_editingcontexts(editorcontext)
@@ -28,6 +29,7 @@ class GraphicalEditor(object):
         self.modification_observers = []
         self.change_observers = []
         self.modified_flag = False
+        self.kill_ring = KillRingManager()
         self.text.bind('<<Modified>>', self._editor_modified)
         self.text.edit_modified(False)
 
@@ -437,6 +439,7 @@ class GraphicalEditor(object):
 
     def copy_region(self):
         try:
+            self._add_yank()
             self._select_region()
             self.text.event_generate('<<Copy>>')
             self.text.tag_remove(SEL, '1.0', END)
@@ -445,11 +448,24 @@ class GraphicalEditor(object):
 
     def cut_region(self):
         try:
+            self._add_yank()
             self._select_region()
             self.text.event_generate('<<Cut>>')
             self.text.see(INSERT)
         except TclError, e:
             pass
+
+    def _add_yank(self):
+        start, end = self._get_region_index()
+        selected = self.text.get(start, end)
+        self.kill_ring.killed(selected)
+
+    def yank(self, count):
+        result = self.kill_ring.yank(count)
+        if result is not None:
+            old = self.kill_ring.yank(count - 1)
+            self.text.delete('insert -%dc' % len(old), INSERT)
+            self.text.insert(INSERT, result)
 
     def paste(self):
         self.text.event_generate('<<Paste>>')
@@ -788,3 +804,19 @@ class GraphicalLineEditor(object):
 
     def insert_to_line(self, line_number, text):
         self.editor.text.insert('%d.0' % line_number, text)
+
+
+class KillRingManager(object):
+
+    def __init__(self, limit=20):
+        self.ring = []
+        self.limit = limit
+
+    def yank(self, count):
+        if self.ring:
+            return self.ring[count % len(self.ring)]
+
+    def killed(self, killed):
+        self.ring.insert(0, killed)
+        if len(self.ring) > self.limit:
+            del self.ring[-1]

@@ -12,6 +12,7 @@ import rope.refactor.method_object
 import rope.refactor.move
 import rope.refactor.rename
 import rope.ui.core
+from rope.base import exceptions
 from rope.refactor import ImportOrganizer
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
@@ -58,8 +59,9 @@ class PreviewAndCommitChanges(object):
 
 class RefactoringDialog(object):
 
-    def __init__(self, project, title):
-        self.project = project
+    def __init__(self, context, title):
+        self.core = context.core
+        self.project = context.project
         self.title = title
 
     def show(self):
@@ -80,11 +82,17 @@ class RefactoringDialog(object):
         frame.grid(row=0, columnspan=3)
 
     def _ok(self, event=None):
-        PreviewAndCommitChanges(self.project, self._get_changes()).commit()
+        try:
+            PreviewAndCommitChanges(self.project, self._get_changes()).commit()
+        except exceptions.RopeError, e:
+            self.core._report_error(e)
         self.toplevel.destroy()
 
     def _preview(self, event=None):
-        PreviewAndCommitChanges(self.project, self._get_changes()).preview()
+        try:
+            PreviewAndCommitChanges(self.project, self._get_changes()).preview()
+        except exceptions.RopeError, e:
+            self.core._report_error(e)
         self.toplevel.destroy()
 
     def _cancel(self, event=None):
@@ -96,7 +104,7 @@ class RenameDialog(RefactoringDialog):
     def __init__(self, context, title, is_local=False, current_module=False):
         resource = context.resource
         editor = context.get_active_editor().get_editor()
-        super(RenameDialog, self).__init__(context.project, title)
+        super(RenameDialog, self).__init__(context, title)
         self.is_local = is_local
         offset = editor.get_current_offset()
         if current_module:
@@ -159,8 +167,7 @@ class ExtractDialog(RefactoringDialog):
 
     def __init__(self, context, do_extract, kind):
         editor = context.get_active_editor().get_editor()
-        super(ExtractDialog, self).__init__(context.project,
-                                            'Extract ' + kind)
+        super(ExtractDialog, self).__init__(context, 'Extract ' + kind)
         self.do_extract = do_extract
         self.kind = kind
 
@@ -208,7 +215,7 @@ class IntroduceFactoryDialog(RefactoringDialog):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         super(IntroduceFactoryDialog, self).__init__(
-            context.project, 'Introduce Factory Method Refactoring')
+            context, 'Introduce Factory Method Refactoring')
         self.introducer = rope.refactor.introduce_factory.IntroduceFactoryRefactoring(
             context.project, resource, editor.get_current_offset())
 
@@ -284,8 +291,7 @@ class MoveDialog(RefactoringDialog):
         resource = context.get_active_editor().get_file()
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
-        super(MoveDialog, self).__init__(context.project,
-                                         'Move Refactoring')
+        super(MoveDialog, self).__init__(context, 'Move Refactoring')
         offset = editor.get_current_offset()
         if current_module:
             offset = None
@@ -322,7 +328,6 @@ class MoveDialog(RefactoringDialog):
             tree_view = TreeView(toplevel, tree_handle, title='Destination Module')
             for folder in self.project.get_pycore().get_source_folders():
                 tree_view.add_entry(folder)
-            tree_view.list.focus_set()
             toplevel.grab_set()
 
         self._bind_keys(self.destination_entry)
@@ -405,7 +410,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
         super(ChangeMethodSignatureDialog, self).__init__(
-            context.project, 'Change Method Signature Refactoring')
+            context, 'Change Method Signature Refactoring')
         self.signature = rope.refactor.change_signature.ChangeSignature(
             context.project, resource, editor.get_current_offset())
         self.definition_info = self.signature.get_definition_info()
@@ -528,7 +533,7 @@ class InlineArgumentDefaultDialog(RefactoringDialog):
         editor = context.get_active_editor().get_editor()
         self.project = context.get_core().get_open_project()
         super(InlineArgumentDefaultDialog, self).__init__(
-            context.project, 'Inline Argument Default')
+            context, 'Inline Argument Default')
         self.signature = rope.refactor.change_signature.ChangeSignature(
             context.project, resource, editor.get_current_offset())
         self.definition_info = self.signature.get_definition_info()
@@ -559,7 +564,7 @@ class IntroduceParameterDialog(RefactoringDialog):
 
     def __init__(self, context, title):
         editor = context.get_active_editor().get_editor()
-        super(IntroduceParameterDialog, self).__init__(context.project, title)
+        super(IntroduceParameterDialog, self).__init__(context, title)
         self.renamer = rope.refactor.introduce_parameter.IntroduceParameter(
             context.project, context.resource, editor.get_current_offset())
 
@@ -651,8 +656,7 @@ class MethodObjectDialog(RefactoringDialog):
 
     def __init__(self, context):
         editor = context.get_active_editor().get_editor()
-        super(MethodObjectDialog, self).__init__(
-            context.project, 'Replace Method With Method Object Refactoring')
+        super(MethodObjectDialog, self).__init__(context, 'Replace Method With Method Object Refactoring')
         self.renamer = rope.refactor.method_object.MethodObject(
             context.project, context.resource, editor.get_current_offset())
 
@@ -682,7 +686,7 @@ class ChangeOccurrencesDialog(RefactoringDialog):
     def __init__(self, context):
         resource = context.resource
         editor = context.get_active_editor().get_editor()
-        super(ChangeOccurrencesDialog, self).__init__(context.project,
+        super(ChangeOccurrencesDialog, self).__init__(context,
                                                       'Change Occurrences')
         offset = editor.get_current_offset()
         self.renamer = rope.refactor.rename.ChangeOccurrences(

@@ -46,6 +46,7 @@ class Core(object):
         self.rebound_keys = {}
         self.actions = []
         self.prefs = prefs.Prefs()
+        self.last_action = None
 
     def _load_actions(self):
         """Load extension modules.
@@ -411,6 +412,8 @@ class Core(object):
         def callback(event=None):
             try:
                 action.do(ActionContext(self))
+                if action.get_name() != 'repeat_last_action':
+                    self.last_action = action
             except RopeError, e:
                 self._report_error(e)
             if event:
@@ -419,6 +422,10 @@ class Core(object):
 
     def perform_action(self, action):
         self._make_callback(action)()
+
+    def repeat_last_action(self):
+        if self.last_action is not None:
+            self.perform_action(self.last_action)
 
     def _report_error(self, e):
         toplevel = Toplevel()

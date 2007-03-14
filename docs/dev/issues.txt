@@ -157,6 +157,25 @@ Enhancing `CallInfoManager`
 * Returning a `Generator` for functions with unknown return type;
 * Changing `callinfo` to match not exactly the same but similar args
 * Using `sqlite3` to prevent holding information in memory? mocks?
+* Saving `AbstractXxx`
+
+
+Separating 'none' From 'unknown'
+--------------------------------
+
+
+
+Invalidating Information
+------------------------
+
+When do we need to recalculate the information?
+
+
+Using A Real Database
+---------------------
+
+We need to save information for future use.  We can use a strategy
+object for saving information.
 
 
 Better Concluded Data

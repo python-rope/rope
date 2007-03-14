@@ -1,11 +1,7 @@
-'Rename When Unsure' Option
-===========================
+Small Stories
+=============
 
-- Binding next/prev page keys in show pydoc
-- Adding `UnboundPyName`
-
-* Is throwing `IsBeingInferredException` a good thing?  Can't we
-  return `get_unknown()` instead?
+* Adding a test showing that `None`\s and unknowns are the same
 * Evaluate function parameter defaults in staticoi?
 
 
@@ -20,7 +16,6 @@ Base:
   ``Exception exceptions.SystemError: 'error return without exception set'
     in <generator object at 0xb7173aec> ignored``
 * Only saving diffs in `ChangeContents`
-* Undoing `RemoveResource`; It's not used by refactorings
 * Importing star and removing self imports; stack overflow
 * `PyClass.superclasses` should be concluded data
 * Handling `AssList` for inline variable and encapsulate field

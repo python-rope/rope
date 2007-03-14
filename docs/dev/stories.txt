@@ -109,9 +109,6 @@ Stories
 * Basic code formatting; correcting blank lines
 
 
-* Repeating last command; ``C-x z``
-
-
 * Analyzing function decorators
 
 
@@ -128,9 +125,6 @@ Stories
 
 
 * Lambdas as functions; consider their parameters
-
-
-* Having multiple clipboards; ``M-y``
 
 
 * Renaming textual matches

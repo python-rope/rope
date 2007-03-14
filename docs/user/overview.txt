@@ -63,8 +63,10 @@ cut region                  C-w            C-x
 copy region                 M-w            C-c
 swap mark and insert        C-x C-x
 paste                       C-y            C-v
+yank                        M-y
 undo editing                C-x u          C-z
 redo editing                C-x r          C-y
+repeat last action          C-x z
 --------------------------  -------------  -------------
 Execute Command             M-x
 Edit ~/.rope                C-x c

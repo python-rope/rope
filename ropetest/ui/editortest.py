@@ -4,10 +4,13 @@ import Tkinter
 from ropetest.ui.mockeditortest import (GraphicalEditorFactory,
                                         get_sample_editingcontext)
 from rope.ui.indenter import PythonCodeIndenter
+from rope.ui import editor
 
 
 class GraphicalEditorTest(unittest.TestCase):
-    '''This class only tests features that are specific to GraphicalEditor; see mockeditortest'''
+    """This class only tests features that are specific to GraphicalEditor;
+    see mockeditortest
+    """
 
     __factory = GraphicalEditorFactory(Tkinter.Frame())
 
@@ -420,6 +423,16 @@ class GraphicalEditorTest(unittest.TestCase):
         self.editor.goto_line(2)
         self.assertEquals(2, self.editor.get_current_line_number())
 
+    def test_yanking(self):
+        self.editor.next_word()
+        self.editor.set_mark()
+        self.editor.goto_end()
+        self.editor.copy_region()
+        self.editor.goto_start()
+        self.editor.paste()
+        self.assertEquals(' textsample text', self.editor.get_text())
+
+
 class TextChangeInspectorTest(unittest.TestCase):
 
     __factory = GraphicalEditorFactory(Tkinter.Frame())
@@ -470,13 +483,55 @@ class TextChangeInspectorTest(unittest.TestCase):
         self.assertEquals(('1.1', '1.4'), self.change_inspector.get_changed_region())
 
 
+class KillRingManagerTest(unittest.TestCase):
+
+    def setUp(self):
+        super(KillRingManagerTest, self).setUp()
+        self.ring = editor.KillRingManager()
+
+    def tearDown(self):
+        super(KillRingManagerTest, self).tearDown()
+
+    def test_empty_ring(self):
+        self.assertTrue(self.ring.yank(1) is None)
+
+    def test_trivial_yanking(self):
+        self.ring.killed('x')
+        self.ring.killed('y')
+        self.assertEquals('x', self.ring.yank(1))
+
+    def test_yanking_direction(self):
+        self.ring.killed('x')
+        self.ring.killed('y')
+        self.ring.killed('z')
+        self.assertEquals('y', self.ring.yank(1))
+        self.assertEquals('x', self.ring.yank(2))
+        self.assertEquals('z', self.ring.yank(3))
+
+    def test_yanking_the_last_element(self):
+        self.ring.killed('x')
+        self.ring.killed('y')
+        self.assertEquals('y', self.ring.yank(2))
+
+    def test_only_one_entry(self):
+        self.ring.killed('x')
+        self.assertEquals('x', self.ring.yank(1))
+
+    def test_unclear_conditions2(self):
+        ring = editor.KillRingManager(limit=2)
+        ring.killed('1')
+        ring.killed('2')
+        ring.killed('3')
+        self.assertEquals('3', ring.yank(2))
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(GraphicalEditorTest))
     result.addTests(unittest.makeSuite(TextChangeInspectorTest))
+    result.addTests(unittest.makeSuite(KillRingManagerTest))
     return result
 
 
 if __name__ == '__main__':
     unittest.main()
-

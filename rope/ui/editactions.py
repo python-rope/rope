@@ -25,6 +25,23 @@ def paste(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor().paste()
 
+
+class Yank(object):
+
+    _yank_count = 0
+
+    def __call__(self, context):
+        last_command = context.core.last_action
+        if last_command is None or last_command.get_name() not in ['paste', 'yank']:
+            return
+        if last_command.get_name() == 'paste':
+            self._yank_count = 1
+        if last_command.get_name() == 'yank':
+            self._yank_count += 1
+        if context.get_active_editor():
+            context.get_active_editor().get_editor().yank(self._yank_count)
+
+
 def undo_editing(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor().undo()
@@ -158,6 +175,10 @@ def edit_dot_rope(context):
     editor_manager = context.get_core().get_editor_manager()
     editor_manager.get_resource_editor(resource, mode='python')
 
+def repeat_last_action(context):
+    if context.get_active_editor():
+        context.core.repeat_last_action()
+
 
 class FindCommandHandle(uihelpers.FindItemHandle):
 
@@ -193,6 +214,8 @@ actions.append(SimpleAction('cut', cut, 'C-w',
                             MenuAddress(['Edit', 'Cut'], 't'), ['all']))
 actions.append(SimpleAction('paste', paste, 'C-y',
                             MenuAddress(['Edit', 'Paste'], 'p'), ['all']))
+actions.append(SimpleAction('yank', Yank(), 'M-y',
+                            MenuAddress(['Edit', 'Yank'], 'y'), ['all']))
 actions.append(SimpleAction('goto_line', goto_line, 'C-x g',
                             MenuAddress(['Edit', 'Goto Line'], 'g'), ['all']))
 actions.append(SimpleAction('goto_last_edit_location', goto_last_edit_location, 'C-x C-q',
@@ -204,6 +227,8 @@ actions.append(SimpleAction('undo', undo_editing, 'C-x u',
                             MenuAddress(['Edit', 'Undo Editing'], 'u', 1), ['all']))
 actions.append(SimpleAction('redo', redo_editing, 'C-x r',
                             MenuAddress(['Edit', 'Redo Editing'], 'r', 1), ['all']))
+actions.append(SimpleAction('repeat_last_action', repeat_last_action, 'C-x z',
+                            MenuAddress(['Edit', 'Repeat Last Action'], 'l', 1), ['all']))
 actions.append(
     SimpleAction('undo_project',
                  ConfirmEditorsAreSaved(undo_project), 'C-x p u',

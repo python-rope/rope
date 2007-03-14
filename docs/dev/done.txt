@@ -3,6 +3,12 @@
 ===========
 
 
+- Yanking ``M-y`` : March 13, 2007
+
+
+- Repeating last command; ``C-x z`` : March 13, 2007
+
+
 - Adding 'rename when unsure' option : March 13, 2007
 
 

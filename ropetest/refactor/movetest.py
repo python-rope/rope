@@ -81,6 +81,11 @@ class MoveRefactoringTest(unittest.TestCase):
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                    self.mod2)
 
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_raising_exception_for_moving_global_elements_to_the_same_module(self):
+        self.mod1.write('def a_func():\n    pass\n')
+        self._move(self.mod1, self.mod1.read().index('a_func'), self.mod1)
+
     def test_moving_used_imports_to_destination_module(self):
         self.mod3.write('a_var = 10')
         self.mod1.write('import mod3\nfrom mod3 import a_var\n' \
@@ -311,7 +316,7 @@ class MoveRefactoringTest(unittest.TestCase):
             '    def new_method(self):\n        return 1\n',
             self.mod2.read())
 
-    def test_moving_methods_getting_getting_changes_for_goal_class(self):
+    def test_moving_methods_getting_getting_changes_for_goal_class2(self):
         code = 'class B(object):\n    var = 1\n\n' \
                'class A(object):\n    attr = B()\n' \
                '    def a_method(self):\n        return 1\n'
@@ -358,7 +363,7 @@ class MoveRefactoringTest(unittest.TestCase):
             '    def new_method(self):\n        return sys.version\n',
             self.mod2.read())
 
-    def test_moving_methods_getting_getting_changes_for_goal_class(self):
+    def test_moving_methods_getting_getting_changes_for_goal_class3(self):
         self.mod2.write('class B(object):\n    pass\n')
         code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
                '    def a_method(self):\n        return 1\n'

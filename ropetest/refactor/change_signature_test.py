@@ -332,6 +332,20 @@ class ChangeSignatureTest(unittest.TestCase):
             'c = C()\n',
             self.mod.read())
 
+    def test_changing_signature_for_constructors_when_using_super(self):
+        self.mod.write(
+            'class A(object):\n    def __init__(self, p):\n        pass\n'
+            'class B(A):\n    '
+            'def __init__(self, p):\n        super(B, self).__init__(p)\n')
+        signature = ChangeSignature(self.project, self.mod,
+                                    self.mod.read().index('__init__') + 1)
+        signature.apply_changers([change_signature.ArgumentRemover(1)]).do()
+        self.assertEquals(
+            'class A(object):\n    def __init__(self):\n        pass\n'
+            'class B(A):\n    '
+            'def __init__(self, p):\n        super(B, self).__init__()\n',
+            self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -444,7 +444,7 @@ builtins = {
 
 
 for name in dir(__builtin__):
-    if name not in builtins:
+    if name not in builtins and name not in ['None']:
         obj = getattr(__builtin__, name)
         if inspect.isclass(obj):
             builtins[name] = BuiltinName(BuiltinClass(obj, {}))

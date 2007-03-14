@@ -254,6 +254,9 @@ class MoveGlobal(_Mover):
         if dest.is_folder():
             raise exceptions.RefactoringError(
                 'Move destination for non-modules should not be folders.')
+        if self.source == dest:
+            raise exceptions.RefactoringError(
+                'Moving global elements to the same module.')
         changes = ChangeSet('Moving global <%s>' % self.old_name)
         self._change_destination_module(changes, dest)
         self._change_source_module(changes, dest)

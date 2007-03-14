@@ -35,8 +35,7 @@ class _FunctionParser(object):
                 args.append(primary)
             current = self.word_finder._find_last_non_space_char(current - 1)
         if self.is_called_as_a_method():
-            args.append(self.word_finder.get_primary_at(
-                        self.call.rindex('.', 0, self.first_parens) - 1))
+            args.append(self.call[:self.call.rindex('.', 0, self.first_parens)].strip())
         args.reverse()
         keywords.reverse()
         return args, keywords
