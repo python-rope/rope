@@ -6,7 +6,7 @@ import rope.base.project
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
-from rope.ui import uihelpers
+from rope.ui import uihelpers, fill
 
 
 def set_mark(context):
@@ -40,6 +40,22 @@ class Yank(object):
             self._yank_count += 1
         if context.get_active_editor():
             context.get_active_editor().get_editor().yank(self._yank_count)
+
+
+class FillParagraph(object):
+
+    def __init__(self):
+        self.fill = fill.Fill()
+
+    def __call__(self, context):
+        text = context.editor.get_text()
+        offset = context.editor.get_current_offset()
+        start, end, filled = self.fill.fill_paragraph(text, offset)
+        start_index = context.editor.get_index(start)
+        end_index = context.editor.get_index(end)
+        context.editor.delete(start_index, end_index)
+        context.editor.insert(start_index, filled)
+        context.editor.set_insert(context.editor.get_index(offset))
 
 
 def undo_editing(context):
@@ -222,6 +238,8 @@ actions.append(SimpleAction('goto_last_edit_location', goto_last_edit_location, 
                             MenuAddress(['Edit', 'Goto Last Edit Location'], 'e'), ['all', 'none']))
 actions.append(SimpleAction('swap_mark_and_insert', swap_mark_and_insert, 'C-x C-x',
                             None, ['all']))
+actions.append(SimpleAction('fill_paragraph', FillParagraph(), 'M-q',
+                            None, ['rest', 'other']))
 
 actions.append(SimpleAction('undo', undo_editing, 'C-x u',
                             MenuAddress(['Edit', 'Undo Editing'], 'u', 1), ['all']))

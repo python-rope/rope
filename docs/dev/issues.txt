@@ -83,27 +83,26 @@ Better SOI
 ==========
 
 To improve our static object inference mechanisms I propose to add a
-new feature to rope to perform enhanced SOI.  Rope analyzes
-all function calls in a module and saves the information in
+new feature to rope to perform enhanced SOI.  Rope analyzes all
+function calls in a module and saves the information in
 `rope.base.oi.callinfo.CallInforManager` class.
 
-I don't know how often and when to scan a module for
-SOI.  Maybe before ``0.5`` release, rope only performs SOI when
-when the user askes; just like DOI.  Performing it automatically
-requires it to be efficient.  So later, after using it for some
-time, we'll decide about that.
+I don't know how often and when to scan a module for SOI.  Maybe before
+``0.5`` release, rope only performs SOI when when the user askes; just
+like DOI.  Performing it automatically requires it to be efficient.  So
+later, after using it for some time, we'll decide about that.
 
 
 Returned Object SOI
 -------------------
 
 Since we're passed the objects parameters hold, we can perform a
-better returned object SOI.  We can do that by giving parameter
-objects passed and infer the object of local names once more.
+better returned object SOI.  We can do that by giving parameter objects
+passed and infer the object of local names once more.
 
 Actually we have to perform two things.  We have to ask scope
-`PyName`\s to forget their concluded data and change the
-parameters to return what we want.
+`PyName`\s to forget their concluded data and change the parameters to
+return what we want.
 
 So to make it we have:
 
@@ -112,9 +111,8 @@ So to make it we have:
 * Added `FunctionScope.invalidate_data()` to invalidate the
   pyobjects `AssignedName`\s and `EvaluatedName`\s hold.
 
-And after implementing these we thought of treating function
-scopes specially, since the names there cannot be accessed
-from outside.
+And after implementing these we thought of treating function scopes
+specially, since the names there cannot be accessed from outside.
 
 
 Function Scopes

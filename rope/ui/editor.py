@@ -290,10 +290,10 @@ class GraphicalEditor(object):
             endIndex = end._getIndex()
         return self.text.get(startIndex, endIndex)
 
-    def insert(self, textIndex, text):
-        self.text.insert(textIndex._getIndex(), text)
+    def insert(self, text_index, text):
+        self.text.insert(text_index._getIndex(), text)
 
-    def delete(self, start = None, end = None):
+    def delete(self, start=None, end=None):
         startIndex = INSERT
         if start is not None:
             startIndex = start._getIndex()

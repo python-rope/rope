@@ -1,8 +1,9 @@
-Small Stories
-=============
+Filling
+=======
+
+- End line dots
 
 * Evaluate function parameter defaults in staticoi?
-
 * Enhanced templates
 
   * Generate method; ``C-c w m``
