@@ -216,6 +216,13 @@ class ObjectInferTest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
 
+    def test_considering_nones_to_be_unknowns(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    pass\na_var = None\na_var = C()\na_var = None\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
 
 class NewStaticOITest(unittest.TestCase):
 

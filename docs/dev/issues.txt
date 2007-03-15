@@ -150,32 +150,77 @@ Enhancing `CallInfoManager`
 ===========================
 
 * Not saving return value in callinfo when we're approximating?
-* Separating 'none' from 'unknown'
 * Should every unknown be calculated everytime?
 * When to forget old results?
-* Adding `None` builtin
-* Returning a `Generator` for functions with unknown return type;
+* Returning a `Generator` for generator functions with unknown return type?
 * Changing `callinfo` to match not exactly the same but similar args
 * Using `sqlite3` to prevent holding information in memory? mocks?
 * Saving `AbstractXxx`
 
 
-Separating 'none' From 'unknown'
---------------------------------
-
-
-
 Invalidating Information
 ------------------------
 
-When do we need to recalculate the information?
+When do we need to recalculate the information?  Currently rope does
+not save anything unless an exact object is calculated in that case
+it will be used forever(That is till project is closed).  The
+problems with this approach includes:
+
+* The method might be changed in future.
+
+  * Returned object
+  * Parameter objects
+  * The number of parameters
+
+* We don't want to recalculate 'unknown's and 'none's every time
+* The methods or data accessed by the method might change
+* Removing out of date information
+
+  * Methods that do not exist
+  * Files that no longer exist
+  * Types that do not exist
+
+The need for invalidating data is felt more after saving object
+data to disk.
+
+
+Fixing Small Changes
+--------------------
+
+We don't want small changes in source files to invalidate all
+information.  For example if a blank line is inserted at the
+top of a file we don't want the information held for all the
+methods contained in that module to be lost.
 
 
 Using A Real Database
 ---------------------
 
-We need to save information for future use.  We can use a strategy
-object for saving information.
+There are two main reasons for saving object information into disk.
+One is that We can use these information in future sessions.  The
+other is holding all type information in memory takes lots of space.
+
+We can take two approaches:
+
+* Manual DB:
+
+  We can use a simple saving to files approach.  This won't solve
+  the memory problem but it will save the data for future use.  Since
+  files are written once when closing a project and loaded once when
+  saving a project we can use a compression for our data not to take
+  much space.
+
+  But this approach an be enhanced much.  By holding object
+  information in different files we can save or update files only
+  when needed.
+
+* Using `sqlite3`:
+
+  This will solve both problems but requires having `sqlite3`.
+  Fortunately it is included in standard library since `2.5`.
+
+Saving object data requires having a good mechanisms for invalidating
+information and testing.
 
 
 Better Concluded Data

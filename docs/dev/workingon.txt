@@ -1,8 +1,12 @@
 Small Stories
 =============
 
-* Adding a test showing that `None`\s and unknowns are the same
 * Evaluate function parameter defaults in staticoi?
+
+* Enhanced templates
+
+  * Generate method; ``C-c w m``
+  * Assign field in constructor; ``C-c w f``
 
 
 Remaining Small Stories

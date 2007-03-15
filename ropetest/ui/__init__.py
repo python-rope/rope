@@ -8,7 +8,7 @@ import ropetest.ui.highlightertest
 import ropetest.ui.searchertest
 import ropetest.ui.statusbartest
 import ropetest.ui.uihelperstest
-import ropetest.ui.indentertest
+import ropetest.ui.filltest
 
 
 def suite():
@@ -22,6 +22,7 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.ui.indentertest.PythonCodeIndenterTest))
     result.addTests(unittest.makeSuite(ropetest.ui.statusbartest.StatusBarTest))
     result.addTests(unittest.makeSuite(ropetest.ui.uihelperstest.UIHelpersTest))
+    result.addTests(unittest.makeSuite(ropetest.ui.filltest.FillTest))
     return result
 
 
