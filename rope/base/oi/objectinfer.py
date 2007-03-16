@@ -86,24 +86,29 @@ class ObjectInfer(object):
         except pyobjects.IsBeingInferredError:
             pass
 
-    def evaluate_object(self, pyname):
+    def evaluate_object(self, evaluated):
         pyobject = self._infer_pyobject_for_assign_node(
-            pyname.assignment.ast_node, pyname.module, pyname.lineno)
-        tokens = pyname.evaluation.split('.')
+            evaluated.assignment.ast_node, evaluated.module, evaluated.lineno)
+        pyname = evaluated
+        tokens = evaluated.evaluation.split('.')
         for token in tokens:
             call = token.endswith('()')
             if call:
                 token = token[:-2]
             if token:
-                pyobject = self._get_attribute(pyobject, token)
+                pyname2 = self._get_attribute(pyobject, token)
+                if pyname2 is not None:
+                    pyobject = pyname2.get_object()
             if pyobject is not None and call:
-                pyobject = pyobject.get_returned_object()
+                args = evaluate.ObjectArguments(pyname, [])
+                pyobject = pyobject.get_returned_object(args)
+                pyname = None
             if pyobject is None:
                 break
-        if pyname is None:
+        if evaluated is None:
             return pyobject
-        return self._infer_assignment_object(pyname.assignment, pyobject)
+        return self._infer_assignment_object(evaluated.assignment, pyobject)
 
     def _get_attribute(self, pyobject, name):
         if pyobject is not None and name in pyobject.get_attributes():
-            return pyobject.get_attribute(name).get_object()
+            return pyobject.get_attribute(name)

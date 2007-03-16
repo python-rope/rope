@@ -1,13 +1,40 @@
-Filling
-=======
+Holding Per Name Information
+============================
 
-- End line dots
+- Handling `__getitem__()`
+- Fetching defining scope for fields
+- Handling `__setitem__()`
+- Handling `extend`
 
+* Lots of places that call a function with `get_returned_value()` with
+  no args; Should we remove args' default?
+* For loops call `__iter__` with no args
+* Remove duplication in `SOIVisitor`
+* Remove duplication between `Evaluator` and `SOIVisitor`
+* Using `builtins._AttributeConstructor`
+* `__setslice__`?
+* Removing `BuiltinFunction`; using `PerNameFunction` instead
+* `ObjectArguments` should extend `Arguments`?
+* Moving `Arguments`, `ObjectArguments` and `_CallContext`;
+  `rope.base.args` or `callcontext` module
+* What sins did we make in `staticoi` and `evaluate`
+
+* Handling slices?
+* Refactor `builtins`
+* Adding an option not to collect per name information
+* Better per object data holding in `callinfo`
+* Not overwriting useful per object data in `callinfo`
+* `list`\s
+* `set`\s
+* `dict`\s
+
+* Some `self`\s are unknown!
+
+* Registers for holding places in buffers; names or letters?
+* Handling lists in fill paragraph
 * Evaluate function parameter defaults in staticoi?
-* Enhanced templates
-
-  * Generate method; ``C-c w m``
-  * Assign field in constructor; ``C-c w f``
+* Adding 'do when unsure' to all refactorings?
+* Profiling rope
 
 
 Remaining Small Stories

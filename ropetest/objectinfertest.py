@@ -339,17 +339,6 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod2.get_attribute('a_var').get_object()
         self.assertEquals(c2_class, a_var.get_type())
 
-    # TODO: Requires saving per object data
-    def xxx_test_static_oi_for_lists_depending_on_append_function(self):
-        code = 'class C(object):\n    pass\nl = list()\n' \
-               'l.append(C())\na_var = l[0]\n'
-        self.mod.write(code)
-        self.pycore.analyze_module(self.mod)
-        pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
-        self.assertEquals(c_class, a_var.get_type())
-
     def test_handling_generator_functions_for_strs(self):
         self.mod.write('class C(object):\n    pass\ndef f(p):\n    yield p()\n'
                        'for c in f(C):\n    a_var = c\n')
@@ -366,6 +355,69 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertTrue(isinstance(a_var.get_type(),
                                    rope.base.builtins.Generator))
+
+    def test_static_oi_for_lists_depending_on_append_function(self):
+        code = 'class C(object):\n    pass\nl = list()\n' \
+               'l.append(C())\na_var = l.pop()\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_static_oi_for_lists_per_object_for_get_item(self):
+        code = 'class C(object):\n    pass\nl = list()\n' \
+               'l.append(C())\na_var = l[0]\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_static_oi_for_lists_per_object_for_fields(self):
+        code = 'class C(object):\n    pass\n' \
+               'class A(object):\n    def __init__(self):\n        self.l = []\n' \
+               '    def set(self):\n        self.l.append(C())\n' \
+               'a = A()\na.set()\na_var = a.l[0]\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_static_oi_for_lists_per_object_for_set_item(self):
+        code = 'class C(object):\n    pass\nl = [None]\n' \
+               'l[0] = C()\na_var = l[0]\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_static_oi_for_lists_per_object_for_extending_lists(self):
+        code = 'class C(object):\n    pass\nl = []\n' \
+               'l.append(C())\nl2 = []\nl2.extend(l)\na_var = l2[0]\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    # TODO: Handle this case
+    def xxx_test_static_oi_for_lists_per_object_for_iters(self):
+        code = 'class C(object):\n    pass\nl = []\n' \
+               'l.append(C())\nfor c in l:\n    a_var = c\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
 
 
 class DynamicOITest(unittest.TestCase):

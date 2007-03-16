@@ -7,14 +7,14 @@ class Fill(object):
 
     def __init__(self, width=70):
         self.width = width
-        self.separators = re.compile('\\S+\\s*')
+        self.word_pattern = re.compile('\\S+\\s*')
 
     def fill(self, text):
         lines = text.splitlines()
         indents = self._find_indents(lines)
         builder = _TextBuilder(self.width, indents)
         for line in lines:
-            for match in self.separators.finditer(line):
+            for match in self.word_pattern.finditer(line):
                 matched = match.group()
                 word = matched.strip()
                 builder.add_word(word)

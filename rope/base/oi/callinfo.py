@@ -13,6 +13,7 @@ class CallInfoManager(object):
         self.files = {}
         self.to_textual = _PyObjectToTextual(pycore.project)
         self.to_pyobject = _TextualToPyObject(pycore.project)
+        self.per_object = {}
 
     def get_returned(self, pyobject, args):
         organizer = self.find_organizer(pyobject)
@@ -44,6 +45,15 @@ class CallInfoManager(object):
         if returned is not None:
             returned_text = self.to_textual.transform(returned)
         self._save_data(function_text, params_text, returned_text)
+
+    def save_per_name(self, scope, name, data):
+        key = (self.to_textual.transform(scope.pyobject), name)
+        self.per_object[key] = self.to_textual.transform(data)
+
+    def get_per_name(self, scope, name):
+        key = (self.to_textual.transform(scope.pyobject), name)
+        data = self.per_object.get(key, ('unknown',))
+        return self.to_pyobject.transform(data)
 
     def _save_data(self, function, args, returned=('unknown',)):
         path = function[1]

@@ -135,7 +135,7 @@ class AbstractFunction(PyObject):
     def get_param_names(self, special_args=True):
         return []
 
-    def get_returned_object(self):
+    def get_returned_object(self, args=None):
         return get_unknown()
 
 
@@ -514,20 +514,23 @@ class _NodeNameCollector(object):
         self.levels = levels
         self.index = 0
 
-    def _add_name(self, name):
+    def _add_node(self, node):
         new_levels = []
         if self.levels is not None:
             new_levels = list(self.levels)
             new_levels.append(self.index)
         self.index += 1
-        if name is not None:
-            self.names.append((name, new_levels))
+        self._added(node, new_levels)
+
+    def _added(self, node, levels):
+        if hasattr(node, 'name'):
+            self.names.append((node.name, levels))
 
     def visitAssName(self, node):
-        self._add_name(node.name)
+        self._add_node(node)
 
     def visitName(self, node):
-        self._add_name(node.name)
+        self._add_node(node)
 
     def visitTuple(self, node):
         new_levels = []
@@ -544,13 +547,13 @@ class _NodeNameCollector(object):
         self.visitTuple(node)
 
     def visitAssAttr(self, node):
-        self._add_name(None)
+        self._add_node(node)
 
     def visitSubscript(self, node):
-        self._add_name(None)
+        self._add_node(node)
 
     def visitSlice(self, node):
-        self._add_name(None)
+        self._add_node(node)
 
     @staticmethod
     def get_assigned_names(node):

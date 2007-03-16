@@ -135,13 +135,35 @@ scope.  Maybe we can change pynames to support function scopes.
 Holding Per Name Information
 ============================
 
-We can change our type DB to add this feature.::
+We can change our object DB to add this feature.::
 
   objectdb.add_per_object(scope, name, function_name, parameters)
 
-* Forcing `create_arguments` to pass the implicit object for
-  builtin functions.
 * Not ignoring the first argument for builtin types
+
+This feature has two aspects:
+
+When analyzing a module we should save per name information and when
+getting the object we should use those information.  The main reason
+for implementing this feature is supporting builtin container types.
+They should be untyped and ask `callinfo` about that.
+
+Consider analyzing ``a_list.append(x)``.  We know that we should hold
+information about this call; since `list.append()` function says so
+(We can indicate that by checking if it is an instance of
+`BuiltinFunction` and the method `BuiltinFunction.is_per_object()`
+return `True`).  So when we see this method call we add information
+to our `callinfo` DB the same way as described above.
+
+Now consider the time we need to know what object a container holds.
+We want to find out the type of `a_var` in ``a_var = a_list.pop()``.
+`list.pop()` knows that there might be useful information in our
+`callinfo` so it tries to retrieve these information.  It does so by
+calling `Arguments.get_instance_pyname()`.  Now that we have it, we
+can call `CallInfoManager.get_per_instance(scope, name)`.  This
+requires `list` types not to have explict holding types.
+
+* We do these only for containers with unknowns; not for ``[C()]``
 
 
 Enhancing `CallInfoManager`
@@ -160,7 +182,7 @@ Invalidating Information
 ------------------------
 
 When do we need to recalculate the information?  Currently rope does
-not save anything unless an exact object is calculated in that case
+not save anything unless an exact object is calculated; in that case
 it will be used forever(That is till project is closed).  The
 problems with this approach includes:
 
@@ -186,24 +208,31 @@ Fixing Small Changes
 --------------------
 
 We don't want small changes in source files to invalidate all
-information.  For example if a blank line is inserted at the
-top of a file we don't want the information held for all the
-methods contained in that module to be lost.
+information.  For example if a blank line is inserted at the top of a
+file we don't want the information held for all the methods contained
+in that module to be lost.
+
+
+Using Less Space
+----------------
+
+* Currently we hold absolute path for files inside our project
+* Using foreign keys instead of textual form for params and returned
 
 
 Using A Real Database
 ---------------------
 
 There are two main reasons for saving object information into disk.
-One is that We can use these information in future sessions.  The
+One is that we can use these information in future sessions.  The
 other is holding all type information in memory takes lots of space.
 
 We can take two approaches:
 
 * Manual DB:
 
-  We can use a simple saving to files approach.  This won't solve
-  the memory problem but it will save the data for future use.  Since
+  We can use a simple saving to files approach.  This won't solve the
+  memory problem but it will save the data for future use.  Since
   files are written once when closing a project and loaded once when
   saving a project we can use a compression for our data not to take
   much space.
@@ -221,12 +250,37 @@ Saving object data requires having a good mechanisms for invalidating
 information and testing.
 
 
+Generate Element
+================
+
+* Generate variable or field
+* Generate function or method
+* Generate class
+* Generate module
+* Generate package
+
+We should choose a good prefix:
+
+* generate; ``C-c g``
+* generate; ``C-c n``
+* generate; ``C-c 1``
+* new; ``C-c n``
+* make; ``C-c m``
+* set up; ``C-c s``
+* stub; ``C-c s``
+* fix; ``C-c f``
+* create; ``C-c c``
+* build; ``C-c b``
+* produce; ``C-c p``
+* dummy; ``C-c d``
+
+
 Better Concluded Data
 =====================
 
 The main problem is when using star imports, after a module has been
-invalidated its concluded data still exist.  This does not seem to
-be a major memory leak, since these `_ConcludedData`\s are invalidated
+invalidated its concluded data still exist.  This does not seem to be
+a major memory leak, since these `_ConcludedData`\s are invalidated
 and contain `None`.
 
 * Using weak references for holding concluded data
@@ -236,9 +290,9 @@ and contain `None`.
   `ImportedModule` and `ImportedName`\s
 
 The other suggestion here is that currently `ImportedName`\s store
-object information in the concluded data of the importing module
-while they can get concluded data from imported module.  The problem
-happens when the imported module gets deleted.
+object information in the concluded data of the importing module while
+they can get concluded data from imported module.  The problem happens
+when the imported module gets deleted.
 
 Note that concluded attributes are:
 
@@ -265,10 +319,9 @@ Better Occurrence Finding
 =========================
 
 The current implementation for finding occurrences of a `PyName` is to
-test every textual occurrence of that name has the same `PyName`
-or not.  This approach does not work when a name is repeated many
-times in the source.  For example renaming `self`\s are very time
-consuming.
+test every textual occurrence of that name has the same `PyName` or
+not.  This approach does not work when a name is repeated many times
+in the source.  For example renaming `self`\s are very time consuming.
 
 Maybe we can use one of these solutions:
 
@@ -281,10 +334,10 @@ Maybe we can use one of these solutions:
 * Limiting the places to search for a name
 
   For example for renaming a parameter we search the body of that
-  function and the keyword arguments passed to functions.  As
-  another example function parameters never appear as attributes
-  and class variables and methods never are referenced directly
-  except in class body.  The search locations include:
+  function and the keyword arguments passed to functions.  As another
+  example function parameters never appear as attributes and class
+  variables and methods never are referenced directly except in class
+  body.  The search locations include:
 
   * module bodies
   * class bodies
@@ -298,9 +351,9 @@ Maybe we can use one of these solutions:
 
 * Excluding unimported modules
 
-  This does not seem to be a good solution.  One reason is that
-  the imports might be indirect.  So we have to put a long time
-  for creating import trees.
+  This does not seem to be a good solution.  One reason is that the
+  imports might be indirect.  So we have to put a long time for
+  creating import trees.
 
 Or maybe we can use a strategy object for searching.
 

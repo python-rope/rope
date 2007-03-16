@@ -2,7 +2,7 @@ import compiler.ast
 import compiler.consts
 
 import rope.base
-from rope.base import pyobjects, evaluate, builtins
+from rope.base import pyobjects, pynames, evaluate, builtins
 
 
 class StaticObjectInference(object):
@@ -66,7 +66,7 @@ class StaticObjectInference(object):
 
 
 class SOIVisitor(object):
-    
+
     def __init__(self, pycore, pymodule):
         self.pycore = pycore
         self.pymodule = pymodule
@@ -76,14 +76,50 @@ class SOIVisitor(object):
         for child in node.getChildNodes():
             compiler.walk(child, self)
         scope = self.scope.get_inner_scope_for_line(node.lineno)
-        pyname = evaluate.get_statement_result(scope, node.node)
+        primary, pyname = evaluate.get_primary_and_result(scope, node.node)
         if pyname is None:
             return
         pyfunction = pyname.get_object()
         if '__call__' in pyfunction.get_attributes():
             pyfunction = pyfunction.get_attribute('__call__')
-        if not isinstance(pyfunction, pyobjects.PyFunction):
+        if not isinstance(pyfunction, pyobjects.AbstractFunction):
             return
-        args = evaluate.create_arguments(pyfunction, node, scope)
-        self.pycore.call_info.function_called(
-            pyfunction, args.get_arguments(pyfunction.get_param_names()))
+        args = evaluate.create_arguments(primary, pyfunction, node, scope)
+        self._call(pyfunction, args)
+
+    def _call(self, pyfunction, args):
+        if isinstance(pyfunction, pyobjects.PyFunction):
+            self.pycore.call_info.function_called(
+                pyfunction, args.get_arguments(pyfunction.get_param_names()))
+        # XXX: Maybe we should not call every builtin function
+        if isinstance(pyfunction, builtins.BuiltinFunction):
+            pyfunction.get_returned_object(args)
+
+    def visitAssign(self, node):
+        visitor = _SOIAssignVisitor()
+        nodes = []
+        for child in node.nodes:
+            compiler.walk(child, visitor)
+            nodes.extend(visitor.nodes)
+        for assigned, levels in nodes:
+            scope = self.scope.get_inner_scope_for_line(node.lineno)
+            instance = evaluate.get_statement_result(scope, assigned.expr)
+            value = self.pycore.object_infer._infer_assignment(
+                pynames._Assigned(node.expr, levels), self.pymodule)
+            if instance is not None and value is not None:
+                pyobject = instance.get_object()
+                if '__setitem__' in pyobject.get_attributes():
+                    pyfunction = pyobject.get_attribute('__setitem__').get_object()
+                    args = evaluate.ObjectArguments(instance, [None, value])
+                    self._call(pyfunction, args)
+
+
+class _SOIAssignVisitor(pyobjects._NodeNameCollector):
+
+    def __init__(self):
+        super(_SOIAssignVisitor, self).__init__()
+        self.nodes = []
+
+    def _added(self, node, levels):
+        if isinstance(node, compiler.ast.Subscript):
+            self.nodes.append((node, levels))

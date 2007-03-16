@@ -1,7 +1,4 @@
-"""This module trys to support some of the builtin types and
-functions.
-
-"""
+"""This module trys to support builtin types and functions."""
 import __builtin__
 import inspect
 
@@ -41,28 +38,177 @@ class BuiltinClass(pyobjects.AbstractClass):
         return self.builtin.__name__
 
 
+class BuiltinFunction(pyobjects.AbstractFunction):
+
+    def __init__(self, returned=None, function=None, builtin=None):
+        super(BuiltinFunction, self).__init__()
+        self.returned = returned
+        self.function = function
+        self.builtin = builtin
+
+    def get_returned_object(self, args=None):
+        if self.function is not None:
+            return self.function(args)
+        return self.returned
+
+    def get_doc(self):
+        if self.builtin:
+            return self.builtin.__doc__
+
+    def get_name(self):
+        if self.builtin:
+            return self.builtin.__name__
+
+
+class PerNameFunction(BuiltinFunction):
+
+    def __init__(self, returned=None, function=None, builtin=None, argnames=[]):
+        super(PerNameFunction, self).__init__(
+            returned=returned, function=self, builtin=builtin)
+        self.called = function
+        self.argnames = argnames
+
+    def __call__(self, args):
+        if self.called is not None:
+            return self.called(_CallContext(self.argnames, args))
+        else:
+            return self.returned
+
+
+class _CallContext(object):
+
+    def __init__(self, argnames, args):
+        self.argnames = argnames
+        self.args = args
+
+    def _get_scope_and_pyname(self, pyname):
+        if pyname is not None and isinstance(pyname, pynames.AssignedName):
+            pymodule, lineno = pyname.get_definition_location()
+            if pymodule is None or lineno is None:
+                return None, None
+            scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+            name = None
+            while name is None and scope is not None:
+                for current in scope.get_names():
+                    if scope.get_name(current) is pyname:
+                        name = current
+                        break
+                else:
+                    scope = scope.parent
+            return scope, name
+        return None, None
+
+    def get_argument(self, name):
+        if self.args:
+            args = self.args.get_arguments(self.argnames)
+            return args[self.argnames.index(name)]
+
+    def get_pyname(self, name):
+        if self.args:
+            args = self.args.get_pynames(self.argnames)
+            return args[self.argnames.index(name)]
+
+    def get_arguments(self, argnames):
+        if self.args:
+            return self.args.get_arguments(argnames)
+
+    def get_per_name(self):
+        if self.args is None:
+            return None
+        pyname = self.args.get_instance_pyname()
+        scope, name = self._get_scope_and_pyname(pyname)
+        if name is not None:
+            pymodule = pyname.get_definition_location()[0]
+            return pymodule.pycore.call_info.get_per_name(scope, name)
+        return None
+
+    def save_per_name(self, value):
+        if self.args is None:
+            return None
+        pyname = self.args.get_instance_pyname()
+        scope, name = self._get_scope_and_pyname(pyname)
+        if name is not None:
+            pymodule = pyname.get_definition_location()[0]
+            pymodule.pycore.call_info.save_per_name(scope, name, value)
+
+
+class _AttributeCollector(object):
+
+    def __init__(self, type):
+        self.attributes = {}
+        self.type = type
+
+    def __call__(self, name, returned=None, function=None, argnames=['self']):
+        self.attributes[name] = BuiltinName(
+            PerNameFunction(returned=returned, function=function,
+                            argnames=argnames,
+                            builtin=getattr(self.type, name)))
+
+    def __setitem__(self, name, value):
+        self.attributes[name] = value
+
+
 class List(BuiltinClass):
 
     def __init__(self, holding=None):
         self.holding = holding
-        attributes = {}
-        def add(name, returned=None, function=None):
-            attributes[name] = BuiltinName(
-                BuiltinFunction(returned=returned, function=function,
-                                builtin=getattr(list, name)))
+        collector = _AttributeCollector(list)
 
-        add('__getitem__', self.holding)
-        add('__getslice__', pyobjects.PyObject(self))
-        add('pop', self.holding)
-        add('__iter__', Iterator(self.holding))
-        add('__new__', function=self._new_list)
-        for method in ['append', 'count', 'extend', 'index', 'insert',
-                       'remove', 'reverse', 'sort']:
-            add(method)
-        super(List, self).__init__(list, attributes)
+        collector('__iter__', function=self._iterator_get)
+        collector('__new__', function=self._new_list)
+        for method in ['count', 'index', 'remove', 'reverse', 'sort']:
+            collector(method)
+
+        # Adding methods
+        collector('append', function=self._list_add, argnames=['self', 'value'])
+        collector('__setitem__', function=self._list_add,
+                  argnames=['self', 'index', 'value'])
+        collector('insert', function=self._list_add,
+                  argnames=['self', 'index', 'value'])
+        collector('extend', function=self._self_set, 
+                  argnames=['self', 'iterable'])
+
+        # Getting methods
+        collector('__getitem__', function=self._list_get)
+        collector('pop', function=self._list_get)
+        collector('__getslice__', function=self._self_get)
+
+        super(List, self).__init__(list, collector.attributes)
 
     def _new_list(self, args):
         return _create_builtin(args, get_list)
+
+    def _list_add(self, context):
+        if self.holding is not None:
+            return
+        holding = context.get_argument('value')
+        if holding is not None and holding != pyobjects.get_unknown():
+            context.save_per_name(holding)
+
+    def _self_set(self, context):
+        if self.holding is not None:
+            return
+        iterable = context.get_pyname('iterable')
+        holding = _infer_sequence_for_pyname(iterable)
+        if holding is not None and holding != pyobjects.get_unknown():
+            context.save_per_name(holding)
+
+    def _list_get(self, context):
+        if self.holding is not None:
+            return self.holding
+        return context.get_per_name()
+
+    def _iterator_get(self, context):
+        holding = self.holding
+        if holding is None:
+            holding = context.get_per_name()
+        return Iterator(holding)
+
+    def _self_get(self, context):
+        holding = self.holding
+        if holding is None:
+            holding = context.get_per_name()
+        return get_list(holding)
 
 
 get_list = _create_builtin_getter(List)
@@ -210,28 +356,6 @@ class BuiltinName(pynames.PyName):
     def get_definition_location(self):
         return (None, None)
 
-class BuiltinFunction(pyobjects.AbstractFunction):
-
-    def __init__(self, returned=None, function=None, builtin=None):
-        super(BuiltinFunction, self).__init__()
-        self.returned = returned
-        self.function = function
-        self.builtin = builtin
-
-    def get_returned_object(self, args=None):
-        if self.function is not None:
-            return self.function(args)
-        return self.returned
-
-    def get_doc(self):
-        if self.builtin:
-            return self.builtin.__doc__
-
-    def get_name(self):
-        if self.builtin:
-            return self.builtin.__name__
-
-
 class Iterator(pyobjects.AbstractClass):
 
     def __init__(self, holding=None):
@@ -358,6 +482,19 @@ def _infer_sequence_type(seq):
                       get_returned_object()
             return holding
 
+def _infer_sequence_for_pyname(pyname):
+    if pyname is None:
+        return None
+    seq = pyname.get_object()
+    args = evaluate.ObjectArguments(pyname, [])
+    if '__iter__' in seq.get_attributes():
+        iter = seq.get_attribute('__iter__').get_object().\
+               get_returned_object(args)
+        if iter is not None and 'next' in iter.get_attributes():
+            holding = iter.get_attribute('next').get_object().\
+                      get_returned_object(args)
+            return holding
+
 
 def _create_builtin(args, creator):
     passed = args.get_arguments(['sequence'])[0]
@@ -385,7 +522,8 @@ def _super_function(args):
     if passed_self is None:
         return passed_class
     else:
-        pyclass = passed_self.get_type()
+        #pyclass = passed_self.get_type()
+        pyclass = passed_class
         if isinstance(pyclass, pyobjects.AbstractClass):
             supers = pyclass.get_superclasses()
             if supers:

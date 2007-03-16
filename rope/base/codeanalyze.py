@@ -438,9 +438,7 @@ class ScopeNameFinder(object):
             ast = compiler.parse('(%s)' % name)
         except SyntaxError:
             raise BadIdentifierError('Not a python identifier selected.')
-        evaluator = evaluate.StatementEvaluator(holding_scope)
-        compiler.walk(ast, evaluator)
-        return evaluator.old_result, evaluator.result
+        return evaluate.get_primary_and_result(holding_scope, ast)
 
 
 class BadIdentifierError(rope.base.exceptions.RopeError):

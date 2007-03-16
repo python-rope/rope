@@ -58,6 +58,8 @@ class UnboundName(PyName):
     
     def __init__(self, pyobject=None):
         self.pyobject = pyobject
+        if self.pyobject is None:
+            self.pyobject = rope.base.pyobjects.get_unknown()
 
     def get_object(self):
         return self.pyobject
