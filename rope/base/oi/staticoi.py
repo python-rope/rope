@@ -104,13 +104,21 @@ class SOIVisitor(object):
         for assigned, levels in nodes:
             scope = self.scope.get_inner_scope_for_line(node.lineno)
             instance = evaluate.get_statement_result(scope, assigned.expr)
+            args_pyobjects = []
+            for ast in assigned.subs:
+                pyname = evaluate.get_statement_result(scope, ast)
+                if pyname is not None:
+                    args_pyobjects.append(pyname.get_object())
+                else:
+                    args_pyobjects.append(None)
             value = self.pycore.object_infer._infer_assignment(
                 pynames._Assigned(node.expr, levels), self.pymodule)
+            args_pyobjects.append(value)
             if instance is not None and value is not None:
                 pyobject = instance.get_object()
                 if '__setitem__' in pyobject.get_attributes():
                     pyfunction = pyobject.get_attribute('__setitem__').get_object()
-                    args = evaluate.ObjectArguments(instance, [None, value])
+                    args = evaluate.ObjectArguments(instance, args_pyobjects)
                     self._call(pyfunction, args)
 
 

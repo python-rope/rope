@@ -127,8 +127,8 @@ class RenameDialog(RefactoringDialog):
         self.new_name_entry.select_range(0, Tkinter.END)
         self.new_name_entry.grid(row=0, column=1, columnspan=2)
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
-        self.in_hierarchy = Tkinter.IntVar(frame, value=0)
-        self.unsure = Tkinter.IntVar(frame, value=0)
+        self.in_hierarchy = Tkinter.IntVar()
+        self.unsure = Tkinter.IntVar()
         in_hierarchy = Tkinter.Checkbutton(
             frame, text='Do for all matching methods in class hierarchy',
             variable=self.in_hierarchy)
@@ -230,7 +230,7 @@ class IntroduceFactoryDialog(RefactoringDialog):
         self.new_name_entry.insert(0, 'create')
         self.new_name_entry.select_range(0, Tkinter.END)
 
-        self.global_factory_val = Tkinter.BooleanVar(False)
+        self.global_factory_val = Tkinter.IntVar()
         static_factory_button = Tkinter.Radiobutton(
             frame, variable=self.global_factory_val,
             value=False, text='Use static method')
@@ -470,7 +470,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         move_down.grid(row=1, column=1, sticky=Tkinter.N)
         remove.grid(row=2, column=1, sticky=Tkinter.N)
         add.grid(row=3, column=1, sticky=Tkinter.N)
-        self.in_hierarchy = Tkinter.IntVar(frame, value=0)
+        self.in_hierarchy = Tkinter.IntVar()
         in_hierarchy = Tkinter.Checkbutton(
             frame, text='Do for all matching methods in class hierarchy',
             variable=self.in_hierarchy)
@@ -707,9 +707,11 @@ class ChangeOccurrencesDialog(RefactoringDialog):
         self.new_name_entry.select_range(0, Tkinter.END)
         self.new_name_entry.grid(row=0, column=1, columnspan=2)
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
-        self.only_calls = Tkinter.IntVar(frame, value=0)
-        self.reads = Tkinter.IntVar(frame, value=1)
-        self.writes = Tkinter.IntVar(frame, value=1)
+        self.only_calls = Tkinter.IntVar()
+        self.reads = Tkinter.IntVar()
+        self.reads.set(1)
+        self.writes = Tkinter.IntVar()
+        self.writes.set(1)
         only_calls_button = Tkinter.Checkbutton(
             frame, text='Do only for calls', variable=self.only_calls)
         reads_button = Tkinter.Checkbutton(

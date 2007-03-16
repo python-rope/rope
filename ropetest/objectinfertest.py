@@ -408,8 +408,7 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
-    # TODO: Handle this case
-    def xxx_test_static_oi_for_lists_per_object_for_iters(self):
+    def test_static_oi_for_lists_per_object_for_iters(self):
         code = 'class C(object):\n    pass\nl = []\n' \
                'l.append(C())\nfor c in l:\n    a_var = c\n'
         self.mod.write(code)
@@ -418,6 +417,19 @@ class NewStaticOITest(unittest.TestCase):
         c_class = pymod.get_attribute('C').get_object()
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
+
+    def test_static_oi_for_lists_depending_on_append_function(self):
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'd = {}\nd[C1()] = C2()\na, b = d.popitem()\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
 
 class DynamicOITest(unittest.TestCase):

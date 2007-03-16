@@ -221,27 +221,25 @@ class Dict(BuiltinClass):
         self.keys = keys
         self.values = values
         item = get_tuple(self.keys, self.values)
-        attributes = {}
-        def add(name, returned=None, function=None):
-            attributes[name] = BuiltinName(
-                BuiltinFunction(returned=returned, function=function,
-                                builtin=getattr(dict, name)))
-        add('__getitem__', self.values)
-        add('__iter__', Iterator(self.keys))
-        add('__new__', function=self._new_dict)
-        add('pop', self.values)
-        add('get', self.keys)
-        add('keys', List(self.keys))
-        add('values', List(self.values))
-        add('iterkeys', Iterator(self.keys))
-        add('itervalues', Iterator(self.values))
-        add('items', List(item))
-        add('iteritems', Iterator(item))
-        add('copy', pyobjects.PyObject(self))
-        add('popitem', item)
+        collector = _AttributeCollector(dict)
+        collector('__getitem__', self.values)
+        collector('__iter__', Iterator(self.keys))
+        collector('__new__', function=self._new_dict)
+        collector('pop', self.values)
+        collector('get', self.keys)
+        collector('keys', List(self.keys))
+        collector('values', List(self.values))
+        collector('iterkeys', Iterator(self.keys))
+        collector('itervalues', Iterator(self.values))
+        collector('items', List(item))
+        collector('iteritems', Iterator(item))
+        collector('copy', pyobjects.PyObject(self))
+        collector('popitem', item)
         for method in ['clear', 'has_key', 'setdefault', 'update']:
-            add(method)
-        super(Dict, self).__init__(dict, attributes)
+            collector(method)
+        collector('__setitem__', function=self._dict_add)
+        collector('popitem', function=self._item_get)
+        super(Dict, self).__init__(dict, collector.attributes)
 
     def _new_dict(self, args):
         def do_create(holding):
@@ -249,6 +247,20 @@ class Dict(BuiltinClass):
             if isinstance(type, Tuple) and len(type.get_holding_objects()) == 2:
                 return get_dict(*type.get_holding_objects())
         return _create_builtin(args, do_create)
+
+    def _dict_add(self, context):
+        if self.keys is not None:
+            return
+        key, value = context.get_arguments(['self', 'key', 'value'])[1:]
+        if key is not None and key != pyobjects.get_unknown():
+            context.save_per_name(get_tuple(key, value))
+
+    def _item_get(self, context):
+        if self.keys is not None:
+            return self.key, self.value
+        item = context.get_per_name()
+        return item
+
 
 get_dict = _create_builtin_getter(Dict)
 get_dict_type = _create_builtin_type_getter(Dict)

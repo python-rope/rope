@@ -70,11 +70,8 @@ class ObjectInfer(object):
 
     def _infer_pyobject_for_assign_node(self, assign_node, pymodule, lineno=None):
         try:
-            if lineno is None and hasattr(assign_node, 'lineno') and \
-               assign_node.lineno is not None:
-                lineno = assign_node.lineno
             if lineno is None:
-                lineno = 1
+                lineno = self._get_lineno_for_node(assign_node)
             holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
             pyname = evaluate.get_statement_result(holding_scope, assign_node)
             if pyname is not None:
@@ -86,23 +83,40 @@ class ObjectInfer(object):
         except pyobjects.IsBeingInferredError:
             pass
 
+    def _infer_pyname_for_assign_node(self, assign_node, pymodule, lineno=None):
+        try:
+            if lineno is None:
+                lineno = self._get_lineno_for_node(assign_node)
+            holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+            return evaluate.get_statement_result(holding_scope, assign_node)
+        except pyobjects.IsBeingInferredError:
+            pass
+
+    def _get_lineno_for_node(self, assign_node):
+        if hasattr(assign_node, 'lineno') and \
+           assign_node.lineno is not None:
+            return assign_node.lineno
+        return 1
+
     def evaluate_object(self, evaluated):
         pyobject = self._infer_pyobject_for_assign_node(
             evaluated.assignment.ast_node, evaluated.module, evaluated.lineno)
-        pyname = evaluated
+        pyname = self._infer_pyname_for_assign_node(
+            evaluated.assignment.ast_node, evaluated.module, evaluated.lineno)
+        new_pyname = pyname
         tokens = evaluated.evaluation.split('.')
         for token in tokens:
             call = token.endswith('()')
             if call:
                 token = token[:-2]
             if token:
-                pyname2 = self._get_attribute(pyobject, token)
-                if pyname2 is not None:
-                    pyobject = pyname2.get_object()
+                pyname = new_pyname
+                new_pyname = self._get_attribute(pyobject, token)
+                if new_pyname is not None:
+                    pyobject = new_pyname.get_object()
             if pyobject is not None and call:
                 args = evaluate.ObjectArguments(pyname, [])
                 pyobject = pyobject.get_returned_object(args)
-                pyname = None
             if pyobject is None:
                 break
         if evaluated is None:

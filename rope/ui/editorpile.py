@@ -12,7 +12,7 @@ class EditorPile(object):
         self.editor_frame = Frame(editor_panel, borderwidth=0, relief=RIDGE)
         self.editors = []
         self.buttons = {}
-        self.active_file_path = StringVar('')
+        self.active_file_path = StringVar()
         self.active_editor = None
         self.last_edited_location = None
 

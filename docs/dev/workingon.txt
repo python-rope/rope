@@ -1,14 +1,10 @@
 Holding Per Name Information
 ============================
 
-- Handling `__getitem__()`
-- Fetching defining scope for fields
-- Handling `__setitem__()`
-- Handling `extend`
+- Passing `Arguments` to `__iter__` in for loops
 
 * Lots of places that call a function with `get_returned_value()` with
   no args; Should we remove args' default?
-* For loops call `__iter__` with no args
 * Remove duplication in `SOIVisitor`
 * Remove duplication between `Evaluator` and `SOIVisitor`
 * Using `builtins._AttributeConstructor`
@@ -29,6 +25,7 @@ Holding Per Name Information
 * `dict`\s
 
 * Some `self`\s are unknown!
+* Removing ``pass`` when introducing factory for empty class
 
 * Registers for holding places in buffers; names or letters?
 * Handling lists in fill paragraph
