@@ -1,16 +1,17 @@
 Holding Per Name Information
 ============================
 
-- Passing `Arguments` to `__iter__` in for loops
+- `list`\s
+- `dict`\s
+- Passing `PyName`\s to `ObjectArguments`
+- ``d.update([(1, 2)])``
+- `set`\s
+- Removing `BuiltinFunction`; using `PerNameFunction` instead
 
-* Lots of places that call a function with `get_returned_value()` with
-  no args; Should we remove args' default?
+* Removing args' default for `AbstractFunction.get_returned_value()`
 * Remove duplication in `SOIVisitor`
 * Remove duplication between `Evaluator` and `SOIVisitor`
-* Using `builtins._AttributeConstructor`
 * `__setslice__`?
-* Removing `BuiltinFunction`; using `PerNameFunction` instead
-* `ObjectArguments` should extend `Arguments`?
 * Moving `Arguments`, `ObjectArguments` and `_CallContext`;
   `rope.base.args` or `callcontext` module
 * What sins did we make in `staticoi` and `evaluate`
@@ -20,9 +21,6 @@ Holding Per Name Information
 * Adding an option not to collect per name information
 * Better per object data holding in `callinfo`
 * Not overwriting useful per object data in `callinfo`
-* `list`\s
-* `set`\s
-* `dict`\s
 
 * Some `self`\s are unknown!
 * Removing ``pass`` when introducing factory for empty class

@@ -418,7 +418,7 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
-    def test_static_oi_for_lists_depending_on_append_function(self):
+    def test_static_oi_for_dicts_depending_on_append_function(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
                'd = {}\nd[C1()] = C2()\na, b = d.popitem()\n'
         self.mod.write(code)
@@ -430,6 +430,55 @@ class NewStaticOITest(unittest.TestCase):
         b_var = pymod.get_attribute('b').get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
+
+    def test_static_oi_for_dicts_depending_on_for_loops(self):
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'd = {}\nd[C1()] = C2()\nfor k, v in d.items():\n    a = k\n    b = v\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_static_oi_for_dicts_depending_on_update(self):
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'd = {}\nd[C1()] = C2()\nd2 = {}\nd2.update(d)\na, b = d2.popitem()\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_static_oi_for_dicts_depending_on_update_on_seqs(self):
+        code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
+               'd = {}\nd.update([(C1(), C2())])\na, b = d.popitem()\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        c2_class = pymod.get_attribute('C2').get_object()
+        a_var = pymod.get_attribute('a').get_object()
+        b_var = pymod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
+    def test_static_oi_for_sets_per_object_for_set_item(self):
+        code = 'class C(object):\n    pass\ns = set()\n' \
+               's.add(C())\na_var = s.pop() \n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
 
 
 class DynamicOITest(unittest.TestCase):

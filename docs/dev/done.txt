@@ -3,6 +3,9 @@
 ===========
 
 
+- Holding per name information for builtin containers : March 17, 2007
+
+
 - Filling paragraphs in text modes; ``M-q`` : March 15, 2007
 
 

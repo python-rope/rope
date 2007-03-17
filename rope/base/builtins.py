@@ -40,16 +40,18 @@ class BuiltinClass(pyobjects.AbstractClass):
 
 class BuiltinFunction(pyobjects.AbstractFunction):
 
-    def __init__(self, returned=None, function=None, builtin=None):
+    def __init__(self, returned=None, function=None, builtin=None, argnames=[]):
         super(BuiltinFunction, self).__init__()
+        self.argnames = argnames
         self.returned = returned
         self.function = function
         self.builtin = builtin
 
-    def get_returned_object(self, args=None):
+    def get_returned_object(self, args):
         if self.function is not None:
-            return self.function(args)
-        return self.returned
+            return self.function(_CallContext(self.argnames, args))
+        else:
+            return self.returned
 
     def get_doc(self):
         if self.builtin:
@@ -58,21 +60,6 @@ class BuiltinFunction(pyobjects.AbstractFunction):
     def get_name(self):
         if self.builtin:
             return self.builtin.__name__
-
-
-class PerNameFunction(BuiltinFunction):
-
-    def __init__(self, returned=None, function=None, builtin=None, argnames=[]):
-        super(PerNameFunction, self).__init__(
-            returned=returned, function=self, builtin=builtin)
-        self.called = function
-        self.argnames = argnames
-
-    def __call__(self, args):
-        if self.called is not None:
-            return self.called(_CallContext(self.argnames, args))
-        else:
-            return self.returned
 
 
 class _CallContext(object):
@@ -112,6 +99,10 @@ class _CallContext(object):
         if self.args:
             return self.args.get_arguments(argnames)
 
+    def get_pynames(self, argnames):
+        if self.args:
+            return self.args.get_pynames(argnames)
+
     def get_per_name(self):
         if self.args is None:
             return None
@@ -140,7 +131,7 @@ class _AttributeCollector(object):
 
     def __call__(self, name, returned=None, function=None, argnames=['self']):
         self.attributes[name] = BuiltinName(
-            PerNameFunction(returned=returned, function=function,
+            BuiltinFunction(returned=returned, function=function,
                             argnames=argnames,
                             builtin=getattr(self.type, name)))
 
@@ -199,16 +190,10 @@ class List(BuiltinClass):
         return context.get_per_name()
 
     def _iterator_get(self, context):
-        holding = self.holding
-        if holding is None:
-            holding = context.get_per_name()
-        return Iterator(holding)
+        return Iterator(self._list_get(context))
 
     def _self_get(self, context):
-        holding = self.holding
-        if holding is None:
-            holding = context.get_per_name()
-        return get_list(holding)
+        return get_list(self._list_get(context))
 
 
 get_list = _create_builtin_getter(List)
@@ -222,23 +207,23 @@ class Dict(BuiltinClass):
         self.values = values
         item = get_tuple(self.keys, self.values)
         collector = _AttributeCollector(dict)
-        collector('__getitem__', self.values)
-        collector('__iter__', Iterator(self.keys))
         collector('__new__', function=self._new_dict)
-        collector('pop', self.values)
-        collector('get', self.keys)
-        collector('keys', List(self.keys))
-        collector('values', List(self.values))
-        collector('iterkeys', Iterator(self.keys))
-        collector('itervalues', Iterator(self.values))
-        collector('items', List(item))
-        collector('iteritems', Iterator(item))
-        collector('copy', pyobjects.PyObject(self))
-        collector('popitem', item)
-        for method in ['clear', 'has_key', 'setdefault', 'update']:
+        for method in ['clear', 'has_key', 'setdefault']:
             collector(method)
         collector('__setitem__', function=self._dict_add)
         collector('popitem', function=self._item_get)
+        collector('pop', function=self._value_get)
+        collector('get', function=self._key_get)
+        collector('keys', function=self._key_list)
+        collector('values', function=self._value_list)
+        collector('items', function=self._item_list)
+        collector('copy', function=self._self_get)
+        collector('__getitem__', function=self._value_get)
+        collector('iterkeys', function=self._key_iter)
+        collector('itervalues', function=self._value_iter)
+        collector('iteritems', function=self._item_iter)
+        collector('__iter__', function=self._key_iter)
+        collector('update', function=self._self_set)
         super(Dict, self).__init__(dict, collector.attributes)
 
     def _new_dict(self, args):
@@ -257,9 +242,56 @@ class Dict(BuiltinClass):
 
     def _item_get(self, context):
         if self.keys is not None:
-            return self.key, self.value
+            return get_tuple(self.keys, self.values)
         item = context.get_per_name()
+        if item is None:
+            return get_tuple(self.keys, self.values)
         return item
+
+    def _value_get(self, context):
+        item = self._item_get(context).get_type()
+        return item.get_holding_objects()[1]
+
+    def _key_get(self, context):
+        item = self._item_get(context).get_type()
+        return item.get_holding_objects()[0]
+
+    def _value_list(self, context):
+        return get_list(self._value_get(context))
+
+    def _key_list(self, context):
+        return get_list(self._key_get(context))
+
+    def _item_list(self, context):
+        return get_list(self._item_get(context))
+
+    def _value_iter(self, context):
+        return get_iterator(self._value_get(context))
+
+    def _key_iter(self, context):
+        return get_iterator(self._key_get(context))
+
+    def _item_iter(self, context):
+        return get_iterator(self._item_get(context))
+
+    def _self_get(self, context):
+        item = self._item_get(context).get_type()
+        key, value = item.get_holding_objects()[:2]
+        return get_dict(key, value)
+
+    def _self_set(self, context):
+        if self.keys is not None:
+            return
+        new_dict = context.get_pynames(['self', 'd'])[1]
+        if isinstance(new_dict.get_object().get_type(), Dict):
+            args = evaluate.ObjectArguments([new_dict])
+            items = new_dict.get_object().get_attribute('popitem').\
+                    get_object().get_returned_object(args)
+            context.save_per_name(items)
+        else:
+            holding = _infer_sequence_for_pyname(new_dict)
+            if isinstance(holding.get_type(), Tuple):
+                context.save_per_name(holding)
 
 
 get_dict = _create_builtin_getter(Dict)
@@ -295,28 +327,56 @@ class Set(BuiltinClass):
 
     def __init__(self, holding=None):
         self.holding = holding
-        attributes = {}
-        def add(name, returned=None, function=None):
-            attributes[name] = BuiltinName(
-                BuiltinFunction(returned=returned, function=function,
-                                builtin=getattr(set, name)))
-        add('pop', self.holding)
-        add('__iter__', Iterator(self.holding))
-        add('__new__', function=self._new_set)
+        collector = _AttributeCollector(set)
+        collector('__new__', function=self._new_set)
 
         self_methods = ['copy', 'difference', 'intersection',
                         'symmetric_difference', 'union']
         for method in self_methods:
-            add(method, pyobjects.PyObject(self))
-        normal_methods = ['add', 'symmetric_difference_update',
-                          'difference_update', 'discard', 'remove',
-                          'issuperset', 'issubset', 'clear', 'update']
+            collector(method, function=self._self_get)
+        normal_methods = ['discard', 'remove',
+                          'issuperset', 'issubset', 'clear']
         for method in normal_methods:
-            add(method)
-        super(Set, self).__init__(set, attributes)
+            collector(method)
+        collector('add', function=self._set_add)
+        collector('update', function=self._self_set)
+        collector('update', function=self._self_set)
+        collector('symmetric_difference_update', function=self._self_set)
+        collector('difference_update', function=self._self_set)
+
+        collector('pop', function=self._set_get)
+        collector('__iter__', function=self._iterator_get)
+        super(Set, self).__init__(set, collector.attributes)
 
     def _new_set(self, args):
         return _create_builtin(args, get_set)
+
+    def _set_add(self, context):
+        if self.holding is not None:
+            return
+        holding = context.get_arguments(['self', 'value'])[1]
+        if holding is not None and holding != pyobjects.get_unknown():
+            context.save_per_name(holding)
+
+    def _self_set(self, context):
+        if self.holding is not None:
+            return
+        iterable = context.get_pyname('iterable')
+        holding = _infer_sequence_for_pyname(iterable)
+        if holding is not None and holding != pyobjects.get_unknown():
+            context.save_per_name(holding)
+
+    def _set_get(self, context):
+        if self.holding is not None:
+            return self.holding
+        return context.get_per_name()
+
+    def _iterator_get(self, context):
+        return Iterator(self._set_get(context))
+
+    def _self_get(self, context):
+        return get_list(self._set_get(context))
+
 
 get_set = _create_builtin_getter(Set)
 get_set_type = _create_builtin_type_getter(Set)
@@ -380,7 +440,7 @@ class Iterator(pyobjects.AbstractClass):
     def get_attributes(self):
         return self.attributes
 
-    def get_returned_object(self):
+    def get_returned_object(self, args=None):
         return self.holding
 
 get_iterator = _create_builtin_getter(Iterator)
@@ -401,7 +461,7 @@ class Generator(pyobjects.AbstractClass):
     def get_attributes(self):
         return self.attributes
 
-    def get_returned_object(self):
+    def get_returned_object(self, args=None):
         return self.holding
 
 get_generator = _create_builtin_getter(Generator)
@@ -439,8 +499,8 @@ class Property(BuiltinClass):
         self._fdoc = fdoc
         attributes = {
             'fget': BuiltinName(BuiltinFunction()),
-            'fset': BuiltinName(BuiltinFunction()),
-            'fdel': BuiltinName(BuiltinFunction()),
+            'fset': BuiltinName(pynames.UnboundName()),
+            'fdel': BuiltinName(pynames.UnboundName()),
             '__new__': BuiltinName(BuiltinFunction(function=_property_function))}
         super(Property, self).__init__(property, attributes)
 
@@ -485,20 +545,11 @@ class BuiltinType(BuiltinClass):
         super(BuiltinType, self).__init__(type, {})
 
 
-def _infer_sequence_type(seq):
-    if '__iter__' in seq.get_attributes():
-        iter = seq.get_attribute('__iter__').get_object().\
-               get_returned_object()
-        if iter is not None and 'next' in iter.get_attributes():
-            holding = iter.get_attribute('next').get_object().\
-                      get_returned_object()
-            return holding
-
 def _infer_sequence_for_pyname(pyname):
     if pyname is None:
         return None
     seq = pyname.get_object()
-    args = evaluate.ObjectArguments(pyname, [])
+    args = evaluate.ObjectArguments([pyname])
     if '__iter__' in seq.get_attributes():
         iter = seq.get_attribute('__iter__').get_object().\
                get_returned_object(args)
@@ -509,11 +560,11 @@ def _infer_sequence_for_pyname(pyname):
 
 
 def _create_builtin(args, creator):
-    passed = args.get_arguments(['sequence'])[0]
+    passed = args.get_pynames(['sequence'])[0]
     if passed is None:
         holding = None
     else:
-        holding = _infer_sequence_type(passed)
+        holding = _infer_sequence_for_pyname(passed)
     if holding is not None:
         return creator(holding)
     else:
@@ -543,32 +594,32 @@ def _super_function(args):
         return passed_self
 
 def _zip_function(args):
-    args = args.get_arguments(['sequence'])
+    args = args.get_pynames(['sequence'])
     objects = []
     for seq in args:
         if seq is None:
             holding = None
         else:
-            holding = _infer_sequence_type(seq)
+            holding = _infer_sequence_for_pyname(seq)
         objects.append(holding)
     tuple = get_tuple(*objects)
     return get_list(tuple)
 
 def _enumerate_function(args):
-    passed = args.get_arguments(['sequence'])[0]
+    passed = args.get_pynames(['sequence'])[0]
     if passed is None:
         holding = None
     else:
-        holding = _infer_sequence_type(passed)
+        holding = _infer_sequence_for_pyname(passed)
     tuple = get_tuple(None, holding)
     return Iterator(tuple)
 
 def _iter_function(args):
-    passed = args.get_arguments(['sequence'])[0]
+    passed = args.get_pynames(['sequence'])[0]
     if passed is None:
         holding = None
     else:
-        holding = _infer_sequence_type(passed)
+        holding = _infer_sequence_for_pyname(passed)
     return Iterator(holding)
 
 

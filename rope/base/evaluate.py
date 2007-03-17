@@ -239,18 +239,20 @@ class Arguments(object):
 
 class ObjectArguments(object):
 
-    def __init__(self, pyname, args):
-        self.pyname = pyname
-        self.args = args
+    def __init__(self, pynames):
+        self.pynames = pynames
 
     def get_arguments(self, parameters):
-        result = list(self.args)
-        if self.pyname:
-            result.insert(0, self.pyname.get_object())
+        result = []
+        for pyname in self.pynames:
+            if pyname is None:
+                result.append(None)
+            else:
+                result.append(pyname.get_object())
         return result
 
     def get_instance_pyname(self):
-        return self.pyname
+        return self.pynames[0]
 
 
 def create_arguments(primary, pyfunction, call_func_node, scope):
