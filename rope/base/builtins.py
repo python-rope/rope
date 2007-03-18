@@ -71,8 +71,10 @@ class _CallContext(object):
     def _get_scope_and_pyname(self, pyname):
         if pyname is not None and isinstance(pyname, pynames.AssignedName):
             pymodule, lineno = pyname.get_definition_location()
-            if pymodule is None or lineno is None:
+            if pymodule is None:
                 return None, None
+            if lineno is None:
+                lineno = 1
             scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
             name = None
             while name is None and scope is not None:
@@ -440,7 +442,7 @@ class Iterator(pyobjects.AbstractClass):
     def get_attributes(self):
         return self.attributes
 
-    def get_returned_object(self, args=None):
+    def get_returned_object(self, args):
         return self.holding
 
 get_iterator = _create_builtin_getter(Iterator)
@@ -461,7 +463,7 @@ class Generator(pyobjects.AbstractClass):
     def get_attributes(self):
         return self.attributes
 
-    def get_returned_object(self, args=None):
+    def get_returned_object(self, args):
         return self.holding
 
 get_generator = _create_builtin_getter(Generator)
@@ -504,9 +506,9 @@ class Property(BuiltinClass):
             '__new__': BuiltinName(BuiltinFunction(function=_property_function))}
         super(Property, self).__init__(property, attributes)
 
-    def get_property_object(self):
+    def get_property_object(self, args):
         if isinstance(self._fget, pyobjects.AbstractFunction):
-            return self._fget.get_returned_object()
+            return self._fget.get_returned_object(args)
 
 
 def _property_function(args):
@@ -521,7 +523,7 @@ class Lambda(pyobjects.AbstractFunction):
         self.node = node
         self.scope = scope
 
-    def get_returned_object(self, args=None):
+    def get_returned_object(self, args):
         result = evaluate.get_statement_result(
             self.scope, self.node.code)
         if result is not None:

@@ -1,25 +1,16 @@
-Holding Per Name Information
-============================
+Small Stories
+=============
 
-- `list`\s
-- `dict`\s
-- Passing `PyName`\s to `ObjectArguments`
-- ``d.update([(1, 2)])``
-- `set`\s
-- Removing `BuiltinFunction`; using `PerNameFunction` instead
+- Properties and passing arguments
+- Removing args' default for `AbstractFunction.get_returned_value()`
 
-* Removing args' default for `AbstractFunction.get_returned_value()`
-* Remove duplication in `SOIVisitor`
 * Remove duplication between `Evaluator` and `SOIVisitor`
 * `__setslice__`?
 * Moving `Arguments`, `ObjectArguments` and `_CallContext`;
   `rope.base.args` or `callcontext` module
-* What sins did we make in `staticoi` and `evaluate`
 
-* Handling slices?
-* Refactor `builtins`
 * Adding an option not to collect per name information
-* Better per object data holding in `callinfo`
+* Better per name data holding in `callinfo`
 * Not overwriting useful per object data in `callinfo`
 
 * Some `self`\s are unknown!
@@ -29,7 +20,7 @@ Holding Per Name Information
 * Handling lists in fill paragraph
 * Evaluate function parameter defaults in staticoi?
 * Adding 'do when unsure' to all refactorings?
-* Profiling rope
+* Profiling before ``0.5``
 
 
 Remaining Small Stories

@@ -55,7 +55,7 @@ if not i_like_emacs:
     core.rebind_action('swap_mark_and_insert', None)
     core.rebind_action('undo', 'C-z')
     core.rebind_action('redo', 'C-y')
-    core.rebind_action('repeat_last_action', 'C-x z')
+    core.rebind_action('repeat_last_action', None)
     core.rebind_action('undo_project', 'C-Z')
     core.rebind_action('redo_project', 'C-Y')
     core.rebind_action('project_history', None)
@@ -78,7 +78,7 @@ if not i_like_emacs:
     core.rebind_action('comment_region', None)
     core.rebind_action('run_module', 'M-X p')
     core.rebind_action('run_unit_tests', 'M-X t')
-    core.rebind_action('run_soi', None)
+    core.rebind_action('run_soi', 'M-X s')
 
     core.rebind_action('rename', 'M-R')
     core.rebind_action('move', 'M-V')

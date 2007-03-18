@@ -118,9 +118,6 @@ Stories
 * Supporting templates in text modes
 
 
-* Supporting modules without source code
-
-
 * Lambdas as functions; consider their parameters
 
 
@@ -139,4 +136,7 @@ Stories
 * Moving `staticmethod`\s
 
 
-> Public Release 0.5m3 : March 18, 2007
+> Public Release 0.5m4 : April 1, 2007
+
+
+* Supporting modules without source code

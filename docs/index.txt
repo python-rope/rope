@@ -70,7 +70,7 @@ Features implemented so far:
 * Object Inference
 
   * A dynamic object inference approach
-  * A simple static type inference approach
+  * A static object inference approach
   * Handling built-in container types
 
 

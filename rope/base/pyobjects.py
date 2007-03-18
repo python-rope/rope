@@ -135,7 +135,7 @@ class AbstractFunction(PyObject):
     def get_param_names(self, special_args=True):
         return []
 
-    def get_returned_object(self, args=None):
+    def get_returned_object(self, args):
         return get_unknown()
 
 
@@ -268,7 +268,7 @@ class PyFunction(PyDefinedObject, AbstractFunction):
     def get_parameter(self, index):
         return self.parameter_pyobjects.get()[index]
 
-    def get_returned_object(self, args=None):
+    def get_returned_object(self, args):
         return self.returned.get(args)
 
     def get_name(self):

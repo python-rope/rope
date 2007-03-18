@@ -8,6 +8,7 @@ import ropetest.ui.highlightertest
 import ropetest.ui.searchertest
 import ropetest.ui.statusbartest
 import ropetest.ui.uihelperstest
+import ropetest.ui.indentertest
 import ropetest.ui.filltest
 
 

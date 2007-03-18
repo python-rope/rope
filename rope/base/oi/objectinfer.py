@@ -73,12 +73,15 @@ class ObjectInfer(object):
             if lineno is None:
                 lineno = self._get_lineno_for_node(assign_node)
             holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-            pyname = evaluate.get_statement_result(holding_scope, assign_node)
+            primary, pyname = evaluate.get_primary_and_result(holding_scope,
+                                                              assign_node)
             if pyname is not None:
                 result = pyname.get_object()
                 if isinstance(result.get_type(), builtins.Property) and \
-                   holding_scope.get_kind() == 'Class':
-                    return result.get_type().get_property_object()
+                   primary and isinstance(primary.get_object().get_type(),
+                                          pyobjects.PyClass):
+                    return result.get_type().get_property_object(
+                        evaluate.ObjectArguments([primary]))
                 return result
         except pyobjects.IsBeingInferredError:
             pass

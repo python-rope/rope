@@ -1,7 +1,8 @@
 import unittest
 
 from rope.ui.indenter import PythonCodeIndenter, NormalIndenter
-from ropetest.ui.mockeditortest import GraphicalEditorFactory, MockEditorFactory
+from ropetest.ui.mockeditortest import MockEditorFactory
+
 
 class PythonCodeIndenterTest(unittest.TestCase):
 

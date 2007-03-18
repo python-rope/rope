@@ -480,6 +480,17 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
+    def test_properties_and_calling_get_property(self):
+        code = 'class C1(object):\n    pass\n' \
+               'class C2(object):\n    c1 = C1()\n' \
+               '    def get_c1(self):\n        return self.c1\n' \
+               '    p = property(get_c1)\nc2 = C2()\na_var = c2.p\n'
+        self.mod.write(code)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 
