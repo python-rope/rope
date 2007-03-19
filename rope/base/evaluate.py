@@ -251,8 +251,33 @@ class ObjectArguments(object):
                 result.append(pyname.get_object())
         return result
 
+    def get_pynames(self, parameters):
+        return self.pynames
+
     def get_instance_pyname(self):
         return self.pynames[0]
+
+
+class MixedArguments(object):
+
+    def __init__(self, pyname, args, scope):
+        self.pyname = pyname
+        self.args = Arguments(args, scope)
+
+    def get_pynames(self, parameters):
+        return [self.pyname] + self.args.get_pynames(parameters[1:])
+
+    def get_arguments(self, parameters):
+        result = []
+        for pyname in self.get_pynames(parameters):
+            if pyname is None:
+                result.append(None)
+            else:
+                result.append(pyname.get_object())
+        return result
+
+    def get_instance_pyname(self):
+        return self.pyname
 
 
 def create_arguments(primary, pyfunction, call_func_node, scope):

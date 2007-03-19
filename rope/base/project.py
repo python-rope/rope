@@ -68,6 +68,12 @@ class _Project(object):
     def get_pycore(self):
         return self.pycore
 
+    def get_file(self, path):
+        return File(self, path)
+
+    def get_folder(self, path):
+        return Folder(self, path)
+
     def _get_resource_path(self, name):
         pass
 
@@ -166,6 +172,9 @@ class Resource(object):
     def is_folder(self):
         """Return true if the resource is a folder"""
 
+    def create(self):
+        """Create this resource"""
+
     def exists(self):
         return os.path.exists(self.real_path)
 
@@ -236,6 +245,9 @@ class File(Resource):
     def is_folder(self):
         return False
 
+    def create(self):
+        self.parent.create_file(self.name)
+
 
 class Folder(Resource):
     """Represents a folder"""
@@ -301,6 +313,9 @@ class Folder(Resource):
         if self == resource:
             return False
         return self.path == '' or resource.path.startswith(self.path + '/')
+
+    def create(self):
+        self.parent.create_folder(self.name)
 
 
 class ResourceObserver(object):

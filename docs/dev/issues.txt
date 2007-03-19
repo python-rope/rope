@@ -265,6 +265,22 @@ But having an option to generate elements in global scopes seems a
 good idea.
 
 
+Inserting Blank Lines
+---------------------
+
+The blank lines inserted for an element depends on not only the
+element itself, but on the location is is being inserted, too.  Not
+thinking about the element inself the blank spaces can be specified
+so:
+
+* Module elements: 2 blank line
+* Class and function elements: 1 blank line
+
+But the trick here is that when we are insertion an element is the
+current scope these blank lines should be inserted at the end of the
+definition and otherwise it should be inserted at the beginning of it.
+
+
 Supporting Registers
 ====================
 
@@ -395,20 +411,6 @@ Getting ready for Python 3.0
 * Set literals and comprehension ``{1, 2, 3}`` and ``{x for x in range(10)}``
 * Renamed function attributes; ``f.func_whatever`` to ``f.__whatever__``
 * Use new function signature
-
-
-Allowing Non-Existent Resources
-===============================
-
-Instead of doing::
-
-  parent = project.get_resource('my_folder')
-  new_file = parent.create_file('my_file.txt')
-
-We can do::
-
-  new_file = project.get_file('my_folder/my_file.txt')
-  new_file.create(create_folders=False)
 
 
 Having Virtual `PyModule`\s

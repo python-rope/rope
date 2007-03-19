@@ -1,20 +1,36 @@
+Allowing Non-Existent Resources
+===============================
+
+- Handling constructors in SOI
+- `File.create`
+- `Folder.create`
+- Raising exception when resource already exists
+- Raising exception when the folder does not exist
+
+* Changing `CreateFile` and `CreateFolder` to require only one argument
+
+
+
 Generate Element
 ================
 
-- `get_location()`
-- Removing ``pass`` when adding the first entry to a class
+- Handling blank lines
+- Generating variables inside packages
+- Generating classes
+- Generating modules
+- Generating packages
 
-* Handling blank lines
-* Generating globals
-* Blanks before and after
-* A class with a single pass
-* Adding `generatetest` to testsuite
-* Generating variables inside packages
+* Generating functions
 * Generating methods
 * Generating `staticmethod`\s
+* Generating constructors
+
+* Moving `generate` to `rope.ide`?
+* Adding `generatetest` to testsuite
 * Error: already exists
 * Error: cannot be determined
 * Error: not a package
+* Adding `generate(kind)` factory
 
 * Recursive SOI; Go where the calls go
 * Adding an option not to collect per name information

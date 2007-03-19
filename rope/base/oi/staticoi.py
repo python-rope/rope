@@ -80,11 +80,19 @@ class SOIVisitor(object):
         if pyname is None:
             return
         pyfunction = pyname.get_object()
-        if '__call__' in pyfunction.get_attributes():
+        if not isinstance(pyfunction, pyobjects.PyClass) and \
+           '__call__' in pyfunction.get_attributes():
             pyfunction = pyfunction.get_attribute('__call__')
-        if not isinstance(pyfunction, pyobjects.AbstractFunction):
+        if isinstance(pyfunction, pyobjects.AbstractFunction):
+            args = evaluate.create_arguments(primary, pyfunction, node, scope)
+        elif isinstance(pyfunction, pyobjects.PyClass):
+            pyclass = pyfunction
+            if '__init__' in pyfunction.get_attributes():
+                pyfunction = pyfunction.get_attribute('__init__').get_object()
+            pyname = pynames.UnboundName(pyobjects.PyObject(pyclass))
+            args = evaluate.MixedArguments(pyname, node.args, scope)
+        else:
             return
-        args = evaluate.create_arguments(primary, pyfunction, node, scope)
         self._call(pyfunction, args)
 
     def _call(self, pyfunction, args):
@@ -96,6 +104,8 @@ class SOIVisitor(object):
             pyfunction.get_returned_object(args)
 
     def visitAssign(self, node):
+        for child in node.getChildNodes():
+            compiler.walk(child, self)
         visitor = _SOIAssignVisitor()
         nodes = []
         for child in node.nodes:

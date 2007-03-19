@@ -491,6 +491,18 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c1_class, a_var.get_type())
 
+    def test_soi_on_constructors(self):
+        code = 'class C1(object):\n    pass\n' \
+               'class C2(object):\n' \
+               '    def __init__(self, arg):\n        self.attr = arg\n' \
+               'c2 = C2(C1())\na_var = c2.attr'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        a_var = pymod.get_attribute('a_var').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 

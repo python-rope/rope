@@ -284,17 +284,17 @@ class ProjectTest(unittest.TestCase):
         project_file = 'NewFile.txt'
         parent_folder = self.project.get_resource(self.sample_folder)
         parent_folder.create_file(project_file)
-        newFile = self.project.get_resource(self.sample_folder
+        new_file = self.project.get_resource(self.sample_folder
                                             + '/' + project_file)
         self.assertTrue(new_file is not None and not new_file.is_folder())
 
-    def test_folder_creating_files(self):
+    def test_folder_creating_files2(self):
         projectFile = 'newfolder'
         self.project.root.create_folder(projectFile)
         new_folder = self.project.get_resource(projectFile)
         self.assertTrue(new_folder is not None and new_folder.is_folder())
 
-    def test_folder_creating_nested_files(self):
+    def test_folder_creating_nested_files2(self):
         project_file = 'newfolder'
         parent_folder = self.project.get_resource(self.sample_folder)
         parent_folder.create_folder(project_file)
@@ -385,6 +385,35 @@ class ProjectTest(unittest.TestCase):
         file.write(contents.encode('utf-8-sig'))
         file.close()
         self.assertEquals(contents, sample_file.read())
+
+    def test_using_project_get_file(self):
+        myfile = self.project.get_file(self.sample_file)
+        self.assertTrue(myfile.exists())
+
+    def test_using_file_create(self):
+        myfile = self.project.get_file('myfile.txt')
+        self.assertFalse(myfile.exists())
+        myfile.create()
+        self.assertTrue(myfile.exists())
+        self.assertFalse(myfile.is_folder())
+
+    def test_using_folder_create(self):
+        myfolder = self.project.get_folder('myfolder')
+        self.assertFalse(myfolder.exists())
+        myfolder.create()
+        self.assertTrue(myfolder.exists())
+        self.assertTrue(myfolder.is_folder())
+
+    @testutils.assert_raises(RopeError)
+    def test_exception_when_creating_twice(self):
+        myfile = self.project.get_file('myfile.txt')
+        myfile.create()
+        myfile.create()
+
+    @testutils.assert_raises(RopeError)
+    def test_exception_when_parent_does_not_exist(self):
+        myfile = self.project.get_file('myfolder/myfile.txt')
+        myfile.create()
 
 
 class ResourceObserverTest(unittest.TestCase):

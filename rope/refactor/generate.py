@@ -2,18 +2,21 @@ from rope.base import change, codeanalyze, pyobjects
 from rope.refactor import sourceutils
 
 
-class GenerateVariable(object):
+class _Generate(object):
 
     def __init__(self, project, resource, offset):
+        self.project = project
         self.insertion_location = _InsertionLocation(project.pycore,
                                                      resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
 
     def get_changes(self):
-        changes = change.ChangeSet('Generate Variable %s' % self.name)
+        changes = change.ChangeSet('Generate %s <%s>' %
+                                   (self._get_element_kind(), self.name))
         indents = self.insertion_location.get_scope_indents()
-        definition = sourceutils.fix_indentation('%s = None\n' % self.name,
-                                                 indents)
+        blanks = self.insertion_location.get_blank_lines()
+        base_definition = sourceutils.fix_indentation(self._get_element(), indents)
+        definition = '\n' * blanks[0] + base_definition + '\n' * blanks[1]
 
         resource = self.insertion_location.get_insertion_resource()
         start, end = self.insertion_location.get_insertion_offsets()
@@ -27,6 +30,59 @@ class GenerateVariable(object):
     def get_location(self):
         return (self.insertion_location.get_insertion_resource(),
                 self.insertion_location.get_insertion_lineno())
+
+    def _get_element_kind(self):
+        raise NotImplementedError()
+
+    def _get_element(self):
+        raise NotImplementedError()
+
+
+class GenerateVariable(_Generate):
+
+    def _get_element(self):
+        return '%s = None\n' % self.name
+
+    def _get_element_kind(self):
+        return 'Class'
+
+
+class GenerateClass(_Generate):
+
+    def _get_element(self):
+        return 'class %s(object):\n    pass\n' % self.name
+
+    def _get_element_kind(self):
+        return 'Class'
+
+
+class GenerateModule(_Generate):
+
+    def get_changes(self):
+        package = self.insertion_location.get_package()
+        changes = change.ChangeSet('Generate Module <%s>' % self.name)
+        changes.add_change(change.CreateFile(package, '%s.py' % self.name))
+        return changes
+
+    def get_location(self):
+        package = self.insertion_location.get_package()
+        return (package.get_child('%s.py' % self.name) , 1)
+
+
+class GeneratePackage(_Generate):
+
+    def get_changes(self):
+        package = self.insertion_location.get_package()
+        changes = change.ChangeSet('Generate Package <%s>' % self.name)
+        changes.add_change(change.CreateFolder(package, '%s' % self.name))
+        child = self.project.get_folder(package.path + '/' + self.name)
+        changes.add_change(change.CreateFile(child, '__init__.py'))
+        return changes
+
+    def get_location(self):
+        package = self.insertion_location.get_package()
+        child = package.get_child(self.name)
+        return (child.get_child('__init__.py') , 1)
 
 
 class _InsertionLocation(object):
@@ -89,3 +145,21 @@ class _InsertionLocation(object):
             return 0
         return sourceutils.get_indents(self.goal_pymodule.lines,
                                        self.goal_scope.get_start()) + 4
+
+    def get_blank_lines(self):
+        if self.goal_scope.get_kind() == 'Module':
+            base_blanks = 2
+            if self.goal_pymodule.source_code.strip() == '':
+                base_blanks = 0
+        if self.goal_scope.get_kind() == 'Class':
+            base_blanks = 1
+        if self.goal_scope.get_kind() == 'Function':
+            base_blanks = 0
+        if self.goal_scope == self.source_scope:
+            return (0, base_blanks)
+        return (base_blanks, 0)
+
+    def get_package(self):
+        primary = self.primary
+        if primary and isinstance(primary.get_object(), pyobjects.PyPackage):
+            return primary.get_object().get_resource()
