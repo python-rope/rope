@@ -76,9 +76,6 @@ Stories
 * Handling the return type of ``yield`` keyword
 
 
-* Finding similar statements when extracting variable/method
-
-
 * Encapsulate field using properties
 
 
@@ -101,9 +98,6 @@ Stories
 
 
 * Renaming similarly named variables
-
-
-* Inlining static methods
 
 
 * Basic code formatting; correcting blank lines
@@ -133,10 +127,22 @@ Stories
 * Inferring the object list comprehensions or generator expressions hold
 
 
-* Moving `staticmethod`\s
+* Supporting modules without source code
+
+
+* Finding similar statements when extracting variable/method
 
 
 > Public Release 0.5m4 : April 1, 2007
 
 
-* Supporting modules without source code
+* Registers for holding locations and texts
+
+
+* Inlining `staticmethod`\s
+
+
+* Moving `staticmethod`\s
+
+
+* Generate python elements

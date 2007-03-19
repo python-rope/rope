@@ -60,7 +60,6 @@ most promising ones.
 Hot Topics
 ==========
 
-* `Better SOI`_
 
 
 To Be Discussed
@@ -87,18 +86,19 @@ new feature to rope to perform enhanced SOI.  Rope analyzes all
 function calls in a module and saves the information in
 `rope.base.oi.callinfo.CallInforManager` class.
 
-I don't know how often and when to scan a module for SOI.  Maybe before
-``0.5`` release, rope only performs SOI when when the user askes; just
-like DOI.  Performing it automatically requires it to be efficient.  So
-later, after using it for some time, we'll decide about that.
+I don't know how often and when to scan a module for SOI.  Maybe
+before ``0.5`` release, rope only performs SOI when when the user
+askes; just like DOI.  Performing it automatically requires it to be
+efficient.  So later, after using it for some time, we'll decide about
+that.
 
 
 Returned Object SOI
 -------------------
 
 Since we're passed the objects parameters hold, we can perform a
-better returned object SOI.  We can do that by giving parameter objects
-passed and infer the object of local names once more.
+better returned object SOI.  We can do that by giving parameter
+objects passed and infer the object of local names once more.
 
 Actually we have to perform two things.  We have to ask scope
 `PyName`\s to forget their concluded data and change the parameters to
@@ -119,8 +119,8 @@ Function Scopes
 ---------------
 
 Another issue for implementing this feature is that function scope
-variable types are dependant on the type of the parameters and
-should change.  This issue seem to have some relations with implicit
+variable types are dependant on the type of the parameters and should
+change.  This issue seem to have some relations with implicit
 interfaces.
 
 These two problems(in the above section) points us to treating
@@ -130,40 +130,6 @@ temporary place.
 
 The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
-
-
-Holding Per Name Information
-============================
-
-We can change our object DB to add this feature.::
-
-  objectdb.add_per_object(scope, name, function_name, parameters)
-
-* Not ignoring the first argument for builtin types
-
-This feature has two aspects:
-
-When analyzing a module we should save per name information and when
-getting the object we should use those information.  The main reason
-for implementing this feature is supporting builtin container types.
-They should be untyped and ask `callinfo` about that.
-
-Consider analyzing ``a_list.append(x)``.  We know that we should hold
-information about this call; since `list.append()` function says so
-(We can indicate that by checking if it is an instance of
-`BuiltinFunction` and the method `BuiltinFunction.is_per_object()`
-return `True`).  So when we see this method call we add information
-to our `callinfo` DB the same way as described above.
-
-Now consider the time we need to know what object a container holds.
-We want to find out the type of `a_var` in ``a_var = a_list.pop()``.
-`list.pop()` knows that there might be useful information in our
-`callinfo` so it tries to retrieve these information.  It does so by
-calling `Arguments.get_instance_pyname()`.  Now that we have it, we
-can call `CallInfoManager.get_per_instance(scope, name)`.  This
-requires `list` types not to have explict holding types.
-
-* We do these only for containers with unknowns; not for ``[C()]``
 
 
 Enhancing `CallInfoManager`
@@ -176,6 +142,9 @@ Enhancing `CallInfoManager`
 * Changing `callinfo` to match not exactly the same but similar args
 * Using `sqlite3` to prevent holding information in memory? mocks?
 * Saving `AbstractXxx`
+* Better per name data holding in `callinfo`
+* Not overwriting useful per object data in `callinfo`
+* Some `self`\s are unknown!
 
 
 Invalidating Information
@@ -244,7 +213,7 @@ We can take two approaches:
 * Using `sqlite3`:
 
   This will solve both problems but requires having `sqlite3`.
-  Fortunately it is included in standard library since `2.5`.
+  Fortunately it is included in standard library since ``2.5``.
 
 Saving object data requires having a good mechanisms for invalidating
 information and testing.
@@ -254,25 +223,76 @@ Generate Element
 ================
 
 * Generate variable or field
-* Generate function or method
 * Generate class
+* Generate function or method
 * Generate module
 * Generate package
 
 We should choose a good prefix:
 
-* generate; ``C-c g``
-* generate; ``C-c n``
+* generate; ``C-c g``; it is already used for goto definition
+* generate; ``C-c G``
+* generate, new; ``C-c n``
+* generate; ``C-c r g``
 * generate; ``C-c 1``
-* new; ``C-c n``
 * make; ``C-c m``
-* set up; ``C-c s``
-* stub; ``C-c s``
 * fix; ``C-c f``
 * create; ``C-c c``
-* build; ``C-c b``
-* produce; ``C-c p``
-* dummy; ``C-c d``
+
+
+Where To Insert the definition
+------------------------------
+
+That depends on the scope and the kind of element.  But a general
+solution would be to:
+
+* For local elements(Where primary is ``None`` or points to the
+  current scope) insert the definition just before the usage.
+* For elements accessed from other scopes insert the definition
+  at the end of that scope.
+
+
+Issues
+------
+
+In situations like::
+
+  def f():
+      print a_var
+
+calling generate variable should generate a local variable I believe.
+But having an option to generate elements in global scopes seems a
+good idea.
+
+
+Supporting Registers
+====================
+
+How registers can be used?
+
+* Holding texts
+* Holding document locations
+
+Issues:
+
+* Should they be global or per buffer?
+* Should they be saved across sessions?
+
+Keys:
+
+Unfortunately ``C-x r`` is already used for redoing changes.  We can
+use one of these instead:
+
+* ``C-x m``: memory
+* ``C-x R``: registers
+* ``C-x t``: store
+
+* ``s``: save string
+* ``i``: insert string
+
+* ``m``: bookmark location
+* ``b``: load bookmark
+* ``l``: list bookmarks
 
 
 Better Concluded Data
@@ -502,35 +522,6 @@ the source code.  In futures some of this restrictions might be removed.
 
 Object Inference Issues
 =======================
-
-
-Better Object Inference
------------------------
-
-Currently rope's object inference mechanisms are simple and there are
-many situations that they are of no use:
-
-* A dynamic type inference saves the return types of methods based on
-  their parameters
-* We use a simple static type inference that:
-
-  * Follows assignments
-  * Checks the returned ASTs
-  * Uses method return value and parameter information gained by DOI
-  * Supports builtin types and containers in a limited way
-
-We are very interested in supporting:
-
-* Implicit interfaces
-* Better support for container types based on insertions to them
-
-Possible alternatives:
-
-* Saving the type of local variables when exiting a scope
-* Having a set of functions to record the place they are called
-* Having a flag that lets us save information per instance
-* Saving the result of every call
-* Using static type inference algorithms
 
 
 Rejecting Smalltalk `RefactoringBrowser` Approach

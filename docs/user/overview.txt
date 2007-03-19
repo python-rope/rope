@@ -416,6 +416,106 @@ Basic support for builtin types::
       #key.${codeassist}
       #value.${codeassist}
 
+Enhanced static returned object inference::
+
+    class C(object):
+
+        def c_func(self):
+            return ['']
+
+    def a_func(arg):
+        return arg.c_func()
+
+    a_var = a_func(C)
+
+Here rope knows that the type of a_var is a `list` that holds `str`\s.
+
+Supporting generator functions::
+
+  class C(object):
+      pass
+
+  def a_generator():
+      yield C()
+
+
+  for c in a_generator():
+      a_var = c
+
+Here the objects `a_var` and `c` hold are known.
+
+Another thing that has been added is SOI analysis (Available in
+``Edit`` menu or by using ``C-c x s``).  It analyzes a module for
+finding useful object information.  Currently it is used only when the
+user askes (Just like DOI), but in future that might change.
+
+Many kinds of information is collected during SOI like per name data
+for builtin container types::
+
+  l1 = [C()]
+  var1 = l1.pop()
+
+  l2 = []
+  l2.append(C())
+  var2 = l2.pop()
+
+Here rope knowns the type of `var1` without doing anything.  But for
+knowing the type of `var2` we need to analyze the items added to `l2`
+which might happen in other modules.  Rope can find out that by
+running SOI analysis on this module.
+
+You might be wondering is there any reason for using DOI instead of
+SOI.  The answer is that DOI is more accurate and handles complex and
+dynamic situations.  For example in::
+
+  def f(arg):
+      return eval(arg)
+
+  a_var = f('C')
+
+SOI can no way conclude the object `a_var` holds but it is really
+trivial for DOI.  What's more SOI analyzes calls only in one module
+while DOI analyzes any call that happens when running a module.  That
+is for achieving the same result as DOI you might need to run SOI on
+more than one module and more than once (not considering dynamic
+situations.) One advantage of SOI is that it is much faster than DOI.
+
+Many enhancements to rope's object inference has been planned and till
+``0.5`` release most of them will be implemented.  I'll write more
+about them in future releases.
+
+'Rename when unsure' option has been added to rename refactoring.  This
+option tells rope to rename when it doesn't know whether it is an exact
+match or not.  For example after renaming `C.a_func` when the
+'rename when unsure' option is set in::
+
+  class C(object):
+
+      def a_func(self):
+          pass
+
+  def a_func(arg):
+      arg.a_func()
+
+  C().a_func()
+  
+we would have::
+
+  class C(object):
+
+      def new_func(self):
+          pass
+
+  def a_func(arg):
+      arg.new_func()
+
+  C().new_func()
+
+Note that the global `a_func` was not renamed because we are sure that
+it is not a match.  But when using this option there might be some
+unexpected renames.  So only use this option when the name is not
+another python defined elements.
+
 
 Dynamic Object Inference
 ========================

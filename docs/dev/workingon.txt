@@ -1,22 +1,23 @@
-Small Stories
-=============
+Generate Element
+================
 
-- Properties and passing arguments
-- Removing args' default for `AbstractFunction.get_returned_value()`
+- `get_location()`
+- Removing ``pass`` when adding the first entry to a class
 
-* Remove duplication between `Evaluator` and `SOIVisitor`
-* `__setslice__`?
-* Moving `Arguments`, `ObjectArguments` and `_CallContext`;
-  `rope.base.args` or `callcontext` module
+* Handling blank lines
+* Generating globals
+* Blanks before and after
+* A class with a single pass
+* Adding `generatetest` to testsuite
+* Generating variables inside packages
+* Generating methods
+* Generating `staticmethod`\s
+* Error: already exists
+* Error: cannot be determined
+* Error: not a package
 
+* Recursive SOI; Go where the calls go
 * Adding an option not to collect per name information
-* Better per name data holding in `callinfo`
-* Not overwriting useful per object data in `callinfo`
-
-* Some `self`\s are unknown!
-* Removing ``pass`` when introducing factory for empty class
-
-* Registers for holding places in buffers; names or letters?
 * Handling lists in fill paragraph
 * Evaluate function parameter defaults in staticoi?
 * Adding 'do when unsure' to all refactorings?
@@ -28,6 +29,10 @@ Remaining Small Stories
 
 Base:
 
+* Removing ``pass`` when introducing factory for empty classes
+* `__setslice__` for per name information?
+* Moving `Arguments`, `ObjectArguments` and `_CallContext`;
+  `rope.base.args` or `callcontext` module
 * ``enable_doi`` config
 * Sorting names in from import list
 * When running `inlinetest` modules we get
