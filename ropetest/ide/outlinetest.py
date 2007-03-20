@@ -1,9 +1,10 @@
 import os
 import unittest
 
-from rope.ide.outline import PythonOutline
 from rope.base.project import Project
+from rope.ide.outline import PythonOutline
 from ropetest import testutils
+
 
 class OutlineTest(unittest.TestCase):
 

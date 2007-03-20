@@ -1,8 +1,9 @@
 import unittest
 
 import rope.base.project
-import ropetest.testutils
-from rope.refactor import generate
+from rope.base import exceptions
+from ropetest import testutils
+from rope.ide import generate
 
 
 class GenerateTest(unittest.TestCase):
@@ -10,7 +11,7 @@ class GenerateTest(unittest.TestCase):
     def setUp(self):
         super(GenerateTest, self).setUp()
         self.project_root = 'sample_project'
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         self.project = rope.base.project.Project(self.project_root)
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod1')
@@ -18,7 +19,7 @@ class GenerateTest(unittest.TestCase):
         self.pkg = self.pycore.create_package(self.project.root, 'pkg')
 
     def tearDown(self):
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_recursively(self.project_root)
         super(GenerateTest, self).tearDown()
 
     def _get_generate(self, offset):
@@ -32,6 +33,9 @@ class GenerateTest(unittest.TestCase):
 
     def _get_generate_package(self, offset):
         return generate.GeneratePackage(self.project, self.mod, offset)
+
+    def _get_generate_function(self, offset):
+        return generate.GenerateFunction(self.project, self.mod, offset)
 
     def test_getting_location(self):
         code = 'a_var = name\n'
@@ -120,6 +124,35 @@ class GenerateTest(unittest.TestCase):
         pkg2 = self.pkg.get_child('pkg2')
         init = pkg2.get_child('__init__.py')
         self.assertEquals((init, 1), generator.get_location())
+
+    def test_generating_methods(self):
+        code = 'a_func()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('a_func')).get_changes()
+        self.project.do(changes)
+        self.assertEquals('def a_func():\n    pass\n\n\na_func()\n',
+                          self.mod.read())
+
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_generating_modules_cannot_be_found(self):
+        code = 'mod\n'
+        self.mod.write(code)
+        generator = self._get_generate_module(code.rindex('mod'))
+        self.project.do(generator.get_changes())
+        mod = self.pkg.get_child('mod.py')
+        self.assertEquals((mod, 1), generator.get_location())
+
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_generating_variable_already_exists(self):
+        code = 'b = 1\nc = b\n'
+        self.mod.write(code)
+        changes = self._get_generate(code.index('b')).get_changes()
+
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_generating_variable_primary_cannot_be_determined(self):
+        code = 'c = can_not_be_found.b\n'
+        self.mod.write(code)
+        changes = self._get_generate(code.rindex('b')).get_changes()
 
 
 if __name__ == '__main__':

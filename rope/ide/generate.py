@@ -1,4 +1,4 @@
-from rope.base import change, codeanalyze, pyobjects
+from rope.base import change, codeanalyze, pyobjects, exceptions, pynames
 from rope.refactor import sourceutils
 
 
@@ -9,6 +9,15 @@ class _Generate(object):
         self.insertion_location = _InsertionLocation(project.pycore,
                                                      resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
+        self._check_exceptional_conditions()
+
+    def _check_exceptional_conditions(self):
+        if self.insertion_location.element_already_exists():
+            raise exceptions.RefactoringError(
+                'Element <%s> already exists.' % self.name)
+        if not self.insertion_location.primary_is_found():
+            raise exceptions.RefactoringError(
+                'Cannot determine the scope <%s> should be defined in.' % self.name)
 
     def get_changes(self):
         changes = change.ChangeSet('Generate %s <%s>' %
@@ -36,6 +45,15 @@ class _Generate(object):
 
     def _get_element(self):
         raise NotImplementedError()
+
+
+class GenerateFunction(_Generate):
+
+    def _get_element(self):
+        return 'def %s():\n    pass\n' % self.name
+
+    def _get_element_kind(self):
+        return 'Function'
 
 
 class GenerateVariable(_Generate):
@@ -109,6 +127,8 @@ class _InsertionLocation(object):
 
     def _get_goal_module(self):
         scope = self._get_goal_scope()
+        if scope is None:
+            return
         while scope.parent is not None:
             scope = scope.parent
         return scope.pyobject
@@ -163,3 +183,13 @@ class _InsertionLocation(object):
         primary = self.primary
         if primary and isinstance(primary.get_object(), pyobjects.PyPackage):
             return primary.get_object().get_resource()
+        raise exceptions.RefactoringError(
+            'A module/package can be only created in a package.')
+
+    def primary_is_found(self):
+        return self.goal_scope is not None
+
+    def element_already_exists(self):
+        if self.pyname is None or isinstance(self.pyname, pynames.UnboundName):
+            return False
+        return True

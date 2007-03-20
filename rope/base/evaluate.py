@@ -17,8 +17,10 @@ class StatementEvaluator(object):
 
     def visitGetattr(self, node):
         pyname = get_statement_result(self.scope, node.expr)
+        if pyname is None:
+            pyname = rope.base.pynames.UnboundName()
         self.old_result = pyname
-        if pyname is not None and pyname.get_object() is not None:
+        if pyname.get_object() != rope.base.pyobjects.get_unknown():
             try:
                 self.result = pyname.get_object().get_attribute(node.attrname)
             except rope.base.exceptions.AttributeNotFoundError:

@@ -1,9 +1,10 @@
-import unittest
-import traceback
 import imp
-import sys
 import os
+import sys
+import traceback
+import unittest
 import xmlrpclib
+
 
 class TestResultProxy(unittest.TestResult):
 

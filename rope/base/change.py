@@ -121,36 +121,37 @@ class MoveResource(Change):
         return [self.old_resource, self.new_resource]
 
 
-class _CreateResource(Change):
+class CreateResource(Change):
 
-    def __init__(self, parent, name):
-        self.parent = parent
-        self.name = name
-        self.new_resource = None
-        self.operations = self.parent.project.operations
+    def __init__(self, resource):
+        self.resource = resource
+        self.operations = self.resource.project.operations
+
+    def do(self):
+        self.operations.create(self.resource)
 
     def undo(self):
-        self.operations.remove(self.new_resource)
+        self.operations.remove(self.resource)
 
     def __str__(self):
-        return 'Create <%s>' % (self.parent.path + '/' + self.name)
+        return 'Create Resource <%s>' % (self.resource.project)
 
     def get_changed_resources(self):
-        return [self.new_resource]
+        return [self.resource]
 
 
-class CreateFolder(_CreateResource):
+class CreateFolder(CreateResource):
 
-    def do(self):
-        self.new_resource = self.operations.create_folder(self.parent,
-                                                          self.name)
+    def __init__(self, parent, name):
+        resource = parent.project.get_folder(parent.path + '/' + name)
+        super(CreateFolder, self).__init__(resource)
 
 
-class CreateFile(_CreateResource):
+class CreateFile(CreateResource):
 
-    def do(self):
-        self.new_resource = self.operations.create_file(self.parent,
-                                                        self.name)
+    def __init__(self, parent, name):
+        resource = parent.project.get_file(parent.path + '/' + name)
+        super(CreateFile, self).__init__(resource)
 
 
 class RemoveResource(Change):
@@ -193,27 +194,13 @@ class _ResourceOperations(object):
         for observer in list(self.project.observers):
             observer.resource_removed(resource, new_resource)
 
-    def create_file(self, folder, file_name):
-        if folder.path:
-            file_path = folder.path + '/' + file_name
+    def create(self, resource):
+        if resource.is_folder():
+            self._create_folder(resource.path)
         else:
-            file_path = file_name
-        self._create_file(file_path)
-        child = folder.get_child(file_name)
+            self._create_file(resource.path)
         for observer in list(self.project.observers):
-            observer.resource_changed(child)
-        return child
-
-    def create_folder(self, folder, folder_name):
-        if folder.path:
-            folder_path = folder.path + '/' + folder_name
-        else:
-            folder_path = folder_name
-        self._create_folder(folder_path)
-        child = folder.get_child(folder_name)
-        for observer in list(self.project.observers):
-            observer.resource_changed(child)
-        return child
+            observer.resource_changed(resource)
 
     def remove(self, resource):
         self.fscommands.remove(resource.real_path)
