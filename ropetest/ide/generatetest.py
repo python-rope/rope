@@ -115,6 +115,7 @@ class GenerateTest(unittest.TestCase):
         self.project.do(generator.get_changes())
         mod = self.pkg.get_child('mod.py')
         self.assertEquals((mod, 1), generator.get_location())
+        self.assertEquals('import pkg.mod\npkg.mod\n', self.mod.read())
 
     def test_generating_packages(self):
         code = 'import pkg\npkg.pkg2\n'
@@ -124,6 +125,7 @@ class GenerateTest(unittest.TestCase):
         pkg2 = self.pkg.get_child('pkg2')
         init = pkg2.get_child('__init__.py')
         self.assertEquals((init, 1), generator.get_location())
+        self.assertEquals('import pkg.pkg2\npkg.pkg2\n', self.mod.read())
 
     def test_generating_methods(self):
         code = 'a_func()\n'
@@ -133,14 +135,14 @@ class GenerateTest(unittest.TestCase):
         self.assertEquals('def a_func():\n    pass\n\n\na_func()\n',
                           self.mod.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
-    def test_generating_modules_cannot_be_found(self):
+    def test_generating_modules_with_empty_primary(self):
         code = 'mod\n'
         self.mod.write(code)
         generator = self._get_generate_module(code.rindex('mod'))
         self.project.do(generator.get_changes())
-        mod = self.pkg.get_child('mod.py')
+        mod = self.project.root.get_child('mod.py')
         self.assertEquals((mod, 1), generator.get_location())
+        self.assertEquals('import mod\nmod\n', self.mod.read())
 
     @testutils.assert_raises(exceptions.RefactoringError)
     def test_generating_variable_already_exists(self):
@@ -153,6 +155,13 @@ class GenerateTest(unittest.TestCase):
         code = 'c = can_not_be_found.b\n'
         self.mod.write(code)
         changes = self._get_generate(code.rindex('b')).get_changes()
+
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_generating_modules_when_already_exists(self):
+        code = 'mod2\n'
+        self.mod.write(code)
+        generator = self._get_generate_module(code.rindex('mod'))
+        self.project.do(generator.get_changes())
 
 
 if __name__ == '__main__':

@@ -36,6 +36,9 @@ Release Goals
 
 Metaphor: Better static object inference
 
+* Enhancing old refactorings
+* Enhancing UI
+
 
 Discussion
 ----------
@@ -221,23 +224,6 @@ information and testing.
 
 Generate Element
 ================
-
-* Generate variable or field
-* Generate class
-* Generate function or method
-* Generate module
-* Generate package
-
-We should choose a good prefix:
-
-* generate; ``C-c g``; it is already used for goto definition
-* generate; ``C-c G``
-* generate, new; ``C-c n``
-* generate; ``C-c r g``
-* generate; ``C-c 1``
-* make; ``C-c m``
-* fix; ``C-c f``
-* create; ``C-c c``
 
 
 Where To Insert the definition

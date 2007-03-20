@@ -56,6 +56,7 @@ class Core(object):
         """
         import rope.ui.fileactions
         import rope.ui.editactions
+        import rope.ui.sourceactions
         import rope.ui.codeactions
         import rope.ui.refactor
         import rope.ui.helpactions

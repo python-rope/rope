@@ -1,24 +1,19 @@
 Generate Element
 ================
 
-- Adding `CreateResource` that requires only one argument
-- Generating functions
-- Error: not a package
-- Error: already exists
-- Error: cannot be determined
-- Moving `generate` to `rope.ide`
-- Adding `ropetest.ide`
-- Adding `generatetest` to testsuite
-
-* Error: module already exists
-* Adding to UI
+- Adding `create_generate(kind)` factory
+- Adding ``Source`` menu
+- Adding to UI
+- Adding import for generate module/package when needed
+- Create package in the current source folder when not specified
+- Error: module already exists
 
 * Generating arguments
 * Generating methods
 * Generating `staticmethod`\s
 * Generating constructors
-
-* Adding `generate(kind)` factory?
+* Updating ``index.txt``
+* Updating ``overview.txt``
 
 * Recursive SOI; Go where the calls go
 * Adding an option not to collect per name information

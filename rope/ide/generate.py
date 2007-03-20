@@ -1,11 +1,24 @@
 from rope.base import change, codeanalyze, pyobjects, exceptions, pynames
 from rope.refactor import sourceutils
+from rope.refactor import importutils
+
+
+def create_generate(kind, project, resource, offset):
+    """A factory for creating `Generate` objects
+
+    `kind` can be ``variable``, ``function``, ``class``, ``module``
+    or ``package``.
+
+    """
+    generate = eval('Generate' + kind.title())
+    return generate(project, resource, offset)
 
 
 class _Generate(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
+        self.resource = resource
         self.insertion_location = _InsertionLocation(project.pycore,
                                                      resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
@@ -79,7 +92,13 @@ class GenerateModule(_Generate):
     def get_changes(self):
         package = self.insertion_location.get_package()
         changes = change.ChangeSet('Generate Module <%s>' % self.name)
-        changes.add_change(change.CreateFile(package, '%s.py' % self.name))
+        new_resource = self.project.get_file('%s/%s.py' % (package.path, self.name))
+        if new_resource.exists():
+            raise exceptions.RefactoringError(
+                'Module <%s> already exists' % new_resource.path)
+        changes.add_change(change.CreateResource(new_resource))
+        changes.add_change(_add_import_to_module(
+                           self.project.get_pycore(), self.resource, new_resource))
         return changes
 
     def get_location(self):
@@ -92,7 +111,13 @@ class GeneratePackage(_Generate):
     def get_changes(self):
         package = self.insertion_location.get_package()
         changes = change.ChangeSet('Generate Package <%s>' % self.name)
-        changes.add_change(change.CreateFolder(package, '%s' % self.name))
+        new_resource = self.project.get_folder('%s/%s' % (package.path, self.name))
+        if new_resource.exists():
+            raise exceptions.RefactoringError(
+                'Package <%s> already exists' % new_resource.path)
+        changes.add_change(change.CreateResource(new_resource))
+        changes.add_change(_add_import_to_module(
+                           self.project.get_pycore(), self.resource, new_resource))
         child = self.project.get_folder(package.path + '/' + self.name)
         changes.add_change(change.CreateFile(child, '__init__.py'))
         return changes
@@ -101,6 +126,16 @@ class GeneratePackage(_Generate):
         package = self.insertion_location.get_package()
         child = package.get_child(self.name)
         return (child.get_child('__init__.py') , 1)
+
+
+def _add_import_to_module(pycore, resource, imported):
+    pymodule = pycore.resource_to_pyobject(resource)
+    import_tools = importutils.ImportTools(pycore)
+    module_imports = import_tools.get_module_imports(pymodule)
+    module_name = importutils.get_module_name(pycore, imported)
+    new_import = importutils.NormalImport(((module_name, None), ))
+    module_imports.add_import(new_import)
+    return change.ChangeContents(resource, module_imports.get_changed_source())
 
 
 class _InsertionLocation(object):
@@ -181,7 +216,9 @@ class _InsertionLocation(object):
 
     def get_package(self):
         primary = self.primary
-        if primary and isinstance(primary.get_object(), pyobjects.PyPackage):
+        if self.primary is None:
+            return self.pycore.get_source_folders()[0]
+        if isinstance(primary.get_object(), pyobjects.PyPackage):
             return primary.get_object().get_resource()
         raise exceptions.RefactoringError(
             'A module/package can be only created in a package.')
