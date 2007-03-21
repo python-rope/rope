@@ -127,7 +127,7 @@ class GenerateTest(unittest.TestCase):
         self.assertEquals((init, 1), generator.get_location())
         self.assertEquals('import pkg.pkg2\npkg.pkg2\n', self.mod.read())
 
-    def test_generating_methods(self):
+    def test_generating_function(self):
         code = 'a_func()\n'
         self.mod.write(code)
         changes = self._get_generate_function(code.index('a_func')).get_changes()
@@ -162,6 +162,55 @@ class GenerateTest(unittest.TestCase):
         self.mod.write(code)
         generator = self._get_generate_module(code.rindex('mod'))
         self.project.do(generator.get_changes())
+
+    def test_generating_static_methods(self):
+        code = 'class C(object):\n    pass\nC.a_func()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('a_func')).get_changes()
+        self.project.do(changes)
+        self.assertEquals(
+            'class C(object):\n\n    @staticmethod\n    def a_func():\n        pass\nC.a_func()\n',
+            self.mod.read())
+
+    def test_generating_methods(self):
+        code = 'class C(object):\n    pass\nc = C()\nc.a_func()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('a_func')).get_changes()
+        self.project.do(changes)
+        self.assertEquals(
+            'class C(object):\n\n    def a_func(self):\n        pass\n'
+            'c = C()\nc.a_func()\n',
+            self.mod.read())
+
+    def test_generating_constructors(self):
+        code = 'class C(object):\n    pass\nc = C()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.rindex('C')).get_changes()
+        self.project.do(changes)
+        self.assertEquals(
+            'class C(object):\n\n    def __init__(self):\n        pass\n'
+            'c = C()\n',
+            self.mod.read())
+
+    def test_generating_calls(self):
+        code = 'class C(object):\n    pass\nc = C()\nc()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.rindex('c')).get_changes()
+        self.project.do(changes)
+        self.assertEquals(
+            'class C(object):\n\n    def __call__(self):\n        pass\n'
+            'c = C()\nc()\n',
+            self.mod.read())
+
+    def test_generating_calls_in_other_modules(self):
+        self.mod2.write('class C(object):\n    pass\n')
+        code = 'import mod2\nc = mod2.C()\nc()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.rindex('c')).get_changes()
+        self.project.do(changes)
+        self.assertEquals(
+            'class C(object):\n\n    def __call__(self):\n        pass\n',
+            self.mod2.read())
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ class Highlighting(object):
         self.pattern = None
 
     def get_styles(self):
-        """Return the dictionary of styles used in highlighting texts by this highlighting"""
+        """Return the dictionary of styles used"""
 
     def highlights(self, text, start, end):
         """Generate highlighted ranges as (start, end, style) tuples"""

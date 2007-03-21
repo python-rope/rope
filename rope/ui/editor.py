@@ -68,12 +68,12 @@ class GraphicalEditor(object):
             self.text.tag_remove(style, start_index, end_index)
         start_offset = self.get_offset(start_index)
         end_offset = self.get_offset(end_index)
+        indexer = _OffsetToIndexCacher(self.text)
         for start, end, kind in self.highlighting.highlights(self.get_text(),
                                                              start_offset,
                                                              end_offset):
-            tag_start = start_index + ' +%dc' % (start - start_offset)
-            tag_end = start_index + ' +%dc' % (end - start_offset)
-            self.text.tag_add(kind, tag_start, tag_end)
+            self.text.tag_add(kind, indexer.get_index(start),
+                              indexer.get_index(end))
 
     def _bind_keys(self):
         self.text.bind('<Alt-f>', lambda event: self.next_word())
@@ -631,17 +631,15 @@ class GraphicalEditor(object):
         text = self.get_text()
         start = 0
         end = len(text)
-        start_index = '1.0'
+        indexer = _OffsetToIndexCacher(self.text)
         while start < end:
             mid = (start + end) / 2
-            mid_index = self.text.index(start_index + '+%dc' % (mid - start))
-            if self.text.compare(mid_index, '>', index):
+            if self.text.compare(indexer.get_index(mid), '>', index):
                 end = mid - 1
-            elif self.text.compare(mid_index, '==', index):
+            elif self.text.compare(indexer.get_index(mid), '==', index):
                 return mid
             else:
                 start = mid + 1
-                start_index = mid_index + '+1c'
         return start
 
     def get_offset(self, get_offset):
@@ -769,6 +767,7 @@ class EditorFactory(object):
     def create(self):
         pass
 
+
 class GraphicalEditorFactory(EditorFactory):
 
     def __init__(self, frame, **kwds):
@@ -804,6 +803,33 @@ class GraphicalLineEditor(object):
 
     def insert_to_line(self, line_number, text):
         self.editor.text.insert('%d.0' % line_number, text)
+
+
+class _OffsetToIndexCacher(object):
+    """A faster way to convert offset to `Tkinter` index
+
+    This should not be used if the text changes during calls to
+    `get_index()` method.
+
+    """
+    def __init__(self, editor):
+        self.editor = editor
+        self.index = '1.0'
+        self.offset = 0
+
+    def get_index(self, offset):
+        diff = offset - self.offset
+        if diff == 0:
+            return self.index
+        if diff > 0:
+            new_index = self.index + ' +%dc' % diff
+        else:
+            new_index = self.index + ' %dc' % diff
+        if abs(diff) > 1:
+            new_index = self.editor.index(new_index)
+            self.index = new_index
+            self.offset = offset
+        return new_index
 
 
 class KillRingManager(object):

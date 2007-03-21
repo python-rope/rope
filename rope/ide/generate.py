@@ -19,29 +19,31 @@ class _Generate(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.resource = resource
-        self.insertion_location = _InsertionLocation(project.pycore,
-                                                     resource, offset)
-        self.name = codeanalyze.get_name_at(resource, offset)
+        self.info = self._generate_info(project, resource, offset)
+        self.name = self.info.get_name()
         self._check_exceptional_conditions()
 
+    def _generate_info(self, project, resource, offset):
+        return _GenerationInfo(project.pycore, resource, offset)
+
     def _check_exceptional_conditions(self):
-        if self.insertion_location.element_already_exists():
+        if self.info.element_already_exists():
             raise exceptions.RefactoringError(
                 'Element <%s> already exists.' % self.name)
-        if not self.insertion_location.primary_is_found():
+        if not self.info.primary_is_found():
             raise exceptions.RefactoringError(
                 'Cannot determine the scope <%s> should be defined in.' % self.name)
 
     def get_changes(self):
         changes = change.ChangeSet('Generate %s <%s>' %
                                    (self._get_element_kind(), self.name))
-        indents = self.insertion_location.get_scope_indents()
-        blanks = self.insertion_location.get_blank_lines()
+        indents = self.info.get_scope_indents()
+        blanks = self.info.get_blank_lines()
         base_definition = sourceutils.fix_indentation(self._get_element(), indents)
         definition = '\n' * blanks[0] + base_definition + '\n' * blanks[1]
 
-        resource = self.insertion_location.get_insertion_resource()
-        start, end = self.insertion_location.get_insertion_offsets()
+        resource = self.info.get_insertion_resource()
+        start, end = self.info.get_insertion_offsets()
 
         collector = sourceutils.ChangeCollector(resource.read())
         collector.add_change(start, end, definition)
@@ -50,8 +52,8 @@ class _Generate(object):
         return changes
 
     def get_location(self):
-        return (self.insertion_location.get_insertion_resource(),
-                self.insertion_location.get_insertion_lineno())
+        return (self.info.get_insertion_resource(),
+                self.info.get_insertion_lineno())
 
     def _get_element_kind(self):
         raise NotImplementedError()
@@ -62,8 +64,19 @@ class _Generate(object):
 
 class GenerateFunction(_Generate):
 
+    def _generate_info(self, project, resource, offset):
+        return _FunctionGenerationInfo(project.pycore, resource, offset)
+
     def _get_element(self):
-        return 'def %s():\n    pass\n' % self.name
+        decorator = ''
+        args = ''
+        if self.info.is_static_method():
+            decorator = '@staticmethod\n'
+        if self.info.is_method() or self.info.is_constructor() or \
+           self.info.is_instance():
+            args = 'self'
+        definition = '%sdef %s(%s):\n    pass\n' % (decorator, self.name, args)
+        return definition
 
     def _get_element_kind(self):
         return 'Function'
@@ -75,7 +88,7 @@ class GenerateVariable(_Generate):
         return '%s = None\n' % self.name
 
     def _get_element_kind(self):
-        return 'Class'
+        return 'Variable'
 
 
 class GenerateClass(_Generate):
@@ -90,7 +103,7 @@ class GenerateClass(_Generate):
 class GenerateModule(_Generate):
 
     def get_changes(self):
-        package = self.insertion_location.get_package()
+        package = self.info.get_package()
         changes = change.ChangeSet('Generate Module <%s>' % self.name)
         new_resource = self.project.get_file('%s/%s.py' % (package.path, self.name))
         if new_resource.exists():
@@ -102,14 +115,14 @@ class GenerateModule(_Generate):
         return changes
 
     def get_location(self):
-        package = self.insertion_location.get_package()
+        package = self.info.get_package()
         return (package.get_child('%s.py' % self.name) , 1)
 
 
 class GeneratePackage(_Generate):
 
     def get_changes(self):
-        package = self.insertion_location.get_package()
+        package = self.info.get_package()
         changes = change.ChangeSet('Generate Package <%s>' % self.name)
         new_resource = self.project.get_folder('%s/%s' % (package.path, self.name))
         if new_resource.exists():
@@ -123,7 +136,7 @@ class GeneratePackage(_Generate):
         return changes
 
     def get_location(self):
-        package = self.insertion_location.get_package()
+        package = self.info.get_package()
         child = package.get_child(self.name)
         return (child.get_child('__init__.py') , 1)
 
@@ -138,7 +151,7 @@ def _add_import_to_module(pycore, resource, imported):
     return change.ChangeContents(resource, module_imports.get_changed_source())
 
 
-class _InsertionLocation(object):
+class _GenerationInfo(object):
 
     def __init__(self, pycore, resource, offset):
         self.pycore = pycore
@@ -147,9 +160,12 @@ class _InsertionLocation(object):
         self.source_pymodule = self.pycore.resource_to_pyobject(resource)
         finder = codeanalyze.ScopeNameFinder(self.source_pymodule)
         self.primary, self.pyname = finder.get_primary_and_pyname_at(offset)
-        self.goal_pymodule = self._get_goal_module()
+        self._init_fields()
+
+    def _init_fields(self):
         self.source_scope = self._get_source_scope()
         self.goal_scope = self._get_goal_scope()
+        self.goal_pymodule = self._get_goal_module(self.goal_scope)
 
     def _get_goal_scope(self):
         if self.primary is None:
@@ -160,8 +176,7 @@ class _InsertionLocation(object):
         elif isinstance(pyobject.get_type(), pyobjects.PyClass):
             return pyobject.get_type().get_scope()
 
-    def _get_goal_module(self):
-        scope = self._get_goal_scope()
+    def _get_goal_module(self, scope):
         if scope is None:
             return
         while scope.parent is not None:
@@ -230,3 +245,54 @@ class _InsertionLocation(object):
         if self.pyname is None or isinstance(self.pyname, pynames.UnboundName):
             return False
         return True
+
+    def get_name(self):
+        return codeanalyze.get_name_at(self.resource, self.offset)
+
+
+class _FunctionGenerationInfo(_GenerationInfo):
+
+    def _get_goal_scope(self):
+        if self.is_constructor():
+            return self.pyname.get_object().get_scope()
+        if self.is_instance():
+            return self.pyname.get_object().get_type().get_scope()
+        if self.primary is None:
+            return self._get_source_scope()
+        pyobject = self.primary.get_object()
+        if isinstance(pyobject, pyobjects.PyDefinedObject):
+            return pyobject.get_scope()
+        elif isinstance(pyobject.get_type(), pyobjects.PyClass):
+            return pyobject.get_type().get_scope()
+
+    def element_already_exists(self):
+        if self.pyname is None or isinstance(self.pyname, pynames.UnboundName):
+            return False
+        if self.get_name() not in self.goal_scope.get_names():
+            return False
+        return True
+
+    def is_static_method(self):
+        return self.primary is not None and \
+               isinstance(self.primary.get_object(), pyobjects.PyClass)
+
+    def is_method(self):
+        return self.primary is not None and \
+               isinstance(self.primary.get_object().get_type(), pyobjects.PyClass)
+
+    def is_constructor(self):
+        return self.pyname is not None and \
+               isinstance(self.pyname.get_object(), pyobjects.PyClass)
+
+    def is_instance(self):
+        if self.pyname is None:
+            return False
+        pyobject = self.pyname.get_object()
+        return isinstance(pyobject.get_type(), pyobjects.PyClass)
+
+    def get_name(self):
+        if self.is_constructor():
+            return '__init__'
+        if self.is_instance():
+            return '__call__'
+        return codeanalyze.get_name_at(self.resource, self.offset)

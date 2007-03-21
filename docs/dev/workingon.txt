@@ -1,18 +1,13 @@
 Generate Element
 ================
 
-- Adding `create_generate(kind)` factory
-- Adding ``Source`` menu
-- Adding to UI
-- Adding import for generate module/package when needed
-- Create package in the current source folder when not specified
-- Error: module already exists
+- Faster highlighting
+- Generating methods
+- Generating `staticmethod`\s
+- Generating constructors
+- Generating `__call__()`
 
 * Generating arguments
-* Generating methods
-* Generating `staticmethod`\s
-* Generating constructors
-* Updating ``index.txt``
 * Updating ``overview.txt``
 
 * Recursive SOI; Go where the calls go

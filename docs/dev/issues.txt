@@ -172,8 +172,8 @@ problems with this approach includes:
   * Files that no longer exist
   * Types that do not exist
 
-The need for invalidating data is felt more after saving object
-data to disk.
+The need for invalidating data is felt more after saving object data
+to disk.
 
 
 Fixing Small Changes
@@ -288,6 +288,8 @@ use one of these instead:
 * ``C-x m``: memory
 * ``C-x R``: registers
 * ``C-x t``: store
+
+Here are the keys for individual actions.
 
 * ``s``: save string
 * ``i``: insert string

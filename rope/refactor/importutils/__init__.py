@@ -4,8 +4,6 @@ This package provides tools for modifing module imports after
 refactorings or as a separate task.
 
 """
-
-
 import rope.base.evaluate
 from rope.refactor import occurrences, rename
 from rope.refactor.importutils import module_imports

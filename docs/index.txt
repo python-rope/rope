@@ -39,7 +39,8 @@ Features implemented so far:
 
 * Code-assists
 
-  * Go to definition
+  * Auto-completion
+  * Goto definition
   * Quick outline
   * Show PyDoc
   * Proposing templates in completions
@@ -51,11 +52,12 @@ Features implemented so far:
     * Change from imports to normal imports
     * Expand ``from ... import *`` imports
 
+  * Generating python elements
+
 * Editing and IDE tools
 
   * Python and reST highlighting
   * Multiple editers
-  * Auto-completion
   * Project file history
   * Basic SVN support using pysvn_ library
   * An emacs like keybinding
