@@ -1,7 +1,5 @@
-Generate Element
-================
-
-- Generating arguments
+Small Stories
+=============
 
 * Updating ``overview.txt``
 * Recursive SOI; Go where the calls go

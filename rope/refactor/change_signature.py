@@ -210,6 +210,16 @@ class ArgumentDefaultInliner(_ArgumentChanger):
 class ArgumentReorderer(_ArgumentChanger):
 
     def __init__(self, new_order):
+        """Construct an `ArgumentReorderer`
+
+        Note that the `new_order` is a list containing the new
+        position of parameters; not the position each parameter
+        is going to be moved to. (changed in ``0.5m4``)
+
+        For example changing ``f(a, b, c)`` to ``f(c, a, b)``
+        requires passing ``[2, 0, 1]`` and *not* ``[1, 2, 0]``.
+
+        """
         self.new_order = new_order
 
     def change_definition_info(self, definition_info):
