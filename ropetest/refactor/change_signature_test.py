@@ -346,6 +346,15 @@ class ChangeSignatureTest(unittest.TestCase):
             'def __init__(self, p):\n        super(B, self).__init__()\n',
             self.mod.read())
 
+    def test_redordering_arguments_reported_by_mft(self):
+        self.mod.write('def f(a, b, c):\n    pass\nf(1, 2, 3)\n')
+        signature = ChangeSignature(self.project, self.mod,
+                                    self.mod.read().rindex('f'))
+        signature.apply_changers(
+            [change_signature.ArgumentReorderer([1, 2, 0])]).do()
+        self.assertEquals('def f(b, c, a):\n    pass\nf(2, 3, 1)\n',
+                          self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()

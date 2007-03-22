@@ -214,7 +214,7 @@ class ArgumentReorderer(_ArgumentChanger):
 
     def change_definition_info(self, definition_info):
         new_args = list(definition_info.args_with_defaults)
-        for index, new_index in enumerate(self.new_order):
+        for new_index, index in enumerate(self.new_order):
             new_args[new_index] = definition_info.args_with_defaults[index]
         definition_info.args_with_defaults = new_args
 
