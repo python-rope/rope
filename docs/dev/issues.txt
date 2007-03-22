@@ -222,51 +222,6 @@ Saving object data requires having a good mechanisms for invalidating
 information and testing.
 
 
-Generate Element
-================
-
-
-Where To Insert the definition
-------------------------------
-
-That depends on the scope and the kind of element.  But a general
-solution would be to:
-
-* For local elements(Where primary is ``None`` or points to the
-  current scope) insert the definition just before the usage.
-* For elements accessed from other scopes insert the definition
-  at the end of that scope.
-
-
-Issues
-------
-
-In situations like::
-
-  def f():
-      print a_var
-
-calling generate variable should generate a local variable I believe.
-But having an option to generate elements in global scopes seems a
-good idea.
-
-
-Inserting Blank Lines
----------------------
-
-The blank lines inserted for an element depends on not only the
-element itself, but on the location is is being inserted, too.  Not
-thinking about the element inself the blank spaces can be specified
-so:
-
-* Module elements: 2 blank line
-* Class and function elements: 1 blank line
-
-But the trick here is that when we are insertion an element is the
-current scope these blank lines should be inserted at the end of the
-definition and otherwise it should be inserted at the beginning of it.
-
-
 Supporting Registers
 ====================
 
@@ -399,6 +354,7 @@ Getting ready for Python 3.0
 * Set literals and comprehension ``{1, 2, 3}`` and ``{x for x in range(10)}``
 * Renamed function attributes; ``f.func_whatever`` to ``f.__whatever__``
 * Use new function signature
+* Not using ``__cmp__``
 
 
 Having Virtual `PyModule`\s

@@ -231,13 +231,13 @@ class _ChangeCallsInModule(object):
         self._source = None
 
     def get_changed_module(self):
+        word_finder = codeanalyze.WordRangeFinder(self.source)
         change_collector = sourceutils.ChangeCollector(self.source)
         for occurrence in self.occurrence_finder.find_occurrences(self.resource):
             if not occurrence.is_called() and not occurrence.is_defined():
                 continue
             start, end = occurrence.get_primary_range()
-            begin_parens =  self.source.index('(', end)
-            end_parens = self._find_end_parens(self.source, begin_parens)
+            begin_parens, end_parens = word_finder.get_word_parens_range(end - 1)
             if occurrence.is_called():
                 primary, pyname = occurrence.get_primary_and_pyname()
                 changed_call = self.call_changer.change_call(
@@ -266,19 +266,6 @@ class _ChangeCallsInModule(object):
         if self._lines is None:
             self._lines = self.pymodule.lines
         return self._lines
-
-    def _find_end_parens(self, source, start):
-        index = start
-        open_count = 0
-        while index < len(source):
-            if source[index] == '(':
-                open_count += 1
-            if source[index] == ')':
-                open_count -= 1
-            if open_count == 0:
-                return index + 1
-            index += 1
-        return index
 
     source = property(_get_source)
     lines = property(_get_lines)

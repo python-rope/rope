@@ -1,21 +1,15 @@
 Generate Element
 ================
 
-- Faster highlighting
-- Generating methods
-- Generating `staticmethod`\s
-- Generating constructors
-- Generating `__call__()`
+- Generating arguments
 
-* Generating arguments
 * Updating ``overview.txt``
-
 * Recursive SOI; Go where the calls go
 * Adding an option not to collect per name information
 * Handling lists in fill paragraph
 * Evaluate function parameter defaults in staticoi?
 * Adding 'do when unsure' to all refactorings?
-* Profiling before ``0.5``
+* Profiling before ``0.5`` for occurrence finding and SOI
 
 
 Remaining Small Stories

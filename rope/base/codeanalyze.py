@@ -330,6 +330,36 @@ class WordRangeFinder(object):
         operation = self.source_code[next_char:current_char + 1]
         return operation
 
+    def get_primary_range(self, offset):
+        offset = max(0, offset - 1)
+        start = self._find_primary_start(offset)
+        end = self._find_word_end(offset) + 1
+        return (start, end)
+
+    def get_word_range(self, offset):
+        offset = max(0, offset - 1)
+        start = self._find_word_start(offset)
+        end = self._find_word_end(offset) + 1
+        return (start, end)
+
+    def get_word_parens_range(self, offset):
+        if self.is_a_function_being_called(offset) or \
+           self.is_a_class_or_function_name_in_header(offset):
+            end = self._find_word_end(offset)
+            start_parens = self.source_code.index('(', end)
+            index = start_parens
+            open_count = 0
+            while index < len(self.source_code):
+                if self.source_code[index] == '(':
+                    open_count += 1
+                if self.source_code[index] == ')':
+                    open_count -= 1
+                if open_count == 0:
+                    return (start_parens, index + 1)
+                index += 1
+            return (start_parens, index)
+        return (None, None)
+
 
 class ScopeNameFinder(object):
 

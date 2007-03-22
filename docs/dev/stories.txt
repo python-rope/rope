@@ -143,6 +143,3 @@ Stories
 
 
 * Moving `staticmethod`\s
-
-
-* Generate python elements

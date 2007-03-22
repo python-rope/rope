@@ -51,14 +51,10 @@ class Occurrence(object):
         self.offset = offset
 
     def get_word_range(self):
-        start = self.tools.word_finder._find_word_start(self.offset - 1)
-        end = self.tools.word_finder._find_word_end(self.offset - 1) + 1
-        return (start, end)
+        return self.tools.word_finder.get_word_range(self.offset)
 
     def get_primary_range(self):
-        start = self.tools.word_finder._find_primary_start(self.offset - 1)
-        end = self.tools.word_finder._find_word_end(self.offset - 1) + 1
-        return (start, end)
+        return self.tools.word_finder.get_primary_range(self.offset)
 
     def get_pyname(self):
         return self.tools.name_finder.get_pyname_at(self.offset)

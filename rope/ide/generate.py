@@ -1,6 +1,6 @@
 from rope.base import change, codeanalyze, pyobjects, exceptions, pynames
 from rope.refactor import sourceutils
-from rope.refactor import importutils
+from rope.refactor import importutils, functionutils
 
 
 def create_generate(kind, project, resource, offset):
@@ -69,13 +69,15 @@ class GenerateFunction(_Generate):
 
     def _get_element(self):
         decorator = ''
-        args = ''
+        args = []
         if self.info.is_static_method():
             decorator = '@staticmethod\n'
         if self.info.is_method() or self.info.is_constructor() or \
            self.info.is_instance():
-            args = 'self'
-        definition = '%sdef %s(%s):\n    pass\n' % (decorator, self.name, args)
+            args.append('self')
+        args.extend(self.info.get_passed_args())
+        definition = '%sdef %s(%s):\n    pass\n' % (decorator, self.name,
+                                                    ', '.join(args))
         return definition
 
     def _get_element_kind(self):
@@ -296,3 +298,30 @@ class _FunctionGenerationInfo(_GenerationInfo):
         if self.is_instance():
             return '__call__'
         return codeanalyze.get_name_at(self.resource, self.offset)
+
+    def get_passed_args(self):
+        result = []
+        source = self.source_pymodule.source_code
+        finder = codeanalyze.WordRangeFinder(source)
+        if finder.is_a_function_being_called(self.offset):
+            start, end = finder.get_primary_range(self.offset)
+            parens_start, parens_end = finder.get_word_parens_range(self.offset)
+            call = source[start:parens_end]
+            parser = functionutils._FunctionParser(call, False)
+            args, keywords = parser.get_parameters()
+            for arg in args:
+                if self._is_id(arg):
+                    result.append(arg)
+                else:
+                    result.append('arg%d' % len(result))
+            for name, value in keywords:
+                result.append(name)
+        return result
+
+    def _is_id(self, arg):
+        def id_or_underline(c):
+            return c.isalpha() or c == '_'
+        for c in arg:
+            if not id_or_underline(c) and not c.isdigit():
+                return False
+        return id_or_underline(arg[0])

@@ -212,6 +212,30 @@ class GenerateTest(unittest.TestCase):
             'class C(object):\n\n    def __call__(self):\n        pass\n',
             self.mod2.read())
 
+    def test_generating_function_handling_arguments(self):
+        code = 'a_func(1)\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('a_func')).get_changes()
+        self.project.do(changes)
+        self.assertEquals('def a_func(arg0):\n    pass\n\n\na_func(1)\n',
+                          self.mod.read())
+
+    def test_generating_function_handling_keyword_xarguments(self):
+        code = 'a_func(p=1)\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('a_func')).get_changes()
+        self.project.do(changes)
+        self.assertEquals('def a_func(p):\n    pass\n\n\na_func(p=1)\n',
+                          self.mod.read())
+
+    def test_generating_function_handling_arguments_better_naming(self):
+        code = 'a_var = 1\na_func(a_var)\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('a_func')).get_changes()
+        self.project.do(changes)
+        self.assertEquals('a_var = 1\ndef a_func(a_var):\n    pass\n\n\na_func(a_var)\n',
+                          self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()
