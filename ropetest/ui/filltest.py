@@ -80,10 +80,13 @@ class FillTest(unittest.TestCase):
         self.assertEquals('a b.  c d.',
                           self.fill.fill('a b.\nc d.'))
 
-    # TODO: Handling lists
-    def xxx_test_indented_broken_lines(self):
+    def test_handling_simple_unordered_lists(self):
         self.assertEquals('* simple\n  paragraph',
                           self.fill.fill('* simple paragraph'))
+
+    def test_handling_definition_lists(self):
+        self.assertEquals('name\n  value',
+                          self.fill.fill('name\n  value'))
 
 
 if __name__ == '__main__':

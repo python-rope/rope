@@ -71,9 +71,13 @@ class ActionContext(object):
     def _get_editing_context(self):
         return self.get_active_editor().get_editor().get_editing_context().editingtools
 
+    def _get_buffer_offset(self):
+        return self.editor.get_current_offset()
+
     project = property(_get_open_project)
     fileeditor = property(get_active_editor)
     editor = property(_get_active_editor_editor)
+    offset = property(_get_buffer_offset)
     resource = property(_get_active_editor_resource)
     editingtools = property(_get_editing_context)
 

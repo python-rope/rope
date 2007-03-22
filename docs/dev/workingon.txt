@@ -1,13 +1,16 @@
-Small Stories
-=============
+Location And Text Registers
+===========================
 
-* Updating ``overview.txt``
+- Adding offset attribute to `ActionContext`
+- Handling unordered and definition lists in fill paragraph
+
+* Extracting `SearchableList` from change buffer
+* Adding method to static method refactoring
 * Recursive SOI; Go where the calls go
 * Adding an option not to collect per name information
-* Handling lists in fill paragraph
 * Evaluate function parameter defaults in staticoi?
 * Adding 'do when unsure' to all refactorings?
-* Profiling before ``0.5`` for occurrence finding and SOI
+* Profiling before ``0.5rc1`` for occurrence finding and SOI
 
 
 Remaining Small Stories

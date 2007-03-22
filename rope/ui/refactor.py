@@ -103,10 +103,10 @@ class RenameDialog(RefactoringDialog):
 
     def __init__(self, context, title, is_local=False, current_module=False):
         resource = context.resource
-        editor = context.get_active_editor().get_editor()
+        editor = context.editor
         super(RenameDialog, self).__init__(context, title)
         self.is_local = is_local
-        offset = editor.get_current_offset()
+        offset = context.offset
         if current_module:
             offset = None
         self.renamer = rope.refactor.rename.Rename(

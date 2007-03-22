@@ -1,12 +1,14 @@
+import re
+
 import Tkinter
 import tkMessageBox
-import re
 
 import rope.base.project
 import rope.ui.core
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
-from rope.ui.uihelpers import TreeViewHandle, TreeView, find_item_dialog
+from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
+                               SearchableList, SearchableListHandle)
 
 
 def open_project(context):
@@ -262,14 +264,42 @@ def _show_resource_view(core):
     for child in tree_handle.get_children(core.project.root):
         tree_view.add_entry(child)
 
+class ChangeBufferHandle(SearchableListHandle):
+
+    def __init__(self, toplevel, context):
+        self.toplevel = toplevel
+        self.context = context
+
+    def selected(self, editor):
+        self.toplevel.destroy()
+        self.context.core.activate_editor(editor)
+
+    def entry_to_string(self, editor):
+        return editor.get_file().name
+
+    def matches(self, editor, text):
+        return editor.get_file().name.startswith(text)
+
+    def canceled(self):
+        self.toplevel.destroy()
+
+def change_editor(context):
+    if not _check_if_project_is_open(core):
+        return
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Change Buffer')
+    buffer_list = SearchableList(toplevel, ChangeBufferHandle(toplevel, context),
+                                 title='Change Buffer', width=28, height=9)
+    editor_list = context.core.editor_manager.get_editor_list()
+    for editor in editor_list:
+        buffer_list.add_entry(editor)
+
+
 def project_tree(context):
     _show_resource_view(context.get_core())
 
 def validate_project(context):
     context.project.validate(context.project.root)
-
-def change_editor(context):
-    context.get_core()._change_editor_dialog()
 
 def save_editor(context):
     context.get_core().save_active_editor()

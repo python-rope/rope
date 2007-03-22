@@ -167,10 +167,10 @@ class EnhancedList(_BaseList):
 
 class VolatileList(EnhancedList):
     """This is like an `EnhancedList` except you can move entries in it.
-    
+
     You can use ``M-p`` and ``M-n`` or `move_up` and `move_down` methods
     to move entries in the list
-    
+
     """
 
     def __init__(self, *args, **kwds):
@@ -447,3 +447,48 @@ def find_item_dialog(handle, title='Find', matches='Matches',
     find_dialog.grid(row=2, column=0, columnspan=2)
     name.focus_set()
     toplevel.grab_set()
+
+
+class SearchableListHandle(EnhancedListHandle):
+
+    def matches(self, entry, text):
+        pass
+
+
+class SearchableList(object):
+
+    def __init__(self, parent, handle, title="List", get_focus=True,
+                 height=14, width=50):
+        self.handle = handle
+        self.frame = Frame(parent)
+        label1 = Label(self.frame, text=title)
+        self.text = Tkinter.Entry(self.frame)
+        list_frame = Frame(self.frame)
+        self.list = EnhancedList(list_frame, handle, title, False,
+                                 height=height, width=width)
+
+        self.text.bind('<Return>', self._open_selected)
+        self.text.bind('<Escape>', self._cancel)
+        self.text.bind('<Control-g>', self._cancel)
+        self.text.bind('<Any-KeyRelease>', self._text_changed)
+        if get_focus:
+            self.text.focus_set()
+        label1.grid(row=0)
+        self.text.grid(row=1)
+        list_frame.grid(row=2)
+        self.frame.grid(sticky=N+E+W+S)
+
+    def _open_selected(self, event=None):
+        self.handle.selected(self.list.get_active_entry())
+
+    def _cancel(self, event=None):
+        self.handle.canceled()
+
+    def _text_changed(self, event=None):
+        for index, entry in enumerate(self.list.get_entries()):
+            if self.handle.matches(entry, self.text.get()):
+                self.list.activate(index)
+                break
+
+    def add_entry(self, entry):
+        self.list.add_entry(entry)

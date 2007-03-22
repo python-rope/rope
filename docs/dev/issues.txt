@@ -46,7 +46,7 @@ Discussion
 Now that we handle many kinds of refactorings and we have achieved
 many of rope's initial goals we can think of extending it.
 
-There are many places to extend rope.  There are two main places
+nThere are many places to extend rope.  There are two main places
 that can be enhanced.  One is occurrence finding mechanisms and the
 other is object inference.  Among the features that are going to be
 added implicit interfaces and changing structure refactorings are the
@@ -288,7 +288,6 @@ How registers can be used?
 
 Issues:
 
-* Should they be global or per buffer?
 * Should they be saved across sessions?
 
 Keys:
