@@ -4,10 +4,7 @@ class Prefs(object):
         self.prefs = {}
 
     def set(self, key, value):
-        """Set a preference
-
-        Set the preference for `key` to `value`.
-        """
+        """Set the value of `key` preference to `value`."""
         self.prefs[key] = value
 
     def add(self, key, value):

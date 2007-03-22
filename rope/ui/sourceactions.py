@@ -165,19 +165,19 @@ actions.append(SimpleAction('show_annotations', show_all, 'C-c a a',
 
 
 actions.append(
-    SimpleAction('generate_variable', generate_variable, 'C-c G v',
+    SimpleAction('generate_variable', generate_variable, 'C-c n v',
                  MenuAddress(['Source', 'Generate Variable'], None, 2), ['python']))
 actions.append(
-    SimpleAction('generate_function', generate_function, 'C-c G f',
+    SimpleAction('generate_function', generate_function, 'C-c n f',
                  MenuAddress(['Source', 'Generate Function'], None, 2), ['python']))
 actions.append(
-    SimpleAction('generate_class', generate_class, 'C-c G c',
+    SimpleAction('generate_class', generate_class, 'C-c n c',
                  MenuAddress(['Source', 'Generate Class'], None, 2), ['python']))
 actions.append(
-    SimpleAction('generate_module', generate_module, 'C-c G m',
+    SimpleAction('generate_module', generate_module, 'C-c n m',
                  MenuAddress(['Source', 'Generate Module'], None, 2), ['python']))
 actions.append(
-    SimpleAction('generate_package', generate_package, 'C-c G p',
+    SimpleAction('generate_package', generate_package, 'C-c n p',
                  MenuAddress(['Source', 'Generate Package'], None, 2), ['python']))
 
 for action in actions:

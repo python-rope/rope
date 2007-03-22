@@ -148,6 +148,7 @@ Enhancing `CallInfoManager`
 * Better per name data holding in `callinfo`
 * Not overwriting useful per object data in `callinfo`
 * Some `self`\s are unknown!
+* Updating our db when performing refactorings like move module
 
 
 Invalidating Information
@@ -211,7 +212,7 @@ We can take two approaches:
 
   But this approach an be enhanced much.  By holding object
   information in different files we can save or update files only
-  when needed.
+  when needed.  Also we can use `shelve` module.
 
 * Using `sqlite3`:
 
@@ -220,6 +221,61 @@ We can take two approaches:
 
 Saving object data requires having a good mechanisms for invalidating
 information and testing.
+
+
+An Implementation Proposal
+--------------------------
+
+We probably have to extend the information we hold for each individual
+call info.::
+
+  class CallInfo(object):
+
+      parameters = None
+      returned = None
+      time = None
+      exactness = None
+
+      def __getstate__(self):
+          pass
+
+      def __setstate__(self, data):
+          pass
+
+
+The added fields does not seem to be a major memory problem since
+call information is going to be saved to the disk.  We decided to
+put data on the disk and use flat file databases or `shelve`
+module.
+
+Now the problem is how to organize data in files.  The data is
+organized so::
+
+  file/
+    function/
+      callinfo1
+      callinfo2
+      ...
+
+  file/
+    scope/
+        pernameinfo1
+        pernameinfo2
+        ...
+
+
+The simplest approach that we can take would be to use one file for
+saving information for functions and scopes in that file.  This way
+the keys are the function locations and the values are dictionaries
+containing different call infos.
+
+The most complex part is when to invalidate data.  Before going on we
+should keep in mind that whatever we do is only an approaximation and
+does not solve all problems.  That is mainly because even when no
+resource changes it is possible that by running SOI multiple times
+better data might be calculated and we can not know that.  But at
+least we know that a good call info remains valid as long as no
+resource gets changed.
 
 
 Supporting Registers

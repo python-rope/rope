@@ -21,7 +21,10 @@ class _Project(object):
 
         `resource_name` is the path of a resource in a project.  It
         is the path of a resource relative to project root.  Project
-        root folder address is an empty string.
+        root folder address is an empty string.  If the resource does
+        not exist a `RopeError` exception would be raised.  Use
+        `get_file()` and `get_folder()` when you need to get non-
+        existent `Resource`\s.
 
         """
         path = self._get_resource_path(resource_name)
@@ -69,9 +72,11 @@ class _Project(object):
         return self.pycore
 
     def get_file(self, path):
+        """Get the file with `path`(it may not exist)"""
         return File(self, path)
 
     def get_folder(self, path):
+        """Get the folder with `path`(it may not exist)"""
         return Folder(self, path)
 
     def _get_resource_path(self, name):
@@ -514,4 +519,3 @@ class _Changes(object):
 
     def add_removed(self, resource, new_resource=None):
         self.moves[resource] = new_resource
-

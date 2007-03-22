@@ -114,6 +114,12 @@ relatives to absolutes      C-c i a
 froms to imports            C-c i i
 handle long imports         C-c i l
 --------------------------  -------------  -------------
+Generate variable           C-c n v        M-G v
+Generate function/method    C-c n f        M-G f
+Generate class              C-c n c        M-G c
+Generate module             C-c n m        M-G m
+Generate package            C-c n p        M-G p
+--------------------------  -------------  -------------
 about                       C-h a
 README                      C-h r
 features                    C-h f
