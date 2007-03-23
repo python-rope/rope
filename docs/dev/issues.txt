@@ -278,37 +278,6 @@ least we know that a good call info remains valid as long as no
 resource gets changed.
 
 
-Supporting Registers
-====================
-
-How registers can be used?
-
-* Holding texts
-* Holding document locations
-
-Issues:
-
-* Should they be saved across sessions?
-
-Keys:
-
-Unfortunately ``C-x r`` is already used for redoing changes.  We can
-use one of these instead:
-
-* ``C-x m``: memory
-* ``C-x R``: registers
-* ``C-x t``: store
-
-Here are the keys for individual actions.
-
-* ``s``: save string
-* ``i``: insert string
-
-* ``m``: bookmark location
-* ``b``: load bookmark
-* ``l``: list bookmarks
-
-
 Better Concluded Data
 =====================
 

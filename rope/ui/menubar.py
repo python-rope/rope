@@ -78,13 +78,13 @@ class _MenuCascade(_MenuItem):
         current_group = 0
         for child in self.children:
             if isinstance(child, _MenuSeparator):
-                current_group += 1
-                if group + 1 == current_group:
+                if group < child.number:
                     break
+                current_group = child.number
             index += 1
-        for i in range(group - current_group):
-            self.children.append(_MenuSeparator(str(current_group + i)))
-            self.menu.add_separator()
+        if current_group != group:
+            self.children.insert(index, _MenuSeparator(group))
+            self.menu.insert_separator(index)
             index += 1
         return index
 
@@ -95,7 +95,10 @@ class _MenuCascade(_MenuItem):
 
 
 class _MenuSeparator(_MenuItem):
-    pass
+
+    def __init__(self, number):
+        self.number = number
+        super(_MenuSeparator, self).__init__(str(number))
 
 
 class _MenuCommand(_MenuItem):

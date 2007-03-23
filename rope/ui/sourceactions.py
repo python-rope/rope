@@ -4,6 +4,7 @@ import rope.ide.codeassist
 import rope.ui.core
 from rope.base import codeanalyze
 from rope.ide import formatter, notes, generate
+from rope.ui import registers
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
@@ -135,7 +136,7 @@ def show_all(context):
 
 
 core = rope.ui.core.Core.get_core()
-core._add_menu_cascade(MenuAddress(['Source'], 's'), ['python', 'rest'])
+core._add_menu_cascade(MenuAddress(['Source'], 's'), ['all', 'none'])
 actions = []
 
 actions.append(SimpleAction('correct_line_indentation',
@@ -179,6 +180,15 @@ actions.append(
 actions.append(
     SimpleAction('generate_package', generate_package, 'C-c n p',
                  MenuAddress(['Source', 'Generate Package'], None, 2), ['python']))
+
+actions.append(SimpleAction('memorize_location', registers.add_location, 'C-x m m',
+                            MenuAddress(['Source', 'Memorize Location'], None, 3), ['all']))
+actions.append(SimpleAction('remember_location', registers.goto_location, 'C-x m b',
+                            MenuAddress(['Source', 'Remember Location'], None, 3)))
+actions.append(SimpleAction('memorize_string', registers.add_string, 'C-x m s',
+                            MenuAddress(['Source', 'Memorize String'], None, 3), ['all']))
+actions.append(SimpleAction('remember_string', registers.insert_string, 'C-x m i',
+                            MenuAddress(['Source', 'Remember String'], None, 3)))
 
 for action in actions:
     core.register_action(action)

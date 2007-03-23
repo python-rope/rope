@@ -3,6 +3,9 @@
 ===========
 
 
+- Saving locations and texts : March 23, 2007
+
+
 - Generating python elements : March 21, 2007
 
 

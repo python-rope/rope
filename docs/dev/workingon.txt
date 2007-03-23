@@ -1,10 +1,6 @@
 Location And Text Registers
 ===========================
 
-- Adding offset attribute to `ActionContext`
-- Handling unordered and definition lists in fill paragraph
-
-* Extracting `SearchableList` from change buffer
 * Adding method to static method refactoring
 * Recursive SOI; Go where the calls go
 * Adding an option not to collect per name information

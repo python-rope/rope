@@ -4,7 +4,6 @@ import Tkinter
 import rope.ide.codeassist
 import rope.ui.core
 import rope.ui.testview
-from rope.ui import registers
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
@@ -281,15 +280,6 @@ actions.append(SimpleAction('run_unit_tests', run_tests, 'C-c x t',
                             MenuAddress(['Code', 'Run Unit Tests'], 't', 1), ['python']))
 actions.append(SimpleAction('run_soi', run_soi, 'C-c x s',
                             MenuAddress(['Code', 'Run SOI On Module'], None, 1), ['python']))
-
-actions.append(SimpleAction('bookmark_location', registers.add_location, 'C-x m m',
-                            None, ['all']))
-actions.append(SimpleAction('bookmark_string', registers.add_string, 'C-x m s',
-                            None, ['all']))
-actions.append(SimpleAction('insert_bookmarked_string', registers.insert_string,
-                            'C-x m i', None, ['all']))
-actions.append(SimpleAction('goto_bookmarked_location', registers.goto_location,
-                            'C-x m b', None, ['all']))
 
 for action in actions:
     core.register_action(action)
