@@ -135,6 +135,48 @@ The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
 
 
+``.ropeproject`` Directory
+==========================
+
+Rope needs to store information for each project.  I propose to
+introduce a ``.ropeproject`` directory inside each project for saving
+files.
+
+Here are some of the things we can do inside ``.ropeproject``:
+
+* ``objectdb``: for storing information for object inference tools
+* ``config.py``: Should be loaded when the project is opened
+
+  * Indicating which files to ignore
+
+Issues:
+
+* Add ``project_rope_folder`` config
+* When using rope as a library it might be unacceptable to make a dir
+* This folder and its contents should not be on version control
+* What to do about `NoProject`
+
+
+``config.py``
+-------------
+
+* Push or poll model::
+
+    def opening_project(project):
+        pass
+
+    def closing_project(project):
+        pass
+
+* Changing dot rope?::
+
+    def starting_rope(core):
+        pass
+
+    def closing_rope(core):
+        pass
+
+
 Enhancing `CallInfoManager`
 ===========================
 

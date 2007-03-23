@@ -1,4 +1,5 @@
 import os
+import re
 
 import rope.base.change
 import rope.base.fscommands
@@ -79,6 +80,9 @@ class _Project(object):
         """Get the folder with `path`(it may not exist)"""
         return Folder(self, path)
 
+    def is_ignored(self, resource):
+        return False
+
     def _get_resource_path(self, name):
         pass
 
@@ -88,7 +92,7 @@ class _Project(object):
 class Project(_Project):
     """A Project containing files and folders"""
 
-    def __init__(self, project_root, fscommands=None):
+    def __init__(self, projectroot, fscommands=None, ropefolder='.ropeproject'):
         """A rope project
 
         :parameters:
@@ -97,7 +101,7 @@ class Project(_Project):
               have a look at `rope.base.fscommands`
 
         """
-        self._address = os.path.expanduser(project_root)
+        self._address = os.path.expanduser(projectroot)
         if not os.path.exists(self._address):
             os.mkdir(self._address)
         elif not os.path.isdir(self._address):
@@ -105,10 +109,9 @@ class Project(_Project):
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)
-
-    root = property(lambda self: self.get_resource(''))
-
-    address = property(lambda self: self._address)
+        self.ignored_patterns = []
+        self.set_ignored_resources(['*.pyc', '.svn', '*~', '.ropeproject'])
+        self._ropefolder = self._create_rope_folder(ropefolder)
 
     def get_files(self):
         return self._get_files_recursively(self.root)
@@ -124,6 +127,40 @@ class Project(_Project):
             if not folder.name.startswith('.'):
                 result.extend(self._get_files_recursively(folder))
         return result
+
+    def _create_rope_folder(self, ropefolder):
+        if ropefolder is not None:
+            result = self.get_folder(ropefolder)
+            if not result.exists():
+                result.create()
+            return result
+
+    def set_ignored_resources(self, patterns):
+        """Specify which resources to ignore
+
+        `patterns` is a `list` of `str`\s that can contain ``*`` and
+        ``?`` signs for matching resource names.
+
+        """
+        del self.ignored_patterns[:]
+        for pattern in patterns:
+            self._add_ignored_pattern(pattern)
+
+    def _add_ignored_pattern(self, pattern):
+        re_pattern = pattern.replace('.', '\\.').\
+                     replace('*', '.*').replace('?', '.')
+        re_pattern = '(.*/)?' + re_pattern + '(/.*)?'
+        self.ignored_patterns.append(re.compile(re_pattern))
+
+    def is_ignored(self, resource):
+        for pattern in self.ignored_patterns:
+            if pattern.match(resource.path):
+                return True
+        return False
+
+    root = property(lambda self: self.get_resource(''))
+    address = property(lambda self: self._address)
+    ropefolder = property(lambda self: self._ropefolder)
 
 
 class NoProject(_Project):
@@ -269,9 +306,9 @@ class Folder(Resource):
         result = []
         content = os.listdir(path)
         for name in content:
-            if name.endswith('.pyc') or name == '.svn' or name.endswith('~'):
-                continue
-            result.append(self.get_child(name))
+            child = self.get_child(name)
+            if not self.project.is_ignored(child):
+                result.append(self.get_child(name))
         return result
 
     def create_file(self, file_name):
@@ -326,14 +363,15 @@ class Folder(Resource):
 class ResourceObserver(object):
     """Provides the interface for observing resources
 
-    `ResourceObserver`\s can be registered using `Resource.add_observer`.
-    But most of the time what is needed is `FilteredResourceObserver`
-    since ResourceObserver report all changes passed to them and they
-    don't report changes to all of the resources.  For example if a
-    folder is removed, it only `removed` for that folder and not its
-    contents.  You can use `FilteredResourceObserver` if you are
-    interested in changes only to a list of resources.  And you want
-    changes to be reported on individual resources.
+    `ResourceObserver`\s can be registered using `Project.
+    add_observer()`.  But most of the time `FilteredResourceObserver`
+    should be used.  `ResourceObserver`\s report all changes passed
+    to them and they don't report changes to all resources.  For
+    example if a folder is removed, it only calls `removed()` for that
+    folder and not its contents.  You can use
+    `FilteredResourceObserver` if you are interested in changes only
+    to a list of resources.  And you want changes to be reported on
+    individual resources.
 
     """
 
@@ -382,7 +420,7 @@ class FilteredResourceObserver(object):
     * When validating a folder it validates all of the interesting
       files in that folder.
 
-    Since most resource observers have are interested in a list of
+    Since most resource observers are interested in a list of
     resources that change over time, `add_resource` and
     `remove_resource` might be useful.
 

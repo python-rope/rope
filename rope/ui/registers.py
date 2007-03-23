@@ -86,7 +86,7 @@ def goto_location(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('Goto Location')
     location_list = SearchableList(toplevel, _LocationHandle(toplevel, context),
-                                   title='Goto Location', width=35, height=12)
+                                   verb='Goto', name='Location', width=35, height=12)
     for name, location in reversed(context.core.registers.locations.items()):
         location_list.add_entry((name, location))
 
@@ -116,6 +116,6 @@ def insert_string(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('Insert String')
     location_list = SearchableList(toplevel, _StringHandle(toplevel, context),
-                                   title='Insert String', width=32, height=12)
+                                   verb='Insert', name='String', width=32, height=12)
     for name in reversed(context.core.registers.strings.keys()):
         location_list.add_entry(name)

@@ -1,6 +1,20 @@
-Location And Text Registers
-===========================
+``.ropeproject`` Folder
+=======================
 
+- ``Project(ropefolder='.ropeproject')``
+- In ``.rope``: ``core.set('project_rope_folder', '.ropefolder')``
+- `Project.ropefolder` property
+- How to specify ignored resources; `Project.set_ignored_patterns`
+- Ignored folders and children
+- Add `FSCommandsTest` for testing ignores and VCSs
+
+Next:
+
+* Adding ``.ropeproject/config.py`` and its default
+* Executing the `opening_project(project)` function
+* Changing `.rope` to use `starting_rope(core)`
+
+* What happens when `NoProject` saves call information
 * Adding method to static method refactoring
 * Recursive SOI; Go where the calls go
 * Adding an option not to collect per name information

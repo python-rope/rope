@@ -260,14 +260,15 @@ class Core(object):
         parent.create_file(file_name)
         return self.open_file(file_name)
 
-    def open_project(self, projectRoot):
+    def open_project(self, project_root):
         if self.project:
             self.close_project()
-        self.project = Project(projectRoot)
+        ropefolder = self.prefs.get('project_rope_folder', '.ropeproject')
+        self.project = Project(project_root, ropefolder=ropefolder)
 
     def _close_project_dialog(self, exit_=False):
         modified_editors = [editor for editor in self.editor_manager.editors
-                           if editor.get_editor().is_modified()]
+                            if editor.get_editor().is_modified()]
         if not modified_editors:
             self.close_project()
             if exit_:

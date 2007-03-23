@@ -78,7 +78,6 @@ def _create_resource_dialog(core, creation_callback,
         tree_handle = _FolderViewHandle(core, toplevel, do_select)
         tree_view = TreeView(toplevel, tree_handle, title='Resources')
         tree_view.add_entry(core.project.root)
-        tree_view.list.focus_set()
         toplevel.grab_set()
 
     parent_browse = Tkinter.Button(create_dialog, text='...', command=show_directory_view)
@@ -289,7 +288,7 @@ def change_editor(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('Change Buffer')
     buffer_list = SearchableList(toplevel, ChangeBufferHandle(toplevel, context),
-                                 title='Change Buffer', width=28, height=9)
+                                 verb='Change', name='Buffer', width=28, height=9)
     editor_list = context.core.editor_manager.get_editor_list()
     for editor in editor_list:
         buffer_list.add_entry(editor)

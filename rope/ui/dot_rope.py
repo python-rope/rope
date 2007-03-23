@@ -77,6 +77,10 @@ if not i_like_emacs:
     core.rebind_action('generate_class', 'M-G c')
     core.rebind_action('generate_module', 'M-G m')
     core.rebind_action('generate_package', 'M-G g')
+    core.rebind_action('memorize_location', 'M-M m')
+    core.rebind_action('remember_location', 'M-M b')
+    core.rebind_action('memorize_string', 'M-M s')
+    core.rebind_action('remember_string', 'M-M i')
 
     core.rebind_action('code_assist', 'C-space')
     core.rebind_action('goto_definition', 'F3')
@@ -122,6 +126,12 @@ if not i_like_emacs:
 # Add your python templates
 core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
 core.add('templates', ('set_field', "self.${field}${cursor} = ${field}\n"))
+
+
+# The folder relative to project root that holds config files and
+# information about the project.  If this folder does not exist it is
+# created.  Specifying `None` means do not make and use a rope folder.
+#core.set('project_rope_folder', '.ropeproject')
 
 
 # Adding your own `Action`\s:

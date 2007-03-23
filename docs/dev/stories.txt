@@ -136,10 +136,4 @@ Stories
 > Public Release 0.5m4 : April 1, 2007
 
 
-* Inlining `staticmethod`\s
-
-
 * Moving `staticmethod`\s
-
-
-* Registers for holding locations and texts

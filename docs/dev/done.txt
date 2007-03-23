@@ -3,6 +3,9 @@
 ===========
 
 
+- Inlining `staticmethod`\s : March 23, 2007
+
+
 - Saving locations and texts : March 23, 2007
 
 

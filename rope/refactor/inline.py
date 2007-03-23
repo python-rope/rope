@@ -19,7 +19,7 @@ class Inline(object):
         if self._is_variable():
             self.performer = _VariableInliner(self.pycore, self.name,
                                               self.pyname)
-        elif self._is_method():
+        elif self._is_function():
             self.performer = _MethodInliner(self.pycore, self.name,
                                             self.pyname)
         else:
@@ -33,7 +33,7 @@ class Inline(object):
     def _is_variable(self):
         return isinstance(self.pyname, pynames.AssignedName)
 
-    def _is_method(self):
+    def _is_function(self):
         return isinstance(self.pyname.get_object(), pyobjects.PyFunction)
 
 
@@ -65,7 +65,12 @@ class _MethodInliner(_Inliner):
     def _get_scope_range(self):
         scope = self.pyfunction.get_scope()
         lines = self.pymodule.lines
-        start_offset = lines.get_line_start(scope.get_start())
+        start_line = scope.get_start()
+        if self.pyfunction.get_ast().decorators is not None:
+            decorators = self.pyfunction.get_ast().decorators
+            if hasattr(decorators.nodes[0], 'lineno'):
+                start_line = decorators.nodes[0].lineno
+        start_offset = lines.get_line_start(start_line)
         end_offset = min(lines.get_line_end(scope.get_end()) + 1,
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
@@ -99,9 +104,7 @@ class _MethodInliner(_Inliner):
         class_start, class_end = sourceutils.get_body_region(pyclass)
         source = self.pymodule.source_code
         lines = self.pymodule.lines
-        scope = self.pyfunction.get_scope()
-        func_start = lines.get_line_start(scope.get_start())
-        func_end = lines.get_line_end(scope.get_end())
+        func_start, func_end = self._get_scope_range()
         if source[class_start:func_start].strip() == '' and \
            source[func_end:class_end].strip() == '':
             return True
@@ -111,7 +114,6 @@ class _MethodInliner(_Inliner):
         for file in self.pycore.get_python_files():
             if file == self.resource:
                 continue
-            start, end = self._get_scope_range()
             result = _InlineFunctionCallsForModule(
                 self.occurrence_finder, file,
                 self.definition_generator).get_changed_module()
@@ -308,7 +310,7 @@ class _DefinitionGenerator(object):
             primary, pyname, self.definition_info, call)
         paramdict = self.definition_params
         mapping = rope.refactor.functionutils.ArgumentMapping(self.definition_info,
-                                                               call_info)
+                                                              call_info)
         for param_name, value in mapping.param_dict.iteritems():
             paramdict[param_name] = value
         header = ""

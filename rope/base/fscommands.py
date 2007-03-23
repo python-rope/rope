@@ -7,8 +7,8 @@ interface provided by `FileSystemCommands` class.
 """
 
 import os
-import shutil
 import re
+import shutil
 
 
 try:

@@ -457,14 +457,14 @@ class SearchableListHandle(EnhancedListHandle):
 
 class SearchableList(object):
 
-    def __init__(self, parent, handle, title="List", get_focus=True,
-                 height=14, width=50):
+    def __init__(self, parent, handle, verb='Find', name='Item',
+                 get_focus=True, height=14, width=50):
         self.handle = handle
         self.frame = Frame(parent)
-        label1 = Label(self.frame, text=title)
+        label1 = Label(self.frame, text=(verb + ' '+ name))
         self.text = Tkinter.Entry(self.frame)
         list_frame = Frame(self.frame)
-        self.list = EnhancedList(list_frame, handle, title, False,
+        self.list = EnhancedList(list_frame, handle, name + 's', False,
                                  height=height, width=width)
 
         self.text.bind('<Return>', self._open_selected)

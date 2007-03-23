@@ -4,6 +4,7 @@ import os
 from rope.base.project import Project, NoProject, FilteredResourceObserver
 from rope.base.exceptions import RopeError
 from ropetest import testutils
+from rope.base.fscommands import FileSystemCommands
 
 
 class ProjectTest(unittest.TestCase):
@@ -13,7 +14,7 @@ class ProjectTest(unittest.TestCase):
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
         self._make_sample_project()
-        self.project = Project(self.project_root)
+        self.project = Project(self.project_root, ropefolder=None)
         self.no_project = NoProject()
 
     def _make_sample_project(self):
@@ -674,11 +675,95 @@ class OutOfProjectTest(unittest.TestCase):
         self.assertEquals(sample_resource, sample_folder.get_child('sample.txt'))
 
 
+class _MockFSCommands(object):
+    
+    def __init__(self):
+        self.log = ''
+        self.fscommands = FileSystemCommands()
+
+    def create_file(self, path):
+        self.log += 'create_file '
+        self.fscommands.create_file(path)
+
+    def create_folder(self, path):
+        self.log += 'create_folder '
+        self.fscommands.create_folder(path)
+
+    def move(self, path, new_location):
+        self.log += 'move '
+        self.fscommands.move(path, new_location)
+
+    def remove(self, path):
+        self.log += 'remove '
+        self.fscommands.remove(path)
+
+
+class RopeFolderTest(unittest.TestCase):
+
+    def setUp(self):
+        super(RopeFolderTest, self).setUp()
+        self.project_root = 'sample_project'
+        testutils.remove_recursively(self.project_root)
+
+    def tearDown(self):
+        testutils.remove_recursively(self.project_root)
+        super(RopeFolderTest, self).tearDown()
+
+    def test_none_project_rope_folder(self):
+        project = Project(self.project_root, ropefolder=None)
+        self.assertTrue(project.ropefolder is None)
+
+    def test_getting_project_rope_folder(self):
+        project = Project(self.project_root, ropefolder='.ropeproject')
+        self.assertTrue(project.ropefolder.exists())
+        self.assertTrue('.ropeproject', project.ropefolder.path)
+
+    def test_setting_ignored_resources(self):
+        project = Project(self.project_root)
+        project.set_ignored_resources(['myfile.txt'])
+        myfile = project.get_file('myfile.txt')
+        file2 = project.get_file('file2.txt')
+        self.assertTrue(project.is_ignored(myfile))
+        self.assertFalse(project.is_ignored(file2))
+
+    def test_ignored_folders(self):
+        project = Project(self.project_root)
+        project.set_ignored_resources(['myfolder'])
+        myfolder = project.root.create_folder('myfolder')
+        self.assertTrue(project.is_ignored(myfolder))
+        myfile = myfolder.create_file('myfile.txt')
+        self.assertTrue(project.is_ignored(myfile))
+
+    def test_setting_ignored_resources_patterns(self):
+        project = Project(self.project_root)
+        project.set_ignored_resources(['m?file.*'])
+        myfile = project.get_file('myfile.txt')
+        file2 = project.get_file('file2.txt')
+        self.assertTrue(project.is_ignored(myfile))
+        self.assertFalse(project.is_ignored(file2))
+
+    def test_normal_fscommands(self):
+        fscommands = _MockFSCommands()
+        project = Project(self.project_root, fscommands=fscommands)
+        myfile = project.get_file('myfile.txt')
+        myfile.create()
+        self.assertTrue('create_file ', fscommands.log)
+
+    def test_fscommands_and_ignored_resources(self):
+        fscommands = _MockFSCommands()
+        project = Project(self.project_root, fscommands=fscommands)
+        project.set_ignored_resources(['myfile.txt'])
+        myfile = project.get_file('myfile.txt')
+        myfile.create()
+        self.assertEquals('', fscommands.log)
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(ProjectTest))
     result.addTests(unittest.makeSuite(ResourceObserverTest))
     result.addTests(unittest.makeSuite(OutOfProjectTest))
+    result.addTests(unittest.makeSuite(RopeFolderTest))
     return result
 
 if __name__ == '__main__':

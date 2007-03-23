@@ -246,8 +246,7 @@ class InlineTest(unittest.TestCase):
                    'print 1, an_a.var\n'
         self.assertEquals(expected, self.mod.read())
 
-    # XXX: Handling ``AClass.a_method(a_var, param)``
-    def xxx_test_passing_first_arguments_for_methods3(self):
+    def test_passing_first_arguments_for_methods3(self):
         a_class = 'class A(object):\n' \
                   '    def __init__(self):\n' \
                   '        self.var = 1\n' \
@@ -264,8 +263,20 @@ class InlineTest(unittest.TestCase):
                    'print 1, an_a.var\n'
         self.assertEquals(expected, self.mod.read())
 
-    # XXX: The decorator should be removed, too
-    def xxx_test_static_methods(self):
+    def test_inlining_staticmethods(self):
+        a_class = 'class A(object):\n' \
+                  '    @staticmethod\n' \
+                  '    def a_func(param):\n' \
+                  '        print(param)\n' \
+                  'A.a_func(1)\n'
+        self.mod.write(a_class)
+        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        expected = 'class A(object):\n' \
+                   '    pass\n' \
+                  'print(1)\n'
+        self.assertEquals(expected, self.mod.read())
+
+    def test_static_methods2(self):
         a_class = 'class A(object):\n' \
                   '    var = 10\n' \
                   '    @staticmethod\n' \
