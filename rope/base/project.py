@@ -83,6 +83,9 @@ class _Project(object):
     def is_ignored(self, resource):
         return False
 
+    def close(self):
+        pass
+
     def _get_resource_path(self, name):
         pass
 
@@ -174,6 +177,9 @@ class Project(_Project):
             if pattern.match(resource.path):
                 return True
         return False
+
+    def close(self):
+        self.pycore.call_info.close()
 
     root = property(lambda self: self.get_resource(''))
     address = property(lambda self: self._address)

@@ -3,7 +3,7 @@ import os.path
 
 import rope.ui.core
 import rope.base.project
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved
+from rope.ui.actionhelpers import ConfirmEditorsAreSaved, check_project
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui import uihelpers, fill
@@ -191,6 +191,15 @@ def edit_dot_rope(context):
     editor_manager = context.get_core().get_editor_manager()
     editor_manager.get_resource_editor(resource, mode='python')
 
+def edit_project_config(context):
+    if not check_project(context.core):
+        return
+    resource = context.project.ropefolder
+    if resource is not None:
+        config = resource.get_child('config.py')
+        editor_manager = context.get_core().get_editor_manager()
+        editor_manager.get_resource_editor(config)
+
 def repeat_last_action(context):
     if context.get_active_editor():
         context.core.repeat_last_action()
@@ -262,6 +271,9 @@ actions.append(
                  ConfirmEditorsAreSaved(show_history), 'C-x p h',
                  MenuAddress(['Edit', 'Project History'], 'h', 2),
                  ['all', 'none']))
+actions.append(SimpleAction('edit_project_config', edit_project_config, 'C-x p c',
+                            MenuAddress(['Edit', 'Edit Project config.py'], None, 2),
+                            ['all', 'none']))
 
 actions.append(SimpleAction('search_forward', forward_search, 'C-s',
                             MenuAddress(['Edit', 'Forward Search'], 'f', 3), ['all']))

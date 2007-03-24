@@ -301,6 +301,16 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg1.mod1 import *\n',
                           module_with_imports.get_changed_source())
 
+    def test_adding_imports_and_preserving_spaces_after_imports(self):
+        self.mod.write('import pkg1\n\n\nprint(pkg1)\n')
+        pymod = self.pycore.get_module('mod')
+        module_with_imports = self.import_tools.get_module_imports(pymod)
+        new_import = self.import_tools.get_import_for_module(
+            self.pycore.resource_to_pyobject(self.pkg2))
+        module_with_imports.add_import(new_import)
+        self.assertEquals('import pkg1\nimport pkg2\n\n\nprint(pkg1)\n',
+                          module_with_imports.get_changed_source())
+
     def test_not_changing_the_format_of_unchanged_imports(self):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import (a_func,\n    another_func)\n')

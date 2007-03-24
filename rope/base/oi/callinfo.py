@@ -1,6 +1,7 @@
 import compiler.consts
 import os
 import re
+import shelve
 
 import rope.base.project
 from rope.base import pyobjects
@@ -10,22 +11,30 @@ class CallInfoManager(object):
 
     def __init__(self, pycore):
         self.pycore = pycore
-        self.files = {}
         self.to_textual = _PyObjectToTextual(pycore.project)
         self.to_pyobject = _TextualToPyObject(pycore.project)
         self.per_object = {}
+        self.objectdb = _MemoryObjectDB()
+#        self.objectdb = _DiskObjectDB(self.pycore.project)
 
     def get_returned(self, pyobject, args):
         organizer = self.find_organizer(pyobject)
         if organizer:
-            return self.to_pyobject.transform(organizer.get_returned(
-                                              pyobject, args))
+            return self.to_pyobject.transform(
+                organizer.get_returned(self._args_to_textual(pyobject, args)))
 
     def get_exact_returned(self, pyobject, args):
         organizer = self.find_organizer(pyobject)
         if organizer:
             return self.to_pyobject.transform(
-                organizer.get_exact_returned(pyobject, args))
+                organizer.get_exact_returned(self._args_to_textual(pyobject, args)))
+
+    def _args_to_textual(self, pyfunction, args):
+        parameters = list(pyfunction.get_param_names(special_args=False))
+        arguments = args.get_arguments(parameters)[:len(parameters)]
+        textual_args = tuple([self.to_textual.transform(arg)
+                              for arg in arguments])
+        return textual_args
 
     def get_parameter_objects(self, pyobject):
         organizer = self.find_organizer(pyobject)
@@ -56,13 +65,8 @@ class CallInfoManager(object):
         return self.to_pyobject.transform(data)
 
     def _save_data(self, function, args, returned=('unknown',)):
-        path = function[1]
-        lineno = function[2]
-        if path not in self.files:
-            self.files[path] = {}
-        if lineno not in self.files[path]:
-            self.files[path][lineno] = _CallInformationOrganizer(self.to_textual)
-        self.files[path][lineno].add_call_information(args, returned)
+        self.objectdb.get_call_info(function[1], function[2], create=True).\
+             add_call_information(args, returned)
 
     def find_organizer(self, pyobject):
         resource = pyobject.get_module().get_resource()
@@ -70,16 +74,105 @@ class CallInfoManager(object):
             return
         path = os.path.abspath(resource.real_path)
         lineno = pyobject.get_ast().lineno
-        if path in self.files and lineno in self.files[path]:
-            organizer = self.files[path][lineno]
-            return organizer
+        return self.objectdb.get_call_info(path, lineno, create=False)
+
+    def close(self):
+        self.objectdb.close()
+
+
+class _MemoryObjectDB(object):
+
+    def __init__(self):
+        self.files = {}
+
+    def get_call_info(self, path, key, create=True):
+        if path not in self.files:
+            if create:
+                self.files[path] = {}
+            else:
+                return
+        if key not in self.files[path]:
+            if create:
+                self.files[path][key] = {}
+            else:
+                return
+        return _CallInformationOrganizer(self.files[path][key])
+
+    def close(self):
+        pass
+
+
+class _DiskObjectDB(object):
+    
+    def __init__(self, project):
+        self.project = project
+        self._root = None
+        self._index = None
+        self.cache = {}
+
+    def _get_root(self):
+        if self._root is None:
+            self._root = self._get_resource(self.project.ropefolder,
+                                            'objectdb', is_folder=True)
+        return self._root
+
+    def _get_index(self):
+        if self._index is None:
+            index_file = self.project.get_file(self.root.path + '/index')
+            self._index = shelve.open(index_file.real_path, writeback=True)
+        return self._index
+
+    root = property(_get_root)
+    index = property(_get_index)
+
+    def _get_resource(self, parent, name, is_folder=False):
+        if parent.has_child(name):
+            return parent.get_child(name)
+        else:
+            if is_folder:
+                return parent.create_folder(name)
+            else:
+                return parent.create_file(name)
+
+    def _get_file_dict(self, path, create=True):
+        if path not in self.cache:
+            if path not in self.index:
+                # TODO: Use better and shorter names
+                self.index[path] = path.replace('/', '$')
+            name = self.index[path]
+            resource = self.project.get_file(self.root.path + '/' + name)
+            if not create and not resource.exists():
+                return
+            self.cache[path] = shelve.open(resource.real_path, writeback=True)
+        return self.cache[path]
+
+    def get_call_info(self, path, key, create=True):
+        key = str(key)
+        file_dict = self._get_file_dict(path, create=create)
+        if file_dict is None:
+            return
+        if key not in file_dict:
+            if create:
+                file_dict[key] = {}
+            else:
+                return
+        return _CallInformationOrganizer(file_dict[key])
+
+    def close(self):
+        self.index.close()
+        for file_dict in self.cache.values():
+            file_dict.close()
+        self._index = None
+        self.cache.clear()
 
 
 class _CallInformationOrganizer(object):
 
-    def __init__(self, to_textual):
-        self.info = {}
-        self.to_textual = to_textual
+    def __init__(self, info=None):
+        if info is None:
+            self.info = {}
+        else:
+            self.info = info
 
     def add_call_information(self, args, returned):
         self.info[args] = returned
@@ -90,21 +183,17 @@ class _CallInformationOrganizer(object):
                 return args
         return self.info.keys()[0]
 
-    def get_returned(self, pyfunction, args):
-        result = self.get_exact_returned(pyfunction, args)
+    def get_returned(self, args):
+        result = self.get_exact_returned(args)
         if result != ('unknown',):
             return result
         return self._get_default_returned()
 
-    def get_exact_returned(self, pyfunction, args):
+    def get_exact_returned(self, args):
         if len(self.info) == 0 or args is None:
             return ('unknown',)
-        parameters = list(pyfunction.get_param_names(special_args=False))
-        arguments = args.get_arguments(parameters)[:len(parameters)]
-        textual_args = tuple([self.to_textual.transform(arg)
-                              for arg in arguments])
-        if self.info.get(textual_args, ('unknown',)) != ('unknown',):
-            return self.info[textual_args]
+        if self.info.get(args, ('unknown',)) != ('unknown',):
+            return self.info[args]
         return ('unknown',)
 
     def _get_default_returned(self):

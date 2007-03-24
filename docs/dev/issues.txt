@@ -135,28 +135,6 @@ The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
 
 
-``.ropeproject`` Directory
-==========================
-
-Rope needs to store information for each project.  I propose to
-introduce a ``.ropeproject`` directory inside each project for saving
-files.
-
-Here are some of the things we can do inside ``.ropeproject``:
-
-* ``objectdb``: for storing information for object inference tools
-* ``config.py``: Should be loaded when the project is opened
-
-  * Indicating which files to ignore
-
-Issues:
-
-* Add ``project_rope_folder`` config
-* When using rope as a library it might be unacceptable to make a dir
-* This folder and its contents should not be on version control
-* What to do about `NoProject`
-
-
 Enhancing `CallInfoManager`
 ===========================
 
@@ -290,6 +268,12 @@ The simplest approach that we can take would be to use one file for
 saving information for functions and scopes in that file.  This way
 the keys are the function locations and the values are dictionaries
 containing different call infos.
+
+Issues:
+
+* What to do with per name information
+* The values are very long; shelve might fail
+* The pickling might be very inefficient
 
 The most complex part is when to invalidate data.  Before going on we
 should keep in mind that whatever we do is only an approaximation and

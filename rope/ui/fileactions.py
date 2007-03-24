@@ -1,9 +1,9 @@
 import re
 
 import Tkinter
-import tkMessageBox
 
 import rope.base.project
+import rope.ui.actionhelpers
 import rope.ui.core
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
@@ -48,12 +48,6 @@ class _FolderViewHandle(TreeViewHandle):
     def focus_went_out(self):
         pass
 
-def _check_if_project_is_open(core):
-    if core.project is rope.base.project.get_no_project():
-        tkMessageBox.showerror(parent=core.root, title='No Open Project',
-                               message='No project is open')
-        return False
-    return True
 
 def _create_resource_dialog(core, creation_callback,
                             resource_name='File', parent_name='Parent Folder'):
@@ -62,7 +56,7 @@ def _create_resource_dialog(core, creation_callback,
     creation_callback is a function accepting the parent and the name
 
     """
-    if not _check_if_project_is_open(core):
+    if not rope.ui.actionhelpers.check_project(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('New ' + resource_name)
@@ -211,7 +205,7 @@ class FindFileHandle(object):
 
 
 def find_file(context):
-    if not _check_if_project_is_open(context.core):
+    if not rope.ui.actionhelpers.check_project(context.core):
         return
     find_item_dialog(FindFileHandle(context), title='Find Project File',
                      matches='Matching Files')
@@ -253,7 +247,7 @@ class _ResourceViewHandle(TreeViewHandle):
 
 
 def _show_resource_view(core):
-    if not _check_if_project_is_open(core):
+    if not rope.ui.actionhelpers.check_project(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('Resources')
@@ -283,7 +277,7 @@ class ChangeBufferHandle(SearchableListHandle):
         self.toplevel.destroy()
 
 def change_editor(context):
-    if not _check_if_project_is_open(core):
+    if not rope.ui.actionhelpers.check_project(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('Change Buffer')

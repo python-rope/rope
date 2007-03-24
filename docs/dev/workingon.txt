@@ -1,10 +1,15 @@
-``.ropeproject`` Folder
+Moving CallInfo To Disk
 =======================
 
-- Adding ``.ropeproject/config.py`` and its default
-- The default ``config.py``
-- Executing the `opening_project(project)` function
-- Changing `.rope` to use `starting_rope(core)`
+- Adding ``Edit Project Config`` action
+- Added ``DiskObjectDB``
+
+* Adding `Project.close()` to sync `objectdb`
+* Renaming `Project.close()` to `sync()` or we should change all tests
+* Adding `testutils.get_sample_dir()` to use ``/dev/shm``
+* Adding ``use_memory_db`` config
+* Adding clear objectdb command
+* Multiple ropes on one project; problems for objectdb
 
 * What happens when `NoProject` saves call information
 * Adding method to static method refactoring

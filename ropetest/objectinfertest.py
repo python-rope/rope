@@ -20,7 +20,8 @@ class ObjectInferTest(unittest.TestCase):
         super(ObjectInferTest, self).tearDown()
 
     def test_simple_type_inferencing(self):
-        scope = self.pycore.get_string_scope('class Sample(object):\n    pass\na_var = Sample()\n')
+        scope = self.pycore.get_string_scope(
+            'class Sample(object):\n    pass\na_var = Sample()\n')
         sample_class = scope.get_name('Sample').get_object()
         a_var = scope.get_name('a_var').get_object()
         self.assertEquals(sample_class, a_var.get_type())
