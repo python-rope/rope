@@ -757,6 +757,16 @@ class RopeFolderTest(unittest.TestCase):
         myfile.create()
         self.assertEquals('', fscommands.log)
 
+    def test_loading_config_dot_py(self):
+        project = Project(self.project_root, ropefolder='.ropeproject')
+        config = project.get_file('.ropeproject/config.py')
+        if not config.exists():
+            config.create()
+        config.write('def opening_project(project):\n'
+                     '    project.root.create_file("loaded")\n')
+        project = Project(self.project_root, ropefolder='.ropeproject')
+        self.assertTrue(project.get_file('loaded').exists())
+
 
 def suite():
     result = unittest.TestSuite()

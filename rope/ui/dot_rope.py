@@ -8,28 +8,60 @@
 # Note: Since this file is not inside a project you cannot perform
 #   refactorings on it.
 #
-import rope.ui.core
 
 
-core = rope.ui.core.get_core()
+def starting_rope(core):
+    """Change rope preferences.
 
-# Changing editor font
-#core.set('font', ('Courier', 14))
+    This function is called when rope starts.
+
+    """
+
+    # Changing editor font
+    #core.set('font', ('Courier', 14))
+
+    # Hiding menu bar
+    #core.set('show_menu_bar', False)
+
+    # Hiding buffer list
+    #core.set('show_buffer_list', False)
+
+    # Hiding status bar
+    #core.set('show_status_bar', False)
 
 
-# Hiding menu bar
-#core.set('show_menu_bar', False)
-
-# Hiding buffer list
-#core.set('show_buffer_list', False)
-
-# Hiding status bar
-#core.set('show_status_bar', False)
+    # If you don't like emacs keybindings, change this to False
+    i_like_emacs = True
+    if not i_like_emacs:
+        _change_key_binding(core)
 
 
-# If you don't like emacs keybindings, change this to False
-i_like_emacs = True
-if not i_like_emacs:
+    # Add your python templates
+    core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
+    core.add('templates', ('set_field', "self.${field}${cursor} = ${field}\n"))
+
+
+    # The folder relative to project root that holds config files and
+    # information about the project.  If this folder does not exist it is
+    # created.  Specifying `None` means do not make and use a rope folder.
+    #core.set('project_rope_folder', '.ropeproject')
+
+
+    # Adding your own `Action`\s:
+    # If you're interested in adding your own actions to rope you can do so
+    # like this.
+    # Plugins can use this interface for registering their actions.  For
+    # more information see `rope.ui.extension` module.
+    from rope.ui.extension import SimpleAction
+
+    def say_hello(context):
+        print 'Hello Action!'
+
+    hello_action = SimpleAction('hello_action', say_hello, 'C-h h')
+    core.register_action(hello_action)
+
+
+def _change_key_binding(core):
     core.rebind_action('open_project', 'C-P')
     core.rebind_action('close_project', None)
     core.rebind_action('create_file', None)
@@ -121,29 +153,3 @@ if not i_like_emacs:
     core.rebind_action('contributing', None)
     core.rebind_action('library', None)
     core.rebind_action('about', None)
-
-
-# Add your python templates
-core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
-core.add('templates', ('set_field', "self.${field}${cursor} = ${field}\n"))
-
-
-# The folder relative to project root that holds config files and
-# information about the project.  If this folder does not exist it is
-# created.  Specifying `None` means do not make and use a rope folder.
-#core.set('project_rope_folder', '.ropeproject')
-
-
-# Adding your own `Action`\s:
-# If you're interested in adding your own actions to rope you can do so
-# like this.
-# Plugins can use this interface for registering their actions.  For
-# more information see `rope.ui.extension` module.
-
-from rope.ui.extension import SimpleAction
-
-def say_hello(context):
-    print 'Hello Action!'
-
-hello_action = SimpleAction('hello_action', say_hello, 'C-h h')
-core.register_action(hello_action)

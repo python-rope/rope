@@ -157,26 +157,6 @@ Issues:
 * What to do about `NoProject`
 
 
-``config.py``
--------------
-
-* Push or poll model::
-
-    def opening_project(project):
-        pass
-
-    def closing_project(project):
-        pass
-
-* Changing dot rope?::
-
-    def starting_rope(core):
-        pass
-
-    def closing_rope(core):
-        pass
-
-
 Enhancing `CallInfoManager`
 ===========================
 

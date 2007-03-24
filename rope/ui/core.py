@@ -1,4 +1,5 @@
 import os
+import imp
 
 import tkFileDialog
 from Tkinter import *
@@ -224,6 +225,8 @@ class Core(object):
                                 '__builtins__': __builtins__,
                                 '__file__': dot_rope})
             execfile(dot_rope, run_globals)
+            if 'starting_rope' in run_globals:
+                run_globals['starting_rope'](self)
         except IOError, e:
             print 'Unable to load <~.rope> file: ' + e
 

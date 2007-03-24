@@ -111,7 +111,7 @@ class Project(_Project):
         super(Project, self).__init__(fscommands)
         self.ignored_patterns = []
         self.set_ignored_resources(['*.pyc', '.svn', '*~', '.ropeproject'])
-        self._ropefolder = self._create_rope_folder(ropefolder)
+        self._ropefolder = self._init_rope_folder(ropefolder)
 
     def get_files(self):
         return self._get_files_recursively(self.root)
@@ -128,11 +128,28 @@ class Project(_Project):
                 result.extend(self._get_files_recursively(folder))
         return result
 
-    def _create_rope_folder(self, ropefolder):
+    def _init_rope_folder(self, ropefolder):
         if ropefolder is not None:
             result = self.get_folder(ropefolder)
             if not result.exists():
                 result.create()
+            if result.has_child('config.py'):
+                config = result.get_child('config.py')
+            else:
+                config = result.create_file('config.py')
+                config.write(
+                    '# The default ``config.py``\n\n\n'
+                    'def opening_project(project):\n'
+                    '    """This function is called when this project is opened"""\n'
+                    '    #project.set_ignored_resources'
+                    "(['*.pyc', '.svn', '*~', '.ropeproject'])\n")
+            run_globals = {}
+            run_globals.update({'__name__': '__main__',
+                                '__builtins__': __builtins__,
+                                '__file__': config.real_path})
+            execfile(config.real_path, run_globals)
+            if 'opening_project' in run_globals:
+                run_globals['opening_project'](self)
             return result
 
     def set_ignored_resources(self, patterns):
