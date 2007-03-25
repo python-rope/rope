@@ -1,7 +1,7 @@
 import unittest
 
-from rope.base.project import Project
-import rope.base.builtins
+import rope.base.project
+from rope.base import builtins
 from rope.base.oi import callinfo
 from ropetest import testutils
 
@@ -10,13 +10,11 @@ class ObjectInferTest(unittest.TestCase):
 
     def setUp(self):
         super(ObjectInferTest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(ObjectInferTest, self).tearDown()
 
     def test_simple_type_inferencing(self):
@@ -215,7 +213,7 @@ class ObjectInferTest(unittest.TestCase):
                   'for s in f():\n    a_var = s\n')
         pymod = self.pycore.resource_to_pyobject(mod)
         a_var = pymod.get_attribute('a_var').get_object()
-        self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
+        self.assertTrue(isinstance(a_var.get_type(), builtins.Str))
 
     def test_considering_nones_to_be_unknowns(self):
         mod = self.pycore.get_string_module(
@@ -229,14 +227,12 @@ class NewStaticOITest(unittest.TestCase):
 
     def setUp(self):
         super(NewStaticOITest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(NewStaticOITest, self).tearDown()
 
     def test_static_oi_for_simple_function_calls(self):
@@ -355,7 +351,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertTrue(isinstance(a_var.get_type(),
-                                   rope.base.builtins.Generator))
+                                   builtins.Generator))
 
     def test_static_oi_for_lists_depending_on_append_function(self):
         code = 'class C(object):\n    pass\nl = list()\n' \
@@ -509,13 +505,11 @@ class DynamicOITest(unittest.TestCase):
 
     def setUp(self):
         super(DynamicOITest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(DynamicOITest, self).tearDown()
 
     def test_simple_dti(self):
@@ -710,7 +704,7 @@ class DynamicOITest(unittest.TestCase):
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
         a_var = pymod.get_attribute('a_var').get_object()
-        self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
+        self.assertTrue(isinstance(a_var.get_type(), builtins.Str))
 
     def test_textual_transformations(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
@@ -727,7 +721,7 @@ class DynamicOITest(unittest.TestCase):
             var = pymod.get_attribute(name).get_object()
             self.assertEquals(to_textual.transform(var), complex_to_textual(var))
         self.assertEquals(to_textual.transform(pymod), complex_to_textual(pymod))
-        enumerate_func = rope.base.builtins.builtins['enumerate'].get_object()
+        enumerate_func = builtins.builtins['enumerate'].get_object()
         self.assertEquals(to_textual.transform(enumerate_func),
                           complex_to_textual(enumerate_func))
 

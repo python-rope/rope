@@ -1,4 +1,3 @@
-import compiler.consts
 import os
 import re
 import shelve
@@ -138,7 +137,8 @@ class _DiskObjectDB(object):
         if path not in self.cache:
             if path not in self.index:
                 # TODO: Use better and shorter names
-                self.index[path] = path.replace('/', '$')
+                self.index[path] = os.path.basename(path) + \
+                                   str(hash(path)) + '.shelve'
             name = self.index[path]
             resource = self.project.get_file(self.root.path + '/' + name)
             if not create and not resource.exists():

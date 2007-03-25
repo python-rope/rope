@@ -1,6 +1,5 @@
 import unittest
 
-import rope.base.project
 from rope.base import exceptions
 from rope.refactor import move
 from ropetest import testutils
@@ -10,9 +9,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def setUp(self):
         super(MoveRefactoringTest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = rope.base.project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
         self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
@@ -22,7 +19,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod5 = self.pycore.create_module(self.pkg, 'mod5')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(MoveRefactoringTest, self).tearDown()
 
     def _move(self, resource, offset, dest_resource):

@@ -5,7 +5,6 @@ from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    SourceLinesAdapter, WordRangeFinder,
                                    ScopeNameFinder, LogicalLineFinder,
                                    get_block_start)
-from rope.base.project import Project
 from ropetest import testutils
 
 
@@ -239,13 +238,11 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def setUp(self):
         super(ScopeNameFinderTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(ScopeNameFinderTest, self).tearDown()
 
     # FIXME: in normal scopes the interpreter raises `UnboundLocalName`

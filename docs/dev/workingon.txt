@@ -1,12 +1,12 @@
 Moving CallInfo To Disk
 =======================
 
-- Adding ``Edit Project Config`` action
-- Added ``DiskObjectDB``
+- Adding `Project.close()`
+- `testutils.sample_project()` and `testutils.remove_project()`
+- Calling `Project.close()` in all tests
 
-* Adding `Project.close()` to sync `objectdb`
-* Renaming `Project.close()` to `sync()` or we should change all tests
-* Adding `testutils.get_sample_dir()` to use ``/dev/shm``
+* Documenting `Project.close()`
+* Use ``/dev/shm/sample_project`` as project root for faster testing?
 * Adding ``use_memory_db`` config
 * Adding clear objectdb command
 * Multiple ropes on one project; problems for objectdb

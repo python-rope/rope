@@ -1,7 +1,24 @@
-import os
 import os.path
 import shutil
 import sys
+
+import rope.base.project
+
+
+def sample_project(root=None, **kwds):
+    if root is None:
+        root = 'sample_project'
+        # HACK: Using ``/dev/shm/`` for faster tests
+        if os.name == 'posix' and os.path.isdir('/dev/shm'):
+            root = '/dev/shm/' + root
+    remove_recursively(root)
+    return rope.base.project.Project(root, **kwds)
+
+
+def remove_project(project):
+    project.close()
+    remove_recursively(project.address)
+
 
 def remove_recursively(path):
     import time

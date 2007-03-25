@@ -1,8 +1,7 @@
-import os
 import unittest
 
-from rope.base.project import Project
-from rope.ide.codeassist import PythonCodeAssist, RopeSyntaxError, Template, ProposalSorter
+from rope.ide.codeassist import (PythonCodeAssist, RopeSyntaxError,
+                                 Template, ProposalSorter)
 from ropetest import testutils
 
 
@@ -10,14 +9,11 @@ class CodeAssistTest(unittest.TestCase):
 
     def setUp(self):
         super(CodeAssistTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        os.mkdir(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.assist = PythonCodeAssist(self.project)
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(CodeAssistTest, self).tearDown()
 
     def test_simple_assist(self):
@@ -586,10 +582,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
 
     def setUp(self):
         super(CodeAssistInProjectsTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        os.mkdir(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.assist = PythonCodeAssist(self.project)
         self.pycore = self.project.get_pycore()
         samplemod = self.pycore.create_module(self.project.root, 'samplemod')
@@ -611,7 +604,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
                 self.fail('completion <%s> was proposed' % name)
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(self.__class__, self).tearDown()
 
     def test_simple_import(self):

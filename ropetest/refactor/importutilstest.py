@@ -1,6 +1,5 @@
 import unittest
 
-from rope.base.project import Project
 from rope.refactor.importutils import ImportTools
 from ropetest import testutils
 
@@ -9,9 +8,7 @@ class ImportUtilsTest(unittest.TestCase):
 
     def setUp(self):
         super(ImportUtilsTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.import_tools = ImportTools(self.pycore)
 
@@ -27,7 +24,7 @@ class ImportUtilsTest(unittest.TestCase):
         m1 = self.pycore.create_module(p3, 'm1')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(ImportUtilsTest, self).tearDown()
 
     def test_get_import_for_module(self):

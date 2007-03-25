@@ -1,6 +1,5 @@
 import unittest
 
-from rope.base.project import Project
 from rope.ide import notes
 from ropetest import testutils
 
@@ -9,13 +8,11 @@ class AnnotationsTest(unittest.TestCase):
 
     def setUp(self):
         super(AnnotationsTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.tags = notes.Codetags()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(AnnotationsTest, self).tearDown()
 
     def test_tags_empty_input(self):

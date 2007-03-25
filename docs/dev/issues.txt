@@ -142,9 +142,8 @@ Enhancing `CallInfoManager`
 * Should every unknown be calculated everytime?
 * When to forget old results?
 * Returning a `Generator` for generator functions with unknown return type?
-* Changing `callinfo` to match not exactly the same but similar args
-* Using `sqlite3` to prevent holding information in memory? mocks?
-* Saving `AbstractXxx`
+* Changing `callinfo` to match similar args
+* Saving `AbstractXxx`\s
 * Better per name data holding in `callinfo`
 * Not overwriting useful per object data in `callinfo`
 * Some `self`\s are unknown!
@@ -223,8 +222,8 @@ Saving object data requires having a good mechanisms for invalidating
 information and testing.
 
 
-An Implementation Proposal
---------------------------
+Using `shelve` For `_DiskObjectDB`
+----------------------------------
 
 We probably have to extend the information we hold for each individual
 call info.::
@@ -274,14 +273,34 @@ Issues:
 * What to do with per name information
 * The values are very long; shelve might fail
 * The pickling might be very inefficient
+* More than one rope on a project
 
-The most complex part is when to invalidate data.  Before going on we
-should keep in mind that whatever we do is only an approaximation and
-does not solve all problems.  That is mainly because even when no
-resource changes it is possible that by running SOI multiple times
-better data might be calculated and we can not know that.  But at
-least we know that a good call info remains valid as long as no
-resource gets changed.
+
+Using `sqlite3`
+---------------
+
+Scope:
+
+=========  ========
+path       key
+=========  ========
+=========  ========
+
+
+Call info:
+
+==========  ======  ==========
+scope fk    args    returned
+==========  ======  ==========
+==========  ======  ==========
+
+
+Per name:
+
+==========  ======  ==========
+scope fk    name    value
+==========  ======  ==========
+==========  ======  ==========
 
 
 Better Concluded Data

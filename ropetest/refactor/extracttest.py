@@ -2,7 +2,6 @@ import unittest
 
 import rope.base.codeanalyze
 import rope.base.exceptions
-import rope.base.project
 import ropetest.testutils as testutils
 from rope.refactor import extract
 
@@ -11,13 +10,11 @@ class ExtractMethodTest(unittest.TestCase):
 
     def setUp(self):
         super(ExtractMethodTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = rope.base.project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(ExtractMethodTest, self).tearDown()
 
     def do_extract_method(self, source_code, start, end, extracted):

@@ -1,7 +1,6 @@
 import unittest
 
 import rope.base.exceptions
-import rope.base.project
 from rope.refactor import change_signature
 from rope.refactor.change_signature import ChangeSignature
 from ropetest import testutils
@@ -11,14 +10,12 @@ class ChangeSignatureTest(unittest.TestCase):
 
     def setUp(self):
         super(ChangeSignatureTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = rope.base.project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(ChangeSignatureTest, self).tearDown()
 
     def test_normalizing_parameters_for_trivial_case(self):

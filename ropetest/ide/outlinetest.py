@@ -1,7 +1,5 @@
-import os
 import unittest
 
-from rope.base.project import Project
 from rope.ide.outline import PythonOutline
 from ropetest import testutils
 
@@ -10,14 +8,11 @@ class OutlineTest(unittest.TestCase):
 
     def setUp(self):
         super(OutlineTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        os.mkdir(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.outline = PythonOutline(self.project)
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(OutlineTest, self).tearDown()
 
     def test_simple_outline(self):

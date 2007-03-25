@@ -1,21 +1,19 @@
 import os
 import unittest
 
-from rope.base.project import Project
 from rope.base.exceptions import RopeError
 from ropetest import testutils
+
 
 class PythonFileRunnerTest(unittest.TestCase):
 
     def setUp(self):
         super(PythonFileRunnerTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(PythonFileRunnerTest, self).tearDown()
 
     def make_sample_python_file(self, file_path, get_text_function_source=None):

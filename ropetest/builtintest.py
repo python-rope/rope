@@ -1,23 +1,19 @@
 import unittest
 
-import rope.base.project
-import ropetest
 from rope.base import pyobjects, builtins
+from ropetest import testutils
 
 
 class BuiltinTypesTest(unittest.TestCase):
 
     def setUp(self):
         super(BuiltinTypesTest, self).setUp()
-        ropetest.testutils.remove_recursively(self.project_root)
-        self.project = rope.base.project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
-    project_root = 'sample_project'
-
     def tearDown(self):
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(BuiltinTypesTest, self).tearDown()
 
     def test_simple_case(self):
@@ -260,7 +256,7 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('for line in open("file.txt"):\n    a_var = line\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         a_var = pymod.get_attribute('a_var').get_object()
-        self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
+        self.assertTrue(isinstance(a_var.get_type(), builtins.Str))
 
     def test_file_builtin_type2(self):
         self.mod.write('p = property()\n')

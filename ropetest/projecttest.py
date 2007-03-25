@@ -28,7 +28,7 @@ class ProjectTest(unittest.TestCase):
         sample.close()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         unittest.TestCase.tearDown(self)
 
     def test_project_creation(self):
@@ -64,21 +64,21 @@ class ProjectTest(unittest.TestCase):
         self.fail('Should have failed')
 
     def test_making_root_folder_if_it_does_not_exist(self):
-        projectRoot = 'SampleProject2'
+        project_root = 'SampleProject2'
         try:
-            project = Project(projectRoot)
-            self.assertTrue(os.path.exists(projectRoot) and os.path.isdir(projectRoot))
+            project = Project(project_root)
+            self.assertTrue(os.path.exists(project_root) and os.path.isdir(project_root))
         finally:
-            testutils.remove_recursively(projectRoot)
+            testutils.remove_recursively(project_root)
 
     @testutils.assert_raises(RopeError)
     def test_failure_when_project_root_exists_and_is_a_file(self):
         try:
-            projectRoot = 'SampleProject2'
-            open(projectRoot, 'w').close()
-            project = Project(projectRoot)
+            project_root = 'SampleProject2'
+            open(project_root, 'w').close()
+            project = Project(project_root)
         finally:
-            os.remove(projectRoot)
+            os.remove(project_root)
 
     def test_creating_folders(self):
         folderName = 'SampleFolder'
@@ -421,12 +421,10 @@ class ResourceObserverTest(unittest.TestCase):
 
     def setUp(self):
         super(ResourceObserverTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(ResourceObserverTest, self).tearDown()
 
     def test_resource_change_observer(self):
@@ -621,16 +619,14 @@ class OutOfProjectTest(unittest.TestCase):
 
     def setUp(self):
         super(OutOfProjectTest, self).setUp()
-        self.project_root = 'sample_project'
         self.test_directory = 'temp_test_directory'
-        testutils.remove_recursively(self.project_root)
         testutils.remove_recursively(self.test_directory)
         os.mkdir(self.test_directory)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.no_project = NoProject()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         testutils.remove_recursively(self.test_directory)
         super(OutOfProjectTest, self).tearDown()
 
@@ -702,70 +698,71 @@ class RopeFolderTest(unittest.TestCase):
 
     def setUp(self):
         super(RopeFolderTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
+        self.project = None
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        if self.project:
+            testutils.remove_project(self.project)
         super(RopeFolderTest, self).tearDown()
 
     def test_none_project_rope_folder(self):
-        project = Project(self.project_root, ropefolder=None)
-        self.assertTrue(project.ropefolder is None)
+        self.project = testutils.sample_project(ropefolder=None)
+        self.assertTrue(self.project.ropefolder is None)
 
     def test_getting_project_rope_folder(self):
-        project = Project(self.project_root, ropefolder='.ropeproject')
-        self.assertTrue(project.ropefolder.exists())
-        self.assertTrue('.ropeproject', project.ropefolder.path)
+        self.project = testutils.sample_project(ropefolder='.ropeproject')
+        self.assertTrue(self.project.ropefolder.exists())
+        self.assertTrue('.ropeproject', self.project.ropefolder.path)
 
     def test_setting_ignored_resources(self):
-        project = Project(self.project_root)
-        project.set_ignored_resources(['myfile.txt'])
-        myfile = project.get_file('myfile.txt')
-        file2 = project.get_file('file2.txt')
-        self.assertTrue(project.is_ignored(myfile))
-        self.assertFalse(project.is_ignored(file2))
+        self.project = testutils.sample_project()
+        self.project.set_ignored_resources(['myfile.txt'])
+        myfile = self.project.get_file('myfile.txt')
+        file2 = self.project.get_file('file2.txt')
+        self.assertTrue(self.project.is_ignored(myfile))
+        self.assertFalse(self.project.is_ignored(file2))
 
     def test_ignored_folders(self):
-        project = Project(self.project_root)
-        project.set_ignored_resources(['myfolder'])
-        myfolder = project.root.create_folder('myfolder')
-        self.assertTrue(project.is_ignored(myfolder))
+        self.project = testutils.sample_project()
+        self.project.set_ignored_resources(['myfolder'])
+        myfolder = self.project.root.create_folder('myfolder')
+        self.assertTrue(self.project.is_ignored(myfolder))
         myfile = myfolder.create_file('myfile.txt')
-        self.assertTrue(project.is_ignored(myfile))
+        self.assertTrue(self.project.is_ignored(myfile))
 
     def test_setting_ignored_resources_patterns(self):
-        project = Project(self.project_root)
-        project.set_ignored_resources(['m?file.*'])
-        myfile = project.get_file('myfile.txt')
-        file2 = project.get_file('file2.txt')
-        self.assertTrue(project.is_ignored(myfile))
-        self.assertFalse(project.is_ignored(file2))
+        self.project = testutils.sample_project()
+        self.project.set_ignored_resources(['m?file.*'])
+        myfile = self.project.get_file('myfile.txt')
+        file2 = self.project.get_file('file2.txt')
+        self.assertTrue(self.project.is_ignored(myfile))
+        self.assertFalse(self.project.is_ignored(file2))
 
     def test_normal_fscommands(self):
         fscommands = _MockFSCommands()
-        project = Project(self.project_root, fscommands=fscommands)
-        myfile = project.get_file('myfile.txt')
+        self.project = testutils.sample_project(fscommands=fscommands)
+        myfile = self.project.get_file('myfile.txt')
         myfile.create()
         self.assertTrue('create_file ', fscommands.log)
 
     def test_fscommands_and_ignored_resources(self):
         fscommands = _MockFSCommands()
-        project = Project(self.project_root, fscommands=fscommands)
-        project.set_ignored_resources(['myfile.txt'])
-        myfile = project.get_file('myfile.txt')
+        self.project = testutils.sample_project(fscommands=fscommands)
+        self.project.set_ignored_resources(['myfile.txt'])
+        myfile = self.project.get_file('myfile.txt')
         myfile.create()
         self.assertEquals('', fscommands.log)
 
     def test_loading_config_dot_py(self):
-        project = Project(self.project_root, ropefolder='.ropeproject')
-        config = project.get_file('.ropeproject/config.py')
+        self.project = testutils.sample_project(ropefolder='.ropeproject')
+        config = self.project.get_file('.ropeproject/config.py')
         if not config.exists():
             config.create()
         config.write('def opening_project(project):\n'
                      '    project.root.create_file("loaded")\n')
-        project = Project(self.project_root, ropefolder='.ropeproject')
-        self.assertTrue(project.get_file('loaded').exists())
+        self.project.close()
+        self.project = Project(self.project.address, ropefolder='.ropeproject')
+        self.assertTrue(self.project.get_file('loaded').exists())
 
 
 def suite():

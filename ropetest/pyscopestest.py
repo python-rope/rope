@@ -1,6 +1,5 @@
 import unittest
 
-from rope.base.project import Project
 from rope.base.pyobjects import get_base_type
 from ropetest import testutils
 
@@ -9,13 +8,11 @@ class PyCoreScopesTest(unittest.TestCase):
 
     def setUp(self):
         super(PyCoreScopesTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(PyCoreScopesTest, self).tearDown()
 
     def test_simple_scope(self):

@@ -1,7 +1,7 @@
 import unittest
 
 import rope.base.history
-from rope.base import exceptions, project
+from rope.base import exceptions
 from rope.base.change import *
 from ropetest import testutils
 
@@ -10,13 +10,11 @@ class HistoryTest(unittest.TestCase):
 
     def setUp(self):
         super(HistoryTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.history = self.project.history
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(HistoryTest, self).tearDown()
 
     def test_undoing_writes(self):
@@ -49,15 +47,13 @@ class IsolatedHistoryTest(unittest.TestCase):
 
     def setUp(self):
         super(IsolatedHistoryTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.history = rope.base.history.History()
         self.file1 = self.project.root.create_file('file1.txt')
         self.file2 = self.project.root.create_file('file2.txt')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(IsolatedHistoryTest, self).tearDown()
 
     def test_simple_undo(self):

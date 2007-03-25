@@ -1,25 +1,22 @@
 import unittest
 
-import rope.base.project
 from rope.base import exceptions
-from ropetest import testutils
 from rope.ide import generate
+from ropetest import testutils
 
 
 class GenerateTest(unittest.TestCase):
 
     def setUp(self):
         super(GenerateTest, self).setUp()
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
-        self.project = rope.base.project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod1')
         self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
         self.pkg = self.pycore.create_package(self.project.root, 'pkg')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(GenerateTest, self).tearDown()
 
     def _get_generate(self, offset):

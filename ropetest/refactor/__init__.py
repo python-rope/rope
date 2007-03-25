@@ -9,7 +9,6 @@ import ropetest.refactor.inlinetest
 import ropetest.refactor.movetest
 import ropetest.refactor.renametest
 from rope.base.exceptions import RefactoringError
-from rope.base.project import Project
 from rope.refactor.encapsulate_field import EncapsulateField
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.localtofield import LocalToField
@@ -21,14 +20,12 @@ class MethodObjectTest(unittest.TestCase):
 
     def setUp(self):
         super(MethodObjectTest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(MethodObjectTest, self).tearDown()
 
     def test_empty_method(self):
@@ -134,13 +131,11 @@ class IntroduceFactoryTest(unittest.TestCase):
 
     def setUp(self):
         super(IntroduceFactoryTest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(IntroduceFactoryTest, self).tearDown()
 
     def _introduce_factory(self, resource, offset, factory_name,
@@ -368,9 +363,7 @@ class EncapsulateFieldTest(unittest.TestCase):
 
     def setUp(self):
         super(EncapsulateFieldTest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
         self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -382,7 +375,7 @@ class EncapsulateFieldTest(unittest.TestCase):
                             '    def set_attr(self, value):\n        self.attr = value\n'
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(EncapsulateFieldTest, self).tearDown()
 
     def _perform_encapsulate_field(self, resource, offset):
@@ -495,14 +488,12 @@ class LocalToFieldTest(unittest.TestCase):
 
     def setUp(self):
         super(LocalToFieldTest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(LocalToFieldTest, self).tearDown()
 
     def _perform_convert_local_variable_to_field(self, resource, offset):
@@ -566,14 +557,12 @@ class IntroduceParameterTest(unittest.TestCase):
 
     def setUp(self):
         super(IntroduceParameterTest, self).setUp()
-        self.project_root = 'sampleproject'
-        testutils.remove_recursively(self.project_root)
-        self.project = Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
     def tearDown(self):
-        testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(IntroduceParameterTest, self).tearDown()
 
     def _introduce_parameter(self, offset, name):

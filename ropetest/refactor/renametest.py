@@ -1,24 +1,21 @@
 import unittest
 
 import rope.base.codeanalyze
-import rope.base.project
 import rope.refactor.occurrences
-import ropetest
 from rope.refactor import rename
 from rope.refactor.rename import Rename
+from ropetest import testutils
 
 
 class RenameRefactoringTest(unittest.TestCase):
 
     def setUp(self):
         super(RenameRefactoringTest, self).setUp()
-        self.project_root = 'sample_project'
-        ropetest.testutils.remove_recursively(self.project_root)
-        self.project = rope.base.project.Project(self.project_root)
+        self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):
-        ropetest.testutils.remove_recursively(self.project_root)
+        testutils.remove_project(self.project)
         super(RenameRefactoringTest, self).tearDown()
 
     def _local_rename(self, source_code, offset, new_name):
@@ -451,14 +448,12 @@ class RenameRefactoringTest(unittest.TestCase):
 class ChangeOccurrencesTest(unittest.TestCase):
 
     def setUp(self):
-        super(ChangeOccurrencesTest, self).setUp()
-        ropetest.testutils.remove_recursively('sample_project')
-        self.project = rope.base.project.Project('sample_project')
+        self.project = testutils.sample_project()
         self.mod = self.project.get_pycore().create_module(
             self.project.root, 'mod')
 
     def tearDown(self):
-        ropetest.testutils.remove_recursively('sample_project')
+        testutils.remove_project(self.project)
         super(ChangeOccurrencesTest, self).tearDown()
 
     def test_simple_case(self):
