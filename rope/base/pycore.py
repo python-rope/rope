@@ -1,13 +1,12 @@
 import re
 import sys
 
-import rope.base.oi.dynamicoi
+import rope.base.oi.callinfo
 import rope.base.oi.objectinfer
-import rope.base.oi.staticoi
 import rope.base.project
 from rope.base.exceptions import ModuleNotFoundError
+from rope.base.oi import dynamicoi
 from rope.base.pyobjects import PyModule, PyPackage, PyClass
-import rope.base.oi.callinfo
 
 
 class PyCore(object):
@@ -15,7 +14,7 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
-        self.call_info = rope.base.oi.callinfo.CallInfoManager(self)
+        self.call_info = rope.base.oi.callinfo.ObjectInfoManager(project)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self.classes = None
         observer = rope.base.project.ResourceObserver(
@@ -195,7 +194,9 @@ class PyCore(object):
         controlling the process.
 
         """
-        runner = self.object_infer.doi.run_module(resource, args, stdin, stdout)
+        receiver = self.call_info.doi_data_received
+        runner = dynamicoi.PythonFileRunner(self, resource, args, stdin,
+                                            stdout, receiver)
         runner.add_finishing_observer(self._invalidate_all_concluded_data)
         runner.run()
         return runner

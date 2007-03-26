@@ -10,9 +10,10 @@ import rope.ui.keybinder
 import rope.ui.statusbar
 from rope.base.exceptions import RopeError
 from rope.base.project import Project, get_no_project
-from rope.ui import editingcontexts, prefs, registers
+from rope.ui import editingcontexts, registers
 from rope.ui.extension import ActionContext
 from rope.ui.menubar import MenuBarManager
+import rope.base.prefs
 
 
 class Core(object):
@@ -46,7 +47,7 @@ class Core(object):
         self.project = get_no_project()
         self.rebound_keys = {}
         self.actions = []
-        self.prefs = prefs.Prefs()
+        self.prefs = rope.base.prefs.Prefs()
         self.last_action = None
         self.registers = registers.Registers()
 
@@ -306,7 +307,7 @@ class Core(object):
     def close_project(self):
         while self.editor_manager.active_editor is not None:
             self.close_active_editor()
-            self.project.close()
+        self.project.close()
         self.registers.project_closed()
         self.project = get_no_project()
 

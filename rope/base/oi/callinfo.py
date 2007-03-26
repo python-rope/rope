@@ -6,15 +6,18 @@ import rope.base.project
 from rope.base import pyobjects
 
 
-class CallInfoManager(object):
+class ObjectInfoManager(object):
 
-    def __init__(self, pycore):
-        self.pycore = pycore
-        self.to_textual = _PyObjectToTextual(pycore.project)
-        self.to_pyobject = _TextualToPyObject(pycore.project)
+    def __init__(self, project):
+        self.project = project
+        self.to_textual = _PyObjectToTextual(project)
+        self.to_pyobject = _TextualToPyObject(project)
         self.per_object = {}
-        self.objectdb = _MemoryObjectDB()
-#        self.objectdb = _DiskObjectDB(self.pycore.project)
+        if True or isinstance(project, rope.base.project.NoProject) or \
+           project.ropefolder is None:
+            self.objectdb = _MemoryObjectDB()
+        else:
+            self.objectdb = _DiskObjectDB(project)
 
     def get_returned(self, pyobject, args):
         organizer = self.find_organizer(pyobject)
@@ -117,7 +120,7 @@ class _DiskObjectDB(object):
 
     def _get_index(self):
         if self._index is None:
-            index_file = self.project.get_file(self.root.path + '/index')
+            index_file = self.project.get_file(self.root.path + '/index.shelve')
             self._index = shelve.open(index_file.real_path, writeback=True)
         return self._index
 

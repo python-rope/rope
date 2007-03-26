@@ -5,25 +5,8 @@ import subprocess
 import sys
 import tempfile
 import threading
+
 import cPickle as pickle
-
-
-class DynamicObjectInference(object):
-
-    def __init__(self, pycore):
-        self.pycore = pycore
-        self.info = pycore.call_info
-
-    def infer_returned_object(self, pyobject, args):
-        return self.info.get_returned(pyobject, args)
-
-    def infer_parameter_objects(self, pyobject):
-        return self.info.get_parameter_objects(pyobject)
-
-    def run_module(self, resource, args=None, stdin=None, stdout=None):
-        """Return a PythonFileRunner for controlling the process"""
-        return PythonFileRunner(self.pycore, resource, args, stdin,
-                                stdout, self.info.doi_data_received)
 
 
 class PythonFileRunner(object):

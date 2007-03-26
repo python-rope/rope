@@ -135,6 +135,37 @@ The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
 
 
+Setting Project Preferences In ``config.py``
+============================================
+
+Using `Project`::
+
+  def opening_project(project):
+      project.set_ignored_resources(['*.pyc', '.svn', '*~', '.ropeproject'])
+      project.set_objectdb_type('mem')
+
+Using `Project.set`::
+
+  def opening_project(project):
+      project.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
+      project.set('objectdb_type', 'mem')
+
+Using `Prefs`::
+
+  def opening_project(prefs):
+      prefs.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
+      prefs.set('objectdb_type', 'mem')
+
+Using `Project.prefs`::
+
+  def opening_project(project):
+      prefs = project.prefs
+      prefs.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
+      prefs.set('objectdb_type', 'mem')
+
+I prefer the last.
+
+
 Enhancing `CallInfoManager`
 ===========================
 
@@ -143,7 +174,7 @@ Enhancing `CallInfoManager`
 * When to forget old results?
 * Returning a `Generator` for generator functions with unknown return type?
 * Changing `callinfo` to match similar args
-* Saving `AbstractXxx`\s
+* Saving python elements with now source; `Abstract...`
 * Better per name data holding in `callinfo`
 * Not overwriting useful per object data in `callinfo`
 * Some `self`\s are unknown!
@@ -185,13 +216,6 @@ file we don't want the information held for all the methods contained
 in that module to be lost.
 
 
-Using Less Space
-----------------
-
-* Currently we hold absolute path for files inside our project
-* Using foreign keys instead of textual form for params and returned
-
-
 Using A Real Database
 ---------------------
 
@@ -222,16 +246,15 @@ Saving object data requires having a good mechanisms for invalidating
 information and testing.
 
 
-Using `shelve` For `_DiskObjectDB`
-----------------------------------
+Saving More Info
+----------------
 
 We probably have to extend the information we hold for each individual
 call info.::
 
-  class CallInfo(object):
+  class ObjectInfo(object):
 
-      parameters = None
-      returned = None
+      value = None
       time = None
       exactness = None
 
@@ -242,13 +265,13 @@ call info.::
           pass
 
 
-The added fields does not seem to be a major memory problem since
-call information is going to be saved to the disk.  We decided to
-put data on the disk and use flat file databases or `shelve`
-module.
+It can be used both for call info and per name objects.
 
-Now the problem is how to organize data in files.  The data is
-organized so::
+
+Using `shelve` For `_DiskObjectDB`
+----------------------------------
+
+The data is organized so::
 
   file/
     function/
@@ -270,7 +293,7 @@ containing different call infos.
 
 Issues:
 
-* What to do with per name information
+* What to do for per name information
 * The values are very long; shelve might fail
 * The pickling might be very inefficient
 * More than one rope on a project

@@ -12,9 +12,7 @@ class ObjectInfer(object):
 
     def __init__(self, pycore):
         self.soi = staticoi.StaticObjectInference(pycore)
-        self.doi = dynamicoi.DynamicObjectInference(pycore)
         self.call_info = pycore.call_info
-        self.ois = [self.soi, self.doi]
 
     def infer_returned_object(self, pyobject, args):
         """Infer the `PyObject` this callable `PyObject` returns after calling"""
@@ -32,10 +30,10 @@ class ObjectInfer(object):
 
     def infer_parameter_objects(self, pyobject):
         """Infer the `PyObject`\s of parameters of this callable `PyObject`"""
-        for oi in reversed(self.ois):
-            result = oi.infer_parameter_objects(pyobject)
-            if result is not None:
-                return result
+        result = self.call_info.get_parameter_objects(pyobject)
+        if result is None:
+            result = self.soi.infer_parameter_objects(pyobject)
+        return result
 
     def infer_assigned_object(self, pyname):
         if not pyname.assignments:

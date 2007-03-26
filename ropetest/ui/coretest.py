@@ -11,7 +11,6 @@ class CoreTest(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.project_root = 'sample_project'
         testutils.remove_recursively(self.project_root)
-        Core.get_core().close_project()
         self._make_sample_project()
         self.sample_file2 = 'samplefile2.txt'
         Core.get_core().open_project(self.project_root)
@@ -29,6 +28,7 @@ class CoreTest(unittest.TestCase):
         sample.close()
 
     def tearDown(self):
+        Core.get_core().close_project()
         testutils.remove_recursively(self.project_root)
         unittest.TestCase.tearDown(self)
 

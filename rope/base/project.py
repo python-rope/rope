@@ -15,7 +15,7 @@ class _Project(object):
         self.file_access = rope.base.fscommands.FileAccess()
         self._history = rope.base.history.History(maxundos=100)
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
-        self.pycore = rope.base.pycore.PyCore(self)
+        self._pycore = None
 
     def get_resource(self, resource_name):
         """Get a resource in a project.
@@ -30,7 +30,7 @@ class _Project(object):
         """
         path = self._get_resource_path(resource_name)
         if not os.path.exists(path):
-            raise RopeError('Resource %s does not exist' % resource_name)
+            raise RopeError('Resource <%s> does not exist' % resource_name)
         elif os.path.isfile(path):
             return File(self, resource_name)
         elif os.path.isdir(path):
@@ -70,7 +70,9 @@ class _Project(object):
         self.history.do(changes)
 
     def get_pycore(self):
-        return self.pycore
+        if self._pycore is None:
+            self._pycore = rope.base.pycore.PyCore(self)
+        return self._pycore
 
     def get_file(self, path):
         """Get the file with `path`(it may not exist)"""
@@ -90,6 +92,7 @@ class _Project(object):
         pass
 
     history = property(lambda self: self._history)
+    pycore = property(get_pycore)
 
 
 class Project(_Project):
@@ -99,9 +102,12 @@ class Project(_Project):
         """A rope project
 
         :parameters:
-            - `project_root`: the address of the root folder of the project
+            - `projectroot`: the address of the root folder of the project
             - `fscommands`: implements the file system operations rope uses
               have a look at `rope.base.fscommands`
+            - `ropefolder`: the name of the folder in which rope stores
+              project configurations and data.  Pass `None` for not using
+              such a folder at all.
 
         """
         self._address = os.path.expanduser(projectroot)

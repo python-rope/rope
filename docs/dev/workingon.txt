@@ -1,10 +1,6 @@
 Moving CallInfo To Disk
 =======================
 
-- Adding `Project.close()`
-- `testutils.sample_project()` and `testutils.remove_project()`
-- Calling `Project.close()` in all tests
-
 * Documenting `Project.close()`
 * Use ``/dev/shm/sample_project`` as project root for faster testing?
 * Adding ``use_memory_db`` config
