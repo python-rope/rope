@@ -13,7 +13,9 @@ class ObjectInfoManager(object):
         self.to_textual = _PyObjectToTextual(project)
         self.to_pyobject = _TextualToPyObject(project)
         self.per_object = {}
-        if True or isinstance(project, rope.base.project.NoProject) or \
+        prefered_db = project.get_prefs().get('objectdb_type', 'memory')
+        if prefered_db == 'memory' or \
+           isinstance(project, rope.base.project.NoProject) or \
            project.ropefolder is None:
             self.objectdb = _MemoryObjectDB()
         else:

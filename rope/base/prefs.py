@@ -2,10 +2,14 @@ class Prefs(object):
 
     def __init__(self):
         self.prefs = {}
+        self.callbacks = {}
 
     def set(self, key, value):
         """Set the value of `key` preference to `value`."""
-        self.prefs[key] = value
+        if key in self.callbacks:
+            self.callbacks[key](value)
+        else:
+            self.prefs[key] = value
 
     def add(self, key, value):
         """Add an entry to a list preference
@@ -20,3 +24,12 @@ class Prefs(object):
     def get(self, key, default=None):
         """Get the value of the key preference"""
         return self.prefs.get(key, default)
+
+    def add_callback(self, key, callback):
+        """Add `key` preference with `callback` function
+        
+        Whenever `key` is set the callback is called with the
+        given `value` as parameter.
+
+        """
+        self.callbacks[key] = callback

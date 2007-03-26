@@ -135,37 +135,6 @@ The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
 
 
-Setting Project Preferences In ``config.py``
-============================================
-
-Using `Project`::
-
-  def opening_project(project):
-      project.set_ignored_resources(['*.pyc', '.svn', '*~', '.ropeproject'])
-      project.set_objectdb_type('mem')
-
-Using `Project.set`::
-
-  def opening_project(project):
-      project.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
-      project.set('objectdb_type', 'mem')
-
-Using `Prefs`::
-
-  def opening_project(prefs):
-      prefs.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
-      prefs.set('objectdb_type', 'mem')
-
-Using `Project.prefs`::
-
-  def opening_project(project):
-      prefs = project.prefs
-      prefs.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
-      prefs.set('objectdb_type', 'mem')
-
-I prefer the last.
-
-
 Enhancing `CallInfoManager`
 ===========================
 

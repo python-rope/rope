@@ -1,6 +1,8 @@
 Moving CallInfo To Disk
 =======================
 
+* Adding `rope.base.resources` module
+* Renaming `rope.base.change` to `changes`
 * Documenting `Project.close()`
 * Use ``/dev/shm/sample_project`` as project root for faster testing?
 * Adding ``use_memory_db`` config

@@ -716,7 +716,7 @@ class RopeFolderTest(unittest.TestCase):
 
     def test_setting_ignored_resources(self):
         self.project = testutils.sample_project()
-        self.project.set_ignored_resources(['myfile.txt'])
+        self.project.set('ignored_resources', ['myfile.txt'])
         myfile = self.project.get_file('myfile.txt')
         file2 = self.project.get_file('file2.txt')
         self.assertTrue(self.project.is_ignored(myfile))
@@ -724,7 +724,7 @@ class RopeFolderTest(unittest.TestCase):
 
     def test_ignored_folders(self):
         self.project = testutils.sample_project()
-        self.project.set_ignored_resources(['myfolder'])
+        self.project.set('ignored_resources', ['myfolder'])
         myfolder = self.project.root.create_folder('myfolder')
         self.assertTrue(self.project.is_ignored(myfolder))
         myfile = myfolder.create_file('myfile.txt')
@@ -732,7 +732,7 @@ class RopeFolderTest(unittest.TestCase):
 
     def test_setting_ignored_resources_patterns(self):
         self.project = testutils.sample_project()
-        self.project.set_ignored_resources(['m?file.*'])
+        self.project.set('ignored_resources', ['m?file.*'])
         myfile = self.project.get_file('myfile.txt')
         file2 = self.project.get_file('file2.txt')
         self.assertTrue(self.project.is_ignored(myfile))
@@ -748,7 +748,7 @@ class RopeFolderTest(unittest.TestCase):
     def test_fscommands_and_ignored_resources(self):
         fscommands = _MockFSCommands()
         self.project = testutils.sample_project(fscommands=fscommands)
-        self.project.set_ignored_resources(['myfile.txt'])
+        self.project.set('ignored_resources', ['myfile.txt'])
         myfile = self.project.get_file('myfile.txt')
         myfile.create()
         self.assertEquals('', fscommands.log)
