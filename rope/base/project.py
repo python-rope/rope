@@ -17,6 +17,7 @@ class _Project(object):
         self.file_access = rope.base.fscommands.FileAccess()
         self._history = rope.base.history.History(maxundos=100)
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
+        self.prefs = rope.base.prefs.Prefs()
         self._pycore = None
 
     def get_resource(self, resource_name):
@@ -88,7 +89,10 @@ class _Project(object):
         return False
 
     def close(self):
-        pass
+        """Closes project open resources"""
+
+    def get_prefs(self):
+        return self.prefs
 
     def _get_resource_path(self, name):
         pass
@@ -120,7 +124,6 @@ class Project(_Project):
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)
-        self.prefs = rope.base.prefs.Prefs()
         self.ignored = _IgnoredResources()
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
         self.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
@@ -164,10 +167,7 @@ class Project(_Project):
         return self.ignored.is_ignored(resource)
 
     def close(self):
-        self.pycore.call_info.close()
-
-    def get_prefs(self):
-        return self.prefs
+        self.pycore.call_info.sync()
 
     def set(self, key, value):
         """Set the `key` preference to `value`"""

@@ -40,8 +40,8 @@ provides:
 See code documentation and unit-tests for more.
 
 
-`Project.do`
-------------
+`Project.do()`
+--------------
 
 For committing changes returned by refactorings.
 
@@ -53,8 +53,8 @@ A `rope.base.history.History` object.  You can use its `undo` and
 `redo` methods for undoing or redoing changes.
 
 
-`Project.validate`
-------------------
+`Project.validate()`
+--------------------
 
 When using rope as a library you probably change the files in that
 project in parallel (for example in IDEs).  To force rope to
@@ -65,6 +65,16 @@ You should pass a resource to this method.  For example::
   project.validate(project.root)
 
 validates all files and directories in the project.
+
+
+`Project.close()`
+-----------------
+
+Closes project open resources.  Always call this function when you
+don't need a project anymore.  Currently it only closes the files used
+for storing object information.  Since some parts of these files are
+in memory for efficiency not closing a project might put them in an
+inconsistent state.
 
 
 `rope.base.fscommands`
@@ -78,6 +88,19 @@ If you need other version control systems you can write a new class
 providing this interface.  `rope.base.project.Project` accepts a
 ``fscommands`` argument.  You can use this argument to force rope to
 use your new class.
+
+
+``.ropeproject`` Folder
+-----------------------
+
+From version ``0.5m4`` rope makes a ``.ropeproject`` folder in the
+project by default for saving project configurations and data.  The
+name of this folder is passed to the constructor if you want to change
+that.  Also you can force rope not to make such a folder by passing
+`None`.
+
+If such a folder exists rope loads the ``config.py`` file in that
+folder.  It might also use it for storing object information.
 
 
 `rope.base.pycore.PyCore`
@@ -153,5 +176,6 @@ Here is a sample session.::
 
   >>> pkg.remove()
   >>> mod1.remove()
+  >>> project.close()
 
 See code documentation and test suites for more information.

@@ -90,7 +90,7 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(get_base_type('Type'), var.get_type())
 
     @testutils.assert_raises(ModuleNotFoundError)
-    def test_non_existant_module(self):
+    def test_non_existent_module(self):
         self.pycore.get_module('doesnotexistmodule')
 
     def test_imported_names(self):
@@ -636,14 +636,14 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertTrue('a_var' not in pymod.get_attribute('pkg1').get_object().
                         get_attribute('pkg2').get_object().get_attributes())
 
-    def test_from_import_nonexistant_module(self):
+    def test_from_import_nonexistent_module(self):
         mod = self.pycore.get_string_module('from doesnotexistmod import DoesNotExistClass\n')
         self.assertTrue('DoesNotExistClass' in mod.get_attributes())
         self.assertEquals(get_base_type('Unknown'),
                           mod.get_attribute('DoesNotExistClass').
                           get_object().get_type())
 
-    def test_from_import_nonexistant_name(self):
+    def test_from_import_nonexistent_name(self):
         mod = self.pycore.get_string_module('from samplemod import DoesNotExistClass\n')
         self.assertTrue('DoesNotExistClass' in mod.get_attributes())
         self.assertEquals(get_base_type('Unknown'),

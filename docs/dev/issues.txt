@@ -140,14 +140,12 @@ Enhancing `CallInfoManager`
 
 * Not saving return value in callinfo when we're approximating?
 * Should every unknown be calculated everytime?
-* When to forget old results?
-* Returning a `Generator` for generator functions with unknown return type?
 * Changing `callinfo` to match similar args
-* Saving python elements with now source; `Abstract...`
-* Better per name data holding in `callinfo`
-* Not overwriting useful per object data in `callinfo`
+* Saving python elements with no source; `Abstract...`
+* When to forget old results?
 * Some `self`\s are unknown!
 * Updating our db when performing refactorings like move module
+* Returning a `Generator` for generator functions with unknown return type?
 
 
 Invalidating Information
@@ -185,14 +183,12 @@ file we don't want the information held for all the methods contained
 in that module to be lost.
 
 
-Using A Real Database
----------------------
+Saving Data On Disk
+-------------------
 
 There are two main reasons for saving object information into disk.
 One is that we can use these information in future sessions.  The
 other is holding all type information in memory takes lots of space.
-
-We can take two approaches:
 
 * Manual DB:
 
@@ -215,16 +211,39 @@ Saving object data requires having a good mechanisms for invalidating
 information and testing.
 
 
-Saving More Info
-----------------
+Better Data Management
+----------------------
 
-We probably have to extend the information we hold for each individual
-call info.::
+Invalidate when:
+
+* When calculating
+
+  * The return value is invalid
+  * Per name value is invalid
+
+* When cleaning up
+
+  * A file is invalid
+  * A scope is invalid
+  * A parameter is invalid
+  * The number of parameters are invalid
+
+* Overwriting rules
+
+  * Overwrite less accurate values
+
+* Maching similar parameters
+
+
+Beeter Invalidation Support
+---------------------------
+
+We will save more data.::
 
   class ObjectInfo(object):
 
       value = None
-      time = None
+      session = None
       exactness = None
 
       def __getstate__(self):
@@ -233,8 +252,94 @@ call info.::
       def __setstate__(self, data):
           pass
 
+For each per name and returned value we save this structure.  The
+`session` is an identifier that shows the session this information was
+calculated.
 
-It can be used both for call info and per name objects.
+`exactness` is a positive integer that indicates the exactness of the
+value.
+
+Rules:
+
+* `exactness` should be decreased when:
+
+  * holding file changes
+  * 'uknown's are involved
+  * time passes
+
+* `exactness` should increase when a value is recalculated
+* We should recalculate the value when:
+
+  * `exactness` is less than some value
+
+Issues:
+
+* How to test this?
+
+
+A Common DB Interface
+---------------------
+
+::
+
+  class ObjectDB(object):
+
+      def __init__(self, validator):
+          pass
+
+      def get_scope_info(self, file, key):
+          pass
+
+      def validate_file(self, file):
+          pass
+
+      def sync(self):
+          pass
+
+
+  class ScopeInfo(object):
+
+      def get_per_name(self, name):
+          pass
+
+      def save_per_name(self, name, value):
+          pass
+
+      def get_returned(self, parameters):
+          pass
+
+      def get_call_infos(self):
+          pass
+
+      def add_call(self, parameters, returned):
+          pass
+
+
+  class CallInfo(object):
+
+      def get_parameters(self):
+          pass
+
+      def get_returned(self):
+          pass
+
+
+  class Validator(object):
+
+      def is_file_valid(self, file):
+          pass
+
+      def is_scope_valid(self, file, key):
+          pass
+
+      def is_value_valid(self, value):
+          pass
+
+      def get_invalid_value(self):
+          pass
+
+      def is_more_valid(self, new, old):
+          pass
 
 
 Using `shelve` For `_DiskObjectDB`

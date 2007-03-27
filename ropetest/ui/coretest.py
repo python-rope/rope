@@ -57,7 +57,7 @@ class CoreTest(unittest.TestCase):
         editor.get_editor().set_text('file2')
         editor.save()
 
-    def test_error_when_making_already_existant_file(self):
+    def test_error_when_making_already_existent_file(self):
         try:
             editor = Core.get_core().create_file(self.sample_file)
             self.fail('Show have throws exception; file already exists')

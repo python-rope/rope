@@ -27,7 +27,7 @@ class Registers(object):
 
 def _ask_name(name, callback):
     toplevel = Tkinter.Toplevel()
-    toplevel.title('Add Register')
+    toplevel.title('Add ' + name.title())
     label = Tkinter.Label(toplevel, text=(name.title() + ' Name:'))
     text = Tkinter.Entry(toplevel)
     def done(event):

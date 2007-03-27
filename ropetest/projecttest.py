@@ -111,8 +111,8 @@ class ProjectTest(unittest.TestCase):
                                                             file_path)).read())
 
     @testutils.assert_raises(RopeError)
-    def test_failing_when_creating_file_inside_non_existant_folder(self):
-        self.project.root.create_file('NonexistantFolder/SomeFile.txt')
+    def test_failing_when_creating_file_inside_non_existent_folder(self):
+        self.project.root.create_file('NonexistentFolder/SomeFile.txt')
 
     def test_nested_directories(self):
         folder_name = 'SampleFolder'
@@ -140,8 +140,8 @@ class ProjectTest(unittest.TestCase):
                                                      self.sample_folder)))
 
     @testutils.assert_raises(RopeError)
-    def test_removing_non_existant_files(self):
-        self.project.get_resource('NonExistantFile.txt').remove()
+    def test_removing_non_existent_files(self):
+        self.project.get_resource('NonExistentFile.txt').remove()
 
     def test_removing_nested_files(self):
         file_name = self.sample_folder + '/sample_file.txt'

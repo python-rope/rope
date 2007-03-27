@@ -34,9 +34,9 @@ class StatusBarTest(unittest.TestCase):
         status.remove()
         self.assertNotEquals(status, self.manager.create_status('sample'))
 
-    def test_getting_a_nonexistant_status(self):
+    def test_getting_a_nonexistent_status(self):
         try:
-            status = self.manager.get_status('nonexistant')
+            status = self.manager.get_status('nonexistent')
             self.fail('should have raised exception')
         except StatusBarException:
             pass
