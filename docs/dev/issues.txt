@@ -210,6 +210,8 @@ other is holding all type information in memory takes lots of space.
 Saving object data requires having a good mechanisms for invalidating
 information and testing.
 
+* More than one rope on a project
+
 
 Better Data Management
 ----------------------
@@ -232,49 +234,7 @@ Invalidate when:
 
   * Overwrite less accurate values
 
-* Maching similar parameters
-
-
-Beeter Invalidation Support
----------------------------
-
-We will save more data.::
-
-  class ObjectInfo(object):
-
-      value = None
-      session = None
-      exactness = None
-
-      def __getstate__(self):
-          pass
-
-      def __setstate__(self, data):
-          pass
-
-For each per name and returned value we save this structure.  The
-`session` is an identifier that shows the session this information was
-calculated.
-
-`exactness` is a positive integer that indicates the exactness of the
-value.
-
-Rules:
-
-* `exactness` should be decreased when:
-
-  * holding file changes
-  * 'uknown's are involved
-  * time passes
-
-* `exactness` should increase when a value is recalculated
-* We should recalculate the value when:
-
-  * `exactness` is less than some value
-
-Issues:
-
-* How to test this?
+* Matching similar parameters
 
 
 A Common DB Interface
@@ -340,37 +300,6 @@ A Common DB Interface
 
       def is_more_valid(self, new, old):
           pass
-
-
-Using `shelve` For `_DiskObjectDB`
-----------------------------------
-
-The data is organized so::
-
-  file/
-    function/
-      callinfo1
-      callinfo2
-      ...
-
-  file/
-    scope/
-        pernameinfo1
-        pernameinfo2
-        ...
-
-
-The simplest approach that we can take would be to use one file for
-saving information for functions and scopes in that file.  This way
-the keys are the function locations and the values are dictionaries
-containing different call infos.
-
-Issues:
-
-* What to do for per name information
-* The values are very long; shelve might fail
-* The pickling might be very inefficient
-* More than one rope on a project
 
 
 Using `sqlite3`

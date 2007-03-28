@@ -444,5 +444,5 @@ def opening_project(project):
     """This function is called when this project is opened"""
 
     #project.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
-    #project.set('objectdb_location', 'disk')
+    #project.set('objectdb_type', 'shelve')
 '''

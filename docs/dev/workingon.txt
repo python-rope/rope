@@ -1,18 +1,17 @@
 Moving CallInfo To Disk
 =======================
 
-- Documenting `Project.close()`
-- Use ``/dev/shm/sample_project`` as project root for faster testing?
+- Using a new objectdb interface
+- Updating `shelvedb` to use the new interface
+- Testing dbs
+- Adding `Validator`\s
 
-* Using a new objectdb interface
-* Changing `shelvedb` to use the new interface
-* Adding `Validator`\s
-* Testing dbs
 * `sqlite3db`
 * Renaming `rope.base.oi.callinfo` to `objectinfo`
 * Adding clear objectdb command
 * Multiple ropes on one project; problems for objectdb
 
+* Change method signature changes other files with no changes
 * ``some_path + '/' + file`` might cause extra leading slash
 * Better key bindings for template assists
 * Formatting problems in move refactoring

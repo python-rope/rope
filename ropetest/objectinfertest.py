@@ -2,7 +2,7 @@ import unittest
 
 import rope.base.project
 from rope.base import builtins
-from rope.base.oi import callinfo
+from rope.base.oi import objectinfo, memorydb, shelvedb, transform
 from ropetest import testutils
 
 
@@ -711,8 +711,8 @@ class DynamicOITest(unittest.TestCase):
         code = 'class C(object):\n    pass\ndef f():\n    pass\na_var = C()\n' \
                'a_list = [C()]\na_str = "hey"\na_file = open("file.txt")\n'
         mod.write(code)
-        to_pyobject = callinfo._TextualToPyObject(self.project)
-        to_textual = callinfo._PyObjectToTextual(self.project)
+        to_pyobject = transform.TextualToPyObject(self.project)
+        to_textual = transform.PyObjectToTextual(self.project)
         pymod = self.pycore.resource_to_pyobject(mod)
         def complex_to_textual(pyobject):
             return to_textual.transform(
@@ -802,6 +802,121 @@ class DynamicOITest(unittest.TestCase):
         b_var = pymod.get_attribute('b').get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
+
+
+def _do_for_all_dbs(function):
+    def called(self):
+        for db in self.dbs:
+            function(self, db)
+    return called
+
+
+class _MockValidation(object):
+
+    def is_value_valid(self, value):
+        return value != -1
+
+    def is_more_valid(self, new, old):
+        return new != -1
+
+
+class ObjectDBTest(unittest.TestCase):
+
+    def setUp(self):
+        super(ObjectDBTest, self).setUp()
+        self.project = testutils.sample_project()
+        validation = _MockValidation()
+        self.dbs = [memorydb.MemoryObjectDB(validation),
+                    shelvedb.ShelveObjectDB(self.project, validation)]
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(ObjectDBTest, self).tearDown()
+
+    @_do_for_all_dbs
+    def test_simple_per_name(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.save_per_name('name', 1)
+
+        scope_info = db.get_scope_info('file', 'key')
+        self.assertEqual(1, scope_info.get_per_name('name'))
+
+    @_do_for_all_dbs
+    def test_simple_per_name_does_not_exist(self, db):
+        scope_info = db.get_scope_info('file', 'key')
+        self.assertEqual(None, scope_info.get_per_name('name'))
+
+    @_do_for_all_dbs
+    def test_simple_per_name_after_syncing(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.save_per_name('name', 1)
+        db.sync()
+
+        scope_info = db.get_scope_info('file', 'key')
+        self.assertEqual(1, scope_info.get_per_name('name'))
+
+    @_do_for_all_dbs
+    def test_getting_returned(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+
+        scope_info = db.get_scope_info('file', 'key')
+        self.assertEqual(3, scope_info.get_returned((1, 2)))
+
+    @_do_for_all_dbs
+    def test_getting_returned_when_does_not_match(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+
+        scope_info = db.get_scope_info('file', 'key')
+        self.assertEqual(None, scope_info.get_returned((1, 1)))
+
+    @_do_for_all_dbs
+    def test_getting_call_info(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+
+        scope_info = db.get_scope_info('file', 'key')
+        call_infos = list(scope_info.get_call_infos())
+        self.assertEqual(1, len(call_infos))
+        self.assertEqual((1, 2), call_infos[0].get_parameters())
+        self.assertEqual(3, call_infos[0].get_returned())
+
+    @_do_for_all_dbs
+    def test_invalid_per_name(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.save_per_name('name', -1)
+
+        self.assertEqual(None, scope_info.get_per_name('name'))
+
+    @_do_for_all_dbs
+    def test_overwriting_per_name(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.save_per_name('name', 1)
+        scope_info.save_per_name('name', 2)
+        self.assertEqual(2, scope_info.get_per_name('name'))
+
+    @_do_for_all_dbs
+    def test_not_overwriting_with_invalid_per_name(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.save_per_name('name', 1)
+        scope_info.save_per_name('name', -1)
+        self.assertEqual(1, scope_info.get_per_name('name'))
+
+    @_do_for_all_dbs
+    def test_getting_invalid_returned(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.add_call((1, 2), -1)
+
+        self.assertEqual(None, scope_info.get_returned((1, 2)))
+
+    @_do_for_all_dbs
+    def test_not_overwriting_with_invalid_returned(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+        scope_info.add_call((1, 2), -1)
+
+        self.assertEqual(3, scope_info.get_returned((1, 2)))
 
 
 def suite():

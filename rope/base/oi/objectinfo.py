@@ -2,7 +2,7 @@ import os
 
 import rope.base.oi.transform
 import rope.base.project
-from rope.base.oi import memorydb
+from rope.base.oi import memorydb, shelvedb
 
 
 class ObjectInfoManager(object):
@@ -11,7 +11,12 @@ class ObjectInfoManager(object):
         self.project = project
         self.to_textual = rope.base.oi.transform.PyObjectToTextual(project)
         self.to_pyobject = rope.base.oi.transform.TextualToPyObject(project)
-        self.objectdb = memorydb.MemoryObjectDB()
+        preferred = project.get_prefs().get('objectdb_type', 'memory')
+        validation = TextualValidation(self.to_pyobject)
+        if preferred == 'memory' or project.ropefolder is None:
+            self.objectdb = memorydb.MemoryObjectDB(validation)
+        else:
+            self.objectdb = shelvedb.ShelveObjectDB(project, validation)
 
     def get_returned(self, pyobject, args):
         result = self.get_exact_returned(pyobject, args)
@@ -70,11 +75,13 @@ class ObjectInfoManager(object):
 
     def save_per_name(self, scope, name, data):
         scope_info = self._find_scope_info(scope.pyobject, readonly=False)
-        scope_info.save_per_name(name, data)
+        scope_info.save_per_name(name, self.to_textual.transform(data))
 
     def get_per_name(self, scope, name):
         scope_info = self._find_scope_info(scope.pyobject)
-        return scope_info.get_per_name(name)
+        result = scope_info.get_per_name(name)
+        if result is not None:
+            return self.to_pyobject.transform(result)
 
     def _save_data(self, function, args, returned=('unknown',)):
         self.objectdb.get_scope_info(function[1], function[2], readonly=False).\
@@ -90,3 +97,18 @@ class ObjectInfoManager(object):
 
     def sync(self):
         self.objectdb.sync()
+
+
+class TextualValidation(object):
+
+    def __init__(self, to_pyobject):
+        self.to_pyobject = to_pyobject
+
+    def is_value_valid(self, value):
+        # ???: Should none and unknown be considered valid?
+        if value[0] in ('none', 'unknown'):
+            return True
+        return self.to_pyobject.transform(value) is not None
+
+    def is_more_valid(self, new, old):
+        return new[0] not in ('unknown', 'none')

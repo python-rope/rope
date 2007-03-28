@@ -1,7 +1,7 @@
 import re
 import sys
 
-import rope.base.oi.callinfo
+import rope.base.oi.objectinfo
 import rope.base.oi.objectinfer
 import rope.base.project
 from rope.base.exceptions import ModuleNotFoundError
@@ -14,7 +14,7 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
-        self.call_info = rope.base.oi.callinfo.ObjectInfoManager(project)
+        self.call_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self.classes = None
         observer = rope.base.project.ResourceObserver(

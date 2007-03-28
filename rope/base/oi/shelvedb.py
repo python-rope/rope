@@ -1,17 +1,19 @@
 import os
 import shelve
+import random
 
-import rope.base.oi.memorydb
+from rope.base.oi import memorydb
 
 
-# FIXME: Adapt to the new ObjectDB interface
 class ShelveObjectDB(object):
-    
-    def __init__(self, project):
+
+    def __init__(self, project, validation):
         self.project = project
+        self.validation = validation
         self._root = None
         self._index = None
         self.cache = {}
+        self.random = random.Random()
 
     def _get_root(self):
         if self._root is None:
@@ -37,12 +39,20 @@ class ShelveObjectDB(object):
             else:
                 return parent.create_file(name)
 
+    def _get_name_for_path(self, path):
+        base_name = os.path.basename(path)
+        def to_hex(i):
+            return hex(i).replace('0x', '', 1)
+        hashed = to_hex(hash(path))
+        hashed_list = list(hashed)
+        self.random.shuffle(hashed_list)
+        shuffled = ''.join(hashed_list)
+        return base_name + hashed + shuffled + '.shelve'
+
     def _get_file_dict(self, path, readonly=True):
         if path not in self.cache:
             if path not in self.index:
-                # TODO: Use better and shorter names
-                self.index[path] = os.path.basename(path) + \
-                                   str(hash(path)) + '.shelve'
+                self.index[path] = self._get_name_for_path(path)
             name = self.index[path]
             resource = self.project.get_file(self.root.path + '/' + name)
             if readonly and not resource.exists():
@@ -54,13 +64,14 @@ class ShelveObjectDB(object):
         key = str(key)
         file_dict = self._get_file_dict(path, readonly=readonly)
         if file_dict is None:
-            return
+            return memorydb.NullScopeInfo()
         if key not in file_dict:
-            if not readonly:
-                file_dict[key] = {}
-            else:
-                return
-        return rope.base.oi.memorydb._CallInformationOrganizer(file_dict[key])
+            if readonly:
+                return memorydb.NullScopeInfo()
+            file_dict[key] = memorydb.ScopeInfo()
+        result = file_dict[key]
+        result._set_validation(self.validation)
+        return result
 
     def sync(self):
         self.index.close()
