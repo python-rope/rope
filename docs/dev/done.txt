@@ -3,7 +3,10 @@
 ===========
 
 
-- Saving object data to disk : March 28, 2207
+- Saving history across sessions : March 29, 2007
+
+
+- Saving object data to disk : March 28, 2007
 
 
 - Adding `.ropeproject` folder : Mark 26, 2007

@@ -15,7 +15,7 @@ class _Project(object):
     def __init__(self, fscommands):
         self.observers = set()
         self.file_access = rope.base.fscommands.FileAccess()
-        self._history = rope.base.history.History(maxundos=100)
+        self._history = None
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
         self.prefs = rope.base.prefs.Prefs()
         self._pycore = None
@@ -97,7 +97,12 @@ class _Project(object):
     def _get_resource_path(self, name):
         pass
 
-    history = property(lambda self: self._history)
+    def _get_history(self):
+        if self._history is None:
+            self._history = rope.base.history.History(self, maxundos=100)
+        return self._history
+
+    history = property(_get_history)
     pycore = property(get_pycore)
 
 
@@ -127,7 +132,7 @@ class Project(_Project):
         self.ignored = _IgnoredResources()
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
         self.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
-        self._ropefolder = self._init_rope_folder(ropefolder)
+        self._init_rope_folder(ropefolder)
 
     def get_files(self):
         return self._get_files_recursively(self.root)
@@ -145,14 +150,15 @@ class Project(_Project):
         return result
 
     def _init_rope_folder(self, ropefolder):
+        self._ropefolder = None
         if ropefolder is not None:
-            result = self.get_folder(ropefolder)
-            if not result.exists():
-                result.create()
-            if result.has_child('config.py'):
-                config = result.get_child('config.py')
+            self._ropefolder = self.get_folder(ropefolder)
+            if not self._ropefolder.exists():
+                self._ropefolder.create()
+            if self._ropefolder.has_child('config.py'):
+                config = self._ropefolder.get_child('config.py')
             else:
-                config = result.create_file('config.py')
+                config = self._ropefolder.create_file('config.py')
                 config.write(_DEFAULT_CONFIG_PY)
             run_globals = {}
             run_globals.update({'__name__': '__main__',
@@ -161,13 +167,13 @@ class Project(_Project):
             execfile(config.real_path, run_globals)
             if 'opening_project' in run_globals:
                 run_globals['opening_project'](self)
-            return result
 
     def is_ignored(self, resource):
         return self.ignored.is_ignored(resource)
 
     def close(self):
         self.pycore.call_info.sync()
+        self.history.sync()
 
     def set(self, key, value):
         """Set the `key` preference to `value`"""
@@ -445,4 +451,5 @@ def opening_project(project):
 
     #project.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
     #project.set('objectdb_type', 'shelve')
+    #project.set('save_history', True)
 '''

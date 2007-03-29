@@ -70,13 +70,18 @@ class ChangeSet(Change):
 
 class ChangeContents(Change):
 
-    def __init__(self, resource, new_content):
+    def __init__(self, resource, new_content, old_content=None):
         self.resource = resource
         self.new_content = new_content
-        self.old_content = self.resource.read()
+        self.old_content = old_content
+        if self.old_content is None:
+            if self.resource.exists():
+                self.old_content = self.resource.read()
         self.operations = self.resource.project.operations
 
     def do(self):
+        if self.old_content is None:
+            self.old_content = self.resource.read()
         self.operations.write_file(self.resource, self.new_content)
 
     def undo(self):
@@ -97,28 +102,29 @@ class ChangeContents(Change):
 
 class MoveResource(Change):
 
-    def __init__(self, resource, new_location):
+    def __init__(self, resource, new_location, exact=False):
         self.project = resource.project
-        self.new_location = _get_destination_for_move(resource, new_location)
-        self.old_location = resource.path
         self.operations = resource.project.operations
         self.old_resource = resource
+        if not exact:
+            new_location = _get_destination_for_move(resource, new_location)
         if resource.is_folder():
-            self.new_resource = self.project.get_folder(self.new_location)
+            self.new_resource = self.project.get_folder(new_location)
         else:
-            self.new_resource = self.project.get_file(self.new_location)
+            self.new_resource = self.project.get_file(new_location)
 
     def do(self):
-        self.operations.move(self.old_resource, self.new_location)
+        self.operations.move(self.old_resource, self.new_resource.path)
 
     def undo(self):
-        self.operations.move(self.new_resource, self.old_location)
+        self.operations.move(self.new_resource, self.old_resource.path)
 
     def __str__(self):
         return 'Move <%s>' % self.old_location
 
     def get_description(self):
-        return 'Move <%s> to <%s>' % (self.old_location, self.new_location)
+        return 'Move <%s> to <%s>' % (self.old_resource.path,
+                                      self.new_resource.path)
 
     def get_changed_resources(self):
         return [self.old_resource, self.new_resource]
@@ -137,7 +143,7 @@ class CreateResource(Change):
         self.operations.remove(self.resource)
 
     def __str__(self):
-        return 'Create Resource <%s>' % (self.resource.project)
+        return 'Create Resource <%s>' % (self.resource.path)
 
     def get_changed_resources(self):
         return [self.resource]
@@ -258,3 +264,70 @@ def _get_destination_for_move(resource, destination):
         else:
             return resource.name
     return destination
+
+
+class ChangeToData(object):
+
+    def convertChangeSet(self, change):
+        description = change.description
+        changes = []
+        for child in change.changes:
+            changes.append(self(child))
+        return (description, changes)
+
+    def convertChangeContents(self, change):
+        return (change.resource.path, change.new_content, change.old_content)
+
+    def convertMoveResource(self, change):
+        return (change.old_resource.path, change.new_resource.path)
+
+    def convertCreateResource(self, change):
+        return (change.resource.path, change.resource.is_folder())
+
+    def convertRemoveResource(self, change):
+        return (change.resource.path, change.resource.is_folder())
+
+    def __call__(self, change):
+        change_type = type(change)
+        if change_type in (CreateFolder, CreateFile):
+            change_type = CreateResource
+        method = getattr(self, 'convert' + change_type.__name__)
+        return (change_type.__name__, method(change))
+
+
+class DataToChange(object):
+
+    def __init__(self, project):
+        self.project = project
+
+    def makeChangeSet(self, description, changes):
+        result = ChangeSet(description)
+        for child in changes:
+            result.add_change(self(child))
+        return result
+
+    def makeChangeContents(self, path, new_content, old_content):
+        resource = self.project.get_file(path)
+        return ChangeContents(resource, new_content, old_content)
+
+    def makeMoveResource(self, old_path, new_path):
+        resource = self.project.get_file(old_path)
+        return MoveResource(resource, new_path, exact=True)
+
+    def makeCreateResource(self, path, is_folder):
+        if is_folder:
+            resource = self.project.get_folder(path)
+        else:
+            resource = self.project.get_file(path)
+        return CreateResource(resource)
+
+    def makeRemoveResource(self, path, is_folder):
+        if is_folder:
+            resource = self.project.get_folder(path)
+        else:
+            resource = self.project.get_file(path)
+        return RemoveResource(resource)
+
+    def __call__(self, data):
+        method = getattr(self, 'make' + data[0])
+        return method(*data[1])

@@ -1,11 +1,5 @@
-Moving Object Info To Disk
-==========================
-
-- Change method signature changes other files with no changes
-- Better key bindings for template assists
-- Using `Core._report_error()` for no project is open
-- Removing blank lines after inlined
-- Removing blank lines after moved
+Saving History Across Sessions
+==============================
 
 * Inline fails when there is an arg mismatch
 * `sqlite3db`

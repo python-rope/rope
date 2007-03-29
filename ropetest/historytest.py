@@ -41,14 +41,14 @@ class HistoryTest(unittest.TestCase):
         my_file.write('')
         self.project.history.undo()
         self.assertFalse(my_file.exists())
-        
+
 
 class IsolatedHistoryTest(unittest.TestCase):
 
     def setUp(self):
         super(IsolatedHistoryTest, self).setUp()
         self.project = testutils.sample_project()
-        self.history = rope.base.history.History()
+        self.history = rope.base.history.History(self.project)
         self.file1 = self.project.root.create_file('file1.txt')
         self.file2 = self.project.root.create_file('file2.txt')
 
@@ -65,7 +65,7 @@ class IsolatedHistoryTest(unittest.TestCase):
 
     @testutils.assert_raises(exceptions.HistoryError)
     def test_undo_limit(self):
-        history = rope.base.history.History(maxundos=1)
+        history = rope.base.history.History(self.project, maxundos=1)
         history.do(ChangeContents(self.file1, '1'))
         history.do(ChangeContents(self.file1, '2'))
         try:
@@ -186,10 +186,137 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.history.undo(change)
 
 
+class SavingHistoryTest(unittest.TestCase):
+
+    def setUp(self):
+        super(SavingHistoryTest, self).setUp()
+        self.project = testutils.sample_project()
+        self.history = rope.base.history.History(self.project)
+        self.to_data = ChangeToData()
+        self.to_change = DataToChange(self.project)
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(SavingHistoryTest, self).tearDown()
+
+    def test_simple_set_saving(self):
+        data = self.to_data(ChangeSet('testing'))
+        change = self.to_change(data)
+        self.assertEquals('testing', str(change))
+
+    def test_simple_change_content_saving(self):
+        myfile = self.project.get_file('myfile.txt')
+        myfile.create()
+        myfile.write('1')
+        data = self.to_data(ChangeContents(myfile, '2'))
+        change = self.to_change(data)
+        self.history.do(change)
+        self.assertEquals('2', myfile.read())
+        self.history.undo()
+        self.assertEquals('1', change.old_content)
+
+    def test_move_resource_saving(self):
+        myfile = self.project.root.create_file('myfile.txt')
+        myfolder = self.project.root.create_folder('myfolder')
+        data = self.to_data(MoveResource(myfile, 'myfolder'))
+        change = self.to_change(data)
+        self.history.do(change)
+        self.assertFalse(myfile.exists())
+        self.assertTrue(myfolder.has_child('myfile.txt'))
+        self.history.undo()
+        self.assertTrue(myfile.exists())
+        self.assertFalse(myfolder.has_child('myfile.txt'))
+
+    def test_move_resource_saving_for_folders(self):
+        myfolder = self.project.root.create_folder('myfolder')
+        newfolder = self.project.get_folder('newfolder')
+        change = MoveResource(myfolder, 'newfolder')
+        self.history.do(change)
+
+        data = self.to_data(change)
+        change = self.to_change(data)
+        change.undo()
+        self.assertTrue(myfolder.exists())
+        self.assertFalse(newfolder.exists())
+
+    def test_create_file_saving(self):
+        myfile = self.project.get_file('myfile.txt')
+        data = self.to_data(CreateFile(self.project.root, 'myfile.txt'))
+        change = self.to_change(data)
+        self.history.do(change)
+        self.assertTrue(myfile.exists())
+        self.history.undo()
+        self.assertFalse(myfile.exists())
+
+    def test_create_folder_saving(self):
+        myfolder = self.project.get_folder('myfolder')
+        data = self.to_data(CreateFolder(self.project.root, 'myfolder'))
+        change = self.to_change(data)
+        self.history.do(change)
+        self.assertTrue(myfolder.exists())
+        self.history.undo()
+        self.assertFalse(myfolder.exists())
+
+    def test_create_resource_saving(self):
+        myfile = self.project.get_file('myfile.txt')
+        data = self.to_data(CreateResource(myfile))
+        change = self.to_change(data)
+        self.history.do(change)
+        self.assertTrue(myfile.exists())
+        self.history.undo()
+        self.assertFalse(myfile.exists())
+
+    def test_remove_resource_saving(self):
+        myfile = self.project.root.create_file('myfile.txt')
+        data = self.to_data(RemoveResource(myfile))
+        change = self.to_change(data)
+        self.history.do(change)
+        self.assertFalse(myfile.exists())
+
+    def test_change_set_saving(self):
+        change = ChangeSet('testing')
+        myfile = self.project.get_file('myfile.txt')
+        change.add_change(CreateResource(myfile))
+        change.add_change(ChangeContents(myfile, '1'))
+
+        data = self.to_data(change)
+        change = self.to_change(data)
+        self.history.do(change)
+        self.assertEquals('1', myfile.read())
+        self.history.undo()
+        self.assertFalse(myfile.exists())
+
+    def test_writing_and_reading_history(self):
+        history_file = self.project.get_file('history.pickle')
+        self.project.set('save_history', True)
+        history = rope.base.history.History(self.project)
+        myfile = self.project.get_file('myfile.txt')
+        history.do(CreateResource(myfile))
+        history.sync()
+
+        history = rope.base.history.History(self.project)
+        history.undo()
+        self.assertFalse(myfile.exists())
+
+    def test_writing_and_reading_history2(self):
+        history_file = self.project.get_file('history.pickle')
+        self.project.set('save_history', True)
+        history = rope.base.history.History(self.project)
+        myfile = self.project.get_file('myfile.txt')
+        history.do(CreateResource(myfile))
+        history.undo()
+        history.sync()
+
+        history = rope.base.history.History(self.project)
+        history.redo()
+        self.assertTrue(myfile.exists())
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(HistoryTest))
     result.addTests(unittest.makeSuite(IsolatedHistoryTest))
+    result.addTests(unittest.makeSuite(SavingHistoryTest))
     return result
 
 if __name__ == '__main__':

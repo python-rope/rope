@@ -1,12 +1,33 @@
-from rope.base import exceptions
+from rope.base import exceptions, change
+import cPickle as pickle
 
 
 class History(object):
 
-    def __init__(self, maxundos=1000):
+    def __init__(self, project, maxundos=1000):
+        self.project = project
         self._undo_list = []
         self._redo_list = []
         self.max_undo_count = maxundos
+        self._load_history()
+
+    def _load_history(self):
+        if self.history_file is not None and self.history_file.exists():
+            input_file = file(self.history_file.real_path)
+            to_change = change.DataToChange(self.history_file.project)
+            for data in pickle.load(input_file):
+                self._undo_list.append(to_change(data))
+            for data in pickle.load(input_file):
+                self._redo_list.append(to_change(data))
+            input_file.close()
+
+    def _get_history_file(self):
+        if self.project.get_prefs().get('save_history', False):
+            folder = self.project.ropefolder
+            if folder is not None and folder.exists():
+                return self.project.get_file(folder.path + '/history.pickle')
+
+    history_file = property(_get_history_file)
 
     def do(self, changes):
         self.undo_list.append(changes)
@@ -46,6 +67,16 @@ class History(object):
         change = self.redo_list.pop()
         self.undo_list.append(change)
         change.do()
+
+    def sync(self):
+        if self.history_file is not None:
+            output_file = file(self.history_file.real_path, 'w')
+            to_data = change.ChangeToData()
+            pickle.dump([to_data(change_) for change_ in self.undo_list],
+                        output_file)
+            pickle.dump([to_data(change_) for change_ in self.redo_list],
+                        output_file)
+            output_file.close()
 
     undo_list = property(lambda self: self._undo_list)
     redo_list = property(lambda self: self._redo_list)
