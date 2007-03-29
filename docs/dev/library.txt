@@ -71,10 +71,10 @@ validates all files and directories in the project.
 -----------------
 
 Closes project open resources.  Always call this function when you
-don't need a project anymore.  Currently it only closes the files used
-for storing object information.  Since some parts of these files are
-in memory for efficiency not closing a project might put them in an
-inconsistent state.
+don't need a project anymore.  Currently it closes the files used for
+storing object information and project history.  Since some parts of
+these files are in memory for efficiency not closing a project might
+put them in an inconsistent state.
 
 
 `rope.base.fscommands`

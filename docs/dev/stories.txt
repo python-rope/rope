@@ -33,7 +33,7 @@ IDE And UI Stories
 * Replacement; M-%
 * Remembering last open project
 * Go to matching parenthesis
-* Indenting a range of file
+* Indenting a region of a file
 * Auto completion type
 
   * Inserting or overwriting
@@ -134,6 +134,3 @@ Stories
 
 
 * Moving `staticmethod`\s
-
-
-* Saving history across sessions

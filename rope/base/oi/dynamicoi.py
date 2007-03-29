@@ -40,6 +40,8 @@ class PythonFileRunner(object):
         args = [sys.executable, runmod_path, send_info,
                 os.path.abspath(self.pycore.project.address),
                 os.path.abspath(self.file.real_path)]
+        if self.analyze_data is None:
+            del args[1:4]
         if self.args is not None:
             args.extend(self.args)
         self.process = subprocess.Popen(

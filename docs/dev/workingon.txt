@@ -1,9 +1,13 @@
-Saving History Across Sessions
-==============================
+Small Stories
+=============
 
+- ``enable_doi`` project config
+
+* Adding *clear objectdb* command
+* Adding *sync project data* command
+* Renaming `Project.close()` to `Project.sync()`
 * Inline fails when there is an arg mismatch
 * `sqlite3db`
-* Adding clear objectdb command
 * Multiple ropes on one project; problems for objectdb and history
 * Changing method to static method refactoring
 * Recursive SOI; Go where the calls go
@@ -21,7 +25,6 @@ Base:
 * `__setslice__` for per name information?
 * Moving `Arguments`, `ObjectArguments` and `_CallContext`;
   `rope.base.args` or `callcontext` module
-* ``enable_doi`` config
 * Sorting names in from import list
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'

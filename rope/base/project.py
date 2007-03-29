@@ -452,4 +452,5 @@ def opening_project(project):
     #project.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
     #project.set('objectdb_type', 'shelve')
     #project.set('save_history', True)
+    #project.set('enable_doi', True)
 '''

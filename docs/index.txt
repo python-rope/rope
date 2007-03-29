@@ -68,6 +68,7 @@ Features implemented so far:
   * Unit-test running view
   * Showing codetags/errors/warnings
   * Defining templates
+  * Memorizing strings/locations
 
 * Object Inference
 

@@ -177,8 +177,8 @@ class Core(object):
         if not active_editor.get_editor().is_modified():
             return self.close_active_editor()
         toplevel = Toplevel()
-        toplevel.title('Closing Unsaved Editor')
-        label = Label(toplevel, text='Closing Unsaved Editor for <%s>' %
+        toplevel.title('Killing Unsaved Buffer')
+        label = Label(toplevel, text='Killing Unsaved Buffer <%s>' %
                       active_editor.get_file().path)
         def save():
             active_editor.save()
@@ -187,11 +187,13 @@ class Core(object):
         def dont_save():
             self.close_active_editor()
             toplevel.destroy()
-        def cancel():
+        def cancel(event=None):
             toplevel.destroy()
         save_button = Button(toplevel, text='Save', command=save)
         dont_save_button = Button(toplevel, text="Don't Save", command=dont_save)
         cancel_button = Button(toplevel, text='Cancel', command=cancel)
+        toplevel.bind('<Control-g>', cancel)
+        toplevel.bind('<Escape>', cancel)
         label.grid(row=0, column=0, columnspan=3)
         save_button.grid(row=1, column=0)
         dont_save_button.grid(row=1, column=1)

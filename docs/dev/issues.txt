@@ -135,8 +135,8 @@ The problem gets worse when there are defined objects in a function
 scope.  Maybe we can change pynames to support function scopes.
 
 
-Enhancing `CallInfoManager`
-===========================
+Enhancing `ObjectInfoManager`
+=============================
 
 * Not saving return value in callinfo when we're approximating?
 * Should every unknown be calculated everytime?
@@ -164,14 +164,25 @@ approach includes:
 
 * We don't want to recalculate 'unknown's and 'none's every time
 * The methods or data accessed by the method might change
-* Removing out of date information
-
-  * Methods that do not exist
-  * Files that no longer exist
-  * Types that do not exist
 
 The need for invalidating data is felt more after saving object data
 to disk.
+
+
+Incremental Validation
+----------------------
+
+We can validate files whenever they are saved.
+
+* Removing out of date information
+
+  * Scopes that do not exist
+  * Files that no longer exist
+  * Call infos with wrong arg count or invalid arg/returns
+  * invalid per names
+
+We can also check whether files are valid or not after move
+refactorings.
 
 
 Fixing Small Changes
@@ -183,14 +194,57 @@ file we don't want the information held for all the methods contained
 in that module to be lost.
 
 * Adding name to function textual form: ``(function, lineno, name)``
+* Searching for ``r'\s*def[ \t]*%s[ \t]*(' % name`` in lineno +- 10
+
+Using hierarchies::
+
+  class A(object):
+      def f(self):
+          pass
+
+  def g():
+      pass
+
+* f -> ('function', path, 'A.f')
+* g -> ('function', path, 'f')
+* A -> ('class', path, 'A')
+
+Maybe we can use multiple forms for textuals:
+
+* ``key.isdigit()`` -> uses *lineno* form
+* ``key.isalnum()`` -> uses *name* form
+* ``'.' in key`` -> uses *hierarchical* form
+* ``':' in key `` -> uses *lineno/name* form
+
+But the main problem with having multiple representations is that it
+makes comparison harder.  We can no more match expected args using a
+simple dictionary lookup.
+
+Adding restrictions to args and keys?:
+
+* All args and keys should use a standard representation
+* DOI should be able to easily use the standard representation
+* The values are free to use whichever form they prefer
+
+Solving dictionary lookup problem without imposing restrictions:
+
+* The only problem is DOI
+* Performing two lookups instead of one; one for hierarchical form
+  this might require some entries to be merged on validations?
+* Transforming lineno and name forms to hierarchical form whenever
+  possible
+
+* Is the first argument necessary any more?
+  ``('class', path, key)`` and ``('function', path, key)``
+  -> ``('scope', path, key)``
 
 
 Saving Data On Disk
 -------------------
 
-There are two main reasons for saving object information into disk.
-One is that we can use these information in future sessions.  The
-other is holding all type information in memory takes lots of space.
+There are two main reasons for saving object information on disk.  One
+is that we can use these information in future sessions.  The other is
+holding all type information in memory needs a lot of memory.
 
 * ``shelvedb``:
 
@@ -198,34 +252,16 @@ other is holding all type information in memory takes lots of space.
 
 * ``sqlite3db``:
 
-  This will solve both problems but requires having `sqlite3`.
-  Fortunately it is included in standard library since ``2.5``.
+  This requires having `sqlite3`.  Fortunately it is included in
+  standard library since ``2.5``.  We can have these tables:
+
+  * scope: path, key
+  * call_info: scope_fk, args, returned
+  * per_name: scope_fk, name, value
+
 
 Saving object data requires having a good mechanisms for invalidating
 information and testing.
-
-
-Using `sqlite3`
----------------
-
-Scope:
-
-* path
-* key
-
-
-Call info:
-
-* scope fk
-* args
-* returned
-
-
-Per name:
-
-* scope fk
-* name
-* value
 
 
 Better Concluded Data

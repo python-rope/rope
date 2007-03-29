@@ -63,7 +63,6 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner.wait_process()
         self.assertTrue(self.get_output_file_content(file_path).endswith("['hello world']"))
 
-    # XXX: Fixing for windows
     def test_killing_runner(self):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path,
@@ -133,6 +132,16 @@ class PythonFileRunnerTest(unittest.TestCase):
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()
         self.assertEquals('run', self.get_output_file_content(file_path))
+
+    def test_making_runner_when_doi_is_disabled(self):
+        self.project.set('enable_doi', False)
+        file_path = 'sample.py'
+        self.make_sample_python_file(file_path)
+        file_resource = self.project.get_resource(file_path)
+        runner = self.pycore.run_module(file_resource)
+        runner.wait_process()
+        self.assertEquals('run', self.get_output_file_content(file_path))
+
 
 def suite():
     result = unittest.TestSuite()
