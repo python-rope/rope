@@ -91,11 +91,12 @@ def __rope_start_everything():
             source = object_.co_filename
             if not os.path.exists(source):
                 raise TypeError('no source')
-            return ('function', os.path.abspath(source), object_.co_firstlineno)
+            return ('defined', os.path.abspath(source),
+                    str(object_.co_firstlineno))
 
-        def _get_persisted_class(self, object_, type_):
+        def _get_persisted_class(self, object_):
             try:
-                return (type_, os.path.abspath(inspect.getsourcefile(object_)),
+                return ('defined', os.path.abspath(inspect.getsourcefile(object_)),
                         object_.__name__)
             except (TypeError, AttributeError):
                 return ('unknown',)
@@ -144,12 +145,12 @@ def __rope_start_everything():
             if isinstance(object_, types.MethodType):
                 return self._get_persisted_code(object_.im_func.func_code)
             if isinstance(object_, types.ModuleType):
-                return ('module', os.path.abspath(object_.__file__))
+                return ('defined', os.path.abspath(object_.__file__))
             if isinstance(object_, (str, unicode, list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
             if isinstance(object_, (types.TypeType, types.ClassType)):
-                return self._get_persisted_class(object_, 'class')
-            return self._get_persisted_class(type(object_), 'instance')
+                return self._get_persisted_class(object_)
+            return ('instance', self._get_persisted_class(type(object_)))
 
 
     send_info = sys.argv[1]

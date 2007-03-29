@@ -61,7 +61,6 @@ class ShelveObjectDB(object):
         return self.cache[path]
 
     def get_scope_info(self, path, key, readonly=True):
-        key = str(key)
         file_dict = self._get_file_dict(path, readonly=readonly)
         if file_dict is None:
             return memorydb.NullScopeInfo()

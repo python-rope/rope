@@ -93,7 +93,8 @@ class ObjectInfoManager(object):
             return memorydb.NullScopeInfo(error_on_write=False)
         path = os.path.abspath(resource.real_path)
         lineno = pyobject.get_ast().lineno
-        return self.objectdb.get_scope_info(path, lineno, readonly=readonly)
+        return self.objectdb.get_scope_info(path, str(lineno),
+                                            readonly=readonly)
 
     def sync(self):
         self.objectdb.sync()

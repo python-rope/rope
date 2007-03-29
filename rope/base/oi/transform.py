@@ -21,26 +21,26 @@ class PyObjectToTextual(object):
             return ('unknown',)
 
     def PyObject_to_textual(self, pyobject):
-        if type(pyobject.get_type()) != rope.base.pyobjects.PyObject:
+        if isinstance(pyobject.get_type(), rope.base.pyobjects.AbstractClass):
             result = self.transform(pyobject.get_type())
-            if result[0] == 'class':
-                return ('instance',) + result[1:]
+            if result[0] == 'defined':
+                return ('instance', result)
             return result
         return ('unknown',)
 
     def PyFunction_to_textual(self, pyobject):
-        return ('function', self._get_pymodule_path(pyobject.get_module()),
-                pyobject.get_ast().lineno)
+        return ('defined', self._get_pymodule_path(pyobject.get_module()),
+                str(pyobject.get_ast().lineno))
 
     def PyClass_to_textual(self, pyobject):
-        return ('class', self._get_pymodule_path(pyobject.get_module()),
+        return ('defined', self._get_pymodule_path(pyobject.get_module()),
                 pyobject.get_name())
 
     def PyModule_to_textual(self, pyobject):
-        return ('module', self._get_pymodule_path(pyobject))
+        return ('defined', self._get_pymodule_path(pyobject))
 
     def PyPackage_to_textual(self, pyobject):
-        return ('module', self._get_pymodule_path(pyobject))
+        return ('defined', self._get_pymodule_path(pyobject))
 
     def List_to_textual(self, pyobject):
         return ('builtin', 'list', self.transform(pyobject.holding))
@@ -101,35 +101,46 @@ class TextualToPyObject(object):
 
     def builtin_to_pyobject(self, textual):
         name = textual[1]
-        if name == 'str':
-            return rope.base.builtins.get_str()
-        if name == 'list':
-            holding = self.transform(textual[2])
-            return rope.base.builtins.get_list(holding)
-        if name == 'dict':
-            keys = self.transform(textual[2])
-            values = self.transform(textual[3])
-            return rope.base.builtins.get_dict(keys, values)
-        if name == 'tuple':
-            objects = []
-            for holding in textual[2:]:
-                objects.append(self.transform(holding))
-            return rope.base.builtins.get_tuple(*objects)
-        if name == 'set':
-            holding = self.transform(textual[2])
-            return rope.base.builtins.get_set(holding)
-        if name == 'iter':
-            holding = self.transform(textual[2])
-            return rope.base.builtins.get_iterator(holding)
-        if name == 'generator':
-            holding = self.transform(textual[2])
-            return rope.base.builtins.get_generator(holding)
-        if name == 'file':
-            return rope.base.builtins.get_file()
-        if name == 'function':
-            if textual[2] in rope.base.builtins.builtins:
-                return rope.base.builtins.builtins[textual[2]].get_object()
-        return None
+        method = getattr(self, 'builtin_%s_to_pyobject' % textual[1], None)
+        if method is not None:
+            return method(textual)
+
+    def builtin_str_to_pyobject(self, textual):
+        return rope.base.builtins.get_str()
+
+    def builtin_list_to_pyobject(self, textual):
+        holding = self.transform(textual[2])
+        return rope.base.builtins.get_list(holding)
+
+    def builtin_dict_to_pyobject(self, textual):
+        keys = self.transform(textual[2])
+        values = self.transform(textual[3])
+        return rope.base.builtins.get_dict(keys, values)
+
+    def builtin_tuple_to_pyobject(self, textual):
+        objects = []
+        for holding in textual[2:]:
+            objects.append(self.transform(holding))
+        return rope.base.builtins.get_tuple(*objects)
+
+    def builtin_set_to_pyobject(self, textual):
+        holding = self.transform(textual[2])
+        return rope.base.builtins.get_set(holding)
+
+    def builtin_iter_to_pyobject(self, textual):
+        holding = self.transform(textual[2])
+        return rope.base.builtins.get_iterator(holding)
+
+    def builtin_generator_to_pyobject(self, textual):
+        holding = self.transform(textual[2])
+        return rope.base.builtins.get_generator(holding)
+
+    def builtin_file_to_pyobject(self, textual):
+        return rope.base.builtins.get_file()
+
+    def builtin_function_to_pyobject(self, textual):
+        if textual[2] in rope.base.builtins.builtins:
+            return rope.base.builtins.builtins[textual[2]].get_object()
 
     def unknown_to_pyobject(self, textual):
         return None
@@ -138,7 +149,7 @@ class TextualToPyObject(object):
         return None
 
     def function_to_pyobject(self, textual):
-        return self._get_pyobject_at(textual[1], textual[2])
+        return self._get_pyobject_at(textual[1], int(textual[2]))
 
     def class_to_pyobject(self, textual):
         path, name = textual[1:]
@@ -155,8 +166,16 @@ class TextualToPyObject(object):
                 inner_scope = module_scope.get_inner_scope_for_line(lineno)
                 return inner_scope.pyobject
 
+    def defined_to_pyobject(self, textual):
+        if len(textual) == 2:
+            return self.module_to_pyobject(textual)
+        elif textual[2].isdigit():
+            return self.function_to_pyobject(textual)
+        else:
+            return self.class_to_pyobject(textual)
+
     def instance_to_pyobject(self, textual):
-        type = self.class_to_pyobject(textual)
+        type = self.transform(textual[1])
         if type is not None:
             return rope.base.pyobjects.PyObject(type)
 

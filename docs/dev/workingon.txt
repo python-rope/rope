@@ -1,7 +1,7 @@
 Small Stories
 =============
 
-- ``enable_doi`` project config
+- Refactor `builtin_to_pyobject()`
 
 * Adding *clear objectdb* command
 * Adding *sync project data* command

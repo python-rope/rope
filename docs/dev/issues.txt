@@ -234,9 +234,15 @@ Solving dictionary lookup problem without imposing restrictions:
 * Transforming lineno and name forms to hierarchical form whenever
   possible
 
-* Is the first argument necessary any more?
-  ``('class', path, key)`` and ``('function', path, key)``
-  -> ``('scope', path, key)``
+* Is the first argument necessary anymore?::
+
+  ('class', path, key)  -> ('defined', path, key)
+  ('function', path, key)  -> ('defined', path, key)
+  ('module', path)  -> ('defined', path)
+  ('instance', path, key)  -> ('instance', ('defined', path, key))
+  ('builtin', type, args)
+  ('none',)
+  ('unknown',)
 
 
 Saving Data On Disk
@@ -500,66 +506,6 @@ If we solve these problems we can can use a strategy for finding
 occurrences.  Also Think of other ways of collecting type information.
 
 
-Saving Collected Data
----------------------
-
-Since resources might change after DTI, we should save collected data
-so that they can be used even if there are small changes in some
-files.  There might be two approaches to this problem.
-
-In the first approach we can make `PyName`\s and `PyObject`\s
-reference objects so that they can be used persistantly.  This
-approach seems hard due to problems that might arise for updating
-`PyName`\s.
-
-The second approach seems easier to implement.  We can save collected
-type information somewhere outside `PyName`\s.  Each time we need a
-`PyName`\'s object we use the stored data.  In this approach we
-should find someway of storing collected data so it can be used even
-if there are some small changes in a resource.  The simplest way of
-saving collected data is the ``(file, lineno)`` tuple.  The other is
-the hierarchical representation and in this approach we save the data
-like ``file.class.method``.
-
-
-Considerations For A New Textual Form
--------------------------------------
-
-Although textual forms are currently used only for transferring
-running data, it can be used for saving `PyObject`\s, too.  This
-might be useful if we want to save some of the collected information
-to a file.
-
-A textual form should:
-
-* be stored
-* have maximum immunity to changes
-* represent all kinds of objects
-
-The current textual form:
-
-* ('module', file)
-* ('function', file, lineno)
-* ('class', file, name)
-* ('instance', file, name)
-* ('builtin', type, args)
-* ('none')
-* ('unknown')
-
-Lot's of optimizations is possible.  But they make things more
-complicated.  For example By adding a file indexing form:
-
-* ('file', file, index)
-
-We can replace all files in above forms to use the integer indices
-specified with file command.  The main problem with this approach is
-that file indices might change across different runs.  If transfering
-efficiency is really a problem we can add a filter for sending and
-receiving that converts the two forms.
-
-We can also remove 'none' and 'unknown' with and empty string.
-
-
 Returned Types Or Objects
 -------------------------
 
@@ -715,6 +661,7 @@ Version Control Commands
 * Remove; ``C-x v v``
 * Status; ``C-x v s``
 * Add; ``C-x v a``
+* Blame; ``C-x v b``
 
 
 Better Dialogs
