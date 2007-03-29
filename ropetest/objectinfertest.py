@@ -500,6 +500,21 @@ class NewStaticOITest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c1_class, a_var.get_type())
 
+    def test_not_saving_unknown_function_returns(self):
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        self.mod.write('class C(object):\n    pass\nl = []\nl.append(C())\n')
+        mod2.write('import mod\ndef f():\n    return mod.l.pop()\na_var = f()\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        c_class = pymod.get_attribute('C').get_object()
+        a_var = pymod2.get_attribute('a_var')
+
+        self.pycore.analyze_module(mod2)
+        self.assertNotEquals(c_class, a_var.get_object().get_type())
+
+        self.pycore.analyze_module(self.mod)
+        self.assertEquals(c_class, a_var.get_object().get_type())
+
 
 class DynamicOITest(unittest.TestCase):
 

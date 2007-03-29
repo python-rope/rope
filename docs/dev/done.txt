@@ -3,6 +3,12 @@
 ===========
 
 
+- Saving object data to disk : March 28, 2207
+
+
+- Adding `.ropeproject` folder : Mark 26, 2007
+
+
 - Inlining `staticmethod`\s : March 23, 2007
 
 

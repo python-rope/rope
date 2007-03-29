@@ -1,23 +1,18 @@
-Moving CallInfo To Disk
-=======================
+Moving Object Info To Disk
+==========================
 
-- Using a new objectdb interface
-- Updating `shelvedb` to use the new interface
-- Testing dbs
-- Adding `Validator`\s
+- Change method signature changes other files with no changes
+- Better key bindings for template assists
+- Using `Core._report_error()` for no project is open
+- Removing blank lines after inlined
+- Removing blank lines after moved
 
+* Inline fails when there is an arg mismatch
 * `sqlite3db`
-* Renaming `rope.base.oi.callinfo` to `objectinfo`
 * Adding clear objectdb command
-* Multiple ropes on one project; problems for objectdb
-
-* Change method signature changes other files with no changes
-* ``some_path + '/' + file`` might cause extra leading slash
-* Better key bindings for template assists
-* Formatting problems in move refactoring
+* Multiple ropes on one project; problems for objectdb and history
 * Changing method to static method refactoring
 * Recursive SOI; Go where the calls go
-* Adding an option not to collect per name information
 * Evaluate function parameter defaults in staticoi?
 * Adding 'do when unsure' to all refactorings?
 * Profiling before ``0.5rc1`` for occurrence finding and SOI
@@ -49,12 +44,8 @@ UI and IDE:
 * Faster find file in large projects
 * A completing text widget for dialogs; `Completing(name, list, handle)`
 * Goto definition for ``"# comment.\na_var"``
-* Showing properties in quick outline
-* Changing ``C-a C-a`` to move to the first character in the line
-* ``M-a`` and ``M-e``
-* ``C-l`` and ``M-r``
 * Comments should be indented
-* Decide when to use `difflib` in `Editor.set_text` based on the
+* Decide when to use `difflib` in `Editor.set_text()` based on the
   number of changes
 
 Docs:

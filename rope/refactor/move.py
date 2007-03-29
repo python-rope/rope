@@ -7,7 +7,7 @@ based on inputs.
 from rope.base import pyobjects, codeanalyze, exceptions, pynames
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import (importutils, rename, occurrences,
-                           sourceutils, functionutils)
+                           sourceutils, functionutils, inline)
 
 
 def create_move(project, resource, offset=None):
@@ -81,7 +81,7 @@ class MoveMethod(object):
                 result = _add_imports_to_module(import_tools, goal_pymodule,
                                                 new_imports)
             changes.add_change(ChangeContents(resource2, result))
-                
+
         changes.add_change(ChangeContents(resource1,
                                           collector1.get_changed()))
         return changes
@@ -141,6 +141,8 @@ class MoveMethod(object):
         finder = occurrences.FilteredFinder(
             self.pycore, self_name, [pymodule.get_attribute(self_name)])
         result = rename.rename_in_module(finder, host, pymodule=pymodule)
+        if result is None:
+            result = body
         return result[result.index('\n') + 1:]
 
     def _get_self_name(self):
@@ -208,7 +210,8 @@ class _Mover(object):
                                                      pymodule.get_resource())
         return pymodule, can_select.changed
 
-    def _rename_in_module(self, pymodule, new_name, imports=False):
+    def _rename_in_module(self, pymodule, new_name, imports=False,
+                          skipstart=None, skipend=None, skiptext=''):
         occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, [self.old_pyname], imports=imports)
         source = rename.rename_in_module(occurrence_finder, new_name,
@@ -271,29 +274,19 @@ class MoveGlobal(_Mover):
             self.pycore.resource_to_pyobject(dest))
 
     def _change_source_module(self, changes, dest):
-        uses_moving = False
-        # Changing occurrences
-        pymodule = self.pycore.resource_to_pyobject(self.source)
-        pymodule, has_changed = self._rename_in_module(
-            pymodule, self._new_name(dest))
-        if has_changed:
-            uses_moving = True
-        source = self._get_moved_moving_source(pymodule)
-        if uses_moving:
+        handle = _ChangeMoveOccurrencesHandle(self._new_name(dest))
+        occurrence_finder = occurrences.FilteredFinder(
+            self.pycore, self.old_name, [self.old_pyname])
+        start, end = self._get_moving_region()
+        renamer = inline.ModuleSkipRenamer(occurrence_finder, self.source,
+                                           handle, start, end)
+        source = renamer.get_changed_module()
+        if handle.occurred:
             pymodule = self.pycore.get_string_module(source, self.source)
             # Adding new import
             source = _add_imports_to_module(self.import_tools, pymodule,
                                             [self._new_import(dest)])
         changes.add_change(ChangeContents(self.source, source))
-
-    def _get_moved_moving_source(self, pymodule):
-        source = pymodule.source_code
-        lines = pymodule.lines
-        scope = self.old_pyname.get_object().get_scope()
-        start = lines.get_line_start(scope.get_start())
-        end = lines.get_line_end(scope.get_end())
-        source = source[:start] + source[end + 1:]
-        return source
 
     def _change_destination_module(self, changes, dest):
         # Changing occurrences
@@ -313,7 +306,7 @@ class MoveGlobal(_Mover):
         else:
             result = ''
             start = -1
-        result += moving + '\n' + source[start + 1:]
+        result += moving + source[start + 1:]
 
         # Organizing imports
         source = result
@@ -350,12 +343,23 @@ class MoveGlobal(_Mover):
         return self.import_tools.get_module_imports(pymodule)
 
     def _get_moving_element(self):
-        lines = self.pycore.resource_to_pyobject(self.source).lines
+        start, end = self._get_moving_region()
+        moving = self.source.read()[start:end]
+        return moving.rstrip() + '\n'
+
+    def _get_moving_region(self):
+        pymodule = self.pycore.resource_to_pyobject(self.source)
+        lines = pymodule.lines
         scope = self.old_pyname.get_object().get_scope()
         start = lines.get_line_start(scope.get_start())
-        end = lines.get_line_end(scope.get_end())
-        moving = self.source.read()[start:end]
-        return moving
+        end_line = scope.get_end()
+        for i in range(end_line + 1, lines.length()):
+            if lines.get_line(i).strip() == '':
+                end_line = i
+            else:
+                break
+        end = min(lines.get_line_end(end_line) + 1, len(pymodule.source_code))
+        return start, end
 
     def _get_used_imports_by_the_moving_element(self):
         pymodule = self.pycore.resource_to_pyobject(self.source)
@@ -486,3 +490,18 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
     for new_import in new_imports:
         module_with_imports.add_import(new_import)
     return module_with_imports.get_changed_source()
+
+
+class _ChangeMoveOccurrencesHandle(object):
+
+    def __init__(self, new_name):
+        self.new_name = new_name
+        self.occurred = False
+
+    def occurred_inside_skip(self, change_collector, occurrence):
+        pass
+
+    def occurred_outside_skip(self, change_collector, occurrence):
+        start, end = occurrence.get_primary_range()
+        change_collector.add_change(start, end, self.new_name)
+        self.occurred = True

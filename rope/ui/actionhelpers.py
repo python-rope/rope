@@ -1,13 +1,12 @@
 import Tkinter
-import tkMessageBox
 
 import rope.base.project
 
 
 def check_project(core):
     if core.project is rope.base.project.get_no_project():
-        tkMessageBox.showerror(parent=core.root, title='No Open Project',
-                               message='No project is open')
+        core._report_error(message='Open a project first!',
+                           title='No Open Project')
         return False
     return True
 

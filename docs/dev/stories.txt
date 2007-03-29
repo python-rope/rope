@@ -70,9 +70,6 @@ Stories
 * Open Type; ``C-T``
 
 
-* Saving history across sessions
-
-
 * Handling the return type of ``yield`` keyword
 
 
@@ -86,9 +83,6 @@ Stories
 
 
 * Moving initialization to constructor in local variable to field
-
-
-* Inlining a single occurrence
 
 
 * Performing import actions only on one import statement
@@ -137,3 +131,9 @@ Stories
 
 
 * Moving `staticmethod`\s
+
+
+* Saving history across sessions
+
+
+* Inlining a single occurrence

@@ -151,10 +151,10 @@ Enhancing `CallInfoManager`
 Invalidating Information
 ------------------------
 
-When do we need to recalculate the information?  Currently rope does
+When do we need to recalculate the information? Currently rope does
 not save anything unless an exact object is calculated; in that case
-it will be used forever(That is till project is closed).  The
-problems with this approach includes:
+it will be used until they remain valid.  The problems with this
+approach includes:
 
 * The method might be changed in future.
 
@@ -182,6 +182,8 @@ information.  For example if a blank line is inserted at the top of a
 file we don't want the information held for all the methods contained
 in that module to be lost.
 
+* Adding name to function textual form: ``(function, lineno, name)``
+
 
 Saving Data On Disk
 -------------------
@@ -190,19 +192,11 @@ There are two main reasons for saving object information into disk.
 One is that we can use these information in future sessions.  The
 other is holding all type information in memory takes lots of space.
 
-* Manual DB:
+* ``shelvedb``:
 
-  We can use a simple saving to files approach.  This won't solve the
-  memory problem but it will save the data for future use.  Since
-  files are written once when closing a project and loaded once when
-  saving a project we can use a compression for our data not to take
-  much space.
+  This has been implemented in ``0.5m4``.
 
-  But this approach an be enhanced much.  By holding object
-  information in different files we can save or update files only
-  when needed.  Also we can use `shelve` module.
-
-* Using `sqlite3`:
+* ``sqlite3db``:
 
   This will solve both problems but requires having `sqlite3`.
   Fortunately it is included in standard library since ``2.5``.
@@ -210,123 +204,28 @@ other is holding all type information in memory takes lots of space.
 Saving object data requires having a good mechanisms for invalidating
 information and testing.
 
-* More than one rope on a project
-
-
-Better Data Management
-----------------------
-
-Invalidate when:
-
-* When calculating
-
-  * The return value is invalid
-  * Per name value is invalid
-
-* When cleaning up
-
-  * A file is invalid
-  * A scope is invalid
-  * A parameter is invalid
-  * The number of parameters are invalid
-
-* Overwriting rules
-
-  * Overwrite less accurate values
-
-* Matching similar parameters
-
-
-A Common DB Interface
----------------------
-
-::
-
-  class ObjectDB(object):
-
-      def __init__(self, validator):
-          pass
-
-      def get_scope_info(self, file, key):
-          pass
-
-      def validate_file(self, file):
-          pass
-
-      def sync(self):
-          pass
-
-
-  class ScopeInfo(object):
-
-      def get_per_name(self, name):
-          pass
-
-      def save_per_name(self, name, value):
-          pass
-
-      def get_returned(self, parameters):
-          pass
-
-      def get_call_infos(self):
-          pass
-
-      def add_call(self, parameters, returned):
-          pass
-
-
-  class CallInfo(object):
-
-      def get_parameters(self):
-          pass
-
-      def get_returned(self):
-          pass
-
-
-  class Validator(object):
-
-      def is_file_valid(self, file):
-          pass
-
-      def is_scope_valid(self, file, key):
-          pass
-
-      def is_value_valid(self, value):
-          pass
-
-      def get_invalid_value(self):
-          pass
-
-      def is_more_valid(self, new, old):
-          pass
-
 
 Using `sqlite3`
 ---------------
 
 Scope:
 
-=========  ========
-path       key
-=========  ========
-=========  ========
+* path
+* key
 
 
 Call info:
 
-==========  ======  ==========
-scope fk    args    returned
-==========  ======  ==========
-==========  ======  ==========
+* scope fk
+* args
+* returned
 
 
 Per name:
 
-==========  ======  ==========
-scope fk    name    value
-==========  ======  ==========
-==========  ======  ==========
+* scope fk
+* name
+* value
 
 
 Better Concluded Data

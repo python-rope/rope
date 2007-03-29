@@ -157,6 +157,9 @@ def _get_template_information(editor, result, proposal):
     cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
     ok_button.grid(row=len(template.variables()) + 1, column=0)
     cancel_button.grid(row=len(template.variables()) + 1, column=1)
+    toplevel.bind('<Escape>', lambda event: cancel())
+    toplevel.bind('<Control-g>', lambda event: cancel())
+    toplevel.bind('<Return>', lambda event: ok())
     frame.grid()
 
 

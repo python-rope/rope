@@ -280,7 +280,7 @@ class Core(object):
             return
         toplevel = Toplevel()
         toplevel.title('Closing Project')
-        label = Label(toplevel, text='Which modified editors to save')
+        label = Label(toplevel, text='Which modified editors to save?')
         label.grid(row=0, columnspan=2)
         int_vars = []
         for i, editor in enumerate(modified_editors):
@@ -302,6 +302,9 @@ class Core(object):
         done_button = Button(toplevel, text='Done', command=done)
         done_button.grid(row=len(int_vars) + 1, column=0)
         cancel_button = Button(toplevel, text='Cancel', command=cancel)
+        toplevel.bind('<Escape>', lambda event: cancel())
+        toplevel.bind('<Control-g>', lambda event: cancel())
+        toplevel.bind('<Return>', lambda event: done())
         cancel_button.grid(row=len(int_vars) + 1, column=1)
 
     def close_project(self):
@@ -366,10 +369,10 @@ class Core(object):
         if self.last_action is not None:
             self.perform_action(self.last_action)
 
-    def _report_error(self, e):
+    def _report_error(self, message, title='RopeError Was Raised'):
         toplevel = Toplevel()
-        toplevel.title('RopeError Was Raised')
-        label = Label(toplevel, text=str(e))
+        toplevel.title(title)
+        label = Label(toplevel, text=str(message))
         def ok(event=None):
             toplevel.destroy()
             return 'break'

@@ -103,11 +103,13 @@ class MoveResource(Change):
         self.old_location = resource.path
         self.operations = resource.project.operations
         self.old_resource = resource
-        self.new_resource = None
+        if resource.is_folder():
+            self.new_resource = self.project.get_folder(self.new_location)
+        else:
+            self.new_resource = self.project.get_file(self.new_location)
 
     def do(self):
         self.operations.move(self.old_resource, self.new_location)
-        self.new_resource = self.project.get_resource(self.new_location)
 
     def undo(self):
         self.operations.move(self.new_resource, self.old_location)
@@ -140,18 +142,24 @@ class CreateResource(Change):
     def get_changed_resources(self):
         return [self.resource]
 
+    def _get_child_path(self, parent, name):
+        if parent.path == '':
+            return name
+        else:
+            return parent.path + '/' + name
+
 
 class CreateFolder(CreateResource):
 
     def __init__(self, parent, name):
-        resource = parent.project.get_folder(parent.path + '/' + name)
+        resource = parent.project.get_folder(self._get_child_path(parent, name))
         super(CreateFolder, self).__init__(resource)
 
 
 class CreateFile(CreateResource):
 
     def __init__(self, parent, name):
-        resource = parent.project.get_file(parent.path + '/' + name)
+        resource = parent.project.get_file(self._get_child_path(parent, name))
         super(CreateFile, self).__init__(resource)
 
 

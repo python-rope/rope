@@ -16,15 +16,17 @@ class ChangeCollector(object):
         if not self.changes:
             return None
         self.changes.sort()
-        result = []
+        pieces = []
         last_changed = 0
         for change in self.changes:
             start, end, text = change
-            result.append(self.text[last_changed:start] + text)
+            pieces.append(self.text[last_changed:start] + text)
             last_changed = end
         if last_changed < len(self.text):
-            result.append(self.text[last_changed:])
-        return ''.join(result)
+            pieces.append(self.text[last_changed:])
+        result = ''.join(pieces)
+        if result != self.text:
+            return result
 
 
 def get_indents(lines, lineno):

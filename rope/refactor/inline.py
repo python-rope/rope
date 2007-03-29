@@ -81,13 +81,28 @@ class _MethodInliner(_Inliner):
         self._change_other_files(changes)
         return changes
 
+    def _get_removed_range(self):
+        scope = self.pyfunction.get_scope()
+        lines = self.pymodule.lines
+        start_line = scope.get_start()
+        start, end = self._get_scope_range()
+        end_line = scope.get_end()
+        for i in range(end_line + 1, lines.length()):
+            if lines.get_line(i).strip() == '':
+                end_line = i
+            else:
+                break
+        end = min(lines.get_line_end(end_line) + 1,
+                  len(self.pymodule.source_code))
+        return (start, end)
+
     def _change_defining_file(self, changes):
-        start_offset, end_offset = self._get_scope_range()
-        result = _InlineFunctionCallsForModule(
-            self.occurrence_finder, self.resource,
-            self.definition_generator,
-            start_offset, end_offset,
-            self._get_method_replacement()).get_changed_module()
+        start_offset, end_offset = self._get_removed_range()
+        handle = _InlineFunctionCallsForModuleHandle(
+            self.pycore, self.resource, self.definition_generator)
+        result = ModuleSkipRenamer(
+            self.occurrence_finder, self.resource, handle, start_offset,
+            end_offset, self._get_method_replacement()).get_changed_module()
         changes.add_change(ChangeContents(self.resource, result))
 
     def _get_method_replacement(self):
@@ -114,9 +129,10 @@ class _MethodInliner(_Inliner):
         for file in self.pycore.get_python_files():
             if file == self.resource:
                 continue
-            result = _InlineFunctionCallsForModule(
-                self.occurrence_finder, file,
-                self.definition_generator).get_changed_module()
+            handle = _InlineFunctionCallsForModuleHandle(
+                self.pycore, file, self.definition_generator)
+            result = ModuleSkipRenamer(
+                self.occurrence_finder, file, handle).get_changed_module()
             if result is not None:
                 changes.add_change(ChangeContents(file, result))
 
@@ -174,100 +190,6 @@ def _join_lines(lines):
         definition_lines.append(line)
     joined = ' '.join(definition_lines)
     return joined
-
-
-class _InlineFunctionCallsForModule(object):
-
-    def __init__(self, occurrence_finder, resource, definition_generator,
-                 skip_start=0, skip_end=0, replacement=''):
-        self.pycore = occurrence_finder.pycore
-        self.occurrence_finder = occurrence_finder
-        self.generator = definition_generator
-        self.resource = resource
-        self._pymodule = None
-        self._lines = None
-        self._source = None
-        self.skip_start = skip_start
-        self.skip_end = skip_end
-        self.replacement = replacement
-
-    def get_changed_module(self):
-        change_collector = sourceutils.ChangeCollector(self.source)
-        change_collector.add_change(self.skip_start, self.skip_end,
-                                    self.replacement)
-        for occurrence in self.occurrence_finder.find_occurrences(self.resource):
-            start, end = occurrence.get_primary_range()
-            if self.skip_start <= start < self.skip_end:
-                if occurrence.is_defined():
-                    continue
-                else:
-                    raise rope.base.exceptions.RefactoringError(
-                        'Cannot inline functions that reference themselves')
-            if not occurrence.is_called():
-                raise rope.base.exceptions.RefactoringError(
-                    'Reference to inlining function other than function call'
-                    ' in <file: %s, offset: %d>' % (self.resource.path, start))
-            end_parens = self._find_end_parens(self.source,
-                                               self.source.index('(', end))
-            lineno = self.lines.get_line_number(start)
-            start_line, end_line = codeanalyze.LogicalLineFinder(self.lines).\
-                                   get_logical_line_in(lineno)
-            line_start = self.lines.get_line_start(start_line)
-            line_end = self.lines.get_line_end(end_line)
-            returns = self.source[line_start:start].strip() != '' or \
-                      self.source[end_parens:line_end].strip() != ''
-            indents = sourceutils.get_indents(self.lines, start_line)
-            primary, pyname = occurrence.get_primary_and_pyname()
-            definition = self.generator.get_definition(
-                primary, pyname, self.source[start:end_parens], returns=returns)
-            end = min(line_end + 1, len(self.source))
-            change_collector.add_change(
-                line_start, end, sourceutils.fix_indentation(definition, indents))
-            if returns:
-                name = self.generator.get_returned()
-                if name is None:
-                    name = 'None'
-                change_collector.add_change(
-                    line_end, end, self.source[line_start:start] + name +
-                    self.source[end_parens:end])
-        result = change_collector.get_changed()
-        if result is not None and result != self.source:
-            return result
-
-    def _get_pymodule(self):
-        if self._pymodule is None:
-            self._pymodule = self.pycore.resource_to_pyobject(self.resource)
-        return self._pymodule
-
-    def _get_source(self):
-        if self._source is None:
-            if self.resource is not None:
-                self._source = self.resource.read()
-            else:
-                self._source = self.pymodule.source_code
-        return self._source
-
-    def _get_lines(self):
-        if self._lines is None:
-            self._lines = self.pymodule.lines
-        return self._lines
-
-    def _find_end_parens(self, source, start):
-        index = start
-        open_count = 0
-        while index < len(source):
-            if source[index] == '(':
-                open_count += 1
-            if source[index] == ')':
-                open_count -= 1
-            if open_count == 0:
-                return index + 1
-            index += 1
-        return index
-
-    source = property(_get_source)
-    lines = property(_get_lines)
-    pymodule = property(_get_pymodule)
 
 
 class _DefinitionGenerator(object):
@@ -378,3 +300,112 @@ class _DefinitionGenerator(object):
                                              string_pattern + "|" +
                                              return_pattern)
         return cls._return_pattern
+
+
+class _InlineFunctionCallsForModuleHandle(object):
+
+    def __init__(self, pycore, resource, definition_generator):
+        self.pycore = pycore
+        self.generator = definition_generator
+        self.resource = resource
+        self._pymodule = None
+        self._lines = None
+        self._source = None
+
+    def occurred_inside_skip(self, change_collector, occurrence):
+        if not occurrence.is_defined():
+            raise rope.base.exceptions.RefactoringError(
+                'Cannot inline functions that reference themselves')
+
+    def occurred_outside_skip(self, change_collector, occurrence):
+        start, end = occurrence.get_primary_range()
+        if not occurrence.is_called():
+            raise rope.base.exceptions.RefactoringError(
+                'Reference to inlining function other than function call'
+                ' in <file: %s, offset: %d>' % (self.resource.path, start))
+        end_parens = self._find_end_parens(self.source, end - 1)
+        lineno = self.lines.get_line_number(start)
+        start_line, end_line = codeanalyze.LogicalLineFinder(self.lines).\
+                               get_logical_line_in(lineno)
+        line_start = self.lines.get_line_start(start_line)
+        line_end = self.lines.get_line_end(end_line)
+        returns = self.source[line_start:start].strip() != '' or \
+                  self.source[end_parens:line_end].strip() != ''
+        indents = sourceutils.get_indents(self.lines, start_line)
+        primary, pyname = occurrence.get_primary_and_pyname()
+        definition = self.generator.get_definition(
+            primary, pyname, self.source[start:end_parens], returns=returns)
+        end = min(line_end + 1, len(self.source))
+        change_collector.add_change(
+            line_start, end, sourceutils.fix_indentation(definition, indents))
+        if returns:
+            name = self.generator.get_returned()
+            if name is None:
+                name = 'None'
+            change_collector.add_change(
+                line_end, end, self.source[line_start:start] + name +
+                self.source[end_parens:end])
+
+    def _find_end_parens(self, source, offset):
+        finder = codeanalyze.WordRangeFinder(source)
+        return finder.get_word_parens_range(offset)[1]
+
+    def _get_pymodule(self):
+        if self._pymodule is None:
+            self._pymodule = self.pycore.resource_to_pyobject(self.resource)
+        return self._pymodule
+
+    def _get_source(self):
+        if self._source is None:
+            if self.resource is not None:
+                self._source = self.resource.read()
+            else:
+                self._source = self.pymodule.source_code
+        return self._source
+
+    def _get_lines(self):
+        if self._lines is None:
+            self._lines = self.pymodule.lines
+        return self._lines
+
+    source = property(_get_source)
+    lines = property(_get_lines)
+    pymodule = property(_get_pymodule)
+
+
+class ModuleSkipRenamerHandle(object):
+
+    def occurred_outside_skip(self, change_collector, occurrence):
+        pass
+
+    def occurred_inside_skip(self, change_collector, occurrence):
+        pass
+
+
+class ModuleSkipRenamer(object):
+
+    def __init__(self, occurrence_finder, resource, handle=None,
+                 skip_start=0, skip_end=0, replacement=''):
+        self.occurrence_finder = occurrence_finder
+        self.resource = resource
+        self.skip_start = skip_start
+        self.skip_end = skip_end
+        self.replacement = replacement
+        self.handle = handle
+        if self.handle is None:
+            self.handle = ModuleSkipHandle()
+
+    def get_changed_module(self):
+        source = self.resource.read()
+        change_collector = sourceutils.ChangeCollector(source)
+        change_collector.add_change(self.skip_start, self.skip_end,
+                                    self.replacement)
+        for occurrence in self.occurrence_finder.find_occurrences(self.resource):
+            start, end = occurrence.get_primary_range()
+            if self.skip_start <= start < self.skip_end:
+                self.handle.occurred_inside_skip(change_collector, occurrence)
+            else:
+                self.handle.occurred_outside_skip(change_collector, occurrence)
+        result = change_collector.get_changed()
+        if result is not None and result != source:
+            return result
