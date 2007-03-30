@@ -91,6 +91,10 @@ class _Project(object):
     def close(self):
         """Closes project open resources"""
 
+    def sync(self):
+        """Closes project open resources"""
+        self.close()
+
     def get_prefs(self):
         return self.prefs
 

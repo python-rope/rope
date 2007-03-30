@@ -148,8 +148,8 @@ Enhancing `ObjectInfoManager`
 * Returning a `Generator` for generator functions with unknown return type?
 
 
-Invalidating Information
-------------------------
+Validating Information
+----------------------
 
 When do we need to recalculate the information? Currently rope does
 not save anything unless an exact object is calculated; in that case
@@ -181,8 +181,27 @@ We can validate files whenever they are saved.
   * Call infos with wrong arg count or invalid arg/returns
   * invalid per names
 
-We can also check whether files are valid or not after move
-refactorings.
+Sample interface::
+
+  class TextualValidation(object):
+
+      def is_value_valid(self, value):
+          pass
+
+      def is_more_valid(self, new, old):
+          pass
+
+      def is_file_valid(self, path):
+          pass
+
+      def is_scope_valid(self, path, key):
+          pass
+
+      def is_callinfo_valid(self, callinfo):
+          pass
+
+* Should we use `FilteredResourceObserver`?
+* Changes caused by move refactoring
 
 
 Fixing Small Changes
@@ -193,9 +212,6 @@ information.  For example if a blank line is inserted at the top of a
 file we don't want the information held for all the methods contained
 in that module to be lost.
 
-* Adding name to function textual form: ``(function, lineno, name)``
-* Searching for ``r'\s*def[ \t]*%s[ \t]*(' % name`` in lineno +- 10
-
 Using hierarchies::
 
   class A(object):
@@ -205,9 +221,9 @@ Using hierarchies::
   def g():
       pass
 
-* f -> ('function', path, 'A.f')
-* g -> ('function', path, 'f')
-* A -> ('class', path, 'A')
+* f -> ('defined', path, 'A.f')
+* g -> ('defined', path, 'f')
+* A -> ('defined', path, 'A')
 
 Maybe we can use multiple forms for textuals:
 
@@ -233,16 +249,6 @@ Solving dictionary lookup problem without imposing restrictions:
   this might require some entries to be merged on validations?
 * Transforming lineno and name forms to hierarchical form whenever
   possible
-
-* Is the first argument necessary anymore?::
-
-  ('class', path, key)  -> ('defined', path, key)
-  ('function', path, key)  -> ('defined', path, key)
-  ('module', path)  -> ('defined', path)
-  ('instance', path, key)  -> ('instance', ('defined', path, key))
-  ('builtin', type, args)
-  ('none',)
-  ('unknown',)
 
 
 Saving Data On Disk

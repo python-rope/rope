@@ -1,5 +1,7 @@
 import difflib
 import os
+import time
+import datetime
 
 from rope.base.exceptions import RopeError
 from rope.base.fscommands import FileSystemCommands
@@ -22,9 +24,10 @@ class Change(object):
 
 class ChangeSet(Change):
 
-    def __init__(self, description):
+    def __init__(self, description, timestamp=None):
         self.changes = []
         self.description = description
+        self.time = timestamp
 
     def do(self):
         try:
@@ -32,6 +35,7 @@ class ChangeSet(Change):
             for change in self.changes:
                 change.do()
                 done.append(change)
+            self.time = time.time()
         except Exception:
             for change in done:
                 change.undo()
@@ -52,13 +56,24 @@ class ChangeSet(Change):
         self.changes.append(change)
 
     def get_description(self):
-        result = self.description + ':\n\n\n' + \
+        result = str(self) + ':\n\n\n' + \
                  '\n------\n'.join(
             [(str(change) + ':\n\n' + change.get_description())
              for change in self.changes])
         return result
 
     def __str__(self):
+        if self.time is not None:
+            date = datetime.datetime.fromtimestamp(self.time)
+            if date.date() == datetime.date.today():
+                string_date = 'today'
+            elif date.date() == (datetime.date.today() - datetime.timedelta(1)):
+                string_date = 'yesterday'
+            else:
+                string_date = date.strftime('%a %d %b %Y')
+            string_time = date.strftime('%H:%M:%S')
+            string_time = '%s %s ' % (string_date, string_time)
+            return self.description + ' - ' + string_time
         return self.description
 
     def get_changed_resources(self):
@@ -273,7 +288,7 @@ class ChangeToData(object):
         changes = []
         for child in change.changes:
             changes.append(self(child))
-        return (description, changes)
+        return (description, changes, change.time)
 
     def convertChangeContents(self, change):
         return (change.resource.path, change.new_content, change.old_content)
@@ -300,8 +315,8 @@ class DataToChange(object):
     def __init__(self, project):
         self.project = project
 
-    def makeChangeSet(self, description, changes):
-        result = ChangeSet(description)
+    def makeChangeSet(self, description, changes, time=None):
+        result = ChangeSet(description, time)
         for child in changes:
             result.add_change(self(child))
         return result

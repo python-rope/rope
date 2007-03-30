@@ -1,11 +1,13 @@
 Small Stories
 =============
 
-- Refactor `builtin_to_pyobject()`
+- Adding time to `ChangeSet`\s
 
 * Adding *clear objectdb* command
 * Adding *sync project data* command
 * Renaming `Project.close()` to `Project.sync()`
+* Defaults and documents for project ``config.py`` options
+
 * Inline fails when there is an arg mismatch
 * `sqlite3db`
 * Multiple ropes on one project; problems for objectdb and history
