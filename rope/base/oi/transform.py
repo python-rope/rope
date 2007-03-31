@@ -2,6 +2,7 @@ import os
 import re
 
 import rope.base.project
+from rope.base import exceptions
 
 
 class PyObjectToTextual(object):
@@ -95,10 +96,6 @@ class TextualToPyObject(object):
         except AttributeError:
             return None
 
-    def module_to_pyobject(self, textual):
-        path = textual[1]
-        return self._get_pymodule(path)
-
     def builtin_to_pyobject(self, textual):
         name = textual[1]
         method = getattr(self, 'builtin_%s_to_pyobject' % textual[1], None)
@@ -148,12 +145,24 @@ class TextualToPyObject(object):
     def none_to_pyobject(self, textual):
         return None
 
-    def function_to_pyobject(self, textual):
-        return self._get_pyobject_at(textual[1], int(textual[2]))
+    def _module_to_pyobject(self, textual):
+        path = textual[1]
+        return self._get_pymodule(path)
 
-    def class_to_pyobject(self, textual):
+    def _function_to_pyobject(self, textual):
+        path = textual[1]
+        lineno = int(textual[2])
+        pymodule = self._get_pymodule(path)
+        if pymodule is not None:
+            scope = pymodule.get_scope()
+            inner_scope = scope.get_inner_scope_for_line(lineno)
+            return inner_scope.pyobject
+
+    def _class_to_pyobject(self, textual):
         path, name = textual[1:]
         pymodule = self._get_pymodule(path)
+        if pymodule is None:
+            return None
         module_scope = pymodule.get_scope()
         suspected = None
         if name in module_scope.get_names():
@@ -168,11 +177,14 @@ class TextualToPyObject(object):
 
     def defined_to_pyobject(self, textual):
         if len(textual) == 2:
-            return self.module_to_pyobject(textual)
-        elif textual[2].isdigit():
-            return self.function_to_pyobject(textual)
+            return self._module_to_pyobject(textual)
         else:
-            return self.class_to_pyobject(textual)
+            if textual[2].isdigit():
+                result = self._function_to_pyobject(textual)
+            else:
+                result = self._class_to_pyobject(textual)
+            if not isinstance(result, rope.base.pyobjects.PyModule):
+                return result
 
     def instance_to_pyobject(self, textual):
         type = self.transform(textual[1])
@@ -187,17 +199,20 @@ class TextualToPyObject(object):
                 return i + 1
 
     def _get_pymodule(self, path):
-        root = os.path.abspath(self.project.address)
-        if path.startswith(root):
-            relative_path = path[len(root):]
-            if relative_path.startswith('/') or relative_path.startswith(os.sep):
-                relative_path = relative_path[1:]
-            resource = self.project.get_resource(relative_path)
-        else:
-            resource = rope.base.project.get_no_project().get_resource(path)
-        return self.project.get_pycore().resource_to_pyobject(resource)
+        resource = self.file_to_resource(path)
+        if resource is not None:
+            return self.project.get_pycore().resource_to_pyobject(resource)
 
-    def _get_pyobject_at(self, path, lineno):
-        scope = self._get_pymodule(path).get_scope()
-        inner_scope = scope.get_inner_scope_for_line(lineno)
-        return inner_scope.pyobject
+    def file_to_resource(self, path):
+        try:
+            root = os.path.abspath(self.project.address)
+            if path.startswith(root):
+                relative_path = path[len(root):]
+                if relative_path.startswith('/') or relative_path.startswith(os.sep):
+                    relative_path = relative_path[1:]
+                resource = self.project.get_resource(relative_path)
+            else:
+                resource = rope.base.project.get_no_project().get_resource(path)
+            return resource
+        except exceptions.RopeError:
+            return None

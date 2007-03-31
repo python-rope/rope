@@ -3,18 +3,53 @@ class MemoryObjectDB(object):
     def __init__(self, validation):
         self.files = {}
         self.validation = validation
+        self.observers = []
 
     def get_scope_info(self, path, key, readonly=True):
         if path not in self.files:
             if readonly:
                 return NullScopeInfo()
-            self.files[path] = {}
+            self._add_file(path)
         if key not in self.files[path]:
             if readonly:
                 return NullScopeInfo()
             self.files[path][key] = ScopeInfo()
             self.files[path][key]._set_validation(self.validation)
         return self.files[path][key]
+
+    def _add_file(self, path):
+        self.files[path] = {}
+        for observer in self.observers:
+            observer.added(path)
+
+    def get_files(self):
+        return self.files.keys()
+
+    def validate_files(self):
+        for file in list(self.get_files()):
+            if not self.validation.is_file_valid(file):
+                self._remove_file(file)
+
+    def validate_file(self, file):
+        if file not in self.files:
+            return
+        for key in list(self.files[file]):
+            if not self.validation.is_scope_valid(file, key):
+                del self.files[file][key]
+
+    def file_moved(self, file, newfile):
+        if file not in self.files:
+            return
+        self.files[newfile] = self.files[file]
+        self._remove_file(file)
+
+    def _remove_file(self, file):
+        del self.files[file]
+        for observer in self.observers:
+            observer.removed(file)
+
+    def add_file_list_observer(self, observer):
+        self.observers.append(observer)
 
     def sync(self):
         pass
@@ -100,3 +135,12 @@ class CallInfo(object):
 
     def get_returned(self):
         return self.returned
+
+
+class FileListObserver(object):
+
+    def added(self, path):
+        pass
+
+    def removed(self, path):
+        pass

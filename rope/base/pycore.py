@@ -195,7 +195,7 @@ class PyCore(object):
 
         """
         receiver = self.call_info.doi_data_received
-        if not self.project.get_prefs().get('enable_doi', True):
+        if not self.project.get_prefs().get('perform_doi', True):
             receiver = None
         runner = dynamicoi.PythonFileRunner(self, resource, args, stdin,
                                             stdout, receiver)

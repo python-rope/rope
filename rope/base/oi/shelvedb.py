@@ -14,6 +14,7 @@ class ShelveObjectDB(object):
         self._index = None
         self.cache = {}
         self.random = random.Random()
+        self.observers = []
 
     def _get_root(self):
         if self._root is None:
@@ -58,6 +59,8 @@ class ShelveObjectDB(object):
             if readonly and not resource.exists():
                 return
             self.cache[path] = shelve.open(resource.real_path, writeback=True)
+            for observer in self.observers:
+                observer.added(path)
         return self.cache[path]
 
     def get_scope_info(self, path, key, readonly=True):
@@ -78,3 +81,41 @@ class ShelveObjectDB(object):
             file_dict.close()
         self._index = None
         self.cache.clear()
+
+    def get_files(self):
+        return self.index.keys()
+
+    def validate_files(self):
+        for file in list(self.get_files()):
+            if not self.validation.is_file_valid(file):
+                self._remove_file(file)
+
+    def validate_file(self, file):
+        if file not in self.index:
+            return
+        file_dict = self._get_file_dict(file)
+        for key in list(file_dict):
+            if not self.validation.is_scope_valid(file, key):
+                del file_dict[key]
+
+    def file_moved(self, file, newfile):
+        if file not in self.index:
+            return
+        self.index[newfile] = self.index[file]
+        self._remove_file(file, on_disk=False)
+
+    def _remove_file(self, file, on_disk=True):
+        if file not in self.index:
+            return
+        if file in self.cache:
+            self.cache[file].close()
+            del self.cache[file]
+        mapping = self.index[file]
+        del self.index[file]
+        if on_disk:
+            self.root.get_child(mapping).remove()
+        for observer in self.observers:
+            observer.removed(file)
+
+    def add_file_list_observer(self, observer):
+        self.observers.append(observer)

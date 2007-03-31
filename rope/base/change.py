@@ -226,7 +226,7 @@ class _ResourceOperations(object):
         destination = _get_destination_for_move(resource, new_location)
         fscommands = self._get_fscommands(resource)
         fscommands.move(resource.real_path,
-                             self.project._get_resource_path(destination))
+                        self.project._get_resource_path(destination))
         new_resource = self.project.get_resource(destination)
         for observer in list(self.project.observers):
             observer.resource_removed(resource, new_resource)

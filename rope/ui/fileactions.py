@@ -294,6 +294,9 @@ def project_tree(context):
 def validate_project(context):
     context.project.validate(context.project.root)
 
+def sync_project(context):
+    context.project.sync()
+
 def save_editor(context):
     context.get_core().save_active_editor()
 
@@ -330,6 +333,8 @@ actions.append(SimpleAction('project_tree', project_tree, 'C-x p t',
                             MenuAddress(['File', 'Project Tree'], 't', 2)))
 actions.append(SimpleAction('validate_project', validate_project, 'C-x p v',
                             MenuAddress(['File', 'Validate Project Files'], 'v', 2)))
+actions.append(SimpleAction('sync_project', sync_project, 'C-x p s',
+                            MenuAddress(['File', 'Sync Project To Disk'], None, 2)))
 
 actions.append(SimpleAction('change_buffer', change_editor, 'C-x b',
                             MenuAddress(['File', 'Change Editor...'], 'c', 3)))

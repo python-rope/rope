@@ -137,6 +137,8 @@ class Project(_Project):
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
         self.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
         self._init_rope_folder(ropefolder)
+        # Forcing the creation of `self.pycore` to register observers
+        self.pycore
 
     def get_files(self):
         return self._get_files_recursively(self.root)
@@ -456,5 +458,6 @@ def opening_project(project):
     #project.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
     #project.set('objectdb_type', 'shelve')
     #project.set('save_history', True)
-    #project.set('enable_doi', True)
+    #project.set('perform_doi', True)
+    #project.set('validate_objectdb', True)
 '''

@@ -197,8 +197,29 @@ Sample interface::
       def is_scope_valid(self, path, key):
           pass
 
-      def is_callinfo_valid(self, callinfo):
+      def is_callinfo_valid(self, path, key, callinfo):
           pass
+
+  class ObjectDB(object):
+
+      def get_scope_info(self):
+          pass
+
+      def sync(self):
+          pass
+
+      def get_files(self):
+          pass
+
+      def validate_files(self):
+          pass
+
+      def validate_file(self, path):
+          pass
+
+      def file_moved(self, path, new_path):
+          pass
+
 
 * Should we use `FilteredResourceObserver`?
 * Changes caused by move refactoring

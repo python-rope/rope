@@ -17,6 +17,31 @@ class ObjectInfoManager(object):
             self.objectdb = memorydb.MemoryObjectDB(validation)
         else:
             self.objectdb = shelvedb.ShelveObjectDB(project, validation)
+        if project.get_prefs().get('validate_objectdb', True):
+            self._init_validation()
+
+    def _init_validation(self):
+        self.objectdb.validate_files()
+        observer = rope.base.project.ResourceObserver(self._resource_changed,
+                                                      self._resource_removed)
+        files = []
+        for path in self.objectdb.get_files():
+            resource = self.to_pyobject.file_to_resource(path)
+            if resource is not None and resource.project == self.project:
+                files.append(resource)
+        self.observer = rope.base.project.FilteredResourceObserver(observer,
+                                                                   files)
+        self.objectdb.add_file_list_observer(_FileListObserver(self))
+        self.project.add_observer(self.observer)
+
+    def _resource_changed(self, resource):
+        self.objectdb.validate_file(resource.real_path)
+
+    def _resource_removed(self, resource, new_resource=None):
+        self.observer.remove_resource(resource)
+        if new_resource is not None:
+            self.objectdb.file_moved(resource.real_path, new_resource.real_path)
+            self.observer.add_resource(new_resource)
 
     def get_returned(self, pyobject, args):
         result = self.get_exact_returned(pyobject, args)
@@ -113,3 +138,27 @@ class TextualValidation(object):
 
     def is_more_valid(self, new, old):
         return new[0] not in ('unknown', 'none')
+
+    def is_file_valid(self, path):
+        return self.to_pyobject.file_to_resource(path) is not None
+
+    def is_scope_valid(self, path, key):
+        return self.to_pyobject.transform(('defined', path, key)) is not None
+
+
+class _FileListObserver(object):
+
+    def __init__(self, object_info):
+        self.object_info = object_info
+        self.observer = self.object_info.observer
+        self.to_pyobject = self.object_info.to_pyobject
+
+    def removed(self, path):
+        resource = self.to_pyobject.file_to_resource(path)
+        if resource is not None:
+            self.observer.remove_resource(resource)
+
+    def added(self, path):
+        resource = self.to_pyobject.file_to_resource(path)
+        if resource is not None:
+            self.observer.add_resource(resource)

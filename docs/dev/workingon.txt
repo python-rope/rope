@@ -1,11 +1,16 @@
-Small Stories
-=============
+Incremental ObjectDB Validation
+===============================
 
-- Adding time to `ChangeSet`\s
+- Not saving changes about ignored resources in undo list
+- What if a resource in objectdb is invalid?
+- Adding *sync project to disk* command
+- Add ``enable_objectdb_validation`` config
+
+* A common base class for dbs
 
 * Adding *clear objectdb* command
-* Adding *sync project data* command
 * Renaming `Project.close()` to `Project.sync()`
+* Adding ``Project`` menu entry?
 * Defaults and documents for project ``config.py`` options
 
 * Inline fails when there is an arg mismatch

@@ -217,7 +217,8 @@ class ObjectInferTest(unittest.TestCase):
 
     def test_considering_nones_to_be_unknowns(self):
         mod = self.pycore.get_string_module(
-            'class C(object):\n    pass\na_var = None\na_var = C()\na_var = None\n')
+            'class C(object):\n    pass\n'
+            'a_var = None\na_var = C()\na_var = None\n')
         c_class = mod.get_attribute('C').get_object()
         a_var = mod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -818,6 +819,32 @@ class DynamicOITest(unittest.TestCase):
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
+    def test_invalidating_data_after_changing(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        code = 'def a_func(arg):\n    return eval("arg")\n' \
+               'a_var = a_func(a_func)\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        mod.write('\n' + code)
+        mod.write(code)
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertNotEquals(pymod.get_attribute('a_func').get_object(),
+                             pymod.get_attribute('a_var').get_object())
+
+    def test_invalidating_data_after_moving(self):
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod2.write('class C(object):\n    pass\n')
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        code = 'import mod2\ndef a_func(arg):\n    return eval(arg)\n' \
+               'a_var = a_func("mod2.C")\n'
+        mod.write(code)
+        self.pycore.run_module(mod).wait_process()
+        mod.move('newmod.py')
+        pymod = self.pycore.get_module('newmod')
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        self.assertEquals(pymod2.get_attribute('C').get_object(),
+                          pymod.get_attribute('a_var').get_object())
+
 
 def _do_for_all_dbs(function):
     def called(self):
@@ -834,6 +861,22 @@ class _MockValidation(object):
     def is_more_valid(self, new, old):
         return new != -1
 
+    def is_file_valid(self, path):
+        return path != 'invalid'
+
+    def is_scope_valid(self, path, key):
+        return path != 'invalid' and key != 'invalid'
+
+
+class _MockFileListObserver(object):
+
+    log = ''
+
+    def added(self, path):
+        self.log += 'added %s ' % path
+
+    def removed(self, path):
+        self.log += 'removed %s ' % path
 
 class ObjectDBTest(unittest.TestCase):
 
@@ -859,7 +902,7 @@ class ObjectDBTest(unittest.TestCase):
     @_do_for_all_dbs
     def test_simple_per_name_does_not_exist(self, db):
         scope_info = db.get_scope_info('file', 'key')
-        self.assertEqual(None, scope_info.get_per_name('name'))
+        self.assertEquals(None, scope_info.get_per_name('name'))
 
     @_do_for_all_dbs
     def test_simple_per_name_after_syncing(self, db):
@@ -868,7 +911,7 @@ class ObjectDBTest(unittest.TestCase):
         db.sync()
 
         scope_info = db.get_scope_info('file', 'key')
-        self.assertEqual(1, scope_info.get_per_name('name'))
+        self.assertEquals(1, scope_info.get_per_name('name'))
 
     @_do_for_all_dbs
     def test_getting_returned(self, db):
@@ -876,7 +919,7 @@ class ObjectDBTest(unittest.TestCase):
         scope_info.add_call((1, 2), 3)
 
         scope_info = db.get_scope_info('file', 'key')
-        self.assertEqual(3, scope_info.get_returned((1, 2)))
+        self.assertEquals(3, scope_info.get_returned((1, 2)))
 
     @_do_for_all_dbs
     def test_getting_returned_when_does_not_match(self, db):
@@ -884,7 +927,7 @@ class ObjectDBTest(unittest.TestCase):
         scope_info.add_call((1, 2), 3)
 
         scope_info = db.get_scope_info('file', 'key')
-        self.assertEqual(None, scope_info.get_returned((1, 1)))
+        self.assertEquals(None, scope_info.get_returned((1, 1)))
 
     @_do_for_all_dbs
     def test_getting_call_info(self, db):
@@ -893,37 +936,37 @@ class ObjectDBTest(unittest.TestCase):
 
         scope_info = db.get_scope_info('file', 'key')
         call_infos = list(scope_info.get_call_infos())
-        self.assertEqual(1, len(call_infos))
-        self.assertEqual((1, 2), call_infos[0].get_parameters())
-        self.assertEqual(3, call_infos[0].get_returned())
+        self.assertEquals(1, len(call_infos))
+        self.assertEquals((1, 2), call_infos[0].get_parameters())
+        self.assertEquals(3, call_infos[0].get_returned())
 
     @_do_for_all_dbs
     def test_invalid_per_name(self, db):
         scope_info = db.get_scope_info('file', 'key', readonly=False)
         scope_info.save_per_name('name', -1)
 
-        self.assertEqual(None, scope_info.get_per_name('name'))
+        self.assertEquals(None, scope_info.get_per_name('name'))
 
     @_do_for_all_dbs
     def test_overwriting_per_name(self, db):
         scope_info = db.get_scope_info('file', 'key', readonly=False)
         scope_info.save_per_name('name', 1)
         scope_info.save_per_name('name', 2)
-        self.assertEqual(2, scope_info.get_per_name('name'))
+        self.assertEquals(2, scope_info.get_per_name('name'))
 
     @_do_for_all_dbs
     def test_not_overwriting_with_invalid_per_name(self, db):
         scope_info = db.get_scope_info('file', 'key', readonly=False)
         scope_info.save_per_name('name', 1)
         scope_info.save_per_name('name', -1)
-        self.assertEqual(1, scope_info.get_per_name('name'))
+        self.assertEquals(1, scope_info.get_per_name('name'))
 
     @_do_for_all_dbs
     def test_getting_invalid_returned(self, db):
         scope_info = db.get_scope_info('file', 'key', readonly=False)
         scope_info.add_call((1, 2), -1)
 
-        self.assertEqual(None, scope_info.get_returned((1, 2)))
+        self.assertEquals(None, scope_info.get_returned((1, 2)))
 
     @_do_for_all_dbs
     def test_not_overwriting_with_invalid_returned(self, db):
@@ -931,7 +974,51 @@ class ObjectDBTest(unittest.TestCase):
         scope_info.add_call((1, 2), 3)
         scope_info.add_call((1, 2), -1)
 
-        self.assertEqual(3, scope_info.get_returned((1, 2)))
+        self.assertEquals(3, scope_info.get_returned((1, 2)))
+
+    @_do_for_all_dbs
+    def test_get_files(self, db):
+        scope_info = db.get_scope_info('file1', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+        scope_info = db.get_scope_info('file2', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+
+        self.assertEquals(set(['file1', 'file2']), set(db.get_files()))
+
+    @_do_for_all_dbs
+    def test_validating_files(self, db):
+        scope_info = db.get_scope_info('invalid', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+        db.validate_files()
+        self.assertEquals(0, len(db.get_files()))
+
+    @_do_for_all_dbs
+    def test_validating_file_for_scopes(self, db):
+        scope_info = db.get_scope_info('file', 'invalid', readonly=False)
+        scope_info.add_call((1, 2), 3)
+        db.validate_file('file')
+        self.assertEquals(1, len(db.get_files()))
+        scope_info = db.get_scope_info('file', 'invalid', readonly=True)
+        self.assertEquals(0, len(list(scope_info.get_call_infos())))
+
+    @_do_for_all_dbs
+    def test_validating_file_moved(self, db):
+        scope_info = db.get_scope_info('file', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+
+        db.file_moved('file', 'newfile')
+        self.assertEquals(1, len(db.get_files()))
+        scope_info = db.get_scope_info('newfile', 'key', readonly=True)
+        self.assertEquals(1, len(list(scope_info.get_call_infos())))
+
+    @_do_for_all_dbs
+    def test_using_file_list_observer(self, db):
+        scope_info = db.get_scope_info('invalid', 'key', readonly=False)
+        scope_info.add_call((1, 2), 3)
+        observer = _MockFileListObserver()
+        db.add_file_list_observer(observer)
+        db.validate_files()
+        self.assertEquals('removed invalid ', observer.log)
 
 
 def suite():
@@ -939,6 +1026,7 @@ def suite():
     result.addTests(unittest.makeSuite(ObjectInferTest))
     result.addTests(unittest.makeSuite(DynamicOITest))
     result.addTests(unittest.makeSuite(NewStaticOITest))
+    result.addTests(unittest.makeSuite(ObjectDBTest))
     return result
 
 if __name__ == '__main__':

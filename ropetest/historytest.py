@@ -185,6 +185,14 @@ class IsolatedHistoryTest(unittest.TestCase):
         change = ChangeContents(self.file1, '1')
         self.history.undo(change)
 
+    def test_ignoring_ignored_resources(self):
+        self.project.set('ignored_resources', ['ignored*'])
+        ignored = self.project.get_file('ignored.txt')
+        change = CreateResource(ignored)
+        self.history.do(change)
+        self.assertTrue(ignored.exists())
+        self.assertEquals(0, len(self.history.undo_list))
+
 
 class SavingHistoryTest(unittest.TestCase):
 

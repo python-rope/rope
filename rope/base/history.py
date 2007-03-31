@@ -30,10 +30,17 @@ class History(object):
     history_file = property(_get_history_file)
 
     def do(self, changes):
-        self.undo_list.append(changes)
-        if len(self.undo_list) > self.max_undo_count:
-            del self.undo_list[0]
+        if self._is_change_interesting(changes):
+            self.undo_list.append(changes)
+            if len(self.undo_list) > self.max_undo_count:
+                del self.undo_list[0]
         changes.do()
+
+    def _is_change_interesting(self, changes):
+        for resource in changes.get_changed_resources():
+            if not self.project.is_ignored(resource):
+                return True
+        return False
 
     def undo(self, change=None):
         if not self._undo_list:
