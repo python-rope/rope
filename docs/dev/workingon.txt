@@ -1,16 +1,12 @@
-Incremental ObjectDB Validation
-===============================
+Small Stories
+=============
 
-- Not saving changes about ignored resources in undo list
-- What if a resource in objectdb is invalid?
-- Adding *sync project to disk* command
-- Add ``enable_objectdb_validation`` config
+* Better Menus
 
 * A common base class for dbs
-
+* Test on dos
 * Adding *clear objectdb* command
 * Renaming `Project.close()` to `Project.sync()`
-* Adding ``Project`` menu entry?
 * Defaults and documents for project ``config.py`` options
 
 * Inline fails when there is an arg mismatch

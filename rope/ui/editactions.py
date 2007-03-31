@@ -1,12 +1,12 @@
-import Tkinter
 import os.path
 
-import rope.ui.core
+import Tkinter
+
 import rope.base.project
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved, check_project
+import rope.ui.core
+from rope.ui import uihelpers, fill
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
-from rope.ui import uihelpers, fill
 
 
 def set_mark(context):
@@ -66,52 +66,6 @@ def redo_editing(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor().redo()
 
-def _confirm_action(title, message, action):
-    toplevel = Tkinter.Toplevel()
-    toplevel.title(title)
-    frame = Tkinter.Frame(toplevel)
-    label = Tkinter.Label(frame, text=message)
-    label.grid(row=0, column=0, columnspan=2)
-    def ok(event=None):
-        action()
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-    ok_button = Tkinter.Button(frame, text='OK', command=ok)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    ok_button.grid(row=1, column=0)
-    toplevel.bind('<Return>', lambda event: ok())
-    toplevel.bind('<Escape>', lambda event: cancel())
-    toplevel.bind('<Control-g>', lambda event: cancel())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    ok_button.focus_set()
-
-
-def undo_project(context):
-    if context.project:
-        history = context.project.history
-        if not history.undo_list:
-            return
-        def undo():
-            history.undo()
-        _confirm_action(
-            'Undoing Project Change',
-            'Undoing <%s>\n\n' % str(history.undo_list[-1]) +
-            'Undo project might change many files. Proceed?', undo)
-
-def redo_project(context):
-    if context.project:
-        history = context.project.history
-        if not history.redo_list:
-            return
-        def redo():
-            history.redo()
-        _confirm_action(
-            'Redoing Project Change',
-            'Redoing <%s>\n\n' % str(history.redo_list[-1]) +
-            'Redo project might change many files. Proceed?', redo)
-
 def forward_search(context):
     if context.get_active_editor():
         context.get_active_editor().get_editor().start_searching(True)
@@ -145,42 +99,6 @@ def goto_last_edit_location(context):
     context.get_core().get_editor_manager().goto_last_edit_location()
 
 
-def show_history(context):
-    if not context.project:
-        return
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('File History')
-    frame = Tkinter.Frame(toplevel)
-    list_frame = Tkinter.Frame(frame)
-    enhanced_list = uihelpers.DescriptionList(
-        list_frame, 'Undo History', lambda change: change.get_description())
-    for change in reversed(context.project.history.undo_list):
-        enhanced_list.add_entry(change)
-    list_frame.grid(row=0, column=0, columnspan=2)
-    def undo(event=None):
-        change = enhanced_list.get_selected()
-        if change is None:
-            return
-        def undo():
-            context.project.history.undo(change)
-        _confirm_action(
-            'Undoing Project Change',
-            'Undoing <%s>\n\n' % str(change) +
-            'Undo project might change many files. Proceed?', undo)
-        toplevel.destroy()
-    def cancel(event=None):
-        toplevel.destroy()
-    undo_button = Tkinter.Button(frame, text='Undo', command=undo)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
-    undo_button.grid(row=1, column=0)
-    toplevel.bind('<Return>', lambda event: undo())
-    toplevel.bind('<Escape>', lambda event: cancel())
-    toplevel.bind('<Control-g>', lambda event: cancel())
-    toplevel.bind('<Alt-u>', lambda event: undo())
-    cancel_button.grid(row=1, column=1)
-    frame.grid()
-    undo_button.focus_set()
-
 def swap_mark_and_insert(context):
     context.editor.swap_mark_and_insert()
 
@@ -190,15 +108,6 @@ def edit_dot_rope(context):
         os.path.expanduser('~%s.rope' % os.path.sep))
     editor_manager = context.get_core().get_editor_manager()
     editor_manager.get_resource_editor(resource, mode='python')
-
-def edit_project_config(context):
-    if not check_project(context.core):
-        return
-    resource = context.project.ropefolder
-    if resource is not None:
-        config = resource.get_child('config.py')
-        editor_manager = context.get_core().get_editor_manager()
-        editor_manager.get_resource_editor(config)
 
 def repeat_last_action(context):
     if context.get_active_editor():
@@ -227,9 +136,38 @@ def execute_command(context):
         'Matched Commands', height=10, width=25)
 
 
+def next_word(context):
+    context.editor.next_word()
+
+def prev_word(context):
+    context.editor.prev_word()
+
+def delete_next_word(context):
+    context.editor.delete_next_word()
+
+def delete_prev_word(context):
+    context.editor.delete_prev_word()
+
+def lower_word(context):
+    context.editor.lower_next_word()
+
+def upper_word(context):
+    context.editor.upper_next_word()
+
+def capitalize_word(context):
+    context.editor.capitalize_next_word()
+
 core = rope.ui.core.Core.get_core()
-core._add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
+core.add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
+
+actions.append(SimpleAction('next_word', next_word, 'M-f', None, ['all']))
+actions.append(SimpleAction('prev_word', prev_word, 'M-b', None, ['all']))
+actions.append(SimpleAction('delete_next_word', delete_next_word, 'M-d', None, ['all']))
+actions.append(SimpleAction('delete_prev_word', delete_prev_word, 'M-BackSpace', None, ['all']))
+actions.append(SimpleAction('lower_next_word', lower_word, 'M-l', None, ['all']))
+actions.append(SimpleAction('upper_next_word', upper_word, 'M-u', None, ['all']))
+actions.append(SimpleAction('capitalize_next_word', capitalize_word, 'M-c', None, ['all']))
 
 actions.append(SimpleAction('set_mark', set_mark, 'C-space',
                             MenuAddress(['Edit', 'Set Mark'], 's'), ['all']))
@@ -256,25 +194,6 @@ actions.append(SimpleAction('redo', redo_editing, 'C-x r',
                             MenuAddress(['Edit', 'Redo Editing'], 'r', 1), ['all']))
 actions.append(SimpleAction('repeat_last_action', repeat_last_action, 'C-x z',
                             MenuAddress(['Edit', 'Repeat Last Action'], 'l', 1), ['all']))
-actions.append(
-    SimpleAction('undo_project',
-                 ConfirmEditorsAreSaved(undo_project), 'C-x p u',
-                 MenuAddress(['Edit', 'Undo Last Project Change'], 'd', 2),
-                 ['all', 'none']))
-actions.append(
-    SimpleAction('redo_project',
-                 ConfirmEditorsAreSaved(redo_project), 'C-x p r',
-                 MenuAddress(['Edit', 'Redo Last Project Change'], 'o', 2),
-                 ['all', 'none']))
-actions.append(
-    SimpleAction('project_history',
-                 ConfirmEditorsAreSaved(show_history), 'C-x p h',
-                 MenuAddress(['Edit', 'Project History'], 'h', 2),
-                 ['all', 'none']))
-actions.append(SimpleAction('edit_project_config', edit_project_config, 'C-x p c',
-                            MenuAddress(['Edit', 'Edit Project config.py'], None, 2),
-                            ['all', 'none']))
-
 actions.append(SimpleAction('search_forward', forward_search, 'C-s',
                             MenuAddress(['Edit', 'Forward Search'], 'f', 3), ['all']))
 actions.append(SimpleAction('search_backward', backward_search, 'C-r',

@@ -73,7 +73,7 @@ def show_copying(context):
 
 
 core = rope.ui.core.Core.get_core()
-core._add_menu_cascade(MenuAddress(['Help'], 'p'), ['all', 'none'])
+core.add_menu_cascade(MenuAddress(['Help'], 'h'), ['all', 'none'])
 actions = []
 
 actions.append(SimpleAction('readme', show_readme, 'C-h r',

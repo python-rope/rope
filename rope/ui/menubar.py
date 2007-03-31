@@ -103,4 +103,3 @@ class _MenuSeparator(_MenuItem):
 
 class _MenuCommand(_MenuItem):
     pass
-

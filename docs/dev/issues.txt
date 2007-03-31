@@ -221,10 +221,6 @@ Sample interface::
           pass
 
 
-* Should we use `FilteredResourceObserver`?
-* Changes caused by move refactoring
-
-
 Fixing Small Changes
 --------------------
 
@@ -293,7 +289,7 @@ holding all type information in memory needs a lot of memory.
   * per_name: scope_fk, name, value
 
 
-Saving object data requires having a good mechanisms for invalidating
+Saving object data requires having good mechanisms for invalidating
 information and testing.
 
 

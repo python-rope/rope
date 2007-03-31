@@ -60,7 +60,6 @@ class Core(object):
         import rope.ui.fileactions
         import rope.ui.editactions
         import rope.ui.sourceactions
-        import rope.ui.codeactions
         import rope.ui.refactor
         import rope.ui.helpactions
 
@@ -83,7 +82,7 @@ class Core(object):
         """Return a `rope.ui.pref.Prefs` object"""
         return self.prefs
 
-    def _add_menu_cascade(self, menu_address, active_contexts):
+    def add_menu_cascade(self, menu_address, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)
         for context in active_contexts:
             context.menu_manager.add_menu_cascade(menu_address)

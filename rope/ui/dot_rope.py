@@ -153,3 +153,9 @@ def _change_key_binding(core):
     core.rebind_action('contributing', None)
     core.rebind_action('library', None)
     core.rebind_action('about', None)
+
+    core.rebind_action('prev_word', 'C-Left')
+    core.rebind_action('next_word', 'C-Right')
+    core.rebind_action('lower_next_word', None)
+    core.rebind_action('upper_next_word', None)
+    core.rebind_action('capitalize_next_word', None)

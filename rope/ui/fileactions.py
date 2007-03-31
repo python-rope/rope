@@ -5,6 +5,8 @@ import Tkinter
 import rope.base.project
 import rope.ui.actionhelpers
 import rope.ui.core
+from rope.ui import uihelpers
+from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
@@ -306,11 +308,102 @@ def save_all(context):
 def close_editor(context):
     context.get_core()._close_active_editor_dialog()
 
+def edit_project_config(context):
+    if not rope.ui.actionhelpers.check_project(context.core):
+        return
+    resource = context.project.ropefolder
+    if resource is not None:
+        config = resource.get_child('config.py')
+        editor_manager = context.get_core().get_editor_manager()
+        editor_manager.get_resource_editor(config)
+
+def _confirm_action(title, message, action):
+    toplevel = Tkinter.Toplevel()
+    toplevel.title(title)
+    frame = Tkinter.Frame(toplevel)
+    label = Tkinter.Label(frame, text=message)
+    label.grid(row=0, column=0, columnspan=2)
+    def ok(event=None):
+        action()
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+    ok_button = Tkinter.Button(frame, text='OK', command=ok)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    ok_button.grid(row=1, column=0)
+    toplevel.bind('<Return>', lambda event: ok())
+    toplevel.bind('<Escape>', lambda event: cancel())
+    toplevel.bind('<Control-g>', lambda event: cancel())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    ok_button.focus_set()
+
+
+def show_history(context):
+    if not context.project:
+        return
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('File History')
+    frame = Tkinter.Frame(toplevel)
+    list_frame = Tkinter.Frame(frame)
+    enhanced_list = uihelpers.DescriptionList(
+        list_frame, 'Undo History', lambda change: change.get_description())
+    for change in reversed(context.project.history.undo_list):
+        enhanced_list.add_entry(change)
+    list_frame.grid(row=0, column=0, columnspan=2)
+    def undo(event=None):
+        change = enhanced_list.get_selected()
+        if change is None:
+            return
+        def undo():
+            context.project.history.undo(change)
+        _confirm_action(
+            'Undoing Project Change',
+            'Undoing <%s>\n\n' % str(change) +
+            'Undo project might change many files. Proceed?', undo)
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+    undo_button = Tkinter.Button(frame, text='Undo', command=undo)
+    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    undo_button.grid(row=1, column=0)
+    toplevel.bind('<Return>', lambda event: undo())
+    toplevel.bind('<Escape>', lambda event: cancel())
+    toplevel.bind('<Control-g>', lambda event: cancel())
+    toplevel.bind('<Alt-u>', lambda event: undo())
+    cancel_button.grid(row=1, column=1)
+    frame.grid()
+    undo_button.focus_set()
+
+def undo_project(context):
+    if context.project:
+        history = context.project.history
+        if not history.undo_list:
+            return
+        def undo():
+            history.undo()
+        _confirm_action(
+            'Undoing Project Change',
+            'Undoing <%s>\n\n' % str(history.undo_list[-1]) +
+            'Undo project might change many files. Proceed?', undo)
+
+def redo_project(context):
+    if context.project:
+        history = context.project.history
+        if not history.redo_list:
+            return
+        def redo():
+            history.redo()
+        _confirm_action(
+            'Redoing Project Change',
+            'Redoing <%s>\n\n' % str(history.redo_list[-1]) +
+            'Redo project might change many files. Proceed?', redo)
+
 def exit_rope(context):
     context.get_core()._close_project_and_exit()
 
 core = rope.ui.core.Core.get_core()
-core._add_menu_cascade(MenuAddress(['File'], 'i'), ['all', 'none'])
+core.add_menu_cascade(MenuAddress(['File'], 'f'), ['all', 'none'])
 actions = []
 
 actions.append(SimpleAction('open_project', open_project, 'C-x C-p',
@@ -318,35 +411,56 @@ actions.append(SimpleAction('open_project', open_project, 'C-x C-p',
 actions.append(SimpleAction('close_project', close_project, 'C-x p k',
                             MenuAddress(['File', 'Close Project'], 'l')))
 
-actions.append(SimpleAction('create_file', create_file, 'C-x n f',
-                            MenuAddress(['File', 'New File...'], 'n', 1)))
-actions.append(SimpleAction('create_folder', create_folder, 'C-x n d',
-                            MenuAddress(['File', 'New Folder...'], 'e', 1)))
-actions.append(SimpleAction('create_module', create_module, 'C-x n m',
-                            MenuAddress(['File', 'New Module...'], 'm', 1)))
-actions.append(SimpleAction('create_package', create_package, 'C-x n p',
-                            MenuAddress(['File', 'New Package...'], 'p', 1)))
-
 actions.append(SimpleAction('find_file', find_file, 'C-x C-f',
-                            MenuAddress(['File', 'Find File...'], 'f', 2)))
-actions.append(SimpleAction('project_tree', project_tree, 'C-x p t',
-                            MenuAddress(['File', 'Project Tree'], 't', 2)))
-actions.append(SimpleAction('validate_project', validate_project, 'C-x p v',
-                            MenuAddress(['File', 'Validate Project Files'], 'v', 2)))
-actions.append(SimpleAction('sync_project', sync_project, 'C-x p s',
-                            MenuAddress(['File', 'Sync Project To Disk'], None, 2)))
+                            MenuAddress(['File', 'Find File...'], 'f', 1)))
+core.add_menu_cascade(MenuAddress(['File', 'New'], 'n', 1), ['all', 'none'])
+actions.append(SimpleAction('create_file', create_file, 'C-x n f',
+                            MenuAddress(['File', 'New', 'New File...'], 'f')))
+actions.append(SimpleAction('create_folder', create_folder, 'C-x n d',
+                            MenuAddress(['File', 'New', 'New Directory...'], 'd')))
+actions.append(SimpleAction('create_module', create_module, 'C-x n m',
+                            MenuAddress(['File', 'New', 'New Module...'], 'm')))
+actions.append(SimpleAction('create_package', create_package, 'C-x n p',
+                            MenuAddress(['File', 'New', 'New Package...'], 'p')))
 
 actions.append(SimpleAction('change_buffer', change_editor, 'C-x b',
-                            MenuAddress(['File', 'Change Editor...'], 'c', 3)))
+                            MenuAddress(['File', 'Change Editor...'], 'c', 2)))
 actions.append(SimpleAction('save_buffer', save_editor, 'C-x C-s',
-                            MenuAddress(['File', 'Save Editor'], 's', 3)))
+                            MenuAddress(['File', 'Save Editor'], 's', 2)))
 actions.append(SimpleAction('save_all_buffers', save_all, 'C-x s',
-                            MenuAddress(['File', 'Save All'], 'a', 3)))
+                            MenuAddress(['File', 'Save All'], 'a', 2)))
 actions.append(SimpleAction('close_buffer', close_editor, 'C-x k',
-                            MenuAddress(['File', 'Close Editor'], 'd', 3)))
+                            MenuAddress(['File', 'Close Editor'], 'd', 2)))
+
+actions.append(
+    SimpleAction('undo_project',
+                 ConfirmEditorsAreSaved(undo_project), 'C-x p u',
+                 MenuAddress(['File', 'Undo Last Project Change'], 'u', 3),
+                 ['all', 'none']))
+actions.append(
+    SimpleAction('redo_project',
+                 ConfirmEditorsAreSaved(redo_project), 'C-x p r',
+                 MenuAddress(['File', 'Redo Last Project Change'], 'r', 3),
+                 ['all', 'none']))
+actions.append(
+    SimpleAction('project_history',
+                 ConfirmEditorsAreSaved(show_history), 'C-x p h',
+                 MenuAddress(['File', 'Project History'], 'h', 3),
+                 ['all', 'none']))
+
+actions.append(SimpleAction('project_tree', project_tree, 'C-x p t',
+                            MenuAddress(['File', 'Project Tree'], 't', 4)))
+actions.append(
+    SimpleAction('edit_project_config', edit_project_config, 'C-x p c',
+                 MenuAddress(['File', 'Edit Project config.py'], None, 4),
+                 ['all', 'none']))
+actions.append(SimpleAction('validate_project', validate_project, 'C-x p v',
+                            MenuAddress(['File', 'Validate Project Files'], 'v', 4)))
+actions.append(SimpleAction('sync_project', sync_project, 'C-x p s',
+                            MenuAddress(['File', 'Sync Project To Disk'], None, 4)))
 
 actions.append(SimpleAction('exit', exit_rope, 'C-x C-c',
-                            MenuAddress(['File', 'Exit'], 'x', 4)))
+                            MenuAddress(['File', 'Exit'], 'x', 5)))
 
 for action in actions:
     core.register_action(action)

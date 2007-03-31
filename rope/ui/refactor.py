@@ -730,6 +730,9 @@ def change_occurrences(context):
 
 
 actions = []
+core = rope.ui.core.get_core()
+core.add_menu_cascade(MenuAddress(['Refactor'], 'r'), ['python'])
+
 actions.append(SimpleAction('rename', ConfirmEditorsAreSaved(rename), 'C-c r r',
                             MenuAddress(['Refactor', 'Rename'], 'r'), ['python']))
 actions.append(SimpleAction('extract_method',
@@ -791,27 +794,26 @@ actions.append(SimpleAction('module_to_package',
                             MenuAddress(['Refactor', 'Transform Module to Package'], 't', 1),
                             ['python']))
 
+core.add_menu_cascade(MenuAddress(['Refactor', 'Imports'], 'o', 2), ['python'])
 actions.append(SimpleAction('organize_imports',
                             ConfirmEditorsAreSaved(organize_imports, all=False), 'C-c i o',
-                            MenuAddress(['Refactor', 'Organize Imports'], 'o', 2), ['python']))
+                            MenuAddress(['Refactor', 'Imports', 'Organize Imports'], 'o'), ['python']))
 actions.append(SimpleAction('expand_star_imports',
                             ConfirmEditorsAreSaved(expand_star_imports, all=False), 'C-c i x',
-                            MenuAddress(['Refactor', 'Expand Star Imports'], 'x', 2),
+                            MenuAddress(['Refactor', 'Imports', 'Expand Star Imports'], 'x'),
                             ['python']))
 actions.append(SimpleAction('relatives_to_absolutes',
                             ConfirmEditorsAreSaved(transform_relatives_to_absolute, all=False), 'C-c i a',
-                            MenuAddress(['Refactor', 'Transform Relatives to Absolute'], 'a', 2),
+                            MenuAddress(['Refactor', 'Imports', 'Transform Relatives to Absolute'], 'a'),
                             ['python']))
 actions.append(SimpleAction('froms_to_imports',
                             ConfirmEditorsAreSaved(transform_froms_to_imports, all=False), 'C-c i i',
-                            MenuAddress(['Refactor', 'Transform Froms to Imports'], None, 2),
+                            MenuAddress(['Refactor', 'Imports', 'Transform Froms to Imports'], 'i'),
                             ['python']))
 actions.append(SimpleAction('handle_long_imports',
                             ConfirmEditorsAreSaved(handle_long_imports, all=False), 'C-c i l',
-                            MenuAddress(['Refactor', 'Handle Long Imports'], None, 2),
+                            MenuAddress(['Refactor', 'Imports', 'Handle Long Imports'], 'l'),
                             ['python']))
 
-core = rope.ui.core.get_core()
-core._add_menu_cascade(MenuAddress(['Refactor'], 't'), ['python'])
 for action in actions:
     core.register_action(action)

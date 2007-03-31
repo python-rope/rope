@@ -76,13 +76,6 @@ class GraphicalEditor(object):
                               indexer.get_index(end))
 
     def _bind_keys(self):
-        self.text.bind('<Alt-f>', lambda event: self.next_word())
-        self.text.bind('<Alt-b>', lambda event: self.prev_word())
-        self.text.bind('<Alt-d>', lambda event: self.delete_next_word())
-        def delete_prev_word_listener(event):
-            self.delete_prev_word()
-            return 'break'
-        self.text.bind('<Alt-BackSpace>', delete_prev_word_listener)
         def do_goto_start(event):
             self.goto_start()
             self.text.see(INSERT)
@@ -129,9 +122,6 @@ class GraphicalEditor(object):
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
-        self.text.bind('<Alt-l>', lambda event: self.lower_next_word())
-        self.text.bind('<Alt-u>', lambda event: self.upper_next_word())
-        self.text.bind('<Alt-c>', lambda event: self.capitalize_next_word())
         def kill_line(event):
             self.kill_line()
             return 'break'

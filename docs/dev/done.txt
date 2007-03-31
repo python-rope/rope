@@ -3,6 +3,9 @@
 ===========
 
 
+- Incremental ObjectDB validation : March 31, 2007
+
+
 - Saving history across sessions : March 29, 2007
 
 
