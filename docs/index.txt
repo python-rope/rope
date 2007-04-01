@@ -75,6 +75,8 @@ Features implemented so far:
   * A dynamic object inference approach
   * A static object inference approach
   * Handling built-in container types
+  * Saving object information on disk
+  * Basic stored object data validation
 
 
 Download

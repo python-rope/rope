@@ -18,13 +18,68 @@ New Features
 ============
 
 * Generating python elements
-* Saving locations and texts
-* Adding `.ropeproject` folder
+* Memorizing locations and texts
+* Added `.ropeproject` folder
 * Saving history across sessions
 * Saving object data to disk
 * Incremental ObjectDB validation
 * Inlining `staticmethod`\s
+* Setting ignored resources patterns
 
+Maybe the most notable change in this release is the addition of a new
+folder in projects for holding configurations and other informations
+for a project.  Its default name is ``.ropeproject``, but it can be
+changed in ``~/.rope`` or `Project` constructor (if using rope as a
+library).  You can also force rope not to make such a folder by using
+`None` instead of a `str`.
+
+Currently it is used for these perposes:
+
+* There is a ``config.py`` file in this folder in which you can change
+  project configurations.  Look at the default ``config.py`` file,
+  that is created when there is none available, for more information.
+  When a project is open you can edit this file using ``"Edit Project
+  config.py"`` action or ``C-x p c``.
+* It can be used for saving project history, so that the next time you
+  open the project you can see and undo past changes.  If you're new
+  to rope use ``"Project History"`` (``C-x p h``) for more
+  information.
+* It can be used for saving object information.  Before this release
+  all object information where kept in memory.  Saving them on disk
+  has two advantages.  First, rope will need less memory and second,
+  the calculated and collected information is not thrown away each
+  time you close a project.
+
+You can change what to save and what not to in the ``config.py`` file.
+
+Since files on disk change overtime project object DB might hold
+invalid information.  Currently there is a basic incremental object DB
+validation that can be used to remove or fix out of date information.
+Rope uses this feature by default but you can disable it by editing
+``config.py``.  Other interesting features related to rope's object DB
+and object inference are planned for ``0.5`` release.  So if you're
+interested keep waiting!
+
+The generate element actions make python elements.  You have to move
+on an element that does not exist and perform one of these generate
+actions.  For example::
+
+  my_print(var=1)
+
+Calling generate function on `my_print` (``C-c n f``) will result in:
+
+  def my_print(var):
+      pass
+
+
+  my_print(var=1)
+
+It handle methods, static methods, classes, variables, modules, and
+packages, too.  Generate element actions use ``C-c n`` prefix.
+
+Rope can now save locations or strings in memory.  These are similar
+to emacs's bookmarks and registers.  These actions use ``C-x m``
+prefix.
 
 
 Getting Started

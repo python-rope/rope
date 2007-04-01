@@ -133,4 +133,7 @@ Stories
 * Moving `staticmethod`\s
 
 
-> Public Release 0.5m4 : April 1, 2007
+> Public Release 0.5m5 : April 15, 2007
+
+
+* Using a better object textual form

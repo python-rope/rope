@@ -28,7 +28,9 @@ binding                     emacs binding  normal
 open/new project            C-x C-p        C-P
 close project               C-x p k
 show project tree           C-x p t        M-Q r
+edit project config         C-x p c
 validate project files      C-x p v        F5
+sync project to disk        C-x p s
 --------------------------  -------------  -------------
 new module                  C-x n m
 new package                 C-x n p

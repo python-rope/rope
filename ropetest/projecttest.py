@@ -32,8 +32,8 @@ class ProjectTest(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def test_project_creation(self):
-        self.assertTrue(os.path.samefile(self.project_root,
-                                         self.project.address))
+        self.assertEquals(os.path.abspath(self.project_root),
+                          os.path.abspath(self.project.address))
 
     def test_getting_project_file(self):
         project_file = self.project.get_resource(self.sample_file)
@@ -746,7 +746,7 @@ class RopeFolderTest(unittest.TestCase):
     def test_fscommands_and_ignored_resources(self):
         fscommands = _MockFSCommands()
         self.project = testutils.sample_project(
-            fscommands=fscommands, ignored_resources=['myfile.txt'])
+            fscommands=fscommands, ignored_resources=['myfile.txt'], ropefolder=None)
         myfile = self.project.get_file('myfile.txt')
         myfile.create()
         self.assertEquals('', fscommands.log)

@@ -1,15 +1,10 @@
 Small Stories
 =============
 
-- Using MemoryObjectDB for unittests?
-- ``max_history_items`` config
-
-* Profiling and renaming random classes
-* Test on dos
-
 * Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * `sqlite3db`
+* Better UI; Performing refactorings on a separate thread
 * Multiple ropes on one project; problems for objectdb and history
 * Changing method to static method refactoring
 * Recursive SOI; Go where the calls go
