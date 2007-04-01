@@ -11,8 +11,12 @@ def sample_project(root=None, **kwds):
         # HACK: Using ``/dev/shm/`` for faster tests
         if os.name == 'posix' and os.path.isdir('/dev/shm'):
             root = '/dev/shm/' + root
+    # Using these prefs for faster tests
+    prefs = {'objectdb_type': 'memory', 'save_history': False}
+    prefs.update(kwds)
     remove_recursively(root)
-    return rope.base.project.Project(root, **kwds)
+    project = rope.base.project.Project(root, **prefs)
+    return project
 
 
 def remove_project(project):

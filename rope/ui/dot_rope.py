@@ -70,6 +70,8 @@ def _change_key_binding(core):
     core.rebind_action('create_package', None)
     core.rebind_action('project_tree', 'M-Q r')
     core.rebind_action('validate_project', 'F5')
+    core.rebind_action('edit_project_config', None)
+    core.rebind_action('sync_project', None)
     core.rebind_action('find_file', 'C-R')
     core.rebind_action('change_buffer', 'C-E')
     core.rebind_action('save_buffer', 'C-s')

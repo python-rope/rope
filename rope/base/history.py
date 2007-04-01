@@ -4,11 +4,14 @@ import cPickle as pickle
 
 class History(object):
 
-    def __init__(self, project, maxundos=1000):
+    def __init__(self, project, maxundos=None):
         self.project = project
         self._undo_list = []
         self._redo_list = []
-        self.max_undo_count = maxundos
+        if maxundos is None:
+            self.max_undos = project.get_prefs().get('max_history_items', 100)
+        else:
+            self.max_undos = maxundos
         self._load_history()
 
     def _load_history(self):
@@ -32,7 +35,7 @@ class History(object):
     def do(self, changes):
         if self._is_change_interesting(changes):
             self.undo_list.append(changes)
-            if len(self.undo_list) > self.max_undo_count:
+            if len(self.undo_list) > self.max_undos:
                 del self.undo_list[0]
         changes.do()
 

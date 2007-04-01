@@ -17,7 +17,15 @@ library.
 New Features
 ============
 
-* 
+* Generating python elements
+* Saving locations and texts
+* Adding `.ropeproject` folder
+* Saving history across sessions
+* Saving object data to disk
+* Incremental ObjectDB validation
+* Inlining `staticmethod`\s
+
+
 
 Getting Started
 ===============

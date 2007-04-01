@@ -103,7 +103,7 @@ class _Project(object):
 
     def _get_history(self):
         if self._history is None:
-            self._history = rope.base.history.History(self, maxundos=100)
+            self._history = rope.base.history.History(self)
         return self._history
 
     history = property(_get_history)
@@ -113,19 +113,22 @@ class _Project(object):
 class Project(_Project):
     """A Project containing files and folders"""
 
-    def __init__(self, projectroot, fscommands=None, ropefolder='.ropeproject'):
+    def __init__(self, projectroot, fscommands=None,
+                 ropefolder='.ropeproject', **prefs):
         """A rope project
 
         :parameters:
-            - `projectroot`: the address of the root folder of the project
-            - `fscommands`: implements the file system operations rope uses
+            - `projectroot`: The address of the root folder of the project
+            - `fscommands`: Implements the file system operations rope uses
               have a look at `rope.base.fscommands`
-            - `ropefolder`: the name of the folder in which rope stores
+            - `ropefolder`: The name of the folder in which rope stores
               project configurations and data.  Pass `None` for not using
               such a folder at all.
+            - `prefs`: Specify project preferences.  These values
+              overwrite config file preferences.
 
         """
-        self._address = os.path.expanduser(projectroot)
+        self._address = os.path.abspath(os.path.expanduser(projectroot))
         if not os.path.exists(self._address):
             os.mkdir(self._address)
         elif not os.path.isdir(self._address):
@@ -135,10 +138,9 @@ class Project(_Project):
         super(Project, self).__init__(fscommands)
         self.ignored = _IgnoredResources()
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
-        self.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
+        self.prefs['ignored_resources'] = ['*.pyc', '.svn', '*~', '.ropeproject']
         self._init_rope_folder(ropefolder)
-        # Forcing the creation of `self.pycore` to register observers
-        self.pycore
+        self._init_prefs(prefs)
 
     def get_files(self):
         return self._get_files_recursively(self.root)
@@ -161,18 +163,30 @@ class Project(_Project):
             self._ropefolder = self.get_folder(ropefolder)
             if not self._ropefolder.exists():
                 self._ropefolder.create()
+
+    def _init_prefs(self, prefs):
+        run_globals = {}
+        if self.ropefolder is not None:
             if self._ropefolder.has_child('config.py'):
                 config = self._ropefolder.get_child('config.py')
             else:
                 config = self._ropefolder.create_file('config.py')
                 config.write(_DEFAULT_CONFIG_PY)
-            run_globals = {}
             run_globals.update({'__name__': '__main__',
                                 '__builtins__': __builtins__,
                                 '__file__': config.real_path})
             execfile(config.real_path, run_globals)
-            if 'opening_project' in run_globals:
-                run_globals['opening_project'](self)
+            if 'set_prefs' in run_globals:
+                run_globals['set_prefs'](self.prefs)
+        for key, value in prefs.items():
+            self.prefs[key] = value
+        self._init_other_parts()
+        if 'project_opened' in run_globals:
+            run_globals['project_opened'](self)
+
+    def _init_other_parts(self):
+        # Forcing the creation of `self.pycore` to register observers
+        self.pycore
 
     def is_ignored(self, resource):
         return self.ignored.is_ignored(resource)
@@ -423,7 +437,8 @@ class _Changes(object):
 class _IgnoredResources(object):
 
     def __init__(self):
-        self.ignored_patterns = []
+        self.patterns = []
+        self._ignored_patterns = []
 
     def set_ignored(self, patterns):
         """Specify which resources to ignore
@@ -432,9 +447,8 @@ class _IgnoredResources(object):
         ``?`` signs for matching resource names.
 
         """
-        del self.ignored_patterns[:]
-        for pattern in patterns:
-            self._add_ignored_pattern(pattern)
+        self._ignored_patterns = None
+        self.patterns = patterns
 
     def _add_ignored_pattern(self, pattern):
         re_pattern = pattern.replace('.', '\\.').\
@@ -448,16 +462,49 @@ class _IgnoredResources(object):
                 return True
         return False
 
+    def _get_compiled_patterns(self):
+        if self._ignored_patterns is None:
+            self._ignored_patterns = []
+            for pattern in self.patterns:
+                self._add_ignored_pattern(pattern)
+        return self._ignored_patterns
+
+    ignored_patterns = property(_get_compiled_patterns)
+
 
 _DEFAULT_CONFIG_PY = '''# The default ``config.py``
 
 
-def opening_project(project):
-    """This function is called when this project is opened"""
+def set_prefs(prefs):
+    """This function is called before the project is opened"""
 
-    #project.set('ignored_resources', ['*.pyc', '.svn', '*~', '.ropeproject'])
-    #project.set('objectdb_type', 'shelve')
-    #project.set('save_history', True)
-    #project.set('perform_doi', True)
-    #project.set('validate_objectdb', True)
+    # Specify which files and folders to ignore in the project.
+    # Changes to ignored resources are not added to the history and
+    # VCSs.  Also they are not shown in "Find File" dialog.
+    prefs['ignored_resources'] = ['*.pyc', '.svn', '*~', '.ropeproject']
+
+    # Possible values are 'memory' and 'shelve' for now.  The default
+    # is 'memory'.  If 'shelve', object information is saved to disk
+    # for future sessions.
+    prefs['objectdb_type'] = 'shelve'
+
+    # Shows whether to save history across sessions.  Defaults to
+    # `False`.
+    prefs['save_history'] = True
+    prefs['max_history_items'] = 100
+
+    # If `False` when running modules or unit tests "Dynamic Object
+    # Inference" is turned off.  This makes them much faster.  The
+    # default is `True`.
+    prefs['perform_doi'] = True
+
+    # Rope can test the validity of its object DB when running.  You
+    # can turn this feature off by using `False`.  Defaults to
+    # `True`.
+    prefs['validate_objectdb'] = True
+
+
+def project_opened(project):
+    """This function is called after the project is opened"""
+    # Do whatever you like here!
 '''

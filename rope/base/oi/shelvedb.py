@@ -94,6 +94,8 @@ class ShelveObjectDB(object):
         if file not in self.index:
             return
         file_dict = self._get_file_dict(file)
+        if file_dict is None:
+            return
         for key in list(file_dict):
             if not self.validation.is_scope_valid(file, key):
                 del file_dict[key]

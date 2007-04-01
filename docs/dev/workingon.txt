@@ -1,14 +1,13 @@
 Small Stories
 =============
 
-* Better Menus
+- Using MemoryObjectDB for unittests?
+- ``max_history_items`` config
 
-* A common base class for dbs
+* Profiling and renaming random classes
 * Test on dos
-* Adding *clear objectdb* command
-* Renaming `Project.close()` to `Project.sync()`
-* Defaults and documents for project ``config.py`` options
 
+* Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * `sqlite3db`
 * Multiple ropes on one project; problems for objectdb and history

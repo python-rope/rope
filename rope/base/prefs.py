@@ -33,3 +33,9 @@ class Prefs(object):
 
         """
         self.callbacks[key] = callback
+
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __getitem__(self, key):
+        return self.get(key)

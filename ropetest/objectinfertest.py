@@ -888,6 +888,8 @@ class ObjectDBTest(unittest.TestCase):
                     shelvedb.ShelveObjectDB(self.project, validation)]
 
     def tearDown(self):
+        for db in self.dbs:
+            db.sync()
         testutils.remove_project(self.project)
         super(ObjectDBTest, self).tearDown()
 

@@ -32,7 +32,8 @@ class ProjectTest(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def test_project_creation(self):
-        self.assertEquals(self.project_root, self.project.address)
+        self.assertTrue(os.path.samefile(self.project_root,
+                                         self.project.address))
 
     def test_getting_project_file(self):
         project_file = self.project.get_resource(self.sample_file)
@@ -64,17 +65,17 @@ class ProjectTest(unittest.TestCase):
         self.fail('Should have failed')
 
     def test_making_root_folder_if_it_does_not_exist(self):
-        project_root = 'SampleProject2'
+        project = Project('sampleproject2')
         try:
-            project = Project(project_root)
-            self.assertTrue(os.path.exists(project_root) and os.path.isdir(project_root))
+            self.assertTrue(os.path.exists('sampleproject2') and
+                            os.path.isdir('sampleproject2'))
         finally:
-            testutils.remove_recursively(project_root)
+            testutils.remove_project(project)
 
     @testutils.assert_raises(RopeError)
     def test_failure_when_project_root_exists_and_is_a_file(self):
         try:
-            project_root = 'SampleProject2'
+            project_root = 'sampleproject2'
             open(project_root, 'w').close()
             project = Project(project_root)
         finally:
@@ -715,24 +716,21 @@ class RopeFolderTest(unittest.TestCase):
         self.assertTrue('.ropeproject', self.project.ropefolder.path)
 
     def test_setting_ignored_resources(self):
-        self.project = testutils.sample_project()
-        self.project.set('ignored_resources', ['myfile.txt'])
+        self.project = testutils.sample_project(ignored_resources=['myfile.txt'])
         myfile = self.project.get_file('myfile.txt')
         file2 = self.project.get_file('file2.txt')
         self.assertTrue(self.project.is_ignored(myfile))
         self.assertFalse(self.project.is_ignored(file2))
 
     def test_ignored_folders(self):
-        self.project = testutils.sample_project()
-        self.project.set('ignored_resources', ['myfolder'])
+        self.project = testutils.sample_project(ignored_resources=['myfolder'])
         myfolder = self.project.root.create_folder('myfolder')
         self.assertTrue(self.project.is_ignored(myfolder))
         myfile = myfolder.create_file('myfile.txt')
         self.assertTrue(self.project.is_ignored(myfile))
 
     def test_setting_ignored_resources_patterns(self):
-        self.project = testutils.sample_project()
-        self.project.set('ignored_resources', ['m?file.*'])
+        self.project = testutils.sample_project(ignored_resources=['m?file.*'])
         myfile = self.project.get_file('myfile.txt')
         file2 = self.project.get_file('file2.txt')
         self.assertTrue(self.project.is_ignored(myfile))
@@ -747,8 +745,8 @@ class RopeFolderTest(unittest.TestCase):
 
     def test_fscommands_and_ignored_resources(self):
         fscommands = _MockFSCommands()
-        self.project = testutils.sample_project(fscommands=fscommands)
-        self.project.set('ignored_resources', ['myfile.txt'])
+        self.project = testutils.sample_project(
+            fscommands=fscommands, ignored_resources=['myfile.txt'])
         myfile = self.project.get_file('myfile.txt')
         myfile.create()
         self.assertEquals('', fscommands.log)
@@ -758,11 +756,15 @@ class RopeFolderTest(unittest.TestCase):
         config = self.project.get_file('.ropeproject/config.py')
         if not config.exists():
             config.create()
-        config.write('def opening_project(project):\n'
+        config.write('def set_prefs(prefs):\n'
+                     '    prefs["ignored_resources"] = ["myfile.txt"]\n'
+                     'def project_opened(project):\n'
                      '    project.root.create_file("loaded")\n')
         self.project.close()
         self.project = Project(self.project.address, ropefolder='.ropeproject')
         self.assertTrue(self.project.get_file('loaded').exists())
+        myfile = self.project.get_file('myfile.txt')
+        self.assertTrue(self.project.is_ignored(myfile))
 
 
 def suite():
