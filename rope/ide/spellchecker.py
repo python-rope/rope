@@ -1,5 +1,6 @@
 import subprocess
 import os
+from rope.base import exceptions
 
 
 class SpellChecker(object):
@@ -95,6 +96,7 @@ class Aspell(object):
         for candidate in candidates:
             if os.path.exists(candidate):
                 return candidate
+        raise exceptions.RopeError('Cannot find Aspell/Ispell')
 
     def write_line(self, line):
         self.process.stdin.write(line + '\n')

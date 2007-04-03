@@ -157,6 +157,9 @@ def upper_word(context):
 def capitalize_word(context):
     context.editor.capitalize_next_word()
 
+def goto_center_line(context):
+    context.editor.goto_center_line()
+
 core = rope.ui.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
@@ -168,6 +171,7 @@ actions.append(SimpleAction('delete_prev_word', delete_prev_word, 'M-BackSpace',
 actions.append(SimpleAction('lower_next_word', lower_word, 'M-l', None, ['all']))
 actions.append(SimpleAction('upper_next_word', upper_word, 'M-u', None, ['all']))
 actions.append(SimpleAction('capitalize_next_word', capitalize_word, 'M-c', None, ['all']))
+actions.append(SimpleAction('goto_center_line', goto_center_line, 'M-r', None, ['all']))
 
 actions.append(SimpleAction('set_mark', set_mark, 'C-space',
                             MenuAddress(['Edit', 'Set Mark'], 's'), ['all']))

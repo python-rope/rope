@@ -42,8 +42,8 @@ class _TypoDialog(object):
         toplevel.title('Spell Checker <%s>' % self.typo.original)
         suggestions = ''
         for index, name in enumerate(self.typo.suggestions[:10]):
-            suggestions += '%i : %s\n' % (index, name)
-            toplevel.bind('<KeyPress-%i>' % index,
+            suggestions += '%d : %s\n' % (index, name)
+            toplevel.bind('<KeyPress-%d>' % index,
                           lambda event, name=name: self._use(name))
         actions = 'SPC : Leave unchanged\n'
         actions += 'r : Replace word\n'

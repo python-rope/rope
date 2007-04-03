@@ -1,34 +1,20 @@
 Spell-Checker
 =============
 
-- spellcheck_word
-- spellcheck_region
-- spellcheck_buffer
-- Adding to UI
+- Updating index.txt
+- What to do when spellchecker is not available
+- `C-l`, `M-r`
 
-  - ' ': skip
-  - DIGITs: select
-  - 'r': replace the word
-  - 'a': accept word for this session
-  - 'i': insert to your private dictionary
-  - 'l': insert the lower cased version to your private dictionary
-  - 'q': exit
+* Filling for lists
+* Adding ``indentation_size`` config
 
-- Saving dictionary at the end of session
-
-* Updating index.txt
-* Showing spellchecker only when available?
-* `C-l`, `C-r`
 * Working on python source
-
 * Mass module renaming?
 
   * Removing -er; like highlighter?
   * Removing -s; like uihelpers?
   * Not using '_' for two-words; like change_signature?
 
-* Filling for lists
-* Adding ``indentation_size`` config
 * Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * `sqlite3db`

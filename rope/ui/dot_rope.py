@@ -161,3 +161,4 @@ def _change_key_binding(core):
     core.rebind_action('lower_next_word', None)
     core.rebind_action('upper_next_word', None)
     core.rebind_action('capitalize_next_word', None)
+    core.rebind_action('goto_center_line', None)

@@ -63,6 +63,7 @@ Features implemented so far:
   * An emacs like keybinding
   * Configurable keybinding
   * Basic UI plug-in support
+  * Spell-checking using Aspell/Ispell
   * Correcting indentation
   * Project tree view
   * Unit-test running view

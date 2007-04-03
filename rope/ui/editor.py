@@ -2,6 +2,7 @@ import os
 
 import ScrolledText
 import tkFont
+import Tkinter
 from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT, Toplevel, Text
 
 import rope.ide.codeassist
@@ -126,6 +127,24 @@ class GraphicalEditor(object):
             self.kill_line()
             return 'break'
         self.text.bind('<Control-k>', kill_line)
+        self.text.bind('<Control-l>', lambda event: self.center_line())
+        self.text.bind('<Alt-r>', lambda event: self.goto_center_line())
+
+    def center_line(self):
+        mid = self._get_center_line()
+        current = self._get_line_from_index(self.text.index(INSERT))
+        diffs = current - mid
+        self.text.yview_scroll(diffs, Tkinter.UNITS)
+
+    def goto_center_line(self):
+        mid = self._get_center_line()
+        self.goto_line(mid)
+
+    def _get_center_line(self):
+        start = self._get_line_from_index(self.text.index('@0,0'))
+        end = self._get_line_from_index(
+            self.text.index('@0,%d' % self.text.winfo_height()))
+        return (start + end) / 2
 
     def get_region_offset(self):
         start, end = self._get_region_index()
