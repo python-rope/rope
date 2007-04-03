@@ -1,26 +1,25 @@
-Spellchecker
-============
+Spell-Checker
+=============
 
-- lines starting with an ``aspell -a`` command sign
-- Finding the executable
-- Using ispell if possible
-- Error generating methods in other modules!
+- spellcheck_word
+- spellcheck_region
+- spellcheck_buffer
+- Adding to UI
 
-* Adding to UI
+  - ' ': skip
+  - DIGITs: select
+  - 'r': replace the word
+  - 'a': accept word for this session
+  - 'i': insert to your private dictionary
+  - 'l': insert the lower cased version to your private dictionary
+  - 'q': exit
 
-  * ' ': skip
-  * DIGITs: select
-  * 'r': replace the word
-  * 'a': accept word for this session
-  * 'i': insert to your private dictionary
-  * 'u': insert the lower cased version to your private dictionary
-  * 'q': exit
+- Saving dictionary at the end of session
 
-* spellcheck_word
-* spellcheck_region
-* spellcheck_buffer
+* Updating index.txt
+* Showing spellchecker only when available?
+* `C-l`, `C-r`
 * Working on python source
-* Showing spellchecker only when available
 
 * Mass module renaming?
 

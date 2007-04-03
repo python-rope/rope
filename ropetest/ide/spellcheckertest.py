@@ -80,7 +80,7 @@ class SpellCheckerTest(unittest.TestCase):
 
     def test_inserting_dictionary(self):
         text = 'hellp\nhellp\n'
-        checker = SpellChecker(text, aspell=self.aspell)
+        checker = SpellChecker(text, aspell=self.aspell, save_dict=False)
         result = checker.check()
         typo = result.next()
         checker.insert_dictionary('hellp')

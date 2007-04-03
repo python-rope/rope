@@ -133,5 +133,6 @@ def _emacs_to_tk(sequence):
         modifier = modifier.replace('M-', 'Alt-').replace('C-', 'Control-')
         if key.isdigit():
             key = 'KeyPress-' + key
+        key = key.replace('/', 'slash').replace('$', 'dollar')
         result.append('<%s>' % (modifier + key))
     return ''.join(result)

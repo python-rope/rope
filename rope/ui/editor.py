@@ -822,6 +822,16 @@ class _OffsetToIndexCacher(object):
         return new_index
 
 
+class OffsetToIndexCacher(object):
+    """A faster way to convert offset to `GraphicalTextIndex`"""
+    def __init__(self, editor):
+        self.editor = editor
+        self.cacher = _OffsetToIndexCacher(editor)
+
+    def get_index(self, offset):
+        return GraphicalTextIndex(editor, self.cacher.get_index(offset))
+
+
 class KillRingManager(object):
 
     def __init__(self, limit=20):

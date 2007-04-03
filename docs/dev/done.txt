@@ -3,6 +3,9 @@
 ===========
 
 
+- Spell-Checker : April 3, 2007
+
+
 > Public Release 0.5m4 : April 1, 2007
 
 

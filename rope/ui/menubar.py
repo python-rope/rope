@@ -31,6 +31,11 @@ class MenuAddress(object):
         self.alt_key = alt_key
         self.last_group = last_group
 
+    def child(self, name, *args, **kwds):
+        address = list(self.address)
+        address.append(name)
+        return MenuAddress(address, *args, **kwds)
+
 
 class _MenuItem(object):
 

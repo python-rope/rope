@@ -137,6 +137,3 @@ Stories
 
 
 * Using a better object textual form
-
-
-* Spellchecker

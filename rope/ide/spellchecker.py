@@ -5,7 +5,7 @@ import os
 class SpellChecker(object):
     """An interface to Aspell/Ispell programs"""
 
-    def __init__(self, text, aspell=None):
+    def __init__(self, text, aspell=None, save_dict=True):
         self.text = text
         if aspell is None:
             self.aspell = Aspell()
@@ -15,21 +15,29 @@ class SpellChecker(object):
         self.aspell.write_line('!')
         self.line_offset = 0
         self.line_ignored = set()
+        self.do_quit = False
+        self.save_dict = save_dict
 
     def check(self):
         lines = self.text.splitlines()
         try:
             for line in lines:
+                if self.do_quit:
+                    break
                 for typo in self._check_line(line):
                     yield typo
                 self.line_offset += len(line) + 1
                 self.line_ignored.clear()
         finally:
+            if self.save_dict:
+                self.aspell.write_line('#')
             self.aspell.close()
 
     def _check_line(self, line):
         self.aspell.write_line('^%s' % line)
         while True:
+            if self.do_quit:
+                break
             result = self.aspell.read_line()
             if result.strip() == '':
                 break
@@ -61,6 +69,9 @@ class SpellChecker(object):
 
     def save_dictionary(self):
         self.aspell.write_line('#')
+
+    def quit(self):
+        self.do_quit = True
 
 
 class Typo(object):

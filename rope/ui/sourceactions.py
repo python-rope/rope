@@ -6,7 +6,7 @@ import rope.ui.core
 import rope.ui.testview
 from rope.base import codeanalyze
 from rope.ide import formatter, notes, generate
-from rope.ui import registers
+from rope.ui import spelldialog, registers
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
@@ -393,7 +393,7 @@ core = rope.ui.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Source'], 's'), ['all', 'none'])
 actions = []
 
-actions.append(SimpleAction('code_assist', do_code_assist, 'M-slash',
+actions.append(SimpleAction('code_assist', do_code_assist, 'M-/',
                             MenuAddress(['Source', 'Code Assist (Auto-Complete)'], 'c'), ['python']))
 actions.append(SimpleAction('goto_definition', do_goto_definition, 'C-c g',
                             MenuAddress(['Source', 'Goto Definition'], 'd'), ['python']))
@@ -417,51 +417,60 @@ actions.append(SimpleAction('comment_region', comment_region, 'C-c C-c',
                             MenuAddress(['Source', 'Comment Region'], 'n', 1),
                             ['python']))
 
-core.add_menu_cascade(MenuAddress(['Source', 'Run'], 'r', 2), ['python'])
+run = MenuAddress(['Source', 'Run'], 'r', 2)
+core.add_menu_cascade(run, ['python'])
 actions.append(SimpleAction('run_module', do_run_module, 'C-c x p',
-                            MenuAddress(['Source', 'Run', 'Run Module'], 'm'), ['python']))
+                            run.child('Run Module', 'm'), ['python']))
 actions.append(SimpleAction('run_unit_tests', run_tests, 'C-c x t',
-                            MenuAddress(['Source', 'Run', 'Run Unit Tests'], 't'), ['python']))
+                            run.child('Run Unit Tests', 't'), ['python']))
 actions.append(SimpleAction('run_soi', run_soi, 'C-c x s',
-                            MenuAddress(['Source', 'Run', 'Run SOI On Module'], 's'), ['python']))
+                            run.child('Run SOI On Module', 's'), ['python']))
 
-core.add_menu_cascade(MenuAddress(['Source', 'Annotations'], 'a', 2), ['python'])
+notes = MenuAddress(['Source', 'Annotations'], 'a', 2)
+core.add_menu_cascade(notes, ['python'])
 actions.append(SimpleAction('show_codetags', show_codetags, 'C-c a t',
-                            MenuAddress(['Source', 'Annotations', 'Show Codetags'], 'c'), ['python']))
+                            notes.child('Show Codetags', 'c'), ['python']))
 actions.append(SimpleAction('show_errors', show_errors, 'C-c a e',
-                            MenuAddress(['Source', 'Annotations', 'Show Errors'], 'e'), ['python']))
+                            notes.child('Show Errors', 'e'), ['python']))
 actions.append(SimpleAction('show_warnings', show_warnings, 'C-c a w',
-                            MenuAddress(['Source', 'Annotations', 'Show Warnings'], 'w'), ['python']))
+                            notes.child('Show Warnings', 'w'), ['python']))
 actions.append(SimpleAction('show_annotations', show_all, 'C-c a a',
-                            MenuAddress(['Source', 'Annotations', 'Show All Annotations'], 'a'), ['python']))
+                            notes.child('Show All Annotations', 'a'), ['python']))
 
 
-core.add_menu_cascade(MenuAddress(['Source', 'Generate'], 'g', 2), ['python'])
-actions.append(
-    SimpleAction('generate_variable', generate_variable, 'C-c n v',
-                 MenuAddress(['Source', 'Generate', 'Generate Variable'], 'v'), ['python']))
-actions.append(
-    SimpleAction('generate_function', generate_function, 'C-c n f',
-                 MenuAddress(['Source', 'Generate', 'Generate Function'], 'f'), ['python']))
-actions.append(
-    SimpleAction('generate_class', generate_class, 'C-c n c',
-                 MenuAddress(['Source', 'Generate', 'Generate Class'], 'c'), ['python']))
-actions.append(
-    SimpleAction('generate_module', generate_module, 'C-c n m',
-                 MenuAddress(['Source', 'Generate', 'Generate Module'], 'm'), ['python']))
-actions.append(
-    SimpleAction('generate_package', generate_package, 'C-c n p',
-                 MenuAddress(['Source', 'Generate', 'Generate Package'], 'p'), ['python']))
+generate = MenuAddress(['Source', 'Generate'], 'g', 2)
+core.add_menu_cascade(generate, ['python'])
+actions.append(SimpleAction('generate_variable', generate_variable, 'C-c n v',
+                            generate.child('Generate Variable', 'v'), ['python']))
+actions.append(SimpleAction('generate_function', generate_function, 'C-c n f',
+                            generate.child('Generate Function', 'f'), ['python']))
+actions.append(SimpleAction('generate_class', generate_class, 'C-c n c',
+                            generate.child('Generate Class', 'c'), ['python']))
+actions.append(SimpleAction('generate_module', generate_module, 'C-c n m',
+                            generate.child('Generate Module', 'm'), ['python']))
+actions.append(SimpleAction('generate_package', generate_package, 'C-c n p',
+                            generate.child('Generate Package', 'p'), ['python']))
 
-core.add_menu_cascade(MenuAddress(['Source', 'Memory'], 'm', 2), ['all', 'none'])
+memory = MenuAddress(['Source', 'Memory'], 'm', 2)
+core.add_menu_cascade(memory, ['all', 'none'])
 actions.append(SimpleAction('memorize_location', registers.add_location, 'C-x m m',
-                            MenuAddress(['Source', 'Memory', 'Memorize Location'], 'm'), ['all']))
+                            memory.child('Memorize Location', 'm'), ['all']))
 actions.append(SimpleAction('remember_location', registers.goto_location, 'C-x m b',
-                            MenuAddress(['Source', 'Memory', 'Remember Location'], 'b')))
+                            memory.child('Remember Location', 'b')))
 actions.append(SimpleAction('memorize_string', registers.add_string, 'C-x m s',
-                            MenuAddress(['Source', 'Memory', 'Memorize String'], 's'), ['all']))
+                            memory.child('Memorize String', 's'), ['all']))
 actions.append(SimpleAction('remember_string', registers.insert_string, 'C-x m i',
-                            MenuAddress(['Source', 'Memory', 'Remember String'], 'i')))
+                            memory.child('Remember String', 'i')))
+
+spell = MenuAddress(['Source', 'Spell Checking'], 'p', 2)
+core.add_menu_cascade(spell, ['all'])
+actions.append(SimpleAction('spellcheck_word', spelldialog.check_word, 'M-$',
+                            spell.child('Spell-Check Word', 'w'), ['all']))
+actions.append(SimpleAction('spellcheck_region', spelldialog.check_region, 'C-x $ r',
+                            spell.child('Spell-Check Region', 'r'), ['all']))
+actions.append(SimpleAction('spellcheck_buffer', spelldialog.check_buffer, 'C-x $ b',
+                            spell.child('Spell-Check Buffer', 'b'), ['all']))
+
 
 for action in actions:
     core.register_action(action)
