@@ -37,6 +37,7 @@ class _TypoDialog(object):
         self.toplevel = None
 
     def __call__(self):
+        self._highlight_in_editor()
         toplevel = Tkinter.Toplevel()
         self.toplevel = toplevel
         toplevel.title('Spell Checker <%s>' % self.typo.original)
@@ -70,6 +71,12 @@ class _TypoDialog(object):
         toplevel.focus_set()
         toplevel.grab_set()
         toplevel.mainloop()
+
+    def _highlight_in_editor(self):
+        start_index = self.editor.get_index(self.typo.offset)
+        end_index = self.editor.get_index(self.typo.offset +
+                                          len(self.typo.original))
+        self.editor.select_range(start_index, end_index)
 
     def _add_session(self, event=None):
         self.checking.checker.accept_word(self.typo.original)

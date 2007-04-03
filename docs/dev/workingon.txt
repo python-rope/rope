@@ -1,9 +1,7 @@
-Spell-Checker
+Small Stories
 =============
 
-- Using Mon day for history in current year
-
-* Highlighting in spellchecking
+- Selecting the word that is being spell checked
 
 * Adding ``indentation_size`` config
 * Working on python source

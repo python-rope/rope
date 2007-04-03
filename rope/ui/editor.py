@@ -76,6 +76,12 @@ class GraphicalEditor(object):
             self.text.tag_add(kind, indexer.get_index(start),
                               indexer.get_index(end))
 
+    def select_range(self, start_index, end_index):
+        self.text.tag_remove(SEL, '1.0', END)
+        self.text.tag_add(SEL, start_index._getIndex(),
+                          end_index._getIndex())
+        self.text.see(start_index._getIndex())
+
     def _bind_keys(self):
         def do_goto_start(event):
             self.goto_start()
