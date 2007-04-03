@@ -1,7 +1,9 @@
 Spell-Checker
 =============
 
-- Filling for lists
+- Using Mon day for history in current year
+
+* Highlighting in spellchecking
 
 * Adding ``indentation_size`` config
 * Working on python source

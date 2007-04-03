@@ -69,8 +69,12 @@ class ChangeSet(Change):
                 string_date = 'today'
             elif date.date() == (datetime.date.today() - datetime.timedelta(1)):
                 string_date = 'yesterday'
+            elif date.month == datetime.date.today().month:
+                string_date = date.strftime('%a, %b %d')
+            elif date.year == datetime.date.today().year:
+                string_date = date.strftime('%b %d')
             else:
-                string_date = date.strftime('%a %d %b %Y')
+                string_date = date.strftime('%d %b, %Y')
             string_time = date.strftime('%H:%M:%S')
             string_time = '%s %s ' % (string_date, string_time)
             return self.description + ' - ' + string_time
