@@ -1,6 +1,35 @@
-Small Stories
-=============
+Spellchecker
+============
 
+- lines starting with an ``aspell -a`` command sign
+- Finding the executable
+- Using ispell if possible
+- Error generating methods in other modules!
+
+* Adding to UI
+
+  * ' ': skip
+  * DIGITs: select
+  * 'r': replace the word
+  * 'a': accept word for this session
+  * 'i': insert to your private dictionary
+  * 'u': insert the lower cased version to your private dictionary
+  * 'q': exit
+
+* spellcheck_word
+* spellcheck_region
+* spellcheck_buffer
+* Working on python source
+* Showing spellchecker only when available
+
+* Mass module renaming?
+
+  * Removing -er; like highlighter?
+  * Removing -s; like uihelpers?
+  * Not using '_' for two-words; like change_signature?
+
+* Filling for lists
+* Adding ``indentation_size`` config
 * Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * `sqlite3db`

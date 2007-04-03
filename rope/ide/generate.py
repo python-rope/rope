@@ -207,10 +207,9 @@ class _GenerationInfo(object):
             start, end = sourceutils.get_body_region(self.goal_scope.pyobject)
             if self.goal_pymodule.source_code[start:end].strip() == 'pass':
                 return start, end
-        lines = self.source_pymodule.lines
+        lines = self.goal_pymodule.lines
         start = lines.get_line_start(self.get_insertion_lineno())
         return (start, start)
-
 
     def get_scope_indents(self):
         if self.goal_scope.get_kind() == 'Module':

@@ -10,7 +10,7 @@ Release Schedule
 version would be released.  That is:
 
 =======  ===============
-Week #   Release Number
+Week #   Release Name
 =======  ===============
 2        x.ym1
 4        x.ym2
@@ -46,7 +46,7 @@ Discussion
 Now that we handle many kinds of refactorings and we have achieved
 many of rope's initial goals we can think of extending it.
 
-nThere are many places to extend rope.  There are two main places
+There are many places to extend rope.  There are two main places
 that can be enhanced.  One is occurrence finding mechanisms and the
 other is object inference.  Among the features that are going to be
 added implicit interfaces and changing structure refactorings are the
@@ -56,7 +56,7 @@ most promising ones.
 * DOI
 * SOI
 * Implicit interfaces
-* Changing strucutre refactorings; like ``a = b`` -> ``a.set(b)``
+* Changing structure refactorings; like ``a = b`` -> ``a.set(b)``
 * Advanced refactorings
 
 
@@ -84,14 +84,9 @@ To Be Discussed
 Better SOI
 ==========
 
-To improve our static object inference mechanisms I propose to add a
-new feature to rope to perform enhanced SOI.  Rope analyzes all
-function calls in a module and saves the information in
-`rope.base.oi.callinfo.CallInforManager` class.
-
 I don't know how often and when to scan a module for SOI.  Maybe
-before ``0.5`` release, rope only performs SOI when when the user
-askes; just like DOI.  Performing it automatically requires it to be
+before ``0.5`` release, rope only performs SOI when the user asks;
+just like DOI.  Performing it automatically requires it to be
 efficient.  So later, after using it for some time, we'll decide about
 that.
 
@@ -122,7 +117,7 @@ Function Scopes
 ---------------
 
 Another issue for implementing this feature is that function scope
-variable types are dependant on the type of the parameters and should
+variable types are dependent on the type of the parameters and should
 change.  This issue seem to have some relations with implicit
 interfaces.
 
@@ -525,7 +520,7 @@ Although we cannot find the exact offset an occurrence happens we
 can know the suspected lines and that will help us shorten the
 scope for searching for occurrences considerably.
 
-If we solve these problems we can can use a strategy for finding
+If we solve these problems we can use a strategy for finding
 occurrences.  Also Think of other ways of collecting type information.
 
 
@@ -602,7 +597,7 @@ Supporting Implicit Interfaces
 We need to find out the way these implicit interfaces are defined.
 Actually each function defines an interface for each of its parameters
 and the members of this interface are the objects that are passed as
-that arguement.  Another thing to keep in mind is that implicit
+that argument.  Another thing to keep in mind is that implicit
 interfaces are extended by inheritance relation, too.  For example::
 
   class C(A):
@@ -615,7 +610,7 @@ interfaces are extended by inheritance relation, too.  For example::
 
   another_func(C())
 
-Renaming `arg.a_method` not only should rename `C.a_method` but also it
+Renaming `arg.a_method` not only should rename `C.a_method` but also
 it should rename `A.a_method`.
 
 We should be careful about situations like::
@@ -661,7 +656,7 @@ Among `PyName` classes `AssignedName`, `ParameterName` and
 `ImportedName` might have more than one object.  And I believe
 the main place to change is `StatementEvaluator` that might
 return a list of pynames in ``${attribute_accesses}.name``
-where `attribute_accessses` might result in more than one kind
+where `attribute_accesses` might result in more than one kind
 of pyname.  This implies that `get_pyname_at` might return a list
 of pynames.
 

@@ -5,6 +5,7 @@ import ropetest.ide.codeassisttest
 import ropetest.ide.formattertest
 import ropetest.ide.notestest
 import ropetest.ide.outlinetest
+import ropetest.ide.spellcheckertext
 
 
 def suite():
@@ -14,6 +15,7 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.ide.formattertest.FormatterTest))
     result.addTests(unittest.makeSuite(ropetest.ide.notestest.AnnotationsTest))
     result.addTests(unittest.makeSuite(ropetest.ide.outlinetest.OutlineTest))
+    result.addTests(unittest.makeSuite(ropetest.ide.spellcheckertest.SpellCheckerTest))
     return result
 
 

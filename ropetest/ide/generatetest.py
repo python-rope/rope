@@ -233,6 +233,15 @@ class GenerateTest(unittest.TestCase):
         self.assertEquals('a_var = 1\ndef a_func(a_var):\n    pass\n\n\na_func(a_var)\n',
                           self.mod.read())
 
+    def test_generating_variable_in_other_modules2(self):
+        self.mod2.write('\n\n\nprint(1)\n')
+        code = 'import mod2\nc = mod2.b\n'
+        self.mod.write(code)
+        generator = self._get_generate(code.index('b'))
+        self.project.do(generator.get_changes())
+        self.assertEquals((self.mod2, 5), generator.get_location())
+        self.assertEquals('\n\n\nprint(1)\n\n\nb = None\n', self.mod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()
