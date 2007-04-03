@@ -1,20 +1,10 @@
 Spell-Checker
 =============
 
-- Updating index.txt
-- What to do when spellchecker is not available
-- `C-l`, `M-r`
+- Filling for lists
 
-* Filling for lists
 * Adding ``indentation_size`` config
-
 * Working on python source
-* Mass module renaming?
-
-  * Removing -er; like highlighter?
-  * Removing -s; like uihelpers?
-  * Not using '_' for two-words; like change_signature?
-
 * Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * `sqlite3db`

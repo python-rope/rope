@@ -41,16 +41,21 @@ class Fill(object):
 
     def _find_block_start(self, lines, lineno):
         result = 1
-        for i in range(lineno - 1, 0, -1):
-            if lines.get_line(i).strip() == '':
+        for i in range(lineno, -1, -1):
+            line = lines.get_line(i).strip()
+            if line == '':
                 result = i + 1
+                break
+            if  self._is_list(line):
+                result = i
                 break
         return lines.get_line_start(result)
 
     def _find_block_end(self, lines, lineno):
         result = lines.length()
         for i in range(lineno + 1, lines.length()):
-            if lines.get_line(i).strip() == '':
+            line = lines.get_line(i).strip()
+            if line == '' or self._is_list(line):
                 result = i - 1
                 break
         return lines.get_line_end(result)
@@ -75,7 +80,7 @@ class Fill(object):
 
     def _is_list(self, line):
         for mark in '*-+':
-            if line.startswith('%s ' % mark):
+            if line.lstrip().startswith('%s ' % mark):
                 return True
         return False
 

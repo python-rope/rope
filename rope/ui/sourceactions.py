@@ -426,16 +426,16 @@ actions.append(SimpleAction('run_unit_tests', run_tests, 'C-c x t',
 actions.append(SimpleAction('run_soi', run_soi, 'C-c x s',
                             run.child('Run SOI On Module', 's'), ['python']))
 
-notes = MenuAddress(['Source', 'Annotations'], 'a', 2)
-core.add_menu_cascade(notes, ['python'])
+annotes = MenuAddress(['Source', 'Annotations'], 'a', 2)
+core.add_menu_cascade(annotes, ['python'])
 actions.append(SimpleAction('show_codetags', show_codetags, 'C-c a t',
-                            notes.child('Show Codetags', 'c'), ['python']))
+                            annotes.child('Show Codetags', 'c'), ['python']))
 actions.append(SimpleAction('show_errors', show_errors, 'C-c a e',
-                            notes.child('Show Errors', 'e'), ['python']))
+                            annotes.child('Show Errors', 'e'), ['python']))
 actions.append(SimpleAction('show_warnings', show_warnings, 'C-c a w',
-                            notes.child('Show Warnings', 'w'), ['python']))
+                            annotes.child('Show Warnings', 'w'), ['python']))
 actions.append(SimpleAction('show_annotations', show_all, 'C-c a a',
-                            notes.child('Show All Annotations', 'a'), ['python']))
+                            annotes.child('Show All Annotations', 'a'), ['python']))
 
 
 generate = MenuAddress(['Source', 'Generate'], 'g', 2)

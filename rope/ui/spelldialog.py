@@ -59,10 +59,13 @@ class _TypoDialog(object):
         toplevel.bind('q', self._quit_session)
         toplevel.bind('<Control-g>', self._quit_session)
         toplevel.bind('<Escape>', self._quit_session)
+        label0 = Tkinter.Label(toplevel, text='Word <%s>' %
+                               self.typo.original, justify=Tkinter.LEFT)
         label1 = Tkinter.Label(toplevel, text=suggestions, justify=Tkinter.LEFT)
         label2 = Tkinter.Label(toplevel, text=actions, justify=Tkinter.LEFT)
-        label1.grid(row=0, column=0)
-        label2.grid(row=0, column=1)
+        label0.grid(row=0, columnspan=2)
+        label1.grid(row=1, column=0)
+        label2.grid(row=1, column=1)
         # For blocking the main thread
         toplevel.focus_set()
         toplevel.grab_set()
