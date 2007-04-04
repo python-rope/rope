@@ -17,15 +17,18 @@ class MethodObject(object):
         self.resource = self.pymodule.get_resource()
 
     def get_new_class(self, name):
-        body = sourceutils.fix_indentation(self._get_body(), 8)
-        return 'class %s(object):\n\n%s    def __call__(self):\n%s' % \
-               (name, self._get_init(), body)
+        body = sourceutils.fix_indentation(
+            self._get_body(), sourceutils.get_indent(self.pycore) * 2)
+        return 'class %s(object):\n\n%s%sdef __call__(self):\n%s' % \
+               (name, self._get_init(),
+                ' ' * sourceutils.get_indent(self.pycore), body)
 
     def get_changes(self, new_class_name):
         collector = sourceutils.ChangeCollector(self.pymodule.source_code)
         start, end = sourceutils.get_body_region(self.pyfunction)
         indents = sourceutils.get_indents(
-            self.pymodule.lines, self.pyfunction.get_scope().get_start()) + 4
+            self.pymodule.lines, self.pyfunction.get_scope().get_start()) + \
+            sourceutils.get_indent(self.pycore)
         new_contents = ' ' * indents + 'return %s(%s)()\n' % \
                        (new_class_name, ', '.join(self._get_parameter_names()))
         collector.add_change(start, end, new_contents)
@@ -59,16 +62,17 @@ class MethodObject(object):
 
     def _get_init(self):
         params = self._get_parameter_names()
+        indents = ' ' * sourceutils.get_indent(self.pycore)
         if not params:
             return ''
-        header = '    def __init__(self'
+        header = indents + 'def __init__(self'
         body = ''
         for arg in params:
             new_name = arg
             if arg == 'self':
                 new_name = 'host'
             header += ', %s' % new_name
-            body += '        self.%s = %s\n' % (arg, new_name)
+            body += indents * 2 + 'self.%s = %s\n' % (arg, new_name)
         header += '):'
         return '%s\n%s\n' % (header, body)
 

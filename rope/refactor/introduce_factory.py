@@ -66,8 +66,9 @@ class IntroduceFactoryRefactoring(object):
         unindented_factory = ('@staticmethod\n' +
                               'def %s(*args, **kwds):\n' % factory_name +
                               '    return %s(*args, **kwds)\n' % self.old_name)
-        return '\n' + sourceutils.indent_lines(
-            unindented_factory, self._get_scope_indents(lines, class_scope) + 4)
+        indents = self._get_scope_indents(lines, class_scope) + \
+                  sourceutils.get_indent(self.pycore)
+        return '\n' + sourceutils.indent_lines(unindented_factory, indents)
 
     def _get_scope_indents(self, lines, scope):
         return sourceutils.get_indents(lines, scope.get_start())

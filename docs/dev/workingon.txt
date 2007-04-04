@@ -1,9 +1,9 @@
-New Hierarchical Textual Form
-=============================
+Small Stories
+=============
 
-- Using a new textual form
+- Adding ``indentation_size`` config
 
-* Adding ``indentation_size`` config
+* Renaming normal files, folder, modules, and packages in project tree view
 * Adding configs for specifying long imports?
 * ``match_when_unsure`` project config?
 * Spell checking on python source

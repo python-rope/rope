@@ -74,7 +74,8 @@ def add_methods(pymodule, class_scope, methods_sources):
     insertion_offset = lines.get_line_end(insertion_line)
     methods = '\n\n' + '\n\n'.join(methods_sources)
     indented_methods = fix_indentation(
-        methods, get_indents(lines, class_scope.get_start()) + 4)
+        methods, get_indents(lines, class_scope.get_start()) + 
+        get_indent(pymodule.pycore))
     result = []
     result.append(source_code[:insertion_offset])
     result.append(indented_methods)
@@ -103,3 +104,8 @@ def get_body_region(defined):
     end = min(lines.get_line_end(scope.get_end()) + 1,
               len(pymodule.source_code))
     return start, end
+
+
+def get_indent(pycore):
+    project = pycore.project
+    return project.get_prefs().get('indent_size', 4)

@@ -3,6 +3,9 @@
 ===========
 
 
+- Using a better object textual form : April 4, 2007
+
+
 - Spell-Checker : April 3, 2007
 
 

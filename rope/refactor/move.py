@@ -96,13 +96,18 @@ class MoveMethod(object):
 
     def _get_changes_made_by_old_class(self, dest_attr, new_name):
         pymodule = self.pyfunction.get_module()
-        indents = sourceutils.get_indents(
-            pymodule.lines, self.pyfunction.get_scope().get_start())
+        indents = self._get_scope_indents(self.pyfunction)
         body = 'return self.%s.%s(%s)\n' % (dest_attr, new_name,
                                             self._get_passed_arguments_string())
         region = sourceutils.get_body_region(self.pyfunction)
         return (pymodule.get_resource(), region[0], region[1],
-                sourceutils.fix_indentation(body, indents + 4))
+                sourceutils.fix_indentation(body, indents))
+
+    def _get_scope_indents(self, pyobject):
+        pymodule = pyobject.get_module()
+        return sourceutils.get_indents(
+            pymodule.lines, pyobject.get_scope().get_start()) + \
+            sourceutils.get_indent(self.pycore)
 
     def _get_changes_made_by_new_class(self, dest_attr, new_name):
         old_pyclass = self.pyfunction.parent
@@ -120,16 +125,16 @@ class MoveMethod(object):
         if pymodule.source_code[start:end].strip() != 'pass':
             pre_blanks = '\n\n'
             start = end
-        indents = sourceutils.get_indents(pymodule.lines,
-                                          pyclass.get_scope().get_start())
+        indents = self._get_scope_indents(pyclass)
         body = pre_blanks + sourceutils.fix_indentation(
-            self.get_new_method(new_name), indents + 4)
+            self.get_new_method(new_name), indents)
         return resource, start, end, body
 
     def get_new_method(self, name):
         return '%s\n%s' % (
             self._get_new_header(name),
-            sourceutils.fix_indentation(self._get_body(), 4))
+            sourceutils.fix_indentation(self._get_body(),
+                                        sourceutils.get_indent(self.pycore)))
 
     def _get_unchanged_body(self):
         return sourceutils.get_body(self.pyfunction)

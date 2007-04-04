@@ -485,7 +485,7 @@ def set_prefs(prefs):
 
     # Possible values are 'memory' and 'shelve' for now.  The default
     # is 'memory'.  If 'shelve', object information is saved to disk
-    # for future sessions.
+    # so that it can be used in future sessions.
     prefs['objectdb_type'] = 'shelve'
 
     # Shows whether to save history across sessions.  Defaults to
@@ -503,7 +503,11 @@ def set_prefs(prefs):
     # `True`.
     prefs['validate_objectdb'] = True
 
+    # If `True`, rope will analyze each module after it is saved.
     prefs['automatic_soi'] = True
+
+    # Set the number spaces used for indenting.
+    prefs['indent_size'] = 4
 
 
 def project_opened(project):

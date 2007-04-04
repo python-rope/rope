@@ -165,46 +165,6 @@ The need for invalidating data is felt more after saving object data
 to disk.
 
 
-Fixing Small Changes
---------------------
-
-We don't want small changes in source files to invalidate all
-information.  For example if a blank line is inserted at the top of a
-file we don't want the information held for all the methods contained
-in that module to be lost.
-
-Using hierarchies::
-
-  class A(object):
-      def f(self):
-          pass
-
-  def g():
-      pass
-
-* f -> ('defined', path, 'A.f')
-* g -> ('defined', path, 'f')
-* A -> ('defined', path, 'A')
-
-Maybe we can use multiple forms for textuals:
-
-* ``key.isdigit()`` -> uses *lineno* form
-* ``key.isalnum()`` -> uses *name* form
-* ``'.' in key`` -> uses *hierarchical* form
-* ``':' in key `` -> uses *lineno/name* form
-
-But the main problem with having multiple representations is that it
-makes comparison harder.  We can no more match expected args using a
-simple dictionary lookup.
-
-Because of its resistance to changes, hierarchical form will be added
-although there are problems for DOI.  Possible Implementations:
-
-* Performing two lookups
-* Merging textual forms whenever possible
-* Transforming DOI data to hierarchical form
-
-
 Saving Data On Disk
 -------------------
 
@@ -238,6 +198,41 @@ Performing SOI when saving:
 * The order in which observers are called
 * Not analyzing everytime?
 * ``automatic_soi`` project config
+
+Unfortunately performing SOI whenever a buffer is saved is not
+cpu and memory efficient.
+
+
+Memory Management
+=================
+
+These are the places in which rope spends most of the memory it
+consumes:
+
+* PyCore: for storing PyModules
+* ObjectInfo: for storing object information
+* History: for storing changes
+
+We should measure the amount of memory each of them uses to make
+decisions.
+
+
+Refactoring `Progress`
+======================
+
+Currently refactorings cannot be stopped.  I propose to add an object
+for stopping and showing the progress of a time consuming task::
+
+  class TaskHandle(object):
+
+      def stop(self):
+          pass
+
+      def is_stopped(self):
+          pass
+
+It requires adding an argument to all refactorings and other time
+consuming tasks and changing them to use this object.
 
 
 Better Concluded Data
@@ -444,7 +439,6 @@ What Rope Assumes...
 In order to simplify problems a bit, rope makes some assumptions about
 the source code.  In futures some of this restrictions might be removed.
 
-* All of the modules should use 4 spaces for indenting and no hard tabs.
 * All files that end with ``.py`` are considered to be python files and
   all others not.
 * Either all files should be under version control or none.

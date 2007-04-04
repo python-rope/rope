@@ -86,6 +86,7 @@ class _ExtractPerformer(object):
     """
 
     def __init__(self, pycore, resource, parts, extracted_name, extract_variable=False):
+        self.pycore = pycore
         self.source_code = source_code = resource.read()
         self.extracted_name = extracted_name
         self.extract_variable = extract_variable
@@ -191,7 +192,8 @@ class _ExtractPerformer(object):
                       (' ' * function_indents,
                        self._get_function_signature(args)))
         unindented_body = self._get_unindented_function_body(returns)
-        function_body = sourceutils.indent_lines(unindented_body, function_indents + 4)
+        indents = function_indents + sourceutils.get_indent(self.pycore)
+        function_body = sourceutils.indent_lines(unindented_body, indents)
         result.append(function_body)
         definition = ''.join(result)
 

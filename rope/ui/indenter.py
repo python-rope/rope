@@ -6,8 +6,9 @@ from rope.base import codeanalyze
 class TextIndenter(object):
     """A class for formatting texts"""
 
-    def __init__(self, editor):
+    def __init__(self, editor, indents=4):
         self.editor = editor
+        self.indents = indents
         self.line_editor = editor.line_editor()
 
     def correct_indentation(self, lineno):
@@ -16,13 +17,13 @@ class TextIndenter(object):
     def deindent(self, lineno):
         """Deindent the a line"""
         current_indents = self._count_line_indents(lineno)
-        new_indents = max(0, current_indents - 4)
+        new_indents = max(0, current_indents - self.indents)
         self._set_line_indents(lineno, new_indents)
 
     def indent(self, lineno):
         """Indents a line"""
         current_indents = self._count_line_indents(lineno)
-        new_indents = current_indents + 4
+        new_indents = current_indents + self.indents
         self._set_line_indents(lineno, new_indents)
 
     def entering_new_line(self, lineno):
@@ -37,7 +38,7 @@ class TextIndenter(object):
 
     def insert_tab(self, index):
         """Inserts a tab in the given index"""
-        self.editor.insert(index, ' ' * 4)
+        self.editor.insert(index, ' ' * self.indents)
 
     def _set_line_indents(self, lineno, indents):
         old_indents = self._count_line_indents(lineno)
@@ -71,8 +72,8 @@ class NormalIndenter(TextIndenter):
 
 class PythonCodeIndenter(TextIndenter):
 
-    def __init__(self, editor):
-        super(PythonCodeIndenter, self).__init__(editor)
+    def __init__(self, editor, indents=4):
+        super(PythonCodeIndenter, self).__init__(editor, indents)
 
     def _get_last_non_empty_line(self, lineno):
         current_line = lineno - 1
@@ -117,7 +118,7 @@ class PythonCodeIndenter(TextIndenter):
                 if len(range_finder.open_parens) > 1:
                     return range_finder.open_parens[-2][1] + 1
                 else:
-                    return self._count_line_indents(start) + 4
+                    return self._count_line_indents(start) + self.indents
             return range_finder.last_open_parens()[1] + 1
 
         start_line = self.line_editor.get_line(start)
@@ -125,7 +126,7 @@ class PythonCodeIndenter(TextIndenter):
             try:
                 equals_index = start_line.index(' = ') + 1
                 if start_line[equals_index + 1:].strip() == '\\':
-                    return self._count_line_indents(start) + 4
+                    return self._count_line_indents(start) + self.indents
                 return equals_index + 2
             except ValueError:
                 match = re.search(r'(\b )|(\.)', start_line)
@@ -142,29 +143,29 @@ class PythonCodeIndenter(TextIndenter):
         last_line = self.line_editor.get_line(stmt_range[1])
         new_indent = 0
         if last_line.rstrip().endswith(':'):
-            new_indent += 4
+            new_indent += self.indents
         if last_line.strip() == 'pass':
-            new_indent -= 4
+            new_indent -= self.indents
         if first_line.lstrip().startswith('return ') or \
            first_line.lstrip().startswith('raise '):
-            new_indent -= 4
+            new_indent -= self.indents
         if first_line.strip() == 'break':
-            new_indent -= 4
+            new_indent -= self.indents
         if first_line.strip() == 'continue':
-            new_indent -= 4
+            new_indent -= self.indents
         return new_indent
 
     def _get_indentation_changes_caused_by_current_stmt(self, current_line):
         new_indent = 0
         if current_line.strip() == 'else:':
-            new_indent -= 4
+            new_indent -= self.indents
         if current_line.strip() == 'finally:':
-            new_indent -= 4
+            new_indent -= self.indents
         if current_line.strip().startswith('elif '):
-            new_indent -= 4
+            new_indent -= self.indents
         if current_line.lstrip().startswith('except ') and \
            current_line.rstrip().endswith(':'):
-            new_indent -= 4
+            new_indent -= self.indents
         return new_indent
 
     def correct_indentation(self, lineno):
