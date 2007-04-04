@@ -95,7 +95,8 @@ class _CallContext(object):
     def get_pyname(self, name):
         if self.args:
             args = self.args.get_pynames(self.argnames)
-            return args[self.argnames.index(name)]
+            if name in self.argnames:
+                return args[self.argnames.index(name)]
 
     def get_arguments(self, argnames):
         if self.args:
@@ -287,7 +288,7 @@ class Dict(BuiltinClass):
         if self.keys is not None:
             return
         new_dict = context.get_pynames(['self', 'd'])[1]
-        if isinstance(new_dict.get_object().get_type(), Dict):
+        if new_dict and isinstance(new_dict.get_object().get_type(), Dict):
             args = evaluate.ObjectArguments([new_dict])
             items = new_dict.get_object().get_attribute('popitem').\
                     get_object().get_returned_object(args)

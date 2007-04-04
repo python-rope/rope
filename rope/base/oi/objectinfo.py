@@ -11,6 +11,7 @@ class ObjectInfoManager(object):
         self.project = project
         self.to_textual = rope.base.oi.transform.PyObjectToTextual(project)
         self.to_pyobject = rope.base.oi.transform.TextualToPyObject(project)
+        self.doi_to_pyobject = rope.base.oi.transform.DOITextualToPyObject(project)
         preferred = project.get_prefs().get('objectdb_type', 'memory')
         validation = TextualValidation(self.to_pyobject)
         if preferred == 'memory' or project.ropefolder is None:
@@ -87,7 +88,14 @@ class ObjectInfoManager(object):
                     for parameter in parameters]
 
     def doi_data_received(self, data):
-        self._save_data(data[0], data[1], data[2])
+        def doi_to_normal(textual):
+            pyobject = self.doi_to_pyobject.transform(textual)
+            return self.to_textual.transform(pyobject)
+        function = doi_to_normal(data[0])
+        args = tuple([doi_to_normal(textual) for textual in data[1]])
+        returned = doi_to_normal(data[2])
+        if function[0] == 'defined' and len(function) == 3:
+            self._save_data(function, args, returned)
 
     def function_called(self, pyfunction, params, returned=None):
         function_text = self.to_textual.transform(pyfunction)
@@ -116,10 +124,14 @@ class ObjectInfoManager(object):
         resource = pyobject.get_module().get_resource()
         if resource is None:
             return memorydb.NullScopeInfo(error_on_write=False)
-        path = os.path.abspath(resource.real_path)
-        lineno = pyobject.get_ast().lineno
-        return self.objectdb.get_scope_info(path, str(lineno),
-                                            readonly=readonly)
+        textual = self.to_textual.transform(pyobject)
+        if textual[0] == 'defined':
+            path = textual[1]
+            if len(textual) == 3:
+                key = textual[2]
+            else:
+                key = ''
+            return self.objectdb.get_scope_info(path, key, readonly=readonly)
 
     def sync(self):
         self.objectdb.sync()
@@ -143,7 +155,11 @@ class TextualValidation(object):
         return self.to_pyobject.file_to_resource(path) is not None
 
     def is_scope_valid(self, path, key):
-        return self.to_pyobject.transform(('defined', path, key)) is not None
+        if key == '':
+            textual = ('defined', path)
+        else:
+            textual = ('defined', path, key)
+        return self.to_pyobject.transform(textual) is not None
 
 
 class _FileListObserver(object):

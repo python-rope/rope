@@ -30,12 +30,18 @@ class PyObjectToTextual(object):
         return ('unknown',)
 
     def PyFunction_to_textual(self, pyobject):
-        return ('defined', self._get_pymodule_path(pyobject.get_module()),
-                str(pyobject.get_ast().lineno))
+        return self._defined_to_textual(pyobject)
 
     def PyClass_to_textual(self, pyobject):
+        return self._defined_to_textual(pyobject)
+
+    def _defined_to_textual(self, pyobject):
+        address = []
+        while pyobject.parent is not None:
+            address.insert(0, pyobject.get_name())
+            pyobject = pyobject.parent
         return ('defined', self._get_pymodule_path(pyobject.get_module()),
-                pyobject.get_name())
+                '.'.join(address))
 
     def PyModule_to_textual(self, pyobject):
         return ('defined', self._get_pymodule_path(pyobject))
@@ -74,12 +80,7 @@ class PyObjectToTextual(object):
 
     def _get_pymodule_path(self, pymodule):
         resource = pymodule.get_resource()
-        resource_path = resource.path
-        if os.path.isabs(resource_path):
-            return resource_path
-        return os.path.abspath(
-            os.path.normpath(os.path.join(self.project.address,
-                                          resource_path)))
+        return resource.real_path
 
 
 class TextualToPyObject(object):
@@ -149,54 +150,33 @@ class TextualToPyObject(object):
         path = textual[1]
         return self._get_pymodule(path)
 
-    def _function_to_pyobject(self, textual):
+    def _hierarchical_defined_to_pyobject(self, textual):
         path = textual[1]
-        lineno = int(textual[2])
+        names = textual[2].split('.')
         pymodule = self._get_pymodule(path)
-        if pymodule is not None:
-            scope = pymodule.get_scope()
-            inner_scope = scope.get_inner_scope_for_line(lineno)
-            return inner_scope.pyobject
-
-    def _class_to_pyobject(self, textual):
-        path, name = textual[1:]
-        pymodule = self._get_pymodule(path)
-        if pymodule is None:
-            return None
-        module_scope = pymodule.get_scope()
-        suspected = None
-        if name in module_scope.get_names():
-            suspected = module_scope.get_name(name).get_object()
-        if suspected is not None and isinstance(suspected, rope.base.pyobjects.PyClass):
-            return suspected
-        else:
-            lineno = self._find_occurrence(name, pymodule.get_resource().read())
-            if lineno is not None:
-                inner_scope = module_scope.get_inner_scope_for_line(lineno)
-                return inner_scope.pyobject
+        pyobject = pymodule
+        for name in names:
+            if pyobject is None:
+                return None
+            if isinstance(pyobject, rope.base.pyobjects.PyDefinedObject):
+                try:
+                    pyobject = pyobject.get_scope().get_name(name).get_object()
+                except exceptions.NameNotFoundError:
+                    return None
+            else:
+                return None
+        return pyobject
 
     def defined_to_pyobject(self, textual):
-        if len(textual) == 2:
+        if len(textual) == 2 or textual[2] == '':
             return self._module_to_pyobject(textual)
         else:
-            if textual[2].isdigit():
-                result = self._function_to_pyobject(textual)
-            else:
-                result = self._class_to_pyobject(textual)
-            if not isinstance(result, rope.base.pyobjects.PyModule):
-                return result
+            return self._hierarchical_defined_to_pyobject(textual)
 
     def instance_to_pyobject(self, textual):
         type = self.transform(textual[1])
         if type is not None:
             return rope.base.pyobjects.PyObject(type)
-
-    def _find_occurrence(self, name, source):
-        pattern = re.compile(r'^\s*class\s*' + name + r'\b')
-        lines = source.split('\n')
-        for i in range(len(lines)):
-            if pattern.match(lines[i]):
-                return i + 1
 
     def _get_pymodule(self, path):
         resource = self.file_to_resource(path)
@@ -216,3 +196,51 @@ class TextualToPyObject(object):
             return resource
         except exceptions.RopeError:
             return None
+
+
+class DOITextualToPyObject(TextualToPyObject):
+
+    def _function_to_pyobject(self, textual):
+        path = textual[1]
+        lineno = int(textual[2])
+        pymodule = self._get_pymodule(path)
+        if pymodule is not None:
+            scope = pymodule.get_scope()
+            inner_scope = scope.get_inner_scope_for_line(lineno)
+            return inner_scope.pyobject
+
+    def _class_to_pyobject(self, textual):
+        path, name = textual[1:]
+        pymodule = self._get_pymodule(path)
+        if pymodule is None:
+            return None
+        module_scope = pymodule.get_scope()
+        suspected = None
+        if name in module_scope.get_names():
+            suspected = module_scope.get_name(name).get_object()
+        if suspected is not None and \
+           isinstance(suspected, rope.base.pyobjects.PyClass):
+            return suspected
+        else:
+            lineno = self._find_occurrence(name, pymodule.get_resource().read())
+            if lineno is not None:
+                inner_scope = module_scope.get_inner_scope_for_line(lineno)
+                return inner_scope.pyobject
+
+    def defined_to_pyobject(self, textual):
+        if len(textual) == 2:
+            return self._module_to_pyobject(textual)
+        else:
+            if textual[2].isdigit():
+                result = self._function_to_pyobject(textual)
+            else:
+                result = self._class_to_pyobject(textual)
+            if not isinstance(result, rope.base.pyobjects.PyModule):
+                return result
+
+    def _find_occurrence(self, name, source):
+        pattern = re.compile(r'^\s*class\s*' + name + r'\b')
+        lines = source.split('\n')
+        for i in range(len(lines)):
+            if pattern.match(lines[i]):
+                return i + 1

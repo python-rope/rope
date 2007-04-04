@@ -33,11 +33,11 @@ class History(object):
     history_file = property(_get_history_file)
 
     def do(self, changes):
+        changes.do()
         if self._is_change_interesting(changes):
             self.undo_list.append(changes)
             if len(self.undo_list) > self.max_undos:
                 del self.undo_list[0]
-        changes.do()
 
     def _is_change_interesting(self, changes):
         for resource in changes.get_changed_resources():

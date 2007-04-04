@@ -825,7 +825,7 @@ class DynamicOITest(unittest.TestCase):
                'a_var = a_func(a_func)\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
-        mod.write('\n' + code)
+        mod.write(code.replace('a_func', 'newfunc'))
         mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
         self.assertNotEquals(pymod.get_attribute('a_func').get_object(),

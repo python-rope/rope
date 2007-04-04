@@ -1,7 +1,7 @@
-Automatic SOI
-=============
+New Hierarchical Textual Form
+=============================
 
-- ``automatic_soi`` project config
+- Using a new textual form
 
 * Adding ``indentation_size`` config
 * Adding configs for specifying long imports?

@@ -266,7 +266,8 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         return self.parameter_pynames
 
     def get_parameter(self, index):
-        return self.parameter_pyobjects.get()[index]
+        if index < len(self.parameter_pyobjects.get()):
+            return self.parameter_pyobjects.get()[index]
 
     def get_returned_object(self, args):
         return self.returned.get(args)

@@ -31,9 +31,10 @@ class PyCore(object):
 
     def _file_changed(self, resource, new_resource=None):
         if resource.exists() and self.is_python_file(resource):
-            self.analyze_module(resource)
-        elif new_resource is not None and self.is_python_file(new_resource):
-            self.analyze_module(new_resource)
+            try:
+                self.analyze_module(resource)
+            except SyntaxError:
+                pass
 
     def is_python_file(self, resource):
         return not resource.is_folder() and resource.name.endswith('.py')
