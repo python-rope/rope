@@ -134,7 +134,6 @@ class GraphicalEditor(object):
             return 'break'
         self.text.bind('<Control-k>', kill_line)
         self.text.bind('<Control-l>', lambda event: self.center_line())
-        self.text.bind('<Alt-r>', lambda event: self.goto_center_line())
 
     def center_line(self):
         mid = self._get_center_line()

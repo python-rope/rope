@@ -73,19 +73,26 @@ class _TypoDialog(object):
         toplevel.mainloop()
 
     def _highlight_in_editor(self):
-        start_index = self.editor.get_index(self.typo.offset)
-        end_index = self.editor.get_index(self.typo.offset +
-                                          len(self.typo.original))
-        self.editor.select_range(start_index, end_index)
+        start, end = self._get_word_index()
+        self.editor.select_range(start, end)
+
+    def _get_word_index(self):
+        length = len(self.typo.original)
+        start = self.editor.get_index(self.typo.offset + self.checking.changed_offset)
+        end = self.editor.get_relative(start, length)
+        return start, end
 
     def _add_session(self, event=None):
         self.checking.checker.accept_word(self.typo.original)
+        self._skip()
 
     def _add_dictionary(self, event=None):
         self.checking.checker.insert_dictionary(self.typo.original)
+        self._skip()
 
     def _add_lower_to_dictionary(self, event=None):
         self.checking.checker.insert_dictionary(self.typo.original.lower())
+        self._skip()
 
     def _replace(self, event=None):
         toplevel = Tkinter.Toplevel()
@@ -110,9 +117,8 @@ class _TypoDialog(object):
         entry.grab_set()
 
     def _use(self, name):
+        start, end = self._get_word_index()
         length = len(self.typo.original)
-        start = self.editor.get_index(self.typo.offset + self.checking.changed_offset)
-        end = self.editor.get_relative(start, length)
         new_length = len(name)
         self.editor.delete(start, end)
         self.editor.insert(start, name)

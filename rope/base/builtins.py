@@ -229,7 +229,9 @@ class Dict(BuiltinClass):
         super(Dict, self).__init__(dict, collector.attributes)
 
     def _new_dict(self, args):
-        def do_create(holding):
+        def do_create(holding=None):
+            if holding is None:
+                return get_dict()
             type = holding.get_type()
             if isinstance(type, Tuple) and len(type.get_holding_objects()) == 2:
                 return get_dict(*type.get_holding_objects())

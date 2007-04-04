@@ -13,7 +13,7 @@ from rope.base.resources import File, Folder
 class _Project(object):
 
     def __init__(self, fscommands):
-        self.observers = set()
+        self.observers = []
         self.file_access = rope.base.fscommands.FileAccess()
         self._history = None
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
@@ -57,7 +57,7 @@ class _Project(object):
 
         See `FilteredResourceObserver`.
         """
-        self.observers.add(observer)
+        self.observers.append(observer)
 
     def remove_observer(self, observer):
         """Remove a registered `ResourceObserver`"""
@@ -502,6 +502,8 @@ def set_prefs(prefs):
     # can turn this feature off by using `False`.  Defaults to
     # `True`.
     prefs['validate_objectdb'] = True
+
+    prefs['automatic_soi'] = True
 
 
 def project_opened(project):

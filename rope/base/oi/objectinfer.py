@@ -116,11 +116,14 @@ class ObjectInfer(object):
                 if new_pyname is not None:
                     pyobject = new_pyname.get_object()
             if pyobject is not None and call:
-                args = evaluate.ObjectArguments([pyname])
-                pyobject = pyobject.get_returned_object(args)
+                if isinstance(pyobject, pyobjects.AbstractFunction):
+                    args = evaluate.ObjectArguments([pyname])
+                    pyobject = pyobject.get_returned_object(args)
+                else:
+                    pyobject = None
             if pyobject is None:
                 break
-        if evaluated is None:
+        if evaluated is None or pyobject is None:
             return pyobject
         return self._infer_assignment_object(evaluated.assignment, pyobject)
 

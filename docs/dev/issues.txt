@@ -141,6 +141,7 @@ Enhancing `ObjectInfoManager`
 * Some `self`\s are unknown!
 * Updating our db when performing refactorings like move module
 * Returning a `Generator` for generator functions with unknown return type?
+* Validating call infos
 
 
 Validating Information
@@ -162,58 +163,6 @@ approach includes:
 
 The need for invalidating data is felt more after saving object data
 to disk.
-
-
-Incremental Validation
-----------------------
-
-We can validate files whenever they are saved.
-
-* Removing out of date information
-
-  * Scopes that do not exist
-  * Files that no longer exist
-  * Call infos with wrong arg count or invalid arg/returns
-  * invalid per names
-
-Sample interface::
-
-  class TextualValidation(object):
-
-      def is_value_valid(self, value):
-          pass
-
-      def is_more_valid(self, new, old):
-          pass
-
-      def is_file_valid(self, path):
-          pass
-
-      def is_scope_valid(self, path, key):
-          pass
-
-      def is_callinfo_valid(self, path, key, callinfo):
-          pass
-
-  class ObjectDB(object):
-
-      def get_scope_info(self):
-          pass
-
-      def sync(self):
-          pass
-
-      def get_files(self):
-          pass
-
-      def validate_files(self):
-          pass
-
-      def validate_file(self, path):
-          pass
-
-      def file_moved(self, path, new_path):
-          pass
 
 
 Fixing Small Changes
@@ -248,19 +197,12 @@ But the main problem with having multiple representations is that it
 makes comparison harder.  We can no more match expected args using a
 simple dictionary lookup.
 
-Adding restrictions to args and keys?:
+Because of its resistance to changes, hierarchical form will be added
+although there are problems for DOI.  Possible Implementations:
 
-* All args and keys should use a standard representation
-* DOI should be able to easily use the standard representation
-* The values are free to use whichever form they prefer
-
-Solving dictionary lookup problem without imposing restrictions:
-
-* The only problem is DOI
-* Performing two lookups instead of one; one for hierarchical form
-  this might require some entries to be merged on validations?
-* Transforming lineno and name forms to hierarchical form whenever
-  possible
+* Performing two lookups
+* Merging textual forms whenever possible
+* Transforming DOI data to hierarchical form
 
 
 Saving Data On Disk
@@ -286,6 +228,16 @@ holding all type information in memory needs a lot of memory.
 
 Saving object data requires having good mechanisms for invalidating
 information and testing.
+
+
+Automatic SOI
+=============
+
+Performing SOI when saving:
+
+* The order in which observers are called
+* Not analyzing everytime?
+* ``automatic_soi`` project config
 
 
 Better Concluded Data

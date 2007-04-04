@@ -12,7 +12,8 @@ def sample_project(root=None, **kwds):
         if os.name == 'posix' and os.path.isdir('/dev/shm'):
             root = '/dev/shm/' + root
     # Using these prefs for faster tests
-    prefs = {'objectdb_type': 'memory', 'save_history': False}
+    prefs = {'objectdb_type': 'memory', 'save_history': False,
+             'validate_objectdb': False, 'automatic_soi': False}
     prefs.update(kwds)
     remove_recursively(root)
     project = rope.base.project.Project(root, **prefs)

@@ -438,18 +438,18 @@ actions.append(SimpleAction('show_annotations', show_all, 'C-c a a',
                             annotes.child('Show All Annotations', 'a'), ['python']))
 
 
-generate = MenuAddress(['Source', 'Generate'], 'g', 2)
-core.add_menu_cascade(generate, ['python'])
+generate_ = MenuAddress(['Source', 'Generate'], 'g', 2)
+core.add_menu_cascade(generate_, ['python'])
 actions.append(SimpleAction('generate_variable', generate_variable, 'C-c n v',
-                            generate.child('Generate Variable', 'v'), ['python']))
+                            generate_.child('Generate Variable', 'v'), ['python']))
 actions.append(SimpleAction('generate_function', generate_function, 'C-c n f',
-                            generate.child('Generate Function', 'f'), ['python']))
+                            generate_.child('Generate Function', 'f'), ['python']))
 actions.append(SimpleAction('generate_class', generate_class, 'C-c n c',
-                            generate.child('Generate Class', 'c'), ['python']))
+                            generate_.child('Generate Class', 'c'), ['python']))
 actions.append(SimpleAction('generate_module', generate_module, 'C-c n m',
-                            generate.child('Generate Module', 'm'), ['python']))
+                            generate_.child('Generate Module', 'm'), ['python']))
 actions.append(SimpleAction('generate_package', generate_package, 'C-c n p',
-                            generate.child('Generate Package', 'p'), ['python']))
+                            generate_.child('Generate Package', 'p'), ['python']))
 
 memory = MenuAddress(['Source', 'Memory'], 'm', 2)
 core.add_menu_cascade(memory, ['all', 'none'])

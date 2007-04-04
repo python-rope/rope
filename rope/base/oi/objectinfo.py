@@ -17,7 +17,7 @@ class ObjectInfoManager(object):
             self.objectdb = memorydb.MemoryObjectDB(validation)
         else:
             self.objectdb = shelvedb.ShelveObjectDB(project, validation)
-        if project.get_prefs().get('validate_objectdb', True):
+        if project.get_prefs().get('validate_objectdb', False):
             self._init_validation()
 
     def _init_validation(self):

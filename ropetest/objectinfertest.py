@@ -228,7 +228,7 @@ class NewStaticOITest(unittest.TestCase):
 
     def setUp(self):
         super(NewStaticOITest, self).setUp()
-        self.project = testutils.sample_project()
+        self.project = testutils.sample_project(validate_objectdb=True)
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
 
@@ -521,7 +521,7 @@ class DynamicOITest(unittest.TestCase):
 
     def setUp(self):
         super(DynamicOITest, self).setUp()
-        self.project = testutils.sample_project()
+        self.project = testutils.sample_project(validate_objectdb=True)
         self.pycore = self.project.get_pycore()
 
     def tearDown(self):

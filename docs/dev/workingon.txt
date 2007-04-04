@@ -1,10 +1,12 @@
-Small Stories
+Automatic SOI
 =============
 
-- Selecting the word that is being spell checked
+- ``automatic_soi`` project config
 
 * Adding ``indentation_size`` config
-* Working on python source
+* Adding configs for specifying long imports?
+* ``match_when_unsure`` project config?
+* Spell checking on python source
 * Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * `sqlite3db`

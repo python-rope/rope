@@ -14,13 +14,29 @@ class PyCore(object):
     def __init__(self, project):
         self.project = project
         self.module_map = {}
-        self.call_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
-        self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self.classes = None
         observer = rope.base.project.ResourceObserver(
             self._invalidate_resource_cache, self._invalidate_resource_cache)
         self.observer = rope.base.project.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
+        self.call_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
+        self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
+        if project.get_prefs().get('automatic_soi', False):
+            self._init_automatic_soi()
+
+    def _init_automatic_soi(self):
+        observer = rope.base.project.ResourceObserver(self._file_changed,
+                                                      self._file_changed)
+        self.project.add_observer(observer)
+
+    def _file_changed(self, resource, new_resource=None):
+        if resource.exists() and self.is_python_file(resource):
+            self.analyze_module(resource)
+        elif new_resource is not None and self.is_python_file(new_resource):
+            self.analyze_module(new_resource)
+
+    def is_python_file(self, resource):
+        return not resource.is_folder() and resource.name.endswith('.py')
 
     def get_module(self, name, current_folder=None):
         """Returns a `PyObject` if the module was found."""
@@ -158,7 +174,7 @@ class PyCore(object):
     def get_python_files(self):
         """Returns all python files available in the project"""
         return [resource for resource in self.project.get_files()
-                if resource.name.endswith('.py')]
+                if self.is_python_file(resource)]
 
     def _is_package(self, folder):
         if folder.has_child('__init__.py') and \
