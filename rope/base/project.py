@@ -506,7 +506,9 @@ def set_prefs(prefs):
     # If `True`, rope will analyze each module after it is saved.
     prefs['automatic_soi'] = True
 
-    # Set the number spaces used for indenting.
+    # Set the number spaces used for indenting.  According to
+    # :PEP:`8`, it is best to use 4 spaces.  Since most of rope's
+    # unit-tests use 4 spaces it is more reliable, too.
     prefs['indent_size'] = 4
 
 

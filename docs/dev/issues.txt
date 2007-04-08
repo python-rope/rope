@@ -46,11 +46,11 @@ Discussion
 Now that we handle many kinds of refactorings and we have achieved
 many of rope's initial goals we can think of extending it.
 
-There are many places to extend rope.  There are two main places
-that can be enhanced.  One is occurrence finding mechanisms and the
-other is object inference.  Among the features that are going to be
-added implicit interfaces and changing structure refactorings are the
-most promising ones.
+There are many places to extend rope.  There are two main places that
+can be enhanced.  One is occurrence finding mechanisms and the other
+is object inference.  Among the features that are going to be added
+implicit interfaces and changing structure refactorings are the most
+promising ones.
 
 * Occurrence finding
 * DOI
@@ -68,17 +68,30 @@ Hot Topics
 To Be Discussed
 ===============
 
+* `Memory management`_
 * `Better occurrence finding`_
-* `Allowing non-existent resources`_
-* `Python's implicit interfaces`_
-* `Having virtual PyModules`_
 * `Getting ready for Python 3.0`_
+* `Python's implicit interfaces`_
 * Decorators and method refactorings
 * Should `rope.base` be thread safe? which parts?
 * Indexing source files for faster occurrence finding
 * Faster module running
 * Saving hard to compute information like class hierarchies to files
 * Finding available refactorings
+
+
+Memory Management
+=================
+
+These are the places in which rope spends most of the memory it
+consumes:
+
+* PyCore: for storing PyModules
+* ObjectInfo: for storing object information
+* History: for storing changes
+
+We should measure the amount of memory each of them uses to make
+decisions.
 
 
 Better SOI
@@ -89,6 +102,24 @@ before ``0.5`` release, rope only performs SOI when the user asks;
 just like DOI.  Performing it automatically requires it to be
 efficient.  So later, after using it for some time, we'll decide about
 that.
+
+
+Automatic SOI
+-------------
+
+Performing SOI when saving:
+
+* The order in which observers are called
+* Not analyzing everytime?
+* ``automatic_soi`` project config
+
+Unfortunately performing SOI whenever a buffer is saved is not cpu and
+memory efficient.  One way to solve this problem is to hold a new
+variable for each scope.  This variable will hold the has of the
+contents of that scope.  When a project changes only those scope whose
+contents have changed will be analyzed.  The main problem with this
+approach is that scopes are nested and when an inner scope changes all
+its parents change, too.
 
 
 Returned Object SOI
@@ -188,33 +219,6 @@ holding all type information in memory needs a lot of memory.
 
 Saving object data requires having good mechanisms for invalidating
 information and testing.
-
-
-Automatic SOI
-=============
-
-Performing SOI when saving:
-
-* The order in which observers are called
-* Not analyzing everytime?
-* ``automatic_soi`` project config
-
-Unfortunately performing SOI whenever a buffer is saved is not
-cpu and memory efficient.
-
-
-Memory Management
-=================
-
-These are the places in which rope spends most of the memory it
-consumes:
-
-* PyCore: for storing PyModules
-* ObjectInfo: for storing object information
-* History: for storing changes
-
-We should measure the amount of memory each of them uses to make
-decisions.
 
 
 Refactoring `Progress`
@@ -336,101 +340,6 @@ Getting ready for Python 3.0
 * Renamed function attributes; ``f.func_whatever`` to ``f.__whatever__``
 * Use new function signature
 * Not using ``__cmp__``
-
-
-Having Virtual `PyModule`\s
-===========================
-
-For doing this we actually need to support `VirtualProject`\s.
-Because a refactoring changes the files in a project.  The
-`VirtualProject` should compute the changed project tree and
-act as a normal `Project`.
-
-
-What Do We Gain?
-----------------
-
-After this refactoring we'll be able to mix any of the refactorings
-and move toward bigger refactorings.
-
-* Handling import changes for all modules
-
-  One of the problems we are facing when performing refactorings is
-  that imports need to be changed in some of the modules involved in
-  that refactoring, but since those modules are already changed for
-  that refactoring, it cannot be changed once more easily.
-
-* Performing multiple refactorings in sequence
-
-  For example for performing move method refactoring we can rename the
-  self parameter of the method and then move the method itself.  Then
-  move the imports used.
-
-* Support for bigger refactorings
-
-  Examples:
-
-
-Consequences
-------------
-
-* Complexity of implementation
-
-  After a change the internal representation of project should be
-  updated.  This requires for example changes to `Folder.get_children`
-  and `File.read`.
-
-* Inefficiency because of multiple changes while refactoring
-
-  If in a refactoring we perform 3 changes we might also need to
-  recompute the information calculated in some of the `PyModule`\s 3
-  times.  This seems inefficient.
-
-* Inefficiency due to missing computed information computed locally
-
-  One of the difficulties of having a set of main and many local
-  `PyModule`\s is that when we compute some information in local ones
-  these information might be no longer valid in global pymodules.
-
-
-* Not convincing uses
-
-  Right know the only need for performing multiple refactorings is for
-  changing imports after performing a refactoring and it has been
-  handled using some kind of virtual `PyModule` already.  We could not
-  think of any good refactoring that needs to perform multiple basic
-  refactorings.
-
-* Lots of changes
-
-  This refactoring needs lots of changes to `PyCore` and modules that
-  use it.
-
-* Complex design
-
-  Managing multiple `PyCore`\s and changing `PyObject`\s to work with
-  many of them at the same time seems to be hard.
-
-
-Preventing Unnecessary Recomputations
--------------------------------------
-
-* Using copy on write
-* Updating global `PyCore` after performing changes
-
-
-Using ASTs For Transformations
-==============================
-
-The main problem with AST nodes is that they only hold the line in
-which statements appear but we need the offset.  If we add offset
-information to AST nodes, we would be able to use them for all of the
-tasks that we do right now using direct operations on program source
-code.
-
-Using ASTs for transforming programs requires making a new AST tree or
-altering the old one and writing AST trees.  We can use the latter in
-the formatter too but it seems a lot of work.
 
 
 What Rope Assumes...

@@ -153,6 +153,7 @@ class FindFileHandle(object):
     def __init__(self, context):
         self.core = context.core
         self.project = context.project
+        self.all_files = None
         self.last_keyword = None
         self.last_result = None
 
@@ -162,7 +163,9 @@ class FindFileHandle(object):
         if self.last_keyword is not None and starting.startswith(self.last_keyword):
             files = self.last_result
         else:
-            files = self.project.get_files()
+            if self.all_files is None:
+                self.all_files = self.project.get_files()
+            files = self.all_files
             files.sort(cmp=self._compare_files)
         result = []
         selector = self._create_selector(starting)

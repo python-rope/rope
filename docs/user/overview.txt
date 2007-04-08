@@ -44,6 +44,12 @@ run active editor           C-c x p        M-X p
 run unit-tests              C-c x t        M-X t
 run SOI                     C-c x s
 --------------------------  -------------  -------------
+save                        C-x C-s        C-s
+save all                    C-x s          C-S
+undo project change         C-x p u        C-Z
+redo project change         C-x p r        C-Y
+project history             C-x p h
+--------------------------  -------------  -------------
 forward character           C-f
 backward character          C-b
 next line                   C-n
@@ -72,12 +78,6 @@ repeat last action          C-x z
 --------------------------  -------------  -------------
 Execute Command             M-x
 Edit ~/.rope                C-x c
---------------------------  -------------  -------------
-save                        C-x C-s        C-s
-save all                    C-x s          C-S
-undo project change         C-x C-u        C-Z
-redo project change         C-x C-r        C-Y
-project history             C-x p h
 --------------------------  -------------  -------------
 code-assist(auto-complete)  M-/            C-space
 go to definition location   C-c g          F3

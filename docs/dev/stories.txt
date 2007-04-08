@@ -94,9 +94,6 @@ Stories
 * Renaming similarly named variables
 
 
-* Basic code formatting; correcting blank lines
-
-
 * Analyzing function decorators
 
 
@@ -106,22 +103,13 @@ Stories
 * Supporting templates in text modes
 
 
-* Lambdas as functions; consider their parameters
-
-
 * Inlining a single occurrence
 
 
 * Renaming textual matches
 
 
-* Enhancing open project dialog
-
-
 * Searching inside `EnhancedList`\s
-
-
-* Inferring the object list comprehensions or generator expressions hold
 
 
 * Supporting modules without source code
@@ -133,4 +121,16 @@ Stories
 * Moving `staticmethod`\s
 
 
+* Lambdas as functions; consider their parameters
+
+
+* Basic code formatting; correcting blank lines
+
+
 > Public Release 0.5m5 : April 15, 2007
+
+
+* Enhancing open project dialog
+
+
+* Inferring the object list comprehensions or generator expressions hold

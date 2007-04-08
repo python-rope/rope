@@ -45,15 +45,18 @@ class ShelveObjectDB(object):
         def to_hex(i):
             return hex(i).replace('0x', '', 1)
         hashed = to_hex(hash(path))
-        hashed_list = list(hashed)
-        self.random.shuffle(hashed_list)
-        shuffled = ''.join(hashed_list)
+        if not hashed.startswith('-'):
+            hashed = '-' + hashed
+        second_list = list(to_hex(id(path)) +
+                           to_hex(self.random.randint(0, 255)))
+        self.random.shuffle(second_list)
+        shuffled = ''.join(second_list)
         return base_name + hashed + shuffled + '.shelve'
 
     def _get_file_dict(self, path, readonly=True):
         if path not in self.cache:
             if path not in self.index:
-                self.index[path] = self._get_name_for_path(path)
+                self.index[path] = self._add_file_for_path(path)
             name = self.index[path]
             resource = self.project.get_file(self.root.path + '/' + name)
             if readonly and not resource.exists():
@@ -62,6 +65,15 @@ class ShelveObjectDB(object):
             for observer in self.observers:
                 observer.added(path)
         return self.cache[path]
+
+    def _add_file_for_path(self, path):
+        while True:
+            new_name = self._get_name_for_path(path)
+            new_resource = self.project.get_file(self.root.path
+                                                 + '/' + new_name)
+            if not new_resource.exists():
+                break
+        return new_name
 
     def get_scope_info(self, path, key, readonly=True):
         file_dict = self._get_file_dict(path, readonly=readonly)

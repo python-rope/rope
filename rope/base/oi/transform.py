@@ -1,3 +1,4 @@
+"""Provides classes for persisting `PyObject`\s"""
 import os
 import re
 
@@ -6,6 +7,12 @@ from rope.base import exceptions
 
 
 class PyObjectToTextual(object):
+    """For transforming `PyObject` to textual form
+
+    This can be used for storing `PyObjects` in files.  Use
+    `TextualToPyObject` for converting back.
+
+    """
 
     def __init__(self, project):
         self.project = project
@@ -20,6 +27,9 @@ class PyObjectToTextual(object):
             return method(pyobject)
         except AttributeError:
             return ('unknown',)
+
+    def __call__(self, pyobject):
+        return self.transform(pyobject)
 
     def PyObject_to_textual(self, pyobject):
         if isinstance(pyobject.get_type(), rope.base.pyobjects.AbstractClass):
@@ -84,9 +94,13 @@ class PyObjectToTextual(object):
 
 
 class TextualToPyObject(object):
+    """For transforming textual form to `PyObject`"""
 
     def __init__(self, project):
         self.project = project
+
+    def __call__(self, textual):
+        return self.transform(textual)
 
     def transform(self, textual):
         """Transform an object from textual form to `PyObject`"""
@@ -199,6 +213,16 @@ class TextualToPyObject(object):
 
 
 class DOITextualToPyObject(TextualToPyObject):
+    """For transforming textual form to `PyObject`
+    
+    The textual form DOI uses is different from rope's standard
+    textual form.  The reason is that we cannot find the needed
+    information by analyzing live objects.  This class can be
+    used to transform DOI textual form to `PyObject` and later
+    we can convert it to standard textual form using
+    `TextualToPyObject` class.
+
+    """
 
     def _function_to_pyobject(self, textual):
         path = textual[1]

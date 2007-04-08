@@ -1,22 +1,17 @@
-Small Stories
-=============
+Possible Future Plans
+=====================
 
-- Adding ``indentation_size`` config
-
-* Renaming normal files, folder, modules, and packages in project tree view
-* Adding configs for specifying long imports?
-* ``match_when_unsure`` project config?
-* Spell checking on python source
-* Adding *clear objectdb* command
-* Inline fails when there is an arg mismatch
-* `sqlite3db`
-* Better UI; Performing refactorings on a separate thread
-* Multiple ropes on one project; problems for objectdb and history
-* Changing method to static method refactoring
-* Recursive SOI; Go where the calls go
-* Evaluate function parameter defaults in staticoi?
-* Adding 'do when unsure' to all refactorings?
-* Profiling before ``0.5rc1`` for occurrence finding and SOI
+* List comprehension inference
+* Finding similar to extracted
+* Formatting
+* Modules without source
+* New function scopes
+* Better warnings
+* Lambdas as functions
+* Restructorings
+* Implicit interfaces
+* Stoppable refactorings
+* Enhanced occurrence finding
 
 
 Remaining Small Stories
@@ -24,6 +19,16 @@ Remaining Small Stories
 
 Base:
 
+* Adding configs for specifying long imports?
+* Changing method to static method refactoring
+* Profiling before ``0.5rc1`` for occurrence finding and SOI
+* Multiple ropes on one project; problems for objectdb and history
+* Adding *clear objectdb* command
+* Inline fails when there is an arg mismatch
+* Evaluate function parameter defaults in staticoi?
+* Recursive SOI; Go where the calls go
+* ``match_when_unsure`` project config?
+* Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
 * `__setslice__` for per name information?
 * Moving `Arguments`, `ObjectArguments` and `_CallContext`;
@@ -40,8 +45,10 @@ Base:
 
 UI and IDE:
 
+* Renaming normal files, folder, modules, and packages in project tree view
+* Spell checking on python source
+* Faster find file in large projects; caching `Project.get_all_files()`
 * Completion in module entries
-* Faster find file in large projects
 * A completing text widget for dialogs; `Completing(name, list, handle)`
 * Goto definition for ``"# comment.\na_var"``
 * Comments should be indented

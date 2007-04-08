@@ -93,7 +93,7 @@ use your new class.
 ``.ropeproject`` Folder
 -----------------------
 
-From version ``0.5m4`` rope makes a ``.ropeproject`` folder in the
+From version ``0.5m4``, rope makes a ``.ropeproject`` folder in the
 project by default for saving project configurations and data.  The
 name of this folder is passed to the constructor if you want to change
 that.  Also you can force rope not to make such a folder by passing

@@ -57,15 +57,17 @@ class IntroduceFactoryRefactoring(object):
 
     def _get_factory_method(self, lines, class_scope,
                             factory_name, global_factory):
+        unit_indents = ' ' * sourceutils.get_indent(self.pycore)
         if global_factory:
             if self._get_scope_indents(lines, class_scope) > 0:
                 raise rope.base.exceptions.RefactoringError(
                     'Cannot make global factory method for nested classes.')
-            return ('\ndef %s(*args, **kwds):\n    return %s(*args, **kwds)\n' %
-                    (factory_name, self.old_name))
+            return ('\ndef %s(*args, **kwds):\n%sreturn %s(*args, **kwds)\n' %
+                    (factory_name, unit_indents, self.old_name))
         unindented_factory = ('@staticmethod\n' +
                               'def %s(*args, **kwds):\n' % factory_name +
-                              '    return %s(*args, **kwds)\n' % self.old_name)
+                              '%sreturn %s(*args, **kwds)\n' % (unit_indents,
+                                                                self.old_name))
         indents = self._get_scope_indents(lines, class_scope) + \
                   sourceutils.get_indent(self.pycore)
         return '\n' + sourceutils.indent_lines(unindented_factory, indents)
