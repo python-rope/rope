@@ -36,7 +36,10 @@ class ObjectInfoManager(object):
         self.project.add_observer(self.observer)
 
     def _resource_changed(self, resource):
-        self.objectdb.validate_file(resource.real_path)
+        try:
+            self.objectdb.validate_file(resource.real_path)
+        except SyntaxError:
+            pass
 
     def _resource_removed(self, resource, new_resource=None):
         self.observer.remove_resource(resource)
@@ -86,6 +89,17 @@ class ObjectInfoManager(object):
         if parameters:
             return [self.to_pyobject.transform(parameter)
                     for parameter in parameters]
+
+    def get_passed_objects(self, pyfunction, parameter_index):
+        scope_info = self._find_scope_info(pyfunction)
+        result = set()
+        for call_info in scope_info.get_call_infos():
+            args = call_info.get_parameters()
+            if len(args) > parameter_index:
+                parameter = self.to_pyobject(args[parameter_index])
+                if parameter is not None:
+                    result.add(parameter)
+        return result
 
     def doi_data_received(self, data):
         def doi_to_normal(textual):

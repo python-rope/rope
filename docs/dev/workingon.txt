@@ -1,17 +1,25 @@
-Possible Future Plans
-=====================
+Basic Implicit Interfaces
+=========================
 
-* List comprehension inference
-* Finding similar to extracted
-* Formatting
-* Modules without source
-* New function scopes
-* Better warnings
-* Lambdas as functions
-* Restructorings
-* Implicit interfaces
-* Stoppable refactorings
-* Enhanced occurrence finding
+- Breaking objectinfertest into two modules
+- Add `ImplicitInterfacesTest` to testsuite
+- Using SOI when `ObjectInfo.get_passed_objects()` return []
+- Rename `PyCore.call_info` to `PyCore.object_info`
+- Implicit interfaces and change method signature
+
+
+Reducing Long SOI Analysis Time
+===============================
+
+- Adding `History.get_prev_contents()`
+- Adding `TextChangeDetector` class::
+- Adding `TextChangeDetectorTest` to testsuite
+- Making `SOIVisitor` recursive
+- Passing `should_analyze` to `StaticOI.analyze_module()`
+- Long SOI Analysis time for large files
+
+* Better property handling; `Project.pycore`
+* ObjectDB after change method signature
 
 
 Remaining Small Stories

@@ -17,8 +17,9 @@ class Rename(object):
         self.resource = resource
         if offset is not None:
             self.old_name = codeanalyze.get_name_at(self.resource, offset)
-            self.old_pyname = codeanalyze.get_pyname_at(self.pycore,
-                                                        resource, offset)
+            self.old_instance, self.old_pyname = \
+                codeanalyze.get_primary_and_pyname_at(self.pycore,
+                                                      resource, offset)
             if self.old_pyname is None:
                 raise exceptions.RefactoringError(
                     'Rename refactoring should be performed on python identifiers.')
@@ -26,6 +27,7 @@ class Rename(object):
             if not resource.is_folder() and resource.name == '__init__.py':
                 resource = resource.parent
             dummy_pymodule = self.pycore.get_string_module('')
+            self.old_instance = None
             self.old_pyname = pynames.ImportedModule(dummy_pymodule,
                                                      resource=resource)
             if resource.is_folder():
@@ -87,13 +89,9 @@ class Rename(object):
         return False
 
     def _get_old_pynames(self, in_file, in_hierarchy):
-        if self.old_pyname is None:
-            return []
-        if self.is_method() and in_hierarchy:
-            return get_all_methods_in_hierarchy(self.old_pyname.get_object().
-                                                parent, self.old_name)
-        else:
-            return [self.old_pyname]
+        return FindMatchingPyNames(
+            self.old_instance, self.old_pyname, self.old_name,
+            in_file, in_hierarchy and self.is_method()).get_all()
 
     def _get_interesting_files(self, in_file):
         if not in_file:
@@ -124,7 +122,7 @@ class ChangeOccurrences(object):
     This class replaces the occurrences of a name.  Note that it only
     changes the scope containing the offset passed to the constructor.
     What's more it does not have any side-effects.  That is for
-    example changing occurrences of a module does not rename the 
+    example changing occurrences of a module does not rename the
     module; it merely replaces the occurrences of that module in a
     scope with the given expression.  This class is useful for
     performing many custom refactorings.
@@ -189,26 +187,58 @@ def rename_in_module(occurrences_finder, new_name, resource=None, pymodule=None,
     return change_collector.get_changed()
 
 
-def get_all_methods_in_hierarchy(pyclass, attr_name):
-    superclasses = _get_superclasses_defining_method(pyclass, attr_name)
-    methods = set()
-    for superclass in superclasses:
-        methods.update(_get_all_methods_in_subclasses(
-                       superclass, attr_name))
-    return methods
+class FindMatchingPyNames(object):
+    """Find matching pynames
 
-def _get_superclasses_defining_method(pyclass, attr_name):
-    result = set()
-    for superclass in pyclass.get_superclasses():
-        if attr_name in superclass.get_attributes():
-            result.update(_get_superclasses_defining_method(
-                          superclass, attr_name))
-    if not result:
-        return set([pyclass])
-    return result
+    This is useful for finding overriding and overridden methods in
+    class hierarchy and attributes concluded from implicit interfaces.
+    """
 
-def _get_all_methods_in_subclasses(pyclass, attr_name):
-    result = set([pyclass.get_attribute(attr_name)])
-    for subclass in pyclass.pycore.get_subclasses(pyclass):
-        result.update(_get_all_methods_in_subclasses(subclass, attr_name))
-    return result
+    def __init__(self, primary, pyname, name, in_file, in_hierarchy):
+        self.name = name
+        self.pyname = pyname
+        self.instance = primary
+        self.in_file = in_file
+        self.in_hierarchy = in_hierarchy
+
+    def get_all(self):
+        result = set()
+        if self.pyname is not None:
+            result.add(self.pyname)
+        if isinstance(self.instance, pynames.ParameterName):
+            for pyobject in self.instance.get_objects():
+                try:
+                    result.add(pyobject.get_attribute(self.name))
+                except exceptions.AttributeNotFoundError:
+                    pass
+        if self.in_hierarchy:
+            for pyname in set(result):
+                result.update(self.get_all_methods_in_hierarchy(
+                              self.pyname.get_object().parent, self.name))
+        return list(result)
+
+
+    def get_all_methods_in_hierarchy(self, pyclass, attr_name):
+        superclasses = self._get_superclasses_defining_method(pyclass,
+                                                              attr_name)
+        methods = set()
+        for superclass in superclasses:
+            methods.update(self._get_all_methods_in_subclasses(
+                           superclass, attr_name))
+        return methods
+
+    def _get_superclasses_defining_method(self, pyclass, attr_name):
+        result = set()
+        for superclass in pyclass.get_superclasses():
+            if attr_name in superclass.get_attributes():
+                result.update(self._get_superclasses_defining_method(
+                              superclass, attr_name))
+        if not result:
+            return set([pyclass])
+        return result
+
+    def _get_all_methods_in_subclasses(self, pyclass, attr_name):
+        result = set([pyclass.get_attribute(attr_name)])
+        for subclass in pyclass.pycore.get_subclasses(pyclass):
+            result.update(self._get_all_methods_in_subclasses(subclass, attr_name))
+        return result

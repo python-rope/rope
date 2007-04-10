@@ -5,6 +5,7 @@ import ropetest.codeanalyzetest
 import ropetest.pycoretest
 import ropetest.pyscopestest
 import ropetest.objectinfertest
+import ropetest.advanced_oi_test
 import ropetest.runmodtest
 import ropetest.builtintest
 import ropetest.historytest
@@ -17,6 +18,7 @@ def suite():
     result.addTests(ropetest.pycoretest.suite())
     result.addTests(ropetest.pyscopestest.suite())
     result.addTests(ropetest.objectinfertest.suite())
+    result.addTests(ropetest.advanced_oi_test.suite())
     result.addTests(ropetest.runmodtest.suite())
     result.addTests(unittest.makeSuite(ropetest.builtintest.BuiltinTypesTest))
     result.addTests(ropetest.historytest.suite())

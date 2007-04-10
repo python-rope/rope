@@ -113,7 +113,7 @@ class _CallContext(object):
         scope, name = self._get_scope_and_pyname(pyname)
         if name is not None:
             pymodule = pyname.get_definition_location()[0]
-            return pymodule.pycore.call_info.get_per_name(scope, name)
+            return pymodule.pycore.object_info.get_per_name(scope, name)
         return None
 
     def save_per_name(self, value):
@@ -123,7 +123,7 @@ class _CallContext(object):
         scope, name = self._get_scope_and_pyname(pyname)
         if name is not None:
             pymodule = pyname.get_definition_location()[0]
-            pymodule.pycore.call_info.save_per_name(scope, name, value)
+            pymodule.pycore.object_info.save_per_name(scope, name, value)
 
 
 class _AttributeCollector(object):

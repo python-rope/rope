@@ -3,6 +3,12 @@
 ===========
 
 
+- Faster automatic SOI analysis : April 9, 2007
+
+
+- Basic implicit interfaces : April 9, 2007
+
+
 - Using a better object textual form : April 4, 2007
 
 

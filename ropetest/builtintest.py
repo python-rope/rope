@@ -258,7 +258,7 @@ class BuiltinTypesTest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertTrue(isinstance(a_var.get_type(), builtins.Str))
 
-    def test_file_builtin_type2(self):
+    def test_property_builtin_type(self):
         self.mod.write('p = property()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         p_var = pymod.get_attribute('p').get_object()

@@ -138,6 +138,11 @@ class ParameterName(PyName):
             result = rope.base.pyobjects.get_unknown()
         return result
 
+    def get_objects(self):
+        """Returns the list of objects passed as this parameter"""
+        object_infer = self.pyfunction.pycore._get_object_infer()
+        return object_infer.get_passed_objects(self.pyfunction, self.index)
+
     def get_definition_location(self):
         return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)
 

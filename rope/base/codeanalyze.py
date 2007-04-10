@@ -481,10 +481,16 @@ def get_pyname_at(pycore, resource, offset):
     This function is inefficient for multiple calls because of the
     recalculation of initialization data.
     """
+    return get_primary_and_pyname_at(pycore, resource, offset)[1]
+
+def get_primary_and_pyname_at(pycore, resource, offset):
+    """Finds the primary and pyname at offset
+
+    See notes about `get_pyname_at`.
+    """
     pymodule = pycore.resource_to_pyobject(resource)
     pyname_finder = rope.base.codeanalyze.ScopeNameFinder(pymodule)
-    pyname = pyname_finder.get_pyname_at(offset)
-    return pyname
+    return pyname_finder.get_primary_and_pyname_at(offset)
 
 def get_name_at(resource, offset):
     source_code = resource.read()

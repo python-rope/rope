@@ -1,3 +1,4 @@
+import difflib
 import re
 import sys
 
@@ -19,7 +20,7 @@ class PyCore(object):
             self._invalidate_resource_cache, self._invalidate_resource_cache)
         self.observer = rope.base.project.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
-        self.call_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
+        self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         if project.get_prefs().get('automatic_soi', False):
             self._init_automatic_soi()
@@ -32,7 +33,14 @@ class PyCore(object):
     def _file_changed(self, resource, new_resource=None):
         if resource.exists() and self.is_python_file(resource):
             try:
-                self.analyze_module(resource)
+                old_contents = self.project.history.get_prev_contents(resource)
+                new_contents = resource.read()
+                # detecting changes in new_contents relative to old_contents
+                detector = TextChangeDetector(new_contents, old_contents)
+                def should_analyze(pydefined):
+                    scope = pydefined.get_scope()
+                    return detector.is_changed(scope.get_start(), scope.get_end())
+                self.analyze_module(resource, should_analyze)
             except SyntaxError:
                 pass
 
@@ -211,7 +219,7 @@ class PyCore(object):
         controlling the process.
 
         """
-        receiver = self.call_info.doi_data_received
+        receiver = self.object_info.doi_data_received
         if not self.project.get_prefs().get('perform_doi', True):
             receiver = None
         runner = dynamicoi.PythonFileRunner(self, resource, args, stdin,
@@ -220,7 +228,7 @@ class PyCore(object):
         runner.run()
         return runner
 
-    def analyze_module(self, resource):
+    def analyze_module(self, resource, should_analyze=None):
         """Analyze `resource` module for static object inference
 
         This function forces rope to analyze this module to concluded
@@ -229,7 +237,7 @@ class PyCore(object):
         """
         pymodule = self.resource_to_pyobject(resource)
         pymodule._invalidate_concluded_data()
-        self.object_infer.soi.analyze_module(pymodule)
+        self.object_infer.soi.analyze_module(pymodule, should_analyze)
         pymodule._invalidate_concluded_data()
 
     def get_subclasses(self, pyclass):
@@ -246,3 +254,31 @@ class PyCore(object):
             self.classes = classes
         return [class_ for class_ in self.classes
                 if pyclass in class_.get_superclasses()]
+
+
+class TextChangeDetector(object):
+
+    def __init__(self, old, new):
+        self.old = old
+        self.new = new
+        self._set_diffs()
+
+    def _set_diffs(self):
+        differ = difflib.Differ()
+        self.lines = []
+        for line in differ.compare(self.old.splitlines(True),
+                                   self.new.splitlines(True)):
+            if line.startswith(' '):
+                self.lines.append(False)
+            elif line.startswith('-'):
+                self.lines.append(True)
+
+    def is_changed(self, start, end):
+        """Tell whether any of start till end lines have changed
+
+        The end points are inclusive and indices start from 1.
+        """
+        for i in range(start - 1, min(end, len(self.lines))):
+            if self.lines[i]:
+                return True
+        return False

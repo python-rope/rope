@@ -192,7 +192,7 @@ class Project(_Project):
         return self.ignored.is_ignored(resource)
 
     def close(self):
-        self.pycore.call_info.sync()
+        self.pycore.object_info.sync()
         self.history.sync()
 
     def set(self, key, value):

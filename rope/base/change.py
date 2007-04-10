@@ -69,8 +69,6 @@ class ChangeSet(Change):
                 string_date = 'today'
             elif date.date() == (datetime.date.today() - datetime.timedelta(1)):
                 string_date = 'yesterday'
-            elif date.month == datetime.date.today().month:
-                string_date = date.strftime('%a, %b %d')
             elif date.year == datetime.date.today().year:
                 string_date = date.strftime('%b %d')
             else:

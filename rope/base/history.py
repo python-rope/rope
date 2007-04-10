@@ -78,6 +78,26 @@ class History(object):
         self.undo_list.append(change)
         change.do()
 
+    def get_prev_contents(self, file):
+        result = self._search_for_change_contents(self.undo_list, file)
+        if result is not None:
+            return result
+        if file.exists() and not file.is_folder():
+            return file.read()
+        else:
+            return None
+
+    def _search_for_change_contents(self, change_list, file):
+        for change_ in reversed(change_list):
+            if isinstance(change_, change.ChangeSet):
+                result = self._search_for_change_contents(change_.changes,
+                                                          file)
+                if result is not None:
+                    return result
+            if isinstance(change_, change.ChangeContents) and \
+               change_.resource == file:
+                return change_.old_content
+
     def sync(self):
         if self.history_file is not None:
             output_file = file(self.history_file.real_path, 'w')

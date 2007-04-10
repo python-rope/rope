@@ -12,11 +12,11 @@ class ObjectInfer(object):
 
     def __init__(self, pycore):
         self.soi = staticoi.StaticObjectInference(pycore)
-        self.call_info = pycore.call_info
+        self.object_info = pycore.object_info
 
     def infer_returned_object(self, pyobject, args):
         """Infer the `PyObject` this callable `PyObject` returns after calling"""
-        result = self.call_info.get_exact_returned(pyobject, args)
+        result = self.object_info.get_exact_returned(pyobject, args)
         if result is not None:
             return result
         result = self.soi.infer_returned_object(pyobject, args)
@@ -24,13 +24,13 @@ class ObjectInfer(object):
             if args and pyobject.get_module().get_resource() is not None:
                 params = args.get_arguments(
                     pyobject.get_param_names(special_args=False))
-                self.call_info.function_called(pyobject, params, result)
+                self.object_info.function_called(pyobject, params, result)
             return result
-        return self.call_info.get_returned(pyobject, args)
+        return self.object_info.get_returned(pyobject, args)
 
     def infer_parameter_objects(self, pyobject):
         """Infer the `PyObject`\s of parameters of this callable `PyObject`"""
-        result = self.call_info.get_parameter_objects(pyobject)
+        result = self.object_info.get_parameter_objects(pyobject)
         if result is None:
             result = self.soi.infer_parameter_objects(pyobject)
         return result
@@ -42,6 +42,14 @@ class ObjectInfer(object):
             result = self._infer_assignment(assignment, pyname.module)
             if result is not None:
                 return result
+
+    def get_passed_objects(self, pyfunction, parameter_index):
+        result = self.object_info.get_passed_objects(pyfunction, parameter_index)
+        if not result:
+            statically_inferred = self.soi.infer_parameter_objects(pyfunction)
+            if len(statically_inferred) > parameter_index:
+                result.add(statically_inferred[parameter_index])
+        return result
 
     def _infer_assignment(self, assignment, pymodule):
         try:

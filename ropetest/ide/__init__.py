@@ -5,7 +5,7 @@ import ropetest.ide.codeassisttest
 import ropetest.ide.formattertest
 import ropetest.ide.notestest
 import ropetest.ide.outlinetest
-import ropetest.ide.spellcheckertext
+import ropetest.ide.spellcheckertest
 
 
 def suite():

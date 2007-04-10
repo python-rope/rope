@@ -39,7 +39,8 @@ class StaticObjectInference(object):
 
     def infer_parameter_objects(self, pyobject):
         objects = []
-        if pyobject.parent is not None and isinstance(pyobject.parent, pyobjects.PyClass):
+        if pyobject.parent is not None and \
+           isinstance(pyobject.parent, pyobjects.PyClass):
             if not pyobject.decorators:
                 objects.append(pyobjects.PyObject(pyobject.parent))
             elif self._is_staticmethod_decorator(pyobject.decorators.nodes[0]):
@@ -59,24 +60,41 @@ class StaticObjectInference(object):
     def _is_classmethod_decorator(self, node):
         return isinstance(node, compiler.ast.Name) and node.name == 'classmethod'
 
-    def analyze_module(self, pymodule):
+    def analyze_module(self, pymodule, should_analyze=None):
         """Analyze `pymodule` for static object inference"""
-        visitor = SOIVisitor(self.pycore, pymodule)
-        compiler.walk(pymodule.get_ast(), visitor)
+        _analyze_node(self.pycore, pymodule, should_analyze)
+
+
+def _analyze_node(pycore, pydefined, should_analyze):
+    if should_analyze is not None and not should_analyze(pydefined):
+        return
+    visitor = SOIVisitor(pycore, pydefined, should_analyze)
+    for child in pydefined.get_ast().getChildNodes():
+        compiler.walk(child, visitor)
 
 
 class SOIVisitor(object):
 
-    def __init__(self, pycore, pymodule):
+    def __init__(self, pycore, pydefined, should_analyze):
         self.pycore = pycore
-        self.pymodule = pymodule
-        self.scope = pymodule.get_scope()
+        self.pymodule = pydefined.get_module()
+        self.scope = pydefined.get_scope()
+        self.should_analyze = should_analyze
+
+    def visitFunction(self, node):
+        self._analyze_child(node)
+
+    def visitClass(self, node):
+        self._analyze_child(node)
+
+    def _analyze_child(self, node):
+        pydefined = self.scope.get_name(node.name).get_object()
+        _analyze_node(self.pycore, pydefined, self.should_analyze)
 
     def visitCallFunc(self, node):
         for child in node.getChildNodes():
             compiler.walk(child, self)
-        scope = self.scope.get_inner_scope_for_line(node.lineno)
-        primary, pyname = evaluate.get_primary_and_result(scope, node.node)
+        primary, pyname = evaluate.get_primary_and_result(self.scope, node.node)
         if pyname is None:
             return
         pyfunction = pyname.get_object()
@@ -84,20 +102,20 @@ class SOIVisitor(object):
            '__call__' in pyfunction.get_attributes():
             pyfunction = pyfunction.get_attribute('__call__')
         if isinstance(pyfunction, pyobjects.AbstractFunction):
-            args = evaluate.create_arguments(primary, pyfunction, node, scope)
+            args = evaluate.create_arguments(primary, pyfunction, node, self.scope)
         elif isinstance(pyfunction, pyobjects.PyClass):
             pyclass = pyfunction
             if '__init__' in pyfunction.get_attributes():
                 pyfunction = pyfunction.get_attribute('__init__').get_object()
             pyname = pynames.UnboundName(pyobjects.PyObject(pyclass))
-            args = evaluate.MixedArguments(pyname, node.args, scope)
+            args = evaluate.MixedArguments(pyname, node.args, self.scope)
         else:
             return
         self._call(pyfunction, args)
 
     def _call(self, pyfunction, args):
         if isinstance(pyfunction, pyobjects.PyFunction):
-            self.pycore.call_info.function_called(
+            self.pycore.object_info.function_called(
                 pyfunction, args.get_arguments(pyfunction.get_param_names()))
         # XXX: Maybe we should not call every builtin function
         if isinstance(pyfunction, builtins.BuiltinFunction):
@@ -112,11 +130,10 @@ class SOIVisitor(object):
             compiler.walk(child, visitor)
             nodes.extend(visitor.nodes)
         for assigned, levels in nodes:
-            scope = self.scope.get_inner_scope_for_line(node.lineno)
-            instance = evaluate.get_statement_result(scope, assigned.expr)
+            instance = evaluate.get_statement_result(self.scope, assigned.expr)
             args_pynames = []
             for ast in assigned.subs:
-                args_pynames.append(evaluate.get_statement_result(scope, ast))
+                args_pynames.append(evaluate.get_statement_result(self.scope, ast))
             value = self.pycore.object_infer._infer_assignment(
                 pynames._Assigned(node.expr, levels), self.pymodule)
             args_pynames.append(pynames.UnboundName(value))

@@ -487,10 +487,45 @@ class ChangeOccurrencesTest(unittest.TestCase):
         self.assertEquals('a = 1\nb = 2\nprint(b)\n', self.mod.read())
 
 
+class ImplicitInterfacesTest(unittest.TestCase):
+
+    def setUp(self):
+        super(ImplicitInterfacesTest, self).setUp()
+        self.project = testutils.sample_project(validate_objectdb=True)
+        self.pycore = self.project.get_pycore()
+        self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(ImplicitInterfacesTest, self).tearDown()
+
+    def _rename(self, resource, offset, new_name, **kwds):
+        changes = Rename(self.project, resource, offset).\
+                  get_changes(new_name, **kwds)
+        self.project.do(changes)
+
+    def test_performing_rename_on_parameters(self):
+        self.mod1.write('def f(arg):\n    arg.run()\n')
+        self.mod2.write('import mod1\n\n\n'
+                        'class A(object):\n    def run(self):\n        pass\n'
+                        'class B(object):\n    def run(self):\n        pass\n'
+                        'mod1.f(A())\nmod1.f(B())\n')
+        self.pycore.analyze_module(self.mod2)
+        self._rename(self.mod1, self.mod1.read().index('run'), 'newrun')
+        self.assertEquals('def f(arg):\n    arg.newrun()\n', self.mod1.read())
+        self.assertEquals(
+            'import mod1\n\n\n'
+            'class A(object):\n    def newrun(self):\n        pass\n'
+            'class B(object):\n    def newrun(self):\n        pass\n'
+            'mod1.f(A())\nmod1.f(B())\n', self.mod2.read())
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(RenameRefactoringTest))
     result.addTests(unittest.makeSuite(ChangeOccurrencesTest))
+    result.addTests(unittest.makeSuite(ImplicitInterfacesTest))
     return result
 
 

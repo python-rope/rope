@@ -221,8 +221,8 @@ Saving object data requires having good mechanisms for invalidating
 information and testing.
 
 
-Refactoring `Progress`
-======================
+Task `Progress`
+===============
 
 Currently refactorings cannot be stopped.  I propose to add an object
 for stopping and showing the progress of a time consuming task::
@@ -235,8 +235,22 @@ for stopping and showing the progress of a time consuming task::
       def is_stopped(self):
           pass
 
+      def get_progress(self, total=None):
+          pass
+
+  class Progress(object):
+
+      def done(self, count):
+          pass
+
+      def set_task(self, name):
+          pass
+
 It requires adding an argument to all refactorings and other time
-consuming tasks and changing them to use this object.
+consuming tasks and changing them to use this object.  Alternatively
+we can change `TaskHandle` to have a method like `done(percent)`
+method that checks whether it is stopped and raises exceptions if it
+is.
 
 
 Better Concluded Data
@@ -398,6 +412,16 @@ list will be probably extended.
 
 Python's Implicit Interfaces
 ============================
+
+Basic Implicit Interfaces
+-------------------------
+
+There are many dark points about these interfaces, but we should start
+from somewhere.
+
+
+Overview
+--------
 
 In python you don't have to define interfaces to declare that classes
 use a specific protocol or interface.  There are lots of such examples

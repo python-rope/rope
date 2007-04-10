@@ -20,8 +20,8 @@ class ChangeSignature(object):
 
     def _set_name_and_pyname(self):
         self.name = codeanalyze.get_name_at(self.resource, self.offset)
-        self.pyname = codeanalyze.get_pyname_at(self.pycore, self.resource,
-                                                self.offset)
+        self.primary, self.pyname = codeanalyze.get_primary_and_pyname_at(
+            self.pycore, self.resource, self.offset)
         if self.pyname is None:
             return
         pyobject = self.pyname.get_object()
@@ -40,12 +40,9 @@ class ChangeSignature(object):
 
     def _change_calls(self, call_changer, in_hierarchy=False):
         changes = ChangeSet('Changing signature of <%s>' % self.name)
-        if in_hierarchy and self.is_method():
-            pyfunction = self.pyname.get_object()
-            pyclass = pyfunction.parent
-            pynames = rename.get_all_methods_in_hierarchy(pyclass, self.name)
-        else:
-            pynames = [self.pyname]
+        pynames = rename.FindMatchingPyNames(
+            self.primary, self.pyname, self.name, False,
+            in_hierarchy and self.is_method()).get_all()
         finder = occurrences.FilteredFinder(self.pycore, self.name, pynames)
         if self.others:
             name, pyname = self.others
