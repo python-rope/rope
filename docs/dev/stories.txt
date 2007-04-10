@@ -142,7 +142,7 @@ Stories
 > Public Release 0.5m5 : April 15, 2007
 
 
-* Stoppable refactorings
-
-
 * Inferring the object list comprehensions or generator expressions hold
+
+
+* Stoppable refactorings

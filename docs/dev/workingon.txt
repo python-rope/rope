@@ -1,24 +1,17 @@
-Basic Implicit Interfaces
-=========================
+Stoppable Refactorings
+======================
 
-- Breaking objectinfertest into two modules
-- Add `ImplicitInterfacesTest` to testsuite
-- Using SOI when `ObjectInfo.get_passed_objects()` return []
-- Rename `PyCore.call_info` to `PyCore.object_info`
-- Implicit interfaces and change method signature
+- Better property handling
+- Fixing `History.get_prev_contents()` when called in observers
+- Adding `TaskHandle`
 
+* Adding a ui progress
+* Using progress in unit-test view
+* Document refactorings and task handles
 
-Reducing Long SOI Analysis Time
-===============================
-
-- Adding `History.get_prev_contents()`
-- Adding `TextChangeDetector` class::
-- Adding `TextChangeDetectorTest` to testsuite
-- Making `SOIVisitor` recursive
-- Passing `should_analyze` to `StaticOI.analyze_module()`
-- Long SOI Analysis time for large files
-
-* Better property handling; `Project.pycore`
+* Validating callinfo
+* Codeassist only shows saved data
+* Should we default to ``''`` or ``File.read()`` in `History.get_prev_contents()`?
 * ObjectDB after change method signature
 
 

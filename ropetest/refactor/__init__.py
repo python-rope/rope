@@ -8,7 +8,7 @@ import ropetest.refactor.importutilstest
 import ropetest.refactor.inlinetest
 import ropetest.refactor.movetest
 import ropetest.refactor.renametest
-from rope.base.exceptions import RefactoringError
+from rope.base.exceptions import RefactoringError, InterruptedTaskError
 from rope.refactor.encapsulate_field import EncapsulateField
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.localtofield import LocalToField
@@ -609,6 +609,47 @@ class IntroduceParameterTest(unittest.TestCase):
                           self.mod.read())
 
 
+class TaskHandleTest(unittest.TestCase):
+
+    def test_trivial_case(self):
+        handle = rope.refactor.TaskHandle()
+        self.assertFalse(handle.is_stopped())
+
+    def test_stopping(self):
+        handle = rope.refactor.TaskHandle()
+        handle.stop()
+        self.assertTrue(handle.is_stopped())
+
+    def test_zero_get_percent_done(self):
+        handle = rope.refactor.TaskHandle()
+        self.assertFalse(0, handle.get_percent_done())
+
+    def test_job_sets(self):
+        handle = rope.refactor.TaskHandle()
+        jobs = handle.create_job_set()
+        self.assertEquals([jobs], handle.get_job_sets())
+
+    def test_starting_and_finishing_jobs(self):
+        handle = rope.refactor.TaskHandle()
+        jobs = handle.create_job_set(name='test job set', count=1)
+        jobs.started_job('job1')
+        jobs.finished_job()
+
+    @testutils.assert_raises(InterruptedTaskError)
+    def test_test_checking_status(self):
+        handle = rope.refactor.TaskHandle()
+        jobs = handle.create_job_set()
+        handle.stop()
+        jobs.check_status()
+
+    @testutils.assert_raises(InterruptedTaskError)
+    def test_test_checking_status_when_starting(self):
+        handle = rope.refactor.TaskHandle()
+        jobs = handle.create_job_set()
+        handle.stop()
+        jobs.started_job('job1')
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(ropetest.refactor.renametest.suite())
@@ -621,6 +662,7 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.refactor.change_signature_test.ChangeSignatureTest))
     result.addTests(unittest.makeSuite(IntroduceParameterTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.importutilstest.ImportUtilsTest))
+    result.addTests(unittest.makeSuite(TaskHandleTest))
     return result
 
 

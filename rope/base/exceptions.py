@@ -6,6 +6,10 @@ class RefactoringError(RopeError):
     """Errors for performing a refactoring"""
 
 
+class InterruptedTaskError(RopeError):
+    """Errors for performing a refactoring"""
+
+
 class HistoryError(RopeError):
     """Errors for history undo/redo operations"""
 

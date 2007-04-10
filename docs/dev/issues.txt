@@ -104,24 +104,6 @@ efficient.  So later, after using it for some time, we'll decide about
 that.
 
 
-Automatic SOI
--------------
-
-Performing SOI when saving:
-
-* The order in which observers are called
-* Not analyzing everytime?
-* ``automatic_soi`` project config
-
-Unfortunately performing SOI whenever a buffer is saved is not cpu and
-memory efficient.  One way to solve this problem is to hold a new
-variable for each scope.  This variable will hold the has of the
-contents of that scope.  When a project changes only those scope whose
-contents have changed will be analyzed.  The main problem with this
-approach is that scopes are nested and when an inner scope changes all
-its parents change, too.
-
-
 Returned Object SOI
 -------------------
 
@@ -235,22 +217,31 @@ for stopping and showing the progress of a time consuming task::
       def is_stopped(self):
           pass
 
-      def get_progress(self, total=None):
+      def create_job_set(self, name=None, total=None):
           pass
 
-  class Progress(object):
-
-      def done(self, count):
+      def get_job_sets(self):
           pass
 
-      def set_task(self, name):
+      def get_percent_done(self):
           pass
+
+      def add_observer(self):
+          pass
+
+  class JobSet(object):
+
+      def start_job(self, name):
+          if self.current_job is not None:
+              self.finished_job()
+          self.set_job_name(name)
+
+      def finished_job(self):
+          """Raises `TaskInterruptedError` if this task was interrupted"""
+
 
 It requires adding an argument to all refactorings and other time
-consuming tasks and changing them to use this object.  Alternatively
-we can change `TaskHandle` to have a method like `done(percent)`
-method that checks whether it is stopped and raises exceptions if it
-is.
+consuming tasks and changing them to use this object.
 
 
 Better Concluded Data

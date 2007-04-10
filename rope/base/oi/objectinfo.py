@@ -81,7 +81,7 @@ class ObjectInfoManager(object):
         parameters = None
         for call_info in scope_info.get_call_infos():
             args = call_info.get_parameters()
-            if len(args) > 0 and args[0] not in ('unknown', 'none'):
+            if len(args) > 0 and args[-1][0] not in ('unknown', 'none'):
                 parameters = args
                 break
             if parameters is None:

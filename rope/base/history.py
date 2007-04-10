@@ -13,6 +13,7 @@ class History(object):
         else:
             self.max_undos = maxundos
         self._load_history()
+        self.current_change = None
 
     def _load_history(self):
         if self.history_file is not None and self.history_file.exists():
@@ -33,7 +34,11 @@ class History(object):
     history_file = property(_get_history_file)
 
     def do(self, changes):
-        changes.do()
+        self.current_change = changes
+        try:
+            changes.do()
+        finally:
+            self.current_change = None
         if self._is_change_interesting(changes):
             self.undo_list.append(changes)
             if len(self.undo_list) > self.max_undos:
@@ -67,19 +72,28 @@ class History(object):
 
     def _perform_undos(self, count):
         for i in range(count):
-            to_undo = self.undo_list.pop()
-            self.redo_list.append(to_undo)
-            to_undo.undo()
+            self.current_change = self.undo_list[-1]
+            try:
+                self.current_change.undo()
+            finally:
+                self.current_change = None
+            self.redo_list.append(self.undo_list.pop())
 
     def redo(self):
         if not self.redo_list:
             raise exceptions.HistoryError('Redo list is empty')
-        change = self.redo_list.pop()
-        self.undo_list.append(change)
-        change.do()
+        self.current_change = self.redo_list[-1]
+        try:
+            self.current_change.do()
+        finally:
+            self.current_change = None
+        self.undo_list.append(self.redo_list.pop())
 
     def get_prev_contents(self, file):
-        result = self._search_for_change_contents(self.undo_list, file)
+        change_list = list(self.undo_list)
+        if self.current_change is not None:
+            change_list.append(self.current_change)
+        result = self._search_for_change_contents(change_list, file)
         if result is not None:
             return result
         if file.exists() and not file.is_folder():

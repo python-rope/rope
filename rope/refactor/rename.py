@@ -68,7 +68,8 @@ class Rename(object):
                 changes.add_change(ChangeContents(file_, new_content))
 
         if self._is_renaming_a_module():
-            changes.add_change(self._rename_module(old_pynames[0].get_object(), new_name))
+            changes.add_change(self._rename_module(old_pynames[0].get_object(),
+                                                   new_name))
         return changes
 
     def _is_renaming_a_function_local_name(self):

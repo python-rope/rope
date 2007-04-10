@@ -1,4 +1,4 @@
-from rope.base import pyobjects, builtins, evaluate
+from rope.base import pyobjects, pynames, builtins, evaluate
 from rope.base.oi import dynamicoi, staticoi
 
 
@@ -84,10 +84,11 @@ class ObjectInfer(object):
             if pyname is not None:
                 result = pyname.get_object()
                 if isinstance(result.get_type(), builtins.Property) and \
-                   primary and isinstance(primary.get_object().get_type(),
-                                          pyobjects.PyClass):
+                   holding_scope.get_kind() == 'Class':
+                    arg = pynames.UnboundName(pyobjects.PyObject(
+                                              holding_scope.pyobject))
                     return result.get_type().get_property_object(
-                        evaluate.ObjectArguments([primary]))
+                        evaluate.ObjectArguments([arg]))
                 return result
         except pyobjects.IsBeingInferredError:
             pass

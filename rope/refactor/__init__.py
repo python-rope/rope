@@ -42,6 +42,7 @@ a refactoring.  These are the things an IDE does in each step:
 
 """
 import rope.refactor.importutils
+from rope.base import exceptions
 from rope.base.change import ChangeSet, ChangeContents, MoveResource, CreateFolder
 from rope.refactor.importutils import module_imports
 
@@ -120,3 +121,45 @@ class ImportOrganizer(object):
         return self._perform_command_on_import_tools(
             self.import_tools.handle_long_imports, resource)
 
+
+class TaskHandle(object):
+
+    def __init__(self, name='Task'):
+        self.name = name
+        self.stopped = False
+        self.job_sets = []
+
+    def is_stopped(self):
+        return self.stopped
+
+    def stop(self):
+        self.stopped = True
+
+    def get_percent_done(self):
+        return 0
+
+    def create_job_set(self, name='JobSet', count=1):
+        result = JobSet(self, name=name, count=count)
+        self.job_sets.append(result)
+        return result
+
+    def get_job_sets(self):
+        return self.job_sets
+
+
+class JobSet(object):
+
+    def __init__(self, handle, name, count):
+        self.handle = handle
+        self.name = name
+        self.count = count
+
+    def started_job(self, name):
+        self.check_status()
+
+    def finished_job(self):
+        pass
+
+    def check_status(self):
+        if self.handle.is_stopped():
+            raise exceptions.InterruptedTaskError()
