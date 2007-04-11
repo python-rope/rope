@@ -1,3 +1,4 @@
+import rope.refactor
 from rope.base import exceptions, codeanalyze, pyobjects, pynames
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences, sourceutils
@@ -39,7 +40,7 @@ class Rename(object):
         return self.old_name
 
     def get_changes(self, new_name, in_file=False, in_hierarchy=False,
-                    unsure=False):
+                    unsure=False, task_handle=None):
         """Get the changes needed for this refactoring
 
         :parameters:
@@ -62,15 +63,24 @@ class Rename(object):
                             (self.old_name, new_name))
         finder = occurrences.FilteredFinder(self.pycore, self.old_name,
                                             old_pynames, unsure=unsure)
+        job_set = self._create_job_set(task_handle, len(files))
         for file_ in files:
+            job_set.started_job('Working on <%s>' % file_.path)
             new_content = rename_in_module(finder, new_name, resource=file_)
             if new_content is not None:
                 changes.add_change(ChangeContents(file_, new_content))
-
+            job_set.finished_job()
         if self._is_renaming_a_module():
             changes.add_change(self._rename_module(old_pynames[0].get_object(),
                                                    new_name))
         return changes
+
+    def _create_job_set(self, task_handle, count):
+        if task_handle is not None:
+            job_set = task_handle.create_job_set('Collecting Changes', count)
+        else:
+            job_set = rope.refactor.NullJobSet()
+        return job_set
 
     def _is_renaming_a_function_local_name(self):
         module, lineno = self.old_pyname.get_definition_location()

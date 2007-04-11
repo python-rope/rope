@@ -7,40 +7,32 @@ import Tkinter
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 import rope.base.project
-from rope.ui.uihelpers import DescriptionList
+from rope.ui.uihelpers import DescriptionList, ProgressBar
 import rope.ui.runtest
 
 
 class GUITestResult(object):
 
     def __init__(self, gui_runner):
+        self.gui_runner = gui_runner
         self.count = -1
         self.run_count = 0
-        self.label = gui_runner.test_name
-        self.color = 'green'
-        self.gui_runner = gui_runner
-        self.canvas = canvas = gui_runner.canvas
-        canvas.create_rectangle(0, 0, canvas['width'], canvas['height'], fill='')
-        canvas.create_rectangle(0, 0, 0, canvas['height'],
-                                fill=self.color, outline=self.color)
+        self.progress = gui_runner.progress
+        self.progress.set_color('green')
 
     def start_test(self, test_name):
-        self.label['text'] = test_name
+        self.progress.set_text(test_name)
         return True
 
     def add_success(self, test_name):
         return True
 
     def add_error(self, test_name, error):
-        self.gui_runner.add_failure(test_name, error)
-        self.gui_runner.description_list.add_entry(test_name)
-        self.color = 'red'
+        self.progress.set_color('red')
         return True
 
     def add_failure(self, test_name, error):
-        self.gui_runner.add_failure(test_name, error)
-        self.gui_runner.description_list.add_entry(test_name)
-        self.color = 'red'
+        self.progress.set_color('red')
         return True
 
     def set_test_count(self, count):
@@ -49,13 +41,9 @@ class GUITestResult(object):
 
     def stop_test(self, test_name):
         self.run_count += 1
-        self.label['text'] = ('ran %d of %d' % (self.run_count, self.count))
-        self._draw_shape()
+        self.progress.set_text('ran %d of %d' % (self.run_count, self.count))
+        self.progress.set_done_percent(self.run_count * 100 / self.count)
         return True
-
-    def _draw_shape(self):
-        width = int(self.canvas['width']) * self.run_count / self.count
-        self.canvas.create_rectangle(0, 0, width, self.canvas['height'], fill=self.color)
 
     def _is_finished(self):
         return self.run_count == self.count
@@ -75,10 +63,9 @@ class GUITestRunner(object):
         label = Tkinter.Label(self.toplevel,
                               text='Running Unit Tests in <%s>' % resource.path)
         label.grid(row=0)
-        self.test_name = Tkinter.Label(self.toplevel, width=80)
-        self.test_name.grid(row=1)
-        self.canvas = Tkinter.Canvas(self.toplevel, height=20)
-        self.canvas.grid(row=2)
+        progress_frame = Tkinter.Frame(self.toplevel)
+        self.progress = ProgressBar(progress_frame)
+        progress_frame.grid(row=1)
 
         self.result = GUITestResult(self)
         self.failures = {}

@@ -69,7 +69,7 @@ Patch style
 -----------
 
 Always use the latest version of files from rope Subversion repository
-from https://svn.sourceforge.net/svnroot/rope
+from https://rope.svn.sourceforge.net/svnroot/rope
 
 * Submit patches in the format returned by the ``svn diff`` command.
 * Follow :PEP:`8`.

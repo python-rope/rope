@@ -68,6 +68,8 @@ class StaticObjectInference(object):
 def _analyze_node(pycore, pydefined, should_analyze):
     if should_analyze is not None and not should_analyze(pydefined):
         return
+#    if hasattr(pydefined, 'get_name'):
+#        print pydefined.get_name()
     visitor = SOIVisitor(pycore, pydefined, should_analyze)
     for child in pydefined.get_ast().getChildNodes():
         compiler.walk(child, visitor)

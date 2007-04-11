@@ -1,12 +1,13 @@
 Stoppable Refactorings
 ======================
 
-- Better property handling
-- Fixing `History.get_prev_contents()` when called in observers
-- Adding `TaskHandle`
+- Adding a ProgressBar
+- Using ProgressBar in unit-test view
+- Adding `StoppableTaskRunner`
+- Stoppable rename refactoring
 
-* Adding a ui progress
-* Using progress in unit-test view
+* Using in refactorings: move, inline, change signature,
+  introduce_factory, rename/move current module, find occurrences
 * Document refactorings and task handles
 
 * Validating callinfo

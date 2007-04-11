@@ -609,6 +609,14 @@ class IntroduceParameterTest(unittest.TestCase):
                           self.mod.read())
 
 
+class _MockTaskObserver(object):
+
+    def __init__(self):
+        self.called = 0
+
+    def __call__(self):
+        self.called += 1
+
 class TaskHandleTest(unittest.TestCase):
 
     def test_trivial_case(self):
@@ -619,10 +627,6 @@ class TaskHandleTest(unittest.TestCase):
         handle = rope.refactor.TaskHandle()
         handle.stop()
         self.assertTrue(handle.is_stopped())
-
-    def test_zero_get_percent_done(self):
-        handle = rope.refactor.TaskHandle()
-        self.assertFalse(0, handle.get_percent_done())
 
     def test_job_sets(self):
         handle = rope.refactor.TaskHandle()
@@ -648,6 +652,48 @@ class TaskHandleTest(unittest.TestCase):
         jobs = handle.create_job_set()
         handle.stop()
         jobs.started_job('job1')
+
+    def test_calling_the_observer_after_stopping(self):
+        handle = rope.refactor.TaskHandle()
+        observer = _MockTaskObserver()
+        handle.add_observer(observer)
+        handle.stop()
+        self.assertEquals(1, observer.called)
+
+    def test_calling_the_observer_after_creating_job_sets(self):
+        handle = rope.refactor.TaskHandle()
+        observer = _MockTaskObserver()
+        handle.add_observer(observer)
+        jobs = handle.create_job_set()
+        self.assertEquals(1, observer.called)
+
+    def test_calling_the_observer_when_starting_and_finishing_jobs(self):
+        handle = rope.refactor.TaskHandle()
+        observer = _MockTaskObserver()
+        handle.add_observer(observer)
+        jobs = handle.create_job_set(name='test job set', count=1)
+        jobs.started_job('job1')
+        jobs.finished_job()
+        self.assertEquals(3, observer.called)
+
+    def test_job_set_get_percent_done(self):
+        handle = rope.refactor.TaskHandle()
+        jobs = handle.create_job_set(name='test job set', count=2)
+        self.assertEquals(0, jobs.get_percent_done())
+        jobs.started_job('job1')
+        jobs.finished_job()
+        self.assertEquals(50, jobs.get_percent_done())
+        jobs.started_job('job2')
+        jobs.finished_job()
+        self.assertEquals(100, jobs.get_percent_done())
+
+    def test_getting_job_name(self):
+        handle = rope.refactor.TaskHandle()
+        jobs = handle.create_job_set(name='test job set', count=1)
+        self.assertEquals('test job set', jobs.get_name())
+        self.assertEquals(None, jobs.get_active_job_name())
+        jobs.started_job('job1')
+        self.assertEquals('job1', jobs.get_active_job_name())
 
 
 def suite():

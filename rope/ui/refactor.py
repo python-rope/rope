@@ -1,4 +1,5 @@
 import Tkinter
+import threading
 
 import rope.refactor.change_signature
 import rope.refactor.encapsulate_field
@@ -19,7 +20,7 @@ from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView,
                                DescriptionList, EnhancedListHandle,
-                               VolatileList, EnhancedList)
+                               VolatileList, EnhancedList, ProgressBar)
 
 
 class PreviewAndCommitChanges(object):
@@ -98,6 +99,74 @@ class RefactoringDialog(object):
     def _cancel(self, event=None):
         self.toplevel.destroy()
 
+    def _get_changes(self):
+        runner = StoppableTaskRunner(self._calculate_changes, self.title)
+        return runner()
+
+
+class StoppableTaskRunner(object):
+
+    def __init__(self, task, title='Task'):
+        """Task is a function that takes a `TaskHandle`"""
+        self.task = task
+        self.title = title
+
+    def __call__(self):
+        handle = rope.refactor.TaskHandle(self.title)
+        toplevel = Tkinter.Toplevel()
+        toplevel.title('Performing Task ' + self.title)
+        frame = Tkinter.Frame(toplevel)
+        progress = ProgressBar(frame)
+        def update_progress():
+            job_sets = handle.get_job_sets()
+            if job_sets:
+                job_set = job_sets[0]
+                text = ''
+                if job_set.get_name() is not None:
+                    text += job_set.get_name()
+                if job_set.get_active_job_name() is not None:
+                    text += ' : ' + job_set.get_active_job_name()
+                progress.set_text(text)
+                percent = job_set.get_percent_done()
+                if percent is not None:
+                    progress.set_done_percent(percent)
+        handle.add_observer(update_progress)
+        class Calculate(object):
+
+            def __init__(self, task):
+                self.task = task
+                self.result = None
+                self.interrupted = False
+
+            def __call__(self):
+                try:
+                    try:
+                        self.result = self.task(handle)
+                    except exceptions.InterruptedTaskError:
+                        self.interrupted = True
+                finally:
+                    toplevel.quit()
+        
+        calculate = Calculate(self.task)
+        def stop(event=None):
+            handle.stop()
+        frame.grid(row=0)
+        stop_button = Tkinter.Button(toplevel, text='Stop', command=stop)
+        toplevel.bind('<Control-g>', stop)
+        toplevel.bind('<Escape>', stop)
+        stop_button.grid(row=1)
+
+        thread = threading.Thread(target=calculate)
+        thread.start()
+        toplevel.focus_set()
+        toplevel.grab_set()
+        toplevel.mainloop()
+        toplevel.destroy()
+        if calculate.interrupted:
+            raise exceptions.InterruptedTaskError(
+                'Task <%s> was interrupted' % self.title)
+        return calculate.result
+
 
 class RenameDialog(RefactoringDialog):
 
@@ -112,11 +181,12 @@ class RenameDialog(RefactoringDialog):
         self.renamer = rope.refactor.rename.Rename(
             context.project, resource, offset)
 
-    def _get_changes(self):
+    def _calculate_changes(self, handle=None):
         new_name = self.new_name_entry.get()
-        return self.renamer.get_changes(new_name, in_file=self.is_local,
-                                        in_hierarchy=self.in_hierarchy.get(),
-                                        unsure=self.unsure.get())
+        return self.renamer.get_changes(
+            new_name, in_file=self.is_local,
+            in_hierarchy=self.in_hierarchy.get(),
+            unsure=self.unsure.get(), task_handle=handle)
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)

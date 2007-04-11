@@ -223,9 +223,6 @@ for stopping and showing the progress of a time consuming task::
       def get_job_sets(self):
           pass
 
-      def get_percent_done(self):
-          pass
-
       def add_observer(self):
           pass
 
@@ -238,6 +235,9 @@ for stopping and showing the progress of a time consuming task::
 
       def finished_job(self):
           """Raises `TaskInterruptedError` if this task was interrupted"""
+
+      def get_percent_done(self):
+          pass
 
 
 It requires adding an argument to all refactorings and other time
