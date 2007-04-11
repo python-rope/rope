@@ -8,7 +8,7 @@ from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    SourceLinesAdapter, BadIdentifierError)
 from rope.base.exceptions import RopeError
 from rope.ide import pydoc
-from rope.refactor import occurrences, functionutils
+from rope.refactor import occurrences, functionutils, taskhandle
 
 
 class RopeSyntaxError(RopeError):
@@ -391,16 +391,21 @@ class PythonCodeAssist(object):
         pyobject = element.get_object()
         return pydoc.get_doc(pyobject)
 
-    def find_occurrences(self, resource, offset):
+    def find_occurrences(self, resource, offset, unsure=False,
+                         task_handle=taskhandle.NullTaskHandle()):
         name = rope.base.codeanalyze.get_name_at(resource, offset)
         pyname = rope.base.codeanalyze.get_pyname_at(self.project.get_pycore(),
                                                      resource, offset)
         finder = occurrences.FilteredFinder(
-            self.project.get_pycore(), name, [pyname])
+            self.project.get_pycore(), name, [pyname], unsure=unsure)
+        files = self.project.get_pycore().get_python_files()
+        job_set = task_handle.create_job_set('Finding Occurrences', count=len(files))
         result = []
-        for resource in self.project.get_pycore().get_python_files():
+        for resource in files:
+            job_set.started_job('Working On <%s>' % resource.path)
             for occurrence in finder.find_occurrences(resource):
                 result.append((resource, occurrence.get_word_range()[0]))
+            job_set.finished_job()
         return result
 
 

@@ -40,6 +40,11 @@ a refactoring.  These are the things an IDE does in each step:
    by it.
 4. perform the refactoring.
 
+In ``0.5m5`` release the `get_changes()` method of some time
+consuming refactorings take an optional `rope.refactor.taskhandle.
+TaskHandle` parameter.  You can use this object for stopping or
+monitoring the progress of refactorings.
+
 """
 import rope.refactor.importutils
 from rope.base import exceptions
@@ -120,82 +125,3 @@ class ImportOrganizer(object):
     def handle_long_imports(self, resource):
         return self._perform_command_on_import_tools(
             self.import_tools.handle_long_imports, resource)
-
-
-class TaskHandle(object):
-
-    def __init__(self, name='Task'):
-        self.name = name
-        self.stopped = False
-        self.job_sets = []
-        self.observers = []
-
-    def is_stopped(self):
-        return self.stopped
-
-    def stop(self):
-        self.stopped = True
-        self._inform_observers()
-
-    def create_job_set(self, name='JobSet', count=None):
-        result = JobSet(self, name=name, count=count)
-        self.job_sets.append(result)
-        self._inform_observers()
-        return result
-
-    def get_job_sets(self):
-        return self.job_sets
-
-    def add_observer(self, observer):
-        self.observers.append(observer)
-
-    def _inform_observers(self):
-        for observer in list(self.observers):
-            observer()
-
-
-class JobSet(object):
-
-    def __init__(self, handle, name, count):
-        self.handle = handle
-        self.name = name
-        self.count = count
-        self.done = 0
-        self.job_name = None
-
-    def started_job(self, name):
-        self.check_status()
-        self.job_name = name
-        self.handle._inform_observers()
-
-    def finished_job(self):
-        self.handle._inform_observers()
-        self.job_name = None
-        self.done += 1
-
-    def check_status(self):
-        if self.handle.is_stopped():
-            raise exceptions.InterruptedTaskError()
-
-    def get_active_job_name(self):
-        return self.job_name
-
-    def get_percent_done(self):
-        if self.count is not None:
-            percent = self.done * 100 / self.count
-            return min(percent, 100)
-
-    def get_name(self):
-        return self.name
-
-
-class NullJobSet(object):
-
-    def started_job(self, name):
-        pass
-
-    def finished_job(self):
-        pass
-
-    def check_status(self):
-        pass

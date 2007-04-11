@@ -143,6 +143,3 @@ Stories
 
 
 * Inferring the object list comprehensions or generator expressions hold
-
-
-* Stoppable refactorings

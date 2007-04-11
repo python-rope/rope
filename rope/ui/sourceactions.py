@@ -7,7 +7,7 @@ import rope.ui.testview
 from rope.base import codeanalyze
 from rope.ide import formatter, notes, generate
 from rope.ui import spelldialog, registers
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved
+from rope.ui.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
@@ -245,16 +245,20 @@ class _OccurrenceListHandle(EnhancedListHandle):
 
 
 def find_occurrences(context):
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Code Assist Proposals')
     resource = context.resource
     offset = context.editor.get_current_offset()
-    result = context.editingtools.codeassist.find_occurrences(resource, offset)
+    def calculate(handle):
+        return context.editingtools.codeassist.find_occurrences(
+            resource, offset, task_handle=handle)
+    result = StoppableTaskRunner(calculate, title='Finding Occurrences')()
     enhanced_list = None
     def focus_set():
         enhanced_list.list.focus_set()
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Code Assist Proposals')
     enhanced_list = EnhancedList(
-        toplevel, _OccurrenceListHandle(toplevel, context.get_core(), focus_set),
+        toplevel, _OccurrenceListHandle(toplevel, context.get_core(),
+                                        focus_set),
         title='Occurrences')
     for occurrence in result:
         enhanced_list.add_entry(occurrence)

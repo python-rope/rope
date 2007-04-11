@@ -3,7 +3,8 @@ import copy
 import rope.base.exceptions
 from rope.base import pyobjects, codeanalyze
 from rope.base.change import ChangeContents, ChangeSet
-from rope.refactor import occurrences, sourceutils, functionutils, rename
+from rope.refactor import (occurrences, sourceutils, functionutils,
+                           rename, taskhandle)
 
 
 class ChangeSignature(object):
@@ -38,8 +39,11 @@ class ChangeSignature(object):
             self.others = (pyclass.get_name(),
                            pyclass.parent.get_attribute(pyclass.get_name()))
 
-    def _change_calls(self, call_changer, in_hierarchy=False):
+    def _change_calls(self, call_changer, in_hierarchy=False,
+                      handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Changing signature of <%s>' % self.name)
+        job_set = handle.create_job_set('Collecting Changes',
+                                        len(self.pycore.get_python_files()))
         pynames = rename.FindMatchingPyNames(
             self.primary, self.pyname, self.name, False,
             in_hierarchy and self.is_method()).get_all()
@@ -51,11 +55,13 @@ class ChangeSignature(object):
             finder = occurrences.MultipleFinders(
                 [finder, constructor_finder])
         for file in self.pycore.get_python_files():
+            job_set.started_job('Working on <%s>' % file.path)
             change_calls = _ChangeCallsInModule(
                 self.pycore, finder, file, call_changer)
             changed_file = change_calls.get_changed_module()
             if changed_file is not None:
                 changes.add_change(ChangeContents(file, changed_file))
+            job_set.finished_job()
         return changes
 
     def is_method(self):
@@ -66,34 +72,40 @@ class ChangeSignature(object):
         return functionutils.DefinitionInfo.read(self.pyname.get_object())
 
     def normalize(self):
-        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
-                                    [ArgumentNormalizer()])
+        changer = _FunctionChangers(
+            self.pyname.get_object(), self.get_definition_info(),
+            [ArgumentNormalizer()])
         return self._change_calls(changer)
 
     def remove(self, index):
-        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
-                                    [ArgumentRemover(index)])
+        changer = _FunctionChangers(
+            self.pyname.get_object(), self.get_definition_info(),
+            [ArgumentRemover(index)])
         return self._change_calls(changer)
 
     def add(self, index, name, default=None, value=None):
-        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
-                                    [ArgumentAdder(index, name, default, value)])
+        changer = _FunctionChangers(
+            self.pyname.get_object(), self.get_definition_info(),
+            [ArgumentAdder(index, name, default, value)])
         return self._change_calls(changer)
 
     def inline_default(self, index):
-        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
-                                    [ArgumentDefaultInliner(index)])
+        changer = _FunctionChangers(
+            self.pyname.get_object(), self.get_definition_info(),
+            [ArgumentDefaultInliner(index)])
         return self._change_calls(changer)
 
     def reorder(self, new_ordering):
-        changer = _FunctionChangers(self.pyname.get_object(), self.get_definition_info(),
-                                    [ArgumentReorderer(new_ordering)])
+        changer = _FunctionChangers(
+            self.pyname.get_object(), self.get_definition_info(),
+            [ArgumentReorderer(new_ordering)])
         return self._change_calls(changer)
 
-    def apply_changers(self, changers, in_hierarchy=False):
+    def apply_changers(self, changers, in_hierarchy=False,
+                       task_handle=taskhandle.NullTaskHandle()):
         function_changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(), changers)
-        return self._change_calls(function_changer, in_hierarchy)
+        return self._change_calls(function_changer, in_hierarchy, task_handle)
 
 
 class _FunctionChangers(object):

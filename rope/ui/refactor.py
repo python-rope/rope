@@ -1,5 +1,4 @@
 import Tkinter
-import threading
 
 import rope.refactor.change_signature
 import rope.refactor.encapsulate_field
@@ -15,12 +14,12 @@ import rope.refactor.rename
 import rope.ui.core
 from rope.base import exceptions
 from rope.refactor import ImportOrganizer
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved
+from rope.ui.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView,
                                DescriptionList, EnhancedListHandle,
-                               VolatileList, EnhancedList, ProgressBar)
+                               VolatileList, EnhancedList)
 
 
 class PreviewAndCommitChanges(object):
@@ -59,6 +58,13 @@ class PreviewAndCommitChanges(object):
 
 
 class RefactoringDialog(object):
+    """Base class for refactoring dialogs
+
+    Each subclass should implement either `_get_changes` or
+    `_calculate_changes` based on whether the refactoring
+    supports TaskHandles or not.
+
+    """
 
     def __init__(self, context, title):
         self.core = context.core
@@ -102,70 +108,6 @@ class RefactoringDialog(object):
     def _get_changes(self):
         runner = StoppableTaskRunner(self._calculate_changes, self.title)
         return runner()
-
-
-class StoppableTaskRunner(object):
-
-    def __init__(self, task, title='Task'):
-        """Task is a function that takes a `TaskHandle`"""
-        self.task = task
-        self.title = title
-
-    def __call__(self):
-        handle = rope.refactor.TaskHandle(self.title)
-        toplevel = Tkinter.Toplevel()
-        toplevel.title('Performing Task ' + self.title)
-        frame = Tkinter.Frame(toplevel)
-        progress = ProgressBar(frame)
-        def update_progress():
-            job_sets = handle.get_job_sets()
-            if job_sets:
-                job_set = job_sets[0]
-                text = ''
-                if job_set.get_name() is not None:
-                    text += job_set.get_name()
-                if job_set.get_active_job_name() is not None:
-                    text += ' : ' + job_set.get_active_job_name()
-                progress.set_text(text)
-                percent = job_set.get_percent_done()
-                if percent is not None:
-                    progress.set_done_percent(percent)
-        handle.add_observer(update_progress)
-        class Calculate(object):
-
-            def __init__(self, task):
-                self.task = task
-                self.result = None
-                self.interrupted = False
-
-            def __call__(self):
-                try:
-                    try:
-                        self.result = self.task(handle)
-                    except exceptions.InterruptedTaskError:
-                        self.interrupted = True
-                finally:
-                    toplevel.quit()
-        
-        calculate = Calculate(self.task)
-        def stop(event=None):
-            handle.stop()
-        frame.grid(row=0)
-        stop_button = Tkinter.Button(toplevel, text='Stop', command=stop)
-        toplevel.bind('<Control-g>', stop)
-        toplevel.bind('<Escape>', stop)
-        stop_button.grid(row=1)
-
-        thread = threading.Thread(target=calculate)
-        thread.start()
-        toplevel.focus_set()
-        toplevel.grab_set()
-        toplevel.mainloop()
-        toplevel.destroy()
-        if calculate.interrupted:
-            raise exceptions.InterruptedTaskError(
-                'Task <%s> was interrupted' % self.title)
-        return calculate.result
 
 
 class RenameDialog(RefactoringDialog):
@@ -289,9 +231,10 @@ class IntroduceFactoryDialog(RefactoringDialog):
         self.introducer = rope.refactor.introduce_factory.IntroduceFactoryRefactoring(
             context.project, resource, editor.get_current_offset())
 
-    def _get_changes(self):
+    def _calculate_changes(self, handle):
         return self.introducer.get_changes(
-            self.new_name_entry.get(), global_factory=self.global_factory_val.get())
+            self.new_name_entry.get(),
+            global_factory=self.global_factory_val.get(), task_handle=handle)
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
@@ -368,15 +311,17 @@ class MoveDialog(RefactoringDialog):
         self.mover = rope.refactor.move.create_move(
             context.project, resource, offset)
 
-    def _get_changes(self):
+    def _calculate_changes(self, handle):
         destination = None
         if isinstance(self.mover, rope.refactor.move.MoveMethod):
             destination = self.destination_entry.get()
             new_method = self.new_method_entry.get()
-            return self.mover.get_changes(destination, new_method)
+            return self.mover.get_changes(destination, new_method,
+                                          task_handle=handle)
         else:
-            destination = self.project.get_pycore().find_module(self.destination_entry.get())
-            return self.mover.get_changes(destination)
+            destination = self.project.get_pycore().\
+                          find_module(self.destination_entry.get())
+            return self.mover.get_changes(destination, task_handle=handle)
 
     def _get_dialog_frame(self):
         if isinstance(self.mover, rope.refactor.move.MoveMethod):
@@ -486,7 +431,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         self.definition_info = self.signature.get_definition_info()
         self.to_be_removed = []
 
-    def _get_changes(self):
+    def _calculate_changes(self, handle):
         changers = []
         parameters = self.param_list.get_entries()
         definition_info = self.definition_info
@@ -506,7 +451,8 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         new_ordering = [_get_parameter_index(definition_info, param.name)
                         for param in parameters if not param.name.startswith('*')]
         changers.append(rope.refactor.change_signature.ArgumentReorderer(new_ordering))
-        return self.signature.apply_changers(changers, in_hierarchy=self.in_hierarchy.get())
+        return self.signature.apply_changers(
+            changers, in_hierarchy=self.in_hierarchy.get(), task_handle=handle)
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
@@ -695,9 +641,11 @@ def inline(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        changes = rope.refactor.inline.Inline(
-            context.project, resource,
-            editor.get_current_offset()).get_changes()
+        def calculate(handle):
+            return rope.refactor.inline.Inline(
+                context.project, resource,
+                editor.get_current_offset()).get_changes(task_handle=handle)
+        changes = StoppableTaskRunner(calculate, 'Inlining')()
         context.project.do(changes)
 
 

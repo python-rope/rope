@@ -35,6 +35,7 @@ Features implemented so far:
   * Replace method with method object
   * Inline argument default value
   * Previewing refactorings
+  * Stopping refactorings
   * Undo/redo refactorings
 
 * Code-assists

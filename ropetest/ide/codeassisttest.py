@@ -740,6 +740,14 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertEquals(2, len(result))
         self.assertTrue((mod1, 0) in result and (mod2, mod2.read().index('a_var')) in result)
 
+    def test_finding_occurrences_matching_when_unsure(self):
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1.write('class C(object):\n    def a_func(self):\n        pass\n'
+                   'def f(arg):\n    arg.a_func()\n')
+        result = self.assist.find_occurrences(
+            mod1, mod1.read().index('a_func'), unsure=True)
+        self.assertEquals(2, len(result))
+
 
 class TemplateTest(unittest.TestCase):
 

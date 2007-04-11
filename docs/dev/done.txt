@@ -3,6 +3,9 @@
 ===========
 
 
+- Stoppable refactorings : April 11, 2007
+
+
 - Faster automatic SOI analysis : April 9, 2007
 
 

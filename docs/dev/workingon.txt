@@ -1,14 +1,19 @@
 Stoppable Refactorings
 ======================
 
-- Adding a ProgressBar
-- Using ProgressBar in unit-test view
-- Adding `StoppableTaskRunner`
-- Stoppable rename refactoring
+- Adding `rope.refactor.taskhandle` module
+- Stopping time consuming tasks
 
-* Using in refactorings: move, inline, change signature,
-  introduce_factory, rename/move current module, find occurrences
-* Document refactorings and task handles
+  - find occurrences
+  - move
+  - inline
+  - change signature
+  - introduce factory
+
+- Document task handles in `rope.refactor`
+
+* Codeassist on function header with pydocs!
+* Caching `Project.get_all_files()`, `PyCore.get_source_folders()`
 
 * Validating callinfo
 * Codeassist only shows saved data

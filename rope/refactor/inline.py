@@ -4,7 +4,7 @@ import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import pynames, pyobjects, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import occurrences, rename, sourceutils
+from rope.refactor import occurrences, rename, sourceutils, taskhandle
 
 
 class Inline(object):
@@ -27,8 +27,8 @@ class Inline(object):
                 'Inline refactoring should be performed on a method/local variable.')
         self.performer.check_exceptional_conditions()
 
-    def get_changes(self):
-        return self.performer.get_changes()
+    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
+        return self.performer.get_changes(task_handle)
 
     def _is_variable(self):
         return isinstance(self.pyname, pynames.AssignedName)
@@ -48,7 +48,7 @@ class _Inliner(object):
         pass
 
     def get_changes(self):
-        pass
+        raise NotImplementedError()
 
 
 class _MethodInliner(_Inliner):
@@ -75,10 +75,14 @@ class _MethodInliner(_Inliner):
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
 
-    def get_changes(self):
+    def get_changes(self, task_handle):
         changes = ChangeSet('Inline method <%s>' % self.name)
+        job_set = task_handle.create_job_set(
+            'Collecting Changes', len(self.pycore.get_python_files()))
+        job_set.started_job('Changing defining file')
         self._change_defining_file(changes)
-        self._change_other_files(changes)
+        job_set.finished_job()
+        self._change_other_files(changes, job_set)
         return changes
 
     def _get_removed_range(self):
@@ -125,16 +129,18 @@ class _MethodInliner(_Inliner):
             return True
         return False
 
-    def _change_other_files(self, changes):
+    def _change_other_files(self, changes, job_set):
         for file in self.pycore.get_python_files():
             if file == self.resource:
                 continue
+            job_set.started_job('Working on <%s>' % file.path)
             handle = _InlineFunctionCallsForModuleHandle(
                 self.pycore, file, self.definition_generator)
             result = ModuleSkipRenamer(
                 self.occurrence_finder, file, handle).get_changed_module()
             if result is not None:
                 changes.add_change(ChangeContents(file, result))
+            job_set.finished_job()
 
 
 class _VariableInliner(_Inliner):
@@ -149,7 +155,7 @@ class _VariableInliner(_Inliner):
             raise rope.base.exceptions.RefactoringError(
                 'Local variable should be assigned once for inlining.')
 
-    def get_changes(self):
+    def get_changes(self, task_handle):
         source = self._get_changed_module()
         changes = ChangeSet('Inline variable <%s>' % self.name)
         changes.add_change(ChangeContents(self.resource, source))

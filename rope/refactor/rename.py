@@ -1,7 +1,7 @@
 import rope.refactor
 from rope.base import exceptions, codeanalyze, pyobjects, pynames
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
-from rope.refactor import occurrences, sourceutils
+from rope.refactor import occurrences, sourceutils, taskhandle
 
 
 class Rename(object):
@@ -40,7 +40,7 @@ class Rename(object):
         return self.old_name
 
     def get_changes(self, new_name, in_file=False, in_hierarchy=False,
-                    unsure=False, task_handle=None):
+                    unsure=False, task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed for this refactoring
 
         :parameters:
@@ -63,7 +63,7 @@ class Rename(object):
                             (self.old_name, new_name))
         finder = occurrences.FilteredFinder(self.pycore, self.old_name,
                                             old_pynames, unsure=unsure)
-        job_set = self._create_job_set(task_handle, len(files))
+        job_set = task_handle.create_job_set('Collecting Changes', len(files))
         for file_ in files:
             job_set.started_job('Working on <%s>' % file_.path)
             new_content = rename_in_module(finder, new_name, resource=file_)

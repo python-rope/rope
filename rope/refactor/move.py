@@ -6,8 +6,8 @@ based on inputs.
 """
 from rope.base import pyobjects, codeanalyze, exceptions, pynames
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
-from rope.refactor import (importutils, rename, occurrences,
-                           sourceutils, functionutils, inline)
+from rope.refactor import (importutils, rename, occurrences, sourceutils,
+                           functionutils, inline, taskhandle)
 
 
 def create_move(project, resource, offset=None):
@@ -52,7 +52,8 @@ class MoveMethod(object):
         self.method_name = codeanalyze.get_name_at(resource, offset)
         self.pyfunction = pyname.get_object()
 
-    def get_changes(self, dest_attr, new_name):
+    def get_changes(self, dest_attr, new_name,
+                    task_handle=taskhandle.NullTaskHandle()):
         """Return the changes needed for this refactoring
 
         :parameters:
@@ -226,7 +227,7 @@ class _Mover(object):
         else:
             return self.pycore.get_string_module(source, pymodule.get_resource()), True
 
-    def get_changes(self, dest):
+    def get_changes(self, dest, task_handle=None):
         raise NotImplementedError()
 
 
@@ -256,7 +257,7 @@ class MoveGlobal(_Mover):
     def _is_global(self, pyobject):
         return pyobject.get_scope().parent == pyobject.get_module().get_scope()
 
-    def get_changes(self, dest):
+    def get_changes(self, dest, task_handle=taskhandle.NullTaskHandle()):
         if dest.is_folder() and dest.has_child('__init__.py'):
             dest = dest.get_child('__init__.py')
         if dest.is_folder():
@@ -266,9 +267,13 @@ class MoveGlobal(_Mover):
             raise exceptions.RefactoringError(
                 'Moving global elements to the same module.')
         changes = ChangeSet('Moving global <%s>' % self.old_name)
+        job_set = task_handle.create_job_set(
+            'Collecting Changes', len(self.pycore.get_python_files()) - 1)
+        job_set.started_job('Changing goal and destination modules')
         self._change_destination_module(changes, dest)
         self._change_source_module(changes, dest)
-        self._change_other_modules(changes, dest)
+        job_set.finished_job()
+        self._change_other_modules(changes, dest, job_set)
         return changes
 
     def _new_name(self, dest):
@@ -371,10 +376,11 @@ class MoveGlobal(_Mover):
         module_with_imports = self.import_tools.get_module_imports(pymodule)
         return module_with_imports.get_used_imports(self.old_pyname.get_object())
 
-    def _change_other_modules(self, changes, dest):
+    def _change_other_modules(self, changes, dest, job_set):
         for file_ in self.pycore.get_python_files():
             if file_ in (self.source, dest):
                 continue
+            job_set.started_job('Working on <%s>' % file_.path)
             is_changed = False
             should_import = False
             pymodule = self.pycore.resource_to_pyobject(file_)
@@ -394,6 +400,7 @@ class MoveGlobal(_Mover):
                                                 [self._new_import(dest)])
             if is_changed:
                 changes.add_change(ChangeContents(file_, source))
+            job_set.finished_job()
 
     def _add_imports_to_module2(self, pymodule, new_imports):
         source = _add_imports_to_module(self.import_tools, pymodule,
@@ -421,14 +428,18 @@ class MoveModule(_Mover):
             old_name = source.name[:-3]
         super(MoveModule, self).__init__(pycore, source, pyname, old_name)
 
-    def get_changes(self, dest):
+    def get_changes(self, dest, task_handle=taskhandle.NullTaskHandle()):
         moving_pyobject = self.old_pyname.get_object()
         if not dest.is_folder():
             raise exceptions.RefactoringError(
                 'Move destination for modules should be packages.')
         changes = ChangeSet('Moving module <%s>' % self.old_name)
-        self._change_other_modules(changes, dest)
+        job_set = task_handle.create_job_set(
+            'Collecting Changes', len(self.pycore.get_python_files()) - 1)
+        self._change_other_modules(changes, dest, job_set)
+        job_set.started_job('Moving main module')
         self._change_moving_module(changes, dest)
+        job_set.finished_job()
         return changes
 
     def _new_import(self, dest):
@@ -460,15 +471,17 @@ class MoveModule(_Mover):
                 changes.add_change(ChangeContents(self.source, source))
         changes.add_change(MoveResource(self.source, dest.path))
 
-    def _change_other_modules(self, changes, dest):
+    def _change_other_modules(self, changes, dest, job_set):
         for module in self.pycore.get_python_files():
             if module in (self.source, dest):
                 continue
+            job_set.started_job('Working On <%s>' % module.path)
             pymodule = self.pycore.resource_to_pyobject(module)
             source = self._change_occurrences_in_module(
                 pymodule, self._new_import(dest), self._new_name(dest))
             if source is not None:
                 changes.add_change(ChangeContents(module, source))
+            job_set.finished_job()
 
     def _change_occurrences_in_module(self, pymodule, new_import, new_name):
         is_changed = False
