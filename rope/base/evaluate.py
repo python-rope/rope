@@ -1,8 +1,8 @@
 import compiler
 
-import rope.base.exceptions
-import rope.base.pyobjects
 import rope.base.pynames
+import rope.base.pyobjects
+from rope.base import exceptions
 
 
 class StatementEvaluator(object):
@@ -23,7 +23,7 @@ class StatementEvaluator(object):
         if pyname.get_object() != rope.base.pyobjects.get_unknown():
             try:
                 self.result = pyname.get_object().get_attribute(node.attrname)
-            except rope.base.exceptions.AttributeNotFoundError:
+            except exceptions.AttributeNotFoundError:
                 self.result = None
 
     def visitCallFunc(self, node):

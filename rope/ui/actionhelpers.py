@@ -62,8 +62,8 @@ class StoppableTaskRunner(object):
 
         thread = threading.Thread(target=calculate)
         thread.start()
-        toplevel.focus_set()
         toplevel.grab_set()
+        stop_button.focus_set()
         toplevel.mainloop()
         toplevel.destroy()
         if calculate.interrupted:

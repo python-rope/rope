@@ -23,8 +23,9 @@ class ObjectInfoManager(object):
 
     def _init_validation(self):
         self.objectdb.validate_files()
-        observer = rope.base.project.ResourceObserver(self._resource_changed,
-                                                      self._resource_removed)
+        observer = rope.base.project.ResourceObserver(
+            changed=self._resource_changed, moved=self._resource_moved,
+            removed=self._resource_moved)
         files = []
         for path in self.objectdb.get_files():
             resource = self.to_pyobject.file_to_resource(path)
@@ -41,7 +42,7 @@ class ObjectInfoManager(object):
         except SyntaxError:
             pass
 
-    def _resource_removed(self, resource, new_resource=None):
+    def _resource_moved(self, resource, new_resource=None):
         self.observer.remove_resource(resource)
         if new_resource is not None:
             self.objectdb.file_moved(resource.real_path, new_resource.real_path)

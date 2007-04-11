@@ -458,7 +458,7 @@ actions.append(
                  MenuAddress(['File', 'Edit Project config.py'], None, 4),
                  ['all', 'none']))
 actions.append(SimpleAction('validate_project', validate_project, 'C-x p v',
-                            MenuAddress(['File', 'Validate Project Files'], 'v', 4)))
+                            MenuAddress(['File', 'Validate/Refresh Project Files'], 'v', 4)))
 actions.append(SimpleAction('sync_project', sync_project, 'C-x p s',
                             MenuAddress(['File', 'Sync Project To Disk'], None, 4)))
 

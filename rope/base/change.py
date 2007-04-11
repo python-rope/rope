@@ -231,7 +231,7 @@ class _ResourceOperations(object):
                         self.project._get_resource_path(destination))
         new_resource = self.project.get_resource(destination)
         for observer in list(self.project.observers):
-            observer.resource_removed(resource, new_resource)
+            observer.resource_moved(resource, new_resource)
 
     def create(self, resource):
         if resource.is_folder():
@@ -239,7 +239,7 @@ class _ResourceOperations(object):
         else:
             self._create_file(resource.path)
         for observer in list(self.project.observers):
-            observer.resource_changed(resource)
+            observer.resource_created(resource)
 
     def remove(self, resource):
         fscommands = self._get_fscommands(resource)

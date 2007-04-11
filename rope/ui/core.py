@@ -383,7 +383,8 @@ class Core(object):
         toplevel.bind('<Escape>', lambda event: ok())
         toplevel.bind('<Return>', lambda event: ok())
         ok_button.grid(row=1)
-        toplevel.focus_set()
+        toplevel.grab_set()
+        ok_button.focus_set()
 
     def _editor_changed(self):
         active_editor = self.editor_manager.active_editor

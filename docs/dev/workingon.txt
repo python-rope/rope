@@ -1,19 +1,18 @@
-Stoppable Refactorings
-======================
+Small Stories
+=============
 
-- Adding `rope.refactor.taskhandle` module
-- Stopping time consuming tasks
+- Renaming `ResourceObserver.resource_removed()` to `resource_moved`
+- Reporting resource_created in validate_resource; use mtime
+- Changing parents after creations
+- Multiple calls to validate
+- Reporting resource_created in resource_moved
 
-  - find occurrences
-  - move
-  - inline
-  - change signature
-  - introduce factory
-
-- Document task handles in `rope.refactor`
+* Caching `Project.get_all_files()`
+* `Project.get_files()` does not care about ignored resources
+* Caching `PyCore.get_python_files()`?
+* Caching `PyCore.get_source_folders()`?
 
 * Codeassist on function header with pydocs!
-* Caching `Project.get_all_files()`, `PyCore.get_source_folders()`
 
 * Validating callinfo
 * Codeassist only shows saved data

@@ -29,8 +29,9 @@ class FileEditor(object):
         #    self.editor.getWidget()['state'] = Tkinter.DISABLED
 
     def _register_observers(self):
+        callback = self._file_was_modified
         self.observer = FilteredResourceObserver(
-            ResourceObserver(self._file_was_modified, self._file_was_removed),
+            ResourceObserver(changed=callback, moved=callback, removed=callback),
             [self.file])
         if self.project is not None:
             self.project.add_observer(self.observer)

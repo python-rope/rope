@@ -80,6 +80,37 @@ To Be Discussed
 * Finding available refactorings
 
 
+Better Resource Observing
+=========================
+
+I propose to have separate methods for handling different file
+operations::
+
+  class ResourceObserver(object):
+
+      def resource_changed(self, resource):
+          pass
+
+      def resource_moved(self, source, destination):
+          pass
+
+      def resource_removed(self, resource):
+          pass
+
+      def resource_created(self, resource):
+          pass
+
+
+In one extreme we have to separate every change.  Some observers are
+interested in details and some are not.  Reducing the number of
+messages requires more checks on both interested and uninterested
+observers.
+
+The other problem that we might face is that messages might overlap
+each other.  For example when we move a resource a new resource would
+be created, too;  Should we call `resource_created`?
+
+
 Memory Management
 =================
 
@@ -201,47 +232,6 @@ holding all type information in memory needs a lot of memory.
 
 Saving object data requires having good mechanisms for invalidating
 information and testing.
-
-
-Task `Progress`
-===============
-
-Currently refactorings cannot be stopped.  I propose to add an object
-for stopping and showing the progress of a time consuming task::
-
-  class TaskHandle(object):
-
-      def stop(self):
-          pass
-
-      def is_stopped(self):
-          pass
-
-      def create_job_set(self, name=None, total=None):
-          pass
-
-      def get_job_sets(self):
-          pass
-
-      def add_observer(self):
-          pass
-
-  class JobSet(object):
-
-      def start_job(self, name):
-          if self.current_job is not None:
-              self.finished_job()
-          self.set_job_name(name)
-
-      def finished_job(self):
-          """Raises `TaskInterruptedError` if this task was interrupted"""
-
-      def get_percent_done(self):
-          pass
-
-
-It requires adding an argument to all refactorings and other time
-consuming tasks and changing them to use this object.
 
 
 Better Concluded Data

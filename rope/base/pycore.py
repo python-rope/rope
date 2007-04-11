@@ -16,8 +16,9 @@ class PyCore(object):
         self.project = project
         self.module_map = {}
         self.classes = None
+        callback = self._invalidate_resource_cache
         observer = rope.base.project.ResourceObserver(
-            self._invalidate_resource_cache, self._invalidate_resource_cache)
+            changed=callback, moved=callback, removed=callback)
         self.observer = rope.base.project.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
@@ -26,8 +27,9 @@ class PyCore(object):
             self._init_automatic_soi()
 
     def _init_automatic_soi(self):
-        observer = rope.base.project.ResourceObserver(self._file_changed,
-                                                      self._file_changed)
+        callback = self._file_changed
+        observer = rope.base.project.ResourceObserver(
+            changed=callback, moved=callback, removed=callback)
         self.project.add_observer(observer)
 
     def _file_changed(self, resource, new_resource=None):

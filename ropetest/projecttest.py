@@ -445,7 +445,7 @@ class ResourceObserverTest(unittest.TestCase):
                                                            [sample_file]))
         sample_file.remove()
         self.assertEquals(1, sample_observer.change_count)
-        self.assertEquals((sample_file, None), sample_observer.last_moved)
+        self.assertEquals(sample_file, sample_observer.last_removed)
 
     def test_resource_change_observer2(self):
         sample_file = self.project.root.create_file('my_file.txt')
@@ -490,7 +490,7 @@ class ResourceObserverTest(unittest.TestCase):
                                                            [my_file]))
         os.remove(my_file.real_path)
         self.project.validate(root)
-        self.assertEquals((my_file, None), sample_observer.last_moved)
+        self.assertEquals(my_file, sample_observer.last_removed)
         self.assertEquals(1, sample_observer.change_count)
 
     def test_revalidating_files_and_no_changes2(self):
@@ -512,7 +512,7 @@ class ResourceObserverTest(unittest.TestCase):
                                                            [my_folder]))
         testutils.remove_recursively(my_folder.real_path)
         self.project.validate(root)
-        self.assertEquals((my_folder, None), sample_observer.last_moved)
+        self.assertEquals(my_folder, sample_observer.last_removed)
         self.assertEquals(1, sample_observer.change_count)
 
     def test_removing_and_adding_resources_to_filtered_observer(self):
@@ -587,6 +587,42 @@ class ResourceObserverTest(unittest.TestCase):
         folder2 = self.project.root.create_folder('folder2')
         self.assertFalse(folder1.contains(folder2))
 
+    def test_validating_when_created(self):
+        root = self.project.root
+        my_file = self.project.get_file('my_file.txt')
+        sample_observer = _SampleObserver()
+        self.project.add_observer(
+            FilteredResourceObserver(sample_observer, [my_file]))
+        file(my_file.real_path, 'w').close()
+        self.project.validate(root)
+        self.assertEquals(my_file, sample_observer.last_created)
+        self.assertEquals(1, sample_observer.change_count)
+
+    def test_validating_twice_when_created(self):
+        root = self.project.root
+        my_file = self.project.get_file('my_file.txt')
+        sample_observer = _SampleObserver()
+        self.project.add_observer(
+            FilteredResourceObserver(sample_observer, [my_file]))
+        file(my_file.real_path, 'w').close()
+        self.project.validate(root)
+        self.project.validate(root)
+        self.assertEquals(my_file, sample_observer.last_created)
+        self.assertEquals(1, sample_observer.change_count)
+
+    def test_changes_and_adding_resources(self):
+        root = self.project.root
+        file1 = self.project.get_file('file1.txt')
+        file2 = self.project.get_file('file2.txt')
+        file1.create()
+        sample_observer = _SampleObserver()
+        self.project.add_observer(
+            FilteredResourceObserver(sample_observer, [file1, file2]))
+        file1.move(file2.path)
+        self.assertEquals(2, sample_observer.change_count)
+        self.assertEquals(file2, sample_observer.last_created)
+        self.assertEquals((file1, file2), sample_observer.last_moved)
+
 
 class _MockTimeKeepter(object):
 
@@ -606,13 +642,23 @@ class _SampleObserver(object):
         self.change_count = 0
         self.last_changed = None
         self.last_moved = None
+        self.last_created = None
+        self.last_removed = None
 
     def resource_changed(self, resource):
         self.last_changed = resource
         self.change_count += 1
 
-    def resource_removed(self, resource, new_resource=None):
+    def resource_moved(self, resource, new_resource):
         self.last_moved = (resource, new_resource)
+        self.change_count += 1
+
+    def resource_created(self, resource):
+        self.last_created = resource
+        self.change_count += 1
+
+    def resource_removed(self, resource):
+        self.last_removed = resource
         self.change_count += 1
 
 

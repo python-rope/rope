@@ -250,22 +250,31 @@ class ResourceObserver(object):
 
     """
 
-    def __init__(self, changed, removed):
+    def __init__(self, changed=None, moved=None, created=None, removed=None):
         self.changed = changed
+        self.moved = moved
+        self.created = created
         self.removed = removed
 
     def resource_changed(self, resource):
         """It is called when the resource changes"""
-        self.changed(resource)
+        if self.changed is not None:
+            self.changed(resource)
 
-    def resource_removed(self, resource, new_resource=None):
-        """It is called when a resource no longer exists
+    def resource_moved(self, resource, new_resource):
+        """It is called when a resource is moved"""
+        if self.removed is not None:
+            self.removed(resource, new_resource)
 
-        `new_resource` is the destination if we know it, otherwise it
-        is None.
+    def resource_created(self, resource):
+        """Is called when a new resource is created"""
+        if self.created is not None:
+            self.created(resource)
 
-        """
-        self.removed(resource, new_resource)
+    def resource_removed(self, resource):
+        """Is called when a new resource is removed"""
+        if self.removed is not None:
+            self.removed(resource)
 
     def validate(self, resource):
         """Validate the existence of this resource and its children.
@@ -315,7 +324,10 @@ class FilteredResourceObserver(object):
 
     def add_resource(self, resource):
         """Add a resource to the list of interesting resources"""
-        self.resources[resource] = self.timekeeper.getmtime(resource)
+        if resource.exists():
+            self.resources[resource] = self.timekeeper.getmtime(resource)
+        else:
+            self.resources[resource] = None
 
     def remove_resource(self, resource):
         """Add a resource to the list of interesting resources"""
@@ -333,15 +345,17 @@ class FilteredResourceObserver(object):
         if self._is_parent_changed(changed):
             changes.add_changed(changed.parent)
 
-    def _update_changes_caused_by_removed(self, changes, resource,
-                                          new_resource=None):
+    def _update_changes_caused_by_moved(self, changes, resource,
+                                        new_resource=None):
         if resource in self.resources:
             changes.add_removed(resource, new_resource)
+        if new_resource in self.resources:
+            changes.add_created(new_resource)
         if resource.is_folder():
             for file in list(self.resources):
                 if resource.contains(file):
-                    new_file = self._calculate_new_resource(resource,
-                                                            new_resource, file)
+                    new_file = self._calculate_new_resource(
+                        resource, new_resource, file)
                     changes.add_removed(file, new_file)
         if self._is_parent_changed(resource):
             changes.add_changed(resource.parent)
@@ -352,21 +366,25 @@ class FilteredResourceObserver(object):
     def _is_parent_changed(self, child):
         return child.parent in self.resources
 
-    def resource_removed(self, resource, new_resource=None):
+    def resource_moved(self, resource, new_resource):
         changes = _Changes()
-        self._update_changes_caused_by_removed(changes, resource, new_resource)
+        self._update_changes_caused_by_moved(changes, resource, new_resource)
         self._perform_changes(changes)
 
-    def validate(self, resource):
-        moved = self._search_resource_moves(resource)
-        changed = self._search_resource_changes(resource)
+    def resource_created(self, resource):
         changes = _Changes()
-        for file in moved:
-            if file in self.resources:
-                self._update_changes_caused_by_removed(changes, file)
-        for file in changed:
-            if file in self.resources:
-                self._update_changes_caused_by_changed(changes, file)
+        self._update_changes_caused_by_created(changes, resource)
+        self._perform_changes(changes)
+
+    def _update_changes_caused_by_created(self, changes, resource):
+        if resource in self.resources:
+            changes.add_created(resource)
+        if self._is_parent_changed(resource):
+            changes.add_changed(resource.parent)
+
+    def resource_removed(self, resource):
+        changes = _Changes()
+        self._update_changes_caused_by_moved(changes, resource)
         self._perform_changes(changes)
 
     def _perform_changes(self, changes):
@@ -374,7 +392,41 @@ class FilteredResourceObserver(object):
             self.observer.resource_changed(resource)
             self.resources[resource] = self.timekeeper.getmtime(resource)
         for resource, new_resource in changes.moves.iteritems():
-            self.observer.resource_removed(resource, new_resource)
+            self.resources[resource] = None
+            if new_resource is not None:
+                self.observer.resource_moved(resource, new_resource)
+            else:
+                self.observer.resource_removed(resource)
+        for resource in changes.creations:
+            self.observer.resource_created(resource)
+            self.resources[resource] = self.timekeeper.getmtime(resource)
+
+    def validate(self, resource):
+        moved = self._search_resource_moves(resource)
+        changed = self._search_resource_changes(resource)
+        changes = _Changes()
+        for file in moved:
+            if file in self.resources:
+                self._update_changes_caused_by_moved(changes, file)
+        for file in changed:
+            if file in self.resources:
+                self._update_changes_caused_by_changed(changes, file)
+        for file in self._search_resource_creations(resource):
+            if file in self.resources:
+                changes.add_created(file)
+        self._perform_changes(changes)
+
+    def _search_resource_creations(self, resource):
+        creations = set()
+        if resource in self.resources and resource.exists() and \
+           self.resources[resource] == None:
+            creations.add(resource)
+        if resource.is_folder():
+            for file in self.resources:
+                if file.exists() and resource.contains(file) and \
+                   self.resources[file] == None:
+                    creations.add(file)
+        return creations
 
     def _search_resource_moves(self, resource):
         all_moved = set()
@@ -405,6 +457,8 @@ class FilteredResourceObserver(object):
         return changed
 
     def _is_changed(self, resource):
+        if self.resources[resource] is None:
+            return False
         return self.resources[resource] != self.timekeeper.getmtime(resource)
 
     def _calculate_new_resource(self, main, new_main, resource):
@@ -425,6 +479,7 @@ class _Changes(object):
 
     def __init__(self):
         self.changes = set()
+        self.creations = set()
         self.moves = {}
 
     def add_changed(self, resource):
@@ -433,6 +488,8 @@ class _Changes(object):
     def add_removed(self, resource, new_resource=None):
         self.moves[resource] = new_resource
 
+    def add_created(self, resource):
+        self.creations.add(resource)
 
 class _IgnoredResources(object):
 

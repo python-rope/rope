@@ -67,7 +67,8 @@ class PyObjectToTextual(object):
                 self.transform(pyobject.values))
 
     def Tuple_to_textual(self, pyobject):
-        objects = [self.transform(holding) for holding in pyobject.get_holding_objects()]
+        objects = [self.transform(holding)
+                   for holding in pyobject.get_holding_objects()]
         return tuple(['builtin', 'tuple'] + objects)
 
     def Set_to_textual(self, pyobject):
