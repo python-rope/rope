@@ -411,15 +411,6 @@ Now the problem is, if rope wants to support implicit interfaces, how
 should it find out these interfaces and their members.
 
 
-Not Supporting Implicit Interfaces
-----------------------------------
-
-If we plan not to support implicit interfaces things simplify
-considerably.  Function arguments objects are the common base class
-of encountered arguments and function returned value object is the
-common base class of returned values.
-
-
 Supporting Implicit Interfaces
 ------------------------------
 
@@ -459,38 +450,6 @@ The other issue is what to do for situations like this::
 The problem is we don't know the types of `obj1` and `obj2` exactly
 and we have a list of types that these variables are assigned during
 program execution.  `obj1.f` is not a specific method.
-
-
-Implementation Issues
----------------------
-
-To support implicit interfaces we need to make lots of changes.  First
-of all we know that a function parameter can be anything, so using DOI
-we have a set of objects for each parameter.  So the question that
-comes up here is when do we need parameter objects.
-
-* When refactoring and finding occurrences
-* When code assisting in a function
-
-Also for a rename refactoring we need to check all functions and methods
-for implicit interfaces that are involved.  This does not seem practical.
-Find someway of making it possible.  Maybe we can find
-all of the occurrences of a method and for each check whether it is
-invoked on a parameter or not.  Now that we have a bigger set of
-methods we need to do the same for these methods.  When we're finished
-we can perform the actual refactoring.  The challenge here is that we
-should consider inheritance relations, too.
-
-Among `PyName` classes `AssignedName`, `ParameterName` and
-`ImportedName` might have more than one object.  And I believe
-the main place to change is `StatementEvaluator` that might
-return a list of pynames in ``${attribute_accesses}.name``
-where `attribute_accesses` might result in more than one kind
-of pyname.  This implies that `get_pyname_at` might return a list
-of pynames.
-
-`objectinfer` should be changed to find all of the objects that can
-be inferred.
 
 
 The GUI Mess; Working More on the UI Parts

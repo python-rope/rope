@@ -27,6 +27,11 @@ class TaskHandle(object):
         return self.job_sets
 
     def add_observer(self, observer):
+        """Register an observer for this task handle
+
+        The observer is notified whenever the task is stopped or
+        a job gets finished.
+        """
         self.observers.append(observer)
 
     def _inform_observers(self):
@@ -88,7 +93,6 @@ class NullTaskHandle(object):
 
     def add_observer(self, observer):
         pass
-
 
 
 class NullJobSet(object):

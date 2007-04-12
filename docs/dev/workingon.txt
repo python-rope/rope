@@ -1,13 +1,15 @@
 Small Stories
 =============
 
-- Changing encapsulate field to use `TaskHandle`
-
-* Codeassist on function headers with pydocs!
-
 * Validating callinfo
 * Codeassist only shows saved data
 * ObjectDB after change method signature
+* New modules?:
+
+  * `rope.base.args` or `rope.base.callcontext`:
+    Should hold `Arguments`, `ObjectArguments` and `_CallContext`
+  * `rope.base.observer` or `rope.base.resource_observer`:
+    Should hold `ResourceObserver` and `FilteredResourceObserver`
 
 
 Remaining Small Stories
@@ -27,8 +29,6 @@ Base:
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
 * `__setslice__` for per name information?
-* Moving `Arguments`, `ObjectArguments` and `_CallContext`;
-  `rope.base.args` or `callcontext` module
 * Sorting names in from import list
 * When running `inlinetest` modules we get
   ``Exception exceptions.SystemError: 'error return without exception set'

@@ -34,6 +34,7 @@ Features implemented so far:
   * Convert local variable to field
   * Replace method with method object
   * Inline argument default value
+  * Handling a basic form of implicit interfaces
   * Previewing refactorings
   * Stopping refactorings
   * Undo/redo refactorings
@@ -76,6 +77,7 @@ Features implemented so far:
 
   * A dynamic object inference approach
   * A static object inference approach
+  * Automatic SOI analysis
   * Handling built-in container types
   * Saving object information on disk
   * Basic stored object data validation
