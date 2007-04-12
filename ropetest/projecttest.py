@@ -246,26 +246,26 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals('', root_folder.name)
 
     def test_get_all_files(self):
-        files = self.project.get_files()
+        files = tuple(self.project.get_files())
         self.assertEquals(1, len(files))
         self.assertEquals(self.sample_file, files[0].name)
+
+    def test_get_all_files_after_changing(self):
+        self.assertEquals(1, len(self.project.get_files()))
+        myfile = self.project.root.create_file('myfile.txt')
+        self.assertEquals(2, len(self.project.get_files()))
+        myfile.move('newfile.txt')
+        self.assertEquals(2, len(self.project.get_files()))
+        self.project.get_file('newfile.txt').remove()
+        self.assertEquals(1, len(self.project.get_files()))
 
     def test_multifile_get_all_files(self):
         fileName = 'nestedFile.txt'
         parent = self.project.get_resource(self.sample_folder)
         parent.create_file(fileName)
-        files = self.project.get_files()
+        files = list(self.project.get_files())
         self.assertEquals(2, len(files))
         self.assertTrue(fileName == files[0].name or fileName == files[1].name)
-
-    def test_ignoring_dot_star_folders_in_get_files(self):
-        root = self.project.address
-        dot_test = os.path.join(root, '.test')
-        os.mkdir(dot_test)
-        test_py = os.path.join(dot_test, 'test.py')
-        file(test_py, 'w').close()
-        for x in self.project.get_files():
-            self.assertNotEquals('.test/test.py', x.path)
 
     def test_ignoring_dot_pyc_files_in_get_files(self):
         root = self.project.address
@@ -774,6 +774,20 @@ class RopeFolderTest(unittest.TestCase):
         self.assertTrue(self.project.is_ignored(myfolder))
         myfile = myfolder.create_file('myfile.txt')
         self.assertTrue(self.project.is_ignored(myfile))
+
+    def test_ignored_resources_and_get_files(self):
+        self.project = testutils.sample_project(
+            ignored_resources=['myfile.txt'], ropefolder=None)
+        myfile = self.project.get_file('myfile.txt')
+        self.assertEquals(0, len(self.project.get_files()))
+        myfile.create()
+        self.assertEquals(0, len(self.project.get_files()))
+
+    def test_ignored_resources_and_get_files2(self):
+        self.project = testutils.sample_project(
+            ignored_resources=['myfile.txt'], ropefolder=None)
+        myfile = self.project.root.create_file('myfile.txt')
+        self.assertEquals(0, len(self.project.get_files()))
 
     def test_setting_ignored_resources_patterns(self):
         self.project = testutils.sample_project(ignored_resources=['m?file.*'])

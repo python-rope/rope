@@ -43,7 +43,7 @@ class ShelveObjectDB(object):
     def _get_name_for_path(self, path):
         base_name = os.path.basename(path)
         def to_hex(i):
-            return hex(i).replace('0x', '', 1)
+            return hex(i).replace('0x', '', 1).replace('L', '')
         hashed = to_hex(hash(path))
         if not hashed.startswith('-'):
             hashed = '-' + hashed

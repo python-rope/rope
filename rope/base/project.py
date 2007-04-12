@@ -137,25 +137,17 @@ class Project(_Project):
             fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)
         self.ignored = _IgnoredResources()
+        self.file_list = _FileListCacher(self)
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
         self.prefs['ignored_resources'] = ['*.pyc', '.svn', '*~', '.ropeproject']
         self._init_rope_folder(ropefolder)
         self._init_prefs(prefs)
 
     def get_files(self):
-        return self._get_files_recursively(self.root)
+        return self.file_list.get_files()
 
     def _get_resource_path(self, name):
         return os.path.join(self._address, *name.split('/'))
-
-    def _get_files_recursively(self, folder):
-        result = []
-        for file in folder.get_files():
-            result.append(file)
-        for folder in folder.get_folders():
-            if not folder.name.startswith('.'):
-                result.extend(self._get_files_recursively(folder))
-        return result
 
     def _init_rope_folder(self, ropefolder):
         self._ropefolder = None
@@ -250,11 +242,13 @@ class ResourceObserver(object):
 
     """
 
-    def __init__(self, changed=None, moved=None, created=None, removed=None):
+    def __init__(self, changed=None, moved=None, created=None,
+                 removed=None, validate=None):
         self.changed = changed
         self.moved = moved
         self.created = created
         self.removed = removed
+        self._validate = validate
 
     def resource_changed(self, resource):
         """It is called when the resource changes"""
@@ -263,8 +257,8 @@ class ResourceObserver(object):
 
     def resource_moved(self, resource, new_resource):
         """It is called when a resource is moved"""
-        if self.removed is not None:
-            self.removed(resource, new_resource)
+        if self.moved is not None:
+            self.moved(resource, new_resource)
 
     def resource_created(self, resource):
         """Is called when a new resource is created"""
@@ -284,6 +278,8 @@ class ResourceObserver(object):
         by other processes.
 
         """
+        if self._removed is not None:
+            self._removed(resource)
 
 
 class FilteredResourceObserver(object):
@@ -491,6 +487,7 @@ class _Changes(object):
     def add_created(self, resource):
         self.creations.add(resource)
 
+
 class _IgnoredResources(object):
 
     def __init__(self):
@@ -527,6 +524,64 @@ class _IgnoredResources(object):
         return self._ignored_patterns
 
     ignored_patterns = property(_get_compiled_patterns)
+
+
+class _FileListCacher(object):
+
+    def __init__(self, project):
+        self.project = project
+        self._list = None
+        self.observer = None
+
+    def get_files(self):
+        if self._list is None:
+            if self.observer is None:
+                self._init_observer()
+            self._list = self._get_files_recursively(self.project.root)
+        return self._list
+
+    def _get_files_recursively(self, folder):
+        result = set()
+        for file in folder.get_files():
+            if not self.project.is_ignored(file):
+                result.add(file)
+        for child in folder.get_folders():
+            if not self.project.is_ignored(child):
+                result.update(self._get_files_recursively(child))
+        return result
+
+    def _init_observer(self):
+        if self.observer is None:
+            self.observer = ResourceObserver(
+                self._changed, self._moved, self._created,
+                self._removed, self._validate)
+            self.project.add_observer(self.observer)
+
+    def _changed(self, resource):
+        if resource.is_folder():
+            self._list = None
+
+    def _moved(self, resource, new_resource):
+        if resource.is_folder():
+            self._list = None
+        elif self._list is not None:
+            self._removed(resource)
+            self._created(new_resource)
+
+    def _created(self, resource):
+        if not resource.is_folder() and self._list is not None:
+            if not self.project.is_ignored(resource):
+                self._list.add(resource)
+
+    def _removed(self, resource):
+        if resource.is_folder():
+            self._list = None
+        else:
+            if self._list is not None and resource in self._list:
+                self._list.remove(resource)
+
+    def _validate(self, resource):
+        self._list = None
 
 
 _DEFAULT_CONFIG_PY = '''# The default ``config.py``

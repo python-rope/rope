@@ -80,37 +80,6 @@ To Be Discussed
 * Finding available refactorings
 
 
-Better Resource Observing
-=========================
-
-I propose to have separate methods for handling different file
-operations::
-
-  class ResourceObserver(object):
-
-      def resource_changed(self, resource):
-          pass
-
-      def resource_moved(self, source, destination):
-          pass
-
-      def resource_removed(self, resource):
-          pass
-
-      def resource_created(self, resource):
-          pass
-
-
-In one extreme we have to separate every change.  Some observers are
-interested in details and some are not.  Reducing the number of
-messages requires more checks on both interested and uninterested
-observers.
-
-The other problem that we might face is that messages might overlap
-each other.  For example when we move a resource a new resource would
-be created, too;  Should we call `resource_created`?
-
-
 Memory Management
 =================
 

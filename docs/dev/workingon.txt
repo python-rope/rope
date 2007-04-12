@@ -1,16 +1,9 @@
 Small Stories
 =============
 
-- Renaming `ResourceObserver.resource_removed()` to `resource_moved`
-- Reporting resource_created in validate_resource; use mtime
-- Changing parents after creations
-- Multiple calls to validate
-- Reporting resource_created in resource_moved
-
-* Caching `Project.get_all_files()`
-* `Project.get_files()` does not care about ignored resources
-* Caching `PyCore.get_python_files()`?
-* Caching `PyCore.get_source_folders()`?
+- Caching `Project.get_files()`
+- Using set for caching
+- `Project.get_files()` should ignore ignored resources
 
 * Codeassist on function header with pydocs!
 
@@ -53,7 +46,6 @@ UI and IDE:
 
 * Renaming normal files, folder, modules, and packages in project tree view
 * Spell checking on python source
-* Faster find file in large projects; caching `Project.get_all_files()`
 * Completion in module entries
 * A completing text widget for dialogs; `Completing(name, list, handle)`
 * Goto definition for ``"# comment.\na_var"``

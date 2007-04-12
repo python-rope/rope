@@ -164,9 +164,9 @@ class FindFileHandle(object):
             files = self.last_result
         else:
             if self.all_files is None:
-                self.all_files = self.project.get_files()
+                self.all_files = list(self.project.get_files())
+                self.all_files.sort(cmp=self._compare_files)
             files = self.all_files
-            files.sort(cmp=self._compare_files)
         result = []
         selector = self._create_selector(starting)
         for file_ in files:
