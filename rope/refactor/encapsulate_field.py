@@ -1,7 +1,7 @@
 import rope.base.codeanalyze
 from rope.base import pynames
 from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import sourceutils
+from rope.refactor import sourceutils, taskhandle
 
 
 class EncapsulateField(object):
@@ -27,18 +27,23 @@ class EncapsulateField(object):
                 return True
         return False
 
-    def get_changes(self):
+    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Encapsulate field <%s>' % self.name)
+        job_set = task_handle.create_job_set(
+            'Collecting Changes', len(self.pycore.get_python_files()))
         rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
                                                       [self.pyname])
-
+        job_set.started_job('Working on defining file')
         self._change_holding_module(changes, rename_in_module)
+        job_set.finished_job()
         for file in self.pycore.get_python_files():
             if file == self.resource:
                 continue
+            job_set.started_job('Working on <%s>' % file.path)
             result = rename_in_module.get_changed_module(file)
             if result is not None:
                 changes.add_change(ChangeContents(file, result))
+            job_set.finished_job()
         return changes
 
     def _get_defining_class_scope(self):

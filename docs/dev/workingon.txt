@@ -1,15 +1,12 @@
 Small Stories
 =============
 
-- Caching `Project.get_files()`
-- Using set for caching
-- `Project.get_files()` should ignore ignored resources
+- Changing encapsulate field to use `TaskHandle`
 
-* Codeassist on function header with pydocs!
+* Codeassist on function headers with pydocs!
 
 * Validating callinfo
 * Codeassist only shows saved data
-* Should we default to ``''`` or ``File.read()`` in `History.get_prev_contents()`?
 * ObjectDB after change method signature
 
 

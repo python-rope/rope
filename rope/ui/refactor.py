@@ -654,10 +654,12 @@ def encapsulate_field(context):
         fileeditor = context.get_active_editor()
         resource = fileeditor.get_file()
         editor = fileeditor.get_editor()
-        changes = rope.refactor.encapsulate_field.EncapsulateField(
-            context.project, resource, editor.get_current_offset()).get_changes()
+        def calculate(handle):
+            return rope.refactor.encapsulate_field.EncapsulateField(
+                context.project, resource,
+                editor.get_current_offset()).get_changes(task_handle=handle)
+        changes = StoppableTaskRunner(calculate, 'Encapsulating Field')()
         context.project.do(changes)
-
 
 def convert_local_to_field(context):
     if context.get_active_editor():
