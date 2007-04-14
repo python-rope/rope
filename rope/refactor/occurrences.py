@@ -6,9 +6,10 @@ from rope.base import pynames, pyobjects, codeanalyze
 class OccurrenceFinder(object):
     """For finding textual occurrences of a name"""
 
-    def __init__(self, pycore, name):
+    def __init__(self, pycore, name, docs=False):
         self.pycore = pycore
         self.name = name
+        self.docs = docs
         self.comment_pattern = OccurrenceFinder.any('comment', [r'#[^\n]*'])
         sqstring = r"(\b[rR])?'[^'\\\n]*(\\.[^'\\\n]*)*'?"
         dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
@@ -21,10 +22,42 @@ class OccurrenceFinder(object):
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
         tools = _OccurrenceToolsCreator(self.pycore, resource, pymodule)
-        for match in self.pattern.finditer(tools.source_code):
+        if not self._fast_file_query(tools.source_code):
+            return
+        if self.docs:
+            searcher = self._normal_search
+        else:
+            searcher = self._re_search
+        for matched in searcher(tools.source_code):
+            yield Occurrence(tools, matched + 1)
+
+    def _re_search(self, source):
+        for match in self.pattern.finditer(source):
             for key, value in match.groupdict().items():
                 if value and key == 'occurrence':
-                    yield Occurrence(tools, match.start(key) + 1)
+                    yield match.start(key)
+
+    def _normal_search(self, source):
+        current = 0
+        while True:
+            try:
+                found = source.index(self.name, current)
+                current = found + len(self.name)
+                if (found == 0 or not self._is_id_char(source[found - 1])) and \
+                   (current == len(source) or not self._is_id_char(source[current])):
+                    yield found
+            except ValueError:
+                break
+
+    def _is_id_char(self, c):
+        return c.isalnum() or c == '_'
+
+    def _fast_file_query(self, source):
+        try:
+            source.index(self.name)
+            return True
+        except ValueError:
+            return False
 
     def _get_source(self, resource, pymodule):
         if resource is not None:
@@ -83,14 +116,14 @@ class Occurrence(object):
 class FilteredFinder(object):
 
     def __init__(self, pycore, name, pynames, only_calls=False,
-                 imports=True, unsure=False):
+                 imports=True, unsure=False, docs=False):
         self.pycore = pycore
         self.pynames = pynames
         self.name = name
         self.only_calls = only_calls
         self.imports = imports
         self.unsure = unsure
-        self.occurrence_finder = OccurrenceFinder(pycore, name)
+        self.occurrence_finder = OccurrenceFinder(pycore, name, docs=docs)
 
     def find_occurrences(self, resource=None, pymodule=None):
         for occurrence in self.occurrence_finder.find_occurrences(

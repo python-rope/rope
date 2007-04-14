@@ -1,6 +1,13 @@
 Small Stories
 =============
 
+- Faster occurrence finding; long time for re matching
+- Renaming occurrences in strings and comments
+- Encapsulating field in the defining class
+- Problem finding start of block when there are generator expressions
+  containing for or if at the start of line
+
+* Long rename in hierarchy; it compiles all files; pycore needs refactorings
 * Validating callinfo
 * Codeassist only shows saved data
 * ObjectDB after change method signature

@@ -40,7 +40,8 @@ class Rename(object):
         return self.old_name
 
     def get_changes(self, new_name, in_file=False, in_hierarchy=False,
-                    unsure=False, task_handle=taskhandle.NullTaskHandle()):
+                    unsure=False, docs=False,
+                    task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed for this refactoring
 
         :parameters:
@@ -48,6 +49,9 @@ class Rename(object):
               passed resource.
             - `in_hierarchy`: when renaming a method this keyword forces
               to rename all matching methods in the hierarchy
+            - `docs`: when `True` rename refactoring will rename
+              occurrences in comments and strings where the name is
+              visible.
             - `unsure`: rename occurrence even if unsure.  Do not use it
               unless you know what you're doing.  If `True`, all name
               occurrences except those that we are sure are not what we
@@ -61,8 +65,8 @@ class Rename(object):
         files = self._get_interesting_files(in_file)
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
-        finder = occurrences.FilteredFinder(self.pycore, self.old_name,
-                                            old_pynames, unsure=unsure)
+        finder = occurrences.FilteredFinder(
+            self.pycore, self.old_name, old_pynames, unsure=unsure, docs=docs)
         job_set = task_handle.create_job_set('Collecting Changes', len(files))
         for file_ in files:
             job_set.started_job('Working on <%s>' % file_.path)

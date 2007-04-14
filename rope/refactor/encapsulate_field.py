@@ -47,27 +47,31 @@ class EncapsulateField(object):
         return changes
 
     def _get_defining_class_scope(self):
-        defining_pymodule, defining_line = self.pyname.get_definition_location()
-        defining_scope = defining_pymodule.get_scope().get_inner_scope_for_line(defining_line)
+        defining_scope = self._get_defining_scope()
         if defining_scope.get_kind() == 'Function':
             defining_scope = defining_scope.parent
         return defining_scope
 
+    def _get_defining_scope(self):
+        pymodule, line = self.pyname.get_definition_location()
+        return pymodule.get_scope().get_inner_scope_for_line(line)
+
     def _change_holding_module(self, changes, rename_in_module):
         pymodule = self.pycore.resource_to_pyobject(self.resource)
         class_scope = self._get_defining_class_scope()
-        class_start_line = class_scope.get_start()
-        class_end_line = class_scope.get_end()
-        class_start = pymodule.lines.get_line_start(class_start_line)
-        class_end = pymodule.lines.get_line_end(class_end_line)
-        new_source = rename_in_module.get_changed_module(pymodule=pymodule,
-                                                         skip_start=class_start,
-                                                         skip_end=class_end)
+        defining_object = self._get_defining_scope().pyobject
+        skip_start, skip_end = sourceutils.get_body_region(defining_object)
+        new_source = rename_in_module.get_changed_module(
+            pymodule=pymodule, skip_start=skip_start, skip_end=skip_end)
         if new_source is not None:
             pymodule = self.pycore.get_string_module(new_source, self.resource)
-            class_scope = pymodule.get_scope().get_inner_scope_for_line(class_start_line)
-        getter = 'def get_%s(self):\n    return self.%s' % (self.name, self.name)
-        setter = 'def set_%s(self, value):\n    self.%s = value' % (self.name, self.name)
+            class_scope = pymodule.get_scope().\
+                          get_inner_scope_for_line(class_scope.get_start())
+        indents = sourceutils.get_indent(self.pycore) * ' '
+        getter = 'def get_%s(self):\n%sreturn self.%s' % \
+                 (self.name, indents, self.name)
+        setter = 'def set_%s(self, value):\n%sself.%s = value' % \
+                 (self.name, indents, self.name)
         new_source = sourceutils.add_methods(pymodule, class_scope,
                                              [getter, setter])
         changes.add_change(ChangeContents(pymodule.get_resource(), new_source))

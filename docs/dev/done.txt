@@ -3,6 +3,12 @@
 ===========
 
 
+- Encapsulating field in the defining class : April 13, 2007
+
+
+- Renaming occurrences in strings and comments : April 13, 2007
+
+
 - Stoppable refactorings : April 11, 2007
 
 

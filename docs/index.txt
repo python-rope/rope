@@ -34,7 +34,7 @@ Features implemented so far:
   * Convert local variable to field
   * Replace method with method object
   * Inline argument default value
-  * Handling a basic form of implicit interfaces
+  * Basic implicit interfaces handling
   * Previewing refactorings
   * Stopping refactorings
   * Undo/redo refactorings

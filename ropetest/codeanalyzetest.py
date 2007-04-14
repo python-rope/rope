@@ -391,6 +391,11 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._get_logical_line_finder(code)
         self.assertEquals((1, 2), line_finder.get_logical_line_in(2))
 
+    def test_generator_expressions_and_fors(self):
+        code = 'a_list = (i\n    for i in range(10))\n'
+        line_finder = self._get_logical_line_finder(code)
+        self.assertEquals((1, 2), line_finder.get_logical_line_in(2))
+
     def test_fors_and_block_start(self):
         code = 'l = range(10)\nfor i in l:\n    print i\n'
         self.assertEquals(2, get_block_start(SourceLinesAdapter(code),2 ))

@@ -371,9 +371,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.a_class = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n'
         self.setter_and_getter = '\n    def get_attr(self):\n        return self.attr\n\n' \
                                  '    def set_attr(self, value):\n        self.attr = value\n'
-        self.encapsulated = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n\n' \
-                            '    def get_attr(self):\n        return self.attr\n\n' \
-                            '    def set_attr(self, value):\n        self.attr = value\n'
+        self.encapsulated = self.a_class + self.setter_and_getter
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -483,6 +481,14 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() << 1)\n',
             self.mod1.read())
+
+    def test_changing_occurrences_inside_the_class(self):
+        new_class = self.a_class + '\n    def a_func(self):\n        self.attr = 1\n'
+        self.mod.write(new_class)
+        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        expected = self.a_class + '\n    def a_func(self):\n        self.set_attr(1)\n' + \
+                   self.setter_and_getter
+        self.assertEquals(expected, self.mod.read())
 
 
 class LocalToFieldTest(unittest.TestCase):

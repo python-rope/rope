@@ -21,18 +21,17 @@ class SpellChecker(object):
 
     def check(self):
         lines = self.text.splitlines()
-        try:
-            for line in lines:
-                if self.do_quit:
-                    break
-                for typo in self._check_line(line):
-                    yield typo
-                self.line_offset += len(line) + 1
-                self.line_ignored.clear()
-        finally:
-            if self.save_dict:
-                self.aspell.write_line('#')
-            self.aspell.close()
+        for line in lines:
+            if self.do_quit:
+                break
+            for typo in self._check_line(line):
+                yield typo
+            self.line_offset += len(line) + 1
+            self.line_ignored.clear()
+        # PORT: Removed finally clause for python 2.4
+        if self.save_dict:
+            self.aspell.write_line('#')
+        self.aspell.close()
 
     def _check_line(self, line):
         self.aspell.write_line('^%s' % line)

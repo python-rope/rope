@@ -444,6 +444,27 @@ class RenameRefactoringTest(unittest.TestCase):
             'c1 = C1()\nc1.new_func()\nc2 = C2()\nc2.a_func()\n',
             mod1.read())
 
+    def test_renaming_in_strings_and_comments(self):
+        code = 'a_var = 1\n# a_var\n'
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1.write(code)
+        self._rename(mod1, code.index('a_var'), 'new_var', docs=True)
+        self.assertEquals('new_var = 1\n# new_var\n', mod1.read())
+
+    def test_not_renaming_in_strings_and_comments_where_not_visible(self):
+        code = 'def f():\n    a_var = 1\n# a_var\n'
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1.write(code)
+        self._rename(mod1, code.index('a_var'), 'new_var', docs=True)
+        self.assertEquals('def f():\n    new_var = 1\n# a_var\n', mod1.read())
+
+    def test_not_renaming_all_text_occurrences_in_strings_and_comments(self):
+        code = 'a_var = 1\n# a_vard _a_var\n'
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1.write(code)
+        self._rename(mod1, code.index('a_var'), 'new_var', docs=True)
+        self.assertEquals('new_var = 1\n# a_vard _a_var\n', mod1.read())
+
 
 class ChangeOccurrencesTest(unittest.TestCase):
 

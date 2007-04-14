@@ -240,14 +240,16 @@ class PyCore(object):
         pymodule = self.resource_to_pyobject(resource)
         pymodule._invalidate_concluded_data()
         self.object_infer.soi.analyze_module(pymodule, should_analyze)
-        pymodule._invalidate_concluded_data()
 
     def get_subclasses(self, pyclass):
         if self.classes is None:
             classes = []
             pattern = re.compile(r'^[ \t]*class[ \t]+\w', re.M)
             for resource in self.get_python_files():
-                pyscope = self.resource_to_pyobject(resource).get_scope()
+                try:
+                    pyscope = self.resource_to_pyobject(resource).get_scope()
+                except SyntaxError:
+                    continue
                 source = pyscope.pyobject.source_code
                 for match in pattern.finditer(source):
                     holding_scope = pyscope.get_inner_scope_for_offset(match.start())

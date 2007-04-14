@@ -17,10 +17,15 @@ library.
 New Features
 ============
 
-* Stoppable refactorings
-* Basic implicit interfaces
-* Spell-Checker
-* Automatic SOI analysis
+* `Stoppable refactorings`_
+* `Basic implicit interfaces`_
+* `Spell-Checker`_
+* `Automatic SOI analysis`_
+* `Renaming occurrences in strings and comments`_
+* Faster occurrence finding
+
+Basic Implicit Interfaces
+-------------------------
 
 Implicit interfaces are the interfaces that you don't explicitly
 define; But you expect a group of classes to have some common
@@ -70,15 +75,13 @@ function to `newcount` will result in::
   count_for(B())
 
 
-This also works for change method signature, too.  Note that this
-feature relies on rope's object inference mechanisms to find out the
-parameters that are passed to a function.  Also see the automatic
-SOI analysis added in this release.
+This also works for change method signature.  Note that this feature
+relies on rope's object inference mechanisms to find out the
+parameters that are passed to a function.  Also see the `automatic SOI
+analysis`_ that is added in this release.
 
-Note that rope already supports changing attributes across class
-hierarchies(explicit interfaces) and in this release basic implicit
-interfaces are handled for rename and change method signature
-refactorings.
+Stoppable Refactorings
+----------------------
 
 Another notable new feature is stoppable refactorings.  Some
 refactorings might take a long time to finish (based on the size of
@@ -90,6 +93,9 @@ to monitor or stop these refactoring you can pass a `rope.refactor.
 taskhandle.TaskHandle` to this method.  See `rope.refactor.taskhandle`
 module for more information.
 
+Automatic SOI Analysis
+----------------------
+
 Maybe the most important internal feature added in this release is
 automatic static object inference analysis.  When turned on, it
 analyzes the changed scopes of a file when saving for obtaining object
@@ -98,6 +104,37 @@ consuming.  This feature is by default turned on, but you can turn it
 off by editing your project ``config.py`` file (available in
 ``${your_project_root}/.ropeproject/config.py``, if you're new to
 rope), though that is not recommended.
+
+Renaming Occurrences In Strings And Comments
+--------------------------------------------
+
+You can tell rope to rename all occurrences of a name in comments and
+strings.  This can be done in the rename dialog by selecting its radio
+button or by passing ``docs=True`` to `Rename.get_changes()` method
+when using rope as a library.  Rope renames names in comments and
+strings only when the name is visible there.  For example in::
+
+  def f():
+      a_var = 1
+      print 'a_var = %s' % a_var
+
+  # f prints a_var
+
+after we rename the `a_var` local variable in `f()` to `new_var` we
+would get::
+
+  def f():
+      new_var = 1
+      print 'new_var = %s' % new_var
+
+  # f prints a_var
+
+This makes it safe to assume that this option does not perform wrong
+renames most of the time and for this reason it is by default on in
+the UI (though not in `Rename.get_changes()`).
+
+Spell-Checker
+-------------
 
 The new spell-checker uses ispell/aspell if available.  You can use
 ``M-$`` like emacs for checking current word.  You can also use ``C-x

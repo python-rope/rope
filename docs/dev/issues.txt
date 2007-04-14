@@ -94,6 +94,47 @@ We should measure the amount of memory each of them uses to make
 decisions.
 
 
+Introducing `TemporaryScope`
+============================
+
+There are some language structures that have their own separate scope
+like lambdas, list comprehensions and generator expressions.
+
+These scopes does not have any nested scopes and their parent scopes
+do not include them as their sub-scopes.  The main character of these
+scopes is that the names defined there are not visible from outside.
+What's more they are a single expression.
+
+Lambda have a longer story.  We want the SOI to be able to infer their
+returned value.  We don't want DOI for lambdas.
+
+
+Finding Class Hierarchies
+=========================
+
+Currently for finding the classes in a project all source files are
+searched and compiled.  This takes a lot of time.  What's more when a
+module is invalidated class cache is cleaned up.  This means that
+we have to recaclulate classes each time.
+
+* We can save classes to a file so that we can use them across
+  sessions.  But that is not a good solution because detecting changes
+  to modules and handling these information on disk needs lots of
+  work.
+* Now that creating this cache is so expensive we can at least
+  calculate the hierachies only once for each session and updating it
+  when files change.
+* Since almost all modules contain at least one class, for creating
+  all classes we need to compile all modules.
+* We can visit the AST of a module instead of textually searching the
+  source code; this might improve the speed.
+
+::
+
+  class _ClassCacher(object):
+      """Caches classes inside the project"""
+
+
 Better SOI
 ==========
 
@@ -155,27 +196,6 @@ Enhancing `ObjectInfoManager`
 * Updating our db when performing refactorings like move module
 * Returning a `Generator` for generator functions with unknown return type?
 * Validating call infos
-
-
-Validating Information
-----------------------
-
-When do we need to recalculate the information? Currently rope does
-not save anything unless an exact object is calculated; in that case
-it will be used until they remain valid.  The problems with this
-approach includes:
-
-* The method might be changed in future.
-
-  * Returned object
-  * Parameter objects
-  * The number of parameters
-
-* We don't want to recalculate 'unknown's and 'none's every time
-* The methods or data accessed by the method might change
-
-The need for invalidating data is felt more after saving object data
-to disk.
 
 
 Saving Data On Disk

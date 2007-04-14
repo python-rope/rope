@@ -699,16 +699,16 @@ def get_block_start(lines, lineno, maximum_indents=80):
         if match is not None and \
            count_line_indents(lines.get_line(i)) <= maximum_indents:
             striped = match.string.lstrip()
-            # Maybe we're in a list comprehension
+            # Maybe we're in a list comprehension or generator expression
             if i > 1 and striped.startswith('if') or striped.startswith('for'):
                 bracs = 0
                 for j in range(i, min(i + 5, lines.length() + 1)):
                     for c in lines.get_line(j):
                         if c == '#':
                             break
-                        if c == '[':
+                        if c in '[(':
                             bracs += 1
-                        if c == ']':
+                        if c in ')]':
                             bracs -= 1
                             if bracs < 0:
                                 break
