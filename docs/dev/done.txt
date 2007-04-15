@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.5m5 : April 15, 2007
+
+
 - Encapsulating field in the defining class : April 13, 2007
 
 

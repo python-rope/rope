@@ -136,6 +136,3 @@ Stories
 
 
 * Open Type; ``C-T``
-
-
-> Public Release 0.5m5 : April 15, 2007

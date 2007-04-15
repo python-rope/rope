@@ -1,9 +1,6 @@
 Small Stories
 =============
 
-- Better classes storing
-- Preventing compiling all modules in move global/module
-
 * Refactor `rope.refactor.move`
 
   * nothing is cached; such as OccurrenceFinder
