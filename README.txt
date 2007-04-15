@@ -80,6 +80,34 @@ relies on rope's object inference mechanisms to find out the
 parameters that are passed to a function.  Also see the `automatic SOI
 analysis`_ that is added in this release.
 
+Renaming Occurrences In Strings And Comments
+--------------------------------------------
+
+You can tell rope to rename all occurrences of a name in comments and
+strings.  This can be done in rename refactoring dialog by selecting
+its radio button or by passing ``docs=True`` to `Rename.get_changes()`
+method when using rope as a library.  Rope renames names in comments
+and strings only when the name is visible there.  For example in::
+
+  def f():
+      a_var = 1
+      print 'a_var = %s' % a_var
+
+  # f prints a_var
+
+after we rename the `a_var` local variable in `f()` to `new_var` we
+would get::
+
+  def f():
+      new_var = 1
+      print 'new_var = %s' % new_var
+
+  # f prints a_var
+
+This makes it safe to assume that this option does not perform wrong
+renames most of the time and for this reason it is by default on in
+the UI (though not in `Rename.get_changes()`).
+
 Stoppable Refactorings
 ----------------------
 
@@ -104,34 +132,6 @@ consuming.  This feature is by default turned on, but you can turn it
 off by editing your project ``config.py`` file (available in
 ``${your_project_root}/.ropeproject/config.py``, if you're new to
 rope), though that is not recommended.
-
-Renaming Occurrences In Strings And Comments
---------------------------------------------
-
-You can tell rope to rename all occurrences of a name in comments and
-strings.  This can be done in the rename dialog by selecting its radio
-button or by passing ``docs=True`` to `Rename.get_changes()` method
-when using rope as a library.  Rope renames names in comments and
-strings only when the name is visible there.  For example in::
-
-  def f():
-      a_var = 1
-      print 'a_var = %s' % a_var
-
-  # f prints a_var
-
-after we rename the `a_var` local variable in `f()` to `new_var` we
-would get::
-
-  def f():
-      new_var = 1
-      print 'new_var = %s' % new_var
-
-  # f prints a_var
-
-This makes it safe to assume that this option does not perform wrong
-renames most of the time and for this reason it is by default on in
-the UI (though not in `Rename.get_changes()`).
 
 Spell-Checker
 -------------

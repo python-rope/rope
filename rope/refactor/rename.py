@@ -182,6 +182,7 @@ class ChangeOccurrences(object):
 
 def rename_in_module(occurrences_finder, new_name, resource=None, pymodule=None,
                      replace_primary=False, region=None, reads=True, writes=True):
+    """Returns the changed source or `None` if there is no changes"""
     if resource is not None:
         source_code = resource.read()
     else:

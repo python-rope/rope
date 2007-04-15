@@ -278,8 +278,8 @@ class ResourceObserver(object):
         by other processes.
 
         """
-        if self._removed is not None:
-            self._removed(resource)
+        if self._validate is not None:
+            self._validate(resource)
 
 
 class FilteredResourceObserver(object):

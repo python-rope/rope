@@ -109,32 +109,6 @@ Lambda have a longer story.  We want the SOI to be able to infer their
 returned value.  We don't want DOI for lambdas.
 
 
-Finding Class Hierarchies
-=========================
-
-Currently for finding the classes in a project all source files are
-searched and compiled.  This takes a lot of time.  What's more when a
-module is invalidated class cache is cleaned up.  This means that
-we have to recaclulate classes each time.
-
-* We can save classes to a file so that we can use them across
-  sessions.  But that is not a good solution because detecting changes
-  to modules and handling these information on disk needs lots of
-  work.
-* Now that creating this cache is so expensive we can at least
-  calculate the hierachies only once for each session and updating it
-  when files change.
-* Since almost all modules contain at least one class, for creating
-  all classes we need to compile all modules.
-* We can visit the AST of a module instead of textually searching the
-  source code; this might improve the speed.
-
-::
-
-  class _ClassCacher(object):
-      """Caches classes inside the project"""
-
-
 Better SOI
 ==========
 

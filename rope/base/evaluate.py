@@ -1,7 +1,7 @@
 import compiler
 
-import rope.base.pynames
 import rope.base.pyobjects
+import rope.base.pynames
 from rope.base import exceptions
 
 

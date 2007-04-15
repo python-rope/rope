@@ -212,20 +212,35 @@ class _Mover(object):
         module_with_imports.filter_names(can_select)
         new_source = module_with_imports.get_changed_source()
         if old_source != new_source:
-            pymodule = self.pycore.get_string_module(new_source,
-                                                     pymodule.get_resource())
-        return pymodule, can_select.changed
+            return new_source
 
-    def _rename_in_module(self, pymodule, new_name, imports=False,
-                          skipstart=None, skipend=None, skiptext=''):
+    def _rename_in_module(self, new_name, pymodule=None,
+                          imports=False, resource=None):
         occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, [self.old_pyname], imports=imports)
-        source = rename.rename_in_module(occurrence_finder, new_name,
-                                         pymodule=pymodule, replace_primary=True)
+        source = rename.rename_in_module(
+            occurrence_finder, new_name, replace_primary=True,
+            pymodule=pymodule, resource=resource)
+        return source
+
+    def _occurs_in_module(self, pymodule=None, resource=None, imports=True):
+        finder = occurrences.FilteredFinder(
+            self.pycore, self.old_name, [self.old_pyname], imports=imports)
+        for occurrence in finder.find_occurrences(pymodule=pymodule,
+                                                  resource=resource):
+            return True
+        return False
+
+    def _new_pymodule(self, pymodule, source):
+        if source is not None:
+            return self.pycore.get_string_module(source,\
+                                                 pymodule.get_resource())
+        return pymodule
+
+    def _new_source(self, pymodule, source):
         if source is None:
-            return pymodule, False
-        else:
-            return self.pycore.get_string_module(source, pymodule.get_resource()), True
+            return pymodule.source_code
+        return source
 
     def get_changes(self, dest, task_handle=None):
         raise NotImplementedError()
@@ -268,9 +283,11 @@ class MoveGlobal(_Mover):
                 'Moving global elements to the same module.')
         changes = ChangeSet('Moving global <%s>' % self.old_name)
         job_set = task_handle.create_job_set(
-            'Collecting Changes', len(self.pycore.get_python_files()) - 1)
-        job_set.started_job('Changing goal and destination modules')
+            'Collecting Changes', len(self.pycore.get_python_files()))
+        job_set.started_job('Working on destination module')
         self._change_destination_module(changes, dest)
+        job_set.finished_job()
+        job_set.started_job('Working on source module')
         self._change_source_module(changes, dest)
         job_set.finished_job()
         self._change_other_modules(changes, dest, job_set)
@@ -301,10 +318,12 @@ class MoveGlobal(_Mover):
     def _change_destination_module(self, changes, dest):
         # Changing occurrences
         pymodule = self.pycore.resource_to_pyobject(dest)
-        pymodule, has_changed = self._rename_in_module(pymodule, self.old_name)
+        source = self._rename_in_module(self.old_name, pymodule)
+        pymodule = self._new_pymodule(pymodule, source)
 
         moving, imports = self._get_moving_element_with_imports()
-        pymodule, has_changed = self._remove_old_pyname_imports(pymodule)
+        source = self._remove_old_pyname_imports(pymodule)
+        pymodule = self._new_pymodule(pymodule, source)
         pymodule, has_changed = self._add_imports_to_module2(pymodule, imports)
 
         module_with_imports = self.import_tools.get_module_imports(pymodule)
@@ -335,8 +354,7 @@ class MoveGlobal(_Mover):
         pymodule, has_changed = self._add_imports_to_module2(pymodule, new_imports)
 
         source = self.import_tools.relatives_to_absolutes(pymodule)
-        if source is not None:
-            pymodule = self.pycore.get_string_module(source, self.source)
+        pymodule = self._new_pymodule(pymodule, source)
         source = self.import_tools.froms_to_imports(pymodule)
         module_with_imports = self._get_module_with_imports(source, self.source)
         imports = [import_stmt.import_info
@@ -381,24 +399,22 @@ class MoveGlobal(_Mover):
             if file_ in (self.source, dest):
                 continue
             job_set.started_job('Working on <%s>' % file_.path)
-            is_changed = False
-            should_import = False
+            if not self._occurs_in_module(resource=file_):
+                continue
             pymodule = self.pycore.resource_to_pyobject(file_)
             # Changing occurrences
-            pymodule, has_changed = self._rename_in_module(
-                pymodule, self._new_name(dest))
-            if has_changed:
-                should_import = True
-                is_changed = True
+            source = self._rename_in_module(self._new_name(dest), resource=file_)
+            should_import = source is not None
             # Removing out of date imports
-            pymodule, has_changed = self._remove_old_pyname_imports(pymodule)
-            if has_changed:
-                is_changed = True
+            pymodule = self._new_pymodule(pymodule, source)
+            source = self._remove_old_pyname_imports(pymodule)
             # Adding new import
             if should_import:
+                pymodule = self._new_pymodule(pymodule, source)
                 source = _add_imports_to_module(self.import_tools, pymodule,
                                                 [self._new_import(dest)])
-            if is_changed:
+            source = self._new_source(pymodule, source)
+            if source != file_.read():
                 changes.add_change(ChangeContents(file_, source))
             job_set.finished_job()
 
@@ -455,19 +471,13 @@ class MoveModule(_Mover):
 
     def _change_moving_module(self, changes, dest):
         if not self.source.is_folder():
-            is_changed = False
             pymodule = self.pycore.resource_to_pyobject(self.source)
             source = self.import_tools.relatives_to_absolutes(pymodule)
-            if source is not None:
-                pymodule = self.pycore.get_string_module(source, self.source)
-                is_changed = True
+            pymodule = self._new_pymodule(pymodule, source)
             source = self._change_occurrences_in_module(
-                pymodule, self._new_import(dest), self._new_name(dest))
-            if source is not None:
-                is_changed = True
-            else:
-                source = pymodule.source_code
-            if is_changed:
+                self._new_import(dest), self._new_name(dest), pymodule)
+            source = self._new_source(pymodule, source)
+            if source != self.source.read():
                 changes.add_change(ChangeContents(self.source, source))
         changes.add_change(MoveResource(self.source, dest.path))
 
@@ -476,30 +486,30 @@ class MoveModule(_Mover):
             if module in (self.source, dest):
                 continue
             job_set.started_job('Working On <%s>' % module.path)
-            pymodule = self.pycore.resource_to_pyobject(module)
             source = self._change_occurrences_in_module(
-                pymodule, self._new_import(dest), self._new_name(dest))
+                self._new_import(dest), self._new_name(dest), resource=module)
             if source is not None:
                 changes.add_change(ChangeContents(module, source))
             job_set.finished_job()
 
-    def _change_occurrences_in_module(self, pymodule, new_import, new_name):
-        is_changed = False
-        should_import = False
-        pymodule, has_changed = self._rename_in_module(pymodule, new_name,
-                                                       imports=True)
-        if has_changed:
-            is_changed = True
-        pymodule, has_changed = self._remove_old_pyname_imports(pymodule)
-        if has_changed:
-            should_import = True
-            is_changed = True
+    def _change_occurrences_in_module(self, new_import, new_name,
+                                      pymodule=None, resource=None):
+        if not self._occurs_in_module(pymodule=pymodule, resource=resource):
+            return
+        if pymodule is None:
+            pymodule = self.pycore.resource_to_pyobject(resource)
+        source = self._rename_in_module(new_name, imports=True,
+                                        pymodule=pymodule, resource=resource)
+        should_import = self._occurs_in_module(
+            pymodule=pymodule, resource=resource, imports=False)
+        pymodule = self._new_pymodule(pymodule, source)
+        source = self._remove_old_pyname_imports(pymodule)
         if should_import:
+            pymodule = self._new_pymodule(pymodule, source)
             source = _add_imports_to_module(self.import_tools, pymodule,
                                             [new_import])
-        else:
-            source = pymodule.source_code
-        if is_changed:
+        source = self._new_source(pymodule, source)
+        if source != pymodule.resource.read():
             return source
 
 

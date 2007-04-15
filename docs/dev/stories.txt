@@ -63,12 +63,6 @@ Stories
 > Public Release 0.5 : May 6, 2007
 
 
-* View type hierarchy
-
-
-* Open Type; ``C-T``
-
-
 * Handling the return type of ``yield`` keyword
 
 
@@ -132,7 +126,16 @@ Stories
 * Enhancing open project dialog
 
 
+> Public Release 0.5rc1 : April 29, 2007
+
+
 * Inferring the object list comprehensions or generator expressions hold
+
+
+* View type hierarchy
+
+
+* Open Type; ``C-T``
 
 
 > Public Release 0.5m5 : April 15, 2007

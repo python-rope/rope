@@ -861,6 +861,13 @@ class ClassHierarchyTest(unittest.TestCase):
         a_class = pymod.get_attribute('A').get_object()
         self.assertEquals([], self.pycore.get_subclasses(a_class))
 
+    def test_get_classes_for_in_string_definitions(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod.write('class A(object):\n    pass\n')
+        self.assertEquals(1, len(self.pycore.get_classes()))
+        mod.write('')
+        self.assertEquals(0, len(self.pycore.get_classes()))
+
 
 class TextChangeDetectorTest(unittest.TestCase):
 

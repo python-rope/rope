@@ -101,8 +101,15 @@ class ChangeSignature(object):
             [ArgumentReorderer(new_ordering)])
         return self._change_calls(changer)
 
-    def apply_changers(self, changers, in_hierarchy=False,
-                       task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, changers, in_hierarchy=False,
+                    task_handle=taskhandle.NullTaskHandle()):
+        """Get changes caused by this refactoring
+
+        `changers` is a list of `_ArgumentChanger`\s.  If `in_hierarchy`
+        is `True` the changers are applyed to all matching methods in
+        the class hierarchy.
+
+        """
         function_changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(), changers)
         return self._change_calls(function_changer, in_hierarchy, task_handle)

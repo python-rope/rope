@@ -267,7 +267,7 @@ class ChangeSignatureTest(unittest.TestCase):
         changers.append(change_signature.ArgumentAdder(0, 'p2', None, None))
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.apply_changers(changers).do()
+        signature.get_changes(changers).do()
         self.assertEquals('def a_func(p2):\n    pass\na_func()\n', self.mod.read())
 
     def test_doing_multiple_changes2(self):
@@ -278,7 +278,7 @@ class ChangeSignatureTest(unittest.TestCase):
         changers.append(change_signature.ArgumentRemover(1))
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.apply_changers(changers).do()
+        signature.get_changes(changers).do()
         self.assertEquals('def a_func(p2, p3):\n    pass\na_func(2, 3)\n', self.mod.read())
 
     def test_changing_signature_in_subclasses(self):
@@ -287,7 +287,7 @@ class ChangeSignatureTest(unittest.TestCase):
             'class B(A):\n    def a_method(self):\n        pass\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_method') + 1)
-        signature.apply_changers([change_signature.ArgumentAdder(1, 'p1')],
+        signature.get_changes([change_signature.ArgumentAdder(1, 'p1')],
                                  in_hierarchy=True).do()
         self.assertEquals(
             'class A(object):\n    def a_method(self, p1):\n        pass\n'
@@ -311,7 +311,7 @@ class ChangeSignatureTest(unittest.TestCase):
             'c = C(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('C') + 1)
-        signature.apply_changers([change_signature.ArgumentRemover(1)]).do()
+        signature.get_changes([change_signature.ArgumentRemover(1)]).do()
         self.assertEquals(
             'class C(object):\n    def __init__(self):\n        pass\n'
             'c = C()\n',
@@ -323,7 +323,7 @@ class ChangeSignatureTest(unittest.TestCase):
             'c = C(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('__init__') + 1)
-        signature.apply_changers([change_signature.ArgumentRemover(1)]).do()
+        signature.get_changes([change_signature.ArgumentRemover(1)]).do()
         self.assertEquals(
             'class C(object):\n    def __init__(self):\n        pass\n'
             'c = C()\n',
@@ -336,7 +336,7 @@ class ChangeSignatureTest(unittest.TestCase):
             'def __init__(self, p):\n        super(B, self).__init__(p)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('__init__') + 1)
-        signature.apply_changers([change_signature.ArgumentRemover(1)]).do()
+        signature.get_changes([change_signature.ArgumentRemover(1)]).do()
         self.assertEquals(
             'class A(object):\n    def __init__(self):\n        pass\n'
             'class B(A):\n    '
@@ -347,7 +347,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def f(a, b, c):\n    pass\nf(1, 2, 3)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().rindex('f'))
-        signature.apply_changers(
+        signature.get_changes(
             [change_signature.ArgumentReorderer([1, 2, 0])]).do()
         self.assertEquals('def f(b, c, a):\n    pass\nf(2, 3, 1)\n',
                           self.mod.read())

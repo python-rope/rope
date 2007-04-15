@@ -87,6 +87,7 @@ class RefactoringDialog(object):
         preview_button.grid(row=1, column=1)
         cancel_button.grid(row=1, column=2)
         frame.grid(row=0, columnspan=3)
+        self.toplevel.grab_set()
 
     def _ok(self, event=None):
         try:
@@ -458,7 +459,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         new_ordering = [_get_parameter_index(definition_info, param.name)
                         for param in parameters if not param.name.startswith('*')]
         changers.append(rope.refactor.change_signature.ArgumentReorderer(new_ordering))
-        return self.signature.apply_changers(
+        return self.signature.get_changes(
             changers, in_hierarchy=self.in_hierarchy.get(), task_handle=handle)
 
     def _get_dialog_frame(self):

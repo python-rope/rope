@@ -4,7 +4,6 @@ import rope.base.evaluate
 import rope.base.pyscopes
 from rope.base import pynames
 from rope.base.exceptions import RopeError, AttributeNotFoundError
-from rope.base.pynames import *
 
 
 class PyObject(object):
@@ -261,7 +260,7 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         if self.parameter_pynames is None:
             result = {}
             for index, name in enumerate(self.parameters):
-                result[name] = ParameterName(self, index)
+                result[name] = pynames.ParameterName(self, index)
             self.parameter_pynames = result
         return self.parameter_pynames
 
@@ -427,7 +426,7 @@ class PyPackage(_PyModule):
         if self.resource is None:
             return result
         for name, resource in self._get_child_resources().items():
-            result[name] = ImportedModule(self, resource=resource)
+            result[name] = pynames.ImportedModule(self, resource=resource)
         return result
 
     def _create_concluded_attributes(self):
@@ -478,8 +477,8 @@ class _AssignVisitor(object):
 
     def _assigned(self, name, assignment=None):
         old_pyname = self.scope_visitor.names.get(name, None)
-        if old_pyname is None or not isinstance(old_pyname, AssignedName):
-            self.scope_visitor.names[name] = AssignedName(
+        if not isinstance(old_pyname, pynames.AssignedName):
+            self.scope_visitor.names[name] = pynames.AssignedName(
                 module=self.scope_visitor.get_module())
         if assignment is not None:
             self.scope_visitor.names[name].assignments.append(assignment)
@@ -577,12 +576,12 @@ class _ScopeVisitor(object):
             return None
 
     def visitClass(self, node):
-        self.names[node.name] = DefinedName(PyClass(self.pycore,
-                                                    node, self.owner_object))
+        self.names[node.name] = pynames.DefinedName(
+            PyClass(self.pycore, node, self.owner_object))
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = DefinedName(pyobject)
+        self.names[node.name] = pynames.DefinedName(pyobject)
 
     def visitAssign(self, node):
         compiler.walk(node, _AssignVisitor(self))
@@ -592,7 +591,7 @@ class _ScopeVisitor(object):
         names = _NodeNameCollector.get_assigned_names(assigned_vars)
         for name, levels in names:
             assignment = pynames._Assigned(assigned, levels)
-            self.names[name] = EvaluatedName(
+            self.names[name] = pynames.EvaluatedName(
                 assignment=assignment, module=self.get_module(),
                 lineno=lineno, evaluation=evaluation)
 
@@ -611,26 +610,28 @@ class _ScopeVisitor(object):
             module_name, alias = import_pair
             first_package = module_name.split('.')[0]
             if alias is not None:
-                self.names[alias] = ImportedModule(self.get_module(),
+                self.names[alias] = pynames.ImportedModule(self.get_module(),
                                                    module_name)
             else:
-                self.names[first_package] = ImportedModule(self.get_module(),
+                self.names[first_package] = pynames.ImportedModule(self.get_module(),
                                                            first_package)
 
     def visitFrom(self, node):
         level = 0
         if hasattr(node, 'level'):
             level = node.level
-        imported_module = ImportedModule(self.get_module(),
-                                         node.modname, level)
+        imported_module = pynames.ImportedModule(self.get_module(),
+                                                 node.modname, level)
         if node.names[0][0] == '*':
-            self.owner_object.star_imports.append(StarImport(imported_module))
+            self.owner_object.star_imports.append(
+                pynames.StarImport(imported_module))
         else:
             for (name, alias) in node.names:
                 imported = name
                 if alias is not None:
                     imported = alias
-                self.names[imported] = ImportedName(imported_module, name)
+                self.names[imported] = pynames.ImportedName(imported_module,
+                                                            name)
 
     def visitGlobal(self, node):
         module = self.get_module()
@@ -656,15 +657,15 @@ class _ClassVisitor(_ScopeVisitor):
 
     def visitFunction(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = DefinedName(pyobject)
+        self.names[node.name] = pynames.DefinedName(pyobject)
         if len(node.argnames) > 0:
             new_visitor = _ClassInitVisitor(self, node.argnames[0])
             for child in node.getChildNodes():
                 compiler.walk(child, new_visitor)
 
     def visitClass(self, node):
-        self.names[node.name] = DefinedName(PyClass(self.pycore, node,
-                                                    self.owner_object))
+        self.names[node.name] = pynames.DefinedName(
+            PyClass(self.pycore, node, self.owner_object))
 
 
 class _FunctionVisitor(_ScopeVisitor):
@@ -689,9 +690,10 @@ class _ClassInitVisitor(_AssignVisitor):
         self.self_name = self_name
 
     def visitAssAttr(self, node):
-        if isinstance(node.expr, compiler.ast.Name) and node.expr.name == self.self_name:
+        if isinstance(node.expr, compiler.ast.Name) and \
+           node.expr.name == self.self_name:
             if node.attrname not in self.scope_visitor.names:
-                self.scope_visitor.names[node.attrname] = AssignedName(
+                self.scope_visitor.names[node.attrname] = pynames.AssignedName(
                     lineno=node.lineno, module=self.scope_visitor.get_module())
             self.scope_visitor.names[node.attrname].assignments.append(
                 pynames._Assigned(self.assigned_ast))

@@ -228,7 +228,8 @@ class StarImport(object):
                           rope.base.pyobjects.PyPackage):
                 return {}
             result = {}
-            for name, pyname in self.imported_module.get_object().get_attributes().iteritems():
+            imported = self.imported_module.get_object()
+            for name, pyname in imported.get_attributes().iteritems():
                 if not name.startswith('_'):
                     result[name] = ImportedName(self.imported_module, name)
             self.names.set(result)
