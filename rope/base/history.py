@@ -1,4 +1,4 @@
-from rope.base import exceptions, change
+from rope.base import exceptions, change, taskhandle
 import cPickle as pickle
 
 
@@ -33,10 +33,10 @@ class History(object):
 
     history_file = property(_get_history_file)
 
-    def do(self, changes):
+    def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
         self.current_change = changes
         try:
-            changes.do()
+            changes.do(change.create_job_set(task_handle, changes))
         finally:
             self.current_change = None
         if self._is_change_interesting(changes):
@@ -50,7 +50,7 @@ class History(object):
                 return True
         return False
 
-    def undo(self, change=None):
+    def undo(self, change=None, task_handle=taskhandle.NullTaskHandle()):
         if not self._undo_list:
             raise exceptions.HistoryError('Undo list is empty')
         if change is None:
@@ -58,7 +58,7 @@ class History(object):
         dependencies = self.find_dependencies(change)
         self._move_front(dependencies)
         index = self.undo_list.index(change)
-        self._perform_undos(len(self.undo_list) - index)
+        self._perform_undos(len(self.undo_list) - index, task_handle)
 
     def _move_front(self, changes):
         for change in changes:
@@ -70,21 +70,24 @@ class History(object):
         return _FindChangeDependencies(self.undo_list[index:]).\
                find_dependencies()
 
-    def _perform_undos(self, count):
+    def _perform_undos(self, count, task_handle):
         for i in range(count):
             self.current_change = self.undo_list[-1]
             try:
-                self.current_change.undo()
+                job_set = change.create_job_set(task_handle,
+                                                self.current_change)
+                self.current_change.undo(job_set)
             finally:
                 self.current_change = None
             self.redo_list.append(self.undo_list.pop())
 
-    def redo(self):
+    def redo(self, task_handle=taskhandle.NullTaskHandle()):
         if not self.redo_list:
             raise exceptions.HistoryError('Redo list is empty')
         self.current_change = self.redo_list[-1]
         try:
-            self.current_change.do()
+            job_set = change.create_job_set(task_handle, self.current_change)
+            self.current_change.do(job_set=job_set)
         finally:
             self.current_change = None
         self.undo_list.append(self.redo_list.pop())

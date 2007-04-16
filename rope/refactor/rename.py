@@ -1,7 +1,7 @@
 import rope.refactor
-from rope.base import exceptions, codeanalyze, pyobjects, pynames
+from rope.base import exceptions, codeanalyze, pyobjects, pynames, taskhandle
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
-from rope.refactor import occurrences, sourceutils, taskhandle
+from rope.refactor import occurrences, sourceutils
 
 
 class Rename(object):

@@ -2,8 +2,9 @@ import rope.base.codeanalyze
 import rope.base.exceptions
 import rope.base.pyobjects
 import rope.refactor.importutils
+from rope.base import taskhandle
 from rope.base.change import (ChangeSet, ChangeContents)
-from rope.refactor import rename, occurrences, sourceutils, taskhandle
+from rope.refactor import rename, occurrences, sourceutils
 
 
 class IntroduceFactoryRefactoring(object):

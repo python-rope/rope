@@ -1,5 +1,4 @@
-import rope.base
-import rope.refactor
+from rope.base import exceptions
 
 
 class TaskHandle(object):
@@ -54,13 +53,14 @@ class JobSet(object):
         self.handle._inform_observers()
 
     def finished_job(self):
+        self.check_status()
         self.handle._inform_observers()
         self.job_name = None
         self.done += 1
 
     def check_status(self):
         if self.handle.is_stopped():
-            raise rope.base.exceptions.InterruptedTaskError()
+            raise exceptions.InterruptedTaskError()
 
     def get_active_job_name(self):
         return self.job_name

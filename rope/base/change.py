@@ -1,18 +1,19 @@
+import datetime
 import difflib
 import os
 import time
-import datetime
 
+from rope.base import taskhandle
 from rope.base.exceptions import RopeError
 from rope.base.fscommands import FileSystemCommands
 
 
 class Change(object):
 
-    def do(self, resource_operations):
+    def do(self, job_set=None):
         pass
 
-    def undo(self, resource_operations):
+    def undo(self, job_set=None):
         pass
 
     def get_description(self):
@@ -29,11 +30,11 @@ class ChangeSet(Change):
         self.description = description
         self.time = timestamp
 
-    def do(self):
+    def do(self, job_set=taskhandle.NullJobSet()):
         try:
             done = []
             for change in self.changes:
-                change.do()
+                change.do(job_set)
                 done.append(change)
             self.time = time.time()
         except Exception:
@@ -41,11 +42,11 @@ class ChangeSet(Change):
                 change.undo()
             raise
 
-    def undo(self):
+    def undo(self, job_set=taskhandle.NullJobSet()):
         try:
             done = []
             for change in reversed(self.changes):
-                change.undo()
+                change.undo(job_set)
                 done.append(change)
         except Exception:
             for change in done:
@@ -85,6 +86,19 @@ class ChangeSet(Change):
         return result
 
 
+def _handle_job_set(function):
+    """A decorator for handling `taskhandle.JobSet`\s
+    
+    A decorator for handling `taskhandle.JobSet`\s for `do` and `undo`
+    methods of `Change`\s.
+    """
+    def call(self, job_set=taskhandle.NullJobSet()):
+        job_set.started_job(str(self))
+        function(self)
+        job_set.finished_job()
+    return call
+
+
 class ChangeContents(Change):
 
     def __init__(self, resource, new_content, old_content=None):
@@ -96,11 +110,13 @@ class ChangeContents(Change):
                 self.old_content = self.resource.read()
         self.operations = self.resource.project.operations
 
+    @_handle_job_set
     def do(self):
         if self.old_content is None:
             self.old_content = self.resource.read()
         self.operations.write_file(self.resource, self.new_content)
 
+    @_handle_job_set
     def undo(self):
         self.operations.write_file(self.resource, self.old_content)
 
@@ -130,14 +146,16 @@ class MoveResource(Change):
         else:
             self.new_resource = self.project.get_file(new_location)
 
+    @_handle_job_set
     def do(self):
         self.operations.move(self.old_resource, self.new_resource.path)
 
+    @_handle_job_set
     def undo(self):
         self.operations.move(self.new_resource, self.old_resource.path)
 
     def __str__(self):
-        return 'Move <%s>' % self.old_location
+        return 'Move <%s>' % self.old_resource.path
 
     def get_description(self):
         return 'Move <%s> to <%s>' % (self.old_resource.path,
@@ -153,9 +171,11 @@ class CreateResource(Change):
         self.resource = resource
         self.operations = self.resource.project.operations
 
+    @_handle_job_set
     def do(self):
         self.operations.create(self.resource)
 
+    @_handle_job_set
     def undo(self):
         self.operations.remove(self.resource)
 
@@ -192,10 +212,12 @@ class RemoveResource(Change):
         self.resource = resource
         self.operations = resource.project.operations
 
+    @_handle_job_set
     def do(self):
         self.operations.remove(self.resource)
 
     # TODO: Undoing remove operations
+    @_handle_job_set
     def undo(self):
         raise NotImplementedError(
             'Undoing `RemoveResource` is not implemented yet.')
@@ -205,6 +227,19 @@ class RemoveResource(Change):
 
     def get_changed_resources(self):
         return [self.resource]
+
+
+def count_changes(change):
+    """Counts the number of basic changes a `Change` will make"""
+    if isinstance(change, ChangeSet):
+        result = 0
+        for child in change.changes:
+            result += count_changes(child)
+        return result
+    return 1
+
+def create_job_set(task_handle, change):
+    return task_handle.create_job_set(str(change), count_changes(change))
 
 
 class _ResourceOperations(object):

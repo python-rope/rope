@@ -5,7 +5,7 @@ import Tkinter
 import rope.base.project
 import rope.refactor.change_signature
 import rope.ui.uihelpers
-import rope.refactor.taskhandle
+import rope.base.taskhandle
 
 
 class StoppableTaskRunner(object):
@@ -16,7 +16,7 @@ class StoppableTaskRunner(object):
         self.title = title
 
     def __call__(self):
-        handle = rope.refactor.taskhandle.TaskHandle(self.title)
+        handle = rope.base.taskhandle.TaskHandle(self.title)
         toplevel = Tkinter.Toplevel()
         toplevel.title('Performing Task ' + self.title)
         frame = Tkinter.Frame(toplevel)
@@ -24,7 +24,7 @@ class StoppableTaskRunner(object):
         def update_progress():
             job_sets = handle.get_job_sets()
             if job_sets:
-                job_set = job_sets[0]
+                job_set = job_sets[-1]
                 text = ''
                 if job_set.get_name() is not None:
                     text += job_set.get_name()
@@ -70,6 +70,15 @@ class StoppableTaskRunner(object):
             raise rope.base.exceptions.InterruptedTaskError(
                 'Task <%s> was interrupted' % self.title)
         return calculate.result
+
+def simple_stoppable(description):
+    def decorator(function):
+        def caller():
+            def do_call(handle):
+                return function(handle)
+            return StoppableTaskRunner(do_call, description)()
+        return caller
+    return decorator
 
 
 def check_project(core):

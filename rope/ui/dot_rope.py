@@ -115,6 +115,9 @@ def _change_key_binding(core):
     core.rebind_action('remember_location', 'M-M b')
     core.rebind_action('memorize_string', 'M-M s')
     core.rebind_action('remember_string', 'M-M i')
+    core.rebind_action('spellcheck_word', None)
+    core.rebind_action('spellcheck_buffer', None)
+    core.rebind_action('spellcheck_region', None)
 
     core.rebind_action('code_assist', 'C-space')
     core.rebind_action('goto_definition', 'F3')

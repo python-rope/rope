@@ -1,15 +1,16 @@
 Small Stories
 =============
 
+- Moving `rope.refactor.taskhandle` to `rope.base`
+- Using `TaskHandle` for `History.do()`;
+
 * Refactor `rope.refactor.move`
 
   * nothing is cached; such as OccurrenceFinder
   * Extract class _Mover
-  * Changing modules look similar
+  * Changing resources for move module/global look similar
 
 * Better local history: Showing older versions of files; filtered history
-* Using `TaskHandle` for `History.do()`;
-  moving `rope.refactor.taskhandle` to `rope.base`
 * Should syntax errors in files stop refactorings?
 
 * Validating callinfo

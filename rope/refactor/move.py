@@ -4,10 +4,10 @@
 based on inputs.
 
 """
-from rope.base import pyobjects, codeanalyze, exceptions, pynames
+from rope.base import pyobjects, codeanalyze, exceptions, pynames, taskhandle
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import (importutils, rename, occurrences, sourceutils,
-                           functionutils, inline, taskhandle)
+                           functionutils, inline)
 
 
 def create_move(project, resource, offset=None):

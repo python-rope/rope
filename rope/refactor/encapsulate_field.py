@@ -1,7 +1,7 @@
 import rope.base.codeanalyze
-from rope.base import pynames
+from rope.base import pynames, taskhandle
 from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import sourceutils, taskhandle
+from rope.refactor import sourceutils
 
 
 class EncapsulateField(object):

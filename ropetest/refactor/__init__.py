@@ -14,7 +14,7 @@ from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.localtofield import LocalToField
 from rope.refactor.method_object import MethodObject
 from ropetest import testutils
-import rope.refactor.taskhandle
+import rope.base.taskhandle
 
 
 class MethodObjectTest(unittest.TestCase):
@@ -627,55 +627,55 @@ class _MockTaskObserver(object):
 class TaskHandleTest(unittest.TestCase):
 
     def test_trivial_case(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         self.assertFalse(handle.is_stopped())
 
     def test_stopping(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         handle.stop()
         self.assertTrue(handle.is_stopped())
 
     def test_job_sets(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_job_set()
         self.assertEquals([jobs], handle.get_job_sets())
 
     def test_starting_and_finishing_jobs(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_job_set(name='test job set', count=1)
         jobs.started_job('job1')
         jobs.finished_job()
 
     @testutils.assert_raises(InterruptedTaskError)
     def test_test_checking_status(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_job_set()
         handle.stop()
         jobs.check_status()
 
     @testutils.assert_raises(InterruptedTaskError)
     def test_test_checking_status_when_starting(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_job_set()
         handle.stop()
         jobs.started_job('job1')
 
     def test_calling_the_observer_after_stopping(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         observer = _MockTaskObserver()
         handle.add_observer(observer)
         handle.stop()
         self.assertEquals(1, observer.called)
 
     def test_calling_the_observer_after_creating_job_sets(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         observer = _MockTaskObserver()
         handle.add_observer(observer)
         jobs = handle.create_job_set()
         self.assertEquals(1, observer.called)
 
     def test_calling_the_observer_when_starting_and_finishing_jobs(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         observer = _MockTaskObserver()
         handle.add_observer(observer)
         jobs = handle.create_job_set(name='test job set', count=1)
@@ -684,7 +684,7 @@ class TaskHandleTest(unittest.TestCase):
         self.assertEquals(3, observer.called)
 
     def test_job_set_get_percent_done(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_job_set(name='test job set', count=2)
         self.assertEquals(0, jobs.get_percent_done())
         jobs.started_job('job1')
@@ -695,7 +695,7 @@ class TaskHandleTest(unittest.TestCase):
         self.assertEquals(100, jobs.get_percent_done())
 
     def test_getting_job_name(self):
-        handle = rope.refactor.taskhandle.TaskHandle()
+        handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_job_set(name='test job set', count=1)
         self.assertEquals('test job set', jobs.get_name())
         self.assertEquals(None, jobs.get_active_job_name())

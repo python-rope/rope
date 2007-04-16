@@ -6,6 +6,7 @@ import rope.base.fscommands
 import rope.base.history
 import rope.base.prefs
 import rope.base.pycore
+from rope.base import taskhandle
 from rope.base.exceptions import RopeError
 from rope.base.resources import File, Folder
 
@@ -64,13 +65,13 @@ class _Project(object):
         if observer in self.observers:
             self.observers.remove(observer)
 
-    def do(self, changes):
+    def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
         """Apply the changes in a `ChangeSet`
 
         Most of the time you call this function for committing the
         changes for a refactoring.
         """
-        self.history.do(changes)
+        self.history.do(changes, task_handle=task_handle)
 
     def get_pycore(self):
         if self._pycore is None:

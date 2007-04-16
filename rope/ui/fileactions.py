@@ -6,7 +6,8 @@ import rope.base.project
 import rope.ui.actionhelpers
 import rope.ui.core
 from rope.ui import uihelpers
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved
+from rope.ui.actionhelpers import ConfirmEditorsAreSaved, simple_stoppable
+                                   
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
@@ -358,8 +359,9 @@ def show_history(context):
         change = enhanced_list.get_selected()
         if change is None:
             return
-        def undo():
-            context.project.history.undo(change)
+        @simple_stoppable("Undo Changes")
+        def undo(handle):
+            context.project.history.undo(change, task_handle=handle)
         _confirm_action(
             'Undoing Project Change',
             'Undoing <%s>\n\n' % str(change) +
@@ -383,8 +385,9 @@ def undo_project(context):
         history = context.project.history
         if not history.undo_list:
             return
-        def undo():
-            history.undo()
+        @simple_stoppable('Undo Change')
+        def undo(task_handle):
+            history.undo(task_handle=task_handle)
         _confirm_action(
             'Undoing Project Change',
             'Undoing <%s>\n\n' % str(history.undo_list[-1]) +
@@ -395,8 +398,9 @@ def redo_project(context):
         history = context.project.history
         if not history.redo_list:
             return
-        def redo():
-            history.redo()
+        @simple_stoppable('Redo Change')
+        def redo(handle):
+            history.redo(task_handle=handle)
         _confirm_action(
             'Redoing Project Change',
             'Redoing <%s>\n\n' % str(history.redo_list[-1]) +

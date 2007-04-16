@@ -116,11 +116,15 @@ relatives to absolutes      C-c i a
 froms to imports            C-c i i
 handle long imports         C-c i l
 --------------------------  -------------  -------------
-Generate variable           C-c n v        M-G v
-Generate function/method    C-c n f        M-G f
-Generate class              C-c n c        M-G c
-Generate module             C-c n m        M-G m
-Generate package            C-c n p        M-G p
+generate variable           C-c n v        M-G v
+generate function/method    C-c n f        M-G f
+generate class              C-c n c        M-G c
+generate module             C-c n m        M-G m
+generate package            C-c n p        M-G p
+--------------------------  -------------  -------------
+spell-check word            M-$
+spell-check buffer          C-x $ b
+spell-check region          C-x $ r
 --------------------------  -------------  -------------
 about                       C-h a
 README                      C-h r
@@ -329,6 +333,35 @@ and the new project tree would be::
     newmod.py
 
 
+Renaming Occurrences In Strings And Comments
+--------------------------------------------
+
+You can tell rope to rename all occurrences of a name in comments and
+strings.  This can be done in rename refactoring dialog by selecting
+its radio button or by passing ``docs=True`` to `Rename.get_changes()`
+method when using rope as a library.  Rope renames names in comments
+and strings only when the name is visible there.  For example in::
+
+  def f():
+      a_var = 1
+      print 'a_var = %s' % a_var
+
+  # f prints a_var
+
+after we rename the `a_var` local variable in `f()` to `new_var` we
+would get::
+
+  def f():
+      new_var = 1
+      print 'new_var = %s' % new_var
+
+  # f prints a_var
+
+This makes it safe to assume that this option does not perform wrong
+renames most of the time and for this reason it is by default on in
+the UI (though not in `Rename.get_changes()`).
+
+
 Move Method Refactoring
 -----------------------
 
@@ -449,6 +482,75 @@ pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
 either by having lots of dots or being very long.  The default
 configuration considers imported modules with more than 2 dots or with
 length more than 27 characters to be long.
+
+
+Stoppable Refactorings
+----------------------
+
+Another notable new feature is stoppable refactorings.  Some
+refactorings might take a long time to finish (based on the size of
+your project).  Rope now shows a dialog that has a progress bar and a
+stop button for these refactorings.  You can also use this feature
+when using rope as a library.  The `get_changes()` method of these
+refactorings take a new parameter called `task_handle`.  If you want
+to monitor or stop these refactoring you can pass a `rope.refactor.
+taskhandle.TaskHandle` to this method.  See `rope.refactor.taskhandle`
+module for more information.
+
+Basic Implicit Interfaces
+-------------------------
+
+Implicit interfaces are the interfaces that you don't explicitly
+define; But you expect a group of classes to have some common
+attributes.  These kinds of interfaces are very common in dynamic
+languages; Since we only have implementation inheritance and not
+interface inheritance.  For instance::
+
+  class A(object):
+
+      def count(self):
+          pass
+
+  class B(object):
+
+      def count(self):
+          pass
+
+  def count_for(arg):
+      return arg.count()
+
+  count_for(A())
+  count_for(B())
+
+Here we know that there is an implicit interface defined by the
+function `count_for` that provides `count()`.  Here when we rename
+`A.count()` we expect `B.count()` to be renamed, too.  Currently rope
+supports a basic form of implicit interfaces.  When you try to rename
+an attribute of a parameter, rope renames that attribute for all
+objects that have been passed to that function in different call
+sites.  That is renaming the occurrence of `count` in `count_for`
+function to `newcount` will result in::
+
+  class A(object):
+
+      def newcount(self):
+          pass
+
+  class B(object):
+
+      def newcount(self):
+          pass
+
+  def count_for(arg):
+      return arg.newcount()
+
+  count_for(A())
+  count_for(B())
+
+
+This also works for change method signature.  Note that this feature
+relies on rope's object inference mechanisms to find out the
+parameters that are passed to a function.
 
 
 Basic Object Inference
@@ -692,6 +794,19 @@ After running `mod1` module test rope's DOI this way:
   mod1.func(mod1.C2()).${codeassist}
 
 
+Automatic SOI Analysis
+----------------------
+
+Maybe the most important internal feature added in this release is
+automatic static object inference analysis.  When turned on, it
+analyzes the changed scopes of a file when saving for obtaining object
+information; So this might make saving files a bit more time
+consuming.  This feature is by default turned on, but you can turn it
+off by editing your project ``config.py`` file (available in
+``${your_project_root}/.ropeproject/config.py``, if you're new to
+rope), though that is not recommended.
+
+
 Outline
 =======
 
@@ -723,3 +838,10 @@ folders and refactorings.  Also in "Project History" dialog you can
 see and select changes to be undone in any order.  Note that undoing
 changes in project history undoes the changes it depends on, too.
 
+
+Spell-Checker
+=============
+
+The new spell-checker uses ispell/aspell if available.  You can use
+``M-$`` like emacs for checking current word.  You can also use ``C-x
+$ r`` and ``C-x $ b`` for spell-checking region and buffer.

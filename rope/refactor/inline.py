@@ -2,9 +2,9 @@ import re
 
 import rope.base.exceptions
 import rope.refactor.functionutils
-from rope.base import pynames, pyobjects, codeanalyze
+from rope.base import pynames, pyobjects, codeanalyze, taskhandle
 from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import occurrences, rename, sourceutils, taskhandle
+from rope.refactor import occurrences, rename, sourceutils
 
 
 class Inline(object):

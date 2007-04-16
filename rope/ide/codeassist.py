@@ -2,13 +2,13 @@ import __builtin__
 import re
 
 import rope.base.codeanalyze
-from rope.base import pyobjects, pynames
+from rope.base import pyobjects, pynames, taskhandle
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
                                    SourceLinesAdapter, BadIdentifierError)
 from rope.base.exceptions import RopeError
 from rope.ide import pydoc
-from rope.refactor import occurrences, functionutils, taskhandle
+from rope.refactor import occurrences, functionutils
 
 
 class RopeSyntaxError(RopeError):

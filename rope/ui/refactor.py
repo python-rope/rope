@@ -54,7 +54,9 @@ class PreviewAndCommitChanges(object):
         frame.grid()
 
     def commit(self):
-        self.project.do(self.changes)
+        def commit(handle):
+            self.project.do(self.changes, task_handle=handle)
+        StoppableTaskRunner(commit, "Committing Changes")()
 
 
 class RefactoringDialog(object):
