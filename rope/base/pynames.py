@@ -224,9 +224,10 @@ class StarImport(object):
 
     def get_names(self):
         if self.names.get() is None:
-            if isinstance(self.imported_module.get_object(),
-                          rope.base.pyobjects.PyPackage):
-                return {}
+            # NOTE: importing everything from packages; all submodules!
+            #if isinstance(self.imported_module.get_object(),
+            #              rope.base.pyobjects.PyPackage):
+            #    return {}
             result = {}
             imported = self.imported_module.get_object()
             for name, pyname in imported.get_attributes().iteritems():

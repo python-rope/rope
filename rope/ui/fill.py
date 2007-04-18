@@ -14,7 +14,7 @@ class Fill(object):
         first_indents, indents = self._find_indents(lines)
         is_list = self._is_list(text)
         break_first = first_indents != indents
-        if is_list and indents is None:
+        if is_list:
             indents = first_indents + 2
             break_first = False
 

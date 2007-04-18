@@ -383,7 +383,7 @@ class MoveModule(object):
 
     def get_changes(self, dest, task_handle=taskhandle.NullTaskHandle()):
         moving_pyobject = self.old_pyname.get_object()
-        if not dest.is_folder():
+        if dest is None or not dest.is_folder():
             raise exceptions.RefactoringError(
                 'Move destination for modules should be packages.')
         changes = ChangeSet('Moving module <%s>' % self.old_name)
@@ -499,7 +499,6 @@ class _MoveTools(object):
 
     def rename_in_module(self, new_name, pymodule=None,
                           imports=False, resource=None):
-        # IDEA: Maybe we can cache occurrence finders
         occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, [self.old_pyname], imports=imports)
         source = rename.rename_in_module(

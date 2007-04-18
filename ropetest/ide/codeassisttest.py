@@ -658,11 +658,6 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self.assist.assist(code, len(code))
         self.assert_completion_in_result('nestedmod', 'global', result)
 
-    def test_from_package_import_star(self):
-        code = 'from package import *\nnest'
-        result = self.assist.assist(code, len(code))
-        self.assert_completion_not_in_result('nestedmod', 'global', result)
-
     def test_completing_after_dot(self):
         code = 'class SampleClass(object):\n    def sample_method(self):\n        pass\nSampleClass.sam'
         result = self.assist.assist(code, len(code))

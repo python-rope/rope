@@ -525,8 +525,9 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertEquals(get_base_type('Module'),
                           mod.get_attribute('nestedmod').get_object().get_type())
 
-    def test_from_package_import_star(self):
-        mod = self.pycore.get_string_module('from package import *\nnest')
+    # XXX: Deciding to import everything on import start from packages
+    def xxx_test_from_package_import_star(self):
+        mod = self.pycore.get_string_module('from package import *\n')
         self.assertTrue('nestedmod' not in mod.get_attributes())
 
     def test_unknown_when_module_cannot_be_found(self):

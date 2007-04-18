@@ -102,6 +102,10 @@ class FillTest(unittest.TestCase):
         self.assertEquals('name\n  value',
                           self.fill.fill('name\n  value'))
 
+    def test_handling_simple_unordered_lists(self):
+        self.assertEquals('* simple\n  word in\n  list',
+                          self.fill.fill('* simple word\n  in list'))
+
 
 if __name__ == '__main__':
     unittest.main()

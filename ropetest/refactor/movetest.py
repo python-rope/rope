@@ -209,6 +209,14 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('import os\nimport mod4\n\n\n'
                           'print mod4.a_var\n', self.mod2.read())
 
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_moving_module_refactoring_and_nonexistent_destinations(self):
+        self.mod4.write('a_var = 1')
+        self.mod2.write('from pkg import mod4\n'
+                        'import os\n\n\nprint mod4.a_var\n')
+        mover = move.create_move(self.project, self.mod4)
+        mover.get_changes(None).do()
+
     def test_moving_methods_choosing_the_correct_class(self):
         code = 'class A(object):\n    def a_method(self):\n        pass\n'
         self.mod1.write(code)
