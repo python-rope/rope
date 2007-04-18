@@ -158,6 +158,7 @@ class ImportTools(object):
         return module_imports.get_changed_source()
 
     def handle_long_imports(self, pymodule, maxdots=2, maxlength=27):
+        # IDEA: `maxdots` and `maxlength` can be specified in project config
         # adding new from imports
         module_imports = self.get_module_imports(pymodule)
         to_be_fixed = module_imports.handle_long_imports(maxdots, maxlength)

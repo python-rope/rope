@@ -46,7 +46,8 @@ class PyCore(object):
                 detector = TextChangeDetector(new_contents, old_contents)
                 def should_analyze(pydefined):
                     scope = pydefined.get_scope()
-                    return detector.is_changed(scope.get_start(), scope.get_end())
+                    return detector.is_changed(scope.get_start(),
+                                               scope.get_end())
                 self.analyze_module(resource, should_analyze)
             except SyntaxError:
                 pass
@@ -166,7 +167,8 @@ class PyCore(object):
             if module is not None:
                 return module
         if current_folder is not None:
-            module = self._find_module_in_source_folder(current_folder, module_name)
+            module = self._find_module_in_source_folder(current_folder,
+                                                        module_name)
             if module is not None:
                 return module
         return None

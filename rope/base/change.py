@@ -103,6 +103,7 @@ class ChangeContents(Change):
 
     def __init__(self, resource, new_content, old_content=None):
         self.resource = resource
+        # IDEA: Only saving diffs; possible problems when undo/redoing
         self.new_content = new_content
         self.old_content = old_content
         if self.old_content is None:

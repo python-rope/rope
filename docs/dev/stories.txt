@@ -129,10 +129,13 @@ Stories
 > Public Release 0.5rc1 : April 29, 2007
 
 
-* Inferring the object list comprehensions or generator expressions hold
+* Inferring the object, list comprehensions or generator expressions hold
 
 
 * View type hierarchy
+
+
+* Showing file history
 
 
 * Open Type; ``C-T``

@@ -145,6 +145,7 @@ class SOIVisitor(object):
                     pyfunction = pyobject.get_attribute('__setitem__').get_object()
                     args = evaluate.ObjectArguments([instance] + args_pynames)
                     self._call(pyfunction, args)
+                # IDEA: handle `__setslice__` too
 
 
 class _SOIAssignVisitor(pyobjects._NodeNameCollector):

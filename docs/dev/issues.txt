@@ -112,13 +112,6 @@ returned value.  We don't want DOI for lambdas.
 Better SOI
 ==========
 
-I don't know how often and when to scan a module for SOI.  Maybe
-before ``0.5`` release, rope only performs SOI when the user asks;
-just like DOI.  Performing it automatically requires it to be
-efficient.  So later, after using it for some time, we'll decide about
-that.
-
-
 Returned Object SOI
 -------------------
 

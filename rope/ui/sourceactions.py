@@ -335,6 +335,7 @@ def comment_region(context):
     end_line = lines.get_line_number(end)
     first_line = lines.get_line(start_line)
     action = 'comment'
+    # IDEA: comments should be indented
     if first_line.lstrip().startswith('#'):
         action = 'uncomment'
     for i in range(start_line, end_line + 1):

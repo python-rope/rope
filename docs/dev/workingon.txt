@@ -1,27 +1,9 @@
 Small Stories
 =============
 
-- Moving `rope.refactor.taskhandle` to `rope.base`
-- Using `TaskHandle` for `History.do()`;
+* Using _MoveTools in MoveMethod
 
-* Refactor `rope.refactor.move`
-
-  * nothing is cached; such as OccurrenceFinder
-  * Extract class _Mover
-  * Changing resources for move module/global look similar
-
-* Better local history: Showing older versions of files; filtered history
-* Should syntax errors in files stop refactorings?
-
-* Validating callinfo
-* Codeassist only shows saved data
-* ObjectDB after change method signature
-* New modules?:
-
-  * `rope.base.args` or `rope.base.callcontext`:
-    Should hold `Arguments`, `ObjectArguments` and `_CallContext`
-  * `rope.base.observer` or `rope.base.resource_observer`:
-    Should hold `ResourceObserver` and `FilteredResourceObserver`
+* Annotation and tags in source code; not changing the source?
 
 
 Remaining Small Stories
@@ -29,9 +11,7 @@ Remaining Small Stories
 
 Base:
 
-* Adding configs for specifying long imports?
 * Changing method to static method refactoring
-* Profiling before ``0.5rc1`` for occurrence finding and SOI
 * Multiple ropes on one project; problems for objectdb and history
 * Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
@@ -40,16 +20,8 @@ Base:
 * ``match_when_unsure`` project config?
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
-* `__setslice__` for per name information?
-* Sorting names in from import list
-* When running `inlinetest` modules we get
-  ``Exception exceptions.SystemError: 'error return without exception set'
-    in <generator object at 0xb7173aec> ignored``
-* Only saving diffs in `ChangeContents`
 * Importing star and removing self imports; stack overflow
 * `PyClass.superclasses` should be concluded data
-* Handling `AssList` for inline variable and encapsulate field
-* Import addition when adding a relative to an absolute import
 
 UI and IDE:
 
@@ -71,4 +43,3 @@ Docs:
 Others:
 
 * Separating UI and functional tests from unit tests
-* Better `ropetest` package structure

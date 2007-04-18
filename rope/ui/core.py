@@ -358,7 +358,7 @@ class Core(object):
                 if action.get_name() != 'repeat_last_action':
                     self.last_action = action
             except RopeError, e:
-                self._report_error(e)
+                self._report_error(e, type(e).__name__)
             if event:
                 return 'break'
         return callback

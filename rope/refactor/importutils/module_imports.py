@@ -160,6 +160,7 @@ class ModuleImports(object):
         return self.pymodule.get_resource().parent
 
     def sort_imports(self):
+        # IDEA: Sort from import list
         all_import_statements = self.get_import_statements()
         visitor = actions.SortingVisitor(self.pycore, self._current_folder())
         for import_statement in all_import_statements:

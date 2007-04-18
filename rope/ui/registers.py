@@ -1,6 +1,6 @@
 import Tkinter
-from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
-                               SearchableList, SearchableListHandle)
+
+from rope.ui.uihelpers import SearchableList, SearchableListHandle
 
 
 class Registers(object):

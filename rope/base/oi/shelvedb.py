@@ -55,16 +55,19 @@ class ShelveObjectDB(object):
 
     def _get_file_dict(self, path, readonly=True):
         if path not in self.cache:
-            if path not in self.index:
-                self.index[path] = self._add_file_for_path(path)
-            name = self.index[path]
-            resource = self.project.get_file(self.root.path + '/' + name)
+            resource = self._get_file_resource(path)
             if readonly and not resource.exists():
                 return
             self.cache[path] = shelve.open(resource.real_path, writeback=True)
             for observer in self.observers:
                 observer.added(path)
         return self.cache[path]
+
+    def _get_file_resource(self, path):
+        if path not in self.index:
+            self.index[path] = self._add_file_for_path(path)
+        name = self.index[path]
+        return self.project.get_file(self.root.path + '/' + name)
 
     def _add_file_for_path(self, path):
         while True:
@@ -99,18 +102,27 @@ class ShelveObjectDB(object):
 
     def validate_files(self):
         for file in list(self.get_files()):
-            if not self.validation.is_file_valid(file):
-                self._remove_file(file)
+            if not self.validation.is_file_valid(file) or \
+               not self._get_file_resource(file).exists():
+                self._remove_file(file, on_disk=False)
 
     def validate_file(self, file):
         if file not in self.index:
             return
+        if not self._get_file_resource(file).exists():
+            self._remove_file(file, on_disk=False)
+            return
         file_dict = self._get_file_dict(file)
         if file_dict is None:
             return
-        for key in list(file_dict):
-            if not self.validation.is_scope_valid(file, key):
-                del file_dict[key]
+        try:
+            for key in file_dict.keys():
+                if not self.validation.is_scope_valid(file, key):
+                    del file_dict[key]
+        except Exception, e:
+            print 'Probably an error in DB: ', type(e), e
+            print 'Print cleaning up! removing <%s> ... ' % file
+            self._remove_file(file)
 
     def file_moved(self, file, newfile):
         if file not in self.index:

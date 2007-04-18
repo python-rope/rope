@@ -126,6 +126,7 @@ class AddingVisitor(ImportInfoVisitor):
         self.pycore = pycore
         self.import_info = import_info
 
+    # TODO: Handle adding relative and absolute imports
     def visitNormalImport(self, import_stmt, import_info):
         if not isinstance(self.import_info, import_info.__class__):
             return False
