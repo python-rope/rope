@@ -204,25 +204,9 @@ New ObjectDB Interface
 
 A new low level interface for using object DBs:
 
-  class InternalObjectDB(object):
+  class InternalDB(object):
 
-      def get_files(self):
-          pass
-
-      def get_returned(self, file, key, args):
-          pass
-
-      def get_pername(self, file, key, name):
-          pass
-
-      def get_callinfos(self, file, key):
-          pass
-
-      def add_callinfo(self, file, key, args, returned):
-          pass
-
-      def save_pername(self, file, key, name):
-          pass
+      files = None
 
   class Table(object):
 

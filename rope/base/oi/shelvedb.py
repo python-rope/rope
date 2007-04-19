@@ -1,20 +1,35 @@
 import os
-import shelve
 import random
+import shelve
 
-from rope.base.oi import objectdb, memorydb
+from rope.base.oi import objectdb
 
 
-class ShelveObjectDB(objectdb.ObjectDB):
+class ShelveObjectDB(objectdb.ObjectDB, objectdb.FileDict):
 
     def __init__(self, project, validation):
+        super(ShelveObjectDB, self).__init__(validation)
         self.project = project
-        self.validation = validation
         self._root = None
         self._index = None
         self.cache = {}
         self.random = random.Random()
-        self.observers = []
+        self.files = self
+
+    def keys(self):
+        return self.index.keys()
+
+    def __contains__(self, key):
+        return key in self.index
+
+    def __getitem__(self, key):
+        return self._get_file_dict(key)
+
+    def create(self, key):
+        self._get_file_dict(key, readonly=False)
+
+    def __delitem__(self, key):
+        self._remove_file(key)
 
     def _get_root(self):
         if self._root is None:
@@ -59,8 +74,6 @@ class ShelveObjectDB(objectdb.ObjectDB):
             if readonly and not resource.exists():
                 return
             self.cache[path] = shelve.open(resource.real_path, writeback=True)
-            for observer in self.observers:
-                observer.added(path)
         return self.cache[path]
 
     def _get_file_resource(self, path):
@@ -78,18 +91,6 @@ class ShelveObjectDB(objectdb.ObjectDB):
                 break
         return new_name
 
-    def get_scope_info(self, path, key, readonly=True):
-        file_dict = self._get_file_dict(path, readonly=readonly)
-        if file_dict is None:
-            return objectdb._NullScopeInfo()
-        if key not in file_dict:
-            if readonly:
-                return objectdb._NullScopeInfo()
-            file_dict[key] = memorydb.ScopeInfo()
-        result = file_dict[key]
-        result._set_validation(self.validation)
-        return result
-
     def sync(self):
         self.index.close()
         for file_dict in self.cache.values():
@@ -97,34 +98,7 @@ class ShelveObjectDB(objectdb.ObjectDB):
         self._index = None
         self.cache.clear()
 
-    def get_files(self):
-        return self.index.keys()
-
-    def validate_files(self):
-        for file in list(self.get_files()):
-            if not self.validation.is_file_valid(file) or \
-               not self._get_file_resource(file).exists():
-                self._remove_file(file, on_disk=False)
-
-    def validate_file(self, file):
-        if file not in self.index:
-            return
-        if not self._get_file_resource(file).exists():
-            self._remove_file(file, on_disk=False)
-            return
-        file_dict = self._get_file_dict(file)
-        if file_dict is None:
-            return
-        try:
-            for key in file_dict.keys():
-                if not self.validation.is_scope_valid(file, key):
-                    del file_dict[key]
-        except Exception, e:
-            print 'Probably an error in DB: ', type(e), e
-            print 'Print cleaning up! removing <%s> ... ' % file
-            self._remove_file(file)
-
-    def file_moved(self, file, newfile):
+    def rename(self, file, newfile):
         if file not in self.index:
             return
         self.index[newfile] = self.index[file]
@@ -140,8 +114,3 @@ class ShelveObjectDB(objectdb.ObjectDB):
         del self.index[file]
         if on_disk:
             self.root.get_child(mapping).remove()
-        for observer in self.observers:
-            observer.removed(file)
-
-    def add_file_list_observer(self, observer):
-        self.observers.append(observer)

@@ -1,104 +1,33 @@
 from rope.base.oi import objectdb
 
 
-class MemoryObjectDB(objectdb.ObjectDB):
+class MemoryObjectDB(objectdb.ObjectDB, objectdb.FileDict):
 
     def __init__(self, validation):
-        self.files = {}
-        self.validation = validation
-        self.observers = []
+        super(MemoryObjectDB, self).__init__(validation)
+        self._files = {}
+        self.files = self
 
-    def get_scope_info(self, path, key, readonly=True):
-        if path not in self.files:
-            if readonly:
-                return objectdb._NullScopeInfo()
-            self._add_file(path)
-        if key not in self.files[path]:
-            if readonly:
-                return objectdb._NullScopeInfo()
-            self.files[path][key] = ScopeInfo()
-            self.files[path][key]._set_validation(self.validation)
-        return self.files[path][key]
+    def keys(self):
+        return self._files.keys()
 
-    def _add_file(self, path):
-        self.files[path] = {}
-        for observer in self.observers:
-            observer.added(path)
+    def __contains__(self, key):
+        return key in self._files
 
-    def get_files(self):
-        return self.files.keys()
+    def __getitem__(self, key):
+        return self._files[key]
 
-    def validate_files(self):
-        for file in list(self.get_files()):
-            if not self.validation.is_file_valid(file):
-                self._remove_file(file)
+    def create(self, path):
+        self._files[path] = {}
 
-    def validate_file(self, file):
-        if file not in self.files:
+    def rename(self, file, newfile):
+        if file not in self._files:
             return
-        for key in list(self.files[file]):
-            if not self.validation.is_scope_valid(file, key):
-                del self.files[file][key]
+        self._files[newfile] = self._files[file]
+        del self[file]
 
-    def file_moved(self, file, newfile):
-        if file not in self.files:
-            return
-        self.files[newfile] = self.files[file]
-        self._remove_file(file)
-
-    def _remove_file(self, file):
-        del self.files[file]
-        for observer in self.observers:
-            observer.removed(file)
-
-    def add_file_list_observer(self, observer):
-        self.observers.append(observer)
+    def __delitem__(self, file):
+        del self._files[file]
 
     def sync(self):
         pass
-
-
-class ScopeInfo(object):
-
-    def __init__(self):
-        self.call_info = {}
-        self.per_name = {}
-        self._validation = None
-
-    def _set_validation(self, validation):
-        """Should be called after creation or unpickling"""
-        self._validation = validation
-
-    def get_per_name(self, name):
-        result = self.per_name.get(name, None)
-        if result is not None and not self._validation.is_value_valid(result):
-            del self.per_name[name]
-            return None
-        return result
-
-    def save_per_name(self, name, value):
-        if name not in self.per_name or \
-           self._validation.is_more_valid(value, self.per_name[name]):
-            self.per_name[name] = value
-
-    def get_returned(self, parameters):
-        result = self.call_info.get(parameters, None)
-        if result is not None and not self._validation.is_value_valid(result):
-            self.call_info[parameters] = None
-            return None
-        return result
-
-    def get_call_infos(self):
-        for args, returned in self.call_info.items():
-            yield objectdb.CallInfo(args, returned)
-
-    def add_call(self, parameters, returned):
-        if parameters not in self.call_info or \
-           self._validation.is_more_valid(returned, self.call_info[parameters]):
-            self.call_info[parameters] = returned
-
-    def __getstate__(self):
-        return (self.call_info, self.per_name)
-
-    def __setstate__(self, data):
-        self.call_info, self.per_name = data

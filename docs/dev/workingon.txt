@@ -1,8 +1,9 @@
 Adding SqliteDB For ObjectInfo
 ==============================
 
-- Adding `sqlitedb` module
-- Adding `objectdb` module
+* Upgrading the old shelvedb
+* Implementing SqlightObjectDB
+* Reporting exceptions that happen in `StoppableTaskRunner`
 
 
 Remaining Small Stories

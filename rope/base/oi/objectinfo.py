@@ -94,9 +94,9 @@ class ObjectInfoManager(object):
                     for parameter in parameters]
 
     def get_passed_objects(self, pyfunction, parameter_index):
-        path, key = self._get_scope(pyobject)
+        path, key = self._get_scope(pyfunction)
         if path is None:
-            return
+            return []
         result = []
         for call_info in self.objectdb.get_callinfos(path, key):
             args = call_info.get_parameters()
