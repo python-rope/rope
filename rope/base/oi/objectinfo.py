@@ -1,17 +1,14 @@
-import os
-
-import rope.base.oi.transform
 import rope.base.project
-from rope.base.oi import memorydb, shelvedb
+from rope.base.oi import objectdb, memorydb, shelvedb, transform
 
 
 class ObjectInfoManager(object):
 
     def __init__(self, project):
         self.project = project
-        self.to_textual = rope.base.oi.transform.PyObjectToTextual(project)
-        self.to_pyobject = rope.base.oi.transform.TextualToPyObject(project)
-        self.doi_to_pyobject = rope.base.oi.transform.DOITextualToPyObject(project)
+        self.to_textual = transform.PyObjectToTextual(project)
+        self.to_pyobject = transform.TextualToPyObject(project)
+        self.doi_to_pyobject = transform.DOITextualToPyObject(project)
         preferred = project.get_prefs().get('objectdb_type', 'memory')
         validation = TextualValidation(self.to_pyobject)
         if preferred == 'memory' or project.ropefolder is None:
@@ -52,8 +49,10 @@ class ObjectInfoManager(object):
         result = self.get_exact_returned(pyobject, args)
         if result is not None:
             return result
-        scope_info = self._find_scope_info(pyobject)
-        for call_info in scope_info.get_call_infos():
+        path, key = self._get_scope(pyobject)
+        if path is None:
+            return None
+        for call_info in self.objectdb.get_callinfos(path, key):
             returned = call_info.get_returned()
             if returned and returned[0] not in ('unknown', 'none'):
                 result = returned
@@ -61,26 +60,29 @@ class ObjectInfoManager(object):
             if result is None:
                 result = returned
         if result is not None:
-            return self.to_pyobject.transform(result)
+            return self.to_pyobject(result)
 
     def get_exact_returned(self, pyobject, args):
-        scope_info = self._find_scope_info(pyobject)
-        returned = scope_info.get_returned(
-            self._args_to_textual(pyobject, args))
-        if returned is not None:
-            return self.to_pyobject.transform(returned)
+        path, key = self._get_scope(pyobject)
+        if path is not None:
+            returned = self.objectdb.get_returned(
+                path, key, self._args_to_textual(pyobject, args))
+            if returned is not None:
+                return self.to_pyobject(returned)
 
     def _args_to_textual(self, pyfunction, args):
         parameters = list(pyfunction.get_param_names(special_args=False))
         arguments = args.get_arguments(parameters)[:len(parameters)]
-        textual_args = tuple([self.to_textual.transform(arg)
+        textual_args = tuple([self.to_textual(arg)
                               for arg in arguments])
         return textual_args
 
     def get_parameter_objects(self, pyobject):
-        scope_info = self._find_scope_info(pyobject)
+        path, key = self._get_scope(pyobject)
+        if path is None:
+            return None
         parameters = None
-        for call_info in scope_info.get_call_infos():
+        for call_info in self.objectdb.get_callinfos(path, key):
             args = call_info.get_parameters()
             if len(args) > 0 and args[-1][0] not in ('unknown', 'none'):
                 parameters = args
@@ -88,13 +90,15 @@ class ObjectInfoManager(object):
             if parameters is None:
                 parameters = args
         if parameters:
-            return [self.to_pyobject.transform(parameter)
+            return [self.to_pyobject(parameter)
                     for parameter in parameters]
 
     def get_passed_objects(self, pyfunction, parameter_index):
-        scope_info = self._find_scope_info(pyfunction)
-        result = set()
-        for call_info in scope_info.get_call_infos():
+        path, key = self._get_scope(pyobject)
+        if path is None:
+            return
+        result = []
+        for call_info in self.objectdb.get_callinfos(path, key):
             args = call_info.get_parameters()
             if len(args) > parameter_index:
                 parameter = self.to_pyobject(args[parameter_index])
@@ -104,8 +108,8 @@ class ObjectInfoManager(object):
 
     def doi_data_received(self, data):
         def doi_to_normal(textual):
-            pyobject = self.doi_to_pyobject.transform(textual)
-            return self.to_textual.transform(pyobject)
+            pyobject = self.doi_to_pyobject(textual)
+            return self.to_textual(pyobject)
         function = doi_to_normal(data[0])
         args = tuple([doi_to_normal(textual) for textual in data[1]])
         returned = doi_to_normal(data[2])
@@ -113,40 +117,42 @@ class ObjectInfoManager(object):
             self._save_data(function, args, returned)
 
     def function_called(self, pyfunction, params, returned=None):
-        function_text = self.to_textual.transform(pyfunction)
-        params_text = tuple([self.to_textual.transform(param)
+        function_text = self.to_textual(pyfunction)
+        params_text = tuple([self.to_textual(param)
                              for param in params])
         returned_text = ('unknown',)
         if returned is not None:
-            returned_text = self.to_textual.transform(returned)
+            returned_text = self.to_textual(returned)
         self._save_data(function_text, params_text, returned_text)
 
     def save_per_name(self, scope, name, data):
-        scope_info = self._find_scope_info(scope.pyobject, readonly=False)
-        scope_info.save_per_name(name, self.to_textual.transform(data))
+        path, key = self._get_scope(scope.pyobject)
+        if path is not None:
+            self.objectdb.add_pername(path, key, name, self.to_textual(data))
 
     def get_per_name(self, scope, name):
-        scope_info = self._find_scope_info(scope.pyobject)
-        result = scope_info.get_per_name(name)
-        if result is not None:
-            return self.to_pyobject.transform(result)
+        path, key = self._get_scope(scope.pyobject)
+        if path is not None:
+            result = self.objectdb.get_pername(path, key, name)
+            if result is not None:
+                return self.to_pyobject(result)
 
     def _save_data(self, function, args, returned=('unknown',)):
-        self.objectdb.get_scope_info(function[1], function[2], readonly=False).\
-             add_call(args, returned)
+        self.objectdb.add_callinfo(function[1], function[2], args, returned)
 
-    def _find_scope_info(self, pyobject, readonly=True):
+    def _get_scope(self, pyobject):
         resource = pyobject.get_module().get_resource()
         if resource is None:
-            return memorydb.NullScopeInfo(error_on_write=False)
-        textual = self.to_textual.transform(pyobject)
+            return None, None
+        textual = self.to_textual(pyobject)
         if textual[0] == 'defined':
             path = textual[1]
             if len(textual) == 3:
                 key = textual[2]
             else:
                 key = ''
-            return self.objectdb.get_scope_info(path, key, readonly=readonly)
+            return path, key
+        return None, None
 
     def sync(self):
         self.objectdb.sync()
@@ -161,7 +167,7 @@ class TextualValidation(object):
         # ???: Should none and unknown be considered valid?
         if value[0] in ('none', 'unknown'):
             return True
-        return self.to_pyobject.transform(value) is not None
+        return self.to_pyobject(value) is not None
 
     def is_more_valid(self, new, old):
         return new[0] not in ('unknown', 'none')
@@ -174,7 +180,7 @@ class TextualValidation(object):
             textual = ('defined', path)
         else:
             textual = ('defined', path, key)
-        return self.to_pyobject.transform(textual) is not None
+        return self.to_pyobject(textual) is not None
 
 
 class _FileListObserver(object):

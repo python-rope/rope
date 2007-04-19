@@ -190,25 +190,87 @@ Saving object data requires having good mechanisms for invalidating
 information and testing.
 
 
-Using A Database
-----------------
+Using SqliteDB
+==============
 
 The shelve module fails mysteriously sometimes.  For this reason I
 think using a database for saving our object information would
 help us get rid of some of the problems.  After a few inspections
 and testing options I decided to do one of the followings:
 
-Using SQLAlchemy
-----------------
 
-SQLAlchemy is a nice tool.  But there are problems:
+New ObjectDB Interface
+----------------------
 
-* Requiring a third party library
-* I could not find a good way to create tables using classes and not
-  using `sqlalchemy.Table` function.
+A new low level interface for using object DBs:
+
+  class InternalObjectDB(object):
+
+      def get_files(self):
+          pass
+
+      def get_returned(self, file, key, args):
+          pass
+
+      def get_pername(self, file, key, name):
+          pass
+
+      def get_callinfos(self, file, key):
+          pass
+
+      def add_callinfo(self, file, key, args, returned):
+          pass
+
+      def save_pername(self, file, key, name):
+          pass
+
+  class Table(object):
+
+      def get_table(self, key, table_name):
+          pass
+
+      def add(self, key):
+          pass
+
+      def remove(self, key):
+          pass
+
+      def contains(self, key):
+          pass
+
+      def get_all(self):
+          pass
+
+  class LeafTable(object):
+
+      def get(self, key):
+          pass
+
+      def set(self, key, value):
+          pass
+
+      def remove(self, key):
+          pass
+
+      def get_all(self, key):
+          pass
+
+      def has_key(self, key):
+          pass
+
+  base = db.base_table()
+  myfile = base.get_table('myfile')
+  pername = myfile.get_table('myscope', 'pername')
+
+* files
+* scopes
+* last level
+
+  * pername: scope_id, name, value
+  * callinfo: scope_id, args, returned
 
 
-Using Sqlite3 directly
+Using Sqlite3 Directly
 ----------------------
 
 The good thing about using sqlite3 is that it is always available in
@@ -237,12 +299,12 @@ The queries and commands that we need:
 
 Maybe we can make it a bit easier by using a helper class::
 
-  class Table(object):
+  class _Table(object):
 
-      def __init__(self):
+      def __init__(self, table_name):
           pass
 
-      def select(self, **kwds):
+      def select(self, what='*', **kwds):
           pass
 
       def insert(self, **kwds):
@@ -262,24 +324,6 @@ Maybe we can make it a bit easier by using a helper class::
                         file='CHAR(255)', key='CHAR(255)')
 
   scopes.insert(file='myfile', key='mykey')
-
-
-Implementing A Simple ORM
--------------------------
-
-I don't want to put much time on it.  My needs are simple.  Lets
-estimate the amount of work needed for it.
-
-* Integer, CHAR, ForeignKey
-* Only one to many relations
-* SELECT *
-* SELECT * where attr=x
-* INSERT
-* UPDATE
-* DELETE
-* ...
-
-This means lots of work and I will give up!
 
 
 Better Concluded Data

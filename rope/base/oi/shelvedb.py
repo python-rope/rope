@@ -2,10 +2,10 @@ import os
 import shelve
 import random
 
-from rope.base.oi import memorydb
+from rope.base.oi import objectdb, memorydb
 
 
-class ShelveObjectDB(object):
+class ShelveObjectDB(objectdb.ObjectDB):
 
     def __init__(self, project, validation):
         self.project = project
@@ -81,10 +81,10 @@ class ShelveObjectDB(object):
     def get_scope_info(self, path, key, readonly=True):
         file_dict = self._get_file_dict(path, readonly=readonly)
         if file_dict is None:
-            return memorydb.NullScopeInfo()
+            return objectdb._NullScopeInfo()
         if key not in file_dict:
             if readonly:
-                return memorydb.NullScopeInfo()
+                return objectdb._NullScopeInfo()
             file_dict[key] = memorydb.ScopeInfo()
         result = file_dict[key]
         result._set_validation(self.validation)

@@ -255,6 +255,7 @@ class _MockFileListObserver(object):
     def removed(self, path):
         self.log += 'removed %s ' % path
 
+
 class ObjectDBTest(unittest.TestCase):
 
     def setUp(self):
@@ -272,128 +273,97 @@ class ObjectDBTest(unittest.TestCase):
 
     @_do_for_all_dbs
     def test_simple_per_name(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.save_per_name('name', 1)
-
-        scope_info = db.get_scope_info('file', 'key')
-        self.assertEqual(1, scope_info.get_per_name('name'))
+        db.add_pername('file', 'key', 'name', 1)
+        self.assertEqual(1, db.get_pername('file', 'key', 'name'))
 
     @_do_for_all_dbs
     def test_simple_per_name_does_not_exist(self, db):
-        scope_info = db.get_scope_info('file', 'key')
-        self.assertEquals(None, scope_info.get_per_name('name'))
+        self.assertEquals(None, db.get_pername('file', 'key', 'name'))
 
     @_do_for_all_dbs
     def test_simple_per_name_after_syncing(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.save_per_name('name', 1)
+        db.add_pername('file', 'key', 'name', 1)
         db.sync()
 
-        scope_info = db.get_scope_info('file', 'key')
-        self.assertEquals(1, scope_info.get_per_name('name'))
+        self.assertEquals(1, db.get_pername('file', 'key', 'name'))
 
     @_do_for_all_dbs
     def test_getting_returned(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
-
-        scope_info = db.get_scope_info('file', 'key')
-        self.assertEquals(3, scope_info.get_returned((1, 2)))
+        db.add_callinfo('file', 'key', (1, 2), 3)
+        self.assertEquals(3, db.get_returned('file', 'key', (1, 2)))
 
     @_do_for_all_dbs
     def test_getting_returned_when_does_not_match(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
-
-        scope_info = db.get_scope_info('file', 'key')
-        self.assertEquals(None, scope_info.get_returned((1, 1)))
+        db.add_callinfo('file', 'key', (1, 2), 3)
+        self.assertEquals(None, db.get_returned('file', 'key', (1, 1)))
 
     @_do_for_all_dbs
     def test_getting_call_info(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
+        db.add_callinfo('file', 'key', (1, 2), 3)
 
-        scope_info = db.get_scope_info('file', 'key')
-        call_infos = list(scope_info.get_call_infos())
+        call_infos = list(db.get_callinfos('file', 'key'))
         self.assertEquals(1, len(call_infos))
         self.assertEquals((1, 2), call_infos[0].get_parameters())
         self.assertEquals(3, call_infos[0].get_returned())
 
     @_do_for_all_dbs
     def test_invalid_per_name(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.save_per_name('name', -1)
-
-        self.assertEquals(None, scope_info.get_per_name('name'))
+        db.add_pername('file', 'key', 'name', -1)
+        self.assertEquals(None, db.get_pername('file', 'key', 'name'))
 
     @_do_for_all_dbs
     def test_overwriting_per_name(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.save_per_name('name', 1)
-        scope_info.save_per_name('name', 2)
-        self.assertEquals(2, scope_info.get_per_name('name'))
+        db.add_pername('file', 'key', 'name', 1)
+        db.add_pername('file', 'key', 'name', 2)
+        self.assertEquals(2, db.get_pername('file', 'key', 'name'))
 
     @_do_for_all_dbs
     def test_not_overwriting_with_invalid_per_name(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.save_per_name('name', 1)
-        scope_info.save_per_name('name', -1)
-        self.assertEquals(1, scope_info.get_per_name('name'))
+        db.add_pername('file', 'key', 'name', 1)
+        db.add_pername('file', 'key', 'name', -1)
+        self.assertEquals(1, db.get_pername('file', 'key', 'name'))
 
     @_do_for_all_dbs
     def test_getting_invalid_returned(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.add_call((1, 2), -1)
-
-        self.assertEquals(None, scope_info.get_returned((1, 2)))
+        db.add_callinfo('file', 'key', (1, 2), -1)
+        self.assertEquals(None, db.get_returned('file', 'key', (1, 2)))
 
     @_do_for_all_dbs
     def test_not_overwriting_with_invalid_returned(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
-        scope_info.add_call((1, 2), -1)
-
-        self.assertEquals(3, scope_info.get_returned((1, 2)))
+        db.add_callinfo('file', 'key', (1, 2), 3)
+        db.add_callinfo('file', 'key', (1, 2), -1)
+        self.assertEquals(3, db.get_returned('file', 'key', (1, 2)))
 
     @_do_for_all_dbs
     def test_get_files(self, db):
-        scope_info = db.get_scope_info('file1', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
-        scope_info = db.get_scope_info('file2', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
-
+        db.add_callinfo('file1', 'key', (1, 2), 3)
+        db.add_callinfo('file2', 'key', (1, 2), 3)
         self.assertEquals(set(['file1', 'file2']), set(db.get_files()))
 
     @_do_for_all_dbs
     def test_validating_files(self, db):
-        scope_info = db.get_scope_info('invalid', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
+        db.add_callinfo('invalid', 'key', (1, 2), 3)
         db.validate_files()
         self.assertEquals(0, len(db.get_files()))
 
     @_do_for_all_dbs
     def test_validating_file_for_scopes(self, db):
-        scope_info = db.get_scope_info('file', 'invalid', readonly=False)
-        scope_info.add_call((1, 2), 3)
+        db.add_callinfo('file', 'invalid', (1, 2), 3)
         db.validate_file('file')
         self.assertEquals(1, len(db.get_files()))
-        scope_info = db.get_scope_info('file', 'invalid', readonly=True)
-        self.assertEquals(0, len(list(scope_info.get_call_infos())))
+        self.assertEquals(0, len(list(db.get_callinfos('file', 'invalid'))))
 
     @_do_for_all_dbs
     def test_validating_file_moved(self, db):
-        scope_info = db.get_scope_info('file', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
+        db.add_callinfo('file', 'key', (1, 2), 3)
 
         db.file_moved('file', 'newfile')
         self.assertEquals(1, len(db.get_files()))
-        scope_info = db.get_scope_info('newfile', 'key', readonly=True)
-        self.assertEquals(1, len(list(scope_info.get_call_infos())))
+        self.assertEquals(1, len(list(db.get_callinfos('newfile', 'key'))))
 
     @_do_for_all_dbs
     def test_using_file_list_observer(self, db):
-        scope_info = db.get_scope_info('invalid', 'key', readonly=False)
-        scope_info.add_call((1, 2), 3)
+        db.add_callinfo('invalid', 'key', (1, 2), 3)
         observer = _MockFileListObserver()
         db.add_file_list_observer(observer)
         db.validate_files()

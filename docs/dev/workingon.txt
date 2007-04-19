@@ -1,17 +1,8 @@
-Small Stories
-=============
+Adding SqliteDB For ObjectInfo
+==============================
 
-- Changing star import from packages to include everything; even
-  all its sum-modules
-- Raising exceptions when moving a module to a nonexistent package
-
-Possible plans for the next release:
-
-* Better concluded data
-* Using DBs in ObjectInfoManager
-* Adding call for UI contributions section and interesting tasks
-* Document features and organize them
-* Annotation and tags in source code; not changing the source?
+- Adding `sqlitedb` module
+- Adding `objectdb` module
 
 
 Remaining Small Stories
@@ -44,6 +35,8 @@ UI and IDE:
 
 Docs:
 
+* Adding call for UI contributions section and interesting tasks
+* Document features and organize them
 * Document how to move fields
 * Describe why rope does not stop the user from performing wrong
   refactorings
