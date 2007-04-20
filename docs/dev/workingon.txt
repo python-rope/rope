@@ -1,8 +1,15 @@
 Adding SqliteDB For ObjectInfo
 ==============================
 
-* Upgrading the old shelvedb
-* Implementing SqlightObjectDB
+- Moving validation from ScopeInfo to ObjectDB
+- Value overwriting in SqliteDB
+
+* Sharing connections
+* Seperate threads
+* Deleting multiple values
+* Removing entries with foreigh keys
+
+* Upgrading the old shelvedb; putting ScopeInfo back to memorydb
 * Reporting exceptions that happen in `StoppableTaskRunner`
 
 

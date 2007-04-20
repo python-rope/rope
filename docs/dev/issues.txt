@@ -199,59 +199,21 @@ help us get rid of some of the problems.  After a few inspections
 and testing options I decided to do one of the followings:
 
 
-New ObjectDB Interface
-----------------------
+Eliminating ScopeInfo
+---------------------
 
-A new low level interface for using object DBs:
+`objectdb` uses `ScopeInfo` for obtaining callinfo and pername
+information.  But in sqlite these data are stored in different tables.
+We should either adapt them to `ScopeInfo` interface or change the
+interface.
 
-  class InternalDB(object):
+The problem with adapting `ScopeInfo` is that dbs don't know anything
+about it.  It is the `objectdb` that assigns it to a scope.
 
-      files = None
+Candidate Interfaces::
 
-  class Table(object):
+  pass
 
-      def get_table(self, key, table_name):
-          pass
-
-      def add(self, key):
-          pass
-
-      def remove(self, key):
-          pass
-
-      def contains(self, key):
-          pass
-
-      def get_all(self):
-          pass
-
-  class LeafTable(object):
-
-      def get(self, key):
-          pass
-
-      def set(self, key, value):
-          pass
-
-      def remove(self, key):
-          pass
-
-      def get_all(self, key):
-          pass
-
-      def has_key(self, key):
-          pass
-
-  base = db.base_table()
-  myfile = base.get_table('myfile')
-  pername = myfile.get_table('myscope', 'pername')
-
-* files
-* scopes
-* last level
-
-  * pername: scope_id, name, value
-  * callinfo: scope_id, args, returned
 
 
 Using Sqlite3 Directly
@@ -299,15 +261,6 @@ Maybe we can make it a bit easier by using a helper class::
 
       def update(self, command, **kwds):
           pass
-
-
-  def create_table(name, **fields):
-      pass
-
-  scopes = create_table('scopes', scope_id='INTEGER',
-                        file='CHAR(255)', key='CHAR(255)')
-
-  scopes.insert(file='myfile', key='mykey')
 
 
 Better Concluded Data

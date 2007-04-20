@@ -79,7 +79,7 @@ class ProjectTest(unittest.TestCase):
             open(project_root, 'w').close()
             project = Project(project_root)
         finally:
-            os.remove(project_root)
+            testutils.remove_recursively(project_root)
 
     def test_creating_folders(self):
         folderName = 'SampleFolder'

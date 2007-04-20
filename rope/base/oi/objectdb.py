@@ -3,9 +3,11 @@ import UserDict
 
 class ObjectDB(object):
 
-    def __init__(self, validation):
+    def __init__(self, db, validation):
+        self.db = db
         self.validation = validation
         self.observers = []
+        self.files = db.files
 
     def validate_files(self):
         for file in self.files:
@@ -32,11 +34,15 @@ class ObjectDB(object):
 
     def get_returned(self, path, key, args):
         scope_info = self._get_scope_info(path, key, readonly=True)
-        return scope_info.get_returned(args)
+        result = scope_info.get_returned(args)
+        if self.validation.is_value_valid(result):
+            return result
 
     def get_pername(self, path, key, name):
         scope_info = self._get_scope_info(path, key, readonly=True)
-        return scope_info.get_per_name(name)
+        result = scope_info.get_per_name(name)
+        if self.validation.is_value_valid(result):
+            return result
 
     def get_callinfos(self, path, key):
         scope_info = self._get_scope_info(path, key, readonly=True)
@@ -44,17 +50,21 @@ class ObjectDB(object):
 
     def add_callinfo(self, path, key, args, returned):
         scope_info = self._get_scope_info(path, key, readonly=False)
-        scope_info.add_call(args, returned)
+        old_returned = scope_info.get_returned(args)
+        if self.validation.is_more_valid(returned, old_returned):
+            scope_info.add_call(args, returned)
 
     def add_pername(self, path, key, name, value):
         scope_info = self._get_scope_info(path, key, readonly=False)
-        scope_info.save_per_name(name, value)
+        old_value = scope_info.get_per_name(name)
+        if self.validation.is_more_valid(value, old_value):
+            scope_info.save_per_name(name, value)
 
     def add_file_list_observer(self, observer):
         self.observers.append(observer)
 
     def sync(self):
-        pass
+        self.db.sync()
 
     def _get_scope_info(self, path, key, readonly=True):
         if path not in self.files:
@@ -65,9 +75,10 @@ class ObjectDB(object):
         if key not in self.files[path]:
             if readonly:
                 return _NullScopeInfo()
-            self.files[path][key] = ScopeInfo()
+            self.files[path].create_scope(key)
         result = self.files[path][key]
-        result._set_validation(self.validation)
+        if isinstance(result, dict):
+            print self.files, self.files[path], self.files[path][key]
         return result
 
     def _file_removed(self, path):
@@ -102,6 +113,39 @@ class _NullScopeInfo(object):
             raise NotImplementedError()
 
 
+class FileInfo(UserDict.DictMixin):
+
+    def create_scope(self, key):
+        pass
+
+
+class FileDict(UserDict.DictMixin):
+
+    def create(self, key):
+        pass
+
+    def rename(self, key, new_key):
+        pass
+
+
+class ScopeInfo(object):
+
+    def get_per_name(self, name):
+        pass
+
+    def save_per_name(self, name, value):
+        pass
+
+    def get_returned(self, parameters):
+        pass
+
+    def get_call_infos(self):
+        pass
+
+    def add_call(self, parameters, returned):
+        pass
+
+
 class CallInfo(object):
 
     def __init__(self, args, returned):
@@ -122,58 +166,3 @@ class FileListObserver(object):
 
     def removed(self, path):
         pass
-
-
-class FileDict(UserDict.DictMixin):
-
-    def create(self, key):
-        pass
-
-    def rename(self, key, new_key):
-        pass
-
-
-class ScopeInfo(object):
-
-    def __init__(self):
-        self.call_info = {}
-        self.per_name = {}
-        self._validation = None
-
-    def _set_validation(self, validation):
-        """Should be called after creation or unpickling"""
-        self._validation = validation
-
-    def get_per_name(self, name):
-        result = self.per_name.get(name, None)
-        if result is not None and not self._validation.is_value_valid(result):
-            del self.per_name[name]
-            return None
-        return result
-
-    def save_per_name(self, name, value):
-        if name not in self.per_name or \
-           self._validation.is_more_valid(value, self.per_name[name]):
-            self.per_name[name] = value
-
-    def get_returned(self, parameters):
-        result = self.call_info.get(parameters, None)
-        if result is not None and not self._validation.is_value_valid(result):
-            self.call_info[parameters] = None
-            return None
-        return result
-
-    def get_call_infos(self):
-        for args, returned in self.call_info.items():
-            yield CallInfo(args, returned)
-
-    def add_call(self, parameters, returned):
-        if parameters not in self.call_info or \
-           self._validation.is_more_valid(returned, self.call_info[parameters]):
-            self.call_info[parameters] = returned
-
-    def __getstate__(self):
-        return (self.call_info, self.per_name)
-
-    def __setstate__(self, data):
-        self.call_info, self.per_name = data

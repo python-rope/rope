@@ -1,4 +1,4 @@
-from rope.base import pyobjects, pynames, builtins, evaluate
+from rope.base import evaluate, pyobjects, builtins, pynames
 from rope.base.oi import dynamicoi, staticoi
 
 
@@ -44,11 +44,12 @@ class ObjectInfer(object):
                 return result
 
     def get_passed_objects(self, pyfunction, parameter_index):
-        result = self.object_info.get_passed_objects(pyfunction, parameter_index)
+        result = self.object_info.get_passed_objects(pyfunction,
+                                                     parameter_index)
         if not result:
             statically_inferred = self.soi.infer_parameter_objects(pyfunction)
             if len(statically_inferred) > parameter_index:
-                result.add(statically_inferred[parameter_index])
+                result.append(statically_inferred[parameter_index])
         return result
 
     def _infer_assignment(self, assignment, pymodule):

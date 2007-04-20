@@ -2,13 +2,12 @@ import os
 import random
 import shelve
 
-from rope.base.oi import objectdb
+from rope.base.oi import objectdb, memorydb
 
 
-class ShelveObjectDB(objectdb.ObjectDB, objectdb.FileDict):
+class ShelveDB(objectdb.FileDict):
 
-    def __init__(self, project, validation):
-        super(ShelveObjectDB, self).__init__(validation)
+    def __init__(self, project):
         self.project = project
         self._root = None
         self._index = None
@@ -23,7 +22,7 @@ class ShelveObjectDB(objectdb.ObjectDB, objectdb.FileDict):
         return key in self.index
 
     def __getitem__(self, key):
-        return self._get_file_dict(key)
+        return memorydb.FileInfo(self._get_file_dict(key))
 
     def create(self, key):
         self._get_file_dict(key, readonly=False)

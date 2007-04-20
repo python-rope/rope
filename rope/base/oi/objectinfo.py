@@ -1,3 +1,5 @@
+import sys
+
 import rope.base.project
 from rope.base.oi import objectdb, memorydb, shelvedb, transform
 
@@ -9,14 +11,21 @@ class ObjectInfoManager(object):
         self.to_textual = transform.PyObjectToTextual(project)
         self.to_pyobject = transform.TextualToPyObject(project)
         self.doi_to_pyobject = transform.DOITextualToPyObject(project)
-        preferred = project.get_prefs().get('objectdb_type', 'memory')
-        validation = TextualValidation(self.to_pyobject)
-        if preferred == 'memory' or project.ropefolder is None:
-            self.objectdb = memorydb.MemoryObjectDB(validation)
-        else:
-            self.objectdb = shelvedb.ShelveObjectDB(project, validation)
+        self._init_objectdb()
         if project.get_prefs().get('validate_objectdb', False):
             self._init_validation()
+
+    def _init_objectdb(self):
+        preferred = self.project.get_prefs().get('objectdb_type', 'memory')
+        validation = TextualValidation(self.to_pyobject)
+        if preferred == 'memory' or self.project.ropefolder is None:
+            db = memorydb.MemoryDB()
+        elif preferred == 'sqlite' and sys.version_info >= (2, 5, 0):
+            import rope.base.oi.sqlitedb
+            db = rope.base.oi.sqlitedb.SqliteDB(self.project)
+        else:
+            db = shelvedb.ShelveDB(self.project)
+        self.objectdb = objectdb.ObjectDB(db, validation)
 
     def _init_validation(self):
         self.objectdb.validate_files()
@@ -103,7 +112,7 @@ class ObjectInfoManager(object):
             if len(args) > parameter_index:
                 parameter = self.to_pyobject(args[parameter_index])
                 if parameter is not None:
-                    result.add(parameter)
+                    result.append(parameter)
         return result
 
     def doi_data_received(self, data):
@@ -165,11 +174,13 @@ class TextualValidation(object):
 
     def is_value_valid(self, value):
         # ???: Should none and unknown be considered valid?
-        if value[0] in ('none', 'unknown'):
-            return True
+        if value is None or value[0] in ('none', 'unknown'):
+            return False
         return self.to_pyobject(value) is not None
 
     def is_more_valid(self, new, old):
+        if old is None:
+            return True
         return new[0] not in ('unknown', 'none')
 
     def is_file_valid(self, path):

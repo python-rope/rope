@@ -1,10 +1,11 @@
+import UserDict
+
 from rope.base.oi import objectdb
 
 
-class MemoryObjectDB(objectdb.ObjectDB, objectdb.FileDict):
+class MemoryDB(objectdb.FileDict):
 
-    def __init__(self, validation):
-        super(MemoryObjectDB, self).__init__(validation)
+    def __init__(self):
         self._files = {}
         self.files = self
 
@@ -15,7 +16,7 @@ class MemoryObjectDB(objectdb.ObjectDB, objectdb.FileDict):
         return key in self._files
 
     def __getitem__(self, key):
-        return self._files[key]
+        return FileInfo(self._files[key])
 
     def create(self, path):
         self._files[path] = {}
@@ -31,3 +32,52 @@ class MemoryObjectDB(objectdb.ObjectDB, objectdb.FileDict):
 
     def sync(self):
         pass
+
+class FileInfo(objectdb.FileInfo):
+
+    def __init__(self, scopes):
+        self.scopes = scopes
+
+    def create_scope(self, key):
+        self.scopes[key] = ScopeInfo()
+
+    def keys(self):
+        return self.scopes.keys()
+
+    def __contains__(self, key):
+        return key in self.scopes
+
+    def __getitem__(self, key):
+        return self.scopes[key]
+
+    def __delitem__(self, key):
+        del self.scopes[key]
+
+
+class ScopeInfo(objectdb.ScopeInfo):
+
+    def __init__(self):
+        self.call_info = {}
+        self.per_name = {}
+
+    def get_per_name(self, name):
+        return self.per_name.get(name, None)
+
+    def save_per_name(self, name, value):
+        self.per_name[name] = value
+
+    def get_returned(self, parameters):
+        return self.call_info.get(parameters, None)
+
+    def get_call_infos(self):
+        for args, returned in self.call_info.items():
+            yield objectdb.CallInfo(args, returned)
+
+    def add_call(self, parameters, returned):
+        self.call_info[parameters] = returned
+
+    def __getstate__(self):
+        return (self.call_info, self.per_name)
+
+    def __setstate__(self, data):
+        self.call_info, self.per_name = data
