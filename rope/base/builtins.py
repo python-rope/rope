@@ -295,7 +295,7 @@ class Dict(BuiltinClass):
             context.save_per_name(items)
         else:
             holding = _infer_sequence_for_pyname(new_dict)
-            if isinstance(holding.get_type(), Tuple):
+            if holding is not None and isinstance(holding.get_type(), Tuple):
                 context.save_per_name(holding)
 
 

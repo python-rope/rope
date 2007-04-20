@@ -190,77 +190,21 @@ Saving object data requires having good mechanisms for invalidating
 information and testing.
 
 
-Using SqliteDB
-==============
+Custom Flat File DB
+-------------------
 
-The shelve module fails mysteriously sometimes.  For this reason I
-think using a database for saving our object information would
-help us get rid of some of the problems.  After a few inspections
-and testing options I decided to do one of the followings:
+The internal DB has to be enhanced.  The `shelve` module can not be
+used since it is known to make mysterious exceptions.
 
+* A single hierarchy; depth? Maybe 3
+* Keys are strings
+* It can use more than one file
+* Writing changes to files lazily
 
-Eliminating ScopeInfo
----------------------
+Candidates:
 
-`objectdb` uses `ScopeInfo` for obtaining callinfo and pername
-information.  But in sqlite these data are stored in different tables.
-We should either adapt them to `ScopeInfo` interface or change the
-interface.
-
-The problem with adapting `ScopeInfo` is that dbs don't know anything
-about it.  It is the `objectdb` that assigns it to a scope.
-
-Candidate Interfaces::
-
-  pass
-
-
-
-Using Sqlite3 Directly
-----------------------
-
-The good thing about using sqlite3 is that it is always available in
-Python 2.5.  The problem is that it requires using SQL inside python
-source code.  It makes changing the DB a really hard task.  And
-refactorings cannot be used to add columns or rename them.
-
-The queries and commands that we need:
-
-* ``select * from per_name where scope_id=? and name=?``
-* ``insert into per_name (name, value) values (?, ?)``
-* ``update per_name set value=? where scope_id=? and name=?``
-* ``delete from users where scope_id=?``
-
-* ``select * from call_info where scope_id=?``
-* ``select * from call_info where scope_id=? and args=?``
-* ``insert into call_info (args, returned) values (?, ?)``
-* ``update call_info set returned=? where scope_id=? and name=?``
-* ``delete from call_info where scope_id=?``
-
-* ``select * from scopes``
-* ``insert into scopes (path, key) values (?, ?)``
-* ``select scope_id from scopes where path=? key=?``
-* ``delete from scopes where file=? key=?``
-
-
-Maybe we can make it a bit easier by using a helper class::
-
-  class _Table(object):
-
-      def __init__(self, table_name):
-          pass
-
-      def select(self, what='*', **kwds):
-          pass
-
-      def insert(self, **kwds):
-          pass
-
-      def delete(self, **kwds):
-          pass
-
-      def update(self, command, **kwds):
-          pass
+* The simplest approach is to save all memorydb in a single file.
+  This needs lots of memory
 
 
 Better Concluded Data

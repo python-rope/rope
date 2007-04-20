@@ -1,6 +1,7 @@
 import cPickle as pickle
 import UserDict
 import sqlite3
+import threading
 
 from rope.base.oi import objectdb
 
@@ -9,6 +10,8 @@ class SqliteDB(objectdb.FileDict):
 
     def __init__(self, project):
         self.project = project
+        self.all_connections = []
+        self.main_thread = threading.currentThread()
         self._connection = None
         self._cursor = None
         if not self._get_db_file().exists():
@@ -20,11 +23,26 @@ class SqliteDB(objectdb.FileDict):
         self.files = FilesTable(self)
 
     def _get_cursor(self):
-        if self._cursor is None:
+        if self._connection is None:
             db = self._get_db_file()
             self._connection = sqlite3.connect(db.real_path)
             self._cursor = self._connection.cursor()
         return self._cursor
+
+    def execute(self, command, args=[]):
+        if self.main_thread == threading.currentThread():
+            result = list(self.cursor.execute(command, args).fetchall())
+            self._connection.commit()
+            return result
+        else:
+            db = self._get_db_file()
+            connection = sqlite3.connect(db.real_path)
+            cursor = connection.cursor()
+            result = list(cursor.execute(command, args))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return result
 
     def _get_db_file(self):
         return self.project.get_file(self.project.ropefolder.path +
@@ -56,13 +74,13 @@ class SqliteDB(objectdb.FileDict):
                         'name VARCHAR(255),' \
                         'value BLOB,' \
                         'FOREIGN KEY (scope_id) REFERENCES scopes (scope_id))'
-        self.cursor.execute(files_table)
-        self.cursor.execute(scopes_table)
-        self.cursor.execute(callinfo_table)
-        self.cursor.execute(pername_table)
+        self.execute(files_table)
+        self.execute(scopes_table)
+        self.execute(callinfo_table)
+        self.execute(pername_table)
 
     def sync(self):
-        if self._cursor is not None:
+        if self._connection is not None:
             self._connection.commit()
             self._cursor.close()
             self._connection.close()
@@ -93,7 +111,11 @@ class FilesTable(objectdb.FileDict):
         self.table.update({'path': newpath}, path=path)
 
     def __delitem__(self, path):
-        # TODO: removing foreign keys
+        file_id = self.table.select('file_id', path=path)[0][0]
+        keys = self.db.scopes_table.select('key', file_id=file_id)
+        file_info = _FileInfo(self.db, file_id)
+        for key in keys:
+            del file_info[key[0]]
         self.table.delete(path=path)
 
 
@@ -120,7 +142,10 @@ class _FileInfo(objectdb.FileInfo):
         return _ScopeInfo(self.db, scope_id)
 
     def __delitem__(self, key):
-        self.table.delete(file_id=self.file_id, key=key)
+        scope_id = self.table.select('scope_id', key=key)[0][0]
+        self.db.callinfos_table.delete(scope_id=scope_id)
+        self.db.pernames_table.delete(scope_id=scope_id)
+        self.table.delete(key=key)
 
 
 class _ScopeInfo(objectdb.ScopeInfo):
@@ -169,17 +194,11 @@ class Table(object):
     def __init__(self, db, name):
         self.db = db
         self.name = name
-        self._cursor = None
-
-    def _get_cursor(self):
-        return self.db.cursor
-
-    cursor = property(_get_cursor)
 
     def select(self, what='*', **kwds):
         where = self._get_where(kwds)
         command = 'SELECT %s FROM %s %s' % (what, self.name, where)
-        return self.cursor.execute(command, kwds.values()).fetchall()
+        return self.db.execute(command, kwds.values())
 
     def _get_where(self, kwds):
         conditions = []
@@ -204,12 +223,12 @@ class Table(object):
         command = 'INSERT INTO %s (%s) VALUES (%s)' % \
                   (self.name, ', '.join(names),
                    ', '.join(['?'] * len(values)))
-        self.cursor.execute(command, values)
+        self.db.execute(command, values)
 
     def delete(self, **kwds):
         where = self._get_where(kwds)
         command = 'DELETE FROM %s %s' % (self.name, where)
-        return self.cursor.execute(command, kwds.values())
+        return self.db.execute(command, kwds.values())
 
     def update(self, sets, **kwds):
         if not self.contains(**kwds):
@@ -226,4 +245,4 @@ class Table(object):
         values.extend(kwds.values())
         command = 'UPDATE %s SET %s %s' % (self.name,
                                            ', '.join(commands), where)
-        return self.cursor.execute(command, values)
+        return self.db.execute(command, values)

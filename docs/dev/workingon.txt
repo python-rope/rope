@@ -3,13 +3,10 @@ Adding SqliteDB For ObjectInfo
 
 - Moving validation from ScopeInfo to ObjectDB
 - Value overwriting in SqliteDB
+- Removing entries with foreigh keys
+- Upgrading the old shelvedb; putting ScopeInfo back to memorydb
 
-* Sharing connections
-* Seperate threads
-* Deleting multiple values
-* Removing entries with foreigh keys
-
-* Upgrading the old shelvedb; putting ScopeInfo back to memorydb
+* Document ``sqlite`` value for ``objectdb_type``project config
 * Reporting exceptions that happen in `StoppableTaskRunner`
 
 
