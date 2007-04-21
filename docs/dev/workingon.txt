@@ -1,13 +1,12 @@
 Adding SqliteDB For ObjectInfo
 ==============================
 
-- Moving validation from ScopeInfo to ObjectDB
-- Value overwriting in SqliteDB
-- Removing entries with foreigh keys
-- Upgrading the old shelvedb; putting ScopeInfo back to memorydb
+- Added ``persisted_memory`` objectdb
+- Document ``sqlite`` value for ``objectdb_type``project config
+- Document ``persisted_memory`` value for ``objectdb_type``project config
 
-* Document ``sqlite`` value for ``objectdb_type``project config
 * Reporting exceptions that happen in `StoppableTaskRunner`
+* Which objectdb should be the default?
 
 
 Remaining Small Stories
@@ -20,7 +19,7 @@ Base:
 * Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * Evaluate function parameter defaults in staticoi?
-* Recursive SOI; Go where the calls go
+* Recursive SOI; Go where the calls go with limited depth
 * ``match_when_unsure`` project config?
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes

@@ -23,8 +23,10 @@ class ObjectInfoManager(object):
         elif preferred == 'sqlite' and sys.version_info >= (2, 5, 0):
             import rope.base.oi.sqlitedb
             db = rope.base.oi.sqlitedb.SqliteDB(self.project)
-        else:
+        elif preferred == 'shelve':
             db = shelvedb.ShelveDB(self.project)
+        elif True or preferred == 'persisted_memory':
+            db = memorydb.MemoryDB(self.project, persist=True)
         self.objectdb = objectdb.ObjectDB(db, validation)
 
     def _init_validation(self):

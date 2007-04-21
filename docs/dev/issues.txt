@@ -154,14 +154,9 @@ scope.  Maybe we can change pynames to support function scopes.
 Enhancing `ObjectInfoManager`
 =============================
 
-* Not saving return value in callinfo when we're approximating?
-* Should every unknown be calculated everytime?
 * Changing `callinfo` to match similar args
-* Saving python elements with no source; `Abstract...`
-* When to forget old results?
 * Some `self`\s are unknown!
-* Updating our db when performing refactorings like move module
-* Returning a `Generator` for generator functions with unknown return type?
+* Returning a `Generator` for unknown generator functions?
 * Validating call infos
 
 
@@ -201,10 +196,17 @@ used since it is known to make mysterious exceptions.
 * It can use more than one file
 * Writing changes to files lazily
 
-Candidates:
+Loading complete files:
 
-* The simplest approach is to save all memorydb in a single file.
-  This needs lots of memory
+* The simplest approach is to save all memorydb in a single file.  This
+  needs lots of memory but is quite fast. -> ``persisted_memory``
+* Saving each `FileInfo` in a file and having an index for each file.
+  This is very much like `shelvedb` but it does not use shelve for
+  individual files and the file dictionaries are read and writtin to
+  files using pickle or marshal.
+* Saving each `ScopeInfo` in a single file.  This does not seem to be
+  a reasonable approach.  For a medium sized project we need more than
+  4k files.
 
 
 Better Concluded Data

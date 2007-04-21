@@ -596,10 +596,37 @@ def set_prefs(prefs):
     # VCSs.  Also they are not shown in "Find File" dialog.
     prefs['ignored_resources'] = ['*.pyc', '.svn', '*~', '.ropeproject']
 
-    # Possible values are 'memory' and 'shelve' for now.  The default
-    # is 'memory'.  If 'shelve', object information is saved to disk
-    # so that it can be used in future sessions.
-    prefs['objectdb_type'] = 'shelve'
+    # This option tells rope how to hold and save object information.
+    # Possible values are:
+    #
+    # * 'memory': It holds all information in
+    #   memory.  So it is the fastest and the least memory efficient.
+    #   Its biggest problem is that the data is not saved and
+    #   the information is lost when you open a project in future.
+    #   You probably never want to use this (it is used in unit
+    #   tests), but if you decide not to have rope folder (see ~/.rope
+    #   file) this db is used.
+    #
+    # * 'persisted_memory': Exactly like 'memory' but the information is
+    #   saved for future sessions.  The problem with this approach is
+    #   that it might take lots of memory (This is not an issue for
+    #   small projects).
+    #
+    # * 'shelve': It stores data in `shelve` files.  This solves
+    #   both the memory efficiency and the persistency problems.  But
+    #   `shelve` is known to cause misterious problems in rare
+    #   conditions.
+    #
+    # * 'sqlite': It uses `sqlite3` module which is available in
+    #   Python distributions from ``2.5``.  It is like 'shelve'
+    #   but probably more reliable.  But it is much less CPU
+    #   efficient.
+    #
+    # The choice of objectdb might be hard.  For small
+    # projects I think 'persisted_memory' is the best.  For larger
+    # projects I prefer 'shelve'.  If you encounter mysterious
+    # problems when using 'shelve' use the slower 'sqlite'.
+    prefs['objectdb_type'] = 'persisted_memory'
 
     # Shows whether to save history across sessions.  Defaults to
     # `False`.
@@ -616,7 +643,7 @@ def set_prefs(prefs):
     # `True`.
     prefs['validate_objectdb'] = True
 
-    # If `True`, rope will analyze each module after it is saved.
+    # If `True`, rope will analyze each module when it is saved.
     prefs['automatic_soi'] = True
 
     # Set the number spaces used for indenting.  According to

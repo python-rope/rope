@@ -1,3 +1,4 @@
+import cPickle as pickle
 import UserDict
 
 from rope.base.oi import objectdb
@@ -5,9 +6,25 @@ from rope.base.oi import objectdb
 
 class MemoryDB(objectdb.FileDict):
 
-    def __init__(self):
-        self._files = {}
+    def __init__(self, project, persist=False):
+        self.project = project
+        self.persist = persist
+        self._load_files()
         self.files = self
+
+    def _get_persisted_file(self):
+        resource = self.project.get_file(
+            self.project.ropefolder.path + '/objectdb.pickle')
+        return resource
+
+    def _load_files(self):
+        self._files = {}
+        if self.persist:
+            persisted = self._get_persisted_file()
+            if persisted.exists():
+                output = open(persisted.real_path, 'rb')
+                self._files = pickle.load(output)
+                output.close()
 
     def keys(self):
         return self._files.keys()
@@ -31,7 +48,11 @@ class MemoryDB(objectdb.FileDict):
         del self._files[file]
 
     def sync(self):
-        pass
+        if self.persist:
+            output = open(self._get_persisted_file().real_path, 'wb')
+            pickle.dump(self._files, output)
+            output.close()
+
 
 class FileInfo(objectdb.FileInfo):
 
