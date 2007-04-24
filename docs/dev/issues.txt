@@ -189,7 +189,7 @@ Custom Flat File DB
 -------------------
 
 The internal DB has to be enhanced.  The `shelve` module can not be
-used since it is known to make mysterious exceptions.
+used since it is known to throw mysterious exceptions.
 
 * A single hierarchy; depth? Maybe 3
 * Keys are strings

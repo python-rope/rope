@@ -1,3 +1,4 @@
+import re
 import ScrolledText
 import Tkinter
 from Tkinter import *
@@ -522,3 +523,65 @@ class ProgressBar(object):
         width = int(self.canvas['width']) * self.percent / 100
         self.canvas.create_rectangle(0, 0, width, self.canvas['height'],
                                      fill=self.color)
+
+
+class HelperMatcher(object):
+
+    def __init__(self, all_entries, to_search_text):
+        self.all_entries = all_entries
+        self.to_search_text = to_search_text
+        self.last_keyword = None
+        self.last_result = None
+
+    def find_matches(self, starting):
+        if starting == self.last_keyword:
+            return self.last_result
+        entries = []
+        if self.last_keyword is not None and \
+           starting.startswith(self.last_keyword):
+            entries = self.last_result
+        else:
+            entries = self.all_entries
+        result = []
+        selector = self._create_selector(starting)
+        for entry in entries:
+            if self._can_match(selector, entry):
+                result.append(entry)
+        self.last_keyword = starting
+        self.last_result = result
+        return result
+
+    def _can_match(self, selector, entry):
+        text = self.to_search_text(entry)
+        if isinstance(text, basestring):
+            return selector.can_select(text)
+        if isinstance(text, list):
+            for subtext in text:
+                if selector.can_select(subtext):
+                    return True
+        return False
+
+    def _create_selector(self, pattern):
+        if '?' in pattern or '*' in pattern:
+            return _RESelector(pattern)
+        else:
+            return _NormalSelector(pattern)
+
+
+class _NormalSelector(object):
+
+    def __init__(self, pattern):
+        self.pattern = pattern
+
+    def can_select(self, input_str):
+        return input_str.startswith(self.pattern)
+
+
+class _RESelector(object):
+
+    def __init__(self, pattern):
+        self.pattern = re.compile((pattern + '*').replace('?', '.').
+                                  replace('*', '.*'))
+
+    def can_select(self, input_str):
+        return self.pattern.match(input_str)

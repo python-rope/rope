@@ -1,12 +1,25 @@
-Adding SqliteDB For ObjectInfo
-==============================
+Small Stories
+=============
 
-- Added ``persisted_memory`` objectdb
-- Document ``sqlite`` value for ``objectdb_type``project config
-- Document ``persisted_memory`` value for ``objectdb_type``project config
+- Adding HelperMatcher
+- Problem finding the changed region after whole buffer change
+- Reporting exceptions that happen in `StoppableTaskRunner`
+- Which objectdb should be the default? 'persisted_memory'
+- Removing listing keybindings in overview.txt and showing all in menus
+- Open type
 
-* Reporting exceptions that happen in `StoppableTaskRunner`
-* Which objectdb should be the default?
+* Problems for highlighting after refactorings
+* Move refactoring and moving a group of elements together
+
+
+For 0.5
+=======
+
+* How rope helps for custom refactorings
+* Request for contributions: ui, documentation, others
+* Write more docs
+* Adding ``random_hacks.txt``?
+* A better homepage with screen-shots?
 
 
 Remaining Small Stories

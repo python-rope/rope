@@ -161,7 +161,7 @@ Rope comes with two kinds of undo/redos.
   Project changes are the changes made to the files in the project.
   These changes consist of things like saving files, creating files/
   folders and refactoring.  You can undo/redo project changes using
-  ``C-x U``/``C-x R``.
+  ``C-x p u``/``C-x p r``.
 
 
 ReStructuredText Files

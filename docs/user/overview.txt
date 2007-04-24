@@ -2,11 +2,6 @@
  Rope Features
 ===============
 
-.. contents:: Table of Contents
-
-
-Overview
-========
 
 The purpose of this file is to give an overview of some of rope's
 features.  It is incomplete.  Because rope is enhancing very fast
@@ -15,125 +10,16 @@ can do in extremes.  So if you really want to feel the power of
 rope try its features and see its unit tests.
 
 
+.. contents:: Table of Contents
+
+
 Keybinding
 ==========
 
-The keybinding will be customizable in future.  Some of these bindings
-are chosen from emacs and some from eclipse.  ("C" stands for Control
-key and "M" for Meta(Alt) key.)
-
-==========================  =============  =============
-binding                     emacs binding  normal
-==========================  =============  =============
-open/new project            C-x C-p        C-P
-close project               C-x p k
-show project tree           C-x p t        M-Q r
-edit project config         C-x p c
-validate project files      C-x p v        F5
-sync project to disk        C-x p s
---------------------------  -------------  -------------
-new module                  C-x n m
-new package                 C-x n p
-new file                    C-x n f
-new directory               C-x n d
-find file                   C-x C-f        C-R
-change active editor        C-x b          C-E
-close active editor         C-x k          C-w
-exit                        C-x C-c        C-W
-run active editor           C-c x p        M-X p
-run unit-tests              C-c x t        M-X t
-run SOI                     C-c x s
---------------------------  -------------  -------------
-save                        C-x C-s        C-s
-save all                    C-x s          C-S
-undo project change         C-x p u        C-Z
-redo project change         C-x p r        C-Y
-project history             C-x p h
---------------------------  -------------  -------------
-forward character           C-f
-backward character          C-b
-next line                   C-n
-previous line               C-p
-next word                   M-f
-previous word               M-b
-next page                   C-v
-previous page               M-v
-downcase word               M-l
-capitalize word             M-c
-upcase word                 M-u
-start searching             C-s            C-f
-start reverse searching     C-r            C-F
-last edit location          C-x C-q        C-q
-goto line                   C-x C-g        C-g
---------------------------  -------------  -------------
-set mark                    C-space
-cut region                  C-w            C-x
-copy region                 M-w            C-c
-swap mark and insert        C-x C-x
-paste                       C-y            C-v
-yank                        M-y
-undo editing                C-x u          C-z
-redo editing                C-x r          C-y
-repeat last action          C-x z
---------------------------  -------------  -------------
-Execute Command             M-x
-Edit ~/.rope                C-x c
---------------------------  -------------  -------------
-code-assist(auto-complete)  M-/            C-space
-go to definition location   C-c g          F3
-show doc                    C-c C-d        F2
-show quick outline          C-c C-o        C-o
-correct line indentation    C-i            C-i
-remove extra spaces         C-c C-f        C-F
-comment current line        C-c c          C-3
-comment region lines        C-c C-c
-find occurrences            C-c C-s        C-G
-show codetags               C-c a t
-show errors                 C-c a e
-show warnings               C-c a w
-show all annotations        C-c a a
---------------------------  -------------  -------------
-rename refactoring          C-c r r        M-R
-extract method              C-c r m        M-M
-move refactoring            C-c r v        M-V
-inline refactoring          C-c r i        M-I
-change method signature     C-c r c        M-C
-extract local variable      C-c r l        M-L
-introduce factory           C-c r f
-method to method object     C-c r j
-encapsulate field           C-c r s
-introduce parameter         C-c r p
-rename in file              C-c r e
-local to field              C-c r b
-inline argument default     C-c r d
-module to package           C-c r 1 p
-rename current module       C-c r 1 r
-move current package        C-c r 1 v
---------------------------  -------------  -------------
-organize imports            C-c i o        C-O
-expand star imports         C-c i x
-relatives to absolutes      C-c i a
-froms to imports            C-c i i
-handle long imports         C-c i l
---------------------------  -------------  -------------
-generate variable           C-c n v        M-G v
-generate function/method    C-c n f        M-G f
-generate class              C-c n c        M-G c
-generate module             C-c n m        M-G m
-generate package            C-c n p        M-G p
---------------------------  -------------  -------------
-spell-check word            M-$
-spell-check buffer          C-x $ b
-spell-check region          C-x $ r
---------------------------  -------------  -------------
-about                       C-h a
-README                      C-h r
-features                    C-h f
-overview                    C-h o
-tutorial                    C-h t
-using as library            C-h l
-contributing                C-h c
-==========================  =============  =============
+You can change the keybinding in ``~/.rope``.  The keybinding is shown
+next to every action in menus.  Some of these bindings are chosen from
+emacs and some from eclipse.  ("C" stands for Control key and "M" for
+Meta(Alt) key.)
 
 
 Code Assist(Auto Complete)
@@ -209,14 +95,13 @@ prefix.
 ``.ropeproject`` Folder
 =======================
 
-``0.5m4`` release added of a new
-folder in projects for holding configurations and other information
-for a project.  Its default name is ``.ropeproject``, but it can be
-changed in ``~/.rope`` or `Project` constructor (if using rope as a
-library).  You can also force rope not to make such a folder by using
-`None` instead of a `str`.
+``0.5m4`` release added of a new folder inside projects for holding
+configurations and other information for a project.  Its default name
+is ``.ropeproject``, but it can be changed in ``~/.rope`` or `Project`
+constructor (if using rope as a library).  You can also force rope not
+to make such a folder by using `None` instead of a `str`.
 
-Currently it is used for these purposes:
+Currently it is used for things such as:
 
 * There is a ``config.py`` file in this folder in which you can change
   project configurations.  Look at the default ``config.py`` file,
@@ -245,7 +130,7 @@ Rope uses this feature by default but you can disable it by editing
 Refactorings
 ============
 
-This section shows some random refactorings you can do using rope.
+This section shows some random refactorings you can perform using rope.
 
 
 Renaming attributes
@@ -553,8 +438,12 @@ relies on rope's object inference mechanisms to find out the
 parameters that are passed to a function.
 
 
-Basic Object Inference
-======================
+Object Inference
+================
+
+
+Static Object Inference
+-----------------------
 
 ::
 
@@ -601,7 +490,7 @@ Enhanced static returned object inference::
     def a_func(arg):
         return arg.c_func()
 
-    a_var = a_func(C)
+    a_var = a_func(C())
 
 Here rope knows that the type of a_var is a `list` that holds `str`\s.
 
@@ -621,10 +510,11 @@ Here the objects `a_var` and `c` hold are known.
 
 Another thing that has been added is SOI analysis (Available in
 ``Edit`` menu or by using ``C-c x s``).  It analyzes a module for
-finding useful object information.  Currently it is used only when the
-user askes (Just like DOI), but in future that might change.
+finding useful object information.  Rope runs SOI analysis whenever a
+files is changed on the changed scopes automatically. (This can be
+overridden in project ``config.py``.)
 
-Many kinds of information is collected during SOI like per name data
+Many kind of information is collected during SOI like per name data
 for builtin container types::
 
   l1 = [C()]
@@ -660,8 +550,8 @@ Many enhancements to rope's object inference has been planned and till
 about them in future releases.
 
 'Rename when unsure' option has been added to rename refactoring.  This
-option tells rope to rename when it doesn't know whether it is an exact
-match or not.  For example after renaming `C.a_func` when the
+option tells rope to rename when it doesn't know whether it is an
+exact match or not.  For example after renaming `C.a_func` when the
 'rename when unsure' option is set in::
 
   class C(object):
@@ -693,7 +583,7 @@ another python defined elements.
 
 
 Dynamic Object Inference
-========================
+------------------------
 
 Dynamic type inference gets its needed information from running
 modules (``M-X p``) or unit tests (``M-X t``).  You open the module
@@ -737,7 +627,7 @@ code assists in `mod1`.
 
 
 Builtin Container Types
------------------------
+'''''''''''''''''''''''
 
 Builtin types can be handled in a limited way, too::
 
@@ -797,14 +687,12 @@ After running `mod1` module test rope's DOI this way:
 Automatic SOI Analysis
 ----------------------
 
-Maybe the most important internal feature added in this release is
-automatic static object inference analysis.  When turned on, it
-analyzes the changed scopes of a file when saving for obtaining object
-information; So this might make saving files a bit more time
-consuming.  This feature is by default turned on, but you can turn it
-off by editing your project ``config.py`` file (available in
-``${your_project_root}/.ropeproject/config.py``, if you're new to
-rope), though that is not recommended.
+When turned on, it analyzes the changed scopes of a file when saving
+for obtaining object information; So this might make saving files a
+bit more time consuming.  This feature is by default turned on, but
+you can turn it off by editing your project ``config.py`` file
+(available in ``${your_project_root}/.ropeproject/config.py``, if
+you're new to rope), though that is not recommended.
 
 
 Outline

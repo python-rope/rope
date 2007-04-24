@@ -54,6 +54,6 @@ class StatusBarManager(object):
         return self.status_text[kind]
 
     def remove_status(self, status):
-        status.label.destroy()
-        del self.status_text[status.kind]
-
+        if status.kind in self.status_text:
+            status.label.destroy()
+            del self.status_text[status.kind]

@@ -114,14 +114,18 @@ def repeat_last_action(context):
         context.core.repeat_last_action()
 
 
-class FindCommandHandle(uihelpers.FindItemHandle):
+class FindCommandHandle(uihelpers.EnhancedListHandle):
 
     def __init__(self, core):
         self.core = core
+        self.matcher = uihelpers.HelperMatcher(
+            list(self.core.get_available_actions()), self._to_search_text)
+
+    def _to_search_text(self, action):
+        return action.get_name()
 
     def find_matches(self, starting):
-        return [action for action in self.core.get_available_actions()
-                if action.get_name().startswith(starting)]
+        return self.matcher.find_matches(starting)
 
     def selected(self, action):
         self.core.perform_action(action)
@@ -160,18 +164,61 @@ def capitalize_word(context):
 def goto_center_line(context):
     context.editor.goto_center_line()
 
+def next_page(context):
+    context.editor.next_page()
+
+def prev_page(context):
+    context.editor.prev_page()
+
+def center_line(context):
+    context.editor.center_line()
+
+def end_of_buffer(context):
+    context.editor.goto_end()
+
+def beginning_of_buffer(context):
+    context.editor.goto_start()
+
+def kill_line(context):
+    context.editor.kill_line()
+
 core = rope.ui.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
 
-actions.append(SimpleAction('next_word', next_word, 'M-f', None, ['all']))
-actions.append(SimpleAction('prev_word', prev_word, 'M-b', None, ['all']))
-actions.append(SimpleAction('delete_next_word', delete_next_word, 'M-d', None, ['all']))
-actions.append(SimpleAction('delete_prev_word', delete_prev_word, 'M-BackSpace', None, ['all']))
-actions.append(SimpleAction('lower_next_word', lower_word, 'M-l', None, ['all']))
-actions.append(SimpleAction('upper_next_word', upper_word, 'M-u', None, ['all']))
-actions.append(SimpleAction('capitalize_next_word', capitalize_word, 'M-c', None, ['all']))
-actions.append(SimpleAction('goto_center_line', goto_center_line, 'M-r', None, ['all']))
+others = MenuAddress(['Edit', 'Others'], 'o', 0)
+core.add_menu_cascade(others, ['all'])
+
+actions.append(SimpleAction('next_word', next_word, 'M-f', 
+                            others.child('Next Word'), ['all']))
+actions.append(SimpleAction('prev_word', prev_word, 'M-b',
+                            others.child('Prev Word'), ['all']))
+actions.append(SimpleAction('goto_center_line', goto_center_line, 'M-r',
+                            others.child('Goto Center Line'), ['all']))
+actions.append(SimpleAction('next_page', next_page, 'C-v',
+                            others.child('Next Page'), ['all']))
+actions.append(SimpleAction('prev_page', prev_page, 'M-v',
+                            others.child('Prev Page'), ['all']))
+actions.append(SimpleAction('center_line', center_line, 'C-l',
+                            others.child('Center Line'), ['all']))
+actions.append(SimpleAction('beginning_of_buffer', beginning_of_buffer, 'M-<',
+                            others.child('Beginning Of Buffer'), ['all']))
+actions.append(SimpleAction('end_of_buffer', end_of_buffer, 'M->',
+                            others.child('End Of Buffer'), ['all']))
+
+actions.append(SimpleAction('delete_next_word', delete_next_word, 'M-d',
+                            others.child('Delete Next Word'), ['all']))
+actions.append(SimpleAction('delete_prev_word', delete_prev_word, 'M-BackSpace',
+                            others.child('Delete Prev Word'), ['all']))
+actions.append(SimpleAction('lower_next_word', lower_word, 'M-l', 
+                            others.child('Lower Next Word'), ['all']))
+actions.append(SimpleAction('upper_next_word', upper_word, 'M-u',
+                            others.child('Upper Next Word'), ['all']))
+actions.append(SimpleAction('capitalize_next_word', capitalize_word, 'M-c',
+                            others.child('Capitalize Next Word'), ['all']))
+actions.append(SimpleAction('kill_line', kill_line, 'C-k', 
+                            others.child('Kill Line'), ['all']))
+
 
 actions.append(SimpleAction('set_mark', set_mark, 'C-space',
                             MenuAddress(['Edit', 'Set Mark'], 's'), ['all']))

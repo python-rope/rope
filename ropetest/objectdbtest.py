@@ -44,7 +44,7 @@ class ObjectDBTest(unittest.TestCase):
         self.project = testutils.sample_project()
         validation = _MockValidation()
         self.dbs = [
-            objectdb.ObjectDB(memorydb.MemoryDB(), validation),
+            objectdb.ObjectDB(memorydb.MemoryDB(self.project), validation),
             objectdb.ObjectDB(shelvedb.ShelveDB(self.project), validation),
             objectdb.ObjectDB(sqlitedb.SqliteDB(self.project), validation)]
 

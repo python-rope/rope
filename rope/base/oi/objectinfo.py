@@ -19,7 +19,7 @@ class ObjectInfoManager(object):
         preferred = self.project.get_prefs().get('objectdb_type', 'memory')
         validation = TextualValidation(self.to_pyobject)
         if preferred == 'memory' or self.project.ropefolder is None:
-            db = memorydb.MemoryDB()
+            db = memorydb.MemoryDB(self.project)
         elif preferred == 'sqlite' and sys.version_info >= (2, 5, 0):
             import rope.base.oi.sqlitedb
             db = rope.base.oi.sqlitedb.SqliteDB(self.project)

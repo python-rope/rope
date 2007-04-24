@@ -21,9 +21,9 @@ Features implemented so far:
 
 * Refactorings
 
-  * Rename class/function/module/package/method/variable/keyword arg
+  * Rename everything!
   * Extract method
-  * Extract variable
+  * Extract local variable
   * Move class/function/module/package/method
   * Inline method/local variable
   * Change method signature
@@ -34,7 +34,9 @@ Features implemented so far:
   * Convert local variable to field
   * Replace method with method object
   * Inline argument default value
+
   * Basic implicit interfaces handling
+  * Fixing imports when needed
   * Previewing refactorings
   * Stopping refactorings
   * Undo/redo refactorings
@@ -75,12 +77,12 @@ Features implemented so far:
 
 * Object Inference
 
-  * A dynamic object inference approach
   * A static object inference approach
+  * A dynamic object inference approach
   * Automatic SOI analysis
   * Handling built-in container types
   * Saving object information on disk
-  * Basic stored object data validation
+  * Stored object data validation
 
 
 Download

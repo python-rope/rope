@@ -73,7 +73,8 @@ class SqliteDB(objectdb.FileDict):
                         'scope_id INTEGER,' \
                         'name VARCHAR(255),' \
                         'value BLOB,' \
-                        'FOREIGN KEY (scope_id) REFERENCES scopes (scope_id))'
+                        'FOREIGN KEY (scope_id) REFERENCES scopes ( scope_id ))'
+
         self.execute(files_table)
         self.execute(scopes_table)
         self.execute(callinfo_table)

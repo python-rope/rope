@@ -136,6 +136,3 @@ Stories
 
 
 * Showing file history
-
-
-* Open Type; ``C-T``

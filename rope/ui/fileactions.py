@@ -11,7 +11,7 @@ from rope.ui.actionhelpers import ConfirmEditorsAreSaved, simple_stoppable
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
-                               SearchableList, SearchableListHandle)
+                               SearchableList, SearchableListHandle, HelperMatcher)
 
 
 def open_project(context):
@@ -130,61 +130,25 @@ def create_package(context):
     _create_resource_dialog(context.get_core(), do_create_package, 'Package', 'Source Folder')
 
 
-class _NormalSelector(object):
-
-    def __init__(self, pattern):
-        self.pattern = pattern
-
-    def can_select(self, input_str):
-        return input_str.startswith(self.pattern)
-
-
-class _RESelector(object):
-
-    def __init__(self, pattern):
-        self.pattern = re.compile((pattern + '*').replace('?', '.').
-                                  replace('*', '.*'))
-
-    def can_select(self, input_str):
-        return self.pattern.match(input_str)
-
-
 class FindFileHandle(object):
 
     def __init__(self, context):
         self.core = context.core
         self.project = context.project
-        self.all_files = None
-        self.last_keyword = None
-        self.last_result = None
+        self.matcher = None
 
     def find_matches(self, starting):
         """Returns the Files in the project whose names starts with starting"""
-        files = []
-        if self.last_keyword is not None and starting.startswith(self.last_keyword):
-            files = self.last_result
-        else:
-            if self.all_files is None:
-                self.all_files = list(self.project.get_files())
-                self.all_files.sort(cmp=self._compare_files)
-            files = self.all_files
-        result = []
-        selector = self._create_selector(starting)
-        for file_ in files:
-            if selector.can_select(file_.name):
-                result.append(file_)
-            elif file_.name == '__init__.py' and \
-                 selector.can_select(file_.parent.name):
-                result.append(file_)
-        self.last_keyword = starting
-        self.last_result = result
-        return result
+        if self.matcher is None:
+            files = list(self.project.get_files())
+            files.sort(cmp=self._compare_files)
+            self.matcher = HelperMatcher(files, self._to_search_text)
+        return self.matcher.find_matches(starting)
 
-    def _create_selector(self, pattern):
-        if '?' in pattern or '*' in pattern:
-            return _RESelector(pattern)
-        else:
-            return _NormalSelector(pattern)
+    def _to_search_text(self, entry):
+        if entry.name == '__init__.py':
+            return [entry.parent.name, '__init__.py']
+        return entry.name
 
     def selected(self, resource):
         self.core.open_file(resource.path)
@@ -215,6 +179,45 @@ def find_file(context):
         return
     find_item_dialog(FindFileHandle(context), title='Find Project File',
                      matches='Matching Files')
+
+
+class FindTypeHandle(object):
+
+    def __init__(self, context):
+        self.core = context.core
+        self.pycore = context.project.get_pycore()
+        self.matcher = None
+
+    def find_matches(self, starting):
+        """Returns the Files in the project whose names starts with starting"""
+        if self.matcher is None:
+            types = list(self.pycore.get_classes())
+            types.sort(cmp=self._compare_types)
+            self.matcher = HelperMatcher(types, self._to_search_text)
+        return self.matcher.find_matches(starting)
+
+    def _to_search_text(self, entry):
+        return entry.get_name()
+
+    def selected(self, pyclass):
+        editor_manager = self.core.get_editor_manager()
+        pymodule = pyclass.get_module()
+        file_editor = editor_manager.get_resource_editor(
+            pymodule.get_resource())
+        file_editor.get_editor().goto_line(pyclass.get_ast().lineno)
+
+    def to_string(self, pyclass):
+        return '%s: %s' % (pyclass.get_module().get_resource().path,
+                           pyclass.get_name())
+
+    def _compare_types(self, type1, type2):
+        return cmp(type1.get_name(), type2.get_name())
+
+def find_type(context):
+    if not rope.ui.actionhelpers.check_project(context.core):
+        return
+    find_item_dialog(FindTypeHandle(context), title='Find Project Type',
+                     matches='Matching Types')
 
 class _ResourceViewHandle(TreeViewHandle):
 
@@ -420,6 +423,8 @@ actions.append(SimpleAction('close_project', close_project, 'C-x p k',
 
 actions.append(SimpleAction('find_file', find_file, 'C-x C-f',
                             MenuAddress(['File', 'Find File...'], 'f', 1)))
+actions.append(SimpleAction('find_type', find_type, 'C-x C-t',
+                            MenuAddress(['File', 'Find Type...'], None, 1)))
 core.add_menu_cascade(MenuAddress(['File', 'New'], 'n', 1), ['all', 'none'])
 actions.append(SimpleAction('create_file', create_file, 'C-x n f',
                             MenuAddress(['File', 'New', 'New File...'], 'f')))

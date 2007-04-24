@@ -3,6 +3,15 @@
 ===========
 
 
+- Open Type; ``C-x C-t`` : April 23, 2007
+
+
+- Adding persisted_memory objectdb : April 20, 2007
+
+
+- Adding sqlite objectdb : April 20, 2007
+
+
 > Public Release 0.5m5 : April 15, 2007
 
 

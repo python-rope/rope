@@ -40,14 +40,14 @@ class StoppableTaskRunner(object):
             def __init__(self, task):
                 self.task = task
                 self.result = None
-                self.interrupted = False
+                self.exception = None
 
             def __call__(self):
                 try:
                     try:
                         self.result = self.task(handle)
-                    except rope.base.exceptions.InterruptedTaskError:
-                        self.interrupted = True
+                    except Exception, e:
+                        self.exception = e
                 finally:
                     toplevel.quit()
         
@@ -66,9 +66,12 @@ class StoppableTaskRunner(object):
         stop_button.focus_set()
         toplevel.mainloop()
         toplevel.destroy()
-        if calculate.interrupted:
+        if calculate.exception is not None:
+            description = type(calculate.exception).__name__ + ': ' + \
+                          str(calculate.exception)
             raise rope.base.exceptions.InterruptedTaskError(
-                'Task <%s> was interrupted' % self.title)
+                'Task <%s> was interrupted.\nReason: <%s>' %
+                (self.title, description))
         return calculate.result
 
 def simple_stoppable(description):

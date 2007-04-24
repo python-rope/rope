@@ -35,6 +35,8 @@ class GraphicalEditor(object):
         self.text.edit_modified(False)
 
     def _text_changed(self):
+        if not self.change_inspector.is_changed():
+            return
         start, end = self.change_inspector.get_changed_region()
         self._colorize(start, end)
         self.change_inspector.clear_changed()
@@ -83,28 +85,12 @@ class GraphicalEditor(object):
         self.text.see(start_index._getIndex())
 
     def _bind_keys(self):
-        def do_goto_start(event):
-            self.goto_start()
-            self.text.see(INSERT)
-        def do_goto_end(event):
-            self.goto_end()
-            self.text.see(INSERT)
-        self.text.bind('<Alt-less>', do_goto_start)
-        self.text.bind('<Alt-KeyPress->>', do_goto_end)
         def escape(event):
             self.clear_mark()
             if self.get_searcher().is_searching():
                 self.get_searcher().cancel_searching()
         self.text.bind('<Control-g>', escape)
         self.text.bind('<Escape>', escape)
-        def go_next_page(event):
-            self.next_page()
-            return 'break'
-        self.text.bind('<Control-v>', go_next_page)
-        def go_prev_page(event):
-            self.prev_page()
-            return 'break'
-        self.text.bind('<Alt-v>', go_prev_page)
         def do_insert_tab(event):
             self.insert_tab()
             return 'break'
@@ -129,11 +115,6 @@ class GraphicalEditor(object):
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
-        def kill_line(event):
-            self.kill_line()
-            return 'break'
-        self.text.bind('<Control-k>', kill_line)
-        self.text.bind('<Control-l>', lambda event: self.center_line())
 
     def center_line(self):
         mid = self._get_center_line()
@@ -723,10 +704,13 @@ class _TextChangeInspector(object):
                 end = self.text.index(self.changed_region[1] + ' +%dc' % len(args[1]))
             if self.text.compare(self.changed_region[0], '<', start):
                 start = self.changed_region[0]
-        if self.changed_region is None and self.change_observer:
-            self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
+        self._notify_observer()
         return result
+
+    def _notify_observer(self):
+        if self.is_changed() and self.change_observer:
+            self.text.after_idle(self.change_observer)
 
     def _delete(self, *args):
         start = self.text.index(args[0])
@@ -743,9 +727,8 @@ class _TextChangeInspector(object):
                 end = self.text.index(self.changed_region[1] + ' -%dc' % delete_len)
             if self.text.compare(self.changed_region[0], '<', start):
                 start = self.changed_region[0]
-        if self.changed_region is None and self.change_observer:
-            self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
+        self._notify_observer()
         return result
 
     def _edit(self, *args):
@@ -761,9 +744,8 @@ class _TextChangeInspector(object):
                 start = self.changed_region[0]
             if self.text.compare(self.changed_region[1], '>', end):
                 end = self.changed_region[1]
-        if self.changed_region is None and self.change_observer:
-            self.text.after_idle(self.change_observer)
         self.changed_region = (start, end)
+        self._notify_observer()
         return result
 
     def get_changed_region(self):
