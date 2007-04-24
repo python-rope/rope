@@ -5,6 +5,7 @@ import sys
 import rope.base.oi.objectinfer
 import rope.base.oi.objectinfo
 import rope.base.project
+from rope.base import taskhandle
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.oi import dynamicoi
 from rope.base.pyobjects import PyModule, PyPackage, PyClass
@@ -249,13 +250,13 @@ class PyCore(object):
         pymodule._invalidate_concluded_data()
         self.object_infer.soi.analyze_module(pymodule, should_analyze)
 
-    def get_subclasses(self, pyclass):
-        classes = self.classes_cache.get_classes()
+    def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
+        classes = self.classes_cache.get_classes(task_handle)
         return [class_ for class_ in classes
                 if pyclass in class_.get_superclasses()]
 
-    def get_classes(self):
-        return self.classes_cache.get_classes()
+    def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
+        return self.classes_cache.get_classes(task_handle)
 
 
 class _ClassesCache(object):
@@ -269,10 +270,15 @@ class _ClassesCache(object):
         if resource in self.cache:
             del self.cache[resource]
 
-    def get_classes(self):
+    def get_classes(self, task_handle):
+        files = self.pycore.get_python_files()
+        job_set = task_handle.create_job_set(name='Looking For Classes',
+                                             count=len(files))
         result = []
-        for resource in self.pycore.get_python_files():
+        for resource in files:
+            job_set.started_job('Working On <%s>' % resource.path)
             result.extend(self._get_resource_classes(resource))
+            job_set.finished_job()
         return result
 
     def _get_resource_classes(self, resource):

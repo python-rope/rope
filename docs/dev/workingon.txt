@@ -15,10 +15,15 @@ Small Stories
 For 0.5
 =======
 
-* How rope helps for custom refactorings
+* How rope helps custom refactorings
 * Request for contributions: ui, documentation, others
 * Write more docs
 * Adding ``random_hacks.txt``?
+
+  * Renaming fields
+  * Using change occurrences
+  * Using templates
+
 * A better homepage with screen-shots?
 
 

@@ -58,7 +58,7 @@ class Rename(object):
               want are renamed.
 
         """
-        old_pynames = self._get_old_pynames(in_file, in_hierarchy)
+        old_pynames = self._get_old_pynames(in_file, in_hierarchy, task_handle)
         if not in_file and len(old_pynames) == 1 and \
            self._is_renaming_a_function_local_name():
             in_file = True
@@ -103,10 +103,10 @@ class Rename(object):
             return True
         return False
 
-    def _get_old_pynames(self, in_file, in_hierarchy):
+    def _get_old_pynames(self, in_file, in_hierarchy, handle):
         return FindMatchingPyNames(
             self.old_instance, self.old_pyname, self.old_name,
-            in_file, in_hierarchy and self.is_method()).get_all()
+            in_file, in_hierarchy and self.is_method(), handle).get_all()
 
     def _get_interesting_files(self, in_file):
         if not in_file:
@@ -210,12 +210,14 @@ class FindMatchingPyNames(object):
     class hierarchy and attributes concluded from implicit interfaces.
     """
 
-    def __init__(self, primary, pyname, name, in_file, in_hierarchy):
+    def __init__(self, primary, pyname, name, in_file,
+                 in_hierarchy, handle=taskhandle.NullTaskHandle()):
         self.name = name
         self.pyname = pyname
         self.instance = primary
         self.in_file = in_file
         self.in_hierarchy = in_hierarchy
+        self.handle = handle
 
     def get_all(self):
         result = set()
@@ -232,7 +234,6 @@ class FindMatchingPyNames(object):
                 result.update(self.get_all_methods_in_hierarchy(
                               self.pyname.get_object().parent, self.name))
         return list(result)
-
 
     def get_all_methods_in_hierarchy(self, pyclass, attr_name):
         superclasses = self._get_superclasses_defining_method(pyclass,
@@ -255,6 +256,6 @@ class FindMatchingPyNames(object):
 
     def _get_all_methods_in_subclasses(self, pyclass, attr_name):
         result = set([pyclass.get_attribute(attr_name)])
-        for subclass in pyclass.pycore.get_subclasses(pyclass):
+        for subclass in pyclass.pycore.get_subclasses(pyclass, self.handle):
             result.update(self._get_all_methods_in_subclasses(subclass, attr_name))
         return result

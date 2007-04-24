@@ -191,7 +191,10 @@ class FindTypeHandle(object):
     def find_matches(self, starting):
         """Returns the Files in the project whose names starts with starting"""
         if self.matcher is None:
-            types = list(self.pycore.get_classes())
+            @simple_stoppable('Finding Classes')
+            def calculate(handle):
+                return self.pycore.get_classes(handle)
+            types = list(calculate())
             types.sort(cmp=self._compare_types)
             self.matcher = HelperMatcher(types, self._to_search_text)
         return self.matcher.find_matches(starting)

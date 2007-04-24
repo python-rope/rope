@@ -38,8 +38,8 @@ class GraphicalEditor(object):
         if not self.change_inspector.is_changed():
             return
         start, end = self.change_inspector.get_changed_region()
-        self._colorize(start, end)
         self.change_inspector.clear_changed()
+        self._colorize(start, end)
         if self.modified_flag:
             for observer in self.change_observers:
                 observer(end)

@@ -501,6 +501,7 @@ class ProgressBar(object):
         self.text = Tkinter.Label(parent, width=80, justify=Tkinter.LEFT)
         self.canvas = canvas = Tkinter.Canvas(parent, height=20)
         self.color = 'blue'
+        self.back_color = canvas['bg']
         self.percent = 0
         canvas.create_rectangle(0, 0, canvas['width'], canvas['height'], fill='')
         canvas.create_rectangle(0, 0, 0, canvas['height'],
@@ -523,6 +524,10 @@ class ProgressBar(object):
         width = int(self.canvas['width']) * self.percent / 100
         self.canvas.create_rectangle(0, 0, width, self.canvas['height'],
                                      fill=self.color)
+        total_width = self.canvas['width']
+        self.canvas.create_rectangle(width, 0, total_width,
+                                     self.canvas['height'],
+                                     fill=self.back_color)
 
 
 class HelperMatcher(object):

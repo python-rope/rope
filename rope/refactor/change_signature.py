@@ -45,7 +45,7 @@ class ChangeSignature(object):
                                         len(self.pycore.get_python_files()))
         pynames = rename.FindMatchingPyNames(
             self.primary, self.pyname, self.name, False,
-            in_hierarchy and self.is_method()).get_all()
+            in_hierarchy and self.is_method(), handle).get_all()
         finder = occurrences.FilteredFinder(self.pycore, self.name, pynames)
         if self.others:
             name, pyname = self.others
