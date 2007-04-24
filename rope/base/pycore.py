@@ -265,21 +265,31 @@ class _ClassesCache(object):
         self.pycore = pycore
         self.pycore.cache_observers.append(self._invalidate_resource)
         self.cache = {}
+        self.changed = True
 
     def _invalidate_resource(self, resource):
         if resource in self.cache:
+            self.changed = True
             del self.cache[resource]
 
     def get_classes(self, task_handle):
         files = self.pycore.get_python_files()
-        job_set = task_handle.create_job_set(name='Looking For Classes',
-                                             count=len(files))
+        job_set = self._get_job_set(files, task_handle)
         result = []
         for resource in files:
             job_set.started_job('Working On <%s>' % resource.path)
             result.extend(self._get_resource_classes(resource))
             job_set.finished_job()
+        self.changed = False
         return result
+
+    def _get_job_set(self, files, task_handle):
+        if self.changed:
+            job_set = task_handle.create_job_set(name='Looking For Classes',
+                                                 count=len(files))
+        else:
+            job_set = taskhandle.NullJobSet()
+        return job_set
 
     def _get_resource_classes(self, resource):
         if resource not in self.cache:

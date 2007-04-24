@@ -1,13 +1,10 @@
 Small Stories
 =============
 
-- Adding HelperMatcher
-- Problem finding the changed region after whole buffer change
-- Reporting exceptions that happen in `StoppableTaskRunner`
-- Which objectdb should be the default? 'persisted_memory'
-- Removing listing keybindings in overview.txt and showing all in menus
-- Open type
+- Multiple 'Collecting Classes' JobSet when collecting methods
+  in hierarchy
 
+* StoppableTaskRunner stops when finished till a GUI event
 * Problems for highlighting after refactorings
 * Move refactoring and moving a group of elements together
 
