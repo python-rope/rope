@@ -222,7 +222,7 @@ class WordRangeFinder(object):
         next_char = self._find_first_non_space_char(start)
         if self.source_code[next_char] == '(':
             try:
-                return self.source_code.index(')', next_char)
+                return self.source_code.index(')', next_char) + 1
             except ValueError:
                 return SyntaxError('Unmatched Parens')
         else:
@@ -238,10 +238,9 @@ class WordRangeFinder(object):
     def is_import_statement(self, offset):
         try:
             last_import = self.source_code.rindex('import ', 0, offset)
-            import_names = last_import + 8
         except ValueError:
             return False
-        return self._find_import_pair_end(import_names) >= offset
+        return self._find_import_pair_end(last_import + 7) >= offset
 
     def is_from_statement(self, offset):
         try:

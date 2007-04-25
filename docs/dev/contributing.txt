@@ -10,7 +10,7 @@ Rope was started because of the lack of good refactoring tools for
 python.  But after observing python IDE limitations we grew bigger
 ideas in our heads.
 
-If you want to have more a powerful python IDE and have big ideas
+If you want to have a more powerful python IDE and have big ideas
 in your head, you are welcome to get involved.
 
 
@@ -24,6 +24,47 @@ How to Help Rope?
 
 .. _rope project page: http://sf.net/projects/rope
 .. _`rope-developers`: rope-developers@lists.sourceforge.net
+
+
+Wish List
+=========
+
+If you're interested you are welcome discuss your ideas in
+`rope-developers`_ mailing list or send your patches.  Here is only a
+list of suggestions.
+
+A New GUI
+---------
+
+Right now rope uses Tkinter for its GUI.  But Tkinter, as many have
+complained about, looks very bad and is not suitable for writing an
+IDE.  The UI parts of rope, ie. `rope.ui` package, is a layer on top
+of other core parts of rope.  When I started rope I hoped that someday
+the IDE and UI parts of rope (`rope.ui` and `rope.ide` packages) would
+be developed by other developers and I still do hope so.  So if you're
+interested in working on GUI/IDE part of rope using something like
+`pygtk` or `wxPython` you're welcome.
+
+Formatting
+----------
+
+You can format python source code.  This probably needs using ASTs and
+writing them.
+
+Detecting Warnings
+------------------
+
+This might include detecting unused variables and imports or
+unreachable statements.  `rope.base` can help, too.  Currently rope
+only detects redefined elements.
+
+Modules Without Source Code
+---------------------------
+
+Rope cannot know anything about python C extensions and compiled
+modules without matching source code.  Some information can be
+gathered using `inspect` module.  But that is not safe but better than
+nothing.  This requires a good knowledge of `rope.base`.
 
 
 Rope Structure
@@ -42,20 +83,6 @@ description.  Also have a look at `library.txt`_ for a few
 examples.
 
 .. _`library.txt`: library.html
-
-
-Wish List
-=========
-
-Right now rope uses Tkinter for its GUI.  But Tkinter, as many have
-complained about, looks very bad and is not suitable for writing an
-IDE.  The UI parts of rope, ie. `rope.ui` package, is a layer on top
-of other core parts of rope.  When I started rope I hoped that
-someday the IDE and UI parts of rope (`rope.ui` and `rope.ide`
-packages) would be developed by other developers and I still do hope
-so.  If you're interested, start sending patches or if you want to
-use some other graphical library like wxPython send a basic but
-working UI.
 
 
 Submitting patches

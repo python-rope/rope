@@ -1,5 +1,5 @@
 ===============
- Rope Features
+ Rope Overview
 ===============
 
 
@@ -8,6 +8,8 @@ features.  It is incomplete.  Because rope is enhancing very fast
 some of the features shown here are old and do not show what rope
 can do in extremes.  So if you really want to feel the power of
 rope try its features and see its unit tests.
+
+Note that this file assumes emacs keybinding.
 
 
 .. contents:: Table of Contents
@@ -54,13 +56,14 @@ module; It will be copied to ``~/.rope`` if none already exists.)
 Show PyDoc
 ----------
 
-Try it!
+By using ``C-c C-d`` you can tell rope to show the pydoc of a python
+defined element.
 
 
 Goto Definition
 ---------------
 
-Try it!
+You can use ``C-c g`` for going to the line a name was defined in.
 
 
 Generate Python Elements
@@ -92,14 +95,28 @@ to emacs's bookmarks and registers.  These actions use ``C-x m``
 prefix.
 
 
+Defining Templates
+------------------
+
+You can define your own templates in ``~/.rope``.  You can use ``C-x c``
+and a line like this::
+
+    core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
+
+This defines a new python template called ``say_hello``.  Now if you
+type ``say_`` in a python file and use code-assist (``M-/``), this
+template will be proposed.  If you press enter you can insert the
+value to be used as ``name``.
+
+
 ``.ropeproject`` Folder
 =======================
 
-``0.5m4`` release added of a new folder inside projects for holding
-configurations and other information for a project.  Its default name
-is ``.ropeproject``, but it can be changed in ``~/.rope`` or `Project`
-constructor (if using rope as a library).  You can also force rope not
-to make such a folder by using `None` instead of a `str`.
+Rope uses a folder inside projects for holding project configuration
+and data.  Its default name is ``.ropeproject``, but it can be changed
+in ``~/.rope`` or `Project` constructor (if using rope as a library).
+You can also force rope not to make such a folder by using `None`
+instead of a `str`.
 
 Currently it is used for things such as:
 
@@ -130,7 +147,8 @@ Rope uses this feature by default but you can disable it by editing
 Refactorings
 ============
 
-This section shows some random refactorings you can perform using rope.
+This section shows some random refactorings that you can perform using
+rope.
 
 
 Renaming attributes
@@ -175,7 +193,7 @@ We have::
   a_func(a_param=10)
   a_func(10)
 
-After performing rename refactoring on any occurance of ``a_param``
+After performing rename refactoring on any occurrence of ``a_param``
 we will have::
 
   def a_func(new_param):
@@ -202,7 +220,7 @@ Consider the project tree is something like::
   mod2.a_func()
   a_var = AClass()
 
-After performing rename refactoring one of the ``mod2`` occurances in
+After performing rename refactoring one of the ``mod2`` occurrences in
 `mod1` we'll get::
 
   import newmod
@@ -229,6 +247,7 @@ and strings only when the name is visible there.  For example in::
 
   def f():
       a_var = 1
+      # INFO: I'm printing `a_var`
       print 'a_var = %s' % a_var
 
   # f prints a_var
@@ -238,6 +257,7 @@ would get::
 
   def f():
       new_var = 1
+      # INFO: I'm printing `new_var`
       print 'new_var = %s' % new_var
 
   # f prints a_var
@@ -255,6 +275,96 @@ In this refactoring a method of a class is moved to the class of one
 of its attributes.  The old method will call the new method.  If you
 want to change all of the occurrences of the old method to use the new
 method you can inline it afterwards.
+
+For instance if you perform move method on `a_method` in::
+
+  class A(object):
+      pass
+
+  class B(object):
+
+      def __init__(self):
+          self.attr = A()
+
+      def a_method(self):
+          pass
+
+  b = B()
+  b.a_method()
+
+You will be asked for the destination field and the name of the new
+method.  If you use ``attr`` and ``new_method`` in these fields
+and press enter, you'll have::
+      
+  class A(object):
+
+      def new_method(self):
+          pass
+
+  class B(object):
+
+      def __init__(self):
+          self.attr = A()
+
+      def a_method(self):
+          return self.attr.new_method()
+
+
+  b = B()
+  b.a_method()
+
+Now if you want to change the occurrences of `B.a_method()` to use
+`A.new_method()`, you can inline `B.a_method()`::
+
+  class A(object):
+
+      def new_method(self):
+          pass
+
+  class B(object):
+
+      def __init__(self):
+          self.attr = A()
+
+  b = B()
+  b.attr.new_method()
+
+
+Moving Fields
+-------------
+
+Rope does not have a separate refactoring for moving fields.  Rope's
+refactorings are very flexible.  You can use the rename refactoring to
+rename fields.  For instance::
+
+  class A(object):
+      pass
+
+  class B(object):
+
+      def __init__(self):
+          self.a = A()
+          self.attr = 1
+
+  b = B()
+  print(b.attr)
+
+consider we want to move `attr` to `A`.  We can do that by renaming `attr`
+to `a.attr`::
+  
+  class A(object):
+      pass
+
+  class B(object):
+
+      def __init__(self):
+          self.a = A()
+          self.attr = 1
+
+  b = B()
+  print(b.a.attr)
+
+You can move the definition of `attr` manually.
 
 
 Extract Method
@@ -382,6 +492,7 @@ to monitor or stop these refactoring you can pass a `rope.refactor.
 taskhandle.TaskHandle` to this method.  See `rope.refactor.taskhandle`
 module for more information.
 
+
 Basic Implicit Interfaces
 -------------------------
 
@@ -431,7 +542,6 @@ function to `newcount` will result in::
 
   count_for(A())
   count_for(B())
-
 
 This also works for change method signature.  Note that this feature
 relies on rope's object inference mechanisms to find out the
@@ -524,7 +634,7 @@ for builtin container types::
   l2.append(C())
   var2 = l2.pop()
 
-Here rope knowns the type of `var1` without doing anything.  But for
+Here rope knows the type of `var1` without doing anything.  But for
 knowing the type of `var2` we need to analyze the items added to `l2`
 which might happen in other modules.  Rope can find out that by
 running SOI analysis on this module.
@@ -711,7 +821,7 @@ creating new files or when moving modules and packages for
 refactorings it will call the appropriate subversion commands.  The
 subversion support is automatically turned on when there is a ``.svn``
 folder inside project root and the ``pysvn`` package is
-available. (You can get PySVN from http://pysvn.tigris.org ).  Rope
+available. (You can get PySVN from http://pysvn.tigris.org).  Rope
 assumes all files are under version control when these conditions are
 met.  Also don't forget to commit your changes yourself, rope doesn't
 do that yet.

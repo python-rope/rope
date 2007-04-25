@@ -85,6 +85,11 @@ Features implemented so far:
   * Stored object data validation
 
 
+For more information see `overview.txt`_.
+
+.. _overview.txt: user/overview.html
+
+
 Download
 ========
 

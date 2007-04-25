@@ -22,6 +22,7 @@ class ImportUtilsTest(unittest.TestCase):
         p2 = self.pycore.create_package(p1, 'p2')
         p3 = self.pycore.create_package(p2, 'p3')
         m1 = self.pycore.create_module(p3, 'm1')
+        l = self.pycore.create_module(p3, 'l')
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -717,6 +718,13 @@ class ImportUtilsTest(unittest.TestCase):
             'from p1.p2.p3 import m1\n\n\nm = m1\n',
             self.import_tools.handle_long_imports(pymod, maxdots=3,
                                                   maxlength=10))
+
+    def test_handling_long_imports_with_one_letter_last(self):
+        self.mod.write('import p1.p2.p3.l\n\n\nm = p1.p2.p3.l\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from p1.p2.p3 import l\n\n\nm = l\n',
+            self.import_tools.handle_long_imports(pymod, maxdots=2))
 
     def test_empty_removing_unused_imports_and_eating_blank_lines(self):
         self.mod.write('import pkg1\nimport pkg2\n\n\nprint pkg1\n')

@@ -167,6 +167,7 @@ class ImportTools(object):
             module_imports.get_changed_source(),
             resource=pymodule.get_resource())
         for name in to_be_fixed:
-            pymodule = self._rename_in_module(pymodule, name, name.split('.')[-1])
+            pymodule = self._rename_in_module(pymodule, name,
+                                              name.split('.')[-1])
         # organizing imports
         return self.organize_imports(pymodule)

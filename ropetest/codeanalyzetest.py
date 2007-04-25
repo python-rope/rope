@@ -233,6 +233,11 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertTrue(word_finder.is_import_statement(code.index('mod') + 1))
         self.assertFalse(word_finder.is_import_statement(code.index('a_var') + 1))
 
+    def test_import_statement_finding2(self):
+        code = 'import a.b.c.d\nresult = a.b.c.d.f()\n'
+        word_finder = WordRangeFinder(code)
+        self.assertFalse(word_finder.is_import_statement(code.rindex('d') + 1))
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 
