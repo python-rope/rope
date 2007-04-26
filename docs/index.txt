@@ -85,9 +85,11 @@ Features implemented so far:
   * Stored object data validation
 
 
-For more information see `overview.txt`_.
+For more information see `overview.txt`_.  Here are a few
+`screen-shots`_.
 
 .. _overview.txt: user/overview.html
+.. _`screen-shots`: screenshots/screenshots.html
 
 
 Download

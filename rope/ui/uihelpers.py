@@ -218,12 +218,14 @@ class _DescriptionListHandle(EnhancedListHandle):
 
 class DescriptionList(object):
 
-    def __init__(self, parent, title, description):
+    def __init__(self, parent, title, description, height=12, indexwidth=50):
         frame = Tkinter.Frame(parent)
 
-        description_text = ScrolledText.ScrolledText(frame, height=12, width=80)
+        description_text = ScrolledText.ScrolledText(frame, height=height,
+                                                     width=80)
         self.handle = _DescriptionListHandle(description_text, description)
-        self.list = EnhancedList(frame, self.handle, title)
+        self.list = EnhancedList(frame, self.handle, title,
+                                 height=height, width=indexwidth)
         description_text.grid(row=0, column=1, sticky=N+E+W+S)
         frame.grid()
 

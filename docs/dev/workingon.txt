@@ -1,10 +1,6 @@
 Small Stories
 =============
 
-- Document how to rename fields
-- Document how to use templates
-- Fixing handling long imports for single character imports
-
 * Not compiling when only the commented lines change in codeassist
 * StoppableTaskRunner stops when finished till a GUI event
 * Problems for highlighting after refactorings
@@ -14,12 +10,8 @@ Small Stories
 For 0.5
 =======
 
-* How rope helps custom refactorings
-* Request for contributions: ui, documentation, others
-* Write more docs
 * Renaming ``overview.txt``? ``random_hacks.txt``?
 * Using change occurrences in docs
-* A better homepage with screen-shots?
 
 
 Remaining Small Stories
@@ -52,7 +44,6 @@ UI and IDE:
 
 Docs:
 
-* Adding call for UI contributions section and interesting tasks
 * Document features and organize them
 * Describe why rope does not stop the user from performing wrong
   refactorings

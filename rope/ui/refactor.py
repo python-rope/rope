@@ -34,24 +34,25 @@ class PreviewAndCommitChanges(object):
 
         def description(change):
             return change.get_description()
-        description_list = DescriptionList(toplevel, 'Changes', description)
+        frame = Tkinter.Frame(toplevel)
+        description_list = DescriptionList(frame, 'Changes', description,
+                                           indexwidth=30)
         for change in self.changes.changes:
             description_list.add_entry(change)
 
-        frame = Tkinter.Frame(toplevel)
         def ok(event=None):
             toplevel.destroy()
             self.commit()
         def cancel(event=None):
             toplevel.destroy()
-        ok_button = Tkinter.Button(frame, text='OK', command=ok)
-        cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+        ok_button = Tkinter.Button(toplevel, text='Perform', command=ok)
+        cancel_button = Tkinter.Button(toplevel, text='Cancel', command=cancel)
+        frame.grid(row=0, columnspan=2)
         ok_button.grid(row=1, column=0)
+        cancel_button.grid(row=1, column=1)
         #toplevel.bind('<Return>', lambda event: ok())
         toplevel.bind('<Escape>', lambda event: cancel())
         toplevel.bind('<Control-g>', lambda event: cancel())
-        cancel_button.grid(row=1, column=1)
-        frame.grid()
 
     def commit(self):
         def commit(handle):
@@ -471,7 +472,7 @@ class ChangeMethodSignatureDialog(RefactoringDialog):
         param_frame = Tkinter.Frame(frame)
         self.param_list = VolatileList(
             param_frame, _ParameterListHandle(self.definition_info),
-            "Parameters")
+            "Parameters", width=25)
         for pair in self.definition_info.args_with_defaults:
             self.param_list.add_entry(_Parameter(pair[0]))
         if self.definition_info.args_arg is not None:

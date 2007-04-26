@@ -49,6 +49,7 @@ def do_quick_outline(context):
         tree_view.add_entry(node)
     toplevel.grab_set()
 
+
 class _CompletionListHandle(EnhancedListHandle):
 
     def __init__(self, editor, toplevel, code_assist_result):
@@ -91,7 +92,7 @@ def do_code_assist(context):
     toplevel.title('Code Assist Proposals')
     handle = _CompletionListHandle(editor, toplevel, result)
     enhanced_list = EnhancedList(
-        toplevel, handle, title='Code Assist Proposals')
+        toplevel, handle, title='Code Assist Proposals', height=9, width=30)
     proposals = rope.ide.codeassist.ProposalSorter(result).get_sorted_proposal_list()
     for proposal in proposals:
         enhanced_list.add_entry(proposal)

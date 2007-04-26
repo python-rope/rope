@@ -90,8 +90,14 @@ class PyObjectToTextual(object):
         return ('builtin', 'function', pyobject.get_name())
 
     def _get_pymodule_path(self, pymodule):
-        resource = pymodule.get_resource()
-        return resource.real_path
+        return self.resource_to_path(pymodule.get_resource())
+
+    def resource_to_path(self, resource):
+        real_path = resource.real_path
+        if real_path.startswith(self.project.address):
+            return resource.path
+        else:
+            return real_path
 
 
 class TextualToPyObject(object):
@@ -194,21 +200,21 @@ class TextualToPyObject(object):
             return rope.base.pyobjects.PyObject(type)
 
     def _get_pymodule(self, path):
-        resource = self.file_to_resource(path)
+        resource = self.path_to_resource(path)
         if resource is not None:
             return self.project.get_pycore().resource_to_pyobject(resource)
 
-    def file_to_resource(self, path):
+    def path_to_resource(self, path):
         try:
-            root = os.path.abspath(self.project.address)
+            root = self.project.address
+            if not os.path.isabs(path):
+                return self.project.get_resource(path)
             if path.startswith(root):
                 relative_path = path[len(root):]
                 if relative_path.startswith('/') or relative_path.startswith(os.sep):
                     relative_path = relative_path[1:]
-                resource = self.project.get_resource(relative_path)
-            else:
-                resource = rope.base.project.get_no_project().get_resource(path)
-            return resource
+                return self.project.get_resource(relative_path)
+            return rope.base.project.get_no_project().get_resource(path)
         except exceptions.RopeError:
             return None
 

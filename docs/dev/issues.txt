@@ -94,21 +94,6 @@ We should measure the amount of memory each of them uses to make
 decisions.
 
 
-Introducing `TemporaryScope`
-============================
-
-There are some language structures that have their own separate scope
-like lambdas, list comprehensions and generator expressions.
-
-These scopes does not have any nested scopes and their parent scopes
-do not include them as their sub-scopes.  The main character of these
-scopes is that the names defined there are not visible from outside.
-What's more they are a single expression.
-
-Lambda have a longer story.  We want the SOI to be able to infer their
-returned value.  We don't want DOI for lambdas.
-
-
 Better SOI
 ==========
 
@@ -207,6 +192,17 @@ Loading complete files:
 * Saving each `ScopeInfo` in a single file.  This does not seem to be
   a reasonable approach.  For a medium sized project we need more than
   4k files.
+
+
+Project Root Short Form
+-----------------------
+
+In our objectdb there are lots of references to files inside our
+project.  Currently these references are absolute.  There are two main
+problems with holding absolute path for files inside projects.
+
+* When moving the project all local information should be thrown away.
+* Lots of extra memory is put on saving project directory
 
 
 Better Concluded Data

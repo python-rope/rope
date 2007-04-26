@@ -36,7 +36,7 @@ class ObjectInfoManager(object):
             removed=self._resource_moved)
         files = []
         for path in self.objectdb.get_files():
-            resource = self.to_pyobject.file_to_resource(path)
+            resource = self.to_pyobject.path_to_resource(path)
             if resource is not None and resource.project == self.project:
                 files.append(resource)
         self.observer = rope.base.project.FilteredResourceObserver(observer,
@@ -46,14 +46,17 @@ class ObjectInfoManager(object):
 
     def _resource_changed(self, resource):
         try:
-            self.objectdb.validate_file(resource.real_path)
+            self.objectdb.validate_file(
+                self.to_textual.resource_to_path(resource))
         except SyntaxError:
             pass
 
     def _resource_moved(self, resource, new_resource=None):
         self.observer.remove_resource(resource)
         if new_resource is not None:
-            self.objectdb.file_moved(resource.real_path, new_resource.real_path)
+            old = self.to_textual.resource_to_path(resource)
+            new = self.to_textual.resource_to_path(new_resource)
+            self.objectdb.file_moved(old, new)
             self.observer.add_resource(new_resource)
 
     def get_returned(self, pyobject, args):
@@ -186,7 +189,7 @@ class TextualValidation(object):
         return new[0] not in ('unknown', 'none')
 
     def is_file_valid(self, path):
-        return self.to_pyobject.file_to_resource(path) is not None
+        return self.to_pyobject.path_to_resource(path) is not None
 
     def is_scope_valid(self, path, key):
         if key == '':
@@ -204,11 +207,11 @@ class _FileListObserver(object):
         self.to_pyobject = self.object_info.to_pyobject
 
     def removed(self, path):
-        resource = self.to_pyobject.file_to_resource(path)
+        resource = self.to_pyobject.path_to_resource(path)
         if resource is not None:
             self.observer.remove_resource(resource)
 
     def added(self, path):
-        resource = self.to_pyobject.file_to_resource(path)
+        resource = self.to_pyobject.path_to_resource(path)
         if resource is not None:
             self.observer.add_resource(resource)

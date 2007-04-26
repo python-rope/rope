@@ -33,6 +33,7 @@ class GUITestResult(object):
 
     def add_failure(self, test_name, error):
         self.progress.set_color('red')
+        self.gui_runner.add_failure(test_name, error)
         return True
 
     def set_test_count(self, count):
@@ -71,7 +72,8 @@ class GUITestRunner(object):
         self.failures = {}
         def description(test_name):
             return self.failures[test_name]
-        self.description_list = DescriptionList(self.toplevel, 'Failures', description)
+        self.description_list = DescriptionList(
+            self.toplevel, 'Failures', description, indexwidth=30, height=10)
         self.ok_button = Tkinter.Button(self.toplevel, text='Stop',
                                         command=self._ok)
         self.ok_button.grid(row=4)
@@ -81,6 +83,7 @@ class GUITestRunner(object):
 
     def add_failure(self, test_name, error):
         self.failures[test_name] = error
+        self.description_list.add_entry(test_name)
 
     def _ok(self, event=None):
         if self.result._is_finished():
