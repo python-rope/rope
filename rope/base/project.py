@@ -91,7 +91,7 @@ class _Project(object):
 
     def close(self):
         """Closes project open resources"""
-        if self._history is None:
+        if self._history is not None:
             self.history.sync()
 
     def sync(self):
@@ -131,7 +131,8 @@ class Project(_Project):
               overwrite config file preferences.
 
         """
-        self._address = os.path.abspath(os.path.expanduser(projectroot))
+        self._address = os.path.abspath(
+            os.path.expanduser(projectroot)).rstrip('/\\')
         if not os.path.exists(self._address):
             os.mkdir(self._address)
         elif not os.path.isdir(self._address):

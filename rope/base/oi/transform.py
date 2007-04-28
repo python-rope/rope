@@ -103,7 +103,7 @@ class PyObjectToTextual(object):
 class TextualToPyObject(object):
     """For transforming textual form to `PyObject`"""
 
-    def __init__(self, project):
+    def __init__(self, project, allow_in_project_absolutes=False):
         self.project = project
 
     def __call__(self, textual):
@@ -210,10 +210,8 @@ class TextualToPyObject(object):
             if not os.path.isabs(path):
                 return self.project.get_resource(path)
             if path.startswith(root):
-                relative_path = path[len(root):]
-                if relative_path.startswith('/') or relative_path.startswith(os.sep):
-                    relative_path = relative_path[1:]
-                return self.project.get_resource(relative_path)
+                # INFO: This is a project file; should not be absolute
+                return None
             return rope.base.project.get_no_project().get_resource(path)
         except exceptions.RopeError:
             return None
@@ -275,3 +273,11 @@ class DOITextualToPyObject(TextualToPyObject):
         for i in range(len(lines)):
             if pattern.match(lines[i]):
                 return i + 1
+
+    def path_to_resource(self, path):
+        root = self.project.address
+        if os.path.isabs(path) and path.startswith(root):
+            path = path[len(root):].replace(os.sep, '/')
+            if path.startswith('/'):
+                path = path[1:]
+        return super(DOITextualToPyObject, self).path_to_resource(path)

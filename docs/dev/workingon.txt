@@ -1,10 +1,8 @@
 Small Stories
 =============
 
-* Not compiling when only the commented lines change in codeassist
-* StoppableTaskRunner stops when finished till a GUI event
-* Problems for highlighting after refactorings
-* Move refactoring and moving a group of elements together
+- Handling absolute paths for files inside projects
+- Fixing history synchronization
 
 
 For 0.5
@@ -21,7 +19,6 @@ Base:
 
 * Changing method to static method refactoring
 * Multiple ropes on one project; problems for objectdb and history
-* Adding *clear objectdb* command
 * Inline fails when there is an arg mismatch
 * Evaluate function parameter defaults in staticoi?
 * Recursive SOI; Go where the calls go with limited depth

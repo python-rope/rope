@@ -1,5 +1,5 @@
 from rope.base import codeanalyze, pyobjects, exceptions, change
-from rope.refactor import sourceutils, functionutils, occurrences, rename
+from rope.refactor import sourceutils, occurrences, rename
 
 
 class MethodObject(object):

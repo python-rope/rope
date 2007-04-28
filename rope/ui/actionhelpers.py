@@ -60,10 +60,10 @@ class StoppableTaskRunner(object):
         toplevel.bind('<Escape>', stop)
         stop_button.grid(row=1)
 
-        thread = threading.Thread(target=calculate)
-        thread.start()
         toplevel.grab_set()
         stop_button.focus_set()
+        thread = threading.Thread(target=calculate)
+        thread.start()
         toplevel.mainloop()
         toplevel.destroy()
         if calculate.exception is not None:

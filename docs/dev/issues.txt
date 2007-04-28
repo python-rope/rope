@@ -145,31 +145,6 @@ Enhancing `ObjectInfoManager`
 * Validating call infos
 
 
-Saving Data On Disk
--------------------
-
-There are two main reasons for saving object information on disk.  One
-is that we can use these information in future sessions.  The other is
-holding all type information in memory needs a lot of memory.
-
-* ``shelvedb``:
-
-  This has been implemented in ``0.5m4``.
-
-* ``sqlite3db``:
-
-  This requires having `sqlite3`.  Fortunately it is included in
-  standard library since ``2.5``.  We can have these tables:
-
-  * scope: path, key
-  * call_info: scope_fk, args, returned
-  * per_name: scope_fk, name, value
-
-
-Saving object data requires having good mechanisms for invalidating
-information and testing.
-
-
 Custom Flat File DB
 -------------------
 
@@ -192,17 +167,6 @@ Loading complete files:
 * Saving each `ScopeInfo` in a single file.  This does not seem to be
   a reasonable approach.  For a medium sized project we need more than
   4k files.
-
-
-Project Root Short Form
------------------------
-
-In our objectdb there are lots of references to files inside our
-project.  Currently these references are absolute.  There are two main
-problems with holding absolute path for files inside projects.
-
-* When moving the project all local information should be thrown away.
-* Lots of extra memory is put on saving project directory
 
 
 Better Concluded Data

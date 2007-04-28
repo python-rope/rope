@@ -350,7 +350,7 @@ def _confirm_action(title, message, action):
 
 
 def show_history(context):
-    if not context.project:
+    if not rope.ui.actionhelpers.check_project(context.core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('File History')

@@ -126,6 +126,9 @@ Stories
 * Enhancing open project dialog
 
 
+* Move refactoring and moving a group of elements together
+
+
 * Inferring the object, list comprehensions or generator expressions hold
 
 
