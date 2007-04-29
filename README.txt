@@ -19,8 +19,8 @@ New Features
 
 * Showing current file history; ``C-x p 1 h``
 * Open Type; ``C-x C-t``
-* Adding persisted_memory objectdb
-* Adding sqlite objectdb
+* Adding ``persisted_memory`` objectdb
+* Adding ``sqlite`` objectdb
 
 
 Getting Started

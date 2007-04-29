@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.5rc1 : April 29, 2007
+
+
 - Showing current file history; ``C-x p 1 h`` : April 28, 2007
 
 

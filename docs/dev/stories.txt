@@ -130,6 +130,3 @@ Stories
 
 
 * View type hierarchy
-
-
-> Public Release 0.5rc1 : April 29, 2007
