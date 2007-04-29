@@ -203,6 +203,27 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertTrue(ignored.exists())
         self.assertEquals(0, len(self.history.undo_list))
 
+    def test_get_file_undo_list_simple(self):
+        change = ChangeContents(self.file1, '1')
+        self.history.do(change)
+        self.assertEquals(set([change]),
+                          set(self.history.get_file_undo_list(self.file1)))
+
+    def test_get_file_undo_list_for_moves(self):
+        change = MoveResource(self.file1, 'file2.txt')
+        self.history.do(change)
+        self.assertEquals(set([change]),
+                          set(self.history.get_file_undo_list(self.file1)))
+
+    # XXX: What happens for moves before the file is created?
+    def xxx_test_get_file_undo_list_and_moving_its_contining_folder(self):
+        folder = self.project.root.create_folder('folder')
+        old_file = folder.create_file('file3.txt')
+        change1 = MoveResource(folder, 'new_folder')
+        self.history.do(change1)
+        self.assertEquals(set([change1]),
+                          set(self.history.get_file_undo_list(old_file)))
+
 
 class SavingHistoryTest(unittest.TestCase):
 

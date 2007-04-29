@@ -125,6 +125,13 @@ class History(object):
                         output_file)
             output_file.close()
 
+    def get_file_undo_list(self, resource):
+        result = []
+        for change in self.undo_list:
+            if resource in change.get_changed_resources():
+                result.append(change)
+        return result
+
     undo_list = property(lambda self: self._undo_list)
     redo_list = property(lambda self: self._redo_list)
 

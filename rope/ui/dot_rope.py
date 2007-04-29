@@ -94,6 +94,7 @@ def _change_key_binding(core):
     core.rebind_action('undo_project', 'C-Z')
     core.rebind_action('redo_project', 'C-Y')
     core.rebind_action('project_history', None)
+    core.rebind_action('current_file_history', None)
     core.rebind_action('search_forward', 'C-f')
     core.rebind_action('search_backward', 'C-F')
     core.rebind_action('edit_dot_rope', None)

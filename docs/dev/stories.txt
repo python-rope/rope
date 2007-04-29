@@ -111,9 +111,6 @@ Stories
 * Lambdas as functions; consider their parameters
 
 
-* Basic code formatting; correcting blank lines
-
-
 * Better warnings
 
 
@@ -133,9 +130,6 @@ Stories
 
 
 * View type hierarchy
-
-
-* Showing file history
 
 
 > Public Release 0.5rc1 : April 29, 2007

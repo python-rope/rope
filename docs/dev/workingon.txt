@@ -1,15 +1,8 @@
 Small Stories
 =============
 
-- Handling absolute paths for files inside projects
-- Fixing history synchronization
-
-
-For 0.5
-=======
-
-* Renaming ``overview.txt``? ``random_hacks.txt``?
-* Using change occurrences in docs
+- Showing current file history; ``C-x p 1 h``
+- Extra slash at the start of resource path in history dialog
 
 
 Remaining Small Stories

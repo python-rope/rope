@@ -3,6 +3,9 @@
 ===========
 
 
+- Showing current file history; ``C-x p 1 h`` : April 28, 2007
+
+
 - Open Type; ``C-x C-t`` : April 23, 2007
 
 

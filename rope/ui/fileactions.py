@@ -107,19 +107,22 @@ def create_file(context):
     def do_create_file(parent_folder, file_name):
         new_file = parent_folder.create_file(file_name)
         context.get_core().editor_manager.get_resource_editor(new_file)
-    _create_resource_dialog(context.get_core(), do_create_file, 'File', 'Parent Folder')
+    _create_resource_dialog(context.get_core(), do_create_file,
+                            'File', 'Parent Folder')
 
 def create_folder(context):
     def do_create_folder(parent_folder, folder_name):
         new_file = parent_folder.create_folder(folder_name)
-    _create_resource_dialog(context.get_core(), do_create_folder, 'Folder', 'Parent Folder')
+    _create_resource_dialog(context.get_core(), do_create_folder,
+                            'Folder', 'Parent Folder')
 
 def create_module(context):
     def do_create_module(source_folder, module_name):
         new_module = context.get_core().project.get_pycore().\
                      create_module(source_folder, module_name)
         context.get_core().editor_manager.get_resource_editor(new_module)
-    _create_resource_dialog(context.get_core(), do_create_module, 'Module', 'Source Folder')
+    _create_resource_dialog(context.get_core(), do_create_module,
+                            'Module', 'Source Folder')
 
 def create_package(context):
     def do_create_package(source_folder, package_name):
@@ -349,16 +352,14 @@ def _confirm_action(title, message, action):
     ok_button.focus_set()
 
 
-def show_history(context):
-    if not rope.ui.actionhelpers.check_project(context.core):
-        return
+def _history_dialog(context, undo_list, title='File History'):
     toplevel = Tkinter.Toplevel()
-    toplevel.title('File History')
+    toplevel.title(title)
     frame = Tkinter.Frame(toplevel)
     list_frame = Tkinter.Frame(frame)
     enhanced_list = uihelpers.DescriptionList(
-        list_frame, 'Undo History', lambda change: change.get_description())
-    for change in reversed(context.project.history.undo_list):
+        list_frame, title, lambda change: change.get_description())
+    for change in reversed(undo_list):
         enhanced_list.add_entry(change)
     list_frame.grid(row=0, column=0, columnspan=2)
     def undo(event=None):
@@ -385,6 +386,19 @@ def show_history(context):
     cancel_button.grid(row=1, column=1)
     frame.grid()
     undo_button.focus_set()
+
+def show_history(context):
+    if not rope.ui.actionhelpers.check_project(context.core):
+        return
+    undo_list = context.project.history.undo_list
+    _history_dialog(context, undo_list)
+
+def show_current_file_history(context):
+    if not rope.ui.actionhelpers.check_project(context.core):
+        return
+    undo_list = context.project.history.get_file_undo_list(context.resource)
+    _history_dialog(context, undo_list,
+                    title='File <%s> History' % context.resource.path)
 
 def undo_project(context):
     if context.project:
@@ -462,6 +476,10 @@ actions.append(
                  ConfirmEditorsAreSaved(show_history), 'C-x p h',
                  MenuAddress(['File', 'Project History'], 'h', 3),
                  ['all', 'none']))
+actions.append(
+    SimpleAction('current_file_history',
+                 ConfirmEditorsAreSaved(show_current_file_history), 'C-x p 1 h',
+                 MenuAddress(['File', 'Current File History'], None, 3), ['all']))
 
 actions.append(SimpleAction('project_tree', project_tree, 'C-x p t',
                             MenuAddress(['File', 'Project Tree'], 't', 4)))

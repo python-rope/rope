@@ -124,14 +124,20 @@ class Folder(Resource):
     def create_file(self, file_name):
         self._perform_change(
             rope.base.change.CreateFile(self, file_name),
-            'Creating file <%s>' % (self.path + '/' + file_name))
+            'Creating file <%s>' % self._get_child_path(file_name))
         return self.get_child(file_name)
 
     def create_folder(self, folder_name):
         self._perform_change(
             rope.base.change.CreateFolder(self, folder_name),
-            'Creating folder <%s>' % (self.path + '/' + folder_name))
+            'Creating folder <%s>' % self._get_child_path(folder_name))
         return self.get_child(folder_name)
+
+    def _get_child_path(self, name):
+        if self.path:
+            return self.path + '/' + name
+        else:
+            return name
 
     def get_child(self, name):
         if self.path:
