@@ -114,7 +114,7 @@ def repeat_last_action(context):
         context.core.repeat_last_action()
 
 
-class FindCommandHandle(uihelpers.EnhancedListHandle):
+class FindCommandHandle(uihelpers.FindItemHandle):
 
     def __init__(self, core):
         self.core = core
@@ -132,6 +132,9 @@ class FindCommandHandle(uihelpers.EnhancedListHandle):
 
     def to_string(self, action):
         return action.get_name()
+
+    def to_name(self, action):
+        return self.to_string(action)
 
 
 def execute_command(context):

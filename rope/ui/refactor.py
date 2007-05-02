@@ -45,8 +45,10 @@ class PreviewAndCommitChanges(object):
             self.commit()
         def cancel(event=None):
             toplevel.destroy()
-        ok_button = Tkinter.Button(toplevel, text='Perform', command=ok)
-        cancel_button = Tkinter.Button(toplevel, text='Cancel', command=cancel)
+        ok_button = Tkinter.Button(toplevel, text='Perform',
+                                   command=ok, width=15)
+        cancel_button = Tkinter.Button(toplevel, text='Cancel',
+                                       command=cancel, width=15)
         frame.grid(row=0, columnspan=2)
         ok_button.grid(row=1, column=0)
         cancel_button.grid(row=1, column=1)
@@ -83,9 +85,12 @@ class RefactoringDialog(object):
         frame['border'] = 2
         frame['relief'] = Tkinter.GROOVE
 
-        ok_button = Tkinter.Button(self.toplevel, text='Done', command=self._ok)
-        preview_button = Tkinter.Button(self.toplevel, text='Preview', command=self._preview)
-        cancel_button = Tkinter.Button(self.toplevel, text='Cancel', command=self._cancel)
+        ok_button = Tkinter.Button(self.toplevel, text='Done',
+                                   command=self._ok, width=12)
+        preview_button = Tkinter.Button(self.toplevel, text='Preview',
+                                        command=self._preview, width=12)
+        cancel_button = Tkinter.Button(self.toplevel, text='Cancel',
+                                       command=self._cancel, width=12)
         ok_button.grid(row=1, column=0)
         preview_button.grid(row=1, column=1)
         cancel_button.grid(row=1, column=2)
@@ -137,8 +142,8 @@ class RenameDialog(RefactoringDialog):
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='New Name :')
-        label.grid(row=0, column=0)
-        self.new_name_entry = Tkinter.Entry(frame)
+        label.grid(row=0, column=0, sticky=Tkinter.W)
+        self.new_name_entry = Tkinter.Entry(frame, width=50)
         self.new_name_entry.insert(0, self.renamer.get_old_name())
         self.new_name_entry.select_range(0, Tkinter.END)
         self.new_name_entry.grid(row=0, column=1, columnspan=2)

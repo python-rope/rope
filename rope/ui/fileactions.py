@@ -133,7 +133,7 @@ def create_package(context):
     _create_resource_dialog(context.get_core(), do_create_package, 'Package', 'Source Folder')
 
 
-class FindFileHandle(object):
+class FindFileHandle(uihelpers.FindItemHandle):
 
     def __init__(self, context):
         self.core = context.core
@@ -184,7 +184,7 @@ def find_file(context):
                      matches='Matching Files')
 
 
-class FindTypeHandle(object):
+class FindTypeHandle(uihelpers.FindItemHandle):
 
     def __init__(self, context):
         self.core = context.core
@@ -376,8 +376,10 @@ def _history_dialog(context, undo_list, title='File History'):
         toplevel.destroy()
     def cancel(event=None):
         toplevel.destroy()
-    undo_button = Tkinter.Button(frame, text='Undo', command=undo)
-    cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+    undo_button = Tkinter.Button(frame, text='Undo',
+                                 command=undo, width=15)
+    cancel_button = Tkinter.Button(frame, text='Cancel',
+                                   command=cancel, width=15)
     undo_button.grid(row=1, column=0)
     toplevel.bind('<Return>', lambda event: undo())
     toplevel.bind('<Escape>', lambda event: cancel())

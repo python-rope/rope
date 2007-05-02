@@ -125,8 +125,10 @@ class ConfirmEditorsAreSaved(object):
             self.callback(context)
         def cancel(event=None):
             toplevel.destroy()
-        ok_button = Tkinter.Button(frame, text='Save All', command=ok)
-        cancel_button = Tkinter.Button(frame, text='Cancel', command=cancel)
+        ok_button = Tkinter.Button(frame, text='Save All',
+                                   command=ok, width=10)
+        cancel_button = Tkinter.Button(frame, text='Cancel',
+                                       command=cancel, width=10)
         ok_button.grid(row=1, column=0)
         toplevel.bind('<Return>', lambda event: ok())
         toplevel.bind('<Escape>', lambda event: cancel())

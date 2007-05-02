@@ -31,8 +31,9 @@ def show_about_dialog(context):
         show_copying(context)
         toplevel.destroy()
     label.grid(row=0, column=0, columnspan=2)
-    ok_button = Tkinter.Button(toplevel, text='OK', command=ok)
-    gpl_button = Tkinter.Button(toplevel, text='Show GNU GPL', command=show_gpl)
+    ok_button = Tkinter.Button(toplevel, text='OK', command=ok, width=20)
+    gpl_button = Tkinter.Button(toplevel, text='Show GNU GPL',
+                                command=show_gpl, width=20)
     ok_button.grid(row=1, column=0)
     gpl_button.grid(row=1, column=1)
     ok_button.focus_set()

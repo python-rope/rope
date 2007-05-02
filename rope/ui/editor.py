@@ -209,8 +209,8 @@ class GraphicalEditor(object):
 
     def set_text(self, text, reset_editor=True):
         initial_position = self.text.index(INSERT)
-        # `_change_text2` performs much better than `_change_text1`
-        # when the number of changes is few
+        # IDEA: When to use `_change_text2` that uses difflib;
+        # Maybe when the number of changes is few
         self._change_text1(text)
         self.text.mark_set(INSERT, initial_position)
         self.text.see(INSERT)
