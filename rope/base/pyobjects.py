@@ -291,12 +291,12 @@ class PyClass(PyDefinedObject, AbstractClass):
         AbstractClass.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
-        self._superclasses = None
+        self._superclasses = self.get_module()._get_concluded_data()
 
     def get_superclasses(self):
-        if self._superclasses is None:
-            self._superclasses = self._get_bases()
-        return self._superclasses
+        if self._superclasses.get() is None:
+            self._superclasses.set(self._get_bases())
+        return self._superclasses.get()
 
     def get_name(self):
         return self.get_ast().name

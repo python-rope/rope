@@ -266,6 +266,20 @@ This makes it safe to assume that this option does not perform wrong
 renames most of the time and for this reason it is by default on in
 the UI (though not in `Rename.get_changes()`).
 
+This also changes occurrences inside evaluated strings::
+
+  def func():
+      print 'func() called'
+
+  eval('func()')
+
+After renaming `func` to `newfunc` we should have::
+
+  def newfunc():
+      print 'newfunc() called'
+
+  eval('newfunc()')
+
 
 Move Method Refactoring
 -----------------------

@@ -60,7 +60,7 @@ IDE And UI Stories
 Stories
 =======
 
-> Public Release 0.5 : May 6, 2007
+> Public Release 0.6 : August 5, 2007
 
 
 * Handling the return type of ``yield`` keyword
@@ -130,3 +130,6 @@ Stories
 
 
 * View type hierarchy
+
+
+> Public Release 0.5 : May 6, 2007

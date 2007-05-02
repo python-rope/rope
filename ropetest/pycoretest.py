@@ -782,6 +782,18 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertEquals(pymod1.get_attribute('a_func').get_object(),
                           pymod2.get_attribute('a_func').get_object())
 
+    def test_invalidating_superclasses_after_change(self):
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod1.write('class A(object):\n    def func1(self):\n        pass\n')
+        mod2.write('import mod1\nclass B(mod1.A):\n    pass\n')
+
+        b_class = self.pycore.get_module('mod2').get_attribute('B').get_object()
+        self.assertTrue('func1' in b_class.get_attributes())
+
+        mod1.write('class A(object):\n    def func2(self):\n        pass\n')
+        self.assertTrue('func2' in b_class.get_attributes())
+
 
 class ClassHierarchyTest(unittest.TestCase):
 

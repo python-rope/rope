@@ -1,3 +1,13 @@
+For 0.5 Release
+===============
+
+- Fixed problem in completing find command and type dialogs
+- Better dialogs
+- `PyClass.superclasses` should be concluded data
+
+* More documentation for using rope as a library
+
+
 Remaining Small Stories
 =======================
 
@@ -12,25 +22,17 @@ Base:
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
 * Importing star and removing self imports; stack overflow
-* `PyClass.superclasses` should be concluded data
 
 UI and IDE:
 
-* Renaming normal files, folder, modules, and packages in project tree view
+* Renaming normal files, folders, modules, and packages in project tree view
 * Spell checking on python source
 * Completion in module entries
-* A completing text widget for dialogs; `Completing(name, list, handle)`
 * Goto definition for ``"# comment.\na_var"``
 * Comments should be indented
-* Decide when to use `difflib` in `Editor.set_text()` based on the
-  number of changes
 
 Docs:
 
 * Document features and organize them
 * Describe why rope does not stop the user from performing wrong
   refactorings
-
-Others:
-
-* Separating UI and functional tests from unit tests
