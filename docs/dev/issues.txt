@@ -94,6 +94,44 @@ We should measure the amount of memory each of them uses to make
 decisions.
 
 
+Finding Similar Pieces
+======================
+
+Finally rope decided to start this story.  There are two main uses for
+this feature.  One is finding similar code when extracting
+method/variable and the other is supporting restructorings.
+
+The main problem for implementing this story is that we need to work
+on python ASTs and we need more information than what is provided by
+`compiler` module.  For instance we need to find the start and end
+offsets of nodes.
+
+We should also decide about the way we define the pattern to search
+for.  For now we can assume matching exactly what is passed but in
+future that will probably change.  We probably need to insert pyobject
+information in the searching pattern, too.
+
+
+The AST Problem
+---------------
+
+Parsing and constructing ASTs manually is not feasible at all.  It
+probably has to be in C for efficiency.  That brings up the compiling
+issues for different platforms.  Also the grammar changes across
+python versions and maintaining that is very hard.  For such reasons I
+prefer to monkeypatch standard `compiler` module.
+
+
+A Look Into The Future
+----------------------
+
+Restructoring::
+
+  pattern = '${a} = ${b}'
+  goal = '${a}.set(${b})'
+  constraints = {'a': pyname1}
+
+
 Better SOI
 ==========
 

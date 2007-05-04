@@ -1,9 +1,7 @@
 For 0.5 Release
 ===============
 
-- Fixed problem in completing find command and type dialogs
-- Better dialogs
-- `PyClass.superclasses` should be concluded data
+- Adding `similarfinder` module
 
 * More documentation for using rope as a library
 
@@ -26,7 +24,6 @@ Base:
 UI and IDE:
 
 * Renaming normal files, folders, modules, and packages in project tree view
-* Spell checking on python source
 * Completion in module entries
 * Goto definition for ``"# comment.\na_var"``
 * Comments should be indented

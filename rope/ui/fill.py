@@ -4,6 +4,11 @@ from rope.base import codeanalyze
 
 
 class Fill(object):
+    """A class for filling text
+
+    Note that we cannot use `textwrap` module; it has problems finding
+    sentence end.
+    """
 
     def __init__(self, width=70):
         self.width = width

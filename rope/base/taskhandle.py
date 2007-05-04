@@ -66,7 +66,7 @@ class JobSet(object):
         return self.job_name
 
     def get_percent_done(self):
-        if self.count is not None:
+        if self.count is not None and self.count > 0:
             percent = self.done * 100 / self.count
             return min(percent, 100)
 

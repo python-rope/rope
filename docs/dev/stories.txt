@@ -55,6 +55,7 @@ IDE And UI Stories
   * Running last run
 
 * Formating code
+* Spell checking python source
 
 
 Stories

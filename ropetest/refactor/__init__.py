@@ -1,8 +1,8 @@
 import unittest
 
 import rope.base.codeanalyze
+import rope.base.taskhandle
 import rope.refactor.introduce_parameter
-import ropetest.refactor.change_signature_test
 import ropetest.refactor.extracttest
 import ropetest.refactor.importutilstest
 import ropetest.refactor.inlinetest
@@ -14,7 +14,7 @@ from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
 from rope.refactor.localtofield import LocalToField
 from rope.refactor.method_object import MethodObject
 from ropetest import testutils
-import rope.base.taskhandle
+from ropetest.refactor import change_signature_test, similarfindertest
 
 
 class MethodObjectTest(unittest.TestCase):
@@ -706,15 +706,20 @@ class TaskHandleTest(unittest.TestCase):
 def suite():
     result = unittest.TestSuite()
     result.addTests(ropetest.refactor.renametest.suite())
-    result.addTests(unittest.makeSuite(ropetest.refactor.extracttest.ExtractMethodTest))
+    result.addTests(unittest.makeSuite(
+                    ropetest.refactor.extracttest.ExtractMethodTest))
     result.addTests(unittest.makeSuite(IntroduceFactoryTest))
-    result.addTests(unittest.makeSuite(ropetest.refactor.movetest.MoveRefactoringTest))
+    result.addTests(unittest.makeSuite(
+                    ropetest.refactor.movetest.MoveRefactoringTest))
     result.addTests(ropetest.refactor.inlinetest.suite())
     result.addTests(unittest.makeSuite(EncapsulateFieldTest))
     result.addTests(unittest.makeSuite(LocalToFieldTest))
-    result.addTests(unittest.makeSuite(ropetest.refactor.change_signature_test.ChangeSignatureTest))
+    result.addTests(unittest.makeSuite(
+                    change_signature_test.ChangeSignatureTest))
     result.addTests(unittest.makeSuite(IntroduceParameterTest))
-    result.addTests(unittest.makeSuite(ropetest.refactor.importutilstest.ImportUtilsTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.
+                                       importutilstest.ImportUtilsTest))
+    result.addTests(unittest.makeSuite(similarfindertest.SimilarFinderTest))
     result.addTests(unittest.makeSuite(TaskHandleTest))
     return result
 
