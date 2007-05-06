@@ -137,6 +137,3 @@ Stories
 
 
 * Renaming and moving normal files/folders
-
-
-> Public Release 0.5 : May 6, 2007

@@ -1,9 +1,6 @@
 Working On
 ==========
 
-- Not changing buffer after filling with no changes
-
-
 Remaining Small Stories
 =======================
 

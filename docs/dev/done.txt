@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.5 : May 6, 2007
+
+
 - Better dialogs : May 2, 2007
 
 
