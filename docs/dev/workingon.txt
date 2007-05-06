@@ -1,9 +1,7 @@
-For 0.5 Release
-===============
+Working On
+==========
 
-- Adding `similarfinder` module
-
-* More documentation for using rope as a library
+- Not changing buffer after filling with no changes
 
 
 Remaining Small Stories
@@ -11,6 +9,7 @@ Remaining Small Stories
 
 Base:
 
+* Better default callinfo selection
 * Changing method to static method refactoring
 * Multiple ropes on one project; problems for objectdb and history
 * Inline fails when there is an arg mismatch
@@ -30,6 +29,7 @@ UI and IDE:
 
 Docs:
 
+* More documentation for using rope as a library
 * Document features and organize them
 * Describe why rope does not stop the user from performing wrong
   refactorings

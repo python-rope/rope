@@ -3,6 +3,9 @@
 ===========
 
 
+- Better dialogs : May 2, 2007
+
+
 > Public Release 0.5rc1 : April 29, 2007
 
 

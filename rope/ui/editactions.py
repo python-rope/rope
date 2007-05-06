@@ -51,11 +51,12 @@ class FillParagraph(object):
         text = context.editor.get_text()
         offset = context.editor.get_current_offset()
         start, end, filled = self.fill.fill_paragraph(text, offset)
-        start_index = context.editor.get_index(start)
-        end_index = context.editor.get_index(end)
-        context.editor.delete(start_index, end_index)
-        context.editor.insert(start_index, filled)
-        context.editor.set_insert(context.editor.get_index(offset))
+        if text[start:end] != filled:
+            start_index = context.editor.get_index(start)
+            end_index = context.editor.get_index(end)
+            context.editor.delete(start_index, end_index)
+            context.editor.insert(start_index, filled)
+            context.editor.set_insert(context.editor.get_index(offset))
 
 
 def undo_editing(context):
