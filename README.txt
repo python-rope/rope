@@ -17,45 +17,7 @@ library.
 New Features
 ============
 
-New features since 0.4:
-
-Core:
-
-* Moving methods
-* Replace method with method object
-* Renaming occurrences in strings and comments
-* Stoppable refactorings
-* Automatic SOI analysis
-* Basic implicit interfaces
-* Performing change signature in class hierarchies
-* Change occurrences
-* Saving history across sessions
-* Saving object data to disk
-* Enhanced static object inference
-* Adding ``rename when unsure`` option
-* Holding per name information for builtin containers
-* Adding ``.ropeproject`` folder
-* Supporting generator functions
-* Handling ``with`` statements
-
-IDE and UI:
-
-* Generating python elements; ``C-c n ...``
-* Spell-checker; ``M-$`` and ``C-x $ ...``
-* Saving locations and texts; ``C-x m ...``
-* Open Type; ``C-x C-t``
-* Showing current file history; ``C-x p 1 h``
-* Registering templates in ``~/.rope``
-* Filling paragraphs in text modes; ``M-q``
-* Yanking; ``M-y``
-* Repeating last command; ``C-x z``
-* Showing annotations(codetag/error/warning list); ``C-c a ...``
-* Auto-completing function keyword arguments when calling
-* Execute command; ``M-x``
-* Changing editor font and keybinding in ``~/.rope``
-* Having two keybindings emacs/normal
-* Removing extra spaces and lines; ``C-c C-f``
-
+* 
 
 Getting Started
 ===============

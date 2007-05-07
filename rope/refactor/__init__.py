@@ -40,7 +40,7 @@ a refactoring.  These are the things an IDE does in each step:
    by it.
 4. perform the refactoring.
 
-In ``0.5m5`` release the `get_changes()` method of some time
+From ``0.5m5`` release the `get_changes()` method of some time-
 consuming refactorings take an optional `rope.base.taskhandle.
 TaskHandle` parameter.  You can use this object for stopping or
 monitoring the progress of refactorings.

@@ -118,4 +118,3 @@ class FileAccess(object):
             # Using ``utf-8`` if guessed encoding fails
             file_.write(contents.encode('utf-8'))
         file_.close()
-

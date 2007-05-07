@@ -17,34 +17,37 @@ Week #   Release Name
 6        x.ym3
 8        x.ym4
 10       x.ym5
-12       x.yrc1
+12       x.ym6
 13       x.y
 =======  ===============
 
-This is only a rough plan.  For example we might have more release
-candidates before the ``x.y`` release.
+This is only a rough plan.  For example we might have 1-week release
+candidates before the ``x.y``.
 
 
-Version 0.5
+Version 0.6
 ===========
 
-From February 4, 2007 till May 6, 2007
+From May 7, 2007 till August 5, 2007
 
 
 Release Goals
 -------------
 
-Metaphor: Better static object inference
+Metaphor: Supporting restructurings
 
-Other goals:
+Goals:
 
-* Enhancing old refactorings
-* Enhancing UI
+* Restructuring
+* Finding similar pieces to extracted
+* Formatting
 
 
 Hot Topics
 ==========
 
+* `Patched AST`_
+* `Finding similar pieces`_
 
 
 To Be Discussed
@@ -56,24 +59,61 @@ To Be Discussed
 * `Python's implicit interfaces`_
 * Decorators and method refactorings
 * Should `rope.base` be thread safe? which parts?
-* Indexing source files for faster occurrence finding
-* Faster module running
-* Saving hard to compute information like class hierarchies to files
-* Finding available refactorings
 
 
-Memory Management
-=================
+Patched AST
+===========
 
-These are the places in which rope spends most of the memory it
-consumes:
+I propose to construct the patched tree from input and at the same
+time insert textual info into it.  In this phase we might add new
+nodes that contain textual information about the source.
 
-* PyCore: for storing PyModules
-* ObjectInfo: for storing object information
-* History: for storing changes
+Issues:
 
-We should measure the amount of memory each of them uses to make
-decisions.
+* How to handle parenthesis? like ``a + ((b + c) + d)``
+* Nodes are not in order; like function args and defaults
+* How to save comments, parenthesis, like breaks and ...
+* Many commands in the same line; like ``a = 1; b = 2``
+* Where do textual data belong to?  To the parent probably
+
+
+Monkey-patching Old Nodes
+-------------------------
+
+We can add information to the old tree.  The new ast will look like
+the old one and provides the same methods but adds two new fields:
+`region` and `sorted_children`.
+
+`sorted_children` field is a list of AST nodes and strings.  The
+strings contain textual information and the nodes are the place to
+insert the children.
+
+
+Construction
+------------
+
+The construction is recursive.  When constructing the child nodes we
+should give them the start offset.  They can calculate their own start
+and end offsets.
+
+
+Supporting Formatting
+---------------------
+
+We can handle formatting as we are patching the old AST.  Instead of
+using the text formatting data we can insert the formatting specific
+data.
+
+
+Handling Changed ASTs
+---------------------
+
+Restructurings need to replace an AST node with another AST node.  We
+can do this by searching over the parents nodes and `sorted_children`.
+Whenever we encounter the old AST node we replace it with the new one.
+
+There are a few other questions.  Should we store offsets or lengths
+in AST nodes.  Should formatting information be updated after changes.
 
 
 Finding Similar Pieces
@@ -81,7 +121,7 @@ Finding Similar Pieces
 
 Finally rope decided to start this story.  There are two main uses for
 this feature.  One is finding similar code when extracting
-method/variable and the other is supporting restructorings.
+method/variable and the other is supporting restructurings.
 
 The main problem for implementing this story is that we need to work
 on python ASTs and we need more information than what is provided by
@@ -107,7 +147,7 @@ prefer to monkeypatch standard `compiler` module.
 A Look Into The Future
 ----------------------
 
-Restructoring::
+Restructuring::
 
   # ``a = b`` to ``a.set(b)`` where the type of `a` is `type_pyclass`
   pattern = '${?a} = ${?b}'
@@ -133,6 +173,20 @@ Suggestions:
   gets the matched ASTs and returns True or False.
 * Rematching can be implemented by having a layer on top of AST
   matcher.
+
+
+Memory Management
+=================
+
+These are the places in which rope spends most of the memory it
+consumes:
+
+* PyCore: for storing PyModules
+* ObjectInfo: for storing object information
+* History: for storing changes
+
+We should measure the amount of memory each of them uses to make
+decisions.
 
 
 Better SOI

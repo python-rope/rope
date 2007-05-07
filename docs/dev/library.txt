@@ -82,10 +82,10 @@ put them in an inconsistent state.
 
 The `rope.base.fscommands` module implements the basic file system
 operations that rope needs to perform.  The main reason for the
-existence this module is supporting version control systems.  Have a
-look at `FileSystemCommands` and `SubversionCommands` in the same module.
-If you need other version control systems you can write a new class
-providing this interface.  `rope.base.project.Project` accepts a
+existence of this module is supporting version control systems.  Have
+a look at `FileSystemCommands` and `SubversionCommands` in the same
+module.  If you need other version control systems you can write a new
+class providing this interface.  `rope.base.project.Project` accepts a
 ``fscommands`` argument.  You can use this argument to force rope to
 use your new class.
 
@@ -100,7 +100,8 @@ that.  Also you can force rope not to make such a folder by passing
 `None`.
 
 If such a folder exists rope loads the ``config.py`` file in that
-folder.  It might also use it for storing object information.
+folder.  It might also use it for storing object information and
+history.
 
 
 `rope.base.pycore.PyCore`

@@ -1,5 +1,12 @@
-Working On
-==========
+Patched AST
+===========
+
+- Adding `rope.refactor.patchedast`
+
+* Refactor `_PatchedASTWalker.visitAssign()`
+* Handling string literals
+* Adding `patchedasttest` to testsuite
+
 
 Remaining Small Stories
 =======================
