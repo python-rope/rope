@@ -1,26 +1,24 @@
 Patched AST
 ===========
 
-- ``(a + #)\nb)``
-- ``a + ((b))``
-- ``(a) + (b)``
-- Handling new string literals u''
-- Adding `_Source.consume_number()` and `_Source.consume_string()`
-- Testing different forms of strings
-- Testing different forms of numbers
-- ``(a + ')')``
-- Handling strings and docs
-- Integer literals; 10l, 0x08
-- Adding `patchedasttest` to testsuite
-- classes with no super
+- GenExpr and Tuple should consume surrounding parens if exists
+- Module not loosing blank lines in the begining and end of the file
+- Add `patchedast.write_ast()`
+- Ignoring comments
 
-* not loosing blank lines in the begining and end of the file
-
-* py3k
+* tuple parameter unpacking
+* handle long slices
+* handle Sliceobj
+* py3k: How to handle both versions?
 
   * metadata=? and classes
   * function annotations
   * // and /
+  * ...
+
+* profiling
+* report error on ``return``
+* adding custom source folders in ``config.py``
 
 
 Remaining Small Stories

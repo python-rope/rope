@@ -2,7 +2,7 @@ import compiler.ast
 import compiler.consts
 import re
 
-from rope.base import codeanalyze
+from rope.base import codeanalyze, exceptions
 
 
 def get_patched_ast(source):
@@ -19,6 +19,19 @@ def call_for_nodes(ast, callback, recursive=False):
         for child in ast.getChildNodes():
             call_for_nodes(child, callback, recursive)
 
+def write_ast(ast):
+    """Extract source form a patched AST"""
+    result = []
+    for child in ast.sorted_children:
+        if isinstance(child, compiler.ast.Node):
+            result.append(write_ast(child))
+        else:
+            result.append(child)
+    return ''.join(result)
+
+
+class MismatchedTokenError(exceptions.RopeError):
+    pass
 
 class _PatchingASTWalker(object):
 
@@ -36,7 +49,7 @@ class _PatchingASTWalker(object):
         raise RuntimeError('Unknown node type <%s>' %
                            node.__class__.__name__)
 
-    def _handle(self, node, base_children):
+    def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
         children = []
         suspected_start = self.source.offset
         start = suspected_start
@@ -64,19 +77,45 @@ class _PatchingASTWalker(object):
                 start = token_start
             children.append(child)
         start = self._handle_parens(children, start)
+        if eat_parens:
+            start = self._eat_surrounding_parens(
+                children, suspected_start, start)
+        if eat_spaces:
+            children.insert(0, self.source[0:start])
+            end_spaces = self.source[self.source.offset:]
+            self.source.consume(end_spaces)
+            children.append(end_spaces)
+            start = 0
         node.sorted_children = children
         node.region = (start, self.source.offset)
 
     def _handle_parens(self, children, start):
         """Changes `children` and returns new start"""
         opens, closes = self._count_needed_parens(children)
+        old_end = self.source.offset
+        new_end = None
         for i in range(closes):
-            token_start, token_end = self.source.consume(')')
-            children.append(self.source.get(token_start, token_end))
+            new_end = self.source.consume(')')[1]
+        if new_end is not None:
+            children.append(self.source.get(old_end, new_end))
+        new_start = None
         for i in range(opens):
             new_start = self.source.find_backwards('(', start)
+        if new_start is not None:
             children.insert(0, self.source.get(new_start, start))
             start = new_start
+        return start
+
+    def _eat_surrounding_parens(self, children, suspected_start, start):
+        if '(' in self.source[suspected_start:start]:
+            old_start = start
+            old_offset = self.source.offset
+            start = self.source.find_backwards('(', start)
+            children.insert(0, '(')
+            children.insert(1, self.source[start + 1:old_start])
+            token_start, token_end = self.source.consume(')')
+            children.append(self.source[old_offset:token_start])
+            children.append(')')
         return start
 
     def _count_needed_parens(self, children):
@@ -162,9 +201,13 @@ class _PatchingASTWalker(object):
         children.append('(')
         children.extend(self._child_nodes(node.args, ','))
         if node.star_args is not None:
-            children.extend([',', '*', node.star_args])
+            if node.args:
+                children.append(',')
+            children.extend(['*', node.star_args])
         if node.dstar_args is not None:
-            children.extend([',', '**', node.dstar_args])
+            if node.args:
+                children.append(',')
+            children.extend(['**', node.dstar_args])
         children.append(')')
         self._handle(node, children)
 
@@ -261,14 +304,24 @@ class _PatchingASTWalker(object):
         if node.decorators:
             children.append(node.decorators)
         children.extend(['def', node.name, '('])
-        args = list(node.argnames)
+        children.extend(self._arg_list(node.argnames, node.defaults,
+                                       node.flags))
+        children.extend([')', ':'])
+        if node.doc:
+            children.append(self.String)
+        children.append(node.code)
+        self._handle(node, children)
+
+    def _arg_list(self, argnames, defaults, flags):
+        children = []
+        args = list(argnames)
         dstar_args = None
-        if node.flags & compiler.consts.CO_VARKEYWORDS:
+        if flags & compiler.consts.CO_VARKEYWORDS:
             dstar_args = args.pop()
         star_args = None
-        if node.flags & compiler.consts.CO_VARARGS:
+        if flags & compiler.consts.CO_VARARGS:
             star_args = args.pop()
-        defaults = [None] * (len(args) - len(node.defaults)) + list(node.defaults)
+        defaults = [None] * (len(args) - len(defaults)) + list(defaults)
         for arg, default in zip(args[:-1], defaults[:-1]):
             self._add_args_to_children(children, arg, default)
             children.append(',')
@@ -282,11 +335,7 @@ class _PatchingASTWalker(object):
             if args:
                 children.append(',')
             children.extend(['**', dstar_args])
-        children.extend([')', ':'])
-        if node.doc:
-            children.append(self.String)
-        children.append(node.code)
-        self._handle(node, children)
+        return children
 
     def _add_args_to_children(self, children, arg, default):
         children.append(arg)
@@ -294,29 +343,212 @@ class _PatchingASTWalker(object):
             children.append('=')
             children.append(default)
 
+    def visitGenExpr(self, node):
+        self._handle(node, [node.code], eat_parens=True)
+
+    def visitGenExprFor(self, node):
+        children = ['for', node.assign, 'in', node.iter]
+        if node.ifs:
+            children.extend(node.ifs)
+        self._handle(node, children)
+
+    def visitGenExprIf(self, node):
+        self._handle(node, ['if', node.test])
+
+    def visitGenExprInner(self, node):
+        self._handle(node, [node.expr] + node.quals)
+
+    def visitGetattr(self, node):
+        self._handle(node, [node.expr, '.', node.attrname])
+
+    def visitGlobal(self, node):
+        children = self._child_nodes(node.names, ',')
+        children.insert(0, 'global')
+        self._handle(node, children)
+
+    def visitIf(self, node):
+        children = ['if', node.tests[0][0], ':', node.tests[0][1]]
+        for test, body in node.tests[1:]:
+            children.extend(['elif', test, ':', body])
+        if node.else_:
+            children.extend(['else', ':', node.else_])
+        self._handle(node, children)
+
+    def visitImport(self, node):
+        children = ['import']
+        for index, (name, alias) in enumerate(node.names):
+            if index != 0:
+                children.append(',')
+            children.append(name)
+            if alias is not None:
+                children.extend(['as', alias])
+        self._handle(node, children)
+
+    def visitInvert(self, node):
+        self._handle(node, ['~', node.expr])
+
     def visitKeyword(self, node):
         self._handle(node, [node.name, '=', node.expr])
+
+    def visitLambda(self, node):
+        children = ['lambda']
+        children.extend(self._arg_list(node.argnames, node.defaults,
+                                       node.flags))
+        children.extend([':', node.code])
+        self._handle(node, children)
+
+    def visitLeftShift(self, node):
+        self._handle(node, [node.left, '<<', node.right])
+
+    def visitList(self, node):
+        self._handle(node, ['['] + self._child_nodes(node.nodes, ',') + [']'])
+
+    def visitListCompFor(self, node):
+        children = ['for', node.assign, 'in', node.list]
+        if node.ifs:
+            children.extend(node.ifs)
+        self._handle(node, children)
+
+    def visitListCompIf(self, node):
+        self._handle(node, ['if', node.test])
+
+    def visitListComp(self, node):
+        self._handle(node, ['[', node.expr] + node.quals + [']'])
+
+    def visitMod(self, node):
+        self._handle(node, [node.left, '%', node.right])
 
     def visitModule(self, node):
         doc = None
         if node.doc is not None:
             doc = self.String
-        self._handle(node, [doc, node.node])
+        self._handle(node, [doc, node.node], eat_spaces=True)
+
+    def visitMul(self, node):
+        self._handle(node, [node.left, '*', node.right])
 
     def visitName(self, node):
         self._handle(node, [node.name])
 
+    def visitNot(self, node):
+        self._handle(node, ['not', node.expr])
+
+    def visitOr(self, node):
+        self._handle(node, self._child_nodes(node.nodes, 'or'))
+
     def visitPass(self, node):
         self._handle(node, ['pass'])
+
+    def visitPower(self, node):
+        self._handle(node, [node.left, '**', node.right])
+
+    def visitPrint(self, node):
+        children = self._base_print(node)
+        children.append(',')
+        self._handle(node, children)
+
+    def visitPrintnl(self, node):
+        self._handle(node, self._base_print(node))
+
+    def _base_print(self, node):
+        children = ['print']
+        if node.dest:
+            children.extend(['>>', node.dest, ','])
+        children.extend(self._child_nodes(node.nodes, ','))
+        return children
+
+    def visitRaise(self, node):
+        children = ['raise']
+        if node.expr1:
+            children.append(node.expr1)
+        if node.expr2:
+            children.append(',')
+            children.append(node.expr2)
+        if node.expr3:
+            children.append(',')
+            children.append(node.expr3)
+        self._handle(node, children)
+
+    def visitReturn(self, node):
+        children = ['return']
+        if node.value and not (isinstance(node.value, compiler.ast.Const) and
+                               node.value.value == None):
+            children.append(node.value)
+        self._handle(node, children)
+
+    def visitRightShift(self, node):
+        self._handle(node, [node.left, '>>', node.right])
+
+    def visitSlice(self, node):
+        children = [node.expr, '[']
+        if node.lower:
+            children.append(node.lower)
+        children.append(':')
+        if node.lower:
+            children.append(node.upper)
+        children.append(']')
+        self._handle(node, children)
 
     def visitStmt(self, node):
         self._handle(node, node.nodes)
 
+    def visitSub(self, node):
+        self._handle(node, [node.left, '-', node.right])
+
+    def visitSubscript(self, node):
+        self._handle(node, [node.expr, '['] +
+                            self._child_nodes(node.subs, ',') + [']'])
+
     def visitTuple(self, node):
         self._handle_tuple(node)
 
+    def visitTryFinally(self, node):
+        children = []
+        if not isinstance(node.body, compiler.ast.TryExcept):
+            children.extend(['try', ':'])
+        children.extend([node.body, 'finally', ':', node.final])
+        self._handle(node, children)
+
+    def visitTryExcept(self, node):
+        children = ['try', ':', node.body]
+        for exception, name, body in node.handlers:
+            children.append('except')
+            if exception:
+                children.append(exception)
+            if name:
+                children.extend([',', name])
+            children.extend([':', body])
+        if node.else_:
+            children.extend(['else', ':', node.else_])
+        self._handle(node, children    )
+
     def _handle_tuple(self, node):
-        self._handle(node, self._child_nodes(node.nodes, ','))
+        self._handle(node, self._child_nodes(node.nodes, ','), eat_parens=True)
+
+    def visitUnaryAdd(self, node):
+        self._handle(node, ['+', node.expr])
+
+    def visitUnarySub(self, node):
+        self._handle(node, ['-', node.expr])
+
+    def visitYield(self, node):
+        children = ['yield']
+        if node.value:
+            children.append(node.value)
+        self._handle(node, children)
+
+    def visitWhile(self, node):
+        children = ['while', node.test, ':', node.body]
+        if node.else_:
+            children.extend(['else', ':', node.else_])
+        self._handle(node, children)
+
+    def visitWith(self, node):
+        children = ['with', node.expr]
+        if node.vars:
+            children.extend(['as', node.vars])
+        children.extend([':', node.body])
+        self._handle(node, children)
 
     def _child_nodes(self, nodes, separator):
         children = []
@@ -334,9 +566,30 @@ class _Source(object):
         self.offset = 0
 
     def consume(self, token):
-        new_offset = self.source.index(token, self.offset)
+        try:
+            while True:
+                new_offset = self.source.index(token, self.offset)
+                if self._good_token(token, new_offset):
+                    break
+                else:
+                    self._skip_comment()
+        except (ValueError, TypeError):
+            raise MismatchedTokenError(
+                'Token <%s> at %s cannot be matched' %
+                (token, self._get_location()))
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
+
+    def _good_token(self, token, offset):
+        """Checks whether consumed token is in comments"""
+        return not '#' in self.source[self.offset:offset]
+
+    def _skip_comment(self):
+        self.offset = self.source.index('\n', self.offset + 1)
+
+    def _get_location(self):
+        lines = self.source[:self.offset].split('\n')
+        return (len(lines), len(lines[-1]))
 
     def consume_string(self):
         if _Source._string_pattern is None:
@@ -354,7 +607,12 @@ class _Source(object):
         return self._consume_pattern(repattern)
 
     def _consume_pattern(self, repattern):
-        match = repattern.search(self.source, self.offset)
+        while True:
+            match = repattern.search(self.source, self.offset)
+            if self._good_token(match.group(), match.start()):
+                break
+            else:
+                self._skip_comment()
         self.offset = match.end()
         return match.start(), match.end()
 

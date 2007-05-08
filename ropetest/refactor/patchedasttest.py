@@ -1,6 +1,7 @@
 import unittest
 
 from rope.refactor import patchedast
+from ropetest import testutils
 
 
 class PatchedASTTest(unittest.TestCase):
@@ -93,7 +94,7 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast)
         checker.check_region('Add', 0, len(source) - 1)
         checker.check_children(
-            'Add', ['Const(1)', ' ', '+', ' ((', 'Const(2)', ')', ')'])
+            'Add', ['Const(1)', ' ', '+', ' ((', 'Const(2)', '))'])
 
     def test_handling_comments(self):
         source = '(1 + #(\n2)\n'
@@ -101,6 +102,13 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast)
         checker.check_children(
             'Add', ['Const(1)', ' ', '+', ' #(\n', 'Const(2)'])
+
+    def test_handling_parens_with_spaces(self):
+        source = '1 + (2\n    )\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Add', ['Const(1)', ' ', '+', ' (', 'Const(2)', '\n    )'])
 
     def test_handling_strings(self):
         source = '1 + "("\n'
@@ -168,9 +176,9 @@ class PatchedASTTest(unittest.TestCase):
         source = '(a, b) = 1, 2\n'
         ast = patchedast.get_patched_ast(source)
         checker = _ResultChecker(self, ast)
-        checker.check_region('AssTuple', 1, source.index('=') - 2)
+        checker.check_region('AssTuple', 0, source.index('=') - 1)
         checker.check_children(
-            'AssTuple', ['AssName', '', ',', ' ', 'AssName'])
+            'AssTuple', ['(', '', 'AssName', '', ',', ' ', 'AssName', '', ')'])
 
     def test_assert(self):
         source = 'assert True\n'
@@ -245,6 +253,13 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'CallFunc', ['Name', '', '(', '', 'Const(1)', '', ',',
                          ' ', '*', '', 'Name', '', ')'])
+
+    def test_call_func_and_only_dstart_args(self):
+        source = 'f(**kwds)\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'CallFunc', ['Name', '', '(', '', '**', '', 'Name', '', ')'])
 
     def test_class_node(self):
         source = 'class A(object):\n    """class docs"""\n    pass\n'
@@ -355,6 +370,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'From', ['from', ' ', 'x', ' ', 'import', ' ', 'y'])
 
+    @testutils.run_only_for_25
     def test_from_node(self):
         source = 'from ..x import y as z\n'
         ast = patchedast.get_patched_ast(source)
@@ -363,6 +379,251 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'From', ['from', ' ', '..', '', 'x', ' ', 'import', ' ', 'y',
                      ' ', 'as', ' ', 'z'])
+
+    def test_simple_gen_expr_node(self):
+        source = 'zip(i for i in x)\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('GenExpr', 4, len(source) - 2)
+        checker.check_children(
+            'GenExprInner', ['Name', ' ', 'GenExprFor'])
+        checker.check_children(
+            'GenExprFor', ['for', ' ', 'AssName', ' ', 'in', ' ', 'Name'])
+
+    def test_gen_expr_node_handling_surrounding_parens(self):
+        source = '(i for i in x)\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('GenExpr', 0, len(source) - 1)
+        checker.check_children(
+            'GenExpr', ['(', '', 'GenExprInner', '', ')'])
+
+    def test_gen_expr_node2(self):
+        source = 'zip(i for i in range(1) if i == 1)\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'GenExprFor', ['for', ' ', 'AssName', ' ', 'in', ' ', 'CallFunc',
+                           ' ', 'GenExprIf'])
+        checker.check_children('GenExprIf', ['if', ' ', 'Compare'])
+
+    def test_get_attr_node(self):
+        source = 'a.b\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Getattr', 0, len(source) - 1)
+        checker.check_children('Getattr', ['Name', '', '.', '', 'b'])
+
+    def test_global_node(self):
+        source = 'global a, b\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Global', 0, len(source) - 1)
+        checker.check_children('Global', ['global', ' ', 'a', '', ',', ' ', 'b'])
+
+    def test_if_node(self):
+        source = 'if True:\n    pass\nelse:\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('If', 0, len(source) - 1)
+        checker.check_children(
+            'If', ['if', ' ', 'Name', '', ':', '\n    ', 'Stmt', '\n',
+                   'else', '', ':', '\n    ', 'Stmt'])
+
+    def test_if_node2(self):
+        source = 'if True:\n    pass\nelif False:\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('If', 0, len(source) - 1)
+        checker.check_children(
+            'If', ['if', ' ', 'Name', '', ':', '\n    ', 'Stmt', '\n',
+                   'elif', ' ', 'Name', '', ':', '\n    ', 'Stmt'])
+
+    def test_import_node(self):
+        source = 'import a, b as c\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Import', 0, len(source) - 1)
+        checker.check_children(
+            'Import', ['import', ' ', 'a', '', ',', ' ', 'b', ' ',
+                       'as', ' ', 'c'])
+
+    def test_lambda_node(self):
+        source = 'lambda a, b=1, *z: None\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Lambda', 0, len(source) - 1)
+        checker.check_children(
+            'Lambda', ['lambda', ' ', 'a', '', ',', ' ', 'b', '', '=', '',
+                       'Const(1)', '', ',', ' ', '*', '', 'z', '', ':',
+                       ' ', 'Name'])
+
+    def test_list_node(self):
+        source = '[1, 2]\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('List', 0, len(source) - 1)
+        checker.check_children(
+            'List', ['[', '', 'Const(1)', '', ',', ' ', 'Const(2)', '', ']'])
+
+    def test_list_comp_node(self):
+        source = '[i for i in range(1) if True]\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('ListComp', 0, len(source) - 1)
+        checker.check_children(
+            'ListComp', ['[', '', 'Name', ' ', 'ListCompFor', '', ']'])
+        checker.check_children(
+            'ListCompFor', ['for', ' ', 'AssName', ' ', 'in', ' ',
+                            'CallFunc', ' ', 'ListCompIf'])
+        checker.check_children('ListCompIf', ['if', ' ', 'Name'])
+
+    def test_simple_module_node(self):
+        source = 'pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Module', 0, len(source))
+        checker.check_children('Module', ['', 'Stmt', '\n'])
+
+    def test_module_node(self):
+        source = '"""docs"""\npass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Module', 0, len(source))
+        checker.check_children('Module', ['', '"""docs"""', '\n', 'Stmt', '\n'])
+
+    def test_not_and_or_nodes(self):
+        source = 'not True or False\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Discard', ['Or'])
+        checker.check_children('Or', ['Not', ' ', 'or', ' ', 'Name'])
+
+    def test_print_node(self):
+        source = 'print >>out, 1,\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Print', 0, len(source) - 1)
+        checker.check_children('Print', ['print', ' ', '>>', '', 'Name', '',
+                                         ',', ' ', 'Const(1)', '', ','])
+
+    def test_printnl_node(self):
+        source = 'print 1\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Printnl', 0, len(source) - 1)
+        checker.check_children('Printnl', ['print', ' ', 'Const(1)'])
+
+    def test_raise_node(self):
+        source = 'raise x, y, z\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Raise', 0, len(source) - 1)
+        checker.check_children(
+            'Raise', ['raise', ' ', 'Name', '', ',', ' ', 'Name', '', ',',
+                      ' ', 'Name'])
+
+    def test_return_node(self):
+        source = 'def f():\n    return None\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Return', ['return', ' ', 'Name'])
+
+    def test_empty_return_node(self):
+        source = 'def f():\n    return\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Return', ['return'])
+
+    def test_simple_slice_node(self):
+        source = 'a[1:2]\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Slice', ['Name', '', '[', '', 'Const(1)', '', ':', '',
+                      'Const(2)', '', ']'])
+
+    def test_slice_node2(self):
+        source = 'a[:]\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Slice', ['Name', '', '[', '', ':', '', ']'])
+
+    def test_simple_subscript(self):
+        source = 'a[1]\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Subscript', ['Name', '', '[', '', 'Const(1)', '', ']'])
+
+    def test_tuple_node(self):
+        source = '(1, 2)\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Tuple', ['(', '', 'Const(1)', '', ',', ' ', 'Const(2)', '', ')'])
+
+    def test_one_item_tuple_node(self):
+        source = '(1,)\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Tuple', ['(', '', 'Const(1)', ',', ')'])
+
+    def test_yield_node(self):
+        source = 'def f():\n    yield None\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Yield', ['yield', ' ', 'Name'])
+
+    def test_while_node(self):
+        source = 'while True:\n    pass\nelse:\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'While', ['while', ' ', 'Name', '', ':', '\n    ', 'Stmt', '\n',
+                      'else', '', ':', '\n    ', 'Stmt'])
+
+    @testutils.run_only_for_25
+    def test_with_node(self):
+        source = 'from __future__ import with_statement\nwith a as b:\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'With', ['with', ' ', 'Name', ' ', 'as', ' ', 'AssName', '', ':',
+                     '\n    ', 'Stmt'])
+
+    def test_try_finally_node(self):
+        source = 'try:\n    pass\nfinally:\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'TryFinally', ['try', '', ':', '\n    ', 'Stmt', '\n', 'finally',
+                           '', ':', '\n    ', 'Stmt'])
+
+    def test_try_except_node(self):
+        source = 'try:\n    pass\nexcept Exception, e:\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'TryExcept', ['try', '', ':', '\n    ', 'Stmt', '\n', 'except',
+                          ' ', 'Name', '', ',', ' ', 'AssName', '', ':',
+                          '\n    ', 'Stmt'])
+
+    @testutils.run_only_for_25
+    def test_try_except_and_finally_node(self):
+        source = 'try:\n    pass\nexcept:\n    pass\nfinally:\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'TryFinally', ['TryExcept', '\n', 'finally',
+                           '', ':', '\n    ', 'Stmt'])
+
+    def test_ignoring_comments(self):
+        source = '#1\n1\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        start = source.rindex('1')
+        checker.check_region('Const(1)', start, start + 1)
 
 
 class _ResultChecker(object):
@@ -388,10 +649,7 @@ class _ResultChecker(object):
 
     def check_children(self, text, children):
         node = self._find_node(text)
-        try:
-            result = list(node.sorted_children)
-        except:
-            raise
+        result = list(node.sorted_children)
         self.test_case.assertEquals(len(children), len(result))
         for expected, child in zip(children, result):
             if isinstance(child, basestring):
