@@ -3,8 +3,7 @@ import unittest
 from rope.base import exceptions
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    SourceLinesAdapter, WordRangeFinder,
-                                   ScopeNameFinder, LogicalLineFinder,
-                                   get_block_start)
+                                   ScopeNameFinder, LogicalLineFinder, get_block_start)
 from ropetest import testutils
 
 
@@ -416,4 +415,3 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main()
-

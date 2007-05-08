@@ -81,12 +81,8 @@ class PythonHighlighting(Highlighting):
         builtin_pattern = r"([^.'\"\\]\b|^)" + \
                           PythonHighlighting.any("builtin", builtinlist) + r"\b"
         comment_pattern = PythonHighlighting.any("comment", [r"#[^\n]*"])
-        sqstring = r"(\b[rR])?'[^'\\\n]*(\\.[^'\\\n]*)*'?"
-        dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
-        sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
-        dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
         string_pattern = PythonHighlighting.any(
-                       "string", [sq3string, dq3string, sqstring, dqstring])
+                       "string", [rope.base.codeanalyze.get_string_pattern()])
         definition_pattern = r'^\s*(?P<defkeyword>def|class)\s+(?P<definition>\w+)'
         all_patterns = definition_pattern + '|' + keyword_pattern + '|' + \
                        builtin_pattern + '|' + comment_pattern + '|' + string_pattern

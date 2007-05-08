@@ -11,12 +11,8 @@ class OccurrenceFinder(object):
         self.name = name
         self.docs = docs
         self.comment_pattern = OccurrenceFinder.any('comment', [r'#[^\n]*'])
-        sqstring = r"(\b[rR])?'[^'\\\n]*(\\.[^'\\\n]*)*'?"
-        dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
-        sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
-        dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
         self.string_pattern = OccurrenceFinder.any(
-            'string', [sq3string, dq3string, sqstring, dqstring])
+            'string', [codeanalyze.get_string_pattern()])
         self.pattern = self._get_occurrence_pattern(self.name)
 
     def find_occurrences(self, resource=None, pymodule=None):

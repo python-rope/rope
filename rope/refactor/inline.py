@@ -296,11 +296,8 @@ class _DefinitionGenerator(object):
             def named_pattern(name, list_):
                 return "(?P<%s>" % name + "|".join(list_) + ")"
             comment_pattern = named_pattern('comment', [r'#[^\n]*'])
-            sqstring = r"(\b[rR])?'[^'\\\n]*(\\.[^'\\\n]*)*'?"
-            dqstring = r'(\b[rR])?"[^"\\\n]*(\\.[^"\\\n]*)*"?'
-            sq3string = r"(\b[rR])?'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?"
-            dq3string = r'(\b[rR])?"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?'
-            string_pattern = named_pattern('string', [sq3string, dq3string, sqstring, dqstring])
+            string_pattern = named_pattern('string',
+                                           [codeanalyze.get_string_pattern()])
             return_pattern = r'\b(?P<return>return)\b'
             cls._return_pattern = re.compile(comment_pattern + "|" +
                                              string_pattern + "|" +

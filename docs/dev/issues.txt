@@ -36,11 +36,10 @@ Release Goals
 
 Metaphor: Supporting restructurings
 
-Goals:
+Other Possible Goals:
 
-* Restructuring
 * Finding similar pieces to extracted
-* Formatting
+* Formatting?
 
 
 Hot Topics
@@ -341,6 +340,7 @@ Getting ready for Python 3.0
 * Renamed function attributes; ``f.func_whatever`` to ``f.__whatever__``
 * Use new function signature
 * Not using ``__cmp__``
+* Updating integer and string literal patterns
 
 
 What Rope Assumes...

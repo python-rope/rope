@@ -1,11 +1,26 @@
 Patched AST
 ===========
 
-- Adding `rope.refactor.patchedast`
+- ``(a + #)\nb)``
+- ``a + ((b))``
+- ``(a) + (b)``
+- Handling new string literals u''
+- Adding `_Source.consume_number()` and `_Source.consume_string()`
+- Testing different forms of strings
+- Testing different forms of numbers
+- ``(a + ')')``
+- Handling strings and docs
+- Integer literals; 10l, 0x08
+- Adding `patchedasttest` to testsuite
+- classes with no super
 
-* Refactor `_PatchedASTWalker.visitAssign()`
-* Handling string literals
-* Adding `patchedasttest` to testsuite
+* not loosing blank lines in the begining and end of the file
+
+* py3k
+
+  * metadata=? and classes
+  * function annotations
+  * // and /
 
 
 Remaining Small Stories

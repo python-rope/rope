@@ -797,3 +797,11 @@ def count_line_indents(line):
         else:
             return indents
     return 0
+
+
+def get_string_pattern():
+    start = r'(\b[uU]?[rR]?)?'
+    return '|'.join([r"%s'''[^'\\]*((\\.|'(?!''))[^'\\]*)*(''')?" % start,
+                     r'%s"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?' % start,
+                     r"%s'[^'\\\n]*(\\.[^'\\\n]*)*'?" % start,
+                     r'%s"[^"\\\n]*(\\.[^"\\\n]*)*"?' % start])
