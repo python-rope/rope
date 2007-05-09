@@ -188,7 +188,7 @@ def transform_module_to_package(context):
         editor = fileeditor.get_editor()
         changes = rope.refactor.ModuleToPackage(
             context.project, resource).get_changes()
-        self.project.do(changes)
+        context.project.do(changes)
 
 
 class ExtractDialog(RefactoringDialog):

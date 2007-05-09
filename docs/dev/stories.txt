@@ -17,7 +17,6 @@ Base Stories
 * Extract superclass
 * Collapse hierarchy
 * Python C extensions
-* User specified source folders
 * Zip imports
 * Pull up method
 * Push down method
@@ -104,9 +103,6 @@ Stories
 * Supporting modules without source code
 
 
-* Finding similar statements when extracting variable/method
-
-
 * Moving `staticmethod`\s
 
 
@@ -141,3 +137,9 @@ Stories
 
 
 > Public Release 0.6m1 : May 20, 2007
+
+
+* Finding similar statements when extracting variable/method
+
+
+* Adding custom source folders in ``config.py``

@@ -63,38 +63,8 @@ To Be Discussed
 Patched AST
 ===========
 
-I propose to construct the patched tree from input and at the same
-time insert textual info into it.  In this phase we might add new
-nodes that contain textual information about the source.
-
-Issues:
-
-* How to handle parenthesis? like ``a + ((b + c) + d)``
-* Nodes are not in order; like function args and defaults
-* How to save comments, parenthesis, like breaks and ...
-* Many commands in the same line; like ``a = 1; b = 2``
-* Where do textual data belong to?  To the parent probably
-
-
-Monkey-patching Old Nodes
--------------------------
-
-We can add information to the old tree.  The new ast will look like
-the old one and provides the same methods but adds two new fields:
-`region` and `sorted_children`.
-
-`sorted_children` field is a list of AST nodes and strings.  The
-strings contain textual information and the nodes are the place to
-insert the children.
-
-
-Construction
-------------
-
-The construction is recursive.  When constructing the child nodes we
-should give them the start offset.  They can calculate their own start
-and end offsets.
-
+I propose to construct a patched AST from code that holds formatting
+info.
 
 Supporting Formatting
 ---------------------
@@ -111,8 +81,12 @@ Restructurings need to replace an AST node with another AST node.  We
 can do this by searching over the parents nodes and `sorted_children`.
 Whenever we encounter the old AST node we replace it with the new one.
 
-There are a few other questions.  Should we store offsets or lengths
-in AST nodes.  Should formatting information be updated after changes.
+There are two approaches here.
+
+* We can change ASTs to construct a new AST
+* We can derived change source from the main AST
+
+The second approach seems more practical
 
 
 Finding Similar Pieces

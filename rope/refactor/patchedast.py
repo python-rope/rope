@@ -7,7 +7,11 @@ from rope.base import codeanalyze, exceptions
 
 def get_patched_ast(source):
     """Adds `region` and `sorted_children` fields to nodes"""
-    ast = compiler.parse(source)
+    return patch_ast(compiler.parse(source), source)
+
+
+def patch_ast(ast, source):
+    """Patches the given ast"""
     call_for_nodes(ast, _PatchingASTWalker(source))
     return ast
 

@@ -68,7 +68,10 @@ class ModuleToPackage(object):
         parent = self.resource.parent
         name = self.resource.name[:-3]
         changes.add_change(CreateFolder(parent, name))
-        new_path = parent.path + '/%s/__init__.py' % name
+        parent_path = parent.path + '/'
+        if not parent.path:
+            parent_path = ''
+        new_path = parent_path + '%s/__init__.py' % name
         changes.add_change(MoveResource(self.resource, new_path))
         return changes
 

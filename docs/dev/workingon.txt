@@ -1,19 +1,22 @@
-Patched AST
-===========
+Similar Finder
+==============
 
-- tuple parameter unpacking
-- handle Sliceobj
-- handle long slices
+- Matching patterns with multiple statements
+- Check multiple matches
+- Only matches in selected region
 
-* profiling
-* py3k: How to handle both versions?
+* Only scanning selected region for matches
+* Changing patchedast only to patch a branch?
+
+* Handling '<>' in patchedast
+
+* py3k: How to handle both branches?
 
   * metadata=? and classes
   * function annotations
   * // and /
+  * decorated class
   * ...
-
-* adding custom source folders in ``config.py``
 
 
 Remaining Small Stories
