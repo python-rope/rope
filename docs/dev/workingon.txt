@@ -1,14 +1,11 @@
 Patched AST
 ===========
 
-- GenExpr and Tuple should consume surrounding parens if exists
-- Module not loosing blank lines in the begining and end of the file
-- Add `patchedast.write_ast()`
-- Ignoring comments
+- tuple parameter unpacking
+- handle Sliceobj
+- handle long slices
 
-* tuple parameter unpacking
-* handle long slices
-* handle Sliceobj
+* profiling
 * py3k: How to handle both versions?
 
   * metadata=? and classes
@@ -16,8 +13,6 @@ Patched AST
   * // and /
   * ...
 
-* profiling
-* report error on ``return``
 * adding custom source folders in ``config.py``
 
 

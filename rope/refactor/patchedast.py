@@ -51,6 +51,7 @@ class _PatchingASTWalker(object):
 
     def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
         children = []
+        formats = []
         suspected_start = self.source.offset
         start = suspected_start
         first_token = True
@@ -71,12 +72,13 @@ class _PatchingASTWalker(object):
                 child = self.source.get(region[0], region[1])
                 token_start = region[0]
             if not first_token:
+                formats.append(self.source.get(offset, token_start))
                 children.append(self.source.get(offset, token_start))
             else:
                 first_token = False
                 start = token_start
             children.append(child)
-        start = self._handle_parens(children, start)
+        start = self._handle_parens(children, start, formats)
         if eat_parens:
             start = self._eat_surrounding_parens(
                 children, suspected_start, start)
@@ -89,28 +91,29 @@ class _PatchingASTWalker(object):
         node.sorted_children = children
         node.region = (start, self.source.offset)
 
-    def _handle_parens(self, children, start):
+    def _handle_parens(self, children, start, formats):
         """Changes `children` and returns new start"""
-        opens, closes = self._count_needed_parens(children)
+        opens, closes = self._count_needed_parens(formats)
         old_end = self.source.offset
         new_end = None
         for i in range(closes):
             new_end = self.source.consume(')')[1]
         if new_end is not None:
             children.append(self.source.get(old_end, new_end))
-        new_start = None
+        new_start = start
         for i in range(opens):
-            new_start = self.source.find_backwards('(', start)
-        if new_start is not None:
+            new_start = self.source.rfind_token('(', 0, new_start)
+        if new_start != start:
             children.insert(0, self.source.get(new_start, start))
             start = new_start
         return start
 
     def _eat_surrounding_parens(self, children, suspected_start, start):
-        if '(' in self.source[suspected_start:start]:
+        index = self.source.rfind_token('(', suspected_start, start)
+        if index is not None:
             old_start = start
             old_offset = self.source.offset
-            start = self.source.find_backwards('(', start)
+            start = index
             children.insert(0, '(')
             children.insert(1, self.source[start + 1:old_start])
             token_start, token_end = self.source.consume(')')
@@ -196,9 +199,7 @@ class _PatchingASTWalker(object):
         self._handle(node, ['break'])
 
     def visitCallFunc(self, node):
-        children = []
-        children.append(node.node)
-        children.append('(')
+        children = [node.node, '(']
         children.extend(self._child_nodes(node.args, ','))
         if node.star_args is not None:
             if node.args:
@@ -257,7 +258,10 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def visitDiscard(self, node):
-        self._handle(node, [node.expr])
+        children = []
+        if not self._is_none_or_const_none(node.expr):
+            children.append(node.expr)
+        self._handle(node, children)
 
     def visitDiv(self, node):
         self._handle(node, [node.left, '/', node.right])
@@ -322,11 +326,10 @@ class _PatchingASTWalker(object):
         if flags & compiler.consts.CO_VARARGS:
             star_args = args.pop()
         defaults = [None] * (len(args) - len(defaults)) + list(defaults)
-        for arg, default in zip(args[:-1], defaults[:-1]):
+        for index, (arg, default) in enumerate(zip(args, defaults)):
+            if index > 0:
+                children.append(',')
             self._add_args_to_children(children, arg, default)
-            children.append(',')
-        if args:
-            self._add_args_to_children(children, args[-1], defaults[-1])
         if star_args is not None:
             if args:
                 children.append(',')
@@ -338,10 +341,24 @@ class _PatchingASTWalker(object):
         return children
 
     def _add_args_to_children(self, children, arg, default):
-        children.append(arg)
+        if isinstance(arg, (list, tuple)):
+            self._add_tuple_parameter(children, arg)
+        else:
+            children.append(arg)
         if default is not None:
             children.append('=')
             children.append(default)
+
+    def _add_tuple_parameter(self, children, arg):
+        children.append('(')
+        for index, token in enumerate(arg):
+            if index > 0:
+                children.append(',')
+            if isinstance(token, (list, tuple)):
+                self._add_tuple_parameter(children, token)
+            else:
+                children.append(token)
+        children.append(')')
 
     def visitGenExpr(self, node):
         self._handle(node, [node.code], eat_parens=True)
@@ -373,6 +390,10 @@ class _PatchingASTWalker(object):
         if node.else_:
             children.extend(['else', ':', node.else_])
         self._handle(node, children)
+
+    def visitIfExp(self, node):
+        return self._handle(node, [node.then, 'if', node.test,
+                                   'else', node.else_])
 
     def visitImport(self, node):
         children = ['import']
@@ -453,7 +474,9 @@ class _PatchingASTWalker(object):
     def _base_print(self, node):
         children = ['print']
         if node.dest:
-            children.extend(['>>', node.dest, ','])
+            children.extend(['>>', node.dest])
+            if node.nodes:
+                children.append(',')
         children.extend(self._child_nodes(node.nodes, ','))
         return children
 
@@ -471,10 +494,13 @@ class _PatchingASTWalker(object):
 
     def visitReturn(self, node):
         children = ['return']
-        if node.value and not (isinstance(node.value, compiler.ast.Const) and
-                               node.value.value == None):
+        if not self._is_none_or_const_none(node.value):
             children.append(node.value)
         self._handle(node, children)
+
+    def _is_none_or_const_none(self, node):
+        return node is None or (isinstance(node, compiler.ast.Const) and
+                                node.value == None)
 
     def visitRightShift(self, node):
         self._handle(node, [node.left, '>>', node.right])
@@ -484,9 +510,18 @@ class _PatchingASTWalker(object):
         if node.lower:
             children.append(node.lower)
         children.append(':')
-        if node.lower:
+        if node.upper:
             children.append(node.upper)
         children.append(']')
+        self._handle(node, children)
+
+    def visitSliceobj(self, node):
+        children = []
+        for index, slice in enumerate(node.nodes):
+            if index > 0:
+                children.append(':')
+            if not self._is_none_or_const_none(slice):
+                children.append(slice)
         self._handle(node, children)
 
     def visitStmt(self, node):
@@ -523,7 +558,11 @@ class _PatchingASTWalker(object):
         self._handle(node, children    )
 
     def _handle_tuple(self, node):
-        self._handle(node, self._child_nodes(node.nodes, ','), eat_parens=True)
+        if node.nodes:
+            self._handle(node, self._child_nodes(node.nodes, ','),
+                         eat_parens=True)
+        else:
+            self._handle(node, ['(', ')'])
 
     def visitUnaryAdd(self, node):
         self._handle(node, ['+', node.expr])
@@ -580,9 +619,19 @@ class _Source(object):
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
-    def _good_token(self, token, offset):
+    def _good_token(self, token, offset, start=None):
         """Checks whether consumed token is in comments"""
-        return not '#' in self.source[self.offset:offset]
+        if start is None:
+            start = self.offset
+        try:
+            comment_index = self.source.rindex('#', start, offset)
+        except ValueError:
+            return True
+        try:
+            new_line_index = self.source.rindex('\n', start, offset)
+        except ValueError:
+            return False
+        return comment_index < new_line_index
 
     def _skip_comment(self):
         self.offset = self.source.index('\n', self.offset + 1)
@@ -594,7 +643,7 @@ class _Source(object):
     def consume_string(self):
         if _Source._string_pattern is None:
             original = codeanalyze.get_string_pattern()
-            pattern = r'(%s)((\s|\\\n)*(%s))*' % (original, original)
+            pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % (original, original)
             _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern)
@@ -622,6 +671,18 @@ class _Source(object):
 
     def get(self, start, end):
         return self.source[start:end]
+
+    def rfind_token(self, token, start, end):
+        index = start
+        while True:
+            try:
+                index = self.source.rindex(token, start, end)
+                if self._good_token(token, index, start=start):
+                    return index
+                else:
+                    end = index
+            except ValueError:
+                return None
 
     def from_offset(self, offset):
         return self.get(offset, self.offset)

@@ -320,6 +320,16 @@ class PatchedASTTest(unittest.TestCase):
                          ' ', '**', '', 'p2', '', ')', '', ':', '\n    ',
                          '"""docs"""', '\n    ', 'Stmt'])
 
+    def test_function_node_and_tuple_parameters(self):
+        source = 'def f(a, (b, c)):\n    pass\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('Function', 0, len(source) - 1)
+        checker.check_children(
+            'Function', ['def', ' ', 'f', '', '(', '', 'a', '', ',', ' ', '(',
+                         '', 'b', '', ',', ' ', 'c', '', ')', '', ')' , '',
+                         ':', '\n    ', 'Stmt'])
+
     def test_dict_node(self):
         source = '{1: 2, 3: 4}\n'
         ast = patchedast.get_patched_ast(source)
@@ -563,11 +573,23 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Tuple', ['(', '', 'Const(1)', '', ',', ' ', 'Const(2)', '', ')'])
 
+    def test_tuple_node(self):
+        source = '#(\n1, 2\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Tuple', ['Const(1)', '', ',', ' ', 'Const(2)'])
+
     def test_one_item_tuple_node(self):
         source = '(1,)\n'
         ast = patchedast.get_patched_ast(source)
         checker = _ResultChecker(self, ast)
         checker.check_children('Tuple', ['(', '', 'Const(1)', ',', ')'])
+
+    def test_empty_tuple_node(self):
+        source = '()\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children('Tuple', ['(', '', ')'])
 
     def test_yield_node(self):
         source = 'def f():\n    yield None\n'
@@ -624,6 +646,41 @@ class PatchedASTTest(unittest.TestCase):
         checker = _ResultChecker(self, ast)
         start = source.rindex('1')
         checker.check_region('Const(1)', start, start + 1)
+
+    def test_simple_sliceobj(self):
+        source = 'a[1::3]\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Sliceobj', ['Const(1)', '', ':', '', ':', '', 'Const(3)'])
+
+    def test_ignoring_strings_that_start_with_a_char(self):
+        source = 'r"""("""\n1\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Module', ['', 'r"""("""', '\n', 'Stmt', '\n'])
+
+    # XXX: ``<>`` will be removed in Python 3.0
+    def xxx_test_how_to_handle_old_not_equals(self):
+        source = '1 <> 2\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Module', ['Const(1)', ' ', '<>', ' ', 'Const(2)'])
+
+    def test_semicolon(self):
+        source = '1;\n'
+        ast = patchedast.get_patched_ast(source)
+
+    @testutils.run_only_for_25
+    def test_if_exp_node(self):
+        source = '1 if True else 2\n'
+        ast = patchedast.get_patched_ast(source)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'IfExp', ['Const(1)', ' ', 'if', ' ', 'Name', ' ', 'else',
+                      ' ', 'Const(2)'])
 
 
 class _ResultChecker(object):
