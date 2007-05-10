@@ -1,12 +1,17 @@
 Similar Finder
 ==============
 
-- Matching patterns with multiple statements
-- Check multiple matches
-- Only matches in selected region
+- `Match.get_ast()`
+- __rope__variable_normal_a
+- __rope__variable_any_a
 
+* Handling multiple assigns
+* Handle assigns
+
+* Inserting common prefix when using codeassist
 * Only scanning selected region for matches
 * Changing patchedast only to patch a branch?
+* One failure in windows
 
 * Handling '<>' in patchedast
 
@@ -25,12 +30,10 @@ Remaining Small Stories
 Base:
 
 * Better default callinfo selection
-* Changing method to static method refactoring
 * Multiple ropes on one project; problems for objectdb and history
 * Inline fails when there is an arg mismatch
 * Evaluate function parameter defaults in staticoi?
 * Recursive SOI; Go where the calls go with limited depth
-* ``match_when_unsure`` project config?
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
 * Importing star and removing self imports; stack overflow

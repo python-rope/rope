@@ -805,3 +805,6 @@ def get_string_pattern():
                      r'%s"""[^"\\]*((\\.|"(?!""))[^"\\]*)*(""")?' % start,
                      r"%s'[^'\\\n]*(\\.[^'\\\n]*)*'?" % start,
                      r'%s"[^"\\\n]*(\\.[^"\\\n]*)*"?' % start])
+
+def get_comment_pattern():
+    return r'#[^\n]*'

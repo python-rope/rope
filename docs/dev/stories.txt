@@ -109,6 +109,9 @@ Stories
 * Lambdas as functions; consider their parameters
 
 
+* Changing method to static method refactoring
+
+
 * Better warnings
 
 

@@ -46,6 +46,7 @@ def _remove_recursively(path):
     else:
         shutil.rmtree(path)
 
+
 def run_only_for_25(func):
     """Should be used as a decorator for a unittest.TestCase test method"""
     if sys.version_info >= (2, 5, 0):
