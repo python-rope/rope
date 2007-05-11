@@ -722,7 +722,7 @@ def suite():
     result.addTests(unittest.makeSuite(IntroduceParameterTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.
                                        importutilstest.ImportUtilsTest))
-    result.addTests(similarfindertest.suite()))
+    result.addTests(similarfindertest.suite())
     result.addTests(unittest.makeSuite(TaskHandleTest))
     return result
 

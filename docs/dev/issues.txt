@@ -95,9 +95,15 @@ shown in the next section.
 
 Suggestions and issues:
 
-* ``${*a}``: Match any statement
+* Where can wildcards appear?
 
-  The main reason for expression lists is matching `Stmt` nodes.  That
+  Although the names can appear in many places we limit that by
+  forcing the wildcards to appear only where `Name` and `AssName` can
+  appear.
+
+* ``${*a}``: Match any statement?
+
+  The main reason for statement lists is matching `Stmt` nodes.  That
   is::
 
     class A(object):
@@ -108,9 +114,17 @@ Suggestions and issues:
     class A(object):
         ${*a}
 
-* Matching names?
-* Assignment vs. reading
 * Efficiency
+
+
+Adding Name Checks
+------------------
+
+Now that we can match similar AST nodes, we can do our last move for
+making the examples in `a look into the future`_ section real.  I
+propose to add a `CheckingFinder`::
+
+  
 
 
 A Look Into The Future
@@ -121,27 +135,20 @@ Restructuring::
   # ``a = b`` to ``a.set(b)`` where the type of `a` is `type_pyclass`
   pattern = '${?a} = ${?b}'
   goal = '${?a}.set(${?b})'
-  constraints = {'?a.object.type': type_pyclass}
+  checks = {'?a.object.type': type_pyclass}
 
-  # ``a.set(b)`` to ``a = b`` where `set` is `method_pyname`
-  pattern = '${?a}.${set}(${?b})'
+  # ``a.set(b)`` to ``a = b`` where the type of `a` is `type_pyclass`
+  pattern = '${?a}.set(${?b})'
   goal = '${?a} = ${?b}'
-  constraints = {'set': method_pyname}
+  checks = {'?a.object.type': type_pyclass}
 
   # Can we use it for giving self assignment warnings?
   pattern = '${?a} = ${?b}'
-  constraints = {'?a': '?b'}
+  checks = {'?a': '?b'}
 
-  # I don't think rematching is interesting
+  # Rematching might be useful, too
   pattern = '${?x} = [${?a}, ${?a}]'
   goal = '${?x} = [${?a}] * 2'
-
-Suggestions:
-
-* Maybe `constraints` should be replaced with a python method that
-  gets the matched ASTs and returns True or False.
-* Rematching can be implemented by having a layer on top of AST
-  matcher.
 
 
 Patched AST

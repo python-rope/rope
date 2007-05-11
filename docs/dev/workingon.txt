@@ -1,17 +1,12 @@
 Similar Finder
 ==============
 
-- `Match.get_ast()`
-- __rope__variable_normal_a
-- __rope__variable_any_a
+- Handling `AssName`
+- AssName should not matche Name
 
-* Handling multiple assigns
-* Handle assigns
-
-* Inserting common prefix when using codeassist
 * Only scanning selected region for matches
 * Changing patchedast only to patch a branch?
-* One failure in windows
+* One failure on windows!
 
 * Handling '<>' in patchedast
 
@@ -40,6 +35,7 @@ Base:
 
 UI and IDE:
 
+* Inserting common prefix when using codeassist
 * Renaming normal files, folders, modules, and packages in project tree view
 * Completion in module entries
 * Goto definition for ``"# comment.\na_var"``

@@ -701,8 +701,7 @@ class _Source(object):
         return self.source[i:j]
 
     def _get_number_pattern(self):
-        # We should handle integer, long_integer, others, imagnumber
-        # HACK: An approaximation does the job
+        # HACK: It is merely an approaximation and does the job
         integer = r'(0|0x)?[\da-fA-F]+[lL]?'
         return r'(%s(\.\d*)?|(\.\d+))([eE][-+]?\d*)?[jJ]?' % integer
 

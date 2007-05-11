@@ -10,14 +10,21 @@ class SimilarFinder(object):
     """A class for finding similar expressions and statements"""
 
     def __init__(self, source, start=0, end=None):
-        self.source = source
         self.start = start
-        self.end = len(self.source)
+        self.end = len(source)
         if end is not None:
             self.end = end
-        self.ast = patchedast.get_patched_ast(self.source)
+        self.ast = patchedast.get_patched_ast(source)
 
     def get_matches(self, code):
+        """Search for `code` in source and return a list of `Match`\es
+
+        `code` can contain wildcards.  ``${name}`` matches normal
+        names and ``${?name} can match any expression.  They can
+        only appear in `compiler.ast.Name` and `compiler.ast.AssName`.
+        You can use `Match.get_ast()` for getting the node that has
+        matched a given pattern.
+        """
         wanted = self._create_pattern(code)
         matches = _ASTMatcher(self.ast, wanted).find_matches()
         for match in matches:
@@ -32,10 +39,10 @@ class SimilarFinder(object):
     def _create_pattern(self, expression):
         expression = self._replace_wildcards(expression)
         ast = compiler.parse(expression)
-        # Module.Stmt
+        # Getting Module.Stmt.nodes
         nodes = ast.node.nodes
         if len(nodes) == 1 and isinstance(nodes[0], compiler.ast.Discard):
-            # Discard
+            # Getting Discard.expr
             wanted = nodes[0].expr
         else:
             wanted = nodes
@@ -95,7 +102,7 @@ class _ASTMatcher(object):
                     self.matches.append(StatementMatch(current_stmts, mapping))
 
     def _match_nodes(self, expected, node, mapping):
-        if isinstance(expected, compiler.ast.Name):
+        if isinstance(expected, (compiler.ast.Name, compiler.ast.AssName)):
            if self.ropevar.is_normal(expected.name):
                return self._match_normal_var(expected, node, mapping)
            if self.ropevar.is_any(expected.name):
@@ -125,7 +132,7 @@ class _ASTMatcher(object):
         return True
 
     def _match_normal_var(self, node1, node2, mapping):
-        if isinstance(node2, compiler.ast.Name) and \
+        if node2.__class__ == node1.__class__ and \
            self.ropevar.get_base(node1.name) == node2.name:
             mapping[self.ropevar.get_base(node1.name)] = node2
             return True
@@ -178,9 +185,6 @@ class _Template(object):
         self.template = template
         self._find_names()
 
-    def get_names(self):
-        return self.names.keys()
-
     def _find_names(self):
         self.names = {}
         for match in _Template._get_pattern().finditer(self.template):
@@ -192,16 +196,8 @@ class _Template(object):
                     self.names[name] = []
                 self.names[name].append((start, end))
 
-    @classmethod
-    def _get_pattern(cls):
-        if cls._match_pattern is None:
-            pattern = codeanalyze.get_comment_pattern() + '|' + \
-                      codeanalyze.get_string_pattern() + '|' + \
-                      r'(?P<name>\$\{\S*\})'
-            cls._match_pattern = re.compile(pattern)
-        return cls._match_pattern
-
-    _match_pattern = None
+    def get_names(self):
+        return self.names.keys()
 
     def substitute(self, mapping):
         collector = sourceutils.ChangeCollector(self.template)
@@ -212,6 +208,17 @@ class _Template(object):
         if result is None:
             return self.template
         return result
+
+    _match_pattern = None
+
+    @classmethod
+    def _get_pattern(cls):
+        if cls._match_pattern is None:
+            pattern = codeanalyze.get_comment_pattern() + '|' + \
+                      codeanalyze.get_string_pattern() + '|' + \
+                      r'(?P<name>\$\{\S*\})'
+            cls._match_pattern = re.compile(pattern)
+        return cls._match_pattern
 
 
 class _RopeVariable(object):

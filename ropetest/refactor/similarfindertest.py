@@ -112,6 +112,18 @@ class SimilarFinderTest(unittest.TestCase):
         result = list(finder.get_matches('b = ${?x} + ${?x}'))
         self.assertEquals(0, len(result))
 
+    def test_matching_normal_names_and_assname(self):
+        source = 'a = 1\n'
+        finder = similarfinder.SimilarFinder(source)
+        result = list(finder.get_matches('${a} = 1'))
+        self.assertEquals('a', result[0].get_ast('a').name)
+
+    def test_matching_normal_names_and_assname(self):
+        source = 'a = 1\n'
+        finder = similarfinder.SimilarFinder(source)
+        result = list(finder.get_matches('${a}'))
+        self.assertEquals(0, len(result))
+
 
 class TemplateTest(unittest.TestCase):
 
