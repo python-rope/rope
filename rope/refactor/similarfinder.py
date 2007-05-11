@@ -2,7 +2,7 @@
 import compiler.ast
 import re
 
-from rope.base import codeanalyze
+from rope.base import codeanalyze, evaluate
 from rope.refactor import patchedast, sourceutils
 
 
@@ -10,11 +10,16 @@ class SimilarFinder(object):
     """A class for finding similar expressions and statements"""
 
     def __init__(self, source, start=0, end=None):
+        ast = compiler.parse(source)
+        self._init_using_ast(ast, source, start, end)
+
+    def _init_using_ast(self, ast, source, start, end):
         self.start = start
         self.end = len(source)
         if end is not None:
             self.end = end
-        self.ast = patchedast.get_patched_ast(source)
+        if not hasattr(ast, 'sorted_children'):
+            self.ast = patchedast.patch_ast(ast, source)
 
     def get_matches(self, code):
         """Search for `code` in source and return a list of `Match`\es
@@ -58,6 +63,54 @@ class SimilarFinder(object):
             else:
                 mapping[name] = ropevar.get_normal(name)
         return template.substitute(mapping)
+
+
+class CheckingFinder(SimilarFinder):
+    """A `SimilarFinder` that can perform object and name checks
+
+    The constructor takes a `checks` dictionary.  This dictionary
+    contains checks to be performed.  As an example::
+
+      pattern: '${?a}.set(${?b})'
+      checks: {'?a.type': type_pyclass}
+
+      pattern: '${?c} = ${?C}())'
+      checks: {'C': c_pyname}
+
+    This means only match expressions as '?a' only if its type is
+    type_pyclass.  Each matched expression is a `PyName`.  By using
+    nothing, `.object` or `.type` you can specify a check.
+
+    """
+
+    def __init__(self, pymodule, checks, start=0, end=None):
+        super(CheckingFinder, self)._init_using_ast(
+            pymodule.get_ast(), pymodule.source_code, start, end)
+        self.pymodule = pymodule
+        self.checks = checks
+
+    def get_matches(self, code):
+        for match in SimilarFinder.get_matches(self, code):
+            matched = True
+            for check, expected in self.checks.items():
+                if self._evaluate_expression(match, check) != expected:
+                    matched = False
+                    break
+            if matched:
+                yield match
+
+    def _evaluate_expression(self, match, check):
+        scope = self.pymodule.get_scope().get_inner_scope_for_offset(
+            match.get_region()[0])
+        parts = check.split('.')
+        expression = match.get_ast(parts[0])
+        pyname = evaluate.get_statement_result(scope, expression)
+        if len(parts) == 1:
+            return pyname
+        if parts[1] == 'object':
+            return pyname.get_object()
+        if parts[1] == 'type':
+            return pyname.get_object().get_type()
 
 
 class _ASTMatcher(object):

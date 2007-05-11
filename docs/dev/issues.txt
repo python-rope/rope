@@ -122,9 +122,12 @@ Adding Name Checks
 
 Now that we can match similar AST nodes, we can do our last move for
 making the examples in `a look into the future`_ section real.  I
-propose to add a `CheckingFinder`::
+propose to add `CheckingFinder` class.
 
-  
+Possible accessors can be nothing for checking `PyName`\s, ``.object``
+for checking `PyObject`\s (derived by calling ``pyname.get_object()``)
+and ``.type`` for checking the type (derived by calling ``pyname.
+get_object.get_type()``).
 
 
 A Look Into The Future
@@ -135,12 +138,12 @@ Restructuring::
   # ``a = b`` to ``a.set(b)`` where the type of `a` is `type_pyclass`
   pattern = '${?a} = ${?b}'
   goal = '${?a}.set(${?b})'
-  checks = {'?a.object.type': type_pyclass}
+  checks = {'?a.type': type_pyclass}
 
   # ``a.set(b)`` to ``a = b`` where the type of `a` is `type_pyclass`
   pattern = '${?a}.set(${?b})'
   goal = '${?a} = ${?b}'
-  checks = {'?a.object.type': type_pyclass}
+  checks = {'?a.type': type_pyclass}
 
   # Can we use it for giving self assignment warnings?
   pattern = '${?a} = ${?b}'

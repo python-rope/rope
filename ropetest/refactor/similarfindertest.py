@@ -1,6 +1,7 @@
 import unittest
 
 from rope.refactor import similarfinder
+from ropetest import testutils
 
 
 class SimilarFinderTest(unittest.TestCase):
@@ -125,6 +126,71 @@ class SimilarFinderTest(unittest.TestCase):
         self.assertEquals(0, len(result))
 
 
+class CheckingFinderTest(unittest.TestCase):
+
+    def setUp(self):
+        super(CheckingFinderTest, self).setUp()
+        self.project = testutils.sample_project()
+        self.pycore = self.project.get_pycore()
+        self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(CheckingFinderTest, self).tearDown()
+
+    def test_trivial_case(self):
+        self.mod1.write('')
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(pymodule, {})
+        self.assertEquals([], list(finder.get_match_regions('10')))
+
+    def test_simple_finding(self):
+        self.mod1.write('class A(object):\n    pass\na = A()\n')
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(pymodule, {})
+        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        self.assertEquals(1, len(result))
+
+    def test_finding2(self):
+        self.mod1.write('class A(object):\n    pass\na = list()\n')
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(
+            pymodule, {'?A': pymodule.get_attribute('A')})
+        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        self.assertEquals(0, len(result))
+
+    def test_not_matching_unknowns_finding(self):
+        self.mod1.write('class A(object):\n    pass\na = unknown()\n')
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(
+            pymodule, {'?A': pymodule.get_attribute('A')})
+        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        self.assertEquals(0, len(result))
+
+    def test_finding_and_matching_pyobjects(self):
+        source = 'class A(object):\n    pass\nNewA = A\na = NewA()\n'
+        self.mod1.write(source)
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(
+            pymodule, {'?A.object': pymodule.get_attribute('A').get_object()})
+        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        self.assertEquals(1, len(result))
+        start = source.rindex('a =')
+        self.assertEquals((start, len(source) - 1), result[0].get_region())
+
+    def test_finding_and_matching_types(self):
+        source = 'class A(object):\n    def f(self):\n        pass\n' \
+                 'a = A()\nb = a.f()\n'
+        self.mod1.write(source)
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(
+            pymodule, {'?inst.type': pymodule.get_attribute('A').get_object()})
+        result = list(finder.get_matches('${?anything} = ${?inst}.f()'))
+        self.assertEquals(1, len(result))
+        start = source.rindex('b')
+        self.assertEquals((start, len(source) - 1), result[0].get_region())
+
+
 class TemplateTest(unittest.TestCase):
 
     def test_simple_templates(self):
@@ -151,6 +217,7 @@ class TemplateTest(unittest.TestCase):
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(SimilarFinderTest))
+    result.addTests(unittest.makeSuite(CheckingFinderTest))
     result.addTests(unittest.makeSuite(TemplateTest))
     return result
 

@@ -1,22 +1,18 @@
-Similar Finder
-==============
+Checking Similar Finder
+=======================
 
-- Handling `AssName`
-- AssName should not matche Name
+- What if evaluate return `None`?
+
+* When to match? not ``==``; see occurrences; ImportedName
+* Match when unsure; `occurrences._do_pynames_match()`
+* ``${?name} = ...`` and `?name` checks
 
 * Only scanning selected region for matches
 * Changing patchedast only to patch a branch?
 * One failure on windows!
 
 * Handling '<>' in patchedast
-
-* py3k: How to handle both branches?
-
-  * metadata=? and classes
-  * function annotations
-  * // and /
-  * decorated class
-  * ...
+* Consider filling python source
 
 
 Remaining Small Stories
