@@ -2,8 +2,8 @@
 import compiler.ast
 import re
 
-from rope.base import codeanalyze, evaluate
-from rope.refactor import patchedast, sourceutils
+from rope.base import codeanalyze, evaluate, pyobjects
+from rope.refactor import patchedast, sourceutils, occurrences
 
 
 class SimilarFinder(object):
@@ -93,24 +93,41 @@ class CheckingFinder(SimilarFinder):
         for match in SimilarFinder.get_matches(self, code):
             matched = True
             for check, expected in self.checks.items():
-                if self._evaluate_expression(match, check) != expected:
-                    matched = False
-                    break
-            if matched:
+                name, kind = self._split_name(check)
+                pyname = self._evaluate_node(match.get_ast(name))
+                if kind == 'name':
+                    if not self._same_pyname(expected, pyname):
+                        break
+                else:
+                    pyobject = pyname.get_object()
+                    if kind == 'type':
+                        pyobject = pyobject.get_type()
+                    if not self._same_pyobject(expected, pyobject):
+                        break
+            else:
                 yield match
 
-    def _evaluate_expression(self, match, check):
-        scope = self.pymodule.get_scope().get_inner_scope_for_offset(
-            match.get_region()[0])
-        parts = check.split('.')
-        expression = match.get_ast(parts[0])
-        pyname = evaluate.get_statement_result(scope, expression)
+    def _same_pyobject(self, expected, pyobject):
+        return expected == pyobject
+
+    def _same_pyname(self, expected, pyname):
+        return occurrences.FilteredFinder.same_pyname(expected, pyname)
+
+    def _split_name(self, name):
+        parts = name.split('.')
+        expression, kind = parts[0], parts[-1]
         if len(parts) == 1:
-            return pyname
-        if parts[1] == 'object':
-            return pyname.get_object()
-        if parts[1] == 'type':
-            return pyname.get_object().get_type()
+            kind = 'name'
+        return expression, kind
+
+    def _evaluate_node(self, node):
+        scope = self.pymodule.get_scope().get_inner_scope_for_line(node.lineno)
+        expression = node
+        if isinstance(expression, compiler.ast.AssName):
+            text = patchedast.write_ast(expression)
+            return evaluate.get_string_result(scope, text)
+        else:
+            return evaluate.get_statement_result(scope, expression)
 
 
 class _ASTMatcher(object):

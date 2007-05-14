@@ -101,19 +101,6 @@ Suggestions and issues:
   forcing the wildcards to appear only where `Name` and `AssName` can
   appear.
 
-* ``${*a}``: Match any statement?
-
-  The main reason for statement lists is matching `Stmt` nodes.  That
-  is::
-
-    class A(object):
-        pass
-
-  will match::
-
-    class A(object):
-        ${*a}
-
 * Efficiency
 
 
@@ -128,6 +115,19 @@ Possible accessors can be nothing for checking `PyName`\s, ``.object``
 for checking `PyObject`\s (derived by calling ``pyname.get_object()``)
 and ``.type`` for checking the type (derived by calling ``pyname.
 get_object.get_type()``).
+
+A question that comes up is why don't we add a ``match when unsure``
+option.  This is different from something like rename refactoring.
+Consider a situation like ``${a_var}.a_func()``.  In this example,
+matching when unsure does not work::
+
+  def f(arg):
+      arg.a_func()
+
+We expect ``arg.a_func()`` to match, but it does not since `args` is a
+`Parameter` and `a_var` is a `PyName`.  So we know that they are not
+the same pyname.  Note that when renaming we don't compare `arg` to
+`arg` but instead we compare `a_func` that yields what we want.
 
 
 A Look Into The Future
@@ -144,10 +144,6 @@ Restructuring::
   pattern = '${?a}.set(${?b})'
   goal = '${?a} = ${?b}'
   checks = {'?a.type': type_pyclass}
-
-  # Can we use it for giving self assignment warnings?
-  pattern = '${?a} = ${?b}'
-  checks = {'?a': '?b'}
 
   # Rematching might be useful, too
   pattern = '${?x} = [${?a}, ${?a}]'
@@ -354,9 +350,23 @@ Maybe we can use one of these solutions:
 Or maybe we can use a strategy object for searching.
 
 
-Getting ready for Python 3.0
+Getting Ready For Python 3.0
 ============================
 
+Unfortunately it seems impossible to make rope both a valid Python 2.x
+and 3.x program.  Possible approaches are having two separate branches
+of rope (that I strongly resist) or moving from 2.x to 3.x gradually.
+
+We can also maintain rope so that it can be used for writing python
+3.x programs as well as 2.x while running on 2.x.  The main problem is
+the `compiler` package.  After that when we finally drop support for
+running rope on 2.x and it would need 3.x to run.  But it can be used
+to write 2.x programs as well as 3.x.
+
+* Updating `rope.refactor.patchedast` module for using new nodes
+* Updating `rope.base.evaluate`
+* Updating `rope.base.builtins`
+* Changing `rope.refactor.funcutils` to handle keyword only args
 * Changing print to function in tests
 * Not supporting old relative imports
 * `iter.__next__()` instead of `iter.next()`?
@@ -366,7 +376,6 @@ Getting ready for Python 3.0
 * Show function annotations in pydocs
 * ``nonlocal``
 * ``except xxx as yyy``
-* ``...``
 * Supporting keyword only arguments
 * Set literals and comprehension ``{1, 2, 3}`` and ``{x for x in range(10)}``
 * Renamed function attributes; ``f.func_whatever`` to ``f.__whatever__``
@@ -383,33 +392,14 @@ the source code.  In futures some of this restrictions might be removed.
 
 * All files that end with ``.py`` are considered to be python files and
   all others not.
-* Either all files should be under version control or none.
+* Either all files that are not ignored should be under version
+  control or none.
 * All ``*.txt`` files are considered in reST formats.
 * XXX
 
 
 Object Inference Issues
 =======================
-
-
-Rejecting Smalltalk `RefactoringBrowser` Approach
--------------------------------------------------
-
-We can't use smalltalks approach because it requires the whole
-tests suite to be run before each refactoring and this does not
-seem appealing because it might take a lot of time.
-
-Apart from that if we use a wrapper for a function using python
-runtime mechanisms it is possible to find out from which line
-a function is called, but we cannot always find the offset in that
-file from which this function is called.
-
-Although we cannot find the exact offset an occurrence happens we
-can know the suspected lines and that will help us shorten the
-scope for searching for occurrences considerably.
-
-If we solve these problems we can use a strategy for finding
-occurrences.  Also Think of other ways of collecting type information.
 
 
 Returned Types Or Objects

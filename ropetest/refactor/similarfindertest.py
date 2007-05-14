@@ -119,7 +119,7 @@ class SimilarFinderTest(unittest.TestCase):
         result = list(finder.get_matches('${a} = 1'))
         self.assertEquals('a', result[0].get_ast('a').name)
 
-    def test_matching_normal_names_and_assname(self):
+    def test_matching_normal_names_and_assname2(self):
         source = 'a = 1\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('${a}'))
@@ -189,6 +189,25 @@ class CheckingFinderTest(unittest.TestCase):
         self.assertEquals(1, len(result))
         start = source.rindex('b')
         self.assertEquals((start, len(source) - 1), result[0].get_region())
+
+    def test_checking_the_type_of_an_ass_name_node(self):
+        self.mod1.write('class A(object):\n    pass\nan_a = A()\n')
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(
+            pymodule, {'?a.type':pymodule.get_attribute('A').get_object()})
+        result = list(finder.get_matches('${?a} = ${?assigned}'))
+        self.assertEquals(1, len(result))
+
+    def test_checking_equality_of_imported_pynames(self):
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod2.write('class A(object):\n    pass\n')
+        self.mod1.write('from mod2 import A\nan_a = A()\n')
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        pymod1 = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(
+            pymod1, {'?a_class':pymod2.get_attribute('A')})
+        result = list(finder.get_matches('${?a_class}()'))
+        self.assertEquals(1, len(result))
 
 
 class TemplateTest(unittest.TestCase):

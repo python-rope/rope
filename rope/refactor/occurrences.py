@@ -134,29 +134,30 @@ class FilteredFinder(object):
             return False
         new_pyname = occurrence.get_pyname()
         for pyname in self.pynames:
-            if self._are_pynames_the_same(pyname, new_pyname):
+            if FilteredFinder.same_pyname(pyname, new_pyname):
                 return True
             elif self.unsure and self._unsure_match(pyname, new_pyname):
                 return True
                 
         return False
 
-    def _are_pynames_the_same(self, pyname1, pyname2):
-        if pyname1 is None or pyname2 is None:
+    @staticmethod
+    def same_pyname(expected, pyname):
+        if expected is None or pyname is None:
             return False
-        if pyname1 == pyname2:
+        if expected == pyname:
             return True
-        if type(pyname1) not in (pynames.ImportedModule, pynames.ImportedName) and \
-           type(pyname2) not in (pynames.ImportedModule, pynames.ImportedName):
+        if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and \
+           type(pyname) not in (pynames.ImportedModule, pynames.ImportedName):
             return False
-        return pyname1.get_definition_location() == pyname2.get_definition_location() and \
-               pyname1.get_object() == pyname2.get_object()
+        return expected.get_definition_location() == pyname.get_definition_location() and \
+               expected.get_object() == pyname.get_object()
 
-    def _unsure_match(self, pyname1, pyname2):
-        if pyname2 is None:
+    def _unsure_match(self, expected, pyname):
+        if pyname is None:
             return True
-        if isinstance(pyname2, pynames.UnboundName) and \
-           pyname2.get_object() == pyobjects.get_unknown():
+        if isinstance(pyname, pynames.UnboundName) and \
+           pyname.get_object() == pyobjects.get_unknown():
             return True
 
 

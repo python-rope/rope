@@ -47,7 +47,7 @@ class ExtractVariable(_ExtractRefactoring):
 
     def get_changes(self, extracted_name):
         info = _ExtractingPartOffsets(self.pycore, self.resource,
-                                   self.start_offset, self.end_offset)
+                                      self.start_offset, self.end_offset)
         new_contents = _OneLineExtractPerformer(self.pycore, self.resource, info,
                                                 extracted_name, True).extract()
         changes = ChangeSet('Extract variable <%s>' % extracted_name)
