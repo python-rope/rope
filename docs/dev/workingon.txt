@@ -1,18 +1,25 @@
-Checking Similar Finder
-=======================
+Performing Restructurings
+=========================
 
-- ``${?name} = ...`` and `?name` checks
-- When to match? not ``==``; see occurrences; ImportedName
+- Add `rope.refactor.restructure` module
+- Handling name
+- Adding `restruturetest` to testsuite
+- Adding checks
+- `task_handle` argument for `Restructure.get_changes()`
+- Not patching an ast if it has already been patched
+- Is `Node.sorted_children` needed?
+- Handling '<>' in `patchedast`
+- Better exceptions when invalid checks are given
 
-* ``{'?a': '?b'}`` checks?
+* Should we call `pycore.resource_to_pyobject` for all modules
+* The ability to limit the files to restructure
 
-* Only scanning selected region for matches
-* Changing patchedast only to patch a branch?
 * One failure on windows!
-* Is `Node.sorted_children` needed?
+* Caching `CodeTemplate.substitute()`?
+* CheckingFinder and ``{'?a': '?b'}`` checks?
+* Only scanning selected region for matches
 
 * Restructuring UI
-* Handling '<>' in patchedast
 * Consider filling python source
 
 

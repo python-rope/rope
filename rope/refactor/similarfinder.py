@@ -2,7 +2,7 @@
 import compiler.ast
 import re
 
-from rope.base import codeanalyze, evaluate, pyobjects
+from rope.base import codeanalyze, evaluate, exceptions, pyobjects
 from rope.refactor import patchedast, sourceutils, occurrences
 
 
@@ -55,7 +55,7 @@ class SimilarFinder(object):
 
     def _replace_wildcards(self, expression):
         ropevar = _RopeVariable()
-        template = _Template(expression)
+        template = CodeTemplate(expression)
         mapping = {}
         for name in template.get_names():
             if name.startswith('?'):
@@ -63,6 +63,10 @@ class SimilarFinder(object):
             else:
                 mapping[name] = ropevar.get_normal(name)
         return template.substitute(mapping)
+
+
+class BadNameInCheckError(exceptions.RefactoringError):
+    pass
 
 
 class CheckingFinder(SimilarFinder):
@@ -94,7 +98,10 @@ class CheckingFinder(SimilarFinder):
             matched = True
             for check, expected in self.checks.items():
                 name, kind = self._split_name(check)
-                pyname = self._evaluate_node(match.get_ast(name))
+                node = match.get_ast(name)
+                if node is None:
+                    raise BadNameInCheckError('Unknown name <%s>' % name)
+                pyname = self._evaluate_node(node)
                 if kind == 'name':
                     if not self._same_pyname(expected, pyname):
                         break
@@ -124,7 +131,8 @@ class CheckingFinder(SimilarFinder):
         scope = self.pymodule.get_scope().get_inner_scope_for_line(node.lineno)
         expression = node
         if isinstance(expression, compiler.ast.AssName):
-            text = patchedast.write_ast(expression)
+            start, end = patchedast.node_region(expression)
+            text = self.pymodule.source_code[start:end]
             return evaluate.get_string_result(scope, text)
         else:
             return evaluate.get_statement_result(scope, expression)
@@ -249,7 +257,7 @@ class StatementMatch(Match):
         return self.ast_list[0].region[0], self.ast_list[-1].region[1]
 
 
-class _Template(object):
+class CodeTemplate(object):
 
     def __init__(self, template):
         self.template = template
@@ -257,7 +265,7 @@ class _Template(object):
 
     def _find_names(self):
         self.names = {}
-        for match in _Template._get_pattern().finditer(self.template):
+        for match in CodeTemplate._get_pattern().finditer(self.template):
             if 'name' in match.groupdict() and \
                match.group('name') is not None:
                 start, end = match.span('name')

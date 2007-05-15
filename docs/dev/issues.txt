@@ -45,8 +45,8 @@ Other Possible Goals:
 Hot Topics
 ==========
 
-* `Patched AST`_
-* `Finding similar pieces`_
+* `Restructuring UI`_
+* `Revising extract module`_
 
 
 To Be Discussed
@@ -101,7 +101,14 @@ Suggestions and issues:
   forcing the wildcards to appear only where `Name` and `AssName` can
   appear.
 
-* Efficiency
+* Efficiency:
+
+  The `Node.sorted_children` field was added for saving formatting and
+  easier testing.  But it not seem to be necessary in `similarfinder`
+  module.  So maybe we can pass a `sorded_children` keyword to
+  `patchedast.patchast` that controls whether to add this field or
+  not.
+
 
 
 Adding Name Checks
@@ -133,6 +140,10 @@ the same pyname.  Note that when renaming we don't compare `arg` to
 A Look Into The Future
 ----------------------
 
+This is no longer the future.  It can be done right now using
+`rope.refactor.restructure` module.  But there is no UI dialog for it
+yet.
+
 Restructuring::
 
   # ``a = b`` to ``a.set(b)`` where the type of `a` is `type_pyclass`
@@ -148,6 +159,24 @@ Restructuring::
   # Rematching might be useful, too
   pattern = '${?x} = [${?a}, ${?a}]'
   goal = '${?x} = [${?a}] * 2'
+
+
+Restructuring UI
+================
+
+If restructuring is going to be used by a normal python user it has to
+have a good UI.  The search pattern and the goal is straightforward
+but adding checks is the real problem.
+
+We can have a list of changes.  Each item in this list is a tuple
+containing whose first item is a name that appear in search pattern
+plus an identifier like '', '.object', '.type'.  Its second item should
+be a string that indicates a `PyName` or a `PyObject`.
+
+Now the we have to find good ways for:
+
+* Specifying a `PyName` or `PyObject`
+* Differentiating between `PyName`\s and `PyObject`\s
 
 
 Patched AST

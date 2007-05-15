@@ -209,27 +209,34 @@ class CheckingFinderTest(unittest.TestCase):
         result = list(finder.get_matches('${?a_class}()'))
         self.assertEquals(1, len(result))
 
+    @testutils.assert_raises(similarfinder.BadNameInCheckError)
+    def test_reporting_exception_when_bad_checks_are_given(self):
+        self.mod1.write('1\n')
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.CheckingFinder(
+            pymodule, {'does_not_exist': pymodule})
+        result = list(finder.get_matches('${?a}'))
 
 class TemplateTest(unittest.TestCase):
 
     def test_simple_templates(self):
-        template = similarfinder._Template('${a}\n')
+        template = similarfinder.CodeTemplate('${a}\n')
         self.assertEquals(set(['a']), set(template.get_names()))
 
     def test_ignoring_matches_in_comments(self):
-        template = similarfinder._Template('#${a}\n')
+        template = similarfinder.CodeTemplate('#${a}\n')
         self.assertEquals([], template.get_names())
 
     def test_ignoring_matches_in_strings(self):
-        template = similarfinder._Template("'${a}'\n")
+        template = similarfinder.CodeTemplate("'${a}'\n")
         self.assertEquals([], template.get_names())
 
     def test_simple_substitution(self):
-        template = similarfinder._Template('${a}\n')
+        template = similarfinder.CodeTemplate('${a}\n')
         self.assertEquals('b\n', template.substitute({'a': 'b'}))
 
     def test_substituting_multiple_names(self):
-        template = similarfinder._Template('${a}, ${b}\n')
+        template = similarfinder.CodeTemplate('${a}, ${b}\n')
         self.assertEquals('1, 2\n', template.substitute({'a': '1', 'b': '2'}))
 
 

@@ -5,14 +5,28 @@ import re
 from rope.base import codeanalyze, exceptions
 
 
-def get_patched_ast(source):
+def get_patched_ast(source, sorted_children=False):
     """Adds `region` and `sorted_children` fields to nodes"""
-    return patch_ast(compiler.parse(source), source)
+    return patch_ast(compiler.parse(source), source, sorted_children)
 
 
-def patch_ast(ast, source):
-    """Patches the given ast"""
-    call_for_nodes(ast, _PatchingASTWalker(source))
+def patch_ast(ast, source, sorted_children=False):
+    """Patches the given ast
+    
+    After calling, each node in `ast` will have a new field named
+    `region` that is a tuple containing the start and end offsets
+    of the code that generated it.
+    
+    If `sorted_children` is true, a `sorted_children` field will
+    be created for each node, too.  It is a list containing child
+    nodes as well as whitespaces and comments that occur between
+    them.
+
+    """
+    if hasattr(ast, 'region'):
+        return ast
+    walker = _PatchingASTWalker(source, children=sorted_children)
+    call_for_nodes(ast, walker)
     return ast
 
 
@@ -23,10 +37,19 @@ def call_for_nodes(ast, callback, recursive=False):
         for child in ast.getChildNodes():
             call_for_nodes(child, callback, recursive)
 
-def write_ast(ast):
-    """Extract source form a patched AST"""
+def node_region(patched_ast_node):
+    """Get the region of a patched ast node"""
+    return patched_ast_node.region
+
+
+def write_ast(patched_ast_node):
+    """Extract source form a patched AST node with `sorted_children` field
+    
+    If the node is patched with sorted_children turned off you can use
+    `node_region` function for obtaining code using module source code.
+    """
     result = []
-    for child in ast.sorted_children:
+    for child in patched_ast_node.sorted_children:
         if isinstance(child, compiler.ast.Node):
             result.append(write_ast(child))
         else:
@@ -39,8 +62,9 @@ class MismatchedTokenError(exceptions.RopeError):
 
 class _PatchingASTWalker(object):
 
-    def __init__(self, source):
+    def __init__(self, source, children=False):
         self.source = _Source(source)
+        self.children = children
 
     Number = object()
     String = object()
@@ -71,6 +95,9 @@ class _PatchingASTWalker(object):
                     region = self.source.consume_string()
                 elif child is self.Number:
                     region = self.source.consume_number()
+                elif child == '!=':
+                    # INFO: This has been added to handle deprecated ``<>``
+                    region = self.source.consume_not_equal()
                 else:
                     region = self.source.consume(child)
                 child = self.source.get(region[0], region[1])
@@ -92,7 +119,8 @@ class _PatchingASTWalker(object):
             self.source.consume(end_spaces)
             children.append(end_spaces)
             start = 0
-        node.sorted_children = children
+        if self.children:
+            node.sorted_children = children
         node.region = (start, self.source.offset)
 
     def _handle_parens(self, children, start, formats):
@@ -623,6 +651,27 @@ class _Source(object):
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
+    def consume_string(self):
+        if _Source._string_pattern is None:
+            original = codeanalyze.get_string_pattern()
+            pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % (original, original)
+            _Source._string_pattern = re.compile(pattern)
+        repattern = _Source._string_pattern
+        return self._consume_pattern(repattern)
+
+    def consume_number(self):
+        if _Source._number_pattern is None:
+            _Source._number_pattern = re.compile(
+                self._get_number_pattern())
+        repattern = _Source._number_pattern
+        return self._consume_pattern(repattern)
+
+    def consume_not_equal(self):
+        if _Source._not_equals_pattern is None:
+            _Source._not_equals_pattern = re.compile('<>|!=')
+        repattern = _Source._not_equals_pattern
+        return self._consume_pattern(repattern)
+
     def _good_token(self, token, offset, start=None):
         """Checks whether consumed token is in comments"""
         if start is None:
@@ -643,21 +692,6 @@ class _Source(object):
     def _get_location(self):
         lines = self.source[:self.offset].split('\n')
         return (len(lines), len(lines[-1]))
-
-    def consume_string(self):
-        if _Source._string_pattern is None:
-            original = codeanalyze.get_string_pattern()
-            pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % (original, original)
-            _Source._string_pattern = re.compile(pattern)
-        repattern = _Source._string_pattern
-        return self._consume_pattern(repattern)
-
-    def consume_number(self):
-        if _Source._number_pattern is None:
-            _Source._number_pattern = re.compile(
-                self._get_number_pattern())
-        repattern = _Source._number_pattern
-        return self._consume_pattern(repattern)
 
     def _consume_pattern(self, repattern):
         while True:
@@ -707,3 +741,4 @@ class _Source(object):
 
     _string_pattern = None
     _number_pattern = None
+    _not_equals_pattern = None
