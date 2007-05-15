@@ -61,6 +61,20 @@ class RestructureTest(unittest.TestCase):
         self.assertEquals('def f(p=1):\n    return p\ng = f\ng(2)\n',
                           self.mod.read())
 
+    def test_replacing_assignments_with_sets(self):
+        refactoring = restructure.Restructure(
+            self.project, '${?a} = ${?b}', '${?a}.set(${?b})')
+        self.mod.write('a = 1\nb = 1\n')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('a.set(1)\nb.set(1)\n', self.mod.read())
+
+    def test_replacing_sets_with_assignments(self):
+        refactoring = restructure.Restructure(
+            self.project, '${?a}.set(${?b})', '${?a} = ${?b}')
+        self.mod.write('a.set(1)\nb.set(1)\n')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('a = 1\nb = 1\n', self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()

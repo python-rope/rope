@@ -68,14 +68,6 @@ nothing.  This requires a good knowledge of `rope.base`.  We probably
 can extract source from compiled files, too. (See
 ``Python-2.5/Demo/parser/unparse.py``)
 
-Maintaining Rope For Python 2.4
--------------------------------
-
-Since rope is developed using Python 2.5, it might have problems
-running on Python 2.4.  Until recently the testsuite was run on 2.4,
-too.  I'll probably drop 2.4 support if there is no one interested in
-maintaining for 2.4.
-
 
 Rope Structure
 ==============

@@ -1,25 +1,13 @@
 Performing Restructurings
 =========================
 
-- Add `rope.refactor.restructure` module
-- Handling name
-- Adding `restruturetest` to testsuite
-- Adding checks
-- `task_handle` argument for `Restructure.get_changes()`
-- Not patching an ast if it has already been patched
-- Is `Node.sorted_children` needed?
-- Handling '<>' in `patchedast`
-- Better exceptions when invalid checks are given
-
-* Should we call `pycore.resource_to_pyobject` for all modules
+* Should we call `pycore.resource_to_pyobject()` for all modules
 * The ability to limit the files to restructure
 
 * One failure on windows!
 * Caching `CodeTemplate.substitute()`?
 * CheckingFinder and ``{'?a': '?b'}`` checks?
 * Only scanning selected region for matches
-
-* Restructuring UI
 * Consider filling python source
 
 

@@ -3,6 +3,12 @@
 ===========
 
 
+- A simple UI for performing restructurings : May 14, 2007
+
+
+- Restructurings : May 14, 2007
+
+
 - Finding similar code : May 13, 2007
 
 

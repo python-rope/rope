@@ -35,6 +35,9 @@ class Restructure(object):
         mapping = {}
         for name in self.template.get_names():
             ast = match.get_ast(name)
+            if ast is None:
+                raise similarfinder.BadNameInCheckError(
+                    'Unknown name <%s>' % name)
             start, end = patchedast.node_region(ast)
             mapping[name] = source[start:end]
         return self.template.substitute(mapping)

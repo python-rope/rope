@@ -11,6 +11,7 @@ import rope.refactor.localtofield
 import rope.refactor.method_object
 import rope.refactor.move
 import rope.refactor.rename
+import rope.refactor.restructure
 import rope.ui.core
 from rope.base import exceptions
 from rope.refactor import ImportOrganizer
@@ -765,6 +766,47 @@ def change_occurrences(context):
     ChangeOccurrencesDialog(context).show()
 
 
+class RestructureDialog(RefactoringDialog):
+
+    def __init__(self, context):
+        self.project = context
+        super(RestructureDialog, self).__init__(context, 'Restructuring')
+
+    def _calculate_changes(self, handle=None):
+        pattern = self.pattern.get()
+        goal = self.goal.get()
+        restructuring = rope.refactor.restructure.Restructure(
+            self.project, pattern, goal)
+        return restructuring.get_changes(handle)
+
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        goal_label = Tkinter.Label(frame, text='Goal :')
+        pattern_label = Tkinter.Label(frame, text='Pattern :')
+        self.pattern = Tkinter.Entry(frame, width=50)
+        self.goal = Tkinter.Entry(frame, width=50)
+
+        self.pattern.bind('<Return>', lambda event: self._ok())
+        self.goal.bind('<Return>', lambda event: self._ok())
+
+        pattern_label.grid(row=0, column=0, sticky=Tkinter.W)
+        self.pattern.grid(row=0, column=1, sticky=Tkinter.W)
+        goal_label.grid(row=1, column=0, sticky=Tkinter.W)
+        self.goal.grid(row=1, column=1, sticky=Tkinter.W)
+
+        notes = 'You can use ``${?name}`` and ``${name}`` patterns.' \
+                '  Checking the types of names is not available' \
+                ' in this dialog, yet.'
+        notes_label = Tkinter.Label(frame, text=notes, justify=Tkinter.LEFT)
+        notes_label.grid(row=2, column=0, columnspan=2, sticky=Tkinter.W)
+
+        self.pattern.focus_set()
+        return frame
+
+
+def restructure(context):
+    RestructureDialog(context).show()
+
 actions = []
 core = rope.ui.core.get_core()
 core.add_menu_cascade(MenuAddress(['Refactor'], 'r'), ['python'])
@@ -787,6 +829,10 @@ actions.append(SimpleAction('rename_in_file',
 actions.append(SimpleAction('change_signature',
                             ConfirmEditorsAreSaved(change_signature), 'C-c r c',
                             MenuAddress(['Refactor', 'Change Method Signature'], 'c'),
+                            ['python']))
+actions.append(SimpleAction('restructure',
+                            ConfirmEditorsAreSaved(restructure), 'C-c r x',
+                            MenuAddress(['Refactor', 'Restructure'], None),
                             ['python']))
 
 actions.append(SimpleAction('introduce_factory',

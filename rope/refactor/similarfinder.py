@@ -294,7 +294,7 @@ class CodeTemplate(object):
         if cls._match_pattern is None:
             pattern = codeanalyze.get_comment_pattern() + '|' + \
                       codeanalyze.get_string_pattern() + '|' + \
-                      r'(?P<name>\$\{\S*\})'
+                      r'(?P<name>\$\{[^\s\$]*\})'
             cls._match_pattern = re.compile(pattern)
         return cls._match_pattern
 

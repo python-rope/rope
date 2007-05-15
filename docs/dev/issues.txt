@@ -47,6 +47,7 @@ Hot Topics
 
 * `Restructuring UI`_
 * `Revising extract module`_
+* `Using _ast module`_
 
 
 To Be Discussed
@@ -58,6 +59,34 @@ To Be Discussed
 * `Python's implicit interfaces`_
 * Decorators and method refactorings
 * Should `rope.base` be thread safe? which parts?
+
+
+Using _ast module
+=================
+
+Unfortunately the `compiler` package was removed for Python 3.  Rope
+uses the `compiler` package extensively.  So I'm considering moving
+to `_ast` module.  There are other reasons for doing so, too:
+
+* `_ast` is much faster than `compiler`; since it's in C
+* Some of the nodes in `_ast` have lineno and colno that make patching
+  them easier or not needed at all.
+
+Problems:
+
+* `_ast` module is not available in Python 2.4.  So if we plan to use
+  it we have to drop support for older versions of python.
+* Lots of places use `compiler` package.  Changing all of those places
+  needs lots of time.
+
+
+Custom Source Folders
+=====================
+
+We can add two separate project configs.  The `source_folders` config
+holds the list of project source folders.  These folders should have
+priority over the folders detected by rope.  The `python_path` config
+is for extending `sys.path`.
 
 
 Finding Similar Pieces
