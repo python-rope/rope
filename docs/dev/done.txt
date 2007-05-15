@@ -3,7 +3,10 @@
 ===========
 
 
-- A simple UI for performing restructurings : May 14, 2007
+- Adding custom source folders in ``config.py`` : May 15, 2007
+
+
+- A simple UI for performing restructurings : May 15, 2007
 
 
 - Restructurings : May 14, 2007

@@ -80,15 +80,6 @@ Problems:
   needs lots of time.
 
 
-Custom Source Folders
-=====================
-
-We can add two separate project configs.  The `source_folders` config
-holds the list of project source folders.  These folders should have
-priority over the folders detected by rope.  The `python_path` config
-is for extending `sys.path`.
-
-
 Finding Similar Pieces
 ======================
 
@@ -170,8 +161,8 @@ A Look Into The Future
 ----------------------
 
 This is no longer the future.  It can be done right now using
-`rope.refactor.restructure` module.  But there is no UI dialog for it
-yet.
+`rope.refactor.restructure` module.  But the current UI restructuring
+dialog does not support checking names.
 
 Restructuring::
 

@@ -9,6 +9,19 @@ def set_prefs(prefs):
     # VCSs.  Also they are not shown in "Find File" dialog.
     prefs['ignored_resources'] = ['*.pyc', '.svn', '*~', '.ropeproject']
 
+    # Custom source folders:  By default rope searches the project
+    # for finding source folders (folders that should be searched
+    # for finding modules).  You can add paths to that lists.  Note
+    # that rope guesses project source folders correctly most of the
+    # time; use this if you have any problems.
+    # The folders should be relative to project root and use '/' for
+    # separating folders regardless of the platform rope is running on.
+    # 'src/my_source_folder' for instance.
+    #prefs.add('source_folders', 'src')
+
+    # You can extend python path:
+    #prefs.add('python_path', '~/python/')
+
     # This option tells rope how to hold and save object information.
     # Possible values are:
     #

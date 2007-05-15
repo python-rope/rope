@@ -22,6 +22,7 @@ class PyCore(object):
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self._init_automatic_soi()
+        self._init_source_folders()
 
     def _init_resource_observer(self):
         callback = self._invalidate_resource_cache
@@ -29,6 +30,13 @@ class PyCore(object):
             changed=callback, moved=callback, removed=callback)
         self.observer = rope.base.project.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
+
+    def _init_source_folders(self):
+        self._custom_source_folders = []
+        for path in self.project.prefs.get('source_folders', []):
+            self._custom_source_folders.append(path)
+        for path in self.project.prefs.get('python_path', []):
+            sys.path.append(path)
 
     def _init_automatic_soi(self):
         if not self.project.get_prefs().get('automatic_soi', False):
@@ -178,7 +186,9 @@ class PyCore(object):
         """Returns project source folders"""
         if self.project.root is None:
             return []
-        return self._find_source_folders(self.project.root)
+        result = list(self._custom_source_folders)
+        result.extend(self._find_source_folders(self.project.root))
+        return result
 
     def resource_to_pyobject(self, resource):
         if resource in self.module_map:
