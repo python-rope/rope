@@ -407,7 +407,7 @@ def undo_project(context):
         history = context.project.history
         if not history.undo_list:
             return
-        @simple_stoppable('Undo Change')
+        @simple_stoppable('Undo Change', interrupts=False)
         def undo(task_handle):
             history.undo(task_handle=task_handle)
         _confirm_action(
@@ -420,7 +420,7 @@ def redo_project(context):
         history = context.project.history
         if not history.redo_list:
             return
-        @simple_stoppable('Redo Change')
+        @simple_stoppable('Redo Change', interrupts=False)
         def redo(handle):
             history.redo(task_handle=handle)
         _confirm_action(

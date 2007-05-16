@@ -10,13 +10,15 @@ import rope.base.taskhandle
 
 class StoppableTaskRunner(object):
 
-    def __init__(self, task, title='Task'):
+    def __init__(self, task, title='Task', interrupts=True):
         """Task is a function that takes a `TaskHandle`"""
         self.task = task
         self.title = title
+        self.interrupts = interrupts
 
     def __call__(self):
-        handle = rope.base.taskhandle.TaskHandle(self.title)
+        handle = rope.base.taskhandle.TaskHandle(self.title,
+                                                 interrupts=self.interrupts)
         toplevel = Tkinter.Toplevel()
         toplevel.title('Performing Task ' + self.title)
         frame = Tkinter.Frame(toplevel)
@@ -74,12 +76,13 @@ class StoppableTaskRunner(object):
                 (self.title, description))
         return calculate.result
 
-def simple_stoppable(description):
+def simple_stoppable(description, interrupts=True):
     def decorator(function):
         def caller():
             def do_call(handle):
                 return function(handle)
-            return StoppableTaskRunner(do_call, description)()
+            return StoppableTaskRunner(do_call, description,
+                                       interrupts=interrupts)()
         return caller
     return decorator
 

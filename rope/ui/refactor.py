@@ -60,7 +60,7 @@ class PreviewAndCommitChanges(object):
     def commit(self):
         def commit(handle):
             self.project.do(self.changes, task_handle=handle)
-        StoppableTaskRunner(commit, "Committing Changes")()
+        StoppableTaskRunner(commit, "Committing Changes", interrupts=False)()
 
 
 class RefactoringDialog(object):

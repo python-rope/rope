@@ -62,6 +62,7 @@ def starting_rope(core):
 
 
 def _change_key_binding(core):
+    # file actions
     core.rebind_action('open_project', 'C-P')
     core.rebind_action('close_project', None)
     core.rebind_action('create_file', None)
@@ -80,6 +81,12 @@ def _change_key_binding(core):
     core.rebind_action('close_buffer', 'C-w')
     core.rebind_action('exit', 'C-W')
 
+    core.rebind_action('undo_project', 'C-Z')
+    core.rebind_action('redo_project', 'C-Y')
+    core.rebind_action('project_history', None)
+    core.rebind_action('current_file_history', None)
+
+    # edit actions
     core.rebind_action('set_mark', None)
     core.rebind_action('copy', 'C-c')
     core.rebind_action('cut', 'C-x')
@@ -91,15 +98,12 @@ def _change_key_binding(core):
     core.rebind_action('undo', 'C-z')
     core.rebind_action('redo', 'C-y')
     core.rebind_action('repeat_last_action', None)
-    core.rebind_action('undo_project', 'C-Z')
-    core.rebind_action('redo_project', 'C-Y')
-    core.rebind_action('project_history', None)
-    core.rebind_action('current_file_history', None)
     core.rebind_action('search_forward', 'C-f')
     core.rebind_action('search_backward', 'C-F')
     core.rebind_action('edit_dot_rope', None)
     core.rebind_action('execute_command', None)
 
+    # source actions
     core.rebind_action('correct_line_indentation', 'C-i')
     core.rebind_action('show_codetags', None)
     core.rebind_action('show_errors', None)
@@ -130,6 +134,7 @@ def _change_key_binding(core):
     core.rebind_action('run_unit_tests', 'M-X t')
     core.rebind_action('run_soi', 'M-X s')
 
+    # refactorings
     core.rebind_action('rename', 'M-R')
     core.rebind_action('move', 'M-V')
     core.rebind_action('extract_method', 'M-M')
@@ -147,12 +152,15 @@ def _change_key_binding(core):
     core.rebind_action('module_to_package', None)
     core.rebind_action('rename_current_module', None)
     core.rebind_action('move_current_module', None)
+    core.rebind_action('restructure', None)
+    # import actions
     core.rebind_action('organize_imports', 'C-O')
     core.rebind_action('expand_star_imports', None)
     core.rebind_action('relatives_to_absolutes', None)
     core.rebind_action('froms_to_imports', None)
     core.rebind_action('handle_long_imports', None)
 
+    # help actions
     core.rebind_action('readme', None)
     core.rebind_action('features', None)
     core.rebind_action('overview', None)
@@ -161,6 +169,7 @@ def _change_key_binding(core):
     core.rebind_action('library', None)
     core.rebind_action('about', None)
 
+    # other actions
     core.rebind_action('prev_word', 'C-Left')
     core.rebind_action('next_word', 'C-Right')
     core.rebind_action('lower_next_word', None)

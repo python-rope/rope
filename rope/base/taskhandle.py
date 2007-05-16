@@ -3,8 +3,9 @@ from rope.base import exceptions
 
 class TaskHandle(object):
 
-    def __init__(self, name='Task'):
+    def __init__(self, name='Task', interrupts=True):
         self.name = name
+        self.interrupts = interrupts
         self.stopped = False
         self.job_sets = []
         self.observers = []
@@ -13,8 +14,9 @@ class TaskHandle(object):
         return self.stopped
 
     def stop(self):
-        self.stopped = True
-        self._inform_observers()
+        if self.interrupts:
+            self.stopped = True
+            self._inform_observers()
 
     def create_job_set(self, name='JobSet', count=None):
         result = JobSet(self, name=name, count=count)
