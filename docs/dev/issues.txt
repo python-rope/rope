@@ -79,6 +79,41 @@ Problems:
 * Lots of places use `compiler` package.  Changing all of those places
   needs lots of time.
 
+Transition plan:
+
+* Inform the users that python 2.4 is no longer supported
+* Start from local uses of `compiler.parse`
+* Maybe at some point each module should have both ASTs.  Then one by
+  one change the places `PyDefinedObject.get_ast()` is used.
+
+Patterns to look for:
+
+* `compiler.parse()`
+* `compiler.walk()`
+* `compiler.ast`
+* `compiler.const`
+* `${?node}.get_ast()`
+
+
+Revising `extract` Module
+=========================
+
+I suggest to add an information collector that provides extracting
+information and has some setter methods.
+
+Main classes:
+
+* `ExtractInformation`
+* `ExtractPerformer`
+
+I think there are these groups of information providers.
+
+* Checking exceptional conditions
+* Where to look for occurrences
+* Finding the definition, occurrence search pattern, replacement pattern
+* Finding occurrences and replacement matches
+* Finding the place to insert the definition
+
 
 Finding Similar Pieces
 ======================
@@ -161,7 +196,7 @@ A Look Into The Future
 ----------------------
 
 This is no longer the future.  It can be done right now using
-`rope.refactor.restructure` module.  But the current UI restructuring
+`rope.refactor.restructure` module.  But the current restructuring UI
 dialog does not support checking names.
 
 Restructuring::
@@ -211,44 +246,6 @@ Supporting Formatting
 We can handle formatting as we are patching the old AST.  Instead of
 using the text formatting data we can insert the formatting specific
 data.
-
-
-Handling Changed ASTs
----------------------
-
-Restructurings need to replace an AST node with another AST node.  We
-can do this by searching over the parents nodes and `sorted_children`.
-Whenever we encounter the old AST node we replace it with the new one.
-
-There are two approaches here.
-
-* We can change ASTs to construct a new AST
-* We can derived change source from the main AST
-
-The second approach seems more practical.  We can have a class that
-takes a `similarfinder.Match` object and a goal pattern.  The
-placeholders in the goal pattern will be replaced with the matched
-ASTs in the match object and written back inplace of the original
-occurrence.
-
-
-Revising `extract` Module
-=========================
-
-Now that we've developed `similarfinder` module, we can change extract
-refactoring to use this new module.  The algorithm is like this:
-
-* Compile the extracted code and search for that AST in holding scopes.
-* Find a good place for inserting the definition based on the matches.
-* Replace each occurrence with extracted and add definition.
-
-But there are lots of special cases for performing extract
-refactoring.  For example the insertion point for a variable or a
-global function is the line before the first occurrence while the
-insertion point for methods is right after the holding method.
-
-What's more currently `similarfinder` does not support patterns.  That
-is necessary for extract method refactoring.
 
 
 Memory Management
