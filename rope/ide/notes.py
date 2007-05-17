@@ -1,5 +1,6 @@
 import re
-import compiler
+
+from rope.base import ast
 
 
 class Codetags(object):
@@ -20,7 +21,7 @@ class Errors(object):
 
     def errors(self, source):
         try:
-            compiler.parse(source)
+            ast.parse(source)
         except SyntaxError, e:
             return [(e.lineno, e.msg)]
         except SyntaxWarning:
@@ -33,13 +34,13 @@ class Warnings(object):
     def warnings(self, source):
         result = []
         try:
-            ast = compiler.parse(source)
+            node = ast.parse(source)
         except SyntaxError:
             return []
         except SyntaxWarning, e:
             result.append((e.lineno, e.msg))
         visitor = _WarningsVisitor()
-        compiler.walk(ast, visitor)
+        ast.walk(node, visitor)
         result.extend(visitor.warnings)
         return result
 
@@ -50,16 +51,17 @@ class _WarningsVisitor(object):
         self.definitions = set()
         self.warnings = []
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         self._new_definition(node.name, node.lineno)
         self._new_scope(node)
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         self._new_definition(node.name, node.lineno)
         self._new_scope(node)
 
-    def visitAssName(self, node):
-        self._new_name(node.name, node.lineno)
+    def _Name(self, node):
+        if isinstance(node.ctx, ast.Store):
+            self._new_name(node.id, node.lineno)
 
     def _new_name(self, name, lineno):
         if name in self.definitions:
@@ -72,6 +74,6 @@ class _WarningsVisitor(object):
 
     def _new_scope(self, node):
         visitor = _WarningsVisitor()
-        for child in node.getChildNodes():
-            compiler.walk(child, visitor)
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, visitor)
         self.warnings.extend(visitor.warnings)

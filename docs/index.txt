@@ -27,6 +27,7 @@ Features implemented so far:
   * Move class/function/module/package/method
   * Inline method/local variable
   * Change method signature
+  * Restructuring
   * Introduce factory method
   * Introduce parameter
   * Encapsulate field

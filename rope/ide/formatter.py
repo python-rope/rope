@@ -1,16 +1,7 @@
-import compiler
-
-# NOTE: I've stopped developing a formatter for a few reasons:
-#
-#  * There has been many attempts for writing an AST
-#    writer so I won't bother implementing one myself and
-#    wait for a good one.
-#  * Although formatting python source is a good feature
-#    to add, right now I'll put more time in developing
-#    core parts and give up writing a formatter.
-#
-#  So a formatter would be added some time in the future,
-#  maybe by rope's contributing users.
+# NOTE: This actually does not format anything.  It merely removes
+#   extra blank lines and trailing white-spaces.  Now that
+#   `rope.refactor.patchedast` has been added I think this can be
+#   implemented.
 
 
 class Formatter(object):
@@ -50,22 +41,3 @@ class Formatter(object):
             result.append('')
         result.append('')
         return '\n'.join(result)
-
-    def _rewrite_ast(self, source_code):
-        ast_node = compiler.parse(source_code)
-        writer = _ASTWriter()
-        compiler.walk(ast_node, writer)
-        return writer.output
-
-
-class _ASTWriter(object):
-
-    def __init__(self):
-        self.output = ''
-
-    def visitAssName(self, node):
-        self.output += node.name + ' = '
-
-    def visitConst(self, node):
-        self.output += str(node.value) + '\n'
-

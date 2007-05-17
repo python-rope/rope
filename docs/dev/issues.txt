@@ -41,12 +41,18 @@ Other Possible Goals:
 * Finding similar pieces to extracted
 * Formatting?
 
+Release Issues
+--------------
+
+Rope will drop Python 2.4 support in this release.  The main reason is
+moving from `compiler` package to `_ast` package which is not
+available in versions prior to 2.5.
+
 
 Hot Topics
 ==========
 
 * `Restructuring UI`_
-* `Revising extract module`_
 * `Using _ast module`_
 
 
@@ -93,31 +99,6 @@ Patterns to look for:
 * `compiler.ast`
 * `compiler.const`
 * `${?node}.get_ast()`
-
-
-Revising `extract` Module
-=========================
-
-I suggest to add an information collector that provides extracting
-information and has some setter methods.
-
-Main classes:
-
-* `ExtractInformation`
-* `ExtractPerformer`
-
-I think there are these groups of information providers.
-
-* Checking exceptional conditions
-* Where to look for occurrences
-* Finding the definition, occurrence search pattern, replacement pattern
-* Finding occurrences and replacement matches
-* Finding the place to insert the definition
-
-The problem is that some of these tasks are composed of more than one
-task.  If we don't do anything about that, I'm afraid we'll end up
-with something like what we have right now.  The problem with
-separating these is that they depend a lot on each other.
 
 
 Finding Similar Pieces
@@ -168,7 +149,6 @@ Suggestions and issues:
   module.  So maybe we can pass a `sorded_children` keyword to
   `patchedast.patchast` that controls whether to add this field or
   not.
-
 
 
 Adding Name Checks
