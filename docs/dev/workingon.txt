@@ -1,11 +1,6 @@
 Small Stories
 =============
 
-- Interrupting refactorings when they are being done; performed but
-  not added to the undolist
-
-  - Adding interrupts option for constructing `TaskHandle`\s
-
 * Should we call `pycore.resource_to_pyobject()` for all modules
 * The ability to limit the files to restructure
 * Caching `CodeTemplate.substitute()`?

@@ -114,6 +114,11 @@ I think there are these groups of information providers.
 * Finding occurrences and replacement matches
 * Finding the place to insert the definition
 
+The problem is that some of these tasks are composed of more than one
+task.  If we don't do anything about that, I'm afraid we'll end up
+with something like what we have right now.  The problem with
+separating these is that they depend a lot on each other.
+
 
 Finding Similar Pieces
 ======================
