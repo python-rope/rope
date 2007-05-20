@@ -10,8 +10,11 @@ Overview
 
 *rope* is a python refactoring IDE and library.  The IDE uses the
 library to provide features like refactoring, code assist, and
-auto-completion.  It is written in python.  The IDE uses `Tkinter`
-library.
+auto-completion.
+
+It is written in python.  The IDE uses `Tkinter` library.  Note that
+rope ``0.5`` was the last version that supported Python ``2.4`` and
+currently rope requires Python ``2.5``.
 
 
 Status
@@ -87,10 +90,10 @@ Features implemented so far:
 
 
 For more information see `overview.txt`_.  Here are a few
-`screen-shots`_.
+`screenshots`_.
 
 .. _overview.txt: user/overview.html
-.. _`screen-shots`: screenshots/screenshots.html
+.. _`screenshots`: screenshots/screenshots.html
 
 
 Download

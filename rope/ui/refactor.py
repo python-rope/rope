@@ -773,8 +773,8 @@ class RestructureDialog(RefactoringDialog):
         super(RestructureDialog, self).__init__(context, 'Restructuring')
 
     def _calculate_changes(self, handle=None):
-        pattern = self.pattern.get()
-        goal = self.goal.get()
+        pattern = self.pattern.get('1.0', 'end-1c')
+        goal = self.goal.get('1.0', 'end-1c')
         restructuring = rope.refactor.restructure.Restructure(
             self.project, pattern, goal)
         return restructuring.get_changes(handle)
@@ -783,11 +783,8 @@ class RestructureDialog(RefactoringDialog):
         frame = Tkinter.Frame(self.toplevel)
         goal_label = Tkinter.Label(frame, text='Goal :')
         pattern_label = Tkinter.Label(frame, text='Pattern :')
-        self.pattern = Tkinter.Entry(frame, width=50)
-        self.goal = Tkinter.Entry(frame, width=50)
-
-        self.pattern.bind('<Return>', lambda event: self._ok())
-        self.goal.bind('<Return>', lambda event: self._ok())
+        self.pattern = Tkinter.Text(frame, width=50, height=2)
+        self.goal = Tkinter.Text(frame, width=50, height=2)
 
         pattern_label.grid(row=0, column=0, sticky=Tkinter.W)
         self.pattern.grid(row=0, column=1, sticky=Tkinter.W)

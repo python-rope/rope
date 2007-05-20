@@ -1,6 +1,8 @@
 Small Stories
 =============
 
+- Allowing multiline patterns in restructuring dialog
+
 * Should we call `pycore.resource_to_pyobject()` for all modules
 * The ability to limit the files to restructure
 * Caching `CodeTemplate.substitute()`?

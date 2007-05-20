@@ -44,9 +44,7 @@ Other Possible Goals:
 Release Issues
 --------------
 
-Rope will drop Python 2.4 support in this release.  The main reason is
-moving from `compiler` package to `_ast` package which is not
-available in versions prior to 2.5.
+Rope will drop Python 2.4 support in this release.
 
 
 Hot Topics
@@ -98,7 +96,7 @@ Patterns to look for:
 * `compiler.walk()`
 * `compiler.ast`
 * `compiler.const`
-* `${?node}.get_ast()`
+* `${?pydefined}.get_ast()`
 
 
 Finding Similar Pieces

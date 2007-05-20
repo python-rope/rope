@@ -64,9 +64,7 @@ Modules Without Source Code
 Rope cannot know anything about python C extensions and compiled
 modules without matching source code.  Some information can be
 gathered using `inspect` module.  It's not safe but better than
-nothing.  This requires a good knowledge of `rope.base`.  We probably
-can extract source from compiled files, too. (See
-``Python-2.5/Demo/parser/unparse.py``)
+nothing.  This requires a good knowledge of `rope.base`.
 
 
 Rope Structure

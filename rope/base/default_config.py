@@ -11,7 +11,7 @@ def set_prefs(prefs):
 
     # Custom source folders:  By default rope searches the project
     # for finding source folders (folders that should be searched
-    # for finding modules).  You can add paths to that lists.  Note
+    # for finding modules).  You can add paths to that list.  Note
     # that rope guesses project source folders correctly most of the
     # time; use this if you have any problems.
     # The folders should be relative to project root and use '/' for
