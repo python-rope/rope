@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.6m1 : May 20, 2007
+
+
 - Adding custom source folders in ``config.py`` : May 15, 2007
 
 

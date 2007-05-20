@@ -143,6 +143,3 @@ Stories
 
 
 * Finding similar statements when extracting variable/method
-
-
-> Public Release 0.6m1 : May 20, 2007
