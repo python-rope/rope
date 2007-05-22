@@ -1,8 +1,7 @@
-import compiler
 import re
 
 import rope.base.pyobjects
-from rope.base import codeanalyze
+from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.refactor import sourceutils
@@ -281,8 +280,8 @@ class _ExtractMethodParts(object):
         indented_body = self.info.source[self.info.scope_region[0]:
                                          self.info.scope_region[1]]
         body = sourceutils.fix_indentation(indented_body, 0)
-        ast = _parse_text(body)
-        compiler.walk(ast, info_collector)
+        node = _parse_text(body)
+        ast.walk(node, info_collector)
         return info_collector
 
     def _get_function_indents(self):
@@ -417,32 +416,44 @@ class _FunctionInformationCollector(object):
         if self.end < lineno:
             self.postwritten.add(name)
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         if not self.is_global and self.host_function:
             self.host_function = False
-            for name in node.argnames:
+            for name in _get_argnames(node.args):
                 self._written_variable(name, node.lineno)
-            compiler.walk(node.code, self)
+            for child in node.body:
+                ast.walk(child, self)
         else:
             self._written_variable(node.name, node.lineno)
             visitor = _VariableReadsAndWritesFinder()
-            compiler.walk(node.code, visitor)
+            for child in node.body:
+                ast.walk(child, visitor)
             for name in visitor.read - visitor.written:
                 self._read_variable(name, node.lineno)
 
-    def visitAssName(self, node):
+    def _Name(self, node):
+        if isinstance(node.ctx, (ast.Store, ast.AugStore)):
+            self._written_variable(node.id, node.lineno)
+        if not isinstance(node.ctx, ast.Store):
+            self._read_variable(node.id, node.lineno)
+
+    def _Assign(self, node):
+        ast.walk(node.value, self)
+        for child in node.targets:
+            ast.walk(child, self)
+
+    def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
 
-    def visitAssign(self, node):
-        compiler.walk(node.expr, self)
-        for child in node.nodes:
-            compiler.walk(child, self)
 
-    def visitName(self, node):
-        self._read_variable(node.name, node.lineno)
-
-    def visitClass(self, node):
-        self._written_variable(node.name, node.lineno)
+def _get_argnames(arguments):
+    result = [node.id for node in arguments.args
+              if isinstance(node, ast.Name)]
+    if arguments.vararg:
+        result.append(arguments.vararg)
+    if arguments.kwarg:
+        result.append(arguments.kwarg)
+    return result
 
 
 class _VariableReadsAndWritesFinder(object):
@@ -451,20 +462,19 @@ class _VariableReadsAndWritesFinder(object):
         self.written = set()
         self.read = set()
 
-    def visitAssName(self, node):
-        self.written.add(node.name)
+    def _Name(self, node):
+        if isinstance(node.ctx, (ast.Store, ast.AugStore)):
+            self.written.add(node.id)
+        if not isinstance(node, ast.Store):
+            self.read.add(node.id)
 
-    def visitName(self, node):
-        if node.name not in self.written:
-            self.read.add(node.name)
-
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         self.written.add(node.name)
         visitor = _VariableReadsAndWritesFinder()
-        compiler.walk(node.code, visitor)
+        ast.walk(node.code, visitor)
         self.read.update(visitor.read - visitor.written)
 
-    def visitClass(self, node):
+    def _Class(self, node):
         self.written.add(node.name)
 
     @staticmethod
@@ -475,18 +485,18 @@ class _VariableReadsAndWritesFinder(object):
         indented_code = sourceutils.indent_lines(code, -min_indents)
         if isinstance(indented_body, unicode):
             indented_body = indented_body.encode('utf-8')
-        ast = _parse_text(indented_code)
+        node = _parse_text(indented_code)
         visitor = _VariableReadsAndWritesFinder()
-        compiler.walk(ast, visitor)
+        ast.walk(node, visitor)
         return visitor.read, visitor.written
 
     @staticmethod
     def find_reads_for_one_liners(code):
         if code.strip() == '':
             return set(), set()
-        ast = _parse_text(code)
+        node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
-        compiler.walk(ast, visitor)
+        ast.walk(node, visitor)
         return visitor.read
 
 
@@ -500,16 +510,16 @@ class _ReturnOrYieldFinder(object):
         if self.loop_count < 1:
             self.error = True
 
-    def visitReturn(self, node):
+    def _Return(self, node):
         self.returns = True
 
-    def visitYield(self, node):
+    def _Yield(self, node):
         self.returns = True
 
-    def visitFunction(self, node):
+    def _Function(self, node):
         pass
 
-    def visitClass(self, node):
+    def _Class(self, node):
         pass
 
     @staticmethod
@@ -518,9 +528,9 @@ class _ReturnOrYieldFinder(object):
             return False
         min_indents = sourceutils.find_minimum_indents(code)
         indented_code = sourceutils.indent_lines(code, -min_indents)
-        ast = _parse_text(indented_code)
+        node = _parse_text(indented_code)
         visitor = _ReturnOrYieldFinder()
-        compiler.walk(ast, visitor)
+        ast.walk(node, visitor)
         return visitor.returns
 
 
@@ -530,33 +540,34 @@ class _UnmatchedBreakOrContinueFinder(object):
         self.error = False
         self.loop_count = 0
 
-    def visitFor(self, node):
+    def _For(self, node):
         self.loop_encountered(node)
 
-    def visitWhile(self, node):
+    def _While(self, node):
         self.loop_encountered(node)
 
     def loop_encountered(self, node):
         self.loop_count += 1
-        compiler.walk(node.body, self)
+        for child in node.body:
+            ast.walk(child, self)
         self.loop_count -= 1
-        if node.else_:
-            compiler.walk(node.else_, self)
+        if node.orelse:
+            ast.walk(node.orelse, self)
 
-    def visitBreak(self, node):
+    def _Break(self, node):
         self.check_loop()
 
-    def visitContinue(self, node):
+    def _Continue(self, node):
         self.check_loop()
 
     def check_loop(self):
         if self.loop_count < 1:
             self.error = True
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         pass
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         pass
 
     @staticmethod
@@ -565,17 +576,17 @@ class _UnmatchedBreakOrContinueFinder(object):
             return False
         min_indents = sourceutils.find_minimum_indents(code)
         indented_code = sourceutils.indent_lines(code, -min_indents)
-        ast = _parse_text(indented_code)
+        node = _parse_text(indented_code)
         visitor = _UnmatchedBreakOrContinueFinder()
-        compiler.walk(ast, visitor)
+        ast.walk(node, visitor)
         return visitor.error
 
 
 def _parse_text(body):
     if isinstance(body, unicode):
         body = body.encode('utf-8')
-    ast = compiler.parse(body)
-    return ast
+    node = ast.parse(body)
+    return node
 
 def _join_lines(code):
     lines = []

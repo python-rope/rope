@@ -212,9 +212,10 @@ class WordRangeFinder(object):
         word_start = self._find_word_start(offset - 1)
         word_end = self._find_word_end(offset - 1) + 1
         next_char = self._find_first_non_space_char(word_end)
-        return not self.is_a_class_or_function_name_in_header(offset) and \
-               next_char < len(self.source_code) and \
-               self.source_code[next_char] == '('
+        return next_char < len(self.source_code) and \
+               self.source_code[next_char] == '(' and \
+               not self.is_a_class_or_function_name_in_header(offset)
+               
 
     def _find_import_pair_end(self, start):
         next_char = self._find_first_non_space_char(start)

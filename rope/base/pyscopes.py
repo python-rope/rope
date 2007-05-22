@@ -205,7 +205,8 @@ class _HoldingScopeFinder(object):
         self.lines = pymodule.lines
 
     def get_indents(self, lineno):
-        return rope.base.codeanalyze.count_line_indents(self.lines.get_line(lineno))
+        return rope.base.codeanalyze.count_line_indents(
+            self.lines.get_line(lineno))
 
     def get_location(self, offset):
         current_pos = 0

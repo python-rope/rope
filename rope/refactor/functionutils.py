@@ -1,7 +1,6 @@
 import rope.base.exceptions
 import rope.base.pyobjects
-import compiler.consts
-from rope.base import codeanalyze
+from rope.base import ast, codeanalyze
 
 
 class _FunctionParser(object):
@@ -192,7 +191,7 @@ def is_method(pyname):
         decorators = pyname.get_object().get_ast().decorators
         if decorators is None:
             return True
-        for decorator in decorators.nodes:
+        for decorator in decorators:
             if _is_staticmethod_decorator(decorator) or \
                _is_classmethod_decorator(decorator):
                 return False
@@ -201,10 +200,10 @@ def is_method(pyname):
     return False
 
 def _is_staticmethod_decorator(node):
-    return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'
+    return isinstance(node, ast.Name) and node.id == 'staticmethod'
 
 def _is_classmethod_decorator(node):
-    return isinstance(node, compiler.ast.Name) and node.name == 'classmethod'
+    return isinstance(node, ast.Name) and node.id == 'classmethod'
 
 
 class ArgumentMapping(object):

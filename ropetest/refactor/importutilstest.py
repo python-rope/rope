@@ -107,11 +107,11 @@ class ImportUtilsTest(unittest.TestCase):
 
     @testutils.run_only_for_25
     def test_get_import_statements_for_new_relatives(self):
-        self.mod2.write('from .mod3 import *\n')
+        self.mod2.write('from .mod3 import x\n')
         pymod = self.pycore.get_module('pkg2.mod2')
         module_with_imports = self.import_tools.get_module_imports(pymod)
         imports = module_with_imports.get_import_statements()
-        self.assertEquals('from .mod3 import *',
+        self.assertEquals('from .mod3 import x',
                           imports[0].import_info.get_import_statement())
 
     def test_ignoring_indented_imports(self):

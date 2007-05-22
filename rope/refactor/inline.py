@@ -66,10 +66,10 @@ class _MethodInliner(_Inliner):
         scope = self.pyfunction.get_scope()
         lines = self.pymodule.lines
         start_line = scope.get_start()
-        if self.pyfunction.get_ast().decorators is not None:
+        if self.pyfunction.get_ast().decorators:
             decorators = self.pyfunction.get_ast().decorators
-            if hasattr(decorators.nodes[0], 'lineno'):
-                start_line = decorators.nodes[0].lineno
+            if hasattr(decorators[0], 'lineno'):
+                start_line = decorators[0].lineno
         start_offset = lines.get_line_start(start_line)
         end_offset = min(lines.get_line_end(scope.get_end()) + 1,
                          len(self.pymodule.source_code))

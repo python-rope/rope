@@ -506,7 +506,7 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.index('\n') + 1
         end = len(code)
         refactored = self.do_extract_method(code, start, end, 'new_f')
-        expected = 'a = 1\n\ndef new_f(a):\n    a += 1\n\nnew_f(a)\n'
+        expected = 'a = 1\n\ndef new_f():\n    a += 1\n\nnew_f()\n'
         self.assertEquals(expected, refactored)
 
 

@@ -179,8 +179,11 @@ class ModuleImports(object):
         # Getting the line of the first import fails when the first
         # import is not in the first non doc line of module
         nodes = self.pymodule.get_ast().body
-        if nodes:
-            last_index = nodes[0].lineno
+        first_child = 0
+        if self.pymodule.get_doc() is not None:
+            first_child = 1
+        if len(nodes) > first_child:
+            last_index = nodes[first_child].lineno
         return last_index
 
     def _compare_imports(self, stmt1, stmt2):
@@ -246,7 +249,7 @@ class _UnboundNameFinder(object):
         pyobject = self.pyobject.get_module().get_scope().\
                    get_inner_scope_for_line(node.lineno).pyobject
         visitor = _LocalUnboundNameFinder(pyobject, self)
-        for child in node.getChildNodes():
+        for child in ast.get_child_nodes(node):
             ast.walk(child, visitor)
 
     def _FunctionDef(self, node):
@@ -257,16 +260,16 @@ class _UnboundNameFinder(object):
 
     def _Name(self, node):
         if self._get_root()._is_node_interesting(node) and \
-           not self.is_bound(node.name):
-            self.add_unbound(node.name)
+           not self.is_bound(node.id):
+            self.add_unbound(node.id)
 
     def _Attribute(self, node):
         result = []
         while isinstance(node, ast.Attribute):
-            result.append(node.attrname)
-            node = node.expr
+            result.append(node.attr)
+            node = node.value
         if isinstance(node, ast.Name):
-            result.append(node.name)
+            result.append(node.id)
             primary = '.'.join(reversed(result))
             if self._get_root()._is_node_interesting(node) and \
                not self.is_bound(primary):
@@ -355,8 +358,8 @@ class _GlobalImportFinder(object):
     def visit_import(self, node, end_line):
         start_line = node.lineno
         import_statement = importinfo.ImportStatement(
-            importinfo.NormalImport(node.names),start_line, end_line,
-            self._get_text(start_line, end_line),
+            importinfo.NormalImport(self._get_names(node.names)),
+            start_line, end_line, self._get_text(start_line, end_line),
             blank_lines=self._count_empty_lines_before(start_line))
         self.imports.append(import_statement)
     
@@ -393,15 +396,22 @@ class _GlobalImportFinder(object):
 
     def visit_from(self, node, end_line):
         level = 0
-        if hasattr(node, 'level'):
+        if node.level:
             level = node.level
-        import_info = importinfo.FromImport(node.modname, level, node.names,
-                                            self.current_folder, self.pycore)
+        import_info = importinfo.FromImport(
+            node.module, level, self._get_names(node.names),
+            self.current_folder, self.pycore)
         start_line = node.lineno
         self.imports.append(importinfo.ImportStatement(
                             import_info, node.lineno, end_line,
                             self._get_text(start_line, end_line),
                             blank_lines=self._count_empty_lines_before(start_line)))
+
+    def _get_names(self, alias_names):
+        result = []
+        for alias in alias_names:
+            result.append((alias.name, alias.asname))
+        return result
 
     def find_import_statements(self):
         nodes = self.pymodule.get_ast().body
