@@ -528,7 +528,7 @@ class Lambda(pyobjects.AbstractFunction):
 
     def get_returned_object(self, args):
         result = evaluate.get_statement_result(
-            self.scope, self.node.code)
+            self.scope, self.node.body)
         if result is not None:
             return result.get_object()
         else:

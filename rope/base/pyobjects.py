@@ -1,8 +1,6 @@
-import compiler.consts
-
 import rope.base.evaluate
 import rope.base.pyscopes
-from rope.base import pynames
+from rope.base import ast, pynames
 from rope.base.exceptions import RopeError, AttributeNotFoundError
 
 
@@ -199,7 +197,11 @@ class PyDefinedObject(object):
         return current_object
 
     def get_doc(self):
-        return self.get_ast().doc
+        if len(self.get_ast().body) > 0:
+            expr = self.get_ast().body[0]
+            if isinstance(expr, ast.Expr) and \
+               isinstance(expr.value, ast.Str):
+                return expr.value.s
 
     def _create_structural_attributes(self):
         return {}
@@ -219,7 +221,7 @@ class PyFunction(PyDefinedObject, AbstractFunction):
     def __init__(self, pycore, ast_node, parent):
         AbstractFunction.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
-        self.parameters = self.ast_node.argnames
+        self.arguments = self.ast_node.args
         self.decorators = self.ast_node.decorators
         self.parameter_pyobjects = pynames._Inferred(
             self._infer_parameters, self.get_module()._get_concluded_data())
@@ -246,10 +248,10 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         return object_infer.infer_returned_object(self, args)
 
     def _handle_special_args(self, pyobjects):
-        if len(pyobjects) < len(self.parameters):
-            if self.get_ast().flags & compiler.consts.CO_VARARGS:
+        if len(pyobjects) == len(self.arguments.args):
+            if self.arguments.vararg:
                 pyobjects.append(rope.base.builtins.get_list())
-            if self.get_ast().flags & compiler.consts.CO_VARKEYWORDS:
+            if self.arguments.kwarg:
                 pyobjects.append(rope.base.builtins.get_dict())
 
     def _set_parameter_pyobjects(self, pyobjects):
@@ -259,7 +261,8 @@ class PyFunction(PyDefinedObject, AbstractFunction):
     def get_parameters(self):
         if self.parameter_pynames is None:
             result = {}
-            for index, name in enumerate(self.parameters):
+            for index, name in enumerate(self.get_param_names()):
+                # TODO: handle tuple parameters
                 result[name] = pynames.ParameterName(self, index)
             self.parameter_pynames = result
         return self.parameter_pynames
@@ -275,13 +278,14 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         return self.get_ast().name
 
     def get_param_names(self, special_args=True):
-        result = list(self.parameters)
-        if not special_args:
-            node = self.get_ast()
-            if node.flags & compiler.consts.CO_VARKEYWORDS:
-                del result[-1]
-            if node.flags & compiler.consts.CO_VARARGS:
-                del result[-1]
+        # TODO: handle tuple parameters
+        result = [node.id for node in self.arguments.args
+                  if isinstance(node, ast.Name)]
+        if special_args:
+            if self.arguments.vararg:
+                result.append(self.arguments.vararg)
+            if self.arguments.kwarg:
+                result.append(self.arguments.kwarg)
         return result
 
 
@@ -303,8 +307,8 @@ class PyClass(PyDefinedObject, AbstractClass):
 
     def _create_structural_attributes(self):
         new_visitor = _ClassVisitor(self.pycore, self)
-        for n in self.ast_node.getChildNodes():
-            compiler.walk(n, new_visitor)
+        for child in ast.get_child_nodes(self.ast_node):
+            ast.walk(child, new_visitor)
         return new_visitor.names
 
     def _create_concluded_attributes(self):
@@ -384,7 +388,7 @@ class PyModule(_PyModule):
             source_code = source_code.encode('utf-8')
         self.source_code = source_code
         self._lines = None
-        ast_node = compiler.parse(source_code.rstrip(' \t'))
+        ast_node = ast.parse(source_code.rstrip(' \t'))
         self.star_imports = []
         super(PyModule, self).__init__(pycore, ast_node, resource)
 
@@ -403,7 +407,7 @@ class PyModule(_PyModule):
 
     def _create_structural_attributes(self):
         visitor = _GlobalVisitor(self.pycore, self)
-        compiler.walk(self.ast_node, visitor)
+        ast.walk(self.ast_node, visitor)
         return visitor.names
 
     def _create_scope(self):
@@ -418,7 +422,7 @@ class PyPackage(_PyModule):
             ast_node = pycore.resource_to_pyobject(
                 resource.get_child('__init__.py')).get_ast()
         else:
-            ast_node = compiler.parse('\n')
+            ast_node = ast.parse('\n')
         super(PyPackage, self).__init__(pycore, ast_node, resource)
 
     def _create_structural_attributes(self):
@@ -470,10 +474,10 @@ class _AssignVisitor(object):
         self.scope_visitor = scope_visitor
         self.assigned_ast = None
 
-    def visitAssign(self, node):
-        self.assigned_ast = node.expr
-        for child_node in node.nodes:
-            compiler.walk(child_node, self)
+    def _Assign(self, node):
+        self.assigned_ast = node.value
+        for child_node in node.targets:
+            ast.walk(child_node, self)
 
     def _assigned(self, name, assignment=None):
         old_pyname = self.scope_visitor.names.get(name, None)
@@ -483,13 +487,13 @@ class _AssignVisitor(object):
         if assignment is not None:
             self.scope_visitor.names[name].assignments.append(assignment)
 
-    def visitAssName(self, node):
+    def _Name(self, node):
         assignment = None
         if self.assigned_ast is not None:
             assignment = pynames._Assigned(self.assigned_ast)
-        self._assigned(node.name, assignment)
+        self._assigned(node.id, assignment)
 
-    def visitAssTuple(self, node):
+    def _Tuple(self, node):
         names = _NodeNameCollector.get_assigned_names(node)
         for name, levels in names:
             assignment = None
@@ -497,13 +501,13 @@ class _AssignVisitor(object):
                 assignment = pynames._Assigned(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
-    def visitAssAttr(self, node):
+    def _Attribute(self, node):
         pass
 
-    def visitSubscript(self, node):
+    def _Subscript(self, node):
         pass
 
-    def visitSlice(self, node):
+    def _Slice(self, node):
         pass
 
 
@@ -523,42 +527,30 @@ class _NodeNameCollector(object):
         self._added(node, new_levels)
 
     def _added(self, node, levels):
-        if hasattr(node, 'name'):
-            self.names.append((node.name, levels))
+        if hasattr(node, 'id'):
+            self.names.append((node.id, levels))
 
-    def visitAssName(self, node):
+    def _Name(self, node):
         self._add_node(node)
 
-    def visitName(self, node):
-        self._add_node(node)
-
-    def visitTuple(self, node):
+    def _Tuple(self, node):
         new_levels = []
         if self.levels is not None:
             new_levels = list(self.levels)
             new_levels.append(self.index)
         self.index += 1
         visitor = _NodeNameCollector(new_levels)
-        for child in node.getChildNodes():
-            compiler.walk(child, visitor)
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, visitor)
         self.names.extend(visitor.names)
 
-    def visitAssTuple(self, node):
-        self.visitTuple(node)
-
-    def visitAssAttr(self, node):
-        self._add_node(node)
-
-    def visitSubscript(self, node):
-        self._add_node(node)
-
-    def visitSlice(self, node):
+    def _Subscript(self, node):
         self._add_node(node)
 
     @staticmethod
     def get_assigned_names(node):
         visitor = _NodeNameCollector()
-        compiler.walk(node, visitor)
+        ast.walk(node, visitor)
         return visitor.names
 
 
@@ -575,16 +567,16 @@ class _ScopeVisitor(object):
         else:
             return None
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         self.names[node.name] = pynames.DefinedName(
             PyClass(self.pycore, node, self.owner_object))
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
         self.names[node.name] = pynames.DefinedName(pyobject)
 
-    def visitAssign(self, node):
-        compiler.walk(node, _AssignVisitor(self))
+    def _Assign(self, node):
+        ast.walk(node, _AssignVisitor(self))
 
     def _assign_evaluated_object(self, assigned_vars, assigned,
                                  evaluation, lineno):
@@ -595,45 +587,51 @@ class _ScopeVisitor(object):
                 assignment=assignment, module=self.get_module(),
                 lineno=lineno, evaluation=evaluation)
 
-    def visitFor(self, node):
+    def _For(self, node):
         self._assign_evaluated_object(
-            node.assign, node.list, '.__iter__().next()', node.lineno)
-        compiler.walk(node.body, self)
+            node.target, node.iter, '.__iter__().next()', node.lineno)
+        for child in node.body:
+            ast.walk(child, self)
 
-    def visitWith(self, node):
+    def _With(self, node):
+        # ???: What if there are no optional vars?
         self._assign_evaluated_object(
-            node.vars, node.expr, '.__enter__()', node.lineno)
-        compiler.walk(node.body, self)
+            node.optional_vars, node.context_expr,
+            '.__enter__()', node.lineno)
+        for child in node.body:
+            ast.walk(child, self)
 
-    def visitImport(self, node):
+    def _Import(self, node):
         for import_pair in node.names:
-            module_name, alias = import_pair
+            module_name = import_pair.name
+            alias = import_pair.asname
             first_package = module_name.split('.')[0]
             if alias is not None:
-                self.names[alias] = pynames.ImportedModule(self.get_module(),
-                                                   module_name)
+                self.names[alias] = \
+                    pynames.ImportedModule(self.get_module(), module_name)
             else:
-                self.names[first_package] = pynames.ImportedModule(self.get_module(),
-                                                           first_package)
+                self.names[first_package] = \
+                    pynames.ImportedModule(self.get_module(), first_package)
 
-    def visitFrom(self, node):
+    def _ImportFrom(self, node):
         level = 0
-        if hasattr(node, 'level'):
+        if node.level:
             level = node.level
         imported_module = pynames.ImportedModule(self.get_module(),
-                                                 node.modname, level)
-        if node.names[0][0] == '*':
+                                                 node.module, level)
+        if len(node.names) == 1 and node.names[0].name == '*':
             self.owner_object.star_imports.append(
                 pynames.StarImport(imported_module))
         else:
-            for (name, alias) in node.names:
-                imported = name
+            for imported_name in node.names:
+                imported = imported_name.name
+                alias = imported_name.asname
                 if alias is not None:
                     imported = alias
                 self.names[imported] = pynames.ImportedName(imported_module,
-                                                            name)
+                                                            imported_name.name)
 
-    def visitGlobal(self, node):
+    def _Global(self, node):
         module = self.get_module()
         for name in node.names:
             if module is not None:
@@ -655,15 +653,17 @@ class _ClassVisitor(_ScopeVisitor):
     def __init__(self, pycore, owner_object):
         super(_ClassVisitor, self).__init__(pycore, owner_object)
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         pyobject = PyFunction(self.pycore, node, self.owner_object)
         self.names[node.name] = pynames.DefinedName(pyobject)
-        if len(node.argnames) > 0:
-            new_visitor = _ClassInitVisitor(self, node.argnames[0])
-            for child in node.getChildNodes():
-                compiler.walk(child, new_visitor)
+        if len(node.args.args) > 0:
+            first = node.args.args[0]
+            if isinstance(first, ast.Name):
+                new_visitor = _ClassInitVisitor(self, first.id)
+                for child in ast.get_child_nodes(node):
+                    ast.walk(child, new_visitor)
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         self.names[node.name] = pynames.DefinedName(
             PyClass(self.pycore, node, self.owner_object))
 
@@ -675,10 +675,10 @@ class _FunctionVisitor(_ScopeVisitor):
         self.returned_asts = []
         self.generator = False
 
-    def visitReturn(self, node):
+    def _Return(self, node):
         self.returned_asts.append(node.value)
 
-    def visitYield(self, node):
+    def _Yield(self, node):
         self.returned_asts.append(node.value)
         self.generator = True
 
@@ -689,32 +689,36 @@ class _ClassInitVisitor(_AssignVisitor):
         super(_ClassInitVisitor, self).__init__(scope_visitor)
         self.self_name = self_name
 
-    def visitAssAttr(self, node):
-        if isinstance(node.expr, compiler.ast.Name) and \
-           node.expr.name == self.self_name:
-            if node.attrname not in self.scope_visitor.names:
-                self.scope_visitor.names[node.attrname] = pynames.AssignedName(
+    def _Attribute(self, node):
+        if not isinstance(node.ctx, ast.Store):
+            return
+        if isinstance(node.value, ast.Name) and \
+           node.value.id == self.self_name:
+            if node.attr not in self.scope_visitor.names:
+                self.scope_visitor.names[node.attr] = pynames.AssignedName(
                     lineno=node.lineno, module=self.scope_visitor.get_module())
-            self.scope_visitor.names[node.attrname].assignments.append(
+            self.scope_visitor.names[node.attr].assignments.append(
                 pynames._Assigned(self.assigned_ast))
 
-    def visitAssTuple(self, node):
-        for child in node.getChildNodes():
-            compiler.walk(child, self)
+    def _Tuple(self, node):
+        if not isinstance(node.ctx, ast.Store):
+            return
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, self)
 
-    def visitAssName(self, node):
+    def _Name(self, node):
         pass
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         pass
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         pass
 
-    def visitFor(self, node):
+    def _For(self, node):
         pass
 
-    def visitWith(self, node):
+    def _With(self, node):
         pass
 
 

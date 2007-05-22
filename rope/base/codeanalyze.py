@@ -1,4 +1,3 @@
-import compiler
 import re
 import tokenize
 import token
@@ -7,8 +6,7 @@ import rope.base.pyobjects
 import rope.base.pynames
 from rope.base import pyobjects, pynames
 import rope.base.exceptions
-from rope.base import builtins
-from rope.base import evaluate
+from rope.base import ast, builtins, evaluate
 
 
 class WordRangeFinder(object):
@@ -461,13 +459,12 @@ class ScopeNameFinder(object):
     # XXX: This might belong to `rope.base.evaluate` module
     @staticmethod
     def get_primary_and_pyname_in_scope(holding_scope, name):
-        #ast = compiler.parse(name)
         try:
             # parenthesizing for handling cases like 'a_var.\nattr'
-            ast = compiler.parse('(%s)' % name)
+            node = ast.parse('(%s)' % name)
         except SyntaxError:
             raise BadIdentifierError('Not a python identifier selected.')
-        return evaluate.get_primary_and_result(holding_scope, ast)
+        return evaluate.get_primary_and_result(holding_scope, node)
 
 
 class BadIdentifierError(rope.base.exceptions.RopeError):

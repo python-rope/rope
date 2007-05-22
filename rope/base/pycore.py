@@ -1,11 +1,10 @@
-import compiler
 import difflib
 import sys
 
 import rope.base.oi.objectinfer
 import rope.base.oi.objectinfo
 import rope.base.project
-from rope.base import taskhandle
+from rope.base import ast, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.oi import dynamicoi
 from rope.base.pyobjects import PyModule, PyPackage, PyClass
@@ -326,13 +325,13 @@ class _ClassesCache(object):
         def __init__(self):
             self.class_lines = []
 
-        def visitClass(self, node):
+        def _ClassDef(self, node):
             self.class_lines.append(node.lineno)
             self.find_class_lines(node)
 
         def find_class_lines(self, node):
-            for child in node.getChildNodes():
-                compiler.walk(child, self)
+            for child in ast.get_child_nodes(node):
+                ast.walk(child, self)
             return self.class_lines
 
 

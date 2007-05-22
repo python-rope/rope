@@ -1,8 +1,6 @@
-import compiler
-
 import rope.base.pyobjects
 import rope.base.pynames
-from rope.base import exceptions
+from rope.base import ast, exceptions
 
 
 class StatementEvaluator(object):
@@ -12,22 +10,22 @@ class StatementEvaluator(object):
         self.result = None
         self.old_result = None
 
-    def visitName(self, node):
-        self.result = self.scope.lookup(node.name)
+    def _Name(self, node):
+        self.result = self.scope.lookup(node.id)
 
-    def visitGetattr(self, node):
-        pyname = get_statement_result(self.scope, node.expr)
+    def _Attribute(self, node):
+        pyname = get_statement_result(self.scope, node.value)
         if pyname is None:
             pyname = rope.base.pynames.UnboundName()
         self.old_result = pyname
         if pyname.get_object() != rope.base.pyobjects.get_unknown():
             try:
-                self.result = pyname.get_object().get_attribute(node.attrname)
+                self.result = pyname.get_object().get_attribute(node.attr)
             except exceptions.AttributeNotFoundError:
                 self.result = None
 
-    def visitCallFunc(self, node):
-        primary, pyobject = self._get_primary_and_object_for_node(node.node)
+    def _Call(self, node):
+        primary, pyobject = self._get_primary_and_object_for_node(node.func)
         if pyobject is None:
             return
         def _get_returned(pyobject):
@@ -53,88 +51,56 @@ class StatementEvaluator(object):
             self.result = rope.base.pynames.UnboundName(
                 pyobject=_get_returned(pyfunction))
 
-    def visitConst(self, node):
-        if isinstance(node.value, (str, unicode)):
-            self.result = rope.base.pynames.UnboundName(
-                pyobject=rope.base.builtins.get_str())
+    def _Str(self, node):
+        self.result = rope.base.pynames.UnboundName(
+            pyobject=rope.base.builtins.get_str())
 
-    def visitAdd(self, node):
+    def _Num(self, node):
         pass
 
-    def visitAnd(self, node):
+    def _BinOp(self, node):
         pass
 
-    def visitBackquote(self, node):
+    def _BoolOp(self, node):
         pass
 
-    def visitBitand(self, node):
+    def _Repr(self, node):
         pass
 
-    def visitBitor(self, node):
+    def _UnaryOp(self, node):
         pass
 
-    def visitXor(self, node):
+    def _Compare(self, node):
         pass
 
-    def visitCompare(self, node):
-        pass
-
-    def visitDict(self, node):
+    def _Dict(self, node):
         keys = None
         values = None
-        if node.items:
-            item = node.items[0]
-            keys = self._get_object_for_node(item[0])
-            values = self._get_object_for_node(item[1])
+        if node.keys:
+            keys = self._get_object_for_node(node.keys[0])
+            values = self._get_object_for_node(node.values[0])
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_dict(keys, values))
 
-    def visitFloorDiv(self, node):
-        pass
-
-    def visitList(self, node):
+    def _List(self, node):
         holding = None
-        if node.nodes:
-            holding = self._get_object_for_node(node.nodes[0])
+        if node.elts:
+            holding = self._get_object_for_node(node.elts[0])
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_list(holding))
 
-    def visitListComp(self, node):
+    def _ListComp(self, node):
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_list())
 
-    def visitGenExpr(self, node):
+    def _GeneratorExp(self, node):
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_iterator())
 
-    def visitMul(self, node):
-        pass
-
-    def visitNot(self, node):
-        pass
-
-    def visitOr(self, node):
-        pass
-
-    def visitPower(self, node):
-        pass
-
-    def visitRightShift(self, node):
-        pass
-
-    def visitLeftShift(self, node):
-        pass
-
-    def visitSlice(self, node):
-        self._call_function(node.expr, '__getslice__')
-
-    def visitSliceobj(self, node):
-        pass
-
-    def visitTuple(self, node):
+    def _Tuple(self, node):
         objects = []
-        if len(node.nodes) < 4:
-            for stmt in node.nodes:
+        if len(node.elts) < 4:
+            for stmt in node.elts:
                 pyobject = self._get_object_for_node(stmt)
                 objects.append(pyobject)
         else:
@@ -156,8 +122,12 @@ class StatementEvaluator(object):
             pyobject = pyname.get_object()
         return primary, pyobject
 
-    def visitSubscript(self, node):
-        self._call_function(node.expr, '__getitem__', node.subs)
+    def _Subscript(self, node):
+        if isinstance(node.slice, ast.Index):
+            self._call_function(node.value, '__getitem__',
+                                [node.slice.value])
+        elif isinstance(node.slice, ast.Slice):
+            self._call_function(node.value, '__getslice__')
 
     def _call_function(self, node, function_name, other_args=None):
         pyname = get_statement_result(self.scope, node)
@@ -174,13 +144,13 @@ class StatementEvaluator(object):
             self.result = rope.base.pynames.UnboundName(
                 pyobject=call_function.get_returned_object(arguments))
 
-    def visitLambda(self, node):
+    def _Lambda(self, node):
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.Lambda(node, self.scope))
 
 
 def get_statement_result(scope, node):
-    """Evaluate a `compiler.ast` node and return a PyName
+    """Evaluate a `ast.AST` node and return a PyName
 
     Returns `None` if the expression cannot be evaluated.
 
@@ -190,21 +160,21 @@ def get_statement_result(scope, node):
 
 def get_primary_and_result(scope, node):
     evaluator = StatementEvaluator(scope)
-    compiler.walk(node, evaluator)
+    ast.walk(node, evaluator)
     return evaluator.old_result, evaluator.result
 
 
 def get_string_result(scope, string):
     evaluator = StatementEvaluator(scope)
-    node = compiler.parse(string)
-    compiler.walk(node, evaluator)
+    node = ast.parse(string)
+    ast.walk(node, evaluator)
     return evaluator.result
 
 
 class Arguments(object):
     """A class for evaluating parameters passed to a function
 
-    You can use the `create_argument` factory.  It handles when the
+    You can use the `create_arguments` factory.  It handles when the
     first argument is implicit
 
     """
@@ -212,6 +182,7 @@ class Arguments(object):
     def __init__(self, args, scope):
         self.args = args
         self.scope = scope
+        self.instance = None
 
     def get_arguments(self, parameters):
         result = []
@@ -225,8 +196,8 @@ class Arguments(object):
     def get_pynames(self, parameters):
         result = [None] * max(len(parameters), len(self.args))
         for index, arg in enumerate(self.args):
-            if isinstance(arg, compiler.ast.Keyword) and arg.name in parameters:
-                result[parameters.index(arg.name)] = self._evaluate(arg.expr)
+            if isinstance(arg, ast.keyword) and arg.arg in parameters:
+                result[parameters.index(arg.arg)] = self._evaluate(arg.value)
             else:
                 result[index] = self._evaluate(arg)
         return result
@@ -262,9 +233,10 @@ class ObjectArguments(object):
 
 class MixedArguments(object):
 
-    def __init__(self, pyname, args, scope):
+    def __init__(self, pyname, arguments, scope):
+        """`argumens` is an instance of `Arguments`"""
         self.pyname = pyname
-        self.args = Arguments(args, scope)
+        self.args = arguments
 
     def get_pynames(self, parameters):
         return [self.pyname] + self.args.get_pynames(parameters[1:])
@@ -282,14 +254,15 @@ class MixedArguments(object):
         return self.pyname
 
 
-def create_arguments(primary, pyfunction, call_func_node, scope):
+def create_arguments(primary, pyfunction, call_node, scope):
     """A factory for creating `Arguments`'"""
-    args = call_func_node.args
-    called = call_func_node.node
+    # TODO: handle tuple parameters
+    args = list(call_node.args)
+    args.extend(call_node.keywords)
+    called = call_node.func
     # XXX: Handle constructors
     if _is_method_call(primary, pyfunction):
-        args = list(args)
-        args.insert(0, called.expr)
+        args.insert(0, called.value)
     return Arguments(args, scope)
 
 

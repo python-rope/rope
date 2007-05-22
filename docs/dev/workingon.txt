@@ -1,9 +1,7 @@
 Using `_ast` instead of `compiler
 =================================
 
-- Using `_ast` in `patchedast`
-- Using `_ast` in `similarfinder`
-
+* Handle tuple parameters
 * Handling strings in following lines in `patchedast`
 * Using `PyModule.ast` in `similarfinder`
 

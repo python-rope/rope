@@ -1,8 +1,6 @@
-import compiler
-
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.base import exceptions
+from rope.base import ast, exceptions
 
 
 class Scope(object):
@@ -147,8 +145,8 @@ class FunctionScope(Scope):
         if self.names is None:
             new_visitor = rope.base.pyobjects._FunctionVisitor(self.pycore,
                                                                self.pyobject)
-            for n in self.pyobject.get_ast().getChildNodes():
-                compiler.walk(n, new_visitor)
+            for n in ast.get_child_nodes(self.pyobject.get_ast()):
+                ast.walk(n, new_visitor)
             self.names = self.pyobject.get_parameters()
             self.names.update(new_visitor.names)
             self.returned_asts = new_visitor.returned_asts

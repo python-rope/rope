@@ -1,8 +1,5 @@
-import compiler.ast
-import compiler.consts
-
 import rope.base
-from rope.base import pyobjects, pynames, evaluate, builtins
+from rope.base import ast, pyobjects, pynames, evaluate, builtins
 
 
 class StaticObjectInference(object):
@@ -43,9 +40,9 @@ class StaticObjectInference(object):
            isinstance(pyobject.parent, pyobjects.PyClass):
             if not pyobject.decorators:
                 objects.append(pyobjects.PyObject(pyobject.parent))
-            elif self._is_staticmethod_decorator(pyobject.decorators.nodes[0]):
+            elif self._is_staticmethod_decorator(pyobject.decorators[0]):
                 objects.append(pyobjects.get_unknown())
-            elif self._is_classmethod_decorator(pyobject.decorators.nodes[0]):
+            elif self._is_classmethod_decorator(pyobject.decorators[0]):
                 objects.append(pyobject.parent)
             elif pyobject.get_param_names()[0] == 'self':
                 objects.append(pyobjects.PyObject(pyobject.parent))
@@ -55,10 +52,10 @@ class StaticObjectInference(object):
         return objects
 
     def _is_staticmethod_decorator(self, node):
-        return isinstance(node, compiler.ast.Name) and node.name == 'staticmethod'
+        return isinstance(node, ast.Name) and node.id == 'staticmethod'
 
     def _is_classmethod_decorator(self, node):
-        return isinstance(node, compiler.ast.Name) and node.name == 'classmethod'
+        return isinstance(node, ast.Name) and node.id == 'classmethod'
 
     def analyze_module(self, pymodule, should_analyze=None):
         """Analyze `pymodule` for static object inference"""
@@ -71,8 +68,8 @@ def _analyze_node(pycore, pydefined, should_analyze):
     #    if hasattr(pydefined, 'get_name'):
     #        print pydefined.get_name()
     visitor = SOIVisitor(pycore, pydefined, should_analyze)
-    for child in pydefined.get_ast().getChildNodes():
-        compiler.walk(child, visitor)
+    for child in ast.get_child_nodes(pydefined.get_ast()):
+        ast.walk(child, visitor)
 
 
 class SOIVisitor(object):
@@ -83,20 +80,21 @@ class SOIVisitor(object):
         self.scope = pydefined.get_scope()
         self.should_analyze = should_analyze
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         self._analyze_child(node)
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         self._analyze_child(node)
 
     def _analyze_child(self, node):
         pydefined = self.scope.get_name(node.name).get_object()
         _analyze_node(self.pycore, pydefined, self.should_analyze)
 
-    def visitCallFunc(self, node):
-        for child in node.getChildNodes():
-            compiler.walk(child, self)
-        primary, pyname = evaluate.get_primary_and_result(self.scope, node.node)
+    def _Call(self, node):
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, self)
+        primary, pyname = evaluate.get_primary_and_result(self.scope,
+                                                          node.func)
         if pyname is None:
             return
         pyfunction = pyname.get_object()
@@ -104,13 +102,16 @@ class SOIVisitor(object):
            '__call__' in pyfunction.get_attributes():
             pyfunction = pyfunction.get_attribute('__call__')
         if isinstance(pyfunction, pyobjects.AbstractFunction):
-            args = evaluate.create_arguments(primary, pyfunction, node, self.scope)
+            args = evaluate.create_arguments(primary, pyfunction,
+                                             node, self.scope)
         elif isinstance(pyfunction, pyobjects.PyClass):
             pyclass = pyfunction
             if '__init__' in pyfunction.get_attributes():
                 pyfunction = pyfunction.get_attribute('__init__').get_object()
             pyname = pynames.UnboundName(pyobjects.PyObject(pyclass))
-            args = evaluate.MixedArguments(pyname, node.args, self.scope)
+            base_args = evaluate.create_arguments(primary, pyfunction,
+                                                  node, self.scope)
+            args = evaluate.MixedArguments(pyname, base_args, self.scope)
         else:
             return
         self._call(pyfunction, args)
@@ -123,21 +124,21 @@ class SOIVisitor(object):
         if isinstance(pyfunction, builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
 
-    def visitAssign(self, node):
-        for child in node.getChildNodes():
-            compiler.walk(child, self)
+    def _Assign(self, node):
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, self)
         visitor = _SOIAssignVisitor()
         nodes = []
-        for child in node.nodes:
-            compiler.walk(child, visitor)
+        for child in node.targets:
+            ast.walk(child, visitor)
             nodes.extend(visitor.nodes)
-        for assigned, levels in nodes:
-            instance = evaluate.get_statement_result(self.scope, assigned.expr)
+        for subscript, levels in nodes:
+            instance = evaluate.get_statement_result(self.scope, subscript.value)
             args_pynames = []
-            for ast in assigned.subs:
-                args_pynames.append(evaluate.get_statement_result(self.scope, ast))
+            args_pynames.append(evaluate.get_statement_result(
+                                self.scope, subscript.slice.value))
             value = self.pycore.object_infer._infer_assignment(
-                pynames._Assigned(node.expr, levels), self.pymodule)
+                pynames._Assigned(node.value, levels), self.pymodule)
             args_pynames.append(pynames.UnboundName(value))
             if instance is not None and value is not None:
                 pyobject = instance.get_object()
@@ -155,5 +156,6 @@ class _SOIAssignVisitor(pyobjects._NodeNameCollector):
         self.nodes = []
 
     def _added(self, node, levels):
-        if isinstance(node, compiler.ast.Subscript):
+        if isinstance(node, ast.Subscript) and \
+           isinstance(node.slice, ast.Index):
             self.nodes.append((node, levels))

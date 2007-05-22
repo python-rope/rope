@@ -10,6 +10,7 @@ def parse(source, filename='<string>'):
 
 
 def walk(node, walker):
+    """Walk the syntax tree"""
     method_name = '_' + node.__class__.__name__
     method = getattr(walker, method_name, None)
     if method is not None:
@@ -19,6 +20,8 @@ def walk(node, walker):
 
 
 def get_child_nodes(node):
+    if isinstance(node, _ast.Module):
+        return node.body
     result = []
     if node._fields is not None:
         for name in node._fields:

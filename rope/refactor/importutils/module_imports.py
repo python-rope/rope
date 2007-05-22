@@ -1,6 +1,5 @@
-import compiler
-
 import rope.base.pynames
+from rope.base import ast
 from rope.refactor.importutils import importinfo
 from rope.refactor.importutils import actions
 
@@ -22,7 +21,7 @@ class ModuleImports(object):
 
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
-        compiler.walk(self.pymodule.get_ast(), visitor)
+        ast.walk(self.pymodule.get_ast(), visitor)
         return visitor.unbound
 
     def remove_unused_imports(self):
@@ -179,9 +178,9 @@ class ModuleImports(object):
         last_index = 1
         # Getting the line of the first import fails when the first
         # import is not in the first non doc line of module
-        nodes = self.pymodule.get_ast().node
-        if nodes.getChildNodes():
-            last_index = nodes.getChildNodes()[0].lineno
+        nodes = self.pymodule.get_ast().body
+        if nodes:
+            last_index = nodes[0].lineno
         return last_index
 
     def _compare_imports(self, stmt1, stmt2):
@@ -248,32 +247,32 @@ class _UnboundNameFinder(object):
                    get_inner_scope_for_line(node.lineno).pyobject
         visitor = _LocalUnboundNameFinder(pyobject, self)
         for child in node.getChildNodes():
-            compiler.walk(child, visitor)
+            ast.walk(child, visitor)
 
-    def visitFunction(self, node):
+    def _FunctionDef(self, node):
         self._visit_child_scope(node)
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         self._visit_child_scope(node)
 
-    def visitName(self, node):
+    def _Name(self, node):
         if self._get_root()._is_node_interesting(node) and \
            not self.is_bound(node.name):
             self.add_unbound(node.name)
 
-    def visitGetattr(self, node):
+    def _Attribute(self, node):
         result = []
-        while isinstance(node, compiler.ast.Getattr):
+        while isinstance(node, ast.Attribute):
             result.append(node.attrname)
             node = node.expr
-        if isinstance(node, compiler.ast.Name):
+        if isinstance(node, ast.Name):
             result.append(node.name)
             primary = '.'.join(reversed(result))
             if self._get_root()._is_node_interesting(node) and \
                not self.is_bound(primary):
                 self.add_unbound(primary)
         else:
-            compiler.walk(node, self)
+            ast.walk(node, self)
 
     def _get_root(self):
         pass
@@ -405,16 +404,16 @@ class _GlobalImportFinder(object):
                             blank_lines=self._count_empty_lines_before(start_line)))
 
     def find_import_statements(self):
-        nodes = self.pymodule.get_ast().node.nodes
+        nodes = self.pymodule.get_ast().body
         for index, node in enumerate(nodes):
-            if isinstance(node, (compiler.ast.Import, compiler.ast.From)):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
                 end_line = self.lines.length() + 1
                 if index + 1 < len(nodes):
                     end_line = nodes[index + 1].lineno
                 while self.lines.get_line(end_line - 1).strip() == '':
                     end_line -= 1
-            if isinstance(node, compiler.ast.Import):
+            if isinstance(node, ast.Import):
                 self.visit_import(node, end_line)
-            if isinstance(node, compiler.ast.From):
+            if isinstance(node, ast.ImportFrom):
                 self.visit_from(node, end_line)
         return self.imports

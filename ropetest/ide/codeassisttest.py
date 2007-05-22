@@ -317,7 +317,7 @@ class CodeAssistTest(unittest.TestCase):
         code = 'class AClass(object):\n    ' + \
                '@staticmethod\n    def a_method():\n        pass\nAClass.a_method()'
         result = self.assist.get_definition_location(code, len(code) - 3)
-        self.assertEquals((None, 3), result)
+        self.assertEquals((None, 2), result)
 
     def test_get_definition_location_dotted_module_names(self):
         module_resource = self.project.get_pycore().\
@@ -347,10 +347,11 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals((None, None), result)
 
     def test_get_definition_location_dot_spaces(self):
-        code = 'class AClass(object):\n    ' + \
-               '@staticmethod\n    def a_method():\n        pass\nAClass.\\\n     a_method()'
+        code = 'class AClass(object):\n    ' \
+               '@staticmethod\n    def a_method():\n' \
+               '        pass\nAClass.\\\n     a_method()'
         result = self.assist.get_definition_location(code, len(code) - 3)
-        self.assertEquals((None, 3), result)
+        self.assertEquals((None, 2), result)
 
     def test_get_definition_location_dot_line_break_inside_parens(self):
         code = 'class A(object):\n    def a_method(self):\n        pass\n' + \

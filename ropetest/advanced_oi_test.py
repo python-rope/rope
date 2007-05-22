@@ -231,7 +231,7 @@ class DynamicOITest(unittest.TestCase):
     def test_arguments_with_keywords(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
-               'def a_func(arg):\n    return arg\n' \
+               'def a_func(arg):\n    return eval("arg")\n' \
                'a = a_func(arg=C1())\nb = a_func(arg=C2())\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
