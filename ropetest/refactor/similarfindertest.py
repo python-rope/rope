@@ -80,32 +80,32 @@ class SimilarFinderTest(unittest.TestCase):
         source = 'b = a\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('${a}'))
-        self.assertEquals('a', result[0].get_ast('a').name)
+        self.assertEquals('a', result[0].get_ast('a').id)
 
     def test_match_get_ast_for_statements(self):
         source = 'b = a\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('b = ${a}'))
-        self.assertEquals('a', result[0].get_ast('a').name)
+        self.assertEquals('a', result[0].get_ast('a').id)
 
     def test_matching_multiple_patterns(self):
         source = 'c = a + b\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('${a} + ${b}'))
-        self.assertEquals('a', result[0].get_ast('a').name)
-        self.assertEquals('b', result[0].get_ast('b').name)
+        self.assertEquals('a', result[0].get_ast('a').id)
+        self.assertEquals('b', result[0].get_ast('b').id)
 
     def test_matching_any_patterns(self):
         source = 'b = a\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('b = ${?x}'))
-        self.assertEquals('a', result[0].get_ast('?x').name)
+        self.assertEquals('a', result[0].get_ast('?x').id)
 
     def test_matching_any_patterns_repeating(self):
         source = 'b = 1 + 1\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('b = ${?x} + ${?x}'))
-        self.assertEquals(1, result[0].get_ast('?x').value)
+        self.assertEquals(1, result[0].get_ast('?x').n)
 
     def test_matching_any_patterns_not_matching_different_nodes(self):
         source = 'b = 1 + 2\n'
@@ -117,13 +117,13 @@ class SimilarFinderTest(unittest.TestCase):
         source = 'a = 1\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('${a} = 1'))
-        self.assertEquals('a', result[0].get_ast('a').name)
+        self.assertEquals('a', result[0].get_ast('a').id)
 
     def test_matching_normal_names_and_assname2(self):
         source = 'a = 1\n'
         finder = similarfinder.SimilarFinder(source)
         result = list(finder.get_matches('${a}'))
-        self.assertEquals(0, len(result))
+        self.assertEquals(1, len(result))
 
 
 class CheckingFinderTest(unittest.TestCase):

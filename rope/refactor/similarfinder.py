@@ -1,8 +1,7 @@
 """This module can be used for finding similar code"""
-import compiler.ast
 import re
 
-from rope.base import codeanalyze, evaluate, exceptions, pyobjects
+from rope.base import codeanalyze, evaluate, exceptions, pyobjects, ast
 from rope.refactor import patchedast, sourceutils, occurrences
 
 
@@ -10,23 +9,23 @@ class SimilarFinder(object):
     """A class for finding similar expressions and statements"""
 
     def __init__(self, source, start=0, end=None):
-        ast = compiler.parse(source)
-        self._init_using_ast(ast, source, start, end)
+        node = ast.parse(source)
+        self._init_using_ast(node, source, start, end)
 
-    def _init_using_ast(self, ast, source, start, end):
+    def _init_using_ast(self, node, source, start, end):
         self.start = start
         self.end = len(source)
         if end is not None:
             self.end = end
-        if not hasattr(ast, 'sorted_children'):
-            self.ast = patchedast.patch_ast(ast, source)
+        if not hasattr(node, 'sorted_children'):
+            self.ast = patchedast.patch_ast(node, source)
 
     def get_matches(self, code):
         """Search for `code` in source and return a list of `Match`\es
 
         `code` can contain wildcards.  ``${name}`` matches normal
         names and ``${?name} can match any expression.  They can
-        only appear in `compiler.ast.Name` and `compiler.ast.AssName`.
+        only appear in `_ast.Name`.
         You can use `Match.get_ast()` for getting the node that has
         matched a given pattern.
         """
@@ -43,12 +42,12 @@ class SimilarFinder(object):
 
     def _create_pattern(self, expression):
         expression = self._replace_wildcards(expression)
-        ast = compiler.parse(expression)
+        node = ast.parse(expression)
         # Getting Module.Stmt.nodes
-        nodes = ast.node.nodes
-        if len(nodes) == 1 and isinstance(nodes[0], compiler.ast.Discard):
+        nodes = node.body
+        if len(nodes) == 1 and isinstance(nodes[0], ast.Expr):
             # Getting Discard.expr
-            wanted = nodes[0].expr
+            wanted = nodes[0].value
         else:
             wanted = nodes
         return wanted
@@ -88,8 +87,10 @@ class CheckingFinder(SimilarFinder):
     """
 
     def __init__(self, pymodule, checks, start=0, end=None):
-        super(CheckingFinder, self)._init_using_ast(
-            pymodule.get_ast(), pymodule.source_code, start, end)
+        # XXX: was distabled to use the new ast
+        #        super(CheckingFinder, self)._init_using_ast(
+        #            pymodule.get_ast(), pymodule.source_code, start, end)
+        super(CheckingFinder, self).__init__(pymodule.source_code, start, end)
         self.pymodule = pymodule
         self.checks = checks
 
@@ -130,7 +131,8 @@ class CheckingFinder(SimilarFinder):
     def _evaluate_node(self, node):
         scope = self.pymodule.get_scope().get_inner_scope_for_line(node.lineno)
         expression = node
-        if isinstance(expression, compiler.ast.AssName):
+        if isinstance(expression, ast.Name) and \
+           isinstance(expression.ctx, ast.Store):
             start, end = patchedast.node_region(expression)
             text = self.pymodule.source_code[start:end]
             return evaluate.get_string_result(scope, text)
@@ -154,8 +156,7 @@ class _ASTMatcher(object):
     def find_matches(self):
         if self.matches is None:
             self.matches = []
-            patchedast.call_for_nodes(self.body, self._check_node,
-                                      recursive=True)
+            ast.call_for_nodes(self.body, self._check_node, recursive=True)
         return self.matches
 
     def _check_node(self, node):
@@ -170,32 +171,43 @@ class _ASTMatcher(object):
             self.matches.append(ExpressionMatch(node, mapping))
 
     def _check_statements(self, node):
-        if not isinstance(node, compiler.ast.Stmt):
-            return
-        for index in range(len(node.nodes)):
-            if len(node.nodes) - index >= len(self.pattern):
-                current_stmts = node.nodes[index:index + len(self.pattern)]
+        for child in ast.get_children(node):
+            if isinstance(child, (list, tuple)):
+                self.__check_stmt_list(child)
+
+    def __check_stmt_list(self, nodes):
+        for index in range(len(nodes)):
+            if len(nodes) - index >= len(self.pattern):
+                current_stmts = nodes[index:index + len(self.pattern)]
                 mapping = {}
                 if self._match_stmts(current_stmts, mapping):
                     self.matches.append(StatementMatch(current_stmts, mapping))
 
     def _match_nodes(self, expected, node, mapping):
-        if isinstance(expected, (compiler.ast.Name, compiler.ast.AssName)):
-           if self.ropevar.is_normal(expected.name):
+        if isinstance(expected, ast.Name):
+           if self.ropevar.is_normal(expected.id):
                return self._match_normal_var(expected, node, mapping)
-           if self.ropevar.is_any(expected.name):
+           if self.ropevar.is_any(expected.id):
                return self._match_any_var(expected, node, mapping)
+        if not isinstance(expected, ast.AST):
+            return expected == node
         if expected.__class__ != node.__class__:
             return False
 
-        children1 = expected.getChildren()
-        children2 = node.getChildren()
+        children1 = ast.get_children(expected)
+        children2 = ast.get_children(node)
         if len(children1) != len(children2):
             return False
         for child1, child2 in zip(children1, children2):
-            if isinstance(child1, compiler.ast.Node):
+            if isinstance(child1, ast.AST):
                 if not self._match_nodes(child1, child2, mapping):
                     return False
+            elif isinstance(child1, (list, tuple)):
+                if not isinstance(child2, (list, tuple)):
+                    return False
+                for c1, c2 in zip(child1, child2):
+                    if not self._match_nodes(c1, c2, mapping):
+                        return False
             else:
                 if child1 != child2:
                     return False
@@ -211,13 +223,13 @@ class _ASTMatcher(object):
 
     def _match_normal_var(self, node1, node2, mapping):
         if node2.__class__ == node1.__class__ and \
-           self.ropevar.get_base(node1.name) == node2.name:
-            mapping[self.ropevar.get_base(node1.name)] = node2
+           self.ropevar.get_base(node1.id) == node2.id:
+            mapping[self.ropevar.get_base(node1.id)] = node2
             return True
         return False
 
     def _match_any_var(self, node1, node2, mapping):
-        name = self.ropevar.get_base(node1.name)
+        name = self.ropevar.get_base(node1.id)
         if name not in mapping:
             mapping[name] = node2
             return True

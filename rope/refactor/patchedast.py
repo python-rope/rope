@@ -1,19 +1,17 @@
-import compiler.ast
-import compiler.consts
 import re
 
-from rope.base import codeanalyze, exceptions
+from rope.base import ast, codeanalyze, exceptions
 
 
 def get_patched_ast(source, sorted_children=False):
     """Adds `region` and `sorted_children` fields to nodes"""
-    return patch_ast(compiler.parse(source), source, sorted_children)
+    return patch_ast(ast.parse(source), source, sorted_children)
 
 
-def patch_ast(ast, source, sorted_children=False):
-    """Patches the given ast
+def patch_ast(node, source, sorted_children=False):
+    """Patches the given node
     
-    After calling, each node in `ast` will have a new field named
+    After calling, each node in `node` will have a new field named
     `region` that is a tuple containing the start and end offsets
     of the code that generated it.
     
@@ -23,19 +21,12 @@ def patch_ast(ast, source, sorted_children=False):
     them.
 
     """
-    if hasattr(ast, 'region'):
-        return ast
+    if hasattr(node, 'region'):
+        return node
     walker = _PatchingASTWalker(source, children=sorted_children)
-    call_for_nodes(ast, walker)
-    return ast
+    ast.call_for_nodes(node, walker)
+    return node
 
-
-def call_for_nodes(ast, callback, recursive=False):
-    """If callback returns `True` the child nodes are skipped"""
-    result = callback(ast)
-    if recursive and not result:
-        for child in ast.getChildNodes():
-            call_for_nodes(child, callback, recursive)
 
 def node_region(patched_ast_node):
     """Get the region of a patched ast node"""
@@ -50,7 +41,7 @@ def write_ast(patched_ast_node):
     """
     result = []
     for child in patched_ast_node.sorted_children:
-        if isinstance(child, compiler.ast.Node):
+        if isinstance(child, ast.AST):
             result.append(write_ast(child))
         else:
             result.append(child)
@@ -60,17 +51,19 @@ def write_ast(patched_ast_node):
 class MismatchedTokenError(exceptions.RopeError):
     pass
 
+
 class _PatchingASTWalker(object):
 
     def __init__(self, source, children=False):
         self.source = _Source(source)
         self.children = children
+        self.lines = codeanalyze.SourceLinesAdapter(source)
 
     Number = object()
     String = object()
 
     def __call__(self, node):
-        method = getattr(self, 'visit' + node.__class__.__name__, None)
+        method = getattr(self, '_' + node.__class__.__name__, None)
         if method is not None:
             return method(node)
         # ???: Unknown node; What should we do here?
@@ -78,6 +71,9 @@ class _PatchingASTWalker(object):
                            node.__class__.__name__)
 
     def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
+        if hasattr(node, 'region'):
+            raise RuntimeError('Node <%s> has been already patched!' %
+                               node.__class__.__name__)
         children = []
         formats = []
         suspected_start = self.source.offset
@@ -87,8 +83,8 @@ class _PatchingASTWalker(object):
             if child is None:
                 continue
             offset = self.source.offset
-            if isinstance(child, compiler.ast.Node):
-                call_for_nodes(child, self)
+            if isinstance(child, ast.AST):
+                ast.call_for_nodes(child, self)
                 token_start = child.region[0]
             else:
                 if child is self.String:
@@ -178,73 +174,69 @@ class _PatchingASTWalker(object):
                 index += 1
         return start, opens
 
-    def visitAdd(self, node):
-        self._handle(node, [node.left, '+', node.right])
+    _operators = {'And': 'and', 'Or': 'or', 'Add': '+', 'Sub': '-', 'Mult': '*',
+                  'Div': '/', 'Mod': '%', 'Pow': '**', 'LShift': '<<',
+                  'RShift': '>>', 'BitOr': '|', 'BitAnd': '&', 'BitXor': '^',
+                  'FloorDiv': '//', 'Invert': '~', 'Not': 'not', 'UAdd': '+',
+                  'USub': '-', 'Eq': '==', 'NotEq': '!=', 'Lt': '<',
+                  'LtE': '<=', 'Gt': '>', 'GtE': '>=', 'Is': 'is',
+                  'IsNot': 'is not', 'In': 'in', 'NotIn': 'not in'}
 
-    def visitAnd(self, node):
-        self._handle(node, self._child_nodes(node.nodes, 'and'))
+    def _get_op(self, node):
+        return self._operators[node.__class__.__name__].split(' ')
 
-    def visitAssAttr(self, node):
-        self._handle(node, [node.expr, '.', node.attrname])
+    def _Attribute(self, node):
+        self._handle(node, [node.value, '.', node.attr])
 
-    def visitAssList(self, node):
-        children = self._child_nodes(node.nodes, ',')
-        children.insert(0, '[')
-        children.append(']')
-        self._handle(node, children)
-
-    def visitAssName(self, node):
-        self._handle(node, [node.name])
-
-    def visitAssTuple(self, node):
-        self._handle_tuple(node)
-
-    def visitAssert(self, node):
+    def _Assert(self, node):
         children = ['assert', node.test]
-        if node.fail:
+        if node.msg:
             children.append(',')
-            children.append(node.fail)
+            children.append(node.msg)
         self._handle(node, children)
 
-    def visitAssign(self, node):
-        children = self._child_nodes(node.nodes, '=')
+    def _Assign(self, node):
+        children = self._child_nodes(node.targets, '=')
         children.append('=')
-        children.append(node.expr)
+        children.append(node.value)
         self._handle(node, children)
 
-    def visitAugAssign(self, node):
-        self._handle(node, [node.node, node.op, node.expr])
+    def _AugAssign(self, node):
+        children = [node.target]
+        children.extend(self._get_op(node.op))
+        children.extend(['=', node.value])
+        self._handle(node, children)
 
-    def visitBackquote(self, node):
-        self._handle(node, ['`', node.expr, '`'])
+    def _Repr(self, node):
+        self._handle(node, ['`', node.value, '`'])
 
-    def visitBitand(self, node):
-        self._handle(node, self._child_nodes(node.nodes, '&'))
+    def _BinOp(self, node):
+        children = [node.left] + self._get_op(node.op) + [node.right]
+        self._handle(node, children)
 
-    def visitBitor(self, node):
-        self._handle(node, self._child_nodes(node.nodes, '|'))
+    def _BoolOp(self, node):
+        self._handle(node, self._child_nodes(node.values,
+                                             self._get_op(node.op)[0]))
 
-    def visitBitxor(self, node):
-        self._handle(node, self._child_nodes(node.nodes, '^'))
-
-    def visitBreak(self, node):
+    def _Break(self, node):
         self._handle(node, ['break'])
 
-    def visitCallFunc(self, node):
-        children = [node.node, '(']
-        children.extend(self._child_nodes(node.args, ','))
-        if node.star_args is not None:
-            if node.args:
+    def _Call(self, node):
+        children = [node.func, '(']
+        args = list(node.args) + node.keywords
+        children.extend(self._child_nodes(args, ','))
+        if node.starargs is not None:
+            if args:
                 children.append(',')
-            children.extend(['*', node.star_args])
-        if node.dstar_args is not None:
-            if node.args:
+            children.extend(['*', node.starargs])
+        if node.kwargs is not None:
+            if args:
                 children.append(',')
-            children.extend(['**', node.dstar_args])
+            children.extend(['**', node.kwargs])
         children.append(')')
         self._handle(node, children)
 
-    def visitClass(self, node):
+    def _ClassDef(self, node):
         children = []
         children.extend(['class', node.name])
         if node.bases:
@@ -252,112 +244,94 @@ class _PatchingASTWalker(object):
             children.extend(self._child_nodes(node.bases, ','))
             children.append(')')
         children.append(':')
-        if node.doc is not None:
-            children.append(self.String)
-        children.append(node.code)
+        children.extend(node.body)
         self._handle(node, children)
 
-    def visitCompare(self, node):
+    def _Compare(self, node):
         children = []
-        children.append(node.expr)
-        for op, child in node.ops:
-            children.append(op)
-            children.append(child)
+        children.append(node.left)
+        for op, expr in zip(node.ops, node.comparators):
+            children.extend(self._get_op(op))
+            children.append(expr)
         self._handle(node, children)
 
-    def visitConst(self, node):
-        value = repr(node.value)
-        if isinstance(node.value, (int, long, float, complex)):
-            value = self.Number
-        if isinstance(node.value, basestring):
-            value = self.String
-        self._handle(node, [value])
+    def _Delete(self, node):
+        self._handle(node, ['del'] + self._child_nodes(node.targets, ','))
 
-    def visitContinue(self, node):
+    def _Num(self, node):
+        self._handle(node, [self.Number])
+
+    def _Str(self, node):
+        self._handle(node, [self.String])
+
+    def _Continue(self, node):
         self._handle(node, ['continue'])
 
-    def visitDecorators(self, node):
-        self._handle(node, ['@'] + self._child_nodes(node.nodes, '@'))
-
-    def visitDict(self, node):
+    def _Dict(self, node):
         children = []
         children.append('{')
-        for index, (key, value) in enumerate(node.items):
-            children.extend([key, ':', value])
-            if index < len(node.items) - 1:
-                children.append(',')
+        if node.keys:
+            for index, (key, value) in enumerate(zip(node.keys, node.values)):
+                children.extend([key, ':', value])
+                if index < len(node.keys) - 1:
+                    children.append(',')
         children.append('}')
         self._handle(node, children)
 
-    def visitDiscard(self, node):
-        children = []
-        if not self._is_none_or_const_none(node.expr):
-            children.append(node.expr)
-        self._handle(node, children)
-
-    def visitDiv(self, node):
-        self._handle(node, [node.left, '/', node.right])
-
-    def visitEllipsis(self, node):
+    def _Ellipsis(self, node):
         self._handle(node, ['...'])
 
-    def visitExpression(self, node):
-        self._handle(node, [node.node])
+    def _Expr(self, node):
+        self._handle(node, [node.value])
 
-    def visitExec(self, node):
+    def _Exec(self, node):
         children = []
-        children.extend(['exec', node.expr])
-        if node.locals:
-            children.extend(['in', node.locals])
+        children.extend(['exec', node.body])
         if node.globals:
-            children.extend([',', node.globals])
+            children.extend(['in', node.globals])
+        if node.locals:
+            children.extend([',', node.locals])
         self._handle(node, children)
 
-    def visitFloorDiv(self, node):
-        self._handle(node, [node.left, '//', node.right])
-
-    def visitFor(self, node):
-        children = ['for', node.assign, 'in', node.list, ':', node.body]
-        if node.else_:
-            children.extend(['else', ':', node.else_])
+    def _For(self, node):
+        children = ['for', node.target, 'in', node.iter, ':']
+        children.extend(node.body)
+        if node.orelse:
+            children.extend(['else', ':'])
+            children.extend(node.orelse)
         self._handle(node, children)
 
-    def visitFrom(self, node):
+    def _ImportFrom(self, node):
         children = ['from']
-        if hasattr(node, 'level') and node.level > 0:
+        if node.level:
             children.append('.' * node.level)
-        children.extend([node.modname, 'import'])
-        for index, (name, alias) in enumerate(node.names):
-            children.append(name)
-            if alias is not None:
-                children.extend(['as', alias])
-            if index < len(node.names) - 1:
-                children.append(',')
+        children.extend([node.module, 'import'])
+        children.extend(self._child_nodes(node.names, ','))
         self._handle(node, children)
 
-    def visitFunction(self, node):
+    def _alias(self, node):
+        children = [node.name]
+        if node.asname:
+            children.extend(['as', node.asname])
+        self._handle(node, children)
+
+    def _FunctionDef(self, node):
         children = []
         if node.decorators:
-            children.append(node.decorators)
-        children.extend(['def', node.name, '('])
-        children.extend(self._arg_list(node.argnames, node.defaults,
-                                       node.flags))
+            for decorator in node.decorators:
+                children.append('@')
+                children.append(decorator)
+        children.extend(['def', node.name, '(', node.args])
         children.extend([')', ':'])
-        if node.doc:
-            children.append(self.String)
-        children.append(node.code)
+        children.extend(node.body)
         self._handle(node, children)
 
-    def _arg_list(self, argnames, defaults, flags):
+    def _arguments(self, node):
         children = []
-        args = list(argnames)
-        dstar_args = None
-        if flags & compiler.consts.CO_VARKEYWORDS:
-            dstar_args = args.pop()
-        star_args = None
-        if flags & compiler.consts.CO_VARARGS:
-            star_args = args.pop()
-        defaults = [None] * (len(args) - len(defaults)) + list(defaults)
+        args = list(node.args)
+        star_args = node.vararg
+        dstar_args = node.kwarg
+        defaults = [None] * (len(args) - len(node.defaults)) + list(node.defaults)
         for index, (arg, default) in enumerate(zip(args, defaults)):
             if index > 0:
                 children.append(',')
@@ -370,7 +344,7 @@ class _PatchingASTWalker(object):
             if args:
                 children.append(',')
             children.extend(['**', dstar_args])
-        return children
+        self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):
         if isinstance(arg, (list, tuple)):
@@ -392,233 +366,197 @@ class _PatchingASTWalker(object):
                 children.append(token)
         children.append(')')
 
-    def visitGenExpr(self, node):
-        self._handle(node, [node.code], eat_parens=True)
+    def _GeneratorExp(self, node):
+        children = [node.elt]
+        children.extend(node.generators)
+        self._handle(node, children, eat_parens=True)
 
-    def visitGenExprFor(self, node):
-        children = ['for', node.assign, 'in', node.iter]
+    def _comprehension(self, node):
+        children = ['for', node.target, 'in', node.iter]
         if node.ifs:
-            children.extend(node.ifs)
+            for if_ in node.ifs:
+                children.append('if')
+                children.append(if_)
         self._handle(node, children)
 
-    def visitGenExprIf(self, node):
-        self._handle(node, ['if', node.test])
-
-    def visitGenExprInner(self, node):
-        self._handle(node, [node.expr] + node.quals)
-
-    def visitGetattr(self, node):
-        self._handle(node, [node.expr, '.', node.attrname])
-
-    def visitGlobal(self, node):
+    def _Global(self, node):
         children = self._child_nodes(node.names, ',')
         children.insert(0, 'global')
         self._handle(node, children)
 
-    def visitIf(self, node):
-        children = ['if', node.tests[0][0], ':', node.tests[0][1]]
-        for test, body in node.tests[1:]:
-            children.extend(['elif', test, ':', body])
-        if node.else_:
-            children.extend(['else', ':', node.else_])
+    def _If(self, node):
+        if self._is_elif(node):
+            children = ['elif']
+        else:
+            children = ['if']
+        children.extend([node.test, ':'])
+        children.extend(node.body)
+        if node.orelse:
+            if len(node.orelse) == 1 and self._is_elif(node.orelse[0]):
+                pass
+            else:
+                children.extend(['else', ':'])
+            children.extend(node.orelse)
         self._handle(node, children)
 
-    def visitIfExp(self, node):
-        return self._handle(node, [node.then, 'if', node.test,
-                                   'else', node.else_])
+    def _is_elif(self, node):
+        if not isinstance(node, ast.If):
+            return False
+        offset = self.lines.get_line_start(node.lineno) + node.col_offset
+        word = self.source[offset:offset + 4]
+        # XXX: This is a bug; the offset does not point to the first
+        alt_word = self.source[offset - 5:offset - 1]
+        return 'elif' in (word, alt_word)
 
-    def visitImport(self, node):
+    def _IfExp(self, node):
+        return self._handle(node, [node.body, 'if', node.test,
+                                   'else', node.orelse])
+
+    def _Import(self, node):
         children = ['import']
-        for index, (name, alias) in enumerate(node.names):
-            if index != 0:
-                children.append(',')
-            children.append(name)
-            if alias is not None:
-                children.extend(['as', alias])
+        children.extend(self._child_nodes(node.names, ','))
         self._handle(node, children)
 
-    def visitInvert(self, node):
-        self._handle(node, ['~', node.expr])
+    def _keyword(self, node):
+        self._handle(node, [node.arg, '=', node.value])
 
-    def visitKeyword(self, node):
-        self._handle(node, [node.name, '=', node.expr])
+    def _Lambda(self, node):
+        self._handle(node, ['lambda', node.args, ':', node.body])
 
-    def visitLambda(self, node):
-        children = ['lambda']
-        children.extend(self._arg_list(node.argnames, node.defaults,
-                                       node.flags))
-        children.extend([':', node.code])
+    def _List(self, node):
+        self._handle(node, ['['] + self._child_nodes(node.elts, ',') + [']'])
+
+    def _ListComp(self, node):
+        children = ['[', node.elt]
+        children.extend(node.generators)
+        children.append(']')
         self._handle(node, children)
 
-    def visitLeftShift(self, node):
-        self._handle(node, [node.left, '<<', node.right])
+    def _Module(self, node):
+        self._handle(node, node.body, eat_spaces=True)
 
-    def visitList(self, node):
-        self._handle(node, ['['] + self._child_nodes(node.nodes, ',') + [']'])
+    def _Name(self, node):
+        self._handle(node, [node.id])
 
-    def visitListCompFor(self, node):
-        children = ['for', node.assign, 'in', node.list]
-        if node.ifs:
-            children.extend(node.ifs)
-        self._handle(node, children)
-
-    def visitListCompIf(self, node):
-        self._handle(node, ['if', node.test])
-
-    def visitListComp(self, node):
-        self._handle(node, ['[', node.expr] + node.quals + [']'])
-
-    def visitMod(self, node):
-        self._handle(node, [node.left, '%', node.right])
-
-    def visitModule(self, node):
-        doc = None
-        if node.doc is not None:
-            doc = self.String
-        self._handle(node, [doc, node.node], eat_spaces=True)
-
-    def visitMul(self, node):
-        self._handle(node, [node.left, '*', node.right])
-
-    def visitName(self, node):
-        self._handle(node, [node.name])
-
-    def visitNot(self, node):
-        self._handle(node, ['not', node.expr])
-
-    def visitOr(self, node):
-        self._handle(node, self._child_nodes(node.nodes, 'or'))
-
-    def visitPass(self, node):
+    def _Pass(self, node):
         self._handle(node, ['pass'])
 
-    def visitPower(self, node):
-        self._handle(node, [node.left, '**', node.right])
-
-    def visitPrint(self, node):
-        children = self._base_print(node)
-        children.append(',')
-        self._handle(node, children)
-
-    def visitPrintnl(self, node):
-        self._handle(node, self._base_print(node))
-
-    def _base_print(self, node):
+    def _Print(self, node):
         children = ['print']
         if node.dest:
             children.extend(['>>', node.dest])
-            if node.nodes:
+            if node.values:
                 children.append(',')
-        children.extend(self._child_nodes(node.nodes, ','))
-        return children
-
-    def visitRaise(self, node):
-        children = ['raise']
-        if node.expr1:
-            children.append(node.expr1)
-        if node.expr2:
+        children.extend(self._child_nodes(node.values, ','))
+        if not node.nl:
             children.append(',')
-            children.append(node.expr2)
-        if node.expr3:
-            children.append(',')
-            children.append(node.expr3)
         self._handle(node, children)
 
-    def visitReturn(self, node):
+    def _Raise(self, node):
+        children = ['raise']
+        if node.type:
+            children.append(node.type)
+        if node.inst:
+            children.append(',')
+            children.append(node.inst)
+        if node.tback:
+            children.append(',')
+            children.append(node.tback)
+        self._handle(node, children)
+
+    def _Return(self, node):
         children = ['return']
-        if not self._is_none_or_const_none(node.value):
+        if node.value:
             children.append(node.value)
         self._handle(node, children)
 
-    def _is_none_or_const_none(self, node):
-        return node is None or (isinstance(node, compiler.ast.Const) and
-                                node.value == None)
+    def _Sliceobj(self, node):
+        children = []
+        for index, slice in enumerate(node.nodes):
+            if index > 0:
+                children.append(':')
+            if slice:
+                children.append(slice)
+        self._handle(node, children)
 
-    def visitRightShift(self, node):
-        self._handle(node, [node.left, '>>', node.right])
+    def _Index(self, node):
+        self._handle(node, [node.value])
 
-    def visitSlice(self, node):
-        children = [node.expr, '[']
+    def _Subscript(self, node):
+        self._handle(node, [node.value, '[', node.slice, ']'])
+
+    def _Slice(self, node):
+        children = []
         if node.lower:
             children.append(node.lower)
         children.append(':')
         if node.upper:
             children.append(node.upper)
-        children.append(']')
+        if node.step:
+            children.append(':')
+            children.append(node.step)
         self._handle(node, children)
 
-    def visitSliceobj(self, node):
+    def _TryFinally(self, node):
         children = []
-        for index, slice in enumerate(node.nodes):
-            if index > 0:
-                children.append(':')
-            if not self._is_none_or_const_none(slice):
-                children.append(slice)
-        self._handle(node, children)
-
-    def visitStmt(self, node):
-        self._handle(node, node.nodes)
-
-    def visitSub(self, node):
-        self._handle(node, [node.left, '-', node.right])
-
-    def visitSubscript(self, node):
-        self._handle(node, [node.expr, '['] +
-                            self._child_nodes(node.subs, ',') + [']'])
-
-    def visitTuple(self, node):
-        self._handle_tuple(node)
-
-    def visitTryFinally(self, node):
-        children = []
-        if not isinstance(node.body, compiler.ast.TryExcept):
+        if len(node.body) != 1 or not isinstance(node.body[0], ast.TryExcept):
             children.extend(['try', ':'])
-        children.extend([node.body, 'finally', ':', node.final])
+        children.extend(node.body)
+        children.extend(['finally', ':'])
+        children.extend(node.finalbody)
         self._handle(node, children)
 
-    def visitTryExcept(self, node):
-        children = ['try', ':', node.body]
-        for exception, name, body in node.handlers:
-            children.append('except')
-            if exception:
-                children.append(exception)
-            if name:
-                children.extend([',', name])
-            children.extend([':', body])
-        if node.else_:
-            children.extend(['else', ':', node.else_])
-        self._handle(node, children    )
+    def _TryExcept(self, node):
+        children = ['try', ':']
+        children.extend(node.body)
+        children.extend(node.handlers)
+        if node.orelse:
+            children.extend(['else', ':'])
+            children.extend(node.orelse)
+        self._handle(node, children)
 
-    def _handle_tuple(self, node):
-        if node.nodes:
-            self._handle(node, self._child_nodes(node.nodes, ','),
+    def _excepthandler(self, node):
+        children = ['except']
+        if node.type:
+            children.append(node.type)
+        if node.name:
+            children.extend([',', node.name])
+        children.append(':')
+        children.extend(node.body)
+        self._handle(node, children)
+
+    def _Tuple(self, node):
+        if node.elts:
+            self._handle(node, self._child_nodes(node.elts, ','),
                          eat_parens=True)
         else:
             self._handle(node, ['(', ')'])
 
-    def visitUnaryAdd(self, node):
-        self._handle(node, ['+', node.expr])
+    def _UnaryOp(self, node):
+        children = self._get_op(node.op)
+        children.append(node.operand)
+        self._handle(node, children)
 
-    def visitUnarySub(self, node):
-        self._handle(node, ['-', node.expr])
-
-    def visitYield(self, node):
+    def _Yield(self, node):
         children = ['yield']
         if node.value:
             children.append(node.value)
         self._handle(node, children)
 
-    def visitWhile(self, node):
-        children = ['while', node.test, ':', node.body]
-        if node.else_:
-            children.extend(['else', ':', node.else_])
+    def _While(self, node):
+        children = ['while', node.test, ':']
+        children.extend(node.body)
+        if node.orelse:
+            children.extend(['else', ':'])
+            children.extend(node.orelse)
         self._handle(node, children)
 
-    def visitWith(self, node):
-        children = ['with', node.expr]
-        if node.vars:
-            children.extend(['as', node.vars])
-        children.extend([':', node.body])
+    def _With(self, node):
+        children = ['with', node.context_expr]
+        if node.optional_vars:
+            children.extend(['as', node.optional_vars])
+        children.append(':')
+        children.extend(node.body)
         self._handle(node, children)
 
     def _child_nodes(self, nodes, separator):
@@ -654,7 +592,8 @@ class _Source(object):
     def consume_string(self):
         if _Source._string_pattern is None:
             original = codeanalyze.get_string_pattern()
-            pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % (original, original)
+            pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
+                      (original, original)
             _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
         return self._consume_pattern(repattern)
@@ -668,7 +607,7 @@ class _Source(object):
 
     def consume_not_equal(self):
         if _Source._not_equals_pattern is None:
-            _Source._not_equals_pattern = re.compile('<>|!=')
+            _Source._not_equals_pattern = re.compile(r'<>|!=')
         repattern = _Source._not_equals_pattern
         return self._consume_pattern(repattern)
 

@@ -29,3 +29,20 @@ def get_child_nodes(node):
             if isinstance(child, _ast.AST):
                 result.append(child)
     return result
+
+
+def call_for_nodes(node, callback, recursive=False):
+    """If callback returns `True` the child nodes are skipped"""
+    result = callback(node)
+    if recursive and not result:
+        for child in get_child_nodes(node):
+            call_for_nodes(child, callback, recursive)
+
+
+def get_children(node):
+    result = []
+    if node._fields is not None:
+        for name in node._fields:
+            child = getattr(node, name)
+            result.append(child)
+    return result
