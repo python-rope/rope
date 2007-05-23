@@ -241,7 +241,7 @@ class _DefinitionGenerator(object):
                                                               call_info)
         for param_name, value in mapping.param_dict.iteritems():
             paramdict[param_name] = value
-        header = ""
+        header = ''
         to_be_inlined = []
         for name, value in paramdict.iteritems():
             if name != value:

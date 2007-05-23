@@ -257,7 +257,7 @@ class _HoldingScopeFinder(object):
     def find_scope_end(self, scope):
         if not scope.parent:
             return self.lines.length()
-        end = scope.get_start()
+        end = scope.pyobject.get_ast().body[-1].lineno
         for l in range(scope.get_start() + 1, self.lines.length() + 1):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):

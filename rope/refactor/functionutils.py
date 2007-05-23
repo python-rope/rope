@@ -109,11 +109,11 @@ class DefinitionInfo(object):
         pymodule = pyfunction.get_module()
         source = pymodule.source_code
         lines = pymodule.lines
-        line_finder = codeanalyze.LogicalLineFinder(lines)
-        start_line, end_line = line_finder.get_logical_line_in(pyfunction.get_ast().lineno)
+        start_line = pyfunction.get_ast().lineno
+        end_line = pyfunction.get_ast().body[0].lineno - 1
         start = lines.get_line_start(start_line)
         end = lines.get_line_end(end_line)
-        start = pymodule.source_code.find('def', start) + 4
+        start = pymodule.source_code.find('def ', start) + 4
         end = pymodule.source_code.rfind(':', start, end)
         return DefinitionInfo._read(pyfunction, pymodule.source_code[start:end])
 

@@ -1,4 +1,4 @@
-from rope.base import codeanalyze
+from rope.base import ast, codeanalyze
 
 
 class ChangeCollector(object):
@@ -74,7 +74,7 @@ def add_methods(pymodule, class_scope, methods_sources):
     insertion_offset = lines.get_line_end(insertion_line)
     methods = '\n\n' + '\n\n'.join(methods_sources)
     indented_methods = fix_indentation(
-        methods, get_indents(lines, class_scope.get_start()) + 
+        methods, get_indents(lines, class_scope.get_start()) +
         get_indent(pymodule.pycore))
     result = []
     result.append(source_code[:insertion_offset])
@@ -96,10 +96,13 @@ def get_body_region(defined):
     scope = defined.get_scope()
     pymodule = defined.get_module()
     lines = pymodule.lines
-    logical_lines = codeanalyze.LogicalLineFinder(lines)
-    start_line = logical_lines.get_logical_line_in(scope.get_start())[1] + 1
-    if defined.get_doc() is not None:
-        start_line = logical_lines.get_logical_line_in(start_line)[1] + 1
+    node = defined.get_ast()
+    start_line = node.lineno
+    if defined.get_doc() is None:
+        start_line = node.body[0].lineno
+    elif len(node.body) > 1:
+        start_line = node.body[1].lineno
+
     start = lines.get_line_start(start_line)
     end = min(lines.get_line_end(scope.get_end()) + 1,
               len(pymodule.source_code))

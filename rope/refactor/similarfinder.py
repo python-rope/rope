@@ -87,10 +87,8 @@ class CheckingFinder(SimilarFinder):
     """
 
     def __init__(self, pymodule, checks, start=0, end=None):
-        # XXX: was distabled to use the new ast
-        #        super(CheckingFinder, self)._init_using_ast(
-        #            pymodule.get_ast(), pymodule.source_code, start, end)
-        super(CheckingFinder, self).__init__(pymodule.source_code, start, end)
+        super(CheckingFinder, self)._init_using_ast(
+            pymodule.get_ast(), pymodule.source_code, start, end)
         self.pymodule = pymodule
         self.checks = checks
 

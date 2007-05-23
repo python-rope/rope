@@ -1,15 +1,17 @@
 Using `_ast` instead of `compiler`
 ==================================
 
-* `funcutils` might fail on function start and decorators
+- Using `PyModule.ast` in `similarfinder`
+- `funcutils` might fail on function start and decorators
+
+* Goto definition goes to the decorators line
 * Separating `Defined.get_lineno()` and `Scope.get_start()`?
 * Function parameter line-number can be enhanced; Using `Name.lineno`
 * Updating `_HoldingScopeFinder`; relies on textual approximation
 * `FunctionDef.lineno` is the line that includes the decorators
 * Replacing `.get_ast().lineno` with `get_scope().get_start()`
-* Handle tuple parameters
 * Handling strings in following lines in `patchedast`
-* Using `PyModule.ast` in `similarfinder`
+* Handle tuple parameters
 
 * Should we call `pycore.resource_to_pyobject()` for all modules
 * Caching `CodeTemplate.substitute()`?
