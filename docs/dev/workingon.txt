@@ -1,20 +1,20 @@
-Using `_ast` instead of `compiler`
-==================================
+Enhanced Restructuring Dialog
+=============================
 
-- Using `PyModule.ast` in `similarfinder`
-- `funcutils` might fail on function start and decorators
+- Having a list of checks for each restructuring
+- Adding `rope.ui.uihelpers.CompletingEntry`
 
-* Goto definition goes to the decorators line
-* Separating `Defined.get_lineno()` and `Scope.get_start()`?
-* Function parameter line-number can be enhanced; Using `Name.lineno`
-* Updating `_HoldingScopeFinder`; relies on textual approximation
-* `FunctionDef.lineno` is the line that includes the decorators
-* Replacing `.get_ast().lineno` with `get_scope().get_start()`
+* High memory usage!
+* Updating the parts of overview.txt about restructuring UI
+* Moving pieces from overview.txt to library.txt
+
+
+Goodbye `compiler` Module!
+==========================
+
 * Handling strings in following lines in `patchedast`
-* Handle tuple parameters
 
-* Should we call `pycore.resource_to_pyobject()` for all modules
-* Caching `CodeTemplate.substitute()`?
+* Handle tuple parameters
 * The ability to limit the files to restructure
 * Only scanning selected region for matches
 * Consider filling python source

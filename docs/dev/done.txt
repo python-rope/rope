@@ -3,6 +3,9 @@
 ===========
 
 
+- Using `_ast` instead of `compiler` : May 23, 2007
+
+
 > Public Release 0.6m1 : May 20, 2007
 
 

@@ -758,7 +758,7 @@ class _ResultChecker(object):
         result = list(node.sorted_children)
         self.test_case.assertEquals(len(children), len(result))
         for expected, child in zip(children, result):
-            if isinstance(child, basestring):
+            if expected == '' or isinstance(child, basestring):
                 self.test_case.assertEquals(expected, child)
             else:
                 self.test_case.assertTrue(

@@ -28,7 +28,8 @@ def get_child_nodes(node):
             child = getattr(node, name)
             if isinstance(child, list):
                 for entry in child:
-                    result.append(entry)
+                    if isinstance(entry, _ast.AST):
+                        result.append(entry)
             if isinstance(child, _ast.AST):
                 result.append(child)
     return result

@@ -256,7 +256,6 @@ class MixedArguments(object):
 
 def create_arguments(primary, pyfunction, call_node, scope):
     """A factory for creating `Arguments`'"""
-    # TODO: handle tuple parameters
     args = list(call_node.args)
     args.extend(call_node.keywords)
     called = call_node.func

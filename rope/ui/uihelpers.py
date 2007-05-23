@@ -31,12 +31,11 @@ class EnhancedListHandle(object):
 
 class _BaseList(object):
 
-    def __init__(self, parent, handle, title="List", get_focus=True,
+    def __init__(self, parent, handle, title=None, get_focus=True,
                  height=14, width=50):
         self.handle = handle
         self.entries = []
         self.frame = Frame(parent)
-        label = Label(self.frame, text=title)
         self.list = Listbox(self.frame, selectmode=SINGLE,
                             height=height, width=width)
         scrollbar = Scrollbar(self.frame, orient=VERTICAL)
@@ -55,7 +54,9 @@ class _BaseList(object):
         self.list['selectmode'] = Tkinter.SINGLE
         if get_focus:
             self.list.focus_set()
-        label.grid(row=0, column=0, columnspan=2)
+        if title is not None:
+            label = Label(self.frame, text=title)
+            label.grid(row=0, column=0, columnspan=2)
         self.list.grid(row=1, column=0, sticky=N+E+W+S)
         scrollbar.grid(row=1, column=1, sticky=N+E+W+S)
         self.frame.grid(sticky=N+E+W+S)
@@ -592,3 +593,24 @@ class _RESelector(object):
 
     def can_select(self, input_str):
         return self.pattern.match(input_str)
+
+
+def init_completing_entry(entry, completer):
+    def complete(event):
+        text = entry.get()
+        completions = completer(text)
+        if completions:
+            prefix = completions[0]
+            for word in completions:
+                prefix = _common_prefix(prefix, word)
+            entry.delete(0, 'end')
+            entry.insert(0, prefix)
+            entry.index('end')
+    entry.bind('<Alt-slash>', complete)
+    entry.bind('<Control-space>', complete)
+
+def _common_prefix(prefix, word):
+    for index, (c1, c2) in enumerate(zip(prefix, word)):
+        if c1 != c2:
+            return prefix[:index]
+    return prefix[:min(len(prefix), len(word))]

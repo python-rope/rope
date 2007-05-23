@@ -127,22 +127,22 @@ Stories
 * Move refactoring and moving a group of elements together
 
 
-* Inferring the object, list comprehensions or generator expressions hold
-
-
 * View type hierarchy
 
 
 * Removing files/folders
 
 
+* Inferring the object, list comprehensions or generator expressions hold
+
+
+> Public Release 0.6m2 : June 3, 2007
+
+
 * Renaming and moving normal files/folders
 
 
 * Finding similar statements when extracting variable/method
-
-
-> Public Release 0.6m2 : June 3, 2007
 
 
 * Enhanced restructuring dialog

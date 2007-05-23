@@ -51,7 +51,6 @@ Hot Topics
 ==========
 
 * `Restructuring UI`_
-* `Using _ast module`_
 
 
 To Be Discussed
@@ -65,40 +64,6 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
-Using _ast module
-=================
-
-Unfortunately the `compiler` package was removed for Python 3.  Rope
-uses the `compiler` package extensively.  So I'm considering moving
-to `_ast` module.  There are other reasons for doing so, too:
-
-* `_ast` is much faster than `compiler`; since it's in C
-* Some of the nodes in `_ast` have lineno and colno that make patching
-  them easier or not needed at all.
-
-Problems:
-
-* `_ast` module is not available in Python 2.4.  So if we plan to use
-  it we have to drop support for older versions of python.
-* Lots of places use `compiler` package.  Changing all of those places
-  needs lots of time.
-
-Transition plan:
-
-* Inform the users that python 2.4 is no longer supported
-* Start from local uses of `compiler.parse`
-* Maybe at some point each module should have both ASTs.  Then one by
-  one change the places `PyDefinedObject.get_ast()` is used.
-
-Patterns to look for:
-
-* `compiler.parse()`
-* `compiler.walk()`
-* `compiler.ast`
-* `compiler.const`
-* `${?pydefined}.get_ast()`
-
-
 Finding Similar Pieces
 ======================
 
@@ -110,8 +75,8 @@ that it can be used to ease implementing some refactorings.
 The main problem for implementing this story is that we need to work
 on python ASTs and we need more information than what is provided by
 `compiler` module.  For instance we need to find the start and end
-offsets of nodes.  `rope.refactor.patchedast` has been implemented
-to monkey patch ast nodes.
+offsets of nodes.  `rope.refactor.patchedast` has been implemented to
+monkey patch ast nodes.
 
 We should also decide about the way we define the pattern to search
 for.  For now we can assume matching exactly what is passed but in
@@ -136,43 +101,24 @@ Suggestions and issues:
 
 * Where can wildcards appear?
 
-  Although the names can appear in many places we limit that by
-  forcing the wildcards to appear only where `Name` and `AssName` can
-  appear.
-
-* Efficiency:
-
-  The `Node.sorted_children` field was added for saving formatting and
-  easier testing.  But it not seem to be necessary in `similarfinder`
-  module.  So maybe we can pass a `sorded_children` keyword to
-  `patchedast.patchast` that controls whether to add this field or
-  not.
+  Wildcards can appear only where `Name` ast node can appear; that
+  is start of expressions.  For instance ``inst.${attr}`` is not
+  accepted.
 
 
-Adding Name Checks
-------------------
+* Match when unsure
 
-Now that we can match similar AST nodes, we can do our last move for
-making the examples in `a look into the future`_ section real.  I
-propose to add `CheckingFinder` class.
+  This is different from something like rename refactoring.  Consider
+  a situation like ``${a_var}.a_func()``.  In this example, matching
+  when unsure does not work::
 
-Possible accessors can be nothing for checking `PyName`\s, ``.object``
-for checking `PyObject`\s (derived by calling ``pyname.get_object()``)
-and ``.type`` for checking the type (derived by calling ``pyname.
-get_object.get_type()``).
+    def f(arg):
+        arg.a_func()
 
-A question that comes up is why don't we add a ``match when unsure``
-option.  This is different from something like rename refactoring.
-Consider a situation like ``${a_var}.a_func()``.  In this example,
-matching when unsure does not work::
-
-  def f(arg):
-      arg.a_func()
-
-We expect ``arg.a_func()`` to match, but it does not since `args` is a
-`Parameter` and `a_var` is a `PyName`.  So we know that they are not
-the same pyname.  Note that when renaming we don't compare `arg` to
-`arg` but instead we compare `a_func` that yields what we want.
+  We expect ``arg.a_func()`` to match, but it does not since `args` is
+  a `Parameter` and `a_var` is a `PyName`.  So we know that they are
+  not the same pyname.  Note that when renaming we don't compare `arg`
+  to `arg` but instead we compare `a_func` that yields what we want.
 
 
 A Look Into The Future
@@ -204,7 +150,7 @@ Restructuring UI
 
 If restructuring is going to be used by a normal python user it has to
 have a good UI.  The search pattern and the goal is straightforward
-but adding checks is the real problem.
+but adding checks is really a problem.
 
 We can have a list of changes.  Each item in this list is a tuple
 containing whose first item is a name that appear in search pattern
@@ -215,20 +161,6 @@ Now the we have to find good ways for:
 
 * Specifying a `PyName` or `PyObject`
 * Differentiating between `PyName`\s and `PyObject`\s
-
-
-Patched AST
-===========
-
-I propose to construct a patched AST from code that holds formatting
-info.
-
-Supporting Formatting
----------------------
-
-We can handle formatting as we are patching the old AST.  Instead of
-using the text formatting data we can insert the formatting specific
-data.
 
 
 Memory Management
@@ -386,11 +318,8 @@ Unfortunately it seems impossible to make rope both a valid Python 2.x
 and 3.x program.  Possible approaches are having two separate branches
 of rope (that I strongly resist) or moving from 2.x to 3.x gradually.
 
-We can also maintain rope so that it can be used for writing python
-3.x programs as well as 2.x while running on 2.x.  The main problem is
-the `compiler` package.  After that when we finally drop support for
-running rope on 2.x and it would need 3.x to run.  But it can be used
-to write 2.x programs as well as 3.x.
+For making transition to 3.x easier rope has already started using
+`_ast` module instead `compiler`.
 
 * Updating `rope.refactor.patchedast` module for using new nodes
 * Updating `rope.base.evaluate`

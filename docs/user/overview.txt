@@ -568,9 +568,7 @@ Restructurings
 Restructuring support is one of the main goals of the ``0.6`` release
 of rope.  `rope.refactor.restructure` can be used for performing
 restructurings.  Currently a simple dialog has been added for
-performing them, but you cannot add checks to your restructuring in
-that dialog, yet.  But the full functionality is available if you're
-using rope as a library.
+performing them graphically.
 
 A restructuring is a program transformation; not as well defined as
 other refactorings like rename.  Let's see some examples.
@@ -722,16 +720,10 @@ above.  We will have::
 Issues
 ''''''
 
-Adding checks is not available in the restructuring dialog, yet.  The
-main reason is that I couldn't find a user-friendly way for specifying
-them (though I have something in mind for the next release).  If you
-have any idea I'll be glad to hear.
-
-The other constraint that restructurings have is that pattern names
-can only appear in at the start of an expression.  For instance
-``var.${name}`` is invalid.  These situations can usually be fixed by
-specifying good checks, for example on the type of `var` and using a
-``${var}.name`` pattern.
+Pattern names can only appear in at the start of an expression.  For
+instance ``var.${name}`` is invalid.  These situations can usually be
+fixed by specifying good checks, for example on the type of `var` and
+using a ``${var}.name`` pattern.
 
 
 Object Inference
