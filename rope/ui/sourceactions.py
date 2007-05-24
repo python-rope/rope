@@ -144,7 +144,7 @@ def _get_template_information(editor, result, proposal):
     entries = {}
     def ok(event=None):
         mapping = {}
-        for var, entry in entries.iteritems():
+        for var, entry in entries.items():
             mapping[var] = entry.get()
         apply_template(mapping)
         toplevel.destroy()

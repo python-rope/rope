@@ -230,7 +230,7 @@ class StarImport(object):
             #    return {}
             result = {}
             imported = self.imported_module.get_object()
-            for name, pyname in imported.get_attributes().iteritems():
+            for name, pyname in imported.get_attributes().items():
                 if not name.startswith('_'):
                     result[name] = ImportedName(self.imported_module, name)
             self.names.set(result)

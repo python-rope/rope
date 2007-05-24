@@ -239,11 +239,11 @@ class _DefinitionGenerator(object):
         paramdict = self.definition_params
         mapping = rope.refactor.functionutils.ArgumentMapping(self.definition_info,
                                                               call_info)
-        for param_name, value in mapping.param_dict.iteritems():
+        for param_name, value in mapping.param_dict.items():
             paramdict[param_name] = value
         header = ''
         to_be_inlined = []
-        for name, value in paramdict.iteritems():
+        for name, value in paramdict.items():
             if name != value:
                 header += name + ' = ' + value + '\n'
                 to_be_inlined.append(name)

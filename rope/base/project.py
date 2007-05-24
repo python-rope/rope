@@ -397,7 +397,7 @@ class FilteredResourceObserver(object):
         for resource in changes.changes:
             self.observer.resource_changed(resource)
             self.resources[resource] = self.timekeeper.getmtime(resource)
-        for resource, new_resource in changes.moves.iteritems():
+        for resource, new_resource in changes.moves.items():
             self.resources[resource] = None
             if new_resource is not None:
                 self.observer.resource_moved(resource, new_resource)

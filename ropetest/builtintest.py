@@ -102,7 +102,7 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_getting_iterkeys_from_dicts(self):
         self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
-                       'd = {C1(): C2()}\nfor c in d.iterkeys():\n    a_var = c\n')
+                       'd = {C1(): C2()}\nfor c in d.keys():\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod.get_attribute('C1').get_object()
         a_var = pymod.get_attribute('a_var').get_object()
@@ -110,7 +110,7 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_getting_itervalues_from_dicts(self):
         self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
-                       'd = {C1(): C2()}\nfor c in d.itervalues():\n    a_var = c\n')
+                       'd = {C1(): C2()}\nfor c in d.values():\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod.get_attribute('C2').get_object()
         a_var = pymod.get_attribute('a_var').get_object()
@@ -146,7 +146,7 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_tuple_assignments_for_iteritems_in_fors(self):
         self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
-                       'd = {C1(): C2()}\nfor x, y in d.iteritems():\n    a = x;\n    b = y\n')
+                       'd = {C1(): C2()}\nfor x, y in d.items():\n    a = x;\n    b = y\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c1_class = pymod.get_attribute('C1').get_object()
         c2_class = pymod.get_attribute('C2').get_object()

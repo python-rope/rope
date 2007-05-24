@@ -211,7 +211,7 @@ class Dict(BuiltinClass):
         item = get_tuple(self.keys, self.values)
         collector = _AttributeCollector(dict)
         collector('__new__', function=self._new_dict)
-        for method in ['clear', 'has_key', 'setdefault']:
+        for method in ['clear', 'setdefault']:
             collector(method)
         collector('__setitem__', function=self._dict_add)
         collector('popitem', function=self._item_get)
@@ -222,9 +222,6 @@ class Dict(BuiltinClass):
         collector('items', function=self._item_list)
         collector('copy', function=self._self_get)
         collector('__getitem__', function=self._value_get)
-        collector('iterkeys', function=self._key_iter)
-        collector('itervalues', function=self._value_iter)
-        collector('iteritems', function=self._item_iter)
         collector('__iter__', function=self._key_iter)
         collector('update', function=self._self_set)
         super(Dict, self).__init__(dict, collector.attributes)

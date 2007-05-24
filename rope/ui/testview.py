@@ -43,7 +43,7 @@ class GUITestResult(object):
     def stop_test(self, test_name):
         self.run_count += 1
         self.progress.set_text('ran %d of %d' % (self.run_count, self.count))
-        self.progress.set_done_percent(self.run_count * 100 / self.count)
+        self.progress.set_done_percent(self.run_count * 100 // self.count)
         return True
 
     def _is_finished(self):

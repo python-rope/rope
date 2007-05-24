@@ -50,8 +50,7 @@ Rope will drop Python 2.4 support in this release.
 Hot Topics
 ==========
 
-* `Restructuring UI`_
-
+* `Enhanding Extract`
 
 To Be Discussed
 ===============
@@ -62,6 +61,43 @@ To Be Discussed
 * `Python's implicit interfaces`_
 * Decorators and method refactorings
 * Should `rope.base` be thread safe? which parts?
+
+
+Enhancing Extract
+=================
+
+Now that we have implemented restructurings, we can add extract
+similar statements option to extract variable/method refactoring.  But
+there are issues to be handled first.
+
+
+Where To Search
+---------------
+
+The inserted definition should appear before the occurrences.  This is
+not an issue for methods but for functions and variables.  We can
+*not* solve this by limited the region to search from the extracted
+expression till the end of its containing scope.::
+
+  if False:
+      print 1 + 1
+      print 1 + 1
+  print 1 + 1
+
+now if we extract the first appearance of ``1 + 1`` we'll have::
+
+  if False:
+      new_var = 1 + 1
+      print new_var
+      print new_var
+  print new_var
+
+But in the last line `new_var` cannot be resolved.
+
+
+Implementation
+--------------
+
 
 
 Finding Similar Pieces
@@ -143,24 +179,6 @@ Restructuring::
   # Rematching might be useful, too
   pattern = '${?x} = [${?a}, ${?a}]'
   goal = '${?x} = [${?a}] * 2'
-
-
-Restructuring UI
-================
-
-If restructuring is going to be used by a normal python user it has to
-have a good UI.  The search pattern and the goal is straightforward
-but adding checks is really a problem.
-
-We can have a list of changes.  Each item in this list is a tuple
-containing whose first item is a name that appear in search pattern
-plus an identifier like '', '.object', '.type'.  Its second item should
-be a string that indicates a `PyName` or a `PyObject`.
-
-Now the we have to find good ways for:
-
-* Specifying a `PyName` or `PyObject`
-* Differentiating between `PyName`\s and `PyObject`\s
 
 
 Memory Management

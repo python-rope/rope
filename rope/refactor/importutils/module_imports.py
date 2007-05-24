@@ -293,7 +293,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
         super(_GlobalUnboundNameFinder, self).__init__(pymodule)
         self.unbound = set()
         self.names = set()
-        for name, pyname in pymodule._get_structural_attributes().iteritems():
+        for name, pyname in pymodule._get_structural_attributes().items():
             if not isinstance(pyname, (rope.base.pynames.ImportedName,
                                        rope.base.pynames.ImportedModule)):
                 self.names.add(name)

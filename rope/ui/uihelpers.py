@@ -524,7 +524,7 @@ class ProgressBar(object):
         self.text['text'] = text
 
     def _draw_shape(self):
-        width = int(self.canvas['width']) * self.percent / 100
+        width = int(self.canvas['width']) * self.percent // 100
         self.canvas.create_rectangle(0, 0, width, self.canvas['height'],
                                      fill=self.color)
         total_width = self.canvas['width']

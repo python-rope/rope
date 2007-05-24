@@ -188,7 +188,7 @@ class _CodeCompletionCollector(object):
                                                          self.expression)
         if found_pyname is not None:
             element = found_pyname.get_object()
-            for name, pyname in element.get_attributes().iteritems():
+            for name, pyname in element.get_attributes().items():
                 if name.startswith(self.starting) or self.starting == '':
                     result[name] = CompletionProposal(
                         name, 'attribute', self._get_pyname_type(pyname))
@@ -202,7 +202,7 @@ class _CodeCompletionCollector(object):
             names = scope.get_propagated_names()
         else:
             names = scope.get_names()
-        for name, pyname in names.iteritems():
+        for name, pyname in names.items():
             if name.startswith(self.starting):
                 kind = 'local'
                 if scope.get_kind() == 'Module':

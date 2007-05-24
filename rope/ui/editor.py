@@ -130,7 +130,7 @@ class GraphicalEditor(object):
         start = self._get_line_from_index(self.text.index('@0,0'))
         end = self._get_line_from_index(
             self.text.index('@0,%d' % self.text.winfo_height()))
-        return (start + end) / 2
+        return (start + end) // 2
 
     def get_region_offset(self):
         start, end = self._get_region_index()
@@ -498,7 +498,7 @@ class GraphicalEditor(object):
 
     def set_highlighting(self, highlighting):
         self.highlighting = highlighting
-        for name, style in self.highlighting.get_styles().iteritems():
+        for name, style in self.highlighting.get_styles().items():
             fontKWs = {}
             if style.italic is not None:
                 if style.italic:
@@ -628,7 +628,7 @@ class GraphicalEditor(object):
         end = len(text)
         indexer = _OffsetToIndexCacher(self.text)
         while start < end:
-            mid = (start + end) / 2
+            mid = (start + end) // 2
             if self.text.compare(indexer.get_index(mid), '>', index):
                 end = mid - 1
             elif self.text.compare(indexer.get_index(mid), '==', index):
