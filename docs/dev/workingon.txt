@@ -1,19 +1,9 @@
-Enhanced Restructuring Dialog
-=============================
-
-- Having a list of checks for each restructuring
-- Adding `rope.ui.uihelpers.CompletingEntry`
-
-* High memory usage!
-* Updating the parts of overview.txt about restructuring UI
-* Moving pieces from overview.txt to library.txt
-
-
 Goodbye `compiler` Module!
 ==========================
 
 * Handling strings in following lines in `patchedast`
 
+* High memory usage! Write a memory profiler
 * Handle tuple parameters
 * The ability to limit the files to restructure
 * Only scanning selected region for matches

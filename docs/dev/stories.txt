@@ -115,9 +115,6 @@ Stories
 * Better warnings
 
 
-* Restructorings
-
-
 * Enhanced occurrence finding
 
 
@@ -143,6 +140,3 @@ Stories
 
 
 * Finding similar statements when extracting variable/method
-
-
-* Enhanced restructuring dialog

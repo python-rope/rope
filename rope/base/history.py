@@ -132,6 +132,10 @@ class History(object):
                 result.append(change)
         return result
 
+    def __str__(self):
+        return 'History holds %s changes in memory' % \
+               (len(self.undo_list) + len(self.redo_list))
+
     undo_list = property(lambda self: self._undo_list)
     redo_list = property(lambda self: self._redo_list)
 

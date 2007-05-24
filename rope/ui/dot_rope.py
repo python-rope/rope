@@ -46,7 +46,11 @@ def starting_rope(core):
     # created.  Specifying `None` means do not make and use a rope folder.
     #core.set('project_rope_folder', '.ropeproject')
 
+    # You can register your own actions
+    _register_my_actions(core)
 
+
+def _register_my_actions(core):
     # Adding your own `Action`\s:
     # If you're interested in adding your own actions to rope you can do so
     # like this.
@@ -59,6 +63,27 @@ def starting_rope(core):
 
     hello_action = SimpleAction('hello_action', say_hello, 'C-h h')
     core.register_action(hello_action)
+
+    def rope_info(context):
+        import gc
+        import rope.base.pyobjects
+
+        print
+        print
+        print 'Rope Running Info'
+        print '================='
+        print
+        print str(context.project.history)
+        module_count = 0
+        for obj in gc.get_objects():
+            # Checking the real type; not isinstance
+            if type(obj) in (rope.base.pyobjects.PyModule,
+                             rope.base.pyobjects.PyPackage):
+                module_count += 1
+        print 'Memory contains %s PyModules' % module_count
+        print str(context.project.pycore)
+    info_action = SimpleAction('rope_info', rope_info, 'C-h i')
+    core.register_action(info_action)
 
 
 def _change_key_binding(core):

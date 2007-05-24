@@ -267,6 +267,10 @@ class PyCore(object):
     def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
         return self.classes_cache.get_classes(task_handle)
 
+    def __str__(self):
+        return 'PyCore caches %d PyModules\n' % len(self.module_map) + \
+               str(self.object_info)
+
 
 class _ClassesCache(object):
 

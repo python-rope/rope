@@ -171,6 +171,9 @@ class ObjectInfoManager(object):
     def sync(self):
         self.objectdb.sync()
 
+    def __str__(self):
+        return str(self.objectdb)
+
 
 class TextualValidation(object):
 

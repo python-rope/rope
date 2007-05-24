@@ -3,6 +3,9 @@
 ===========
 
 
+- Adding checks in restructuring dialog : May 23, 2007
+
+
 - Using `_ast` instead of `compiler` : May 23, 2007
 
 

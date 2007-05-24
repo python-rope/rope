@@ -89,6 +89,13 @@ class ObjectDB(object):
         for observer in self.observers:
             observer.added(path)
 
+    def __str__(self):
+        scope_count = 0
+        for file_dict in self.files.values():
+            scope_count += len(file_dict)
+        return 'ObjectDB holds %s file and %s scope infos' % \
+               (len(self.files), scope_count)
+
 
 class _NullScopeInfo(object):
 
