@@ -98,6 +98,16 @@ But in the last line `new_var` cannot be resolved.
 Implementation
 --------------
 
+* Making the search pattern
+* An option to decide whether to extract similar pieces or not
+
+
+Better Callinfo Selection
+=========================
+
+The problem happens when inferring the object a parameter holds.  This
+selection is very important when parameters are passed to class
+constructors to initialize its fields.
 
 
 Finding Similar Pieces
@@ -241,7 +251,6 @@ Enhancing `ObjectInfoManager`
 =============================
 
 * Changing `callinfo` to match similar args
-* Some `self`\s are unknown!
 * Returning a `Generator` for unknown generator functions?
 * Validating call infos
 

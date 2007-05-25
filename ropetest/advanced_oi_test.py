@@ -625,6 +625,18 @@ class NewStaticOITest(unittest.TestCase):
         self.pycore.analyze_module(self.mod)
         self.assertEquals(c_class, a_var.get_object().get_type())
 
+    def test_using_the_best_callinfo(self):
+        code = 'class C1(object):\n    pass\n' \
+               'def f(arg1, arg2, arg3):\n    pass\n' \
+               'f("", None, C1())\nf("", C1(), None)\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c1_class = pymod.get_attribute('C1').get_object()
+        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        arg2 = f_scope.get_name('arg2').get_object()
+        self.assertEquals(c1_class, arg2.get_type())
+
 
 def suite():
     result = unittest.TestSuite()

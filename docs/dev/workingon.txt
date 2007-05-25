@@ -1,9 +1,15 @@
+Better Callinfo Selection
+=========================
+
+- Selecting parameters individually
+
+
 Goodbye `compiler` Module!
 ==========================
 
 * Handling strings in following lines in `patchedast`
 
-* High memory usage! Write a memory profiler
+* High memory usage! What is the problem?
 * Handle tuple parameters
 * The ability to limit the files to restructure
 * Only scanning selected region for matches

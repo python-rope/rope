@@ -17,7 +17,7 @@ class ObjectInfoManager(object):
 
     def _init_objectdb(self):
         preferred = self.project.get_prefs().get('objectdb_type', 'memory')
-        validation = TextualValidation(self.to_pyobject)
+        self.validation = TextualValidation(self.to_pyobject)
         if preferred == 'memory' or self.project.ropefolder is None:
             db = memorydb.MemoryDB(self.project)
         elif preferred == 'sqlite' and sys.version_info >= (2, 5, 0):
@@ -27,7 +27,7 @@ class ObjectInfoManager(object):
             db = shelvedb.ShelveDB(self.project)
         elif True or preferred == 'persisted_memory':
             db = memorydb.MemoryDB(self.project, persist=True)
-        self.objectdb = objectdb.ObjectDB(db, validation)
+        self.objectdb = objectdb.ObjectDB(db, self.validation)
 
     def _init_validation(self):
         self.objectdb.validate_files()
@@ -95,15 +95,20 @@ class ObjectInfoManager(object):
         path, key = self._get_scope(pyobject)
         if path is None:
             return None
-        parameters = None
+        arg_count = len(pyobject.get_param_names(special_args=False))
+        unknowns = arg_count
+        parameters = [None] * arg_count
         for call_info in self.objectdb.get_callinfos(path, key):
             args = call_info.get_parameters()
-            if len(args) > 0 and args[-1][0] not in ('unknown', 'none'):
-                parameters = args
+            for index, arg in enumerate(args[:arg_count]):
+                old = parameters[index]
+                if self.validation.is_more_valid(arg, old):
+                    parameters[index] = arg
+                    if self.validation.is_value_valid(arg):
+                        unknowns -= 1                        
+            if unknowns == 0:
                 break
-            if parameters is None:
-                parameters = args
-        if parameters:
+        if unknowns < arg_count:
             return [self.to_pyobject(parameter)
                     for parameter in parameters]
 
