@@ -41,6 +41,7 @@ Other Possible Goals:
 * Finding similar pieces to extracted
 * Formatting?
 
+
 Release Issues
 --------------
 
@@ -50,7 +51,7 @@ Rope will drop Python 2.4 support in this release.
 Hot Topics
 ==========
 
-* `Enhanding Extract`
+* `Enhanding Extract`_
 
 To Be Discussed
 ===============
@@ -92,22 +93,70 @@ now if we extract the first appearance of ``1 + 1`` we'll have::
       print new_var
   print new_var
 
-But in the last line `new_var` cannot be resolved.
+But in the last line `new_var` cannot be resolved.  So we need to
+decide where to insert the definition of the extracted element based
+on where the uses are for example in::
+
+  if False:
+      print 1 + 1
+  else:
+      print 1 + 1
+
+extracting any of ``1 + 1`` should give::
+
+  new_var = 1 + 1
+  if False:
+      print new_var
+  else:
+      print new_var
+
+But note that this should happen only when the user askes to replace
+similar statements, too.
+
+In order to make this happen we need to construct a block tree of a
+scope.  We should choose the deepest node that is the root of a
+subtree containing all the blocks that hold occurrences of the
+extracted code.
 
 
-Implementation
---------------
+Block Tree
+----------
 
-* Making the search pattern
+We can walk through the scope AST and look for `for`, `while`, `with`,
+`try`, `except`, `if`, `else`, and `elif` nodes.
+
+
+Implementation Issues
+---------------------
+
+* Making search pattern for fuctions and their parameters
 * An option to decide whether to extract similar pieces or not
 
+We should break extract refactoring into these pieces:
 
-Better Callinfo Selection
-=========================
+* The definition
 
-The problem happens when inferring the object a parameter holds.  This
-selection is very important when parameters are passed to class
-constructors to initialize its fields.
+* Occurrences
+
+  * Where to search?
+  * What pattern to look for?
+
+* Finding occurrence replacements
+
+  * The expressions matching the parameters
+
+* Where to insert the definition
+
+  * Construct scope block tree
+
+The problem is that these sub-tasks are not completely separate.
+
+* For finding the occurrences we need to know the definition for
+  constructing the search pattern.
+* We need to know the matched pattern for calculating the replacement.
+* We need to know the occurrences to find where to insert the
+  definition.
+
 
 
 Finding Similar Pieces

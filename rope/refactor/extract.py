@@ -224,9 +224,7 @@ class _ExtractPerformer(object):
 
     def __init__(self, info):
         self.info = info
-
         self.extract_info = self._create_parts()
-
         _ExceptionalConditionChecker()(self.info)
 
     def _create_parts(self):

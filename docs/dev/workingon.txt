@@ -1,15 +1,14 @@
-Better Callinfo Selection
-=========================
+Similar Statements In Extract
+=============================
 
-- Selecting parameters individually
-
-
-Goodbye `compiler` Module!
-==========================
+* Separating the place to insert the definition
+* Finding similar statements to extracted variables
+* Finding similar pieces to extracted methods with parameters
 
 * Handling strings in following lines in `patchedast`
-
-* High memory usage! What is the problem?
+* Add custom refactoring section to ``overview.txt`` file;
+  Extract field refactoring
+* Document restructuring UI
 * Handle tuple parameters
 * The ability to limit the files to restructure
 * Only scanning selected region for matches
@@ -21,7 +20,6 @@ Remaining Small Stories
 
 Base:
 
-* Better default callinfo selection
 * Multiple ropes on one project; problems for objectdb and history
 * Inline fails when there is an arg mismatch
 * Evaluate function parameter defaults in staticoi?
