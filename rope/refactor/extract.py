@@ -4,7 +4,7 @@ import rope.base.pyobjects
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
-from rope.refactor import sourceutils, similarfinder, patchedast
+from rope.refactor import sourceutils, similarfinder, patchedast, suites
 
 
 class _ExtractRefactoring(object):
@@ -256,7 +256,8 @@ class _DefinitionLocationFinder(object):
         return self.info.scope_indents
 
     def _get_before_line(self):
-        return self.matched_lines[0]
+        ast = self.info.scope.pyobject.get_ast()
+        return suites.find_visible(ast, self.matched_lines)
 
     def _get_after_scope(self):
         return self.info.scope.get_end() + 1

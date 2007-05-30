@@ -1,14 +1,10 @@
 Similar Statements In Extract
 =============================
 
-- For methods class scope should be searched for matches
-- Matching function bodies
-- Adding extract similar to UI
-
-* ``find_suite(line)``
-* ``find_visible(lines)``
-* Add `suitestest` to testsuite
-* Selecting where to insert the definition using scope block tree
+- ``Suite.find_suite(line)``
+- ``find_visible(lines)``
+- Add `suitestest` to testsuite
+- Selecting where to insert the definition using scope block tree
 
 * Matching local variables with different names?
 * Split tuple assignment refactoring; ``a, b = 1, 2`` with ``a = 1\nb = 2``

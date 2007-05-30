@@ -10,6 +10,7 @@ import ropetest.refactor.movetest
 import ropetest.refactor.renametest
 import ropetest.refactor.patchedasttest
 import ropetest.refactor.restructuretest
+import ropetest.refactor.suitestest
 from rope.base.exceptions import RefactoringError, InterruptedTaskError
 from rope.refactor.encapsulate_field import EncapsulateField
 from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
@@ -727,6 +728,8 @@ def suite():
     result.addTests(unittest.makeSuite(TaskHandleTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.
                                        restructuretest.RestructureTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.
+                                       suitestest.SuiteTest))
     return result
 
 
