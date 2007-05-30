@@ -4,7 +4,7 @@ import rope.base.pyobjects
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
-from rope.refactor import sourceutils
+from rope.refactor import sourceutils, similarfinder, patchedast
 
 
 class _ExtractRefactoring(object):
@@ -28,10 +28,15 @@ class _ExtractRefactoring(object):
             offset -= 1
         return offset
 
-    def get_changes(self, extracted_name):
+    def get_changes(self, extracted_name, similar=False):
+        """Get the changes this refactoring makes
+
+        if `similar` is `True` similar expressions/statements are also
+        replaced with the extracted.
+        """
         info = _ExtractInfo(
-            self.project, self.resource, self.start_offset,
-            self.end_offset, extracted_name, variable=self.variable)
+            self.project, self.resource, self.start_offset, self.end_offset,
+            extracted_name, variable=self.variable, similar=similar)
         new_contents = _ExtractPerformer(info).extract()
         changes = ChangeSet('Extract %s <%s>' % (self._get_name(),
                                                  extracted_name))
@@ -42,7 +47,7 @@ class _ExtractRefactoring(object):
         if self.variable:
             return 'variable'
         return 'method'
-            
+
 
 class ExtractMethod(_ExtractRefactoring):
 
@@ -59,8 +64,10 @@ class ExtractVariable(_ExtractRefactoring):
 
 
 class _ExtractInfo(object):
+    """Holds information about the extract to be performed"""
 
-    def __init__(self, project, resource, start, end, new_name, variable=False):
+    def __init__(self, project, resource, start, end, new_name,
+                 variable=False, similar=False):
         self.pycore = project.pycore
         self.resource = resource
         self.pymodule = self.pycore.resource_to_pyobject(resource)
@@ -69,18 +76,19 @@ class _ExtractInfo(object):
         self.lines = self.pymodule.lines
         self.new_name = new_name
         self.variable = variable
+        self.similar = similar
         self._init_parts(start, end)
         self._init_scope()
 
     def _init_parts(self, start, end):
-        self.line_finder = codeanalyze.LogicalLineFinder(self.lines)
+        self.logical_lines = codeanalyze.LogicalLineFinder(self.lines)
 
         self.region = (self._choose_closest_line_end(start),
                        self._choose_closest_line_end(end, end=True))
 
         self.region_lines = (
-            self.line_finder.get_logical_line_in(self.lines.get_line_number(self.region[0]))[0],
-            self.line_finder.get_logical_line_in(self.lines.get_line_number(self.region[1]))[1])
+            self.logical_lines.get_logical_line_in(self.lines.get_line_number(self.region[0]))[0],
+            self.logical_lines.get_logical_line_in(self.lines.get_line_number(self.region[1]))[1])
 
         self.lines_region = (self.lines.get_line_start(self.region_lines[0]),
                              self.lines.get_line_end(self.region_lines[1]))
@@ -111,8 +119,8 @@ class _ExtractInfo(object):
 
     def _is_one_line(self):
         return self.region != self.lines_region and \
-               (self.line_finder.get_logical_line_in(self.region_lines[0]) ==
-                self.line_finder.get_logical_line_in(self.region_lines[1]))
+               (self.logical_lines.get_logical_line_in(self.region_lines[0]) ==
+                self.logical_lines.get_logical_line_in(self.region_lines[1]))
 
     def _is_global(self):
         return self.scope.parent is None
@@ -141,6 +149,117 @@ class _ExtractInfo(object):
     indents = property(_get_indents)
     scope_indents = property(_get_scope_indents)
     extracted = property(_get_extracted)
+
+
+class _ExtractCollector(object):
+    """Collects information needed for performing the extract"""
+
+    def __init__(self, info):
+        self.definition = None
+        self.body_pattern = None
+        self.replacement_pattern = None
+        self.matches = None
+        self.replacements = None
+        self.definition_location = None
+
+
+class _ExtractPerformer(object):
+
+    def __init__(self, info):
+        self.info = info
+        _ExceptionalConditionChecker()(self.info)
+
+    def extract(self):
+        extract_info = self._collect_info()
+        content = sourceutils.ChangeCollector(self.info.source)
+        definition = extract_info.definition
+        lineno, indents = extract_info.definition_location
+        offset = self.info.lines.get_line_start(lineno)
+        indented = sourceutils.fix_indentation(definition, indents)
+        content.add_change(offset, offset, indented)
+        self._replace_occurrences(content, extract_info)
+        return content.get_changed()
+
+    def _replace_occurrences(self, content, extract_info):
+        for match in extract_info.matches:
+            replacement = similarfinder.CodeTemplate(
+                extract_info.replacement_pattern)
+            mapping = {}
+            for name in replacement.get_names():
+                node = match.get_ast(name)
+                if node:
+                    start, end = patchedast.node_region(match.get_ast(name))
+                    mapping[name] = self.info.source[start:end]
+                else:
+                    mapping[name] = name[1:]
+            region = match.get_region()
+            content.add_change(region[0], region[1],
+                               replacement.substitute(mapping))
+
+    def _collect_info(self):
+        extract_collector = _ExtractCollector(self.info)
+        self._find_definition(extract_collector)
+        self._find_matches(extract_collector)
+        self._find_definition_location(extract_collector)
+        return extract_collector
+
+    def _find_matches(self, collector):
+        if self.info.similar:
+            if self.info.method:
+                class_scope = self.info.scope.parent
+                start = self.info.lines.get_line_start(class_scope.get_start())
+                end = self.info.lines.get_line_end(class_scope.get_end())
+            else:
+                start, end = self.info.scope_region
+        else:
+            start, end = self.info.region
+        finder = similarfinder.CheckingFinder(self.info.pymodule,
+                                              {}, start, end)
+        collector.matches = list(finder.get_matches(collector.body_pattern))
+
+    def _find_definition_location(self, collector):
+        matched_lines = []
+        for match in collector.matches:
+            start = self.info.lines.get_line_number(match.get_region()[0])
+            start_line = self.info.logical_lines.\
+                         get_logical_line_in(start)[0]
+            matched_lines.append(start_line)
+        location_finder = _DefinitionLocationFinder(self.info, matched_lines)
+        collector.definition_location = (location_finder.find_lineno(),
+                                         location_finder.find_indents())
+
+    def _find_definition(self, collector):
+        if self.info.variable:
+            parts = _ExtractVariableParts(self.info)
+        else:
+            parts = _ExtractMethodParts(self.info)
+        collector.definition = parts.get_definition()
+        collector.body_pattern = parts.get_body_pattern()
+        collector.replacement_pattern = parts.get_replacement_pattern()
+
+
+class _DefinitionLocationFinder(object):
+
+    def __init__(self, info, matched_lines):
+        self.info = info
+        self.matched_lines = matched_lines
+
+    def find_lineno(self):
+        if self.info.global_ or self.info.variable:
+            return self._get_before_line()
+        return self._get_after_scope()
+
+    def find_indents(self):
+        if self.info.global_ or self.info.variable:
+            return sourceutils.get_indents(self.info.lines,
+                                           self._get_before_line())
+        return self.info.scope_indents
+
+    def _get_before_line(self):
+        return self.matched_lines[0]
+
+    def _get_after_scope(self):
+        return self.info.scope.get_end() + 1
 
 
 class _ExceptionalConditionChecker(object):
@@ -193,81 +312,30 @@ class _ExceptionalConditionChecker(object):
         return (prev.isalnum() or prev == '_') and (next.isalnum() or next == '_')
 
 
-class _ExtractPerformer(object):
-    """Perform extract method/variable refactoring
-
-    We devide program source code into these parts::
-
-      [...]
-        scope_start
-            [before_line]
-        start_line
-          start
-            [call]
-          end
-        end_line
-        scope_end
-            [after_scope]
-      [...]
-
-    For extract function the new method is inserted in start_line,
-    while in extract method it is inserted in scope_end.
-
-    Note that start and end are in the same line for one line
-    extractions, so start_line and end_line are in the same line,
-    too.
-
-    The before_line, call, and after_scope placeholders can be
-    set by using `_ExtractMethodParts` or `_ExtractVariableParts`.
-
-    """
-
-    def __init__(self, info):
-        self.info = info
-        self.extract_info = self._create_parts()
-        _ExceptionalConditionChecker()(self.info)
-
-    def _create_parts(self):
-        if self.info.variable:
-            return _ExtractVariableParts(self.info)
-        else:
-            return _ExtractMethodParts(self.info)
-
-    def extract(self):
-        result = []
-        source = self.info.source
-        result.append(source[:self.info.lines_region[0]])
-        result.append(self.extract_info.get_before_line())
-        if self.info.lines_region[0] != self.info.region[0]:
-            result.append(source[self.info.lines_region[0]:self.info.region[0]])
-        else:
-            result.append(' ' * self.info.indents)
-        result.append(self.extract_info.get_call())
-        result.append(source[self.info.region[1]:self.info.lines_region[1]])
-        result.append(source[self.info.lines_region[1]:self.info.scope_region[1]])
-        result.append(self.extract_info.get_after_scope())
-        result.append(source[self.info.scope_region[1]:])
-        return ''.join(result)
-
-
 class _ExtractMethodParts(object):
 
     def __init__(self, info):
         self.info = info
         self.info_collector = self._create_info_collector()
 
-    def get_before_line(self):
+    def get_definition(self):
         if self.info.global_:
             return '\n%s\n' % self._get_function_definition()
-        return ''
-
-    def get_call(self):
-        return self._get_call()
-
-    def get_after_scope(self):
-        if not self.info.global_:
+        else:
             return '\n%s' % self._get_function_definition()
-        return ''
+
+    def get_replacement_pattern(self):
+        variables = []
+        variables.extend(self._find_function_arguments())
+        variables.extend(self._find_function_returns())
+        return similarfinder.make_pattern(self._get_call(), variables)
+
+    def get_body_pattern(self):
+        variables = []
+        variables.extend(self._find_function_arguments())
+        variables.extend(self._find_function_returns())
+        body = sourceutils.fix_indentation(self.info.extracted, 0)
+        return similarfinder.make_pattern(body, variables)
 
     def _create_info_collector(self):
         zero = self.info.scope.get_start() - 1
@@ -282,22 +350,13 @@ class _ExtractMethodParts(object):
         ast.walk(node, info_collector)
         return info_collector
 
-    def _get_function_indents(self):
-        if self.info.global_:
-            return self.info.indents
-        else:
-            return self.info.scope_indents
-
     def _get_function_definition(self):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
-        function_indents = self._get_function_indents()
         result = []
-        result.append('%sdef %s:\n' %
-                      (' ' * function_indents,
-                       self._get_function_signature(args)))
+        result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
-        indents = function_indents + sourceutils.get_indent(self.info.pycore)
+        indents = sourceutils.get_indent(self.info.pycore)
         function_body = sourceutils.indent_lines(unindented_body, indents)
         result.append(function_body)
         definition = ''.join(result)
@@ -354,7 +413,8 @@ class _ExtractMethodParts(object):
     def _find_function_returns(self):
         if self.info.one_line:
             return []
-        return list(self.info_collector.written.intersection(self.info_collector.postread))
+        return list(self.info_collector.written.
+                    intersection(self.info_collector.postread))
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
@@ -372,17 +432,16 @@ class _ExtractVariableParts(object):
     def __init__(self, info):
         self.info = info
 
-    def get_before_line(self):
-        result = ' ' * self.info.indents + \
-                 self.info.new_name + ' = ' + \
+    def get_definition(self):
+        result = self.info.new_name + ' = ' + \
                  _join_lines(self.info.extracted) + '\n'
         return result
 
-    def get_call(self):
-        return self.info.new_name
+    def get_body_pattern(self):
+        return self.info.extracted.strip()
 
-    def get_after_scope(self):
-        return ''
+    def get_replacement_pattern(self):
+        return self.info.new_name
 
 
 class _FunctionInformationCollector(object):

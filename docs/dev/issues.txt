@@ -119,11 +119,39 @@ subtree containing all the blocks that hold occurrences of the
 extracted code.
 
 
-Block Tree
+Suite Tree
 ----------
 
 We can walk through the scope AST and look for `for`, `while`, `with`,
-`try`, `except`, `if`, `else`, and `elif` nodes.
+`try`, `except`, `if`, `else`, and `elif` nodes.  We need to perform
+two operations: Calculating the suite a line is in and finding the
+common parent of two suites where a definition would be visible from
+both scopes.
+
+Multi-suite statements like ``try`` cause problems.  Using same causes
+problems since a name defined in ``except`` statement is not visible
+in another ``except`` statement.  Should we consider ``except``
+statements a separate suite?
+
+Using two separate suites cause problems when we want to find the
+common parent to insert the definition.  We insert the definition
+before the first suite so that all other suites under them can see it.
+But in situations like::
+
+  try:
+      pass
+  except E1:
+      pass
+  except E2:
+      pass
+
+we cannot insert the definition just before the first ``except`` and
+we should insert it before ``try`` line.
+
+One idea is to separate them but use the same start for them.  So we
+both solve the parent finding problem and the defintion location
+finding problem.  This requires `Suite` class to accept a children
+list and the start line number for its construction.
 
 
 Implementation Issues

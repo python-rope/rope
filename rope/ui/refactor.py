@@ -202,7 +202,7 @@ class ExtractDialog(RefactoringDialog):
         self.kind = kind
 
     def _get_changes(self):
-        return self.do_extract(self.new_name_entry.get())
+        return self.do_extract(self.new_name_entry.get(), self.similar.get())
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
@@ -212,6 +212,11 @@ class ExtractDialog(RefactoringDialog):
         self.new_name_entry.grid(row=0, column=1)
         self.new_name_entry.insert(0, 'extracted')
         self.new_name_entry.select_range(0, Tkinter.END)
+        self.similar = Tkinter.IntVar(0)
+        similar = Tkinter.Checkbutton(
+            frame, text='Match similar expressions/statements',
+            variable=self.similar)
+        similar.grid(row=1, column=0, columnspan=2)
 
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
         self.new_name_entry.focus_set()
@@ -219,23 +224,23 @@ class ExtractDialog(RefactoringDialog):
 
 
 def extract_method(context):
-    def do_extract(new_name):
+    def do_extract(new_name, similar):
         editor = context.get_active_editor().get_editor()
         resource = context.resource
         start_offset, end_offset = editor.get_region_offset()
         return rope.refactor.extract.ExtractMethod(
             context.project, resource, start_offset,
-            end_offset).get_changes(new_name)
+            end_offset).get_changes(new_name, similar=similar)
     ExtractDialog(context, do_extract, 'Method').show()
 
 def extract_variable(context):
-    def do_extract(new_name):
+    def do_extract(new_name, similar):
         editor = context.get_active_editor().get_editor()
         resource = context.get_active_editor().get_file()
         start_offset, end_offset = editor.get_region_offset()
         return rope.refactor.extract.ExtractVariable(
             context.project, resource, start_offset,
-            end_offset).get_changes(new_name)
+            end_offset).get_changes(new_name, similar=similar)
     ExtractDialog(context, do_extract, 'Variable').show()
 
 

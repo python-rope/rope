@@ -192,8 +192,8 @@ class _ASTMatcher(object):
         if expected.__class__ != node.__class__:
             return False
 
-        children1 = ast.get_children(expected)
-        children2 = ast.get_children(node)
+        children1 = self._get_children(expected)
+        children2 = self._get_children(node)
         if len(children1) != len(children2):
             return False
         for child1, child2 in zip(children1, children2):
@@ -210,6 +210,12 @@ class _ASTMatcher(object):
                 if child1 != child2:
                     return False
         return True
+
+    def _get_children(self, node):
+        """Return not `ast.expr_context` children of `node`"""
+        children = ast.get_children(node)
+        return [child for child in children
+                if not isinstance(child, ast.expr_context)]
 
     def _match_stmts(self, current_stmts, mapping):
         if len(current_stmts) != len(self.pattern):
@@ -229,8 +235,10 @@ class _ASTMatcher(object):
     def _match_any_var(self, node1, node2, mapping):
         name = self.ropevar.get_base(node1.id)
         if name not in mapping:
-            mapping[name] = node2
-            return True
+            if isinstance(node2, ast.expr):
+                mapping[name] = node2
+                return True
+            return False
         else:
             return self._match_nodes(mapping[name], node2, {})
 
@@ -246,6 +254,7 @@ class Match(object):
     def get_ast(self, name):
         """The ast node that has matched rope variables"""
         return self.mapping.get(name, None)
+
 
 class ExpressionMatch(Match):
 
@@ -332,3 +341,15 @@ class _RopeVariable(object):
             return name[len(self._normal_prefix):]
         if self.is_any(name):
             return '?' + name[len(self._any_prefix):]
+
+
+def make_pattern(code, variables):
+    variables = set(variables)
+    collector = sourceutils.ChangeCollector(code)
+    finder = SimilarFinder(code)
+    for variable in variables:
+        for match in finder.get_matches('${%s}' % variable):
+            start, end = match.get_region()
+            collector.add_change(start, end, '${?%s}' % variable)
+    result = collector.get_changed()
+    return result if result is not None else code
