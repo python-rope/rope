@@ -568,7 +568,7 @@ Restructurings
 Restructuring support is one of the main goals of the ``0.6`` release
 of rope.  `rope.refactor.restructure` can be used for performing
 restructurings.  Currently a simple dialog has been added for
-performing them graphically.
+performing them in the IDE.
 
 A restructuring is a program transformation; not as well defined as
 other refactorings like rename.  Let's see some examples.
@@ -599,8 +599,8 @@ Goal can be some thing like::
 Note that ``${...}`` is used to match something in the pattern.  If
 names that appear in ``${...}`` start with a leading ``?`` every
 expression at that point will match, otherwise only the specified name
-will match (This form is not useful if you're not using checks that is
-described later).
+will match (The form without ``?`` is not useful if you're not using
+checks which is described later).
 
 You can use the matched names in goal and they will be replaced with
 the string that was matched in each occurrence.  So the outcome of our
@@ -620,34 +620,27 @@ same name and we don't want to change it.  Checks come to rescue.  Each
 restructuring gets a ``checks`` parameter in its constructor.  It can
 be a dictionary.  Its keys are pattern names that appear in the
 pattern (the names in ``${...}``) or it can be pattern names plus any
-of ``.object`` or ``.type``.  The values can be rope
-`rope.base.pyobject.PyObject` or `rope.base.pynames.PyNames` objects.
+of ``.object`` or ``.type``.
+
+The values should be resolved into a python variable (or reference).
+For instance for showing `pow` in this example we can use `mod.pow`.
+As you see this string should start from module names.
 
 For solving the above problem we change our `pattern`.  But `goal`
 remains the same::
 
-  pattern = '${?pow_func}(${?param1}, ${?param2})'
-  goal = '${?param1} ** ${?param2}'
+  pattern: '${?pow_func}(${?param1}, ${?param2})'
+  goal: '${?param1} ** ${?param2}'
 
 Consider the name of the module containing our `pow` function is
 `mod`.  ``checks`` can be::
 
-  checks = {}
-  mod = project.get_pycore().get_module('mod')
-  pow_pyname = mod.get_attribute('pow')
-  checks['?pow_func'] = pow_pyname
+  check1: '?pow_func' -> 'mod.pow'
 
-Note that project is an instance of `rope.base.project.Project`.  We
-can perform the restructuring now::
+For performing this refactoring using rope library see `library.txt`_.
 
-  from rope.refactor import restructure
 
-  restructuring = restructure.Restructure(project, pattern, goal, checks)
-  project.do(restructuring.get_changes())
-
-`PyName`\s and `PyObject`\s are used to describe names and objects in
-rope.  Each name in a program (a `PyName`) might reference an object
-(a `PyObject`) that has a type (a `PyObject`).
+.. _library.txt: ../dev/library.html
 
 
 Example 2
@@ -689,17 +682,12 @@ situation can be handled using inline method refactoring but this is
 just an example; Consider inline refactoring is not implemented yet!).
 Restructurings come to rescue::
 
-  pattern = '${?inst}.f(${?p1}, ${?p2})'
-  goal = '${?inst}.f1(${?p1}); ${?inst}.f2(${?p2})\n'
+  pattern: '${?inst}.f(${?p1}, ${?p2})'
+  goal: '${?inst}.f1(${?p1}); ${?inst}.f2(${?p2})\n'
   
-  mod = project.get_pycore().get_module('my.mod')
-  a_class_pyname = mod.get_attribute('A')
-  a_class_pyobject = a_pyname.get_object()
-  checks = {}
-  checks['?inst.type'] = a_class_pyobject
+  check1: '?inst.type' -> 'mod.A'
 
-We can perform the restructuring using `Restructure` class as shown
-above.  We will have::
+After performing we will have::
 
   class A(object):
 

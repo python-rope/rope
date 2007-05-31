@@ -137,6 +137,3 @@ Stories
 
 
 * Renaming and moving normal files/folders
-
-
-* Finding similar statements when extracting variable/method

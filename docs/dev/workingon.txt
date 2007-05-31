@@ -1,17 +1,13 @@
-Similar Statements In Extract
-=============================
+Small Stories
+=============
 
-- ``Suite.find_suite(line)``
-- ``find_visible(lines)``
-- Add `suitestest` to testsuite
-- Selecting where to insert the definition using scope block tree
+* Update restructuring docs in overview.txt to talk about the GUI
+* Handling strings in following lines in `patchedast`
 
-* Matching local variables with different names?
 * Split tuple assignment refactoring; ``a, b = 1, 2`` with ``a = 1\nb = 2``
   Or ``a, b = x`` with ``a = x[0]\nb = x[1]``
 * Extracting subexpressions; look at `extracttest` for more info
 * Create ... and implicit interfaces
-* Handling strings in following lines in `patchedast`
 * Add custom refactoring section to ``overview.txt`` file;
   Extract field refactoring
 * Document restructuring UI

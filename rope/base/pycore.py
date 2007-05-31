@@ -4,7 +4,7 @@ import sys
 import rope.base.oi.objectinfer
 import rope.base.oi.objectinfo
 import rope.base.project
-from rope.base import ast, taskhandle
+from rope.base import ast, taskhandle, codeanalyze
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.oi import dynamicoi
 from rope.base.pyobjects import PyModule, PyPackage, PyClass

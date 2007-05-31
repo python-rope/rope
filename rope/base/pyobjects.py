@@ -394,7 +394,8 @@ class PyModule(_PyModule):
 
     def _get_lines(self):
         if self._lines is None:
-            self._lines = rope.base.codeanalyze.SourceLinesAdapter(self.source_code)
+            self._lines = rope.base.codeanalyze.\
+                          SourceLinesAdapter(self.source_code)
         return self._lines
 
     lines = property(_get_lines, doc="return a `SourceLinesAdapter`")

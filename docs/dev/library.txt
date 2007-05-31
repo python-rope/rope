@@ -136,10 +136,13 @@ Where `destination` module/package is the destination for move refactoring.
 Other refactorings classes have a similar interface.
 
 
-A Sample Session
-================
+Examples
+========
 
-Here is a sample session.::
+Rename
+------
+
+Using rename refactoring::
 
   # Creating a project
   >>> from rope.base.project import Project
@@ -161,7 +164,7 @@ Here is a sample session.::
 
   # Performing rename refactoring on `mod1.a_var`
   >>> from rope.refactor.rename import Rename
-  >>> changes = Rename(pycore, mod1, 1).get_changes('new_var')
+  >>> changes = Rename(project, mod1, 1).get_changes('new_var')
   >>> project.do(changes)
   >>> mod1.read()
   u'new_var = 10\n'
@@ -179,4 +182,44 @@ Here is a sample session.::
   >>> mod1.remove()
   >>> project.close()
 
+
+Restructuring
+-------------
+
+The example for replacing occurrences of our `pow` function to ``**``
+operator (see the restructuring section of `overview.txt`_)::
+
+  # Set up the project
+  >>> from rope.base.project import Project
+  >>> project = Project('.')
+
+  >>> mod1 = project.root.create_file('mod1.py')
+  >>> mod1.write('def pow(x, y):\n    result = 1\n'
+  ...           '    for i in range(y):\n        result *= x\n'
+  ...           '    return result\n')
+  >>> mod2 = project.root.create_file('mod2.py')
+  >>> mod2.write('import mod1\nprint(mod1.pow(2, 3))\n')
+
+  >>> from rope.refactor import restructure
+
+  >>> pattern = '${?pow_func}(${?param1}, ${?param2})'
+  >>> goal = '${?param1} ** ${?param2}'
+
+  >>> checks = {}
+  >>> pymod1 = project.get_pycore().get_module('mod1')
+  >>> pow_pyname = pymod1.get_attribute('pow')
+  >>> checks['?pow_func'] = pow_pyname
+
+  >>> restructuring = restructure.Restructure(project, pattern, goal, checks)
+  >>> project.do(restructuring.get_changes())
+  >>> mod2.read()
+  u'import mod1\nprint(2 ** 3)\n'
+  
+  >>> mod1.remove()
+  >>> mod2.remove()
+  >>> project.close()
+
+
 See code documentation and test suites for more information.
+
+.. _overview.txt: ../user/overview.html

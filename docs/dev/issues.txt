@@ -51,7 +51,6 @@ Rope will drop Python 2.4 support in this release.
 Hot Topics
 ==========
 
-* `Enhanding Extract`_
 
 To Be Discussed
 ===============
@@ -62,129 +61,6 @@ To Be Discussed
 * `Python's implicit interfaces`_
 * Decorators and method refactorings
 * Should `rope.base` be thread safe? which parts?
-
-
-Enhancing Extract
-=================
-
-Now that we have implemented restructurings, we can add extract
-similar statements option to extract variable/method refactoring.  But
-there are issues to be handled first.
-
-
-Where To Search
----------------
-
-The inserted definition should appear before the occurrences.  This is
-not an issue for methods but for functions and variables.  We can
-*not* solve this by limited the region to search from the extracted
-expression till the end of its containing scope.::
-
-  if False:
-      print 1 + 1
-      print 1 + 1
-  print 1 + 1
-
-now if we extract the first appearance of ``1 + 1`` we'll have::
-
-  if False:
-      new_var = 1 + 1
-      print new_var
-      print new_var
-  print new_var
-
-But in the last line `new_var` cannot be resolved.  So we need to
-decide where to insert the definition of the extracted element based
-on where the uses are for example in::
-
-  if False:
-      print 1 + 1
-  else:
-      print 1 + 1
-
-extracting any of ``1 + 1`` should give::
-
-  new_var = 1 + 1
-  if False:
-      print new_var
-  else:
-      print new_var
-
-But note that this should happen only when the user askes to replace
-similar statements, too.
-
-In order to make this happen we need to construct a block tree of a
-scope.  We should choose the deepest node that is the root of a
-subtree containing all the blocks that hold occurrences of the
-extracted code.
-
-
-Suite Tree
-----------
-
-We can walk through the scope AST and look for `for`, `while`, `with`,
-`try`, `except`, `if`, `else`, and `elif` nodes.  We need to perform
-two operations: Calculating the suite a line is in and finding the
-common parent of two suites where a definition would be visible from
-both scopes.
-
-Multi-suite statements like ``try`` cause problems.  Using same causes
-problems since a name defined in ``except`` statement is not visible
-in another ``except`` statement.  Should we consider ``except``
-statements a separate suite?
-
-Using two separate suites cause problems when we want to find the
-common parent to insert the definition.  We insert the definition
-before the first suite so that all other suites under them can see it.
-But in situations like::
-
-  try:
-      pass
-  except E1:
-      pass
-  except E2:
-      pass
-
-we cannot insert the definition just before the first ``except`` and
-we should insert it before ``try`` line.
-
-One idea is to separate them but use the same start for them.  So we
-both solve the parent finding problem and the defintion location
-finding problem.  This requires `Suite` class to accept a children
-list and the start line number for its construction.
-
-
-Implementation Issues
----------------------
-
-* Making search pattern for fuctions and their parameters
-* An option to decide whether to extract similar pieces or not
-
-We should break extract refactoring into these pieces:
-
-* The definition
-
-* Occurrences
-
-  * Where to search?
-  * What pattern to look for?
-
-* Finding occurrence replacements
-
-  * The expressions matching the parameters
-
-* Where to insert the definition
-
-  * Construct scope block tree
-
-The problem is that these sub-tasks are not completely separate.
-
-* For finding the occurrences we need to know the definition for
-  constructing the search pattern.
-* We need to know the matched pattern for calculating the replacement.
-* We need to know the occurrences to find where to insert the
-  definition.
-
 
 
 Finding Similar Pieces

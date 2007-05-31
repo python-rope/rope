@@ -3,6 +3,9 @@
 ===========
 
 
+- Extracting similar expressions/statements : May 30, 2007
+
+
 - Adding checks in restructuring dialog : May 23, 2007
 
 
