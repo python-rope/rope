@@ -1,9 +1,7 @@
 Small Stories
 =============
 
-- Not relying on ``self`` name in extract
-- Handling `staticmethod` in extract method
-- Handling `classmethod` in extract method
+- Adding `PyScope.get_body_start()`
 
 * Using get_method_kind wherever possible
 * Using `LogicalLineFinder` in `_HoldingScopeFinder.find_scope_end()`?

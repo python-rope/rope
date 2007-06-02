@@ -73,6 +73,12 @@ class Scope(object):
     def get_start(self):
         return self.pyobject.get_ast().lineno
 
+    def get_body_start(self):
+        body = self.pyobject.get_ast().body
+        if body:
+            return body[0].lineno
+        return self.get_start()
+
     def get_end(self):
         global_scope = self._get_global_scope()
         return global_scope._get_scope_finder().find_scope_end(self)
@@ -223,43 +229,43 @@ class _HoldingScopeFinder(object):
         line_indents = line_indents
         if line_indents is None:
             line_indents = self.get_indents(lineno)
-        scopes = [module_scope]
         current_scope = module_scope
-        while current_scope is not None and \
-              (current_scope.get_kind() == 'Module' or
-               self._get_scope_indents(current_scope) <= line_indents):
-            scopes.append(current_scope)
+        new_scope = current_scope
+        while new_scope is not None and \
+              (new_scope.get_kind() == 'Module' or
+               self._get_scope_indents(new_scope) <= line_indents):
+            current_scope = new_scope
             if current_scope.get_start() == lineno and \
                current_scope.get_kind() != 'Module':
                 return current_scope
             new_scope = None
             for scope in current_scope.get_scopes():
                 if scope.get_start() <= lineno:
-                    new_scope = scope
+                    if self.find_scope_end(scope) >= lineno:
+                        new_scope = scope
                 else:
                     break
-            current_scope = new_scope
-        while len(scopes) > 1 and \
-              (line_indents <= self._get_scope_indents(scopes[-1]) and
-               not (line_indents == self._get_scope_indents(scopes[-1]) and
-                    lineno == scopes[-1].get_start())):
-            scopes.pop()
-        return scopes[-1]
+        return current_scope
+
+    def _is_empty_line(self, lineno):
+        line = self.lines.get_line(lineno)
+        return line.strip() == '' or line.lstrip().startswith('#')
 
     def _get_body_indents(self, scope):
-        return self.get_indents(scope.pyobject.get_ast().body[0].lineno)
+        return self.get_indents(scope.get_body_start())
 
     def get_holding_scope_for_offset(self, scope, offset):
-        return self.get_holding_scope(scope, self.lines.get_line_number(offset))
+        return self.get_holding_scope(
+            scope, self.lines.get_line_number(offset))
 
     def find_scope_end(self, scope):
         if not scope.parent:
             return self.lines.length()
         end = scope.pyobject.get_ast().body[-1].lineno
+        body_indents = self._get_body_indents(scope)
         for l in range(end + 1, self.lines.length() + 1):
-            if self.lines.get_line(l).strip() != '' and \
-               not self.lines.get_line(l).strip().startswith('#'):
-                if self.get_indents(l) <= self._get_scope_indents(scope):
+            if not self._is_empty_line(l):
+                if self.get_indents(l) < body_indents:
                     return end
                 else:
                     end = l

@@ -146,9 +146,10 @@ class _CodeCompletionCollector(object):
         start = range_finder.get_statement_start() - 1
         end = range_finder.get_block_end() - 1
         last_indents = self._get_line_indents(self.lines[start])
-        self.lines[start] = last_indents * ' ' + 'pass'
+        self.lines[start] = ' ' * last_indents + 'pass'
         for line in range(start + 1, end + 1):
-            self.lines[line] = '#' # + lines[line]
+            #self.lines[line] = '#' # + lines[line]
+            self.lines[line] = self.lines[start]
         self.lines.append('\n')
         self._fix_uncomplete_try_blocks()
 

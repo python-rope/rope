@@ -379,9 +379,9 @@ class ScopeNameFinder(object):
             return True
         return False
 
-    def _is_function_name_in_function_header(self, holding_scope, offset, lineno):
-        if lineno == holding_scope.get_start() and \
-           holding_scope.get_kind() == 'Function' and \
+    def _is_function_name_in_function_header(self, scope, offset, lineno):
+        if scope.get_start() <= lineno <= scope.get_body_start() and \
+           scope.get_kind() == 'Function' and \
            self.word_finder.is_a_class_or_function_name_in_header(offset):
             return True
         return False
