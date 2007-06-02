@@ -3,6 +3,9 @@
 ===========
 
 
+- Enhancing extract method on staticmethods/classmethods : June 2, 2007
+
+
 - Extracting similar expressions/statements : May 30, 2007
 
 

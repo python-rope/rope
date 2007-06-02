@@ -1,10 +1,12 @@
 Small Stories
 =============
 
-* Not relying on ``self`` name in extract
-* Handling `staticmethod` and `classmethod` in extract?
-* Using `LogicalLineFinder` in `_HoldingScopeFinder.find_scope_end()`?
+- Not relying on ``self`` name in extract
+- Handling `staticmethod` in extract method
+- Handling `classmethod` in extract method
 
+* Using get_method_kind wherever possible
+* Using `LogicalLineFinder` in `_HoldingScopeFinder.find_scope_end()`?
 * Handling strings in following lines in `patchedast`
 * Split tuple assignment refactoring; ``a, b = 1, 2`` with ``a = 1\nb = 2``
   Or ``a, b = x`` with ``a = x[0]\nb = x[1]``

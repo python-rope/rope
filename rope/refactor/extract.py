@@ -1,7 +1,7 @@
 import re
 
 import rope.base.pyobjects
-from rope.base import ast, codeanalyze
+from rope.base import ast, builtins, codeanalyze, evaluate
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.refactor import sourceutils, similarfinder, patchedast, suites
@@ -355,6 +355,8 @@ class _ExtractMethodParts(object):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         result = []
+        if self.info.method and self._get_method_kind() != 'normal':
+            result.append('@staticmethod\n')
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
         indents = sourceutils.get_indent(self.info.pycore)
@@ -366,28 +368,46 @@ class _ExtractMethodParts(object):
 
     def _get_function_signature(self, args):
         args = list(args)
-        if self.info.method:
+        prefix = ''
+        if self.info.method and self._get_method_kind() == 'normal':
             self_name = self._get_self_name()
             if self_name in args:
                 args.remove(self_name)
             args.insert(0, self_name)
-        return self.info.new_name + '(%s)' % self._get_comma_form(args)
+        return prefix + self.info.new_name + \
+               '(%s)' % self._get_comma_form(args)
+
+    def _get_method_kind(self):
+        """Get the type of a method
+
+        It returns 'normal', 'static', or 'class'
+
+        """
+        ast = self.info.scope.pyobject.get_ast()
+        for decorator in ast.decorators:
+            pyname = evaluate.get_statement_result(self.info.scope.parent,
+                                                   decorator)
+            if pyname == builtins.builtins['staticmethod']:
+                return 'static'
+            if pyname == builtins.builtins['classmethod']:
+                return 'class'
+        return 'normal'
 
     def _get_self_name(self):
         param_names = self.info.scope.pyobject.get_param_names()
         if param_names:
             return param_names[0]
-        else:
-            raise RefactoringError(
-                'Extracting from a non-method in class body is not supported yet')
 
     def _get_function_call(self, args):
         prefix = ''
         if self.info.method:
-            self_name = self._get_self_name()
-            if  self_name in args:
-                args.remove(self_name)
-            prefix = self_name + '.'
+            if self._get_method_kind() == 'normal':
+                self_name = self._get_self_name()
+                if  self_name in args:
+                    args.remove(self_name)
+                prefix = self_name + '.'
+            else:
+                prefix = self.info.scope.parent.pyobject.get_name() + '.'
         return prefix + '%s(%s)' % (self.info.new_name, self._get_comma_form(args))
 
     def _get_comma_form(self, names):
