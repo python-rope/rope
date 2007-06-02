@@ -157,6 +157,15 @@ class PyCoreScopesTest(unittest.TestCase):
         f_in_c = c_scope.get_scopes()[0]
         self.assertTrue(f_in_c.lookup('an_attr') is None)
 
+    def test_get_inner_scope_for_staticmethods(self):
+        scope = self.pycore.get_string_scope(
+            'class C(object):\n'
+            '    @staticmethod\n'
+            '    def a_func(self):\n        pass\n')
+        c_scope = scope.get_scopes()[0]
+        f_in_c = c_scope.get_scopes()[0]
+        self.assertEquals(f_in_c, scope.get_inner_scope_for_line(4))
+
 
 def suite():
     result = unittest.TestSuite()

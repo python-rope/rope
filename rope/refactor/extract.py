@@ -205,7 +205,7 @@ class _ExtractPerformer(object):
 
     def _find_matches(self, collector):
         if self.info.similar:
-            if self.info.method:
+            if self.info.method and not self.info.variable:
                 class_scope = self.info.scope.parent
                 start = self.info.lines.get_line_start(class_scope.get_start())
                 end = self.info.lines.get_line_end(class_scope.get_end())
@@ -274,7 +274,7 @@ class _ExceptionalConditionChecker(object):
 
     def base_conditions(self, info):
         if info.scope.get_kind() == 'Class':
-            raise RefactoringError('Can not extract methods in class body')
+            raise RefactoringError('Can not extract in class body')
         if info.region[1] > info.scope_region[1]:
             raise RefactoringError('Bad range selected for extract method')
         end_line = info.region_lines[1]
@@ -367,17 +367,27 @@ class _ExtractMethodParts(object):
     def _get_function_signature(self, args):
         args = list(args)
         if self.info.method:
-            if 'self' in args:
-                args.remove('self')
-            args.insert(0, 'self')
+            self_name = self._get_self_name()
+            if self_name in args:
+                args.remove(self_name)
+            args.insert(0, self_name)
         return self.info.new_name + '(%s)' % self._get_comma_form(args)
+
+    def _get_self_name(self):
+        param_names = self.info.scope.pyobject.get_param_names()
+        if param_names:
+            return param_names[0]
+        else:
+            raise RefactoringError(
+                'Extracting from a non-method in class body is not supported yet')
 
     def _get_function_call(self, args):
         prefix = ''
         if self.info.method:
-            if  'self' in args:
-                args.remove('self')
-            prefix = 'self.'
+            self_name = self._get_self_name()
+            if  self_name in args:
+                args.remove(self_name)
+            prefix = self_name + '.'
         return prefix + '%s(%s)' % (self.info.new_name, self._get_comma_form(args))
 
     def _get_comma_form(self, names):

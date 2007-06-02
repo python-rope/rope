@@ -178,6 +178,7 @@ Using rename refactoring::
   >>> mod2.read()
   u'import mod1\nprint mod1.a_var\n'
 
+  # Cleaning up
   >>> pkg.remove()
   >>> mod1.remove()
   >>> project.close()
@@ -189,7 +190,7 @@ Restructuring
 The example for replacing occurrences of our `pow` function to ``**``
 operator (see the restructuring section of `overview.txt`_)::
 
-  # Set up the project
+  # Setting up the project
   >>> from rope.base.project import Project
   >>> project = Project('.')
 
@@ -215,6 +216,7 @@ operator (see the restructuring section of `overview.txt`_)::
   >>> mod2.read()
   u'import mod1\nprint(2 ** 3)\n'
   
+  # Cleaning up
   >>> mod1.remove()
   >>> mod2.remove()
   >>> project.close()

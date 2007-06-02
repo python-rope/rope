@@ -597,6 +597,18 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'one = 1\nif True:\n    a = one\nelse:\n    b = one\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_variable_and_similar_statements_in_classes(self):
+        code = 'class AClass(object):\n\n' \
+               '    def func1(self):\n        a = 1\n' \
+               '    def func2(self):\n        b = 1\n'
+        start = code.index(' 1') + 1
+        refactored = self.do_extract_variable(code, start, start + 1,
+                                              'one', similar=True)
+        expected = 'class AClass(object):\n\n' \
+                   '    def func1(self):\n        one = 1\n        a = one\n' \
+                   '    def func2(self):\n        b = 1\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

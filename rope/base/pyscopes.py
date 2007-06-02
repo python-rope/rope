@@ -239,17 +239,15 @@ class _HoldingScopeFinder(object):
                 else:
                     break
             current_scope = new_scope
-        min_indents = line_indents
-        for l in range(scopes[-1].get_start() + 1, lineno):
-            if self.lines.get_line(l).strip() != '' and \
-               not self.lines.get_line(l).strip().startswith('#'):
-                min_indents = min(min_indents, self.get_indents(l))
         while len(scopes) > 1 and \
-              (min_indents <= self._get_scope_indents(scopes[-1]) and
-               not (min_indents == self._get_scope_indents(scopes[-1]) and
+              (line_indents <= self._get_scope_indents(scopes[-1]) and
+               not (line_indents == self._get_scope_indents(scopes[-1]) and
                     lineno == scopes[-1].get_start())):
             scopes.pop()
         return scopes[-1]
+
+    def _get_body_indents(self, scope):
+        return self.get_indents(scope.pyobject.get_ast().body[0].lineno)
 
     def get_holding_scope_for_offset(self, scope, offset):
         return self.get_holding_scope(scope, self.lines.get_line_number(offset))
@@ -258,7 +256,7 @@ class _HoldingScopeFinder(object):
         if not scope.parent:
             return self.lines.length()
         end = scope.pyobject.get_ast().body[-1].lineno
-        for l in range(scope.get_start() + 1, self.lines.length() + 1):
+        for l in range(end + 1, self.lines.length() + 1):
             if self.lines.get_line(l).strip() != '' and \
                not self.lines.get_line(l).strip().startswith('#'):
                 if self.get_indents(l) <= self._get_scope_indents(scope):

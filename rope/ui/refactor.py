@@ -212,7 +212,8 @@ class ExtractDialog(RefactoringDialog):
         self.new_name_entry.grid(row=0, column=1)
         self.new_name_entry.insert(0, 'extracted')
         self.new_name_entry.select_range(0, Tkinter.END)
-        self.similar = Tkinter.IntVar(0)
+        self.similar = Tkinter.IntVar()
+        self.similar.set(1)
         similar = Tkinter.Checkbutton(
             frame, text='Match similar expressions/statements',
             variable=self.similar)
