@@ -262,6 +262,7 @@ class _HoldingScopeFinder(object):
         if not scope.parent:
             return self.lines.length()
         end = scope.pyobject.get_ast().body[-1].lineno
+        # IDEA: Can we use LogicalLineFinder here?
         body_indents = self._get_body_indents(scope)
         for l in range(end + 1, self.lines.length() + 1):
             if not self._is_empty_line(l):

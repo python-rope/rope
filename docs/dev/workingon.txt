@@ -1,13 +1,9 @@
 Small Stories
 =============
 
-- Adding `PyScope.get_body_start()`
+- Not changing static and class methods when extracting normal methods
 
-* Using get_method_kind wherever possible
-* Using `LogicalLineFinder` in `_HoldingScopeFinder.find_scope_end()`?
 * Handling strings in following lines in `patchedast`
-* Split tuple assignment refactoring; ``a, b = 1, 2`` with ``a = 1\nb = 2``
-  Or ``a, b = x`` with ``a = x[0]\nb = x[1]``
 * Extracting subexpressions; look at `extracttest` for more info
 * Create ... and implicit interfaces
 * Add custom refactoring section to ``overview.txt`` file;

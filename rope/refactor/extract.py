@@ -204,18 +204,32 @@ class _ExtractPerformer(object):
         return extract_collector
 
     def _find_matches(self, collector):
+        regions = self._where_to_search()
+        finder = similarfinder.CheckingFinder(self.info.pymodule, {})
+        matches = []
+        for start, end in regions:
+            matches.extend((finder.get_matches(
+                            collector.body_pattern, start, end)))
+        collector.matches = matches
+
+    def _where_to_search(self):
         if self.info.similar:
             if self.info.method and not self.info.variable:
                 class_scope = self.info.scope.parent
-                start = self.info.lines.get_line_start(class_scope.get_start())
-                end = self.info.lines.get_line_end(class_scope.get_end())
+                regions = []
+                method_kind = _get_method_kind(self.info.scope)
+                for scope in class_scope.get_scopes():
+                    if method_kind == 'normal' and \
+                       _get_method_kind(scope) != 'normal':
+                        continue
+                    start = self.info.lines.get_line_start(scope.get_start())
+                    end = self.info.lines.get_line_end(scope.get_end())
+                    regions.append((start, end))
+                return regions
             else:
-                start, end = self.info.scope_region
+                return [self.info.scope_region]
         else:
-            start, end = self.info.region
-        finder = similarfinder.CheckingFinder(self.info.pymodule,
-                                              {}, start, end)
-        collector.matches = list(finder.get_matches(collector.body_pattern))
+            return [self.info.region]
 
     def _find_definition_location(self, collector):
         matched_lines = []
@@ -355,7 +369,7 @@ class _ExtractMethodParts(object):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         result = []
-        if self.info.method and self._get_method_kind() != 'normal':
+        if self.info.method and _get_method_kind(self.info.scope) != 'normal':
             result.append('@staticmethod\n')
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
@@ -369,29 +383,13 @@ class _ExtractMethodParts(object):
     def _get_function_signature(self, args):
         args = list(args)
         prefix = ''
-        if self.info.method and self._get_method_kind() == 'normal':
+        if self.info.method and _get_method_kind(self.info.scope) == 'normal':
             self_name = self._get_self_name()
             if self_name in args:
                 args.remove(self_name)
             args.insert(0, self_name)
         return prefix + self.info.new_name + \
                '(%s)' % self._get_comma_form(args)
-
-    def _get_method_kind(self):
-        """Get the type of a method
-
-        It returns 'normal', 'static', or 'class'
-
-        """
-        ast = self.info.scope.pyobject.get_ast()
-        for decorator in ast.decorators:
-            pyname = evaluate.get_statement_result(self.info.scope.parent,
-                                                   decorator)
-            if pyname == builtins.builtins['staticmethod']:
-                return 'static'
-            if pyname == builtins.builtins['classmethod']:
-                return 'class'
-        return 'normal'
 
     def _get_self_name(self):
         param_names = self.info.scope.pyobject.get_param_names()
@@ -401,7 +399,7 @@ class _ExtractMethodParts(object):
     def _get_function_call(self, args):
         prefix = ''
         if self.info.method:
-            if self._get_method_kind() == 'normal':
+            if _get_method_kind(self.info.scope) == 'normal':
                 self_name = self._get_self_name()
                 if  self_name in args:
                     args.remove(self_name)
@@ -669,6 +667,21 @@ class _UnmatchedBreakOrContinueFinder(object):
         ast.walk(node, visitor)
         return visitor.error
 
+def _get_method_kind(scope):
+    """Get the type of a method
+
+    It returns 'normal', 'static', or 'class'
+
+    """
+    ast = scope.pyobject.get_ast()
+    for decorator in ast.decorators:
+        pyname = evaluate.get_statement_result(scope.parent,
+                                               decorator)
+        if pyname == builtins.builtins['staticmethod']:
+            return 'static'
+        if pyname == builtins.builtins['classmethod']:
+            return 'class'
+    return 'normal'
 
 def _parse_text(body):
     if isinstance(body, unicode):

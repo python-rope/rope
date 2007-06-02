@@ -620,6 +620,19 @@ class ExtractMethodTest(unittest.TestCase):
                    '    @staticmethod\n    def one():\n        return 1\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_normal_method_with_staticmethods(self):
+        code = 'class AClass(object):\n\n' \
+               '    @staticmethod\n    def func1():\n        b = 1\n' \
+               '    def func2(self):\n        b = 1\n'
+        start = code.rindex(' 1') + 1
+        refactored = self.do_extract_method(code, start, start + 1,
+                                            'one', similar=True)
+        expected = 'class AClass(object):\n\n' \
+                   '    @staticmethod\n    def func1():\n        b = 1\n' \
+                   '    def func2(self):\n        b = self.one()\n\n' \
+                   '    def one(self):\n        return 1\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

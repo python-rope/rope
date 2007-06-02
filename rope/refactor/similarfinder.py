@@ -8,19 +8,17 @@ from rope.refactor import patchedast, sourceutils, occurrences
 class SimilarFinder(object):
     """A class for finding similar expressions and statements"""
 
-    def __init__(self, source, start=0, end=None):
+    def __init__(self, source):
         node = ast.parse(source)
-        self._init_using_ast(node, source, start, end)
+        self._init_using_ast(node, source)
 
-    def _init_using_ast(self, node, source, start, end):
-        self.start = start
-        self.end = len(source)
-        if end is not None:
-            self.end = end
+    def _init_using_ast(self, node, source):
+        self.source = source
+        self._matched_asts = {}
         if not hasattr(node, 'sorted_children'):
             self.ast = patchedast.patch_ast(node, source)
 
-    def get_matches(self, code):
+    def get_matches(self, code, start=0, end=None):
         """Search for `code` in source and return a list of `Match`\es
 
         `code` can contain wildcards.  ``${name}`` matches normal
@@ -29,15 +27,22 @@ class SimilarFinder(object):
         You can use `Match.get_ast()` for getting the node that has
         matched a given pattern.
         """
-        wanted = self._create_pattern(code)
-        matches = _ASTMatcher(self.ast, wanted).find_matches()
-        for match in matches:
-            start, end = match.get_region()
-            if self.start <= start and end <= self.end:
+        if end is None:
+            end = len(self.source)
+        for match in self._get_matched_asts(code):
+            match_start, match_end = match.get_region()
+            if start <= match_start and match_end <= end:
                 yield match
 
-    def get_match_regions(self, code):
-        for match in self.get_matches(code):
+    def _get_matched_asts(self, code):
+        if code not in self._matched_asts:
+            wanted = self._create_pattern(code)
+            matches = _ASTMatcher(self.ast, wanted).find_matches()
+            self._matched_asts[code] = matches
+        return self._matched_asts[code]
+
+    def get_match_regions(self, code, start=0, end=None):
+        for match in self.get_matches(code, start=start, end=end):
             yield match.get_region()
 
     def _create_pattern(self, expression):
@@ -86,14 +91,17 @@ class CheckingFinder(SimilarFinder):
 
     """
 
-    def __init__(self, pymodule, checks, start=0, end=None):
+    def __init__(self, pymodule, checks):
         super(CheckingFinder, self)._init_using_ast(
-            pymodule.get_ast(), pymodule.source_code, start, end)
+            pymodule.get_ast(), pymodule.source_code)
         self.pymodule = pymodule
         self.checks = checks
 
-    def get_matches(self, code):
-        for match in SimilarFinder.get_matches(self, code):
+    def get_matches(self, code, start=0, end=None):
+        if end is None:
+            end = len(self.source)
+        for match in SimilarFinder.get_matches(self, code,
+                                               start=start, end=end):
             matched = True
             for check, expected in self.checks.items():
                 name, kind = self._split_name(check)

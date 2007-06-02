@@ -111,6 +111,8 @@ class TextualToPyObject(object):
 
     def transform(self, textual):
         """Transform an object from textual form to `PyObject`"""
+        if textual is None:
+            return None
         type = textual[0]
         try:
             method = getattr(self, type + '_to_pyobject')

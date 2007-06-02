@@ -91,6 +91,9 @@ Stories
 * Extract class
 
 
+* Split tuple assignment refactoring
+
+
 * Supporting templates in text modes
 
 
@@ -133,7 +136,7 @@ Stories
 * Inferring the object, list comprehensions or generator expressions hold
 
 
-> Public Release 0.6m2 : June 3, 2007
-
-
 * Renaming and moving normal files/folders
+
+
+> Public Release 0.6m2 : June 3, 2007

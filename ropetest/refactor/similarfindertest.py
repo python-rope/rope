@@ -64,8 +64,8 @@ class SimilarFinderTest(unittest.TestCase):
 
     def test_restricting_the_region_to_search(self):
         source = '1\n\n1\n'
-        finder = similarfinder.SimilarFinder(source, start=2)
-        result = list(finder.get_match_regions('1'))
+        finder = similarfinder.SimilarFinder(source)
+        result = list(finder.get_match_regions('1', start=2))
         start = source.rfind('1')
         self.assertEquals([(start, start + 1)], result)
 
