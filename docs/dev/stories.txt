@@ -13,7 +13,6 @@ the `IDE and UI stories`_ are extremely welcome. Have a look at
 Base Stories
 ============
 
-* Updating similarly named variables and methods in rename refactoring
 * Extract superclass
 * Collapse hierarchy
 * Python C extensions
@@ -109,9 +108,6 @@ Stories
 * Moving `staticmethod`\s
 
 
-* Lambdas as functions; consider their parameters
-
-
 * Changing method to static method refactoring
 
 
@@ -133,10 +129,13 @@ Stories
 * Removing files/folders
 
 
-* Inferring the object, list comprehensions or generator expressions hold
-
-
 * Renaming and moving normal files/folders
 
 
-> Public Release 0.6m2 : June 3, 2007
+* Lambdas as functions; consider their parameters
+
+
+> Public Release 0.6m3 : June 17, 2007
+
+
+* Inferring the object, list comprehensions or generator expressions hold

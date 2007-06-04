@@ -196,8 +196,8 @@ operator (see the restructuring section of `overview.txt`_)::
 
   >>> mod1 = project.root.create_file('mod1.py')
   >>> mod1.write('def pow(x, y):\n    result = 1\n'
-  ...           '    for i in range(y):\n        result *= x\n'
-  ...           '    return result\n')
+  ...            '    for i in range(y):\n        result *= x\n'
+  ...            '    return result\n')
   >>> mod2 = project.root.create_file('mod2.py')
   >>> mod2.write('import mod1\nprint(mod1.pow(2, 3))\n')
 

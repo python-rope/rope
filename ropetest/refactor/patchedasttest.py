@@ -521,6 +521,18 @@ class PatchedASTTest(unittest.TestCase):
             'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
                               'Call', ' ', 'if', ' ', 'Name'])
 
+    def test_list_comp_node_with_multiple_comprehensions(self):
+        source = '[i for i in range(1) for j in range(1) if True]\n'
+        ast = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('ListComp', 0, len(source) - 1)
+        checker.check_children(
+            'ListComp', ['[', '', 'Name', ' ', 'comprehension',
+                         ' ', 'comprehension', '', ']'])
+        checker.check_children(
+            'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
+                              'Call', ' ', 'if', ' ', 'Name'])
+
     def test_simple_module_node(self):
         source = 'pass\n'
         ast = patchedast.get_patched_ast(source, True)

@@ -63,87 +63,6 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
-Finding Similar Pieces
-======================
-
-Finally rope decided to start this story.  There are three main uses
-for this feature.  One is finding similar code when extracting method/
-variable.  The second is supporting restructurings.  And the third is
-that it can be used to ease implementing some refactorings.
-
-The main problem for implementing this story is that we need to work
-on python ASTs and we need more information than what is provided by
-`compiler` module.  For instance we need to find the start and end
-offsets of nodes.  `rope.refactor.patchedast` has been implemented to
-monkey patch ast nodes.
-
-We should also decide about the way we define the pattern to search
-for.  For now we can assume matching exactly what is passed but in
-future that will probably change.  We probably need to insert pyobject
-information in the searching pattern, too.
-
-
-AST Patterns
-------------
-
-We need to put wild-cards into our pattern:
-
-* ``${a}``: Match the name `a`
-* ``${?a}``: Match any expression
-
-What `similarfinder` does is that it matches these and holds the
-matched AST for future use.  This allows to add a layer on top of it
-that checks types, too.  For example we can add constraints as it is
-shown in the next section.
-
-Suggestions and issues:
-
-* Where can wildcards appear?
-
-  Wildcards can appear only where `Name` ast node can appear; that
-  is start of expressions.  For instance ``inst.${attr}`` is not
-  accepted.
-
-
-* Match when unsure
-
-  This is different from something like rename refactoring.  Consider
-  a situation like ``${a_var}.a_func()``.  In this example, matching
-  when unsure does not work::
-
-    def f(arg):
-        arg.a_func()
-
-  We expect ``arg.a_func()`` to match, but it does not since `args` is
-  a `Parameter` and `a_var` is a `PyName`.  So we know that they are
-  not the same pyname.  Note that when renaming we don't compare `arg`
-  to `arg` but instead we compare `a_func` that yields what we want.
-
-
-A Look Into The Future
-----------------------
-
-This is no longer the future.  It can be done right now using
-`rope.refactor.restructure` module.  But the current restructuring UI
-dialog does not support checking names.
-
-Restructuring::
-
-  # ``a = b`` to ``a.set(b)`` where the type of `a` is `type_pyclass`
-  pattern = '${?a} = ${?b}'
-  goal = '${?a}.set(${?b})'
-  checks = {'?a.type': type_pyclass}
-
-  # ``a.set(b)`` to ``a = b`` where the type of `a` is `type_pyclass`
-  pattern = '${?a}.set(${?b})'
-  goal = '${?a} = ${?b}'
-  checks = {'?a.type': type_pyclass}
-
-  # Rematching might be useful, too
-  pattern = '${?x} = [${?a}, ${?a}]'
-  goal = '${?x} = [${?a}] * 2'
-
-
 Memory Management
 =================
 
@@ -326,13 +245,14 @@ What Rope Assumes...
 ====================
 
 In order to simplify problems a bit, rope makes some assumptions about
-the source code.  In futures some of this restrictions might be removed.
+the source code.  In futures some of this restrictions might be
+removed.
 
-* All files that end with ``.py`` are considered to be python files and
-  all others not.
+* All files that end with ``.py`` are considered to be python files
+  and all others not.
 * Either all files that are not ignored should be under version
   control or none.
-* All ``*.txt`` files are considered in reST formats.
+* All ``*.txt`` files are considered to be ReST.
 * XXX
 
 

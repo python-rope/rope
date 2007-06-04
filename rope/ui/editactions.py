@@ -241,7 +241,7 @@ actions.append(SimpleAction('goto_last_edit_location', goto_last_edit_location, 
 actions.append(SimpleAction('swap_mark_and_insert', swap_mark_and_insert, 'C-x C-x',
                             None, ['all']))
 actions.append(SimpleAction('fill_paragraph', FillParagraph(), 'M-q',
-                            MenuAddress(['Edit', 'Fill Paragraph']), ['rest', 'other']))
+                            MenuAddress(['Edit', 'Fill Paragraph']), ['all']))
 
 actions.append(SimpleAction('undo', undo_editing, 'C-x u',
                             MenuAddress(['Edit', 'Undo Editing'], 'u', 1), ['all']))

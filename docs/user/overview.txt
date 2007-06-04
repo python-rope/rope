@@ -424,6 +424,52 @@ After performing extract method we'll have::
       return b, c
 
 
+Extracting Similar Expressions/Statements
+-----------------------------------------
+
+When performing extract method or local variable refactorings you can
+tell rope to extract similar expressions/statements.  For instance
+in::
+
+  if True:
+      x = 2 * 3
+  else:
+      x = 2 * 3 + 1
+
+Extracting ``2 * 3`` will result in::
+
+  six = 2 * 3
+  if True:
+      x = six
+  else:
+      x = six + 1
+
+
+Extract Method In Staticmethods/Classmethods
+--------------------------------------------
+
+The extract method refactoring has been enhanced to handle static and
+class methods better.  For instance in::
+
+  class A(object):
+
+      @staticmethod
+      def f(a):
+          b = a * 2
+
+if you extract ``a * 2`` as a method you'll get::
+
+  class A(object):
+
+      @staticmethod
+      def f(a):
+          b = A.twice(a)
+
+      @staticmethod
+      def twice(a):
+          return a * 2
+
+
 Change Method Signature
 -----------------------
 
@@ -704,6 +750,47 @@ After performing we will have::
 
   a = A()
   a.f1(1); a.f2(2)
+
+Example 3
+---------
+
+If you like to replace every occurrences of ``x.set(y)`` with ``x =
+y`` when x is an instance of `mod.A` in::
+
+  from mod import A
+
+  a = A()
+  b = A()
+  a.set(b)
+
+We can perform a restructuring with these information::
+
+  pattern = '${?x}.set(${?y})'
+  goal = '${?x} = ${?y}'
+
+  check: '?x.type' -> 'mod.A'
+
+The names in checks as you see should be the name of a wild card
+pattern like ``?x`` or ``?y`` in the above example.  They can have a
+``.type`` or ``.object`` prefix if you want to match the type of the
+object or the type a name holds instead of the reference itself.  The
+values in checks are the representation of python references.  They
+should start from the module that contains the element.
+
+After performing the above restructuring we'll have::
+
+  from mod import A
+
+  a = A()
+  b = A()
+  a = b
+
+Note that ``mod.py`` contains something like::
+
+  class A(object):
+
+      def set(self, arg):
+          pass
 
 Issues
 ''''''

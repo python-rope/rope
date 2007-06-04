@@ -1,13 +1,15 @@
 Small Stories
 =============
 
+- Updating docs in ``rope.base.oi.__init__.py``
+
 * Handling strings in following lines in `patchedast`
 * Extracting subexpressions; look at `extracttest` for more info
 * Create ... and implicit interfaces
 * Add custom refactoring section to ``overview.txt`` file;
   Extract field refactoring
 * Document restructuring UI
-* Handle tuple parameters
+* Handle tuple parameters?
 * The ability to limit the files to restructure
 * Only scanning selected region for matches
 * Consider filling python source
