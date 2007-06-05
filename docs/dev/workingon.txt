@@ -1,7 +1,7 @@
 Small Stories
 =============
 
-- Updating docs in ``rope.base.oi.__init__.py``
+- Handling `__call__` in staticoi
 
 * Handling strings in following lines in `patchedast`
 * Extracting subexpressions; look at `extracttest` for more info

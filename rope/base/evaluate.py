@@ -260,7 +260,8 @@ def create_arguments(primary, pyfunction, call_node, scope):
     args.extend(call_node.keywords)
     called = call_node.func
     # XXX: Handle constructors
-    if _is_method_call(primary, pyfunction):
+    if _is_method_call(primary, pyfunction) and \
+       isinstance(called, ast.Attribute):
         args.insert(0, called.value)
     return Arguments(args, scope)
 

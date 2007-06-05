@@ -63,6 +63,7 @@ def indent_lines(source_code, amount):
 
 
 def fix_indentation(code, new_indents):
+    """Change the indentation of `code` to `new_indents`"""
     min_indents = find_minimum_indents(code)
     return indent_lines(code, new_indents - min_indents)
 

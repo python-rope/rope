@@ -98,9 +98,6 @@ class SOIVisitor(object):
         if pyname is None:
             return
         pyfunction = pyname.get_object()
-        if not isinstance(pyfunction, pyobjects.PyClass) and \
-           '__call__' in pyfunction.get_attributes():
-            pyfunction = pyfunction.get_attribute('__call__')
         if isinstance(pyfunction, pyobjects.AbstractFunction):
             args = evaluate.create_arguments(primary, pyfunction,
                                              node, self.scope)
@@ -109,12 +106,18 @@ class SOIVisitor(object):
             if '__init__' in pyfunction.get_attributes():
                 pyfunction = pyfunction.get_attribute('__init__').get_object()
             pyname = pynames.UnboundName(pyobjects.PyObject(pyclass))
-            base_args = evaluate.create_arguments(primary, pyfunction,
-                                                  node, self.scope)
-            args = evaluate.MixedArguments(pyname, base_args, self.scope)
+            args = self._args_with_self(primary, pyname, pyfunction, node)
+        elif '__call__' in pyfunction.get_attributes():
+            pyfunction = pyfunction.get_attribute('__call__').get_object()
+            args = self._args_with_self(primary, pyname, pyfunction, node)
         else:
             return
         self._call(pyfunction, args)
+
+    def _args_with_self(self, primary, self_pyname, pyfunction, node):
+        base_args = evaluate.create_arguments(primary, pyfunction,
+                                              node, self.scope)
+        return evaluate.MixedArguments(self_pyname, base_args, self.scope)
 
     def _call(self, pyfunction, args):
         if isinstance(pyfunction, pyobjects.PyFunction):

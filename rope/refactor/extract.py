@@ -449,8 +449,7 @@ class _ExtractMethodParts(object):
         if self.info.one_line:
             return 'return ' + _join_lines(self.info.extracted)
         extracted_body = self.info.extracted
-        unindented_body = sourceutils.indent_lines(
-            extracted_body, -sourceutils.find_minimum_indents(extracted_body))
+        unindented_body = sourceutils.fix_indentation(extracted_body, 0)
         if returns:
             unindented_body += '\nreturn %s' % self._get_comma_form(returns)
         return unindented_body
@@ -567,8 +566,7 @@ class _VariableReadsAndWritesFinder(object):
     def find_reads_and_writes(code):
         if code.strip() == '':
             return set(), set()
-        min_indents = sourceutils.find_minimum_indents(code)
-        indented_code = sourceutils.indent_lines(code, -min_indents)
+        indented_code = sourceutils.fix_indentation(code, 0)
         if isinstance(indented_body, unicode):
             indented_body = indented_body.encode('utf-8')
         node = _parse_text(indented_code)
@@ -612,8 +610,7 @@ class _ReturnOrYieldFinder(object):
     def does_it_return(code):
         if code.strip() == '':
             return False
-        min_indents = sourceutils.find_minimum_indents(code)
-        indented_code = sourceutils.indent_lines(code, -min_indents)
+        indented_code = sourceutils.fix_indentation(code, 0)
         node = _parse_text(indented_code)
         visitor = _ReturnOrYieldFinder()
         ast.walk(node, visitor)
@@ -660,8 +657,7 @@ class _UnmatchedBreakOrContinueFinder(object):
     def has_errors(code):
         if code.strip() == '':
             return False
-        min_indents = sourceutils.find_minimum_indents(code)
-        indented_code = sourceutils.indent_lines(code, -min_indents)
+        indented_code = sourceutils.fix_indentation(code, 0)
         node = _parse_text(indented_code)
         visitor = _UnmatchedBreakOrContinueFinder()
         ast.walk(node, visitor)

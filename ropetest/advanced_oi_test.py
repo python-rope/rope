@@ -637,6 +637,17 @@ class NewStaticOITest(unittest.TestCase):
         arg2 = f_scope.get_name('arg2').get_object()
         self.assertEquals(c1_class, arg2.get_type())
 
+    def test_call_function_and_parameters(self):
+        code = 'class A(object):\n    def __call__(self, p):\n        pass\n' \
+               'A()("")\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        scope = self.pycore.resource_to_pyobject(self.mod).get_scope()
+        p_object = scope.get_scopes()[0].get_scopes()[0].\
+                   get_name('p').get_object()
+        self.assertTrue(isinstance(p_object.get_type(),
+                                   rope.base.builtins.Str))
+
 
 def suite():
     result = unittest.TestSuite()
