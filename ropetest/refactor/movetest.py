@@ -380,6 +380,22 @@ class MoveRefactoringTest(unittest.TestCase):
             'class B(object):\n\n    def new_method(self):\n        return 1\n',
             self.mod2.read())
 
+    def test_moving_methods_and_source_class_with_parameters(self):
+        self.mod2.write('class B(object):\n    pass\n')
+        code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
+               '    def a_method(self, p):\n        return p\n'
+        self.mod1.write(code)
+        mover = move.create_move(self.project, self.mod1,
+                                 code.index('a_method'))
+        mover.get_changes('attr', 'new_method').do()
+        self.assertEquals(
+            'import mod2\n\nclass A(object):\n    attr = mod2.B()\n'
+            '    def a_method(self, p):\n        return self.attr.new_method(p)\n',
+            self.mod1.read())
+        self.assertEquals(
+            'class B(object):\n\n    def new_method(self, p):\n        return p\n',
+            self.mod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()

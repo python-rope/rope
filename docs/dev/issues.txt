@@ -56,10 +56,8 @@ To Be Discussed
 ===============
 
 * `Memory management`_
-* `Better occurrence finding`_
 * `Getting ready for Python 3.0`_
 * `Python's implicit interfaces`_
-* Decorators and method refactorings
 * Should `rope.base` be thread safe? which parts?
 
 
@@ -75,56 +73,6 @@ consumes:
 
 We should measure the amount of memory each of them uses to make
 decisions.
-
-
-Better SOI
-==========
-
-Returned Object SOI
--------------------
-
-Since we're passed the objects parameters hold, we can perform a
-better returned object SOI.  We can do that by giving parameter
-objects passed and infer the object of local names once more.
-
-Actually we have to perform two things.  We have to ask scope
-`PyName`\s to forget their concluded data and change the parameters to
-return what we want.
-
-So to make it we have:
-
-* Used `PyFunction._set_parameter_pyobjects()` to set the type
-  of parameters
-* Added `FunctionScope.invalidate_data()` to invalidate the
-  pyobjects `AssignedName`\s and `EvaluatedName`\s hold.
-
-And after implementing these we thought of treating function scopes
-specially, since the names there cannot be accessed from outside.
-
-
-Function Scopes
----------------
-
-Another issue for implementing this feature is that function scope
-variable types are dependent on the type of the parameters and should
-change.  This issue seem to have some relations with implicit
-interfaces.
-
-These two problems(in the above section) points us to treating
-function scopes specially.  Since function names are not accessible
-from outside that function, we can perform all calculations in a
-temporary place.
-
-The problem gets worse when there are defined objects in a function
-scope.  Maybe we can change pynames to support function scopes.
-
-
-Enhancing `ObjectInfoManager`
-=============================
-
-* Changing `callinfo` to match similar args
-* Returning a `Generator` for unknown generator functions?
-* Validating call infos
 
 
 Better Concluded Data
@@ -151,63 +99,6 @@ Note that concluded attributes are:
 * PyClass: superclass attributes
 * PyModule: star imports
 * PyPackage: ``__init__.py`` attributes
-
-
-Marking Errors And Warnings In GUI
-==================================
-
-* Marking the occurrence in the buffer
-* When to analyze the code?
-
-  * When the user asks
-  * When saving
-
-* Saving error/warning information
-* ``C-,``, ``C-.``
-* ``C-c a p``, ``C-c a n``
-
-
-Better Occurrence Finding
-=========================
-
-The current implementation for finding occurrences of a `PyName` is to
-test every textual occurrence of that name has the same `PyName` or
-not.  This approach does not work when a name is repeated many times
-in the source.  For example renaming `self`\s are very time consuming.
-
-Maybe we can use one of these solutions:
-
-* Checking pyname equality only once for each scope
-
-  This way we check each name only once for each scope.  But this is
-  not applicable for attributes.  What's more `PyName`\s seem to
-  cache their types already.
-
-* Limiting the places to search for a name
-
-  For example for renaming a parameter we search the body of that
-  function and the keyword arguments passed to functions.  As another
-  example function parameters never appear as attributes and class
-  variables and methods never are referenced directly except in class
-  body.  The search locations include:
-
-  * module bodies
-  * class bodies
-  * function bodies
-
-  Access methods include:
-
-  * function call keyword
-  * normal name access
-  * attribute access
-
-* Excluding unimported modules
-
-  This does not seem to be a good solution.  One reason is that the
-  imports might be indirect.  So we have to put a long time for
-  creating import trees.
-
-Or maybe we can use a strategy object for searching.
 
 
 Getting Ready For Python 3.0

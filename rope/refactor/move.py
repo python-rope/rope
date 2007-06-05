@@ -7,7 +7,7 @@ based on inputs.
 from rope.base import pyobjects, codeanalyze, exceptions, pynames, taskhandle
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import (importutils, rename, occurrences, sourceutils,
-                           functionutils, inline)
+                           functionutils, inline, extract)
 
 
 def create_move(project, resource, offset=None):
@@ -51,6 +51,9 @@ class MoveMethod(object):
         pyname = codeanalyze.get_pyname_at(project.pycore, resource, offset)
         self.method_name = codeanalyze.get_name_at(resource, offset)
         self.pyfunction = pyname.get_object()
+        if extract._get_method_kind(self.pyfunction.get_scope()) != 'normal':
+            raise exceptions.RefactoringError('Only normal methods'
+                                              ' can be moved.')
 
     def get_changes(self, dest_attr, new_name,
                     task_handle=taskhandle.NullTaskHandle()):
@@ -172,7 +175,9 @@ class MoveMethod(object):
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
         others = definition_info.arguments_to_string(1)
         if others:
-            result += ', ' + others
+            if result:
+                result += ', '
+            result += others
         return result
 
     def _is_host_used(self):
