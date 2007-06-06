@@ -222,6 +222,43 @@ class ObjectInferTest(unittest.TestCase):
         a_var = mod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
+    def test_basic_list_comprehensions(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    pass\n'
+            'l = [C() for i in range(1)]\na_var = l[0]\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_basic_generator_expressions(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    pass\n'
+            'l = (C() for i in range(1))\na_var = list(l)[0]\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_list_comprehensions_and_loop_var(self):
+        mod = self.pycore.get_string_module(
+            'class C(object):\n    pass\n'
+            'c_objects = [C(), C()]\n'
+            'l = [c for c in c_objects]\na_var = l[0]\n')
+        c_class = mod.get_attribute('C').get_object()
+        a_var = mod.get_attribute('a_var').get_object()
+        self.assertEquals(c_class, a_var.get_type())
+
+    def test_list_comprehensions_and_multiple_loop_var(self):
+        mod = self.pycore.get_string_module(
+            'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+            'l = [(c1, c2) for c1 in [C1()] for c2 in [C2()]]\n'
+            'a, b = l[0]\n')
+        c1_class = mod.get_attribute('C1').get_object()
+        c2_class = mod.get_attribute('C2').get_object()
+        a_var = mod.get_attribute('a').get_object()
+        b_var = mod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
 
 def suite():
     result = unittest.TestSuite()

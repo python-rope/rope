@@ -495,7 +495,7 @@ class _AssignVisitor(object):
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
-        names = _NodeNameCollector.get_assigned_names(node)
+        names = _get_name_levels(node)
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
@@ -510,49 +510,6 @@ class _AssignVisitor(object):
 
     def _Slice(self, node):
         pass
-
-
-class _NodeNameCollector(object):
-
-    def __init__(self, levels=None):
-        self.names = []
-        self.levels = levels
-        self.index = 0
-
-    def _add_node(self, node):
-        new_levels = []
-        if self.levels is not None:
-            new_levels = list(self.levels)
-            new_levels.append(self.index)
-        self.index += 1
-        self._added(node, new_levels)
-
-    def _added(self, node, levels):
-        if hasattr(node, 'id'):
-            self.names.append((node.id, levels))
-
-    def _Name(self, node):
-        self._add_node(node)
-
-    def _Tuple(self, node):
-        new_levels = []
-        if self.levels is not None:
-            new_levels = list(self.levels)
-            new_levels.append(self.index)
-        self.index += 1
-        visitor = _NodeNameCollector(new_levels)
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
-        self.names.extend(visitor.names)
-
-    def _Subscript(self, node):
-        self._add_node(node)
-
-    @staticmethod
-    def get_assigned_names(node):
-        visitor = _NodeNameCollector()
-        ast.walk(node, visitor)
-        return visitor.names
 
 
 class _ScopeVisitor(object):
@@ -579,26 +536,20 @@ class _ScopeVisitor(object):
     def _Assign(self, node):
         ast.walk(node, _AssignVisitor(self))
 
-    def _assign_evaluated_object(self, assigned_vars, assigned,
-                                 evaluation, lineno):
-        names = _NodeNameCollector.get_assigned_names(assigned_vars)
-        for name, levels in names:
-            assignment = pynames._Assigned(assigned, levels)
-            self.names[name] = pynames.EvaluatedName(
-                assignment=assignment, module=self.get_module(),
-                lineno=lineno, evaluation=evaluation)
-
     def _For(self, node):
-        self._assign_evaluated_object(
-            node.target, node.iter, '.__iter__().next()', node.lineno)
+        names = _get_evaluated_names(
+            node.target, node.iter, evaluation='.__iter__().next()',
+            lineno=node.lineno, module=self.get_module())
+        self.names.update(names)
         for child in node.body:
             ast.walk(child, self)
 
     def _With(self, node):
         # ???: What if there are no optional vars?
-        self._assign_evaluated_object(
-            node.optional_vars, node.context_expr,
-            '.__enter__()', node.lineno)
+        names = _get_evaluated_names(
+            node.optional_vars, node.context_expr, evaluation='.__enter__()',
+            lineno=node.lineno, module=self.get_module())
+        self.names.update(names)
         for child in node.body:
             ast.walk(child, self)
 
@@ -641,6 +592,20 @@ class _ScopeVisitor(object):
                 except AttributeNotFoundError:
                     pyname = pynames.AssignedName(node.lineno)
             self.names[name] = pyname
+
+
+def _get_evaluated_names(targets, assigned, **kwds):
+    """Get `pynames.EvaluatedName`\s
+
+    `kwds` is passed to `pynames.EvaluatedName` and should hold
+    things like lineno, evaluation, and module.
+    """
+    result = {}
+    names = _get_name_levels(targets)
+    for name, levels in names:
+        assignment = pynames._Assigned(assigned, levels)
+        result[name] = pynames.EvaluatedName(assignment=assignment, **kwds)
+    return result
 
 
 class _GlobalVisitor(_ScopeVisitor):
@@ -725,3 +690,46 @@ class _ClassInitVisitor(_AssignVisitor):
 
 class IsBeingInferredError(RopeError):
     pass
+
+
+class _NodeNameCollector(object):
+
+    def __init__(self, levels=None):
+        self.names = []
+        self.levels = levels
+        self.index = 0
+
+    def _add_node(self, node):
+        new_levels = []
+        if self.levels is not None:
+            new_levels = list(self.levels)
+            new_levels.append(self.index)
+        self.index += 1
+        self._added(node, new_levels)
+
+    def _added(self, node, levels):
+        if hasattr(node, 'id'):
+            self.names.append((node.id, levels))
+
+    def _Name(self, node):
+        self._add_node(node)
+
+    def _Tuple(self, node):
+        new_levels = []
+        if self.levels is not None:
+            new_levels = list(self.levels)
+            new_levels.append(self.index)
+        self.index += 1
+        visitor = _NodeNameCollector(new_levels)
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, visitor)
+        self.names.extend(visitor.names)
+
+    def _Subscript(self, node):
+        self._add_node(node)
+
+
+def _get_name_levels(node):
+    visitor = _NodeNameCollector()
+    ast.walk(node, visitor)
+    return visitor.names

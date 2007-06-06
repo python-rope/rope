@@ -57,7 +57,6 @@ To Be Discussed
 
 * `Memory management`_
 * `Getting ready for Python 3.0`_
-* `Python's implicit interfaces`_
 * Should `rope.base` be thread safe? which parts?
 
 
@@ -166,98 +165,6 @@ only care about their types and the objects that their individual
 instance is important to us.  Right now the latter group contains
 only functions, classes, modules, lists, dicts and sets but this
 list will be probably extended.
-
-
-Python's Implicit Interfaces
-============================
-
-Basic Implicit Interfaces
--------------------------
-
-There are many dark points about these interfaces, but we should start
-from somewhere.
-
-
-Overview
---------
-
-In python you don't have to define interfaces to declare that classes
-use a specific protocol or interface.  There are lots of such examples
-in standard library.
-
-For example::
-
-  class A(object):
-
-      def a_method(self):
-          pass
-
-  class B(object):
-
-      def a_method(self):
-          pass
-
-  def a_func(arg):
-      arg.a_method()
-
-  a_func(A())
-  a_func(B())
-
-Here although there is no inheritance relations between `A` and `B`,
-renaming `A.a_method` should force `B.a_method` to be renamed too.
-
-Or as another example::
-
-  a_var = A()
-  a_var.a_method()
-
-renaming `a_var.a_method` should rename both `A.a_method` and
-`B.a_method`.  That is `a_func` function defines the interface and its
-members.
-
-Now the problem is, if rope wants to support implicit interfaces, how
-should it find out these interfaces and their members.
-
-
-Supporting Implicit Interfaces
-------------------------------
-
-We need to find out the way these implicit interfaces are defined.
-Actually each function defines an interface for each of its parameters
-and the members of this interface are the objects that are passed as
-that argument.  Another thing to keep in mind is that implicit
-interfaces are extended by inheritance relation, too.  For example::
-
-  class C(A):
-
-      def a_method(self):
-          pass
-
-  def a_func(arg):
-      arg.a_method()
-
-  another_func(C())
-
-Renaming `arg.a_method` not only should rename `C.a_method` but also
-it should rename `A.a_method`.
-
-We should be careful about situations like::
-
-  def a_func(arg):
-      if isinstance(arg, A):
-          arg.do_something()
-      else:
-          arg.do_some_other_thing()
-
-The other issue is what to do for situations like this::
-
-  def a_func(obj1, obj2):
-      result = obj1.f(obj2)
-      result.g()
-
-The problem is we don't know the types of `obj1` and `obj2` exactly
-and we have a list of types that these variables are assigned during
-program execution.  `obj1.f` is not a specific method.
 
 
 The GUI Mess; Working More on the UI Parts

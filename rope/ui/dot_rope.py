@@ -19,6 +19,7 @@ def starting_rope(core):
 
     # Changing editor font
     #core.set('font', ('Courier', 14))
+    #core.set('font', ('Bitstream Vera Sans Mono', 14))
 
     # Hiding menu bar
     #core.set('show_menu_bar', False)

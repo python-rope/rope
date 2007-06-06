@@ -18,7 +18,7 @@ class GraphicalEditor(object):
             if os.name == 'posix':
                 font = tkFont.Font(family='Typewriter', size=14)
             else:
-                font = tkFont.Font(family='Courier', size=13)
+                font = tkFont.Font(family='Courier', size=14)
         self.text = ScrolledText.ScrolledText(
             parent, bg='white', font=font, undo=True,
             maxundo=100, highlightcolor='#99A')

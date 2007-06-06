@@ -132,7 +132,6 @@ class GlobalScope(Scope):
     builtin_names = property(_get_builtin_names)
 
 
-
 class FunctionScope(Scope):
 
     def __init__(self, pycore, pyobject):
@@ -189,7 +188,7 @@ class FunctionScope(Scope):
             if isinstance(pyname, (rope.base.pynames.AssignedName,
                                    rope.base.pynames.EvaluatedName)):
                 pyname.invalidate()
-                
+
 
 class ClassScope(Scope):
 
@@ -271,3 +270,25 @@ class _HoldingScopeFinder(object):
                 else:
                     end = l
         return end
+
+
+class TemporaryScope(Scope):
+    """Currently used for list comprehensions and generator expressions
+
+    These scopes do not appear in the `get_scopes()` method of their
+    parent scopes.
+    """
+
+    def __init__(self, pycore, parent_scope, names):
+        super(TemporaryScope, self).__init__(
+            pycore, parent_scope.pyobject, parent_scope)
+        self.names = names
+
+    def get_names(self):
+        return self.names
+
+    def _create_scopes(self):
+        return []
+
+    def get_kind(self):
+        return 'Temporary'

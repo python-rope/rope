@@ -1,5 +1,6 @@
 import rope.base.pyobjects
 import rope.base.pynames
+import rope.base.pyscopes
 from rope.base import ast, exceptions
 
 
@@ -90,12 +91,30 @@ class StatementEvaluator(object):
             pyobject=rope.base.builtins.get_list(holding))
 
     def _ListComp(self, node):
+        pyobject = self._what_does_comprehension_hold(node)
         self.result = rope.base.pynames.UnboundName(
-            pyobject=rope.base.builtins.get_list())
+            pyobject=rope.base.builtins.get_list(pyobject))
 
     def _GeneratorExp(self, node):
+        pyobject = self._what_does_comprehension_hold(node)
         self.result = rope.base.pynames.UnboundName(
-            pyobject=rope.base.builtins.get_iterator())
+            pyobject=rope.base.builtins.get_iterator(pyobject))
+
+    def _what_does_comprehension_hold(self, node):
+        scope = self._make_comprehension_scope(node)
+        pyname = get_statement_result(scope, node.elt)
+        return pyname.get_object() if pyname is not None else None
+
+    def _make_comprehension_scope(self, node):
+        scope = self.scope
+        module = scope.pyobject.get_module()
+        names = {}
+        for comp in node.generators:
+            new_names = rope.base.pyobjects._get_evaluated_names(
+                comp.target, comp.iter, evaluation='.__iter__().next()',
+                lineno=node.lineno, module=module)
+            names.update(new_names)
+        return rope.base.pyscopes.TemporaryScope(scope.pycore, scope, names)
 
     def _Tuple(self, node):
         objects = []

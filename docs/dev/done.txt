@@ -3,6 +3,9 @@
 ===========
 
 
+- Inferring the object, list comprehensions hold : June 6, 2007
+
+
 > Public Release 0.6m2 : June 3, 2007
 
 
