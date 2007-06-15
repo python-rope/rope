@@ -90,9 +90,6 @@ Stories
 * Extract class
 
 
-* Split tuple assignment refactoring
-
-
 * Supporting templates in text modes
 
 
@@ -135,4 +132,13 @@ Stories
 * Lambdas as functions; consider their parameters
 
 
+* Split tuple assignment refactoring
+
+
+* Adding support for Mercurial VCS
+
+
 > Public Release 0.6m3 : June 17, 2007
+
+
+* Self assignment warning

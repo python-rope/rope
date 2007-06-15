@@ -29,9 +29,15 @@ Getting Started
 * Using as a library: `docs/dev/library.txt`_
 * Contributing: `docs/dev/contributing.txt`_
 
+To change rope IDE preferences edit your ``~/.rope`` (which is created
+the first time you start rope).  To change your project preferences
+edit ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT``
+is the root folder of your project (this file is created the first
+time you open a project).
+
 If you don't like rope's default emacs-like keybinding, edit the
-default ``~/.rope`` file (created the first time you start rope) and
-change `i_like_emacs` variable to `False`.
+default ``~/.rope`` file and change `i_like_emacs` variable to
+`False`.
 
 
 Project Road Map

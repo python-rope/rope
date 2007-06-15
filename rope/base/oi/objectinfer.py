@@ -1,5 +1,5 @@
 from rope.base import evaluate, pyobjects, builtins, pynames
-from rope.base.oi import dynamicoi, staticoi
+from rope.base.oi import staticoi
 
 
 class ObjectInfer(object):

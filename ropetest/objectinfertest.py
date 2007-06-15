@@ -259,6 +259,18 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
+    def test_list_comprehensions_and_multiple_iters(self):
+        mod = self.pycore.get_string_module(
+            'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+            'l = [(c1, c2) for c1, c2 in [(C1(), C2())]]\n'
+            'a, b = l[0]\n')
+        c1_class = mod.get_attribute('C1').get_object()
+        c2_class = mod.get_attribute('C2').get_object()
+        a_var = mod.get_attribute('a').get_object()
+        b_var = mod.get_attribute('b').get_object()
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
+
 
 def suite():
     result = unittest.TestSuite()

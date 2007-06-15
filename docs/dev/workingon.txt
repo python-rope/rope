@@ -1,10 +1,6 @@
 Small Stories
 =============
 
-* Solve importing problems
-* Refactor `objectinfer` module
-* Move `TemporaryScope` to a better place
-
 * Handling strings in following lines in `patchedast`
 * Extracting subexpressions; look at `extracttest` for more info
 * Create ... and implicit interfaces

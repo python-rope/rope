@@ -55,9 +55,36 @@ Hot Topics
 To Be Discussed
 ===============
 
+* `Releasing library package`_
 * `Memory management`_
 * `Getting ready for Python 3.0`_
 * Should `rope.base` be thread safe? which parts?
+
+
+Releasing Library Package
+=========================
+
+As it is written in ``README.txt`` file the initial goal of rope was
+to release a library if it achieved its goals:
+
+  The type inference and refactoring parts will not be dependent on
+  *rope* IDE and if successful, will be released as standalone
+  programs and libraries so that other projects may use them.
+
+I think it is now the time.
+
+Things to do:
+
+* A new ``setup.py`` for making and registering library package
+* The library package will contain `rope`, `rope.base`, and
+  `rope.refactor` packages
+
+Issues:
+
+* The name of packages: using ``rope`` for the library and
+  ``ropeide``, ``rope_ide``, ``rope-ide`` or ``pyrope`` for the IDE
+* Should the IDE contain the library?
+* Separating common, library, and IDE documents
 
 
 Memory Management
