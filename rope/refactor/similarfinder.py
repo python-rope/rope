@@ -8,8 +8,9 @@ from rope.refactor import patchedast, sourceutils, occurrences
 class SimilarFinder(object):
     """A class for finding similar expressions and statements"""
 
-    def __init__(self, source):
-        node = ast.parse(source)
+    def __init__(self, source, node=None):
+        if node is None:
+            node = ast.parse(source)
         self._init_using_ast(node, source)
 
     def _init_using_ast(self, node, source):
@@ -92,8 +93,8 @@ class CheckingFinder(SimilarFinder):
     """
 
     def __init__(self, pymodule, checks):
-        super(CheckingFinder, self)._init_using_ast(
-            pymodule.get_ast(), pymodule.source_code)
+        super(CheckingFinder, self).__init__(
+            pymodule.source_code, pymodule.get_ast())
         self.pymodule = pymodule
         self.checks = checks
 
@@ -260,7 +261,7 @@ class Match(object):
         """Returns match region"""
 
     def get_ast(self, name):
-        """The ast node that has matched rope variables"""
+        """Return the ast node that has matched rope variables"""
         return self.mapping.get(name, None)
 
 

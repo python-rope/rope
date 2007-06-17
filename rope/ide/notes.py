@@ -1,6 +1,7 @@
 import re
 
-from rope.base import ast
+from rope.base import ast, codeanalyze
+from rope.refactor import patchedast, similarfinder
 
 
 class Codetags(object):
@@ -42,6 +43,19 @@ class Warnings(object):
         visitor = _WarningsVisitor()
         ast.walk(node, visitor)
         result.extend(visitor.warnings)
+        result.extend(self._find_self_assignments(node, source))
+        result.sort(cmp=lambda o1, o2: cmp(o1[0], o2[0]))
+        return result
+
+    def _find_self_assignments(self, node, source):
+        result = []
+        finder = similarfinder.SimilarFinder(source, node)
+        lines = codeanalyze.SourceLinesAdapter(source)
+        for self_assignment in finder.get_matches('${?a} = ${?a}'):
+            region = patchedast.node_region(self_assignment.get_ast('?a'))
+            message = 'Assigning <%s> to itself' % source[region[0]:region[1]]
+            lineno = lines.get_line_number(self_assignment.get_region()[0])
+            result.append((lineno, message))
         return result
 
 

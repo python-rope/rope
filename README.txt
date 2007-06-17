@@ -17,7 +17,22 @@ library.
 New Features
 ============
 
-* 
+* Inferring the object list comprehensions contain
+* Adding support for Mercurial VCS in refactorings
+* Self assignment warning
+
+Rope can infer the object, list comprehensions and generator
+expressions hold.  For instance in::
+
+  class A(object):
+      pass
+
+  list1 = [A(), A()]
+  list2 = [a for a in l1]
+
+  var = list2[0]
+
+Rope knows that the type of `var` is `A`.
 
 
 Getting Started

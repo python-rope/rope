@@ -3,6 +3,9 @@
 ===========
 
 
+- Self assignment warning : June 17, 2007
+
+
 - Adding support for Mercurial VCS : June 17, 2007
 
 

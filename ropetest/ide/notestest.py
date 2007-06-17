@@ -66,6 +66,16 @@ class AnnotationsTest(unittest.TestCase):
                           warnings.warnings('def f():\n    pass\n'
                                             'def f():\n    pass\n'))
 
+    def test_self_assignment_warnings(self):
+        warnings = notes.Warnings()
+        self.assertEquals([(2, 'Assigning <a> to itself')],
+                          warnings.warnings('a = 1\na = a\n'))
+
+    def test_self_assignment_warnings(self):
+        warnings = notes.Warnings()
+        self.assertEquals([(2, 'Assigning <a.b> to itself')],
+                          warnings.warnings('a = None\na.b = a.b\n'))
+
 
 if __name__ == '__main__':
     unittest.main()

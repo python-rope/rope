@@ -29,7 +29,8 @@ Features implemented so far:
   * Move class/function/module/package/method
   * Inline method/local variable
   * Change method signature
-  * Restructuring (such as transforming ``${?a} + ${?a}`` to ``{?a} * 2``)
+  * Restructuring (like converting ``${?a}.f(${?b})`` to
+    ``${?b}.g(${?a})`` where ``a.type == mymod.A``)
   * Introduce factory method
   * Introduce parameter
   * Encapsulate field
@@ -69,8 +70,8 @@ Features implemented so far:
   * Python and reST highlighting
   * Multiple editers
   * Project file history
-  * SVN support using pysvn_ library
-  * Mercurial_ support using its library
+  * SVN support in refactorings using pysvn_ library
+  * Mercurial_ support in refactorings
   * An emacs like keybinding
   * Configurable keybinding
   * Basic UI plug-in support
