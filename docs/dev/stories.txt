@@ -135,9 +135,6 @@ Stories
 * Split tuple assignment refactoring
 
 
-* Adding support for Mercurial VCS
-
-
 > Public Release 0.6m3 : June 17, 2007
 
 

@@ -29,7 +29,7 @@ Features implemented so far:
   * Move class/function/module/package/method
   * Inline method/local variable
   * Change method signature
-  * Restructuring
+  * Restructuring (such as transforming ``${?a} + ${?a}`` to ``{?a} * 2``)
   * Introduce factory method
   * Introduce parameter
   * Encapsulate field
@@ -38,8 +38,10 @@ Features implemented so far:
   * Replace method with method object
   * Inline argument default value
 
+* Refactoring Features
+
   * Extracting similar statements in extract refactorings
-  * Basic implicit interfaces handling
+  * Basic implicit interfaces handling in rename and change signature
   * Fixing imports when needed
   * Previewing refactorings
   * Stopping refactorings
@@ -67,7 +69,8 @@ Features implemented so far:
   * Python and reST highlighting
   * Multiple editers
   * Project file history
-  * Basic SVN support using pysvn_ library
+  * SVN support using pysvn_ library
+  * Mercurial_ support using its library
   * An emacs like keybinding
   * Configurable keybinding
   * Basic UI plug-in support
@@ -86,7 +89,7 @@ Features implemented so far:
   * Automatic SOI analysis
   * Handling built-in container types
   * Saving object information on disk
-  * Stored object data validation
+  * Stored object information validation
 
 
 For more information see `overview.txt`_.  Here are a few
@@ -117,3 +120,4 @@ rope is under the terms of GNU GPL(GNU General Public License).
 .. _project download page: http://sf.net/projects/rope/files
 .. _sourceforge.net project page: http://sf.net/projects/rope
 .. _pysvn: http://pysvn.tigris.org
+.. _Mercurial: http://selenic.com/mercurial

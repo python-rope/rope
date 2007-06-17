@@ -3,6 +3,9 @@
 ===========
 
 
+- Adding support for Mercurial VCS : June 17, 2007
+
+
 - Inferring the object, list comprehensions hold : June 6, 2007
 
 

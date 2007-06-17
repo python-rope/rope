@@ -16,10 +16,19 @@ try:
 except ImportError:
     pass
 
+try:
+    import mercurial.commands
+    import mercurial.hg
+    import mercurial.ui
+except ImportError:
+    pass
+
 
 def create_fscommands(root):
     if 'pysvn' in globals() and '.svn' in os.listdir(root):
         return SubversionCommands()
+    if 'mercurial' in globals() and '.hg' in os.listdir(root):
+        return MercurialCommands(root)
     return FileSystemCommands()
 
 
@@ -60,6 +69,30 @@ class SubversionCommands(object):
 
     def remove(self, path):
         self.client.remove(path, force=True)
+
+
+class MercurialCommands(object):
+
+    def __init__(self, root):
+        self.normal_actions = FileSystemCommands()
+        self.ui = mercurial.ui.ui(
+            verbose=False, debug=False, quiet=True,
+            interactive=False, traceback=False, report_untrusted=False)
+        self.repo = mercurial.hg.repository(self.ui, root)
+
+    def create_file(self, path):
+        self.normal_actions.create_file(path)
+        mercurial.commands.add(self.ui, self.repo, path)
+
+    def create_folder(self, path):
+        self.normal_actions.create_folder(path)
+
+    def move(self, path, new_location):
+        mercurial.commands.rename(self.ui, self.repo, path,
+                                  new_location, after=False)
+
+    def remove(self, path):
+        self.client.remove(self.ui, self.repo, path)
 
 
 class FileAccess(object):
