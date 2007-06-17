@@ -45,7 +45,7 @@ Other Possible Goals:
 Release Issues
 --------------
 
-Rope will drop Python 2.4 support in this release.
+Rope has dropped Python 2.4 support in this release.
 
 
 Hot Topics

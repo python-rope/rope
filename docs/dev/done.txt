@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.6m3 : June 17, 2007
+
+
 - Self assignment warning : June 17, 2007
 
 

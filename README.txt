@@ -34,6 +34,9 @@ expressions hold.  For instance in::
 
 Rope knows that the type of `var` is `A`.
 
+Rope IDE can warn when you assign a variable to itself when you use
+``show_warnings`` action.
+
 
 Getting Started
 ===============
