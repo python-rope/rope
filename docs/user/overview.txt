@@ -9,104 +9,10 @@ some of the features shown here are old and do not show what rope
 can do in extremes.  So if you really want to feel the power of
 rope try its features and see its unit tests.
 
-Note that this file assumes emacs keybinding.
+Note that the IDE parts of this file assumes emacs keybinding.
 
 
 .. contents:: Table of Contents
-
-
-Keybinding
-==========
-
-You can change the keybinding in ``~/.rope``.  The keybinding is shown
-next to every action in menus.  Some of these bindings are chosen from
-emacs and some from eclipse.  ("C" stands for Control key and "M" for
-Meta(Alt) key.)
-
-
-Code Assist(Auto Complete)
-==========================
-
-You can complete names as you type by using code assist (``M-/``).
-The two capital letters in the left shows the type of the proposal.
-In the first column:
-
-* L: ``local``
-* G: ``global``
-* A: ``attribute``
-* T: ``template``
-* K: ``keyword``
-* B: ``built-in``
-* P: ``parameter_keyword``
-
-In the second column if present:
-
-* C: ``class``
-* F: ``function``
-* V: ``variable``
-* P: ``paramter``
-* I: ``imported``
-
-You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
-templates.  You can define your own templates in ``~/.rope``.  See
-examples in the default ``~/.rope`` file. (`rope.ui.dot_rope`
-module; It will be copied to ``~/.rope`` if none already exists.)
-
-
-Show PyDoc
-----------
-
-By using ``C-c C-d`` you can tell rope to show the pydoc of a python
-defined element.
-
-
-Goto Definition
----------------
-
-You can use ``C-c g`` for going to the line a name was defined in.
-
-
-Generate Python Elements
-------------------------
-
-The generate element actions make python elements.  You have to move
-on an element that does not exist and perform one of these generate
-actions.  For example::
-
-  my_print(var=1)
-
-Calling generate function on `my_print` (``C-c n f``) will result in::
-
-  def my_print(var):
-      pass
-
-
-  my_print(var=1)
-
-It handle methods, static methods, classes, variables, modules, and
-packages, too.  Generate element actions use ``C-c n`` prefix.
-
-
-Saving Locations And Strings
-----------------------------
-
-Rope can now save locations or strings in memory.  These are similar
-to emacs's bookmarks and registers.  These actions use ``C-x m``
-prefix.
-
-
-Defining Templates
-------------------
-
-You can define your own templates in ``~/.rope``.  You can use ``C-x c``
-and a line like this::
-
-    core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
-
-This defines a new python template called ``say_hello``.  Now if you
-type ``say_`` in a python file and use code-assist (``M-/``), this
-template will be proposed.  If you press enter you can insert the
-value to be used as ``name``.
 
 
 ``.ropeproject`` Folder
@@ -1068,26 +974,27 @@ guesses project source folders correctly most of the time.  You can
 also extend python path using ``python_path`` config.
 
 
-Outline
-=======
+Version Control Systems Support
+===============================
 
-In tree views (like quick outline and project tree views) you can use
-``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
-collapse items.  You can use the ``Return`` key to select items.
+When you perform refactorings some files might need to be moved (when
+renaming a module) or new files might be created.  When you use a VCS
+rope uses that to perform file system actions.
 
+Currently rope supports Subversion (Uses `pysvn`_ library) and
+Mercurial_.  Rope uses Subversion if the `pysvn` module is available
+and there is a `.svn` in project root.  The Mercurial will be used if
+`mercurial` module is available and there is a `.hg` in project root.
+Rope assumes either all files are under version control in a project
+or there is no version control at all.  Also don't forget to commit
+your changes yourself, rope doesn't do that.
 
-SVN Support
-===========
+Adding support for other VCSs is easy have a look at
+`../dev/library.txt`_.
 
-The subversion support is somewhat basic.  What rope does is that when
-creating new files or when moving modules and packages for
-refactorings it will call the appropriate subversion commands.  The
-subversion support is automatically turned on when there is a ``.svn``
-folder inside project root and the ``pysvn`` package is
-available. (You can get PySVN from http://pysvn.tigris.org).  Rope
-assumes all files are under version control when these conditions are
-met.  Also don't forget to commit your changes yourself, rope doesn't
-do that yet.
+.. _../dev/library.txt: ../dev/library.html
+.. _pysvn: http://pysvn.tigris.org
+.. _Mercurial: http://selenic.com/mercurial
 
 
 Project History
@@ -1100,9 +1007,114 @@ see and select changes to be undone in any order.  Note that undoing
 changes in project history undoes the changes it depends on, too.
 
 
+IDE Tools
+=========
+
+Keybinding
+----------
+
+You can change the keybinding in ``~/.rope``.  The keybinding is shown
+next to every action in menus.  Some of these bindings are chosen from
+emacs and some from eclipse.  ("C" stands for Control key and "M" for
+Meta(Alt) key.)
+
+
+Code Assist(Auto Complete)
+--------------------------
+
+You can complete names as you type by using code assist (``M-/``).
+The two capital letters in the left shows the type of the proposal.
+In the first column:
+
+* L: ``local``
+* G: ``global``
+* A: ``attribute``
+* T: ``template``
+* K: ``keyword``
+* B: ``built-in``
+* P: ``parameter_keyword``
+
+In the second column if present:
+
+* C: ``class``
+* F: ``function``
+* V: ``variable``
+* P: ``paramter``
+* I: ``imported``
+
+You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
+templates.  You can define your own templates in ``~/.rope``.  See
+examples in the default ``~/.rope`` file. (`rope.ui.dot_rope`
+module; It will be copied to ``~/.rope`` if none already exists.)
+
+
+Show PyDoc
+----------
+
+By using ``C-c C-d`` you can tell rope to show the pydoc of a python
+defined element.
+
+
+Goto Definition
+---------------
+
+You can use ``C-c g`` for going to the line a name was defined in.
+
+
+Generate Python Elements
+------------------------
+
+The generate element actions make python elements.  You have to move
+on an element that does not exist and perform one of these generate
+actions.  For example::
+
+  my_print(var=1)
+
+Calling generate function on `my_print` (``C-c n f``) will result in::
+
+  def my_print(var):
+      pass
+
+
+  my_print(var=1)
+
+It handle methods, static methods, classes, variables, modules, and
+packages, too.  Generate element actions use ``C-c n`` prefix.
+
+
+Saving Locations And Strings
+----------------------------
+
+Rope can now save locations or strings in memory.  These are similar
+to emacs's bookmarks and registers.  These actions use ``C-x m``
+prefix.
+
+
+Defining Templates
+------------------
+
+You can define your own templates in ``~/.rope``.  You can use ``C-x c``
+and a line like this::
+
+    core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
+
+This defines a new python template called ``say_hello``.  Now if you
+type ``say_`` in a python file and use code-assist (``M-/``), this
+template will be proposed.  If you press enter you can insert the
+value to be used as ``name``.
+
+
 Spell-Checker
-=============
+-------------
 
 The new spell-checker uses ispell/aspell if available.  You can use
 ``M-$`` like emacs for checking current word.  You can also use ``C-x
 $ r`` and ``C-x $ b`` for spell-checking region and buffer.
+
+
+Outline
+-------
+
+In tree views (like quick outline and project tree views) you can use
+``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
+collapse items.  You can use the ``Return`` key to select items.

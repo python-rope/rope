@@ -1,9 +1,7 @@
-include COPYING
+include README.txt COPYING rope.py runtests.py setup.py MANIFEST.in
 recursive-include docs *.html *.txt
-include *.txt
 
 recursive-include rope *.py
 recursive-include ropetest *.py
-include *.py
 
 prune scripts

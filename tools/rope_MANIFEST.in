@@ -1,0 +1,8 @@
+include README.txt COPYING setup.py MANIFEST.in
+recursive-include docs *.html *.txt
+
+recursive-include rope/base *.py
+recursive-include rope/refactor *.py
+include rope/*.py
+include ropetest/*.py
+include ropetest/refactor/*.py

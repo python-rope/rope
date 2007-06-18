@@ -81,6 +81,7 @@ Things to do:
 
 Issues:
 
+* Two separate README files?
 * The name of packages: using ``rope`` for the library and
   ``ropeide``, ``rope_ide``, ``rope-ide`` or ``pyrope`` for the IDE
 * Should the IDE contain the library?

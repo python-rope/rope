@@ -26,8 +26,6 @@ def remove_temps():
     if os.path.exists('rope/docs'):
         shutil.rmtree('rope/docs')
 
-make_temps()
-
 classifiers=[
     'Development Status :: 4 - Beta',
     'Operating System :: OS Independent',
@@ -47,18 +45,20 @@ def get_long_description():
     end = lines.index('Getting Started')
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
-setup(name='rope',
-      version=rope.VERSION,
-      description='a python refactoring IDE and library...',
-      long_description=get_long_description(),
-      author='Ali Gholami Rudi',
-      author_email='aligrudi@users.sourceforge.net',
-      url='http://rope.sf.net/',
-      packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
-                'rope.refactor.importutils', 'rope.ide', 'rope.ui'],
-      package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
-      scripts=['scripts/rope'],
-      license='GNU GPL',
-      classifiers=classifiers)
-
-remove_temps()
+make_temps()
+try:
+    setup(name='ropeide',
+          version=rope.VERSION,
+          description='a python refactoring IDE and library...',
+          long_description=get_long_description(),
+          author='Ali Gholami Rudi',
+          author_email='aligrudi@users.sourceforge.net',
+          url='http://rope.sf.net/',
+          packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
+                    'rope.refactor.importutils', 'rope.ide', 'rope.ui'],
+          package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
+          scripts=['scripts/rope'],
+          license='GNU GPL',
+          classifiers=classifiers)
+finally:
+    remove_temps()
