@@ -1,6 +1,7 @@
 import os
 
 import rope.base.change
+import rope.base.fscommands
 from rope.base.exceptions import RopeError
 
 
@@ -83,7 +84,8 @@ class File(Resource):
         super(File, self).__init__(project, name)
 
     def read(self):
-        return self.project.file_access.read(self.real_path)
+        data = open(self.real_path, 'U').read()
+        return rope.base.fscommands.file_data_to_unicode(data)
 
     def write(self, contents):
         try:

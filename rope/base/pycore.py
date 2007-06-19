@@ -51,7 +51,7 @@ class PyCore(object):
                 old_contents = self.project.history.get_prev_contents(resource)
                 new_contents = resource.read()
                 # detecting changes in new_contents relative to old_contents
-                detector = TextChangeDetector(new_contents, old_contents)
+                detector = _TextChangeDetector(new_contents, old_contents)
                 def should_analyze(pydefined):
                     scope = pydefined.get_scope()
                     return detector.is_changed(scope.get_start(),
@@ -251,8 +251,11 @@ class PyCore(object):
     def analyze_module(self, resource, should_analyze=None):
         """Analyze `resource` module for static object inference
 
-        This function forces rope to analyze this module to concluded
-        information about function calls.
+        This function forces rope to analyze this module to collect
+        information about function calls.  `should_analyze` is a
+        function that is called with a `DefinedObject` argument.  If
+        it returns `True` the element is analyzed.  If it is `None` or
+        returns `False` the element is not searched.
 
         """
         pymodule = self.resource_to_pyobject(resource)
@@ -339,7 +342,7 @@ class _ClassesCache(object):
             return self.class_lines
 
 
-class TextChangeDetector(object):
+class _TextChangeDetector(object):
 
     def __init__(self, old, new):
         self.old = old

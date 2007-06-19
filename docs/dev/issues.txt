@@ -51,14 +51,49 @@ Rope has dropped Python 2.4 support in this release.
 Hot Topics
 ==========
 
+* `Releasing library package`_
+* `Library And Sharing File Changes`_
 
 To Be Discussed
 ===============
 
-* `Releasing library package`_
 * `Memory management`_
 * `Getting ready for Python 3.0`_
 * Should `rope.base` be thread safe? which parts?
+
+
+Library And Sharing File Changes
+================================
+
+The problem is that rope needs to perform some of the changes to
+activate some of its features like automatic SOI.  But other tools
+might want to perform the changes themselves.  There are two problems.
+
+* Informing others about the changes rope performs
+* Tools should inform rope about the changes they want to perform
+
+One way is to collect all file-system operations inside
+`FileSystemCommands`.
+
+Actions that change the file-system:
+
+* move
+* create_file
+* create_folder
+* remove
+* write
+
+Actions that read the file-system:
+
+* read
+* get_children
+* is_folder
+* exists
+* abspath
+
+Note that we don't need to put the actions that don't change the state
+of FS in the `FileSystemCommands`.  Since rope knows that it is
+working on a real file-system.
 
 
 Releasing Library Package
@@ -73,17 +108,15 @@ to release a library if it achieved its goals:
 
 I think it is now the time.
 
-Things to do:
-
 * A new ``setup.py`` for making and registering library package
 * The library package will contain `rope`, `rope.base`, and
   `rope.refactor` packages
+* The name of packages: using ``rope`` for the library and
+  ``ropeide`` for the IDE
 
 Issues:
 
-* Two separate README files?
-* The name of packages: using ``rope`` for the library and
-  ``ropeide``, ``rope_ide``, ``rope-ide`` or ``pyrope`` for the IDE
+* Two separate ``README.txt`` files?
 * Should the IDE contain the library?
 * Separating common, library, and IDE documents
 
@@ -163,7 +196,7 @@ What Rope Assumes...
 ====================
 
 In order to simplify problems a bit, rope makes some assumptions about
-the source code.  In futures some of this restrictions might be
+the source code.  In future some of this restrictions might be
 removed.
 
 * All files that end with ``.py`` are considered to be python files

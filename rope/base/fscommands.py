@@ -50,6 +50,13 @@ class FileSystemCommands(object):
         else:
             shutil.rmtree(path)
 
+    def write(self, path, data):
+        file_ = open(path, 'w')
+        try:
+            file_.write(data)
+        finally:
+            file_.close()
+
 
 class SubversionCommands(object):
 
@@ -70,6 +77,9 @@ class SubversionCommands(object):
 
     def remove(self, path):
         self.client.remove(path, force=True)
+
+    def write(self, path, data):
+        self.normal_actions.write(path, data)
 
 
 class MercurialCommands(object):
@@ -95,18 +105,30 @@ class MercurialCommands(object):
     def remove(self, path):
         self.client.remove(self.ui, self.repo, path)
 
+    def write(self, path, data):
+        self.normal_actions.write(path, data)
 
-class FileAccess(object):
 
-    def read(self, path):
-        """Read the content of the file at `path`.
+def unicode_to_file_data(contents):
+    return _TransformUnicode.get_instance().unicode_to_file_data(contents)
 
-        Returns a `Unicode` object
-        """
-        source_bytes = open(path, 'U').read()
-        return self._file_data_to_unicode(source_bytes)
 
-    def _file_data_to_unicode(self, data):
+def file_data_to_unicode(contents):
+    return _TransformUnicode.get_instance().file_data_to_unicode(contents)
+
+
+class _TransformUnicode(object):
+
+    def unicode_to_file_data(self, contents):
+        encoding = self._conclude_file_encoding(contents)
+        if encoding is not None and isinstance(contents, unicode):
+            return contents.encode(encoding)
+        try:
+            return contents.encode()
+        except UnicodeEncodeError:
+            return contents.encode('utf-8')
+
+    def file_data_to_unicode(self, data):
         encoding = self._conclude_file_encoding(data)
         if encoding is not None:
             return unicode(data, encoding)
@@ -133,22 +155,14 @@ class FileAccess(object):
 
     def _conclude_file_encoding(self, source_bytes):
         first_two_lines = source_bytes[:self._get_second_line_end(source_bytes)]
-        match = FileAccess.encoding_pattern.search(first_two_lines)
+        match = _TransformUnicode.encoding_pattern.search(first_two_lines)
         if match is not None:
             return match.group(1)
 
-    def write(self, path, contents):
-        """Write the `contents` to the file at `path`.
+    file_access = None
 
-        contents should be a `Unicode` object.
-        """
-        file_ = open(path, 'w')
-        encoding = self._conclude_file_encoding(contents)
-        if encoding is not None and isinstance(contents, unicode):
-            contents = contents.encode(encoding)
-        try:
-            file_.write(contents)
-        except UnicodeEncodeError:
-            # Using ``utf-8`` if guessed encoding fails
-            file_.write(contents.encode('utf-8'))
-        file_.close()
+    @classmethod
+    def get_instance(cls):
+        if cls.file_access is None:
+            cls.file_access = _TransformUnicode()
+        return cls.file_access

@@ -97,7 +97,7 @@ For more information see `overview.txt`_.  Here are a few
 `screenshots`_.
 
 .. _overview.txt: user/overview.html
-.. _`screenshots`: screenshots/screenshots.html
+.. _screenshots: screenshots/screenshots.html
 
 
 Download

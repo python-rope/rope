@@ -114,9 +114,6 @@ Stories
 * Enhanced occurrence finding
 
 
-* Enhancing open project dialog
-
-
 * Move refactoring and moving a group of elements together
 
 
@@ -132,7 +129,10 @@ Stories
 * Lambdas as functions; consider their parameters
 
 
-> Public Release 0.6m4 : July 1, 2007
+* Enhancing open project dialog
 
 
 * Split tuple assignment refactoring
+
+
+> Public Release 0.6m4 : July 1, 2007

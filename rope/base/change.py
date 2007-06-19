@@ -3,9 +3,9 @@ import difflib
 import os
 import time
 
+import rope.base.fscommands
 from rope.base import taskhandle
 from rope.base.exceptions import RopeError
-from rope.base.fscommands import FileSystemCommands
 
 
 class Change(object):
@@ -248,7 +248,7 @@ class _ResourceOperations(object):
     def __init__(self, project, fscommands):
         self.project = project
         self.fscommands = fscommands
-        self.direct_commands = FileSystemCommands()
+        self.direct_commands = rope.base.fscommands.FileSystemCommands()
 
     def _get_fscommands(self, resource):
         if self.project.is_ignored(resource):
@@ -256,7 +256,9 @@ class _ResourceOperations(object):
         return self.fscommands
 
     def write_file(self, resource, contents):
-        self.project.file_access.write(resource.real_path, contents)
+        data = rope.base.fscommands.unicode_to_file_data(contents)
+        fscommands = self._get_fscommands(resource)
+        fscommands.write(resource.real_path, data)
         for observer in list(self.project.observers):
             observer.resource_changed(resource)
 

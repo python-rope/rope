@@ -1,7 +1,7 @@
 import sys
 import unittest
 
-from rope.base.pycore import ModuleNotFoundError, TextChangeDetector
+from rope.base.pycore import ModuleNotFoundError, _TextChangeDetector
 from rope.base.pyobjects import get_base_type
 from ropetest import testutils
 
@@ -885,27 +885,27 @@ class ClassHierarchyTest(unittest.TestCase):
 class TextChangeDetectorTest(unittest.TestCase):
 
     def test_trivial_case(self):
-        detector = TextChangeDetector('\n', '\n')
+        detector = _TextChangeDetector('\n', '\n')
         self.assertFalse(detector.is_changed(1, 1))
 
     def test_one_line_change(self):
-        detector = TextChangeDetector('1\n2\n', '1\n3\n')
+        detector = _TextChangeDetector('1\n2\n', '1\n3\n')
         self.assertFalse(detector.is_changed(1, 1))
         self.assertTrue(detector.is_changed(2, 2))
 
     def test_line_expansion(self):
-        detector = TextChangeDetector('1\n2\n', '1\n3\n4\n2\n')
+        detector = _TextChangeDetector('1\n2\n', '1\n3\n4\n2\n')
         self.assertFalse(detector.is_changed(1, 1))
         self.assertFalse(detector.is_changed(2, 2))
 
     def test_line_removals(self):
-        detector = TextChangeDetector('1\n3\n4\n2\n', '1\n2\n')
+        detector = _TextChangeDetector('1\n3\n4\n2\n', '1\n2\n')
         self.assertFalse(detector.is_changed(1, 1))
         self.assertTrue(detector.is_changed(2, 3))
         self.assertFalse(detector.is_changed(4, 4))
 
     def test_multi_line_checks(self):
-        detector = TextChangeDetector('1\n2\n', '1\n3\n')
+        detector = _TextChangeDetector('1\n2\n', '1\n3\n')
         self.assertTrue(detector.is_changed(1, 2))
 
 

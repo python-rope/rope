@@ -1,9 +1,11 @@
-Small Stories
-=============
+Being A Better Library
+======================
+
+- Moving write to `FileSystemCommands`
 
 * Handling strings in following lines in `patchedast`
 * Extracting subexpressions; look at `extracttest` for more info
-* Create ... and implicit interfaces
+* Create ... and implicit interfaces?
 * Add custom refactoring section to ``overview.txt`` file;
   Extract field refactoring
 * Handle tuple parameters?

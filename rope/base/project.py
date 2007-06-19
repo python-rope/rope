@@ -15,7 +15,6 @@ class _Project(object):
 
     def __init__(self, fscommands):
         self.observers = []
-        self.file_access = rope.base.fscommands.FileAccess()
         self._history = None
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
         self.prefs = rope.base.prefs.Prefs()
