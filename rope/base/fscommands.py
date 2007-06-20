@@ -103,7 +103,7 @@ class MercurialCommands(object):
                                   new_location, after=False)
 
     def remove(self, path):
-        self.client.remove(self.ui, self.repo, path)
+        mercurial.commands.remove(self.ui, self.repo, path)
 
     def write(self, path, data):
         self.normal_actions.write(path, data)

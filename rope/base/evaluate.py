@@ -57,22 +57,31 @@ class StatementEvaluator(object):
             pyobject=rope.base.builtins.get_str())
 
     def _Num(self, node):
-        pass
+        type_name = type(node.n).__name__
+        self.result = self._get_builtin_name(type_name)
+
+    def _get_builtin_name(self, type_name):
+        pytype = rope.base.builtins.builtins[type_name].get_object()
+        return rope.base.pynames.UnboundName(
+            rope.base.pyobjects.PyObject(pytype))
 
     def _BinOp(self, node):
-        pass
+        self.result = rope.base.pynames.UnboundName(
+            self._get_object_for_node(node.left))
 
     def _BoolOp(self, node):
-        pass
+        self.result = rope.base.pynames.UnboundName(
+            self._get_object_for_node(node.values[0]))
 
     def _Repr(self, node):
-        pass
+        self.result = self._get_builtin_name('str')
 
     def _UnaryOp(self, node):
-        pass
+        self.result = rope.base.pynames.UnboundName(
+            self._get_object_for_node(node.operand))
 
     def _Compare(self, node):
-        pass
+        self.result = self._get_builtin_name('bool')
 
     def _Dict(self, node):
         keys = None

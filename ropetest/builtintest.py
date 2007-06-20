@@ -358,6 +358,54 @@ class BuiltinTypesTest(unittest.TestCase):
         a_var = pymod.get_attribute('a_var').get_object()
         self.assertEquals(c_class, a_var.get_type())
 
+    def test_simple_int_type(self):
+        self.mod.write('l = 1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['int'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
+    def test_simple_float_type(self):
+        self.mod.write('l = 1.0\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['float'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
+    def test_simple_float_type2(self):
+        self.mod.write('l = 1e1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['float'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
+    def test_simple_complex_type(self):
+        self.mod.write('l = 1.0j\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['complex'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
+    def test_handling_unaryop_on_ints(self):
+        self.mod.write('l = -(1)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['int'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
+    def test_handling_binop_on_ints(self):
+        self.mod.write('l = 1 + 1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['int'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
+    def test_handling_compares(self):
+        self.mod.write('l = 1 == 1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['bool'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
+    def test_handling_boolops(self):
+        self.mod.write('l = 1 and 2\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(builtins.builtins['int'].get_object(),
+                          pymod.get_attribute('l').get_object().get_type())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -85,9 +85,9 @@ operations that rope needs to perform.  The main reason for the
 existence of this module is supporting version control systems.  Have
 a look at `FileSystemCommands` and `SubversionCommands` in the same
 module.  If you need other version control systems you can write a new
-class providing this interface.  `rope.base.project.Project` accepts a
-``fscommands`` argument.  You can use this argument to force rope to
-use your new class.
+class that provides this interface.  `rope.base.project.Project`
+accepts a ``fscommands`` argument.  You can use this argument to force
+rope to use your new class.
 
 
 ``.ropeproject`` Folder
@@ -225,3 +225,70 @@ operator (see the restructuring section of `overview.txt`_)::
 See code documentation and test suites for more information.
 
 .. _overview.txt: ../user/overview.html
+
+
+Using Rope In Other IDEs
+========================
+
+In normal situation its as easy as described above.  But the problem
+happens when both Rope and the IDE need to know or possibly perform
+the changes that the other needs to perform.
+
+
+Outgoing Changes
+----------------
+
+Outgoing changes are the changes required by refactorings.  The
+`get_changes()` method of refactoring classes return a
+`rope.base.change.Change` object.  You perform these changes by
+calling `Project.do()`.  But as explained above some IDEs need to
+perform the changes themselves.
+
+Every change to file-system in rope is commited using an object that
+provides `rope.base.fscommands.FileSystemCommands` interface.  As
+explained above in `rope.base.fscommands`_ section, rope uses this
+interface to handle different VCSs.
+
+You can implement your own fscommands object::
+
+  class MyFileSystemCommands(object):
+
+    def create_file(self, path):
+        """Create a new file"""
+        # ...
+
+    def create_folder(self, path):
+        """Create a new folder"""
+        # ...
+
+    def move(self, path, new_location):
+        """Move resource at `path` to `new_location`"""
+        # ...
+
+    def remove(self, path):
+        """Remove resource"""
+        # ...
+
+    def write(self, path, data):
+        """Write `data` to file at `path`"""
+        # ...
+
+And you can create a project like this::
+
+  my_fscommands = MyFileSystemCommands()
+  project = rope.base.project.Project('~/myproject',
+                                      fscommands=my_fscommands)
+
+
+Incoming Changes
+----------------
+
+These are the changes that are performed by the IDE.  Rope needs to
+know the changes in order to update its cached data.  Also some useful
+features of rope are activated when changing the project.  For example
+when a file is saved static object inference is performed on the
+changed scopes.  Also project history records file changes and that is
+useful if you want to be able to undo and redo the changes.
+
+But if you don't care about these features you can use
+`Project.validate()`_ as described above.  But I don't recommend it.

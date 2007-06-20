@@ -1,7 +1,10 @@
 Being A Better Library
 ======================
 
-- Moving write to `FileSystemCommands`
+- Handling the type of `int`, `float`, `bool`, and `complex` literals
+- Handling `BinOp`, `UnaryOp`, `BoolOp`, and `Compare` AST nodes
+
+* Specifying `__builtins__` module in restructuring dialog
 
 * Handling strings in following lines in `patchedast`
 * Extracting subexpressions; look at `extracttest` for more info

@@ -72,6 +72,16 @@ might want to perform the changes themselves.  There are two problems.
 * Informing others about the changes rope performs
 * Tools should inform rope about the changes they want to perform
 
+How can we make it work:
+
+* Letting rope do the changes and the IDE should observe
+* The IDE should perform the changes and rope should observe
+* Letting rope perform the refactoring changes and observe IDE changes
+
+
+Outgoing Changes
+----------------
+
 One way is to collect all file-system operations inside
 `FileSystemCommands`.
 
@@ -94,6 +104,14 @@ Actions that read the file-system:
 Note that we don't need to put the actions that don't change the state
 of FS in the `FileSystemCommands`.  Since rope knows that it is
 working on a real file-system.
+
+So we can ask tools to register their own `FileSystemCommands` and
+commit all changes.
+
+
+Incoming Changes
+----------------
+
 
 
 Releasing Library Package
