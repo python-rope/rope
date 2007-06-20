@@ -1,17 +1,16 @@
-from rope.base import change, taskhandle
+from rope.base import change, taskhandle, builtins
 from rope.refactor import patchedast, similarfinder, sourceutils
 
 
 class Restructure(object):
 
-    def __init__(self, project, pattern, goal, checks={}):
+    def __init__(self, project, pattern, goal):
         self.pycore = project.pycore
         self.pattern = pattern
         self.goal = goal
-        self.checks = checks
         self.template = similarfinder.CodeTemplate(self.goal)
 
-    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, checks={}, task_handle=taskhandle.NullTaskHandle()):
         changes = change.ChangeSet('Restructuring <%s> to <%s>' %
                                    (self.pattern, self.goal))
         files = self.pycore.get_python_files()
@@ -19,7 +18,7 @@ class Restructure(object):
         for resource in files:
             job_set.started_job('Working on <%s>' % resource.path)
             pymodule = self.pycore.resource_to_pyobject(resource)
-            finder = similarfinder.CheckingFinder(pymodule, self.checks)
+            finder = similarfinder.CheckingFinder(pymodule, checks)
             collector = sourceutils.ChangeCollector(pymodule.source_code)
             for match in finder.get_matches(self.pattern):
                 start, end = match.get_region()
@@ -41,3 +40,36 @@ class Restructure(object):
             start, end = patchedast.node_region(ast)
             mapping[name] = source[start:end]
         return self.template.substitute(mapping)
+
+
+    def make_checks(self, string_checks):
+        """Convert str to str dicts to str to PyObject dicts
+
+        This function is here to ease writing a UI.
+
+        """
+        checks = {}
+        for key, value in string_checks.items():
+            is_pyname = not key.endswith('.object') and \
+                        not key.endswith('.type')
+            evaluated = self._evaluate(value, is_pyname=is_pyname)
+            if evaluated is not None:
+                checks[key] = evaluated
+        return checks
+
+    def _evaluate(self, code, is_pyname=True):
+        attributes = code.split('.')
+        pyname = None
+        if attributes[0] in ('__builtin__', '__builtins__'):
+            class _BuiltinsStub(object):
+                def get_attribute(self, name):
+                    return builtins.builtins[name]
+            pyobject = _BuiltinsStub()
+        else:
+            pyobject = self.pycore.get_module(attributes[0])
+        for attribute in attributes[1:]:
+            pyname = pyobject.get_attribute(attribute)
+            if pyname is None:
+                return None
+            pyobject = pyname.get_object()
+        return pyname if is_pyname else pyobject

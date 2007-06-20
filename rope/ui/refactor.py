@@ -794,26 +794,11 @@ class RestructureDialog(RefactoringDialog):
     def _calculate_changes(self, handle=None):
         pattern = self.pattern.get('1.0', 'end-1c')
         goal = self.goal.get('1.0', 'end-1c')
-        checks = {}
-        for key, value in self.checks.get_entries():
-            is_pyname = not key.endswith('.object') and \
-                        not key.endswith('.type')
-            evaluated = self._evaluate(value, is_pyname=is_pyname)
-            checks[key] = evaluated
         restructuring = rope.refactor.restructure.Restructure(
-            self.project, pattern, goal, checks)
-        return restructuring.get_changes(handle)
-
-    def _evaluate(self, code, is_pyname=True):
-        attributes = code.split('.')
-        pyname = None
-        pyobject = self.project.get_pycore().get_module(attributes[0])
-        for attribute in attributes[1:]:
-            pyname = pyobject.get_attribute(attribute)
-            if pyname is None:
-                return None
-            pyobject = pyname.get_object()
-        return pyname if is_pyname else pyobject
+            self.project, pattern, goal)
+        string_checks = dict(self.checks.get_entries())
+        checks = restructuring.make_checks(string_checks)
+        return restructuring.get_changes(checks, task_handle=handle)
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)

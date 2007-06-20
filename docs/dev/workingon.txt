@@ -1,10 +1,11 @@
 Being A Better Library
 ======================
 
-- Handling the type of `int`, `float`, `bool`, and `complex` literals
-- Handling `BinOp`, `UnaryOp`, `BoolOp`, and `Compare` AST nodes
+- Update ``library.txt``
+- Update `rope.ui.refactor`
 
-* Specifying `__builtins__` module in restructuring dialog
+* Test `Restructure.make_checks()`
+* Specifying `__builtin__`, `__builtins__` module in restructuring dialog
 
 * Handling strings in following lines in `patchedast`
 * Extracting subexpressions; look at `extracttest` for more info

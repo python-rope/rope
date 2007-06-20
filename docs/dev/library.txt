@@ -206,13 +206,16 @@ operator (see the restructuring section of `overview.txt`_)::
   >>> pattern = '${?pow_func}(${?param1}, ${?param2})'
   >>> goal = '${?param1} ** ${?param2}'
 
+  >>> restructuring = restructure.Restructure(project, pattern, goal)
   >>> checks = {}
   >>> pymod1 = project.get_pycore().get_module('mod1')
   >>> pow_pyname = pymod1.get_attribute('pow')
   >>> checks['?pow_func'] = pow_pyname
 
-  >>> restructuring = restructure.Restructure(project, pattern, goal, checks)
-  >>> project.do(restructuring.get_changes())
+  # We could have used this instead:
+  # checks = restructuring.make_checks({'?pow_func': 'mod1.pow'})
+
+  >>> project.do(restructuring.get_changes(checks))
   >>> mod2.read()
   u'import mod1\nprint(2 ** 3)\n'
   

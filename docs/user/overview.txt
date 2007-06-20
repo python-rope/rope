@@ -576,9 +576,11 @@ of ``.object`` or ``.type``.
 
 The values should be resolved into a python variable (or reference).
 For instance for showing `pow` in this example we can use `mod.pow`.
-As you see this string should start from module names.
+As you see this string should start from module names.  For
+referencing python builtin types and functions you can use
+`__builtin__` module (for instance `__builtin__.int`).
 
-For solving the above problem we change our `pattern`.  But `goal`
+For solving the mentioned problem we change our `pattern`.  But `goal`
 remains the same::
 
   pattern: '${?pow_func}(${?param1}, ${?param2})'

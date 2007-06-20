@@ -56,8 +56,8 @@ class RestructureTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         f_pyobject = pymod.get_attribute('f').get_object()
         refactoring = restructure.Restructure(
-            self.project, '${?f}()', '${?f}(2)', {'?f.object':f_pyobject})
-        self.project.do(refactoring.get_changes())
+            self.project, '${?f}()', '${?f}(2)')
+        self.project.do(refactoring.get_changes({'?f.object':f_pyobject}))
         self.assertEquals('def f(p=1):\n    return p\ng = f\ng(2)\n',
                           self.mod.read())
 
@@ -74,6 +74,23 @@ class RestructureTest(unittest.TestCase):
         self.mod.write('a.set(1)\nb.set(1)\n')
         self.project.do(refactoring.get_changes())
         self.assertEquals('a = 1\nb = 1\n', self.mod.read())
+
+    def test_using_make_checks(self):
+        self.mod.write('def f(p=1):\n    return p\ng = f\ng()\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?f}()', '${?f}(2)')
+        checks = refactoring.make_checks({'?f.object': 'mod.f'})
+        self.project.do(refactoring.get_changes(checks))
+        self.assertEquals('def f(p=1):\n    return p\ng = f\ng(2)\n',
+                          self.mod.read())
+
+    def test_using_make_checking_builtin_types(self):
+        self.mod.write('a = 1 + 1\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?i} + ${?i}', '${?i} * 2')
+        checks = refactoring.make_checks({'?i.type': '__builtin__.int'})
+        self.project.do(refactoring.get_changes(checks))
+        self.assertEquals('a = 1 * 2\n', self.mod.read())
 
 
 if __name__ == '__main__':
