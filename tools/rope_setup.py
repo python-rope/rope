@@ -17,8 +17,7 @@ classifiers=[
     'License :: OSI Approved :: GNU General Public License (GPL)',
     'Natural Language :: English',
     'Programming Language :: Python',
-    'Topic :: Software Development',
-    'Topic :: Text Editors :: Integrated Development Environments (IDE)']
+    'Topic :: Software Development']
 
 def get_long_description():
     lines = open('README.txt').read().splitlines(False)

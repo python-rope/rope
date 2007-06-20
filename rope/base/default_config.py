@@ -35,9 +35,8 @@ def set_prefs(prefs):
     #
     # * 'persisted_memory': Exactly like 'memory' but the information is
     #   saved for future sessions.  The problem with this approach is
-    #   that it might take lots of memory (This is not an issue for
-    #   small projects).  It might also make opening and closing
-    #   projects a bit slower.
+    #   that it might take lots of memory (this is not an issue for
+    #   small to medium-sized projects).
     #
     # * 'shelve': It stores data in `shelve` files.  This solves
     #   both the memory efficiency and the persistency problems.  But
@@ -49,8 +48,8 @@ def set_prefs(prefs):
     #   'shelve' but probably more reliable.  But it is much less CPU
     #   efficient.
     #
-    # The choice of the objectdb might be hard.  For small
-    # projects I think 'persisted_memory' is the best.  For larger
+    # The choice of the objectdb might be hard.  I prefer
+    # 'persisted_memory' and think it is the best.  For large
     # projects I prefer 'shelve'.  If you encounter mysterious
     # problems when using 'shelve' use the slower 'sqlite'.
     prefs['objectdb_type'] = 'persisted_memory'

@@ -49,8 +49,10 @@ class _BaseList(object):
         self.list.bind('<FocusIn>', self._focus_in)
         self.list.bind('<Control-p>', self._select_prev)
         self.list.bind('<Up>', self._select_prev)
+        self.list.bind('k', self._select_prev)
         self.list.bind('<Control-n>', self._select_next)
         self.list.bind('<Down>', self._select_next)
+        self.list.bind('j', self._select_next)
         self.list['selectmode'] = Tkinter.SINGLE
         if get_focus:
             self.list.focus_set()

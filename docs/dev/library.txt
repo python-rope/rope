@@ -212,7 +212,7 @@ operator (see the restructuring section of `overview.txt`_)::
   >>> pow_pyname = pymod1.get_attribute('pow')
   >>> checks['?pow_func'] = pow_pyname
 
-  # We could have used this instead:
+  # We could have used `Restructuring.make_checks()` instead:
   # checks = restructuring.make_checks({'?pow_func': 'mod1.pow'})
 
   >>> project.do(restructuring.get_changes(checks))
@@ -295,3 +295,11 @@ useful if you want to be able to undo and redo the changes.
 
 But if you don't care about these features you can use
 `Project.validate()`_ as described above.  But I don't recommend it.
+
+...
+
+
+Previewing Changes
+------------------
+
+...
