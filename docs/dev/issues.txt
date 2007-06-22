@@ -91,20 +91,6 @@ work on validation.  This requires:
 * Validating object data
 
 
-Static Object Inference
------------------------
-
-One of the great strengths of rope is its static object inference,
-SOI.  You can perform SOI on a module using `PyCore.analyze_module()`
-method but performing SOI on a module is not cheap.  So we decided
-that the best time for performing SOI is whan saving files and only
-performing it on changed scopes.
-
-But since rope is not notified about the changes the IDE performs, you
-should tell rope about the change.  You can do that by using
-`rope.base.libtutils.report_change()`.
-
-
 Releasing Library Package
 =========================
 

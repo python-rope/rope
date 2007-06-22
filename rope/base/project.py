@@ -78,11 +78,11 @@ class _Project(object):
         return self._pycore
 
     def get_file(self, path):
-        """Get the file with `path`(it may not exist)"""
+        """Get the file with `path` (it may not exist)"""
         return File(self, path)
 
     def get_folder(self, path):
-        """Get the folder with `path`(it may not exist)"""
+        """Get the folder with `path` (it may not exist)"""
         return Folder(self, path)
 
     def is_ignored(self, resource):

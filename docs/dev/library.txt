@@ -6,13 +6,154 @@ If you need other features, send a feature request.  Have a look at
 ``docs/dev/contributing.txt``.
 
 
-Useful Modules And Classes
-==========================
+Making It Work
+==============
 
-* `rope.base.project.Project`
-* `rope.base.pycore.PyCore`
-* `rope.refactor`
-* `rope.ide.codeassist.PythonCodeAssist`
+This section will help you get started as soon as possible.
+
+
+Make A Project
+--------------
+
+The first thing you should do is to make a project::
+
+  import rope.base.project
+
+
+  myproject = rope.base.project.Project('/path/to/myproject')
+
+
+Library Utilities
+-----------------
+
+The `rope.base.libutils` module provides tools for making using rope
+as a library easier.  We'll talk more about this module later.
+
+
+What Are These `Resource`\s?
+----------------------------
+
+In rope each file and folder in a project are accessed through
+`rope.base.resources.Resource` objects.  It has two subclasses `File`
+and `Folder`.  But what we care about is that refactorings and
+`Change`\s (we'll talk about them later) use resources.
+
+In order to create a `Resource` for a path in a project you have two
+options.  The first approach uses your `Project` object (Use
+`Project.get_resource()`_ method).  I prefer to describe the second
+approach since it needs less to know.
+
+We can use `libutils` module.  You can use `path_to_resource()`
+function.  It takes a project and a path::
+
+  from rope.base import libutils
+
+  myresource = libutils.path_to_resource(myproject, '/path/to/resource')
+
+
+But this is only half of the problem.  Consider we have a resource.
+How can we know anything about it? The answer is to use its ``path``
+and ``real_path`` fields.  `Resource.real_path` is the path of the
+resource in the file-system.  The `Resource.path` field contains the
+address of a resource relative to project root (The same format as
+needed by `Project.get_resource()`_).
+
+
+Performing Refactorings
+-----------------------
+
+There are examples at the end of this document.  But as another
+example we'll extract a variable in a file.  First we need the
+`Resource` object that points to a file in a project::
+
+  resource = libutils.path_to_resource(myproject, '/path/to/my/module')
+
+So we can make our Refactoring class::
+
+  from rope.refactor.extract import ExtractVariable
+
+
+  extractor = ExtractVariable(myproject, resource, start, end)
+
+Where `start` and `end` are the offsets of the region to extract in
+resource.
+
+Next we need to perform the refactoring.  IDE's usually pop up a
+dialog for letting the user configure refactoring option like the name
+of the extracted variable.  Next we need to calculate the changes::
+
+  changes = extractor.get_changes('extracted_variable')
+
+`changes` holds the changes this refactoring makes.  It is an instance
+of a subclass of `rope.base.change.Change`.
+
+
+Previewing And Performing Changes
+---------------------------------
+
+As mentioned in the last section each refactoring return a
+`rope.base.change.Change` object.  Now how can we know what it
+contains and how to perform it?
+
+For previewing the changes see the documentation in `rope.base.change`
+module.
+
+The easiest way for performing the refactoring is to use
+`Project.do()`_ method::
+
+  myproject.do(changes)
+
+
+If you might want to perform the changes yourself, you have two
+options.  Note that the main reason for perform the changes manually
+is handling version control systems that are not supported by rope.
+
+The first approach is to use `rope.base.fscommands`_.  See `Writing A
+FileSystemCommands`_ section.  The changes can be performed as before
+using `Project.do()`.
+
+The other is to perform the changes manually based on the returned
+`changes` object (again see the documentation in `rope.base.change`
+module).
+
+
+Validating The Project
+----------------------
+
+When using rope as a library you probably change the files in it in
+parallel (for example in IDEs).  To force rope to invalidate cached
+information about resources that have been removed or changed outside
+rope you should call `Project.validate()`_ method.  You should pass a
+resource to this method.  For example::
+
+  myproject.validate(myproject.root)
+
+validates all files and directories in the project.  So call this
+function every time you use rope (before performing refactorings, for
+instance).
+
+
+Activating Static Object Inference
+----------------------------------
+
+One of the great strengths of rope is its static object inference,
+SOI.  You can perform SOI on a module using `PyCore.analyze_module()`
+method but performing SOI on a module is not cheap.  So we decided
+that the best time for performing SOI is whan saving files and only
+performing it on changed scopes.
+
+But since rope is not notified about the changes the IDE performs, you
+should tell rope about the change.  You can do that by using
+`rope.base.libtutils.report_change()`.
+
+
+Closing The Project
+-------------------
+
+Closes project open resources.  Always call this function when you
+don't need a project anymore::
+
+  myproject.close()
 
 
 `rope.base.project.Project`
@@ -23,21 +164,24 @@ You can create a project by::
   project = Project(root_address)
 
 Where the `root_address` is the root folder of your project.
-Other interesting methods and attributes that a project
-provides:
 
-* `get_resource()`:
-  For getting a resource(that is file or folder) inside a project.
-  Uses '/'s for separating directories.  For instance
-  ``project.get_resource('my_folder/my_file.txt')`` returns the
-  ``${projectroot}/my_folder/my_file.txt`` file as a
-  `rope.base.project.File` object.
-* `root`:
-  Returns project root folder resource.
-* `get_pycore()`:
-  Returns a `rope.base.pycore.PyCore` object.
+A project has some useful fields.  `Project.address` is the address of
+the root folder of a project.  `Project.root` is the `Folder` that
+points to the root folder.
 
-See code documentation and unit-tests for more.
+
+`Project.get_resource()`
+------------------------
+
+Is for getting a resource (that is file or folder) inside a project.
+Uses '/'s for separating directories.  For instance
+``project.get_resource('my_folder/my_file.txt')`` returns the a
+`rope.base.resources.File` object that points to
+``${projectroot}/my_folder/my_file.txt`` file.
+
+Note that this method assumes the resource exists.  If it does not
+exist you can use `Project.get_file()` and `Project.get_folder()`
+methods.
 
 
 `Project.do()`
@@ -116,6 +260,15 @@ type information to do dynamic object inference.  For this reason
 modules run much slower.
 
 
+
+`rope.base.taskhandle.TaskHandle`
+=================================
+
+For monitoring the progress and stopping time consuming tasks like
+some of the refactorings.
+
+
+
 Refactorings
 ============
 
@@ -134,6 +287,56 @@ Then you can commit the changes by it using `get_changes()` method::
 
 Where `destination` module/package is the destination for move refactoring.
 Other refactorings classes have a similar interface.
+
+
+List Of Refactorings
+--------------------
+
+Here is the list of refactorings rope provides.  Note that this list
+might be out of date.  For more information about these refactoring
+see pydocs in their modules and the unit-tests in the
+``ropetest/refactor/`` folder.
+
+* `rope.refactor.rename.Rename`:
+  Renames something in the project.  See the example below.
+
+* `rope.refactor.move.Move...`:
+   Move a python element in the project.
+
+* `rope.refactor.restructure.Restructure`:
+  Restructures code.  See the example below.
+
+* `rope.refactor.method_object.MethodObject`:
+  Transforms a function or a method to a method object.
+
+* `rope.refactor.extract.Extract...`:
+  Extracts methods/variables.
+
+* `rope.refactor.inline.Inline`:
+  Inlines occurrences of a method/variable.
+
+* `rope.refactor.change_signature.ChangeSignature`:
+  Changes the signature of a function/method.
+
+* `rope.refactor.introduce_factory.IntroduceFactory`:
+  Introduces a factory for a class and changes all constructors to use
+  it.
+
+* `rope.refactor.introduce_parameter.IntroduceParameter`:
+  Introduces a parameter in a function.
+
+* `rope.refactor.encapsulate_field.EncapsulateField`:
+  Generates a getter/setter for a field and changes its occurrences to
+  use them.
+
+* `rope.refactor.localtofield.LocalToField`:
+  Change a local variable to field
+
+* `rope.refactor.ModuleToPackage`:
+  Transform a module to a package with the same name.
+
+* `rope.refactor.ImportOrganizer`:
+  Lets you perform things like organize imports.
 
 
 Examples
@@ -230,19 +433,14 @@ See code documentation and test suites for more information.
 .. _overview.txt: ../user/overview.html
 
 
-Using Rope In Other IDEs
-========================
-
-In normal situation its as easy as described above.  But the problem
-happens when both Rope and the IDE need to know or possibly perform
-the changes that the other needs to perform.
+Other Topics
+============
 
 
-Outgoing Changes
-----------------
+Writing A `FileSystemCommands`
+------------------------------
 
-Outgoing changes are the changes required by refactorings.  The
-`get_changes()` method of refactoring classes return a
+The `get_changes()` method of refactoring classes return a
 `rope.base.change.Change` object.  You perform these changes by
 calling `Project.do()`.  But as explained above some IDEs need to
 perform the changes themselves.
@@ -281,25 +479,3 @@ And you can create a project like this::
   my_fscommands = MyFileSystemCommands()
   project = rope.base.project.Project('~/myproject',
                                       fscommands=my_fscommands)
-
-
-Incoming Changes
-----------------
-
-These are the changes that are performed by the IDE.  Rope needs to
-know the changes in order to update its cached data.  Also some useful
-features of rope are activated when changing the project.  For example
-when a file is saved static object inference is performed on the
-changed scopes.  Also project history records file changes and that is
-useful if you want to be able to undo and redo the changes.
-
-But if you don't care about these features you can use
-`Project.validate()`_ as described above.  But I don't recommend it.
-
-...
-
-
-Previewing Changes
-------------------
-
-...
