@@ -1,6 +1,7 @@
 import unittest
 
 import rope.base.oi
+import rope.base.libutils
 from ropetest import testutils
 
 
@@ -647,6 +648,18 @@ class NewStaticOITest(unittest.TestCase):
                    get_name('p').get_object()
         self.assertTrue(isinstance(p_object.get_type(),
                                    rope.base.builtins.Str))
+
+    def test_report_change_in_libutils(self):
+        code = 'class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n'
+        mod_file = open(self.mod.real_path, 'w')
+        mod_file.write(code)
+        mod_file.close()
+        rope.base.libutils.report_change(self.project, self.mod.real_path, '')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod.get_attribute('C').get_object()
+        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        p_type = f_scope.get_name('p').get_object().get_type()
+        self.assertEquals(c_class, p_type)
 
 
 def suite():

@@ -143,8 +143,13 @@ that the best time for performing SOI is whan saving files and only
 performing it on changed scopes.
 
 But since rope is not notified about the changes the IDE performs, you
-should tell rope about the change.  You can do that by using
-`rope.base.libtutils.report_change()`.
+should tell rope about the change.  You can do so by using
+`rope.base.libutils.report_change()`.  That is whenever you want to
+change a module you can do something like::
+
+  old_contents = file(path).read()
+  write(path, new_content)
+  libutils.report_change(myproject, path, old_contents)
 
 
 Closing The Project
@@ -260,13 +265,15 @@ type information to do dynamic object inference.  For this reason
 modules run much slower.
 
 
-
 `rope.base.taskhandle.TaskHandle`
 =================================
 
 For monitoring the progress and stopping time consuming tasks like
-some of the refactorings.
-
+some of the refactorings.  `Project.do()` and
+`Refactoring.get_changes()` of some refactorings take a keyword
+argument called ``task_handle``.  You can pass a
+`rope.base.taskhandle.TaskHandle` object as this argument.  See its
+methods for more information.
 
 
 Refactorings

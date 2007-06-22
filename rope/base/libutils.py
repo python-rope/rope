@@ -2,6 +2,7 @@
 import os.path
 
 import rope.base.project
+import rope.base.pycore
 
 
 def path_to_resource(project, path, type=None):
@@ -28,3 +29,18 @@ def path_to_resource(project, path, type=None):
     if type == 'folder':
         return project.get_folder(project_path)
     return None
+
+
+def report_change(project, path, old_content):
+    """Report that the contents of file at `path` was changed
+
+    The new contents of file is retrieved by reading the file.
+
+    """
+    resource = path_to_resource(project, path)
+    if resource is None:
+        return
+    for observer in list(project.observers):
+        observer.resource_changed(resource)
+    rope.base.pycore.perform_soi_on_changed_scopes(project, resource,
+                                                   old_content)

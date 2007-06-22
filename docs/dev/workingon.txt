@@ -1,11 +1,10 @@
 Being A Better Library
 ======================
 
-- Documenting `rope.base.change`
+- Refactoring classes list in library
+- Adding `rope.base.libutils.report_change()`
 
-* Adding `rope.base.libutils.file_changed()`
-* Refactoring classes list in library?
-* I'm not happy with `History.get_prev_contents()` in `PyCore`
+* I'm not happy with the use of `History.get_prev_contents()` in `PyCore`
 
 * Handling strings in following lines in `patchedast`
 * Using `svn` instead of `pysvn`

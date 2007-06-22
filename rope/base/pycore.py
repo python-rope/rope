@@ -46,19 +46,9 @@ class PyCore(object):
         self.project.add_observer(observer)
 
     def _file_changed_for_soi(self, resource, new_resource=None):
-        if resource.exists() and self.is_python_file(resource):
-            try:
-                old_contents = self.project.history.get_prev_contents(resource)
-                new_contents = resource.read()
-                # detecting changes in new_contents relative to old_contents
-                detector = _TextChangeDetector(new_contents, old_contents)
-                def should_analyze(pydefined):
-                    scope = pydefined.get_scope()
-                    return detector.is_changed(scope.get_start(),
-                                               scope.get_end())
-                self.analyze_module(resource, should_analyze)
-            except SyntaxError:
-                pass
+        old_contents = self.project.history.get_prev_contents(resource)
+        if old_contents is not None:
+            perform_soi_on_changed_scopes(self.project, resource, old_contents)
 
     def is_python_file(self, resource):
         return not resource.is_folder() and resource.name.endswith('.py')
@@ -340,6 +330,22 @@ class _ClassesCache(object):
             for child in ast.get_child_nodes(node):
                 ast.walk(child, self)
             return self.class_lines
+
+
+def perform_soi_on_changed_scopes(project, resource, old_contents):
+    pycore = project.pycore
+    if resource.exists() and pycore.is_python_file(resource):
+        try:
+            new_contents = resource.read()
+            # detecting changes in new_contents relative to old_contents
+            detector = _TextChangeDetector(new_contents, old_contents)
+            def should_analyze(pydefined):
+                scope = pydefined.get_scope()
+                return detector.is_changed(scope.get_start(),
+                                           scope.get_end())
+            pycore.analyze_module(resource, should_analyze)
+        except SyntaxError:
+            pass
 
 
 class _TextChangeDetector(object):
