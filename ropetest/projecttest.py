@@ -1,7 +1,8 @@
 import unittest
 import os
 
-from rope.base.project import Project, NoProject, FilteredResourceObserver
+from rope.base.project import (Project, NoProject,
+                               FilteredResourceObserver, path_to_resource)
 from rope.base.exceptions import RopeError
 from ropetest import testutils
 from rope.base.fscommands import FileSystemCommands
@@ -417,6 +418,18 @@ class ProjectTest(unittest.TestCase):
         myfile = self.project.get_file('myfolder/myfile.txt')
         myfile.create()
 
+    def test_simple_path_to_resource(self):
+        myfile = self.project.root.create_file('myfile.txt')
+        self.assertEquals(myfile, path_to_resource(self.project,
+                                                   myfile.real_path))
+        self.assertEquals(myfile, path_to_resource(
+                          self.project, myfile.real_path, type='file'))
+        myfolder = self.project.root.create_folder('myfolder')
+        self.assertEquals(myfolder, path_to_resource(self.project,
+                                                     myfolder.real_path))
+        self.assertEquals(myfolder, path_to_resource(
+                          self.project, myfolder.real_path, type='folder'))
+
 
 class ResourceObserverTest(unittest.TestCase):
 
@@ -716,6 +729,15 @@ class OutOfProjectTest(unittest.TestCase):
         self.assertTrue(sample_folder.has_child('sample.txt'))
         self.assertFalse(sample_folder.has_child('doesnothave.txt'))
         self.assertEquals(sample_resource, sample_folder.get_child('sample.txt'))
+
+    def test_out_of_project_files_and_path_to_resource(self):
+        sample_file_path = os.path.join(self.test_directory, 'sample.txt')
+        sample_file = file(sample_file_path, 'w')
+        sample_file.write('sample content\n')
+        sample_file.close()
+        sample_resource = self.no_project.get_resource(sample_file_path)
+        self.assertEquals(sample_resource,
+                          path_to_resource(self.project, sample_file_path))
 
 
 class _MockFSCommands(object):

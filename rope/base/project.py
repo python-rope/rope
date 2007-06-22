@@ -236,6 +236,28 @@ def get_no_project():
     return NoProject._no_project
 
 
+def path_to_resource(project, path, type=None):
+    """Get the resource at path
+
+    `type` can be either 'file' or 'folder'.  If the type is `None` it
+    is assumed that the file or folder already exists.
+
+    """
+    path = os.path.abspath(path)
+    project_path = path
+    if path.startswith(project.address):
+        project_path = path[len(project.address):].lstrip('/' + os.sep)
+    else:
+        project = get_no_project()
+    if type is None:
+        return project.get_resource(project_path)
+    if type == 'file':
+        return project.get_file(project_path)
+    if type == 'folder':
+        return project.get_folder(project_path)
+    return None
+
+
 class ResourceObserver(object):
     """Provides the interface for observing resources
 

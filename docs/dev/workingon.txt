@@ -1,6 +1,12 @@
 Being A Better Library
 ======================
 
+- Adding `rope.base.project.path_to_resource`
+
+* Adding a new module? `libtools`, `library`, `libutils`, `utils`, `libhelper`, `helper`
+  What to include in it?  `path_to_resource()`, `file_changed()`
+* I'm not happy with `History.get_prev_contents()` in `PyCore`
+
 * Handling strings in following lines in `patchedast`
 * Using `svn` instead of `pysvn`
 * Extracting subexpressions; look at `extracttest` for more info

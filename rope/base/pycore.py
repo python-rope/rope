@@ -253,7 +253,7 @@ class PyCore(object):
 
         This function forces rope to analyze this module to collect
         information about function calls.  `should_analyze` is a
-        function that is called with a `DefinedObject` argument.  If
+        function that is called with a `PyDefinedObject` argument.  If
         it returns `True` the element is analyzed.  If it is `None` or
         returns `False` the element is not searched.
 
