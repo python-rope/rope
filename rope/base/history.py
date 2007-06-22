@@ -113,7 +113,7 @@ class History(object):
                     return result
             if isinstance(change_, change.ChangeContents) and \
                change_.resource == file:
-                return change_.old_content
+                return change_.old_contents
 
     def sync(self):
         if self.history_file is not None:

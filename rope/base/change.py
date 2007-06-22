@@ -9,14 +9,29 @@ from rope.base.exceptions import RopeError
 
 
 class Change(object):
+    """The base class for changes
+
+    Rope refactorings return `Change` objects.  They can be previewed,
+    committed or undone.
+
+    """
 
     def do(self, job_set=None):
-        pass
+        """Perform the change
+        
+        .. note:: Do use this directly.  Use `Project.do()` instead.
+
+        """
 
     def undo(self, job_set=None):
-        pass
+        """Perform the change
+        
+        .. note:: Do use this directly.  Use `History.undo()` instead.
+
+        """
 
     def get_description(self):
+        """Return the description of this change"""
         return str(self)
 
     def get_changed_resources(self):
@@ -24,6 +39,15 @@ class Change(object):
 
 
 class ChangeSet(Change):
+    """A collection of `Change` objects
+
+    This class holds a collection of changes.  This class provides
+    these fields:
+
+    * `changes`: the list of changes
+    * `description`: the reason of these changes
+
+    """
 
     def __init__(self, description, timestamp=None):
         self.changes = []
@@ -88,7 +112,7 @@ class ChangeSet(Change):
 
 def _handle_job_set(function):
     """A decorator for handling `taskhandle.JobSet`\s
-    
+
     A decorator for handling `taskhandle.JobSet`\s for `do` and `undo`
     methods of `Change`\s.
     """
@@ -100,34 +124,42 @@ def _handle_job_set(function):
 
 
 class ChangeContents(Change):
+    """A class to change the contents of a file
 
-    def __init__(self, resource, new_content, old_content=None):
+    Fields:
+
+    * `resource`: The `rope.base.resources.File` to change
+    * `new_contents`: What to write in the file
+
+    """
+
+    def __init__(self, resource, new_contents, old_contents=None):
         self.resource = resource
         # IDEA: Only saving diffs; possible problems when undo/redoing
-        self.new_content = new_content
-        self.old_content = old_content
-        if self.old_content is None:
+        self.new_contents = new_contents
+        self.old_contents = old_contents
+        if self.old_contents is None:
             if self.resource.exists():
-                self.old_content = self.resource.read()
+                self.old_contents = self.resource.read()
         self.operations = self.resource.project.operations
 
     @_handle_job_set
     def do(self):
-        if self.old_content is None:
-            self.old_content = self.resource.read()
-        self.operations.write_file(self.resource, self.new_content)
+        if self.old_contents is None:
+            self.old_contents = self.resource.read()
+        self.operations.write_file(self.resource, self.new_contents)
 
     @_handle_job_set
     def undo(self):
-        self.operations.write_file(self.resource, self.old_content)
+        self.operations.write_file(self.resource, self.old_contents)
 
     def __str__(self):
         return 'Change <%s>' % self.resource.path
 
     def get_description(self):
         differ = difflib.Differ()
-        result = list(differ.compare(self.old_content.splitlines(True),
-                                     self.new_content.splitlines(True)))
+        result = list(differ.compare(self.old_contents.splitlines(True),
+                                     self.new_contents.splitlines(True)))
         return ''.join(result)
 
     def get_changed_resources(self):
@@ -135,6 +167,15 @@ class ChangeContents(Change):
 
 
 class MoveResource(Change):
+    """Move a resource to a new location
+
+    Fields:
+
+    * `old_resource`: The `rope.base.resources.Resource` to move
+    * `new_resource`: The destination for move; It is the moved
+      resource not the folder containing that resource.
+
+    """
 
     def __init__(self, resource, new_location, exact=False):
         self.project = resource.project
@@ -167,6 +208,13 @@ class MoveResource(Change):
 
 
 class CreateResource(Change):
+    """A class to create a resource
+
+    Fields:
+
+    * `resource`: The resource to create
+
+    """
 
     def __init__(self, resource):
         self.resource = resource
@@ -194,6 +242,10 @@ class CreateResource(Change):
 
 
 class CreateFolder(CreateResource):
+    """A class to create a folder
+
+    See docs for `CreateResource`.
+    """
 
     def __init__(self, parent, name):
         resource = parent.project.get_folder(self._get_child_path(parent, name))
@@ -201,6 +253,10 @@ class CreateFolder(CreateResource):
 
 
 class CreateFile(CreateResource):
+    """A class to create a file
+
+    See docs for `CreateResource`.
+    """
 
     def __init__(self, parent, name):
         resource = parent.project.get_file(self._get_child_path(parent, name))
@@ -208,6 +264,13 @@ class CreateFile(CreateResource):
 
 
 class RemoveResource(Change):
+    """A class to remove a resource
+
+    Fields
+
+    * `resource`: The resource to be removed
+
+    """
 
     def __init__(self, resource):
         self.resource = resource
@@ -331,7 +394,7 @@ class ChangeToData(object):
         return (description, changes, change.time)
 
     def convertChangeContents(self, change):
-        return (change.resource.path, change.new_content, change.old_content)
+        return (change.resource.path, change.new_contents, change.old_contents)
 
     def convertMoveResource(self, change):
         return (change.old_resource.path, change.new_resource.path)
@@ -361,9 +424,9 @@ class DataToChange(object):
             result.add_change(self(child))
         return result
 
-    def makeChangeContents(self, path, new_content, old_content):
+    def makeChangeContents(self, path, new_contents, old_contents):
         resource = self.project.get_file(path)
-        return ChangeContents(resource, new_content, old_content)
+        return ChangeContents(resource, new_contents, old_contents)
 
     def makeMoveResource(self, old_path, new_path):
         resource = self.project.get_file(old_path)

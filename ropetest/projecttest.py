@@ -1,9 +1,9 @@
 import unittest
 import os
 
-from rope.base.project import (Project, NoProject,
-                               FilteredResourceObserver, path_to_resource)
+from rope.base.project import Project, NoProject, FilteredResourceObserver
 from rope.base.exceptions import RopeError
+from rope.base.libutils import path_to_resource
 from ropetest import testutils
 from rope.base.fscommands import FileSystemCommands
 

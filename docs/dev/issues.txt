@@ -102,8 +102,7 @@ performing it on changed scopes.
 
 But since rope is not notified about the changes the IDE performs, you
 should tell rope about the change.  You can do that by using
-`report_change(project, path, old_content)`.  Rope will read the file
-itself for figuring out the new contents.
+`rope.base.libtutils.report_change()`.
 
 
 Releasing Library Package

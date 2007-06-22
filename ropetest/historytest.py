@@ -252,7 +252,7 @@ class SavingHistoryTest(unittest.TestCase):
         self.history.do(change)
         self.assertEquals('2', myfile.read())
         self.history.undo()
-        self.assertEquals('1', change.old_content)
+        self.assertEquals('1', change.old_contents)
 
     def test_move_resource_saving(self):
         myfile = self.project.root.create_file('myfile.txt')
