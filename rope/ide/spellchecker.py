@@ -87,7 +87,7 @@ class Aspell(object):
     def __init__(self):
         self.process = subprocess.Popen(
             [self._find_executable(), '-a'], stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE)
+            stdout=subprocess.PIPE, close_fds=True)
 
     def _find_executable(self):
         candidates = ['/usr/bin/aspell', '/usr/local/bin/aspell',

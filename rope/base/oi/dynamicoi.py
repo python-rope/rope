@@ -45,9 +45,9 @@ class PythonFileRunner(object):
         if self.args is not None:
             args.extend(self.args)
         self.process = subprocess.Popen(
-            executable=sys.executable, args=args,
+            executable=sys.executable, args=args, env=env,
             cwd=os.path.split(file_path)[0], stdin=self.stdin,
-            stdout=self.stdout, stderr=self.stdout, env=env)
+            stdout=self.stdout, stderr=self.stdout, close_fds=True)
 
     def _init_data_receiving(self):
         if self.analyze_data is None:

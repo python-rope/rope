@@ -3,6 +3,12 @@
 ===========
 
 
+- Adding tools for making using rope library easier : June 23, 2007
+
+
+- Separating rope library from rope IDE : June 20, 2007
+
+
 - Restructuring checks for builtin objects using `__builtin__` : June 20, 2007
 
 

@@ -6,14 +6,14 @@ If you need other features, send a feature request.  Have a look at
 ``docs/dev/contributing.txt``.
 
 
-Making It Work
-==============
+Quick Start
+===========
 
 This section will help you get started as soon as possible.
 
 
-Make A Project
---------------
+Making A Project
+----------------
 
 The first thing you should do is to make a project::
 
@@ -21,6 +21,32 @@ The first thing you should do is to make a project::
 
 
   myproject = rope.base.project.Project('/path/to/myproject')
+
+It's good to know that:
+
+* A project is a folder in the file-system.
+* It can contain anything.
+* Rope searches for python modules and packages inside a project when
+  needed.
+* Refactorings only change files and folders inside the project that
+  has been passed to them.
+* Out of project modules that are imported from a module inside a
+  project are handled but never changed by refactorings.
+* Rope makes a rope folder inside projects.  By default the name of
+  this folder is ``.ropeproject`` but that can be changed using the
+  constructor's `ropefolder` parameter (passing `None` will prevent
+  rope from making this folder).
+* Rope uses ``.ropeproject`` folder for things like saving object
+  information and loading project configurations.
+* Project preferences can be configured by passing options to the
+  constructor or in ``.ropeproject/config.py``.  See the default
+  ``config.py``, `rope.base.default_config` module, for more
+  information.
+* All configurations that are available in the ``config.py`` file can
+  be specified as keyword parameters to `Project` constructor.  These
+  parameters override the ones in the ``config.py`` file.
+* Each project has a set of ignored resource patterns; You can use it
+  to ask rope to ignore files and folders matching certain patterns.
 
 
 Library Utilities
@@ -33,10 +59,10 @@ as a library easier.  We'll talk more about this module later.
 What Are These `Resource`\s?
 ----------------------------
 
-In rope each file and folder in a project are accessed through
+In rope files and folders in a project are accessed through
 `rope.base.resources.Resource` objects.  It has two subclasses `File`
-and `Folder`.  But what we care about is that refactorings and
-`Change`\s (we'll talk about them later) use resources.
+and `Folder`.  What we care about is that refactorings and `Change`\s
+(we'll talk about them later) use resources.
 
 In order to create a `Resource` for a path in a project you have two
 options.  The first approach uses your `Project` object (Use
@@ -51,9 +77,9 @@ function.  It takes a project and a path::
   myresource = libutils.path_to_resource(myproject, '/path/to/resource')
 
 
-But this is only half of the problem.  Consider we have a resource.
-How can we know anything about it? The answer is to use its ``path``
-and ``real_path`` fields.  `Resource.real_path` is the path of the
+But this is only half of the answer.  Consider we have a resource.  How
+can we know anything about it? The answer is to use its ``path`` and
+``real_path`` fields.  `Resource.real_path` is the path of the
 resource in the file-system.  The `Resource.path` field contains the
 address of a resource relative to project root (The same format as
 needed by `Project.get_resource()`_).
@@ -91,7 +117,7 @@ of a subclass of `rope.base.change.Change`.
 Previewing And Performing Changes
 ---------------------------------
 
-As mentioned in the last section each refactoring return a
+As mentioned in the last section each refactoring returns a
 `rope.base.change.Change` object.  Now how can we know what it
 contains and how to perform it?
 
@@ -104,9 +130,9 @@ The easiest way for performing the refactoring is to use
   myproject.do(changes)
 
 
-If you might want to perform the changes yourself, you have two
-options.  Note that the main reason for perform the changes manually
-is handling version control systems that are not supported by rope.
+If you want to perform the changes yourself, you have two options.
+Note that the main reason for performing the changes manually is
+handling version control systems that are not supported by rope.
 
 The first approach is to use `rope.base.fscommands`_.  See `Writing A
 FileSystemCommands`_ section.  The changes can be performed as before
@@ -129,8 +155,8 @@ resource to this method.  For example::
   myproject.validate(myproject.root)
 
 validates all files and directories in the project.  So call this
-function every time you use rope (before performing refactorings, for
-instance).
+function every time you want use rope (before performing refactorings,
+for instance).
 
 
 Activating Static Object Inference
@@ -147,7 +173,7 @@ should tell rope about the change.  You can do so by using
 `rope.base.libutils.report_change()`.  That is whenever you want to
 change a module you can do something like::
 
-  old_contents = file(path).read()
+  old_contents = read(path)
   write(path, new_content)
   libutils.report_change(myproject, path, old_contents)
 
@@ -171,17 +197,17 @@ You can create a project by::
 Where the `root_address` is the root folder of your project.
 
 A project has some useful fields.  `Project.address` is the address of
-the root folder of a project.  `Project.root` is the `Folder` that
-points to the root folder.
+the root folder of a project.  `Project.root` is a `Folder` object
+that points to that folder.
 
 
 `Project.get_resource()`
 ------------------------
 
-Is for getting a resource (that is file or folder) inside a project.
-Uses '/'s for separating directories.  For instance
-``project.get_resource('my_folder/my_file.txt')`` returns the a
-`rope.base.resources.File` object that points to
+You can use this method for getting a resource (that is file or
+folder) inside a project.  Uses ``'/'``s for separating directories.
+For instance ``project.get_resource('my_folder/my_file.txt')`` returns
+a `rope.base.resources.File` object that points to
 ``${projectroot}/my_folder/my_file.txt`` file.
 
 Note that this method assumes the resource exists.  If it does not
@@ -199,7 +225,8 @@ For committing changes returned by refactorings.
 -----------------
 
 A `rope.base.history.History` object.  You can use its `undo` and
-`redo` methods for undoing or redoing changes.
+`redo` methods for undoing or redoing changes.  Note that you can use
+it only if you have committed your changes using rope.
 
 
 `Project.validate()`
@@ -242,7 +269,7 @@ rope to use your new class.
 ``.ropeproject`` Folder
 -----------------------
 
-From version ``0.5m4``, rope makes a ``.ropeproject`` folder in the
+From version ``0.5``, rope makes a ``.ropeproject`` folder in the
 project by default for saving project configurations and data.  The
 name of this folder is passed to the constructor if you want to change
 that.  Also you can force rope not to make such a folder by passing
@@ -260,20 +287,23 @@ Provides useful methods for managing python modules and packages.
 Each project has a `PyCore` that can be accessed using
 `Project.pycore` attribute.
 
-`PyCore.run_module()` runs a resource.  When running it collects
-type information to do dynamic object inference.  For this reason
-modules run much slower.
+`PyCore.run_module()` runs a resource.  When running, it collects type
+information to do dynamic object inference.  For this reason modules
+run much slower.
+
+Also `Pycore.analyze_module()` collects object information for a
+module.  The collected information can be used to enhance rope's
+static object inference.
 
 
 `rope.base.taskhandle.TaskHandle`
 =================================
 
 For monitoring the progress and stopping time consuming tasks like
-some of the refactorings.  `Project.do()` and
-`Refactoring.get_changes()` of some refactorings take a keyword
-argument called ``task_handle``.  You can pass a
-`rope.base.taskhandle.TaskHandle` object as this argument.  See its
-methods for more information.
+some of refactorings.  `Project.do()` and `Refactoring.get_changes()`
+of some refactorings take a keyword argument called ``task_handle``.
+You can pass a `rope.base.taskhandle.TaskHandle` object as this
+argument.  See its methods for more information.
 
 
 Refactorings
@@ -292,8 +322,9 @@ Then you can commit the changes by it using `get_changes()` method::
 
   project.do(mover.get_changes(destination))
 
-Where `destination` module/package is the destination for move refactoring.
-Other refactorings classes have a similar interface.
+Where `destination` module/package is the destination resource for
+move refactoring.  Other refactorings classes have a similar
+interface.
 
 
 List Of Refactorings
