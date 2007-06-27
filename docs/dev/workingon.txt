@@ -1,7 +1,8 @@
 Being A Better Library
 ======================
 
-* Implicit interfaces fail when automatic SOI is on
+- Implicit interfaces fail when automatic SOI is on
+
 * Invalidation problems, Again!
 * Handling strings in following lines in `patchedast`
 * Using `svn` instead of `pysvn`

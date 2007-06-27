@@ -123,6 +123,7 @@ class SOIVisitor(object):
         if isinstance(pyfunction, pyobjects.PyFunction):
             self.pycore.object_info.function_called(
                 pyfunction, args.get_arguments(pyfunction.get_param_names()))
+            pyfunction._set_parameter_pyobjects(None)
         # XXX: Maybe we should not call every builtin function
         if isinstance(pyfunction, builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)

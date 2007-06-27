@@ -255,7 +255,8 @@ class PyFunction(PyDefinedObject, AbstractFunction):
                 pyobjects.append(rope.base.builtins.get_dict())
 
     def _set_parameter_pyobjects(self, pyobjects):
-        self._handle_special_args(pyobjects)
+        if pyobjects is not None:
+            self._handle_special_args(pyobjects)
         self.parameter_pyobjects.set(pyobjects)
 
     def get_parameters(self):
