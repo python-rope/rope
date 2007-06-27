@@ -92,11 +92,10 @@ class History(object):
             self.current_change = None
         self.undo_list.append(self.redo_list.pop())
 
-    def get_prev_contents(self, file):
-        change_list = list(self.undo_list)
-        if self.current_change is not None:
-            change_list.append(self.current_change)
-        result = self._search_for_change_contents(change_list, file)
+    def contents_before_current_change(self, file):
+        if self.current_change is None:
+            return None
+        result = self._search_for_change_contents([self.current_change], file)
         if result is not None:
             return result
         if file.exists() and not file.is_folder():

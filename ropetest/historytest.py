@@ -42,16 +42,6 @@ class HistoryTest(unittest.TestCase):
         self.project.history.undo()
         self.assertFalse(my_file.exists())
 
-    def test_getting_prev_contents(self):
-        my_file = self.project.root.create_file('my_file.txt')
-        self.assertEquals('', self.history.get_prev_contents(my_file))
-
-    def test_getting_prev_contents2(self):
-        my_file = self.project.root.create_file('my_file.txt')
-        my_file.write('1')
-        my_file.write('2')
-        self.assertEquals('1', self.history.get_prev_contents(my_file))
-
 
 class IsolatedHistoryTest(unittest.TestCase):
 

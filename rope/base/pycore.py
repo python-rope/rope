@@ -46,7 +46,8 @@ class PyCore(object):
         self.project.add_observer(observer)
 
     def _file_changed_for_soi(self, resource, new_resource=None):
-        old_contents = self.project.history.get_prev_contents(resource)
+        old_contents = self.project.history.\
+                       contents_before_current_change(resource)
         if old_contents is not None:
             perform_soi_on_changed_scopes(self.project, resource, old_contents)
 
