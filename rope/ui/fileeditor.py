@@ -13,8 +13,8 @@ class FileEditor(object):
         editingcontext = None
         if self.file.name.endswith('.py') or mode == 'python':
             editingcontext = editingcontexts.python
-        elif self.file.name.endswith('.txt') or mode == 'rest':
-            editingcontext = editingcontexts.rest
+        elif self.file.name.endswith('.txt') or mode == 'rst':
+            editingcontext = editingcontexts.rst
         else:
             editingcontext = editingcontexts.others
         self.editor = editor_factory.create(editingcontext)

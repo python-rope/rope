@@ -412,7 +412,7 @@ actions.append(SimpleAction('find_occurrences', find_occurrences, 'C-c C-s',
 
 actions.append(SimpleAction('correct_line_indentation', do_correct_line_indentation, 'C-i',
                             MenuAddress(['Source', 'Correct Line Indentation'], 'i', 1),
-                            ['python', 'rest']))
+                            ['python', 'rst']))
 actions.append(SimpleAction('format_code', do_format_code, 'C-c C-f',
                             MenuAddress(['Source', 'Remove Extra Spaces And Lines'], None, 1),
                             ['python']))

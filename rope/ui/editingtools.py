@@ -9,7 +9,7 @@ import rope.refactor.sourceutils
 def get_editingtools_for_context(editing_context, project, prefs):
     if editing_context.name == 'python':
         return PythonEditingTools(project, prefs)
-    if editing_context.name == 'rest':
+    if editing_context.name == 'rst':
         return ReSTEditingTools()
     return NormalEditingTools()
 

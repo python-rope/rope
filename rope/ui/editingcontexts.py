@@ -17,7 +17,7 @@ class EditingContext(object):
 contexts = {}
 
 def init_contexts(core):
-    for name in ['python', 'rest', 'others', 'none']:
+    for name in ['python', 'rst', 'others', 'none']:
         if name not in contexts:
             context = EditingContext(name, core)
             globals()[name] = context

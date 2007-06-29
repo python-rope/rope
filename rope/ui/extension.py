@@ -43,8 +43,8 @@ class Action(object):
     def get_active_contexts(self):
         """Return a list of context names this actions is active in
 
-        The list can contain 'python', 'rest', 'others', 'all' or 'none'.
-        'none' context is active when no editor is open.
+        The list can contain 'python', 'rst', 'others', 'all' or
+        'none'.  'none' context is active when no editor is open.
         """
 
 
