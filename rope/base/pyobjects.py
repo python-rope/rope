@@ -355,7 +355,6 @@ class _ConcludedData(object):
 class _PyModule(PyDefinedObject, AbstractModule):
 
     def __init__(self, pycore, ast_node, resource):
-        self.dependant_modules = set()
         self.resource = resource
         self.concluded_data = []
         AbstractModule.__init__(self)
@@ -366,17 +365,9 @@ class _PyModule(PyDefinedObject, AbstractModule):
         self.concluded_data.append(new_data)
         return new_data
 
-    def _add_dependant(self, pymodule):
-        if pymodule.get_resource():
-            self.dependant_modules.add(pymodule)
-
     def _invalidate_concluded_data(self):
-        dependant_modules = set(self.dependant_modules)
-        self.dependant_modules.clear()
         for data in self.concluded_data:
             data._invalidate()
-        for module in dependant_modules:
-            module._invalidate_concluded_data()
 
     def get_resource(self):
         return self.resource
@@ -441,7 +432,7 @@ class PyPackage(_PyModule):
         if init_dot_py:
             init_object = self.pycore.resource_to_pyobject(init_dot_py)
             result.update(init_object.get_attributes())
-            init_object._add_dependant(self)
+            self.pycore._add_dependency(self, init_object)
         return result
 
     def _get_child_resources(self):

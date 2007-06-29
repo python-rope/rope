@@ -182,7 +182,8 @@ class ImportedModule(PyName):
                 except ModuleNotFoundError:
                     pass
             if self.pymodule.get() is not None:
-                self.pymodule.get()._add_dependant(self.importing_module)
+                pycore._add_dependency(self.importing_module,
+                                       self.pymodule.get())
         return self.pymodule.get()
 
     def get_object(self):
@@ -220,21 +221,14 @@ class StarImport(object):
 
     def __init__(self, imported_module):
         self.imported_module = imported_module
-        self.names = _get_concluded_data(imported_module.importing_module)
 
     def get_names(self):
-        if self.names.get() is None:
-            # NOTE: importing everything from packages; all submodules!
-            #if isinstance(self.imported_module.get_object(),
-            #              rope.base.pyobjects.PyPackage):
-            #    return {}
-            result = {}
-            imported = self.imported_module.get_object()
-            for name, pyname in imported.get_attributes().items():
-                if not name.startswith('_'):
-                    result[name] = ImportedName(self.imported_module, name)
-            self.names.set(result)
-        return self.names.get()
+        result = {}
+        imported = self.imported_module.get_object()
+        for name, pyname in imported.get_attributes().items():
+            if not name.startswith('_'):
+                result[name] = ImportedName(self.imported_module, name)
+        return result
 
 
 def _get_concluded_data(module):

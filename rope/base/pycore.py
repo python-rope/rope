@@ -14,10 +14,10 @@ class PyCore(object):
 
     def __init__(self, project):
         self.project = project
-        self.module_map = {}
+        self._init_resource_observer()
         self.cache_observers = []
         self.classes_cache = _ClassesCache(self)
-        self._init_resource_observer()
+        self.module_cache = _ModuleCache(self)
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self._init_automatic_soi()
@@ -78,11 +78,6 @@ class PyCore(object):
     def _invalidate_resource_cache(self, resource, new_resource=None):
         for observer in self.cache_observers:
             observer(resource)
-        if resource in self.module_map:
-            local_module = self.module_map[resource]
-            self.observer.remove_resource(resource)
-            del self.module_map[resource]
-            local_module._invalidate_concluded_data()
 
     def create_module(self, src_folder, new_module):
         """Creates a module and returns a `rope.project.File`"""
@@ -181,15 +176,7 @@ class PyCore(object):
         return result
 
     def resource_to_pyobject(self, resource):
-        if resource in self.module_map:
-            return self.module_map[resource]
-        if resource.is_folder():
-            result = PyPackage(self, resource)
-        else:
-            result = PyModule(self, resource.read(), resource=resource)
-        self.module_map[resource] = result
-        self.observer.add_resource(resource)
-        return result
+        return self.module_cache.get_pymodule(resource)
 
     def get_python_files(self):
         """Returns all python files available in the project"""
@@ -219,10 +206,6 @@ class PyCore(object):
     def _get_object_infer(self):
         return self.object_infer
 
-    def _invalidate_all_concluded_data(self):
-        for module in self.module_map.values():
-            module._invalidate_concluded_data()
-
     def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Run `resource` module
 
@@ -235,7 +218,8 @@ class PyCore(object):
             receiver = None
         runner = dynamicoi.PythonFileRunner(self, resource, args, stdin,
                                             stdout, receiver)
-        runner.add_finishing_observer(self._invalidate_all_concluded_data)
+        runner.add_finishing_observer(
+            self.module_cache.invalidate_all_data)
         runner.run()
         return runner
 
@@ -250,7 +234,7 @@ class PyCore(object):
 
         """
         pymodule = self.resource_to_pyobject(resource)
-        pymodule._invalidate_concluded_data()
+        self.module_cache.invalidate_data(resource)
         self.object_infer.soi.analyze_module(pymodule, should_analyze)
 
     def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
@@ -261,9 +245,61 @@ class PyCore(object):
     def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
         return self.classes_cache.get_classes(task_handle)
 
+    def _add_dependency(self, dependent_pymodule, dependency_pymodule):
+        self.module_cache.add_dependency(dependent_pymodule,
+                                         dependency_pymodule)
+
     def __str__(self):
-        return 'PyCore caches %d PyModules\n' % len(self.module_map) + \
-               str(self.object_info)
+        return str(self.module_cache) + str(self.object_info)
+
+
+class _ModuleCache(object):
+
+    def __init__(self, pycore):
+        self.pycore = pycore
+        self.module_map = {}
+        self.dependents = {}
+        self.pycore.cache_observers.append(self._invalidate_resource)
+        self.observer = self.pycore.observer
+
+    def _invalidate_resource(self, resource):
+        if resource in self.module_map:
+            self.invalidate_data(resource)
+            self.observer.remove_resource(resource)
+            del self.module_map[resource]
+            del self.dependents[resource]
+
+    def invalidate_data(self, resource):
+        if resource in self.module_map:
+            self.module_map[resource]._invalidate_concluded_data()
+            dependents = set(self.dependents[resource])
+            self.dependents[resource].clear()
+            for dependent in dependents:
+                self.invalidate_data(dependent)
+
+    def get_pymodule(self, resource):
+        if resource in self.module_map:
+            return self.module_map[resource]
+        if resource.is_folder():
+            result = PyPackage(self.pycore, resource)
+        else:
+            result = PyModule(self.pycore, resource.read(), resource=resource)
+        self.module_map[resource] = result
+        self.dependents[resource] = set()
+        self.observer.add_resource(resource)
+        return result
+
+    def invalidate_all_data(self):
+        for resource in self.module_map:
+            self.invalidate_data(resource)
+
+    def add_dependency(self, dependent, dependency):
+        if dependency.get_resource() and dependent.get_resource():
+            self.dependents[dependency.get_resource()].add(
+                dependent.get_resource())
+
+    def __str__(self):
+        return 'PyCore caches %d PyModules\n' % len(self.module_map)
 
 
 class _ClassesCache(object):

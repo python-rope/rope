@@ -135,4 +135,7 @@ Stories
 * Split tuple assignment refactoring
 
 
+* Next/prev sentence
+
+
 > Public Release 0.6m4 : July 1, 2007

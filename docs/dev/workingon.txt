@@ -1,9 +1,16 @@
-Being A Better Library
-======================
+Small Stories
+=============
 
-- Implicit interfaces fail when automatic SOI is on
+- Renaming `rest` to `rst`
+- Adding `_ModuleCache`
+- Adding `PyCore._add_dependency()`
 
-* Invalidation problems, Again!
+* Adding `PyModule.is_valid()`
+* Using weakref to prevent unnecessary invalidation?
+* Adding `rope.base.refs`?
+* Invalidation problems and function parameter cache
+* Removing function parameter cache using set on individual `ParameterName`\s
+
 * Handling strings in following lines in `patchedast`
 * Using `svn` instead of `pysvn`
 * Extracting subexpressions; look at `extracttest` for more info
