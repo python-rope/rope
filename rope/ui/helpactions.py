@@ -12,17 +12,8 @@ from rope.base import project
 def show_about_dialog(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('About Rope')
-    text = rope.__doc__ + ' ...\n' + \
-           'version ' + rope.VERSION + '\n\n' + \
-           'Copyright (C) 2006-2007 Ali Gholami Rudi\n\n' + \
-           'This program is free software; you can redistribute it and/or modify it\n' + \
-           'under the terms of GNU General Public License as published by the \n' + \
-           'Free Software Foundation; either version 2 of the license, or (at your \n' + \
-           'opinion) any later version.\n\n' + \
-           'This program is distributed in the hope that it will be useful,\n' + \
-           'but WITHOUT ANY WARRANTY; without even the implied warranty of\n' + \
-           'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n' + \
-           'GNU General Public License for more details.\n'
+    text = '%s and IDE ...\nversion %s\n\n%s\n' % \
+           (rope.INFO, rope.VERSION, rope.COPYRIGHT)
     label = Tkinter.Label(toplevel, text=text, height=16, width=70,
                           justify=Tkinter.LEFT, relief=Tkinter.GROOVE)
     def ok():

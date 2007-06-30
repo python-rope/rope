@@ -83,7 +83,7 @@ project page at http://sf.net/projects/rope.
 License
 =======
 
-This program is under the terms of GPL(GNU General Public License).
+This program is under the terms of GPL (GNU General Public License).
 Have a look at ``COPYING`` file for more information.
 
 
