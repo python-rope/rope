@@ -794,6 +794,13 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod1.write('class A(object):\n    def func2(self):\n        pass\n')
         self.assertTrue('func2' in b_class.get_attributes())
 
+    def test_simple_module(self):
+        mod = self.pycore.create_module(self.project.root, 'mod')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertTrue(pymod.is_valid())
+        mod.write('a = 1\n')
+        self.assertFalse(pymod.is_valid())
+
 
 class ClassHierarchyTest(unittest.TestCase):
 

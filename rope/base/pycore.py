@@ -219,7 +219,7 @@ class PyCore(object):
         runner = dynamicoi.PythonFileRunner(self, resource, args, stdin,
                                             stdout, receiver)
         runner.add_finishing_observer(
-            self.module_cache.invalidate_all_data)
+            self.module_cache.forget_all_data)
         runner.run()
         return runner
 
@@ -234,7 +234,7 @@ class PyCore(object):
 
         """
         pymodule = self.resource_to_pyobject(resource)
-        self.module_cache.invalidate_data(resource)
+        self.module_cache.forget_data(resource)
         self.object_infer.soi.analyze_module(pymodule, should_analyze)
 
     def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
@@ -264,18 +264,19 @@ class _ModuleCache(object):
 
     def _invalidate_resource(self, resource):
         if resource in self.module_map:
-            self.invalidate_data(resource)
+            self.module_map[resource].invalidate()
+            self.forget_data(resource)
             self.observer.remove_resource(resource)
             del self.module_map[resource]
             del self.dependents[resource]
 
-    def invalidate_data(self, resource):
+    def forget_data(self, resource):
         if resource in self.module_map:
-            self.module_map[resource]._invalidate_concluded_data()
+            self.module_map[resource]._forget_concluded_data()
             dependents = set(self.dependents[resource])
             self.dependents[resource].clear()
             for dependent in dependents:
-                self.invalidate_data(dependent)
+                self.forget_data(dependent)
 
     def get_pymodule(self, resource):
         if resource in self.module_map:
@@ -289,9 +290,9 @@ class _ModuleCache(object):
         self.observer.add_resource(resource)
         return result
 
-    def invalidate_all_data(self):
+    def forget_all_data(self):
         for resource in self.module_map:
-            self.invalidate_data(resource)
+            self.forget_data(resource)
 
     def add_dependency(self, dependent, dependency):
         if dependency.get_resource() and dependent.get_resource():

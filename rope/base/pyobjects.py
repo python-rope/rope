@@ -357,6 +357,7 @@ class _PyModule(PyDefinedObject, AbstractModule):
     def __init__(self, pycore, ast_node, resource):
         self.resource = resource
         self.concluded_data = []
+        self._is_valid = True
         AbstractModule.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, None)
 
@@ -365,12 +366,18 @@ class _PyModule(PyDefinedObject, AbstractModule):
         self.concluded_data.append(new_data)
         return new_data
 
-    def _invalidate_concluded_data(self):
+    def _forget_concluded_data(self):
         for data in self.concluded_data:
             data._invalidate()
 
     def get_resource(self):
         return self.resource
+
+    def is_valid(self):
+        return self._is_valid
+
+    def invalidate(self):
+        self._is_valid = False
 
 
 class PyModule(_PyModule):

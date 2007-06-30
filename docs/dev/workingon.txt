@@ -1,12 +1,10 @@
 Small Stories
 =============
 
-- Renaming `rest` to `rst`
-- Adding `_ModuleCache`
-- Adding `PyCore._add_dependency()`
+- Adding `PyModule.is_valid()`
 
-* Adding `PyModule.is_valid()`
 * Using weakref to prevent unnecessary invalidation?
+* Moving `PyCore.create_module()` and `PyCore.create_package()`?
 * Adding `rope.base.refs`?
 * Invalidation problems and function parameter cache
 * Removing function parameter cache using set on individual `ParameterName`\s
