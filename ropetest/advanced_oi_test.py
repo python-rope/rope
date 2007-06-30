@@ -661,6 +661,25 @@ class NewStaticOITest(unittest.TestCase):
         p_type = f_scope.get_name('p').get_object().get_type()
         self.assertEquals(c_class, p_type)
 
+    def test_validation_problems_for_objectdb_retrievals(self):
+        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod1.write('l = []\nvar = l.pop()\n')
+        mod2.write('import mod1\n\nclass C(object):\n    pass\n'
+                   'mod1.l.append(C())\n')
+        self.pycore.analyze_module(mod2)
+
+        pymod2 = self.pycore.resource_to_pyobject(mod2)
+        c_class = pymod2.get_attribute('C').get_object()
+        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        var_pyname = pymod1.get_attribute('var')
+        self.assertEquals(c_class, var_pyname.get_object().get_type())
+        mod2.write('import mod1\n\nmod1.l.append("")\n')
+        # Either `pymod1` should be invalid or should not reference to `pymod2`
+        if pymod1.is_valid():
+            self.assertNotEquals(c_class, var_pyname.get_object().get_type(),
+                                 'Class `C` no more exists')
+
 
 def suite():
     result = unittest.TestSuite()

@@ -82,6 +82,11 @@ We should use an approach that:
 
 The current approach fails in all of these.
 
+Why weakref cannot be used in ConcludedData?
+  Concluded data can hold anything.  It can hold a `PyObject` whose
+  type might be invalidated.  But since that pyobject is not
+  referenced it is considered garbage.
+
 
 How `_ConcludedData` Is Used
 ----------------------------
@@ -145,6 +150,12 @@ Actually there are two separate issues:
 The former is already handled.  But the other problem exists mainly
 because of SOI.
 
+The other problem happens when data in our objectdb is retrieved.  No
+dependency is added to pycore for such things.
+
+So the easiest approach would be to forget all concluded data with
+every change.
+
 
 Adding `PyModule.register_invalidation_observer()`
 --------------------------------------------------
@@ -197,7 +208,7 @@ Invalidating Imported Modules In Both Directions
 ------------------------------------------------
 
 If other approaches fails I have to use this.  We have to handle
-loops, by the way.
+loops, by the way.  In the end, it does not solve all of the problems!
 
 
 Better Concluded Data

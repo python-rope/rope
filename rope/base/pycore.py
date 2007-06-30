@@ -265,7 +265,10 @@ class _ModuleCache(object):
     def _invalidate_resource(self, resource):
         if resource in self.module_map:
             self.module_map[resource].invalidate()
-            self.forget_data(resource)
+            # XXX: Forgetting all data due to invalidation problems
+            # TODO: Very inefficient
+            #self.forget_data(resource)
+            self.forget_all_data()
             self.observer.remove_resource(resource)
             del self.module_map[resource]
             del self.dependents[resource]

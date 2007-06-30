@@ -1,7 +1,7 @@
 Small Stories
 =============
 
-- Adding `PyModule.is_valid()`
+- Every change makes all pymodules forget all concluded data
 
 * Using weakref to prevent unnecessary invalidation?
 * Moving `PyCore.create_module()` and `PyCore.create_package()`?

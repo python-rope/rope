@@ -126,6 +126,9 @@ Stories
 * Renaming and moving normal files/folders
 
 
+* Sorting methods
+
+
 * Lambdas as functions; consider their parameters
 
 
