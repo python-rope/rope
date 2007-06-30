@@ -58,6 +58,7 @@ class _PatchingASTWalker(object):
         self.source = _Source(source)
         self.children = children
         self.lines = codeanalyze.SourceLinesAdapter(source)
+        self.children_stack = []
 
     Number = object()
     String = object()
@@ -74,12 +75,14 @@ class _PatchingASTWalker(object):
         if hasattr(node, 'region'):
             raise RuntimeError('Node <%s> has been already patched!' %
                                node.__class__.__name__)
+        self.children_stack.append(base_children)
         children = []
         formats = []
         suspected_start = self.source.offset
         start = suspected_start
         first_token = True
-        for child in base_children:
+        while base_children:
+            child = base_children.pop(0)
             if child is None:
                 continue
             offset = self.source.offset
@@ -88,7 +91,8 @@ class _PatchingASTWalker(object):
                 token_start = child.region[0]
             else:
                 if child is self.String:
-                    region = self.source.consume_string()
+                    region = self.source.consume_string(
+                        end=self._find_next_statement_start())
                 elif child is self.Number:
                     region = self.source.consume_number()
                 elif child == '!=':
@@ -118,6 +122,7 @@ class _PatchingASTWalker(object):
         if self.children:
             node.sorted_children = children
         node.region = (start, self.source.offset)
+        self.children_stack.pop()
 
     def _handle_parens(self, children, start, formats):
         """Changes `children` and returns new start"""
@@ -173,6 +178,13 @@ class _PatchingASTWalker(object):
                         break
                 index += 1
         return start, opens
+
+    def _find_next_statement_start(self):
+        for children in reversed(self.children_stack):
+            for child in children:
+                if isinstance(child, ast.stmt):
+                    return self.lines.get_line_start(child.lineno)
+        return len(self.source.source)
 
     _operators = {'And': 'and', 'Or': 'or', 'Add': '+', 'Sub': '-', 'Mult': '*',
                   'Div': '/', 'Mod': '%', 'Pow': '**', 'LShift': '<<',
@@ -433,7 +445,7 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Module(self, node):
-        self._handle(node, node.body, eat_spaces=True)
+        self._handle(node, list(node.body), eat_spaces=True)
 
     def _Name(self, node):
         self._handle(node, [node.id])
@@ -589,14 +601,14 @@ class _Source(object):
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
-    def consume_string(self):
+    def consume_string(self, end=None):
         if _Source._string_pattern is None:
             original = codeanalyze.get_string_pattern()
             pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
                       (original, original)
             _Source._string_pattern = re.compile(pattern)
         repattern = _Source._string_pattern
-        return self._consume_pattern(repattern)
+        return self._consume_pattern(repattern, end)
 
     def consume_number(self):
         if _Source._number_pattern is None:
@@ -632,9 +644,11 @@ class _Source(object):
         lines = self.source[:self.offset].split('\n')
         return (len(lines), len(lines[-1]))
 
-    def _consume_pattern(self, repattern):
+    def _consume_pattern(self, repattern, end=None):
         while True:
-            match = repattern.search(self.source, self.offset)
+            if end is None:
+                end = len(self.source)
+            match = repattern.search(self.source, self.offset, end)
             if self._good_token(match.group(), match.start()):
                 break
             else:

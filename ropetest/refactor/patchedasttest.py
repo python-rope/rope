@@ -145,11 +145,11 @@ class PatchedASTTest(unittest.TestCase):
             'Assign', ['Name' , ' ', '=', ' (', 'Str', ')'])
         checker.check_children('Str', ["'1' \n'2'"])
 
-    # XXX: Handle this case
-    def xxx_test_not_concatenating_strings_on_separate_lines(self):
+    def test_not_concatenating_strings_on_separate_lines(self):
         source = "'1'\n'2'\n"
         ast = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast)
+        checker.check_children('Module', ['', 'Expr', '\n', 'Expr', '\n'])
 
     def test_long_integer_literals(self):
         source = "0x1L + a"

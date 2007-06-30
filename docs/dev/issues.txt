@@ -65,26 +65,21 @@ To Be Discussed
 Cache Invalidation And Parameter Cache
 ======================================
 
-`PyFunction` holds a cache of is parameters.  The reason this cache is
-not moved to the `ParameterName` is that in SOI we need to set the
-parameters and then we start analyzing the return value.
-
-The main problem with this approach is that the cache references other
-modules and python elements.  I think this happens because SOI might
-analyze calls in the reverse order of imports.  But fixing it needs
-lots of work and maybe changing rope considerably.
+When retrieving pyobjects from objectdb no dependencies between
+pymodules is added.  This might lead to references to invalidated
+modules.
 
 We should use an approach that:
 
-* Never should allow access an invalidated object
-* Does not stop garbage collection from freeing invalidated objects
+* Never should allow access to an invalidated object
+* Should not stop garbage collection from freeing invalidated objects
 * Should be easy to test
 
 The current approach fails in all of these.
 
 Why weakref cannot be used in ConcludedData?
   Concluded data can hold anything.  It can hold a `PyObject` whose
-  type might be invalidated.  But since that pyobject is not
+  type might be a `PyDefinedObject`.  But since that pyobject is not
   referenced it is considered garbage.
 
 
@@ -168,47 +163,6 @@ list of objects.
 
 * When an observer was informed it should be removed from the list of
   observers
-
-
-Adding `PyModule.is_valid()`
-----------------------------
-
-This requires introducing `_PyObjectRef`, `_PyNameRef`, and probably
-`_PyObjectListRef`.  We'll also be able to remove the list of
-concluded objects in `PyModule`.  These objects should use weak
-references.
-
-But this does not seem to work::
-
-  class DependentRef(object):
-      """The data remains valid as long as the dependency remains valid"""
-
-      def __init__(self, dependency=None, data=None):
-          self.dependency = weak(dependency)
-          self.data = weak(data)
-
-      def get(self):
-          if self._is_dependency_valid():
-              return self.data
-          self.data = None
-
-
-  class PyObjectRef(object):
-
-      def __init__(self, pyobject=None):
-          self.data = weak(data)
-
-      def get(self):
-          if self.is_valid(self.data):
-              return self.data
-          self.data = None
-
-
-Invalidating Imported Modules In Both Directions
-------------------------------------------------
-
-If other approaches fails I have to use this.  We have to handle
-loops, by the way.  In the end, it does not solve all of the problems!
 
 
 Better Concluded Data
