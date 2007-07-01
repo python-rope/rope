@@ -141,4 +141,4 @@ Stories
 * Next/prev sentence
 
 
-> Public Release 0.6m4 : July 1, 2007
+> Public Release 0.6m5 : July 15, 2007

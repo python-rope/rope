@@ -1,13 +1,8 @@
 Small Stories
 =============
 
-- Handling strings in following lines in `patchedast`
-- GPL notice in the library
-
-* Refactoring `rope.refactor.patchedast`
 * Moving `PyCore.create_module()` and `PyCore.create_package()`? Where
   to? `libutils` maybe?
-
 * Using `svn` instead of `pysvn`
 * Extracting subexpressions; look at `extracttest` for more info
 * Create ... and implicit interfaces?

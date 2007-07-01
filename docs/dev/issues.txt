@@ -73,9 +73,9 @@ We should use an approach that:
 
 * Never should allow access to an invalidated object
 * Should not stop garbage collection from freeing invalidated objects
-* Should be easy to test
 
-The current approach fails in all of these.
+The current approach achieves these but is very expensive.  Every
+change causes concluded data in all pymodules to be forgotten.
 
 Why weakref cannot be used in ConcludedData?
   Concluded data can hold anything.  It can hold a `PyObject` whose

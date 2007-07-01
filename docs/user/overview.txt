@@ -992,9 +992,8 @@ or there is no version control at all.  Also don't forget to commit
 your changes yourself, rope doesn't do that.
 
 Adding support for other VCSs is easy have a look at
-`../dev/library.txt`_.
+`library.txt`_.
 
-.. _../dev/library.txt: ../dev/library.html
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
 

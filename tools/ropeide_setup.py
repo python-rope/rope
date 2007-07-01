@@ -49,7 +49,7 @@ make_temps()
 try:
     setup(name='ropeide',
           version=rope.VERSION,
-          description='a python refactoring IDE and library...',
+          description='a python refactoring IDE...',
           long_description=get_long_description(),
           author='Ali Gholami Rudi',
           author_email='aligrudi@users.sourceforge.net',
