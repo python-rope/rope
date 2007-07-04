@@ -323,8 +323,11 @@ class _ExceptionalConditionChecker(object):
 
     def _is_on_a_word(self, info, offset):
         prev = info.source[offset]
+        if not (prev.isalnum() or prev == '_') or \
+           offset + 1 == len(info.source):
+            return False
         next = info.source[offset + 1]
-        return (prev.isalnum() or prev == '_') and (next.isalnum() or next == '_')
+        return next.isalnum() or next == '_'
 
 
 class _ExtractMethodParts(object):

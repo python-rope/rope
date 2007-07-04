@@ -1,6 +1,9 @@
 Small Stories
 =============
 
+* Not including dev docs on distribution packages
+
+* Removing input and output streams from `PyCore.run_module()`
 * Moving `PyCore.create_module()` and `PyCore.create_package()`? Where
   to? `libutils` maybe?
 * Using `svn` instead of `pysvn`

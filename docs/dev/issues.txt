@@ -194,26 +194,43 @@ Note that concluded attributes are:
 Releasing Library Package
 =========================
 
-As it is written in ``README.txt`` file the initial goal of rope was
-to release a library if it achieved its goals:
-
-  The type inference and refactoring parts will not be dependent on
-  *rope* IDE and if successful, will be released as standalone
-  programs and libraries so that other projects may use them.
-
-I think it is now the time.
-
-* A new ``setup.py`` for making and registering library package
-* The library package will contain `rope`, `rope.base`, and
-  `rope.refactor` packages
-* The name of packages: using ``rope`` for the library and
-  ``ropeide`` for the IDE
-
 Issues:
 
 * Two separate ``README.txt`` files?
 * Should the IDE contain the library?
 * Separating common, library, and IDE documents
+
+New document tree:
+
+  docs/
+    dev/
+      workingon.txt
+      issues.txt
+      done.txt
+      stories.txt
+    library.txt
+    overview.txt
+    tutorial.txt
+    contributing.txt
+    done.txt
+  README.txt
+  COPYING
+
+Library Docs:
+
+  * README.txt
+  * tutorial.txt
+  * overview.txt
+  * done.txt
+  * library.txt
+  * contributing.txt
+
+IDE Docs:
+
+  * README.txt
+  * done.txt
+  * library.txt
+  * contributing.txt
 
 
 Memory Management

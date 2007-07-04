@@ -59,7 +59,7 @@ as a library easier.  We'll talk more about this module later.
 What Are These `Resource`\s?
 ----------------------------
 
-In rope files and folders in a project are accessed through
+In rope, files and folders in a project are accessed through
 `rope.base.resources.Resource` objects.  It has two subclasses `File`
 and `Folder`.  What we care about is that refactorings and `Change`\s
 (we'll talk about them later) use resources.
@@ -170,7 +170,7 @@ performing it on changed scopes.
 
 But since rope is not notified about the changes the IDE performs, you
 should tell rope about the change.  You can do so by using
-`rope.base.libutils.report_change()`.  That is whenever you want to
+`rope.base.libutils.report_change()`.  That is, whenever you want to
 change a module you can do something like::
 
   old_contents = read(path)

@@ -1,7 +1,7 @@
 """rope, a python refactoring library"""
 
 INFO = __doc__
-VERSION = '0.6m4'
+VERSION = '0.6m5'
 COPYRIGHT = """\
 Copyright (C) 2006-2007 Ali Gholami Rudi
 

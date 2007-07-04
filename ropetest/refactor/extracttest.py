@@ -633,6 +633,14 @@ class ExtractMethodTest(unittest.TestCase):
                    '    def one(self):\n        return 1\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_variable_with_no_new_lines_at_the_end(self):
+        code = 'a_var = 10'
+        start = code.index('10')
+        end = start + 2
+        refactored = self.do_extract_variable(code, start, end, 'new_var')
+        expected = 'new_var = 10\na_var = new_var'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
