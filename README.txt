@@ -53,17 +53,6 @@ programs like "bicycle repair man" aren't reliable due to type
 inference problems and they support a limited number of refactorings.
 *Rope* tries to improve these limitations.
 
-* Why an IDE and not a standalone library or program?
-
-As Don Roberts one of the writers of the "Refactoring Browser" for
-smalltalk writes:
-
-  "An early implementation of the Refactoring Browser for Smalltalk
-  was a separate tool from the standard Smalltalk development tools.
-  What we found was that no one used it.  We did not even use it
-  ourselves.  Once we integrated the refactorings directly into the
-  Smalltalk Browser, we used them extensively."
-
 The main goal of *rope* is to concentrate on the type inference and
 refactoring of python programs and not a state of art IDE (At least
 not in the first phase).  The type inference and refactoring parts

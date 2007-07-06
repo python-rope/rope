@@ -142,3 +142,6 @@ Stories
 
 
 > Public Release 0.6m5 : July 15, 2007
+
+
+* Auto-import in restructurings

@@ -375,8 +375,8 @@ class MoveModule(object):
         if not resource.is_folder() and resource.name == '__init__.py':
             resource = resource.parent
         dummy_pymodule = self.pycore.get_string_module('')
-        self.old_pyname = pynames.ImportedModule(
-            dummy_pymodule, resource=resource)
+        self.old_pyname = pynames.ImportedModule(dummy_pymodule,
+                                                 resource=resource)
         self.source = self.old_pyname.get_object().get_resource()
         if self.source.is_folder():
             self.old_name = self.source.name

@@ -7,7 +7,7 @@ from rope.refactor import patchedast, similarfinder
 class Codetags(object):
 
     def __init__(self):
-        self.pattern = re.compile('# ([A-Z!?]{2,10}):')
+        self.pattern = re.compile('# ([A-Z!\\?]{2,10}):')
 
     def tags(self, source):
         result = []

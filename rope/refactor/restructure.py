@@ -22,13 +22,24 @@ class Restructure(object):
             collector = sourceutils.ChangeCollector(pymodule.source_code)
             for match in finder.get_matches(self.pattern):
                 start, end = match.get_region()
-                collector.add_change(
-                    start, end, self._get_text(pymodule.source_code, match))
+                replacement = self._get_text(pymodule.source_code, match)
+                replacement = self._auto_indent(pymodule, start, replacement)
+                collector.add_change(start, end, replacement)
             result = collector.get_changed()
             if result is not None:
                 changes.add_change(change.ChangeContents(resource, result))
             job_set.finished_job()
         return changes
+
+    def _auto_indent(self, pymodule, offset, text):
+        lineno = pymodule.lines.get_line_number(offset)
+        indents = sourceutils.get_indents(pymodule.lines, lineno)
+        result = []
+        for index, line in enumerate(text.splitlines(True)):
+            if index != 0 and line.strip():
+                result.append(' ' * indents)
+            result.append(line)
+        return ''.join(result)
 
     def _get_text(self, source, match):
         mapping = {}

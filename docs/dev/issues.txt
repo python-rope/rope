@@ -62,6 +62,15 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
+Enhancing Refactorings
+======================
+
+* Ideas for new refactorings
+* Easier refactorings
+* Automating tasks
+* Better import handling
+
+
 Cache Invalidation And Parameter Cache
 ======================================
 
@@ -218,19 +227,19 @@ New document tree:
 
 Library Docs:
 
-  * README.txt
-  * tutorial.txt
-  * overview.txt
-  * done.txt
-  * library.txt
-  * contributing.txt
+* README.txt
+* tutorial.txt
+* overview.txt
+* done.txt
+* library.txt
+* contributing.txt
 
 IDE Docs:
 
-  * README.txt
-  * done.txt
-  * library.txt
-  * contributing.txt
+* README.txt
+* done.txt
+* library.txt
+* contributing.txt
 
 
 Memory Management

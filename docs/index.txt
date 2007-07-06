@@ -2,7 +2,7 @@
  rope
 ======
 
-``a python refactoring IDE and library ...``
+``a python refactoring library and IDE ...``
 
 
 Overview

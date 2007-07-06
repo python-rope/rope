@@ -92,6 +92,27 @@ class RestructureTest(unittest.TestCase):
         self.project.do(refactoring.get_changes(checks))
         self.assertEquals('a = 1 * 2\n', self.mod.read())
 
+    def test_auto_indentation_when_no_indentation(self):
+        self.mod.write('a = 2\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?a} = 2', '${?a} = 1\n${?a} += 1')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('a = 1\na += 1\n', self.mod.read())
+
+    def test_auto_indentation(self):
+        self.mod.write('def f():\n    a = 2\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?a} = 2', '${?a} = 1\n${?a} += 1')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('def f():\n    a = 1\n    a += 1\n', self.mod.read())
+
+    def test_auto_indentation_and_not_indenting_blanks(self):
+        self.mod.write('def f():\n    a = 2\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?a} = 2', '${?a} = 1\n\n${?a} += 1')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('def f():\n    a = 1\n\n    a += 1\n', self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()

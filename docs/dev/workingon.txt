@@ -1,17 +1,18 @@
 Small Stories
 =============
 
+* Extracting subexpressions; look at `extracttest` for more info
+* Remove ``change occurreces`` refactoring
 * Not including dev docs on distribution packages
-
-* Removing input and output streams from `PyCore.run_module()`
+* Changing version format
+* Using similarfinder in introduce_parameter?
+* Should we move generate to refactor?
 * Moving `PyCore.create_module()` and `PyCore.create_package()`? Where
   to? `libutils` maybe?
 * Using `svn` instead of `pysvn`
-* Extracting subexpressions; look at `extracttest` for more info
 * Create ... and implicit interfaces?
-* Add custom refactoring section to ``overview.txt`` file;
-  Extract field refactoring
-* Handle tuple parameters?
+* Handling tuple parameters?
+* Using GPLv3 from 0.7?
 
 
 Remaining Small Stories
@@ -30,14 +31,15 @@ Base:
 UI and IDE:
 
 * Inserting common prefix when using codeassist
-* Renaming normal files, folders, modules, and packages in project tree view
+* Renaming files, folders, modules, and packages in project tree view
 * Completion in module entries
 * Goto definition for ``"# comment.\na_var"``
 * Comments should be indented
 
 Docs:
 
-* More documentation for using rope as a library
-* Document features and organize them
 * Explain why rope does not stop users from performing wrong
   refactorings
+* Add custom refactoring section to ``overview.txt`` file;
+  Extract field refactoring
+* Document why support for Python ``2.4`` was dropped
