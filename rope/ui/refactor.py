@@ -805,7 +805,7 @@ class RestructureDialog(RefactoringDialog):
         goal_label = Tkinter.Label(frame, text='Goal :')
         pattern_label = Tkinter.Label(frame, text='Pattern :')
         self.pattern = Tkinter.Text(frame, width=50, height=2)
-        self.goal = Tkinter.Text(frame, width=50, height=1)
+        self.goal = Tkinter.Text(frame, width=50, height=2)
 
         pattern_label.grid(row=0, column=0, sticky=Tkinter.W)
         self.pattern.grid(row=0, column=1, sticky=Tkinter.W)

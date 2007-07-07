@@ -111,7 +111,23 @@ class RestructureTest(unittest.TestCase):
         refactoring = restructure.Restructure(
             self.project, '${?a} = 2', '${?a} = 1\n\n${?a} += 1')
         self.project.do(refactoring.get_changes())
-        self.assertEquals('def f():\n    a = 1\n\n    a += 1\n', self.mod.read())
+        self.assertEquals('def f():\n    a = 1\n\n    a += 1\n',
+                          self.mod.read())
+
+    def test_importing_names(self):
+        self.mod.write('a = 2\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?a} = 2', '${?a} = myconsts.two')
+        self.project.do(refactoring.get_changes(imports=['import myconsts']))
+        self.assertEquals('import myconsts\na = myconsts.two\n',
+                          self.mod.read())
+
+    def test_not_importing_names_when_there_are_no_changes(self):
+        self.mod.write('a = True\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?a} = 2', '${?a} = myconsts.two')
+        self.project.do(refactoring.get_changes(imports=['import myconsts']))
+        self.assertEquals('a = True\n', self.mod.read())
 
 
 if __name__ == '__main__':

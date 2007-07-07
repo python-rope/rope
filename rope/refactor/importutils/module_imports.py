@@ -110,7 +110,7 @@ class ModuleImports(object):
         else:
             all_imports = self.get_import_statements()
             last_line = 1
-            blank_lines = 0
+            blank_lines = 2
             if all_imports:
                 last_line = all_imports[-1].end_line
                 all_imports[-1].move(last_line)

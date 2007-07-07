@@ -1,8 +1,10 @@
 from rope.base import change, taskhandle, builtins
 from rope.refactor import patchedast, similarfinder, sourceutils
+from rope.refactor.importutils import module_imports
 
 
 class Restructure(object):
+    """A class to perform python restructurings"""
 
     def __init__(self, project, pattern, goal):
         self.pycore = project.pycore
@@ -10,7 +12,15 @@ class Restructure(object):
         self.goal = goal
         self.template = similarfinder.CodeTemplate(self.goal)
 
-    def get_changes(self, checks={}, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, checks={}, imports=[],
+                    task_handle=taskhandle.NullTaskHandle()):
+        """Get the changes needed by this restructuring
+        
+        `checks` is the checks that should hold for changing an
+        occurrence.  `imports` are the imports that should be added
+        modules that have at least one occurrence.
+
+        """
         changes = change.ChangeSet('Restructuring <%s> to <%s>' %
                                    (self.pattern, self.goal))
         files = self.pycore.get_python_files()
@@ -27,7 +37,9 @@ class Restructure(object):
                 collector.add_change(start, end, replacement)
             result = collector.get_changed()
             if result is not None:
-                changes.add_change(change.ChangeContents(resource, result))
+                imported_source = self._add_imports(resource, result, imports)
+                changes.add_change(change.ChangeContents(resource,
+                                                         imported_source))
             job_set.finished_job()
         return changes
 
@@ -40,6 +52,23 @@ class Restructure(object):
                 result.append(' ' * indents)
             result.append(line)
         return ''.join(result)
+
+    def _add_imports(self, resource, source, imports):
+        if not imports:
+            return source
+        import_infos = self._get_import_infos(resource, imports)
+        pymodule = self.pycore.get_string_module(source, resource)
+        imports = module_imports.ModuleImports(self.pycore, pymodule)
+        for import_info in import_infos:
+            imports.add_import(import_info)
+        return imports.get_changed_source()
+
+    def _get_import_infos(self, resource, imports):
+        pymodule = self.pycore.get_string_module('\n'.join(imports),
+                                                 resource)
+        imports = module_imports.ModuleImports(self.pycore, pymodule)
+        return [imports.import_info
+                for imports in imports.get_import_statements()]
 
     def _get_text(self, source, match):
         mapping = {}

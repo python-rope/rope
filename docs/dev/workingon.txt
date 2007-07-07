@@ -1,7 +1,16 @@
+Importing Modules In Restructuring
+==================================
+
+- Adding an ``imports`` argument to `Restructuring.get_changes()`
+
+* Handling the GUI
+
+
 Small Stories
 =============
 
-* Extracting subexpressions; look at `extracttest` for more info
+* Extracting subexpressions; look at `extracttest` for more info;
+  surrounding inside parenthesis?
 * Remove ``change occurreces`` refactoring
 * Not including dev docs on distribution packages
 * Changing version format
