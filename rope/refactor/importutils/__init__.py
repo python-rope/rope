@@ -1,6 +1,6 @@
 """A package for handling imports
 
-This package provides tools for modifing module imports after
+This package provides tools for modifying module imports after
 refactorings or as a separate task.
 
 """
@@ -85,13 +85,13 @@ class ImportTools(object):
         return pymodule
 
     def relatives_to_absolutes(self, pymodule):
-        module_with_imports = self.get_module_imports(pymodule)
-        to_be_absolute_list = module_with_imports.get_relative_to_absolute_list()
+        module_imports = self.get_module_imports(pymodule)
+        to_be_absolute_list = module_imports.get_relative_to_absolute_list()
         for name, absolute_name in to_be_absolute_list:
             pymodule = self._rename_in_module(pymodule, name, absolute_name)
-        module_with_imports = self.get_module_imports(pymodule)
-        module_with_imports.get_relative_to_absolute_list()
-        source = module_with_imports.get_changed_source()
+        module_imports = self.get_module_imports(pymodule)
+        module_imports.get_relative_to_absolute_list()
+        source = module_imports.get_changed_source()
         if source is None:
             source = pymodule.source_code
         return source

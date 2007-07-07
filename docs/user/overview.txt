@@ -542,11 +542,11 @@ aware of the ``**`` operator and wrote our own ::
 Now that we know ``**`` exists we want to use it wherever `pow` is
 used (There might be hundreds of them!).  We can use a pattern like::
 
-  pattern = 'pow(${?param1}, ${?param2})'
+  pattern: pow(${?param1}, ${?param2})
 
 Goal can be some thing like::
 
-  goal = '${?param1} ** ${?param2}'
+  goal: ${?param1} ** ${?param2}
 
 Note that ``${...}`` is used to match something in the pattern.  If
 names that appear in ``${...}`` start with a leading ``?`` every
@@ -568,11 +568,10 @@ restructuring will be::
 
 It seems to be working but what if `pow` is imported in some module or
 we have some other function defined in some other module that uses the
-same name and we don't want to change it.  Checks come to rescue.  Each
-restructuring gets a ``checks`` parameter in its constructor.  It can
-be a dictionary.  Its keys are pattern names that appear in the
-pattern (the names in ``${...}``) or it can be pattern names plus any
-of ``.object`` or ``.type``.
+same name and we don't want to change it.  Checks come to rescue.
+Checks are like mappings.  Its keys are pattern names that appear in
+the pattern (the names in ``${...}``).  The might have a ``.object``
+or ``.type`` postfix.
 
 The values should be resolved into a python variable (or reference).
 For instance for showing `pow` in this example we can use `mod.pow`.
@@ -583,13 +582,13 @@ referencing python builtin types and functions you can use
 For solving the mentioned problem we change our `pattern`.  But `goal`
 remains the same::
 
-  pattern: '${?pow_func}(${?param1}, ${?param2})'
-  goal: '${?param1} ** ${?param2}'
+  pattern: ${?pow_func}(${?param1}, ${?param2})
+  goal: ${?param1} ** ${?param2}
 
 Consider the name of the module containing our `pow` function is
 `mod`.  ``checks`` can be::
 
-  check1: '?pow_func' == 'mod.pow'
+  ?pow_func == mod.pow
 
 For performing this refactoring using rope library see `library.txt`_.
 
@@ -636,10 +635,11 @@ situation can be handled using inline method refactoring but this is
 just an example; Consider inline refactoring is not implemented yet!).
 Restructurings come to rescue::
 
-  pattern: '${?inst}.f(${?p1}, ${?p2})'
-  goal: '${?inst}.f1(${?p1}); ${?inst}.f2(${?p2})\n'
+  pattern: ${?inst}.f(${?p1}, ${?p2})
+  goal: ${?inst}.f1(${?p1})
+        ${?inst}.f2(${?p2})
   
-  check1: '?inst.type' == 'mod.A'
+  checks: ?inst.type == mod.A
 
 After performing we will have::
 
@@ -657,10 +657,12 @@ After performing we will have::
 
 
   a = A()
-  a.f1(1); a.f2(2)
+  a.f1(1)
+  a.f2(2)
+
 
 Example 3
----------
+'''''''''
 
 If you like to replace every occurrences of ``x.set(y)`` with ``x =
 y`` when x is an instance of `mod.A` in::
@@ -673,10 +675,10 @@ y`` when x is an instance of `mod.A` in::
 
 We can perform a restructuring with these information::
 
-  pattern = '${?x}.set(${?y})'
-  goal = '${?x} = ${?y}'
+  pattern: ${?x}.set(${?y})
+  goal: ${?x} = ${?y}
 
-  check: '?x.type' == 'mod.A'
+  checks: ?x.type == mod.A
 
 The names in checks as you see should be the name of a wild card
 pattern like ``?x`` or ``?y`` in the above example.  They can have a

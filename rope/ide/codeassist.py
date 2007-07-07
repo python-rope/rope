@@ -121,7 +121,8 @@ class Proposals(object):
 
 class _CodeCompletionCollector(object):
 
-    def __init__(self, project, source_code, offset, expression, starting, resource):
+    def __init__(self, project, source_code,
+                 offset, expression, starting, resource):
         self.project = project
         self.expression = expression
         self.starting = starting
@@ -133,7 +134,8 @@ class _CodeCompletionCollector(object):
         self.resource = resource
         source_lines = SourceLinesAdapter(source_code)
         self.lineno = source_lines.get_line_number(offset)
-        self.current_indents = self._get_line_indents(source_lines.get_line(self.lineno))
+        self.current_indents = self._get_line_indents(
+            source_lines.get_line(self.lineno))
         self._comment_current_statement()
         self.source_code = '\n'.join(self.lines)
 
@@ -236,9 +238,11 @@ class _CodeCompletionCollector(object):
         inner_scope = module_scope.get_inner_scope_for_line(self.lineno,
                                                             self.current_indents)
         if self.expression.strip() != '':
-            result.update(self._get_dotted_completions(module_scope, inner_scope))
+            result.update(self._get_dotted_completions(module_scope,
+                                                       inner_scope))
         else:
-            result.update(self._get_keyword_parameters(module_scope.pyobject, inner_scope))
+            result.update(self._get_keyword_parameters(module_scope.pyobject,
+                                                       inner_scope))
             self._get_undotted_completions(inner_scope, result)
         return result
 
@@ -358,7 +362,8 @@ class PythonCodeAssist(object):
                 result.append(template)
         return result
 
-    def _get_code_completions(self, source_code, offset, expression, starting, resource):
+    def _get_code_completions(self, source_code, offset,
+                              expression, starting, resource):
         collector = _CodeCompletionCollector(self.project, source_code, offset,
                                              expression, starting, resource)
         return collector.get_code_completions()
@@ -400,7 +405,8 @@ class PythonCodeAssist(object):
         finder = occurrences.FilteredFinder(
             self.project.get_pycore(), name, [pyname], unsure=unsure)
         files = self.project.get_pycore().get_python_files()
-        job_set = task_handle.create_job_set('Finding Occurrences', count=len(files))
+        job_set = task_handle.create_job_set('Finding Occurrences',
+                                             count=len(files))
         result = []
         for resource in files:
             job_set.started_job('Working On <%s>' % resource.path)
@@ -478,7 +484,8 @@ class ProposalSorter(object):
         if proposal1.type != proposal2.type:
             return cmp(preference.index(proposal1.type),
                        preference.index(proposal2.type))
-        return self._compare_names_with_under_lines(proposal1.name, proposal2.name)
+        return self._compare_names_with_under_lines(proposal1.name,
+                                                    proposal2.name)
 
     def _compare_names_with_under_lines(self, name1, name2):
         def underline_count(name):

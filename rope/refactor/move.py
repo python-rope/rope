@@ -340,6 +340,7 @@ class MoveGlobal(object):
                 continue
             job_set.started_job('Working on <%s>' % file_.path)
             if not self.tools.occurs_in_module(resource=file_):
+                job_set.finished_job()
                 continue
             pymodule = self.pycore.resource_to_pyobject(file_)
             # Changing occurrences

@@ -126,7 +126,19 @@ Stories
 * Renaming and moving normal files/folders
 
 
+* Generate ... and implicit interfaces
+
+
+* Using `svn` instead of `pysvn`
+
+
+* Generate method and class hierarchies
+
+
 * Sorting methods
+
+
+* Handling tuple parameters
 
 
 * Lambdas as functions; consider their parameters
@@ -144,4 +156,7 @@ Stories
 > Public Release 0.6m5 : July 15, 2007
 
 
-* Importing modules in restructurings
+* Next/prev scope
+
+
+* Next/prev statement

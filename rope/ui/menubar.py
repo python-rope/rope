@@ -9,8 +9,9 @@ class MenuBarManager(object):
 
     def add_menu_command(self, address, command):
         parent = self._find_parent(address)
-        parent.add_command(address.address[-1], command, address.alt_key,
-                           address.last_group)
+        if parent is not None:
+            parent.add_command(address.address[-1], command,
+                               address.alt_key, address.last_group)
 
     def add_menu_cascade(self, address):
         parent = self._find_parent(address)

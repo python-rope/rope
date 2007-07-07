@@ -1,35 +1,24 @@
-Importing Modules In Restructuring
-==================================
+Next/Prev Statement
+===================
 
-- Adding an ``imports`` argument to `Restructuring.get_changes()`
-- Adding imports in restructuring dialog
+- Restructuring should be available even if no python editor is open
 
-* Helping users make less errors in the GUI
-* Supporting ``$?i``
-* Restructuring should be available even if no python editor is open
+* Handling sentences
+* Walking on python function scopes
+
+* Sorting methods; Move method up/down
 * Better help in restructuring dialog
-
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
-* Performing import action on individual imports
 * What to do with files that cannot be compiled when refactoring?
 
-
-Small Stories
-=============
-
 * Extracting subexpressions; look at `extracttest` for more info;
-  surrounding inside parenthesis?
-* Remove ``change occurreces`` refactoring
+* Remove ``change occurreces`` refactoring?
 * Not including dev docs on distribution packages
-* Changing version format
+* Changing version format?
 * Using similarfinder in introduce_parameter?
-* Should we move generate to refactor?
-* Moving `PyCore.create_module()` and `PyCore.create_package()`? Where
-  to? `libutils` maybe?
-* Using `svn` instead of `pysvn`
-* Create ... and implicit interfaces?
-* Handling tuple parameters?
+* Should we move generate to `rope.base.refactor`?
+* Moving `PyCore.create_module()` and `PyCore.create_package()`?
 * Using GPLv3 from 0.7?
 
 

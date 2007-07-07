@@ -71,8 +71,8 @@ Enhancing Refactorings
 * Better import handling
 
 
-Cache Invalidation And Parameter Cache
-======================================
+Cache Invalidation Again ...
+============================
 
 When retrieving pyobjects from objectdb no dependencies between
 pymodules is added.  This might lead to references to invalidated
@@ -161,19 +161,6 @@ So the easiest approach would be to forget all concluded data with
 every change.
 
 
-Adding `PyModule.register_invalidation_observer()`
---------------------------------------------------
-
-How can this solve invalidation problems? How is it different from
-concluded data?
-
-This can be used to handle situations where there are references to a
-list of objects.
-
-* When an observer was informed it should be removed from the list of
-  observers
-
-
 Better Concluded Data
 =====================
 
@@ -206,8 +193,7 @@ Releasing Library Package
 Issues:
 
 * Two separate ``README.txt`` files?
-* Should the IDE contain the library?
-* Separating common, library, and IDE documents
+* Separating common, library and IDE documents
 
 New document tree:
 

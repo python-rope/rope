@@ -161,8 +161,8 @@ class RenameDialog(RefactoringDialog):
             frame, text='Rename when unsure(Know what you\'re doing!)',
             variable=self.unsure)
         docs = Tkinter.Checkbutton(
-            frame, text='Rename occurrences in strings and comments where the name is visible',
-            variable=self.docs)
+            frame, text='Rename occurrences in strings and comments' +
+            ' where the name is visible', variable=self.docs)
         index = 1
         if self.renamer.is_method():
             in_hierarchy.grid(row=1, columnspan=2, sticky=Tkinter.W)
@@ -178,7 +178,8 @@ def rename(context):
     RenameDialog(context, 'Rename Refactoring').show()
 
 def rename_module(context):
-    RenameDialog(context, 'Rename Current Module Refactoring', current_module=True).show()
+    RenameDialog(context, 'Rename Current Module Refactoring',
+                 current_module=True).show()
 
 def local_rename(context):
     RenameDialog(context, 'Rename Refactoring', True).show()
@@ -700,7 +701,8 @@ class MethodObjectDialog(RefactoringDialog):
 
     def __init__(self, context):
         editor = context.get_active_editor().get_editor()
-        super(MethodObjectDialog, self).__init__(context, 'Replace Method With Method Object Refactoring')
+        super(MethodObjectDialog, self).__init__(
+            context, 'Replace Method With Method Object Refactoring')
         self.renamer = rope.refactor.method_object.MethodObject(
             context.project, context.resource, editor.get_current_offset())
 
@@ -886,7 +888,7 @@ actions.append(SimpleAction('change_signature',
 actions.append(SimpleAction('restructure',
                             ConfirmEditorsAreSaved(restructure), 'C-c r x',
                             MenuAddress(['Refactor', 'Restructure'], None),
-                            ['python']))
+                            ['all', 'none']))
 
 actions.append(SimpleAction('introduce_factory',
                             ConfirmEditorsAreSaved(introduce_factory), 'C-c r f',
