@@ -112,7 +112,8 @@ class NormalImport(ImportInfo):
 
 class FromImport(ImportInfo):
 
-    def __init__(self, module_name, level, names_and_aliases, current_folder, pycore):
+    def __init__(self, module_name, level,
+                 names_and_aliases, current_folder, pycore):
         self.module_name = module_name
         self.level = level
         self.names_and_aliases = names_and_aliases
@@ -142,8 +143,8 @@ class FromImport(ImportInfo):
 
     def get_imported_resource(self):
         if self.level == 0:
-            return self.pycore.find_module(self.module_name,
-                                           current_folder=self.current_folder)
+            return self.pycore.find_module(
+                self.module_name, current_folder=self.current_folder)
         else:
             return self.pycore.find_relative_module(
                 self.module_name, self.current_folder, self.level)
@@ -161,7 +162,8 @@ class FromImport(ImportInfo):
         return len(self.names_and_aliases) == 0
 
     def is_star_import(self):
-        return len(self.names_and_aliases) > 0 and self.names_and_aliases[0][0] == '*'
+        return len(self.names_and_aliases) > 0 and \
+               self.names_and_aliases[0][0] == '*'
 
 
 class EmptyImport(ImportInfo):

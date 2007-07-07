@@ -589,7 +589,7 @@ remains the same::
 Consider the name of the module containing our `pow` function is
 `mod`.  ``checks`` can be::
 
-  check1: '?pow_func' -> 'mod.pow'
+  check1: '?pow_func' == 'mod.pow'
 
 For performing this refactoring using rope library see `library.txt`_.
 
@@ -639,7 +639,7 @@ Restructurings come to rescue::
   pattern: '${?inst}.f(${?p1}, ${?p2})'
   goal: '${?inst}.f1(${?p1}); ${?inst}.f2(${?p2})\n'
   
-  check1: '?inst.type' -> 'mod.A'
+  check1: '?inst.type' == 'mod.A'
 
 After performing we will have::
 
@@ -676,7 +676,7 @@ We can perform a restructuring with these information::
   pattern = '${?x}.set(${?y})'
   goal = '${?x} = ${?y}'
 
-  check: '?x.type' -> 'mod.A'
+  check: '?x.type' == 'mod.A'
 
 The names in checks as you see should be the name of a wild card
 pattern like ``?x`` or ``?y`` in the above example.  They can have a

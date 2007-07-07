@@ -2,8 +2,17 @@ Importing Modules In Restructuring
 ==================================
 
 - Adding an ``imports`` argument to `Restructuring.get_changes()`
+- Adding imports in restructuring dialog
 
-* Handling the GUI
+* Helping users make less errors in the GUI
+* Supporting ``$?i``
+* Restructuring should be available even if no python editor is open
+* Better help in restructuring dialog
+
+* Refactor `rope.base.refactor.importutils`
+* Not holding current_folder in `FromImport`?
+* Performing import action on individual imports
+* What to do with files that cannot be compiled when refactoring?
 
 
 Small Stories

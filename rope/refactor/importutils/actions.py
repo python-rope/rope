@@ -9,7 +9,8 @@ class ImportInfoVisitor(object):
 
     def dispatch(self, import_):
         try:
-            method = getattr(self, 'visit' + import_.import_info.__class__.__name__)
+            method_name = 'visit' + import_.import_info.__class__.__name__
+            method = getattr(self, method_name)
             return method(import_, import_.import_info)
         except exceptions.ModuleNotFoundError:
             pass

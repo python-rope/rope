@@ -796,9 +796,23 @@ class RestructureDialog(RefactoringDialog):
         goal = self.goal.get('1.0', 'end-1c')
         restructuring = rope.refactor.restructure.Restructure(
             self.project, pattern, goal)
-        string_checks = dict(self.checks.get_entries())
+        imports = [line for line in self.imports.get('1.0', 'end').splitlines()
+                   if line.strip]
+        string_checks = self._get_checks_dict()
         checks = restructuring.make_checks(string_checks)
-        return restructuring.get_changes(checks, task_handle=handle)
+        return restructuring.get_changes(checks, imports=imports,
+                                         task_handle=handle)
+
+    def _get_checks_dict(self):
+        checks = self.checks.get('1.0', 'end').splitlines()
+        result = {}
+        for check in checks:
+            if '==' in check:
+                splitted = check.split('==')
+                name = splitted[0].strip()
+                value = splitted[1].strip()
+                result[name] = value
+        return result
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
@@ -813,60 +827,31 @@ class RestructureDialog(RefactoringDialog):
         self.goal.grid(row=1, column=1, sticky=Tkinter.W)
 
         # Handling checks
-        checks_frame = Tkinter.Frame(frame)
-        list_frame = Tkinter.Frame(checks_frame)
-        self.checks = EnhancedList(list_frame, _CheckListHandle(),
-                                   get_focus=False, width=65, height=5)
-        add_check_button = Tkinter.Button(
-            checks_frame, text='Add Check', command=self._add_check, width=15)
-        remove_check_button = Tkinter.Button(
-            checks_frame, text='Remove Check',
-            command=self._remove_check, width=15)
-        list_frame.grid(row=0, columnspan=2)
-        add_check_button.grid(row=1, column=0)
-        remove_check_button.grid(row=1, column=1)
+        checks_frame = Tkinter.Frame(frame, borderwidth=1,
+                                     relief=Tkinter.RIDGE)
+        checks_help = 'Add checks here; One each line.  For instance:\n' \
+                      '?var.type == mymod.AClass'
+        checks_label = Tkinter.Label(checks_frame, text=checks_help,
+                                     justify=Tkinter.LEFT, width=70)
+        checks_label.grid(row=0)
+        self.checks = Tkinter.Text(checks_frame, height=4, width=70)
+        self.checks.grid(row=1)
         checks_frame.grid(row=2, columnspan=2)
 
-        self.goal.bind('<Alt-a>', self._add_check)
-        self.pattern.bind('<Alt-a>', self._add_check)
+        # Handling Imports
+        imports_frame = Tkinter.Frame(frame, borderwidth=1,
+                                      relief=Tkinter.RIDGE)
+        imports_help = 'Add imports here; These imports are added to ' \
+                       'changed files:'
+        imports_label = Tkinter.Label(imports_frame, text=imports_help,
+                                      justify=Tkinter.LEFT, width=70)
+        imports_label.grid(row=0)
+        self.imports = Tkinter.Text(imports_frame, height=4, width=70)
+        self.imports.grid(row=1)
+        imports_frame.grid(row=3, columnspan=2)
+
         self.pattern.focus_set()
         return frame
-
-    def _add_check(self, event=None):
-        toplevel = Tkinter.Toplevel()
-        toplevel.title('Add Check')
-        name_label = Tkinter.Label(toplevel, text='Name')
-        name_entry = Tkinter.Entry(toplevel, width=40)
-        value_label = Tkinter.Label(toplevel, text='Value')
-        value_entry = Tkinter.Entry(toplevel, width=40)
-        uihelpers.init_completing_entry(value_entry, self._complete_check)
-        name_label.grid(row=0, column=0)
-        name_entry.grid(row=0, column=1)
-        value_label.grid(row=1, column=0)
-        value_entry.grid(row=1, column=1)
-        def ok(event=None):
-            self.checks.add_entry((name_entry.get(), value_entry.get()))
-            toplevel.destroy()
-        def cancel(event=None):
-            toplevel.destroy()
-        toplevel.bind('<Return>', ok)
-        toplevel.bind('<Escape>', cancel)
-        toplevel.bind('<Control-g>', cancel)
-        name_entry.focus_set()
-        toplevel.grab_set()
-
-    def _complete_check(self, text):
-        if '.' not in text:
-            return
-        main, not_finished = text.rsplit('.', 1)
-        result = []
-        evaluated = self._evaluate(main, is_pyname=False)
-        if evaluated is None:
-            return
-        for attribute in evaluated.get_attributes():
-            if attribute.startswith(not_finished):
-                result.append(main + '.' + attribute)
-        return result
 
     def _remove_check(self):
         self.checks.remove_entry()

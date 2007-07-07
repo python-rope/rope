@@ -44,7 +44,8 @@ class ModuleImports(object):
     def get_changed_source(self):
         imports = self.get_import_statements()
         after_removing = self._remove_imports(imports)
-        imports = [stmt for stmt in imports if not stmt.import_info.is_empty()]
+        imports = [stmt for stmt in imports
+                   if not stmt.import_info.is_empty()]
 
         first_non_blank = self._first_non_blank_line(after_removing, 0)
         first_import = self._first_import_line() - 1
@@ -62,7 +63,8 @@ class ModuleImports(object):
             result.append('\n' * self.separating_lines)
 
         # Writing the body
-        first_after_imports = self._first_non_blank_line(after_removing, first_import)
+        first_after_imports = self._first_non_blank_line(after_removing,
+                                                         first_import)
         result.extend(after_removing[first_after_imports:])
         return ''.join(result)
 
@@ -92,7 +94,7 @@ class ModuleImports(object):
                 after_removing.append('')
         after_removing.extend(lines[last_index:])
         return after_removing
-    
+
     def _first_non_blank_line(self, lines, lineno):
         result = lineno
         for line in lines[lineno:]:
@@ -134,7 +136,8 @@ class ModuleImports(object):
         imports = self.get_import_statements()
         added_imports = []
         for import_stmt in imports:
-            visitor = actions.AddingVisitor(self.pycore, import_stmt.import_info)
+            visitor = actions.AddingVisitor(self.pycore,
+                                            import_stmt.import_info)
             for added_import in added_imports:
                 if added_import.accept(visitor):
                     import_stmt.empty_import()
@@ -362,7 +365,7 @@ class _GlobalImportFinder(object):
             start_line, end_line, self._get_text(start_line, end_line),
             blank_lines=self._count_empty_lines_before(start_line))
         self.imports.append(import_statement)
-    
+
     def _count_empty_lines_before(self, lineno):
         result = 0
         for current in range(lineno - 1, 0, -1):

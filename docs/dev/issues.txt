@@ -71,19 +71,6 @@ Enhancing Refactorings
 * Better import handling
 
 
-Importing Modules In Restructurings
-===================================
-
-Adding a new argument to `Restructuring.get_changes()`::
-
-  imports = ['import mod1', 'from mod1 import AClass']
-  restructuring.get_changes(checks, imports)
-
-Adding a new name to code template::
-
-  replacement = '${?a} = ${^AClass}()'
-
-
 Cache Invalidation And Parameter Cache
 ======================================
 
