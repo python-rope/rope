@@ -188,26 +188,27 @@ def kill_line(context):
     context.editor.kill_line()
 
 
-class PrevNextStatement(object):
+class PrevNextElement(object):
 
-    def __init__(self, next=True):
+    def __init__(self, next=True, element=movements.Statements):
         self.next = next
-        self.statements = None
+        self.element_type = element
+        self.elements = None
 
     def __call__(self, context):
         editor = context.editor
         text = editor.get_text()
-        if self.statements is None or text != self.statements.source:
-            self.statements = movements.Statements(text)
+        if self.elements is None or text != self.elements.source:
+            self.elements = self.element_type(text)
         offset = editor.get_current_offset()
-        diff = self._new_offset(self.statements, offset) - offset
+        diff = self._new_offset(self.elements, offset) - offset
         editor.set_insert(editor.get_relative(editor.get_insert(), diff))
 
-    def _new_offset(self, statements, offset):
+    def _new_offset(self, elements, offset):
         if self.next:
-            return statements.next(offset)
+            return elements.next(offset)
         else:
-            return statements.prev(offset)
+            return elements.prev(offset)
 
 
 core = rope.ui.core.Core.get_core()
@@ -246,10 +247,16 @@ actions.append(SimpleAction('capitalize_next_word', capitalize_word, 'M-c',
                             others.child('Capitalize Next Word'), ['all']))
 actions.append(SimpleAction('kill_line', kill_line, 'C-k',
                             others.child('Kill Line'), ['all']))
-actions.append(SimpleAction('next_statement', PrevNextStatement(), 'M-e',
+actions.append(SimpleAction('next_statement', PrevNextElement(), 'M-e',
                             others.child('Next Statement'), ['python']))
-actions.append(SimpleAction('prev_statement', PrevNextStatement(False), 'M-a',
+actions.append(SimpleAction('prev_statement', PrevNextElement(False), 'M-a',
                             others.child('Prev Statement'), ['python']))
+actions.append(
+    SimpleAction('next_scope', PrevNextElement(element=movements.Scopes), 'M-E',
+                 others.child('Next Statement'), ['python']))
+actions.append(
+    SimpleAction('prev_scope', PrevNextElement(False, movements.Scopes), 'M-A',
+                 others.child('Prev Scope'), ['python']))
 
 
 actions.append(SimpleAction('set_mark', set_mark, 'C-space',

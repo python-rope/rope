@@ -57,9 +57,48 @@ class StatementsTest(unittest.TestCase):
         self.assertEquals(code.index('a'), statements.prev(len(code)))
 
 
+class ScopesTest(unittest.TestCase):
+
+    def test_trivial_case(self):
+        code = ''
+        scopes = movements.Scopes(code)
+        self.assertEquals(0, scopes.next(0))
+
+    def test_next_on_functions(self):
+        code = 'def f():\n    pass\n'
+        scopes = movements.Scopes(code)
+        self.assertEquals(len(code) - 1, scopes.next(0))
+
+    def test_next_on_functions(self):
+        code = 'def f():\n    pass\n\ndef g():\n    pass\n'
+        scopes = movements.Scopes(code)
+        self.assertEquals(code.index('\n\n'), scopes.next(0))
+        self.assertEquals(code.index('\n\n'), scopes.next(1))
+        self.assertEquals(len(code) - 1, scopes.next(code.index('g')))
+        self.assertEquals(len(code) - 1, scopes.next(code.index('\n\n')))
+
+    def test_trivial_prev(self):
+        code = ''
+        scopes = movements.Scopes(code)
+        self.assertEquals(0, scopes.prev(0))
+
+    def test_prev_on_functions(self):
+        code = 'def f():\n    pass\n'
+        scopes = movements.Scopes(code)
+        self.assertEquals(0, scopes.prev(10))
+        self.assertEquals(0, scopes.prev(len(code)))
+
+    def test_next_on_functions(self):
+        code = 'def f():\n    pass\n\ndef g():\n    pass\n'
+        scopes = movements.Scopes(code)
+        self.assertEquals(0, scopes.prev(code.index('()')))
+        self.assertEquals(code.index('def g'), scopes.prev(len(code)))
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(StatementsTest))
+    result.addTests(unittest.makeSuite(ScopesTest))
     return result
 
 

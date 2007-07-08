@@ -1,7 +1,7 @@
-Next/Prev Statement
-===================
+Next/Prev Scope
+===============
 
-- Caching `Statements` object
+* `Scopes.prev()` not efficient
 
 * Not scanning whole scopes in automatic SOI; only changed lines
 * Sorting methods; Move method up/down

@@ -1,3 +1,5 @@
+import re
+
 from rope.base import codeanalyze
 
 
@@ -28,7 +30,7 @@ class Statements(object):
                 lineno = self._next_nonblank(lineno, -1)
         start, end = self.logical_lines.get_logical_line_in(lineno)
         start_offset = self.lines.get_line_start(start)
-        return self._next_char(start_offset)
+        return _next_char(self.source, start_offset)
 
     def _next_nonblank(self, lineno, direction=1):
         lineno += direction
@@ -37,8 +39,41 @@ class Statements(object):
             lineno += direction
         return lineno
 
-    def _next_char(self, offset):
-        while offset < len(self.source) and \
-              self.source[offset] in ' \t':
-            offset += 1
-        return offset
+
+class Scopes(object):
+
+    def __init__(self, source):
+        self.source = source
+        self.pattern = re.compile(r'^\s*(def|class)\s', re.M)
+
+    def next(self, offset):
+        match = self.pattern.search(self.source, offset)
+        if match is not None:
+            if self.source[offset:match.start()].strip(' \t\r\n') == '':
+                match = self.pattern.search(self.source, match.end())
+        if match is not None:
+            offset = match.start()
+        else:
+            offset = len(self.source)
+        return self._prev_char(offset - 1)
+
+    def _prev_char(self, offset):
+        while 0 < offset and self.source[offset] in ' \t\r\n':
+            offset -= 1
+        return offset + 1
+
+    def prev(self, offset):
+        matches = list(self.pattern.finditer(self.source, 0, offset))
+        if matches:
+            start = matches[-1].start()
+            if self.source[start] == '\n':
+                start += 1
+            return _next_char(self.source, start)
+        return 0
+
+
+def _next_char(source, offset):
+    while offset < len(source) and \
+          source[offset] in ' \t':
+        offset += 1
+    return offset
