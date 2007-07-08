@@ -1,7 +1,8 @@
 Next/Prev Scope
 ===============
 
-* `Scopes.prev()` not efficient
+- `Scopes.prev()` not efficient
+- Fixing `LogicalLineFinder.get_logical_line()`
 
 * Not scanning whole scopes in automatic SOI; only changed lines
 * Sorting methods; Move method up/down

@@ -56,6 +56,11 @@ class StatementsTest(unittest.TestCase):
         statements = movements.Statements(code)
         self.assertEquals(code.index('a'), statements.prev(len(code)))
 
+    def xxx_test_prev_statement_and_comments(self):
+        code = 'a = 1\n# ccc\nb = 1\n'
+        statements = movements.Statements(code)
+        self.assertEquals(0, statements.prev(code.index('b')))
+
 
 class ScopesTest(unittest.TestCase):
 
@@ -88,11 +93,18 @@ class ScopesTest(unittest.TestCase):
         self.assertEquals(0, scopes.prev(10))
         self.assertEquals(0, scopes.prev(len(code)))
 
-    def test_next_on_functions(self):
+    def test_prev_on_functions(self):
         code = 'def f():\n    pass\n\ndef g():\n    pass\n'
         scopes = movements.Scopes(code)
         self.assertEquals(0, scopes.prev(code.index('()')))
         self.assertEquals(code.index('def g'), scopes.prev(len(code)))
+
+    def test_prev_on_indented_functions(self):
+        code = 'class A(object):\n    def f():\n        pass\n\n\n' \
+               '    def g():\n        pass\n'
+        scopes = movements.Scopes(code)
+        self.assertEquals(code.index('def f'),
+                          scopes.prev(code.index('def g')))
 
 
 def suite():

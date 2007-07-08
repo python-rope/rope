@@ -44,7 +44,8 @@ class Scopes(object):
 
     def __init__(self, source):
         self.source = source
-        self.pattern = re.compile(r'^\s*(def|class)\s', re.M)
+        self.pattern = re.compile(r'^[ \t]*(def|class)\s', re.M)
+        self.matches = None
 
     def next(self, offset):
         match = self.pattern.search(self.source, offset)
@@ -63,11 +64,20 @@ class Scopes(object):
         return offset + 1
 
     def prev(self, offset):
-        matches = list(self.pattern.finditer(self.source, 0, offset))
-        if matches:
-            start = matches[-1].start()
+        if self.matches is None:
+            self.matches = list(self.pattern.finditer(self.source))
+        prev_match = None
+        for match in self.matches:
+            if match.start() <= offset:
+                prev_match = match
+            else:
+                break
+        if prev_match is not None:
+            start = prev_match.start()
             if self.source[start] == '\n':
                 start += 1
+            if self.source[start:offset].strip() == '':
+                return self.prev(prev_match.start() - 1)
             return _next_char(self.source, start)
         return 0
 

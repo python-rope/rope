@@ -132,7 +132,7 @@ class StatementEvaluator(object):
                 pyobject = self._get_object_for_node(stmt)
                 objects.append(pyobject)
         else:
-            objects.append(self._get_object_for_node(node.nodes[0]))
+            objects.append(self._get_object_for_node(node.elts[0]))
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.get_tuple(*objects))
 

@@ -586,25 +586,46 @@ class LogicalLineFinder(object):
         self.lines = lines
 
     def get_logical_line_in(self, line_number):
-        block_start = get_block_start(
-            self.lines, line_number,
-            count_line_indents(self.lines.get_line(line_number)))
+        indents = count_line_indents(self.lines.get_line(line_number))
+        tries = 0
+        while True:
+            block_start = get_block_start(
+                self.lines, line_number, indents)
+            try:
+                return self._logical_line_in(block_start, line_number)
+            except IndentationError, e:
+                tries += 1
+                if tries == 5:
+                    raise e
+                lineno = e.lineno + block_start - 1
+                indents = count_line_indents(self.lines.get_line(lineno))
+
+    def _logical_line_in(self, block_start, line_number):
         readline = LinesToReadline(self.lines, block_start)
-        last_line_start = block_start
+        shifted = line_number - block_start + 1
+        region = self._calculate_logical(readline, shifted)
+        start = self._get_first_non_blank(region[0] + block_start - 1)
+        if region[1] is None:
+            end = self.lines.end()
+        else:
+            end = region[1] + block_start - 1
+        return start, end
+
+    def _calculate_logical(self, readline, line_number):
+        last_line_start = 1
         for current in tokenize.generate_tokens(readline):
-            current_lineno = current[2][0] + block_start - 1
+            current_lineno = current[2][0]
             if current[0] == token.NEWLINE:
                 if current_lineno >= line_number:
-                    return (self._get_first_non_empty_line(last_line_start),
-                            current_lineno)
+                    return (last_line_start, current_lineno)
                 last_line_start = current_lineno + 1
-        return (last_line_start, self.lines.length())
+        return (last_line_start, None)
 
-    def _get_first_non_empty_line(self, line_number):
+    def _get_first_non_blank(self, line_number):
         current = line_number
-        while current <= self.lines.length():
-            line = self.lines.get_line(current)
-            if line.strip() != '' and not line.startswith('#'):
+        while current < self.lines.length():
+            line = self.lines.get_line(current).strip()
+            if line != '' and not line.startswith('#'):
                 return current
             current += 1
         return current
