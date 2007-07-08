@@ -7,6 +7,7 @@ import rope.ui.core
 from rope.ui import uihelpers, fill
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
+from rope.ide import movements
 
 
 def set_mark(context):
@@ -186,6 +187,29 @@ def beginning_of_buffer(context):
 def kill_line(context):
     context.editor.kill_line()
 
+
+class PrevNextStatement(object):
+
+    def __init__(self, next=True):
+        self.next = next
+        self.statements = None
+
+    def __call__(self, context):
+        editor = context.editor
+        text = editor.get_text()
+        if self.statements is None or text != self.statements.source:
+            self.statements = movements.Statements(text)
+        offset = editor.get_current_offset()
+        diff = self._new_offset(self.statements, offset) - offset
+        editor.set_insert(editor.get_relative(editor.get_insert(), diff))
+
+    def _new_offset(self, statements, offset):
+        if self.next:
+            return statements.next(offset)
+        else:
+            return statements.prev(offset)
+
+
 core = rope.ui.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
@@ -193,7 +217,7 @@ actions = []
 others = MenuAddress(['Edit', 'Others'], 'o', 0)
 core.add_menu_cascade(others, ['all'])
 
-actions.append(SimpleAction('next_word', next_word, 'M-f', 
+actions.append(SimpleAction('next_word', next_word, 'M-f',
                             others.child('Next Word'), ['all']))
 actions.append(SimpleAction('prev_word', prev_word, 'M-b',
                             others.child('Prev Word'), ['all']))
@@ -214,14 +238,18 @@ actions.append(SimpleAction('delete_next_word', delete_next_word, 'M-d',
                             others.child('Delete Next Word'), ['all']))
 actions.append(SimpleAction('delete_prev_word', delete_prev_word, 'M-BackSpace',
                             others.child('Delete Prev Word'), ['all']))
-actions.append(SimpleAction('lower_next_word', lower_word, 'M-l', 
+actions.append(SimpleAction('lower_next_word', lower_word, 'M-l',
                             others.child('Lower Next Word'), ['all']))
 actions.append(SimpleAction('upper_next_word', upper_word, 'M-u',
                             others.child('Upper Next Word'), ['all']))
 actions.append(SimpleAction('capitalize_next_word', capitalize_word, 'M-c',
                             others.child('Capitalize Next Word'), ['all']))
-actions.append(SimpleAction('kill_line', kill_line, 'C-k', 
+actions.append(SimpleAction('kill_line', kill_line, 'C-k',
                             others.child('Kill Line'), ['all']))
+actions.append(SimpleAction('next_statement', PrevNextStatement(), 'M-e',
+                            others.child('Next Statement'), ['python']))
+actions.append(SimpleAction('prev_statement', PrevNextStatement(False), 'M-a',
+                            others.child('Prev Statement'), ['python']))
 
 
 actions.append(SimpleAction('set_mark', set_mark, 'C-space',

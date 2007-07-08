@@ -1,11 +1,9 @@
 Next/Prev Statement
 ===================
 
-- Restructuring should be available even if no python editor is open
+- Caching `Statements` object
 
-* Handling sentences
-* Walking on python function scopes
-
+* Not scanning whole scopes in automatic SOI; only changed lines
 * Sorting methods; Move method up/down
 * Better help in restructuring dialog
 * Refactor `rope.base.refactor.importutils`

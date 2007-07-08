@@ -157,6 +157,3 @@ Stories
 
 
 * Next/prev scope
-
-
-* Next/prev statement
