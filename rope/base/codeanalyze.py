@@ -589,10 +589,9 @@ class LogicalLineFinder(object):
         indents = count_line_indents(self.lines.get_line(line_number))
         tries = 0
         while True:
-            block_start = get_block_start(
-                self.lines, line_number, indents)
+            block_start = get_block_start(self.lines, line_number, indents)
             try:
-                return self._logical_line_in(block_start, line_number)
+                return self._block_logical_line(block_start, line_number)
             except IndentationError, e:
                 tries += 1
                 if tries == 5:
@@ -600,7 +599,7 @@ class LogicalLineFinder(object):
                 lineno = e.lineno + block_start - 1
                 indents = count_line_indents(self.lines.get_line(lineno))
 
-    def _logical_line_in(self, block_start, line_number):
+    def _block_logical_line(self, block_start, line_number):
         readline = LinesToReadline(self.lines, block_start)
         shifted = line_number - block_start + 1
         region = self._calculate_logical(readline, shifted)

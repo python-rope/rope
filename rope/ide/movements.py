@@ -34,9 +34,12 @@ class Statements(object):
 
     def _next_nonblank(self, lineno, direction=1):
         lineno += direction
-        while lineno > 1 and lineno < self.lines.length() and \
-              self.lines.get_line(lineno).strip() == '':
-            lineno += direction
+        while lineno > 1 and lineno < self.lines.length():
+            line = self.lines.get_line(lineno).strip()
+            if line == '' or line.startswith('#'):
+                lineno += direction
+            else:
+                break
         return lineno
 
 

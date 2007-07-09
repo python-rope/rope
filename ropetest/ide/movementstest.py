@@ -56,7 +56,7 @@ class StatementsTest(unittest.TestCase):
         statements = movements.Statements(code)
         self.assertEquals(code.index('a'), statements.prev(len(code)))
 
-    def xxx_test_prev_statement_and_comments(self):
+    def test_prev_statement_and_comments(self):
         code = 'a = 1\n# ccc\nb = 1\n'
         statements = movements.Statements(code)
         self.assertEquals(0, statements.prev(code.index('b')))

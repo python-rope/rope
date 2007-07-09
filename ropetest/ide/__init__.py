@@ -6,7 +6,7 @@ import ropetest.ide.formattertest
 import ropetest.ide.notestest
 import ropetest.ide.outlinetest
 import ropetest.ide.spellcheckertest
-import ropetest.ide.movements
+import ropetest.ide.movementstest
 
 
 def suite():
