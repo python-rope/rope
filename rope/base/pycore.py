@@ -1,3 +1,4 @@
+import bisect
 import difflib
 import sys
 
@@ -223,19 +224,26 @@ class PyCore(object):
         runner.run()
         return runner
 
-    def analyze_module(self, resource, should_analyze=None):
+    def analyze_module(self, resource, should_analyze=lambda py: True,
+                       search_subscopes=lambda py: True):
         """Analyze `resource` module for static object inference
 
         This function forces rope to analyze this module to collect
         information about function calls.  `should_analyze` is a
         function that is called with a `PyDefinedObject` argument.  If
         it returns `True` the element is analyzed.  If it is `None` or
-        returns `False` the element is not searched.
+        returns `False` the element is not analyzed.
+
+        `search_subscopes` is like `should_analyze`; The difference is
+        that if it returns `False` the sub-scopes are not ignored.
+        That is it is assumed that `should_analyze` returns `False for
+        all of its subscopes.
 
         """
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_data(resource)
-        self.object_infer.soi.analyze_module(pymodule, should_analyze)
+        self.object_infer.soi.analyze_module(pymodule, should_analyze,
+                                             search_subscopes)
 
     def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
         classes = self.classes_cache.get_classes(task_handle)
@@ -380,11 +388,15 @@ def perform_soi_on_changed_scopes(project, resource, old_contents):
             new_contents = resource.read()
             # detecting changes in new_contents relative to old_contents
             detector = _TextChangeDetector(new_contents, old_contents)
+            def search_subscopes(pydefined):
+                scope = pydefined.get_scope()
+                return detector.is_changed(scope.get_start(), scope.get_end())
             def should_analyze(pydefined):
                 scope = pydefined.get_scope()
-                return detector.is_changed(scope.get_start(),
-                                           scope.get_end())
-            pycore.analyze_module(resource, should_analyze)
+                start = scope.get_start()
+                end = scope.get_end()
+                return detector.consume_changes(start, end)
+            pycore.analyze_module(resource, should_analyze, search_subscopes)
         except SyntaxError:
             pass
 
@@ -399,19 +411,33 @@ class _TextChangeDetector(object):
     def _set_diffs(self):
         differ = difflib.Differ()
         self.lines = []
+        lineno = 0
         for line in differ.compare(self.old.splitlines(True),
                                    self.new.splitlines(True)):
             if line.startswith(' '):
-                self.lines.append(False)
+                lineno += 1
             elif line.startswith('-'):
-                self.lines.append(True)
+                lineno += 1
+                self.lines.append(lineno)
 
     def is_changed(self, start, end):
         """Tell whether any of start till end lines have changed
 
         The end points are inclusive and indices start from 1.
         """
-        for i in range(start - 1, min(end, len(self.lines))):
-            if self.lines[i]:
-                return True
+        left, right = self._get_changed(start, end)
+        if left < right:
+            return True
         return False
+
+    def consume_changes(self, start, end):
+        """Clear the changed status of lines from start till end"""
+        left, right = self._get_changed(start, end)
+        if left < right:
+            del self.lines[left:right]
+        return left < right
+
+    def _get_changed(self, start, end):
+        left = bisect.bisect_left(self.lines, start)
+        right = bisect.bisect_right(self.lines, end)
+        return left, right

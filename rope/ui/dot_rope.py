@@ -202,3 +202,7 @@ def _change_key_binding(core):
     core.rebind_action('upper_next_word', None)
     core.rebind_action('capitalize_next_word', None)
     core.rebind_action('goto_center_line', None)
+    core.rebind_action('prev_statement', None)
+    core.rebind_action('next_statement', None)
+    core.rebind_action('prev_scope', 'C-Up')
+    core.rebind_action('next_scope', 'C-Down')

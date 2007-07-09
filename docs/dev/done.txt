@@ -3,7 +3,10 @@
 ===========
 
 
-- Next/prev statement : July 8, 2007
+- Next/prev scope; ``M-C-e/M-C-a`` : July 9, 2007
+
+
+- Next/prev statement; ``M-e/M-a`` : July 8, 2007
 
 
 - Importing modules in restructurings : July 7, 2007

@@ -57,38 +57,38 @@ class StaticObjectInference(object):
     def _is_classmethod_decorator(self, node):
         return isinstance(node, ast.Name) and node.id == 'classmethod'
 
-    def analyze_module(self, pymodule, should_analyze=None):
-        """Analyze `pymodule` for static object inference"""
-        _analyze_node(self.pycore, pymodule, should_analyze)
+    def analyze_module(self, pymodule, should_analyze, search_subscopes):
+        """Analyze `pymodule` for static object inference
+
+        The analysis starts from inner scopes first.
+
+        """
+        _analyze_node(self.pycore, pymodule, should_analyze, search_subscopes)
 
 
-def _analyze_node(pycore, pydefined, should_analyze):
-    if should_analyze is not None and not should_analyze(pydefined):
-        return
-    #    if hasattr(pydefined, 'get_name'):
-    #        print pydefined.get_name()
-    visitor = SOIVisitor(pycore, pydefined, should_analyze)
-    for child in ast.get_child_nodes(pydefined.get_ast()):
-        ast.walk(child, visitor)
+def _analyze_node(pycore, pydefined, should_analyze, search_subscopes):
+    if search_subscopes(pydefined):
+        for scope in pydefined.get_scope().get_scopes():
+            _analyze_node(pycore, scope.pyobject,
+                          should_analyze, search_subscopes)
+    if should_analyze(pydefined):
+        visitor = SOIVisitor(pycore, pydefined)
+        for child in ast.get_child_nodes(pydefined.get_ast()):
+            ast.walk(child, visitor)
 
 
 class SOIVisitor(object):
 
-    def __init__(self, pycore, pydefined, should_analyze):
+    def __init__(self, pycore, pydefined):
         self.pycore = pycore
         self.pymodule = pydefined.get_module()
         self.scope = pydefined.get_scope()
-        self.should_analyze = should_analyze
 
     def _FunctionDef(self, node):
-        self._analyze_child(node)
+        pass
 
     def _ClassDef(self, node):
-        self._analyze_child(node)
-
-    def _analyze_child(self, node):
-        pydefined = self.scope.get_name(node.name).get_object()
-        _analyze_node(self.pycore, pydefined, self.should_analyze)
+        pass
 
     def _Call(self, node):
         for child in ast.get_child_nodes(node):

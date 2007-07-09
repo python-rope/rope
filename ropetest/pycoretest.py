@@ -915,6 +915,12 @@ class TextChangeDetectorTest(unittest.TestCase):
         detector = _TextChangeDetector('1\n2\n', '1\n3\n')
         self.assertTrue(detector.is_changed(1, 2))
 
+    def test_consume_change(self):
+        detector = _TextChangeDetector('1\n2\n', '1\n3\n')
+        self.assertTrue(detector.is_changed(1, 2))
+        self.assertTrue(detector.consume_changes(1, 2))
+        self.assertFalse(detector.is_changed(1, 2))
+
 
 def suite():
     result = unittest.TestSuite()

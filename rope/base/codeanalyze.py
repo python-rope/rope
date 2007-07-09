@@ -605,7 +605,7 @@ class LogicalLineFinder(object):
         region = self._calculate_logical(readline, shifted)
         start = self._get_first_non_blank(region[0] + block_start - 1)
         if region[1] is None:
-            end = self.lines.end()
+            end = self.lines.length()
         else:
             end = region[1] + block_start - 1
         return start, end

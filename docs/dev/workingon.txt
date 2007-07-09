@@ -1,16 +1,15 @@
-Next/Prev Scope
-===============
+Small Stories
+=============
 
-- Fixing prev statement on comments
+- Not analyzing containing scopes in automatic SOI
 
-* Not scanning whole scopes in automatic SOI; only changed lines
 * Sorting methods; Move method up/down
 * Better help in restructuring dialog
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
 * What to do with files that cannot be compiled when refactoring?
 
-* Extracting subexpressions; look at `extracttest` for more info;
+* Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
 * Not including dev docs on distribution packages
 * Changing version format?
