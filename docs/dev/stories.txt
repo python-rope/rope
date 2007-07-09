@@ -93,6 +93,9 @@ Stories
 * Supporting templates in text modes
 
 
+* Next/prev sentence
+
+
 * Inlining a single occurrence
 
 
@@ -148,9 +151,6 @@ Stories
 
 
 * Split tuple assignment refactoring
-
-
-* Next/prev sentence
 
 
 > Public Release 0.6m5 : July 15, 2007

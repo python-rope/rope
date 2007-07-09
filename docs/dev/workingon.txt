@@ -1,12 +1,13 @@
 Small Stories
 =============
 
-- Not analyzing containing scopes in automatic SOI
+- Changing restructuring example in ``library.txt`` to use
+  `Restructure.make_checks()`
 
-* Sorting methods; Move method up/down
-* Better help in restructuring dialog
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
+* Move method up/down
+* Better help in restructuring dialog
 * What to do with files that cannot be compiled when refactoring?
 
 * Extracting subexpressions; look at `extracttest` for more info

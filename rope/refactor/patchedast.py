@@ -4,17 +4,21 @@ from rope.base import ast, codeanalyze, exceptions
 
 
 def get_patched_ast(source, sorted_children=False):
-    """Adds `region` and `sorted_children` fields to nodes"""
+    """Adds ``region`` and ``sorted_children`` fields to nodes
+
+    Adds ``sorted_children`` field only if `sorted_children` is True.
+
+    """
     return patch_ast(ast.parse(source), source, sorted_children)
 
 
 def patch_ast(node, source, sorted_children=False):
     """Patches the given node
-    
+
     After calling, each node in `node` will have a new field named
     `region` that is a tuple containing the start and end offsets
     of the code that generated it.
-    
+
     If `sorted_children` is true, a `sorted_children` field will
     be created for each node, too.  It is a list containing child
     nodes as well as whitespaces and comments that occur between
@@ -35,7 +39,7 @@ def node_region(patched_ast_node):
 
 def write_ast(patched_ast_node):
     """Extract source form a patched AST node with `sorted_children` field
-    
+
     If the node is patched with sorted_children turned off you can use
     `node_region` function for obtaining code using module source code.
     """

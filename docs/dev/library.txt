@@ -448,13 +448,7 @@ operator (see the restructuring section of `overview.txt`_)::
   >>> goal = '${?param1} ** ${?param2}'
 
   >>> restructuring = restructure.Restructure(project, pattern, goal)
-  >>> checks = {}
-  >>> pymod1 = project.get_pycore().get_module('mod1')
-  >>> pow_pyname = pymod1.get_attribute('pow')
-  >>> checks['?pow_func'] = pow_pyname
-
-  # We could have used `Restructuring.make_checks()` instead:
-  # checks = restructuring.make_checks({'?pow_func': 'mod1.pow'})
+  >>> checks = restructuring.make_checks({'?pow_func': 'mod1.pow'})
 
   >>> project.do(restructuring.get_changes(checks))
   >>> mod2.read()
