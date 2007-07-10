@@ -13,7 +13,8 @@ class SearchingState(object):
 class ForwardSearching(SearchingState):
 
     def append_keyword(self, searcher, postfix):
-        start = searcher.editor.get_relative(searcher.editor.get_insert(), -len(searcher.keyword))
+        start = searcher.editor.get_relative(searcher.editor.get_insert(),
+                                             -len(searcher.keyword))
         searcher.keyword += postfix
         searcher._match(start)
 
@@ -37,7 +38,8 @@ class BackwardSearching(SearchingState):
 
     def append_keyword(self, searcher, postfix):
         searcher.keyword += postfix
-        start = searcher.editor.get_relative(searcher.editor.get_insert(), +len(searcher.keyword))
+        start = searcher.editor.get_relative(searcher.editor.get_insert(),
+                                             +len(searcher.keyword))
         searcher._match(start, forward=False, insert_side='left')
 
     def shorten_keyword(self, searcher):
@@ -49,7 +51,8 @@ class BackwardSearching(SearchingState):
     def next_match(self, searcher):
         if not searcher.keyword:
             return
-        searcher._match(searcher.editor.get_insert(), forward=False, insert_side='left')
+        searcher._match(searcher.editor.get_insert(),
+                        forward=False, insert_side='left')
 
     def is_searching(self, searcher):
         return True
@@ -97,7 +100,8 @@ class Searcher(object):
         self.current_match = Match(self.starting_index, self.starting_index)
         self.status_text = None
         if self.editor.status_bar_manager:
-            self.status_text = self.editor.status_bar_manager.create_status('search')
+            self.status_text = self.editor.status_bar_manager.\
+                               create_status('search')
             self.status_text.set_width(35)
         self.update_status_text()
 
@@ -110,7 +114,8 @@ class Searcher(object):
 
     def end_searching(self):
         self.history = self.keyword
-        self.current_match = Match(self.editor.get_insert(), self.editor.get_insert())
+        self.current_match = Match(self.editor.get_insert(),
+                                   self.editor.get_insert())
         self._finish_searching()
 
     def is_searching(self):
@@ -159,7 +164,8 @@ class Searcher(object):
             case = False
             if not self.keyword.islower():
                 case = True
-            found = self.editor.search(self.keyword, start, case=case, forwards=forward)
+            found = self.editor.search(self.keyword, start,
+                                       case=case, forwards=forward)
             if found:
                 found_end = self.editor.get_relative(found, len(self.keyword))
                 self.current_match = Match(found, found_end, insert_side)
@@ -168,9 +174,9 @@ class Searcher(object):
             else:
                 self.failing = True
         else:
-            self.current_match = Match(self.starting_index, self.starting_index)
+            self.current_match = Match(self.starting_index,
+                                       self.starting_index)
             self.editor.highlight_match(self.current_match)
 
     def get_match(self):
         return self.current_match
-
