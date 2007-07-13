@@ -1,9 +1,7 @@
 Small Stories
 =============
 
-- Changing restructuring example in ``library.txt`` to use
-  `Restructure.make_checks()`
-
+* Why are we using `ImportTools.relatives_to_absolutes()` in move?
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
 * Move method up/down

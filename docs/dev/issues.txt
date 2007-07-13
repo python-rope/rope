@@ -245,32 +245,7 @@ decisions.
 Getting Ready For Python 3.0
 ============================
 
-Unfortunately it seems impossible to make rope both a valid Python 2.x
-and 3.x program.  Possible approaches are having two separate branches
-of rope (that I strongly resist) or moving from 2.x to 3.x gradually.
-
-For making transition to 3.x easier rope has already started using
-`_ast` module instead `compiler`.
-
-* Updating `rope.refactor.patchedast` module for using new nodes
-* Updating `rope.base.evaluate`
-* Updating `rope.base.builtins`
-* Changing `rope.refactor.funcutils` to handle keyword only args
-* Changing print to function in tests
-* Not supporting old relative imports
-* `iter.__next__()` instead of `iter.next()`?
-* Supporting `bytes`, `input`
-* Removing nonexistent dict methods and methods that will return sets
-* Chaning imports after library reorganization
-* Show function annotations in pydocs
-* ``nonlocal``
-* ``except xxx as yyy``
-* Supporting keyword only arguments
-* Set literals and comprehension ``{1, 2, 3}`` and ``{x for x in range(10)}``
-* Renamed function attributes; ``f.func_whatever`` to ``f.__whatever__``
-* Use new function signature
-* Not using ``__cmp__``
-* Updating integer and string literal patterns
+This has been moved to a separate branch.
 
 
 What Rope Assumes...

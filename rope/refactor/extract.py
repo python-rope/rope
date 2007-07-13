@@ -86,9 +86,11 @@ class _ExtractInfo(object):
         self.region = (self._choose_closest_line_end(start),
                        self._choose_closest_line_end(end, end=True))
 
-        self.region_lines = (
-            self.logical_lines.get_logical_line_in(self.lines.get_line_number(self.region[0]))[0],
-            self.logical_lines.get_logical_line_in(self.lines.get_line_number(self.region[1]))[1])
+        start = self.logical_lines.get_logical_line_in(
+            self.lines.get_line_number(self.region[0]))[0]
+        end = self.logical_lines.get_logical_line_in(
+            self.lines.get_line_number(self.region[1]))[1]
+        self.region_lines = (start, end)
 
         self.lines_region = (self.lines.get_line_start(self.region_lines[0]),
                              self.lines.get_line_end(self.region_lines[1]))
@@ -97,8 +99,7 @@ class _ExtractInfo(object):
     def _init_scope(self):
         start_line = self.region_lines[0]
         scope = self.global_scope.get_inner_scope_for_line(start_line)
-        if scope.get_kind() != 'Module' and \
-           scope.get_start() == start_line:
+        if scope.get_kind() != 'Module' and scope.get_start() == start_line:
             scope = scope.parent
         self.scope = scope
         self.scope_region = (self.lines.get_line_start(self.scope.get_start()),
@@ -290,31 +291,35 @@ class _ExceptionalConditionChecker(object):
         if info.scope.get_kind() == 'Class':
             raise RefactoringError('Can not extract in class body')
         if info.region[1] > info.scope_region[1]:
-            raise RefactoringError('Bad range selected for extract method')
+            raise RefactoringError('Bad region selected for extract method')
         end_line = info.region_lines[1]
         end_scope = info.global_scope.get_inner_scope_for_line(end_line)
         if end_scope != info.scope and end_scope.get_end() != end_line:
-            raise RefactoringError('Bad range selected for extract method')
+            raise RefactoringError('Bad region selected for extract method')
         try:
             if _ReturnOrYieldFinder.does_it_return(
                 info.source[info.region[0]:info.region[1]]):
-                raise RefactoringError('Extracted piece should not contain return statements.')
+                raise RefactoringError('Extracted piece should not '
+                                       'contain return statements.')
             if _UnmatchedBreakOrContinueFinder.has_errors(
                 info.source[info.region[0]:info.region[1]]):
-                raise RefactoringError(
-                    'A break/continue without matching having a for/while loop.')
+                raise RefactoringError('A break/continue without matching '
+                                       'having a for/while loop.')
         except SyntaxError:
-            raise RefactoringError('Extracted piece should contain complete statements.')
+            raise RefactoringError('Extracted piece should '
+                                   'contain complete statements.')
 
     def one_line_conditions(self, info):
         if self._is_region_on_a_word(info):
             raise RefactoringError('Should extract complete statements.')
         if info.variable and not info.one_line:
-            raise RefactoringError('Extract variable should not span multiple lines.')
+            raise RefactoringError('Extract variable should not '
+                                   'span multiple lines.')
 
     def multi_line_conditions(self, info):
         if info.region != info.lines_region:
-            raise RefactoringError('Extracted piece should contain complete statements.')
+            raise RefactoringError('Extracted piece should'
+                                   ' contain complete statements.')
 
     def _is_region_on_a_word(self, info):
         if info.region[0] > 0 and self._is_on_a_word(info, info.region[0] - 1) or \
@@ -409,7 +414,8 @@ class _ExtractMethodParts(object):
                 prefix = self_name + '.'
             else:
                 prefix = self.info.scope.parent.pyobject.get_name() + '.'
-        return prefix + '%s(%s)' % (self.info.new_name, self._get_comma_form(args))
+        return prefix + '%s(%s)' % (self.info.new_name,
+                                    self._get_comma_form(args))
 
     def _get_comma_form(self, names):
         result = ''
