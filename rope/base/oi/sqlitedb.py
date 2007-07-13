@@ -1,9 +1,13 @@
 import cPickle as pickle
 import UserDict
-import sqlite3
 import threading
 
 from rope.base.oi import objectdb
+
+try:
+    import sqlite3
+except ImportError:
+    pass
 
 
 class SqliteDB(objectdb.FileDict):
