@@ -10,7 +10,7 @@ class ObjectDB(object):
         self.files = db.files
 
     def validate_files(self):
-        for file in self.files:
+        for file in list(self.files):
             if not self.validation.is_file_valid(file):
                 del self.files[file]
                 self._file_removed(file)
