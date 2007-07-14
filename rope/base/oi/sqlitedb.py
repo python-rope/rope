@@ -251,3 +251,7 @@ class Table(object):
         command = 'UPDATE %s SET %s %s' % (self.name,
                                            ', '.join(commands), where)
         return self.db.execute(command, values)
+
+
+def is_sqlite_available():
+    return 'sqlite3' in globals()

@@ -45,8 +45,10 @@ class ObjectDBTest(unittest.TestCase):
         validation = _MockValidation()
         self.dbs = [
             objectdb.ObjectDB(memorydb.MemoryDB(self.project), validation),
-            objectdb.ObjectDB(shelvedb.ShelveDB(self.project), validation),
-            objectdb.ObjectDB(sqlitedb.SqliteDB(self.project), validation)]
+            objectdb.ObjectDB(shelvedb.ShelveDB(self.project), validation)]
+        if sqlitedb.is_sqlite_available():
+            self.dbs.append(objectdb.ObjectDB(sqlitedb.SqliteDB(self.project),
+                                              validation))
 
     def tearDown(self):
         for db in self.dbs:
