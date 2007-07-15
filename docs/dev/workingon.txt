@@ -1,7 +1,8 @@
 Small Stories
 =============
 
-* Handling `raw_input` builtin function
+- Handling `raw_input` builtin function
+
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
 * Move method up/down

@@ -624,6 +624,9 @@ def _iter_function(args):
         holding = _infer_sequence_for_pyname(passed)
     return Iterator(holding)
 
+def _input_function(args):
+    return get_str()
+
 
 builtins = {
     'list': BuiltinName(get_list_type()),
@@ -643,7 +646,8 @@ builtins = {
     'enumerate': BuiltinName(BuiltinFunction(function=_enumerate_function, builtin=enumerate)),
     'object': BuiltinName(BuiltinObject()),
     'type': BuiltinName(BuiltinType()),
-    'iter': BuiltinName(BuiltinFunction(function=_iter_function, builtin=iter))}
+    'iter': BuiltinName(BuiltinFunction(function=_iter_function, builtin=iter)),
+    'raw_input': BuiltinName(BuiltinFunction(function=_input_function, builtin=raw_input))}
 
 
 for name in dir(__builtin__):
