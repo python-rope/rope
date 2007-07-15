@@ -253,7 +253,7 @@ actions.append(SimpleAction('prev_statement', PrevNextElement(False), 'M-a',
                             others.child('Prev Statement'), ['python']))
 actions.append(
     SimpleAction('next_scope', PrevNextElement(element=movements.Scopes), 'C-M-e',
-                 others.child('Next Statement'), ['python']))
+                 others.child('Next Scope'), ['python']))
 actions.append(
     SimpleAction('prev_scope', PrevNextElement(False, movements.Scopes), 'M-C-a',
                  others.child('Prev Scope'), ['python']))

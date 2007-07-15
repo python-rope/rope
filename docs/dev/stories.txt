@@ -153,4 +153,7 @@ Stories
 * Split tuple assignment refactoring
 
 
-> Public Release 0.6m5 : July 15, 2007
+> Public Release 0.6 : July 29, 2007
+
+
+* Handling recursive restructurings

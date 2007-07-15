@@ -51,7 +51,7 @@ class Rename(object):
               to rename all matching methods in the hierarchy
             - `docs`: when `True` rename refactoring will rename
               occurrences in comments and strings where the name is
-              visible.
+              visible.  Setting it will make renames faster, too.
             - `unsure`: rename occurrence even if unsure.  Do not use it
               unless you know what you're doing.  If `True`, all name
               occurrences except those that we are sure are not what we

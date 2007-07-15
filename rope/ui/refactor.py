@@ -15,7 +15,8 @@ import rope.refactor.restructure
 import rope.ui.core
 from rope.base import exceptions, evaluate
 from rope.refactor import ImportOrganizer
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
+from rope.ui.actionhelpers import (ConfirmEditorsAreSaved,
+                                   StoppableTaskRunner, check_project)
 from rope.ui import uihelpers
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
@@ -823,10 +824,17 @@ class RestructureDialog(RefactoringDialog):
         self.pattern = Tkinter.Text(frame, width=50, height=2)
         self.goal = Tkinter.Text(frame, width=50, height=2)
 
-        pattern_label.grid(row=0, column=0, sticky=Tkinter.W)
-        self.pattern.grid(row=0, column=1, sticky=Tkinter.W)
-        goal_label.grid(row=1, column=0, sticky=Tkinter.W)
-        self.goal.grid(row=1, column=1, sticky=Tkinter.W)
+        patterns_help = \
+            'Rope searches for `pattern` in the project and replaces its\n' \
+            'occurrences with `goal`.  They can contain ``${?name}`` and \n' \
+            '``${name}`` wildcards.  See ``docs/overview.txt`` for examples.'
+        help_label = Tkinter.Label(frame, text=patterns_help,
+                                   justify=Tkinter.LEFT, width=70)
+        help_label.grid(row=0, columnspan=2, sticky=Tkinter.W)
+        pattern_label.grid(row=1, column=0, sticky=Tkinter.W)
+        self.pattern.grid(row=1, column=1, sticky=Tkinter.W)
+        goal_label.grid(row=2, column=0, sticky=Tkinter.W)
+        self.goal.grid(row=2, column=1, sticky=Tkinter.W)
 
         # Handling checks
         checks_frame = Tkinter.Frame(frame, borderwidth=1,
@@ -838,7 +846,7 @@ class RestructureDialog(RefactoringDialog):
         checks_label.grid(row=0)
         self.checks = Tkinter.Text(checks_frame, height=4, width=70)
         self.checks.grid(row=1)
-        checks_frame.grid(row=2, columnspan=2)
+        checks_frame.grid(row=3, columnspan=2)
 
         # Handling Imports
         imports_frame = Tkinter.Frame(frame, borderwidth=1,
@@ -850,7 +858,7 @@ class RestructureDialog(RefactoringDialog):
         imports_label.grid(row=0)
         self.imports = Tkinter.Text(imports_frame, height=4, width=70)
         self.imports.grid(row=1)
-        imports_frame.grid(row=3, columnspan=2)
+        imports_frame.grid(row=4, columnspan=2)
 
         self.pattern.focus_set()
         return frame
@@ -860,7 +868,9 @@ class RestructureDialog(RefactoringDialog):
 
 
 def restructure(context):
-    RestructureDialog(context).show()
+    if check_project(context.core):
+        RestructureDialog(context).show()
+
 
 actions = []
 core = rope.ui.core.get_core()

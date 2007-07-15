@@ -1,4 +1,4 @@
-from rope.base import change, taskhandle, builtins
+from rope.base import change, taskhandle, builtins, exceptions
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
 
@@ -30,8 +30,15 @@ class Restructure(object):
             pymodule = self.pycore.resource_to_pyobject(resource)
             finder = similarfinder.CheckingFinder(pymodule, checks)
             collector = sourceutils.ChangeCollector(pymodule.source_code)
+            last_end = -1
             for match in finder.get_matches(self.pattern):
                 start, end = match.get_region()
+                if start < last_end:
+                    raise exceptions.RefactoringError(
+                        'Pattern matched recursively in <%s:%s>; Rope cannot'
+                        ' handle recursive restructurings, yet.' %
+                        (resource.path, start))
+                last_end = end
                 replacement = self._get_text(pymodule.source_code, match)
                 replacement = self._auto_indent(pymodule, start, replacement)
                 collector.add_change(start, end, replacement)

@@ -129,6 +129,14 @@ class RestructureTest(unittest.TestCase):
         self.project.do(refactoring.get_changes(imports=['import myconsts']))
         self.assertEquals('a = True\n', self.mod.read())
 
+    # TODO: Handle recursive restructurings
+    def xxx_test_handling_overlapping_matches(self):
+        self.mod.write('a = 1 / 2 / 3\n')
+        refactoring = restructure.Restructure(
+            self.project, '${?a} / ${?b}', '${?a} // ${?b}')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('a = 1 // 2 // 3\n', self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()

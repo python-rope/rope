@@ -993,7 +993,7 @@ Rope assumes either all files are under version control in a project
 or there is no version control at all.  Also don't forget to commit
 your changes yourself, rope doesn't do that.
 
-Adding support for other VCSs is easy have a look at
+Adding support for other VCSs is easy; have a look at
 `library.txt`_.
 
 .. _pysvn: http://pysvn.tigris.org

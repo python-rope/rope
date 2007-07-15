@@ -26,6 +26,15 @@ New Features
 * Next/prev scope; ``M-C-e/M-C-a``
 * Next/prev statement; ``M-e/M-a``
 
+Restructurings can now handle imports; You can tell rope to add
+imports to files that contain at least once occurrence of the
+restructuring pattern.  This can be useful when you need to import
+something in your goal pattern.  Note that rope does not import
+something if it is already imported.
+
+The goal pattern of restructurings can now have multiple lines.  They
+are indented to match the indentation of the matches.
+
 
 Getting Started
 ===============

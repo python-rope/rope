@@ -1,8 +1,6 @@
 Small Stories
 =============
 
-- Not including dev docs on distribution packages
-
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
 * Move method up/down

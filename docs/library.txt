@@ -3,7 +3,10 @@
 =========================
 
 If you need other features, send a feature request.  Have a look at
-``docs/contributing.txt``.
+`contributing.txt`_.
+
+
+.. contents:: Table of Contents
 
 
 Quick Start
@@ -162,7 +165,7 @@ for instance).
 Activating Static Object Inference
 ----------------------------------
 
-One of the great strengths of rope is its static object inference,
+One of the greatest strengths of rope is its static object inference,
 SOI.  You can perform SOI on a module using `PyCore.analyze_module()`
 method but performing SOI on a module is not cheap.  So we decided
 that the best time for performing SOI is whan saving files and only
@@ -462,7 +465,8 @@ operator (see the restructuring section of `overview.txt`_)::
 
 See code documentation and test suites for more information.
 
-.. _overview.txt: ../user/overview.html
+.. _overview.txt: overview.html
+.. _contributing.txt: contributing.html
 
 
 Other Topics

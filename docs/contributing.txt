@@ -23,7 +23,7 @@ How to Help Rope?
 * Discuss your ideas in `rope-developers`_ mailing list.
 
 .. _rope project page: http://sf.net/projects/rope
-.. _`rope-developers`: rope-developers@lists.sourceforge.net
+.. _`rope-developers`: http://lists.sourceforge.net/mailman/listinfo/rope-developers
 
 
 Wish List
