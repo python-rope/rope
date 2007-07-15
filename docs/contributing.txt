@@ -61,10 +61,15 @@ only detects redefined elements.
 Modules Without Source Code
 ---------------------------
 
-Rope cannot know anything about python C extensions and compiled
-modules without matching source code.  Some information can be
-gathered using `inspect` module.  It's not safe but better than
-nothing.  This requires a good knowledge of `rope.base`.
+Rope cannot know anything about python C extensions and modules
+without matching source code.  Some information can be gathered using
+`inspect` module.  But it's not safe; Yet better than nothing.  This
+requires a good knowledge of `rope.base`.
+
+Getting Ready For Python 3.0
+----------------------------
+
+It has been started, already.  But contributions are appreciated.
 
 
 Rope Structure

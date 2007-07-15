@@ -1,7 +1,7 @@
 Small Stories
 =============
 
-- Handling `raw_input` builtin function
+- Not including dev docs on distribution packages
 
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
@@ -11,7 +11,6 @@ Small Stories
 
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
-* Not including dev docs on distribution packages
 * Changing version format?
 * Using similarfinder in introduce_parameter?
 * Should we move generate to `rope.base.refactor`?

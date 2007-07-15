@@ -1,5 +1,6 @@
 include README.txt COPYING rope.py runtests.py setup.py MANIFEST.in
-recursive-include docs *.html *.txt
+include docs/*.html
+include docs/*.txt
 
 recursive-include rope *.py
 recursive-include ropetest *.py

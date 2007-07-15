@@ -21,17 +21,20 @@ IDE and the library.
 New Features
 ============
 
-*
+* Importing modules in restructurings
+* Auto-indentation in restructurings
+* Next/prev scope; ``M-C-e/M-C-a``
+* Next/prev statement; ``M-e/M-a``
 
 
 Getting Started
 ===============
 
-* Overview and keybinding: `docs/user/overview.txt`_
+* Overview and keybinding: `docs/overview.txt`_
 * List of features: `docs/index.txt`_
-* Tutorial: `docs/user/tutorial.txt`_
-* Using as a library: `docs/dev/library.txt`_
-* Contributing: `docs/dev/contributing.txt`_
+* Tutorial: `docs/tutorial.txt`_
+* Using as a library: `docs/library.txt`_
+* Contributing: `docs/contributing.txt`_
 
 To change rope IDE preferences edit your ``~/.rope`` (which is created
 the first time you start rope).  To change your project preferences
@@ -64,7 +67,7 @@ may use them.
 Get Involved!
 =============
 
-See `docs/dev/contributing.txt`_.
+See `docs/contributing.txt`_.
 
 
 Bug Reports
@@ -81,8 +84,8 @@ This program is under the terms of GPL (GNU General Public License).
 Have a look at ``COPYING`` file for more information.
 
 
-.. _`docs/user/overview.txt`: docs/user/overview.html
-.. _`docs/user/tutorial.txt`: docs/user/tutorial.html
+.. _`docs/overview.txt`: docs/overview.html
+.. _`docs/tutorial.txt`: docs/tutorial.html
 .. _`docs/index.txt`: docs/index.html
-.. _`docs/dev/contributing.txt`: docs/dev/contributing.html
-.. _`docs/dev/library.txt`: docs/dev/library.html
+.. _`docs/contributing.txt`: docs/contributing.html
+.. _`docs/library.txt`: docs/library.html

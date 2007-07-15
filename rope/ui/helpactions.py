@@ -35,10 +35,9 @@ def show_doc(context, name):
     no_project = project.get_no_project()
     if 'docs' in os.listdir(rope_package):
         root = rope_package
-        resource = no_project.get_resource(root + '/docs/' + name.split('/')[-1])
     else:
         root = os.path.dirname(rope_package)
-        resource = no_project.get_resource(root + '/' + name)
+    resource = no_project.get_resource(root + '/' + name)
     editor_manager = context.get_core().get_editor_manager()
     editor_manager.get_resource_editor(resource, readonly=True)
 
@@ -49,16 +48,16 @@ def show_features(context):
     show_doc(context, 'docs/index.txt')
 
 def show_overview(context):
-    show_doc(context, 'docs/user/overview.txt')
+    show_doc(context, 'docs/overview.txt')
 
 def show_tutorial(context):
-    show_doc(context, 'docs/user/tutorial.txt')
+    show_doc(context, 'docs/tutorial.txt')
 
 def show_contributing(context):
-    show_doc(context, 'docs/dev/contributing.txt')
+    show_doc(context, 'docs/contributing.txt')
 
 def show_library(context):
-    show_doc(context, 'docs/dev/library.txt')
+    show_doc(context, 'docs/library.txt')
 
 def show_copying(context):
     show_doc(context, 'COPYING')

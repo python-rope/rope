@@ -96,7 +96,7 @@ Features implemented so far:
 For more information see `overview.txt`_.  Here are a few
 `screenshots`_.
 
-.. _overview.txt: user/overview.html
+.. _overview.txt: overview.html
 .. _screenshots: screenshots/screenshots.html
 
 

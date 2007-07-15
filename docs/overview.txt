@@ -593,7 +593,7 @@ Consider the name of the module containing our `pow` function is
 For performing this refactoring using rope library see `library.txt`_.
 
 
-.. _library.txt: ../dev/library.html
+.. _library.txt: library.html
 
 
 Example 2

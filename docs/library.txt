@@ -3,7 +3,7 @@
 =========================
 
 If you need other features, send a feature request.  Have a look at
-``docs/dev/contributing.txt``.
+``docs/contributing.txt``.
 
 
 Quick Start
