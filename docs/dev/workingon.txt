@@ -1,5 +1,7 @@
-Small Stories
-=============
+Handling Recursive Restructurings
+=================================
+
+- Preventing recursion when matching ``${?a}``
 
 * Refactor `rope.base.refactor.importutils`
 * Not holding current_folder in `FromImport`?
