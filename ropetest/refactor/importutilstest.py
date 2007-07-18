@@ -1,6 +1,6 @@
 import unittest
 
-from rope.refactor.importutils import ImportTools
+from rope.refactor.importutils import ImportTools, importinfo
 from ropetest import testutils
 
 
@@ -126,14 +126,18 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_imports(pymod)
         imports = module_with_imports.get_import_statements()
-        self.assertEquals(['pkg'], imports[0].import_info.get_imported_names())
+        context = importinfo.ImportContext(self.pycore, self.project.root)
+        self.assertEquals(['pkg'],
+                          imports[0].import_info.get_imported_names(context))
 
     def test_import_get_names_with_alias(self):
         self.mod.write('import pkg1.mod1\n')
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_imports(pymod)
         imports = module_with_imports.get_import_statements()
-        self.assertEquals(['pkg1'], imports[0].import_info.get_imported_names())
+        context = importinfo.ImportContext(self.pycore, self.project.root)
+        self.assertEquals(['pkg1'],
+                          imports[0].import_info.get_imported_names(context))
 
     def test_import_get_names_with_alias2(self):
         self.mod1.write('def a_func():\n    pass\n')
@@ -141,7 +145,9 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_imports(pymod)
         imports = module_with_imports.get_import_statements()
-        self.assertEquals(['a_func'], imports[0].import_info.get_imported_names())
+        context = importinfo.ImportContext(self.pycore, self.project.root)
+        self.assertEquals(['a_func'],
+                          imports[0].import_info.get_imported_names(context))
 
     def test_empty_getting_used_imports(self):
         self.mod.write('')

@@ -26,7 +26,8 @@ class ModuleImports(object):
 
     def remove_unused_imports(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
-        visitor = actions.RemovingVisitor(self.pycore, can_select)
+        visitor = actions.RemovingVisitor(
+            self.pycore, self._current_folder(), can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
 
@@ -34,7 +35,8 @@ class ModuleImports(object):
         all_import_statements = self.get_import_statements()
         result = []
         can_select = _OneTimeSelector(self._get_unbound_names(defined_pyobject))
-        visitor = actions.FilteringVisitor(self.pycore, can_select)
+        visitor = actions.FilteringVisitor(
+            self.pycore, self._current_folder(), can_select)
         for import_statement in all_import_statements:
             new_import = import_statement.accept(visitor)
             if new_import is not None and not new_import.is_empty():
@@ -122,13 +124,15 @@ class ModuleImports(object):
                                blank_lines=blank_lines))
 
     def filter_names(self, can_select):
-        visitor = actions.RemovingVisitor(self.pycore, can_select)
+        visitor = actions.RemovingVisitor(
+            self.pycore, self._current_folder(), can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
 
     def expand_stars(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
-        visitor = actions.ExpandStarsVisitor(self.pycore, can_select)
+        visitor = actions.ExpandStarsVisitor(
+            self.pycore, self._current_folder(), can_select)
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
 
@@ -402,8 +406,7 @@ class _GlobalImportFinder(object):
         if node.level:
             level = node.level
         import_info = importinfo.FromImport(
-            node.module, level, self._get_names(node.names),
-            self.current_folder, self.pycore)
+            node.module, level, self._get_names(node.names))
         start_line = node.lineno
         self.imports.append(importinfo.ImportStatement(
                             import_info, node.lineno, end_line,

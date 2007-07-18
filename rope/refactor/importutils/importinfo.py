@@ -50,12 +50,12 @@ class ImportStatement(object):
 
 class ImportInfo(object):
 
-    def get_imported_primaries(self):
+    def get_imported_primaries(self, context):
         pass
 
-    def get_imported_names(self):
+    def get_imported_names(self, context):
         return [primary.split('.')[0]
-                for primary in self.get_imported_primaries()]
+                for primary in self.get_imported_primaries(context)]
 
     def get_import_statement(self):
         pass
@@ -88,7 +88,7 @@ class NormalImport(ImportInfo):
     def __init__(self, names_and_aliases):
         self.names_and_aliases = names_and_aliases
 
-    def get_imported_primaries(self):
+    def get_imported_primaries(self, context):
         result = []
         for name, alias in self.names_and_aliases:
             if alias:
@@ -112,17 +112,14 @@ class NormalImport(ImportInfo):
 
 class FromImport(ImportInfo):
 
-    def __init__(self, module_name, level,
-                 names_and_aliases, current_folder, pycore):
+    def __init__(self, module_name, level, names_and_aliases):
         self.module_name = module_name
         self.level = level
         self.names_and_aliases = names_and_aliases
-        self.current_folder = current_folder
-        self.pycore = pycore
 
-    def get_imported_primaries(self):
+    def get_imported_primaries(self, context):
         if self.names_and_aliases[0][0] == '*':
-            module = self.get_imported_module()
+            module = self.get_imported_module(context)
             return [name for name in module.get_attributes().keys()
                     if not name.startswith('_')]
         result = []
@@ -133,21 +130,21 @@ class FromImport(ImportInfo):
                 result.append(name)
         return result
 
-    def get_imported_module(self):
+    def get_imported_module(self, context):
         if self.level == 0:
-            return self.pycore.get_module(self.module_name,
-                                          self.current_folder)
+            return context.pycore.get_module(
+                self.module_name, context.folder)
         else:
-            return self.pycore.get_relative_module(
-                self.module_name, self.current_folder, self.level)
+            return context.pycore.get_relative_module(
+                self.module_name, context.folder, self.level)
 
-    def get_imported_resource(self):
+    def get_imported_resource(self, context):
         if self.level == 0:
-            return self.pycore.find_module(
-                self.module_name, current_folder=self.current_folder)
+            return context.pycore.find_module(
+                self.module_name, current_folder=context.folder)
         else:
-            return self.pycore.find_relative_module(
-                self.module_name, self.current_folder, self.level)
+            return context.pycore.find_relative_module(
+                self.module_name, context.folder, self.level)
 
     def get_import_statement(self):
         result = 'from ' + '.' * self.level + self.module_name + ' import '
@@ -173,7 +170,7 @@ class EmptyImport(ImportInfo):
     def is_empty(self):
         return True
 
-    def get_imported_primaries(self):
+    def get_imported_primaries(self, context):
         return []
 
 
@@ -195,3 +192,10 @@ def get_module_name(pycore, resource):
         module_name = source_folder.name + '.' + module_name
         source_folder = source_folder.parent
     return module_name
+
+
+class ImportContext(object):
+
+    def __init__(self, pycore, folder):
+        self.pycore = pycore
+        self.folder = folder

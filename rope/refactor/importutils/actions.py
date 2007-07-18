@@ -31,6 +31,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         self.to_be_absolute = []
         self.pycore = pycore
         self.current_folder = current_folder
+        self.context = importinfo.ImportContext(pycore, current_folder)
 
     def visitNormalImport(self, import_stmt, import_info):
         self.to_be_absolute.extend(self._get_relative_to_absolute_list(import_info))
@@ -60,22 +61,22 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         return result
 
     def visitFromImport(self, import_stmt, import_info):
-        resource = import_info.get_imported_resource()
+        resource = import_info.get_imported_resource(self.context)
         if resource is None:
             return None
         absolute_name = importinfo.get_module_name(self.pycore, resource)
         if import_info.module_name != absolute_name:
             import_stmt.import_info = importinfo.FromImport(
-                absolute_name, 0, import_info.names_and_aliases,
-                self.current_folder, self.pycore)
+                absolute_name, 0, import_info.names_and_aliases)
 
 
 class FilteringVisitor(ImportInfoVisitor):
 
-    def __init__(self, pycore, can_select):
+    def __init__(self, pycore, folder, can_select):
         self.to_be_absolute = []
         self.pycore = pycore
         self.can_select = self._transform_can_select(can_select)
+        self.context = importinfo.ImportContext(pycore, folder)
 
     def _transform_can_select(self, can_select):
         def can_select_name_and_alias(name, alias):
@@ -95,7 +96,7 @@ class FilteringVisitor(ImportInfoVisitor):
     def visitFromImport(self, import_stmt, import_info):
         new_pairs = []
         if import_info.is_star_import():
-            for name in import_info.get_imported_names():
+            for name in import_info.get_imported_names(self.context):
                 if self.can_select(name, None):
                     new_pairs.append(import_info.names_and_aliases[0])
                     break
@@ -104,16 +105,15 @@ class FilteringVisitor(ImportInfoVisitor):
                 if self.can_select(name, alias):
                     new_pairs.append((name, alias))
         return importinfo.FromImport(
-            import_info.module_name, import_info.level, new_pairs,
-            import_info.current_folder, self.pycore)
+            import_info.module_name, import_info.level, new_pairs)
 
 
 class RemovingVisitor(ImportInfoVisitor):
 
-    def __init__(self, pycore, can_select):
+    def __init__(self, pycore, folder, can_select):
         self.to_be_absolute = []
         self.pycore = pycore
-        self.filtering = FilteringVisitor(pycore, can_select)
+        self.filtering = FilteringVisitor(pycore, folder, can_select)
 
     def dispatch(self, import_):
         result = self.filtering.dispatch(import_)
@@ -161,16 +161,16 @@ class AddingVisitor(ImportInfoVisitor):
                 if pair not in new_pairs:
                     new_pairs.append(pair)
             import_stmt.import_info = importinfo.FromImport(
-                import_info.module_name, import_info.level, new_pairs,
-                import_info.current_folder, import_info.pycore)
+                import_info.module_name, import_info.level, new_pairs)
             return True
 
 
 class ExpandStarsVisitor(ImportInfoVisitor):
 
-    def __init__(self, pycore, can_select):
+    def __init__(self, pycore, folder, can_select):
         self.pycore = pycore
-        self.filtering = FilteringVisitor(pycore, can_select)
+        self.filtering = FilteringVisitor(pycore, folder, can_select)
+        self.context = importinfo.ImportContext(pycore, folder)
 
     def visitNormalImport(self, import_stmt, import_info):
         self.filtering.dispatch(import_stmt)
@@ -178,12 +178,12 @@ class ExpandStarsVisitor(ImportInfoVisitor):
     def visitFromImport(self, import_stmt, import_info):
         if import_info.is_star_import():
             new_pairs = []
-            for name in import_info.get_imported_names():
+            for name in import_info.get_imported_names(self.context):
                 new_pairs.append((name, None))
             new_import = importinfo.FromImport(
-                import_info.module_name, import_info.level, new_pairs,
-                import_info.current_folder, self.pycore)
-            import_stmt.import_info = self.filtering.visitFromImport(None, new_import)
+                import_info.module_name, import_info.level, new_pairs)
+            import_stmt.import_info = \
+                self.filtering.visitFromImport(None, new_import)
         else:
             self.filtering.dispatch(import_stmt)
 
@@ -196,6 +196,7 @@ class SelfImportVisitor(ImportInfoVisitor):
         self.resource = resource
         self.to_be_fixed = set()
         self.to_be_renamed = set()
+        self.context = importinfo.ImportContext(pycore, current_folder)
 
     def visitNormalImport(self, import_stmt, import_info):
         new_pairs = []
@@ -213,7 +214,7 @@ class SelfImportVisitor(ImportInfoVisitor):
             import_stmt.import_info = importinfo.NormalImport(new_pairs)
 
     def visitFromImport(self, import_stmt, import_info):
-        resource = import_info.get_imported_resource()
+        resource = import_info.get_imported_resource(self.context)
         if resource is None:
             return
         if resource == self.resource:
@@ -237,8 +238,7 @@ class SelfImportVisitor(ImportInfoVisitor):
         if not import_info._are_name_and_alias_lists_equal(
             new_pairs, import_info.names_and_aliases):
             import_stmt.import_info = importinfo.FromImport(
-                import_info.module_name, import_info.level, new_pairs,
-                import_info.current_folder, self.pycore)
+                import_info.module_name, import_info.level, new_pairs)
 
     def _importing_names_from_self(self, import_info, import_stmt):
         if not import_info.is_star_import():
@@ -256,6 +256,7 @@ class SortingVisitor(ImportInfoVisitor):
         self.standard = set()
         self.third_party = set()
         self.in_project = set()
+        self.context = importinfo.ImportContext(pycore, current_folder)
 
     def visitNormalImport(self, import_stmt, import_info):
         if import_info.names_and_aliases:
@@ -265,7 +266,7 @@ class SortingVisitor(ImportInfoVisitor):
             self._check_imported_resource(import_stmt, resource, name)
 
     def visitFromImport(self, import_stmt, import_info):
-        resource = import_info.get_imported_resource()
+        resource = import_info.get_imported_resource(self.context)
         self._check_imported_resource(import_stmt, resource,
                                       import_info.module_name)
 
@@ -319,8 +320,7 @@ class LongImportVisitor(ImportInfoVisitor):
                 from_ = name[:last_dot]
                 imported = name[last_dot + 1:]
                 self.new_imports.append(
-                    importinfo.FromImport(from_, 0, ((imported, None), ),
-                                          self.current_folder, self.pycore))
+                    importinfo.FromImport(from_, 0, ((imported, None), )))
 
     def _is_long(self, name):
         return name.count('.') > self.maxdots or \
