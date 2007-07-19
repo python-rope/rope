@@ -100,15 +100,23 @@ class ImportTools(object):
             return False
         return True
 
-    def organize_imports(self, pymodule):
+    def organize_imports(self, pymodule,
+                         unused=True, duplicates=True,
+                         selfs=True, sort=True):
         module_imports = self.get_module_imports(pymodule)
-        module_imports.remove_unused_imports()
-        module_imports.remove_duplicates()
+        if unused:
+            module_imports.remove_unused_imports()
+        if duplicates:
+            module_imports.remove_duplicates()
         source = module_imports.get_changed_source()
         if source is not None:
             pymodule = self.pycore.get_string_module(source, pymodule.get_resource())
-        pymodule = self._remove_self_imports(pymodule)
-        return self.sort_imports(pymodule)
+        if selfs:
+            pymodule = self._remove_self_imports(pymodule)
+        if sort:
+            return self.sort_imports(pymodule)
+        else:
+            return pymodule.source_code
 
     def _remove_self_imports(self, pymodule):
         module_imports = self.get_module_imports(pymodule)
@@ -170,3 +178,15 @@ class ImportTools(object):
                                               name.split('.')[-1])
         # organizing imports
         return self.organize_imports(pymodule)
+
+
+def get_imports(pycore, pydefined):
+    """A shortcut for getting the `ImportInfo`\s used in a scope"""
+    pymodule = pydefined.get_module()
+    module = module_imports.ModuleImports(pycore, pymodule)
+    return module.get_used_imports(pydefined)
+
+
+def get_module_imports(pycore, pymodule):
+    """A shortcut creating a `module_imports.ModuleImports` object"""
+    return module_imports.ModuleImports(pycore, pymodule)

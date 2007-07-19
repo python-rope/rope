@@ -4,7 +4,7 @@ import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import pynames, pyobjects, codeanalyze, taskhandle
 from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import occurrences, rename, sourceutils
+from rope.refactor import occurrences, rename, sourceutils, importutils
 
 
 class Inline(object):
@@ -60,7 +60,13 @@ class _MethodInliner(_Inliner):
         self.resource = self.pyfunction.get_module().get_resource()
         self.occurrence_finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, self.name, [self.pyname])
-        self.definition_generator = _DefinitionGenerator(self.pycore, self.pyfunction)
+        self.definition_generator = _DefinitionGenerator(self.pycore,
+                                                         self.pyfunction)
+        self._init_imports()
+
+    def _init_imports(self):
+        self.import_tools = importutils.ImportTools(self.pycore)
+        self.imports = importutils.get_imports(self.pycore, self.pyfunction)
 
     def _get_scope_range(self):
         scope = self.pyfunction.get_scope()
@@ -139,8 +145,20 @@ class _MethodInliner(_Inliner):
             result = ModuleSkipRenamer(
                 self.occurrence_finder, file, handle).get_changed_module()
             if result is not None:
+                result = self._add_imports(result, file)
                 changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
+
+    def _add_imports(self, source, file):
+        pymodule = self.pycore.get_string_module(source, file)
+        module_import = importutils.get_module_imports(self.pycore, pymodule)
+        for import_info in self.imports:
+            module_import.add_import(import_info)
+        source = module_import.get_changed_source()
+        pymodule = self.pycore.get_string_module(source, file)
+        source = self.import_tools.organize_imports(
+            pymodule, unused=False, sort=False)
+        return source
 
 
 class _VariableInliner(_Inliner):

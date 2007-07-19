@@ -95,9 +95,7 @@ class MoveMethod(object):
         return self.method_name
 
     def _get_used_imports(self, import_tools):
-        module_imports = import_tools.get_module_imports(
-            self.pyfunction.get_module())
-        return module_imports.get_used_imports(self.pyfunction)
+        return importutils.get_imports(self.pycore, self.pyfunction)
 
     def _get_changes_made_by_old_class(self, dest_attr, new_name):
         pymodule = self.pyfunction.get_module()
@@ -279,7 +277,8 @@ class MoveGlobal(object):
         # Organizing imports
         source = result
         pymodule = self.pycore.get_string_module(source, dest)
-        source = self.import_tools.organize_imports(pymodule)
+        source = self.import_tools.organize_imports(pymodule,
+                                                    sort=False, unused=False)
         changes.add_change(ChangeContents(dest, source))
 
     def _get_moving_element_with_imports(self):
@@ -329,10 +328,8 @@ class MoveGlobal(object):
         return start, end
 
     def _get_used_imports_by_the_moving_element(self):
-        pymodule = self.pycore.resource_to_pyobject(self.source)
-        module_with_imports = self.import_tools.get_module_imports(pymodule)
-        return module_with_imports.get_used_imports(
-            self.old_pyname.get_object())
+        return importutils.get_imports(self.pycore,
+                                       self.old_pyname.get_object())
 
     def _change_other_modules(self, changes, dest, job_set):
         for file_ in self.pycore.get_python_files():

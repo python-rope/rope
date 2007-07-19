@@ -759,6 +759,27 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('"""\ndocs\n"""\nimport mod\n\n\ndef f():\n    print(mod)\n',
                           self.import_tools.sort_imports(pymod))
 
+    def test_selective_import_organization(self):
+        self.mod.write('import sys\nimport sys\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'import sys\n',
+            self.import_tools.organize_imports(pymod, unused=False))
+
+    def test_selective_import_organization2(self):
+        self.mod.write('import sys\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'import sys\n',
+            self.import_tools.organize_imports(pymod, unused=False))
+
+    def test_selective_import_organization3(self):
+        self.mod.write('import sys\nimport mod\n\n\nvar = 1\nprint(mod.var)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'import sys\n\n\nvar = 1\nprint(var)\n',
+            self.import_tools.organize_imports(pymod, unused=False))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -30,14 +30,14 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
     def __init__(self, pycore, current_folder):
         self.to_be_absolute = []
         self.pycore = pycore
-        self.current_folder = current_folder
+        self.folder = current_folder
         self.context = importinfo.ImportContext(pycore, current_folder)
 
     def visitNormalImport(self, import_stmt, import_info):
         self.to_be_absolute.extend(self._get_relative_to_absolute_list(import_info))
         new_pairs = []
         for name, alias in import_info.names_and_aliases:
-            resource = self.pycore.find_module(name, current_folder=self.current_folder)
+            resource = self.pycore.find_module(name, current_folder=self.folder)
             if resource is None:
                 new_pairs.append((name, alias))
                 continue
@@ -52,7 +52,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         for name, alias in import_info.names_and_aliases:
             if alias is not None:
                 continue
-            resource = self.pycore.find_module(name, current_folder=self.current_folder)
+            resource = self.pycore.find_module(name, current_folder=self.folder)
             if resource is None:
                 continue
             absolute_name = importinfo.get_module_name(self.pycore, resource)
@@ -132,7 +132,8 @@ class AddingVisitor(ImportInfoVisitor):
         if not isinstance(self.import_info, import_info.__class__):
             return False
         # Adding ``import x`` and ``import x.y`` that results ``import x.y``
-        if len(import_info.names_and_aliases) == len(self.import_info.names_and_aliases) == 1:
+        if len(import_info.names_and_aliases) == \
+           len(self.import_info.names_and_aliases) == 1:
             imported1 = import_info.names_and_aliases[0]
             imported2 = self.import_info.names_and_aliases[0]
             if imported1[1] == imported2[1] is None:
@@ -192,7 +193,7 @@ class SelfImportVisitor(ImportInfoVisitor):
 
     def __init__(self, pycore, current_folder, resource):
         self.pycore = pycore
-        self.current_folder = current_folder
+        self.folder = current_folder
         self.resource = resource
         self.to_be_fixed = set()
         self.to_be_renamed = set()
@@ -201,7 +202,7 @@ class SelfImportVisitor(ImportInfoVisitor):
     def visitNormalImport(self, import_stmt, import_info):
         new_pairs = []
         for name, alias in import_info.names_and_aliases:
-            resource = self.pycore.find_module(name, current_folder=self.current_folder)
+            resource = self.pycore.find_module(name, current_folder=self.folder)
             if resource is not None and resource == self.resource:
                 imported = name
                 if alias is not None:
@@ -252,7 +253,7 @@ class SortingVisitor(ImportInfoVisitor):
 
     def __init__(self, pycore, current_folder):
         self.pycore = pycore
-        self.current_folder = current_folder
+        self.folder = current_folder
         self.standard = set()
         self.third_party = set()
         self.in_project = set()
@@ -262,7 +263,7 @@ class SortingVisitor(ImportInfoVisitor):
         if import_info.names_and_aliases:
             name, alias = import_info.names_and_aliases[0]
             resource = self.pycore.find_module(
-                name, current_folder=self.current_folder)
+                name, current_folder=self.folder)
             self._check_imported_resource(import_stmt, resource, name)
 
     def visitFromImport(self, import_stmt, import_info):

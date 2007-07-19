@@ -12,6 +12,7 @@ class InlineTest(unittest.TestCase):
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         self.mod = self.pycore.create_module(self.project.root, 'mod')
+        self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -23,8 +24,7 @@ class InlineTest(unittest.TestCase):
         return self.mod.read()
 
     def _inline2(self, resource, offset):
-        changes = Inline(self.project, resource,
-                                    offset).get_changes()
+        changes = Inline(self.project, resource, offset).get_changes()
         self.project.do(changes)
         return self.mod.read()
 
@@ -396,6 +396,20 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().rindex('a_func') + 1)
         self.assertEquals('class A(object):\n    pass\n',
                           self.mod.read())
+
+    def test_adding_needed_imports_in_the_dest_module(self):
+        self.mod.write('import sys\n\ndef ver():\n    print(sys.version)\n')
+        self.mod2.write('import mod\n\nmod.ver()')
+        self._inline2(self.mod, self.mod.read().index('ver') + 1)
+        self.assertEquals('import mod\nimport sys\n\nprint(sys.version)\n',
+                          self.mod2.read())
+
+    def test_adding_needed_imports_in_the_dest_module_removing_selfs(self):
+        self.mod.write('import mod2\n\ndef f():\n    print(mod2.var)\n')
+        self.mod2.write('import mod\n\nvar = 1\nmod.f()\n')
+        self._inline2(self.mod, self.mod.read().index('f(') + 1)
+        self.assertEquals('import mod\n\nvar = 1\nprint(var)\n',
+                          self.mod2.read())
 
 
 def suite():

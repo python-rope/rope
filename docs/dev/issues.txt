@@ -71,59 +71,15 @@ Enhancing Refactorings
 * Better import handling
 
 
-Recursive Restructurings
-========================
+Inlining And Import Handling
+============================
 
-There is a problem with restructurings.  The matches might contain or
-overlap each other.  That causes problems.
+We should do the same thing for moving elements to destination.  We
+should handle imports in this way:
 
-Overlaps
---------
-
-Overlaps only happen when we are searching for statements.  In such
-cases maybe we should only care about the first match and ignore the
-ones that overlap with it.  Maybe we should add an option for it.  This
-needs more feedback.
-
-
-Containing Matches
-------------------
-
-Matches contain other matches only when we are searching for
-expressions.  We should rebuild the source recurively.
-
-The problem is we should find know the order of the children of a node
-for writing asts.
-
-We can use the fact that sub-matches only appear in ``${?...}``
-matches.  This is a good thing.  Since by using having something
-like::
-
-  def _get_text(self, ast):
-      if ast in matched_ast:
-          pass
-
-  def _get_text(self, match):
-      mapping = {}
-      for name in self.template.get_names():
-          ast = match.get_ast(name)
-          if ast is None:
-              raise similarfinder.BadNameInCheckError(
-                  'Unknown name <%s>' % name)
-          start, end = patchedast.node_region(ast)
-          mapping[name] = source[start:end]
-      return self.template.substitute(mapping)
-
-For each node we have to know the nearest match roots.  This can be
-done in a recursive fashion::
-
-  def _get_nearest_roots(self, ast):
-      result = []
-      for child in get_child_nodes(ast):
-          if child in matched_asts:
-              result.append(child)
-          else:
-              result.extend(self.get_nearest_roots(child))
+* Getting imports used by the moving/inlining element
+* Adding imports to the changing module
+* Remove self imports from changing module
 
 
 Cache Invalidation Again ...

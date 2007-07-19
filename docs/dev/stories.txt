@@ -154,3 +154,6 @@ Stories
 
 
 > Public Release 0.6 : July 29, 2007
+
+
+* Handling imports when inlining

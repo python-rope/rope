@@ -1,12 +1,21 @@
-Small Stories
-=============
+Handling Imports When Inlining
+==============================
 
-* Refactor `rope.base.refactor.importutils`
-* Not holding current_folder in `FromImport`?
-* Move method up/down
-* Better help in restructuring dialog
+- Adding new arguements to `ImportTools.organize_imports`
+- Not using the default organize imports in `move`
+
+* Inlining and relative imports
+* Making `inline` classes something like `move` module
+* Adding `handle_imports` option to inline method; 3 recompilation
+* Adding `get_imports(pycore, pydefined)` helper?
+* Removing `ImportTools.get_module_imports()`
+* Sorting imports in inline and move
+
+* Moving `get_imported_resource()` to `ImportInfo` hierarchy
+* Review `ImportTools.organize_imports`
+* Refactoring `importutils`
+
 * What to do with files that cannot be compiled when refactoring?
-
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
 * Changing version format?
