@@ -130,20 +130,29 @@ class FromImport(ImportInfo):
                 result.append(name)
         return result
 
-    def get_imported_module(self, context):
-        if self.level == 0:
-            return context.pycore.get_module(
-                self.module_name, context.folder)
-        else:
-            return context.pycore.get_relative_module(
-                self.module_name, context.folder, self.level)
-
     def get_imported_resource(self, context):
+        """Get the imported resource
+
+        Returns `None` if module was not found.
+        """
         if self.level == 0:
             return context.pycore.find_module(
                 self.module_name, current_folder=context.folder)
         else:
             return context.pycore.find_relative_module(
+                self.module_name, context.folder, self.level)
+
+    def get_imported_module(self, context):
+        """Get the imported `PyModule`
+
+        Raises `rope.base.exceptions.ModuleNotFoundError` if module
+        could not be found.
+        """
+        if self.level == 0:
+            return context.pycore.get_module(
+                self.module_name, context.folder)
+        else:
+            return context.pycore.get_relative_module(
                 self.module_name, context.folder, self.level)
 
     def get_import_statement(self):

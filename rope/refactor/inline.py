@@ -150,6 +150,8 @@ class _MethodInliner(_Inliner):
             job_set.finished_job()
 
     def _add_imports(self, source, file):
+        if not self.imports:
+            return source
         pymodule = self.pycore.get_string_module(source, file)
         module_import = importutils.get_module_imports(self.pycore, pymodule)
         for import_info in self.imports:

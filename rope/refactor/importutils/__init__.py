@@ -103,14 +103,16 @@ class ImportTools(object):
     def organize_imports(self, pymodule,
                          unused=True, duplicates=True,
                          selfs=True, sort=True):
-        module_imports = self.get_module_imports(pymodule)
-        if unused:
-            module_imports.remove_unused_imports()
-        if duplicates:
-            module_imports.remove_duplicates()
-        source = module_imports.get_changed_source()
-        if source is not None:
-            pymodule = self.pycore.get_string_module(source, pymodule.get_resource())
+        if unused or duplicates:
+            module_imports = self.get_module_imports(pymodule)
+            if unused:
+                module_imports.remove_unused_imports()
+            if duplicates:
+                module_imports.remove_duplicates()
+            source = module_imports.get_changed_source()
+            if source is not None:
+                pymodule = self.pycore.get_string_module(
+                    source, pymodule.get_resource())
         if selfs:
             pymodule = self._remove_self_imports(pymodule)
         if sort:
