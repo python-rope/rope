@@ -30,6 +30,12 @@ class Inline(object):
     def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         return self.performer.get_changes(task_handle)
 
+    def get_kind(self):
+        if self._is_variable():
+            return 'variable'
+        else:
+            return 'method'
+
     def _is_variable(self):
         return isinstance(self.pyname, pynames.AssignedName)
 

@@ -38,8 +38,9 @@ class PreviewAndCommitChanges(object):
         def description(change):
             return change.get_description()
         frame = Tkinter.Frame(toplevel)
-        description_list = DescriptionList(frame, 'Changes', description,
-                                           indexwidth=30)
+        description_list = DescriptionList(
+            frame, 'Changes', description, indexwidth=30,
+            callback=uihelpers.highlight_diffs)
         for change in self.changes.changes:
             description_list.add_entry(change)
 
@@ -210,7 +211,7 @@ class ExtractDialog(RefactoringDialog):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(frame, text='New %s Name :' % self.kind)
         label.grid(row=0, column=0)
-        self.new_name_entry = Tkinter.Entry(frame)
+        self.new_name_entry = Tkinter.Entry(frame, width=30)
         self.new_name_entry.grid(row=0, column=1)
         self.new_name_entry.insert(0, 'extracted')
         self.new_name_entry.select_range(0, Tkinter.END)
@@ -219,7 +220,7 @@ class ExtractDialog(RefactoringDialog):
         similar = Tkinter.Checkbutton(
             frame, text='Extract similar expressions/statements',
             variable=self.similar)
-        similar.grid(row=1, column=0, columnspan=2)
+        similar.grid(row=1, column=0, columnspan=2, sticky=Tkinter.W)
 
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
         self.new_name_entry.focus_set()
@@ -662,17 +663,28 @@ def handle_long_imports(context):
     _import_action(context, ImportOrganizer.handle_long_imports)
 
 
+class InlineDialog(RefactoringDialog):
+
+    def __init__(self, context):
+        self.inliner = rope.refactor.inline.Inline(
+            context.project, context.resource, context.offset)
+        super(InlineDialog, self).__init__(
+            context, 'Inline ' + self.inliner.get_kind().title())
+
+    def _calculate_changes(self, handle):
+        return self.inliner.get_changes(task_handle=handle)
+
+    def _get_dialog_frame(self):
+        frame = Tkinter.Frame(self.toplevel)
+        label = Tkinter.Label(
+            frame, text='Inlining occurrences of <%s> %s.' %
+            (self.inliner.name, self.inliner.get_kind()), width=50)
+        label.grid()
+        return frame
+
+
 def inline(context):
-    if context.get_active_editor():
-        fileeditor = context.get_active_editor()
-        resource = fileeditor.get_file()
-        editor = fileeditor.get_editor()
-        def calculate(handle):
-            return rope.refactor.inline.Inline(
-                context.project, resource,
-                editor.get_current_offset()).get_changes(task_handle=handle)
-        changes = StoppableTaskRunner(calculate, 'Inlining')()
-        context.project.do(changes)
+    InlineDialog(context).show()
 
 
 def encapsulate_field(context):

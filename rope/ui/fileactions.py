@@ -358,7 +358,8 @@ def _history_dialog(context, undo_list, title='File History'):
     frame = Tkinter.Frame(toplevel)
     list_frame = Tkinter.Frame(frame)
     enhanced_list = uihelpers.DescriptionList(
-        list_frame, title, lambda change: change.get_description())
+        list_frame, title, lambda change: change.get_description(),
+        callback=uihelpers.highlight_diffs)
     for change in reversed(undo_list):
         enhanced_list.add_entry(change)
     list_frame.grid(row=0, column=0, columnspan=2)
@@ -381,10 +382,10 @@ def _history_dialog(context, undo_list, title='File History'):
     cancel_button = Tkinter.Button(frame, text='Cancel',
                                    command=cancel, width=15)
     undo_button.grid(row=1, column=0)
-    toplevel.bind('<Return>', lambda event: undo())
     toplevel.bind('<Escape>', lambda event: cancel())
     toplevel.bind('<Control-g>', lambda event: cancel())
     toplevel.bind('<Alt-u>', lambda event: undo())
+    undo_button.bind('<Return>', lambda event: undo())
     cancel_button.grid(row=1, column=1)
     frame.grid()
     undo_button.focus_set()

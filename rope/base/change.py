@@ -160,6 +160,10 @@ class ChangeContents(Change):
         differ = difflib.Differ()
         result = list(differ.compare(self.old_contents.splitlines(True),
                                      self.new_contents.splitlines(True)))
+        result = difflib.unified_diff(
+            self.old_contents.splitlines(True),
+            self.new_contents.splitlines(True), 'a/' + self.resource.path,
+            'b/' + self.resource.path)
         return ''.join(result)
 
     def get_changed_resources(self):

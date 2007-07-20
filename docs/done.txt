@@ -3,6 +3,9 @@
 ===========
 
 
+- Better diff highlighting : July 20, 2007
+
+
 - Handling imports when inlining : July 20, 2007
 
 

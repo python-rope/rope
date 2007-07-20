@@ -199,9 +199,10 @@ class VolatileList(EnhancedList):
 
 class _DescriptionListHandle(EnhancedListHandle):
 
-    def __init__(self, text, description):
+    def __init__(self, text, description, callback):
         self.text = text
         self.description = description
+        self.callback = callback
 
     def entry_to_string(self, obj):
         return str(obj)
@@ -210,6 +211,7 @@ class _DescriptionListHandle(EnhancedListHandle):
         self.text['state'] = Tkinter.NORMAL
         self.text.delete('0.0', Tkinter.END)
         self.text.insert('0.0', self._get_description(obj))
+        self.callback(self.text)
         self.text['state'] = Tkinter.DISABLED
 
     def _get_description(self, obj):
@@ -221,12 +223,13 @@ class _DescriptionListHandle(EnhancedListHandle):
 
 class DescriptionList(object):
 
-    def __init__(self, parent, title, description, height=12, indexwidth=50):
+    def __init__(self, parent, title, description,
+                 height=12, indexwidth=50, callback=lambda text: None):
         frame = Tkinter.Frame(parent)
-
         description_text = ScrolledText.ScrolledText(frame, height=height,
                                                      width=80)
-        self.handle = _DescriptionListHandle(description_text, description)
+        self.handle = _DescriptionListHandle(
+            description_text, description, callback)
         self.list = EnhancedList(frame, self.handle, title,
                                  height=height, width=indexwidth)
         description_text.grid(row=0, column=1, sticky=N+E+W+S)
@@ -616,3 +619,19 @@ def _common_prefix(prefix, word):
         if c1 != c2:
             return prefix[:index]
     return prefix[:min(len(prefix), len(word))]
+
+
+def highlight_diffs(text):
+    last = '0.0'
+    current = '1.0'
+    text.tag_config('red', foreground='#AA1111')
+    text.tag_config('green', foreground='#11AA11')
+    text.tag_config('blue', foreground='#1111AA')
+    text.tag_config('grey', foreground='#9999BB')
+    tag_map = {'+': 'green', '-': 'red', '?': 'grey', '@': 'blue'}
+    while current != last:
+        c = text.get(current)
+        if c in tag_map:
+            text.tag_add(tag_map[c], current, current + ' lineend')
+        last = current
+        current = text.index(current + ' +1l')
