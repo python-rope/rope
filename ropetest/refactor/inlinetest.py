@@ -411,6 +411,18 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('import mod\n\nvar = 1\nprint(var)\n',
                           self.mod2.read())
 
+    def test_handling_relative_imports_when_inlining(self):
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
+        mod3 = self.pycore.create_module(pkg, 'mod3')
+        mod4 = self.pycore.create_module(pkg, 'mod4')
+        mod4.write('var = 1\n')
+        mod3.write('from . import mod4\n\ndef f():\n    print(mod4.var)\n')
+        self.mod.write('import pkg.mod3\n\npkg.mod3.f()\n')
+        self._inline2(self.mod, self.mod.read().index('f(') + 1)
+        self.assertEquals(
+            'import pkg.mod3\nfrom pkg import mod4\n\nprint(mod4.var)\n',
+            self.mod.read())
+
 
 def suite():
     result = unittest.TestSuite()

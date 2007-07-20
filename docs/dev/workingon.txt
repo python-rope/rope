@@ -1,14 +1,14 @@
 Handling Imports When Inlining
 ==============================
 
-- Review `ImportTools.organize_imports`
+- Inlining and relative imports
 
-* Refactoring `importutils`
-* Sorting imports in inline and move
+* Better `_get_moving_element_with_imports()` in move
+* Relative imports and ``__init__.py``
 
-* Inlining and relative imports
-* Making `inline` classes something like `move` module
-* Adding `handle_imports` option to inline method; 3 recompilation
+* Sorting imports in inline and move?
+* Making `inline` classes something like `move` module?
+* Adding `handle_imports` option to inline method; 3 recompilation?
 
 * What to do with files that cannot be compiled when refactoring?
 * Extracting subexpressions; look at `extracttest` for more info

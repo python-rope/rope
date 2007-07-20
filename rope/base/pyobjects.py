@@ -466,6 +466,7 @@ class PyPackage(_PyModule):
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
             return self.pycore.resource_to_pyobject(init_dot_py)
+        return self
 
 
 class _AssignVisitor(object):

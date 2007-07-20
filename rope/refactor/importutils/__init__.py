@@ -181,11 +181,24 @@ class ImportTools(object):
         # organizing imports
         return self.organize_imports(pymodule)
 
+    def _relative_to_absolute(self, imports, resource):
+        pymodule = self.pycore.get_string_module('\n', resource)
+        module_imports = get_module_imports(self.pycore, pymodule)
+        for import_info in imports:
+            module_imports.add_import(import_info)
+        source = module_imports.get_changed_source()
+        pymodule = self.pycore.get_string_module(source, resource)
+        source = self.relatives_to_absolutes(pymodule)
+        pymodule = self.pycore.get_string_module(source, resource)
+        return get_imports(self.pycore, pymodule)
+
 
 def get_imports(pycore, pydefined):
     """A shortcut for getting the `ImportInfo`\s used in a scope"""
     pymodule = pydefined.get_module()
     module = module_imports.ModuleImports(pycore, pymodule)
+    if pymodule == pydefined:
+        return [stmt.import_info for stmt in module.get_import_statements()]
     return module.get_used_imports(pydefined)
 
 

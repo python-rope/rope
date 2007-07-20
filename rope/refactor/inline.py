@@ -66,7 +66,9 @@ class _MethodInliner(_Inliner):
 
     def _init_imports(self):
         self.import_tools = importutils.ImportTools(self.pycore)
-        self.imports = importutils.get_imports(self.pycore, self.pyfunction)
+        imports = importutils.get_imports(self.pycore, self.pyfunction)
+        self.imports = self.import_tools._relative_to_absolute(imports,
+                                                               self.resource)
 
     def _get_scope_range(self):
         scope = self.pyfunction.get_scope()
