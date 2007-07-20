@@ -71,17 +71,6 @@ Enhancing Refactorings
 * Better import handling
 
 
-Inlining And Import Handling
-============================
-
-We should do the same thing for moving elements to destination.  We
-should handle imports in this way:
-
-* Getting imports used by the moving/inlining element
-* Adding imports to the changing module
-* Remove self imports from changing module
-
-
 Cache Invalidation Again ...
 ============================
 

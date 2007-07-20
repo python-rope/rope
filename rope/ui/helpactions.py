@@ -28,6 +28,9 @@ def show_about_dialog(context):
     gpl_button.grid(row=1, column=0)
     ok_button.grid(row=1, column=1)
     ok_button.focus_set()
+    toplevel.bind('<Escape>', lambda event: ok())
+    toplevel.bind('<Control-g>', lambda event: ok())
+    toplevel.bind('<Return>', lambda event: ok())
 
 def show_doc(context, name):
     rope_package = (os.path.dirname(sys.modules['rope'].__file__))

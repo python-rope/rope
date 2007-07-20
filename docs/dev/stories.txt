@@ -153,7 +153,4 @@ Stories
 * Split tuple assignment refactoring
 
 
-> Public Release 0.6 : July 29, 2007
-
-
-* Handling imports when inlining
+> Public Release 0.6m6 : July 29, 2007

@@ -3,6 +3,9 @@
 ===========
 
 
+- Handling imports when inlining : July 20, 2007
+
+
 - Handling recursive restructurings : July 18, 2007
 
 

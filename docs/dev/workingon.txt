@@ -1,12 +1,6 @@
 Handling Imports When Inlining
 ==============================
 
-- Inlining and relative imports
-
-* Better `_get_moving_element_with_imports()` in move
-* Relative imports and ``__init__.py``
-
-* Sorting imports in inline and move?
 * Making `inline` classes something like `move` module?
 * Adding `handle_imports` option to inline method; 3 recompilation?
 
