@@ -628,10 +628,11 @@ def highlight_diffs(text):
     text.tag_config('green', foreground='#11AA11')
     text.tag_config('blue', foreground='#1111AA')
     text.tag_config('grey', foreground='#9999BB')
-    tag_map = {'+': 'green', '-': 'red', '?': 'grey', '@': 'blue'}
+    text.tag_config('sep', background='#9999BB')
+    tag_map = {'+': 'green', '-': 'red', '?': 'grey', '@': 'blue', '*': 'sep'}
     while current != last:
         c = text.get(current)
         if c in tag_map:
-            text.tag_add(tag_map[c], current, current + ' lineend')
+            text.tag_add(tag_map[c], current, current + ' lineend +1c')
         last = current
         current = text.index(current + ' +1l')

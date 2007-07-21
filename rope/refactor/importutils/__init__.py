@@ -16,12 +16,14 @@ class ImportTools(object):
     def __init__(self, pycore):
         self.pycore = pycore
 
-    def get_import_for_module(self, module):
-        module_name = get_module_name(self.pycore, module.get_resource())
+    def get_import(self, resource):
+        """The import statement for `resource`"""
+        module_name = get_module_name(self.pycore, resource)
         return NormalImport(((module_name, None), ))
 
-    def get_from_import_for_module(self, module, name):
-        module_name = get_module_name(self.pycore, module.get_resource())
+    def get_from_import(self, resource, name):
+        """The from import statement for `name` in `resource`"""
+        module_name = get_module_name(self.pycore, resource)
         return FromImport(module_name, 0, ((name, None),))
 
     def get_module_imports(self, module):
@@ -180,17 +182,6 @@ class ImportTools(object):
                                               name.split('.')[-1])
         # organizing imports
         return self.organize_imports(pymodule)
-
-    def _relative_to_absolute(self, imports, resource):
-        pymodule = self.pycore.get_string_module('\n', resource)
-        module_imports = get_module_imports(self.pycore, pymodule)
-        for import_info in imports:
-            module_imports.add_import(import_info)
-        source = module_imports.get_changed_source()
-        pymodule = self.pycore.get_string_module(source, resource)
-        source = self.relatives_to_absolutes(pymodule)
-        pymodule = self.pycore.get_string_module(source, resource)
-        return get_imports(self.pycore, pymodule)
 
 
 def get_imports(pycore, pydefined):

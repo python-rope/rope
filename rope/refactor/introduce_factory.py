@@ -91,7 +91,7 @@ class IntroduceFactoryRefactoring(object):
                                              global_factory, job_set):
         changed_name = self._get_new_function_name(factory_name, global_factory)
         import_tools = rope.refactor.importutils.ImportTools(self.pycore)
-        new_import = import_tools.get_import_for_module(self.pymodule)
+        new_import = import_tools.get_import(self.resource)
         if global_factory:
             changed_name = new_import.names_and_aliases[0][0] + '.' + factory_name
 

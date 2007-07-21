@@ -234,8 +234,7 @@ class MoveGlobal(object):
         return importutils.get_module_name(self.pycore, dest) + '.' + self.old_name
 
     def _new_import(self, dest):
-        return self.import_tools.get_import_for_module(
-            self.pycore.resource_to_pyobject(dest))
+        return self.import_tools.get_import(dest)
 
     def _change_source_module(self, changes, dest):
         handle = _ChangeMoveOccurrencesHandle(self._new_name(dest))
@@ -523,10 +522,8 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
 
 def _get_moving_element_with_imports(pycore, resource, source, imports):
     import_tools = importutils.ImportTools(pycore)
-    source_pymodule = pycore.resource_to_pyobject(resource)
     new_imports = list(imports)
-    new_imports.append(import_tools.
-                       get_from_import_for_module(source_pymodule, '*'))
+    new_imports.append(import_tools.get_from_import(resource, '*'))
 
     pymodule = pycore.get_string_module(source, resource)
     source = _add_imports_to_module(import_tools, pymodule, new_imports)

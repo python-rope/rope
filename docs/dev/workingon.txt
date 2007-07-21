@@ -1,11 +1,8 @@
 Small Stories
 =============
 
-* Using separate generators for inlining in the source module and others
-* Similarities between inlining other modules and moving a global to
-  the destination
-* Removing `ImportTools._relative_to_absolute()`?
-* Replacing `ImportTools.get_...import_for_module()` to use resources
+- Removing `ImportTools._relative_to_absolute()`?
+- Replacing `ImportTools.get_...import_for_module()` to use resources
 
 * What to do with files that cannot be compiled when refactoring?
 * Extracting subexpressions; look at `extracttest` for more info

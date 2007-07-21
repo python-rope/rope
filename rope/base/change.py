@@ -82,7 +82,7 @@ class ChangeSet(Change):
 
     def get_description(self):
         result = str(self) + ':\n\n\n' + \
-                 '\n\n********\n\n'.join(
+                 ('\n\n%s\n\n' % ('*' * 78)).join(
             [change.get_description() for change in self.changes])
         return result
 
