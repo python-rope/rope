@@ -7,67 +7,57 @@ from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import occurrences, rename, sourceutils, importutils
 
 
-class Inline(object):
+def create_inline(project, resource, offset):
+    """Create a refactoring object for inlining
 
-    def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
-        self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
-        self.name = codeanalyze.get_name_at(resource, offset)
-        if self.pyname is None:
-            raise rope.base.exceptions.RefactoringError(
-                'Inline refactoring should be performed on a method/local variable.')
-        if self._is_variable():
-            self.performer = _VariableInliner(self.pycore, self.name,
-                                              self.pyname)
-        elif self._is_function():
-            self.performer = _MethodInliner(self.pycore, self.name,
-                                            self.pyname)
-        else:
-            raise rope.base.exceptions.RefactoringError(
-                'Inline refactoring should be performed on a method/local variable.')
-        self.performer.check_exceptional_conditions()
+    Based on `resource` and `offset` will return an `InlineMethod` or
+    an `InlineVariable` object.
 
-    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
-        return self.performer.get_changes(task_handle)
-
-    def get_kind(self):
-        if self._is_variable():
-            return 'variable'
-        else:
-            return 'method'
-
-    def _is_variable(self):
-        return isinstance(self.pyname, pynames.AssignedName)
-
-    def _is_function(self):
-        return isinstance(self.pyname.get_object(), pyobjects.PyFunction)
+    """
+    pycore = project.pycore
+    pyname = codeanalyze.get_pyname_at(pycore, resource, offset)
+    if pyname is None:
+        raise rope.base.exceptions.RefactoringError(
+            'Inline refactoring should be performed on a method/local variable.')
+    if isinstance(pyname, pynames.AssignedName):
+        return InlineVariable(project, resource, offset)
+    elif isinstance(pyname.get_object(), pyobjects.PyFunction):
+        return InlineMethod(project, resource, offset)
+    else:
+        raise rope.base.exceptions.RefactoringError(
+            'Inline refactoring should be performed on a method/local variable.')
 
 
 class _Inliner(object):
 
-    def __init__(self, pycore, name, pyname):
-        self.pycore = pycore
-        self.name = name
-        self.pyname = pyname
+    def __init__(self, project, resource, offset):
+        self.project = project
+        self.pycore = project.pycore
+        self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        self.name = codeanalyze.get_name_at(resource, offset)
 
-    def check_exceptional_conditions(self):
+    def _check_exceptional_conditions(self):
         pass
 
     def get_changes(self):
-        raise NotImplementedError()
+        """The changes this refactoring makes"""
+
+    def get_kind(self):
+        """Return either 'variable' or 'method'"""
 
 
-class _MethodInliner(_Inliner):
+class InlineMethod(_Inliner):
 
     def __init__(self, *args, **kwds):
-        super(_MethodInliner, self).__init__(*args, **kwds)
+        super(InlineMethod, self).__init__(*args, **kwds)
         self.pyfunction = self.pyname.get_object()
         self.pymodule = self.pyfunction.get_module()
         self.resource = self.pyfunction.get_module().get_resource()
         self.occurrence_finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, self.name, [self.pyname])
-        self.definition_generator = _DefinitionGenerator(self.pycore,
+        self.definition_generator = _DefinitionGenerator(self.project,
                                                          self.pyfunction)
+        self._check_exceptional_conditions()
         self._init_imports()
 
     def _init_imports(self):
@@ -89,7 +79,7 @@ class _MethodInliner(_Inliner):
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
 
-    def get_changes(self, task_handle):
+    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Inline method <%s>' % self.name)
         job_set = task_handle.create_job_set(
             'Collecting Changes', len(self.pycore.get_python_files()))
@@ -170,49 +160,35 @@ class _MethodInliner(_Inliner):
             pymodule, unused=False, sort=False)
         return source
 
+    def get_kind(self):
+        return 'method'
 
-class _VariableInliner(_Inliner):
+
+class InlineVariable(_Inliner):
 
     def __init__(self, *args, **kwds):
-        super(_VariableInliner, self).__init__(*args, **kwds)
+        super(InlineVariable, self).__init__(*args, **kwds)
         self.pymodule = self.pyname.get_definition_location()[0]
         self.resource = self.pymodule.get_resource()
+        self._check_exceptional_conditions()
 
-    def check_exceptional_conditions(self):
+    def _check_exceptional_conditions(self):
         if len(self.pyname.assignments) != 1:
             raise rope.base.exceptions.RefactoringError(
                 'Local variable should be assigned once for inlining.')
 
-    def get_changes(self, task_handle):
+    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         source = self._get_changed_module()
         changes = ChangeSet('Inline variable <%s>' % self.name)
         changes.add_change(ChangeContents(self.resource, source))
         return changes
 
     def _get_changed_module(self):
-        assignment = self.pyname.assignments[0]
-        definition_line = assignment.ast_node.lineno
-        lines = self.pymodule.lines
-        start, end = codeanalyze.LogicalLineFinder(lines).\
-                     get_logical_line_in(definition_line)
-        definition_with_assignment = _join_lines(
-            [lines.get_line(n) for n in range(start, end + 1)])
-        if assignment.levels:
-            raise rope.base.exceptions.RefactoringError(
-                'Cannot inline tuple assignments.')
-        definition = definition_with_assignment[definition_with_assignment.\
-                                                index('=') + 1:].strip()
+        return _inline_variable(self.pycore, self.pymodule,
+                                self.pyname, self.name)
 
-        occurrence_finder = occurrences.FilteredFinder(
-            self.pycore, self.name, [self.pyname])
-        changed_source = rename.rename_in_module(
-            occurrence_finder, definition, pymodule=self.pymodule, replace_primary=True)
-        if changed_source is None:
-            changed_source = self.pymodule.source_code
-        lines = codeanalyze.SourceLinesAdapter(changed_source)
-        source = changed_source[:lines.get_line_start(start)] + \
-                 changed_source[lines.get_line_end(end) + 1:]
-        return source
+    def get_kind(self):
+        return 'variable'
 
 
 def _join_lines(lines):
@@ -228,8 +204,8 @@ def _join_lines(lines):
 
 class _DefinitionGenerator(object):
 
-    def __init__(self, pycore, pyfunction):
-        self.pycore = pycore
+    def __init__(self, project, pyfunction):
+        self.pycore = project.pycore
         self.pyfunction = pyfunction
         self.pymodule = pyfunction.get_module()
         self.resource = self.pymodule.get_resource()
@@ -279,8 +255,7 @@ class _DefinitionGenerator(object):
         for name in to_be_inlined:
             pymodule = self.pycore.get_string_module(source, self.resource)
             pyname = pymodule.get_attribute(name)
-            inliner = _VariableInliner(self.pycore, name, pyname)
-            source = inliner._get_changed_module()
+            source = _inline_variable(self.pycore, pymodule, pyname, name)
         return self._replace_returns_with(source, returns)
 
     def get_returned(self):
@@ -440,3 +415,28 @@ class ModuleSkipRenamer(object):
         result = change_collector.get_changed()
         if result is not None and result != source:
             return result
+
+
+def _inline_variable(pycore, pymodule, pyname, name):
+    assignment = pyname.assignments[0]
+    definition_line = assignment.ast_node.lineno
+    lines = pymodule.lines
+    start, end = codeanalyze.LogicalLineFinder(lines).\
+                 get_logical_line_in(definition_line)
+    definition_with_assignment = _join_lines(
+        [lines.get_line(n) for n in range(start, end + 1)])
+    if assignment.levels:
+        raise rope.base.exceptions.RefactoringError(
+            'Cannot inline tuple assignments.')
+    definition = definition_with_assignment[definition_with_assignment.\
+                                            index('=') + 1:].strip()
+
+    occurrence_finder = occurrences.FilteredFinder(pycore, name, [pyname])
+    changed_source = rename.rename_in_module(
+        occurrence_finder, definition, pymodule=pymodule, replace_primary=True)
+    if changed_source is None:
+        changed_source = pymodule.source_code
+    lines = codeanalyze.SourceLinesAdapter(changed_source)
+    source = changed_source[:lines.get_line_start(start)] + \
+             changed_source[lines.get_line_end(end) + 1:]
+    return source

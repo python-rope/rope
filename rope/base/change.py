@@ -82,9 +82,8 @@ class ChangeSet(Change):
 
     def get_description(self):
         result = str(self) + ':\n\n\n' + \
-                 '\n------\n'.join(
-            [(str(change) + ':\n\n' + change.get_description())
-             for change in self.changes])
+                 '\n\n********\n\n'.join(
+            [change.get_description() for change in self.changes])
         return result
 
     def __str__(self):
@@ -157,13 +156,10 @@ class ChangeContents(Change):
         return 'Change <%s>' % self.resource.path
 
     def get_description(self):
-        differ = difflib.Differ()
-        result = list(differ.compare(self.old_contents.splitlines(True),
-                                     self.new_contents.splitlines(True)))
         result = difflib.unified_diff(
             self.old_contents.splitlines(True),
-            self.new_contents.splitlines(True), 'a/' + self.resource.path,
-            'b/' + self.resource.path)
+            self.new_contents.splitlines(True),
+            'a/' + self.resource.path, 'b/' + self.resource.path)
         return ''.join(result)
 
     def get_changed_resources(self):

@@ -1,7 +1,7 @@
 import unittest
 
 import rope.base.exceptions
-from rope.refactor.inline import Inline
+from rope.refactor import inline
 from ropetest import testutils
 
 
@@ -24,7 +24,8 @@ class InlineTest(unittest.TestCase):
         return self.mod.read()
 
     def _inline2(self, resource, offset):
-        changes = Inline(self.project, resource, offset).get_changes()
+        changes = inline.create_inline(self.project,
+                                       resource, offset).get_changes()
         self.project.do(changes)
         return self.mod.read()
 
@@ -422,6 +423,14 @@ class InlineTest(unittest.TestCase):
         self.assertEquals(
             'import pkg.mod3\nfrom pkg import mod4\n\nprint(mod4.var)\n',
             self.mod.read())
+
+    # TODO: Handle this case
+    def xxx_test_adding_needed_imports_for_elements_in_source(self):
+        self.mod.write('def f1():\n    return f2()\ndef f2():\n    return 1\n')
+        self.mod2.write('import mod\n\nprint(mod.f1())\n')
+        self._inline2(self.mod, self.mod.read().index('f1') + 1)
+        self.assertEquals('import mod\n\nprint(mod.f2())\n',
+                          self.mod2.read())
 
 
 def suite():

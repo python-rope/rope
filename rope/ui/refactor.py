@@ -666,7 +666,7 @@ def handle_long_imports(context):
 class InlineDialog(RefactoringDialog):
 
     def __init__(self, context):
-        self.inliner = rope.refactor.inline.Inline(
+        self.inliner = rope.refactor.inline.create_inline(
             context.project, context.resource, context.offset)
         super(InlineDialog, self).__init__(
             context, 'Inline ' + self.inliner.get_kind().title())
