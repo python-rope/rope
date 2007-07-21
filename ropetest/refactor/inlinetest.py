@@ -420,17 +420,27 @@ class InlineTest(unittest.TestCase):
         mod3.write('from . import mod4\n\ndef f():\n    print(mod4.var)\n')
         self.mod.write('import pkg.mod3\n\npkg.mod3.f()\n')
         self._inline2(self.mod, self.mod.read().index('f(') + 1)
-        self.assertEquals(
-            'import pkg.mod3\nfrom pkg import mod4\n\nprint(mod4.var)\n',
-            self.mod.read())
+        # Cannot determine the exact import
+        self.assertTrue('\n\nprint(pkg.mod4.var)\n' in self.mod.read())
 
-    # TODO: Handle this case
-    def xxx_test_adding_needed_imports_for_elements_in_source(self):
+    def test_adding_needed_imports_for_elements_in_source(self):
         self.mod.write('def f1():\n    return f2()\ndef f2():\n    return 1\n')
         self.mod2.write('import mod\n\nprint(mod.f1())\n')
         self._inline2(self.mod, self.mod.read().index('f1') + 1)
         self.assertEquals('import mod\n\nprint(mod.f2())\n',
                           self.mod2.read())
+
+    def test_relative_imports_and_changing_inlining_body(self):
+        pkg = self.pycore.create_package(self.project.root, 'pkg')
+        mod3 = self.pycore.create_module(pkg, 'mod3')
+        mod4 = self.pycore.create_module(pkg, 'mod4')
+        mod4.write('var = 1\n')
+        mod3.write('import mod4\n\ndef f():\n    print(mod4.var)\n')
+        self.mod.write('import pkg.mod3\n\npkg.mod3.f()\n')
+        self._inline2(self.mod, self.mod.read().index('f(') + 1)
+        self.assertEquals(
+            'import pkg.mod3\nimport pkg.mod4\n\nprint(pkg.mod4.var)\n',
+            self.mod.read())
 
 
 def suite():

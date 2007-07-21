@@ -4,7 +4,7 @@ import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import pynames, pyobjects, codeanalyze, taskhandle
 from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import occurrences, rename, sourceutils, importutils
+from rope.refactor import occurrences, rename, sourceutils, importutils, move
 
 
 def create_inline(project, resource, offset):
@@ -40,7 +40,7 @@ class _Inliner(object):
         pass
 
     def get_changes(self):
-        """The changes this refactoring makes"""
+        """Get the changes this refactoring makes"""
 
     def get_kind(self):
         """Return either 'variable' or 'method'"""
@@ -55,16 +55,20 @@ class InlineMethod(_Inliner):
         self.resource = self.pyfunction.get_module().get_resource()
         self.occurrence_finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, self.name, [self.pyname])
-        self.definition_generator = _DefinitionGenerator(self.project,
-                                                         self.pyfunction)
         self._check_exceptional_conditions()
+        self.normal_generator = _DefinitionGenerator(self.project,
+                                                     self.pyfunction)
         self._init_imports()
 
     def _init_imports(self):
         self.import_tools = importutils.ImportTools(self.pycore)
         imports = importutils.get_imports(self.pycore, self.pyfunction)
-        self.imports = self.import_tools._relative_to_absolute(imports,
-                                                               self.resource)
+        body = sourceutils.get_body(self.pyfunction)
+        body, imports = move._get_moving_element_with_imports(
+            self.pycore, self.resource, body, imports)
+        self.imports = imports
+        self.others_generator = _DefinitionGenerator(
+            self.project, self.pyfunction, body=body)
 
     def _get_scope_range(self):
         scope = self.pyfunction.get_scope()
@@ -107,8 +111,8 @@ class InlineMethod(_Inliner):
     def _change_defining_file(self, changes):
         start_offset, end_offset = self._get_removed_range()
         handle = _InlineFunctionCallsForModuleHandle(
-            self.pycore, self.resource, self.definition_generator)
-        result = ModuleSkipRenamer(
+            self.pycore, self.resource, self.normal_generator)
+        result = move.ModuleSkipRenamer(
             self.occurrence_finder, self.resource, handle, start_offset,
             end_offset, self._get_method_replacement()).get_changed_module()
         changes.add_change(ChangeContents(self.resource, result))
@@ -139,8 +143,8 @@ class InlineMethod(_Inliner):
                 continue
             job_set.started_job('Working on <%s>' % file.path)
             handle = _InlineFunctionCallsForModuleHandle(
-                self.pycore, file, self.definition_generator)
-            result = ModuleSkipRenamer(
+                self.pycore, file, self.others_generator)
+            result = move.ModuleSkipRenamer(
                 self.occurrence_finder, file, handle).get_changed_module()
             if result is not None:
                 result = self._add_imports(result, file)
@@ -204,7 +208,7 @@ def _join_lines(lines):
 
 class _DefinitionGenerator(object):
 
-    def __init__(self, project, pyfunction):
+    def __init__(self, project, pyfunction, body=None):
         self.pycore = project.pycore
         self.pyfunction = pyfunction
         self.pymodule = pyfunction.get_module()
@@ -213,6 +217,10 @@ class _DefinitionGenerator(object):
         self.definition_params = self._get_definition_params()
         self._calculated_definitions = {}
         self.returned = None
+        if body is not None:
+            self.body = body
+        else:
+            self.body = sourceutils.get_body(self.pyfunction)
 
     def _get_definition_info(self):
         return rope.refactor.functionutils.DefinitionInfo.read(self.pyfunction)
@@ -251,7 +259,7 @@ class _DefinitionGenerator(object):
             if name != value:
                 header += name + ' = ' + value + '\n'
                 to_be_inlined.append(name)
-        source = header + sourceutils.get_body(self.pyfunction)
+        source = header + self.body
         for name in to_be_inlined:
             pymodule = self.pycore.get_string_module(source, self.resource)
             pyname = pymodule.get_attribute(name)
@@ -377,44 +385,6 @@ class _InlineFunctionCallsForModuleHandle(object):
     source = property(_get_source)
     lines = property(_get_lines)
     pymodule = property(_get_pymodule)
-
-
-class ModuleSkipRenamerHandle(object):
-
-    def occurred_outside_skip(self, change_collector, occurrence):
-        pass
-
-    def occurred_inside_skip(self, change_collector, occurrence):
-        pass
-
-
-class ModuleSkipRenamer(object):
-
-    def __init__(self, occurrence_finder, resource, handle=None,
-                 skip_start=0, skip_end=0, replacement=''):
-        self.occurrence_finder = occurrence_finder
-        self.resource = resource
-        self.skip_start = skip_start
-        self.skip_end = skip_end
-        self.replacement = replacement
-        self.handle = handle
-        if self.handle is None:
-            self.handle = ModuleSkipHandle()
-
-    def get_changed_module(self):
-        source = self.resource.read()
-        change_collector = sourceutils.ChangeCollector(source)
-        change_collector.add_change(self.skip_start, self.skip_end,
-                                    self.replacement)
-        for occurrence in self.occurrence_finder.find_occurrences(self.resource):
-            start, end = occurrence.get_primary_range()
-            if self.skip_start <= start < self.skip_end:
-                self.handle.occurred_inside_skip(change_collector, occurrence)
-            else:
-                self.handle.occurred_outside_skip(change_collector, occurrence)
-        result = change_collector.get_changed()
-        if result is not None and result != source:
-            return result
 
 
 def _inline_variable(pycore, pymodule, pyname, name):

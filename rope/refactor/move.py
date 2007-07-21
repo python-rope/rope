@@ -7,7 +7,7 @@ based on inputs.
 from rope.base import pyobjects, codeanalyze, exceptions, pynames, taskhandle
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import (importutils, rename, occurrences, sourceutils,
-                           functionutils, inline, extract)
+                           functionutils, extract)
 
 
 def create_move(project, resource, offset=None):
@@ -242,8 +242,8 @@ class MoveGlobal(object):
         occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, [self.old_pyname])
         start, end = self._get_moving_region()
-        renamer = inline.ModuleSkipRenamer(occurrence_finder, self.source,
-                                           handle, start, end)
+        renamer = ModuleSkipRenamer(occurrence_finder, self.source,
+                                    handle, start, end)
         source = renamer.get_changed_module()
         if handle.occurred:
             pymodule = self.pycore.get_string_module(source, self.source)
@@ -282,27 +282,9 @@ class MoveGlobal(object):
         changes.add_change(ChangeContents(dest, source))
 
     def _get_moving_element_with_imports(self):
-        moving = self._get_moving_element()
-        source_pymodule = self.pycore.resource_to_pyobject(self.source)
-        new_imports = self._get_used_imports_by_the_moving_element()
-        new_imports.append(self.import_tools.
-                           get_from_import_for_module(source_pymodule, '*'))
-
-        pymodule = self.pycore.get_string_module(moving, self.source)
-        pymodule, has_changed = self._add_imports2(pymodule, new_imports)
-
-        source = self.import_tools.relatives_to_absolutes(pymodule)
-        pymodule = self.tools.new_pymodule(pymodule, source)
-        source = self.import_tools.froms_to_imports(pymodule)
-        module_with_imports = self._get_module_with_imports(source, self.source)
-        imports = [import_stmt.import_info
-                   for import_stmt in module_with_imports.get_import_statements()]
-        start = 1
-        if module_with_imports.get_import_statements():
-            start = module_with_imports.get_import_statements()[-1].end_line
-        lines = codeanalyze.SourceLinesAdapter(source)
-        moving = source[lines.get_line_start(start):]
-        return moving, imports
+        return _get_moving_element_with_imports(
+            self.pycore, self.source, self._get_moving_element(),
+            self._get_used_imports_by_the_moving_element())
 
     def _get_module_with_imports(self, source_code, resource):
         pymodule = self.pycore.get_string_module(source_code, resource)
@@ -537,3 +519,67 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
     for new_import in new_imports:
         module_with_imports.add_import(new_import)
     return module_with_imports.get_changed_source()
+
+
+def _get_moving_element_with_imports(pycore, resource, source, imports):
+    import_tools = importutils.ImportTools(pycore)
+    source_pymodule = pycore.resource_to_pyobject(resource)
+    new_imports = list(imports)
+    new_imports.append(import_tools.
+                       get_from_import_for_module(source_pymodule, '*'))
+
+    pymodule = pycore.get_string_module(source, resource)
+    source = _add_imports_to_module(import_tools, pymodule, new_imports)
+    pymodule = pycore.get_string_module(source, resource)
+
+    source = import_tools.relatives_to_absolutes(pymodule)
+    pymodule = pycore.get_string_module(source, resource)
+    source = import_tools.froms_to_imports(pymodule)
+    pymodule = pycore.get_string_module(source, resource)
+    module_with_imports = import_tools.get_module_imports(pymodule)
+    imports = [import_stmt.import_info
+               for import_stmt in module_with_imports.get_import_statements()]
+    start = 1
+    if module_with_imports.get_import_statements():
+        start = module_with_imports.get_import_statements()[-1].end_line
+    lines = codeanalyze.SourceLinesAdapter(source)
+    moving = source[lines.get_line_start(start):]
+    return moving, imports
+
+
+class ModuleSkipRenamerHandle(object):
+
+    def occurred_outside_skip(self, change_collector, occurrence):
+        pass
+
+    def occurred_inside_skip(self, change_collector, occurrence):
+        pass
+
+
+class ModuleSkipRenamer(object):
+
+    def __init__(self, occurrence_finder, resource, handle=None,
+                 skip_start=0, skip_end=0, replacement=''):
+        self.occurrence_finder = occurrence_finder
+        self.resource = resource
+        self.skip_start = skip_start
+        self.skip_end = skip_end
+        self.replacement = replacement
+        self.handle = handle
+        if self.handle is None:
+            self.handle = ModuleSkipHandle()
+
+    def get_changed_module(self):
+        source = self.resource.read()
+        change_collector = sourceutils.ChangeCollector(source)
+        change_collector.add_change(self.skip_start, self.skip_end,
+                                    self.replacement)
+        for occurrence in self.occurrence_finder.find_occurrences(self.resource):
+            start, end = occurrence.get_primary_range()
+            if self.skip_start <= start < self.skip_end:
+                self.handle.occurred_inside_skip(change_collector, occurrence)
+            else:
+                self.handle.occurred_outside_skip(change_collector, occurrence)
+        result = change_collector.get_changed()
+        if result is not None and result != source:
+            return result
