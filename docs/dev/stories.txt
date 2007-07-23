@@ -154,3 +154,6 @@ Stories
 
 
 > Public Release 0.6m6 : July 29, 2007
+
+
+* Better restructuring dialog

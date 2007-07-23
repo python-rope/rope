@@ -1,8 +1,7 @@
 Small Stories
 =============
 
-* Better restructurings ``{?func}(...)``
-* Or ``{?func}(..., on_disk=True)``
+* Not return suite start and returning suite end
 
 * Using pychecker in warnings?
 * What to do with files that cannot be compiled when refactoring?

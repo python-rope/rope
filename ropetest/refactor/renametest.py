@@ -44,43 +44,52 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_not_renaming_dot_name(self):
         refactored = self._local_rename(
             "replace = True\n'aaa'.replace('a', 'b')\n", 1, 'new_var')
-        self.assertEquals("new_var = True\n'aaa'.replace('a', 'b')\n", refactored)
+        self.assertEquals("new_var = True\n'aaa'.replace('a', 'b')\n",
+                          refactored)
 
     def test_renaming_multiple_names_in_the_same_line(self):
         refactored = self._local_rename(
             'a_var = 10\na_var = 10 + a_var / 2\n', 2, 'new_var')
-        self.assertEquals('new_var = 10\nnew_var = 10 + new_var / 2\n', refactored)
+        self.assertEquals('new_var = 10\nnew_var = 10 + new_var / 2\n',
+                          refactored)
 
     def test_renaming_names_when_getting_some_attribute(self):
         refactored = self._local_rename(
             "a_var = 'a b c'\na_var.split('\\n')\n", 2, 'new_var')
-        self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n", refactored)
+        self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n",
+                          refactored)
 
     def test_renaming_names_when_getting_some_attribute2(self):
         refactored = self._local_rename(
             "a_var = 'a b c'\na_var.split('\\n')\n", 20, 'new_var')
-        self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n", refactored)
+        self.assertEquals("new_var = 'a b c'\nnew_var.split('\\n')\n",
+                          refactored)
 
     def test_renaming_function_parameters1(self):
         refactored = self._local_rename(
-            "def f(a_param):\n    print a_param\n", 8, 'new_param')
-        self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
+            "def f(a_param):\n    print(a_param)\n", 8, 'new_param')
+        self.assertEquals("def f(new_param):\n    print(new_param)\n",
+                          refactored)
 
     def test_renaming_function_parameters2(self):
-        refactored = self._local_rename("def f(a_param):\n    print a_param\n", 30, 'new_param')
-        self.assertEquals("def f(new_param):\n    print new_param\n", refactored)
+        refactored = self._local_rename(
+            "def f(a_param):\n    print(a_param)\n", 30, 'new_param')
+        self.assertEquals("def f(new_param):\n    print(new_param)\n",
+                          refactored)
 
     def test_renaming_occurrences_inside_functions(self):
         code = 'def a_func(p1):\n    a = p1\na_func(1)\n'
         refactored = self._local_rename(code, code.index('p1') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param):\n    a = new_param\na_func(1)\n',
-                          refactored)
+        self.assertEquals(
+            'def a_func(new_param):\n    a = new_param\na_func(1)\n', 
+            refactored)
 
     def test_renaming_arguments_for_normal_args_changing_calls(self):
         code = 'def a_func(p1=None, p2=None):\n    pass\na_func(p2=1)\n'
         refactored = self._local_rename(code, code.index('p2') + 1, 'p3')
-        self.assertEquals('def a_func(p1=None, p3=None):\n    pass\na_func(p3=1)\n',
-                          refactored)
+        self.assertEquals(
+            'def a_func(p1=None, p3=None):\n    pass\na_func(p3=1)\n',
+            refactored)
 
     def test_renaming_function_parameters_of_class_init(self):
         code = 'class A(object):\n    def __init__(self, a_param):\n        pass\n' \
@@ -93,41 +102,49 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_renaming_functions_parameters_and_occurances_in_other_modules(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
-        mod1.write('def a_func(a_param):\n    print a_param\n')
+        mod1.write('def a_func(a_param):\n    print(a_param)\n')
         mod2.write('from mod1 import a_func\na_func(a_param=10)\n')
         self._rename(mod1, mod1.read().index('a_param') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param):\n    print new_param\n', mod1.read())
-        self.assertEquals('from mod1 import a_func\na_func(new_param=10)\n', mod2.read())
+        self.assertEquals('def a_func(new_param):\n    print(new_param)\n',
+                          mod1.read())
+        self.assertEquals('from mod1 import a_func\na_func(new_param=10)\n',
+                          mod2.read())
 
     def test_renaming_with_backslash_continued_names(self):
-        refactored = self._local_rename("replace = True\n'ali'.\\\nreplace\n", 2, 'is_replace')
-        self.assertEquals("is_replace = True\n'ali'.\\\nreplace\n", refactored)
+        refactored = self._local_rename(
+            "replace = True\n'ali'.\\\nreplace\n", 2, 'is_replace')
+        self.assertEquals("is_replace = True\n'ali'.\\\nreplace\n",
+                          refactored)
 
     def test_not_renaming_string_contents(self):
-        refactored = self._local_rename("a_var = 20\na_string='a_var'\n", 2, 'new_var')
-        self.assertEquals("new_var = 20\na_string='a_var'\n", refactored)
+        refactored = self._local_rename("a_var = 20\na_string='a_var'\n",
+                                        2, 'new_var')
+        self.assertEquals("new_var = 20\na_string='a_var'\n",
+                          refactored)
 
     def test_not_renaming_comment_contents(self):
-        refactored = self._local_rename("a_var = 20\n# a_var\n", 2, 'new_var')
+        refactored = self._local_rename("a_var = 20\n# a_var\n",
+                                        2, 'new_var')
         self.assertEquals("new_var = 20\n# a_var\n", refactored)
 
     def test_renaming_all_occurances_in_containing_scope(self):
         code = 'if True:\n    a_var = 1\nelse:\n    a_var = 20\n'
         refactored = self._local_rename(code, 16, 'new_var')
-        self.assertEquals('if True:\n    new_var = 1\nelse:\n    new_var = 20\n',
-                          refactored)
+        self.assertEquals(
+            'if True:\n    new_var = 1\nelse:\n    new_var = 20\n', refactored)
 
     def test_renaming_a_variable_with_arguement_name(self):
-        code = 'a_var = 10\ndef a_func(a_var):\n    print a_var\n'
+        code = 'a_var = 10\ndef a_func(a_var):\n    print(a_var)\n'
         refactored = self._local_rename(code, 1, 'new_var')
-        self.assertEquals('new_var = 10\ndef a_func(a_var):\n    print a_var\n',
-                          refactored)
+        self.assertEquals(
+            'new_var = 10\ndef a_func(a_var):\n    print(a_var)\n', refactored)
 
     def test_renaming_an_arguement_with_variable_name(self):
-        code = 'a_var = 10\ndef a_func(a_var):\n    print a_var\n'
+        code = 'a_var = 10\ndef a_func(a_var):\n    print(a_var)\n'
         refactored = self._local_rename(code, len(code) - 3, 'new_var')
-        self.assertEquals('a_var = 10\ndef a_func(new_var):\n    print new_var\n',
-                          refactored)
+        self.assertEquals(
+            'a_var = 10\ndef a_func(new_var):\n    print(new_var)\n',
+            refactored)
 
     def test_renaming_function_with_local_variable_name(self):
         code = 'def a_func():\n    a_func=20\na_func()'
@@ -147,7 +164,8 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('import mod1\nmod1.a_func()\n')
         self._rename(mod1, len(mod1.read()) - 5, 'new_func')
-        self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod1.read())
+        self.assertEquals('def new_func():\n    pass\nnew_func()\n',
+                          mod1.read())
         self.assertEquals('import mod1\nmod1.new_func()\n', mod2.read())
 
     def test_renaming_functions_across_modules_from_import(self):
@@ -156,8 +174,10 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('from mod1 import a_func\na_func()\n')
         self._rename(mod1, len(mod1.read()) - 5, 'new_func')
-        self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod1.read())
-        self.assertEquals('from mod1 import new_func\nnew_func()\n', mod2.read())
+        self.assertEquals('def new_func():\n    pass\nnew_func()\n',
+                          mod1.read())
+        self.assertEquals('from mod1 import new_func\nnew_func()\n',
+                          mod2.read())
 
     def test_renaming_functions_from_another_module(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -165,7 +185,8 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod2.write('import mod1\nmod1.a_func()\n')
         self._rename(mod2, len(mod2.read()) - 5, 'new_func')
-        self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod1.read())
+        self.assertEquals('def new_func():\n    pass\nnew_func()\n',
+                          mod1.read())
         self.assertEquals('import mod1\nmod1.new_func()\n', mod2.read())
 
     def test_applying_all_changes_together(self):
@@ -175,7 +196,8 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2.write('def a_func():\n    pass\na_func()\n')
         self._rename(mod2, len(mod2.read()) - 5, 'new_func')
         self.assertEquals('import mod2\nmod2.new_func()\n', mod1.read())
-        self.assertEquals('def new_func():\n    pass\nnew_func()\n', mod2.read())
+        self.assertEquals('def new_func():\n    pass\nnew_func()\n',
+                          mod2.read())
 
     def test_renaming_modules(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -215,26 +237,31 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1.write('class AClass(object):\n    def __init__(self):\n'
                    '        self.an_attr = 10\n')
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
-        mod2.write('import mod1\na_var = mod1.AClass()\nanother_var = a_var.an_attr')
+        mod2.write('import mod1\na_var = mod1.AClass()\n'
+                   'another_var = a_var.an_attr')
 
         self._rename(mod1, mod1.read().index('an_attr'), 'attr')
         self.assertEquals('class AClass(object):\n    def __init__(self):\n'
                           '        self.attr = 10\n', mod1.read())
-        self.assertEquals('import mod1\na_var = mod1.AClass()\nanother_var = a_var.attr',
-                          mod2.read())
+        self.assertEquals(
+            'import mod1\na_var = mod1.AClass()\nanother_var = a_var.attr',
+            mod2.read())
 
     def test_renaming_class_attributes2(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('class AClass(object):\n    def __init__(self):\n'
                    '        an_attr = 10\n        self.an_attr = 10\n')
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
-        mod2.write('import mod1\na_var = mod1.AClass()\nanother_var = a_var.an_attr')
+        mod2.write('import mod1\na_var = mod1.AClass()\n'
+                   'another_var = a_var.an_attr')
 
         self._rename(mod1, mod1.read().rindex('an_attr'), 'attr')
-        self.assertEquals('class AClass(object):\n    def __init__(self):\n'
-                          '        an_attr = 10\n        self.attr = 10\n', mod1.read())
-        self.assertEquals('import mod1\na_var = mod1.AClass()\nanother_var = a_var.attr',
-                          mod2.read())
+        self.assertEquals(
+            'class AClass(object):\n    def __init__(self):\n'
+            '        an_attr = 10\n        self.attr = 10\n', mod1.read())
+        self.assertEquals(
+            'import mod1\na_var = mod1.AClass()\nanother_var = a_var.attr',
+            mod2.read())
 
     def test_renaming_methods_in_subclasses(self):
         mod = self.pycore.create_module(self.project.root, 'mod1')
@@ -243,8 +270,9 @@ class RenameRefactoringTest(unittest.TestCase):
 
         self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method',
                      in_hierarchy=True)
-        self.assertEquals('class A(object):\n    def new_method(self):\n        pass\n'
-                          'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
+        self.assertEquals(
+            'class A(object):\n    def new_method(self):\n        pass\n'
+            'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
 
     def test_renaming_methods_in_sibling_classes(self):
         mod = self.pycore.create_module(self.project.root, 'mod1')
@@ -254,9 +282,10 @@ class RenameRefactoringTest(unittest.TestCase):
 
         self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method',
                      in_hierarchy=True)
-        self.assertEquals('class A(object):\n    def new_method(self):\n        pass\n'
-                  'class B(A):\n    def new_method(self):\n        pass\n'
-                  'class C(A):\n    def new_method(self):\n        pass\n', mod.read())
+        self.assertEquals(
+            'class A(object):\n    def new_method(self):\n        pass\n'
+            'class B(A):\n    def new_method(self):\n        pass\n'
+            'class C(A):\n    def new_method(self):\n        pass\n', mod.read())
 
     def test_not_renaming_methods_in_hierarchies(self):
         mod = self.pycore.create_module(self.project.root, 'mod1')
@@ -265,8 +294,9 @@ class RenameRefactoringTest(unittest.TestCase):
 
         self._rename(mod, mod.read().rindex('a_method') + 1, 'new_method',
                      in_hierarchy=False)
-        self.assertEquals('class A(object):\n    def a_method(self):\n        pass\n'
-                          'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
+        self.assertEquals(
+            'class A(object):\n    def a_method(self):\n        pass\n'
+            'class B(A):\n    def new_method(self):\n        pass\n', mod.read())
 
     def test_undoing_refactorings(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -287,61 +317,68 @@ class RenameRefactoringTest(unittest.TestCase):
 
     def test_rename_in_module_renaming_one_letter_names_for_expressions(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
-        mod1.write('a = 10\nprint (1+a)\n')
+        mod1.write('a = 10\nprint(1+a)\n')
         pymod = self.pycore.get_module('mod1')
         old_pyname = pymod.get_attribute('a')
         finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, 'a', [old_pyname])
         refactored = rename.rename_in_module(
             finder, 'new_var', pymodule=pymod, replace_primary=True)
-        self.assertEquals('new_var = 10\nprint (1+new_var)\n', refactored)
+        self.assertEquals('new_var = 10\nprint(1+new_var)\n', refactored)
 
     def test_renaming_for_loop_variable(self):
-        code = 'for var in range(10):\n    print var\n'
+        code = 'for var in range(10):\n    print(var)\n'
         refactored = self._local_rename(code, code.find('var') + 1, 'new_var')
-        self.assertEquals('for new_var in range(10):\n    print new_var\n',
+        self.assertEquals('for new_var in range(10):\n    print(new_var)\n',
                           refactored)
 
     def test_renaming_parameters(self):
-        code = 'def a_func(param):\n    print param\na_func(param=hey)\n'
-        refactored = self._local_rename(code, code.find('param') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param):\n    print new_param\n'
+        code = 'def a_func(param):\n    print(param)\na_func(param=hey)\n'
+        refactored = self._local_rename(code, code.find('param') + 1,
+                                        'new_param')
+        self.assertEquals('def a_func(new_param):\n    print(new_param)\n'
                           'a_func(new_param=hey)\n', refactored)
 
     def test_renaming_parameters_not_renaming_others(self):
-        code = 'def a_func(param):\n    print param\nparam=10\na_func(param)\n'
+        code = 'def a_func(param):\n    print(param)\nparam=10\na_func(param)\n'
         refactored = self._local_rename(code, code.find('param') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param):\n    print new_param\n'
+        self.assertEquals('def a_func(new_param):\n    print(new_param)\n'
                           'param=10\na_func(param)\n', refactored)
 
     def test_renaming_parameters_not_renaming_others2(self):
-        code = 'def a_func(param):\n    print param\nparam=10\na_func(param=param)'
+        code = 'def a_func(param):\n    print(param)\nparam=10\na_func(param=param)'
         refactored = self._local_rename(code, code.find('param') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param):\n    print new_param\n'
+        self.assertEquals('def a_func(new_param):\n    print(new_param)\n'
                           'param=10\na_func(new_param=param)', refactored)
 
     def test_renaming_parameters_with_multiple_params(self):
-        code = 'def a_func(param1, param2):\n    print param1\na_func(param1=1, param2=2)\n'
+        code = 'def a_func(param1, param2):\n    print(param1)\n'\
+               'a_func(param1=1, param2=2)\n'
         refactored = self._local_rename(code, code.find('param1') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param, param2):\n    print new_param\n'
-                          'a_func(new_param=1, param2=2)\n', refactored)
+        self.assertEquals(
+            'def a_func(new_param, param2):\n    print(new_param)\n'
+            'a_func(new_param=1, param2=2)\n', refactored)
 
     def test_renaming_parameters_with_multiple_params2(self):
-        code = 'def a_func(param1, param2):\n    print param1\na_func(param1=1, param2=2)\n'
-        refactored = self._local_rename(code, code.rfind('param2') + 1, 'new_param')
-        self.assertEquals('def a_func(param1, new_param):\n    print param1\n'
+        code = 'def a_func(param1, param2):\n    print(param1)\n' \
+               'a_func(param1=1, param2=2)\n'
+        refactored = self._local_rename(code, code.rfind('param2') + 1,
+                                        'new_param')
+        self.assertEquals('def a_func(param1, new_param):\n    print(param1)\n'
                           'a_func(param1=1, new_param=2)\n', refactored)
 
     def test_renaming_parameters_on_calls(self):
-        code = 'def a_func(param):\n    print param\na_func(param = hey)\n'
-        refactored = self._local_rename(code, code.rfind('param') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param):\n    print new_param\n'
+        code = 'def a_func(param):\n    print(param)\na_func(param = hey)\n'
+        refactored = self._local_rename(code, code.rfind('param') + 1,
+                                        'new_param')
+        self.assertEquals('def a_func(new_param):\n    print(new_param)\n'
                           'a_func(new_param = hey)\n', refactored)
 
     def test_renaming_parameters_spaces_before_call(self):
-        code = 'def a_func(param):\n    print param\na_func  (param=hey)\n'
-        refactored = self._local_rename(code, code.rfind('param') + 1, 'new_param')
-        self.assertEquals('def a_func(new_param):\n    print new_param\n'
+        code = 'def a_func(param):\n    print(param)\na_func  (param=hey)\n'
+        refactored = self._local_rename(code, code.rfind('param') + 1,
+                                        'new_param')
+        self.assertEquals('def a_func(new_param):\n    print(new_param)\n'
                           'a_func  (new_param=hey)\n', refactored)
 
     def test_renaming_parameter_like_objects_after_keywords(self):
@@ -355,31 +392,31 @@ class RenameRefactoringTest(unittest.TestCase):
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
         mod = self.pycore.create_module(self.project.root, 'mod')
-        mod.write('import pkg\nprint pkg.a_var\n')
+        mod.write('import pkg\nprint(pkg.a_var)\n')
         self._rename(mod, mod.read().index('a_var') + 1, 'new_var')
         self.assertEquals('new_var = 10\n', init_dot_py.read())
-        self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
+        self.assertEquals('import pkg\nprint(pkg.new_var)\n', mod.read())
 
     def test_renaming_variables_in_init_dot_pys2(self):
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
         mod = self.pycore.create_module(self.project.root, 'mod')
-        mod.write('import pkg\nprint pkg.a_var\n')
+        mod.write('import pkg\nprint(pkg.a_var)\n')
         self._rename(init_dot_py,
                      init_dot_py.read().index('a_var') + 1, 'new_var')
         self.assertEquals('new_var = 10\n', init_dot_py.read())
-        self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
+        self.assertEquals('import pkg\nprint(pkg.new_var)\n', mod.read())
 
     def test_renaming_variables_in_init_dot_pys3(self):
         pkg = self.pycore.create_package(self.project.root, 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
         mod = self.pycore.create_module(self.project.root, 'mod')
-        mod.write('import pkg\nprint pkg.a_var\n')
+        mod.write('import pkg\nprint(pkg.a_var)\n')
         self._rename(mod, mod.read().index('a_var') + 1, 'new_var')
         self.assertEquals('new_var = 10\n', init_dot_py.read())
-        self.assertEquals('import pkg\nprint pkg.new_var\n', mod.read())
+        self.assertEquals('import pkg\nprint(pkg.new_var)\n', mod.read())
 
     def test_renaming_resources_using_rename_module_refactoring(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
@@ -489,16 +526,19 @@ class ChangeOccurrencesTest(unittest.TestCase):
         changer = rename.ChangeOccurrences(self.project, self.mod,
                                            self.mod.read().rindex('a_var'))
         changer.get_changes('new_var').do()
-        self.assertEquals('a_var = 1\nnew_var = 2\ndef f():\n    print(new_var)\n',
-                          self.mod.read())
+        self.assertEquals(
+            'a_var = 1\nnew_var = 2\ndef f():\n    print(new_var)\n',
+            self.mod.read())
 
     def test_only_performing_on_calls(self):
-        self.mod.write('def f1():\n    pass\ndef f2():\n    pass\ng = f1\na = f1()\n')
+        self.mod.write('def f1():\n    pass\ndef f2():\n    pass\n'
+                       'g = f1\na = f1()\n')
         changer = rename.ChangeOccurrences(self.project, self.mod,
                                            self.mod.read().rindex('f1'))
         changer.get_changes('f2', only_calls=True).do()
-        self.assertEquals('def f1():\n    pass\ndef f2():\n    pass\ng = f1\na = f2()\n',
-                          self.mod.read())
+        self.assertEquals(
+            'def f1():\n    pass\ndef f2():\n    pass\ng = f1\na = f2()\n',
+            self.mod.read())
 
     def test_only_performing_on_reads(self):
         self.mod.write('a = 1\nb = 2\nprint(a)\n')

@@ -79,7 +79,7 @@ Features implemented so far:
   * Correcting indentation
   * Project tree view
   * Unit-test running view
-  * Showing codetags/errors/warnings
+  * Basic codetags/errors/warnings listing
   * Defining templates
   * Memorizing strings/locations
 

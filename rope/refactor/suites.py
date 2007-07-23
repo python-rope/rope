@@ -8,25 +8,27 @@ def find_visible(ast, lines):
 
 
 def find_visible_for_suite(root, lines):
-    line1 = lines[0]
     if len(lines) == 1:
-        return line1
-    suite1 = root.find_suite(lines[0])
+        return lines[0]
+    line1 = lines[0]
     line2 = find_visible_for_suite(root, lines[1:])
+    suite1 = root.find_suite(line1)
     suite2 = root.find_suite(line2)
-    while suite1 != suite2 and suite1.parent != None:
+    while suite1 != suite2 and suite1.parent != suite2.parent:
         if suite1._get_level() < suite2._get_level():
+            line2 = suite2.get_start()
             suite2 = suite2.parent
         elif suite1._get_level() > suite2._get_level():
+            line1 = suite1.get_start()
             suite1 = suite1.parent
         else:
+            line1 = suite1.get_start()
+            line2 = suite2.get_start()
             suite1 = suite1.parent
             suite2 = suite2.parent
-    return min(suite1.local_start(), suite2.local_start())
-
-
-def source_suite_tree(source):
-    return ast_suite_tree(ast.parse(source))
+    if suite1 == suite2:
+        return min(line1, line2)
+    return min(suite1.get_start(), suite2.get_start())
 
 
 def ast_suite_tree(ast):
@@ -35,22 +37,6 @@ def ast_suite_tree(ast):
     else:
         lineno = 1
     return Suite(ast.body, lineno)
-
-
-def _find_visible_suite(root, lines):
-    suite1 = root.find_suite(lines[0])
-    if len(lines) == 1:
-        return suite1
-    suite2 = _find_visible_suite(root, lines[1:])
-    while suite1 != suite2 and suite1.parent != None:
-        if suite1._get_level() < suite2._get_level():
-            suite2 = suite2.parent
-        elif suite1._get_level() > suite2._get_level():
-            suite1 = suite1.parent
-        else:
-            suite1 = suite1.parent
-            suite2 = suite2.parent
-    return suite1
 
 
 class Suite(object):
@@ -62,6 +48,11 @@ class Suite(object):
         self._children = None
 
     def get_start(self):
+        if self.parent is None:
+            if self.child_nodes:
+                return self.local_start()
+            else:
+                return 1
         return self.lineno
 
     def get_children(self):
