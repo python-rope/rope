@@ -113,3 +113,17 @@ class ShelveDB(objectdb.FileDict):
         del self.index[file]
         if on_disk:
             self.root.get_child(mapping).remove()
+
+
+def is_available():
+    try:
+        import bsddb
+    except ImportError:
+        try:
+            import dbhash
+        except ImportError:
+            try:
+                import gdbm
+            except ImportError:
+                return False
+    return True

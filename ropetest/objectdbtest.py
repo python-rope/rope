@@ -44,9 +44,11 @@ class ObjectDBTest(unittest.TestCase):
         self.project = testutils.sample_project()
         validation = _MockValidation()
         self.dbs = [
-            objectdb.ObjectDB(memorydb.MemoryDB(self.project), validation),
-            objectdb.ObjectDB(shelvedb.ShelveDB(self.project), validation)]
-        if sqlitedb.is_sqlite_available():
+            objectdb.ObjectDB(memorydb.MemoryDB(self.project), validation)]
+        if shelvedb.is_available():
+            self.dbs.append(objectdb.ObjectDB(shelvedb.ShelveDB(self.project),
+                                              validation))
+        if sqlitedb.is_available():
             self.dbs.append(objectdb.ObjectDB(sqlitedb.SqliteDB(self.project),
                                               validation))
 

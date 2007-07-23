@@ -189,7 +189,6 @@ class WordRangeFinder(object):
 
     def is_a_class_or_function_name_in_header(self, offset):
         word_start = self._find_word_start(offset - 1)
-        word_end = self._find_word_end(offset - 1) + 1
         line_start = self._get_line_start(word_start)
         prev_word = self.source_code[line_start:word_start].strip()
         return prev_word in ['def', 'class']
@@ -209,7 +208,6 @@ class WordRangeFinder(object):
         return current_offset
 
     def is_a_function_being_called(self, offset):
-        word_start = self._find_word_start(offset - 1)
         word_end = self._find_word_end(offset - 1) + 1
         next_char = self._find_first_non_space_char(word_end)
         return next_char < len(self.source_code) and \
@@ -439,9 +437,6 @@ class ScopeNameFinder(object):
         return None
 
     def _find_module(self, module_name):
-        current_folder = None
-        if self.module_scope.pyobject.get_resource():
-            current_folder = self.module_scope.pyobject.get_resource().parent
         dot_count = 0
         if module_name.startswith('.'):
             for c in module_name:
@@ -743,67 +738,6 @@ def get_block_start_patterns():
         StatementRangeFinder._block_start_pattern = re.compile(pattern, re.M)
     return StatementRangeFinder._block_start_pattern
 
-
-# XXX: Should we use it
-class xxxStatementRangeFinder(object):
-    """A method object for finding the range of a statement"""
-
-    def __init__(self, lines, lineno):
-        self.lines = lines
-        self.lineno = lineno
-        self.block_start = StatementRangeFinder.get_block_start(lines, lineno)
-        self.open_parens = []
-        self.statement_start = self.block_start
-        self.block_end = lineno
-        self.continued = True
-
-    def analyze(self):
-        readline = LinesToReadline(self.lines, self.block_start)
-        try:
-            for current in tokenize.generate_tokens(readline):
-                current_lineno = current[2][0] + self.block_start - 1
-                if current_lineno < self.lineno:
-                    if current[0] == token.NEWLINE:
-                        self.statement_start = current_lineno + 1
-                if current_lineno <= self.lineno:
-                    if current[0] == token.OP and current[1] in '([{':
-                        self.open_parens.append((current_lineno, current[2][1]))
-                    if current[0] == token.OP and current[1] in ')]}':
-                        self.open_parens.pop()
-
-                if current_lineno == self.lineno:
-                    if current[0] in (tokenize.NEWLINE, tokenize.COMMENT):
-                        self.continued = False
-
-                if current_lineno > self.lineno:
-                    self.block_end = current_lineno - 1
-                    if current[0] == token.DEDENT:
-                        break
-        except tokenize.TokenError:
-            pass
-
-    def get_statement_start(self):
-        return self.statement_start
-
-    def get_block_end(self):
-        return self.block_end
-
-    def last_open_parens(self):
-        if not self.open_parens:
-            return None
-        return self.open_parens[-1]
-
-    def is_line_continued(self):
-        return self.continued
-
-    def get_line_indents(self, line_number):
-        indents = 0
-        for char in self.lines.get_line(line_number):
-            if char == ' ':
-                indents += 1
-            else:
-                break
-        return indents
 
 def count_line_indents(line):
     indents = 0

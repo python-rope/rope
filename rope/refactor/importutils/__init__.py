@@ -30,7 +30,6 @@ class ImportTools(object):
         return module_imports.ModuleImports(self.pycore, module)
 
     def froms_to_imports(self, pymodule):
-        resource = pymodule.get_resource()
         pymodule = self._clean_up_imports(pymodule)
         module_imports = self.get_module_imports(pymodule)
         for import_stmt in module_imports.get_import_statements():

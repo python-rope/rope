@@ -253,5 +253,5 @@ class Table(object):
         return self.db.execute(command, values)
 
 
-def is_sqlite_available():
+def is_available():
     return 'sqlite3' in globals()

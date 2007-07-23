@@ -1,9 +1,10 @@
 Small Stories
 =============
 
-- Removing `ImportTools._relative_to_absolute()`?
-- Replacing `ImportTools.get_...import_for_module()` to use resources
+* Better restructurings ``{?func}(...)``
+* Or ``{?func}(..., on_disk=True)``
 
+* Using pychecker in warnings?
 * What to do with files that cannot be compiled when refactoring?
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
