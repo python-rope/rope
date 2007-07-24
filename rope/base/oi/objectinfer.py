@@ -33,7 +33,21 @@ class ObjectInfer(object):
         result = self.object_info.get_parameter_objects(pyobject)
         if result is None:
             result = self.soi.infer_parameter_objects(pyobject)
+        self._handle_first_parameter(pyobject, result)
         return result
+
+    def _handle_first_parameter(self, pyobject, parameters):
+        kind = pyobject.get_kind()
+        if parameters is None or kind not in ['method', 'classmethod']:
+            pass
+        if not parameters:
+            if not pyobject.get_param_names(special_args=False):
+                return
+            parameters.append(pyobjects.get_unknown())
+        if kind == 'method':
+            parameters[0] = pyobjects.PyObject(pyobject.parent)
+        if kind == 'classmethod':
+            parameters[0] = pyobject.parent
 
     def infer_assigned_object(self, pyname):
         if not pyname.assignments:

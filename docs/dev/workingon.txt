@@ -1,15 +1,9 @@
 Small Stories
 =============
 
-- Not waiting on stoppable task runner dialog
-- Adding `PyFunction.get_kind()`
-- Moving static method detection to a common place; extract,
-  funcionutils, staticoi
-- Problems with cache in inline for returns
-
-* Remove `extract._get_method_kind()`
-* object inference and ``self`` argument; it gets the value of
+- object inference and ``self`` argument; it gets the value of
   subclasses
+- What to do about methods with no parameters?
 
 * What to do with files that cannot be compiled when refactoring?
 * Extracting subexpressions; look at `extracttest` for more info

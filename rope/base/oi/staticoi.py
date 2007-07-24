@@ -35,18 +35,8 @@ class StaticObjectInference(object):
                 pass
 
     def infer_parameter_objects(self, pyobject):
-        objects = []
-        kind = pyobject.get_kind()
-        if kind == 'method':
-            objects.append(pyobjects.PyObject(pyobject.parent))
-        elif kind == 'staticmethod':
-            objects.append(pyobjects.get_unknown())
-        elif kind == 'classmethod':
-            objects.append(pyobject.parent)
         params = pyobject.get_param_names(special_args=False)
-        for parameter in params[len(objects):]:
-            objects.append(pyobjects.get_unknown())
-        return objects
+        return [pyobjects.get_unknown()] * len(params)
 
     def analyze_module(self, pymodule, should_analyze, search_subscopes):
         """Analyze `pymodule` for static object inference

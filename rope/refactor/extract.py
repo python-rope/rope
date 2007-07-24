@@ -218,10 +218,10 @@ class _ExtractPerformer(object):
             if self.info.method and not self.info.variable:
                 class_scope = self.info.scope.parent
                 regions = []
-                method_kind = _get_method_kind(self.info.scope)
+                method_kind = _get_function_kind(self.info.scope)
                 for scope in class_scope.get_scopes():
                     if method_kind == 'method' and \
-                       _get_method_kind(scope) != 'method':
+                       _get_function_kind(scope) != 'method':
                         continue
                     start = self.info.lines.get_line_start(scope.get_start())
                     end = self.info.lines.get_line_end(scope.get_end())
@@ -377,7 +377,7 @@ class _ExtractMethodParts(object):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         result = []
-        if self.info.method and _get_method_kind(self.info.scope) != 'method':
+        if self.info.method and _get_function_kind(self.info.scope) != 'method':
             result.append('@staticmethod\n')
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
@@ -391,7 +391,7 @@ class _ExtractMethodParts(object):
     def _get_function_signature(self, args):
         args = list(args)
         prefix = ''
-        if self.info.method and _get_method_kind(self.info.scope) == 'method':
+        if self.info.method and _get_function_kind(self.info.scope) == 'method':
             self_name = self._get_self_name()
             if self_name in args:
                 args.remove(self_name)
@@ -407,7 +407,7 @@ class _ExtractMethodParts(object):
     def _get_function_call(self, args):
         prefix = ''
         if self.info.method:
-            if _get_method_kind(self.info.scope) == 'method':
+            if _get_function_kind(self.info.scope) == 'method':
                 self_name = self._get_self_name()
                 if  self_name in args:
                     args.remove(self_name)
@@ -672,12 +672,7 @@ class _UnmatchedBreakOrContinueFinder(object):
         ast.walk(node, visitor)
         return visitor.error
 
-def _get_method_kind(scope):
-    """Get the type of a method
-
-    It returns 'normal', 'static', or 'class'
-
-    """
+def _get_function_kind(scope):
     return scope.pyobject.get_kind()
 
 

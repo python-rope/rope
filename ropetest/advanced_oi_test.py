@@ -680,6 +680,17 @@ class NewStaticOITest(unittest.TestCase):
             self.assertNotEquals(c_class, var_pyname.get_object().get_type(),
                                  'Class `C` no more exists')
 
+    def test_always_returning_containing_class_for_selfs(self):
+        code = 'class A(object):\n    def f(p):\n        return p\n' \
+               'class B(object):\n    pass\nb = B()\nb.f()\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        a_class = pymod.get_attribute('A').get_object()
+        f_scope = a_class.get_scope().get_scopes()[0]
+        p_type = f_scope.get_name('p').get_object().get_type()
+        self.assertEquals(a_class, p_type)
+
 
 def suite():
     result = unittest.TestSuite()
