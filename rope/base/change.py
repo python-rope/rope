@@ -81,10 +81,11 @@ class ChangeSet(Change):
         self.changes.append(change)
 
     def get_description(self):
-        result = str(self) + ':\n\n\n' + \
-                 ('\n\n%s\n\n' % ('=' * 78)).join(
-            [change.get_description() for change in self.changes])
-        return result
+        result = [str(self) + ':\n\n\n']
+        for change in self.changes:
+            result.append((' %s ' % str(change)).center(78, '=') + '\n')
+            result.append(change.get_description())
+        return ''.join(result)
 
     def __str__(self):
         if self.time is not None:
@@ -160,7 +161,7 @@ class ChangeContents(Change):
             self.old_contents.splitlines(True),
             self.new_contents.splitlines(True),
             'a/' + self.resource.path, 'b/' + self.resource.path)
-        return ''.join(result)
+        return ''.join(list(result)[2:])
 
     def get_changed_resources(self):
         return [self.resource]

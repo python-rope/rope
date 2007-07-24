@@ -51,7 +51,7 @@ class MoveMethod(object):
         pyname = codeanalyze.get_pyname_at(project.pycore, resource, offset)
         self.method_name = codeanalyze.get_name_at(resource, offset)
         self.pyfunction = pyname.get_object()
-        if extract._get_method_kind(self.pyfunction.get_scope()) != 'normal':
+        if self.pyfunction.get_kind() != 'method':
             raise exceptions.RefactoringError('Only normal methods'
                                               ' can be moved.')
 

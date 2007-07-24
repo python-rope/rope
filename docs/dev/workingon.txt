@@ -1,9 +1,16 @@
 Small Stories
 =============
 
-* Not return suite start and returning suite end
+- Not waiting on stoppable task runner dialog
+- Adding `PyFunction.get_kind()`
+- Moving static method detection to a common place; extract,
+  funcionutils, staticoi
+- Problems with cache in inline for returns
 
-* Using pychecker in warnings?
+* Remove `extract._get_method_kind()`
+* object inference and ``self`` argument; it gets the value of
+  subclasses
+
 * What to do with files that cannot be compiled when refactoring?
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
@@ -25,7 +32,7 @@ Base:
 * Recursive SOI; Go where the calls go with limited depth
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
-* Importing star and removing self imports; stack overflow
+p* Importing star and removing self imports; stack overflow
 
 UI and IDE:
 

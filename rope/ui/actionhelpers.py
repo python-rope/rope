@@ -52,7 +52,8 @@ class StoppableTaskRunner(object):
                         self.exception = e
                 finally:
                     toplevel.quit()
-        
+                    toplevel.update_idletasks()
+
         calculate = Calculate(self.task)
         def stop(event=None):
             handle.stop()

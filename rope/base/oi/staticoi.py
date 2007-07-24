@@ -36,26 +36,17 @@ class StaticObjectInference(object):
 
     def infer_parameter_objects(self, pyobject):
         objects = []
-        if pyobject.parent is not None and \
-           isinstance(pyobject.parent, pyobjects.PyClass):
-            if not pyobject.decorators:
-                objects.append(pyobjects.PyObject(pyobject.parent))
-            elif self._is_staticmethod_decorator(pyobject.decorators[0]):
-                objects.append(pyobjects.get_unknown())
-            elif self._is_classmethod_decorator(pyobject.decorators[0]):
-                objects.append(pyobject.parent)
-            elif pyobject.get_param_names()[0] == 'self':
-                objects.append(pyobjects.PyObject(pyobject.parent))
+        kind = pyobject.get_kind()
+        if kind == 'method':
+            objects.append(pyobjects.PyObject(pyobject.parent))
+        elif kind == 'staticmethod':
+            objects.append(pyobjects.get_unknown())
+        elif kind == 'classmethod':
+            objects.append(pyobject.parent)
         params = pyobject.get_param_names(special_args=False)
         for parameter in params[len(objects):]:
             objects.append(pyobjects.get_unknown())
         return objects
-
-    def _is_staticmethod_decorator(self, node):
-        return isinstance(node, ast.Name) and node.id == 'staticmethod'
-
-    def _is_classmethod_decorator(self, node):
-        return isinstance(node, ast.Name) and node.id == 'classmethod'
 
     def analyze_module(self, pymodule, should_analyze, search_subscopes):
         """Analyze `pymodule` for static object inference

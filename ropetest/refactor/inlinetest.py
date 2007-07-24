@@ -442,6 +442,13 @@ class InlineTest(unittest.TestCase):
             'import pkg.mod3\nimport pkg.mod4\n\nprint(pkg.mod4.var)\n',
             self.mod.read())
 
+    def test_inlining_with_different_returns(self):
+        self.mod.write('def f(p):\n    return p\n'
+                       'print(f(1))\nprint(f(2))\nprint(f(1))\n')
+        self._inline2(self.mod, self.mod.read().index('f(') + 1)
+        self.assertEquals('print(1)\nprint(2)\nprint(1)\n',
+                          self.mod.read())
+
 
 def suite():
     result = unittest.TestSuite()

@@ -152,7 +152,7 @@ class CallInfo(object):
     def read(primary, pyname, definition_info, code):
         is_method_call = False
         is_constructor = False
-        if CallInfo._is_instance(primary) and is_method(pyname):
+        if CallInfo._is_instance(primary) and _is_method(pyname):
             is_method_call = True
         if CallInfo._is_class(pyname):
             is_constructor = True
@@ -184,26 +184,11 @@ class CallInfo(object):
                           rope.base.pyobjects.PyClass)
 
 
-def is_method(pyname):
+def _is_method(pyname):
     if pyname is not None and \
-       isinstance(pyname.get_object(), rope.base.pyobjects.PyFunction) and \
-       isinstance(pyname.get_object().parent, rope.base.pyobjects.PyClass):
-        decorators = pyname.get_object().get_ast().decorators
-        if decorators is None:
-            return True
-        for decorator in decorators:
-            if _is_staticmethod_decorator(decorator) or \
-               _is_classmethod_decorator(decorator):
-                return False
-        else:
-            return True
+       isinstance(pyname.get_object(), rope.base.pyobjects.PyFunction):
+        return pyname.get_object().get_kind() == 'method'
     return False
-
-def _is_staticmethod_decorator(node):
-    return isinstance(node, ast.Name) and node.id == 'staticmethod'
-
-def _is_classmethod_decorator(node):
-    return isinstance(node, ast.Name) and node.id == 'classmethod'
 
 
 class ArgumentMapping(object):

@@ -289,6 +289,27 @@ class PyFunction(PyDefinedObject, AbstractFunction):
                 result.append(self.arguments.kwarg)
         return result
 
+    def get_kind(self):
+        """Get function type
+
+        It returns on of 'function', 'method', 'staticmethod' or
+        'classmethod' strs.
+
+        """
+        import rope.base.evaluate
+        import rope.base.builtins
+        scope = self.parent.get_scope()
+        if isinstance(self.parent, PyClass):
+            for decorator in self.get_ast().decorators:
+                pyname = rope.base.evaluate.get_statement_result(scope,
+                                                                 decorator)
+                if pyname == rope.base.builtins.builtins['staticmethod']:
+                    return 'staticmethod'
+                if pyname == rope.base.builtins.builtins['classmethod']:
+                    return 'classmethod'
+            return 'method'
+        return 'function'
+
 
 class PyClass(PyDefinedObject, AbstractClass):
 

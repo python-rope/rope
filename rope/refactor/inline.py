@@ -216,7 +216,6 @@ class _DefinitionGenerator(object):
         self.definition_info = self._get_definition_info()
         self.definition_params = self._get_definition_params()
         self._calculated_definitions = {}
-        self.returned = None
         if body is not None:
             self.body = body
         else:
@@ -266,11 +265,9 @@ class _DefinitionGenerator(object):
             source = _inline_variable(self.pycore, pymodule, pyname, name)
         return self._replace_returns_with(source, returns)
 
-    def get_returned(self):
-        return self.returned
-
     def _replace_returns_with(self, source, returns):
         result = []
+        returned = None
         last_changed = 0
         for match in _DefinitionGenerator._get_return_pattern().finditer(source):
             for key, value in match.groupdict().items():
@@ -279,7 +276,7 @@ class _DefinitionGenerator(object):
                     if returns:
                         self._check_nothing_after_return(source,
                                                          match.end('return'))
-                        self.returned = _join_lines(
+                        returned = _join_lines(
                             source[match.end('return'): len(source)].splitlines())
                         last_changed = len(source)
                     else:
@@ -290,7 +287,7 @@ class _DefinitionGenerator(object):
                         if current == len(source) or source[current] == '\n':
                             result.append('pass')
         result.append(source[last_changed:])
-        return ''.join(result)
+        return ''.join(result), returned
 
     def _check_nothing_after_return(self, source, offset):
         lines = codeanalyze.SourceLinesAdapter(source)
@@ -347,13 +344,13 @@ class _InlineFunctionCallsForModuleHandle(object):
                   self.source[end_parens:line_end].strip() != ''
         indents = sourceutils.get_indents(self.lines, start_line)
         primary, pyname = occurrence.get_primary_and_pyname()
-        definition = self.generator.get_definition(
+        definition, returned = self.generator.get_definition(
             primary, pyname, self.source[start:end_parens], returns=returns)
         end = min(line_end + 1, len(self.source))
         change_collector.add_change(
             line_start, end, sourceutils.fix_indentation(definition, indents))
         if returns:
-            name = self.generator.get_returned()
+            name = returned
             if name is None:
                 name = 'None'
             change_collector.add_change(
