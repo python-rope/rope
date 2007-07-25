@@ -5,9 +5,9 @@ from rope.base import ast, codeanalyze
 
 class _FunctionParser(object):
 
-    def __init__(self, call, is_method):
+    def __init__(self, call, implicit_arg):
         self.call = call
-        self.is_method = is_method
+        self.implicit_arg = implicit_arg
         self.word_finder = rope.base.codeanalyze.WordRangeFinder(self.call)
         self.last_parens = self.call.rindex(')')
         self.first_parens = self.word_finder._find_parens_start(self.last_parens)
@@ -51,7 +51,7 @@ class _FunctionParser(object):
             return self.word_finder.get_primary_at(self.first_parens - 1)
 
     def is_called_as_a_method(self):
-        return self.is_method and '.' in self.call[:self.first_parens]
+        return self.implicit_arg and '.' in self.call[:self.first_parens]
 
 
 class DefinitionInfo(object):
@@ -85,10 +85,7 @@ class DefinitionInfo(object):
         scope = pyfunction.get_scope()
         parent = scope.parent
         parameter_names = pyfunction.get_param_names()
-        is_method = len(parameter_names) > 0 and \
-                    (parent is not None and parent.pyobject == pyfunction.
-                     get_parameters()[parameter_names[0]].get_object().get_type()) and \
-                     (isinstance(parent.pyobject, rope.base.pyobjects.PyClass))
+        is_method = pyfunction.get_kind() == 'method'
         info = _FunctionParser(code, is_method)
         args, keywords = info.get_parameters()
         args_arg = None
@@ -121,22 +118,22 @@ class DefinitionInfo(object):
 class CallInfo(object):
 
     def __init__(self, function_name, args, keywords, args_arg,
-                 keywords_arg, is_method_call, is_constructor):
+                 keywords_arg, implicit_arg, constructor):
         self.function_name = function_name
         self.args = args
         self.keywords = keywords
         self.args_arg = args_arg
         self.keywords_arg = keywords_arg
-        self.is_method_call = is_method_call
-        self.is_constructor = is_constructor
+        self.implicit_arg = implicit_arg
+        self.constructor = constructor
 
     def to_string(self):
         function = self.function_name
-        if self.is_method_call:
+        if self.implicit_arg:
             function = self.args[0] + '.' + self.function_name
         params = []
         start = 0
-        if self.is_method_call or self.is_constructor:
+        if self.implicit_arg or self.constructor:
             start = 1
         if self.args[start:]:
             params.extend(self.args[start:])
@@ -150,13 +147,10 @@ class CallInfo(object):
 
     @staticmethod
     def read(primary, pyname, definition_info, code):
-        is_method_call = False
-        is_constructor = False
-        if CallInfo._is_instance(primary) and _is_method(pyname):
-            is_method_call = True
-        if CallInfo._is_class(pyname):
-            is_constructor = True
-        info = _FunctionParser(code, is_method_call)
+        is_method_call = CallInfo._is_method_call(primary, pyname)
+        is_constructor = CallInfo._is_class(pyname)
+        is_classmethod = CallInfo._is_classmethod(pyname)
+        info = _FunctionParser(code, is_method_call or is_classmethod)
         args, keywords = info.get_parameters()
         args_arg = None
         keywords_arg = None
@@ -169,13 +163,15 @@ class CallInfo(object):
         if is_constructor:
             args.insert(0, definition_info.args_with_defaults[0][0])
         return CallInfo(info.get_function_name(), args, keywords, args_arg,
-                        keywords_arg, is_method_call, is_constructor)
+                        keywords_arg, is_method_call or is_classmethod,
+                        is_constructor)
 
     @staticmethod
-    def _is_instance(pyname):
-        return pyname is not None and \
-               isinstance(pyname.get_object().get_type(),
-                          rope.base.pyobjects.PyClass)
+    def _is_method_call(primary, pyname):
+        return primary is not None and \
+               isinstance(primary.get_object().get_type(),
+                          rope.base.pyobjects.PyClass) and \
+                          CallInfo._is_method(pyname)
 
     @staticmethod
     def _is_class(pyname):
@@ -183,12 +179,19 @@ class CallInfo(object):
                isinstance(pyname.get_object(),
                           rope.base.pyobjects.PyClass)
 
+    @staticmethod
+    def _is_method(pyname):
+        if pyname is not None and \
+           isinstance(pyname.get_object(), rope.base.pyobjects.PyFunction):
+            return pyname.get_object().get_kind() == 'method'
+        return False
 
-def _is_method(pyname):
-    if pyname is not None and \
-       isinstance(pyname.get_object(), rope.base.pyobjects.PyFunction):
-        return pyname.get_object().get_kind() == 'method'
-    return False
+    @staticmethod
+    def _is_classmethod(pyname):
+        if pyname is not None and \
+           isinstance(pyname.get_object(), rope.base.pyobjects.PyFunction):
+            return pyname.get_object().get_kind() == 'classmethod'
+        return False
 
 
 class ArgumentMapping(object):
@@ -230,4 +233,4 @@ class ArgumentMapping(object):
         keywords.extend(self.keyword_args)
         return CallInfo(self.call_info.function_name, args, keywords,
                         self.call_info.args_arg, self.call_info.keywords_arg,
-                        self.call_info.is_method_call, self.call_info.is_constructor)
+                        self.call_info.implicit_arg, self.call_info.constructor)

@@ -1,9 +1,10 @@
 Small Stories
 =============
 
-- object inference and ``self`` argument; it gets the value of
-  subclasses
-- What to do about methods with no parameters?
+- Inlining classmethods
+
+* Generate method and functions
+* Assignment to parameters in inline method
 
 * What to do with files that cannot be compiled when refactoring?
 * Extracting subexpressions; look at `extracttest` for more info
@@ -26,7 +27,7 @@ Base:
 * Recursive SOI; Go where the calls go with limited depth
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
-p* Importing star and removing self imports; stack overflow
+* Importing star and removing self imports; stack overflow
 
 UI and IDE:
 

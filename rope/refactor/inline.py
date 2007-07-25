@@ -231,6 +231,8 @@ class _DefinitionGenerator(object):
            definition_info.keywords_arg is not None:
             raise rope.base.exceptions.RefactoringError(
                 'Cannot inline functions with list and keyword arguements.')
+        if self.pyfunction.get_kind() == 'classmethod':
+            paramdict[definition_info.args_with_defaults[0][0]] = self.pyfunction.parent.get_name()
         return paramdict
 
     def get_function_name(self):
@@ -255,7 +257,7 @@ class _DefinitionGenerator(object):
         header = ''
         to_be_inlined = []
         for name, value in paramdict.items():
-            if name != value:
+            if name != value and value is not None:
                 header += name + ' = ' + value + '\n'
                 to_be_inlined.append(name)
         source = header + self.body

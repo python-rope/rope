@@ -292,6 +292,32 @@ class InlineTest(unittest.TestCase):
                   'print 2\n'
         self.assertEquals(expected, self.mod.read())
 
+    def test_inlining_classmethods(self):
+        a_class = 'class A(object):\n' \
+                  '    @classmethod\n' \
+                  '    def a_func(cls, param):\n' \
+                  '        print(param)\n' \
+                  'A.a_func(1)\n'
+        self.mod.write(a_class)
+        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        expected = 'class A(object):\n' \
+                   '    pass\n' \
+                   'print(1)\n'
+        self.assertEquals(expected, self.mod.read())
+
+    def test_inlining_classmethods2(self):
+        a_class = 'class A(object):\n' \
+                  '    @classmethod\n' \
+                  '    def a_func(cls, param):\n' \
+                  '        return cls\n' \
+                  'print(A.a_func(1))\n'
+        self.mod.write(a_class)
+        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        expected = 'class A(object):\n' \
+                   '    pass\n' \
+                   'print(A)\n'
+        self.assertEquals(expected, self.mod.read())
+
     def test_simple_return_values_and_inlining_functions(self):
         self.mod.write('def a_func():\n    return 1\na = a_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
