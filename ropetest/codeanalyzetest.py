@@ -237,6 +237,12 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder(code)
         self.assertFalse(word_finder.is_import_statement(code.rindex('d') + 1))
 
+    def test_word_parens_range(self):
+        code = 's = str()\ns.title()\n'
+        word_finder = WordRangeFinder(code)
+        result = word_finder.get_word_parens_range(code.rindex('()') - 1)
+        self.assertEquals((len(code) - 3, len(code) - 1), result)
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 

@@ -6,8 +6,8 @@ from rope.refactor import importutils, functionutils
 def create_generate(kind, project, resource, offset):
     """A factory for creating `Generate` objects
 
-    `kind` can be ``variable``, ``function``, ``class``, ``module``
-    or ``package``.
+    `kind` can be 'variable', 'function', 'class', 'module' or
+    'package'.
 
     """
     generate = eval('Generate' + kind.title())
@@ -304,7 +304,7 @@ class _FunctionGenerationInfo(_GenerationInfo):
         finder = codeanalyze.WordRangeFinder(source)
         if finder.is_a_function_being_called(self.offset):
             start, end = finder.get_primary_range(self.offset)
-            parens_start, parens_end = finder.get_word_parens_range(self.offset)
+            parens_start, parens_end = finder.get_word_parens_range(end - 1)
             call = source[start:parens_end]
             parser = functionutils._FunctionParser(call, False)
             args, keywords = parser.get_parameters()

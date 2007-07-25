@@ -250,8 +250,8 @@ class _DefinitionGenerator(object):
         call_info = rope.refactor.functionutils.CallInfo.read(
             primary, pyname, self.definition_info, call)
         paramdict = self.definition_params
-        mapping = rope.refactor.functionutils.ArgumentMapping(self.definition_info,
-                                                              call_info)
+        mapping = rope.refactor.functionutils.ArgumentMapping(
+            self.definition_info, call_info)
         for param_name, value in mapping.param_dict.items():
             paramdict[param_name] = value
         header = ''

@@ -1,10 +1,9 @@
 Small Stories
 =============
 
-- Inlining classmethods
-
-* Generate method and functions
 * Assignment to parameters in inline method
+* Assignment to parameter warning
+* Refactoring codeanalyze; lots of estimations
 
 * What to do with files that cannot be compiled when refactoring?
 * Extracting subexpressions; look at `extracttest` for more info
