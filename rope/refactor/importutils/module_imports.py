@@ -113,23 +113,22 @@ class ModuleImports(object):
                 break
         else:
             all_imports = self.get_import_statements()
-            last_line = self._get_new_import_lineno()
-            blank_lines = self._get_new_import_blanks()
+            lineno = self._get_new_import_lineno()
+            blanks = self._get_new_import_blanks()
             all_imports.append(importinfo.ImportStatement(
-                               import_info, last_line, last_line,
-                               blank_lines=blank_lines))
+                               import_info, lineno, lineno,
+                               blank_lines=blanks))
+
+    def _get_new_import_blanks(self):
+        if self.get_import_statements():
+            return 0
+        return 2
 
     def _get_new_import_lineno(self):
         imports = self.get_import_statements()
         if imports:
             return imports[-1].end_line
         return 1
-
-    def _get_new_import_blanks(self):
-        imports = self.get_import_statements()
-        if imports:
-            return imports[-1].blank_lines
-        return 2
 
     def filter_names(self, can_select):
         visitor = actions.RemovingVisitor(

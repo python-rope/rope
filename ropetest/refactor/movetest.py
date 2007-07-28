@@ -407,6 +407,18 @@ class MoveRefactoringTest(unittest.TestCase):
             'import sys\n\n\ndef f():\n    print(sys.version)\n',
             self.mod2.read())
 
+    def test_moving_globals_to_a_module_with_only_docstrings2(self):
+        self.mod1.write('import os\nimport sys\n\n\n'
+                        'def f():\n    print(sys.version, os.path)\n')
+        self.mod2.write('"""doc\n\nMore docs ...\n\n"""\n')
+        mover = move.create_move(self.project, self.mod1,
+                                 self.mod1.read().index('f()') + 1)
+        self.project.do(mover.get_changes(self.mod2))
+        self.assertEquals(
+            '"""doc\n\nMore docs ...\n\n"""\nimport os\nimport sys\n\n\n'
+            'def f():\n    print(sys.version, os.path)\n',
+            self.mod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()

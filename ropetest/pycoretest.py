@@ -470,6 +470,17 @@ class PyCoreTest(unittest.TestCase):
         var = pymod.get_attribute('var').get_object()
         self.assertEquals(a_class, var.get_type())
 
+    def test_check_for_else_block(self):
+        mod = self.pycore.get_string_module('for i in range(10):\n    pass\n'
+                                            'else:\n    myvar = 1\n')
+        a_var = mod.get_attribute('myvar')
+        self.assertEquals((mod, 4), a_var.get_definition_location())
+
+    def test_check_names_defined_in_whiles(self):
+        mod = self.pycore.get_string_module('while False:\n    myvar = 1\n')
+        a_var = mod.get_attribute('myvar')
+        self.assertEquals((mod, 2), a_var.get_definition_location())
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 

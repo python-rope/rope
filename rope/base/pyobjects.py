@@ -562,7 +562,7 @@ class _ScopeVisitor(object):
             node.target, node.iter, evaluation='.__iter__().next()',
             lineno=node.lineno, module=self.get_module())
         self.names.update(names)
-        for child in node.body:
+        for child in node.body + node.orelse:
             ast.walk(child, self)
 
     def _With(self, node):

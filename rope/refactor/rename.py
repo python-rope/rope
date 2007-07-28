@@ -23,7 +23,8 @@ class Rename(object):
                                                       resource, offset)
             if self.old_pyname is None:
                 raise exceptions.RefactoringError(
-                    'Rename refactoring should be performed on python identifiers.')
+                    'Rename refactoring should be performed'
+                    ' on resolvable python identifiers.')
         else:
             if not resource.is_folder() and resource.name == '__init__.py':
                 resource = resource.parent

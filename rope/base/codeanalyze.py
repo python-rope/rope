@@ -458,7 +458,7 @@ class ScopeNameFinder(object):
             # parenthesizing for handling cases like 'a_var.\nattr'
             node = ast.parse('(%s)' % name)
         except SyntaxError:
-            raise BadIdentifierError('Not a python identifier selected.')
+            raise BadIdentifierError('Not a resolvable python identifier selected.')
         return evaluate.get_primary_and_result(holding_scope, node)
 
 
@@ -669,7 +669,8 @@ class StatementRangeFinder(object):
         for current_line_number in range(get_block_start(self.lines,
                                                          self.lineno),
                                          self.lineno + 1):
-            if not self.explicit_continuation and self.open_count == 0 and self.in_string == '':
+            if not self.explicit_continuation and \
+               self.open_count == 0 and self.in_string == '':
                 last_statement = current_line_number
             self._analyze_line(current_line_number)
         last_indents = self.get_line_indents(last_statement)
