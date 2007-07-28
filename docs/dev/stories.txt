@@ -60,7 +60,7 @@ IDE And UI Stories
 Stories
 =======
 
-> Public Release 0.6 : August 5, 2007
+> Public Release 0.7 : October 28, 2007
 
 
 * Handling the return type of ``yield`` keyword
@@ -153,7 +153,7 @@ Stories
 * Split tuple assignment refactoring
 
 
-> Public Release 0.6m6 : July 29, 2007
-
-
 * Better restructuring dialog
+
+
+> Public Release 0.6 : August 5, 2007

@@ -21,19 +21,57 @@ IDE and the library.
 New Features
 ============
 
-* Importing modules in restructurings
-* Auto-indentation in restructurings
-* Next/prev scope; ``M-C-e/M-C-a``
-* Next/prev statement; ``M-e/M-a``
+* Handling imports when inlining
+* Handling recursive restructurings
+* Better diff highlighting
 
-Restructurings can now handle imports; You can tell rope to add
-imports to files that contain at least once occurrence of the
-restructuring pattern.  This can be useful when you need to import
-something in your goal pattern.  Note that rope does not import
-something if it is already imported.
+Inline method refactoring can add imports when necessary.  For
+instance consider ``mod1.py`` is::
 
-The goal pattern of restructurings can now have multiple lines.  They
-are indented to match the indentation of the matches.
+  import sys
+
+
+  class C(object):
+      pass
+
+  def do_something():
+      print sys.version
+      return C()
+
+and ``mod2.py`` is::
+
+  import mod1
+
+
+  c = mod1.do_something()
+
+After inlining `do_something`, ``mod2.py`` would be::
+
+  import mod1
+  import sys
+
+
+  print sys.version
+  c = mod1.C()
+
+Also rope can inline class methods; for instance in::
+
+  class C(object):
+      @classmethod
+      def say_hello(cls, name):
+          return 'Saying hello to %s from %s' % (name, cls.__name__)
+  hello = C.say_hello('Rope')
+
+inlining `say_hello` will result in::
+
+  class C(object):
+      pass
+  hello = 'Saying hello to %s from %s' % ('Rope', C.__name__)
+
+
+Restructurings can handle recursive patterns like searching for
+``${?a} // ${?b}`` in ``1 // 2 // 3``.  Also the diffs in show history
+and preview changes dialog are highlighted.
 
 
 Getting Started

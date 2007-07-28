@@ -1,8 +1,6 @@
 Small Stories
 =============
 
-- Handling else suites for for statements
-
 * Some of the things in `codeanalyze.WordFinder` can be achieved using
   asts; make a clone and do them there
 * Assignment to parameters in inline method

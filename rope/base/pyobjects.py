@@ -90,7 +90,7 @@ def get_unknown():
     Note that two unknown objects are equal.  So for example you can
     write::
 
-      if pyname.get_object() == get_unknown():
+      if pyname.get_object() != get_unknown():
           print 'Object of pyname is not known'
 
     Rope could have used `None` for indicating unknown objects but

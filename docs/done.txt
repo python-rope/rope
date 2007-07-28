@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.6m6 : July 29, 2007
+
+
 - Better diff highlighting : July 20, 2007
 
 
