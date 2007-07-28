@@ -506,12 +506,13 @@ class SearchableList(object):
 class ProgressBar(object):
 
     def __init__(self, parent):
-        self.text = Tkinter.Label(parent, width=80, justify=Tkinter.LEFT)
+        self.text = Tkinter.Label(parent, width=79, justify=Tkinter.LEFT)
         self.canvas = canvas = Tkinter.Canvas(parent, height=20)
         self.color = 'blue'
         self.back_color = canvas['bg']
         self.percent = 0
-        canvas.create_rectangle(0, 0, canvas['width'], canvas['height'], fill='')
+        canvas.create_rectangle(0, 0, canvas['width'],
+                                canvas['height'], fill='')
         canvas.create_rectangle(0, 0, 0, canvas['height'],
                                 fill=self.color, outline=self.color)
         self.text.grid(row=0)

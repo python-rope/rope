@@ -113,15 +113,23 @@ class ModuleImports(object):
                 break
         else:
             all_imports = self.get_import_statements()
-            last_line = 1
-            blank_lines = 2
-            if all_imports:
-                last_line = all_imports[-1].end_line
-                all_imports[-1].move(last_line)
-                blank_lines = all_imports[-1].blank_lines
+            last_line = self._get_new_import_lineno()
+            blank_lines = self._get_new_import_blanks()
             all_imports.append(importinfo.ImportStatement(
                                import_info, last_line, last_line,
                                blank_lines=blank_lines))
+
+    def _get_new_import_lineno(self):
+        imports = self.get_import_statements()
+        if imports:
+            return imports[-1].end_line
+        return 1
+
+    def _get_new_import_blanks(self):
+        imports = self.get_import_statements()
+        if imports:
+            return imports[-1].blank_lines
+        return 2
 
     def filter_names(self, can_select):
         visitor = actions.RemovingVisitor(
@@ -182,15 +190,14 @@ class ModuleImports(object):
         self.separating_lines = 2
 
     def _first_import_line(self):
-        last_index = 1
-        # Getting the line of the first import fails when the first
-        # import is not in the first non doc line of module
         nodes = self.pymodule.get_ast().body
         first_child = 0
         if self.pymodule.get_doc() is not None:
             first_child = 1
         if len(nodes) > first_child:
             last_index = nodes[first_child].lineno
+        else:
+            last_index = self.pymodule.lines.length()
         return last_index
 
     def _compare_imports(self, stmt1, stmt2):

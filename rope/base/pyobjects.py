@@ -292,7 +292,7 @@ class PyFunction(PyDefinedObject, AbstractFunction):
     def get_kind(self):
         """Get function type
 
-        It returns on of 'function', 'method', 'staticmethod' or
+        It returns one of 'function', 'method', 'staticmethod' or
         'classmethod' strs.
 
         """

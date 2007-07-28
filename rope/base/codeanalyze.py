@@ -47,7 +47,7 @@ class WordRangeFinder(object):
     def get_word_at(self, offset):
         offset = self._get_fixed_offset(offset)
         return self.source[self._find_word_start(offset):
-                                self._find_word_end(offset) + 1]
+                           self._find_word_end(offset) + 1]
 
     def _get_fixed_offset(self, offset):
         if offset >= len(self.source):
@@ -126,7 +126,7 @@ class WordRangeFinder(object):
     def get_primary_at(self, offset):
         offset = self._get_fixed_offset(offset)
         return self.source[self._find_primary_start(offset):
-                                self._find_word_end(offset) + 1].strip()
+                           self._find_word_end(offset) + 1].strip()
 
     def get_splitted_primary_before(self, offset):
         """returns expression, starting, starting_offset
@@ -213,7 +213,6 @@ class WordRangeFinder(object):
         return next_char < len(self.source) and \
                self.source[next_char] == '(' and \
                not self.is_a_class_or_function_name_in_header(offset)
-               
 
     def _find_import_pair_end(self, start):
         next_char = self._find_first_non_space_char(start)

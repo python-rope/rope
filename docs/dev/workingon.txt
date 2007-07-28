@@ -1,6 +1,9 @@
 Small Stories
 =============
 
+* Moving globals to a module with only docstrings
+* Some of the things in `codeanalyze.WordFinder` can be achieved using
+  asts; make a clone and do them there
 * Assignment to parameters in inline method
 * Assignment to parameter warning
 * Refactoring codeanalyze; lots of estimations

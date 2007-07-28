@@ -60,6 +60,7 @@ To Be Discussed
 * `Memory management`_
 * `Getting ready for Python 3.0`_
 * Should `rope.base` be thread safe? which parts?
+* Better `WordRangeFinder`
 
 
 Enhancing Refactorings

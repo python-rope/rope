@@ -64,13 +64,13 @@ class OccurrenceFinder(object):
     def _get_occurrence_pattern(self, name):
         occurrence_pattern = OccurrenceFinder.any('occurrence',
                                                  ['\\b' + name + '\\b'])
-        pattern = re.compile(occurrence_pattern + "|" + self.comment_pattern +
-                             "|" + self.string_pattern)
+        pattern = re.compile(occurrence_pattern + '|' + self.comment_pattern +
+                             '|' + self.string_pattern)
         return pattern
 
     @staticmethod
     def any(name, list_):
-        return "(?P<%s>" % name + "|".join(list_) + ")"
+        return '(?P<%s>' % name + '|'.join(list_) + ')'
 
 
 class Occurrence(object):
