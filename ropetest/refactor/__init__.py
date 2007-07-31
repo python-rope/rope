@@ -640,26 +640,26 @@ class TaskHandleTest(unittest.TestCase):
 
     def test_job_sets(self):
         handle = rope.base.taskhandle.TaskHandle()
-        jobs = handle.create_job_set()
-        self.assertEquals([jobs], handle.get_job_sets())
+        jobs = handle.create_jobset()
+        self.assertEquals([jobs], handle.get_jobsets())
 
     def test_starting_and_finishing_jobs(self):
         handle = rope.base.taskhandle.TaskHandle()
-        jobs = handle.create_job_set(name='test job set', count=1)
+        jobs = handle.create_jobset(name='test job set', count=1)
         jobs.started_job('job1')
         jobs.finished_job()
 
     @testutils.assert_raises(InterruptedTaskError)
     def test_test_checking_status(self):
         handle = rope.base.taskhandle.TaskHandle()
-        jobs = handle.create_job_set()
+        jobs = handle.create_jobset()
         handle.stop()
         jobs.check_status()
 
     @testutils.assert_raises(InterruptedTaskError)
     def test_test_checking_status_when_starting(self):
         handle = rope.base.taskhandle.TaskHandle()
-        jobs = handle.create_job_set()
+        jobs = handle.create_jobset()
         handle.stop()
         jobs.started_job('job1')
 
@@ -674,21 +674,21 @@ class TaskHandleTest(unittest.TestCase):
         handle = rope.base.taskhandle.TaskHandle()
         observer = _MockTaskObserver()
         handle.add_observer(observer)
-        jobs = handle.create_job_set()
+        jobs = handle.create_jobset()
         self.assertEquals(1, observer.called)
 
     def test_calling_the_observer_when_starting_and_finishing_jobs(self):
         handle = rope.base.taskhandle.TaskHandle()
         observer = _MockTaskObserver()
         handle.add_observer(observer)
-        jobs = handle.create_job_set(name='test job set', count=1)
+        jobs = handle.create_jobset(name='test job set', count=1)
         jobs.started_job('job1')
         jobs.finished_job()
         self.assertEquals(3, observer.called)
 
     def test_job_set_get_percent_done(self):
         handle = rope.base.taskhandle.TaskHandle()
-        jobs = handle.create_job_set(name='test job set', count=2)
+        jobs = handle.create_jobset(name='test job set', count=2)
         self.assertEquals(0, jobs.get_percent_done())
         jobs.started_job('job1')
         jobs.finished_job()
@@ -699,7 +699,7 @@ class TaskHandleTest(unittest.TestCase):
 
     def test_getting_job_name(self):
         handle = rope.base.taskhandle.TaskHandle()
-        jobs = handle.create_job_set(name='test job set', count=1)
+        jobs = handle.create_jobset(name='test job set', count=1)
         self.assertEquals('test job set', jobs.get_name())
         self.assertEquals(None, jobs.get_active_job_name())
         jobs.started_job('job1')

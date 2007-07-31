@@ -80,13 +80,6 @@ class Rename(object):
                                                    new_name))
         return changes
 
-    def _create_job_set(self, task_handle, count):
-        if task_handle is not None:
-            job_set = task_handle.create_job_set('Collecting Changes', count)
-        else:
-            job_set = rope.refactor.NullJobSet()
-        return job_set
-
     def _is_renaming_a_function_local_name(self):
         module, lineno = self.old_pyname.get_definition_location()
         if lineno is None:

@@ -4,36 +4,49 @@ from rope.base import exceptions
 class TaskHandle(object):
 
     def __init__(self, name='Task', interrupts=True):
+        """Construct a TaskHandle
+
+        If `interrupts` is `False` the task won't be interrupted by
+        calling `TaskHandle.stop()`.
+
+        """
         self.name = name
         self.interrupts = interrupts
         self.stopped = False
         self.job_sets = []
         self.observers = []
 
-    def is_stopped(self):
-        return self.stopped
-
     def stop(self):
+        """Interrupts the refactoring"""
         if self.interrupts:
             self.stopped = True
             self._inform_observers()
 
-    def create_job_set(self, name='JobSet', count=None):
-        result = JobSet(self, name=name, count=count)
-        self.job_sets.append(result)
-        self._inform_observers()
-        return result
-
-    def get_job_sets(self):
-        return self.job_sets
+    def current_jobset(self):
+        """Return the current `JobSet`"""
+        if self.job_sets:
+            return self.job_sets[-1]
 
     def add_observer(self, observer):
         """Register an observer for this task handle
 
         The observer is notified whenever the task is stopped or
         a job gets finished.
+
         """
         self.observers.append(observer)
+
+    def is_stopped(self):
+        return self.stopped
+
+    def get_jobsets(self):
+        return self.job_sets
+
+    def create_jobset(self, name='JobSet', count=None):
+        result = JobSet(self, name=name, count=count)
+        self.job_sets.append(result)
+        self._inform_observers()
+        return result
 
     def _inform_observers(self):
         for observer in list(self.observers):

@@ -24,16 +24,15 @@ class StoppableTaskRunner(object):
         frame = Tkinter.Frame(toplevel)
         progress = rope.ui.uihelpers.ProgressBar(frame)
         def update_progress():
-            job_sets = handle.get_job_sets()
-            if job_sets:
-                job_set = job_sets[-1]
+            jobset = handle.current_jobset()
+            if jobset:
                 text = ''
-                if job_set.get_name() is not None:
-                    text += job_set.get_name()
-                if job_set.get_active_job_name() is not None:
-                    text += ' : ' + job_set.get_active_job_name()
+                if jobset.get_name() is not None:
+                    text += jobset.get_name()
+                if jobset.get_active_job_name() is not None:
+                    text += ' : ' + jobset.get_active_job_name()
                 progress.set_text(text)
-                percent = job_set.get_percent_done()
+                percent = jobset.get_percent_done()
                 if percent is not None:
                     progress.set_done_percent(percent)
         handle.add_observer(update_progress)

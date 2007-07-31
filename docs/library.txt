@@ -113,8 +113,9 @@ of the extracted variable.  Next we need to calculate the changes::
 
   changes = extractor.get_changes('extracted_variable')
 
-`changes` holds the changes this refactoring makes.  It is an instance
-of a subclass of `rope.base.change.Change`.
+`changes` holds the changes this refactoring makes.  Calculating it
+might be time consuming; See `rope.base.taskhandle.TaskHandle`_
+section for measuring its progress or interrupting it.
 
 
 Previewing And Performing Changes
@@ -176,9 +177,15 @@ should tell rope about the change.  You can do so by using
 `rope.base.libutils.report_change()`.  That is, whenever you want to
 change a module you can do something like::
 
+  # Do the actual writing
   old_contents = read(path)
   write(path, new_content)
+
+  # Inform rope about the change
   libutils.report_change(myproject, path, old_contents)
+
+Where `read` and `write` stand for methods used for reading and
+writing files.
 
 
 Closing The Project
@@ -302,11 +309,45 @@ static object inference.
 `rope.base.taskhandle.TaskHandle`
 =================================
 
-For monitoring the progress and stopping time consuming tasks like
-some of refactorings.  `Project.do()` and `Refactoring.get_changes()`
-of some refactorings take a keyword argument called ``task_handle``.
-You can pass a `rope.base.taskhandle.TaskHandle` object as this
-argument.  See its methods for more information.
+Can be used for stopping and monitoring the progress of time consuming
+tasks like some of refactorings.  `Project.do()` and
+`Refactoring.get_changes()` of most refactorings take a keyword
+parameter called ``task_handle``.  You can pass a `TaskHandle` object
+to them.  A `TaskHandle` can be used for interrupting or observing a
+task.
+
+A task might consist of a few `JobSet`\s.  Each `JobSet` does a few
+jobs.  For instance calculating the changes for renaming a method in a
+class hierarchy has two job sets; We need to find the classes for
+constructing the class hierarchy and then we need to change the
+occurrences.
+
+The `TaskHandle.current_jobset()` returns the most recent `JobSet` or
+`None` if none has been started.  You can use the methods of `JobSet`
+for obtaining information about the current job.  So you might want to
+do something like::
+
+  import rope.base.taskhandle
+
+
+  handle = rope.base.taskhandle.TaskHandle("Test Task")
+
+  def update_progress():
+      jobset = handle.current_jobsets()
+      if jobset:
+          text = ''
+          if jobset.get_name() is not None:
+              text += jobset.get_name()
+          if jobset.get_active_job_name() is not None:
+              text += ' : ' + jobset.get_active_job_name()
+          percent = jobset.get_percent_done()
+          if percent is not None:
+              text = ' ... %s percent done' % percent
+          print text
+
+  handle.add_observer(update_progress)
+
+  changes = extractor.get_changes('extracted_variable', task_handle=handle)
 
 
 Refactorings
