@@ -51,16 +51,23 @@ Rope has dropped Python 2.4 support in this release.
 Hot Topics
 ==========
 
-* `Releasing library package`_
-
 
 To Be Discussed
 ===============
 
 * `Memory management`_
-* `Getting ready for Python 3.0`_
 * Should `rope.base` be thread safe? which parts?
 * Better `WordRangeFinder`
+
+
+Sorting Scope Elements
+======================
+
+Issues:
+
+* Where should we put scope statements that are outside other
+  sub-scopes?
+* How to specify the new order
 
 
 Enhancing Refactorings
@@ -186,47 +193,6 @@ Note that concluded attributes are:
 * PyClass: superclass attributes
 * PyModule: star imports
 * PyPackage: ``__init__.py`` attributes
-
-
-Releasing Library Package
-=========================
-
-Issues:
-
-* Two separate ``README.txt`` files?
-* Separating common, library and IDE documents
-
-New document tree:
-
-  docs/
-    dev/
-      workingon.txt
-      issues.txt
-      done.txt
-      stories.txt
-    library.txt
-    overview.txt
-    tutorial.txt
-    contributing.txt
-    done.txt
-  README.txt
-  COPYING
-
-Library Docs:
-
-* README.txt
-* tutorial.txt
-* overview.txt
-* done.txt
-* library.txt
-* contributing.txt
-
-IDE Docs:
-
-* README.txt
-* done.txt
-* library.txt
-* contributing.txt
 
 
 Memory Management

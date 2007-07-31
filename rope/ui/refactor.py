@@ -17,7 +17,7 @@ from rope.base import exceptions, evaluate
 from rope.refactor import ImportOrganizer
 from rope.ui.actionhelpers import (ConfirmEditorsAreSaved,
                                    StoppableTaskRunner, check_project)
-from rope.ui import uihelpers
+from rope.ui import uihelpers, tkhelpers
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView,
@@ -840,37 +840,38 @@ class RestructureDialog(RefactoringDialog):
             'Rope searches for `pattern` in the project and replaces its\n' \
             'occurrences with `goal`.  They can contain ``${?name}`` and \n' \
             '``${name}`` wildcards.  See ``docs/overview.txt`` for examples.'
-        help_label = Tkinter.Label(frame, text=patterns_help,
-                                   justify=Tkinter.LEFT, width=70)
-        help_label.grid(row=0, columnspan=2, sticky=Tkinter.W)
-        pattern_label.grid(row=1, column=0, sticky=Tkinter.W)
-        self.pattern.grid(row=1, column=1, sticky=Tkinter.W)
-        goal_label.grid(row=2, column=0, sticky=Tkinter.W)
-        self.goal.grid(row=2, column=1, sticky=Tkinter.W)
+        tkhelpers.ToolTip(self.pattern, patterns_help)
+        tkhelpers.ToolTip(self.goal, patterns_help)
+        pattern_label.grid(row=0, column=0, sticky=Tkinter.W)
+        self.pattern.grid(row=0, column=1, sticky=Tkinter.W)
+        goal_label.grid(row=1, column=0, sticky=Tkinter.W)
+        self.goal.grid(row=1, column=1, sticky=Tkinter.W)
 
         # Handling checks
         checks_frame = Tkinter.Frame(frame, borderwidth=1,
                                      relief=Tkinter.RIDGE)
         checks_help = 'Add checks here; One each line.  For instance:\n' \
                       '?var.type == mymod.AClass'
-        checks_label = Tkinter.Label(checks_frame, text=checks_help,
+        checks_label = Tkinter.Label(checks_frame, text='Checks',
                                      justify=Tkinter.LEFT, width=70)
         checks_label.grid(row=0)
         self.checks = Tkinter.Text(checks_frame, height=4, width=70)
         self.checks.grid(row=1)
-        checks_frame.grid(row=3, columnspan=2)
+        checks_frame.grid(row=2, columnspan=2)
+        tkhelpers.ToolTip(self.checks, checks_help)
 
         # Handling Imports
         imports_frame = Tkinter.Frame(frame, borderwidth=1,
                                       relief=Tkinter.RIDGE)
         imports_help = 'Add imports here; These imports are added to ' \
                        'changed files:'
-        imports_label = Tkinter.Label(imports_frame, text=imports_help,
+        imports_label = Tkinter.Label(imports_frame, text='Imports',
                                       justify=Tkinter.LEFT, width=70)
         imports_label.grid(row=0)
         self.imports = Tkinter.Text(imports_frame, height=4, width=70)
         self.imports.grid(row=1)
-        imports_frame.grid(row=4, columnspan=2)
+        tkhelpers.ToolTip(self.imports, imports_help)
+        imports_frame.grid(row=3, columnspan=2)
 
         self.pattern.focus_set()
         return frame

@@ -138,9 +138,6 @@ Stories
 * Generate method and class hierarchies
 
 
-* Sorting methods
-
-
 * Handling tuple parameters
 
 
@@ -153,7 +150,10 @@ Stories
 * Split tuple assignment refactoring
 
 
-* Better restructuring dialog
+* Sorting methods
 
 
 > Public Release 0.6 : August 5, 2007
+
+
+* Better restructuring dialog

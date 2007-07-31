@@ -1,3 +1,4 @@
+import warnings
 from rope.base import exceptions
 
 
@@ -41,6 +42,11 @@ class TaskHandle(object):
 
     def get_jobsets(self):
         return self.job_sets
+
+    def get_job_sets(self):
+        warnings.warn('Use `TaskHandle.get_jobsets` instead',
+                      DeprecationWarning, stacklevel=2)
+        return self.get_jobsets()
 
     def create_jobset(self, name='JobSet', count=None):
         result = JobSet(self, name=name, count=count)

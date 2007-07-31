@@ -95,7 +95,7 @@ There are examples at the end of this document.  But as another
 example we'll extract a variable in a file.  First we need the
 `Resource` object that points to a file in a project::
 
-  resource = libutils.path_to_resource(myproject, '/path/to/my/module')
+  resource = libutils.path_to_resource(myproject, '/path/to/my/module.py')
 
 So we can make our Refactoring class::
 
