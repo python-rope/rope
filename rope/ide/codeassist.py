@@ -405,7 +405,7 @@ class PythonCodeAssist(object):
         finder = occurrences.FilteredFinder(
             self.project.get_pycore(), name, [pyname], unsure=unsure)
         files = self.project.get_pycore().get_python_files()
-        job_set = task_handle.create_job_set('Finding Occurrences',
+        job_set = task_handle.create_jobset('Finding Occurrences',
                                              count=len(files))
         result = []
         for resource in files:

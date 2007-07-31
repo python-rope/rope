@@ -340,7 +340,7 @@ class _ClassesCache(object):
 
     def _get_job_set(self, files, task_handle):
         if self.changed:
-            job_set = task_handle.create_job_set(name='Looking For Classes',
+            job_set = task_handle.create_jobset(name='Looking For Classes',
                                                  count=len(files))
         else:
             job_set = taskhandle.NullJobSet()

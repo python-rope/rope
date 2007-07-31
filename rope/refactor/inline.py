@@ -85,7 +85,7 @@ class InlineMethod(_Inliner):
 
     def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Inline method <%s>' % self.name)
-        job_set = task_handle.create_job_set(
+        job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
         job_set.started_job('Changing defining file')
         self._change_defining_file(changes)

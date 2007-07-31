@@ -100,10 +100,10 @@ class NullTaskHandle(object):
     def stop(self):
         pass
 
-    def create_job_set(self, *args, **kwds):
+    def create_jobset(self, *args, **kwds):
         return NullJobSet()
 
-    def get_job_sets(self):
+    def get_jobsets(self):
         return []
 
     def add_observer(self, observer):

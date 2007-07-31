@@ -68,7 +68,7 @@ class Rename(object):
                             (self.old_name, new_name))
         finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, old_pynames, unsure=unsure, docs=docs)
-        job_set = task_handle.create_job_set('Collecting Changes', len(files))
+        job_set = task_handle.create_jobset('Collecting Changes', len(files))
         for file_ in files:
             job_set.started_job('Working on <%s>' % file_.path)
             new_content = rename_in_module(finder, new_name, resource=file_)

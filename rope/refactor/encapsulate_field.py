@@ -29,7 +29,7 @@ class EncapsulateField(object):
 
     def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Encapsulate field <%s>' % self.name)
-        job_set = task_handle.create_job_set(
+        job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
         rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
                                                       [self.pyname])

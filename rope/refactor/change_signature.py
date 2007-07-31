@@ -41,7 +41,7 @@ class ChangeSignature(object):
     def _change_calls(self, call_changer, in_hierarchy=False,
                       handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Changing signature of <%s>' % self.name)
-        job_set = handle.create_job_set('Collecting Changes',
+        job_set = handle.create_jobset('Collecting Changes',
                                         len(self.pycore.get_python_files()))
         pynames = rename.FindMatchingPyNames(
             self.primary, self.pyname, self.name, False,

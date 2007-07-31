@@ -219,7 +219,7 @@ class MoveGlobal(object):
             raise exceptions.RefactoringError(
                 'Moving global elements to the same module.')
         changes = ChangeSet('Moving global <%s>' % self.old_name)
-        job_set = task_handle.create_job_set(
+        job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
         job_set.started_job('Working on destination module')
         self._change_destination_module(changes, dest)
@@ -371,7 +371,7 @@ class MoveModule(object):
             raise exceptions.RefactoringError(
                 'Move destination for modules should be packages.')
         changes = ChangeSet('Moving module <%s>' % self.old_name)
-        job_set = task_handle.create_job_set(
+        job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()) - 1)
         self._change_other_modules(changes, dest, job_set)
         job_set.started_job('Moving main module')

@@ -304,7 +304,7 @@ def count_changes(change):
     return 1
 
 def create_job_set(task_handle, change):
-    return task_handle.create_job_set(str(change), count_changes(change))
+    return task_handle.create_jobset(str(change), count_changes(change))
 
 
 class _ResourceOperations(object):

@@ -26,7 +26,7 @@ class IntroduceFactoryRefactoring(object):
     def get_changes(self, factory_name, global_factory=False,
                     task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Introduce factory method <%s>' % factory_name)
-        job_set = task_handle.create_job_set(
+        job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
         self._change_occurrences_in_other_modules(changes, factory_name,
                                                   global_factory, job_set)
