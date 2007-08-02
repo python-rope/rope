@@ -1,6 +1,7 @@
 import sys
 
 import rope.base.project
+from rope.base import exceptions
 from rope.base.oi import objectdb, memorydb, shelvedb, transform
 
 
@@ -48,7 +49,7 @@ class ObjectInfoManager(object):
         try:
             self.objectdb.validate_file(
                 self.to_textual.resource_to_path(resource))
-        except SyntaxError:
+        except exceptions.ModuleSyntaxError:
             pass
 
     def _resource_moved(self, resource, new_resource=None):

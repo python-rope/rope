@@ -3,6 +3,9 @@
 ===========
 
 
+- Added ``ignore_syntax_errors`` project config : August 2, 2007
+
+
 > Public Release 0.6m6 : July 29, 2007
 
 

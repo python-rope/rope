@@ -1,7 +1,7 @@
 import rope.base.evaluate
 import rope.base.pyscopes
+from rope.base import exceptions
 from rope.base import ast, pynames
-from rope.base.exceptions import RopeError, AttributeNotFoundError
 
 
 class PyObject(object):
@@ -18,7 +18,8 @@ class PyObject(object):
 
     def get_attribute(self, name):
         if name not in self.get_attributes():
-            raise AttributeNotFoundError('Attribute %s not found' % name)
+            raise exceptions.AttributeNotFoundError(
+                'Attribute %s not found' % name)
         return self.get_attributes()[name]
 
     def get_type(self):
@@ -183,7 +184,8 @@ class PyDefinedObject(object):
             return self._get_structural_attributes()[name]
         if name in self._get_concluded_attributes():
             return self._get_concluded_attributes()[name]
-        raise AttributeNotFoundError('Attribute %s not found' % name)
+        raise exceptions.AttributeNotFoundError('Attribute %s not found' %
+                                                name)
 
     def get_scope(self):
         if self.scope is None:
@@ -408,7 +410,18 @@ class PyModule(_PyModule):
             source_code = source_code.encode('utf-8')
         self.source_code = source_code
         self._lines = None
-        ast_node = ast.parse(source_code.rstrip(' \t'))
+        try:
+            ast_node = ast.parse(source_code.rstrip(' \t'))
+        except SyntaxError, e:
+            if not pycore.project.prefs.get('ignore_syntax_errors', False):
+                filename = 'string'
+                if resource:
+                    filename = resource.path
+                raise exceptions.ModuleSyntaxError(
+                    'Syntax error in file <%s> line <%s>: %s' %
+                    (filename, e.lineno, e.msg))
+            else:
+                ast_node = ast.parse('\n')
         self.star_imports = []
         super(PyModule, self).__init__(pycore, ast_node, resource)
 
@@ -610,7 +623,7 @@ class _ScopeVisitor(object):
             if module is not None:
                 try:
                     pyname = module.get_attribute(name)
-                except AttributeNotFoundError:
+                except exceptions.AttributeNotFoundError:
                     pyname = pynames.AssignedName(node.lineno)
             self.names[name] = pyname
 
@@ -709,7 +722,7 @@ class _ClassInitVisitor(_AssignVisitor):
         pass
 
 
-class IsBeingInferredError(RopeError):
+class IsBeingInferredError(exceptions.RopeError):
     pass
 
 

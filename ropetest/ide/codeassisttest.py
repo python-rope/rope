@@ -1,7 +1,7 @@
 import unittest
 
-from rope.ide.codeassist import (PythonCodeAssist, RopeSyntaxError,
-                                 Template, ProposalSorter)
+from rope.base import exceptions
+from rope.ide.codeassist import PythonCodeAssist, Template, ProposalSorter
 from ropetest import testutils
 
 
@@ -67,10 +67,10 @@ class CodeAssistTest(unittest.TestCase):
                      if x.name == 'variable' and x.kind == 'global'])
         self.assertEquals(1, count)
 
+    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_throwing_exception_in_case_of_syntax_errors(self):
         code = 'sample (sdf+)\n'
-        self.assertRaises(RopeSyntaxError,
-                          lambda: self.assist.assist(code, len(code)))
+        self.assist.assist(code, len(code))
 
     def test_ignoring_errors_in_current_line(self):
         code = 'def my_func():\n    return 2\nt = '

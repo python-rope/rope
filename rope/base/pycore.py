@@ -5,7 +5,7 @@ import sys
 import rope.base.oi.objectinfer
 import rope.base.oi.objectinfo
 import rope.base.project
-from rope.base import ast, taskhandle, codeanalyze
+from rope.base import ast, exceptions, taskhandle, codeanalyze
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.oi import dynamicoi
 from rope.base.pyobjects import PyModule, PyPackage, PyClass
@@ -351,7 +351,7 @@ class _ClassesCache(object):
             try:
                 classes = self._calculate_resource_classes(resource)
                 self.cache[resource] = classes
-            except SyntaxError:
+            except exceptions.ModuleSyntaxError:
                 return []
         return self.cache[resource]
 
@@ -397,7 +397,7 @@ def perform_soi_on_changed_scopes(project, resource, old_contents):
                 end = scope.get_end()
                 return detector.consume_changes(start, end)
             pycore.analyze_module(resource, should_analyze, search_subscopes)
-        except SyntaxError:
+        except exceptions.ModuleSyntaxError:
             pass
 
 

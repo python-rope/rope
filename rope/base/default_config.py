@@ -77,6 +77,11 @@ def set_prefs(prefs):
     # unit-tests use 4 spaces it is more reliable, too.
     prefs['indent_size'] = 4
 
+    # If `True` modules with syntax errors are considered to be empty.
+    # The default value is `False`; When `False` syntax errors raise
+    # `rope.base.exceptions.ModuleSyntaxError` exception.
+    prefs['ignore_syntax_errors'] = False
+
 
 def project_opened(project):
     """This function is called after the project is opened"""

@@ -11,10 +11,6 @@ from rope.ide import pydoc
 from rope.refactor import occurrences, functionutils
 
 
-class RopeSyntaxError(RopeError):
-    pass
-
-
 class CodeAssistProposal(object):
     """The base class for proposals reported by CodeAssist"""
 
@@ -229,11 +225,8 @@ class _CodeCompletionCollector(object):
             return 'parameter'
 
     def get_code_completions(self):
-        try:
-            module_scope = get_pymodule(self.pycore, self.source_code,
-                                        self.resource).get_scope()
-        except SyntaxError, e:
-            raise RopeSyntaxError(e)
+        module_scope = get_pymodule(self.pycore, self.source_code,
+                                    self.resource).get_scope()
         result = {}
         inner_scope = module_scope.get_inner_scope_for_line(self.lineno,
                                                             self.current_indents)

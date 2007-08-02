@@ -848,6 +848,14 @@ class RopeFolderTest(unittest.TestCase):
         myfile = self.project.get_file('myfile.txt')
         self.assertTrue(self.project.is_ignored(myfile))
 
+    def test_ignoring_syntax_errors(self):
+        self.project = testutils.sample_project(ropefolder=None,
+                                                ignore_syntax_errors=True)
+        pycore = self.project.pycore
+        mod = pycore.create_module(self.project.root, 'mod')
+        mod.write('xyz print')
+        pymod = pycore.resource_to_pyobject(mod)
+
 
 def suite():
     result = unittest.TestSuite()

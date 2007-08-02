@@ -1,7 +1,8 @@
 import sys
 import unittest
 
-from rope.base.pycore import ModuleNotFoundError, _TextChangeDetector
+from rope.base import exceptions
+from rope.base.pycore import _TextChangeDetector
 from rope.base.pyobjects import get_base_type
 from ropetest import testutils
 
@@ -89,7 +90,7 @@ class PyCoreTest(unittest.TestCase):
         var = sample_class.get_attribute('InnerClass').get_object()
         self.assertEquals(get_base_type('Type'), var.get_type())
 
-    @testutils.assert_raises(ModuleNotFoundError)
+    @testutils.assert_raises(exceptions.ModuleNotFoundError)
     def test_non_existent_module(self):
         self.pycore.get_module('doesnotexistmodule')
 
@@ -480,6 +481,10 @@ class PyCoreTest(unittest.TestCase):
         mod = self.pycore.get_string_module('while False:\n    myvar = 1\n')
         a_var = mod.get_attribute('myvar')
         self.assertEquals((mod, 2), a_var.get_definition_location())
+
+    @testutils.assert_raises(exceptions.ModuleSyntaxError)
+    def test_syntax_errors_in_code(self):
+        mod = self.pycore.get_string_module('xyx print\n')
 
 
 class PyCoreInProjectsTest(unittest.TestCase):

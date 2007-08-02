@@ -24,3 +24,7 @@ class AttributeNotFoundError(RopeError):
 
 class NameNotFoundError(RopeError):
     """Attribute not found exception"""
+
+
+class ModuleSyntaxError(RopeError):
+    """Module has syntax errors"""
