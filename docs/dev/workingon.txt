@@ -1,8 +1,7 @@
 Small Stories
 =============
 
-- Using tooltips in restructuring dialog
-
+* Updating and adding docs on SOI
 * Adding restructuring scope; local scope, module, all files?
 * Better search triggering in find type dialog
 * Some of the things in `codeanalyze.WordFinder` can be achieved using

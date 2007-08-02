@@ -831,10 +831,10 @@ class RestructureDialog(RefactoringDialog):
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
-        goal_label = Tkinter.Label(frame, text='Goal :')
-        pattern_label = Tkinter.Label(frame, text='Pattern :')
-        self.pattern = Tkinter.Text(frame, width=50, height=2)
-        self.goal = Tkinter.Text(frame, width=50, height=2)
+        goal_label = Tkinter.Label(frame, text='Goal')
+        pattern_label = Tkinter.Label(frame, text='Pattern')
+        self.pattern = Tkinter.Text(frame, width=62, height=2)
+        self.goal = Tkinter.Text(frame, width=62, height=2)
 
         patterns_help = \
             'Rope searches for `pattern` in the project and replaces its\n' \
@@ -864,7 +864,7 @@ class RestructureDialog(RefactoringDialog):
         imports_frame = Tkinter.Frame(frame, borderwidth=1,
                                       relief=Tkinter.RIDGE)
         imports_help = 'Add imports here; These imports are added to ' \
-                       'changed files:'
+                       'changed files'
         imports_label = Tkinter.Label(imports_frame, text='Imports',
                                       justify=Tkinter.LEFT, width=70)
         imports_label.grid(row=0)

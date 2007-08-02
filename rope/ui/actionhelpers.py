@@ -44,14 +44,16 @@ class StoppableTaskRunner(object):
                 self.exception = None
 
             def __call__(self):
+                toplevel.bind('<<dont_wait_here>>', self._quit)
                 try:
-                    try:
-                        self.result = self.task(handle)
-                    except Exception, e:
-                        self.exception = e
+                    self.result = self.task(handle)
+                except Exception, e:
+                    self.exception = e
                 finally:
-                    toplevel.quit()
-                    toplevel.update_idletasks()
+                    toplevel.event_generate('<<dont_wait_here>>')
+
+            def _quit(self, event):
+                toplevel.quit()
 
         calculate = Calculate(self.task)
         def stop(event=None):

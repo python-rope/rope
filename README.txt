@@ -21,57 +21,7 @@ IDE and the library.
 New Features
 ============
 
-* Handling imports when inlining
-* Handling recursive restructurings
-* Better diff highlighting
-
-Inline method refactoring can add imports when necessary.  For
-instance consider ``mod1.py`` is::
-
-  import sys
-
-
-  class C(object):
-      pass
-
-  def do_something():
-      print sys.version
-      return C()
-
-and ``mod2.py`` is::
-
-  import mod1
-
-
-  c = mod1.do_something()
-
-After inlining `do_something`, ``mod2.py`` would be::
-
-  import mod1
-  import sys
-
-
-  print sys.version
-  c = mod1.C()
-
-Also rope can inline class methods; for instance in::
-
-  class C(object):
-      @classmethod
-      def say_hello(cls, name):
-          return 'Saying hello to %s from %s' % (name, cls.__name__)
-  hello = C.say_hello('Rope')
-
-inlining `say_hello` will result in::
-
-  class C(object):
-      pass
-  hello = 'Saying hello to %s from %s' % ('Rope', C.__name__)
-
-
-Restructurings can handle recursive patterns like searching for
-``${?a} // ${?b}`` in ``1 // 2 // 3``.  Also the diffs in show history
-and preview changes dialog are highlighted.
+*
 
 
 Getting Started
@@ -104,7 +54,7 @@ inference problems and they support a limited number of refactorings.
 *Rope* tries to improve these limitations.
 
 The main goal of *rope* is to concentrate on the type inference and
-refactoring of python programs and not a state of art IDE (At least
+refactoring of python programs and not a state of art IDE (at least
 not in the first phase).  The type inference and refactoring parts
 will not be dependent on *rope* IDE and if successful, will be
 released as standalone programs and libraries so that other projects

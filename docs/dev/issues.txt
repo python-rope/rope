@@ -67,7 +67,14 @@ Issues:
 
 * Where should we put scope statements that are outside other
   sub-scopes?
-* How to specify the new order
+
+  * Keep them on their own place; Might cause problems
+  * Put them at the end of scope; What to do for imports
+  * Put them at the start of scope; Might cause problems
+  * Hang them to the upper scope; Problems like imports
+  * Hang them to the lower scope; Problems like __main__ checks
+
+* How to specify the new order?
 
 
 Enhancing Refactorings

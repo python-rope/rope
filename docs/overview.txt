@@ -57,7 +57,7 @@ This section shows some random refactorings that you can perform using
 rope.
 
 
-Renaming attributes
+Renaming Attributes
 -------------------
 
 Consider we have::
@@ -187,6 +187,40 @@ After renaming `func` to `newfunc` we should have::
   eval('newfunc()')
 
 
+Rename When Unsure
+------------------
+
+This option tells rope to rename when it doesn't know whether it is an
+exact match or not.  For example after renaming `C.a_func` when the
+'rename when unsure' option is set in::
+
+  class C(object):
+
+      def a_func(self):
+          pass
+
+  def a_func(arg):
+      arg.a_func()
+
+  C().a_func()
+  
+we would have::
+
+  class C(object):
+
+      def new_func(self):
+          pass
+
+  def a_func(arg):
+      arg.new_func()
+
+  C().new_func()
+
+Note that the global `a_func` was not renamed because we are sure that
+it is not a match.  But when using this option there might be some
+unexpected renames.  So only use this option when the name is not
+another python defined elements.
+
 Move Method Refactoring
 -----------------------
 
@@ -279,7 +313,7 @@ to `a.attr`::
 
       def __init__(self):
           self.a = A()
-          self.attr = 1
+          self.a.attr = 1
 
   b = B()
   print(b.a.attr)
@@ -412,10 +446,57 @@ Change Occurrences Refactoring
 
 Change occurrences refactoring is a special refactoring.  It replaces
 occurrences of something with what you want.  This refactoring is
-different from rename refactoring; It only changes the scope
-it was invoked from.  Second it does not rename anything it only
-replaces occurrences and has no side-effects.  This refactoring
-can be used to perform some non-standard refactorings.
+different from rename refactoring; It only changes the scope it was
+invoked from.  Second it does not rename anything it only replaces
+occurrences and has no side-effects.  This refactoring can be used to
+perform some non-standard refactorings.
+
+
+Inline Method Refactoring
+-------------------------
+
+Inline method refactoring can add imports when necessary.  For
+instance consider ``mod1.py`` is::
+
+  import sys
+
+
+  class C(object):
+      pass
+
+  def do_something():
+      print sys.version
+      return C()
+
+and ``mod2.py`` is::
+
+  import mod1
+
+
+  c = mod1.do_something()
+
+After inlining `do_something`, ``mod2.py`` would be::
+
+  import mod1
+  import sys
+
+
+  print sys.version
+  c = mod1.C()
+
+Also rope can inline class methods; for instance in::
+
+  class C(object):
+      @classmethod
+      def say_hello(cls, name):
+          return 'Saying hello to %s from %s' % (name, cls.__name__)
+  hello = C.say_hello('Rope')
+
+inlining `say_hello` will result in::
+
+  class C(object):
+      pass
+  hello = 'Saying hello to %s from %s' % ('Rope', C.__name__)
 
 
 Sorting Imports
@@ -714,6 +795,9 @@ using a ``${var}.name`` pattern.
 Object Inference
 ================
 
+This section is a bit out of date.  SOI can do more than described
+here (See unittests).  Hope to update this someday!
+
 
 Static Object Inference
 -----------------------
@@ -787,7 +871,7 @@ finding useful object information.  Rope runs SOI analysis whenever a
 files is changed on the changed scopes automatically. (This can be
 overridden in project ``config.py``.)
 
-Many kind of information is collected during SOI like per name data
+Many kinds of information is collected during SOI like per name data
 for builtin container types::
 
   l1 = [C()]
@@ -818,55 +902,17 @@ is for achieving the same result as DOI you might need to run SOI on
 more than one module and more than once (not considering dynamic
 situations.) One advantage of SOI is that it is much faster than DOI.
 
-Many enhancements to rope's object inference has been planned and till
-``0.5`` release most of them will be implemented.  I'll write more
-about them in future releases.
-
-'Rename when unsure' option has been added to rename refactoring.  This
-option tells rope to rename when it doesn't know whether it is an
-exact match or not.  For example after renaming `C.a_func` when the
-'rename when unsure' option is set in::
-
-  class C(object):
-
-      def a_func(self):
-          pass
-
-  def a_func(arg):
-      arg.a_func()
-
-  C().a_func()
-  
-we would have::
-
-  class C(object):
-
-      def new_func(self):
-          pass
-
-  def a_func(arg):
-      arg.new_func()
-
-  C().new_func()
-
-Note that the global `a_func` was not renamed because we are sure that
-it is not a match.  But when using this option there might be some
-unexpected renames.  So only use this option when the name is not
-another python defined elements.
-
 
 Dynamic Object Inference
 ------------------------
 
-Dynamic type inference gets its needed information from running
-modules (``M-X p``) or unit tests (``M-X t``).  You open the module
-to run (probably your test suite), then use ``M-X p`` or ``M-X t`` if
-it is a test suite.  Since as the program runs, rope gathers
-type information, the program runs slower.  Right now rope doesn't
-have a good interface for running programs.  It just prints the output
-to the terminal and does not get inputs.  This will be enhanced in
-future releases. After the program is run, you can get better code
-assists and some of the refactorings perform much better.
+Dynamic type inference collects its information by running modules
+(``C-c x p``) or unit tests (``C-c x t``).  Since as the program runs,
+rope gathers type information, the program runs slower.  Right now
+rope doesn't have a good interface for running programs.  It just
+prints the output to the terminal and does not get inputs.  This will
+be enhanced in future releases. After the program is run, you can get
+better code assists and some of the refactorings perform much better.
 
 ``mod1.py``::
 
@@ -945,7 +991,7 @@ Guessing Function Returned Value Based On Parameters
   func(C1())
   func(C2())
 
-After running `mod1` module test rope's DOI this way:
+After running `mod1` either SOI or DOI on this module you can test:
 
 ``mod2.py``::
 
