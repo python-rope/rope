@@ -21,13 +21,16 @@ class TextIndenter(object):
         self._set_line_indents(lineno, new_indents)
 
     def indent(self, lineno):
-        """Indents a line"""
+        """Indent a line"""
         current_indents = self._count_line_indents(lineno)
         new_indents = current_indents + self.indents
         self._set_line_indents(lineno, new_indents)
 
     def entering_new_line(self, lineno):
-        """Indents a line using `correct_indentation` and last line indents"""
+        """Indent a line
+
+        Uses `correct_indentation` and last line indents
+        """
         last_line = ""
         if lineno > 1:
             last_line = self.line_editor.get_line(lineno - 1)
@@ -75,46 +78,38 @@ class PythonCodeIndenter(TextIndenter):
     def __init__(self, editor, indents=4):
         super(PythonCodeIndenter, self).__init__(editor, indents)
 
-    def _get_last_non_empty_line(self, lineno):
+    def _last_non_blank(self, lineno):
         current_line = lineno - 1
         while current_line != 1 and \
-                  self.line_editor.get_line(current_line).strip() == '':
+              self.line_editor.get_line(current_line).strip() == '':
             current_line -= 1
         return current_line
-
-    def _get_starting_backslash_line(self, lineno):
-        current = lineno
-        while current != 1:
-            new_line = current - 1
-            if not self.line_editor.get_line(new_line).rstrip().endswith('\\'):
-                return current
-            current = new_line
-        return 1
 
     def _get_correct_indentation(self, lineno):
         if lineno == 1:
             return 0
         new_indent = self._get_base_indentation(lineno)
 
-        prev_lineno = self._get_last_non_empty_line(lineno)
+        prev_lineno = self._last_non_blank(lineno)
         prev_line = self.line_editor.get_line(prev_lineno)
         if prev_lineno == lineno or prev_line.strip() == '':
             new_indent = 0
         current_line = self.line_editor.get_line(lineno)
-        new_indent += self._get_indentation_changes_caused_by_current_stmt(current_line)
+        new_indent += self._indents_caused_by_current_stmt(current_line)
         return new_indent
 
     def _get_base_indentation(self, lineno):
         range_finder = codeanalyze.StatementRangeFinder(
-            self.line_editor, self._get_last_non_empty_line(lineno))
+            self.line_editor, self._last_non_blank(lineno))
         start = range_finder.get_statement_start()
         if not range_finder.is_line_continued():
-            changes = self._get_indentation_changes_caused_by_prev_stmt(
-                (start, self._get_last_non_empty_line(lineno)))
+            changes = self._indents_caused_by_prev_stmt(
+                (start, self._last_non_blank(lineno)))
             return self._count_line_indents(start) + changes
         if range_finder.last_open_parens():
             open_parens = range_finder.last_open_parens()
-            if self.line_editor.get_line(open_parens[0])[open_parens[1] + 1:].strip() == '':
+            parens_line = self.line_editor.get_line(open_parens[0])
+            if parens_line[open_parens[1] + 1:].strip() == '':
                 if len(range_finder.open_parens) > 1:
                     return range_finder.open_parens[-2][1] + 1
                 else:
@@ -135,10 +130,9 @@ class PythonCodeIndenter(TextIndenter):
                 else:
                     return len(start_line) + 1
         else:
-            return self._count_line_indents(self._get_last_non_empty_line(lineno))
+            return self._count_line_indents(self._last_non_blank(lineno))
 
-
-    def _get_indentation_changes_caused_by_prev_stmt(self, stmt_range):
+    def _indents_caused_by_prev_stmt(self, stmt_range):
         first_line = self.line_editor.get_line(stmt_range[0])
         last_line = self.line_editor.get_line(stmt_range[1])
         new_indent = 0
@@ -155,7 +149,7 @@ class PythonCodeIndenter(TextIndenter):
             new_indent -= self.indents
         return new_indent
 
-    def _get_indentation_changes_caused_by_current_stmt(self, current_line):
+    def _indents_caused_by_current_stmt(self, current_line):
         new_indent = 0
         if current_line.strip() == 'else:':
             new_indent -= self.indents
@@ -171,4 +165,3 @@ class PythonCodeIndenter(TextIndenter):
     def correct_indentation(self, lineno):
         """Correct the indentation of the line containing the given index"""
         self._set_line_indents(lineno, self._get_correct_indentation(lineno))
-

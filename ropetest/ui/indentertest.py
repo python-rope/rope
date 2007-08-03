@@ -232,12 +232,10 @@ class PythonCodeIndenterTest(unittest.TestCase):
         self.assertEquals('def f():\n    return (2,\n            3)\na = 10',
                           self.editor.get_text())
 
-    # TODO: handle this case
-    def xxx_test_ignoring_back_slash_in_comments(self):
+    def test_ignoring_back_slash_in_comments(self):
         self.editor.set_text('# hello \\\na = 10')
         self.indenter.correct_indentation(2)
         self.assertEquals('# hello \\\na = 10', self.editor.get_text())
-
 
     def test_entering_a_new_line(self):
         self.editor.set_text('\n')

@@ -659,7 +659,7 @@ class StatementRangeFinder(object):
                 self.open_count -= 1
                 if self.open_parens:
                     self.open_parens.pop()
-        if current_line.rstrip().endswith('\\'):
+        if current_line and char != '#' and current_line.endswith('\\'):
             self.explicit_continuation = True
         else:
             self.explicit_continuation = False

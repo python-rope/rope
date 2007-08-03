@@ -1,18 +1,16 @@
 Small Stories
 =============
 
-- Using file size for detecting changes, too
-- Clearing redo list after each do
-- Renaming `Timekeeper` to `ChangeIndicator`
+* Commenting based on the line of syntax error in codeassist?
 
 * Updating and adding docs on SOI
 * Adding restructuring scope; local scope, module, all files?
 * Better search triggering in find type dialog
 * Some of the things in `codeanalyze.WordFinder` can be achieved using
-  asts; make a clone and do them there
+  asts; make a clone and test them there
+* Refactoring codeanalyze; lots of estimations
 * Assignment to parameters in inline method
 * Assignment to parameter warning
-* Refactoring codeanalyze; lots of estimations
 
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?

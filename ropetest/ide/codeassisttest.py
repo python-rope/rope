@@ -482,11 +482,10 @@ class CodeAssistTest(unittest.TestCase):
         doc = self.assist.get_doc(src, src.rindex('replace') + 1)
         self.assertTrue(doc is not None)
 
-    # TODO: should comment till the end of scope and not block
-    def xxx_test_not_proposing_variables_defined_till_the_end_of_scope(self):
+    def test_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'
         result = self.assist.assist(code, code.index('a_v') + 3)
-        self.assert_completion_not_in_result('a_var', 'global', result)
+        self.assert_completion_in_result('a_var', 'global', result)
 
     def test_completing_in_uncomplete_try_blocks(self):
         code = 'try:\n    a_var = 10\n    a_'

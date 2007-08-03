@@ -22,12 +22,12 @@ class CompletionProposal(CodeAssistProposal):
     """A completion proposal
 
     The `kind` instance variable shows the kind of the proposal and
-    can be ``global``, ``local``, ``builtin``, ``attribute``,
-    ``keyword``, ``parameter_keyword``, and ``template``.
+    can be 'global', 'local', 'builtin', 'attribute', 'keyword',
+    'parameter_keyword', and 'template'.
 
     The `type` instance variable shows the type of the proposal and
-    can be ``variable``, ``class``, ``function``, ``imported`` ,
-    ``paramter`` and `None`.
+    can be 'variable', 'class', 'function', 'imported' , 'paramter'
+    and `None`.
 
     """
 
@@ -57,9 +57,9 @@ class TemplateProposal(CodeAssistProposal):
 class Template(object):
     """Templates reported by CodeAssist
 
-    Variables in templates are in the format ${variable}. To put
-    a dollar sign in the template put $$. To set the place of the
-    cursor use ${cursor}.
+    Variables in templates are in ``${variable}`` format. To put a
+    dollar sign in the template put $$. To set the place of the cursor
+    use ${cursor}.
     """
 
     def __init__(self, template):
@@ -68,8 +68,11 @@ class Template(object):
     var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>[a-zA-Z][\w]*)}')
 
     def variables(self):
-        """Returns the list of variables sorted by their order
-        of occurence in the template
+        """Get template variables
+        
+        Return the list of variables sorted by their order of
+        occurence in the template.
+
         """
         result = []
         for match in self.var_pattern.finditer(self.template):
@@ -103,8 +106,8 @@ class Proposals(object):
     """A CodeAssist result.
 
     Attribute:
-    completions -- A list of CompletionProposals
-    templates -- A list of TemplateProposals
+    completions -- A list of `CompletionProposal`\s
+    templates -- A list of `TemplateProposal`\s
     start_offset -- completion start offset
 
     """
@@ -378,8 +381,8 @@ class PythonCodeAssist(object):
                          starting_offset)
 
     def get_definition_location(self, source_code, offset, resource=None):
-        return _GetDefinitionLocation(self.project, source_code,
-                                      offset, resource).get_definition_location()
+        return _GetDefinitionLocation(self.project, source_code, offset,
+                                      resource).get_definition_location()
 
     def get_doc(self, source_code, offset, resource=None):
         pymodule = get_pymodule(self.project.pycore, source_code, resource)
@@ -439,6 +442,8 @@ class ProposalSorter(object):
 
     def __init__(self, code_assist_proposals):
         self.proposals = code_assist_proposals
+        self.preference = ['class', 'function', 'variable',
+                           'parameter', 'imported', None]
 
     def get_sorted_proposal_list(self):
         local_proposals = []
@@ -472,15 +477,13 @@ class ProposalSorter(object):
         return result
 
     def _pyname_proposal_cmp(self, proposal1, proposal2):
-        preference = ['class', 'function', 'variable',
-                      'parameter', 'imported', None]
         if proposal1.type != proposal2.type:
-            return cmp(preference.index(proposal1.type),
-                       preference.index(proposal2.type))
-        return self._compare_names_with_under_lines(proposal1.name,
-                                                    proposal2.name)
+            return cmp(self.preference.index(proposal1.type),
+                       self.preference.index(proposal2.type))
+        return self._compare_underlined_names(proposal1.name,
+                                              proposal2.name)
 
-    def _compare_names_with_under_lines(self, name1, name2):
+    def _compare_underlined_names(self, name1, name2):
         def underline_count(name):
             result = 0
             while result < len(name) and name[result] == '_':

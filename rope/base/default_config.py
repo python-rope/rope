@@ -48,10 +48,9 @@ def set_prefs(prefs):
     #   'shelve' but probably more reliable.  But it is much less CPU
     #   efficient.
     #
-    # The choice of the objectdb might be hard.  I prefer
-    # 'persisted_memory' and think it is the best.  For large
-    # projects I prefer 'shelve'.  If you encounter mysterious
-    # problems when using 'shelve' use the slower 'sqlite'.
+    # 'persisted_memory' is the best most of the time.  If your
+    # project is very large, you might consider 'shelve' or the
+    # slower 'sqlite'.
     prefs['objectdb_type'] = 'persisted_memory'
 
     # Shows whether to save history across sessions.  Defaults to

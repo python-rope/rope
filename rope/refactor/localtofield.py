@@ -48,4 +48,3 @@ class LocalToField(object):
                pyname in holding_scope.get_names().values() and \
                holding_scope.get_kind() == 'Function' and \
                parent is not None and parent.get_kind() == 'Class'
-

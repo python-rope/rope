@@ -39,7 +39,6 @@ Metaphor: Supporting restructurings
 Other Possible Goals:
 
 * Finding similar pieces to extracted
-* Formatting?
 
 
 Release Issues
@@ -116,7 +115,7 @@ Handling Name Redefinitions
 ===========================
 
 Currently python elements overwrite others with the same name.  This
-makes some problems for some refactorings.
+might cause problems for some refactorings.
 
 
 Enhancing Refactorings
