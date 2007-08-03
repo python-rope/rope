@@ -322,7 +322,7 @@ class FilteredResourceObserver(object):
         if timekeeper is not None:
             self.timekeeper = timekeeper
         else:
-            self.timekeeper = Timekeeper()
+            self.timekeeper = ChangeIndicator()
         if initial_resources is not None:
             for resource in initial_resources:
                 self.add_resource(resource)
@@ -330,7 +330,7 @@ class FilteredResourceObserver(object):
     def add_resource(self, resource):
         """Add a resource to the list of interesting resources"""
         if resource.exists():
-            self.resources[resource] = self.timekeeper.getmtime(resource)
+            self.resources[resource] = self.timekeeper.get_indicator(resource)
         else:
             self.resources[resource] = None
 
@@ -395,7 +395,7 @@ class FilteredResourceObserver(object):
     def _perform_changes(self, changes):
         for resource in changes.changes:
             self.observer.resource_changed(resource)
-            self.resources[resource] = self.timekeeper.getmtime(resource)
+            self.resources[resource] = self.timekeeper.get_indicator(resource)
         for resource, new_resource in changes.moves.items():
             self.resources[resource] = None
             if new_resource is not None:
@@ -404,7 +404,7 @@ class FilteredResourceObserver(object):
                 self.observer.resource_removed(resource)
         for resource in changes.creations:
             self.observer.resource_created(resource)
-            self.resources[resource] = self.timekeeper.getmtime(resource)
+            self.resources[resource] = self.timekeeper.get_indicator(resource)
 
     def validate(self, resource):
         moved = self._search_resource_moves(resource)
@@ -464,7 +464,7 @@ class FilteredResourceObserver(object):
     def _is_changed(self, resource):
         if self.resources[resource] is None:
             return False
-        return self.resources[resource] != self.timekeeper.getmtime(resource)
+        return self.resources[resource] != self.timekeeper.get_indicator(resource)
 
     def _calculate_new_resource(self, main, new_main, resource):
         if new_main is None:
@@ -473,11 +473,12 @@ class FilteredResourceObserver(object):
         return resource.project.get_resource(new_main.path + diff)
 
 
-class Timekeeper(object):
+class ChangeIndicator(object):
 
-    def getmtime(self, resource):
-        """Return the modification time of a `Resource`."""
-        return os.path.getmtime(resource.real_path)
+    def get_indicator(self, resource):
+        """Return the modification time and size of a `Resource`."""
+        return (os.path.getmtime(resource.real_path),
+                os.path.getsize(resource.real_path))
 
 
 class _Changes(object):

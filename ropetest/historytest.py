@@ -214,6 +214,13 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEquals(set([change1]),
                           set(self.history.get_file_undo_list(old_file)))
 
+    def test_clearing_redo_list_after_do(self):
+        change = ChangeContents(self.file1, '1')
+        self.history.do(change)
+        self.history.undo()
+        self.history.do(change)
+        self.assertEquals(0, len(self.history.redo_list))
+
 
 class SavingHistoryTest(unittest.TestCase):
 

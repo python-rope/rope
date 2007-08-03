@@ -65,16 +65,58 @@ Sorting Scope Elements
 
 Issues:
 
-* Where should we put scope statements that are outside other
-  sub-scopes?
+Statements
+----------
 
-  * Keep them on their own place; Might cause problems
-  * Put them at the end of scope; What to do for imports
-  * Put them at the start of scope; Might cause problems
-  * Hang them to the upper scope; Problems like imports
-  * Hang them to the lower scope; Problems like __main__ checks
+Where should we put scope statements that are outside other
+sub-scopes?
 
-* How to specify the new order?
+* Keep them on their own place; Might cause problems
+* Put them at the end of scope; What to do for imports
+* Put them at the start of scope; Might cause problems
+* Hang them to the upper scope; Problems like imports
+* Hang them to the lower scope; Problems like __main__ checks
+
+One way of solving it might be to insert each block after all of the
+blocks that appear before it.  This solves the problem for imports and
+__main__ checks.
+
+
+Blanks
+------
+
+What to do with blanks?
+
+* Each scope should own the blanks after it
+* Each scope should own the blanks before it
+* Leave the blanks in their own places
+* Use a predefined number of blanks; 1 or 2?
+* Each scopes should own the blanks after it except the last one
+
+
+Specifying The New Order
+------------------------
+
+How to specify the new order?
+
+
+Sort Kinds
+----------
+
+* Alphabetically
+* Classes first
+* Functions first
+* Not-underlined first
+* With-pydocs first
+* Longest first
+* Manual
+
+
+Handling Name Redefinitions
+===========================
+
+Currently python elements overwrite others with the same name.  This
+makes some problems for some refactorings.
 
 
 Enhancing Refactorings

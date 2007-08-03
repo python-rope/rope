@@ -1,7 +1,9 @@
 Small Stories
 =============
 
-- Adding ``ignore_syntax_errors`` project config
+- Using file size for detecting changes, too
+- Clearing redo list after each do
+- Renaming `Timekeeper` to `ChangeIndicator`
 
 * Updating and adding docs on SOI
 * Adding restructuring scope; local scope, module, all files?

@@ -43,6 +43,7 @@ class History(object):
             self.undo_list.append(changes)
             if len(self.undo_list) > self.max_undos:
                 del self.undo_list[0]
+        del self.redo_list[:]
 
     def _is_change_interesting(self, changes):
         for resource in changes.get_changed_resources():

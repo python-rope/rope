@@ -545,23 +545,23 @@ class ResourceObserverTest(unittest.TestCase):
     def test_validation_and_changing_files(self):
         my_file = self.project.root.create_file('my_file.txt')
         sample_observer = _SampleObserver()
-        timekeeper = _MockTimeKeepter()
+        timekeeper = _MockChangeIndicator()
         filtered_observer = FilteredResourceObserver(sample_observer, [my_file],
                                                      timekeeper=timekeeper)
         self.project.add_observer(filtered_observer)
         self._write_file(my_file.real_path)
-        timekeeper.setmtime(my_file, 1)
+        timekeeper.set_indicator(my_file, 1)
         self.project.validate(self.project.root)
         self.assertEquals(1, sample_observer.change_count)
 
     def test_validation_and_changing_files2(self):
         my_file = self.project.root.create_file('my_file.txt')
         sample_observer = _SampleObserver()
-        timekeeper = _MockTimeKeepter()
+        timekeeper = _MockChangeIndicator()
         self.project.add_observer(FilteredResourceObserver(
                                   sample_observer, [my_file],
                                   timekeeper=timekeeper))
-        timekeeper.setmtime(my_file, 1)
+        timekeeper.set_indicator(my_file, 1)
         my_file.write('hey')
         self.assertEquals(1, sample_observer.change_count)
         self.project.validate(self.project.root)
@@ -637,15 +637,15 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEquals((file1, file2), sample_observer.last_moved)
 
 
-class _MockTimeKeepter(object):
+class _MockChangeIndicator(object):
 
     def __init__(self):
         self.times = {}
 
-    def setmtime(self, resource, time):
+    def set_indicator(self, resource, time):
         self.times[resource] = time
 
-    def getmtime(self, resource):
+    def get_indicator(self, resource):
         return self.times.get(resource, 0)
 
 
