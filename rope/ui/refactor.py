@@ -807,6 +807,7 @@ class RestructureDialog(RefactoringDialog):
         super(RestructureDialog, self).__init__(context, 'Restructuring')
 
     def _calculate_changes(self, handle=None):
+        self._save_data()
         pattern = self.pattern.get('1.0', 'end-1c')
         goal = self.goal.get('1.0', 'end-1c')
         restructuring = rope.refactor.restructure.Restructure(
@@ -873,11 +874,29 @@ class RestructureDialog(RefactoringDialog):
         tkhelpers.ToolTip(self.imports, imports_help)
         imports_frame.grid(row=3, columnspan=2)
 
+        self._load_data()
         self.pattern.focus_set()
         return frame
 
     def _remove_check(self):
         self.checks.remove_entry()
+
+    history = None
+
+    def _save_data(self):
+        data = {'pattern': self.pattern.get('1.0', 'end'),
+                'goal': self.goal.get('1.0', 'end'),
+                'checks': self.checks.get('1.0', 'end'),
+                'imports': self.imports.get('1.0', 'end')}
+        RestructureDialog.history = data
+
+    def _load_data(self):
+        if RestructureDialog.history is not None:
+            data = RestructureDialog.history
+            self.pattern.insert('1.0', data['pattern'])
+            self.goal.insert('1.0', data['goal'])
+            self.checks.insert('1.0', data['checks'])
+            self.imports.insert('1.0', data['imports'])
 
 
 def restructure(context):
