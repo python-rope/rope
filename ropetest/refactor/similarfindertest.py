@@ -125,6 +125,12 @@ class SimilarFinderTest(unittest.TestCase):
         result = list(finder.get_matches('${a}'))
         self.assertEquals(1, len(result))
 
+    def test_matching_normal_names_and_attributes(self):
+        source = 'x.a = 1\n'
+        finder = similarfinder.SimilarFinder(source)
+        result = list(finder.get_matches('${a} = 1'))
+        self.assertEquals(1, len(result))
+
 
 class CheckingFinderTest(unittest.TestCase):
 

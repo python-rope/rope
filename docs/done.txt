@@ -3,7 +3,7 @@
 ===========
 
 
-- Finding the scopes of overwritten scopes : August 4, 2007
+- Finding the scope in an overwritten scope : August 4, 2007
 
 
 - Added ``ignore_syntax_errors`` project config : August 2, 2007

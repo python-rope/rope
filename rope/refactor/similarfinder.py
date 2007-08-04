@@ -23,10 +23,10 @@ class SimilarFinder(object):
         """Search for `code` in source and return a list of `Match`\es
 
         `code` can contain wildcards.  ``${name}`` matches normal
-        names and ``${?name} can match any expression.  They can
-        only appear in `_ast.Name`.
-        You can use `Match.get_ast()` for getting the node that has
-        matched a given pattern.
+        names and ``${?name} can match any expression.  You can use
+        `Match.get_ast()` for getting the node that has matched a
+        given pattern.
+
         """
         if end is None:
             end = len(self.source)
@@ -235,11 +235,15 @@ class _ASTMatcher(object):
         return True
 
     def _match_normal_var(self, node1, node2, mapping):
-        if node2.__class__ == node1.__class__ and \
-           self.ropevar.get_base(node1.id) == node2.id:
-            mapping[self.ropevar.get_base(node1.id)] = node2
-            return True
-        return False
+        name = self.ropevar.get_base(node1.id)
+        if name not in mapping:
+            if isinstance(node2, ast.Name) and node2.id == name or \
+               isinstance(node2, ast.Attribute) and node2.attr == name:
+                mapping[name] = node2
+                return True
+            return False
+        else:
+            return self._match_nodes(mapping[name], node2, {})
 
     def _match_any_var(self, node1, node2, mapping):
         name = self.ropevar.get_base(node1.id)

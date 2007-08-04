@@ -523,16 +523,15 @@ transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to ``from
 pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
 either by having lots of dots or being very long.  The default
 configuration considers imported modules with more than 2 dots or with
-length more than 27 characters to be long.
+more than 27 characters to be long.
 
 
 Stoppable Refactorings
 ----------------------
 
-Another notable new feature is stoppable refactorings.  Some
-refactorings might take a long time to finish (based on the size of
-your project).  Rope now shows a dialog that has a progress bar and a
-stop button for these refactorings.  You can also use this feature
+Some refactorings might take a long time to finish (based on the size
+of your project).  Rope now shows a dialog that has a progress bar and
+a stop button for these refactorings.  You can also use this feature
 when using rope as a library.  The `get_changes()` method of these
 refactorings take a new parameter called `task_handle`.  If you want
 to monitor or stop these refactoring you can pass a `rope.refactor.
@@ -632,8 +631,9 @@ Goal can be some thing like::
 Note that ``${...}`` is used to match something in the pattern.  If
 names that appear in ``${...}`` start with a leading ``?`` every
 expression at that point will match, otherwise only the specified name
-will match (The form without ``?`` is not useful if you're not using
-checks which is described later).
+will match (for instance ``${name}`` matches ``name``, ``x.name`` but
+not ``var`` or ``(1 + 2)`` while a ``${?name}`` can match all of
+them).
 
 You can use the matched names in goal and they will be replaced with
 the string that was matched in each occurrence.  So the outcome of our
@@ -670,6 +670,12 @@ Consider the name of the module containing our `pow` function is
 `mod`.  ``checks`` can be::
 
   ?pow_func == mod.pow
+
+Note that we could have used ``pow`` instead of ``?pow_func`` in our
+patterns.  The difference is that ``pow`` cannot handle aliases like::
+
+  mypow = pow
+  mypow(2, 3)
 
 For performing this refactoring using rope library see `library.txt`_.
 
@@ -796,7 +802,7 @@ Object Inference
 ================
 
 This section is a bit out of date.  SOI can do more than described
-here (See unittests).  Hope to update this someday!
+here (see unittests).  Hope to update this someday!
 
 
 Static Object Inference
