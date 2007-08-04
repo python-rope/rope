@@ -166,6 +166,14 @@ class PyCoreScopesTest(unittest.TestCase):
         f_in_c = c_scope.get_scopes()[0]
         self.assertEquals(f_in_c, scope.get_inner_scope_for_line(4))
 
+    def test_getting_overwritten_scopes(self):
+        scope = self.pycore.get_string_scope(
+            'def f():\n    pass\ndef f():\n    pass\n')
+        self.assertEquals(2, len(scope.get_scopes()))
+        f1_scope = scope.get_scopes()[0]
+        f2_scope = scope.get_scopes()[1]
+        self.assertNotEquals(f1_scope, f2_scope)
+
 
 def suite():
     result = unittest.TestSuite()

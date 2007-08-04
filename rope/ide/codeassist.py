@@ -256,7 +256,8 @@ class _CodeCompletionCollector(object):
             function_parens = word_finder.find_parens_start_from_inside(offset - 1, stop)
             primary = word_finder.get_primary_at(function_parens - 1)
             try:
-                function_pyname = ScopeNameFinder.get_pyname_in_scope(scope, primary)
+                function_pyname = ScopeNameFinder.get_pyname_in_scope(scope,
+                                                                      primary)
             except BadIdentifierError, e:
                 return {}
             if function_pyname is not None:

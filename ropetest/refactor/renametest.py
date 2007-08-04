@@ -502,6 +502,19 @@ class RenameRefactoringTest(unittest.TestCase):
         self._rename(mod1, code.index('a_var'), 'new_var', docs=True)
         self.assertEquals('new_var = 1\n# a_vard _a_var\n', mod1.read())
 
+    def test_renaming_occurrences_in_overwritten_scopes(self):
+        refactored = self._local_rename(
+            'a_var = 20\ndef f():\n    print(a_var)\n'
+            'def f():\n    print(a_var)\n', 2, 'new_var')
+        self.assertEquals('new_var = 20\ndef f():\n    print(new_var)\n'
+                          'def f():\n    print(new_var)\n', refactored)
+
+    def test_renaming_occurrences_in_overwritten_scopes2(self):
+        code = 'def f():\n    a_var = 1\n    print(a_var)\n' \
+               'def f():\n    a_var = 1\n    print(a_var)\n'
+        refactored = self._local_rename(code, code.index('a_var') + 1, 'new_var')
+        self.assertEquals(code.replace('a_var', 'new_var', 2), refactored)
+
 
 class ChangeOccurrencesTest(unittest.TestCase):
 

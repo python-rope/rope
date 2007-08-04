@@ -320,6 +320,7 @@ class PyClass(PyDefinedObject, AbstractClass):
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
+        self.defineds = None
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
@@ -329,10 +330,16 @@ class PyClass(PyDefinedObject, AbstractClass):
     def get_name(self):
         return self.get_ast().name
 
+    def _get_defined_objects(self):
+        if self.defineds is None:
+            self._get_structural_attributes()
+        return self.defineds
+
     def _create_structural_attributes(self):
         new_visitor = _ClassVisitor(self.pycore, self)
         for child in ast.get_child_nodes(self.ast_node):
             ast.walk(child, new_visitor)
+        self.defineds = new_visitor.defineds
         return new_visitor.names
 
     def _create_concluded_attributes(self):
@@ -423,6 +430,7 @@ class PyModule(_PyModule):
             else:
                 ast_node = ast.parse('\n')
         self.star_imports = []
+        self.defineds = None
         super(PyModule, self).__init__(pycore, ast_node, resource)
 
     def _get_lines(self):
@@ -433,6 +441,11 @@ class PyModule(_PyModule):
 
     lines = property(_get_lines, doc="return a `SourceLinesAdapter`")
 
+    def _get_defined_objects(self):
+        if self.defineds is None:
+            self._get_structural_attributes()
+        return self.defineds
+
     def _create_concluded_attributes(self):
         result = {}
         for star_import in self.star_imports:
@@ -442,6 +455,7 @@ class PyModule(_PyModule):
     def _create_structural_attributes(self):
         visitor = _GlobalVisitor(self.pycore, self)
         ast.walk(self.ast_node, visitor)
+        self.defineds = visitor.defineds
         return visitor.names
 
     def _create_scope(self):
@@ -549,9 +563,10 @@ class _AssignVisitor(object):
 class _ScopeVisitor(object):
 
     def __init__(self, pycore, owner_object):
-        self.names = {}
         self.pycore = pycore
         self.owner_object = owner_object
+        self.names = {}
+        self.defineds = []
 
     def get_module(self):
         if self.owner_object is not None:
@@ -560,12 +575,14 @@ class _ScopeVisitor(object):
             return None
 
     def _ClassDef(self, node):
-        self.names[node.name] = pynames.DefinedName(
-            PyClass(self.pycore, node, self.owner_object))
+        pyclass = PyClass(self.pycore, node, self.owner_object)
+        self.names[node.name] = pynames.DefinedName(pyclass)
+        self.defineds.append(pyclass)
 
     def _FunctionDef(self, node):
-        pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = pynames.DefinedName(pyobject)
+        pyfunction = PyFunction(self.pycore, node, self.owner_object)
+        self.names[node.name] = pynames.DefinedName(pyfunction)
+        self.defineds.append(pyfunction)
 
     def _Assign(self, node):
         ast.walk(node, _AssignVisitor(self))
@@ -654,8 +671,9 @@ class _ClassVisitor(_ScopeVisitor):
         super(_ClassVisitor, self).__init__(pycore, owner_object)
 
     def _FunctionDef(self, node):
-        pyobject = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = pynames.DefinedName(pyobject)
+        pyfunction = PyFunction(self.pycore, node, self.owner_object)
+        self.names[node.name] = pynames.DefinedName(pyfunction)
+        self.defineds.append(pyfunction)
         if len(node.args.args) > 0:
             first = node.args.args[0]
             if isinstance(first, ast.Name):
@@ -664,8 +682,9 @@ class _ClassVisitor(_ScopeVisitor):
                     ast.walk(child, new_visitor)
 
     def _ClassDef(self, node):
-        self.names[node.name] = pynames.DefinedName(
-            PyClass(self.pycore, node, self.owner_object))
+        pyclass = PyClass(self.pycore, node, self.owner_object)
+        self.names[node.name] = pynames.DefinedName(pyclass)
+        self.defineds.append(pyclass)
 
 
 class _FunctionVisitor(_ScopeVisitor):

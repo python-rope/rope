@@ -1,13 +1,13 @@
 Small Stories
 =============
 
-* Commenting based on the line of syntax error in codeassist?
-
+* Lots of exceptions for `PyFunction`
+* Changing the default font on linux to courier?
 * Updating and adding docs on SOI
+* Commenting based on the line of syntax error in codeassist?
 * Adding restructuring scope; local scope, module, all files?
 * Better search triggering in find type dialog
-* Some of the things in `codeanalyze.WordFinder` can be achieved using
-  asts; make a clone and test them there
+* Changing `codeanalyze.WordFinder` to use ASTs?
 * Refactoring codeanalyze; lots of estimations
 * Assignment to parameters in inline method
 * Assignment to parameter warning

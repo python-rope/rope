@@ -56,13 +56,8 @@ class Scope(object):
         return None
 
     def _create_scopes(self):
-        block_objects = [pyname.get_object() for pyname in
-                         self.pyobject._get_structural_attributes().values()
-                         if isinstance(pyname, rope.base.pynames.DefinedName)]
-        def block_compare(x, y):
-            return cmp(x.get_ast().lineno, y.get_ast().lineno)
-        block_objects.sort(cmp=block_compare)
-        return [block.get_scope() for block in block_objects]
+        return [pydefined.get_scope()
+                for pydefined in self.pyobject._get_defined_objects()]
 
     def _get_global_scope(self):
         current = self
@@ -140,6 +135,7 @@ class FunctionScope(Scope):
         self.names = None
         self.returned_asts = None
         self.is_generator = None
+        self.defineds = None
 
     def _get_names(self):
         if self.names is None:
@@ -156,6 +152,7 @@ class FunctionScope(Scope):
             self.names.update(new_visitor.names)
             self.returned_asts = new_visitor.returned_asts
             self.is_generator = new_visitor.generator
+            self.defineds = new_visitor.defineds
 
     def _get_returned_asts(self):
         if self.names is None:
@@ -171,14 +168,9 @@ class FunctionScope(Scope):
         return self._get_names()
 
     def _create_scopes(self):
-        block_objects = [pyname.get_object()
-                         for pyname in self._get_names().values()
-                         if isinstance(pyname, rope.base.pynames.DefinedName)]
-        def block_compare(x, y):
-            return cmp(x.get_ast().lineno, y.get_ast().lineno)
-        block_objects.sort(cmp=block_compare)
-        result = [block.get_scope() for block in block_objects]
-        return result
+        if self.defineds is None:
+            self._visit_function()
+        return [pydefined.get_scope() for pydefined in self.defineds]
 
     def get_kind(self):
         return 'Function'
