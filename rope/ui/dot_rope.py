@@ -60,29 +60,42 @@ def _register_my_actions(core):
     from rope.ui.extension import SimpleAction
 
     def say_hello(context):
-        print 'Hello Action!'
+        print('Hello Action!')
 
     hello_action = SimpleAction('hello_action', say_hello, 'C-h h')
     core.register_action(hello_action)
 
+    # A more advanced example that uses `Tkinter`
     def rope_info(context):
         import gc
+        import Tkinter
         import rope.base.pyobjects
 
-        print
-        print
-        print 'Rope Running Info'
-        print '================='
-        print
-        print str(context.project.history)
+        info = 'Rope Running Info\n=================\n\n'
+        info += 'Rope version %s\n\n' % rope.VERSION
+        info += str(context.project.history) + '\n'
         module_count = 0
         for obj in gc.get_objects():
             # Checking the real type; not isinstance
             if type(obj) in (rope.base.pyobjects.PyModule,
                              rope.base.pyobjects.PyPackage):
                 module_count += 1
-        print 'Memory contains %s PyModules' % module_count
-        print str(context.project.pycore)
+        info += 'Memory contains %s PyModules\n' % module_count
+        info += str(context.project.pycore) + '\n'
+
+        toplevel = Tkinter.Toplevel()
+        toplevel.title('Rope Running Info')
+        label = Tkinter.Label(toplevel, text=info, height=10, width=50,
+                              justify=Tkinter.LEFT, relief=Tkinter.GROOVE)
+        label.grid(row=0)
+        def ok():
+            toplevel.destroy()
+        ok_button = Tkinter.Button(toplevel, text='OK', command=ok, width=20)
+        ok_button.grid(row=1)
+        ok_button.focus_set()
+        toplevel.bind('<Escape>', lambda event: ok())
+        toplevel.bind('<Control-g>', lambda event: ok())
+
     info_action = SimpleAction('rope_info', rope_info, 'C-h i')
     core.register_action(info_action)
 

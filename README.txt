@@ -21,7 +21,17 @@ IDE and the library.
 New Features
 ============
 
-*
+Changes since 0.5:
+
+* Restructurings; searching for patterns in code and changing them
+* Handling imports when inlining
+* Extracting similar expressions/statements in extract refactorings
+* Adding tools for making using rope library easier
+* Importing modules in restructurings
+* Auto-indentation in restructurings
+* Inferring the object, list comprehensions hold
+* Added ``ignore_syntax_errors`` project config
+* Specifying custom source folders in project config
 
 
 Getting Started
@@ -33,11 +43,11 @@ Getting Started
 * Using as a library: `docs/library.txt`_
 * Contributing: `docs/contributing.txt`_
 
-To change rope IDE preferences edit your ``~/.rope`` (which is created
-the first time you start rope).  To change your project preferences
-edit ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT``
-is the root folder of your project (this file is created the first
-time you open a project).
+To change rope IDE preferences like font edit your ``~/.rope`` (which
+is created the first time you start rope).  To change your project
+preferences edit ``$PROJECT_ROOT/.ropeproject/config.py`` where
+``$PROJECT_ROOT`` is the root folder of your project (this file is
+created the first time you open a project).
 
 If you don't like rope's default emacs-like keybinding, edit the
 default ``~/.rope`` file and change `i_like_emacs` variable to

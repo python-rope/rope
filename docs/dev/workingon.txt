@@ -1,11 +1,12 @@
 Small Stories
 =============
 
+* Remembering last restructuring
+
 * Updating docs
 * Changing the default font on linux to courier?
 * Updating and adding docs on SOI
 
-* Changing ``${name}`` to match every primary that ends with name?
 * Lots of exceptions for `PyFunction`
 * Commenting based on the line of syntax error in codeassist?
 * Adding restructuring scope; local scope, module, all files?
