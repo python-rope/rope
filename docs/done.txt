@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.6 : August 5, 2007
+
+
 - Finding the scope in an overwritten scope : August 4, 2007
 
 

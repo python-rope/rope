@@ -671,8 +671,9 @@ Consider the name of the module containing our `pow` function is
 
   ?pow_func == mod.pow
 
-Note that we could have used ``pow`` instead of ``?pow_func`` in our
-patterns.  The difference is that ``pow`` cannot handle aliases like::
+Note that we could have used ``${pow}`` instead of ``${?pow_func}`` in
+our patterns.  The difference is that ``pow`` cannot handle aliases
+like::
 
   mypow = pow
   mypow(2, 3)

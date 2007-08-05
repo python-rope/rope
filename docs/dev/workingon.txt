@@ -1,11 +1,7 @@
 Small Stories
 =============
 
-- Remembering last restructuring
-
-* Updating docs
 * Changing the default font on linux to courier?
-* Updating and adding docs on SOI
 
 * Lots of exceptions for `PyFunction`
 * Commenting based on the line of syntax error in codeassist?

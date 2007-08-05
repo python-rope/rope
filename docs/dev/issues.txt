@@ -111,13 +111,6 @@ Sort Kinds
 * Manual
 
 
-Handling Name Redefinitions
-===========================
-
-Currently python elements overwrite others with the same name.  This
-might cause problems for some refactorings.
-
-
 Enhancing Refactorings
 ======================
 

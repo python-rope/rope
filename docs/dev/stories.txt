@@ -151,6 +151,3 @@ Stories
 
 
 * Sorting methods
-
-
-> Public Release 0.6 : August 5, 2007

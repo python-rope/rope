@@ -841,8 +841,12 @@ class RestructureDialog(RefactoringDialog):
             'Rope searches for `pattern` in the project and replaces its\n' \
             'occurrences with `goal`.  They can contain ``${?name}`` and \n' \
             '``${name}`` wildcards.  See ``docs/overview.txt`` for examples.'
+        goals_help = \
+            'Pieces of code that that match the pattern will be replaced\n' \
+            'with goal.  It can contain the wildcards that appear in the\n' \
+            'pattern; They are replaced with the code that has matched them.'
         tkhelpers.ToolTip(self.pattern, patterns_help)
-        tkhelpers.ToolTip(self.goal, patterns_help)
+        tkhelpers.ToolTip(self.goal, goals_help)
         pattern_label.grid(row=0, column=0, sticky=Tkinter.W)
         self.pattern.grid(row=0, column=1, sticky=Tkinter.W)
         goal_label.grid(row=1, column=0, sticky=Tkinter.W)
