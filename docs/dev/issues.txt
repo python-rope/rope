@@ -25,26 +25,21 @@ This is only a rough plan.  For example we might have 1-week release
 candidates before the ``x.y``.
 
 
-Version 0.6
+Version 0.7
 ===========
 
-From May 7, 2007 till August 5, 2007
+From August 6, 2007 till October 28, 2007
 
 
 Release Goals
 -------------
 
-Metaphor: Supporting restructurings
-
-Other Possible Goals:
-
-* Finding similar pieces to extracted
+* Getting ready for Python 3.0
 
 
 Release Issues
 --------------
 
-Rope has dropped Python 2.4 support in this release.
 
 
 Hot Topics
@@ -269,63 +264,3 @@ removed.
   control or none.
 * All ``*.txt`` files are considered to be ReST.
 * XXX
-
-
-Object Inference Issues
-=======================
-
-
-Returned Types Or Objects
--------------------------
-
-Should we care only about the type of the returned object or we should
-consider the object itself, too?
-
-Well, it depends on the type of the objects that is returned.  If it
-is an instance of a class then only the type matters.  If it is a
-function, module or class then the object is important.
-
-Indeed we should make some difference between the objects that we
-only care about their types and the objects that their individual
-instance is important to us.  Right now the latter group contains
-only functions, classes, modules, lists, dicts and sets but this
-list will be probably extended.
-
-
-The GUI Mess; Working More on the UI Parts
-==========================================
-
-
-Version Control Commands
-------------------------
-
-* Commit; ``C-x v c``
-* Update; ``C-x v u``
-* Diff; ``C-x v d``
-* Log; ``C-x v l``
-* Revert; ``C-x v r``
-* Remove; ``C-x v v``
-* Status; ``C-x v s``
-* Add; ``C-x v a``
-* Blame; ``C-x v b``
-
-
-Better Dialogs
---------------
-
-Many dialogs look very similar.  They can be factored.  Continue using
-`rope.ui.uihelpers` module and extend it.
-
-
-Isolating Text Widget Features
-------------------------------
-
-Some of the features of GraphicalEditor can be used in other widgets.
-Like completion, highlighting.
-
-
-Defining the Responsibilities of `Core`
----------------------------------------
-
-* Providing an interface to the plug-ins
-* Providing methods for controlling rope?

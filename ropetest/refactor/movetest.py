@@ -86,82 +86,83 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_used_imports_to_destination_module(self):
         self.mod3.write('a_var = 10')
         self.mod1.write('import mod3\nfrom mod3 import a_var\n' \
-                        'def a_func():\n    print mod3, a_var\n')
+                        'def a_func():\n    print(mod3, a_var)\n')
         self._move(self.mod1, self.mod1.read().index('a_func') + 1,
                    self.mod2)
         self.assertEquals('import mod3\n\n\n' \
-                          'def a_func():\n    print mod3, mod3.a_var\n',
+                          'def a_func():\n    print(mod3, mod3.a_var)\n',
                           self.mod2.read())
 
     def test_moving_used_names_to_destination_module2(self):
         self.mod1.write('a_var = 10\n' \
-                        'def a_func():\n    print a_var\n')
+                        'def a_func():\n    print(a_var)\n')
         self._move(self.mod1, self.mod1.read().index('a_func') + 1,
                    self.mod2)
         self.assertEquals('a_var = 10\n', self.mod1.read())
-        self.assertEquals('import mod1\n\n\ndef a_func():\n    print mod1.a_var\n',
+        self.assertEquals('import mod1\n\n\ndef a_func():\n    print(mod1.a_var)\n',
                           self.mod2.read())
 
     def test_moving_and_used_relative_imports(self):
         self.mod4.write('import mod5\n' \
-                        'def a_func():\n    print mod5\n')
+                        'def a_func():\n    print(mod5)\n')
         self._move(self.mod4, self.mod4.read().index('a_func') + 1,
                    self.mod1)
-        self.assertEquals('import pkg.mod5\n\n\ndef a_func():\n    print pkg.mod5\n',
+        self.assertEquals('import pkg.mod5\n\n\ndef a_func():\n    print(pkg.mod5)\n',
                           self.mod1.read())
 
     def test_moving_modules(self):
-        self.mod2.write('import mod1\nprint mod1')
+        self.mod2.write('import mod1\nprint(mod1)')
         self._move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
-        self.assertEquals('import pkg.mod1\nprint pkg.mod1', self.mod2.read())
+        self.assertEquals('import pkg.mod1\nprint(pkg.mod1)', self.mod2.read())
         self.assertTrue(not self.mod1.exists() and
                         self.pycore.find_module('pkg.mod1') is not None)
 
     def test_moving_modules_and_removing_out_of_date_imports(self):
-        self.mod2.write('import pkg.mod4\nprint pkg.mod4')
+        self.mod2.write('import pkg.mod4\nprint(pkg.mod4)')
         self._move(self.mod2, self.mod2.read().index('mod4') + 1,
                    self.project.root)
-        self.assertEquals('import mod4\nprint mod4', self.mod2.read())
+        self.assertEquals('import mod4\nprint(mod4)', self.mod2.read())
         self.assertTrue(self.pycore.find_module('mod4') is not None)
 
     def test_moving_modules_and_removing_out_of_date_froms(self):
-        self.mod2.write('from pkg import mod4\nprint mod4')
+        self.mod2.write('from pkg import mod4\nprint(mod4)')
         self._move(self.mod2, self.mod2.read().index('mod4') + 1,
                    self.project.root)
-        self.assertEquals('import mod4\nprint mod4', self.mod2.read())
+        self.assertEquals('import mod4\nprint(mod4)', self.mod2.read())
 
     def test_moving_modules_and_removing_out_of_date_froms2(self):
         self.mod4.write('a_var = 10')
-        self.mod2.write('from pkg.mod4 import a_var\nprint a_var\n')
+        self.mod2.write('from pkg.mod4 import a_var\nprint(a_var)\n')
         self._move(self.mod2, self.mod2.read().index('mod4') + 1,
                    self.project.root)
-        self.assertEquals('from mod4 import a_var\nprint a_var\n',
+        self.assertEquals('from mod4 import a_var\nprint(a_var)\n',
                           self.mod2.read())
 
     def test_moving_modules_and_relative_import(self):
-        self.mod4.write('import mod5\nprint mod5\n')
-        self.mod2.write('import pkg.mod4\nprint pkg.mod4')
+        self.mod4.write('import mod5\nprint(mod5)\n')
+        self.mod2.write('import pkg.mod4\nprint(pkg.mod4)')
         self._move(self.mod2, self.mod2.read().index('mod4') + 1,
                    self.project.root)
         moved = self.pycore.find_module('mod4')
-        self.assertEquals('import pkg.mod5\nprint pkg.mod5\n', moved.read())
+        self.assertEquals('import pkg.mod5\nprint(pkg.mod5)\n', moved.read())
 
     def test_moving_packages(self):
         pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
-        self.mod1.write('import pkg.mod4\nprint pkg.mod4')
+        self.mod1.write('import pkg.mod4\nprint(pkg.mod4)')
         self._move(self.mod1, self.mod1.read().index('pkg') + 1, pkg2)
         self.assertFalse(self.pkg.exists())
         self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
         self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
         self.assertTrue(self.pycore.find_module('pkg2.pkg.mod5') is not None)
-        self.assertEquals('import pkg2.pkg.mod4\nprint pkg2.pkg.mod4', self.mod1.read())
+        self.assertEquals('import pkg2.pkg.mod4\nprint(pkg2.pkg.mod4)',
+                          self.mod1.read())
 
     def test_moving_modules_with_self_imports(self):
-        self.mod1.write('import mod1\nprint mod1\n')
+        self.mod1.write('import mod1\nprint(mod1)\n')
         self.mod2.write('import mod1\n')
         self._move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
         moved = self.pycore.find_module('pkg.mod1')
-        self.assertEquals('import pkg.mod1\nprint pkg.mod1\n', moved.read())
+        self.assertEquals('import pkg.mod1\nprint(pkg.mod1)\n', moved.read())
 
     def test_moving_funtions_to_imported_module(self):
         self.mod1.write('a_var = 1\n')
@@ -203,17 +204,17 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_module_refactoring_and_not_removing_blanks_after_imports(self):
         self.mod4.write('a_var = 1')
         self.mod2.write('from pkg import mod4\n'
-                        'import os\n\n\nprint mod4.a_var\n')
+                        'import os\n\n\nprint(mod4.a_var)\n')
         mover = move.create_move(self.project, self.mod4)
         mover.get_changes(self.project.root).do()
         self.assertEquals('import os\nimport mod4\n\n\n'
-                          'print mod4.a_var\n', self.mod2.read())
+                          'print(mod4.a_var)\n', self.mod2.read())
 
     @testutils.assert_raises(exceptions.RefactoringError)
     def test_moving_module_refactoring_and_nonexistent_destinations(self):
         self.mod4.write('a_var = 1')
         self.mod2.write('from pkg import mod4\n'
-                        'import os\n\n\nprint mod4.a_var\n')
+                        'import os\n\n\nprint(mod4.a_var)\n')
         mover = move.create_move(self.project, self.mod4)
         mover.get_changes(None).do()
 

@@ -1,6 +1,7 @@
 Small Stories
 =============
 
+* Renaming `rope.py` to `ropeide.py`?
 * Changing the default font on linux to courier?
 
 * Lots of exceptions for `PyFunction`

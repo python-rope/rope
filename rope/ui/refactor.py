@@ -842,7 +842,7 @@ class RestructureDialog(RefactoringDialog):
             'occurrences with `goal`.  They can contain ``${?name}`` and \n' \
             '``${name}`` wildcards.  See ``docs/overview.txt`` for examples.'
         goals_help = \
-            'Pieces of code that that match the pattern will be replaced\n' \
+            'Pieces of code that match the pattern will be replaced\n' \
             'with goal.  It can contain the wildcards that appear in the\n' \
             'pattern; They are replaced with the code that has matched them.'
         tkhelpers.ToolTip(self.pattern, patterns_help)
@@ -855,8 +855,9 @@ class RestructureDialog(RefactoringDialog):
         # Handling checks
         checks_frame = Tkinter.Frame(frame, borderwidth=1,
                                      relief=Tkinter.RIDGE)
-        checks_help = 'Add checks here; One each line.  For instance:\n' \
-                      '?var.type == mymod.AClass'
+        checks_help = 'Add checks here; One each line.  Like:\n' \
+                      '  ?var.type == mymod.AClass\n' \
+                      '\nUse __builtin__ module for builtins'
         checks_label = Tkinter.Label(checks_frame, text='Checks',
                                      justify=Tkinter.LEFT, width=70)
         checks_label.grid(row=0)
@@ -869,7 +870,7 @@ class RestructureDialog(RefactoringDialog):
         imports_frame = Tkinter.Frame(frame, borderwidth=1,
                                       relief=Tkinter.RIDGE)
         imports_help = 'Add imports here; These imports are added to ' \
-                       'changed files'
+                       'changed files; Like:\n  from mymod import AClass'
         imports_label = Tkinter.Label(imports_frame, text='Imports',
                                       justify=Tkinter.LEFT, width=70)
         imports_label.grid(row=0)
