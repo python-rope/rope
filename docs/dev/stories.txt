@@ -150,7 +150,7 @@ Stories
 * Split tuple assignment refactoring
 
 
-* Sorting methods
-
-
 > Public Release 0.7m1 : August 19, 2007
+
+
+* Sorting methods

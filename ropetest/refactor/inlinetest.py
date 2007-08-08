@@ -280,7 +280,7 @@ class InlineTest(unittest.TestCase):
                   '    var = 10\n' \
                   '    @staticmethod\n' \
                   '    def a_func(param):\n' \
-                  '        print param\n' \
+                  '        print(param)\n' \
                   'an_a = A()\n' \
                   'an_a.a_func(1)\n' \
                   'A.a_func(2)\n'
@@ -289,8 +289,8 @@ class InlineTest(unittest.TestCase):
         expected = 'class A(object):\n' \
                   '    var = 10\n' \
                   'an_a = A()\n' \
-                  'print 1\n' \
-                  'print 2\n'
+                  'print(1)\n' \
+                  'print(2)\n'
         self.assertEquals(expected, self.mod.read())
 
     def test_inlining_classmethods(self):
@@ -350,12 +350,12 @@ class InlineTest(unittest.TestCase):
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_for_list_arguments(self):
-        self.mod.write('def a_func(*args):\n    print args\na_func(1)\n')
+        self.mod.write('def a_func(*args):\n    print(args)\na_func(1)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_for_list_keywods(self):
-        self.mod.write('def a_func(**kwds):\n    print kwds\na_func(n=1)\n')
+        self.mod.write('def a_func(**kwds):\n    print(kwds)\na_func(n=1)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
     def test_function_parameters_and_returns_in_other_functions(self):
@@ -367,7 +367,7 @@ class InlineTest(unittest.TestCase):
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_function_references_other_than_call(self):
-        self.mod.write('def a_func(param):\n    print param\nf = a_func\n')
+        self.mod.write('def a_func(param):\n    print(param)\nf = a_func\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)

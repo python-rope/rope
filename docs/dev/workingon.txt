@@ -1,9 +1,27 @@
-Small Stories
-=============
+Sorting Scopes
+==============
 
-* Renaming `rope.py` to `ropeide.py`?
+* Handling blanks after scopes
+* Handling blanks for the final scope
+* Moving statements
+* Sorting 
+
+  * Alphabetically
+  * Classes first
+  * Functions first
+  * Not-underlined first/last
+  * With-pydocs first/last
+  * Longest first/last
+  * Manual
+  * Specials first/last
+
+* Adding sorttest to testsuit
+* Adding a dialog
+
+* Adding an option to inline not to remove the definition
+* Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
+  ``~/.ropeide.py``?
 * Changing the default font on linux to courier?
-
 * Lots of exceptions for `PyFunction`
 * Commenting based on the line of syntax error in codeassist?
 * Adding restructuring scope; local scope, module, all files?

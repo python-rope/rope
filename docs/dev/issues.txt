@@ -88,10 +88,19 @@ What to do with blanks?
 * Each scopes should own the blanks after it except the last one
 
 
+Specifying The Scope To Sort
+----------------------------
+
+* The scope current offset is in
+* The scope of the PyName in current offset
+
+
 Specifying The New Order
 ------------------------
 
-How to specify the new order?
+It is only the manual ordering that requires specifying the new order.
+We can specify the new order the same way we do that for change method
+signature.  The IDE can do better by using scope name and kind.
 
 
 Sort Kinds
@@ -100,10 +109,21 @@ Sort Kinds
 * Alphabetically
 * Classes first
 * Functions first
-* Not-underlined first
-* With-pydocs first
-* Longest first
+* Not-underlined first/last
+* With-pydocs first/last
+* Longest first/last
 * Manual
+* Specials first/last
+
+
+Insert Before In Restructurings
+===============================
+
+Consider a restructuring like this::
+
+  pattern: ${?a} if ${?b} else ${?c}
+  goal: replacement
+  before: if ${?b}:\n    replacement = ${?a}\nelse:\n    replacement = ${?c}
 
 
 Enhancing Refactorings

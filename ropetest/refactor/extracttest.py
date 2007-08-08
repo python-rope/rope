@@ -641,6 +641,14 @@ class ExtractMethodTest(unittest.TestCase):
         expected = 'new_var = 10\na_var = new_var'
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_containing_return_in_functions(self):
+        code = 'def f(arg):\n    return arg\nprint(f(1))\n'
+        start, end = self._convert_line_range_to_offset(code, 1, 3)
+        refactored = self.do_extract_method(code, start, end, 'a_func')
+        expected = '\ndef a_func():\n    def f(arg):\n        return arg\n' \
+                   '    print(f(1))\n\na_func()\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

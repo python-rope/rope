@@ -609,10 +609,10 @@ class _ReturnOrYieldFinder(object):
     def _Yield(self, node):
         self.returns = True
 
-    def _Function(self, node):
+    def _FunctionDef(self, node):
         pass
 
-    def _Class(self, node):
+    def _ClassDef(self, node):
         pass
 
     @staticmethod
