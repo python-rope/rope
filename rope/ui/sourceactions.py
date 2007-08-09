@@ -5,7 +5,7 @@ import rope.ide.codeassist
 import rope.ui.core
 import rope.ui.testview
 from rope.base import codeanalyze
-from rope.ide import formatter, notes, generate
+from rope.ide import formatter, notes, generate, sort
 from rope.ui import spelldialog, registers
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
 from rope.ui.extension import SimpleAction
@@ -395,6 +395,32 @@ def show_all(context):
     _show_annotations(context, 'Annotation', result)
 
 
+_sort_mapping = {'a': 'alpha', 'k': 'kind',
+                 'p': 'pydoc', 's': 'special', 'u': 'underlined'}
+
+def sort_scopes(context, kind):
+    sorter = sort.get_sorter(_sort_mapping[kind.lower()],
+                             reverse=kind.isupper())
+    sort_scopes = sort.SortScopes(context.project,
+                                  context.resource, context.offset)
+    context.project.do(sort_scopes.get_changes(sorter=sorter))
+    
+
+def _generate_sort_actions(menu):
+    for name in _sort_mapping.values():
+        sorter = sort.get_sorter(name)
+        for c in (name[0], name[0].upper()):
+            action_name = 'sort_by_' + name
+            menu_name = str(sorter)
+            if c.isupper():
+                action_name = 'sort_by_reverse_' + name
+                menu_name = 'reverse ' + str(sorter)
+            yield SimpleAction(
+                action_name, lambda context, c=c: sort_scopes(context, c),
+                'C-c s ' + c,
+                menu.child(menu_name.title(), c), ['python'])
+
+
 core = rope.ui.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Source'], 's'), ['all', 'none'])
 actions = []
@@ -456,6 +482,10 @@ actions.append(SimpleAction('generate_module', generate_module, 'C-c n m',
                             generate_.child('Generate Module', 'm'), ['python']))
 actions.append(SimpleAction('generate_package', generate_package, 'C-c n p',
                             generate_.child('Generate Package', 'p'), ['python']))
+
+sort_ = MenuAddress(['Source', 'Sort Scopes'], 'o', 2)
+core.add_menu_cascade(sort_, ['python'])
+actions.extend(_generate_sort_actions(sort_))
 
 memory = MenuAddress(['Source', 'Memory'], 'm', 2)
 core.add_menu_cascade(memory, ['all', 'none'])

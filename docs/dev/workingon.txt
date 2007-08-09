@@ -1,19 +1,20 @@
 Sorting Scopes
 ==============
 
-* Handling blanks after scopes
-* Handling blanks for the final scope
-* Moving statements
+- Handling blanks after scopes
+- Handling blanks for the final scope
+- Moving statements
+
 * Sorting 
 
-  * Alphabetically
-  * Classes first
-  * Functions first
-  * Not-underlined first/last
-  * With-pydocs first/last
-  * Longest first/last
+  - Alpha
+  - Class
+  - Function
+  - Underlined
+  - Specials
+  - Pydocs
+  * Length
   * Manual
-  * Specials first/last
 
 * Adding sorttest to testsuit
 * Adding a dialog
