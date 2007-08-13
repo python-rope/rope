@@ -7,6 +7,7 @@ import ropetest.ide.notestest
 import ropetest.ide.outlinetest
 import ropetest.ide.spellcheckertest
 import ropetest.ide.movementstest
+import ropetest.ide.sorttest
 
 
 def suite():
@@ -17,6 +18,7 @@ def suite():
     result.addTests(unittest.makeSuite(ropetest.ide.notestest.AnnotationsTest))
     result.addTests(unittest.makeSuite(ropetest.ide.outlinetest.OutlineTest))
     result.addTests(ropetest.ide.movementstest.suite())
+    result.addTests(unittest.makeSuite(ropetest.ide.sorttest.SortScopesTest))
     return result
 
 

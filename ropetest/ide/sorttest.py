@@ -1,4 +1,5 @@
 import unittest
+
 from rope.ide import sort
 from ropetest import testutils
 

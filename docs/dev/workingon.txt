@@ -1,23 +1,5 @@
-Sorting Scopes
-==============
-
-- Handling blanks after scopes
-- Handling blanks for the final scope
-- Moving statements
-
-* Sorting 
-
-  - Alpha
-  - Class
-  - Function
-  - Underlined
-  - Specials
-  - Pydocs
-  * Length
-  * Manual
-
-* Adding sorttest to testsuit
-* Adding a dialog
+Small Stories
+=============
 
 * Adding an option to inline not to remove the definition
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to

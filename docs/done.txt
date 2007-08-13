@@ -3,6 +3,9 @@
 ===========
 
 
+- Sorting scopes : August 9, 2007
+
+
 > Public Release 0.6 : August 5, 2007
 
 

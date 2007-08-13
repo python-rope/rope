@@ -184,7 +184,7 @@ class KindSorter(_Sorter):
     def __call__(self, scope1, scope2):
         return self.coef * cmp(scope1.kind, scope2.kind)
 
-    kind = 'type'
+    kind = 'kind'
 
 
 class UnderlinedSorter(_Sorter):

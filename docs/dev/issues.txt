@@ -54,68 +54,6 @@ To Be Discussed
 * Better `WordRangeFinder`
 
 
-Sorting Scope Elements
-======================
-
-Issues:
-
-Statements
-----------
-
-Where should we put scope statements that are outside other
-sub-scopes?
-
-* Keep them on their own place; Might cause problems
-* Put them at the end of scope; What to do for imports
-* Put them at the start of scope; Might cause problems
-* Hang them to the upper scope; Problems like imports
-* Hang them to the lower scope; Problems like __main__ checks
-
-One way of solving it might be to insert each block after all of the
-blocks that appear before it.  This solves the problem for imports and
-__main__ checks.
-
-
-Blanks
-------
-
-What to do with blanks?
-
-* Each scope should own the blanks after it
-* Each scope should own the blanks before it
-* Leave the blanks in their own places
-* Use a predefined number of blanks; 1 or 2?
-* Each scopes should own the blanks after it except the last one
-
-
-Specifying The Scope To Sort
-----------------------------
-
-* The scope current offset is in
-* The scope of the PyName in current offset
-
-
-Specifying The New Order
-------------------------
-
-It is only the manual ordering that requires specifying the new order.
-We can specify the new order the same way we do that for change method
-signature.  The IDE can do better by using scope name and kind.
-
-
-Sort Kinds
-----------
-
-* Alphabetically
-* Classes first
-* Functions first
-* Not-underlined first/last
-* With-pydocs first/last
-* Longest first/last
-* Manual
-* Specials first/last
-
-
 Insert Before In Restructurings
 ===============================
 

@@ -174,6 +174,11 @@ class PyCoreScopesTest(unittest.TestCase):
         f2_scope = scope.get_scopes()[1]
         self.assertNotEquals(f1_scope, f2_scope)
 
+    def test_assigning_builtin_names(self):
+        mod = self.pycore.get_string_module('range = 1\n')
+        range = mod.get_scope().lookup('range')
+        self.assertEquals((mod, 1), range.get_definition_location())
+
 
 def suite():
     result = unittest.TestSuite()

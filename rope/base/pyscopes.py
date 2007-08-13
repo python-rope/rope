@@ -105,8 +105,8 @@ class GlobalScope(Scope):
 
     def get_names(self):
         if self.names.get() is None:
-            result = dict(super(GlobalScope, self).get_names())
-            result.update(self.builtin_names)
+            result = dict(self.builtin_names)
+            result.update(super(GlobalScope, self).get_names())
             self.names.set(result)
         return self.names.get()
 

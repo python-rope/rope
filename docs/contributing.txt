@@ -56,7 +56,7 @@ Detecting Warnings
 
 This might include detecting unused variables and imports or
 unreachable statements.  `rope.base` can help, too.  Currently rope
-only detects redefined elements.
+detects things like redefined elements and assignment to self.
 
 Modules Without Source Code
 ---------------------------
@@ -93,9 +93,7 @@ examples.
 Submitting patches
 ==================
 
-We're always grateful for patches to Rope's code.  Indeed, bug
-reports with associated patches will get fixed *far* more quickly
-than those without patches.
+Patches to rope's code are welcome.
 
 Patch style
 -----------
@@ -103,7 +101,6 @@ Patch style
 Always use the latest version of files from rope Subversion repository
 from https://rope.svn.sourceforge.net/svnroot/rope
 
-* Submit patches in the format returned by the ``svn diff`` command.
 * Follow :PEP:`8`.
 * Use four spaces for indentation.
 * Include good unit-tests if possible.
