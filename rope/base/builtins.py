@@ -159,7 +159,7 @@ class List(BuiltinClass):
                   argnames=['self', 'index', 'value'])
         collector('insert', function=self._list_add,
                   argnames=['self', 'index', 'value'])
-        collector('extend', function=self._self_set, 
+        collector('extend', function=self._self_set,
                   argnames=['self', 'iterable'])
 
         # Getting methods

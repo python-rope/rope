@@ -21,7 +21,7 @@ class Core(object):
 
     def __init__(self):
         self.root = Tk()
-        self.root.title('Rope')
+        self.root.title('ropeide')
         editingcontexts.init_contexts(self)
         for context in editingcontexts.contexts.values():
             context.menu = Menu(self.root, relief=RAISED, borderwidth=1)

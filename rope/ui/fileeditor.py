@@ -11,9 +11,9 @@ class FileEditor(object):
         self.file = file_
         self.project = project
         editingcontext = None
-        if self.file.name.endswith('.py') or mode == 'python':
+        if self._has_extension(self.file, 'py') or mode == 'python':
             editingcontext = editingcontexts.python
-        elif self.file.name.endswith('.txt') or mode == 'rst':
+        elif self._has_extension(self.file, 'txt', 'rst') or mode == 'rst':
             editingcontext = editingcontexts.rst
         else:
             editingcontext = editingcontexts.others
@@ -27,6 +27,13 @@ class FileEditor(object):
         self.readonly = readonly
         #if readonly:
         #    self.editor.getWidget()['state'] = Tkinter.DISABLED
+
+    def _has_extension(self, resource, *extensions):
+        name = resource.name
+        for extension in extensions:
+            if name.endswith('.' + extension):
+                return True
+        return False
 
     def _register_observers(self):
         modified = self._file_was_modified

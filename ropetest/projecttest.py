@@ -379,6 +379,16 @@ class ProjectTest(unittest.TestCase):
         sample_file.write(contents)
         self.assertEquals(contents, sample_file.read())
 
+    # TODO: Detecting utf-16 encoding
+    def xxx_test_using_utf16(self):
+        sample_file = self.project.root.create_file('my_file.txt')
+        contents = '# -*- coding: utf-16 -*-\n# This is a sample file ...\n'
+        file = open(sample_file.real_path, 'w')
+        file.write(contents.encode('utf-16'))
+        file.close()
+        sample_file.write(contents)
+        self.assertEquals(contents, sample_file.read())
+
     # XXX: supporting utf_8_sig
     def xxx_test_file_encoding_reading_for_notepad_styles(self):
         sample_file = self.project.root.create_file('my_file.txt')

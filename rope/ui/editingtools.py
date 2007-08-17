@@ -45,13 +45,7 @@ class PythonEditingTools(EditingTools):
                 self._code_assist.add_template(name, template)
         return self._code_assist
 
-    def _get_outline(self):
-        if self._outline is None:
-            self._outline = rope.ide.outline.PythonOutline(self.project)
-        return self._outline
-
     codeassist = property(_get_code_assist)
-    outline = property(_get_outline)
 
 
 class ReSTEditingTools(EditingTools):

@@ -3,29 +3,140 @@ import re
 from rope.base import pynames, pyobjects, codeanalyze
 
 
-class OccurrenceFinder(object):
-    """For finding textual occurrences of a name"""
+class FilteredFinder(object):
+    """For finding occurrences of a name"""
 
-    def __init__(self, pycore, name, docs=False):
+    def __init__(self, pycore, name, pynames, only_calls=False,
+                 imports=True, unsure=False, docs=False):
         self.pycore = pycore
+        self.pynames = pynames
         self.name = name
-        self.docs = docs
-        self.comment_pattern = OccurrenceFinder.any('comment', [r'#[^\n]*'])
-        self.string_pattern = OccurrenceFinder.any(
-            'string', [codeanalyze.get_string_pattern()])
-        self.pattern = self._get_occurrence_pattern(self.name)
+        self.only_calls = only_calls
+        self.imports = imports
+        self.unsure = unsure
+        self.occurrence_finder = _TextualFinder(name, docs=docs)
 
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
-        tools = _OccurrenceToolsCreator(self.pycore, resource, pymodule)
-        if not self._fast_file_query(tools.source_code):
+        tools = _OccurrenceToolsCreator(self.pycore, resource=resource,
+                                        pymodule=pymodule)
+        for offset in self.occurrence_finder.find_offsets(tools.source_code):
+            occurrence = Occurrence(tools, offset)
+            if self._is_a_match(occurrence):
+                yield occurrence
+
+    def _is_a_match(self, occurrence):
+        if self.only_calls and not occurrence.is_called():
+            return False
+        if not self.imports and occurrence.is_in_import_statement():
+            return False
+        new_pyname = occurrence.get_pyname()
+        for pyname in self.pynames:
+            if same_pyname(pyname, new_pyname):
+                return True
+            elif self.unsure and self._unsure_match(pyname, new_pyname):
+                occurrence._unsure = True
+                return True
+
+        return False
+
+    def _unsure_match(self, expected, pyname):
+        if pyname is None:
+            return True
+        if isinstance(pyname, pynames.UnboundName) and \
+           pyname.get_object() == pyobjects.get_unknown():
+            return True
+
+
+class Occurrence(object):
+
+    def __init__(self, tools, offset):
+        self.tools = tools
+        self.offset = offset
+
+    _unsure = False
+
+    def get_word_range(self):
+        return self.tools.word_finder.get_word_range(self.offset)
+
+    def get_primary_range(self):
+        return self.tools.word_finder.get_primary_range(self.offset)
+
+    def get_pyname(self):
+        return self.tools.name_finder.get_pyname_at(self.offset)
+
+    def get_primary_and_pyname(self):
+        return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
+
+    def is_in_import_statement(self):
+        return (self.tools.word_finder.is_from_statement(self.offset) or
+                self.tools.word_finder.is_import_statement(self.offset))
+
+    def is_called(self):
+        return self.tools.word_finder.is_a_function_being_called(self.offset)
+
+    def is_defined(self):
+        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
+
+    def is_a_fixed_primary(self):
+        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset) or \
+               self.tools.word_finder.is_a_name_after_from_import(self.offset)
+
+    def is_written(self):
+        return self.tools.word_finder.is_assigned_here(self.offset)
+
+    def is_unsure(self):
+        return self._unsure
+
+
+class MultipleFinders(object):
+
+    def __init__(self, finders):
+        self.finders = finders
+
+    def find_occurrences(self, resource=None, pymodule=None):
+        all_occurrences = []
+        for finder in self.finders:
+            all_occurrences.extend(finder.find_occurrences(resource, pymodule))
+        all_occurrences.sort(self._cmp_occurrences)
+        return all_occurrences
+
+    def _cmp_occurrences(self, o1, o2):
+        return cmp(o1.get_primary_range(), o2.get_primary_range())
+
+
+def same_pyname(expected, pyname):
+    """Check whether `expected` and `pyname` are the same"""
+    if expected is None or pyname is None:
+        return False
+    if expected == pyname:
+        return True
+    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and \
+       type(pyname) not in (pynames.ImportedModule, pynames.ImportedName):
+        return False
+    return expected.get_definition_location() == pyname.get_definition_location() and \
+           expected.get_object() == pyname.get_object()
+
+
+class _TextualFinder(object):
+
+    def __init__(self, name, docs=False):
+        self.name = name
+        self.docs = docs
+        self.comment_pattern = _TextualFinder.any('comment', [r'#[^\n]*'])
+        self.string_pattern = _TextualFinder.any(
+            'string', [codeanalyze.get_string_pattern()])
+        self.pattern = self._get_occurrence_pattern(self.name)
+
+    def find_offsets(self, source):
+        if not self._fast_file_query(source):
             return
         if self.docs:
             searcher = self._normal_search
         else:
             searcher = self._re_search
-        for matched in searcher(tools.source_code):
-            yield Occurrence(tools, matched + 1)
+        for matched in searcher(source):
+            yield matched + 1
 
     def _re_search(self, source):
         for match in self.pattern.finditer(source):
@@ -62,7 +173,7 @@ class OccurrenceFinder(object):
             return pymodule.source_code
 
     def _get_occurrence_pattern(self, name):
-        occurrence_pattern = OccurrenceFinder.any('occurrence',
+        occurrence_pattern = _TextualFinder.any('occurrence',
                                                  ['\\b' + name + '\\b'])
         pattern = re.compile(occurrence_pattern + '|' + self.comment_pattern +
                              '|' + self.string_pattern)
@@ -71,110 +182,6 @@ class OccurrenceFinder(object):
     @staticmethod
     def any(name, list_):
         return '(?P<%s>' % name + '|'.join(list_) + ')'
-
-
-class Occurrence(object):
-
-    def __init__(self, tools, offset):
-        self.tools = tools
-        self.offset = offset
-
-    def get_word_range(self):
-        return self.tools.word_finder.get_word_range(self.offset)
-
-    def get_primary_range(self):
-        return self.tools.word_finder.get_primary_range(self.offset)
-
-    def get_pyname(self):
-        return self.tools.name_finder.get_pyname_at(self.offset)
-
-    def get_primary_and_pyname(self):
-        return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
-
-    def is_in_import_statement(self):
-        return (self.tools.word_finder.is_from_statement(self.offset) or
-                self.tools.word_finder.is_import_statement(self.offset))
-
-    def is_called(self):
-        return self.tools.word_finder.is_a_function_being_called(self.offset)
-
-    def is_defined(self):
-        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
-
-    def is_a_fixed_primary(self):
-        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset) or \
-               self.tools.word_finder.is_a_name_after_from_import(self.offset)
-
-    def is_written(self):
-        return self.tools.word_finder.is_assigned_here(self.offset)
-
-
-class FilteredFinder(object):
-
-    def __init__(self, pycore, name, pynames, only_calls=False,
-                 imports=True, unsure=False, docs=False):
-        self.pycore = pycore
-        self.pynames = pynames
-        self.name = name
-        self.only_calls = only_calls
-        self.imports = imports
-        self.unsure = unsure
-        self.occurrence_finder = OccurrenceFinder(pycore, name, docs=docs)
-
-    def find_occurrences(self, resource=None, pymodule=None):
-        for occurrence in self.occurrence_finder.find_occurrences(
-            resource, pymodule):
-            if self._is_a_match(occurrence):
-                yield occurrence
-
-    def _is_a_match(self, occurrence):
-        if self.only_calls and not occurrence.is_called():
-            return False
-        if not self.imports and occurrence.is_in_import_statement():
-            return False
-        new_pyname = occurrence.get_pyname()
-        for pyname in self.pynames:
-            if FilteredFinder.same_pyname(pyname, new_pyname):
-                return True
-            elif self.unsure and self._unsure_match(pyname, new_pyname):
-                return True
-                
-        return False
-
-    @staticmethod
-    def same_pyname(expected, pyname):
-        if expected is None or pyname is None:
-            return False
-        if expected == pyname:
-            return True
-        if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and \
-           type(pyname) not in (pynames.ImportedModule, pynames.ImportedName):
-            return False
-        return expected.get_definition_location() == pyname.get_definition_location() and \
-               expected.get_object() == pyname.get_object()
-
-    def _unsure_match(self, expected, pyname):
-        if pyname is None:
-            return True
-        if isinstance(pyname, pynames.UnboundName) and \
-           pyname.get_object() == pyobjects.get_unknown():
-            return True
-
-
-class MultipleFinders(object):
-
-    def __init__(self, finders):
-        self.finders = finders
-
-    def find_occurrences(self, resource=None, pymodule=None):
-        all_occurrences = []
-        for finder in self.finders:
-            all_occurrences.extend(finder.find_occurrences(resource, pymodule))
-        all_occurrences.sort(self._cmp_occurrences)
-        return all_occurrences
-
-    def _cmp_occurrences(self, o1, o2):
-        return cmp(o1.get_primary_range(), o2.get_primary_range())
 
 
 class _OccurrenceToolsCreator(object):

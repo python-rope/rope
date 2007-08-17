@@ -126,7 +126,7 @@ class CheckingFinder(SimilarFinder):
         return expected == pyobject
 
     def _same_pyname(self, expected, pyname):
-        return occurrences.FilteredFinder.same_pyname(expected, pyname)
+        return occurrences.same_pyname(expected, pyname)
 
     def _split_name(self, name):
         parts = name.split('.')

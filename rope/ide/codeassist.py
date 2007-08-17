@@ -6,9 +6,160 @@ from rope.base import pyobjects, pynames, taskhandle
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
                                    SourceLinesAdapter, BadIdentifierError)
-from rope.base.exceptions import RopeError
 from rope.ide import pydoc
-from rope.refactor import occurrences, functionutils
+from rope.refactor import occurrences
+
+
+class PythonCodeAssist(object):
+
+    def __init__(self, project):
+        self.project = project
+        import keyword
+        self.keywords = keyword.kwlist
+        self.templates = []
+        self.templates.extend(PythonCodeAssist._get_default_templates())
+
+    builtins = [str(name) for name in dir(__builtin__)
+                if not name.startswith('_')]
+
+    @staticmethod
+    def _get_default_templates():
+        templates = {}
+        templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
+        test_case_template = \
+            ('import unittest\n\n\n'
+             'class ${TestClass}(unittest.TestCase):\n\n'
+             '    def setUp(self):\n        super(${TestClass}, self).setUp()\n\n'
+             '    def tearDown(self):\n        super(${TestClass}, self).tearDown()\n\n'
+             '    def test_trivial_case${cursor}(self):\n        pass\n\n\n'
+             'if __name__ == \'__main__\':\n'
+             '    unittest.main()\n')
+        templates['testcase'] = Template(test_case_template)
+        templates['hash'] = Template('\n    def __hash__(self):\n' +
+                                     '        return 1${cursor}\n')
+        templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
+                                   '        ${cursor}return obj is self\n')
+        templates['super'] = Template('super(${class}, self)')
+        templates.update(PythonCodeAssist.default_templates)
+        result = []
+        for name, template in templates.items():
+            result.append(TemplateProposal(name, template))
+        return result
+
+    default_templates = {}
+
+    @staticmethod
+    def add_default_template(name, definition):
+        PythonCodeAssist.default_templates[name] = Template(definition)
+
+    def _find_starting_offset(self, source_code, offset):
+        current_offset = offset - 1
+        while current_offset >= 0 and (source_code[current_offset].isalnum() or
+                                       source_code[current_offset] in '_'):
+            current_offset -= 1;
+        return current_offset + 1
+
+    def _get_matching_builtins(self, starting):
+        result = {}
+        for builtin in self.builtins:
+            if builtin.startswith(starting):
+                result[builtin] = CompletionProposal(builtin, 'builtin')
+        return result
+
+    def _get_matching_keywords(self, starting):
+        result = {}
+        for kw in self.keywords:
+            if kw.startswith(starting):
+                result[kw] = CompletionProposal(kw, 'keyword')
+        return result
+
+    def add_template(self, name, definition):
+        self.templates.append(TemplateProposal(name, Template(definition)))
+
+    def _get_template_proposals(self, starting):
+        result = []
+        for template in self.templates:
+            if template.name.startswith(starting):
+                result.append(template)
+        return result
+
+    def _get_code_completions(self, source_code, offset,
+                              expression, starting, resource):
+        collector = _CodeCompletionCollector(self.project, source_code, offset,
+                                             expression, starting, resource)
+        return collector.get_code_completions()
+
+    def assist(self, source_code, offset, resource=None):
+        if offset > len(source_code):
+            return Proposals()
+        word_finder = WordRangeFinder(source_code)
+        expression, starting, starting_offset = \
+            word_finder.get_splitted_primary_before(offset)
+        completions = self._get_code_completions(
+            source_code, offset, expression, starting, resource)
+        templates = []
+        if expression.strip() == '' and starting.strip() != '':
+            completions.update(self._get_matching_builtins(starting))
+            completions.update(self._get_matching_keywords(starting))
+            templates = self._get_template_proposals(starting)
+        return Proposals(completions.values(), templates,
+                         starting_offset)
+
+def get_doc(project, source_code, offset, resource=None):
+    pymodule = get_pymodule(project.pycore, source_code, resource)
+    scope_finder = ScopeNameFinder(pymodule)
+    element = scope_finder.get_pyname_at(offset)
+    if element is None:
+        return None
+    pyobject = element.get_object()
+    return pydoc.get_doc(pyobject)
+
+
+def get_definition_location(project, source_code, offset, resource=None):
+    pymodule = project.pycore.get_string_module(source_code, resource)
+    scope_finder = ScopeNameFinder(pymodule)
+    element = scope_finder.get_pyname_at(offset)
+    if element is not None:
+        module, lineno = element.get_definition_location()
+        if module is not None:
+            return module.get_module().get_resource(), lineno
+    return (None, None)
+
+
+def find_occurrences(project, resource, offset, unsure=False,
+                     task_handle=taskhandle.NullTaskHandle()):
+    name = rope.base.codeanalyze.get_name_at(resource, offset)
+    pyname = rope.base.codeanalyze.get_pyname_at(project.get_pycore(),
+                                                 resource, offset)
+    finder = occurrences.FilteredFinder(
+        project.get_pycore(), name, [pyname], unsure=unsure)
+    files = project.get_pycore().get_python_files()
+    job_set = task_handle.create_jobset('Finding Occurrences',
+                                        count=len(files))
+    result = []
+    for resource in files:
+        job_set.started_job('Working On <%s>' % resource.path)
+        for occurrence in finder.find_occurrences(resource):
+            result.append((resource, occurrence.get_word_range()[0],
+                           occurrence.is_unsure()))
+        job_set.finished_job()
+    return result
+
+
+class Proposals(object):
+    """A CodeAssist result.
+
+    Attribute:
+    completions -- A list of `CompletionProposal`\s
+    templates -- A list of `TemplateProposal`\s
+    start_offset -- completion start offset
+
+    """
+
+    def __init__(self, completions=[], templates=[], start_offset=0):
+        self.completions = completions
+        self.templates = templates
+        self.start_offset = start_offset
 
 
 class CodeAssistProposal(object):
@@ -100,22 +251,6 @@ class Template(object):
         new_template = self.template[0:cursor_index]
         start = len(self._substitute(new_template, mapping))
         return start
-
-
-class Proposals(object):
-    """A CodeAssist result.
-
-    Attribute:
-    completions -- A list of `CompletionProposal`\s
-    templates -- A list of `TemplateProposal`\s
-    start_offset -- completion start offset
-
-    """
-
-    def __init__(self, completions=[], templates=[], start_offset=0):
-        self.completions = completions
-        self.templates = templates
-        self.start_offset = start_offset
 
 
 class _CodeCompletionCollector(object):
@@ -271,12 +406,8 @@ class _CodeCompletionCollector(object):
                     pyobject = pyobject.get_attribute('__call__').get_object()
                 if isinstance(pyobject, pyobjects.AbstractFunction):
                     param_names = []
-                    if isinstance(pyobject, pyobjects.PyFunction):
-                        function_info = functionutils.DefinitionInfo.read(pyobject)
-                        param_names.extend([name for name, default
-                                            in function_info.args_with_defaults])
-                    else:
-                        param_names = pyobject.get_param_names()
+                    param_names.extend(
+                        pyobject.get_param_names(special_args=False))
                     result = {}
                     for name in param_names:
                         if name.startswith(self.starting):
@@ -286,157 +417,10 @@ class _CodeCompletionCollector(object):
         return {}
 
 
-class PythonCodeAssist(object):
-
-    def __init__(self, project):
-        self.project = project
-        import keyword
-        self.keywords = keyword.kwlist
-        self.templates = []
-        self.templates.extend(PythonCodeAssist._get_default_templates())
-
-    builtins = [str(name) for name in dir(__builtin__)
-                if not name.startswith('_')]
-
-    @staticmethod
-    def _get_default_templates():
-        templates = {}
-        templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
-        test_case_template = \
-            ('import unittest\n\n\n'
-             'class ${TestClass}(unittest.TestCase):\n\n'
-             '    def setUp(self):\n        super(${TestClass}, self).setUp()\n\n'
-             '    def tearDown(self):\n        super(${TestClass}, self).tearDown()\n\n'
-             '    def test_trivial_case${cursor}(self):\n        pass\n\n\n'
-             'if __name__ == \'__main__\':\n'
-             '    unittest.main()\n')
-        templates['testcase'] = Template(test_case_template)
-        templates['hash'] = Template('\n    def __hash__(self):\n' +
-                                     '        return 1${cursor}\n')
-        templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
-                                   '        ${cursor}return obj is self\n')
-        templates['super'] = Template('super(${class}, self)')
-        templates.update(PythonCodeAssist.default_templates)
-        result = []
-        for name, template in templates.items():
-            result.append(TemplateProposal(name, template))
-        return result
-
-    default_templates = {}
-
-    @staticmethod
-    def add_default_template(name, definition):
-        PythonCodeAssist.default_templates[name] = Template(definition)
-
-    def _find_starting_offset(self, source_code, offset):
-        current_offset = offset - 1
-        while current_offset >= 0 and (source_code[current_offset].isalnum() or
-                                       source_code[current_offset] in '_'):
-            current_offset -= 1;
-        return current_offset + 1
-
-    def _get_matching_builtins(self, starting):
-        result = {}
-        for builtin in self.builtins:
-            if builtin.startswith(starting):
-                result[builtin] = CompletionProposal(builtin, 'builtin')
-        return result
-
-    def _get_matching_keywords(self, starting):
-        result = {}
-        for kw in self.keywords:
-            if kw.startswith(starting):
-                result[kw] = CompletionProposal(kw, 'keyword')
-        return result
-
-    def add_template(self, name, definition):
-        self.templates.append(TemplateProposal(name, Template(definition)))
-
-    def _get_template_proposals(self, starting):
-        result = []
-        for template in self.templates:
-            if template.name.startswith(starting):
-                result.append(template)
-        return result
-
-    def _get_code_completions(self, source_code, offset,
-                              expression, starting, resource):
-        collector = _CodeCompletionCollector(self.project, source_code, offset,
-                                             expression, starting, resource)
-        return collector.get_code_completions()
-
-    def assist(self, source_code, offset, resource=None):
-        if offset > len(source_code):
-            return Proposals()
-        word_finder = WordRangeFinder(source_code)
-        expression, starting, starting_offset = \
-            word_finder.get_splitted_primary_before(offset)
-        completions = self._get_code_completions(
-            source_code, offset, expression, starting, resource)
-        templates = []
-        if expression.strip() == '' and starting.strip() != '':
-            completions.update(self._get_matching_builtins(starting))
-            completions.update(self._get_matching_keywords(starting))
-            templates = self._get_template_proposals(starting)
-        return Proposals(completions.values(), templates,
-                         starting_offset)
-
-    def get_definition_location(self, source_code, offset, resource=None):
-        return _GetDefinitionLocation(self.project, source_code, offset,
-                                      resource).get_definition_location()
-
-    def get_doc(self, source_code, offset, resource=None):
-        pymodule = get_pymodule(self.project.pycore, source_code, resource)
-        scope_finder = ScopeNameFinder(pymodule)
-        element = scope_finder.get_pyname_at(offset)
-        if element is None:
-            return None
-        pyobject = element.get_object()
-        return pydoc.get_doc(pyobject)
-
-    def find_occurrences(self, resource, offset, unsure=False,
-                         task_handle=taskhandle.NullTaskHandle()):
-        name = rope.base.codeanalyze.get_name_at(resource, offset)
-        pyname = rope.base.codeanalyze.get_pyname_at(self.project.get_pycore(),
-                                                     resource, offset)
-        finder = occurrences.FilteredFinder(
-            self.project.get_pycore(), name, [pyname], unsure=unsure)
-        files = self.project.get_pycore().get_python_files()
-        job_set = task_handle.create_jobset('Finding Occurrences',
-                                             count=len(files))
-        result = []
-        for resource in files:
-            job_set.started_job('Working On <%s>' % resource.path)
-            for occurrence in finder.find_occurrences(resource):
-                result.append((resource, occurrence.get_word_range()[0]))
-            job_set.finished_job()
-        return result
-
-
 def get_pymodule(pycore, source_code, resource):
     if resource and resource.exists() and source_code == resource.read():
         return pycore.resource_to_pyobject(resource)
     return pycore.get_string_module(source_code, resource=resource)
-
-
-class _GetDefinitionLocation(object):
-
-    def __init__(self, project, source_code, offset, resource):
-        self.project = project
-        self.offset = offset
-        self.source_code = source_code
-        self.resource = resource
-
-    def get_definition_location(self):
-        pymodule = self.project.pycore.get_string_module(self.source_code,
-                                                         self.resource)
-        scope_finder = ScopeNameFinder(pymodule)
-        element = scope_finder.get_pyname_at(self.offset)
-        if element is not None:
-            module, lineno = element.get_definition_location()
-            if module is not None:
-                return module.get_module().get_resource(), lineno
-        return (None, None)
 
 
 class ProposalSorter(object):

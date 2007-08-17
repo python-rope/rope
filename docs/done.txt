@@ -3,6 +3,9 @@
 ===========
 
 
+- Showing unsure occurrences in show occurrences : August 17, 2007
+
+
 - Sorting scopes : August 9, 2007
 
 

@@ -5,7 +5,7 @@ import rope.ide.codeassist
 import rope.ui.core
 import rope.ui.testview
 from rope.base import codeanalyze
-from rope.ide import formatter, notes, generate, sort
+from rope.ide import formatter, notes, generate, sort, outline
 from rope.ui import spelldialog, registers
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
 from rope.ui.extension import SimpleAction
@@ -45,7 +45,8 @@ def do_quick_outline(context):
     toplevel.title('Quick Outline')
     tree_view = TreeView(toplevel, _OutlineViewHandle(editor, toplevel),
                          title='Quick Outline')
-    for node in context.editingtools.outline.get_root_nodes(editor.get_text()):
+    for node in (outline.PythonOutline(context.project).\
+                 get_root_nodes(editor.get_text())):
         tree_view.add_entry(node)
     toplevel.grab_set()
 
@@ -83,6 +84,7 @@ class _CompletionListHandle(EnhancedListHandle):
 
     def focus_went_out(self):
         self.canceled()
+
 
 def do_code_assist(context):
     editor = context.get_active_editor().get_editor()
@@ -170,8 +172,9 @@ def _get_template_information(editor, result, proposal):
 
 def do_goto_definition(context):
     editor = context.get_active_editor().get_editor()
-    resource, lineno = context.editingtools.codeassist.get_definition_location(
-        editor.get_text(), editor.get_current_offset(), context.resource)
+    resource, lineno = rope.ide.codeassist.get_definition_location(
+        context.project, editor.get_text(),
+        editor.get_current_offset(), context.resource)
     if resource is not None:
         new_editor = context.core.get_editor_manager().\
                      get_resource_editor(resource).get_editor()
@@ -184,9 +187,9 @@ def do_show_doc(context):
     if not context.get_active_editor():
         return
     editor = context.get_active_editor().get_editor()
-    doc = context.editingtools.codeassist.get_doc(editor.get_text(),
-                                                  editor.get_current_offset(),
-                                                  context.resource)
+    doc = rope.ide.codeassist.get_doc(
+        context.project, editor.get_text(),
+        editor.get_current_offset(), context.resource)
     if doc is not None:
         toplevel = Tkinter.Toplevel()
         toplevel.title('Show Doc')
@@ -231,7 +234,10 @@ class _OccurrenceListHandle(EnhancedListHandle):
         self.focus_set = focus_set
 
     def entry_to_string(self, entry):
-        return entry[0].path + ' : ' + str(entry[1])
+        result = entry[0].path + ' : ' + str(entry[1])
+        if entry[2]:
+            result += ' ?'
+        return result
 
     def canceled(self):
         self.toplevel.destroy()
@@ -249,8 +255,9 @@ def find_occurrences(context):
     resource = context.resource
     offset = context.editor.get_current_offset()
     def calculate(handle):
-        return context.editingtools.codeassist.find_occurrences(
-            resource, offset, task_handle=handle)
+        return rope.ide.codeassist.find_occurrences(
+            context.project, resource, offset,
+            unsure=True, task_handle=handle)
     result = StoppableTaskRunner(calculate, title='Finding Occurrences')()
     enhanced_list = None
     def focus_set():
