@@ -1,4 +1,5 @@
 import __builtin__
+import keyword
 import re
 
 import rope.base.codeanalyze
@@ -14,39 +15,12 @@ class PythonCodeAssist(object):
 
     def __init__(self, project):
         self.project = project
-        import keyword
         self.keywords = keyword.kwlist
         self.templates = []
         self.templates.extend(PythonCodeAssist._get_default_templates())
 
     builtins = [str(name) for name in dir(__builtin__)
                 if not name.startswith('_')]
-
-    @staticmethod
-    def _get_default_templates():
-        templates = {}
-        templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
-        test_case_template = \
-            ('import unittest\n\n\n'
-             'class ${TestClass}(unittest.TestCase):\n\n'
-             '    def setUp(self):\n        super(${TestClass}, self).setUp()\n\n'
-             '    def tearDown(self):\n        super(${TestClass}, self).tearDown()\n\n'
-             '    def test_trivial_case${cursor}(self):\n        pass\n\n\n'
-             'if __name__ == \'__main__\':\n'
-             '    unittest.main()\n')
-        templates['testcase'] = Template(test_case_template)
-        templates['hash'] = Template('\n    def __hash__(self):\n' +
-                                     '        return 1${cursor}\n')
-        templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
-                                   '        ${cursor}return obj is self\n')
-        templates['super'] = Template('super(${class}, self)')
-        templates.update(PythonCodeAssist.default_templates)
-        result = []
-        for name, template in templates.items():
-            result.append(TemplateProposal(name, template))
-        return result
-
-    default_templates = {}
 
     @staticmethod
     def add_default_template(name, definition):
@@ -105,6 +79,33 @@ class PythonCodeAssist(object):
         return Proposals(completions.values(), templates,
                          starting_offset)
 
+    @staticmethod
+    def _get_default_templates():
+        templates = {}
+        templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
+        test_case_template = \
+            ('import unittest\n\n\n'
+             'class ${TestClass}(unittest.TestCase):\n\n'
+             '    def setUp(self):\n        super(${TestClass}, self).setUp()\n\n'
+             '    def tearDown(self):\n        super(${TestClass}, self).tearDown()\n\n'
+             '    def test_trivial_case${cursor}(self):\n        pass\n\n\n'
+             'if __name__ == \'__main__\':\n'
+             '    unittest.main()\n')
+        templates['testcase'] = Template(test_case_template)
+        templates['hash'] = Template('\n    def __hash__(self):\n' +
+                                     '        return 1${cursor}\n')
+        templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
+                                   '        ${cursor}return obj is self\n')
+        templates['super'] = Template('super(${class}, self)')
+        templates.update(PythonCodeAssist.default_templates)
+        result = []
+        for name, template in templates.items():
+            result.append(TemplateProposal(name, template))
+        return result
+
+    default_templates = {}
+
+
 def get_doc(project, source_code, offset, resource=None):
     pymodule = get_pymodule(project.pycore, source_code, resource)
     scope_finder = ScopeNameFinder(pymodule)
@@ -126,8 +127,16 @@ def get_definition_location(project, source_code, offset, resource=None):
     return (None, None)
 
 
+class Location(object):
+
+    resource = None
+    offset = None
+    unsure = False
+
+
 def find_occurrences(project, resource, offset, unsure=False,
                      task_handle=taskhandle.NullTaskHandle()):
+    """Return a list of `Location`\s"""
     name = rope.base.codeanalyze.get_name_at(resource, offset)
     pyname = rope.base.codeanalyze.get_pyname_at(project.get_pycore(),
                                                  resource, offset)
@@ -140,8 +149,11 @@ def find_occurrences(project, resource, offset, unsure=False,
     for resource in files:
         job_set.started_job('Working On <%s>' % resource.path)
         for occurrence in finder.find_occurrences(resource):
-            result.append((resource, occurrence.get_word_range()[0],
-                           occurrence.is_unsure()))
+            location = Location()
+            location.resource = resource
+            location.offset = occurrence.get_word_range()[0]
+            location.unsure = occurrence.is_unsure()
+            result.append(location)
         job_set.finished_job()
     return result
 
@@ -220,7 +232,7 @@ class Template(object):
 
     def variables(self):
         """Get template variables
-        
+
         Return the list of variables sorted by their order of
         occurence in the template.
 
@@ -417,6 +429,20 @@ class _CodeCompletionCollector(object):
         return {}
 
 
+class _cache(object):
+
+    def __init__(self, function):
+        self.function = function
+        self.cache = None
+
+    def __call__(self, *args, **kwds):
+        if self.cache is None or (args, kwds) != self.cache[0]:
+            result = self.function(*args, **kwds)
+            self.cache = ((args, kwds), result)
+        return self.cache[1]        
+
+
+@_cache
 def get_pymodule(pycore, source_code, resource):
     if resource and resource.exists() and source_code == resource.read():
         return pycore.resource_to_pyobject(resource)

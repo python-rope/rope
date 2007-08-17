@@ -234,8 +234,8 @@ class _OccurrenceListHandle(EnhancedListHandle):
         self.focus_set = focus_set
 
     def entry_to_string(self, entry):
-        result = entry[0].path + ' : ' + str(entry[1])
-        if entry[2]:
+        result = entry.resource.path + ' : ' + str(entry.offset)
+        if entry.unsure:
             result += ' ?'
         return result
 

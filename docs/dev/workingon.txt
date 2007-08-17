@@ -1,10 +1,8 @@
 Small Stories
 =============
 
-- Adding unsure occurrences to find occurrences
-
 * Moving codeassist from editingtools to core?
-* Caching last pymodule in `codeassist.get_pymodule()`?
+* Caching last pymodule in `codeassist.get_pymodule()`?  Probably not?
 * Refactor codeanalyze
 
 * Adding an option to inline not to remove the definition

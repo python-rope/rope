@@ -1,7 +1,8 @@
 import unittest
 
 from rope.base import exceptions
-from rope.ide.codeassist import PythonCodeAssist, Template, ProposalSorter
+from rope.ide.codeassist import (PythonCodeAssist, Template, ProposalSorter,
+                                 get_definition_location, get_doc, find_occurrences)
 from ropetest import testutils
 
 
@@ -305,18 +306,18 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_get_definition_location(self):
         code = 'def a_func():\n    pass\na_func()'
-        result = self.assist.get_definition_location(code, len(code) - 3)
+        result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 1), result)
 
     def test_get_definition_location_underlined_names(self):
         code = 'def a_sample_func():\n    pass\na_sample_func()'
-        result = self.assist.get_definition_location(code, len(code) - 11)
+        result = get_definition_location(self.project, code, len(code) - 11)
         self.assertEquals((None, 1), result)
 
     def test_get_definition_location_dotted_names(self):
         code = 'class AClass(object):\n    ' + \
                '@staticmethod\n    def a_method():\n        pass\nAClass.a_method()'
-        result = self.assist.get_definition_location(code, len(code) - 3)
+        result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 2), result)
 
     def test_get_definition_location_dotted_module_names(self):
@@ -324,7 +325,7 @@ class CodeAssistTest(unittest.TestCase):
                           create_module(self.project.root, 'mod')
         module_resource.write('def a_func():\n    pass\n')
         code = 'import mod\nmod.a_func()'
-        result = self.assist.get_definition_location(code, len(code) - 3)
+        result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((module_resource, 1), result)
 
     def test_get_definition_location_for_nested_packages(self):
@@ -337,31 +338,32 @@ class CodeAssistTest(unittest.TestCase):
 
         mod1_scope = pycore.resource_to_pyobject(mod1).get_scope()
         init_dot_py = pkg2.get_child('__init__.py')
-        found_pyname = self.assist.get_definition_location(mod1.read(),
-                                                           mod1.read().index('pkg2') + 1)
+        found_pyname = get_definition_location(self.project, mod1.read(),
+                                               mod1.read().index('pkg2') + 1)
         self.assertEquals(init_dot_py, found_pyname[0])
 
     def test_get_definition_location_unknown(self):
         code = 'a_func()\n'
-        result = self.assist.get_definition_location(code, len(code) - 3)
+        result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, None), result)
 
     def test_get_definition_location_dot_spaces(self):
         code = 'class AClass(object):\n    ' \
                '@staticmethod\n    def a_method():\n' \
                '        pass\nAClass.\\\n     a_method()'
-        result = self.assist.get_definition_location(code, len(code) - 3)
+        result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 2), result)
 
     def test_get_definition_location_dot_line_break_inside_parens(self):
         code = 'class A(object):\n    def a_method(self):\n        pass\n' + \
                '(A.\na_method)'
-        result = self.assist.get_definition_location(code, code.rindex('a_method') + 1)
+        result = get_definition_location(self.project, code,
+                                         code.rindex('a_method') + 1)
         self.assertEquals((None, 2), result)
 
     def test_if_scopes_in_other_scopes_for_get_definition_location(self):
         code = 'def f(a_var):\n    pass\na_var = 10\nif True:\n    print a_var\n'
-        result = self.assist.get_definition_location(code, len(code) - 3)
+        result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 3), result)
 
     def test_code_assists_in_parens(self):
@@ -431,32 +433,34 @@ class CodeAssistTest(unittest.TestCase):
     def test_get_pydoc_for_functions(self):
         src = 'def a_func():\n    """a function"""\n' \
               '    a_var = 10\na_func()'
-        self.assertTrue(self.assist.get_doc(src, len(src) - 4).endswith('a function'))
-        self.assist.get_doc(src, len(src) - 4).index('a_func()')
+        self.assertTrue(get_doc(self.project, src, len(src) - 4).
+                        endswith('a function'))
+        get_doc(self.project, src, len(src) - 4).index('a_func()')
 
     def test_get_pydoc_for_classes(self):
         src = 'class AClass(object):\n    pass\n'
-        self.assist.get_doc(src, src.index('AClass') + 1).index('AClass')
+        get_doc(self.project, src, src.index('AClass') + 1).index('AClass')
 
     def test_get_pydoc_for_classes_with_init(self):
         src = 'class AClass(object):\n    def __init__(self):\n        pass\n'
-        self.assist.get_doc(src, src.index('AClass') + 1).index('AClass')
+        get_doc(self.project, src, src.index('AClass') + 1).index('AClass')
 
     def test_get_pydoc_for_modules(self):
         pycore = self.project.get_pycore()
         mod = pycore.create_module(self.project.root, 'mod')
         mod.write('"""a module"""\n')
         src = 'import mod\nmod'
-        self.assertEquals('a module', self.assist.get_doc(src, len(src) - 1))
+        self.assertEquals('a module', get_doc(self.project, src, len(src) - 1))
 
     def test_get_pydoc_for_builtins(self):
         src = 'print(object)\n'
-        self.assertTrue(self.assist.get_doc(src, src.index('obj')) is not None)
+        self.assertTrue(get_doc(self.project, src,
+                                src.index('obj')) is not None)
 
     def test_get_pydoc_for_methods_should_include_class_name(self):
         src = 'class AClass(object):\n    def a_method(self):\n'\
               '        """hey"""\n        pass\n'
-        doc = self.assist.get_doc(src, src.index('a_method') + 1)
+        doc = get_doc(self.project, src, src.index('a_method') + 1)
         doc.index('AClass.a_method')
         doc.index('hey')
 
@@ -465,7 +469,7 @@ class CodeAssistTest(unittest.TestCase):
               '        """hey1"""\n        pass\n' \
               'class B(A):\n    def a_method(self):\n' \
               '        """hey2"""\n        pass\n'
-        doc = self.assist.get_doc(src, src.rindex('a_method') + 1)
+        doc = get_doc(self.project, src, src.rindex('a_method') + 1)
         doc.index('A.a_method')
         doc.index('hey1')
         doc.index('B.a_method')
@@ -474,12 +478,12 @@ class CodeAssistTest(unittest.TestCase):
     def test_get_pydoc_for_classes_should_name_super_classes(self):
         src = 'class A(object):\n    pass\n' \
               'class B(A):\n    pass\n'
-        doc = self.assist.get_doc(src, src.rindex('B') + 1)
+        doc = get_doc(self.project, src, src.rindex('B') + 1)
         doc.index('B(A)')
 
     def test_get_pydoc_for_builtin_functions(self):
         src = 's = "hey"\ns.replace\n'
-        doc = self.assist.get_doc(src, src.rindex('replace') + 1)
+        doc = get_doc(self.project, src, src.rindex('replace') + 1)
         self.assertTrue(doc is not None)
 
     def test_proposing_variables_defined_till_the_end_of_scope(self):
@@ -708,7 +712,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         mod2 = self.pycore.create_module(pkg, 'mod2')
         mod1.write('def a_func():\n    pass\n')
         code = 'import mod1\nmod1.a_func\n'
-        result = self.assist.get_definition_location(code, len(code) - 2, mod2)
+        result = get_definition_location(self.project, code,
+                                         len(code) - 2, mod2)
         self.assertEquals((mod1, 1), result)
 
     def test_get_doc_on_relative_imports(self):
@@ -717,30 +722,33 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         mod2 = self.pycore.create_module(pkg, 'mod2')
         mod1.write('def a_func():\n    """hey"""\n    pass\n')
         code = 'import mod1\nmod1.a_func\n'
-        result = self.assist.get_doc(code, len(code) - 2, mod2)
+        result = get_doc(self.project, code, len(code) - 2, mod2)
         self.assertTrue(result.endswith('hey'))
 
     def test_finding_occurrences(self):
         mod = self.pycore.create_module(self.project.root, 'mod')
         mod.write('a_var = 1\n')
-        result = self.assist.find_occurrences(mod, 1)
-        self.assertEquals([(mod, 0)], result)
+        result = find_occurrences(self.project, mod, 1)
+        self.assertEquals(mod, result[0].resource)
+        self.assertEquals(0, result[0].offset)
+        self.assertEquals(False, result[0].unsure)
 
     def test_finding_occurrences_in_more_than_one_module(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod2 = self.pycore.create_module(self.project.root, 'mod2')
         mod1.write('a_var = 1\n')
         mod2.write('import mod1\nmy_var = mod1.a_var')
-        result = self.assist.find_occurrences(mod1, 1)
+        result = find_occurrences(self.project, mod1, 1)
         self.assertEquals(2, len(result))
-        self.assertTrue((mod1, 0) in result and (mod2, mod2.read().index('a_var')) in result)
+        modules = (result[0].resource, result[1].resource)
+        self.assertTrue(mod1 in modules and mod2 in modules)
 
     def test_finding_occurrences_matching_when_unsure(self):
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write('class C(object):\n    def a_func(self):\n        pass\n'
                    'def f(arg):\n    arg.a_func()\n')
-        result = self.assist.find_occurrences(
-            mod1, mod1.read().index('a_func'), unsure=True)
+        result = find_occurrences(
+            self.project, mod1, mod1.read().index('a_func'), unsure=True)
         self.assertEquals(2, len(result))
 
 

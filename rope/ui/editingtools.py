@@ -1,9 +1,7 @@
-import rope.ui.indenter
-import rope.ui.highlighter
 import rope.ide.codeassist
-import rope.ide.outline
-import rope.refactor
 import rope.refactor.sourceutils
+import rope.ui.highlighter
+import rope.ui.indenter
 
 
 def get_editingtools_for_context(editing_context, project, prefs):
