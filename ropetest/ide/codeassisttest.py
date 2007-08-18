@@ -2,8 +2,8 @@ import unittest
 
 from rope.base import exceptions
 from rope.ide.codeassist import \
-     (PythonCodeAssist, Template, get_definition_location,
-      get_doc, find_occurrences, code_assist, sort_proposals)
+     (Template, get_definition_location, get_doc,
+      find_occurrences, code_assist, sort_proposals, starting_offset)
 from ropetest import testutils
 
 
@@ -12,7 +12,6 @@ class CodeAssistTest(unittest.TestCase):
     def setUp(self):
         super(CodeAssistTest, self).setUp()
         self.project = testutils.sample_project()
-        self.assist = PythonCodeAssist(self.project)
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -21,20 +20,19 @@ class CodeAssistTest(unittest.TestCase):
     def _assist(self, code, offset=None, templates={}):
         if offset is None:
             offset = len(code)
-        return code_assist(self.project, code, offset,
-                           templates=templates)
+        return code_assist(self.project, code, offset, templates=templates)
 
     def test_simple_assist(self):
         self._assist('', 0)
 
     def assert_completion_in_result(self, name, kind, result):
-        for proposal in result.completions:
+        for proposal in result:
             if proposal.name == name and proposal.kind == kind:
                 return
         self.fail('completion <%s> not proposed' % name)
 
     def assert_completion_not_in_result(self, name, kind, result):
-        for proposal in result.completions:
+        for proposal in result:
             if proposal.name == name and proposal.kind == kind:
                 self.fail('completion <%s> was proposed' % name)
 
@@ -71,7 +69,7 @@ class CodeAssistTest(unittest.TestCase):
     def test_proposing_each_name_at_most_once(self):
         code = 'variable = 10\nvariable = 20\nt = vari'
         result = self._assist(code)
-        count = len([x for x in result.completions
+        count = len([x for x in result
                      if x.name == 'variable' and x.kind == 'global'])
         self.assertEquals(1, count)
 
@@ -92,8 +90,7 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_completion_result(self):
         code = 'my_global = 10\nt = my'
-        result = self._assist(code)
-        self.assertEquals(len(code) - 2, result.start_offset)
+        self.assertEquals(len(code) - 2, starting_offset(code, len(code)))
 
     def test_completing_imported_names(self):
         code = 'import sys\na = sy'
@@ -284,14 +281,14 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result('param', 'local', result)
 
     def assert_template_in_result(self, name, result):
-        for template in result.templates:
+        for template in result:
             if template.name == name:
                 break
         else:
             self.fail('template <%s> was not proposed' % name)
 
     def assert_template_not_in_result(self, name, result):
-        for template in result.templates:
+        for template in result:
             if template.name == name:
                 self.fail('template <%s> was proposed' % name)
 
@@ -594,7 +591,6 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def setUp(self):
         super(CodeAssistInProjectsTest, self).setUp()
         self.project = testutils.sample_project()
-        self.assist = PythonCodeAssist(self.project)
         self.pycore = self.project.get_pycore()
         samplemod = self.pycore.create_module(self.project.root, 'samplemod')
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
@@ -608,16 +604,16 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         super(self.__class__, self).tearDown()
 
     def _assist(self, code, resource=None):
-        return self.assist.assist(code, len(code), resource)
+        return code_assist(self.project, code, len(code), resource)
 
     def assert_completion_in_result(self, name, kind, result):
-        for proposal in result.completions:
+        for proposal in result:
             if proposal.name == name and proposal.kind == kind:
                 return
         self.fail('completion <%s> not proposed' % name)
 
     def assert_completion_not_in_result(self, name, kind, result):
-        for proposal in result.completions:
+        for proposal in result:
             if proposal.name == name and proposal.kind == kind:
                 self.fail('completion <%s> was proposed' % name)
 
@@ -692,8 +688,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def test_result_start_offset_for_dotted_completions(self):
         code = 'class Sample(object):\n    def method1(self):\n        pass\n' + \
                'Sample.me'
-        result = self._assist(code)
-        self.assertEquals(len(code) - 2, result.start_offset)
+        self.assertEquals(len(code) - 2, starting_offset(code, len(code)))
 
     def test_backslash_after_dots(self):
         code = 'class Sample(object):\n    def a_method(self):\n        pass\n' + \

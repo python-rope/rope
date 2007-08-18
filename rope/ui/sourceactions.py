@@ -53,10 +53,10 @@ def do_quick_outline(context):
 
 class _CompletionListHandle(EnhancedListHandle):
 
-    def __init__(self, editor, toplevel, code_assist_result):
+    def __init__(self, editor, toplevel, start_offset):
         self.editor = editor
         self.toplevel = toplevel
-        self.result = code_assist_result
+        self.start_offset = start_offset
 
     def entry_to_string(self, proposal):
         mode = '  '
@@ -74,11 +74,11 @@ class _CompletionListHandle(EnhancedListHandle):
 
     def selected(self, selected):
         if isinstance(selected, rope.ide.codeassist.TemplateProposal):
-            _get_template_information(self.editor, self.result, selected)
+            _get_template_information(self.editor, selected, self.start_offset)
         else:
-            self.editor.text.delete('0.0 +%dc' % self.result.start_offset,
+            self.editor.text.delete('0.0 +%dc' % self.start_offset,
                                     Tkinter.INSERT)
-            self.editor.text.insert('0.0 +%dc' % self.result.start_offset,
+            self.editor.text.insert('0.0 +%dc' % self.start_offset,
                                     selected.name)
         self.toplevel.destroy()
 
@@ -90,19 +90,21 @@ class DoCodeAssist(object):
 
     def __call__(self, context):
         editor = context.get_active_editor().get_editor()
+        source = editor.get_text()
+        offset = editor.get_current_offset()
         result = rope.ide.codeassist.code_assist(
-            context.project, editor.get_text(),
-            editor.get_current_offset(), context.resource,
+            context.project, source, offset, context.resource,
             templates=self._get_templates(context))
         proposals = rope.ide.codeassist.sort_proposals(result)
+        start_offset = rope.ide.codeassist.starting_offset(source, offset)
         toplevel = Tkinter.Toplevel()
         toplevel.title('Code Assist Proposals')
-        handle = _CompletionListHandle(editor, toplevel, result)
+        handle = _CompletionListHandle(editor, toplevel, start_offset)
         enhanced_list = EnhancedList(
             toplevel, handle, title='Code Assist Proposals', height=9, width=30)
         for proposal in proposals:
             enhanced_list.add_entry(proposal)
-        start_index = editor.text.index('0.0 +%dc' % result.start_offset)
+        start_index = editor.text.index('0.0 +%dc' % start_offset)
         initial_cursor_position = str(editor.text.index(Tkinter.INSERT))
         def key_pressed(event):
             import string
@@ -140,15 +142,15 @@ class DoCodeAssist(object):
         return self._templates
 
 
-def _get_template_information(editor, result, proposal):
+def _get_template_information(editor, proposal, start_offset):
     template = proposal.template
     def apply_template(mapping):
         string = template.substitute(mapping)
-        editor.text.delete('0.0 +%dc' % result.start_offset, Tkinter.INSERT)
-        editor.text.insert('0.0 +%dc' % result.start_offset,
+        editor.text.delete('0.0 +%dc' % start_offset, Tkinter.INSERT)
+        editor.text.insert('0.0 +%dc' % start_offset,
                          string)
         offset = template.get_cursor_location(mapping)
-        editor.text.mark_set(Tkinter.INSERT, '0.0 +%dc' % (result.start_offset + offset))
+        editor.text.mark_set(Tkinter.INSERT, '0.0 +%dc' % (start_offset + offset))
         editor.text.see(Tkinter.INSERT)
 
     if not template.variables():

@@ -11,80 +11,28 @@ from rope.ide import pydoc
 from rope.refactor import occurrences
 
 
-class PythonCodeAssist(object):
-
-    def __init__(self, project, templates={}):
-        self.project = project
-        self.keywords = keyword.kwlist
-        self.templates = templates
-
-    builtins = [str(name) for name in dir(__builtin__)
-                if not name.startswith('_')]
-
-    def _find_starting_offset(self, source_code, offset):
-        current_offset = offset - 1
-        while current_offset >= 0 and (source_code[current_offset].isalnum() or
-                                       source_code[current_offset] in '_'):
-            current_offset -= 1;
-        return current_offset + 1
-
-    def _get_matching_builtins(self, starting):
-        result = {}
-        for builtin in self.builtins:
-            if builtin.startswith(starting):
-                result[builtin] = CompletionProposal(builtin, 'builtin')
-        return result
-
-    def _get_matching_keywords(self, starting):
-        result = {}
-        for kw in self.keywords:
-            if kw.startswith(starting):
-                result[kw] = CompletionProposal(kw, 'keyword')
-        return result
-
-    def add_template(self, name, definition):
-        self.templates.append(TemplateProposal(name, Template(definition)))
-
-    def _get_template_proposals(self, starting):
-        result = []
-        for name, template in self.templates.items():
-            if name.startswith(starting):
-                result.append(TemplateProposal(name, template))
-        return result
-
-    def _get_code_completions(self, source_code, offset,
-                              expression, starting, resource):
-        collector = _CodeCompletionCollector(self.project, source_code, offset,
-                                             expression, starting, resource)
-        return collector.get_code_completions()
-
-    def assist(self, source_code, offset, resource=None):
-        if offset > len(source_code):
-            return Proposals()
-        word_finder = WordRangeFinder(source_code)
-        expression, starting, starting_offset = \
-            word_finder.get_splitted_primary_before(offset)
-        completions = self._get_code_completions(
-            source_code, offset, expression, starting, resource)
-        templates = []
-        if expression.strip() == '' and starting.strip() != '':
-            completions.update(self._get_matching_builtins(starting))
-            completions.update(self._get_matching_keywords(starting))
-            templates = self._get_template_proposals(starting)
-        return Proposals(completions.values(), templates,
-                         starting_offset)
-
-    @staticmethod
-    def add_default_template(name, definition):
-        PythonCodeAssist.default_templates[name] = Template(definition)
-
-    default_templates = {}
-
-
 def code_assist(project, source_code, offset, resource=None, templates={}):
-    """Return python code completions as a `Proposals` object"""
-    assist = PythonCodeAssist(project, templates=templates)
+    """Return python code completions as a list of `CodeAssistProposal`\s"""
+    assist = _PythonCodeAssist(project, templates=templates)
     return assist.assist(source_code, offset, resource)
+
+
+def starting_offset(source_code, offset):
+    """Return the offset in which the completion should be inserted
+
+    Usually code assist proposals should be inserted like::
+
+        completion = proposal.name # not for templates
+        result = (source_code[:starting_offset] +
+                  completion + source_code[offset:])
+
+    Where starting_offset is the offset returned by this function.
+
+    """
+    word_finder = WordRangeFinder(source_code)
+    expression, starting, starting_offset = \
+        word_finder.get_splitted_primary_before(offset)
+    return starting_offset
 
 
 def get_doc(project, source_code, offset, resource=None):
@@ -141,22 +89,6 @@ class Location(object):
     unsure = False
 
 
-class Proposals(object):
-    """A CodeAssist result.
-
-    Attribute:
-    completions -- A list of `CompletionProposal`\s
-    templates -- A list of `TemplateProposal`\s
-    start_offset -- completion start offset
-
-    """
-
-    def __init__(self, completions=[], templates=[], start_offset=0):
-        self.completions = completions
-        self.templates = templates
-        self.start_offset = start_offset
-
-
 class CodeAssistProposal(object):
     """The base class for proposals reported by CodeAssist"""
 
@@ -194,6 +126,8 @@ class TemplateProposal(CodeAssistProposal):
 
     The `template` attribute is a `Template` object.
     """
+
+    kind = 'template'
 
     def __init__(self, name, template):
         super(TemplateProposal, self).__init__(name)
@@ -250,7 +184,7 @@ class Template(object):
 
 
 def sort_proposals(proposals, preference=[]):
-    """Sort the proposals in a `Proposals`
+    """Sort a list of proposals
 
     Return a list of `CodeAssistProposal`.  `preference` can be a list
     of proposal types.  Defaults to ``['class', 'function',
@@ -278,12 +212,81 @@ def default_templates():
     templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
                                '        ${cursor}return obj is self\n')
     templates['super'] = Template('super(${class}, self)')
-    templates.update(PythonCodeAssist.default_templates)
+    templates.update(_PythonCodeAssist.default_templates)
     return templates
 
 
+class _PythonCodeAssist(object):
+
+    def __init__(self, project, templates={}):
+        self.project = project
+        self.keywords = keyword.kwlist
+        self.templates = templates
+
+    builtins = [str(name) for name in dir(__builtin__)
+                if not name.startswith('_')]
+
+    def _find_starting_offset(self, source_code, offset):
+        current_offset = offset - 1
+        while current_offset >= 0 and (source_code[current_offset].isalnum() or
+                                       source_code[current_offset] in '_'):
+            current_offset -= 1;
+        return current_offset + 1
+
+    def _get_matching_builtins(self, starting):
+        result = []
+        for builtin in self.builtins:
+            if builtin.startswith(starting):
+                result.append(CompletionProposal(builtin, 'builtin'))
+        return result
+
+    def _get_matching_keywords(self, starting):
+        result = []
+        for kw in self.keywords:
+            if kw.startswith(starting):
+                result.append(CompletionProposal(kw, 'keyword'))
+        return result
+
+    def add_template(self, name, definition):
+        self.templates.append(TemplateProposal(name, Template(definition)))
+
+    def _get_template_proposals(self, starting):
+        result = []
+        for name, template in self.templates.items():
+            if name.startswith(starting):
+                result.append(TemplateProposal(name, template))
+        return result
+
+    def _get_code_completions(self, source_code, offset,
+                              expression, starting, resource):
+        collector = _CodeCompletionCollector(self.project, source_code, offset,
+                                             expression, starting, resource)
+        return collector.get_code_completions()
+
+    def assist(self, source_code, offset, resource=None):
+        if offset > len(source_code):
+            return []
+        word_finder = WordRangeFinder(source_code)
+        expression, starting, starting_offset = \
+            word_finder.get_splitted_primary_before(offset)
+        completions = list(
+            self._get_code_completions(source_code, offset, expression,
+                                       starting, resource).values())
+        if expression.strip() == '' and starting.strip() != '':
+            completions.extend(self._get_matching_builtins(starting))
+            completions.extend(self._get_matching_keywords(starting))
+            completions.extend(self._get_template_proposals(starting))
+        return completions
+
+    @staticmethod
+    def add_default_template(name, definition):
+        _PythonCodeAssist.default_templates[name] = Template(definition)
+
+    default_templates = {}
+
+
 class _ProposalSorter(object):
-    """Sort the proposals in a `Proposals`"""
+    """Sort a list of code assist proposals"""
 
     def __init__(self, code_assist_proposals, preference=[]):
         self.proposals = code_assist_proposals
@@ -297,8 +300,9 @@ class _ProposalSorter(object):
         parameter_keyword_proposals = []
         global_proposals = []
         attribute_proposals = []
+        template_proposals = []
         others = []
-        for proposal in self.proposals.completions:
+        for proposal in self.proposals:
             if proposal.kind == 'global':
                 global_proposals.append(proposal)
             elif proposal.kind == 'local':
@@ -307,9 +311,10 @@ class _ProposalSorter(object):
                 attribute_proposals.append(proposal)
             elif proposal.kind == 'parameter_keyword':
                 parameter_keyword_proposals.append(proposal)
+            elif proposal.kind == 'template':
+                template_proposals.append(proposal)
             else:
                 others.append(proposal)
-        template_proposals = self.proposals.templates
         local_proposals.sort(self._pyname_proposal_cmp)
         parameter_keyword_proposals.sort(self._pyname_proposal_cmp)
         global_proposals.sort(self._pyname_proposal_cmp)

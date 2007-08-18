@@ -1,10 +1,9 @@
 Small Stories
 =============
 
-- Extract method ignored some parameters! ``f(1, 2)`` matches ``f(1)``
+- Replacing `Proposals` with a list?
 
-* Replacing `Proposals` with a tuple?
-* Setting `TemplateProposal.kind` to be 'template'
+* Specifying 'template' in `sort_proposals`?
 
 * Refactor codeanalyze
 * Adding an option to inline not to remove the definition
