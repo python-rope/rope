@@ -1,10 +1,16 @@
 Small Stories
 =============
 
-* Moving codeassist from editingtools to core?
-* Caching last pymodule in `codeassist.get_pymodule()`?  Probably not?
-* Refactor codeanalyze
+- Replacing PythonCodeAssist with a function; how to handle templates
+- Moving codeassist from editingtools
+- Fix UI for proposing completions
+- Cannot goto definition in show occurrences menu
 
+* Extract method ignored some parameters! ``f(1, 2)`` matches ``f(1)``
+* Replacing `Proposals` with a tuple?
+* Setting `TemplateProposal.kind` to be 'template'
+
+* Refactor codeanalyze
 * Adding an option to inline not to remove the definition
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
   ``~/.ropeide.py``?

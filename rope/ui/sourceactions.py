@@ -86,43 +86,59 @@ class _CompletionListHandle(EnhancedListHandle):
         self.canceled()
 
 
-def do_code_assist(context):
-    editor = context.get_active_editor().get_editor()
-    result = context.editingtools.codeassist.assist(
-        editor.get_text(), editor.get_current_offset(), context.resource)
-    toplevel = Tkinter.Toplevel()
-    toplevel.title('Code Assist Proposals')
-    handle = _CompletionListHandle(editor, toplevel, result)
-    enhanced_list = EnhancedList(
-        toplevel, handle, title='Code Assist Proposals', height=9, width=30)
-    proposals = rope.ide.codeassist.ProposalSorter(result).get_sorted_proposal_list()
-    for proposal in proposals:
-        enhanced_list.add_entry(proposal)
-    start_index = editor.text.index('0.0 +%dc' % result.start_offset)
-    initial_cursor_position = str(editor.text.index(Tkinter.INSERT))
-    def key_pressed(event):
-        import string
-        if len(event.char) == 1 and (event.char.isalnum() or
-                                     event.char in string.punctuation):
-            editor.text.insert(Tkinter.INSERT, event.char)
-        elif event.keysym == 'space':
-            editor.text.insert(Tkinter.INSERT, ' ')
-        elif event.keysym == 'BackSpace':
-            editor.text.delete(Tkinter.INSERT + '-1c')
-        elif editor.text.compare(initial_cursor_position, '>', Tkinter.INSERT):
-            toplevel.destroy()
-            return
-        else:
-            return
-        new_name = editor.text.get(start_index, Tkinter.INSERT)
-        enhanced_list.clear()
+class DoCodeAssist(object):
+
+    def __call__(self, context):
+        editor = context.get_active_editor().get_editor()
+        result = rope.ide.codeassist.code_assist(
+            context.project, editor.get_text(),
+            editor.get_current_offset(), context.resource,
+            templates=self._get_templates(context))
+        proposals = rope.ide.codeassist.sort_proposals(result)
+        toplevel = Tkinter.Toplevel()
+        toplevel.title('Code Assist Proposals')
+        handle = _CompletionListHandle(editor, toplevel, result)
+        enhanced_list = EnhancedList(
+            toplevel, handle, title='Code Assist Proposals', height=9, width=30)
         for proposal in proposals:
-            if proposal.name.startswith(new_name):
-                enhanced_list.add_entry(proposal)
-    enhanced_list.list.focus_set()
-    enhanced_list.list.bind('<Any-KeyPress>', key_pressed)
-    enhanced_list.list.bind('<Control-g>', lambda event: handle.canceled())
-    toplevel.grab_set()
+            enhanced_list.add_entry(proposal)
+        start_index = editor.text.index('0.0 +%dc' % result.start_offset)
+        initial_cursor_position = str(editor.text.index(Tkinter.INSERT))
+        def key_pressed(event):
+            import string
+            if len(event.char) == 1 and (event.char.isalnum() or
+                                         event.char in string.punctuation):
+                editor.text.insert(Tkinter.INSERT, event.char)
+            elif event.keysym == 'space':
+                editor.text.insert(Tkinter.INSERT, ' ')
+            elif event.keysym == 'BackSpace':
+                editor.text.delete(Tkinter.INSERT + '-1c')
+            elif editor.text.compare(initial_cursor_position, '>', Tkinter.INSERT):
+                toplevel.destroy()
+                return
+            else:
+                return
+            new_name = editor.text.get(start_index, Tkinter.INSERT)
+            enhanced_list.clear()
+            for proposal in proposals:
+                if proposal.name.startswith(new_name):
+                    enhanced_list.add_entry(proposal)
+        enhanced_list.list.focus_set()
+        enhanced_list.list.bind('<Any-KeyPress>', key_pressed)
+        enhanced_list.list.bind('<Control-g>', lambda event: handle.canceled())
+        toplevel.grab_set()
+
+    _templates = None
+
+    def _get_templates(self, context):
+        if self._templates is None:
+            templates = rope.ide.codeassist.default_templates()
+            for name, definition in (context.core.get_prefs().
+                                     get('templates', [])):
+                templates[name] = rope.ide.codeassist.Template(definition)
+            self._templates = templates
+        return self._templates
+
 
 def _get_template_information(editor, result, proposal):
     template = proposal.template
@@ -243,8 +259,9 @@ class _OccurrenceListHandle(EnhancedListHandle):
         self.toplevel.destroy()
 
     def selected(self, selected):
-        editor = self.editor_manager.get_resource_editor(selected[0]).get_editor()
-        editor.set_insert(editor.get_index(selected[1]))
+        editor = self.editor_manager.get_resource_editor(
+            selected.resource).get_editor()
+        editor.set_insert(editor.get_index(selected.offset))
         self.focus_set()
 
     def focus_went_out(self):
@@ -432,7 +449,7 @@ core = rope.ui.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Source'], 's'), ['all', 'none'])
 actions = []
 
-actions.append(SimpleAction('code_assist', do_code_assist, 'M-/',
+actions.append(SimpleAction('code_assist', DoCodeAssist(), 'M-/',
                             MenuAddress(['Source', 'Code Assist (Auto-Complete)'], 'c'), ['python']))
 actions.append(SimpleAction('goto_definition', do_goto_definition, 'C-c g',
                             MenuAddress(['Source', 'Goto Definition'], 'd'), ['python']))

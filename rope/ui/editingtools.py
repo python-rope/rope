@@ -36,15 +36,6 @@ class PythonEditingTools(EditingTools):
     def create_highlighting(self):
         return rope.ui.highlighter.PythonHighlighting()
 
-    def _get_code_assist(self):
-        if self._code_assist is None:
-            self._code_assist = rope.ide.codeassist.PythonCodeAssist(self.project)
-            for name, template in self.prefs.get('templates', []):
-                self._code_assist.add_template(name, template)
-        return self._code_assist
-
-    codeassist = property(_get_code_assist)
-
 
 class ReSTEditingTools(EditingTools):
 
@@ -62,4 +53,3 @@ class NormalEditingTools(EditingTools):
 
     def create_highlighting(self):
         return rope.ui.highlighter.NoHighlighting()
-

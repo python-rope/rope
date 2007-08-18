@@ -13,18 +13,13 @@ from rope.refactor import occurrences
 
 class PythonCodeAssist(object):
 
-    def __init__(self, project):
+    def __init__(self, project, templates={}):
         self.project = project
         self.keywords = keyword.kwlist
-        self.templates = []
-        self.templates.extend(PythonCodeAssist._get_default_templates())
+        self.templates = templates
 
     builtins = [str(name) for name in dir(__builtin__)
                 if not name.startswith('_')]
-
-    @staticmethod
-    def add_default_template(name, definition):
-        PythonCodeAssist.default_templates[name] = Template(definition)
 
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
@@ -52,9 +47,9 @@ class PythonCodeAssist(object):
 
     def _get_template_proposals(self, starting):
         result = []
-        for template in self.templates:
-            if template.name.startswith(starting):
-                result.append(template)
+        for name, template in self.templates.items():
+            if name.startswith(starting):
+                result.append(TemplateProposal(name, template))
         return result
 
     def _get_code_completions(self, source_code, offset,
@@ -80,34 +75,21 @@ class PythonCodeAssist(object):
                          starting_offset)
 
     @staticmethod
-    def _get_default_templates():
-        templates = {}
-        templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
-        test_case_template = \
-            ('import unittest\n\n\n'
-             'class ${TestClass}(unittest.TestCase):\n\n'
-             '    def setUp(self):\n        super(${TestClass}, self).setUp()\n\n'
-             '    def tearDown(self):\n        super(${TestClass}, self).tearDown()\n\n'
-             '    def test_trivial_case${cursor}(self):\n        pass\n\n\n'
-             'if __name__ == \'__main__\':\n'
-             '    unittest.main()\n')
-        templates['testcase'] = Template(test_case_template)
-        templates['hash'] = Template('\n    def __hash__(self):\n' +
-                                     '        return 1${cursor}\n')
-        templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
-                                   '        ${cursor}return obj is self\n')
-        templates['super'] = Template('super(${class}, self)')
-        templates.update(PythonCodeAssist.default_templates)
-        result = []
-        for name, template in templates.items():
-            result.append(TemplateProposal(name, template))
-        return result
+    def add_default_template(name, definition):
+        PythonCodeAssist.default_templates[name] = Template(definition)
 
     default_templates = {}
 
 
+def code_assist(project, source_code, offset, resource=None, templates={}):
+    """Return python code completions as a `Proposals` object"""
+    assist = PythonCodeAssist(project, templates=templates)
+    return assist.assist(source_code, offset, resource)
+
+
 def get_doc(project, source_code, offset, resource=None):
-    pymodule = get_pymodule(project.pycore, source_code, resource)
+    """Get the pydoc"""
+    pymodule = _get_pymodule(project.pycore, source_code, resource)
     scope_finder = ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
     if element is None:
@@ -117,6 +99,7 @@ def get_doc(project, source_code, offset, resource=None):
 
 
 def get_definition_location(project, source_code, offset, resource=None):
+    """Return a (`rope.base.resources.File`, lineno) tuple"""
     pymodule = project.pycore.get_string_module(source_code, resource)
     scope_finder = ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
@@ -125,13 +108,6 @@ def get_definition_location(project, source_code, offset, resource=None):
         if module is not None:
             return module.get_module().get_resource(), lineno
     return (None, None)
-
-
-class Location(object):
-
-    resource = None
-    offset = None
-    unsure = False
 
 
 def find_occurrences(project, resource, offset, unsure=False,
@@ -156,6 +132,13 @@ def find_occurrences(project, resource, offset, unsure=False,
             result.append(location)
         job_set.finished_job()
     return result
+
+
+class Location(object):
+
+    resource = None
+    offset = None
+    unsure = False
 
 
 class Proposals(object):
@@ -209,7 +192,7 @@ class CompletionProposal(CodeAssistProposal):
 class TemplateProposal(CodeAssistProposal):
     """A template proposal
 
-    The template attribute is a Template object.
+    The `template` attribute is a `Template` object.
     """
 
     def __init__(self, name, template):
@@ -221,8 +204,9 @@ class Template(object):
     """Templates reported by CodeAssist
 
     Variables in templates are in ``${variable}`` format. To put a
-    dollar sign in the template put $$. To set the place of the cursor
+    dollar sign in the template put $$.  To specify cursor position
     use ${cursor}.
+
     """
 
     def __init__(self, template):
@@ -265,6 +249,100 @@ class Template(object):
         return start
 
 
+def sort_proposals(proposals, preference=[]):
+    """Sort the proposals in a `Proposals`
+
+    Return a list of `CodeAssistProposal`.  `preference` can be a list
+    of proposal types.  Defaults to ``['class', 'function',
+    'variable', 'parameter', 'imported']``
+
+    """
+    sorter = _ProposalSorter(proposals, preference)
+    return sorter.get_sorted_proposal_list()
+
+
+def default_templates():
+    templates = {}
+    templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
+    test_case_template = \
+        ('import unittest\n\n\n'
+         'class ${TestClass}(unittest.TestCase):\n\n'
+         '    def setUp(self):\n        super(${TestClass}, self).setUp()\n\n'
+         '    def tearDown(self):\n        super(${TestClass}, self).tearDown()\n\n'
+         '    def test_trivial_case${cursor}(self):\n        pass\n\n\n'
+         'if __name__ == \'__main__\':\n'
+         '    unittest.main()\n')
+    templates['testcase'] = Template(test_case_template)
+    templates['hash'] = Template('\n    def __hash__(self):\n' +
+                                 '        return 1${cursor}\n')
+    templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
+                               '        ${cursor}return obj is self\n')
+    templates['super'] = Template('super(${class}, self)')
+    templates.update(PythonCodeAssist.default_templates)
+    return templates
+
+
+class _ProposalSorter(object):
+    """Sort the proposals in a `Proposals`"""
+
+    def __init__(self, code_assist_proposals, preference=[]):
+        self.proposals = code_assist_proposals
+        preference.extend(['class', 'function', 'variable',
+                           'parameter', 'imported', None])
+        self.preference = preference
+
+    def get_sorted_proposal_list(self):
+        """Return a list of `CodeAssistProposal`"""
+        local_proposals = []
+        parameter_keyword_proposals = []
+        global_proposals = []
+        attribute_proposals = []
+        others = []
+        for proposal in self.proposals.completions:
+            if proposal.kind == 'global':
+                global_proposals.append(proposal)
+            elif proposal.kind == 'local':
+                local_proposals.append(proposal)
+            elif proposal.kind == 'attribute':
+                attribute_proposals.append(proposal)
+            elif proposal.kind == 'parameter_keyword':
+                parameter_keyword_proposals.append(proposal)
+            else:
+                others.append(proposal)
+        template_proposals = self.proposals.templates
+        local_proposals.sort(self._pyname_proposal_cmp)
+        parameter_keyword_proposals.sort(self._pyname_proposal_cmp)
+        global_proposals.sort(self._pyname_proposal_cmp)
+        attribute_proposals.sort(self._pyname_proposal_cmp)
+        result = []
+        result.extend(local_proposals)
+        result.extend(parameter_keyword_proposals)
+        result.extend(global_proposals)
+        result.extend(attribute_proposals)
+        result.extend(template_proposals)
+        result.extend(others)
+        return result
+
+    def _pyname_proposal_cmp(self, proposal1, proposal2):
+        if proposal1.type != proposal2.type:
+            return cmp(self.preference.index(proposal1.type),
+                       self.preference.index(proposal2.type))
+        return self._compare_underlined_names(proposal1.name,
+                                              proposal2.name)
+
+    def _compare_underlined_names(self, name1, name2):
+        def underline_count(name):
+            result = 0
+            while result < len(name) and name[result] == '_':
+                result += 1
+            return result
+        underline_count1 = underline_count(name1)
+        underline_count2 = underline_count(name2)
+        if underline_count1 != underline_count2:
+            return cmp(underline_count1, underline_count2)
+        return cmp(name1, name2)
+
+
 class _CodeCompletionCollector(object):
 
     def __init__(self, project, source_code,
@@ -299,9 +377,9 @@ class _CodeCompletionCollector(object):
             #self.lines[line] = '#' # + lines[line]
             self.lines[line] = self.lines[start]
         self.lines.append('\n')
-        self._fix_uncomplete_try_blocks()
+        self._fix_incomplete_try_blocks()
 
-    def _fix_uncomplete_try_blocks(self):
+    def _fix_incomplete_try_blocks(self):
         block_start = self.lineno
         last_indents = self.current_indents
         while block_start > 0:
@@ -375,7 +453,7 @@ class _CodeCompletionCollector(object):
             return 'parameter'
 
     def get_code_completions(self):
-        module_scope = get_pymodule(self.pycore, self.source_code,
+        module_scope = _get_pymodule(self.pycore, self.source_code,
                                     self.resource).get_scope()
         result = {}
         inner_scope = module_scope.get_inner_scope_for_line(self.lineno,
@@ -439,69 +517,11 @@ class _cache(object):
         if self.cache is None or (args, kwds) != self.cache[0]:
             result = self.function(*args, **kwds)
             self.cache = ((args, kwds), result)
-        return self.cache[1]        
+        return self.cache[1]
 
 
 @_cache
-def get_pymodule(pycore, source_code, resource):
+def _get_pymodule(pycore, source_code, resource):
     if resource and resource.exists() and source_code == resource.read():
         return pycore.resource_to_pyobject(resource)
     return pycore.get_string_module(source_code, resource=resource)
-
-
-class ProposalSorter(object):
-
-    def __init__(self, code_assist_proposals):
-        self.proposals = code_assist_proposals
-        self.preference = ['class', 'function', 'variable',
-                           'parameter', 'imported', None]
-
-    def get_sorted_proposal_list(self):
-        local_proposals = []
-        parameter_keyword_proposals = []
-        global_proposals = []
-        attribute_proposals = []
-        others = []
-        for proposal in self.proposals.completions:
-            if proposal.kind == 'global':
-                global_proposals.append(proposal)
-            elif proposal.kind == 'local':
-                local_proposals.append(proposal)
-            elif proposal.kind == 'attribute':
-                attribute_proposals.append(proposal)
-            elif proposal.kind == 'parameter_keyword':
-                parameter_keyword_proposals.append(proposal)
-            else:
-                others.append(proposal)
-        template_proposals = self.proposals.templates
-        local_proposals.sort(self._pyname_proposal_cmp)
-        parameter_keyword_proposals.sort(self._pyname_proposal_cmp)
-        global_proposals.sort(self._pyname_proposal_cmp)
-        attribute_proposals.sort(self._pyname_proposal_cmp)
-        result = []
-        result.extend(local_proposals)
-        result.extend(parameter_keyword_proposals)
-        result.extend(global_proposals)
-        result.extend(attribute_proposals)
-        result.extend(template_proposals)
-        result.extend(others)
-        return result
-
-    def _pyname_proposal_cmp(self, proposal1, proposal2):
-        if proposal1.type != proposal2.type:
-            return cmp(self.preference.index(proposal1.type),
-                       self.preference.index(proposal2.type))
-        return self._compare_underlined_names(proposal1.name,
-                                              proposal2.name)
-
-    def _compare_underlined_names(self, name1, name2):
-        def underline_count(name):
-            result = 0
-            while result < len(name) and name[result] == '_':
-                result += 1
-            return result
-        underline_count1 = underline_count(name1)
-        underline_count2 = underline_count(name2)
-        if underline_count1 != underline_count2:
-            return cmp(underline_count1, underline_count2)
-        return cmp(name1, name2)
