@@ -210,7 +210,8 @@ class _ASTMatcher(object):
                 if not self._match_nodes(child1, child2, mapping):
                     return False
             elif isinstance(child1, (list, tuple)):
-                if not isinstance(child2, (list, tuple)):
+                if not isinstance(child2, (list, tuple)) or \
+                   len(child1) != len(child2):
                     return False
                 for c1, c2 in zip(child1, child2):
                     if not self._match_nodes(c1, c2, mapping):

@@ -131,6 +131,11 @@ class SimilarFinderTest(unittest.TestCase):
         result = list(finder.get_matches('${a} = 1'))
         self.assertEquals(1, len(result))
 
+    def test_functions_not_matching_when_only_first_parameters(self):
+        source = 'f(1, 2)\n'
+        finder = similarfinder.SimilarFinder(source)
+        self.assertEquals(0, len(list(finder.get_matches('f(1)'))))
+
 
 class CheckingFinderTest(unittest.TestCase):
 
