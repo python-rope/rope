@@ -1,9 +1,8 @@
-import __builtin__
 import keyword
 import re
 
 import rope.base.codeanalyze
-from rope.base import pyobjects, pynames, taskhandle
+from rope.base import pyobjects, pynames, taskhandle, builtins
 from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
                                    WordRangeFinder, ScopeNameFinder,
                                    SourceLinesAdapter, BadIdentifierError)
@@ -12,7 +11,16 @@ from rope.refactor import occurrences
 
 
 def code_assist(project, source_code, offset, resource=None, templates={}):
-    """Return python code completions as a list of `CodeAssistProposal`\s"""
+    """Return python code completions as a list of `CodeAssistProposal`\s
+
+    `resource` is a `rope.base.resources.Resource` object.  If
+    provided things relative imports are handled.
+
+    `templates` should be a dictionary of template name to `Template`
+    objects.  The matches are returned as `TemplateProposal`
+    instances.
+
+    """
     assist = _PythonCodeAssist(project, templates=templates)
     return assist.assist(source_code, offset, resource)
 
@@ -47,7 +55,7 @@ def get_doc(project, source_code, offset, resource=None):
 
 
 def get_definition_location(project, source_code, offset, resource=None):
-    """Return a (`rope.base.resources.File`, lineno) tuple"""
+    """Return a (`rope.base.resources.Resource`, lineno) tuple"""
     pymodule = project.pycore.get_string_module(source_code, resource)
     scope_finder = ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
@@ -60,7 +68,11 @@ def get_definition_location(project, source_code, offset, resource=None):
 
 def find_occurrences(project, resource, offset, unsure=False,
                      task_handle=taskhandle.NullTaskHandle()):
-    """Return a list of `Location`\s"""
+    """Return a list of `Location`\s
+
+    if `unsure` is `True`, possible matches are shown, too.
+
+    """
     name = rope.base.codeanalyze.get_name_at(resource, offset)
     pyname = rope.base.codeanalyze.get_pyname_at(project.get_pycore(),
                                                  resource, offset)
@@ -90,18 +102,21 @@ class Location(object):
 
 
 class CodeAssistProposal(object):
-    """The base class for proposals reported by CodeAssist"""
-
-    def __init__(self, name):
-        self.name = name
-
-
-class CompletionProposal(CodeAssistProposal):
-    """A completion proposal
+    """The base class for proposals reported by CodeAssist
 
     The `kind` instance variable shows the kind of the proposal and
     can be 'global', 'local', 'builtin', 'attribute', 'keyword',
     'parameter_keyword', and 'template'.
+
+    """
+
+    def __init__(self, name, kind):
+        self.name = name
+        self.kind = kind
+
+
+class CompletionProposal(CodeAssistProposal):
+    """A completion proposal
 
     The `type` instance variable shows the type of the proposal and
     can be 'variable', 'class', 'function', 'imported' , 'paramter'
@@ -110,8 +125,7 @@ class CompletionProposal(CodeAssistProposal):
     """
 
     def __init__(self, name, kind, type=None):
-        super(CompletionProposal, self).__init__(name)
-        self.kind = kind
+        super(CompletionProposal, self).__init__(name, kind)
         self.type = type
 
     def __str__(self):
@@ -127,10 +141,8 @@ class TemplateProposal(CodeAssistProposal):
     The `template` attribute is a `Template` object.
     """
 
-    kind = 'template'
-
     def __init__(self, name, template):
-        super(TemplateProposal, self).__init__(name)
+        super(TemplateProposal, self).__init__(name, 'template')
         self.template = template
 
 
@@ -183,15 +195,20 @@ class Template(object):
         return start
 
 
-def sort_proposals(proposals, preference=[]):
+def sort_proposals(proposals, kindpref=None, typepref=None):
     """Sort a list of proposals
 
-    Return a list of `CodeAssistProposal`.  `preference` can be a list
-    of proposal types.  Defaults to ``['class', 'function',
-    'variable', 'parameter', 'imported']``
+    Return a sorted list of the given `CodeAssistProposal`\s.
+
+    `typepref` can be a list of proposal kinds.  Defaults to ``['local',
+    'parameter_keyword', 'global', 'attribute', 'template', 'builtin',
+    'keyword']``.
+
+    `typepref` can be a list of proposal types.  Defaults to
+    ``['class', 'function', 'variable', 'parameter', 'imported']``
 
     """
-    sorter = _ProposalSorter(proposals, preference)
+    sorter = _ProposalSorter(proposals, kindpref, typepref)
     return sorter.get_sorted_proposal_list()
 
 
@@ -223,22 +240,12 @@ class _PythonCodeAssist(object):
         self.keywords = keyword.kwlist
         self.templates = templates
 
-    builtins = [str(name) for name in dir(__builtin__)
-                if not name.startswith('_')]
-
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
         while current_offset >= 0 and (source_code[current_offset].isalnum() or
                                        source_code[current_offset] in '_'):
             current_offset -= 1;
         return current_offset + 1
-
-    def _get_matching_builtins(self, starting):
-        result = []
-        for builtin in self.builtins:
-            if builtin.startswith(starting):
-                result.append(CompletionProposal(builtin, 'builtin'))
-        return result
 
     def _get_matching_keywords(self, starting):
         result = []
@@ -273,7 +280,6 @@ class _PythonCodeAssist(object):
             self._get_code_completions(source_code, offset, expression,
                                        starting, resource).values())
         if expression.strip() == '' and starting.strip() != '':
-            completions.extend(self._get_matching_builtins(starting))
             completions.extend(self._get_matching_keywords(starting))
             completions.extend(self._get_template_proposals(starting))
         return completions
@@ -288,50 +294,38 @@ class _PythonCodeAssist(object):
 class _ProposalSorter(object):
     """Sort a list of code assist proposals"""
 
-    def __init__(self, code_assist_proposals, preference=[]):
+    def __init__(self, code_assist_proposals, kindpref=None, typepref=None):
         self.proposals = code_assist_proposals
-        preference.extend(['class', 'function', 'variable',
-                           'parameter', 'imported', None])
-        self.preference = preference
+        if kindpref is None:
+            kindpref = ['local', 'parameter_keyword', 'global', 'attribute',
+                        'template', 'builtin', 'keyword']
+        self.kindpref = kindpref
+        if typepref is None:
+            typepref = ['class', 'function', 'variable',
+                        'parameter', 'imported']
+        self.typerank = dict((type, index)
+                              for index, type in enumerate(typepref))
 
     def get_sorted_proposal_list(self):
         """Return a list of `CodeAssistProposal`"""
-        local_proposals = []
-        parameter_keyword_proposals = []
-        global_proposals = []
-        attribute_proposals = []
-        template_proposals = []
-        others = []
+        proposals = {}
         for proposal in self.proposals:
-            if proposal.kind == 'global':
-                global_proposals.append(proposal)
-            elif proposal.kind == 'local':
-                local_proposals.append(proposal)
-            elif proposal.kind == 'attribute':
-                attribute_proposals.append(proposal)
-            elif proposal.kind == 'parameter_keyword':
-                parameter_keyword_proposals.append(proposal)
-            elif proposal.kind == 'template':
-                template_proposals.append(proposal)
-            else:
-                others.append(proposal)
-        local_proposals.sort(self._pyname_proposal_cmp)
-        parameter_keyword_proposals.sort(self._pyname_proposal_cmp)
-        global_proposals.sort(self._pyname_proposal_cmp)
-        attribute_proposals.sort(self._pyname_proposal_cmp)
+            proposals.setdefault(proposal.kind, []).append(proposal)
         result = []
-        result.extend(local_proposals)
-        result.extend(parameter_keyword_proposals)
-        result.extend(global_proposals)
-        result.extend(attribute_proposals)
-        result.extend(template_proposals)
-        result.extend(others)
+        for kind in self.kindpref:
+            kind_proposals = proposals.get(kind, [])
+            if kind != 'template':
+                kind_proposals = [proposal for proposal in kind_proposals
+                                  if proposal.type in self.typerank]
+            kind_proposals.sort(self._proposal_cmp)
+            result.extend(kind_proposals)
         return result
 
-    def _pyname_proposal_cmp(self, proposal1, proposal2):
-        if proposal1.type != proposal2.type:
-            return cmp(self.preference.index(proposal1.type),
-                       self.preference.index(proposal2.type))
+    def _proposal_cmp(self, proposal1, proposal2):
+        if 'template' not in (proposal1.kind, proposal2.kind) and \
+           proposal1.type != proposal2.type:
+            return cmp(self.typerank.get(proposal1.type, 100),
+                       self.typerank.get(proposal2.type, 100))
         return self._compare_underlined_names(proposal1.name,
                                               proposal2.name)
 
@@ -437,7 +431,9 @@ class _CodeCompletionCollector(object):
         for name, pyname in names.items():
             if name.startswith(self.starting):
                 kind = 'local'
-                if scope.get_kind() == 'Module':
+                if isinstance(pyname, builtins.BuiltinName):
+                    kind = 'builtin'
+                elif scope.get_kind() == 'Module':
                     kind = 'global'
                 result[name] = CompletionProposal(
                     name, kind, self._get_pyname_type(pyname))
@@ -445,17 +441,17 @@ class _CodeCompletionCollector(object):
     def _get_pyname_type(self, pyname):
         if isinstance(pyname, (pynames.AssignedName, pynames.UnboundName)):
             return 'variable'
-        if isinstance(pyname, pynames.DefinedName):
-            pyobject = pyname.get_object()
-            if isinstance(pyobject, pyobjects.AbstractFunction):
-                return 'function'
-            else:
-                return 'class'
         if isinstance(pyname, pynames.ImportedName) or \
            isinstance(pyname, pynames.ImportedModule):
             return 'imported'
         if isinstance(pyname, pynames.ParameterName):
             return 'parameter'
+        if isinstance(pyname, pynames.DefinedName):
+            pyobject = pyname.get_object()
+            if isinstance(pyobject, pyobjects.AbstractFunction):
+                return 'function'
+            if isinstance(pyobject, pyobjects.AbstractClass):
+                return 'class'
 
     def get_code_completions(self):
         module_scope = _get_pymodule(self.pycore, self.source_code,

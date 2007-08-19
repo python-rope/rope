@@ -434,6 +434,45 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals('my_func', sorted_proposals[0].name)
         self.assertEquals('_my_func', sorted_proposals[1].name)
 
+    def test_proposals_sorter_and_kind_prefs(self):
+        code = 'my_global_var = 1\n' \
+               'def func(self):\n' \
+               '    my_local_var = 2\n' \
+               '    my_'
+        result = self._assist(code)
+        sorted_proposals = sort_proposals(
+            result, kindpref=['global', 'local'])
+        self.assertEquals('my_global_var', sorted_proposals[0].name)
+        self.assertEquals('my_local_var', sorted_proposals[1].name)
+
+    def test_proposals_sorter_and_type_prefs(self):
+        code = 'my_global_var = 1\n' \
+               'def my_global_func(self):\n' \
+               '    pass\n' \
+               'my_'
+        result = self._assist(code)
+        sorted_proposals = sort_proposals(
+            result, typepref=['variable', 'function'])
+        self.assertEquals('my_global_var', sorted_proposals[0].name)
+        self.assertEquals('my_global_func', sorted_proposals[1].name)
+
+    def test_proposals_sorter_sorting_templates(self):
+        templates = {'my_first_template': Template(''),
+                     'my_second_template': Template('')}
+        code = 'my_'
+        result = self._assist(code, templates=templates)
+        sorted_proposals = sort_proposals(
+            result, kindpref=['template'])
+        self.assertEquals('my_first_template', sorted_proposals[0].name)
+        self.assertEquals('my_second_template', sorted_proposals[1].name)
+
+    def test_proposals_sorter_and_missing_type_in_typepref(self):
+        code = 'my_global_var = 1\n' \
+               'def my_global_func():\n    pass\n' \
+               'my_'
+        result = self._assist(code)
+        sorted_proposals = sort_proposals(result, typepref=['function'])
+
     def test_get_pydoc_for_functions(self):
         src = 'def a_func():\n    """a function"""\n' \
               '    a_var = 10\na_func()'

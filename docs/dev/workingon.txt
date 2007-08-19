@@ -1,9 +1,7 @@
 Small Stories
 =============
 
-- Replacing `Proposals` with a list?
-
-* Specifying 'template' in `sort_proposals`?
+- Specifying kindpref and typepref in sort_proposals
 
 * Refactor codeanalyze
 * Adding an option to inline not to remove the definition
