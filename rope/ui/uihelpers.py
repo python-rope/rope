@@ -1,3 +1,4 @@
+import fnmatch
 import re
 import ScrolledText
 import Tkinter
@@ -594,8 +595,7 @@ class _NormalSelector(object):
 class _RESelector(object):
 
     def __init__(self, pattern):
-        self.pattern = re.compile((pattern + '*').replace('?', '.').
-                                  replace('*', '.*'))
+        self.pattern = re.compile(fnmatch.translate(pattern + '*'))
 
     def can_select(self, input_str):
         return self.pattern.match(input_str)

@@ -150,4 +150,4 @@ Stories
 * Split tuple assignment refactoring
 
 
-> Public Release 0.6.1 : August 19, 2007
+> Public Release 0.6.2

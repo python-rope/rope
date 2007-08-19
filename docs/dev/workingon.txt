@@ -1,8 +1,6 @@
 Small Stories
 =============
 
-- Builtin names are not reported
-
 * Refactor codeanalyze
 * Adding an option to inline not to remove the definition
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to

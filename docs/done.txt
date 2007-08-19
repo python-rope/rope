@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.6.1 : August 19, 2007
+
+
 - Cleaning up `rope.ide.codeassist` : August 19, 2007
 
 
