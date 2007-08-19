@@ -6,6 +6,14 @@
 Release Schedule
 ================
 
+The following policy is not followed anymore.  Instead, *rope* will
+use ``x.y.z`` release names and the hard two-week release schedule
+goes away.  One reason is rope is getting more stable and fewer
+features are added to it.  Each release includes more bugfixes and a
+few new features so milestones no longer make sense.
+
+Old Schedule:
+
 *rope* will be released every two weeks and each quarter a final
 version would be released.  That is:
 

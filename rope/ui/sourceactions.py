@@ -95,7 +95,7 @@ class DoCodeAssist(object):
         result = rope.ide.codeassist.code_assist(
             context.project, source, offset, context.resource,
             templates=self._get_templates(context))
-        proposals = rope.ide.codeassist.sort_proposals(result)
+        proposals = rope.ide.codeassist.sorted_proposals(result)
         start_offset = rope.ide.codeassist.starting_offset(source, offset)
         toplevel = Tkinter.Toplevel()
         toplevel.title('Code Assist Proposals')

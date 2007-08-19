@@ -3,7 +3,7 @@ import unittest
 from rope.base import exceptions
 from rope.ide.codeassist import \
      (Template, get_definition_location, get_doc,
-      find_occurrences, code_assist, sort_proposals, starting_offset)
+      find_occurrences, code_assist, sorted_proposals, starting_offset)
 from ropetest import testutils
 
 
@@ -387,11 +387,10 @@ class CodeAssistTest(unittest.TestCase):
         code = 'def my_sample_function(self):\n' + \
                '    my_sample_var = 20\n' + \
                '    my_sample_'
-        result = self._assist(code, templates=templates)
-        sorted_proposals = sort_proposals(result)
-        self.assertEquals('my_sample_var', sorted_proposals[0].name)
-        self.assertEquals('my_sample_function', sorted_proposals[1].name)
-        self.assertEquals('my_sample_template', sorted_proposals[2].name)
+        proposals = sorted_proposals(self._assist(code, templates=templates))
+        self.assertEquals('my_sample_var', proposals[0].name)
+        self.assertEquals('my_sample_function', proposals[1].name)
+        self.assertEquals('my_sample_template', proposals[2].name)
 
     def test_proposals_sorter_for_methods_and_attributes(self):
         templates = {'my_sample_template': Template('')}
@@ -404,21 +403,19 @@ class CodeAssistTest(unittest.TestCase):
                '        pass\n' + \
                'a_var = A()\n' + \
                'a_var.my_'
-        result = self._assist(code, templates=templates)
-        sorted_proposals = sort_proposals(result)
-        self.assertEquals('my_b_func', sorted_proposals[0].name)
-        self.assertEquals('my_c_func', sorted_proposals[1].name)
-        self.assertEquals('my_a_var', sorted_proposals[2].name)
+        proposals = sorted_proposals(self._assist(code, templates=templates))
+        self.assertEquals('my_b_func', proposals[0].name)
+        self.assertEquals('my_c_func', proposals[1].name)
+        self.assertEquals('my_a_var', proposals[2].name)
 
     def test_proposals_sorter_for_global_methods_and_funcs(self):
         code = 'def my_b_func(self):\n' + \
                '    pass\n' + \
                'my_a_var = 10\n' + \
                'my_'
-        result = self._assist(code)
-        sorted_proposals = sort_proposals(result)
-        self.assertEquals('my_b_func', sorted_proposals[0].name)
-        self.assertEquals('my_a_var', sorted_proposals[1].name)
+        proposals = sorted_proposals(self._assist(code))
+        self.assertEquals('my_b_func', proposals[0].name)
+        self.assertEquals('my_a_var', proposals[1].name)
 
     def test_proposals_sorter_underlined_methods(self):
         templates = {'my_sample_template': Template('')}
@@ -429,10 +426,9 @@ class CodeAssistTest(unittest.TestCase):
                '        pass\n' + \
                'a_var = A()\n' + \
                'a_var.'
-        result = self._assist(code, templates=templates)
-        sorted_proposals = sort_proposals(result)
-        self.assertEquals('my_func', sorted_proposals[0].name)
-        self.assertEquals('_my_func', sorted_proposals[1].name)
+        proposals = sorted_proposals(self._assist(code, templates=templates))
+        self.assertEquals('my_func', proposals[0].name)
+        self.assertEquals('_my_func', proposals[1].name)
 
     def test_proposals_sorter_and_kind_prefs(self):
         code = 'my_global_var = 1\n' \
@@ -440,10 +436,9 @@ class CodeAssistTest(unittest.TestCase):
                '    my_local_var = 2\n' \
                '    my_'
         result = self._assist(code)
-        sorted_proposals = sort_proposals(
-            result, kindpref=['global', 'local'])
-        self.assertEquals('my_global_var', sorted_proposals[0].name)
-        self.assertEquals('my_local_var', sorted_proposals[1].name)
+        proposals = sorted_proposals(result, kindpref=['global', 'local'])
+        self.assertEquals('my_global_var', proposals[0].name)
+        self.assertEquals('my_local_var', proposals[1].name)
 
     def test_proposals_sorter_and_type_prefs(self):
         code = 'my_global_var = 1\n' \
@@ -451,27 +446,25 @@ class CodeAssistTest(unittest.TestCase):
                '    pass\n' \
                'my_'
         result = self._assist(code)
-        sorted_proposals = sort_proposals(
-            result, typepref=['variable', 'function'])
-        self.assertEquals('my_global_var', sorted_proposals[0].name)
-        self.assertEquals('my_global_func', sorted_proposals[1].name)
+        proposals = sorted_proposals(result, typepref=['variable', 'function'])
+        self.assertEquals('my_global_var', proposals[0].name)
+        self.assertEquals('my_global_func', proposals[1].name)
 
     def test_proposals_sorter_sorting_templates(self):
         templates = {'my_first_template': Template(''),
                      'my_second_template': Template('')}
         code = 'my_'
         result = self._assist(code, templates=templates)
-        sorted_proposals = sort_proposals(
-            result, kindpref=['template'])
-        self.assertEquals('my_first_template', sorted_proposals[0].name)
-        self.assertEquals('my_second_template', sorted_proposals[1].name)
+        proposals = sorted_proposals(result, kindpref=['template'])
+        self.assertEquals('my_first_template', proposals[0].name)
+        self.assertEquals('my_second_template', proposals[1].name)
 
     def test_proposals_sorter_and_missing_type_in_typepref(self):
         code = 'my_global_var = 1\n' \
                'def my_global_func():\n    pass\n' \
                'my_'
         result = self._assist(code)
-        sorted_proposals = sort_proposals(result, typepref=['function'])
+        proposals = sorted_proposals(result, typepref=['function'])
 
     def test_get_pydoc_for_functions(self):
         src = 'def a_func():\n    """a function"""\n' \

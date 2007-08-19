@@ -3,6 +3,9 @@
 ===========
 
 
+- Cleaning up `rope.ide.codeassist` : August 19, 2007
+
+
 - Showing unsure occurrences in show occurrences : August 17, 2007
 
 

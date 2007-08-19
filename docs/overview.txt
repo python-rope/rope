@@ -1107,8 +1107,8 @@ module; It will be copied to ``~/.rope`` if none already exists.)
 Show PyDoc
 ----------
 
-By using ``C-c C-d`` you can tell rope to show the pydoc of a python
-defined element.
+By using ``C-c C-d`` you can tell rope to show the pydoc of a name if
+available.
 
 
 Goto Definition
@@ -1136,6 +1136,28 @@ Calling generate function on `my_print` (``C-c n f``) will result in::
 
 It handle methods, static methods, classes, variables, modules, and
 packages, too.  Generate element actions use ``C-c n`` prefix.
+
+
+Sorting Scope Elements
+----------------------
+
+You can use ``C-c s ...`` for sorting current scope.  ``...`` can be
+one of:
+
+* ``a``: alphabetically
+* ``A``: alphabetically reversed
+* ``k``: classes first
+* ``K``: functions first
+* ``u``: underlineds first
+* ``U``: underlineds last
+* ``p``: those that have pydoc first
+* ``P``: those that don't have pydoc first
+* ``s``: special methods first
+* ``S``: special methods last
+
+Note that capitals sort in the reverse order of normals.  Sorts are
+stable.  So if you want to sort by kind and alphabetically, for
+instance, you can use ``C-c s a`` followed by ``C-c s k``.
 
 
 Saving Locations And Strings

@@ -70,7 +70,7 @@ def find_occurrences(project, resource, offset, unsure=False,
                      task_handle=taskhandle.NullTaskHandle()):
     """Return a list of `Location`\s
 
-    if `unsure` is `True`, possible matches are shown, too.
+    if `unsure` is `True`, possible matches are returned, too.
 
     """
     name = rope.base.codeanalyze.get_name_at(resource, offset)
@@ -102,11 +102,11 @@ class Location(object):
 
 
 class CodeAssistProposal(object):
-    """The base class for proposals reported by CodeAssist
+    """The base class for proposals reported by `code_assist`
 
     The `kind` instance variable shows the kind of the proposal and
     can be 'global', 'local', 'builtin', 'attribute', 'keyword',
-    'parameter_keyword', and 'template'.
+    'parameter_keyword' and 'template'.
 
     """
 
@@ -147,7 +147,7 @@ class TemplateProposal(CodeAssistProposal):
 
 
 class Template(object):
-    """Templates reported by CodeAssist
+    """Templates that are used in code assists
 
     Variables in templates are in ``${variable}`` format. To put a
     dollar sign in the template put $$.  To specify cursor position
@@ -195,7 +195,7 @@ class Template(object):
         return start
 
 
-def sort_proposals(proposals, kindpref=None, typepref=None):
+def sorted_proposals(proposals, kindpref=None, typepref=None):
     """Sort a list of proposals
 
     Return a sorted list of the given `CodeAssistProposal`\s.
@@ -205,7 +205,9 @@ def sort_proposals(proposals, kindpref=None, typepref=None):
     'keyword']``.
 
     `typepref` can be a list of proposal types.  Defaults to
-    ``['class', 'function', 'variable', 'parameter', 'imported']``
+    ``['class', 'function', 'variable', 'parameter', 'imported',
+    None]``.  (`None` stands for completions with no type like
+    keywords.)
 
     """
     sorter = _ProposalSorter(proposals, kindpref, typepref)
@@ -229,7 +231,6 @@ def default_templates():
     templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
                                '        ${cursor}return obj is self\n')
     templates['super'] = Template('super(${class}, self)')
-    templates.update(_PythonCodeAssist.default_templates)
     return templates
 
 
@@ -284,12 +285,6 @@ class _PythonCodeAssist(object):
             completions.extend(self._get_template_proposals(starting))
         return completions
 
-    @staticmethod
-    def add_default_template(name, definition):
-        _PythonCodeAssist.default_templates[name] = Template(definition)
-
-    default_templates = {}
-
 
 class _ProposalSorter(object):
     """Sort a list of code assist proposals"""
@@ -302,7 +297,7 @@ class _ProposalSorter(object):
         self.kindpref = kindpref
         if typepref is None:
             typepref = ['class', 'function', 'variable',
-                        'parameter', 'imported']
+                        'parameter', 'imported', None]
         self.typerank = dict((type, index)
                               for index, type in enumerate(typepref))
 
@@ -446,7 +441,8 @@ class _CodeCompletionCollector(object):
             return 'imported'
         if isinstance(pyname, pynames.ParameterName):
             return 'parameter'
-        if isinstance(pyname, pynames.DefinedName):
+        if isinstance(pyname, builtins.BuiltinName) or \
+           isinstance(pyname, pynames.DefinedName):
             pyobject = pyname.get_object()
             if isinstance(pyobject, pyobjects.AbstractFunction):
                 return 'function'
@@ -508,20 +504,6 @@ class _CodeCompletionCollector(object):
         return {}
 
 
-class _cache(object):
-
-    def __init__(self, function):
-        self.function = function
-        self.cache = None
-
-    def __call__(self, *args, **kwds):
-        if self.cache is None or (args, kwds) != self.cache[0]:
-            result = self.function(*args, **kwds)
-            self.cache = ((args, kwds), result)
-        return self.cache[1]
-
-
-@_cache
 def _get_pymodule(pycore, source_code, resource):
     if resource and resource.exists() and source_code == resource.read():
         return pycore.resource_to_pyobject(resource)

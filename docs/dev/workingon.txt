@@ -1,7 +1,7 @@
 Small Stories
 =============
 
-- Specifying kindpref and typepref in sort_proposals
+- Builtin names are not reported
 
 * Refactor codeanalyze
 * Adding an option to inline not to remove the definition
