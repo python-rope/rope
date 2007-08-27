@@ -158,7 +158,7 @@ class Template(object):
     def __init__(self, template):
         self.template = template
 
-    var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>[a-zA-Z][\w]*)}')
+    var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>\w+)}')
 
     def variables(self):
         """Get template variables

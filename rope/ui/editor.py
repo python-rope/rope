@@ -115,6 +115,7 @@ class GraphicalEditor(object):
         self.text.bind('<Any-KeyPress>', self._search_handler)
         self.text.bind('<BackSpace>', backspace, '+')
         self.text.bind('<FocusOut>', lambda event: self._focus_went_out())
+        self.text.bind('<Destroy>', lambda event: self._focus_went_out(False))
 
     def center_line(self):
         mid = self._get_center_line()
@@ -155,9 +156,9 @@ class GraphicalEditor(object):
             start, end = end, start
         return start, end
 
-    def _focus_went_out(self):
+    def _focus_went_out(self, save=True):
         if self.searcher.is_searching():
-            self.searcher.end_searching()
+            self.searcher.end_searching(save)
 
     def goto_line(self, lineno, colno=0):
         self.text.mark_set(INSERT, '%d.%d' % (lineno, colno))

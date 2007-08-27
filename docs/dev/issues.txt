@@ -62,6 +62,48 @@ To Be Discussed
 * Better `WordRangeFinder`
 
 
+Distributing Refactorings
+=========================
+
+When a library performs a refactoring, user code breaks.  There is
+noway of fixing that since library developers cannot access user code.
+One way for solve this might be writing scripts that can be used by
+users of the library to repeat the refactoring in their own projects.
+
+We can add a ``record_refactorings`` option to project config.  If
+`True` refactorings will be saved in the
+``.ropeproject/refactorings`` file.
+
+Issues:
+
+* Should users use the new version of the library or the old one?
+* Should the library be changed in parallel if using the old version?
+* What if there are more than one refactoring?
+* Refactorings are not the only cause for API changes
+* The outcome of the same refactoring might differ
+* Some refactorings are not important
+
+Arguments passed to refactorings:
+
+* Resources
+* ArgumentChangers
+
+Examples::
+
+  rename('rope.base.project.Project', 'NewProject', docs=True)
+  move_module('rope.ide', 'ropeide')
+  inline('rope.base.libutils.path_to_resource')
+  change_signature('mod.f', [ArgumentRemover(2)])
+
+Or::
+
+  def perform(project):
+      resource, offset = resource_and_offset(project,
+                                             'rope.base.project.Project')
+      renamer = Rename(project, resource, offset)
+      project.do(renamer.get_changes('NewProject', docs=True))
+
+
 Insert Before In Restructurings
 ===============================
 

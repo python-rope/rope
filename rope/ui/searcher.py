@@ -1,3 +1,7 @@
+from rope.ui import statusbar
+
+
+
 class SearchingState(object):
 
     def append_keyword(self, searcher, postfix):
@@ -99,9 +103,12 @@ class Searcher(object):
         self.searching_state = ForwardSearching()
         self.current_match = Match(self.starting_index, self.starting_index)
         self.status_text = None
-        if self.editor.status_bar_manager:
-            self.status_text = self.editor.status_bar_manager.\
-                               create_status('search')
+        manager = self.editor.status_bar_manager
+        if manager:
+            try:
+                self.status_text = manager.create_status('search')
+            except statusbar.StatusBarException:
+                self.status_text = manager.get_status('search')
             self.status_text.set_width(35)
         self.update_status_text()
 
@@ -112,10 +119,11 @@ class Searcher(object):
         self.editor.highlight_match(self.current_match)
         self.failing = False
 
-    def end_searching(self):
+    def end_searching(self, save=True):
         self.history = self.keyword
-        self.current_match = Match(self.editor.get_insert(),
-                                   self.editor.get_insert())
+        if save:
+            self.current_match = Match(self.editor.get_insert(),
+                                       self.editor.get_insert())
         self._finish_searching()
 
     def is_searching(self):

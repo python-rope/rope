@@ -1,6 +1,10 @@
 Small Stories
 =============
 
+* Problems when performing moves
+* Not moving relative to absolute imports when moving
+* Moving x to x.y when there an element x.y already exists
+
 * Refactor codeanalyze
 * Adding an option to inline not to remove the definition
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to

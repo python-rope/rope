@@ -36,10 +36,7 @@ class _Inliner(object):
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
 
-    def _check_exceptional_conditions(self):
-        pass
-
-    def get_changes(self):
+    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         """Get the changes this refactoring makes"""
 
     def get_kind(self):
