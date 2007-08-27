@@ -89,8 +89,8 @@ class MoveRefactoringTest(unittest.TestCase):
                         'def a_func():\n    print(mod3, a_var)\n')
         self._move(self.mod1, self.mod1.read().index('a_func') + 1,
                    self.mod2)
-        self.assertEquals('import mod3\n\n\n' \
-                          'def a_func():\n    print(mod3, mod3.a_var)\n',
+        self.assertEquals('import mod3\nfrom mod3 import a_var\n\n\n' \
+                          'def a_func():\n    print(mod3, a_var)\n',
                           self.mod2.read())
 
     def test_moving_used_names_to_destination_module2(self):
@@ -99,7 +99,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self._move(self.mod1, self.mod1.read().index('a_func') + 1,
                    self.mod2)
         self.assertEquals('a_var = 10\n', self.mod1.read())
-        self.assertEquals('import mod1\n\n\ndef a_func():\n    print(mod1.a_var)\n',
+        self.assertEquals('from mod1 import a_var\n\n\ndef a_func():\n    print(a_var)\n',
                           self.mod2.read())
 
     def test_moving_and_used_relative_imports(self):

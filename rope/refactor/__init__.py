@@ -87,13 +87,6 @@ class ImportOrganizer(object):
         self.pycore = project.pycore
         self.import_tools = rope.refactor.importutils.ImportTools(self.pycore)
 
-    def _perform_command_on_module_with_imports(self, resource, method):
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        module_with_imports = self.import_tools.get_module_imports(pymodule)
-        method(module_with_imports)
-        result = module_with_imports.get_changed_source()
-        return result
-
     def _perform_command_on_import_tools(self, method, resource):
         pymodule = self.pycore.resource_to_pyobject(resource)
         before_performing = pymodule.source_code
@@ -109,12 +102,8 @@ class ImportOrganizer(object):
             self.import_tools.organize_imports, resource)
 
     def expand_star_imports(self, resource):
-        source = self._perform_command_on_module_with_imports(
-            resource, module_imports.ModuleImports.expand_stars)
-        if source is not None:
-            changes = ChangeSet('Expanding stars for <%s>' % resource.path)
-            changes.add_change(ChangeContents(resource, source))
-            return changes
+        return self._perform_command_on_import_tools(
+            self.import_tools.expand_stars, resource)
 
     def froms_to_imports(self, resource):
         return self._perform_command_on_import_tools(

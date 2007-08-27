@@ -47,6 +47,11 @@ class ImportTools(object):
         module_imports.remove_duplicates()
         return module_imports.get_changed_source()
 
+    def expand_stars(self, pymodule):
+        module_imports = self.get_module_imports(pymodule)
+        module_imports.expand_stars()
+        return module_imports.get_changed_source()
+
     def _from_to_normal(self, pymodule, import_stmt):
         resource = pymodule.get_resource()
         from_import = import_stmt.import_info

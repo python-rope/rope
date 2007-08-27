@@ -448,13 +448,13 @@ class InlineTest(unittest.TestCase):
         self.mod.write('import pkg.mod3\n\npkg.mod3.f()\n')
         self._inline2(self.mod, self.mod.read().index('f(') + 1)
         # Cannot determine the exact import
-        self.assertTrue('\n\nprint(pkg.mod4.var)\n' in self.mod.read())
+        self.assertTrue('\n\nprint(mod4.var)\n' in self.mod.read())
 
     def test_adding_needed_imports_for_elements_in_source(self):
         self.mod.write('def f1():\n    return f2()\ndef f2():\n    return 1\n')
         self.mod2.write('import mod\n\nprint(mod.f1())\n')
         self._inline2(self.mod, self.mod.read().index('f1') + 1)
-        self.assertEquals('import mod\n\nprint(mod.f2())\n',
+        self.assertEquals('import mod\nfrom mod import f2\n\nprint(f2())\n',
                           self.mod2.read())
 
     def test_relative_imports_and_changing_inlining_body(self):

@@ -531,7 +531,7 @@ def _get_moving_element_with_imports(pycore, resource, source, imports):
 
     source = import_tools.relatives_to_absolutes(pymodule)
     pymodule = pycore.get_string_module(source, resource)
-    source = import_tools.froms_to_imports(pymodule)
+    source = import_tools.expand_stars(pymodule)
     pymodule = pycore.get_string_module(source, resource)
     module_with_imports = import_tools.get_module_imports(pymodule)
     imports = [import_stmt.import_info

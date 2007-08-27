@@ -52,7 +52,6 @@ class InlineMethod(_Inliner):
         self.resource = self.pyfunction.get_module().get_resource()
         self.occurrence_finder = rope.refactor.occurrences.FilteredFinder(
             self.pycore, self.name, [self.pyname])
-        self._check_exceptional_conditions()
         self.normal_generator = _DefinitionGenerator(self.project,
                                                      self.pyfunction)
         self._init_imports()
