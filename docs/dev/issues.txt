@@ -62,6 +62,32 @@ To Be Discussed
 * Better `WordRangeFinder`
 
 
+Command Prefix
+==============
+
+Where to use it?
+
+Reverse sorts:
+
+* ``C-u C-c s a``
+* ``C-u C-c s k``
+* ``C-u C-c s p``
+* ``C-u C-c s s``
+* ``C-u C-c s u``
+
+Imports actions on individuals?:
+
+* ``C-u C-c i x``
+* ``C-u C-c i a``
+* ``C-u C-c i i``
+* ``C-u C-c i l``
+
+Local rename?:
+
+* ``C-u C-c r r``
+
+
+
 Distributing Refactorings
 =========================
 
@@ -121,6 +147,15 @@ Enhancing Refactorings
 * Easier refactorings
 * Automating tasks
 * Better import handling
+
+
+Remove `PyCore._add_dependency()`
+=================================
+
+After the discussions about concluded data invalidation, module
+dependency information is not used anymore.  Maybe we can remove them
+altogether in the hope that maybe in future a better approach is
+possible.
 
 
 Cache Invalidation Again ...

@@ -1,13 +1,7 @@
 Small Stories
 =============
 
-* Not changing froms to normals to imports when moving
-
-* Adding an option to inline to decide about back imports; froms or
-  normal imports
-* Moving x to x.y when there an element x.y already exists
-* Inlining a single occurrence
-* Changing only one import in `importutils.actions`
+- Removing pycore._add_dependency?
 
 * Refactor codeanalyze
 * Adding an option to inline not to remove the definition

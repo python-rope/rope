@@ -487,7 +487,6 @@ class PyPackage(_PyModule):
         if init_dot_py:
             init_object = self.pycore.resource_to_pyobject(init_dot_py)
             result.update(init_object.get_attributes())
-            self.pycore._add_dependency(self, init_object)
         return result
 
     def _get_child_resources(self):

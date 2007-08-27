@@ -181,9 +181,6 @@ class ImportedModule(PyName):
                                           self.level))
                 except ModuleNotFoundError:
                     pass
-            if self.pymodule.get() is not None:
-                pycore._add_dependency(self.importing_module,
-                                       self.pymodule.get())
         return self.pymodule.get()
 
     def get_object(self):

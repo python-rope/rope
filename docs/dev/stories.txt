@@ -75,9 +75,6 @@ Stories
 * Encapsulate field using properties
 
 
-* Performing import actions only on one import statement
-
-
 * Adding an option to remove old parameter in inline argument default
 
 
@@ -94,9 +91,6 @@ Stories
 
 
 * Next/prev sentence
-
-
-* Inlining a single occurrence
 
 
 * Searching inside `EnhancedList`\s
@@ -151,3 +145,19 @@ Stories
 
 
 > Public Release 0.6.2
+
+
+* An option to decide whether to use froms or normal imports for back
+  imports
+
+
+* Inlining a single occurrence
+
+
+* Changing only one import in `importutils.actions`
+
+
+* Performing import actions only on one import statement
+
+
+* ``C-u`` action prefix

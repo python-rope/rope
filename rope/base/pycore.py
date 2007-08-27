@@ -219,8 +219,7 @@ class PyCore(object):
             receiver = None
         runner = dynamicoi.PythonFileRunner(self, resource, args, stdin,
                                             stdout, receiver)
-        runner.add_finishing_observer(
-            self.module_cache.forget_all_data)
+        runner.add_finishing_observer(self.module_cache.forget_all_data)
         runner.run()
         return runner
 
@@ -241,7 +240,7 @@ class PyCore(object):
 
         """
         pymodule = self.resource_to_pyobject(resource)
-        self.module_cache.forget_data(resource)
+        self.module_cache.forget_all_data()
         self.object_infer.soi.analyze_module(pymodule, should_analyze,
                                              search_subscopes)
 
@@ -253,10 +252,6 @@ class PyCore(object):
     def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
         return self.classes_cache.get_classes(task_handle)
 
-    def _add_dependency(self, dependent_pymodule, dependency_pymodule):
-        self.module_cache.add_dependency(dependent_pymodule,
-                                         dependency_pymodule)
-
     def __str__(self):
         return str(self.module_cache) + str(self.object_info)
 
@@ -266,28 +261,15 @@ class _ModuleCache(object):
     def __init__(self, pycore):
         self.pycore = pycore
         self.module_map = {}
-        self.dependents = {}
         self.pycore.cache_observers.append(self._invalidate_resource)
         self.observer = self.pycore.observer
 
     def _invalidate_resource(self, resource):
         if resource in self.module_map:
             self.module_map[resource].invalidate()
-            # XXX: Forgetting all data due to invalidation problems
-            # TODO: Very inefficient
-            #self.forget_data(resource)
             self.forget_all_data()
             self.observer.remove_resource(resource)
             del self.module_map[resource]
-            del self.dependents[resource]
-
-    def forget_data(self, resource):
-        if resource in self.module_map:
-            self.module_map[resource]._forget_concluded_data()
-            dependents = set(self.dependents[resource])
-            self.dependents[resource].clear()
-            for dependent in dependents:
-                self.forget_data(dependent)
 
     def get_pymodule(self, resource):
         if resource in self.module_map:
@@ -297,18 +279,12 @@ class _ModuleCache(object):
         else:
             result = PyModule(self.pycore, resource.read(), resource=resource)
         self.module_map[resource] = result
-        self.dependents[resource] = set()
         self.observer.add_resource(resource)
         return result
 
     def forget_all_data(self):
-        for resource in self.module_map:
-            self.forget_data(resource)
-
-    def add_dependency(self, dependent, dependency):
-        if dependency.get_resource() and dependent.get_resource():
-            self.dependents[dependency.get_resource()].add(
-                dependent.get_resource())
+        for pymodule in self.module_map.values():
+            pymodule._forget_concluded_data()
 
     def __str__(self):
         return 'PyCore caches %d PyModules\n' % len(self.module_map)
