@@ -59,7 +59,6 @@ To Be Discussed
 
 * `Memory management`_
 * Should `rope.base` be thread safe? which parts?
-* Better `WordRangeFinder`
 
 
 Command Prefix
@@ -147,15 +146,6 @@ Enhancing Refactorings
 * Easier refactorings
 * Automating tasks
 * Better import handling
-
-
-Remove `PyCore._add_dependency()`
-=================================
-
-After the discussions about concluded data invalidation, module
-dependency information is not used anymore.  Maybe we can remove them
-altogether in the hope that maybe in future a better approach is
-possible.
 
 
 Cache Invalidation Again ...
@@ -246,6 +236,16 @@ dependency is added to pycore for such things.
 
 So the easiest approach would be to forget all concluded data with
 every change.
+
+
+Removing `PyCore._add_dependency()`
+-----------------------------------
+
+After the discussions about concluded data invalidation, module
+dependency information is not used anymore.  Maybe we can remove them
+altogether in the hope that maybe in future a better approach is
+possible.
+
 
 
 Separating Ropeide

@@ -11,6 +11,10 @@ from rope.refactor.importutils.importinfo import \
      (NormalImport, FromImport, get_module_name)
 
 
+def filter_none(import_stmt):
+    return True
+
+
 class ImportTools(object):
 
     def __init__(self, pycore):
@@ -29,27 +33,26 @@ class ImportTools(object):
     def get_module_imports(self, module):
         return module_imports.ModuleImports(self.pycore, module)
 
-    def froms_to_imports(self, pymodule):
-        pymodule = self._clean_up_imports(pymodule)
+    def froms_to_imports(self, pymodule, import_filter=filter_none):
+        pymodule = self._clean_up_imports(pymodule, import_filter)
         module_imports = self.get_module_imports(pymodule)
         for import_stmt in module_imports.get_import_statements():
-            if not self._can_import_be_transformed_to_normal_import(
-                import_stmt.import_info):
+            if not self._is_transformable_to_normal(import_stmt.import_info):
                 continue
             pymodule = self._from_to_normal(pymodule, import_stmt)
 
         # Adding normal imports in place of froms
         module_imports = self.get_module_imports(pymodule)
         for import_stmt in module_imports.get_import_statements():
-            if self._can_import_be_transformed_to_normal_import(import_stmt.import_info):
+            if self._is_transformable_to_normal(import_stmt.import_info):
                 import_stmt.import_info = \
                     NormalImport(((import_stmt.import_info.module_name, None),))
         module_imports.remove_duplicates()
         return module_imports.get_changed_source()
 
-    def expand_stars(self, pymodule):
+    def expand_stars(self, pymodule, import_filter=filter_none):
         module_imports = self.get_module_imports(pymodule)
-        module_imports.expand_stars()
+        module_imports.expand_stars(import_filter)
         return module_imports.get_changed_source()
 
     def _from_to_normal(self, pymodule, import_stmt):
@@ -70,7 +73,7 @@ class ImportTools(object):
                 pymodule = self.pycore.get_string_module(source, resource)
         return pymodule
 
-    def _clean_up_imports(self, pymodule):
+    def _clean_up_imports(self, pymodule, import_filter):
         resource = pymodule.get_resource()
         module_with_imports = self.get_module_imports(pymodule)
         module_with_imports.expand_stars()
@@ -89,19 +92,20 @@ class ImportTools(object):
             pymodule = self.pycore.get_string_module(source, resource)
         return pymodule
 
-    def relatives_to_absolutes(self, pymodule):
+    def relatives_to_absolutes(self, pymodule, import_filter=filter_none):
         module_imports = self.get_module_imports(pymodule)
-        to_be_absolute_list = module_imports.get_relative_to_absolute_list()
+        to_be_absolute_list = module_imports.get_relative_to_absolute_list(
+            import_filter)
         for name, absolute_name in to_be_absolute_list:
             pymodule = self._rename_in_module(pymodule, name, absolute_name)
         module_imports = self.get_module_imports(pymodule)
-        module_imports.get_relative_to_absolute_list()
+        module_imports.get_relative_to_absolute_list(import_filter)
         source = module_imports.get_changed_source()
         if source is None:
             source = pymodule.source_code
         return source
 
-    def _can_import_be_transformed_to_normal_import(self, import_info):
+    def _is_transformable_to_normal(self, import_info):
         if not isinstance(import_info, FromImport):
             return False
         return True

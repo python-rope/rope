@@ -781,26 +781,64 @@ class ImportUtilsTest(unittest.TestCase):
             '"""\ndocs\n"""\nimport mod\n\n\ndef f():\n    print(mod)\n',
             self.import_tools.sort_imports(pymod))
 
-    def test_selective_import_organization(self):
+    def test_customized_import_organization(self):
         self.mod.write('import sys\nimport sys\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals(
             'import sys\n',
             self.import_tools.organize_imports(pymod, unused=False))
 
-    def test_selective_import_organization2(self):
+    def test_customized_import_organization2(self):
         self.mod.write('import sys\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals(
             'import sys\n',
             self.import_tools.organize_imports(pymod, unused=False))
 
-    def test_selective_import_organization3(self):
+    def test_customized_import_organization3(self):
         self.mod.write('import sys\nimport mod\n\n\nvar = 1\nprint(mod.var)\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals(
             'import sys\n\n\nvar = 1\nprint(var)\n',
             self.import_tools.organize_imports(pymod, unused=False))
+
+    def test_trivial_filtered_expand_stars(self):
+        self.pkg1.get_child('__init__.py').write('var1 = 1\n')
+        self.pkg2.get_child('__init__.py').write('var2 = 1\n')
+        self.mod.write('from pkg1 import *\nfrom pkg2 import *\n\n'
+                       'print(var1, var2)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from pkg1 import *\nfrom pkg2 import *\n\nprint(var1, var2)\n',
+             self.import_tools.expand_stars(pymod, lambda stmt: False))
+
+    def _get_line_filter(self, lineno):
+        def import_filter(import_stmt):
+            return import_stmt.start_line <= lineno < import_stmt.end_line
+        return import_filter
+        
+    def test_filtered_expand_stars(self):
+        self.pkg1.get_child('__init__.py').write('var1 = 1\n')
+        self.pkg2.get_child('__init__.py').write('var2 = 1\n')
+        self.mod.write('from pkg1 import *\nfrom pkg2 import *\n\n'
+                     'print(var1, var2)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from pkg1 import *\nfrom pkg2 import var2\n\nprint(var1, var2)\n',
+             self.import_tools.expand_stars(pymod, self._get_line_filter(2)))
+
+    def test_filtered_relative_to_absolute(self):
+        self.mod3.write('var = 1')
+        self.mod2.write('import mod3\n\nprint(mod3.var)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod2)
+        self.assertEquals(
+            'import mod3\n\nprint(mod3.var)\n',
+             self.import_tools.relatives_to_absolutes(
+                          pymod, lambda stmt: False))
+        self.assertEquals(
+            'import pkg2.mod3\n\nprint(pkg2.mod3.var)\n',
+             self.import_tools.relatives_to_absolutes(
+                          pymod, self._get_line_filter(1)))
 
 
 if __name__ == '__main__':

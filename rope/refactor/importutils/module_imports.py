@@ -4,6 +4,10 @@ from rope.refactor.importutils import importinfo
 from rope.refactor.importutils import actions
 
 
+def pass_all_imports(import_stmt):
+    return True
+
+
 class ModuleImports(object):
 
     def __init__(self, pycore, pymodule):
@@ -136,12 +140,13 @@ class ModuleImports(object):
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
 
-    def expand_stars(self):
+    def expand_stars(self, import_filter=pass_all_imports):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         visitor = actions.ExpandStarsVisitor(
             self.pycore, self._current_folder(), can_select)
         for import_statement in self.get_import_statements():
-            import_statement.accept(visitor)
+            if import_filter(import_statement):
+                import_statement.accept(visitor)
 
     def remove_duplicates(self):
         imports = self.get_import_statements()
@@ -155,11 +160,12 @@ class ModuleImports(object):
             else:
                 added_imports.append(import_stmt)
 
-    def get_relative_to_absolute_list(self):
+    def get_relative_to_absolute_list(self, import_filter=pass_all_imports):
         visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
             self.pycore, self._current_folder())
         for import_stmt in self.get_import_statements():
-            import_stmt.accept(visitor)
+            if import_filter(import_stmt):
+                import_stmt.accept(visitor)
         return visitor.to_be_absolute
 
     def get_self_import_fix_and_rename_list(self):
