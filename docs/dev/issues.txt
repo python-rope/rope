@@ -61,6 +61,20 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
+Better Import Tools
+===================
+
+Having two kinds of filters: one that passes all and one that passes
+only one? If we find a way for tracking imports we're done.
+
+Ways to do it:
+
+* Making import statements readonly by passing a filter to
+  `ModuleImport` objects.
+* Calling `ImportStatement.accept()` for only imports that are not
+  filtered.
+
+
 Command Prefix
 ==============
 
@@ -84,7 +98,6 @@ Imports actions on individuals?:
 Local rename?:
 
 * ``C-u C-c r r``
-
 
 
 Distributing Refactorings

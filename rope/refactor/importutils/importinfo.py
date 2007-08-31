@@ -1,9 +1,16 @@
 class ImportStatement(object):
+    """Represent an import in a module
+
+    `readonly` attribute controls whether this import can be changed
+    by import actions or not.
+
+    """
 
     def __init__(self, import_info, start_line, end_line,
                  main_statement=None, blank_lines=0):
         self.start_line = start_line
         self.end_line = end_line
+        self.readonly = False
         self.main_statement = main_statement
         self._import_info = None
         self.import_info = import_info
@@ -15,7 +22,8 @@ class ImportStatement(object):
         return self._import_info
 
     def _set_import_info(self, new_import):
-        if new_import is not None and not new_import == self._import_info:
+        if not self.readonly and \
+           new_import is not None and not new_import == self._import_info:
             self._is_changed = True
             self._import_info = new_import
 

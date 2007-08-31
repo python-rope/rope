@@ -4,23 +4,24 @@ from rope.refactor.importutils import importinfo
 from rope.refactor.importutils import actions
 
 
-def pass_all_imports(import_stmt):
-    return True
-
-
 class ModuleImports(object):
 
-    def __init__(self, pycore, pymodule):
+    def __init__(self, pycore, pymodule, import_filter=None):
         self.pycore = pycore
         self.pymodule = pymodule
         self.import_statements = None
         self.separating_lines = 0
+        self.filter = import_filter
 
     def get_import_statements(self):
         if self.import_statements is None:
             finder = _GlobalImportFinder(self.pymodule, self.pycore)
             self.import_statements = finder.find_import_statements()
             self.separating_lines = finder.get_separating_line_count()
+            if self.filter is not None:
+                for import_stmt in self.import_statements:
+                    if not self.filter(import_stmt):
+                        import_stmt.readonly = True
         return self.import_statements
 
     def _get_unbound_names(self, defined_pyobject):
@@ -140,13 +141,12 @@ class ModuleImports(object):
         for import_statement in self.get_import_statements():
             import_statement.accept(visitor)
 
-    def expand_stars(self, import_filter=pass_all_imports):
+    def expand_stars(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         visitor = actions.ExpandStarsVisitor(
             self.pycore, self._current_folder(), can_select)
         for import_statement in self.get_import_statements():
-            if import_filter(import_statement):
-                import_statement.accept(visitor)
+            import_statement.accept(visitor)
 
     def remove_duplicates(self):
         imports = self.get_import_statements()
@@ -160,11 +160,11 @@ class ModuleImports(object):
             else:
                 added_imports.append(import_stmt)
 
-    def get_relative_to_absolute_list(self, import_filter=pass_all_imports):
+    def get_relative_to_absolute_list(self):
         visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
             self.pycore, self._current_folder())
         for import_stmt in self.get_import_statements():
-            if import_filter(import_stmt):
+            if not import_stmt.readonly:
                 import_stmt.accept(visitor)
         return visitor.to_be_absolute
 
@@ -172,7 +172,8 @@ class ModuleImports(object):
         visitor = rope.refactor.importutils.actions.SelfImportVisitor(
             self.pycore, self._current_folder(), self.pymodule.get_resource())
         for import_stmt in self.get_import_statements():
-            import_stmt.accept(visitor)
+            if not import_stmt.readonly:
+                import_stmt.accept(visitor)
         return visitor.to_be_fixed, visitor.to_be_renamed
 
     def _current_folder(self):
@@ -228,7 +229,8 @@ class ModuleImports(object):
         visitor = actions.LongImportVisitor(
             self._current_folder(), self.pycore, maxdots, maxlength)
         for import_statement in self.get_import_statements():
-            import_statement.accept(visitor)
+            if not import_statement.readonly:
+                import_statement.accept(visitor)
         for import_info in visitor.new_imports:
             self.add_import(import_info)
         return visitor.to_be_renamed

@@ -821,7 +821,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.pkg1.get_child('__init__.py').write('var1 = 1\n')
         self.pkg2.get_child('__init__.py').write('var2 = 1\n')
         self.mod.write('from pkg1 import *\nfrom pkg2 import *\n\n'
-                     'print(var1, var2)\n')
+                       'print(var1, var2)\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals(
             'from pkg1 import *\nfrom pkg2 import var2\n\nprint(var1, var2)\n',
@@ -839,6 +839,40 @@ class ImportUtilsTest(unittest.TestCase):
             'import pkg2.mod3\n\nprint(pkg2.mod3.var)\n',
              self.import_tools.relatives_to_absolutes(
                           pymod, self._get_line_filter(1)))
+
+    def test_filtered_froms_to_normals(self):
+        self.pkg1.get_child('__init__.py').write('var1 = 1\n')
+        self.pkg2.get_child('__init__.py').write('var2 = 1\n')
+        self.mod.write('from pkg1 import var1\nfrom pkg2 import var2\n\n'
+                       'print(var1, var2)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from pkg1 import var1\nfrom pkg2 import var2\n\nprint(var1, var2)\n',
+             self.import_tools.expand_stars(pymod, lambda stmt: False))
+        self.assertEquals(
+            'from pkg1 import var1\nimport pkg2\n\nprint(var1, pkg2.var2)\n',
+             self.import_tools.froms_to_imports(pymod, self._get_line_filter(2)))
+
+    def test_filtered_froms_to_normals2(self):
+        self.pkg1.get_child('__init__.py').write('var1 = 1\n')
+        self.pkg2.get_child('__init__.py').write('var2 = 1\n')
+        self.mod.write('from pkg1 import *\nfrom pkg2 import *\n\n'
+                       'print(var1, var2)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from pkg1 import *\nimport pkg2\n\nprint(var1, pkg2.var2)\n',
+             self.import_tools.froms_to_imports(pymod, self._get_line_filter(2)))
+
+    def test_filtered_handle_long_imports(self):
+        self.mod.write('import p1.p2.p3.m1\nimport pkg1.mod1\n\n\n'
+                       'm = p1.p2.p3.m1, pkg1.mod1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'import p1.p2.p3.m1\nfrom pkg1 import mod1\n\n\n'
+            'm = p1.p2.p3.m1, mod1\n',
+            self.import_tools.handle_long_imports(
+                          pymod, maxlength=5,
+                          import_filter=self._get_line_filter(2)))
 
 
 if __name__ == '__main__':

@@ -6,12 +6,12 @@ Performing Import Actions On Individual Imports
 
   - Filtered expanding stars
   - Filtered relative to absolute
+  - Filtered froms to normals
+  - Filtered handle long imports
 
-  * Filtered handle long imports
-  * Filtered froms to normals
-
-* Relative to absolute uses two phases; filtering problems
 * Handle long imports should work on filtered imports unconditionally?
+* Relative to absolute uses two phases; filtering problems
+* From to normal more than one phase; filtering problems
 
 * Better name for import_filter
 * Changing `rope.refactor.ImportOrganizer` to add offset -> import
@@ -21,8 +21,12 @@ Performing Import Actions On Individual Imports
 * Should removing duplicate imports in froms to imports be changed?
 * Removing relative to absolute or changing it to support ``from .
   import x`` style imports?
+
 * Better handling of ``__init__.py``\s in change buffer
 * Sorting items in find file or buffer list
+* Better handling of packages in find file; . for the folder
+  containing a file or something like that; p:, m:, i:, f:, d:
+
 * Refactor codeanalyze
 * Adding an option to inline not to remove the definition
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
