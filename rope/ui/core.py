@@ -91,10 +91,6 @@ class Core(object):
         self._close_project_dialog(exit_=True)
 
     def _init_key_binding(self):
-        def do_switch_active_editor(event):
-            self.switch_active_editor()
-            return 'break'
-        self._bind_key('<Control-KeyRelease-F6>', do_switch_active_editor)
         line_status = self.status_bar_manager.get_status('line')
         def show_current_line_number(event):
             line_text = ' '
@@ -352,15 +348,13 @@ class Core(object):
             context.menu_manager.add_menu_command(menu, callback)
 
     def _make_callback(self, action):
-        def callback(event=None):
+        def callback(prefix=None):
             try:
-                action.do(ActionContext(self))
+                action.do(ActionContext(self, prefix))
                 if action.get_name() != 'repeat_last_action':
                     self.last_action = action
             except RopeError, e:
                 self._report_error(e, type(e).__name__)
-            if event:
-                return 'break'
         return callback
 
     def perform_action(self, action):

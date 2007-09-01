@@ -87,32 +87,41 @@ class ImportOrganizer(object):
         self.pycore = project.pycore
         self.import_tools = rope.refactor.importutils.ImportTools(self.pycore)
 
-    def _perform_command_on_import_tools(self, method, resource):
+    def organize_imports(self, resource, offset=None):
+        return self._perform_command_on_import_tools(
+            self.import_tools.organize_imports, resource, offset)
+
+    def expand_star_imports(self, resource, offset=None):
+        return self._perform_command_on_import_tools(
+            self.import_tools.expand_stars, resource, offset)
+
+    def froms_to_imports(self, resource, offset=None):
+        return self._perform_command_on_import_tools(
+            self.import_tools.froms_to_imports, resource, offset)
+
+    def relatives_to_absolutes(self, resource, offset=None):
+        return self._perform_command_on_import_tools(
+            self.import_tools.relatives_to_absolutes, resource, offset)
+
+    def handle_long_imports(self, resource, offset=None):
+        return self._perform_command_on_import_tools(
+            self.import_tools.handle_long_imports, resource, offset)
+
+    def _perform_command_on_import_tools(self, method, resource, offset):
         pymodule = self.pycore.resource_to_pyobject(resource)
         before_performing = pymodule.source_code
-        result = method(pymodule)
+        import_filter = None
+        if offset is not None:
+            import_filter = self._line_filter(
+                pymodule.lines.get_line_number(offset))
+        result = method(pymodule, import_filter=import_filter)
         if result is not None and result != before_performing:
             changes = ChangeSet(method.__name__.replace('_', ' ') +
                                 ' in <%s>' % resource.path)
             changes.add_change(ChangeContents(resource, result))
             return changes
 
-    def organize_imports(self, resource):
-        return self._perform_command_on_import_tools(
-            self.import_tools.organize_imports, resource)
-
-    def expand_star_imports(self, resource):
-        return self._perform_command_on_import_tools(
-            self.import_tools.expand_stars, resource)
-
-    def froms_to_imports(self, resource):
-        return self._perform_command_on_import_tools(
-            self.import_tools.froms_to_imports, resource)
-
-    def relatives_to_absolutes(self, resource):
-        return self._perform_command_on_import_tools(
-            self.import_tools.relatives_to_absolutes, resource)
-
-    def handle_long_imports(self, resource):
-        return self._perform_command_on_import_tools(
-            self.import_tools.handle_long_imports, resource)
+    def _line_filter(self, lineno):
+        def import_filter(import_stmt):
+            return import_stmt.start_line <= lineno < import_stmt.end_line
+        return import_filter

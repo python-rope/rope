@@ -812,11 +812,11 @@ class ImportUtilsTest(unittest.TestCase):
             'from pkg1 import *\nfrom pkg2 import *\n\nprint(var1, var2)\n',
              self.import_tools.expand_stars(pymod, lambda stmt: False))
 
-    def _get_line_filter(self, lineno):
+    def _line_filter(self, lineno):
         def import_filter(import_stmt):
             return import_stmt.start_line <= lineno < import_stmt.end_line
         return import_filter
-        
+
     def test_filtered_expand_stars(self):
         self.pkg1.get_child('__init__.py').write('var1 = 1\n')
         self.pkg2.get_child('__init__.py').write('var2 = 1\n')
@@ -825,7 +825,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals(
             'from pkg1 import *\nfrom pkg2 import var2\n\nprint(var1, var2)\n',
-             self.import_tools.expand_stars(pymod, self._get_line_filter(2)))
+             self.import_tools.expand_stars(pymod, self._line_filter(2)))
 
     def test_filtered_relative_to_absolute(self):
         self.mod3.write('var = 1')
@@ -838,7 +838,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals(
             'import pkg2.mod3\n\nprint(pkg2.mod3.var)\n',
              self.import_tools.relatives_to_absolutes(
-                          pymod, self._get_line_filter(1)))
+                          pymod, self._line_filter(1)))
 
     def test_filtered_froms_to_normals(self):
         self.pkg1.get_child('__init__.py').write('var1 = 1\n')
@@ -851,7 +851,7 @@ class ImportUtilsTest(unittest.TestCase):
              self.import_tools.expand_stars(pymod, lambda stmt: False))
         self.assertEquals(
             'from pkg1 import var1\nimport pkg2\n\nprint(var1, pkg2.var2)\n',
-             self.import_tools.froms_to_imports(pymod, self._get_line_filter(2)))
+             self.import_tools.froms_to_imports(pymod, self._line_filter(2)))
 
     def test_filtered_froms_to_normals2(self):
         self.pkg1.get_child('__init__.py').write('var1 = 1\n')
@@ -861,7 +861,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals(
             'from pkg1 import *\nimport pkg2\n\nprint(var1, pkg2.var2)\n',
-             self.import_tools.froms_to_imports(pymod, self._get_line_filter(2)))
+             self.import_tools.froms_to_imports(pymod, self._line_filter(2)))
 
     def test_filtered_handle_long_imports(self):
         self.mod.write('import p1.p2.p3.m1\nimport pkg1.mod1\n\n\n'
@@ -872,7 +872,17 @@ class ImportUtilsTest(unittest.TestCase):
             'm = p1.p2.p3.m1, mod1\n',
             self.import_tools.handle_long_imports(
                           pymod, maxlength=5,
-                          import_filter=self._get_line_filter(2)))
+                          import_filter=self._line_filter(2)))
+
+    def test_filtering_and_import_actions_with_more_than_one_phase(self):
+        self.pkg1.get_child('__init__.py').write('var1 = 1\n')
+        self.pkg2.get_child('__init__.py').write('var2 = 1\n')
+        self.mod.write('from pkg1 import *\nfrom pkg2 import *\n\n'
+                       'print(var2)\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(
+            'from pkg2 import *\n\nprint(var2)\n',
+             self.import_tools.expand_stars(pymod, self._line_filter(1)))
 
 
 if __name__ == '__main__':

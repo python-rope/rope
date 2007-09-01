@@ -637,10 +637,13 @@ def _import_action(context, method):
         return
     file_editor = context.get_active_editor()
     import_organizer = ImportOrganizer(context.project)
-    if import_organizer:
-        changes = method(import_organizer, file_editor.get_file())
-        if changes is not None:
-            context.project.do(changes)
+    offset = None
+    if context.prefix:
+        offset = context.offset
+    changes = method(import_organizer, file_editor.get_file(),
+                     offset=offset)
+    if changes is not None:
+        context.project.do(changes)
 
 
 def organize_imports(context):

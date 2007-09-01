@@ -50,8 +50,9 @@ class Action(object):
 
 class ActionContext(object):
 
-    def __init__(self, core):
+    def __init__(self, core, prefix=None):
         self.core = core
+        self.prefix = prefix
 
     def get_core(self):
         return self.core

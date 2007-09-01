@@ -3,6 +3,9 @@
 ===========
 
 
+- ``C-u`` action prefix : September 1, 2007
+
+
 > Public Release 0.6.1 : August 19, 2007
 
 
