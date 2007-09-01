@@ -21,47 +21,6 @@ IDE and the library.
 New Features
 ============
 
-* Sorting scopes
-* Showing probable occurrences in show occurrences
-* Cleaning up `rope.ide.codeassist` module
-
-You can use ``C-c s ...`` for sorting current scope.  ``...`` can be
-one of:
-
-* ``a``: alphabetically
-* ``A``: alphabetically reversed
-* ``k``: classes first
-* ``K``: functions first
-* ``u``: underlineds first
-* ``U``: underlineds last
-* ``p``: those that have pydoc first
-* ``P``: those that don't have pydoc first
-* ``s``: special methods first
-* ``S``: special methods last
-
-Note that capitals sort in the reverse order of normals.  Sorts are
-stable.  So if you want to sort by kind and alphabetically, for
-instance, you can use ``C-c s a`` followed by ``C-c s k``.
-
-Show occurrences dialog (``C-c C-s``) now shows possible matches, too.
-These matches end with a question mark.
-
-`rope.ide.codeassist` has been cleaned up.  Now you can do something
-like::
-
-  from rope.ide import codeassist
-
-  # Get the completions
-  proposals = codeassist.code_assist(project, source_code, offset)
-  # Sorting proposals
-  proposals = codeassist.sorted_proposals(proposals)
-  # Where to insert the completions
-  starting_offset = codeassist.starting_offset(source_code, offset)
-
-See pydocs and source code for more information (other functions in
-that module might be interesting, too; like `get_doc`,
-`get_definition_location` and `find_occurrences`).  Note that this
-module is included in *ropeide* package.
 
 
 Getting Started

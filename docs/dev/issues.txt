@@ -61,31 +61,6 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
-Command Prefix
-==============
-
-Where to use it?
-
-Reverse sorts:
-
-* ``C-u C-c s a``
-* ``C-u C-c s k``
-* ``C-u C-c s p``
-* ``C-u C-c s s``
-* ``C-u C-c s u``
-
-Imports actions on individuals?:
-
-* ``C-u C-c i x``
-* ``C-u C-c i a``
-* ``C-u C-c i i``
-* ``C-u C-c i l``
-
-Local rename?:
-
-* ``C-u C-c r r``
-
-
 Distributing Refactorings
 =========================
 

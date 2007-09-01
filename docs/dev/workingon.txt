@@ -1,25 +1,12 @@
-Performing Import Actions On Individual Imports
-===============================================
-
-- Adding an function to `ImportTools` method that returns `True` if
-  action can be performed on the import statement passed to it.
-
-  - Filtered expanding stars
-  - Filtered relative to absolute
-  - Filtered froms to normals
-  - Filtered handle long imports
-
-- Changing `rope.refactor.ImportOrganizer` to add offset -> import
-  filter transformation? offset or line_number
-- Prefixing commands
+Small Stories
+=============
 
 * Callbacks in keybinder hold their parent frame
 * Relative to absolute uses two phases; filtering problems
 * From to normal more than one phase; filtering problems
 
 * Handle long imports should work on filtered imports unconditionally?
-* Removing relative to absolute or changing it to support ``from .
-  import x`` style imports?
+* Trimming trailing source whitespaces
 
 * Better handling of ``__init__.py``\s in change buffer; using
   ``filename:path`` view

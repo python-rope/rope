@@ -426,7 +426,7 @@ _sort_mapping = {'a': 'alpha', 'k': 'kind',
 
 def sort_scopes(context, kind):
     sorter = sort.get_sorter(_sort_mapping[kind.lower()],
-                             reverse=kind.isupper())
+                             reverse=context.prefix)
     sort_scopes = sort.SortScopes(context.project,
                                   context.resource, context.offset)
     context.project.do(sort_scopes.get_changes(sorter=sorter))
@@ -434,17 +434,14 @@ def sort_scopes(context, kind):
 
 def _generate_sort_actions(menu):
     for name in _sort_mapping.values():
+        c = name[0].lower()
         sorter = sort.get_sorter(name)
-        for c in (name[0], name[0].upper()):
-            action_name = 'sort_by_' + name
-            menu_name = str(sorter)
-            if c.isupper():
-                action_name = 'sort_by_reverse_' + name
-                menu_name = 'reverse ' + str(sorter)
-            yield SimpleAction(
-                action_name, lambda context, c=c: sort_scopes(context, c),
-                'C-c s ' + c,
-                menu.child(menu_name.title(), c), ['python'])
+        action_name = 'sort_by_' + name
+        menu_name = str(sorter)
+        yield SimpleAction(
+            action_name, lambda context, c=c: sort_scopes(context, c),
+            'C-c s ' + c,
+            menu.child(menu_name.title(), c), ['python'])
 
 
 core = rope.ui.core.Core.get_core()

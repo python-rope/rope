@@ -101,7 +101,6 @@ class _KeyLevel(object):
             prefix = None
             if key_data.keys[0] == self.prefix:
                 prefix = True
-            print key_data.keys, self.prefix, prefix
             function(prefix)
             return 'break'
         return callback

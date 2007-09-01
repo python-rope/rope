@@ -155,6 +155,3 @@ Stories
 
 
 * Adding an option for removing the definition when inlining
-
-
-* Performing import actions on individual imports
