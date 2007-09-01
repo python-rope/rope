@@ -675,14 +675,20 @@ class InlineDialog(RefactoringDialog):
             context, 'Inline ' + self.inliner.get_kind().title())
 
     def _calculate_changes(self, handle):
-        return self.inliner.get_changes(task_handle=handle)
+        return self.inliner.get_changes(remove=self.remove.get(),
+                                        task_handle=handle)
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
         label = Tkinter.Label(
             frame, text='Inlining occurrences of <%s> %s.' %
             (self.inliner.name, self.inliner.get_kind()), width=50)
-        label.grid()
+        label.grid(row=0)
+        self.remove = Tkinter.IntVar()
+        remove = Tkinter.Checkbutton(frame, text='Remove the definition',
+                                     variable=self.remove)
+        self.remove.set(1)
+        remove.grid(row=1)
         return frame
 
 

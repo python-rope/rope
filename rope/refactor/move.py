@@ -554,9 +554,21 @@ class ModuleSkipRenamerHandle(object):
 
 
 class ModuleSkipRenamer(object):
+    """Rename occurrences in a module
+
+    This class can be used when you want to treat a region in a file
+    separately from other parts when renaming.
+
+    """
 
     def __init__(self, occurrence_finder, resource, handle=None,
                  skip_start=0, skip_end=0, replacement=''):
+        """Constructor
+        
+        if replacement is `None` the region is not changed.  Otherwise
+        it is replaced with `replacement`.
+    
+        """
         self.occurrence_finder = occurrence_finder
         self.resource = resource
         self.skip_start = skip_start
@@ -569,8 +581,9 @@ class ModuleSkipRenamer(object):
     def get_changed_module(self):
         source = self.resource.read()
         change_collector = sourceutils.ChangeCollector(source)
-        change_collector.add_change(self.skip_start, self.skip_end,
-                                    self.replacement)
+        if self.replacement is not None:
+            change_collector.add_change(self.skip_start, self.skip_end,
+                                        self.replacement)
         for occurrence in self.occurrence_finder.find_occurrences(self.resource):
             start, end = occurrence.get_primary_range()
             if self.skip_start <= start < self.skip_end:

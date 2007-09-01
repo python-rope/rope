@@ -291,13 +291,15 @@ class ChangeBufferHandle(SearchableListHandle):
     def canceled(self):
         self.toplevel.destroy()
 
+
 def change_editor(context):
     if not rope.ui.actionhelpers.check_project(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('Change Buffer')
-    buffer_list = SearchableList(toplevel, ChangeBufferHandle(toplevel, context),
-                                 verb='Change', name='Buffer', width=28, height=9)
+    buffer_list = SearchableList(
+        toplevel, ChangeBufferHandle(toplevel, context),
+        verb='Change', name='Buffer', width=28, height=9)
     editor_list = context.core.editor_manager.get_editor_list()
     for editor in editor_list:
         buffer_list.add_entry(editor)

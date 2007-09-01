@@ -18,14 +18,14 @@ class InlineTest(unittest.TestCase):
         testutils.remove_project(self.project)
         super(InlineTest, self).tearDown()
 
-    def _inline(self, code, offset):
+    def _inline(self, code, offset, **kwds):
         self.mod.write(code)
-        self._inline2(self.mod, offset)
+        self._inline2(self.mod, offset, **kwds)
         return self.mod.read()
 
-    def _inline2(self, resource, offset):
-        changes = inline.create_inline(self.project,
-                                       resource, offset).get_changes()
+    def _inline2(self, resource, offset, **kwds):
+        inliner = inline.create_inline(self.project, resource, offset)
+        changes = inliner.get_changes(**kwds)
         self.project.do(changes)
         return self.mod.read()
 
@@ -475,6 +475,19 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index('f(') + 1)
         self.assertEquals('print(1)\nprint(2)\nprint(1)\n',
                           self.mod.read())
+
+    def test_not_removing_definition_for_variables(self):
+        code = 'a_var = 10\nanother_var = a_var\n'
+        refactored = self._inline(code, code.index('a_var') + 1,
+                                  remove=False)
+        self.assertEquals('a_var = 10\nanother_var = 10\n', refactored)
+
+    def test_not_removing_definition_for_methods(self):
+        code = 'def func():\n    print(1)\n\nfunc()\n'
+        refactored = self._inline(code, code.index('func') + 1,
+                                  remove=False)
+        self.assertEquals('def func():\n    print(1)\n\nprint(1)\n',
+                          refactored)
 
 
 def suite():

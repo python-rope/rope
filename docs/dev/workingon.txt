@@ -1,21 +1,16 @@
-Small Stories
-=============
+Not Removing The Definition After Inlining
+==========================================
+
+- Not removing the definition for inline variable
+- Not removing the definition for inline method
+- Adding to UI
 
 * Callbacks in keybinder hold their parent frame
-* Relative to absolute uses two phases; filtering problems
-* From to normal more than one phase; filtering problems
-
+* Import actions with more that on phase and filtering problems
 * Handle long imports should work on filtered imports unconditionally?
+
 * Trimming trailing source whitespaces
-
-* Better handling of ``__init__.py``\s in change buffer; using
-  ``filename:path`` view
-* Sorting items in find file or buffer list
-* Better handling of packages in find file; . for the folder
-  containing a file or something like that; p:, m:, i:, f:, d:
-
 * Refactor codeanalyze
-* Adding an option to inline not to remove the definition
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
   ``~/.ropeide.py``?
 * Changing the default font on linux to courier?
@@ -30,9 +25,7 @@ Small Stories
 
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
-* Changing version format?
 * Using similarfinder in introduce_parameter?
-* Should we move generate to `rope.base.refactor`?
 * Moving `PyCore.create_module()` and `PyCore.create_package()`?
 * Using GPLv3 from 0.7?
 

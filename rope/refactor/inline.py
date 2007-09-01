@@ -36,8 +36,13 @@ class _Inliner(object):
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
         self.name = codeanalyze.get_name_at(resource, offset)
 
-    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
-        """Get the changes this refactoring makes"""
+    def get_changes(self, remove=True,
+                    task_handle=taskhandle.NullTaskHandle()):
+        """Get the changes this refactoring makes
+
+        If remove is `False` the definition will not be removed.
+
+        """
 
     def get_kind(self):
         """Return either 'variable' or 'method'"""
@@ -79,12 +84,13 @@ class InlineMethod(_Inliner):
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
 
-    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, remove=True,
+                    task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Inline method <%s>' % self.name)
         job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
         job_set.started_job('Changing defining file')
-        self._change_defining_file(changes)
+        self._change_defining_file(changes, remove=remove)
         job_set.finished_job()
         self._change_other_files(changes, job_set)
         return changes
@@ -104,13 +110,16 @@ class InlineMethod(_Inliner):
                   len(self.pymodule.source_code))
         return (start, end)
 
-    def _change_defining_file(self, changes):
+    def _change_defining_file(self, changes, remove):
         start_offset, end_offset = self._get_removed_range()
         handle = _InlineFunctionCallsForModuleHandle(
             self.pycore, self.resource, self.normal_generator)
+        replacement = None
+        if remove:
+            replacement = self._get_method_replacement()
         result = move.ModuleSkipRenamer(
             self.occurrence_finder, self.resource, handle, start_offset,
-            end_offset, self._get_method_replacement()).get_changed_module()
+            end_offset, replacement).get_changed_module()
         changes.add_change(ChangeContents(self.resource, result))
 
     def _get_method_replacement(self):
@@ -177,15 +186,16 @@ class InlineVariable(_Inliner):
             raise rope.base.exceptions.RefactoringError(
                 'Local variable should be assigned once for inlining.')
 
-    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
-        source = self._get_changed_module()
+    def get_changes(self, remove=True,
+                    task_handle=taskhandle.NullTaskHandle()):
+        source = self._get_changed_module(remove=remove)
         changes = ChangeSet('Inline variable <%s>' % self.name)
         changes.add_change(ChangeContents(self.resource, source))
         return changes
 
-    def _get_changed_module(self):
+    def _get_changed_module(self, remove):
         return _inline_variable(self.pycore, self.pymodule,
-                                self.pyname, self.name)
+                                self.pyname, self.name, remove=remove)
 
     def get_kind(self):
         return 'variable'
@@ -383,7 +393,7 @@ class _InlineFunctionCallsForModuleHandle(object):
     pymodule = property(_get_pymodule)
 
 
-def _inline_variable(pycore, pymodule, pyname, name):
+def _inline_variable(pycore, pymodule, pyname, name, remove=True):
     assignment = pyname.assignments[0]
     definition_line = assignment.ast_node.lineno
     lines = pymodule.lines
@@ -399,10 +409,14 @@ def _inline_variable(pycore, pymodule, pyname, name):
 
     occurrence_finder = occurrences.FilteredFinder(pycore, name, [pyname])
     changed_source = rename.rename_in_module(
-        occurrence_finder, definition, pymodule=pymodule, replace_primary=True)
+        occurrence_finder, definition, pymodule=pymodule,
+        replace_primary=True, writes=False)
     if changed_source is None:
         changed_source = pymodule.source_code
-    lines = codeanalyze.SourceLinesAdapter(changed_source)
-    source = changed_source[:lines.get_line_start(start)] + \
-             changed_source[lines.get_line_end(end) + 1:]
+    if remove:
+        lines = codeanalyze.SourceLinesAdapter(changed_source)
+        source = changed_source[:lines.get_line_start(start)] + \
+                 changed_source[lines.get_line_end(end) + 1:]
+    else:
+        source = changed_source
     return source

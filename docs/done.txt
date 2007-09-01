@@ -3,6 +3,9 @@
 ===========
 
 
+- Not removing the definition after inlining : September 1, 2007
+
+
 - Performing import actions on individual imports : September 1, 2007
 
 
