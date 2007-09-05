@@ -1,9 +1,10 @@
-Not Removing The Definition After Inlining
-==========================================
+Small Stories
+=============
 
-- Not removing the definition for inline variable
-- Not removing the definition for inline method
-- Adding to UI
+- Add `_ExtractMethodParts.get_checks()`
+- Fixing extract method failures when the first argument differs!
+
+* Searching all files for extract patterns?
 
 * Callbacks in keybinder hold their parent frame
 * Import actions with more that on phase and filtering problems
@@ -14,7 +15,6 @@ Not Removing The Definition After Inlining
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
   ``~/.ropeide.py``?
 * Changing the default font on linux to courier?
-* Lots of exceptions for `PyFunction`
 * Commenting based on the line of syntax error in codeassist?
 * Adding restructuring scope; local scope, module, all files?
 * Better search triggering in find type dialog

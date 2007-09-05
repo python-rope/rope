@@ -649,6 +649,20 @@ class ExtractMethodTest(unittest.TestCase):
                    '    print(f(1))\n\na_func()\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_and_varying_first_parameter(self):
+        code = 'class C(object):\n' \
+               '    def f1(self):\n        print(str(self))\n' \
+               '    def f2(self):\n        print(str(1))\n'
+        start = code.index('print(') + 6
+        end = code.index('))\n') + 1
+        refactored = self.do_extract_method(code, start, end,
+                                            'to_str', similar=True)
+        expected = 'class C(object):\n' \
+                   '    def f1(self):\n        print(self.to_str())\n\n' \
+                   '    def to_str(self):\n        return str(self)\n' \
+                   '    def f2(self):\n        print(str(1))\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

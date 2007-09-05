@@ -3,13 +3,16 @@
 ===========
 
 
-- Not removing the definition after inlining : September 1, 2007
+- An option for not removing the definition after inlining : September 1, 2007
 
 
 - Performing import actions on individual imports : September 1, 2007
 
 
 - ``C-u`` action prefix : September 1, 2007
+
+
+- Changing inline and move to use froms for back imports : August 27, 2007
 
 
 > Public Release 0.6.1 : August 19, 2007

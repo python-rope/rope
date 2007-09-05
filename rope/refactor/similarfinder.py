@@ -92,11 +92,17 @@ class CheckingFinder(SimilarFinder):
 
     """
 
-    def __init__(self, pymodule, checks):
+    def __init__(self, pymodule, checks, check_all=True):
+        """Construct a CheckingFinder
+
+        The `check_all` is `False` missing names are ignored.
+
+        """
         super(CheckingFinder, self).__init__(
             pymodule.source_code, pymodule.get_ast())
         self.pymodule = pymodule
         self.checks = checks
+        self.check_all = check_all
 
     def get_matches(self, code, start=0, end=None):
         if end is None:
@@ -108,7 +114,10 @@ class CheckingFinder(SimilarFinder):
                 name, kind = self._split_name(check)
                 node = match.get_ast(name)
                 if node is None:
-                    raise BadNameInCheckError('Unknown name <%s>' % name)
+                    if self.check_all:
+                        raise BadNameInCheckError('Unknown name <%s>' % name)
+                    else:
+                        continue
                 pyname = self._evaluate_node(node)
                 if kind == 'name':
                     if not self._same_pyname(expected, pyname):

@@ -32,7 +32,7 @@ class _ExtractRefactoring(object):
         """Get the changes this refactoring makes
 
         if `similar` is `True` similar expressions/statements are also
-        replaced with the extracted.
+        replaced.
         """
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
@@ -158,6 +158,7 @@ class _ExtractCollector(object):
     def __init__(self, info):
         self.definition = None
         self.body_pattern = None
+        self.checks = {}
         self.replacement_pattern = None
         self.matches = None
         self.replacements = None
@@ -206,7 +207,9 @@ class _ExtractPerformer(object):
 
     def _find_matches(self, collector):
         regions = self._where_to_search()
-        finder = similarfinder.CheckingFinder(self.info.pymodule, {})
+        finder = similarfinder.CheckingFinder(self.info.pymodule,
+                                              collector.checks,
+                                              check_all=False)
         matches = []
         for start, end in regions:
             matches.extend((finder.get_matches(
@@ -251,6 +254,7 @@ class _ExtractPerformer(object):
         collector.definition = parts.get_definition()
         collector.body_pattern = parts.get_body_pattern()
         collector.replacement_pattern = parts.get_replacement_pattern()
+        collector.checks = parts.get_checks()
 
 
 class _DefinitionLocationFinder(object):
@@ -359,6 +363,13 @@ class _ExtractMethodParts(object):
         variables.extend(self._find_function_returns())
         body = sourceutils.fix_indentation(self.info.extracted, 0)
         return similarfinder.make_pattern(body, variables)
+
+    def get_checks(self):
+        if self.info.method:
+            if _get_function_kind(self.info.scope) == 'method':
+                return {'?%s.type' % self._get_self_name():
+                        self.info.scope.parent.pyobject}
+        return {}
 
     def _create_info_collector(self):
         zero = self.info.scope.get_start() - 1
@@ -479,6 +490,9 @@ class _ExtractVariableParts(object):
 
     def get_replacement_pattern(self):
         return self.info.new_name
+
+    def get_checks(self):
+        return {}
 
 
 class _FunctionInformationCollector(object):
