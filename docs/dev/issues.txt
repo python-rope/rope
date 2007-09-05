@@ -61,16 +61,6 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
-A Better Find File Dialog
-=========================
-
-* Better handling of ``__init__.py``\s in change buffer; using
-  ``filename:path`` view
-* Sorting items in find file or buffer list
-* Better handling of packages in find file; . for the folder
-  containing a file or something like that; p:, m:, i:, f:, d:
-
-
 Distributing Refactorings
 =========================
 

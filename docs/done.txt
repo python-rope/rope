@@ -3,6 +3,9 @@
 ===========
 
 
+- Using ``/``\s to match parent folders in find file : September 5, 2007
+
+
 - An option for not removing the definition after inlining : September 1, 2007
 
 

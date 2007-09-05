@@ -542,11 +542,11 @@ class ProgressBar(object):
 
 class HelperMatcher(object):
 
-    def __init__(self, all_entries, to_search_text):
+    def __init__(self, all_entries, does_match):
         self.all_entries = all_entries
-        self.to_search_text = to_search_text
         self.last_keyword = None
         self.last_result = None
+        self.does_match = does_match
 
     def find_matches(self, starting):
         if starting == self.last_keyword:
@@ -558,29 +558,46 @@ class HelperMatcher(object):
         else:
             entries = self.all_entries
         result = []
-        selector = self._create_selector(starting)
         for entry in entries:
-            if self._can_match(selector, entry):
+            if self.does_match(starting, entry):
                 result.append(entry)
         self.last_keyword = starting
         self.last_result = result
         return result
 
-    def _can_match(self, selector, entry):
+    def invalidate(self):
+        self.last_keyword = None
+        self.last_result = None
+
+
+class DoesMatch(object):
+
+    def __init__(self, to_search_text=str):
+        self.cache = None
+        self.to_search_text = to_search_text
+
+    def __call__(self, pattern, entry):
+        selector = self._get_selector(pattern)
         text = self.to_search_text(entry)
         if isinstance(text, basestring):
-            return selector.can_select(text)
+            return selector(text)
         if isinstance(text, list):
             for subtext in text:
-                if selector.can_select(subtext):
+                if selector(subtext):
                     return True
         return False
 
-    def _create_selector(self, pattern):
-        if '?' in pattern or '*' in pattern:
-            return _RESelector(pattern)
-        else:
-            return _NormalSelector(pattern)
+    def _get_selector(self, pattern):
+        if self.cache is None or self.cache[0] != pattern:
+            self.cache = (pattern, _create_selector(pattern))
+        return self.cache[1]
+
+
+def _create_selector(pattern):
+    if '?' in pattern or '*' in pattern:
+        return _RESelector(pattern)
+    else:
+        return _NormalSelector(pattern)
 
 
 class _NormalSelector(object):
@@ -588,7 +605,7 @@ class _NormalSelector(object):
     def __init__(self, pattern):
         self.pattern = pattern
 
-    def can_select(self, input_str):
+    def __call__(self, input_str):
         return input_str.startswith(self.pattern)
 
 
@@ -597,7 +614,7 @@ class _RESelector(object):
     def __init__(self, pattern):
         self.pattern = re.compile(fnmatch.translate(pattern + '*'))
 
-    def can_select(self, input_str):
+    def __call__(self, input_str):
         return self.pattern.match(input_str)
 
 

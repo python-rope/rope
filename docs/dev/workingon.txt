@@ -1,11 +1,9 @@
 Small Stories
 =============
 
-- Add `_ExtractMethodParts.get_checks()`
-- Fixing extract method failures when the first argument differs!
+- Using ``/`` in find file dialog to files match hierarchically
 
 * Searching all files for extract patterns?
-
 * Callbacks in keybinder hold their parent frame
 * Import actions with more that on phase and filtering problems
 * Handle long imports should work on filtered imports unconditionally?

@@ -121,7 +121,8 @@ class FindCommandHandle(uihelpers.FindItemHandle):
     def __init__(self, core):
         self.core = core
         self.matcher = uihelpers.HelperMatcher(
-            list(self.core.get_available_actions()), self._to_search_text)
+            list(self.core.get_available_actions()),
+            uihelpers.DoesMatch(self._to_search_text))
 
     def _to_search_text(self, action):
         return action.get_name()

@@ -11,7 +11,8 @@ from rope.ui.actionhelpers import ConfirmEditorsAreSaved, simple_stoppable
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
-                               SearchableList, SearchableListHandle, HelperMatcher)
+                               SearchableList, SearchableListHandle,
+                               HelperMatcher, DoesMatch)
 
 
 def open_project(context):
@@ -133,6 +134,34 @@ def create_package(context):
     _create_resource_dialog(context.get_core(), do_create_package, 'Package', 'Source Folder')
 
 
+class _DoesFileMatch(object):
+
+    def __init__(self):
+        self.does_match = DoesMatch()
+
+    def __call__(self, pattern, file):
+        slash_count = pattern.count('/')
+        if slash_count:
+            search_text = '/'.join(file.path.split('/')[-(slash_count + 1):])
+        else:
+            search_text = file.name
+        return self.does_match(pattern, search_text)
+
+
+class _FileMatcher(object):
+
+    def __init__(self, files):
+        self.matcher = HelperMatcher(files, _DoesFileMatch())
+        self.slash_count = 0
+
+    def find_matches(self, starting):
+        slash_count = starting.count('/')
+        if slash_count != self.slash_count:
+            self.matcher.invalidate()
+            self.slash_count = slash_count
+        return self.matcher.find_matches(starting)
+
+
 class FindFileHandle(uihelpers.FindItemHandle):
 
     def __init__(self, context):
@@ -145,7 +174,7 @@ class FindFileHandle(uihelpers.FindItemHandle):
         if self.matcher is None:
             files = list(self.project.get_files())
             files.sort(cmp=self._compare_files)
-            self.matcher = HelperMatcher(files, self._to_search_text)
+            self.matcher = _FileMatcher(files)
         return self.matcher.find_matches(starting)
 
     def _to_search_text(self, entry):
@@ -199,7 +228,7 @@ class FindTypeHandle(uihelpers.FindItemHandle):
                 return self.pycore.get_classes(handle)
             types = list(calculate())
             types.sort(cmp=self._compare_types)
-            self.matcher = HelperMatcher(types, self._to_search_text)
+            self.matcher = HelperMatcher(types, DoesMatch(self._to_search_text))
         return self.matcher.find_matches(starting)
 
     def _to_search_text(self, entry):
