@@ -3,6 +3,12 @@
 ===========
 
 
+- Changing status bar, menu and buffer list font in .rope : September 8, 2007
+
+
+- Better kill line : September 8, 2007
+
+
 - Using ``/``\s to match parent folders in find file : September 5, 2007
 
 

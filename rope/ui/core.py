@@ -20,22 +20,30 @@ class Core(object):
     """The Core of the IDE"""
 
     def __init__(self):
+        self.rebound_keys = {}
+        self.actions = []
+        self.prefs = rope.base.prefs.Prefs()
+        self.last_action = None
+        self.registers = registers.Registers()
+        self.menu_cascades = []
+        self.project = get_no_project()
+        editingcontexts.init_contexts(self)
+
+    def _init_x(self):
         self.root = Tk()
         self.root.title('ropeide')
-        editingcontexts.init_contexts(self)
-        for context in editingcontexts.contexts.values():
-            context.menu = Menu(self.root, relief=RAISED, borderwidth=1)
-            context.menu_manager = MenuBarManager(context.menu)
 
         self.main = Frame(self.root, height='13c', width='26c', relief=RIDGE, bd=2)
         self.editor_panel = Frame(self.main, borderwidth=0)
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
 
-        self.status_bar_manager = rope.ui.statusbar.StatusBarManager(self.status_bar)
+        self.status_bar_manager = rope.ui.statusbar.StatusBarManager(
+            self.status_bar, font=self.prefs.get('statusbar_font', None))
         buffer_status = self.status_bar_manager.create_status('buffer')
         buffer_status.set_width(40)
-        self.editor_manager = rope.ui.editorpile.EditorPile(self.editor_panel, self,
-                                                            buffer_status)
+        self.editor_manager = rope.ui.editorpile.EditorPile(
+            self.editor_panel, self, buffer_status,
+            font=self.prefs.get('editorlist_font', None))
 
         line_status = self.status_bar_manager.create_status('line')
         line_status.set_width(8)
@@ -44,12 +52,6 @@ class Core(object):
             context.key_binding = rope.ui.keybinder.KeyBinder(
                 self.status_bar_manager)
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
-        self.project = get_no_project()
-        self.rebound_keys = {}
-        self.actions = []
-        self.prefs = rope.base.prefs.Prefs()
-        self.last_action = None
-        self.registers = registers.Registers()
 
     def _load_actions(self):
         """Load extension modules.
@@ -84,8 +86,7 @@ class Core(object):
 
     def add_menu_cascade(self, menu_address, active_contexts):
         active_contexts = self._get_matching_contexts(active_contexts)
-        for context in active_contexts:
-            context.menu_manager.add_menu_cascade(menu_address)
+        self.menu_cascades.append((menu_address, active_contexts))
 
     def _close_project_and_exit(self):
         self._close_project_dialog(exit_=True)
@@ -115,6 +116,15 @@ class Core(object):
         return key
 
     def _init_menus(self):
+        font = self.prefs.get('menu_font', None)
+        for context in editingcontexts.contexts.values():
+            context.menu = Menu(self.root, relief=RAISED, borderwidth=1)
+            if font:
+                context.menu['font'] = font
+            context.menu_manager = MenuBarManager(context.menu)
+        for menu_address, contexts in self.menu_cascades:
+            for context in contexts:
+                context.menu_manager.add_menu_cascade(menu_address)
         for action in self.actions:
             callback = self._make_callback(action)
             menu = action.get_menu()
@@ -122,7 +132,8 @@ class Core(object):
             if menu:
                 if key:
                     menu.address[-1] = menu.address[-1].ljust(32) + key
-                self._add_menu_command(menu, callback, action.get_active_contexts())
+                self._add_menu_command(menu, callback,
+                                       action.get_active_contexts())
         self._editor_changed()
 
     def _bind_none_context_keys(self):
@@ -198,6 +209,7 @@ class Core(object):
     def run(self):
         self._load_actions()
         self._load_dot_rope()
+        self._init_x()
         self._init_key_binding()
         self._bind_none_context_keys()
         self._init_menus()

@@ -5,7 +5,7 @@ import rope.ui.fileeditor
 
 class EditorPile(object):
 
-    def __init__(self, editor_panel, core, status):
+    def __init__(self, editor_panel, core, status, font=None):
         self.core = core
         self.status = status
         self.editor_list = Frame(editor_panel, borderwidth=0)
@@ -15,6 +15,7 @@ class EditorPile(object):
         self.active_file_path = StringVar()
         self.active_editor = None
         self.last_edited_location = None
+        self.font = font
 
     def show(self, show_list=True):
         if show_list:
@@ -65,7 +66,7 @@ class EditorPile(object):
                             variable=self.active_file_path,
                             value=file_.path, indicatoron=0, bd=2,
                             command=lambda: self.activate_editor(editor),
-                            selectcolor='#99A', relief=GROOVE)
+                            selectcolor='#99A', relief=GROOVE, font=self.font)
         self.buttons[editor] = title
         title.select()
         title.pack(fill=BOTH, side=LEFT)

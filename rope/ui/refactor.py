@@ -160,7 +160,7 @@ class RenameDialog(RefactoringDialog):
             frame, text='Do for all matching methods in class hierarchy',
             variable=self.in_hierarchy)
         unsure = Tkinter.Checkbutton(
-            frame, text='Rename when unsure(Know what you\'re doing!)',
+            frame, text='Rename when unsure (know what you\'re doing!)',
             variable=self.unsure)
         docs = Tkinter.Checkbutton(
             frame, text='Rename occurrences in strings and comments' +
@@ -184,7 +184,7 @@ def rename_module(context):
                  current_module=True).show()
 
 def local_rename(context):
-    RenameDialog(context, 'Rename Refactoring', True).show()
+    RenameDialog(context, 'Local Rename Refactoring', True).show()
 
 def transform_module_to_package(context):
     if context.get_active_editor():

@@ -34,8 +34,9 @@ class StatusText(object):
 class StatusBarManager(object):
     """Manages the status bar"""
 
-    def __init__(self, status_bar):
+    def __init__(self, status_bar, font=('courier',)):
         self.status_bar = status_bar
+        self.font = font
         self.status_text = {}
 
     def get_status(self, kind):
@@ -47,7 +48,9 @@ class StatusBarManager(object):
         if kind in self.status_text:
             raise StatusBarException('StatusText <%s> already exists' % kind)
         label = Label(self.status_bar, text=' ', height=1,
-                      relief=RIDGE, font=('Courier', 12))
+                      relief=RIDGE, font=self.font)
+        if self.font is not None:
+            label['font'] = self.font
         self.status_text[kind] = StatusText(self, kind, label)
         label.pack(side=LEFT)
         self.status_text[kind].set_text('')

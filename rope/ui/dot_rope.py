@@ -18,8 +18,13 @@ def starting_rope(core):
     """
 
     # Changing editor font
-    #core.set('font', ('Courier', 14))
-    #core.set('font', ('Bitstream Vera Sans Mono', 14))
+    #core.set('font', ('Courier', 16))
+    #core.set('font', ('Bitstream Vera Sans Mono', 16))
+
+    # Changing font for other parts
+    core.set('menu_font', ('Courier', 12, 'bold'))
+    core.set('statusbar_font', ('Courier', 12))
+    core.set('editorlist_font', ('Courier', 12))
 
     # Hiding menu bar
     #core.set('show_menu_bar', False)
@@ -34,7 +39,7 @@ def starting_rope(core):
     # If you don't like emacs keybindings, change this to False
     i_like_emacs = True
     if not i_like_emacs:
-        _change_key_binding(core)
+        _change_to_nonemacs_keybinding(core)
 
 
     # Add your python templates
@@ -95,12 +100,13 @@ def _register_my_actions(core):
         ok_button.focus_set()
         toplevel.bind('<Escape>', lambda event: ok())
         toplevel.bind('<Control-g>', lambda event: ok())
+        toplevel.bind('<Return>', lambda event: ok())
 
     info_action = SimpleAction('rope_info', rope_info, 'C-h i')
     core.register_action(info_action)
 
 
-def _change_key_binding(core):
+def _change_to_nonemacs_keybinding(core):
     # file actions
     core.rebind_action('open_project', 'C-P')
     core.rebind_action('close_project', None)

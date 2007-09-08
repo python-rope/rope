@@ -56,7 +56,7 @@ def set_prefs(prefs):
     # Shows whether to save history across sessions.  Defaults to
     # `False`.
     prefs['save_history'] = True
-    prefs['max_history_items'] = 100
+    prefs['max_history_items'] = 80
 
     # If `False` when running modules or unit tests "Dynamic Object
     # Inference" is turned off.  This makes them much faster.  The

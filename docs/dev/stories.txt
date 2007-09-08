@@ -152,6 +152,3 @@ Stories
 
 
 * Inlining a single occurrence
-
-
-* Adding an option for removing the definition when inlining

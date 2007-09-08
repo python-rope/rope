@@ -1,7 +1,12 @@
 Small Stories
 =============
 
-* Better ``C-k`` using last action
+- Delaying x initialization or passing prefs object?
+- Fixing failures in ui tests
+- Changing fonts
+
+* Splitting history for being faster
+* Updating ``dot_rope.py`` to bind scope sorts
 * Searching all files for extract patterns?
 * Callbacks in keybinder hold their parent frame
 * Import actions with more that one phase and filtering problems
