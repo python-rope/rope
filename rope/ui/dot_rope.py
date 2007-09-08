@@ -41,6 +41,9 @@ def starting_rope(core):
     if not i_like_emacs:
         _change_to_nonemacs_keybinding(core)
 
+    # The key used for prefixing actions
+    #core.set('action_prefix', 'C-u')
+
 
     # Add your python templates
     core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
@@ -169,6 +172,11 @@ def _change_to_nonemacs_keybinding(core):
     core.rebind_action('spellcheck_word', None)
     core.rebind_action('spellcheck_buffer', None)
     core.rebind_action('spellcheck_region', None)
+    core.rebind_action('sort_by_alpha', None)
+    core.rebind_action('sort_by_kind', None)
+    core.rebind_action('sort_by_pydoc', None)
+    core.rebind_action('sort_by_underlined', None)
+    core.rebind_action('sort_by_special', None)
 
     core.rebind_action('code_assist', 'C-space')
     core.rebind_action('goto_definition', 'F3')

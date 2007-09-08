@@ -144,7 +144,7 @@ Stories
 * Split tuple assignment refactoring
 
 
-> Public Release 0.6.2
+> Public Release 0.6.3
 
 
 * An option to decide whether to use froms or normal imports for back
@@ -152,3 +152,6 @@ Stories
 
 
 * Inlining a single occurrence
+
+
+> Public Release 0.6.2

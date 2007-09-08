@@ -1,18 +1,17 @@
 Small Stories
 =============
 
-- Delaying x initialization or passing prefs object?
-- Fixing failures in ui tests
-- Changing fonts
+- Added `rope.ui.extension.ActionContext.region`
+- Updating ``dot_rope.py`` to rebind scope sorts
+- Changing action prefix in ``~/.rope``
 
-* Splitting history for being faster
-* Updating ``dot_rope.py`` to bind scope sorts
-* Searching all files for extract patterns?
+* Splitting history for being faster?
+* Searching all files when extracting?
 * Callbacks in keybinder hold their parent frame
 * Import actions with more that one phase and filtering problems
 * Handle long imports should work on filtered imports unconditionally?
 
-* Trimming trailing source whitespaces
+* A mode for removing trailing whitespaces
 * Refactor codeanalyze
 * Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
   ``~/.ropeide.py``?

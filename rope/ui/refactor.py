@@ -229,9 +229,8 @@ class ExtractDialog(RefactoringDialog):
 
 def extract_method(context):
     def do_extract(new_name, similar):
-        editor = context.get_active_editor().get_editor()
         resource = context.resource
-        start_offset, end_offset = editor.get_region_offset()
+        start_offset, end_offset = context.region
         return rope.refactor.extract.ExtractMethod(
             context.project, resource, start_offset,
             end_offset).get_changes(new_name, similar=similar)
@@ -239,9 +238,8 @@ def extract_method(context):
 
 def extract_variable(context):
     def do_extract(new_name, similar):
-        editor = context.get_active_editor().get_editor()
         resource = context.get_active_editor().get_file()
-        start_offset, end_offset = editor.get_region_offset()
+        start_offset, end_offset = context.region
         return rope.refactor.extract.ExtractVariable(
             context.project, resource, start_offset,
             end_offset).get_changes(new_name, similar=similar)

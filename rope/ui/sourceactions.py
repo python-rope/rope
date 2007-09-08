@@ -356,7 +356,7 @@ def _comment_line(editor, line_number, action='shift'):
 
 def comment_region(context):
     editor = context.get_active_editor().get_editor()
-    start, end = editor.get_region_offset()
+    start, end = context.region
     lines = codeanalyze.SourceLinesAdapter(editor.get_text())
     start_line = lines.get_line_number(start)
     end_line = lines.get_line_number(end)

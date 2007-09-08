@@ -3,13 +3,16 @@
 ===========
 
 
-- Changing status bar, menu and buffer list font in .rope : September 8, 2007
+- Setting statusbar, menu and bufferlist fonts in ``~/.rope`` : September 8, 2007
 
 
 - Better kill line : September 8, 2007
 
 
 - Using ``/``\s to match parent folders in find file : September 5, 2007
+
+
+- Fixed matching method implicit argument when extracting : September 5, 2007
 
 
 - An option for not removing the definition after inlining : September 1, 2007

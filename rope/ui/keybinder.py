@@ -10,10 +10,12 @@ from rope.ui import statusbar
 
 class KeyBinder(object):
 
-    def __init__(self, status_bar):
+    def __init__(self, status_bar, prefix=None):
         self.binding = []
         self.status_bar = status_bar
-        self.prefix = 'C-u'
+        self.prefix = prefix
+        if self.prefix is None:
+            self.prefix = 'C-u'
 
     def add_key(self, key, function):
         self.binding.append((key, function))

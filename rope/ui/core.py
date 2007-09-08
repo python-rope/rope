@@ -50,7 +50,8 @@ class Core(object):
 
         for context in editingcontexts.contexts.values():
             context.key_binding = rope.ui.keybinder.KeyBinder(
-                self.status_bar_manager)
+                self.status_bar_manager,
+                prefix=self.prefs.get('action_prefix', None))
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
 
     def _load_actions(self):

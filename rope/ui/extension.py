@@ -9,12 +9,12 @@ actions.
 class Action(object):
     """Extending rope commands
 
-    Represents an action that can have keyboard a short-cut and
-    menu item.  The `do` method is called when the action is
-    invoked.  `Action`\s should be registered using `rope.ui.core.
-    Core.register_action` method.  Usually `Action`\s are registered
-    using `rope.ui.core.Core._load_actions` by loading the modules
-    that register their actions when loading.
+    Represents an action that can have keyboard a short-cut and menu
+    item.  The `do` method is called with an `ActionContext` parameter
+    when the action is invoked.  `Action`\s should be registered using
+    `rope.ui.core.Core.register_action` method.  Usually `Action`\s
+    are registered using `rope.ui.core.Core._load_actions` by loading
+    the modules that register their actions when loading.
 
     """
 
@@ -49,6 +49,28 @@ class Action(object):
 
 
 class ActionContext(object):
+    """Action invocation context
+
+    An instance of this class is passed to the `Action.do()` method.
+
+    Fields:
+
+    * `core`: `PyCore` instance
+    * `project`: Current open project
+    * `prefix`: Action prefix; It is set with ``C-u`` key and is
+      `None` when there is no prefix
+    * `resource`: The resource the editor is showing
+    * `offset`: Current offset in the editor
+    * `editor`: Current open `rope.ui.editor.Editor`
+    * `fileeditor`: Current open `rope.ui.fileeditor.FileEditor`
+    * `region`: A tuple that shows the start and end offset of
+      selected region
+    * `editingtools`: `rope.ui.editingtools.EditingTools` instance
+
+    Note that unavailable fields are `None`.  For instance when no
+    editor is open the `editor` field is `None`.
+
+    """
 
     def __init__(self, core, prefix=None):
         self.core = core
@@ -75,10 +97,14 @@ class ActionContext(object):
     def _get_buffer_offset(self):
         return self.editor.get_current_offset()
 
+    def _get_region_offset(self):
+        return self.editor.get_region_offset()
+
     project = property(_get_open_project)
     fileeditor = property(get_active_editor)
     editor = property(_get_active_editor_editor)
     offset = property(_get_buffer_offset)
+    region = property(_get_region_offset)
     resource = property(_get_active_editor_resource)
     editingtools = property(_get_editing_context)
 
