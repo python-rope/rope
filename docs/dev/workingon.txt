@@ -1,11 +1,10 @@
 Small Stories
 =============
 
-- Using ``/`` in find file dialog to files match hierarchically
-
+* Better ``C-k`` using last action
 * Searching all files for extract patterns?
 * Callbacks in keybinder hold their parent frame
-* Import actions with more that on phase and filtering problems
+* Import actions with more that one phase and filtering problems
 * Handle long imports should work on filtered imports unconditionally?
 
 * Trimming trailing source whitespaces

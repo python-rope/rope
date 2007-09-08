@@ -476,15 +476,22 @@ class GraphicalEditor(object):
         except TclError:
             pass
 
-    def kill_line(self):
+    def kill_line(self, append=False):
         if self.text.compare('insert', '>=', 'end -1c'):
             return
-        text = self.text.get(INSERT, 'insert lineend')
+        text = self.text.get('insert', 'insert lineend')
+        if not append:
+            self.text.clipboard_clear()
         if text == '':
+            self.text.clipboard_append('\n')
             self.text.delete('insert')
         else:
-            self.text.mark_set('mark', 'insert lineend')
-            self.cut_region()
+            self.text.clipboard_append(text)
+            self.text.delete('insert', 'insert lineend')
+        if append:
+            self.kill_ring.update_last(self.text.clipboard_get())
+        else:
+            self.kill_ring.killed(self.text.clipboard_get())
 
     def next_page(self):
         self.text.event_generate('<Next>')
@@ -853,3 +860,7 @@ class KillRingManager(object):
         self.ring.insert(0, killed)
         if len(self.ring) > self.limit:
             del self.ring[-1]
+
+    def update_last(self, new_text):
+        if self.ring:
+            self.ring[0] = new_text

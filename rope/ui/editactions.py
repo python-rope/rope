@@ -186,7 +186,8 @@ def beginning_of_buffer(context):
     context.editor.goto_start()
 
 def kill_line(context):
-    context.editor.kill_line()
+    append = context.core.last_action.get_name() == 'kill_line'
+    context.editor.kill_line(append=append)
 
 
 class PrevNextElement(object):
