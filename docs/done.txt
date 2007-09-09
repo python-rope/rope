@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.6.2 : September 9, 2007
+
+
 - Setting statusbar, menu and bufferlist fonts in ``~/.rope`` : September 8, 2007
 
 

@@ -51,12 +51,12 @@ imports.  That made imported names long.  Now rope uses from imports
 for back imports to prevent that.
 
 In the find file dialog, you can use ``/``\s to match parent folders.
-For instance for opening the ``rope/base/__init__.py`` you can use
+For instance for opening ``rope/base/__init__.py`` you can use
 ``base/__init__.py`` or ``ba*/__``.
 
 Kill line has been changed to append to the last item in the kill ring
-(instead of appending to it) when the last action was a kill line,
-too.
+(instead of appending to the ring) when the last action was a kill
+line, too.
 
 
 Getting Started

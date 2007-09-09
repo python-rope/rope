@@ -152,6 +152,3 @@ Stories
 
 
 * Inlining a single occurrence
-
-
-> Public Release 0.6.2
