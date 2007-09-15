@@ -6,6 +6,12 @@ from rope.base.oi import objectdb, memorydb, shelvedb, transform
 
 
 class ObjectInfoManager(object):
+    """Stores object information
+
+    It uses an instance of `objectdb.ObjectDB` for storing
+    information.
+
+    """
 
     def __init__(self, project):
         self.project = project
@@ -106,7 +112,7 @@ class ObjectInfoManager(object):
                 if self.validation.is_more_valid(arg, old):
                     parameters[index] = arg
                     if self.validation.is_value_valid(arg):
-                        unknowns -= 1                        
+                        unknowns -= 1
             if unknowns == 0:
                 break
         if unknowns < arg_count:

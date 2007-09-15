@@ -1,7 +1,10 @@
 Small Stories
 =============
 
-* Change contributing.txt to separate rope and ropeide goals
+* Remove ``docs/dev/workingon.txt``?
+* Add ``docs/dev/rope_py3k.txt``?
+
+* Change ``contributing.txt`` to separate rope and ropeide goals
 * Splitting history for being faster?
 * Searching all files when extracting?
 * Callbacks in keybinder hold their parent frame

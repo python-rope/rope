@@ -1,45 +1,38 @@
 """Rope object inference package
 
-Rope askes two things from object inference objects:
-
-* The object returned from a function when a specific set of
-  parameters are passed to it.
-* The objects passed to a function as parameters.
-
-These information suffies for object inference since rope makes some
-simplifying assumptions about the program.  Rope assumes a program
-performs two main tasks: assignments and function calls.  Tracking
-assignments is simple and PyName objects handle that, themselves.  The
+Rope makes some simplifying assumptions about a python program.  It
+assumes that a program only performs assignments and function calls.
+Tracking assignments is simple and `PyName` objects handle that.  The
 main problem is function calls.  Rope uses these two approaches for
 obtaining call information:
 
-* `rope.base.oi.dynamicoi.DynamicObjectInference`:
+* Static object inference: `rope.base.pycore.PyCore.analyze_module()`
 
-  Works good but is very slow.  What it does is when you run a module
-  or your testsuite, it collects information about the parameters and
-  objects returned from functions and later uses them.  The main
-  problem with this approach is that it is quite slow; Not when
-  looking up the information but when collecting them.
+  It can analyze modules to obtain information about functions.  This
+  is done by analyzing function calls in a module or scope.  Currently
+  SOI analyzes the scopes that are changed while saving or when the
+  user asks to analyze a module.  That is mainly because static
+  analysis is time-consuming.
 
-* `rope.base.oi.staticoi.StaticObjectInference`
+* Dynamic object inference: `rope.base.pycore.PyCore.run_module()`
 
-  In ``0.5m3`` rope's SOI has been enhanced very much.  For Finding
-  the value returned by a function, it analyzes the body of the
-  function.  The good thing about it is that you don't have to run
-  anything like DOI, although for complex functions this approach does
-  not give good results (opposed to DOI in which rope does not care
-  about the function body at all).
+  When you run a module or your testsuite, when DOI is enabled, it
+  collects information about parameters passed to and objects returned
+  from functions.  The main problem with this approach is that it is
+  quite slow; Not when looking up the information but when collecting
+  them.
 
-  But the main advantage of SOI is that it can analyze modules and
-  complete its information about functions.  This is done by analyzing
-  function calls in a module or scope.  Currently SOI analyzes the
-  scopes that are changed while saving or when the user asks to
-  analyze a module.  That is mainly because static analysis is
-  time-consuming.
+An instance of `rope.base.oi.objectinfo.ObjectInfoManager` can be used
+for accessing these information.  It saves the data in a
+`rope.base.oi.objectdb.ObjectDB` internally.
 
-  Note that by repeatedly performing SOI analysis on modules
-  (something like iterative object inference) the result gets more
-  accurate.
+Now if our objectdb does not know anything about a function and we
+need the value returned by it, SOI comes into play once more.  It
+analyzes function body and tries to infer the object that is returned
+from it (we usually need the returned value for the given parameter
+objects).
 
+Rope might collect and store information for other `PyName`\s, too.
+For instance rope stores the object builtin containers hold.
 
 """

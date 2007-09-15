@@ -3,6 +3,16 @@ from rope.base import ast, pyobjects, pynames, evaluate, builtins
 
 
 class StaticObjectInference(object):
+    """Performs static object inference
+
+    It actually performs two things:
+
+    * Analyzes scopes for collection object information
+      (`analyze_module` method)
+    * Analyzes function body for infering the object that is returned
+      from a function (`infer_returned_object` method)
+
+    """
 
     def __init__(self, pycore):
         self.pycore = pycore
@@ -131,7 +141,7 @@ class SOIVisitor(object):
                     pyfunction = pyobject.get_attribute('__setitem__').get_object()
                     args = evaluate.ObjectArguments([instance] + args_pynames)
                     self._call(pyfunction, args)
-                # IDEA: handle `__setslice__` too
+                # IDEA: handle `__setslice__`, too
 
 
 class _SOIAssignVisitor(pyobjects._NodeNameCollector):

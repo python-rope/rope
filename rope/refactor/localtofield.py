@@ -17,7 +17,7 @@ class LocalToField(object):
         if not self._is_a_method_local(pyname):
             raise rope.base.exceptions.RefactoringError(
                 'Convert local variable to field should be performed on \n'
-                'the a local variable of a method.')
+                'a local variable of a method.')
 
         pymodule, lineno = pyname.get_definition_location()
         function_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)

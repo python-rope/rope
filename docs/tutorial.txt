@@ -107,6 +107,10 @@ You can select the ``Find File`` item from the ``File`` menu or use
 module to find it.  The dialog shows all files that start with the
 given name.  Press enter to open the file.
 
+In the find file dialog, you can use ``/``\s to match parent folders.
+For instance for opening ``rope/base/__init__.py`` you can use
+``base/__init__.py`` or ``ba*/__``.
+
 
 Saving A File
 =============

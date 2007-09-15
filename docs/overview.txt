@@ -526,6 +526,14 @@ configuration considers imported modules with more than 2 dots or with
 more than 27 characters to be long.
 
 
+Import Actions On Individual Imports
+------------------------------------
+
+You can perform import actions on individual imports by using action
+prefix.  For instance for expanding an star import just move to that
+line and use ``C-u C-c i x``.
+
+
 Stoppable Refactorings
 ----------------------
 
@@ -1145,17 +1153,12 @@ You can use ``C-c s ...`` for sorting current scope.  ``...`` can be
 one of:
 
 * ``a``: alphabetically
-* ``A``: alphabetically reversed
 * ``k``: classes first
-* ``K``: functions first
 * ``u``: underlineds first
-* ``U``: underlineds last
 * ``p``: those that have pydoc first
-* ``P``: those that don't have pydoc first
 * ``s``: special methods first
-* ``S``: special methods last
 
-Note that capitals sort in the reverse order of normals.  Sorts are
+You can sort in the reverse order by using ``C-u`` prefix..  Sorts are
 stable.  So if you want to sort by kind and alphabetically, for
 instance, you can use ``C-c s a`` followed by ``C-c s k``.
 

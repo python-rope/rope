@@ -15,7 +15,7 @@ class SortScopes(object):
     def get_changes(self, sorter=None):
         if sorter is None:
             sorter = AlphaSorter()
-        changes = change.ChangeSet('Sorting scopes (%s) in %s' %
+        changes = change.ChangeSet('Sorting scopes (%s) in <%s>' %
                                    (sorter, self._get_scope_name()))
         scopes = self._get_scopes()
         stmts = self._get_statements(scopes)

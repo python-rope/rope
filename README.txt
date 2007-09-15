@@ -21,42 +21,6 @@ IDE and the library.
 New Features
 ============
 
-Base changes:
-
-* Performing import actions on individual imports
-* Changing inline and move to use froms for back imports
-* An option for not removing the definition after inlining
-* Fixed matching method implicit argument when extracting
-
-UI changes:
-
-* ``C-u`` action prefix
-* Setting statusbar, menu and bufferlist fonts in ``~/.rope``
-* Using ``/``\s to match parent folders in find file
-* Better kill line
-
-You can invoke actions with a prefix (``C-u`` by default).  For
-instance sort scopes actions were changed so that you can sort in the
-reverse order by using this prefix.
-
-You can perform import actions on individual imports by using action
-prefix.  For instance for expanding an star import just move to that
-line and use ``C-u C-c i x``.
-
-A piece of code might use names from its module.  When moving code in
-inline or move refactorings, rope adds back imports for importing used
-names.  Before this release, rope used to convert all moving imports
-(back imports plus used imports in the source module) to normal
-imports.  That made imported names long.  Now rope uses from imports
-for back imports to prevent that.
-
-In the find file dialog, you can use ``/``\s to match parent folders.
-For instance for opening ``rope/base/__init__.py`` you can use
-``base/__init__.py`` or ``ba*/__``.
-
-Kill line has been changed to append to the last item in the kill ring
-(instead of appending to the ring) when the last action was a kill
-line, too.
 
 
 Getting Started

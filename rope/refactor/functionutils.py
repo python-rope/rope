@@ -1,63 +1,12 @@
 import rope.base.exceptions
 import rope.base.pyobjects
-from rope.base import ast, codeanalyze
-
-
-class _FunctionParser(object):
-
-    def __init__(self, call, implicit_arg):
-        self.call = call
-        self.implicit_arg = implicit_arg
-        self.word_finder = rope.base.codeanalyze.WordRangeFinder(self.call)
-        self.last_parens = self.call.rindex(')')
-        self.first_parens = self.word_finder._find_parens_start(self.last_parens)
-
-    def get_parameters(self):
-        keywords = []
-        args = []
-        current = self.last_parens - 1
-        current = self.word_finder._find_last_non_space_char(current)
-        while current > self.first_parens:
-            primary_start = current
-            current = self.word_finder._find_primary_start(current)
-            while current != self.first_parens and self.call[current] not in '=,':
-                current = self.word_finder._find_last_non_space_char(current - 1)
-            primary = self.call[current + 1:primary_start + 1].strip()
-            if self.call[current] == '=':
-                primary_start = current - 1
-                current -= 1
-                while current != self.first_parens and self.call[current] not in ',':
-                    current = self.word_finder._find_last_non_space_char(current - 1)
-                param_name = self.call[current + 1:primary_start + 1].strip()
-                keywords.append((param_name, primary))
-            else:
-                args.append(primary)
-            current = self.word_finder._find_last_non_space_char(current - 1)
-        if self.is_called_as_a_method():
-            args.append(self.call[:self.call.rindex('.', 0, self.first_parens)].strip())
-        args.reverse()
-        keywords.reverse()
-        return args, keywords
-
-    def get_instance(self):
-        if self.is_called_as_a_method():
-            return self.word_finder.get_primary_at(
-                self.call.rindex('.', 0, self.first_parens) - 1)
-
-    def get_function_name(self):
-        if self.is_called_as_a_method():
-            return self.word_finder.get_word_at(self.first_parens - 1)
-        else:
-            return self.word_finder.get_primary_at(self.first_parens - 1)
-
-    def is_called_as_a_method(self):
-        return self.implicit_arg and '.' in self.call[:self.first_parens]
+from rope.base import codeanalyze
 
 
 class DefinitionInfo(object):
 
-    def __init__(self, function_name, is_method, args_with_defaults, args_arg,
-                 keywords_arg):
+    def __init__(self, function_name, is_method, args_with_defaults,
+                 args_arg, keywords_arg):
         self.function_name = function_name
         self.is_method = is_method
         self.args_with_defaults = args_with_defaults
@@ -234,3 +183,54 @@ class ArgumentMapping(object):
         return CallInfo(self.call_info.function_name, args, keywords,
                         self.call_info.args_arg, self.call_info.keywords_arg,
                         self.call_info.implicit_arg, self.call_info.constructor)
+
+
+class _FunctionParser(object):
+
+    def __init__(self, call, implicit_arg):
+        self.call = call
+        self.implicit_arg = implicit_arg
+        self.word_finder = codeanalyze.WordRangeFinder(self.call)
+        self.last_parens = self.call.rindex(')')
+        self.first_parens = self.word_finder._find_parens_start(self.last_parens)
+
+    def get_parameters(self):
+        keywords = []
+        args = []
+        current = self.last_parens - 1
+        current = self.word_finder._find_last_non_space_char(current)
+        while current > self.first_parens:
+            primary_start = current
+            current = self.word_finder._find_primary_start(current)
+            while current != self.first_parens and self.call[current] not in '=,':
+                current = self.word_finder._find_last_non_space_char(current - 1)
+            primary = self.call[current + 1:primary_start + 1].strip()
+            if self.call[current] == '=':
+                primary_start = current - 1
+                current -= 1
+                while current != self.first_parens and self.call[current] not in ',':
+                    current = self.word_finder._find_last_non_space_char(current - 1)
+                param_name = self.call[current + 1:primary_start + 1].strip()
+                keywords.append((param_name, primary))
+            else:
+                args.append(primary)
+            current = self.word_finder._find_last_non_space_char(current - 1)
+        if self.is_called_as_a_method():
+            args.append(self.call[:self.call.rindex('.', 0, self.first_parens)].strip())
+        args.reverse()
+        keywords.reverse()
+        return args, keywords
+
+    def get_instance(self):
+        if self.is_called_as_a_method():
+            return self.word_finder.get_primary_at(
+                self.call.rindex('.', 0, self.first_parens) - 1)
+
+    def get_function_name(self):
+        if self.is_called_as_a_method():
+            return self.word_finder.get_word_at(self.first_parens - 1)
+        else:
+            return self.word_finder.get_primary_at(self.first_parens - 1)
+
+    def is_called_as_a_method(self):
+        return self.implicit_arg and '.' in self.call[:self.first_parens]
