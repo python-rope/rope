@@ -59,7 +59,8 @@ class StoppableTaskRunner(object):
         def stop(event=None):
             handle.stop()
         frame.grid(row=0)
-        stop_button = Tkinter.Button(toplevel, text='Stop', command=stop)
+        stop_button = Tkinter.Button(toplevel, text='Stop',
+                                     command=stop, width=20)
         toplevel.bind('<Control-g>', stop)
         toplevel.bind('<Escape>', stop)
         stop_button.grid(row=1)

@@ -384,7 +384,7 @@ class Core(object):
         def ok(event=None):
             toplevel.destroy()
             return 'break'
-        ok_button = Button(toplevel, text='OK', command=ok)
+        ok_button = Button(toplevel, text='OK', command=ok, width=15)
         label.grid(row=0)
         toplevel.bind('<Control-g>', lambda event: ok())
         toplevel.bind('<Escape>', lambda event: ok())

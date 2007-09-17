@@ -418,7 +418,7 @@ def find_item_dialog(handle, title='Find', matches='Matches',
     toplevel.title(title)
     find_dialog = Tkinter.Frame(toplevel)
     name_label = Tkinter.Label(toplevel, text='Name')
-    name = Tkinter.Entry(toplevel)
+    name = Tkinter.Entry(toplevel, width=width // 2)
     list_handle = _FindListViewAdapter(toplevel, handle)
     found = EnhancedList(find_dialog, list_handle, matches, get_focus=False,
                          height=height, width=width)
