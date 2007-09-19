@@ -246,7 +246,7 @@ class _PatchingASTWalker(object):
                 children.append(',')
             children.extend(['*', node.starargs])
         if node.kwargs is not None:
-            if args:
+            if args or node.starargs is not None:
                 children.append(',')
             children.extend(['**', node.kwargs])
         children.append(')')
@@ -345,21 +345,19 @@ class _PatchingASTWalker(object):
     def _arguments(self, node):
         children = []
         args = list(node.args)
-        star_args = node.vararg
-        dstar_args = node.kwarg
         defaults = [None] * (len(args) - len(node.defaults)) + list(node.defaults)
         for index, (arg, default) in enumerate(zip(args, defaults)):
             if index > 0:
                 children.append(',')
             self._add_args_to_children(children, arg, default)
-        if star_args is not None:
+        if node.vararg is not None:
             if args:
                 children.append(',')
-            children.extend(['*', star_args])
-        if dstar_args is not None:
-            if args:
+            children.extend(['*', node.vararg])
+        if node.kwarg is not None:
+            if args or node.vararg is not None:
                 children.append(',')
-            children.extend(['**', dstar_args])
+            children.extend(['**', node.kwarg])
         self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):

@@ -278,6 +278,14 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             'Call', ['Name', '', '(', '', '**', '', 'Name', '', ')'])
 
+    def test_call_func_and_both_varargs_and_kwargs(self):
+        source = 'f(*args, **kwds)\n'
+        ast = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'Call', ['Name', '', '(', '', '*', '', 'Name', '', ',',
+                     ' ', '**', '', 'Name', '', ')'])
+
     def test_class_node(self):
         source = 'class A(object):\n    """class docs"""\n    pass\n'
         ast = patchedast.get_patched_ast(source, True)
@@ -321,6 +329,13 @@ class PatchedASTTest(unittest.TestCase):
             'FunctionDef',
             ['@', '', 'Name', '\n', 'def', ' ', 'f', '', '(', '', 'arguments',
              '', ')', '', ':', '\n    ', 'Pass'])
+
+    def test_both_varargs_and_kwargs(self):
+        source = 'def f(*args, **kwds):\n    pass\n'
+        ast = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'arguments', ['*', '', 'args' , '', ',' , ' ', '**', '', 'kwds'])
 
     def test_function_node(self):
         source = 'def f():\n    pass\n'
