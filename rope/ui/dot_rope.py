@@ -108,6 +108,12 @@ def _register_my_actions(core):
     info_action = SimpleAction('rope_info', rope_info, 'C-h i')
     core.register_action(info_action)
 
+    # Alternatively you can put your actions in an extension module
+    # and register the module using `Core.add_extension()`.  When
+    # rope starts it loads all extension modules.  You should register
+    # your actions when the module is loading
+    #core.add_extension('my.extension.module')
+
 
 def _change_to_nonemacs_keybinding(core):
     # file actions

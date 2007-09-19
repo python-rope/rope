@@ -407,7 +407,7 @@ class PyCoreTest(unittest.TestCase):
         mod.write(contents)
         self.pycore.get_module('mod')
 
-    def test_file_encoding_reading2(self):
+    def test_global_keyword(self):
         contents = 'a_var = 1\ndef a_func():\n    global a_var\n'
         mod = self.pycore.get_string_module(contents)
         global_var = mod.get_attribute('a_var')

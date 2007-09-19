@@ -27,6 +27,7 @@ class Core(object):
         self.registers = registers.Registers()
         self.menu_cascades = []
         self.project = get_no_project()
+        self.extension_modules = []
         editingcontexts.init_contexts(self)
 
     def _init_x(self):
@@ -54,17 +55,25 @@ class Core(object):
                 prefix=self.prefs.get('action_prefix', None))
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
 
-    def _load_actions(self):
-        """Load extension modules.
+    def add_extension(self, module_name):
+        """Add an extension module
 
-        The modules that are loaded here use `Core.register_action`
+        `module_name` is the name of the module.  Rope imports that
+        module when it loads extensions.  Should use
+        `Core.register_action()` for registering actions in extension
+        modules.
+
+        """
+        self.extension_modules.append(module_name)
+
+    def _load_actions(self):
+        """Load extension modules
+
+        The modules that are loaded here use `Core.register_action()`
         to register their `Action`\s.
         """
-        import rope.ui.fileactions
-        import rope.ui.editactions
-        import rope.ui.sourceactions
-        import rope.ui.refactor
-        import rope.ui.helpactions
+        for module_name in self.extension_modules:
+            __import__(module_name)
 
     def set(self, key, value):
         """Set a preference
@@ -208,8 +217,13 @@ class Core(object):
         save_button.focus_set()
 
     def run(self):
-        self._load_actions()
+        self.add_extension('rope.ui.fileactions')
+        self.add_extension('rope.ui.editactions')
+        self.add_extension('rope.ui.sourceactions')
+        self.add_extension('rope.ui.refactor')
+        self.add_extension('rope.ui.helpactions')
         self._load_dot_rope()
+        self._load_actions()
         self._init_x()
         self._init_key_binding()
         self._bind_none_context_keys()

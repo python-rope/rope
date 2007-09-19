@@ -1,10 +1,11 @@
 Small Stories
 =============
 
+- Add `Core.add_extension('rope.ui.helpactions')`
+
 * Better tests in `patchedasttest`
 * Remove ``docs/dev/workingon.txt``?
 * Add ``docs/dev/rope_py3k.txt``?
-* Add `Core.add_extension('rope.ui.helpactions')`?
 
 * Change ``contributing.txt`` to separate rope and ropeide goals
 * Splitting history for being faster?

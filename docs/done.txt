@@ -3,6 +3,9 @@
 ===========
 
 
+- Added `Core.add_extension()` : September 19, 2007
+
+
 > Public Release 0.6.2 : September 9, 2007
 
 
