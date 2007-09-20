@@ -5,22 +5,6 @@ import inspect
 from rope.base import pynames, pyobjects, evaluate
 
 
-def _create_builtin_type_getter(cls):
-    def _get_builtin(*args):
-        if not hasattr(cls, '_generated'):
-            cls._generated = {}
-        if args not in cls._generated:
-            cls._generated[args] = cls(*args)
-        return cls._generated[args]
-    return _get_builtin
-
-def _create_builtin_getter(cls):
-    type_getter = _create_builtin_type_getter(cls)
-    def _get_builtin(*args):
-        return pyobjects.PyObject(type_getter(*args))
-    return _get_builtin
-
-
 class BuiltinClass(pyobjects.AbstractClass):
 
     def __init__(self, builtin, attributes):
@@ -60,6 +44,22 @@ class BuiltinFunction(pyobjects.AbstractFunction):
     def get_name(self):
         if self.builtin:
             return self.builtin.__name__
+
+
+def _create_builtin_type_getter(cls):
+    def _get_builtin(*args):
+        if not hasattr(cls, '_generated'):
+            cls._generated = {}
+        if args not in cls._generated:
+            cls._generated[args] = cls(*args)
+        return cls._generated[args]
+    return _get_builtin
+
+def _create_builtin_getter(cls):
+    type_getter = _create_builtin_type_getter(cls)
+    def _get_builtin(*args):
+        return pyobjects.PyObject(type_getter(*args))
+    return _get_builtin
 
 
 class _CallContext(object):
@@ -132,11 +132,17 @@ class _AttributeCollector(object):
         self.attributes = {}
         self.type = type
 
-    def __call__(self, name, returned=None, function=None, argnames=['self']):
+    def __call__(self, name, returned=None, function=None,
+                 argnames=['self'], check_existence=True):
+        try:
+            builtin = getattr(self.type, name)
+        except AttributeError:
+            if check_existence:
+                raise
+            builtin=None
         self.attributes[name] = BuiltinName(
             BuiltinFunction(returned=returned, function=function,
-                            argnames=argnames,
-                            builtin=getattr(self.type, name)))
+                            argnames=argnames, builtin=builtin))
 
     def __setitem__(self, name, value):
         self.attributes[name] = value
@@ -388,28 +394,24 @@ class Str(BuiltinClass):
 
     def __init__(self):
         self_object = pyobjects.PyObject(self)
-        attributes = {}
-        def add(name, returned=None, function=None):
-            builtin = getattr(str, name, None)
-            attributes[name] = BuiltinName(
-                BuiltinFunction(returned=returned, function=function, builtin=builtin))
-        add('__iter__', Iterator(self_object))
+        collector = _AttributeCollector(str)
+        collector('__iter__', Iterator(self_object), check_existence=False)
 
-        self_methods = ['__getitem__', '__getslice__', 'captialize', 'center',
+        self_methods = ['__getitem__', '__getslice__', 'capitalize', 'center',
                         'decode', 'encode', 'expandtabs', 'join', 'ljust',
                         'lower', 'lstrip', 'replace', 'rjust', 'rstrip', 'strip',
                         'swapcase', 'title', 'translate', 'upper', 'zfill']
         for method in self_methods:
-            add(method, self_object)
+            collector(method, self_object)
 
         for method in ['rsplit', 'split', 'splitlines']:
-            add(method, get_list(self_object))
+            collector(method, get_list(self_object))
 
         for method in ['count', 'endswith', 'find', 'index', 'isalnum',
                        'isalpha', 'isdigit', 'islower', 'isspace', 'istitle',
                        'isupper', 'rfind', 'rindex', 'startswith']:
-            add(method)
-        super(Str, self).__init__(str, attributes)
+            collector(method)
+        super(Str, self).__init__(str, collector.attributes)
 
     def get_doc(self):
         return str.__doc__

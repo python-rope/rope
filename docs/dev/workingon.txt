@@ -1,8 +1,9 @@
 Small Stories
 =============
 
-- Add `Core.add_extension('rope.ui.helpactions')`
+- Changing `builtins.Str` to use `builtins._AttributeCollector`?
 
+* Using `__setitem__` for slices in staticoi?
 * Better tests in `patchedasttest`
 * Remove ``docs/dev/workingon.txt``?
 * Add ``docs/dev/rope_py3k.txt``?
