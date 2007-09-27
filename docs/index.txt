@@ -107,6 +107,15 @@ Download
 You can download rope from `project download page`_.
 
 
+Source Repository
+=================
+
+Rope uses Mercurial_ CMS:
+
+* Rope main branch: http://rope.sourceforge.net/hg/rope
+* Rope py3k branch: http://rope.sourceforge.net/hg/rope_py3k
+
+
 Feedback
 ========
 

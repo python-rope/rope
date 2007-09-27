@@ -23,7 +23,7 @@ How to Help Rope?
 * Discuss your ideas in `rope-developers`_ mailing list.
 
 .. _rope project page: http://sf.net/projects/rope
-.. _`rope-developers`: http://lists.sourceforge.net/mailman/listinfo/rope-developers
+.. _rope-developers: http://lists.sourceforge.net/mailman/listinfo/rope-developers
 
 
 Wish List
@@ -69,7 +69,8 @@ requires a good knowledge of `rope.base`.
 Getting Ready For Python 3.0
 ----------------------------
 
-It has been started, already.  But contributions are appreciated.
+Checkout http://rope.sourceforge.net/hg/rope_py3k Mercurial_
+repository.  Contributions are welcome.
 
 
 Rope Structure
@@ -90,6 +91,15 @@ examples.
 .. _`library.txt`: library.html
 
 
+Source Repository
+=================
+
+Rope uses Mercurial_ CMS:
+
+* Rope main branch: http://rope.sourceforge.net/hg/rope
+* Rope py3k branch: http://rope.sourceforge.net/hg/rope_py3k
+
+
 Submitting patches
 ==================
 
@@ -98,10 +108,9 @@ Patches to rope's code are welcome.
 Patch style
 -----------
 
-Always use the latest version of files from rope Subversion repository
-from https://rope.svn.sourceforge.net/svnroot/rope
-
 * Follow :PEP:`8`.
 * Use four spaces for indentation.
 * Include good unit-tests if possible.
 * Rope test suite should pass after patching (``python runtests.py``).
+
+.. _Mercurial: http://selenic.com/mercurial
