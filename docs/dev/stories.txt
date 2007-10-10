@@ -138,9 +138,6 @@ Stories
 * Lambdas as functions; consider their parameters
 
 
-* Enhancing open project dialog
-
-
 * Split tuple assignment refactoring
 
 

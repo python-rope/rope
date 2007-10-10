@@ -75,7 +75,7 @@ def get_base_type(name):
     ``pyobject.get_type() == get_base_type('Function')`` use
     ``isinstance(pyobject, AbstractFunction)``.
 
-    You can use `AbstractClass` for classs, `AbstractFunction` for
+    You can use `AbstractClass` for classes, `AbstractFunction` for
     functions, and `AbstractModule` for modules.  You can also use
     `PyFunction` and `PyClass` for testing if an object is
     defined somewhere and rope can access its source.  These classes

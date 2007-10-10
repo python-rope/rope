@@ -1,4 +1,4 @@
-"""A few utilities for using rope as a library"""
+"""A few useful functions for using rope as a library"""
 import os.path
 
 import rope.base.project

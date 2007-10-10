@@ -3,6 +3,9 @@
 ===========
 
 
+- A new open project dialog : October 10, 2007
+
+
 - Added `Core.add_extension()` : September 19, 2007
 
 

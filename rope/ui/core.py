@@ -178,14 +178,6 @@ class Core(object):
         context = graphical_editor.get_editing_context()
         context.key_binding.bind(graphical_editor.getWidget())
 
-    def _open_project_dialog(self, event=None):
-        def doOpen(projectRoot):
-            self.open_project(projectRoot)
-        directory = tkFileDialog.askdirectory(parent=self.root, title='Open Project')
-        if directory:
-            doOpen(directory)
-        return 'break'
-
     def _close_active_editor_dialog(self):
         active_editor = self.editor_manager.active_editor
         if not active_editor:

@@ -1,13 +1,13 @@
-import re
+import os.path
 
 import Tkinter
+import tkFileDialog
 
 import rope.base.project
 import rope.ui.actionhelpers
 import rope.ui.core
-from rope.ui import uihelpers
+from rope.ui import uihelpers, tkhelpers
 from rope.ui.actionhelpers import ConfirmEditorsAreSaved, simple_stoppable
-                                   
 from rope.ui.extension import SimpleAction
 from rope.ui.menubar import MenuAddress
 from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
@@ -16,10 +16,44 @@ from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
 
 
 def open_project(context):
-    context.get_core()._open_project_dialog()
+    toplevel = Tkinter.Toplevel()
+    toplevel.title('Open Project')
+    root_frame = Tkinter.Frame(toplevel, relief=Tkinter.GROOVE, border=2)
+    label = Tkinter.Label(root_frame, text='Folder :', width=8)
+    root_entry = Tkinter.Entry(root_frame, width=25)
+    root_entry.insert(0, os.path.abspath(os.curdir))
+    def browse(event=None):
+        directory = tkFileDialog.askdirectory(parent=toplevel,
+                                              title='Look For Project')
+        if directory:
+            root_entry.delete(0, Tkinter.END)
+            root_entry.insert(0, directory)
+    browse_button = Tkinter.Button(root_frame, text='...', command=browse)
+    root_help = 'You should specify the root folder of your project.\n' \
+                'It will be created if it does not exist.'
+    tkhelpers.ToolTip(root_entry, root_help)
+    tkhelpers.ToolTip(browse_button, 'Browse')
+    label.grid(row=0, column=0)
+    root_entry.grid(row=0, column=1)
+    browse_button.grid(row=0, column=2)
+
+    def ok(event=None):
+        root = root_entry.get()
+        context.core.open_project(root)
+        toplevel.destroy()
+    def cancel(event=None):
+        toplevel.destroy()
+    ok_button = Tkinter.Button(
+        toplevel, text='Open/Create Project', command=ok, width=25)
+    root_frame.grid(row=0)
+    ok_button.grid(row=1)
+    toplevel.bind('<Return>', ok)
+    toplevel.bind('<Escape>', cancel)
+    toplevel.bind('<Control-g>', cancel)
+    root_entry.focus_set()
 
 def close_project(context):
-    context.get_core()._close_project_dialog()
+    context.core._close_project_dialog()
 
 class _FolderViewHandle(TreeViewHandle):
 
