@@ -304,3 +304,62 @@ removed.
   control or none.
 * All ``*.txt`` files are considered to be ReST.
 * XXX
+
+
+Unresolved Issues
+=================
+
+* Splitting history for being faster?
+* Searching all files when extracting a global method?
+* Better tests in `patchedasttest`
+* Callbacks in keybinder hold their parent frame
+* Import actions with more that one phase and filtering problems
+* Handle long imports should work on filtered imports unconditionally?
+
+* A mode for removing trailing whitespaces
+* Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
+  ``~/.ropeide.py``?
+* Changing the default font on linux to courier?
+* Commenting based on the line of syntax error in codeassist?
+* Adding restructuring scope; local scope, module, all files?
+* Better search triggering in find type dialog
+* Changing `codeanalyze.WordFinder` to use ASTs?
+* Refactoring codeanalyze; lots of estimations
+* Assignment to parameters in inline method
+* Assignment to parameter warning
+
+* Extracting subexpressions; look at `extracttest` for more info
+* Remove ``change occurreces`` refactoring?
+* Using similarfinder in introduce_parameter?
+* Moving `PyCore.create_module()` and `PyCore.create_package()`?
+* Using GPLv3 from 0.7?
+
+
+Small Stories
+=============
+
+Base:
+
+* Multiple ropes on one project; problems for objectdb and history
+* Inline fails when there is an arg mismatch
+* Evaluate function parameter defaults in staticoi?
+* Recursive SOI; Go where the calls go with limited depth
+* Adding ``do when unsure`` config to all refactorings?
+* Removing ``pass`` when introducing factory for empty classes
+* Importing star and removing self imports; stack overflow
+
+UI and IDE:
+
+* Inserting common prefix when using codeassist
+* Renaming files, folders, modules, and packages in project tree view
+* Completion in module entries
+* Goto definition for ``"# comment.\na_var"``
+* Comments should be indented
+
+Docs:
+
+* Explain why rope does not stop users from performing wrong
+  refactorings
+* Add custom refactoring section to ``overview.txt`` file;
+  Extract field refactoring
+* Document why support for Python ``2.4`` was dropped
