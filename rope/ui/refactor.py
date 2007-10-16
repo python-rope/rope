@@ -83,6 +83,7 @@ class RefactoringDialog(object):
     def show(self):
         self.toplevel = Tkinter.Toplevel()
         self.toplevel.title(self.title)
+        self.toplevel.bind('<Return>', lambda event: self._ok())
         self.toplevel.bind('<Escape>', lambda event: self._cancel())
         self.toplevel.bind('<Control-g>', lambda event: self._cancel())
         frame = self._get_dialog_frame()

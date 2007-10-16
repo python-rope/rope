@@ -1,4 +1,4 @@
-from rope.base import change, taskhandle, builtins, exceptions, ast
+from rope.base import change, taskhandle, builtins, ast
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
 
