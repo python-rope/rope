@@ -101,7 +101,8 @@ class DoCodeAssist(object):
         toplevel.title('Code Assist Proposals')
         handle = _CompletionListHandle(editor, toplevel, start_offset)
         enhanced_list = EnhancedList(
-            toplevel, handle, title='Code Assist Proposals', height=9, width=30)
+            toplevel, handle, title='Code Assist Proposals',
+            height=9, width=30, single_keys=False)
         for proposal in proposals:
             enhanced_list.add_entry(proposal)
         start_index = editor.text.index('0.0 +%dc' % start_offset)

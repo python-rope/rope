@@ -33,7 +33,7 @@ class EnhancedListHandle(object):
 class _BaseList(object):
 
     def __init__(self, parent, handle, title=None, get_focus=True,
-                 height=14, width=50):
+                 height=14, width=50, single_keys=True):
         self.handle = handle
         self.entries = []
         self.frame = Frame(parent)
@@ -50,10 +50,11 @@ class _BaseList(object):
         self.list.bind('<FocusIn>', self._focus_in)
         self.list.bind('<Control-p>', self._select_prev)
         self.list.bind('<Up>', self._select_prev)
-        self.list.bind('k', self._select_prev)
         self.list.bind('<Control-n>', self._select_next)
         self.list.bind('<Down>', self._select_next)
-        self.list.bind('j', self._select_next)
+        if single_keys:
+            self.list.bind('k', self._select_prev)
+            self.list.bind('j', self._select_next)
         self.list['selectmode'] = Tkinter.SINGLE
         if get_focus:
             self.list.focus_set()

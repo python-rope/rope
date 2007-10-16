@@ -1,8 +1,6 @@
 Small Stories
 =============
 
-- Changing `builtins.Str` to use `builtins._AttributeCollector`?
-
 * Using `__setitem__` for slices in staticoi?
 * Better tests in `patchedasttest`
 * Remove ``docs/dev/workingon.txt``?
