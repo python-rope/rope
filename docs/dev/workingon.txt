@@ -1,2 +1,5 @@
 Working On
 ==========
+
+* Change generate to use suites?
+* Emacs minor mode

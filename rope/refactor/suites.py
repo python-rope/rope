@@ -1,9 +1,9 @@
 from rope.base import ast
 
 
-def find_visible(ast, lines):
+def find_visible(node, lines):
     """Return the line which is visible from all `lines`"""
-    root = ast_suite_tree(ast)
+    root = ast_suite_tree(node)
     return find_visible_for_suite(root, lines)
 
 
@@ -31,12 +31,12 @@ def find_visible_for_suite(root, lines):
     return min(suite1.get_start(), suite2.get_start())
 
 
-def ast_suite_tree(ast):
-    if hasattr(ast, 'lineno'):
-        lineno = ast.lineno
+def ast_suite_tree(node):
+    if hasattr(node, 'lineno'):
+        lineno = node.lineno
     else:
         lineno = 1
-    return Suite(ast.body, lineno)
+    return Suite(node.body, lineno)
 
 
 class Suite(object):

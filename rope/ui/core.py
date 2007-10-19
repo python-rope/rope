@@ -410,7 +410,7 @@ class Core(object):
             self.root['menu'] = editingcontexts.none.menu
 
     def get_available_actions(self):
-        """Return the applicable actions in current context"""
+        """Return applicable actions in current context"""
         context = 'none'
         active_editor = self.editor_manager.active_editor
         if active_editor:

@@ -1,4 +1,3 @@
-import rope.refactor
 from rope.base import exceptions, codeanalyze, pyobjects, pynames, taskhandle
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences, sourceutils

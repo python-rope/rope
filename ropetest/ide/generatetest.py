@@ -242,6 +242,24 @@ class GenerateTest(unittest.TestCase):
         self.assertEquals((self.mod2, 5), generator.get_location())
         self.assertEquals('\n\n\nprint(1)\n\n\nb = None\n', self.mod2.read())
 
+    def test_generating_function_in_a_suite(self):
+        code = 'if True:\n    a_func()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('a_func')).get_changes()
+        self.project.do(changes)
+        self.assertEquals('def a_func():\n    pass\n\n\nif True:\n    a_func()\n',
+                          self.mod.read())
+
+    def test_generating_function_in_a_suite_in_a_function(self):
+        code = 'def f():\n    a = 1\n    if 1:\n        g()\n'
+        self.mod.write(code)
+        changes = self._get_generate_function(code.index('g()')).get_changes()
+        self.project.do(changes)
+        self.assertEquals(
+            'def f():\n    a = 1\n    def g():\n        pass\n'
+            '    if 1:\n        g()\n',
+            self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()
