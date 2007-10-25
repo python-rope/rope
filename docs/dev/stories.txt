@@ -151,4 +151,7 @@ Stories
 * Generate ~/.rope graphically
 
 
+* An emacs mode
+
+
 > Public Release 0.6.3

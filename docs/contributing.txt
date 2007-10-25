@@ -29,7 +29,7 @@ How to Help Rope?
 Wish List
 =========
 
-If you're interested you are welcome discuss your ideas in
+If you're interested you are welcome to discuss your ideas in
 `rope-developers`_ mailing list or send your patches.  Here is only a
 list of suggestions.
 
@@ -44,6 +44,18 @@ the IDE and UI parts of rope (`rope.ui` and `rope.ide` packages) would
 be developed by other developers and I still do hope so.  So if you're
 interested in working on GUI/IDE part of rope using something like
 `pygtk` or `wxPython` you're welcome.
+
+Getting Ready For Python 3.0
+----------------------------
+
+Checkout http://rope.sourceforge.net/hg/rope_py3k Mercurial_
+repository.  Contributions are welcome.
+
+Emacs Mode
+----------
+
+I'd like to see an emacs mode for rope.  It probably has to use
+pymacs.
 
 Formatting
 ----------
@@ -65,12 +77,6 @@ Rope cannot know anything about python C extensions and modules
 without matching source code.  Some information can be gathered using
 `inspect` module.  But it's not safe; Yet better than nothing.  This
 requires a good knowledge of `rope.base`.
-
-Getting Ready For Python 3.0
-----------------------------
-
-Checkout http://rope.sourceforge.net/hg/rope_py3k Mercurial_
-repository.  Contributions are welcome.
 
 
 Rope Structure
