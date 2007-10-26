@@ -26,10 +26,12 @@ class RopeInterface(object):
 
     @interaction('DProject Root Folder: ')
     def set_project(self, root):
+        if self.project is not None:
+            self.close_project()
         self.project = project.Project(root)
 
     @interaction()
-    def close_project(self, root):
+    def close_project(self):
         self.project.close()
 
     @interaction('sNew Name: ')
