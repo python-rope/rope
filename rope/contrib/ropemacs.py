@@ -15,20 +15,35 @@ class interaction(object):
         func.interaction = self.mode
         return func
 
+class RopeInterface(object):
 
-def get_project(root='.'):
-    return project.Project(root)
+    def __init__(self):
+        self.project = None
 
-@interaction('sNew Name: ')
-def rename(newname):
-    lisp.save_some_buffers()
-    filename = lisp.buffer_file_name()
-    project = get_project(os.path.dirname(filename))
-    resource = libutils.path_to_resource(project, filename)
-    renamer = rope.refactor.rename.Rename(project, resource, 1)
-    project.do(renamer.get_changes(newname))
-    project.close()
+    def init(self):
+        """Initialize rope mode"""
+        #lisp.global_set_key(lisp.kbd('C-c r r'), lisp.rope_rename)
 
-def init():
-    """Initialize rope mode"""
-    #lisp.global_set_key(lisp.kbd('C-c r r'), lisp.rope_rename)
+    @interaction('DProject Root Folder: ')
+    def set_project(self, root):
+        self.project = project.Project(root)
+
+    @interaction()
+    def close_project(self, root):
+        self.project.close()
+
+    @interaction('sNew Name: ')
+    def rename(self, newname):
+        lisp.save_some_buffers()
+        filename = lisp.buffer_file_name()
+        resource = libutils.path_to_resource(self.project, filename)
+        renamer = rope.refactor.rename.Rename(self.project, resource, 1)
+        self.project.do(renamer.get_changes(newname))
+
+
+interface = RopeInterface()
+init = interface.init
+
+set_project = interface.set_project
+close_project = interface.close_project
+rename = interface.rename

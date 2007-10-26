@@ -2,3 +2,6 @@ Working On
 ==========
 
 * Emacs minor mode
+* Reloading buffers after renaming
+* Asking project root folder if not set already before rename
+* Closing the project when exiting emacs
