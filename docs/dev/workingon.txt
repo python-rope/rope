@@ -1,7 +1,10 @@
-Working On
-==========
+Emacs Minor Mode
+================
 
-* Emacs minor mode
+- Asking project root folder if not set already before rename
+
 * Reloading buffers after renaming
-* Asking project root folder if not set already before rename
+* New name should default to the original name?
+* Adding hooks for SOI when saving
+* Renaming modules and packages
 * Closing the project when exiting emacs

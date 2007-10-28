@@ -24,7 +24,7 @@ class RopeInterface(object):
         """Initialize rope mode"""
         #lisp.global_set_key(lisp.kbd('C-c r r'), lisp.rope_rename)
 
-    @interaction('DProject Root Folder: ')
+    @interaction('DRope Project Root Folder: ')
     def set_project(self, root):
         if self.project is not None:
             self.close_project()
@@ -36,11 +36,30 @@ class RopeInterface(object):
 
     @interaction('sNew Name: ')
     def rename(self, newname):
+        self._check_project()
         lisp.save_some_buffers()
         filename = lisp.buffer_file_name()
         resource = libutils.path_to_resource(self.project, filename)
+        offset = lisp.point_min() + lisp.point()
         renamer = rope.refactor.rename.Rename(self.project, resource, 1)
-        self.project.do(renamer.get_changes(newname))
+        changes = renamer.get_changes(newname)
+        self.project.do(changes)
+        self._reload_buffers(changes.get_changed_resources())
+
+    @interaction()
+    def hey(self):
+        pass
+
+    def _check_project(self):
+        if self.project is None:
+            lisp.call_interactively(lisp.rope_set_project)
+
+    def _reload_buffers(self, changed_resources):
+        for resource in changed_resources:
+            buffer = lisp.find_buffer_visiting(resource.real_path)
+            if buffer:
+                lisp.set_buffer(buffer)
+                lisp.revert_buffer(None, 1)
 
 
 interface = RopeInterface()
