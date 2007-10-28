@@ -41,7 +41,7 @@ class RopeInterface(object):
         filename = lisp.buffer_file_name()
         resource = libutils.path_to_resource(self.project, filename)
         offset = lisp.point_min() + lisp.point()
-        renamer = rope.refactor.rename.Rename(self.project, resource, 1)
+        renamer = rope.refactor.rename.Rename(self.project, resource, offset)
         changes = renamer.get_changes(newname)
         self.project.do(changes)
         self._reload_buffers(changes.get_changed_resources())
