@@ -33,6 +33,7 @@ class RopeInterface(object):
     @interaction()
     def close_project(self):
         self.project.close()
+        self.project = None
 
     @interaction('sNew Name: ')
     def rename(self, newname):

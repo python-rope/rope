@@ -5,3 +5,4 @@ Emacs Minor Mode
 * Adding hooks for SOI when saving
 * Renaming modules and packages
 * Closing the project when exiting emacs
+* Add to docs
