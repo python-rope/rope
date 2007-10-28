@@ -151,6 +151,21 @@ Stories
 * Generate ~/.rope graphically
 
 
+* ropemacs: auto-complete, goto definition and show doc
+
+
+* ropemacs: moving elements, methods and modules
+
+
+* ropemacs: activating SOI on changed scopes when saving
+
+
+* ropemacs: extracting method and local variable
+
+
+* ropemacs: renaming names and modules
+
+
 * An emacs mode
 
 

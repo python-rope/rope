@@ -67,13 +67,13 @@ In rope, files and folders in a project are accessed through
 and `Folder`.  What we care about is that refactorings and `Change`\s
 (we'll talk about them later) use resources.
 
-In order to create a `Resource` for a path in a project you have two
-options.  The first approach uses your `Project` object (Use
+In order to create a `Resource` for a path in a project we have two
+options.  The first approach uses the `Project` object (Use
 `Project.get_resource()`_ method).  I prefer to describe the second
 approach since it needs less to know.
 
-We can use `libutils` module.  You can use `path_to_resource()`
-function.  It takes a project and a path::
+We can use `libutils` module.  It has a function named
+`path_to_resource()`.  It takes a project and a path::
 
   from rope.base import libutils
 
@@ -169,7 +169,7 @@ Activating Static Object Inference
 One of the greatest strengths of rope is its static object inference,
 SOI.  You can perform SOI on a module using `PyCore.analyze_module()`
 method but performing SOI on a module is not cheap.  So we decided
-that the best time for performing SOI is whan saving files and only
+that the best time for performing SOI is when saving files and only
 performing it on changed scopes.
 
 But since rope is not notified about the changes the IDE performs, you
@@ -191,8 +191,8 @@ writing files.
 Closing The Project
 -------------------
 
-Closes project open resources.  Always call this function when you
-don't need a project anymore::
+`Project.close()`_ closes project open resources.  Always call this
+function when you don't need a project anymore::
 
   myproject.close()
 
