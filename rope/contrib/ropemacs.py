@@ -33,10 +33,10 @@ class RopeInterface(object):
         lisp.add_hook(lisp.kill_emacs_hook,
                       lisp.rope_exiting_actions)
 
-        lisp.global_set_key('\x03po', lisp.rope_open_project)
-        lisp.global_set_key('\x03pk', lisp.rope_close_project)
-        lisp.global_set_key('\x03pu', lisp.rope_undo_refactoring)
-        lisp.global_set_key('\x03pr', lisp.rope_redo_refactoring)
+        lisp.global_set_key('\x18po', lisp.rope_open_project)
+        lisp.global_set_key('\x18pk', lisp.rope_close_project)
+        lisp.global_set_key('\x18pu', lisp.rope_undo_refactoring)
+        lisp.global_set_key('\x18pr', lisp.rope_redo_refactoring)
 
         lisp.global_set_key('\x03g', lisp.rope_goto_definition)
         lisp.global_set_key('\x03rr', lisp.rope_rename)
@@ -44,6 +44,8 @@ class RopeInterface(object):
         lisp.global_set_key('\x03rl', lisp.rope_extract_variable)
         lisp.global_set_key('\x03rm', lisp.rope_extract_method)
         lisp.global_set_key('\x03ri', lisp.rope_inline)
+
+        lisp.global_set_key('\x03io', lisp.rope_organize_imports)
 
     def before_save_actions(self):
         if self.project is not None:
@@ -75,6 +77,20 @@ class RopeInterface(object):
             self.project.close()
             self.project = None
             lisp.message('Project closed')
+
+    @interactive('cUndo refactoring might change many files; proceed? (y)')
+    def undo_refactoring(self, confirm):
+        if chr(confirm) in ('\r', '\n', 'y'):
+            self._check_project()
+            for changes in self.project.history.undo():
+                self._reload_buffers(changes.get_changed_resources())
+
+    @interactive('cRedo refactoring might change many files; proceed? (y)')
+    def redo_refactoring(self, confirm):
+        if chr(confirm) in ('\r', '\n', 'y'):
+            self._check_project()
+            for changes in self.project.history.redo():
+                self._reload_buffers(changes.get_changed_resources())
 
     def do_rename(self, newname, module=False):
         self._check_project()
@@ -120,6 +136,13 @@ class RopeInterface(object):
             self.project, resource, offset)
         self._perform(inliner.get_changes())
 
+    @interactive('')
+    def organize_imports(self):
+        self._check_project()
+        lisp.save_buffer()
+        organizer = rope.refactor.ImportOrganizer(self.project)
+        self._perform(organizer.organize_imports(self._get_resource()))
+
     def _perform(self, changes):
         self.project.do(changes)
         self._reload_buffers(changes.get_changed_resources())
@@ -145,20 +168,6 @@ class RopeInterface(object):
             lisp.find_file(definition[0].real_path)
         if definition[1]:
             lisp.goto_line(definition[1])
-
-    @interactive('cUndo refactoring might change many files; proceed? (y)')
-    def undo_refactoring(self, confirm):
-        if chr(confirm) in ('\r', '\n', 'y'):
-            self._check_project()
-            for changes in self.project.history.undo():
-                self._reload_buffers(changes.get_changed_resources())
-
-    @interactive('cRedo refactoring might change many files; proceed? (y)')
-    def redo_refactoring(self, confirm):
-        if chr(confirm) in ('\r', '\n', 'y'):
-            self._check_project()
-            for changes in self.project.history.redo():
-                self._reload_buffers(changes.get_changed_resources())
 
     def _get_location(self):
         resource = self._get_resource()
@@ -197,6 +206,8 @@ rename_current_module = interface.rename_current_module
 extract_variable = interface.extract_variable
 extract_method = interface.extract_method
 inline = interface.inline
+
+organize_imports = interface.organize_imports
 
 before_save_actions = interface.before_save_actions
 after_save_actions = interface.after_save_actions
