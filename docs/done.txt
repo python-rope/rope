@@ -3,6 +3,9 @@
 ===========
 
 
+- ropemacs: goto definition : October 29, 2007
+
+
 - ropemacs: rename refactoring : October 29, 2007
 
 

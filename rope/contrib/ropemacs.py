@@ -3,6 +3,7 @@ import os
 from Pymacs import lisp
 
 import rope.refactor.rename
+import rope.refactor.extract
 from rope.base import project, libutils
 from rope.ide import codeassist
 
@@ -40,25 +41,55 @@ class RopeInterface(object):
     def rename(self, newname):
         self._check_project()
         lisp.save_some_buffers()
-        filename = lisp.buffer_file_name()
-        resource = libutils.path_to_resource(self.project, filename)
-        offset = lisp.point_min() + lisp.point()
+        resource, offset = self._get_location()
         renamer = rope.refactor.rename.Rename(self.project, resource, offset)
-        changes = renamer.get_changes(newname)
+        changes = renamer.get_changes(newname, docs=True)
+        self._perform(changes)
+
+    @interactive('sNew Variable Name: ')
+    def extract_variable(self, newname):
+        self._check_project()
+        lisp.save_buffer()
+        resource = self._get_resource()
+        start, end = self._get_region()
+        extractor = rope.refactor.extract.ExtractVariable(
+            self.project, resource, start, end)
+        changes = extractor.get_changes(newname)
+        self._perform(changes)
+
+    def _perform(self, changes):
         self.project.do(changes)
         self._reload_buffers(changes.get_changed_resources())
+
+    def _get_region(self):
+        offset1 = self._get_offset()
+        lisp.exchange_point_and_mark()
+        offset2 = self._get_offset()
+        lisp.exchange_point_and_mark()
+        return min(offset1, offset2), max(offset1, offset2)
+
+    def _get_offset(self):
+        return lisp.point() - 1
 
     @interactive('')
     def goto_definition(self):
         self._check_project()
-        filename = lisp.buffer_file_name()
-        resource = libutils.path_to_resource(self.project, filename)
-        offset = lisp.point_min() + lisp.point()
+        resource, offset = self._get_location()
         definition = codeassist.get_definition_location(
             self.project, lisp.buffer_string(), offset, resource)
-        if definition[0] is not None:
-            buffer = lisp.find_file(definition[0].real_path)
+        if definition[0]:
+            lisp.find_file(definition[0].real_path)
         lisp.goto_line(definition[1])
+
+    def _get_location(self):
+        resource = self._get_resource()
+        offset = self._get_offset()
+        return resource, offset
+
+    def _get_resource(self):
+        filename = lisp.buffer_file_name()
+        resource = libutils.path_to_resource(self.project, filename)
+        return resource
 
     def _check_project(self):
         if self.project is None:
@@ -79,5 +110,6 @@ set_project = interface.set_project
 close_project = interface.close_project
 
 rename = interface.rename
+extract_variable = interface.extract_variable
 
 goto_definition = interface.goto_definition
