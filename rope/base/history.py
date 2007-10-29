@@ -52,6 +52,7 @@ class History(object):
         return False
 
     def undo(self, change=None, task_handle=taskhandle.NullTaskHandle()):
+        """Returns the list of undone changes"""
         if not self._undo_list:
             raise exceptions.HistoryError('Undo list is empty')
         if change is None:
@@ -60,6 +61,7 @@ class History(object):
         self._move_front(dependencies)
         index = self.undo_list.index(change)
         self._perform_undos(len(self.undo_list) - index, task_handle)
+        return self.redo_list[index - len(self.undo_list):]
 
     def _move_front(self, changes):
         for change in changes:
@@ -83,6 +85,7 @@ class History(object):
             self.redo_list.append(self.undo_list.pop())
 
     def redo(self, task_handle=taskhandle.NullTaskHandle()):
+        """Return the list of undone changes"""
         if not self.redo_list:
             raise exceptions.HistoryError('Redo list is empty')
         self.current_change = self.redo_list[-1]
@@ -92,6 +95,7 @@ class History(object):
         finally:
             self.current_change = None
         self.undo_list.append(self.redo_list.pop())
+        return self.undo_list[-1:]
 
     def contents_before_current_change(self, file):
         if self.current_change is None:

@@ -1,7 +1,6 @@
-Emacs Minor Mode
-================
+ropemacs Mode
+=============
 
 * Only activating the keybinding in python files
-* Renaming current modules
 * Specifying refactoring options
-* Add to docs
+* Updating docs

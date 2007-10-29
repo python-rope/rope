@@ -32,6 +32,12 @@ class RopeInterface(object):
                       lisp.rope_after_save_actions)
         lisp.add_hook(lisp.kill_emacs_hook,
                       lisp.rope_exiting_actions)
+
+        lisp.global_set_key('\x03po', lisp.rope_open_project)
+        lisp.global_set_key('\x03pk', lisp.rope_close_project)
+        lisp.global_set_key('\x03pu', lisp.rope_undo_refactoring)
+        lisp.global_set_key('\x03pr', lisp.rope_redo_refactoring)
+
         lisp.global_set_key('\x03g', lisp.rope_goto_definition)
         lisp.global_set_key('\x03rr', lisp.rope_rename)
         lisp.global_set_key('\x03r1r', lisp.rope_rename_current_module)
@@ -58,7 +64,7 @@ class RopeInterface(object):
             self.close_project()
 
     @interactive('DRope Project Root Folder: ')
-    def set_project(self, root):
+    def open_project(self, root):
         if self.project is not None:
             self.close_project()
         self.project = project.Project(root)
@@ -138,6 +144,20 @@ class RopeInterface(object):
         if definition[1]:
             lisp.goto_line(definition[1])
 
+    @interactive('cUndo refactoring might change many files; proceed? (y)')
+    def undo_refactoring(self, confirm):
+        if chr(confirm) in ('\r', '\n', 'y'):
+            self._check_project()
+            for changes in self.project.history.undo():
+                self._reload_buffers(changes.get_changed_resources())
+
+    @interactive('cRedo refactoring might change many files; proceed? (y)')
+    def redo_refactoring(self, confirm):
+        if chr(confirm) in ('\r', '\n', 'y'):
+            self._check_project()
+            for changes in self.project.history.redo():
+                self._reload_buffers(changes.get_changed_resources())
+
     def _get_location(self):
         resource = self._get_resource()
         offset = self._get_offset()
@@ -150,7 +170,7 @@ class RopeInterface(object):
 
     def _check_project(self):
         if self.project is None:
-            lisp.call_interactively(lisp.rope_set_project)
+            lisp.call_interactively(lisp.rope_open_project)
 
     def _reload_buffers(self, changed_resources):
         for resource in changed_resources:
@@ -163,8 +183,10 @@ class RopeInterface(object):
 interface = RopeInterface()
 
 init = interface.init
-set_project = interface.set_project
+open_project = interface.open_project
 close_project = interface.close_project
+undo_refactoring = interface.undo_refactoring
+redo_refactoring = interface.redo_refactoring
 
 rename = interface.rename
 rename_current_module = interface.rename_current_module
