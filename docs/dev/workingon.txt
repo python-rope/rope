@@ -1,6 +1,8 @@
 ropemacs Mode
 =============
 
+- Validating projects before every command
+
 * Only activating the keybinding in python files
 * Specifying refactoring options
 * Updating docs

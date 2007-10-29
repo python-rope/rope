@@ -71,8 +71,10 @@ class RopeInterface(object):
 
     @interactive()
     def close_project(self):
-        self.project.close()
-        self.project = None
+        if project is not None:
+            self.project.close()
+            self.project = None
+            lisp.message('Project closed.')
 
     def do_rename(self, newname, module=False):
         self._check_project()
@@ -171,6 +173,8 @@ class RopeInterface(object):
     def _check_project(self):
         if self.project is None:
             lisp.call_interactively(lisp.rope_open_project)
+        else:
+            self.project.validate(self.project.root)
 
     def _reload_buffers(self, changed_resources):
         for resource in changed_resources:
