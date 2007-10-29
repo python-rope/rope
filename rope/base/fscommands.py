@@ -140,7 +140,7 @@ class _TransformUnicode(object):
 
     def _find_line_end(self, source_bytes, start):
         try:
-            return source_bytes.index('\n', start)
+            return source_bytes.index('\n', start) + 1
         except ValueError:
             return len(source_bytes)
 
