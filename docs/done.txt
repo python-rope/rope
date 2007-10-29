@@ -3,6 +3,9 @@
 ===========
 
 
+- ropemacs: inline refactoring : October 29, 2007
+
+
 - ropemacs: extract method and local variable : October 29, 2007
 
 

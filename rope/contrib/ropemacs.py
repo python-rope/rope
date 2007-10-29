@@ -4,6 +4,7 @@ from Pymacs import lisp
 
 import rope.refactor.rename
 import rope.refactor.extract
+import rope.refactor.inline
 from rope.base import project, libutils
 from rope.ide import codeassist
 
@@ -63,6 +64,15 @@ class RopeInterface(object):
     def extract_method(self, newname):
         self._do_extract(rope.refactor.extract.ExtractMethod, newname)
 
+    @interactive('')
+    def inline(self):
+        self._check_project()
+        lisp.save_some_buffers()
+        resource, offset = self._get_location()
+        inliner = rope.refactor.inline.create_inline(
+            self.project, resource, offset)
+        self._perform(inliner.get_changes())
+
     def _perform(self, changes):
         self.project.do(changes)
         self._reload_buffers(changes.get_changed_resources())
@@ -118,5 +128,6 @@ close_project = interface.close_project
 rename = interface.rename
 extract_variable = interface.extract_variable
 extract_method = interface.extract_method
+inline = interface.inline
 
 goto_definition = interface.goto_definition
