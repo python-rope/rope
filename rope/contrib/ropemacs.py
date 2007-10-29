@@ -48,7 +48,7 @@ class RopeInterface(object):
     def before_save_actions(self):
         if self.project is not None:
             resource = self._get_resource()
-            if resource is not None:
+            if resource is not None and resource.exists():
                 self.old_content = resource.read()
             else:
                 self.old_content = ''
@@ -74,7 +74,7 @@ class RopeInterface(object):
         if project is not None:
             self.project.close()
             self.project = None
-            lisp.message('Project closed.')
+            lisp.message('Project closed')
 
     def do_rename(self, newname, module=False):
         self._check_project()
@@ -167,7 +167,7 @@ class RopeInterface(object):
 
     def _get_resource(self):
         filename = lisp.buffer_file_name()
-        resource = libutils.path_to_resource(self.project, filename)
+        resource = libutils.path_to_resource(self.project, filename, 'file')
         return resource
 
     def _check_project(self):
