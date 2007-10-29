@@ -33,20 +33,31 @@ class RopeInterface(object):
         lisp.add_hook(lisp.kill_emacs_hook,
                       lisp.rope_exiting_actions)
 
-        lisp.global_set_key('\x18po', lisp.rope_open_project)
-        lisp.global_set_key('\x18pk', lisp.rope_close_project)
-        lisp.global_set_key('\x18pu', lisp.rope_undo_refactoring)
-        lisp.global_set_key('\x18pr', lisp.rope_redo_refactoring)
+        actions = [
+            ('C-x p o', lisp.rope_open_project),
+            ('C-x p k', lisp.rope_close_project),
+            ('C-x p u', lisp.rope_undo_refactoring),
+            ('C-x p r', lisp.rope_redo_refactoring),
+            ('C-c g', lisp.rope_goto_definition),
+            ('C-c r r', lisp.rope_rename),
+            ('C-c r 1 r', lisp.rope_rename_current_module),
+            ('C-c r 1 p', lisp.rope_module_to_package),
+            ('C-c r l', lisp.rope_extract_variable),
+            ('C-c r m', lisp.rope_extract_method),
+            ('C-c r i', lisp.rope_inline),
+            ('C-c i o', lisp.rope_organize_imports)]
+        for key, callback in actions:
+            lisp.global_set_key(self._key_sequence(key), callback)
 
-        lisp.global_set_key('\x03g', lisp.rope_goto_definition)
-        lisp.global_set_key('\x03rr', lisp.rope_rename)
-        lisp.global_set_key('\x03r1r', lisp.rope_rename_current_module)
-        lisp.global_set_key('\x03r1p', lisp.rope_module_to_package)
-        lisp.global_set_key('\x03rl', lisp.rope_extract_variable)
-        lisp.global_set_key('\x03rm', lisp.rope_extract_method)
-        lisp.global_set_key('\x03ri', lisp.rope_inline)
-
-        lisp.global_set_key('\x03io', lisp.rope_organize_imports)
+    def _key_sequence(self, sequence):
+        result = []
+        for key in sequence.split():
+            if key.lower().startswith('c-'):
+                number = ord(key[-1].upper()) - ord('A') + 1
+                result.append(chr(number))
+            else:
+                result.append(key)
+        return ''.join(result)
 
     def before_save_actions(self):
         if self.project is not None:
