@@ -47,6 +47,7 @@ Features implemented so far:
   * Previewing refactorings
   * Stopping refactorings
   * Undo/redo refactorings
+  * ropemacs.txt_ emacs plugin
 
 * Code-assists
 
@@ -128,6 +129,7 @@ License
 
 rope is under the terms of GNU GPL(GNU General Public License).
 
+.. _ropemacs.txt: ropemacs.html
 .. _project download page: http://sf.net/projects/rope/files
 .. _sourceforge.net project page: http://sf.net/projects/rope
 .. _pysvn: http://pysvn.tigris.org

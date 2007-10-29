@@ -34,6 +34,7 @@ class RopeInterface(object):
                       lisp.rope_exiting_actions)
         lisp.global_set_key('\x03g', lisp.rope_goto_definition)
         lisp.global_set_key('\x03rr', lisp.rope_rename)
+        lisp.global_set_key('\x03r1r', lisp.rope_rename_current_module)
         lisp.global_set_key('\x03rl', lisp.rope_extract_variable)
         lisp.global_set_key('\x03rm', lisp.rope_extract_method)
         lisp.global_set_key('\x03ri', lisp.rope_inline)
@@ -67,14 +68,23 @@ class RopeInterface(object):
         self.project.close()
         self.project = None
 
-    @interactive('sNew Name: ')
-    def rename(self, newname):
+    def do_rename(self, newname, module=False):
         self._check_project()
         lisp.save_some_buffers()
         resource, offset = self._get_location()
+        if module:
+            offset = None
         renamer = rope.refactor.rename.Rename(self.project, resource, offset)
         changes = renamer.get_changes(newname, docs=True)
         self._perform(changes)
+
+    @interactive('sNew Name: ')
+    def rename(self, newname):
+        self.do_rename(newname)
+
+    @interactive('sNew Module Name: ')
+    def rename_current_module(self, newname):
+        self.do_rename(newname, module=True)
 
     def _do_extract(self, extractor, newname):
         self._check_project()
@@ -105,6 +115,7 @@ class RopeInterface(object):
     def _perform(self, changes):
         self.project.do(changes)
         self._reload_buffers(changes.get_changed_resources())
+        lisp.message(str(changes.description) + ' finished')
 
     def _get_region(self):
         offset1 = self._get_offset()
@@ -124,7 +135,8 @@ class RopeInterface(object):
             self.project, lisp.buffer_string(), offset, resource)
         if definition[0]:
             lisp.find_file(definition[0].real_path)
-        lisp.goto_line(definition[1])
+        if definition[1]:
+            lisp.goto_line(definition[1])
 
     def _get_location(self):
         resource = self._get_resource()
@@ -155,6 +167,7 @@ set_project = interface.set_project
 close_project = interface.close_project
 
 rename = interface.rename
+rename_current_module = interface.rename_current_module
 extract_variable = interface.extract_variable
 extract_method = interface.extract_method
 inline = interface.inline
@@ -164,4 +177,3 @@ after_save_actions = interface.after_save_actions
 exiting_actions = interface.exiting_actions
 
 goto_definition = interface.goto_definition
-

@@ -157,13 +157,10 @@ Stories
 * ropemacs: showing refactoring progress
 
 
+> Public Release 0.6.3 : November 2, 2007
+
+
+* ropemacs: undoing refactorings
+
+
 * ropemacs: moving elements, methods and modules
-
-
-* ropemacs: activating SOI on changed scopes when saving
-
-
-* An emacs mode
-
-
-> Public Release 0.6.3
