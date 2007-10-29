@@ -41,6 +41,7 @@ class RopeInterface(object):
         lisp.global_set_key('\x03g', lisp.rope_goto_definition)
         lisp.global_set_key('\x03rr', lisp.rope_rename)
         lisp.global_set_key('\x03r1r', lisp.rope_rename_current_module)
+        lisp.global_set_key('\x03r1p', lisp.rope_module_to_package)
         lisp.global_set_key('\x03rl', lisp.rope_extract_variable)
         lisp.global_set_key('\x03rm', lisp.rope_extract_method)
         lisp.global_set_key('\x03ri', lisp.rope_inline)
@@ -110,6 +111,14 @@ class RopeInterface(object):
     def rename_current_module(self, newname):
         self.do_rename(newname, module=True)
 
+    @interactive()
+    def module_to_package(self):
+        self._check_project()
+        lisp.save_buffer()
+        packager = rope.refactor.ModuleToPackage(self.project,
+                                                 self._get_resource())
+        self._perform(packager.get_changes())
+
     def _do_extract(self, extractor, newname):
         self._check_project()
         lisp.save_buffer()
@@ -127,7 +136,7 @@ class RopeInterface(object):
     def extract_method(self, newname):
         self._do_extract(rope.refactor.extract.ExtractMethod, newname)
 
-    @interactive('')
+    @interactive()
     def inline(self):
         self._check_project()
         lisp.save_some_buffers()
@@ -136,7 +145,7 @@ class RopeInterface(object):
             self.project, resource, offset)
         self._perform(inliner.get_changes())
 
-    @interactive('')
+    @interactive()
     def organize_imports(self):
         self._check_project()
         lisp.save_buffer()
@@ -158,7 +167,7 @@ class RopeInterface(object):
     def _get_offset(self):
         return lisp.point() - 1
 
-    @interactive('')
+    @interactive()
     def goto_definition(self):
         self._check_project()
         resource, offset = self._get_location()
@@ -202,10 +211,11 @@ undo_refactoring = interface.undo_refactoring
 redo_refactoring = interface.redo_refactoring
 
 rename = interface.rename
-rename_current_module = interface.rename_current_module
 extract_variable = interface.extract_variable
 extract_method = interface.extract_method
 inline = interface.inline
+rename_current_module = interface.rename_current_module
+module_to_package = interface.module_to_package
 
 organize_imports = interface.organize_imports
 
