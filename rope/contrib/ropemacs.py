@@ -46,16 +46,22 @@ class RopeInterface(object):
         changes = renamer.get_changes(newname, docs=True)
         self._perform(changes)
 
-    @interactive('sNew Variable Name: ')
-    def extract_variable(self, newname):
+    def _do_extract(self, extractor, newname):
         self._check_project()
         lisp.save_buffer()
         resource = self._get_resource()
         start, end = self._get_region()
-        extractor = rope.refactor.extract.ExtractVariable(
-            self.project, resource, start, end)
+        extractor = extractor(self.project, resource, start, end)
         changes = extractor.get_changes(newname)
         self._perform(changes)
+
+    @interactive('sNew Variable Name: ')
+    def extract_variable(self, newname):
+        self._do_extract(rope.refactor.extract.ExtractVariable, newname)
+
+    @interactive('sNew Method Name: ')
+    def extract_method(self, newname):
+        self._do_extract(rope.refactor.extract.ExtractMethod, newname)
 
     def _perform(self, changes):
         self.project.do(changes)
@@ -111,5 +117,6 @@ close_project = interface.close_project
 
 rename = interface.rename
 extract_variable = interface.extract_variable
+extract_method = interface.extract_method
 
 goto_definition = interface.goto_definition

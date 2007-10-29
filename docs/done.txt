@@ -3,6 +3,9 @@
 ===========
 
 
+- ropemacs: extract method and local variable : October 29, 2007
+
+
 - ropemacs: goto definition : October 29, 2007
 
 

@@ -163,9 +163,6 @@ Stories
 * ropemacs: activating SOI on changed scopes when saving
 
 
-* ropemacs: extracting method and local variable
-
-
 * An emacs mode
 
 
