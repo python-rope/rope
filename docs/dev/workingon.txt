@@ -1,8 +1,7 @@
 Emacs Minor Mode
 ================
 
-* New name should default to the original name?
-* Adding hooks for SOI when saving
+* Adding hooks for SOI when saving buffers
 * Renaming modules and packages
 * Closing the project when exiting emacs
 * Specifying refactoring options

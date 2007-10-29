@@ -4,6 +4,7 @@ from Pymacs import lisp
 
 import rope.refactor.rename
 from rope.base import project, libutils
+from rope.ide import codeassist
 
 
 class interactive(object):
@@ -47,6 +48,18 @@ class RopeInterface(object):
         self.project.do(changes)
         self._reload_buffers(changes.get_changed_resources())
 
+    @interactive('')
+    def goto_definition(self):
+        self._check_project()
+        filename = lisp.buffer_file_name()
+        resource = libutils.path_to_resource(self.project, filename)
+        offset = lisp.point_min() + lisp.point()
+        definition = codeassist.get_definition_location(
+            self.project, lisp.buffer_string(), offset, resource)
+        if definition[0] is not None:
+            buffer = lisp.find_file(definition[0].real_path)
+        lisp.goto_line(definition[1])
+
     def _check_project(self):
         if self.project is None:
             lisp.call_interactively(lisp.rope_set_project)
@@ -60,8 +73,11 @@ class RopeInterface(object):
 
 
 interface = RopeInterface()
-init = interface.init
 
+init = interface.init
 set_project = interface.set_project
 close_project = interface.close_project
+
 rename = interface.rename
+
+goto_definition = interface.goto_definition

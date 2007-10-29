@@ -3,6 +3,9 @@
 ===========
 
 
+- ropemacs: rename refactoring : October 29, 2007
+
+
 - A new open project dialog : October 10, 2007
 
 

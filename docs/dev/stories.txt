@@ -154,6 +154,9 @@ Stories
 * ropemacs: auto-complete, goto definition and show doc
 
 
+* ropemacs: showing refactoring progress
+
+
 * ropemacs: moving elements, methods and modules
 
 
@@ -161,9 +164,6 @@ Stories
 
 
 * ropemacs: extracting method and local variable
-
-
-* ropemacs: renaming names and modules
 
 
 * An emacs mode
