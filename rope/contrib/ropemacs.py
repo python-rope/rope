@@ -22,10 +22,35 @@ class RopeInterface(object):
 
     def __init__(self):
         self.project = None
+        self.old_content = None
 
     def init(self):
         """Initialize rope mode"""
         #lisp.global_set_key(lisp.kbd('C-c r r'), lisp.rope_rename)
+        lisp.add_hook(lisp.before_save_hook,
+                      lisp.rope_before_save_actions)
+        lisp.add_hook(lisp.after_save_hook,
+                      lisp.rope_after_save_actions)
+        lisp.add_hook(lisp.kill_emacs_hook,
+                      lisp.rope_exiting_actions)
+
+    def before_save_actions(self):
+        if self.project is not None:
+            resource = self._get_resource()
+            if resource is not None:
+                self.old_content = resource.read()
+            else:
+                self.old_content = ''
+
+    def after_save_actions(self):
+        if self.project is not None:
+            libutils.report_change(self.project, lisp.buffer_file_name(),
+                                   self.old_content)
+            self.old_content = None
+
+    def exiting_actions(self):
+        if self.project is not None:
+            self.close_project()
 
     @interactive('DRope Project Root Folder: ')
     def set_project(self, root):
@@ -129,5 +154,9 @@ rename = interface.rename
 extract_variable = interface.extract_variable
 extract_method = interface.extract_method
 inline = interface.inline
+
+before_save_actions = interface.before_save_actions
+after_save_actions = interface.after_save_actions
+exiting_actions = interface.exiting_actions
 
 goto_definition = interface.goto_definition

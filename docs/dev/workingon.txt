@@ -1,8 +1,9 @@
 Emacs Minor Mode
 ================
 
-* Adding hooks for SOI when saving buffers
+- Closing the project when exiting emacs; kill-emacs-hook
+- Adding hooks for SOI when saving buffers; after-save-hook
+
 * Renaming modules and packages
-* Closing the project when exiting emacs
 * Specifying refactoring options
 * Add to docs
