@@ -26,13 +26,17 @@ class RopeInterface(object):
 
     def init(self):
         """Initialize rope mode"""
-        #lisp.global_set_key(lisp.kbd('C-c r r'), lisp.rope_rename)
         lisp.add_hook(lisp.before_save_hook,
                       lisp.rope_before_save_actions)
         lisp.add_hook(lisp.after_save_hook,
                       lisp.rope_after_save_actions)
         lisp.add_hook(lisp.kill_emacs_hook,
                       lisp.rope_exiting_actions)
+        lisp.global_set_key('\x03g', lisp.rope_goto_definition)
+        lisp.global_set_key('\x03rr', lisp.rope_rename)
+        lisp.global_set_key('\x03rl', lisp.rope_extract_variable)
+        lisp.global_set_key('\x03rm', lisp.rope_extract_method)
+        lisp.global_set_key('\x03ri', lisp.rope_inline)
 
     def before_save_actions(self):
         if self.project is not None:
@@ -160,3 +164,4 @@ after_save_actions = interface.after_save_actions
 exiting_actions = interface.exiting_actions
 
 goto_definition = interface.goto_definition
+

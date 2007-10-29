@@ -4,6 +4,8 @@ Emacs Minor Mode
 - Closing the project when exiting emacs; kill-emacs-hook
 - Adding hooks for SOI when saving buffers; after-save-hook
 
-* Renaming modules and packages
+* Only activating the keybinding in python files
+* Moving keybinding to `ropemacs` module
+* Renaming current modules
 * Specifying refactoring options
 * Add to docs
