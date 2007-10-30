@@ -3,6 +3,12 @@
 ===========
 
 
+- ropemacs: moving elements, methods and modules
+
+
+- ropemacs: undoing refactorings : October 29, 2007
+
+
 - ropemacs: inline refactoring : October 29, 2007
 
 

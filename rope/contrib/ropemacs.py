@@ -1,10 +1,9 @@
-import os
-
 from Pymacs import lisp
 
-import rope.refactor.rename
 import rope.refactor.extract
 import rope.refactor.inline
+import rope.refactor.move
+import rope.refactor.rename
 from rope.base import project, libutils
 from rope.ide import codeassist
 
@@ -40,11 +39,14 @@ class RopeInterface(object):
             ('C-x p r', lisp.rope_redo_refactoring),
             ('C-c g', lisp.rope_goto_definition),
             ('C-c r r', lisp.rope_rename),
-            ('C-c r 1 r', lisp.rope_rename_current_module),
-            ('C-c r 1 p', lisp.rope_module_to_package),
             ('C-c r l', lisp.rope_extract_variable),
             ('C-c r m', lisp.rope_extract_method),
             ('C-c r i', lisp.rope_inline),
+            ('C-c r v', lisp.rope_move),
+            ('C-c r 1 r', lisp.rope_rename_current_module),
+            ('C-c r 1 v', lisp.rope_move_current_module),
+            ('C-c r 1 p', lisp.rope_module_to_package),
+
             ('C-c i o', lisp.rope_organize_imports)]
         for key, callback in actions:
             lisp.global_set_key(self._key_sequence(key), callback)
@@ -121,6 +123,48 @@ class RopeInterface(object):
     @interactive('sNew Module Name: ')
     def rename_current_module(self, newname):
         self.do_rename(newname, module=True)
+
+    @interactive()
+    def move(self):
+        mover = self._create_mover()
+        if isinstance(mover, rope.refactor.move.MoveGlobal):
+            lisp.call_interactively(lisp.rope_move_global)
+        if isinstance(mover, rope.refactor.move.MoveModule):
+            lisp.call_interactively(lisp.rope_move_module)
+        if isinstance(mover, rope.refactor.move.MoveMethod):
+            lisp.call_interactively(lisp.rope_move_method)
+
+    def _create_mover(self, module=False):
+        self._check_project()
+        lisp.save_some_buffers()
+        resource, offset = self._get_location()
+        if module:
+            offset = None
+        return rope.refactor.move.create_move(self.project, resource, offset)
+
+    @interactive('sDestination Module Name: ')
+    def move_global(self, dest_module):
+        mover = self._create_mover()
+        destination = self.project.pycore.find_module(dest_module)
+        self._perform(mover.get_changes(destination))
+
+    @interactive('sDestination Attribute: ')
+    def move_method(self, dest_attr):
+        mover = self._create_mover()
+        self._perform(mover.get_changes(dest_attr,
+                                        mover.get_method_name()))
+
+    @interactive('sDestination Package: ')
+    def move_module(self, dest_package):
+        mover = self._create_mover()
+        destination = self.project.pycore.find_module(dest_package)
+        self._perform(mover.get_changes(destination))
+
+    @interactive('sDestination Package: ')
+    def move_current_module(self, dest_package):
+        mover = self._create_mover(module=True)
+        destination = self.project.pycore.find_module(dest_package)
+        self._perform(mover.get_changes(destination))
 
     @interactive()
     def module_to_package(self):
@@ -227,6 +271,11 @@ extract_method = interface.extract_method
 inline = interface.inline
 rename_current_module = interface.rename_current_module
 module_to_package = interface.module_to_package
+move = interface.move
+move_global = interface.move_global
+move_module = interface.move_module
+move_method = interface.move_method
+move_current_module = interface.move_current_module
 
 organize_imports = interface.organize_imports
 

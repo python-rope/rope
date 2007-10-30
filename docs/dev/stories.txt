@@ -158,9 +158,3 @@ Stories
 
 
 > Public Release 0.6.3 : November 2, 2007
-
-
-* ropemacs: undoing refactorings
-
-
-* ropemacs: moving elements, methods and modules

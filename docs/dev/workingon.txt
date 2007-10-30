@@ -1,7 +1,7 @@
 ropemacs Mode
 =============
 
-* Only activating keybinding in python files
 * Adding rope menu
 * Specifying refactoring options
+* Only activating keybinding in python files
 * Updating docs
