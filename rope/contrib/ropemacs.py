@@ -211,6 +211,8 @@ class RopeInterface(object):
         self._perform(organizer.organize_imports(self._get_resource()))
 
     def _perform(self, changes):
+        if changes is None:
+            return
         self.project.do(changes)
         self._reload_buffers(changes.get_changed_resources())
         lisp.message(str(changes.description) + ' finished')
