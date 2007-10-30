@@ -17,6 +17,7 @@ class interactive(object):
         func.interaction = self.mode
         return func
 
+
 class RopeInterface(object):
 
     def __init__(self):
@@ -38,6 +39,8 @@ class RopeInterface(object):
             ('C-x p u', lisp.rope_undo_refactoring),
             ('C-x p r', lisp.rope_redo_refactoring),
             ('C-c g', lisp.rope_goto_definition),
+            ('C-c C-d', lisp.rope_show_doc),
+
             ('C-c r r', lisp.rope_rename),
             ('C-c r l', lisp.rope_extract_variable),
             ('C-c r m', lisp.rope_extract_method),
@@ -233,6 +236,19 @@ class RopeInterface(object):
         if definition[1]:
             lisp.goto_line(definition[1])
 
+    @interactive()
+    def show_doc(self):
+        self._check_project()
+        resource, offset = self._get_location()
+        docs = codeassist.get_doc(
+            self.project, lisp.buffer_string(), offset, resource)
+        if docs:
+            pydoc_buffer = lisp.get_buffer_create('*rope-pydoc*')
+            lisp.set_buffer(pydoc_buffer)
+            lisp.erase_buffer()
+            lisp.insert(docs)
+            lisp.display_buffer(pydoc_buffer)
+
     def _get_location(self):
         resource = self._get_resource()
         offset = self._get_offset()
@@ -284,3 +300,4 @@ after_save_actions = interface.after_save_actions
 exiting_actions = interface.exiting_actions
 
 goto_definition = interface.goto_definition
+show_doc = interface.show_doc
