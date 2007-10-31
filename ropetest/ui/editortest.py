@@ -3,8 +3,8 @@ import Tkinter
 
 from ropetest.ui.mockeditortest import (GraphicalEditorFactory,
                                         get_sample_editingcontext)
-from rope.ui.indenter import PythonCodeIndenter
-from rope.ui import editor
+from ropeide.indenter import PythonCodeIndenter
+from ropeide import editor
 
 
 class GraphicalEditorTest(unittest.TestCase):

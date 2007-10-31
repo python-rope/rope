@@ -2,18 +2,16 @@ import ScrolledText
 import Tkinter
 
 import rope.ide.codeassist
-import rope.ui.core
-import rope.ui.testview
+import ropeide.core
+import ropeide.testview
 from rope.base import codeanalyze
 from rope.ide import formatter, notes, generate, sort, outline
-from rope.ui import spelldialog, registers
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
-from rope.ui.extension import SimpleAction
-from rope.ui.menubar import MenuAddress
-from rope.ui.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
+from ropeide import spelldialog, registers
+from ropeide.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
+from ropeide.extension import SimpleAction
+from ropeide.menubar import MenuAddress
+from ropeide.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
                                EnhancedListHandle)
-
-
 class _OutlineViewHandle(TreeViewHandle):
 
     def __init__(self, editor, toplevel):
@@ -239,7 +237,7 @@ def do_run_module(context):
                 run_module(context.get_active_editor().get_file())
 
 def run_tests(context):
-    rope.ui.testview.run_unit_test(context.project, context.resource)
+    ropeide.testview.run_unit_test(context.project, context.resource)
 
 def run_soi(context):
     pycore = context.project.pycore
@@ -445,7 +443,7 @@ def _generate_sort_actions(menu):
             menu.child(menu_name.title(), c), ['python'])
 
 
-core = rope.ui.core.Core.get_core()
+core = ropeide.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Source'], 's'), ['all', 'none'])
 actions = []
 

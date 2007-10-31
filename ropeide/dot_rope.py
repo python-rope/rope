@@ -65,7 +65,7 @@ def _register_my_actions(core):
     # like this.
     # Plugins can use this interface for registering their actions.  For
     # more information see `rope.ui.extension` module.
-    from rope.ui.extension import SimpleAction
+    from ropeide.extension import SimpleAction
 
     def say_hello(context):
         print('Hello Action!')

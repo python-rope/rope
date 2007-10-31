@@ -1,10 +1,10 @@
 from Tkinter import *
 
 import rope.base.exceptions
-import rope.ui.uihelpers
+import ropeide.uihelpers
 
 
-class StatusBarException(rope.ui.uihelpers.RopeUIError):
+class StatusBarException(ropeide.uihelpers.RopeUIError):
     pass
 
 

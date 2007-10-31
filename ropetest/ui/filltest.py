@@ -1,6 +1,6 @@
 import unittest
 
-from rope.ui import fill
+from ropeide import fill
 
 
 class FillTest(unittest.TestCase):

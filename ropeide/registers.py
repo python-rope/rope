@@ -1,6 +1,6 @@
 import Tkinter
 
-from rope.ui.uihelpers import SearchableList, SearchableListHandle
+from ropeide.uihelpers import SearchableList, SearchableListHandle
 
 
 class Registers(object):

@@ -4,15 +4,15 @@ import imp
 import tkFileDialog
 from Tkinter import *
 
-import rope.ui.editor
-import rope.ui.editorpile
-import rope.ui.keybinder
-import rope.ui.statusbar
+import ropeide.editor
+import ropeide.editorpile
+import ropeide.keybinder
+import ropeide.statusbar
 from rope.base.exceptions import RopeError
 from rope.base.project import Project, get_no_project
-from rope.ui import editingcontexts, registers
-from rope.ui.extension import ActionContext
-from rope.ui.menubar import MenuBarManager
+from ropeide import editingcontexts, registers
+from ropeide.extension import ActionContext
+from ropeide.menubar import MenuBarManager
 import rope.base.prefs
 
 
@@ -38,11 +38,11 @@ class Core(object):
         self.editor_panel = Frame(self.main, borderwidth=0)
         self.status_bar = Frame(self.main, borderwidth=1, relief=RIDGE)
 
-        self.status_bar_manager = rope.ui.statusbar.StatusBarManager(
+        self.status_bar_manager = ropeide.statusbar.StatusBarManager(
             self.status_bar, font=self.prefs.get('statusbar_font', None))
         buffer_status = self.status_bar_manager.create_status('buffer')
         buffer_status.set_width(40)
-        self.editor_manager = rope.ui.editorpile.EditorPile(
+        self.editor_manager = ropeide.editorpile.EditorPile(
             self.editor_panel, self, buffer_status,
             font=self.prefs.get('editorlist_font', None))
 
@@ -50,7 +50,7 @@ class Core(object):
         line_status.set_width(8)
 
         for context in editingcontexts.contexts.values():
-            context.key_binding = rope.ui.keybinder.KeyBinder(
+            context.key_binding = ropeide.keybinder.KeyBinder(
                 self.status_bar_manager,
                 prefix=self.prefs.get('action_prefix', None))
         self.root.protocol('WM_DELETE_WINDOW', self._close_project_and_exit)
@@ -91,7 +91,7 @@ class Core(object):
         self.prefs.add(key, value)
 
     def get_prefs(self):
-        """Return a `rope.ui.pref.Prefs` object"""
+        """Return a `rope.ropeide.pref.Prefs` object"""
         return self.prefs
 
     def add_menu_cascade(self, menu_address, active_contexts):
@@ -209,11 +209,11 @@ class Core(object):
         save_button.focus_set()
 
     def run(self):
-        self.add_extension('rope.ui.fileactions')
-        self.add_extension('rope.ui.editactions')
-        self.add_extension('rope.ui.sourceactions')
-        self.add_extension('rope.ui.refactor')
-        self.add_extension('rope.ui.helpactions')
+        self.add_extension('ropeide.fileactions')
+        self.add_extension('ropeide.editactions')
+        self.add_extension('ropeide.sourceactions')
+        self.add_extension('ropeide.refactor')
+        self.add_extension('ropeide.helpactions')
         self._load_dot_rope()
         self._load_actions()
         self._init_x()
@@ -355,7 +355,7 @@ class Core(object):
         return self.editor_manager
 
     def register_action(self, action):
-        """Register a `rope.ui.extension.Action`"""
+        """Register a `rope.ropeide.extension.Action`"""
         self.actions.append(action)
 
     def rebind_action(self, name, key):
@@ -437,9 +437,9 @@ def get_core():
 
 
 def write_dot_rope(dot_rope):
-    import rope.ui.dot_rope
+    import ropeide.dot_rope
     import inspect
-    text = inspect.getsource(rope.ui.dot_rope)
+    text = inspect.getsource(ropeide.dot_rope)
     output = open(dot_rope, 'w')
     output.write(text)
     output.close()

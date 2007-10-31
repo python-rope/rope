@@ -1,4 +1,4 @@
-from rope.ui.editor import EditorFactory
+from ropeide.editor import EditorFactory
 
 
 class MockEditorFactory(EditorFactory):

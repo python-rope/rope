@@ -2,8 +2,8 @@ import unittest
 
 import Tkinter
 
-from rope.ui.editor import *
-from rope.ui.fileeditor import *
+from ropeide.editor import *
+from ropeide.fileeditor import *
 from ropetest import testutils
 from ropetest.ui.mockeditortest import get_sample_editingcontext
 

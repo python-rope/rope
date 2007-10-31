@@ -6,9 +6,9 @@ import Tkinter
 from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT, Toplevel, Text
 
 import rope.ide.codeassist
-import rope.ui.editingtools
-import rope.ui.searcher
-import rope.ui.tkhelpers
+import ropeide.editingtools
+import ropeide.searcher
+import ropeide.tkhelpers
 
 
 class GraphicalEditor(object):
@@ -23,7 +23,7 @@ class GraphicalEditor(object):
             parent, bg='white', font=font, undo=True,
             maxundo=100, highlightcolor='#99A')
         self.change_inspector = _TextChangeInspector(self, self._text_changed)
-        self.searcher = rope.ui.searcher.Searcher(self)
+        self.searcher = ropeide.searcher.Searcher(self)
         self._set_editingcontexts(editorcontext)
         self._bind_keys()
         self.status_bar_manager = None
@@ -694,7 +694,7 @@ class _TextChangeInspector(object):
     def __init__(self, editor, change_observer=None):
         self.editor = editor
         self.text = editor.text
-        self.redirector = rope.ui.tkhelpers.WidgetRedirector(self.text)
+        self.redirector = ropeide.tkhelpers.WidgetRedirector(self.text)
         self.old_insert = self.redirector.register('insert', self._insert)
         self.old_delete = self.redirector.register('delete', self._delete)
         self.old_edit = self.redirector.register('edit', self._edit)

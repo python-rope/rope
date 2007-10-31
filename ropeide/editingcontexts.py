@@ -1,4 +1,4 @@
-from rope.ui import editingtools
+from ropeide import editingtools
 
 
 class EditingContext(object):

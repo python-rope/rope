@@ -3,9 +3,9 @@ import sys
 
 import Tkinter
 
-import rope.ui.core
-from rope.ui.extension import SimpleAction
-from rope.ui.menubar import MenuAddress
+import ropeide.core
+from ropeide.extension import SimpleAction
+from ropeide.menubar import MenuAddress
 from rope.base import project
 
 
@@ -66,7 +66,7 @@ def show_copying(context):
     show_doc(context, 'COPYING')
 
 
-core = rope.ui.core.Core.get_core()
+core = ropeide.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Help'], 'h'), ['all', 'none'])
 actions = []
 

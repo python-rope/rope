@@ -7,8 +7,8 @@ import Tkinter
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 import rope.base.project
-from rope.ui.uihelpers import DescriptionList, ProgressBar
-import rope.ui.runtest
+from ropeide.uihelpers import DescriptionList, ProgressBar
+import ropeide.runtest
 
 
 class GUITestResult(object):
@@ -108,7 +108,7 @@ class GUITestRunner(object):
         try:
             server.register_instance(self.result)
             run_test_py = rope.base.project.get_no_project().get_resource(
-                inspect.getsourcefile(rope.ui.runtest))
+                inspect.getsourcefile(ropeide.runtest))
             self.process = self.project.get_pycore().run_module(
                 run_test_py, args=[str(rpc_port), self.resource.real_path])
             while not self.result._is_finished() and not self.is_stopped:

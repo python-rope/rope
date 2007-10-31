@@ -1,9 +1,9 @@
 import unittest
 
-from rope.ui import editingcontexts
-from rope.ui.editor import *
+from ropeide import editingcontexts
+from ropeide.editor import *
 from ropetest.ui.mockeditor import *
-from rope.ui import core
+from ropeide import core
 
 
 class TextEditorTest(unittest.TestCase):

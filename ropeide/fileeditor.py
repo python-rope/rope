@@ -1,7 +1,7 @@
 import rope.base.exceptions
-import rope.ui.uihelpers
+import ropeide.uihelpers
 from rope.base.project import ResourceObserver, FilteredResourceObserver
-from rope.ui import editingcontexts
+from ropeide import editingcontexts
 
 
 class FileEditor(object):
@@ -73,7 +73,7 @@ class FileEditor(object):
 
     def save(self):
         if self.readonly:
-            raise rope.ui.uihelpers.RopeUIError(
+            raise ropeide.uihelpers.RopeUIError(
                 'File is opened in readonly mode!')
         self.saving = True
         try:

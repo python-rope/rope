@@ -3,10 +3,10 @@ import os.path
 import Tkinter
 
 import rope.base.project
-import rope.ui.core
-from rope.ui import uihelpers, fill
-from rope.ui.extension import SimpleAction
-from rope.ui.menubar import MenuAddress
+import ropeide.core
+from ropeide import uihelpers, fill
+from ropeide.extension import SimpleAction
+from ropeide.menubar import MenuAddress
 from rope.ide import movements
 
 
@@ -213,7 +213,7 @@ class PrevNextElement(object):
             return elements.prev(offset)
 
 
-core = rope.ui.core.Core.get_core()
+core = ropeide.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['Edit'], 'e'), ['all', 'none'])
 actions = []
 

@@ -4,7 +4,7 @@ import Tkinter
 
 import rope.base.project
 import rope.refactor.change_signature
-import rope.ui.uihelpers
+import ropeide.uihelpers
 import rope.base.taskhandle
 
 
@@ -22,7 +22,7 @@ class StoppableTaskRunner(object):
         toplevel = Tkinter.Toplevel()
         toplevel.title('Performing Task ' + self.title)
         frame = Tkinter.Frame(toplevel)
-        progress = rope.ui.uihelpers.ProgressBar(frame)
+        progress = ropeide.uihelpers.ProgressBar(frame)
         def update_progress():
             jobset = handle.current_jobset()
             if jobset:

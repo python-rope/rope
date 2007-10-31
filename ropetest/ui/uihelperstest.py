@@ -1,8 +1,8 @@
 import unittest
 import Tkinter
 
-from rope.ui.uihelpers import EnhancedList, EnhancedListHandle
-from rope.ui.uihelpers import TreeView, TreeViewHandle
+from ropeide.uihelpers import EnhancedList, EnhancedListHandle
+from ropeide.uihelpers import TreeView, TreeViewHandle
 
 
 class SampleListHandle(EnhancedListHandle):

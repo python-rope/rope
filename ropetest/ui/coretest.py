@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from rope.ui.core import Core, RopeError
+from ropeide.core import Core, RopeError
 from ropetest import testutils
 
 

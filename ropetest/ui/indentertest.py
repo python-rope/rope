@@ -1,6 +1,6 @@
 import unittest
 
-from rope.ui.indenter import PythonCodeIndenter, NormalIndenter
+from ropeide.indenter import PythonCodeIndenter, NormalIndenter
 from ropetest.ui.mockeditortest import MockEditorFactory
 
 

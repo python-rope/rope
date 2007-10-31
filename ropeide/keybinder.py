@@ -5,7 +5,7 @@ multi-key keybindings well.
 
 """
 import Tkinter
-from rope.ui import statusbar
+from ropeide import statusbar
 
 
 class KeyBinder(object):

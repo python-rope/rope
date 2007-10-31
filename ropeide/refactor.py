@@ -12,19 +12,17 @@ import rope.refactor.method_object
 import rope.refactor.move
 import rope.refactor.rename
 import rope.refactor.restructure
-import rope.ui.core
+import ropeide.core
 from rope.base import exceptions, evaluate
 from rope.refactor import ImportOrganizer
-from rope.ui.actionhelpers import (ConfirmEditorsAreSaved,
+from ropeide.actionhelpers import (ConfirmEditorsAreSaved,
                                    StoppableTaskRunner, check_project)
-from rope.ui import uihelpers, tkhelpers
-from rope.ui.extension import SimpleAction
-from rope.ui.menubar import MenuAddress
-from rope.ui.uihelpers import (TreeViewHandle, TreeView,
+from ropeide import uihelpers, tkhelpers
+from ropeide.extension import SimpleAction
+from ropeide.menubar import MenuAddress
+from ropeide.uihelpers import (TreeViewHandle, TreeView,
                                DescriptionList, EnhancedListHandle,
                                VolatileList, EnhancedList)
-
-
 class PreviewAndCommitChanges(object):
 
     def __init__(self, project, changes):
@@ -918,7 +916,7 @@ def restructure(context):
 
 
 actions = []
-core = rope.ui.core.get_core()
+core = ropeide.core.get_core()
 core.add_menu_cascade(MenuAddress(['Refactor'], 'r'), ['python'])
 
 actions.append(SimpleAction('rename', ConfirmEditorsAreSaved(rename), 'C-c r r',

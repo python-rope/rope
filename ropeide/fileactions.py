@@ -4,17 +4,15 @@ import Tkinter
 import tkFileDialog
 
 import rope.base.project
-import rope.ui.actionhelpers
-import rope.ui.core
-from rope.ui import uihelpers, tkhelpers
-from rope.ui.actionhelpers import ConfirmEditorsAreSaved, simple_stoppable
-from rope.ui.extension import SimpleAction
-from rope.ui.menubar import MenuAddress
-from rope.ui.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
+import ropeide.actionhelpers
+import ropeide.core
+from ropeide import uihelpers, tkhelpers
+from ropeide.actionhelpers import ConfirmEditorsAreSaved, simple_stoppable
+from ropeide.extension import SimpleAction
+from ropeide.menubar import MenuAddress
+from ropeide.uihelpers import (TreeViewHandle, TreeView, find_item_dialog,
                                SearchableList, SearchableListHandle,
                                HelperMatcher, DoesMatch)
-
-
 def open_project(context):
     toplevel = Tkinter.Toplevel()
     toplevel.title('Open Project')
@@ -94,7 +92,7 @@ def _create_resource_dialog(core, creation_callback,
     creation_callback is a function accepting the parent and the name
 
     """
-    if not rope.ui.actionhelpers.check_project(core):
+    if not ropeide.actionhelpers.check_project(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('New ' + resource_name)
@@ -241,7 +239,7 @@ class FindFileHandle(uihelpers.FindItemHandle):
 
 
 def find_file(context):
-    if not rope.ui.actionhelpers.check_project(context.core):
+    if not ropeide.actionhelpers.check_project(context.core):
         return
     find_item_dialog(FindFileHandle(context), title='Find Project File',
                      matches='Matching Files')
@@ -283,7 +281,7 @@ class FindTypeHandle(uihelpers.FindItemHandle):
         return cmp(type1.get_name(), type2.get_name())
 
 def find_type(context):
-    if not rope.ui.actionhelpers.check_project(context.core):
+    if not ropeide.actionhelpers.check_project(context.core):
         return
     find_item_dialog(FindTypeHandle(context), title='Find Project Type',
                      matches='Matching Types')
@@ -325,7 +323,7 @@ class _ResourceViewHandle(TreeViewHandle):
 
 
 def _show_resource_view(core):
-    if not rope.ui.actionhelpers.check_project(core):
+    if not ropeide.actionhelpers.check_project(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('Resources')
@@ -356,7 +354,7 @@ class ChangeBufferHandle(SearchableListHandle):
 
 
 def change_editor(context):
-    if not rope.ui.actionhelpers.check_project(core):
+    if not ropeide.actionhelpers.check_project(core):
         return
     toplevel = Tkinter.Toplevel()
     toplevel.title('Change Buffer')
@@ -387,7 +385,7 @@ def close_editor(context):
     context.get_core()._close_active_editor_dialog()
 
 def edit_project_config(context):
-    if not rope.ui.actionhelpers.check_project(context.core):
+    if not ropeide.actionhelpers.check_project(context.core):
         return
     resource = context.project.ropefolder
     if resource is not None:
@@ -456,13 +454,13 @@ def _history_dialog(context, undo_list, title='File History'):
     undo_button.focus_set()
 
 def show_history(context):
-    if not rope.ui.actionhelpers.check_project(context.core):
+    if not ropeide.actionhelpers.check_project(context.core):
         return
     undo_list = context.project.history.undo_list
     _history_dialog(context, undo_list)
 
 def show_current_file_history(context):
-    if not rope.ui.actionhelpers.check_project(context.core):
+    if not ropeide.actionhelpers.check_project(context.core):
         return
     undo_list = context.project.history.get_file_undo_list(context.resource)
     _history_dialog(context, undo_list,
@@ -497,7 +495,7 @@ def redo_project(context):
 def exit_rope(context):
     context.get_core()._close_project_and_exit()
 
-core = rope.ui.core.Core.get_core()
+core = ropeide.core.Core.get_core()
 core.add_menu_cascade(MenuAddress(['File'], 'f'), ['all', 'none'])
 actions = []
 
