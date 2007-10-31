@@ -1,0 +1,2 @@
+include README.txt COPYING setup.py MANIFEST.in
+include ropemacs.py docs/ropemacs.txt

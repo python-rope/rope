@@ -21,14 +21,12 @@ def get_long_description():
     end = lines.index('Getting Started')
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
-setup(name='rope',
+setup(name='ropemacs',
       version=rope.VERSION,
-      description='a python refactoring library...',
+      description='An emacs mode for rope refactoring library',
       long_description=get_long_description(),
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',
-      packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
-                'rope.refactor.importutils'],
       license='GNU GPL',
       classifiers=classifiers)

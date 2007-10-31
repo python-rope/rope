@@ -12,7 +12,7 @@ def run_setup(args):
 
 
 if __name__ == '__main__':
-    for kind in ['rope', 'ropeide']:
+    for kind in ['rope', 'ropeide', 'ropemacs']:
         manifest = 'tools/%s_MANIFEST.in' % kind
         setup = 'tools/%s_setup.py' % kind
         shutil.copy(manifest, 'MANIFEST.in')
