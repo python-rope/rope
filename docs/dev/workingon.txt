@@ -1,13 +1,15 @@
 Plans For New Packages
 ======================
 
-* Renaming `rope.ide` to `rope.contrib`
-* Renaming `rope.ui` to `ropeide`
-* Renaming ``rope.py`` to ``ropeide.py``
-* Renaming `rope.contrib.ropemacs` to `ropemacs`
-* Renaming ``~/.rope`` to ``~/.ropeide``
-* Three separate packages: rope, ropeide, ropemacs
-* Separating ropeide tests
+- Renaming `rope.ide` to `rope.contrib`
+- Renaming `rope.ui` to `ropeide`
+- Renaming ``rope.py`` to ``ropeide.py``
+- Renaming `rope.contrib.ropemacs` to `ropemacs`
+- Three separate packages: rope, ropeide, ropemacs
+- Separating ropeide tests
+- Renaming ``~/.rope`` to ``~/.ropeide``
+
+* Documenting backward incompatible changes
 * Updating docs
 * Separating docs for different packages
 

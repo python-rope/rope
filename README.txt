@@ -32,14 +32,14 @@ Getting Started
 * Using as a library: `docs/library.txt`_
 * Contributing: `docs/contributing.txt`_
 
-To change rope IDE preferences like font edit your ``~/.rope`` (which
-is created the first time you start rope).  To change your project
-preferences edit ``$PROJECT_ROOT/.ropeproject/config.py`` where
-``$PROJECT_ROOT`` is the root folder of your project (this file is
-created the first time you open a project).
+To change rope IDE preferences like font edit your ``~/.ropeide``
+(which is created the first time you start rope).  To change your
+project preferences edit ``$PROJECT_ROOT/.ropeproject/config.py``
+where ``$PROJECT_ROOT`` is the root folder of your project (this file
+is created the first time you open a project).
 
 If you don't like rope's default emacs-like keybinding, edit the
-default ``~/.rope`` file and change `i_like_emacs` variable to
+default ``~/.ropeide`` file and change `i_like_emacs` variable to
 `False`.
 
 

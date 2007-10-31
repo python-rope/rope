@@ -233,7 +233,7 @@ class Core(object):
         self.root.mainloop()
 
     def _load_dot_rope(self):
-        dot_rope = os.path.expanduser('~%s.rope' % os.path.sep)
+        dot_rope = os.path.expanduser('~%s.ropeide' % os.path.sep)
         try:
             if not os.path.exists(dot_rope):
                 write_dot_rope(dot_rope)
@@ -245,7 +245,7 @@ class Core(object):
             if 'starting_rope' in run_globals:
                 run_globals['starting_rope'](self)
         except IOError, e:
-            print 'Unable to load <~.rope> file: ' + e
+            print 'Unable to load <~/.ropeide> file: ' + e
 
     def open_file(self, file_name):
         if self.project is get_no_project():

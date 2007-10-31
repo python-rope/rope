@@ -20,9 +20,9 @@ Note that the IDE parts of this file assumes emacs keybinding.
 
 Rope uses a folder inside projects for holding project configuration
 and data.  Its default name is ``.ropeproject``, but it can be changed
-in ``~/.rope`` or `Project` constructor (if using rope as a library).
-You can also force rope not to make such a folder by using `None`
-instead of a `str`.
+in ``~/.ropeide`` or `Project` constructor (if using rope as a
+library).  You can also force rope not to make such a folder by using
+`None` instead of a `str`.
 
 Currently it is used for things such as:
 
@@ -1077,10 +1077,10 @@ IDE Tools
 Keybinding
 ----------
 
-You can change the keybinding in ``~/.rope``.  The keybinding is shown
-next to every action in menus.  Some of these bindings are chosen from
-emacs and some from eclipse.  ("C" stands for Control key and "M" for
-Meta(Alt) key.)
+You can change the keybinding in ``~/.ropeide``.  The keybinding is
+shown next to every action in menus.  Some of these bindings are
+chosen from emacs and some from eclipse.  ("C" stands for Control key
+and "M" for Meta(Alt) key.)
 
 
 Code Assist(Auto Complete)
@@ -1107,9 +1107,9 @@ In the second column if present:
 * I: ``imported``
 
 You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
-templates.  You can define your own templates in ``~/.rope``.  See
-examples in the default ``~/.rope`` file. (`rope.ui.dot_rope`
-module; It will be copied to ``~/.rope`` if none already exists.)
+templates.  You can define your own templates in ``~/.ropeide``.  See
+examples in the default ``~/.ropeide`` file. (`rope.ui.dot_rope`
+module; It will be copied to ``~/.ropeide`` if none already exists.)
 
 
 Show PyDoc
@@ -1174,8 +1174,8 @@ prefix.
 Defining Templates
 ------------------
 
-You can define your own templates in ``~/.rope``.  You can use ``C-x c``
-and a line like this::
+You can define your own templates in ``~/.ropeide``.  You can use
+``C-x c`` and a line like this::
 
     core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
 
