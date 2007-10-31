@@ -5,7 +5,7 @@ import rope.refactor.inline
 import rope.refactor.move
 import rope.refactor.rename
 from rope.base import project, libutils
-from rope.ide import codeassist
+from rope.contrib import codeassist
 
 
 class interactive(object):

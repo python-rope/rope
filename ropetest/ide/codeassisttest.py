@@ -1,7 +1,7 @@
 import unittest
 
 from rope.base import exceptions
-from rope.ide.codeassist import \
+from rope.contrib.codeassist import \
      (Template, get_definition_location, get_doc,
       find_occurrences, code_assist, sorted_proposals, starting_offset)
 from ropetest import testutils

@@ -1,11 +1,11 @@
 import ScrolledText
 import Tkinter
 
-import rope.ide.codeassist
+import rope.contrib.codeassist
 import ropeide.core
 import ropeide.testview
 from rope.base import codeanalyze
-from rope.ide import generate
+from rope.contrib import generate
 from ropeide import spelldialog, registers
 from ropeide.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
 from ropeide.extension import SimpleAction
@@ -62,9 +62,9 @@ class _CompletionListHandle(EnhancedListHandle):
 
     def entry_to_string(self, proposal):
         mode = '  '
-        if isinstance(proposal, rope.ide.codeassist.TemplateProposal):
+        if isinstance(proposal, rope.contrib.codeassist.TemplateProposal):
             mode = 'T_'
-        if isinstance(proposal, rope.ide.codeassist.CompletionProposal):
+        if isinstance(proposal, rope.contrib.codeassist.CompletionProposal):
             if proposal.type is None:
                 mode = proposal.kind[0].upper() + '_'
             else:
@@ -75,7 +75,7 @@ class _CompletionListHandle(EnhancedListHandle):
         self.toplevel.destroy()
 
     def selected(self, selected):
-        if isinstance(selected, rope.ide.codeassist.TemplateProposal):
+        if isinstance(selected, rope.contrib.codeassist.TemplateProposal):
             _get_template_information(self.editor, selected, self.start_offset)
         else:
             self.editor.text.delete('0.0 +%dc' % self.start_offset,
@@ -94,11 +94,11 @@ class DoCodeAssist(object):
         editor = context.get_active_editor().get_editor()
         source = editor.get_text()
         offset = editor.get_current_offset()
-        result = rope.ide.codeassist.code_assist(
+        result = rope.contrib.codeassist.code_assist(
             context.project, source, offset, context.resource,
             templates=self._get_templates(context))
-        proposals = rope.ide.codeassist.sorted_proposals(result)
-        start_offset = rope.ide.codeassist.starting_offset(source, offset)
+        proposals = rope.contrib.codeassist.sorted_proposals(result)
+        start_offset = rope.contrib.codeassist.starting_offset(source, offset)
         toplevel = Tkinter.Toplevel()
         toplevel.title('Code Assist Proposals')
         handle = _CompletionListHandle(editor, toplevel, start_offset)
@@ -137,10 +137,10 @@ class DoCodeAssist(object):
 
     def _get_templates(self, context):
         if self._templates is None:
-            templates = rope.ide.codeassist.default_templates()
+            templates = rope.contrib.codeassist.default_templates()
             for name, definition in (context.core.get_prefs().
                                      get('templates', [])):
-                templates[name] = rope.ide.codeassist.Template(definition)
+                templates[name] = rope.contrib.codeassist.Template(definition)
             self._templates = templates
         return self._templates
 
@@ -193,7 +193,7 @@ def _get_template_information(editor, proposal, start_offset):
 
 def do_goto_definition(context):
     editor = context.get_active_editor().get_editor()
-    resource, lineno = rope.ide.codeassist.get_definition_location(
+    resource, lineno = rope.contrib.codeassist.get_definition_location(
         context.project, editor.get_text(),
         editor.get_current_offset(), context.resource)
     if resource is not None:
@@ -208,7 +208,7 @@ def do_show_doc(context):
     if not context.get_active_editor():
         return
     editor = context.get_active_editor().get_editor()
-    doc = rope.ide.codeassist.get_doc(
+    doc = rope.contrib.codeassist.get_doc(
         context.project, editor.get_text(),
         editor.get_current_offset(), context.resource)
     if doc is not None:
@@ -277,7 +277,7 @@ def find_occurrences(context):
     resource = context.resource
     offset = context.editor.get_current_offset()
     def calculate(handle):
-        return rope.ide.codeassist.find_occurrences(
+        return rope.contrib.codeassist.find_occurrences(
             context.project, resource, offset,
             unsure=True, task_handle=handle)
     result = StoppableTaskRunner(calculate, title='Finding Occurrences')()

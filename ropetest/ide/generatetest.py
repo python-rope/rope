@@ -1,7 +1,7 @@
 import unittest
 
 from rope.base import exceptions
-from rope.ide import generate
+from rope.contrib import generate
 from ropetest import testutils
 
 

@@ -11,18 +11,18 @@ def make_temps():
         os.mkdir('scripts')
     shutil.copy('ropeide.py', 'scripts/ropeide')
     # copying docs
-    if not os.path.exists('rope/docs'):
-        os.mkdir('rope/docs')
+    if not os.path.exists('ropeide/docs'):
+        os.mkdir('ropeide/docs')
     docs = ['README.txt', 'COPYING']
     docs.extend(glob.glob('docs/*.txt'))
     for name in docs:
-        shutil.copy(name, 'rope/docs/')
+        shutil.copy(name, 'ropeide/docs/')
 
 def remove_temps():
     if os.path.exists('scripts'):
         shutil.rmtree('scripts')
-    if os.path.exists('rope/docs'):
-        shutil.rmtree('rope/docs')
+    if os.path.exists('ropeide/docs'):
+        shutil.rmtree('ropeide/docs')
 
 classifiers=[
     'Development Status :: 4 - Beta',
@@ -52,10 +52,8 @@ try:
           author='Ali Gholami Rudi',
           author_email='aligrudi@users.sourceforge.net',
           url='http://rope.sf.net/',
-          packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
-                    'rope.refactor.importutils', 'rope.ide', 'ropeide',
-                    'ropemacs'],
-          package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
+          packages=['ropeide'],
+          package_data={'ropeide': ['docs/COPYING', 'docs/*.txt']},
           scripts=['scripts/ropeide'],
           license='GNU GPL',
           classifiers=classifiers)

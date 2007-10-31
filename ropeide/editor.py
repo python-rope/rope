@@ -5,7 +5,7 @@ import tkFont
 import Tkinter
 from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT, Toplevel, Text
 
-import rope.ide.codeassist
+import rope.contrib.codeassist
 import ropeide.editingtools
 import ropeide.searcher
 import ropeide.tkhelpers

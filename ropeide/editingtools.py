@@ -1,4 +1,4 @@
-import rope.ide.codeassist
+import rope.contrib.codeassist
 import rope.refactor.sourceutils
 import ropeide.highlighter
 import ropeide.indenter
