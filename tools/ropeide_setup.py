@@ -3,7 +3,7 @@ import os
 import shutil
 from distutils.core import setup
 
-import rope
+import ropeide
 
 
 def make_temps():
@@ -46,7 +46,7 @@ def get_long_description():
 make_temps()
 try:
     setup(name='ropeide',
-          version=rope.VERSION,
+          version=ropeide.VERSION,
           description='a python refactoring IDE...',
           long_description=get_long_description(),
           author='Ali Gholami Rudi',

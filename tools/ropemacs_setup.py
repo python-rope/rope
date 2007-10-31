@@ -1,7 +1,5 @@
 from distutils.core import setup
 
-import rope
-
 
 classifiers=[
     'Development Status :: 4 - Beta',
@@ -22,7 +20,7 @@ def get_long_description():
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
 setup(name='ropemacs',
-      version=rope.VERSION,
+      version='0.1',
       description='An emacs mode for rope refactoring library',
       long_description=get_long_description(),
       author='Ali Gholami Rudi',

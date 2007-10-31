@@ -4,5 +4,6 @@ include docs/*.txt
 
 recursive-include ropeide *.py
 recursive-include ropeidetest *.py
+include ropeide.py
 
 prune scripts

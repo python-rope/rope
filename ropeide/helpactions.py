@@ -3,10 +3,11 @@ import sys
 
 import Tkinter
 
+import rope
 import ropeide.core
+from rope.base import project
 from ropeide.extension import SimpleAction
 from ropeide.menubar import MenuAddress
-from rope.base import project
 
 
 def show_about_dialog(context):

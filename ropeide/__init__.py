@@ -1,14 +1,16 @@
-"""rope UI package
+"""A python refactoring ide"""
 
-This package contains a sample GUI that uses rope core
-parts.  Currently it uses `Tkinter` but in future this will
-probably change.  The UI modules use other rope packages
-such as `rope.base`, `rope.refactor` and `rope.ide`.
+INFO = __doc__
+VERSION = '0.6.3'
+COPYRIGHT = """\
+Copyright (C) 2006-2007 Ali Gholami Rudi
 
-Note that there might be some modules that do not rely on
-the GUI library.  These modules can be moved to
-`rope.ide` package if they are general enough so that if
-we plan to use an new graphical library (maybe wxpython) we
-can reuse those modules.
+This program is free software; you can redistribute it and/or modify it
+under the terms of GNU General Public License as published by the
+Free Software Foundation; either version 2 of the license, or (at your
+opinion) any later version.
 
-"""
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details."""
