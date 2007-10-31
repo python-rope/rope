@@ -1,6 +1,6 @@
 import unittest
 
-from rope.ide.spellchecker import SpellChecker
+from ropeide.spellchecker import SpellChecker
 from ropetest import testutils
 from StringIO import StringIO
 

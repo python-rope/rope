@@ -5,13 +5,17 @@ import rope.ide.codeassist
 import ropeide.core
 import ropeide.testview
 from rope.base import codeanalyze
-from rope.ide import formatter, notes, generate, sort, outline
+from rope.ide import generate
 from ropeide import spelldialog, registers
 from ropeide.actionhelpers import ConfirmEditorsAreSaved, StoppableTaskRunner
 from ropeide.extension import SimpleAction
 from ropeide.menubar import MenuAddress
 from ropeide.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
                                EnhancedListHandle)
+import ropeide.formatter
+import ropeide.notes
+import ropeide.outline
+import ropeide.sort
 class _OutlineViewHandle(TreeViewHandle):
 
     def __init__(self, editor, toplevel):
@@ -43,7 +47,7 @@ def do_quick_outline(context):
     toplevel.title('Quick Outline')
     tree_view = TreeView(toplevel, _OutlineViewHandle(editor, toplevel),
                          title='Quick Outline')
-    for node in (outline.PythonOutline(context.project).\
+    for node in (ropeide.outline.PythonOutline(context.project).\
                  get_root_nodes(editor.get_text())):
         tree_view.add_entry(node)
     toplevel.grab_set()
@@ -332,7 +336,7 @@ def do_correct_line_indentation(context):
 
 def do_format_code(context):
     editor = context.editor
-    result = formatter.Formatter().format(editor.get_text())
+    result = ropeide.formatter.Formatter().format(editor.get_text())
     if result != editor.get_text():
         editor.set_text(result, reset_editor=False)
 
@@ -401,21 +405,21 @@ def _show_annotations(context, name, items):
     enhanced_list.list.focus_set()
 
 def show_codetags(context):
-    tags = notes.Codetags().tags(context.resource.read())
+    tags = ropeide.notes.Codetags().tags(context.resource.read())
     _show_annotations(context, 'Codetag', tags)
 
 def show_errors(context):
-    tags = notes.Errors().errors(context.resource.read())
+    tags = ropeide.notes.Errors().errors(context.resource.read())
     _show_annotations(context, 'Error', tags)
 
 def show_warnings(context):
-    tags = notes.Warnings().warnings(context.resource.read())
+    tags = ropeide.notes.Warnings().warnings(context.resource.read())
     _show_annotations(context, 'Warning', tags)
 
 def show_all(context):
-    result = notes.Codetags().tags(context.resource.read())
-    result.extend(notes.Warnings().warnings(context.resource.read()))
-    result.extend(notes.Errors().errors(context.resource.read()))
+    result = ropeide.notes.Codetags().tags(context.resource.read())
+    result.extend(ropeide.notes.Warnings().warnings(context.resource.read()))
+    result.extend(ropeide.notes.Errors().errors(context.resource.read()))
     result.sort()
     _show_annotations(context, 'Annotation', result)
 
@@ -424,9 +428,9 @@ _sort_mapping = {'a': 'alpha', 'k': 'kind',
                  'p': 'pydoc', 's': 'special', 'u': 'underlined'}
 
 def sort_scopes(context, kind):
-    sorter = sort.get_sorter(_sort_mapping[kind.lower()],
+    sorter = ropeide.sort.get_sorter(_sort_mapping[kind.lower()],
                              reverse=context.prefix)
-    sort_scopes = sort.SortScopes(context.project,
+    sort_scopes = ropeide.sort.SortScopes(context.project,
                                   context.resource, context.offset)
     context.project.do(sort_scopes.get_changes(sorter=sorter))
     
@@ -434,7 +438,7 @@ def sort_scopes(context, kind):
 def _generate_sort_actions(menu):
     for name in _sort_mapping.values():
         c = name[0].lower()
-        sorter = sort.get_sorter(name)
+        sorter = ropeide.sort.get_sorter(name)
         action_name = 'sort_by_' + name
         menu_name = str(sorter)
         yield SimpleAction(

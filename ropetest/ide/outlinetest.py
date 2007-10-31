@@ -1,6 +1,6 @@
 import unittest
 
-from rope.ide.outline import PythonOutline
+from ropeide.outline import PythonOutline
 from ropetest import testutils
 
 

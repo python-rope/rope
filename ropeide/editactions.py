@@ -7,7 +7,7 @@ import ropeide.core
 from ropeide import uihelpers, fill
 from ropeide.extension import SimpleAction
 from ropeide.menubar import MenuAddress
-from rope.ide import movements
+import ropeide.movements
 
 
 def set_mark(context):
@@ -192,7 +192,7 @@ def kill_line(context):
 
 class PrevNextElement(object):
 
-    def __init__(self, next=True, element=movements.Statements):
+    def __init__(self, next=True, element=ropeide.movements.Statements):
         self.next = next
         self.element_type = element
         self.elements = None
@@ -254,10 +254,10 @@ actions.append(SimpleAction('next_statement', PrevNextElement(), 'M-e',
 actions.append(SimpleAction('prev_statement', PrevNextElement(False), 'M-a',
                             others.child('Prev Statement'), ['python']))
 actions.append(
-    SimpleAction('next_scope', PrevNextElement(element=movements.Scopes), 'C-M-e',
+    SimpleAction('next_scope', PrevNextElement(element=ropeide.movements.Scopes), 'C-M-e',
                  others.child('Next Scope'), ['python']))
 actions.append(
-    SimpleAction('prev_scope', PrevNextElement(False, movements.Scopes), 'M-C-a',
+    SimpleAction('prev_scope', PrevNextElement(False, ropeide.movements.Scopes), 'M-C-a',
                  others.child('Prev Scope'), ['python']))
 
 

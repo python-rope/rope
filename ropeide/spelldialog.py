@@ -1,7 +1,7 @@
 import threading
 import Tkinter
 
-from rope.ide.spellchecker import SpellChecker
+from ropeide.spellchecker import SpellChecker
 
 
 class _SpellCheckingDialog(object):

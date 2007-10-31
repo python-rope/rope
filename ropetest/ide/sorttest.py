@@ -1,7 +1,6 @@
 import unittest
-
-from rope.ide import sort
 from ropetest import testutils
+import ropeide.sort
 
 
 class SortScopesTest(unittest.TestCase):
@@ -17,7 +16,7 @@ class SortScopesTest(unittest.TestCase):
         super(SortScopesTest, self).tearDown()
 
     def _do_sort(self, offset, sorter=None):
-        sort_scopes = sort.SortScopes(self.project, self.mod, offset)
+        sort_scopes = ropeide.sort.SortScopes(self.project, self.mod, offset)
         self.project.do(sort_scopes.get_changes(sorter))
 
     def test_trivial_case(self):
@@ -57,31 +56,31 @@ class SortScopesTest(unittest.TestCase):
 
     def test_classes_first(self):
         self.mod.write('\ndef a():\n    pass\n\nclass b():\n    pass\n')
-        self._do_sort(0, sort.KindSorter())
+        self._do_sort(0, ropeide.sort.KindSorter())
         self.assertEquals('\nclass b():\n    pass\n\ndef a():\n    pass\n',
                           self.mod.read())
 
     def test_functions_first(self):
         self.mod.write('\ndef a():\n    pass\n\nclass b():\n    pass\n')
-        self._do_sort(0, sort.KindSorter(reverse=True))
+        self._do_sort(0, ropeide.sort.KindSorter(reverse=True))
         self.assertEquals('\ndef a():\n    pass\n\nclass b():\n    pass\n',
                           self.mod.read())
 
     def test_underlined_last(self):
         self.mod.write('\ndef _a():\n    pass\n\ndef a():\n    pass\n')
-        self._do_sort(0, sort.UnderlinedSorter(reverse=True))
+        self._do_sort(0, ropeide.sort.UnderlinedSorter(reverse=True))
         self.assertEquals('\ndef a():\n    pass\n\ndef _a():\n    pass\n',
                           self.mod.read())
 
     def test_special_last(self):
         self.mod.write('\ndef __a__():\n    pass\n\ndef a():\n    pass\n')
-        self._do_sort(0, sort.SpecialSorter(reverse=True))
+        self._do_sort(0, ropeide.sort.SpecialSorter(reverse=True))
         self.assertEquals('\ndef a():\n    pass\n\ndef __a__():\n    pass\n',
                           self.mod.read())
 
     def test_classes_first(self):
         self.mod.write('\ndef a():\n    pass\n\nclass b():\n    """pydoc"""\n')
-        self._do_sort(0, sort.PydocSorter())
+        self._do_sort(0, ropeide.sort.PydocSorter())
         self.assertEquals('\nclass b():\n    """pydoc"""\n\ndef a():\n    pass\n',
                           self.mod.read())
 
