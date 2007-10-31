@@ -54,7 +54,7 @@ try:
           url='http://rope.sf.net/',
           packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
                     'rope.refactor.importutils', 'rope.ide', 'ropeide',
-                    'rope.contrib'],
+                    'ropemacs'],
           package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
           scripts=['scripts/ropeide'],
           license='GNU GPL',
