@@ -5,7 +5,7 @@ import Tkinter
 from ropeide.editor import *
 from ropeide.fileeditor import *
 from ropetest import testutils
-from ropetest.ui.mockeditortest import get_sample_editingcontext
+from ropeidetest.mockeditortest import get_sample_editingcontext
 
 
 class FileEditorTest(unittest.TestCase):

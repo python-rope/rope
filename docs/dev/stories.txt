@@ -151,7 +151,10 @@ Stories
 * Generate ~/.rope graphically
 
 
-* ropemacs: auto-complete and show doc
+* ropemacs: auto-complete
+
+
+* ropemacs: previewing changes
 
 
 * ropemacs: showing refactoring progress

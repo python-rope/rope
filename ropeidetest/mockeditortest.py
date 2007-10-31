@@ -2,7 +2,7 @@ import unittest
 
 from ropeide import editingcontexts
 from ropeide.editor import *
-from ropetest.ui.mockeditor import *
+from ropeidetest.mockeditor import *
 from ropeide import core
 
 

@@ -2,7 +2,7 @@ import unittest
 
 from ropeide.searcher import Searcher
 from ropeide.statusbar import StatusBarException
-from ropetest.ui.mockeditortest import MockEditorFactory
+from ropeidetest.mockeditortest import MockEditorFactory
 
 
 class SearchingTest(unittest.TestCase):

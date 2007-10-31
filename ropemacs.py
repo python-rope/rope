@@ -38,8 +38,6 @@ class RopeInterface(object):
             ('C-x p k', lisp.rope_close_project),
             ('C-x p u', lisp.rope_undo_refactoring),
             ('C-x p r', lisp.rope_redo_refactoring),
-            ('C-c g', lisp.rope_goto_definition),
-            ('C-c C-d', lisp.rope_show_doc),
 
             ('C-c r r', lisp.rope_rename),
             ('C-c r l', lisp.rope_extract_variable),
@@ -50,6 +48,8 @@ class RopeInterface(object):
             ('C-c r 1 v', lisp.rope_move_current_module),
             ('C-c r 1 p', lisp.rope_module_to_package),
 
+            ('C-c g', lisp.rope_goto_definition),
+            ('C-c C-d', lisp.rope_show_doc),
             ('C-c i o', lisp.rope_organize_imports)]
         for key, callback in actions:
             lisp.global_set_key(self._key_sequence(key), callback)

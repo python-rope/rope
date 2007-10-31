@@ -2,14 +2,16 @@ import unittest
 
 import ropetest
 import ropetest.refactor
-import ropetest.ui
+import ropetest.contrib
+import ropeidetest
 
 
 def suite():
     result = unittest.TestSuite()
     result.addTests(ropetest.suite())
     result.addTests(ropetest.refactor.suite())
-    result.addTests(ropetest.ui.suite())
+    result.addTests(ropetest.contrib.suite())
+    result.addTests(ropeidetest.suite())
     return result
 
 

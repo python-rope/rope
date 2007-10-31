@@ -1,7 +1,22 @@
+Plans For New Packages
+======================
+
+* Renaming `rope.ide` to `rope.contrib`
+* Renaming `rope.ui` to `ropeide`
+* Renaming ``rope.py`` to ``ropeide.py``
+* Renaming `rope.contrib.ropemacs` to `ropemacs`
+* Renaming ``~/.rope`` to ``~/.ropeide``
+* Three separate packages: rope, ropeide, ropemacs
+* Separating ropeide tests
+* Updating docs
+* Separating docs for different packages
+
+
 ropemacs Mode
 =============
 
 * Adding rope menu
+* Adding a patch for pymacs on python2.5
 * Specifying refactoring options
 * Only activating keybinding in python files
 * Updating docs

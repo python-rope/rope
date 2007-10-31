@@ -1,7 +1,7 @@
 import unittest
 import Tkinter
 
-from ropetest.ui.mockeditortest import (GraphicalEditorFactory,
+from ropeidetest.mockeditortest import (GraphicalEditorFactory,
                                         get_sample_editingcontext)
 from ropeide.indenter import PythonCodeIndenter
 from ropeide import editor
