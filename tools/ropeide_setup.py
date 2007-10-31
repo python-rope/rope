@@ -9,7 +9,7 @@ import rope
 def make_temps():
     if not os.path.exists('scripts'):
         os.mkdir('scripts')
-    shutil.copy('rope.py', 'scripts/rope')
+    shutil.copy('ropeide.py', 'scripts/ropeide')
     # copying docs
     if not os.path.exists('rope/docs'):
         os.mkdir('rope/docs')
@@ -53,10 +53,10 @@ try:
           author_email='aligrudi@users.sourceforge.net',
           url='http://rope.sf.net/',
           packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
-                    'rope.refactor.importutils', 'rope.ide', 'rope.ropeide',
+                    'rope.refactor.importutils', 'rope.ide', 'ropeide',
                     'rope.contrib'],
           package_data={'rope': ['docs/COPYING', 'docs/*.txt']},
-          scripts=['scripts/rope'],
+          scripts=['scripts/ropeide'],
           license='GNU GPL',
           classifiers=classifiers)
 finally:
