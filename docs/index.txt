@@ -8,18 +8,21 @@
 Overview
 ========
 
-*rope* is a python refactoring library.  It supports many refactorings
+*Rope* is a python refactoring library.  It supports many refactorings
 and features (see status_ section).
 
-*ropeide* is an IDE that uses rope library to provide features like
+*Ropeide* is an IDE that uses *rope* library to provide features like
 refactoring, code assist and auto-completion.  It uses `Tkinter`
 library.
 
-*ropemacs* is an Emacs mode for using rope library in emacs.  It uses
-Pymacs.
+*Ropemacs* is an Emacs mode for using rope library in emacs.  It uses
+Pymacs_.
 
 Note that rope ``0.5`` was the last version that supported Python
 ``2.4`` and currently rope requires Python ``2.5``.
+
+
+.. _pymacs: http://www.iro.umontreal.ca/~pinard/pymacs/
 
 
 Status
@@ -82,7 +85,7 @@ Features implemented so far:
   * Saving object information on disk
   * Stored object information validation
 
-* *Ropemacs* emacs plugin that uses Pymacs
+* *Ropemacs* emacs plugin that uses Pymacs_
 
 * *Ropeide* features
 
@@ -102,8 +105,13 @@ Features implemented so far:
 
 
 For more information see `overview.txt`_.  Here are a few
-`screenshots`_.
+`screenshots`_.  You might like to have a look at:
 
+* Using as a library: `library.txt`_
+* Contributing: `contributing.txt`_
+
+.. _`contributing.txt`: contributing.html
+.. _`library.txt`: library.html
 .. _overview.txt: overview.html
 .. _screenshots: screenshots/screenshots.html
 
