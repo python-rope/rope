@@ -87,8 +87,7 @@ Rope package structure::
   rope
     base
     refactor
-    ide
-    ui
+    contrib
 
 Have a look at ``__init__.py`` of packages for finding their
 description.  Also have a look at `library.txt`_ for a few

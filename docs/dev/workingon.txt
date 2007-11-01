@@ -8,10 +8,23 @@ Plans For New Packages
 - Three separate packages: rope, ropeide, ropemacs
 - Separating ropeide tests
 - Renaming ``~/.rope`` to ``~/.ropeide``
+- Documenting backward incompatible changes
 
-* Documenting backward incompatible changes
+* Separating docs for different packages; different ``README.txt``\s?
 * Updating docs
-* Separating docs for different packages
+* Adding docs for using code assist to ``library.txt``
+
+===========================  =============================
+Filename                     Belongs to
+===========================  =============================
+docs/contributing.txt        all
+docs/done.txt                all
+docs/library.txt             rope, ropeide
+docs/ropemacs.txt            ropemacs
+docs/index.txt               all
+docs/overview.txt            rope, ropeide
+docs/tutorial.txt            ropeide
+===========================  =============================
 
 
 ropemacs Mode

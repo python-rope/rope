@@ -556,3 +556,39 @@ And you can create a project like this::
   my_fscommands = MyFileSystemCommands()
   project = rope.base.project.Project('~/myproject',
                                       fscommands=my_fscommands)
+
+
+`rope.contrib.codeassist`
+=========================
+
+The `rope.contrib` package contains modules that use rope base parts
+and provide useful features.  `rope.contrib.codeassist` module can
+be used in IDEs::
+
+  from rope.ide import codeassist
+
+
+  # Get the proposals; you might want to pass a Resource
+  proposals = codeassist.code_assist(project, source_code, offset)
+  # Sorting proposals; for changing the order see pydoc
+  proposals = codeassist.sorted_proposals(proposals)
+
+  # Where to insert the completions
+  starting_offset = codeassist.starting_offset(source_code, offset)
+
+  # Applying a proposal
+  proposal = proposals[x]
+  if isinstance(proposal, codeassist.CompletionProposal):
+      replacement = proposal.name
+  else:
+      # isinstance(proposal, codeassist.TemplateProposal) == True
+      # mapping is a proposal.template.variables() -> str dict
+      replacement = proposal.template.substitute(mapping)
+
+  new_source_code = (source_code[:starting_offset] +
+                     replacement + source_code[offset:])
+
+
+See pydocs and source code for more information (other functions in
+that module might be interesting, too; like `get_doc`,
+`get_definition_location` and `find_occurrences`).

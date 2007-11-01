@@ -221,30 +221,6 @@ altogether in the hope that maybe in future a better approach is
 possible.
 
 
-
-Separating Ropeide
-==================
-
-* New package structure::
-
-    rope/
-      base
-      refactor
-    ropeide/
-      ide
-      ui
-
-* ``rope.py`` -> ``ropeide.py``
-* ``rope`` -> ``ropeide``
-* ``~/.rope`` -> ``~/.ropeide.py``
-
-Problems:
-
-* Changing rope requires changing ropeide
-* Ropeide needs to work with multiple versions of rope?
-* Ropeide uses lots of internal things from rope
-
-
 Better Concluded Data
 =====================
 
