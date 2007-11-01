@@ -1,20 +1,7 @@
 Plans For New Packages
 ======================
 
-* Separating docs for different packages; different ``README.txt``\s?
 * Updating docs
-
-===========================  =============================
-Filename                     Belongs to
-===========================  =============================
-docs/contributing.txt        all
-docs/done.txt                all
-docs/library.txt             rope, ropeide
-docs/ropemacs.txt            ropemacs
-docs/index.txt               all
-docs/overview.txt            rope, ropeide
-docs/tutorial.txt            ropeide
-===========================  =============================
 
 
 ropemacs Mode

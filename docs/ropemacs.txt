@@ -2,7 +2,10 @@
  ropemacs, rope in emacs
 =========================
 
-Using rope in emacs.
+Using rope in emacs.  You should install `rope`_ library before using
+ropemacs.
+
+.. _`rope`: http://rope.sf.net/
 
 
 Setting Up
@@ -19,6 +22,16 @@ Keybinding
 ==========
 
 Uses the same keybinding as in rope.
+
+
+Getting Started
+===============
+
+* List of features: `docs/index.txt`_
+* Contributing: `docs/contributing.txt`_
+
+.. _`docs/index.txt`: docs/index.html
+.. _`docs/contributing.txt`: docs/contributing.html
 
 
 License

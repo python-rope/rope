@@ -1,6 +1,6 @@
 include README.txt COPYING setup.py MANIFEST.in
-include docs/*.html
-include docs/*.txt
+include docs/contributing.txt docs/done.txt docs/library.txt
+include docs/index.txt docs/overview.txt
 
 recursive-include rope *.py
 recursive-include ropetest *.py
