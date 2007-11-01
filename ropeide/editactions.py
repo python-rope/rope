@@ -105,9 +105,9 @@ def swap_mark_and_insert(context):
     context.editor.swap_mark_and_insert()
 
 
-def edit_dot_rope(context):
+def edit_dot_ropeide(context):
     resource = rope.base.project.get_no_project().get_resource(
-        os.path.expanduser('~%s.rope' % os.path.sep))
+        os.path.expanduser('~%s.ropeide' % os.path.sep))
     editor_manager = context.get_core().get_editor_manager()
     editor_manager.get_resource_editor(resource, mode='python')
 
@@ -293,7 +293,7 @@ actions.append(SimpleAction('search_backward', backward_search, 'C-r',
 
 actions.append(SimpleAction('execute_command', execute_command, 'M-x',
                             MenuAddress(['Edit', 'Execute Command'], 'x', 4), ['all', 'none']))
-actions.append(SimpleAction('edit_dot_rope', edit_dot_rope, 'C-x c',
+actions.append(SimpleAction('edit_dot_ropeide', edit_dot_ropeide, 'C-x c',
                             MenuAddress(['Edit', 'Edit ~/.rope'], '.', 4), ['all', 'none']))
 
 

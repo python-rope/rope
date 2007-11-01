@@ -1,9 +1,9 @@
-# The default ~/.rope file for *rope*.
+# The default ~/.ropeide file for *ropeide*.
 #
 # You can edit this file to change some of rope's preferences.  If
 # you like you can edit this file using rope itself.
-# (``edit_dot_rope`` in execute command or ``Edit ~/.rope`` in
-# ``Edit`` menu.)
+# (``edit_dot_ropeide`` in execute command or ``Edit ~/.ropeide``
+# in ``Edit`` menu.)
 #
 # Note: Since this file is not inside a project you cannot perform
 #   refactorings on it.
@@ -154,7 +154,7 @@ def _change_to_nonemacs_keybinding(core):
     core.rebind_action('repeat_last_action', None)
     core.rebind_action('search_forward', 'C-f')
     core.rebind_action('search_backward', 'C-F')
-    core.rebind_action('edit_dot_rope', None)
+    core.rebind_action('edit_dot_ropeide', None)
     core.rebind_action('execute_command', None)
 
     # source actions

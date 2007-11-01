@@ -22,9 +22,6 @@ Note that rope ``0.5`` was the last version that supported Python
 ``2.4`` and currently rope requires Python ``2.5``.
 
 
-.. _pymacs: http://www.iro.umontreal.ca/~pinard/pymacs/
-
-
 Status
 ======
 
@@ -110,11 +107,6 @@ For more information see `overview.txt`_.  Here are a few
 * Using as a library: `library.txt`_
 * Contributing: `contributing.txt`_
 
-.. _`contributing.txt`: contributing.html
-.. _`library.txt`: library.html
-.. _overview.txt: overview.html
-.. _screenshots: screenshots/screenshots.html
-
 
 Download
 ========
@@ -147,3 +139,8 @@ rope is under the terms of GNU GPL (GNU General Public License).
 .. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
+.. _`contributing.txt`: contributing.html
+.. _`library.txt`: library.html
+.. _overview.txt: overview.html
+.. _screenshots: screenshots/screenshots.html
+.. _pymacs: http://www.iro.umontreal.ca/~pinard/pymacs/
