@@ -16,7 +16,7 @@ classifiers=[
 
 def get_long_description():
     lines = open('README.txt').read().splitlines(False)
-    end = lines.index('License')
+    end = lines.index('Getting Started')
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
 setup(name='ropemacs',

@@ -12,9 +12,10 @@ from ropeide.menubar import MenuAddress
 
 def show_about_dialog(context):
     toplevel = Tkinter.Toplevel()
-    toplevel.title('About Rope')
-    text = '%s and IDE ...\nversion %s\n\n%s\n' % \
-           (rope.INFO, rope.VERSION, rope.COPYRIGHT)
+    toplevel.title('About Ropeide')
+    text = '%s - version %s\n' % (rope.INFO, rope.VERSION)
+    text += '%s - version %s\n\n%s\n' % \
+         (ropeide.INFO, ropeide.VERSION, ropeide.COPYRIGHT)
     label = Tkinter.Label(toplevel, text=text, height=16, width=70,
                           justify=Tkinter.LEFT, relief=Tkinter.GROOVE)
     def ok():

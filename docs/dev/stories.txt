@@ -60,7 +60,7 @@ IDE And UI Stories
 Stories
 =======
 
-> Public Release 0.7
+> Public Release 0.8
 
 
 * Handling the return type of ``yield`` keyword
@@ -151,6 +151,12 @@ Stories
 * Generate ~/.rope graphically
 
 
+* Performing refactorings across multiple projects
+
+
+* ropemacs: only activating keybinding in python files
+
+
 * ropemacs: auto-complete
 
 
@@ -160,4 +166,10 @@ Stories
 * ropemacs: showing refactoring progress
 
 
-> Public Release 0.6.3 : November 2, 2007
+* ropemacs: adding a menu
+
+
+* ropemacs: specifying refactoring options
+
+
+> Public Release 0.7 : November 2, 2007

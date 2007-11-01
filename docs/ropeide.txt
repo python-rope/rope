@@ -6,19 +6,19 @@
 Overview
 ========
 
-`Ropeide`_ is a python refactoring IDE.  It uses rope library to
+`Ropeide`_ is a python refactoring IDE.  It uses rope_ library to
 provide features like refactoring, code assist, and auto-completion.
 It is written in python.  The IDE uses `Tkinter` library.
 
 You should install `rope`_ library before using this IDE.
 
+.. _`ropeide`: http://rope.sf.net/
 .. _`rope`: http://rope.sf.net/
 
 
 New Features
 ============
 
-* *Ropemacs* package for using rope in emacs
 * Added `Core.add_extension()` for registering extension modules for
   *ropeide*
 * A new open project dialog
@@ -28,9 +28,9 @@ Backward Incompatible Changes
 -----------------------------
 
 * *Ropeide* and *ropemacs* packages depend on *rope* package; *rope*
-  should be installed, first.
+  should be installed, first
 * Renamed ``rope.py`` and ``rope`` scripts to ``ropeide.py`` and
-  ``ropeide``.
+  ``ropeide``
 * *Ropeide* reads ``~/.ropeide`` instead of ``~/.rope``
 * `rope.ide.codeassist` was moved to `rope.contrib.codeassist`
 

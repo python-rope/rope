@@ -244,10 +244,10 @@ class RopeInterface(object):
         resource, offset = self._get_location()
         docs = codeassist.get_doc(
             self.project, lisp.buffer_string(), offset, resource)
+        pydoc_buffer = lisp.get_buffer_create('*rope-pydoc*')
+        lisp.set_buffer(pydoc_buffer)
+        lisp.erase_buffer()
         if docs:
-            pydoc_buffer = lisp.get_buffer_create('*rope-pydoc*')
-            lisp.set_buffer(pydoc_buffer)
-            lisp.erase_buffer()
             lisp.insert(docs)
             lisp.display_buffer(pydoc_buffer)
 

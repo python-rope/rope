@@ -8,6 +8,9 @@ ropemacs.
 .. _`rope`: http://rope.sf.net/
 
 
+New Features
+============
+
 Setting Up
 ==========
 
@@ -26,7 +29,7 @@ After installing pymacs, add these lines to your ``~/.emacs`` file::
 Keybinding
 ==========
 
-Uses almost the same keybinding as in rope.
+Uses almost the same keybinding as rope.
 
 =============   ============================
 Key             Action

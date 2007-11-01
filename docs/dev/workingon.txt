@@ -1,13 +1,4 @@
 Plans For New Packages
 ======================
 
-* Updating docs
-
-
-ropemacs Mode
-=============
-
-* Adding rope menu
-* Adding a patch for pymacs on python2.5
-* Specifying refactoring options
-* Only activating keybinding in python files
+* Separating rope and ropeide version numbers?

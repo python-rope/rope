@@ -14,10 +14,7 @@ Overview
 New Features
 ============
 
-* *Ropemacs* package for using rope in emacs
-* Added `Core.add_extension()` for registering extension modules for
-  *ropeide*
-* A new open project dialog
+* Added *ropemacs* package for using rope in emacs
 
 
 Backward Incompatible Changes
