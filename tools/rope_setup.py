@@ -29,6 +29,6 @@ setup(name='rope',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',
       packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
-                'rope.refactor.importutils'],
+                'rope.refactor.importutils', 'rope.contrib'],
       license='GNU GPL',
       classifiers=classifiers)

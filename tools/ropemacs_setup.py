@@ -16,13 +16,14 @@ classifiers=[
 
 def get_long_description():
     lines = open('README.txt').read().splitlines(False)
-    end = lines.index('Getting Started')
+    end = lines.index('License')
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
 setup(name='ropemacs',
       version='0.1',
       description='An emacs mode for rope refactoring library',
       long_description=get_long_description(),
+      py_modules=['ropemacs'],
       author='Ali Gholami Rudi',
       author_email='aligrudi@users.sourceforge.net',
       url='http://rope.sf.net/',

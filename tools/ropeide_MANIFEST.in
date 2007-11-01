@@ -1,4 +1,4 @@
-include README.txt COPYING rope.py runtests.py setup.py MANIFEST.in
+include README.txt COPYING rope.py setup.py MANIFEST.in
 include docs/*.html
 include docs/*.txt
 

@@ -1,18 +1,16 @@
-================================================
- rope, a python refactoring IDE and library ...
-================================================
+====================================
+ rope, a python refactoring IDE ...
+====================================
 
 
 Overview
 ========
 
-`Rope`_ is a python refactoring library and IDE.  The IDE uses the
-library to provide features like refactoring, code assist, and
-auto-completion.  It is written in python.  The IDE uses `Tkinter`
-library.
+`Ropeide`_ is a python refactoring IDE.  It uses rope library to
+provide features like refactoring, code assist, and auto-completion.
+It is written in python.  The IDE uses `Tkinter` library.
 
-Ropeide and library are released in two separate packages.  You should
-install rope before using the library.
+You should install `rope`_ library before using this IDE.
 
 .. _`rope`: http://rope.sf.net/
 
@@ -43,7 +41,6 @@ Getting Started
 * Overview and keybinding: `docs/overview.txt`_
 * List of features: `docs/index.txt`_
 * Tutorial: `docs/tutorial.txt`_
-* Using as a library: `docs/library.txt`_
 * Contributing: `docs/contributing.txt`_
 
 To change rope IDE preferences like font edit your ``~/.ropeide``
@@ -55,29 +52,6 @@ is created the first time you open a project).
 If you don't like rope's default emacs-like keybinding, edit the
 default ``~/.ropeide`` file and change `i_like_emacs` variable to
 `False`.
-
-
-Project Road Map
-================
-
-The main motive for starting this project was the lack of good
-refactoring tools for Python programming language.  Refactoring
-programs like "bicycle repair man" aren't reliable due to type
-inference problems and they support a limited number of refactorings.
-*Rope* tries to improve these limitations.
-
-The main goal of *rope* is to concentrate on the type inference and
-refactoring of python programs and not a state of art IDE (at least
-not in the first phase).  The type inference and refactoring parts
-will not be dependent on *rope* IDE and if successful, will be
-released as standalone programs and libraries so that other projects
-may use them.
-
-
-Get Involved!
-=============
-
-See `docs/contributing.txt`_.
 
 
 Bug Reports
@@ -98,4 +72,3 @@ Have a look at ``COPYING`` file for more information.
 .. _`docs/tutorial.txt`: docs/tutorial.html
 .. _`docs/index.txt`: docs/index.html
 .. _`docs/contributing.txt`: docs/contributing.html
-.. _`docs/library.txt`: docs/library.html

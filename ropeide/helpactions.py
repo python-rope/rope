@@ -34,7 +34,7 @@ def show_about_dialog(context):
     toplevel.bind('<Return>', lambda event: ok())
 
 def show_doc(context, name):
-    rope_package = (os.path.dirname(sys.modules['rope'].__file__))
+    rope_package = (os.path.dirname(sys.modules['ropeide'].__file__))
     # Checking whether rope is installed or not
     no_project = project.get_no_project()
     if 'docs' in os.listdir(rope_package):
