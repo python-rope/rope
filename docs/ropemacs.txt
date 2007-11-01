@@ -11,6 +11,11 @@ ropemacs.
 Setting Up
 ==========
 
+You can get Pymacs from http://www.iro.umontreal.ca/~pinard/pymacs/.
+But version 0.22 does not work with Python 2.5 because of the lack of
+file encoding declarations.  A simple patch is included:
+``docs/pymacs_python25.patch``.
+
 After installing pymacs, add these lines to your ``~/.emacs`` file::
 
   (load-library "pymacs")

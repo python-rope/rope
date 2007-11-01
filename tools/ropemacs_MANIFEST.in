@@ -1,3 +1,4 @@
 include README.txt COPYING setup.py MANIFEST.in
 include docs/contributing.txt docs/done.txt docs/index.txt
 include ropemacs.py
+include docs/pymacs_python25.patch

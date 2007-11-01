@@ -2,19 +2,24 @@
  rope
 ======
 
-``a python refactoring library and IDE ...``
+``a python refactoring library ...``
 
 
 Overview
 ========
 
-*rope* is a python refactoring IDE and library.  The IDE uses the
-library to provide features like refactoring, code assist, and
-auto-completion.
+*rope* is a python refactoring library.  It supports many refactorings
+and features (see status_ section).
 
-It is written in python.  The IDE uses `Tkinter` library.  Note that
-rope ``0.5`` was the last version that supported Python ``2.4`` and
-currently rope requires Python ``2.5``.
+*ropeide* is an IDE that uses rope library to provide features like
+refactoring, code assist and auto-completion.  It uses `Tkinter`
+library.
+
+*ropemacs* is an Emacs mode for using rope library in emacs.  It uses
+Pymacs.
+
+Note that rope ``0.5`` was the last version that supported Python
+``2.4`` and currently rope requires Python ``2.5``.
 
 
 Status
@@ -47,7 +52,8 @@ Features implemented so far:
   * Previewing refactorings
   * Stopping refactorings
   * Undo/redo refactorings
-  * ropemacs.txt_ emacs plugin
+  * Mercurial_ support in refactorings
+  * SVN support in refactorings using pysvn_ library
 
 * Code-assists
 
@@ -67,13 +73,22 @@ Features implemented so far:
   * Generating python elements
   * Sorting scopes
 
-* Editing and IDE tools
+* Object Inference
+
+  * A static object inference approach
+  * A dynamic object inference approach
+  * Automatic SOI analysis
+  * Handling built-in container types
+  * Saving object information on disk
+  * Stored object information validation
+
+* *Ropemacs* emacs plugin that uses Pymacs
+
+* *Ropeide* features
 
   * Python and reST highlighting
   * Multiple editers
   * Project file history
-  * SVN support in refactorings using pysvn_ library
-  * Mercurial_ support in refactorings
   * An emacs like keybinding
   * Configurable keybinding
   * Basic UI plug-in support
@@ -84,15 +99,6 @@ Features implemented so far:
   * Basic codetags/errors/warnings listing
   * Defining templates
   * Memorizing strings/locations
-
-* Object Inference
-
-  * A static object inference approach
-  * A dynamic object inference approach
-  * Automatic SOI analysis
-  * Handling built-in container types
-  * Saving object information on disk
-  * Stored object information validation
 
 
 For more information see `overview.txt`_.  Here are a few
@@ -120,17 +126,16 @@ Rope uses Mercurial_ CMS:
 Feedback
 ========
 
-Send your bug reports, feature requests and patches in rope's
-`sourceforge.net project page`_.
+Send your bug reports, feature requests and patches to `rope-dev (at)
+googlegroups.com`_.
 
 
 License
 =======
 
-rope is under the terms of GNU GPL(GNU General Public License).
+rope is under the terms of GNU GPL (GNU General Public License).
 
-.. _ropemacs.txt: ropemacs.html
 .. _project download page: http://sf.net/projects/rope/files
-.. _sourceforge.net project page: http://sf.net/projects/rope
+.. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
