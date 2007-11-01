@@ -21,7 +21,29 @@ After installing pymacs, add these lines to your ``~/.emacs`` file::
 Keybinding
 ==========
 
-Uses the same keybinding as in rope.
+Uses almost the same keybinding as in rope.
+
+=============   ============================
+Key             Action
+=============   ============================
+C-x p o         rope-open-project
+C-x p k         rope-close-project
+C-x p u         rope-undo-refactoring
+C-x p r         rope-redo-refactoring
+
+C-c r r         rope-rename
+C-c r l         rope-extract-variable
+C-c r m         rope-extract-method
+C-c r i         rope-inline
+C-c r v         rope-move
+C-c r 1 r       rope-rename-current-module
+C-c r 1 v       rope-move-current-module
+C-c r 1 p       rope-module-to-package
+
+C-c g           rope-goto-definition
+C-c C-d         rope-show-doc
+C-c i o         rope-organize-imports
+=============   ============================
 
 
 Getting Started

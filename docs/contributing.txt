@@ -17,33 +17,22 @@ in your head, you are welcome to get involved.
 How to Help Rope?
 =================
 
-* Use rope.
-* Report bugs and request features in `rope project page`_.
-* Submit patches for bugs or new features.
-* Discuss your ideas in `rope-developers`_ mailing list.
+Rope mailing list:  `rope-dev (at) googlegroups.com`_
 
-.. _rope project page: http://sf.net/projects/rope
-.. _rope-developers: http://lists.sourceforge.net/mailman/listinfo/rope-developers
+* Use rope
+* Send bugs reports and request features
+* Submit patches for bugs or new features
+* Discuss your ideas
+
+.. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
 
 
 Wish List
 =========
 
 If you're interested you are welcome to discuss your ideas in
-`rope-developers`_ mailing list or send your patches.  Here is only a
-list of suggestions.
-
-A New GUI
----------
-
-Right now rope uses Tkinter for its GUI.  But Tkinter, as many have
-complained about, looks very bad and is not suitable for writing an
-IDE.  The UI parts of rope, ie. `rope.ui` package, is a layer on top
-of other core parts of rope.  When I started rope I hoped that someday
-the IDE and UI parts of rope (`rope.ui` and `rope.ide` packages) would
-be developed by other developers and I still do hope so.  So if you're
-interested in working on GUI/IDE part of rope using something like
-`pygtk` or `wxPython` you're welcome.
+`rope-dev (at) googlegroups.com`_ mailing list or send your patches.
+Here is only a list of suggestions.
 
 Getting Ready For Python 3.0
 ----------------------------
@@ -56,6 +45,18 @@ Enhance ropemacs
 
 ropemacs can be enhanced very much and many of rope's features can be
 added to it.  Any help is welcome.
+
+A New GUI
+---------
+
+Right now rope uses Tkinter for its GUI.  But Tkinter, as many have
+complained about, looks very bad and is not suitable for writing an
+IDE.  The UI parts of rope, ie. `rope.ui` package, is a layer on top
+of other core parts of rope.  When I started rope I hoped that someday
+the IDE and UI parts of rope (`rope.ui` and `rope.ide` packages) would
+be developed by other developers and I still do hope so.  So if you're
+interested in working on GUI/IDE part of rope using something like
+`pygtk` or `wxPython` you're welcome.
 
 Formatting
 ----------

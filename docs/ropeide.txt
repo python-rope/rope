@@ -57,8 +57,10 @@ default ``~/.ropeide`` file and change `i_like_emacs` variable to
 Bug Reports
 ===========
 
-Send your bug reports and feature requests in *rope*'s sourceforge.net
-project page at http://sf.net/projects/rope.
+Send your bug reports and feature requests to `rope-dev (at)
+googlegroups.com`_.
+
+.. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
 
 
 License

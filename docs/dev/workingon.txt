@@ -11,4 +11,3 @@ ropemacs Mode
 * Adding a patch for pymacs on python2.5
 * Specifying refactoring options
 * Only activating keybinding in python files
-* Updating docs
