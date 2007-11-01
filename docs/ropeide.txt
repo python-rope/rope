@@ -24,8 +24,7 @@ New Features
 * A new open project dialog
 
 
-Backward Incompatible Changes
------------------------------
+Backward incompatible changes:
 
 * *Ropeide* and *ropemacs* packages depend on *rope* package; *rope*
   should be installed, first

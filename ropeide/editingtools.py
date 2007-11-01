@@ -1,4 +1,3 @@
-import rope.contrib.codeassist
 import rope.refactor.sourceutils
 import ropeide.highlighter
 import ropeide.indenter
@@ -26,8 +25,6 @@ class PythonEditingTools(EditingTools):
     def __init__(self, project, prefs):
         self.project = project
         self.prefs = prefs
-        self._code_assist = None
-        self._outline = None
 
     def create_indenter(self, editor):
         indents = rope.refactor.sourceutils.get_indent(self.project.get_pycore())

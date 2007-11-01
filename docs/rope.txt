@@ -17,8 +17,7 @@ New Features
 * Added *ropemacs* package for using rope in emacs
 
 
-Backward Incompatible Changes
------------------------------
+Backward incompatible changes:
 
 * *Ropeide* and *ropemacs* packages depend on *rope* package; *rope*
   should be installed, first.

@@ -1,11 +1,10 @@
 import os
 
 import ScrolledText
-import tkFont
 import Tkinter
-from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT, Toplevel, Text
+import tkFont
+from Tkinter import END, TclError, SEL_FIRST, SEL, SEL_LAST, INSERT
 
-import rope.contrib.codeassist
 import ropeide.editingtools
 import ropeide.searcher
 import ropeide.tkhelpers
