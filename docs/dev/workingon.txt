@@ -1,4 +1,7 @@
-Plans For New Packages
-======================
+Working On
+==========
 
-* Separating rope and ropeide version numbers?
+* Caching `PyCore.get_source_folders()`
+
+  - Does not take time when the root folder contains packages
+  - It doesn't get notified when a folder gets created

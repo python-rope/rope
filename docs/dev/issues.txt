@@ -33,10 +33,10 @@ This is only a rough plan.  For example we might have 1-week release
 candidates before the ``x.y``.
 
 
-Version 0.7
+Version 0.8
 ===========
 
-From August 6, 2007 till October 28, 2007
+From November 2, 2007
 
 
 Release Goals
@@ -59,6 +59,50 @@ To Be Discussed
 
 * `Memory management`_
 * Should `rope.base` be thread safe? which parts?
+
+
+Cross-Project Refactorings
+==========================
+
+We might want to perform a refactoring on more than one project.
+
+Approach #1
+-----------
+
+Adding `ProjectBag`::
+
+  class ProjectBag(object):
+      pass
+
+  class PyCoreBag(object):
+      pass
+
+  class HistoryBag(object):
+      pass
+
+
+Issues:
+
+* Implementing `ProjectBag` and `PyCoreBag`
+* Changing checks like ``resource.project == resource.no_project()``
+  with ``resource.project != project``
+* When saving objects SOI we should consider resource in other
+  projects like `NoProject` resources
+* Using history on different projects
+
+Approach #2
+-----------
+
+Passing all projects to refactorings:
+
+Approach #3
+-----------
+
+Actually we can do that even now.  What we should do is to add the
+dependency projects to the class path and try to apply the refactoring
+for each dependent project.  The dependencies don't change but the
+dependants do.  After that we can apply the refactoring on the
+dependencies.
 
 
 Distributing Refactorings

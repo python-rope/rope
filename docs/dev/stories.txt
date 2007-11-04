@@ -151,13 +151,10 @@ Stories
 * Generate ~/.rope graphically
 
 
-* Performing refactorings across multiple projects
+> Public Release 0.7.1
 
 
 * ropemacs: only activating keybinding in python files
-
-
-* ropemacs: auto-complete
 
 
 * ropemacs: previewing changes
@@ -166,10 +163,16 @@ Stories
 * ropemacs: showing refactoring progress
 
 
-* ropemacs: adding a menu
-
-
 * ropemacs: specifying refactoring options
 
 
-> Public Release 0.7 : November 2, 2007
+* ropemacs: adding a menu
+
+
+* Performing refactorings across multiple projects
+
+
+* ropemacs: find file dialog
+
+
+* ropemacs: auto-complete

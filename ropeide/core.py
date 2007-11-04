@@ -437,9 +437,9 @@ def get_core():
 
 
 def write_dot_rope(dot_rope):
-    import ropeide.dot_rope
+    import ropeide.dot_ropeide
     import inspect
-    text = inspect.getsource(ropeide.dot_rope)
+    text = inspect.getsource(ropeide.dot_ropeide)
     output = open(dot_rope, 'w')
     output.write(text)
     output.close()
