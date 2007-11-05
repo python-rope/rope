@@ -19,20 +19,6 @@ You should install `rope`_ library before using this IDE.
 New Features
 ============
 
-* Added `Core.add_extension()` for registering extension modules for
-  *ropeide*
-* A new open project dialog
-
-
-Backward incompatible changes:
-
-* *Ropeide* and *ropemacs* packages depend on *rope* package; *rope*
-  should be installed, first
-* Renamed ``rope.py`` and ``rope`` scripts to ``ropeide.py`` and
-  ``ropeide``
-* *Ropeide* reads ``~/.ropeide`` instead of ``~/.rope``
-* `rope.ide.codeassist` was moved to `rope.contrib.codeassist`
-
 
 Getting Started
 ===============

@@ -168,6 +168,11 @@ class PyCore(object):
                 return module
         return None
 
+    # INFO: It was decided not to cache source folders, since:
+    #  - Does not take much time when the root folder contains
+    #    packages, that is most of the time
+    #  - We need a separate resource observer; `self.observer`
+    #    does not get notified about module and folder creations
     def get_source_folders(self):
         """Returns project source folders"""
         if self.project.root is None:

@@ -21,7 +21,7 @@ def starting_rope(core):
     #core.set('font', ('Courier', 16))
     #core.set('font', ('Bitstream Vera Sans Mono', 16))
 
-    # Changing font for other parts
+    # Changing other fonts
     core.set('menu_font', ('Courier', 12, 'bold'))
     core.set('statusbar_font', ('Courier', 12))
     core.set('editorlist_font', ('Courier', 12))
