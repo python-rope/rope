@@ -414,9 +414,11 @@ class GraphicalEditor(object):
             pass
 
     def goto_start(self):
+        self.set_mark()
         self.set_insert(self.get_start())
 
     def goto_end(self):
+        self.set_mark()
         self.set_insert(self.get_end())
 
     def generate_event(self, event):
@@ -556,6 +558,7 @@ class GraphicalEditor(object):
             self.searcher.configure_search(forward)
             self.searcher.next_match()
         else:
+            self.set_mark()
             self.searcher.start_searching()
             self.searcher.configure_search(forward)
 
