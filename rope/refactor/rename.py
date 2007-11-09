@@ -40,7 +40,7 @@ class Rename(object):
         return self.old_name
 
     def get_changes(self, new_name, in_file=False, in_hierarchy=False,
-                    unsure=False, docs=False,
+                    unsure=False, docs=False, confirm=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed for this refactoring
 
@@ -56,6 +56,9 @@ class Rename(object):
               unless you know what you're doing.  If `True`, all name
               occurrences except those that we are sure are not what we
               want are renamed.
+            - `confirm`: when renaming unsure occurrences this function
+              is called with an instance of `occorrences.Occurrence`.
+              If it returns `True` the occurrence will be renamed
 
         """
         old_pynames = self._get_old_pynames(in_file, in_hierarchy, task_handle)
@@ -66,7 +69,8 @@ class Rename(object):
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
         finder = occurrences.FilteredFinder(
-            self.pycore, self.old_name, old_pynames, unsure=unsure, docs=docs)
+            self.pycore, self.old_name, old_pynames,
+            unsure=unsure, docs=docs, confirm=confirm)
         job_set = task_handle.create_jobset('Collecting Changes', len(files))
         for file_ in files:
             job_set.started_job('Working on <%s>' % file_.path)
