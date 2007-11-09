@@ -23,6 +23,9 @@ from ropeide.menubar import MenuAddress
 from ropeide.uihelpers import (TreeViewHandle, TreeView,
                                DescriptionList, EnhancedListHandle,
                                VolatileList, EnhancedList)
+import tkMessageBox
+
+
 class PreviewAndCommitChanges(object):
 
     def __init__(self, project, changes):
@@ -127,6 +130,7 @@ class RenameDialog(RefactoringDialog):
     def __init__(self, context, title, is_local=False, current_module=False):
         resource = context.resource
         editor = context.editor
+        self.editors = context.get_core().editor_manager
         super(RenameDialog, self).__init__(context, title)
         self.is_local = is_local
         offset = context.offset
@@ -138,9 +142,19 @@ class RenameDialog(RefactoringDialog):
     def _calculate_changes(self, handle=None):
         new_name = self.new_name_entry.get()
         return self.renamer.get_changes(
-            new_name, in_file=self.is_local,
+            new_name, in_file=self.is_local, docs=self.docs.get(), 
             in_hierarchy=self.in_hierarchy.get(), unsure=self.unsure.get(),
-            docs=self.docs.get(), task_handle=handle)
+            confirm=self._confirm_occurrence, task_handle=handle)
+
+    def _confirm_occurrence(self, occurrence):
+        resource = occurrence.resource
+        start, end = occurrence.get_primary_range()
+        editor = self.editors.get_resource_editor(resource).editor
+        start_index = editor.get_index(start)
+        end_index = editor.get_index(end)
+        editor.select_range(start_index, end_index)
+
+        return tkMessageBox.askyesno('Matches?', 'Is this a match?')
 
     def _get_dialog_frame(self):
         frame = Tkinter.Frame(self.toplevel)
