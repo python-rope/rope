@@ -202,6 +202,7 @@ def do_goto_definition(context):
     else:
         new_editor = editor
     if lineno is not None:
+        new_editor.set_mark()
         new_editor.goto_line(lineno)
 
 def do_show_doc(context):
