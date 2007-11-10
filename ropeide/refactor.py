@@ -143,8 +143,8 @@ class RenameDialog(RefactoringDialog):
         new_name = self.new_name_entry.get()
         return self.renamer.get_changes(
             new_name, in_file=self.is_local, docs=self.docs.get(), 
-            in_hierarchy=self.in_hierarchy.get(), unsure=True,
-            confirm=self._confirm_occurrence, task_handle=handle)
+            in_hierarchy=self.in_hierarchy.get(),
+            unsure=self._confirm_occurrence, task_handle=handle)
 
     def _confirm_occurrence(self, occurrence):
         unsure = self.unsure_val.get()

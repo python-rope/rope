@@ -7,14 +7,13 @@ class FilteredFinder(object):
     """For finding occurrences of a name"""
 
     def __init__(self, pycore, name, pynames, only_calls=False,
-                 imports=True, unsure=False, docs=False, confirm=None):
+                 imports=True, unsure=None, docs=False):
         self.pycore = pycore
         self.pynames = pynames
         self.name = name
         self.only_calls = only_calls
         self.imports = imports
         self.unsure = unsure
-        self.confirm = confirm
         self.occurrence_finder = _TextualFinder(name, docs=docs)
 
     def find_occurrences(self, resource=None, pymodule=None):
@@ -35,11 +34,10 @@ class FilteredFinder(object):
         for pyname in self.pynames:
             if same_pyname(pyname, new_pyname):
                 return True
-            elif self.unsure and self._unsure_match(pyname, new_pyname):
-                occurrence._unsure = True
-                if self.confirm is not None:
-                    return self.confirm(occurrence)
-                return True
+            elif self.unsure is not None and \
+                 self._unsure_match(pyname, new_pyname):
+                occurrence._unsure = self.unsure(occurrence)
+                return occurrence._unsure
         return False
 
     def _unsure_match(self, expected, pyname):

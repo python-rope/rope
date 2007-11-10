@@ -76,8 +76,10 @@ def find_occurrences(project, resource, offset, unsure=False,
     name = rope.base.codeanalyze.get_name_at(resource, offset)
     pyname = rope.base.codeanalyze.get_pyname_at(project.get_pycore(),
                                                  resource, offset)
+    def is_match(occurrence):
+        return unsure
     finder = occurrences.FilteredFinder(
-        project.get_pycore(), name, [pyname], unsure=unsure)
+        project.get_pycore(), name, [pyname], unsure=is_match)
     files = project.get_pycore().get_python_files()
     job_set = task_handle.create_jobset('Finding Occurrences',
                                         count=len(files))

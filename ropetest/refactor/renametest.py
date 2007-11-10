@@ -462,11 +462,15 @@ class RenameRefactoringTest(unittest.TestCase):
                'def f(arg):\n    arg.a_func()\n'
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write(code)
-        self._rename(mod1, code.index('a_func'), 'new_func', unsure=True)
+        self._rename(mod1, code.index('a_func'),
+                     'new_func', unsure=self._true)
         self.assertEquals(
             'class C(object):\n    def new_func(self):\n        pass\n' \
             'def f(arg):\n    arg.new_func()\n',
             mod1.read())
+
+    def _true(self, *args):
+        return True
 
     def test_renaming_when_unsure_with_confirmation(self):
         def confirm(occurrence):
@@ -475,8 +479,7 @@ class RenameRefactoringTest(unittest.TestCase):
                'def f(arg):\n    arg.a_func()\n'
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write(code)
-        self._rename(mod1, code.index('a_func'),
-                     'new_func', unsure=True, confirm=confirm)
+        self._rename(mod1, code.index('a_func'), 'new_func', unsure=confirm)
         self.assertEquals(
             'class C(object):\n    def new_func(self):\n        pass\n' \
             'def f(arg):\n    arg.a_func()\n', mod1.read())
@@ -487,7 +490,7 @@ class RenameRefactoringTest(unittest.TestCase):
                'c1 = C1()\nc1.a_func()\nc2 = C2()\nc2.a_func()\n'
         mod1 = self.pycore.create_module(self.project.root, 'mod1')
         mod1.write(code)
-        self._rename(mod1, code.index('a_func'), 'new_func', unsure=True)
+        self._rename(mod1, code.index('a_func'), 'new_func', unsure=self._true)
         self.assertEquals(
             'class C1(object):\n    def new_func(self):\n        pass\n' \
             'class C2(object):\n    def a_func(self):\n        pass\n' \
