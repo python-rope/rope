@@ -1,8 +1,6 @@
 Working On
 ==========
 
-- Setting mark before goto definition
-* Caching `PyCore.get_source_folders()`
-
-  - Does not take time when the root folder contains packages
-  - It doesn't get notified when a folder gets created
+* Adding a radio button for deciding what to do about unsure
+  occurrences; ignore, ask, rename
+* Removing `unsure` parameter of `Rename.get_changes()`

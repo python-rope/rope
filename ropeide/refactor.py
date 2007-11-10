@@ -143,17 +143,21 @@ class RenameDialog(RefactoringDialog):
         new_name = self.new_name_entry.get()
         return self.renamer.get_changes(
             new_name, in_file=self.is_local, docs=self.docs.get(), 
-            in_hierarchy=self.in_hierarchy.get(), unsure=self.unsure.get(),
+            in_hierarchy=self.in_hierarchy.get(), unsure=True,
             confirm=self._confirm_occurrence, task_handle=handle)
 
     def _confirm_occurrence(self, occurrence):
+        unsure = self.unsure_val.get()
+        if unsure == 0:
+            return False
+        if unsure == 1:
+            return True
         resource = occurrence.resource
         start, end = occurrence.get_primary_range()
         editor = self.editors.get_resource_editor(resource).editor
         start_index = editor.get_index(start)
         end_index = editor.get_index(end)
         editor.select_range(start_index, end_index)
-
         return tkMessageBox.askyesno('Matches?', 'Is this a match?')
 
     def _get_dialog_frame(self):
@@ -163,29 +167,37 @@ class RenameDialog(RefactoringDialog):
         self.new_name_entry = Tkinter.Entry(frame, width=50)
         self.new_name_entry.insert(0, self.renamer.get_old_name())
         self.new_name_entry.select_range(0, Tkinter.END)
-        self.new_name_entry.grid(row=0, column=1, columnspan=2)
+        self.new_name_entry.grid(row=0, column=1, columnspan=5)
         self.new_name_entry.bind('<Return>', lambda event: self._ok())
         self.in_hierarchy = Tkinter.IntVar()
-        self.unsure = Tkinter.IntVar()
         self.docs = Tkinter.IntVar()
         self.docs.set(1)
         in_hierarchy = Tkinter.Checkbutton(
             frame, text='Do for all matching methods in class hierarchy',
             variable=self.in_hierarchy)
-        unsure = Tkinter.Checkbutton(
-            frame, text='Rename when unsure (know what you\'re doing!)',
-            variable=self.unsure)
         docs = Tkinter.Checkbutton(
             frame, text='Rename occurrences in strings and comments' +
             ' where the name is visible', variable=self.docs)
+        self.unsure_val = Tkinter.IntVar()
+        ignore_unsure_button = Tkinter.Radiobutton(
+            frame, variable=self.unsure_val, value=0, text='Ignore')
+        match_unsure_button = Tkinter.Radiobutton(
+            frame, variable=self.unsure_val, value=1, text='Match')
+        ask_unsure_button = Tkinter.Radiobutton(
+            frame, variable=self.unsure_val, value=2, text='Ask')
+        ignore_unsure_button.select()
         index = 1
         if self.renamer.is_method():
-            in_hierarchy.grid(row=1, columnspan=2, sticky=Tkinter.W)
+            in_hierarchy.grid(row=1, columnspan=6, sticky=Tkinter.W)
             index += 1
-        unsure.grid(row=index, columnspan=2, sticky=Tkinter.W)
+        docs.grid(row=index, columnspan=6, sticky=Tkinter.W)
         index += 1
-        docs.grid(row=index, columnspan=2, sticky=Tkinter.W)
+        Tkinter.Label(frame, text='What to do about unsure occurrences?').\
+                grid(row=index, column=0)
         self.new_name_entry.focus_set()
+        ignore_unsure_button.grid(row=index, column=1)
+        match_unsure_button.grid(row=index, column=2)
+        ask_unsure_button.grid(row=index, column=3)
         return frame
 
 
