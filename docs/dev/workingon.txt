@@ -1,7 +1,2 @@
 Working On
 ==========
-
-* Adding a radio button for deciding what to do about unsure
-  occurrences; ignore, ask, rename
-* Removing `unsure` parameter of `Rename.get_changes()`
-* Upadating docs

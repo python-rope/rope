@@ -193,11 +193,11 @@ class RenameDialog(RefactoringDialog):
         docs.grid(row=index, columnspan=6, sticky=Tkinter.W)
         index += 1
         Tkinter.Label(frame, text='What to do about unsure occurrences?').\
-                grid(row=index, column=0)
+                grid(row=index, column=0, columnspan=2)
         self.new_name_entry.focus_set()
-        ignore_unsure_button.grid(row=index, column=1)
-        match_unsure_button.grid(row=index, column=2)
-        ask_unsure_button.grid(row=index, column=3)
+        ignore_unsure_button.grid(row=index, column=2)
+        match_unsure_button.grid(row=index, column=3)
+        ask_unsure_button.grid(row=index, column=4)
         return frame
 
 

@@ -3,6 +3,9 @@
 ===========
 
 
+- Asking the user about unsure occurrences : November 10, 2007
+
+
 > Public Release 0.7 : November 1, 2007
 
 

@@ -44,9 +44,8 @@ class _Project(object):
     def validate(self, folder):
         """Validate files and folders contained in this folder
 
-        This method asks all registered to validate all of the files
-        and folders contained in this folder that they are interested
-        in.
+        It validates all of the files and folders contained in this
+        folder if some observers are interested in them.
 
         """
         for observer in list(self.observers):

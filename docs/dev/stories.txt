@@ -176,6 +176,3 @@ Stories
 
 
 * ropemacs: auto-complete
-
-
-* Asking the user about unsure occurrences

@@ -1,7 +1,7 @@
 """ropeide, a python refactoring IDE"""
 
 INFO = __doc__
-VERSION = '0.7'
+VERSION = '0.7.1'
 COPYRIGHT = """\
 Copyright (C) 2006-2007 Ali Gholami Rudi
 
