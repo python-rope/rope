@@ -345,7 +345,7 @@ class _RopeVariable(object):
     """Transform and identify rope inserted wildcards"""
 
     _normal_prefix = '__rope__variable_normal_'
-    _any_prefix = '__rope_variable_any_'
+    _any_prefix = '__rope__variable_any_'
 
     def get_normal(self, name):
         return self._normal_prefix + name

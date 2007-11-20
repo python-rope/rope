@@ -1,5 +1,5 @@
-from _ast import *
 import _ast
+from _ast import *
 
 
 def parse(source, filename='<string>'):

@@ -605,7 +605,7 @@ parameters that are passed to a function.
 Restructurings
 --------------
 
-Restructuring support is one of the main goals of the ``0.6`` release
+Restructuring support was one of the main goals of the ``0.6`` release
 of rope.  `rope.refactor.restructure` can be used for performing
 restructurings.  Currently a simple dialog has been added for
 performing them in the IDE.
@@ -628,7 +628,7 @@ aware of the ``**`` operator and wrote our own ::
   print pow(2, 3)
 
 Now that we know ``**`` exists we want to use it wherever `pow` is
-used (There might be hundreds of them!).  We can use a pattern like::
+used (there might be hundreds of them!).  We can use a pattern like::
 
   pattern: pow(${?param1}, ${?param2})
 
@@ -658,9 +658,9 @@ restructuring will be::
 It seems to be working but what if `pow` is imported in some module or
 we have some other function defined in some other module that uses the
 same name and we don't want to change it.  Checks come to rescue.
-Checks are like mappings.  Its keys are pattern names that appear in
-the pattern (the names in ``${...}``).  The might have a ``.object``
-or ``.type`` postfix.
+Checks are mappings; Its keys are pattern names that appear in the
+pattern (the names in ``${...}``).  They might have a ``.object`` or
+``.type`` postfix.
 
 The values should be resolved into a python variable (or reference).
 For instance for showing `pow` in this example we can use `mod.pow`.

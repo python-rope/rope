@@ -3,6 +3,10 @@ import Tkinter
 
 import rope.contrib.codeassist
 import ropeide.core
+import ropeide.formatter
+import ropeide.notes
+import ropeide.outline
+import ropeide.sort
 import ropeide.testview
 from rope.base import codeanalyze
 from rope.contrib import generate
@@ -12,10 +16,8 @@ from ropeide.extension import SimpleAction
 from ropeide.menubar import MenuAddress
 from ropeide.uihelpers import (TreeView, TreeViewHandle, EnhancedList,
                                EnhancedListHandle)
-import ropeide.formatter
-import ropeide.notes
-import ropeide.outline
-import ropeide.sort
+
+
 class _OutlineViewHandle(TreeViewHandle):
 
     def __init__(self, editor, toplevel):
