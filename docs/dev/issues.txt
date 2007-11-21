@@ -61,71 +61,6 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
-Splitting The Repository
-========================
-
-Currently rope, ropeide and ropemacs are in rope main repo.  I think
-putting them in separate repos will make releasing them easier.
-
-
-rope_py3k Branch
-----------------
-
-In rope_py3k, ropeide changes are minor.  So I think only having a
-separate rope_py3k suffies.  Ropeide for py3k can be obtained using a
-small patch.
-
-
-The Process
------------
-
-Fortunately hg convert extension takes a filemap file that can be used
-for filtering and renaming files.
-
-ropeide filemap::
-
-  exclude .
-  include rope/ui
-  include ropeide
-  include rope/ide
-  exclude rope/ide/generate.py
-  exclude rope/ide/codeassist.py
-  exclude rope/ide/ropemacs.py
-
-  include ropetest/ui
-  include ropetest/ide
-  exclude ropetest/ide/codeassisttest.py
-  exclude ropetest/ide/generatetest.py
-
-  include COPYING
-  include rope.py
-  include ropeide.py
-  rename tools/ropeide_MANIFEST.txt MANIFEST.txt
-  rename tools/ropeide_setup.py setup.py
-  rename docs/ropeide.txt README.txt
-
-ropemacs filemap::
-
-  exclude .
-  include rope/contrib/ropemacs.py
-  include ropemacs.py
-
-  include COPYING
-  include docs/pymacs_python25.patch
-  rename tools/ropemacs_MANIFEST.txt MANIFEST.txt
-  rename tools/ropemacs_setup.py setup.py
-  rename docs/ropemacs.txt README.txt
-
-Other Issues
-------------
-
-* Common docs in rope and ropeide
-* Renaming docs/dev/done.txt to NEWS or ChangeLog?
-* Cleaning up stories.txt and done.txt
-* Renaming docs/dev/stories.txt to TODO?
-
-
-
 Cross-Project Refactorings
 ==========================
 
@@ -432,14 +367,6 @@ Base:
 * Adding ``do when unsure`` config to all refactorings?
 * Removing ``pass`` when introducing factory for empty classes
 * Importing star and removing self imports; stack overflow
-
-UI and IDE:
-
-* Inserting common prefix when using codeassist
-* Renaming files, folders, modules, and packages in project tree view
-* Completion in module entries
-* Goto definition for ``"# comment.\na_var"``
-* Comments should be indented
 
 Docs:
 

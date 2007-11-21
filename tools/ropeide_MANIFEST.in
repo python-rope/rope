@@ -1,9 +1,0 @@
-include README.txt COPYING rope.py setup.py MANIFEST.in
-include docs/contributing.txt docs/done.txt docs/library.txt
-include docs/index.txt docs/overview.txt docs/tutorial.txt
-
-recursive-include ropeide *.py
-recursive-include ropeidetest *.py
-include ropeide.py
-
-prune scripts

@@ -22,41 +22,6 @@ Base Stories
 * Introduce redirection
 
 
-IDE And UI Stories
-==================
-
-* Editor folding
-* Auto-importing modules
-* Replacement; M-%
-* Remembering last open project
-* Go to matching parenthesis
-* Indenting a region of a file
-* Finding available refactorings
-* Auto completion type
-
-  * Inserting or overwriting
-  * Inserting common prefixes
-
-* ReST
-
-  * highlighting inside pydocs
-  * goto definition
-  * outlines
-  * codeassists
-
-* Show PyDoc reST highlighting
-* Enhancing module running
-
-  * Showing running status in the GUI
-  * Printing output
-  * Getting input
-  * Customizing CWD and parameters
-  * Running last run
-
-* Formating code
-* Spell checking python source
-
-
 Stories
 =======
 
@@ -87,15 +52,6 @@ Stories
 * Extract class
 
 
-* Supporting templates in text modes
-
-
-* Next/prev sentence
-
-
-* Searching inside `EnhancedList`\s
-
-
 * Supporting modules without source code
 
 
@@ -105,16 +61,10 @@ Stories
 * Changing method to static method refactoring
 
 
-* Better warnings
-
-
 * Enhanced occurrence finding
 
 
 * Move refactoring and moving a group of elements together
-
-
-* View type hierarchy
 
 
 * Removing files/folders
@@ -148,31 +98,7 @@ Stories
   imports
 
 
-* Generate ~/.rope graphically
-
-
 > Public Release 0.7.1
 
 
-* ropemacs: only activating keybinding in python files
-
-
-* ropemacs: previewing changes
-
-
-* ropemacs: showing refactoring progress
-
-
-* ropemacs: specifying refactoring options
-
-
-* ropemacs: adding a menu
-
-
 * Performing refactorings across multiple projects
-
-
-* ropemacs: find file dialog
-
-
-* ropemacs: auto-complete
