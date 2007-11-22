@@ -18,7 +18,7 @@ New Features
 Getting Started
 ===============
 
-* List of features: `docs/index.txt`_
+* List of features: `docs/rope.txt`_
 * Using as a library: `docs/library.txt`_
 * Contributing: `docs/contributing.txt`_
 
@@ -61,6 +61,6 @@ This program is under the terms of GPL (GNU General Public License).
 Have a look at ``COPYING`` file for more information.
 
 
-.. _`docs/index.txt`: docs/index.html
+.. _`docs/rope.txt`: docs/rope.html
 .. _`docs/contributing.txt`: docs/contributing.html
 .. _`docs/library.txt`: docs/library.html

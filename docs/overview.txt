@@ -4,12 +4,13 @@
 
 
 The purpose of this file is to give an overview of some of rope's
-features.  It is incomplete.  Because rope is enhancing very fast
-some of the features shown here are old and do not show what rope
-can do in extremes.  So if you really want to feel the power of
-rope try its features and see its unit tests.
+features.  It is incomplete.  And some of the features shown here are
+old and do not show what rope can do in extremes.  So if you really
+want to feel the power of rope try its features and see its unit
+tests.
 
-Note that the IDE parts of this file assumes emacs keybinding.
+Note that the keys mentioned in this file are the ones that are used
+in ropeide.
 
 
 .. contents:: Table of Contents
@@ -1059,143 +1060,3 @@ Adding support for other VCSs is easy; have a look at
 
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
-
-
-Project History
-===============
-
-The "Undo/Redo Project Change" in the edit menu undoes every change
-made to the files in a project; like saving files, creating files and
-folders and refactorings.  Also in "Project History" dialog you can
-see and select changes to be undone in any order.  Note that undoing
-changes in project history undoes the changes it depends on, too.
-
-
-IDE Tools
-=========
-
-Keybinding
-----------
-
-You can change the keybinding in ``~/.ropeide``.  The keybinding is
-shown next to every action in menus.  Some of these bindings are
-chosen from emacs and some from eclipse.  ("C" stands for Control key
-and "M" for Meta(Alt) key.)
-
-
-Code Assist(Auto Complete)
---------------------------
-
-You can complete names as you type by using code assist (``M-/``).
-The two capital letters in the left shows the type of the proposal.
-In the first column:
-
-* L: ``local``
-* G: ``global``
-* A: ``attribute``
-* T: ``template``
-* K: ``keyword``
-* B: ``built-in``
-* P: ``parameter_keyword``
-
-In the second column if present:
-
-* C: ``class``
-* F: ``function``
-* V: ``variable``
-* P: ``paramter``
-* I: ``imported``
-
-You can use ``main``, ``testcase``, ``hash``, ``eq`` and ``super``
-templates.  You can define your own templates in ``~/.ropeide``.  See
-examples in the default ``~/.ropeide`` file. (`rope.ui.dot_rope`
-module; It will be copied to ``~/.ropeide`` if none already exists.)
-
-
-Show PyDoc
-----------
-
-By using ``C-c C-d`` you can tell rope to show the pydoc of a name if
-available.
-
-
-Goto Definition
----------------
-
-You can use ``C-c g`` for going to the line a name was defined in.
-
-
-Generate Python Elements
-------------------------
-
-The generate element actions make python elements.  You have to move
-on an element that does not exist and perform one of these generate
-actions.  For example::
-
-  my_print(var=1)
-
-Calling generate function on `my_print` (``C-c n f``) will result in::
-
-  def my_print(var):
-      pass
-
-
-  my_print(var=1)
-
-It handle methods, static methods, classes, variables, modules, and
-packages, too.  Generate element actions use ``C-c n`` prefix.
-
-
-Sorting Scope Elements
-----------------------
-
-You can use ``C-c s ...`` for sorting current scope.  ``...`` can be
-one of:
-
-* ``a``: alphabetically
-* ``k``: classes first
-* ``u``: underlineds first
-* ``p``: those that have pydoc first
-* ``s``: special methods first
-
-You can sort in the reverse order by using ``C-u`` prefix..  Sorts are
-stable.  So if you want to sort by kind and alphabetically, for
-instance, you can use ``C-c s a`` followed by ``C-c s k``.
-
-
-Saving Locations And Strings
-----------------------------
-
-Rope can now save locations or strings in memory.  These are similar
-to emacs's bookmarks and registers.  These actions use ``C-x m``
-prefix.
-
-
-Defining Templates
-------------------
-
-You can define your own templates in ``~/.ropeide``.  You can use
-``C-x c`` and a line like this::
-
-    core.add('templates', ('say_hello', "print 'Hello, my name is ${name}'\n"))
-
-This defines a new python template called ``say_hello``.  Now if you
-type ``say_`` in a python file and use code-assist (``M-/``), this
-template will be proposed.  If you press enter you can insert the
-value to be used as ``name``.
-
-
-Spell-Checker
--------------
-
-The new spell-checker uses ispell/aspell if available.  You can use
-``M-$`` like emacs for checking current word.  You can also use ``C-x
-$ r`` and ``C-x $ b`` for spell-checking region and buffer.
-
-
-Outline
--------
-
-In tree views (like quick outline and project tree views) you can use
-``C-n`` and ``C-p`` to navigate and ``+`` and ``-`` to expand and
-collapse items.  You can use the ``Return`` key to select items.

@@ -1,0 +1,71 @@
+======
+ rope
+======
+
+``a python refactoring library ...``
+
+
+Features
+========
+
+Features implemented so far:
+
+* Refactorings
+
+  * Rename everything!
+  * Extract method/local variable
+  * Move class/function/module/package/method
+  * Inline method/local variable
+  * Change method signature
+  * Restructuring (like converting ``${?a}.f(${?b})`` to
+    ``${?b}.g(${?a})`` where ``a.type == mymod.A``)
+  * Introduce factory method
+  * Introduce parameter
+  * Encapsulate field
+  * Transform module to package
+  * Convert local variable to field
+  * Replace method with method object
+  * Inline argument default value
+
+* Refactoring Features
+
+  * Extracting similar statements in extract refactorings
+  * Basic implicit interfaces handling in rename and change signature
+  * Fixing imports when needed
+  * Previewing refactorings
+  * Stopping refactorings
+  * Undo/redo refactorings
+  * Mercurial_ support in refactorings
+  * SVN support in refactorings using pysvn_ library
+
+* Code-assists
+
+  * Auto-completion
+  * Goto definition
+  * Quick outline
+  * Show PyDoc
+  * Proposing templates in completions
+  * Find occurrences
+  * Import tools
+
+    * Organize imports (remove unused and duplicate imports and sort them)
+    * Change relative imports to absolute
+    * Change from imports to normal imports
+    * Expand ``from ... import *`` imports
+
+  * Generating python elements
+  * Sorting scopes
+
+* Object Inference
+
+  * A static object inference approach
+  * A dynamic object inference approach
+  * Automatic SOI analysis
+  * Handling built-in container types
+  * Saving object information on disk
+  * Stored object information validation
+
+
+.. _pysvn: http://pysvn.tigris.org
+.. _Mercurial: http://selenic.com/mercurial
+.. _pymacs: http://www.iro.umontreal.ca/~pinard/pymacs/
