@@ -1,17 +1,6 @@
-==============
- rope stories
-==============
-
-This file is actually a todo list.  Right now most of rope's efforts
-are concentrated on implementing `base stories`_.  Contributions to
-the `IDE and UI stories`_ are extremely welcome. Have a look at
-`contributing.txt`_ file.
-
-.. _`contributing.txt`: contributing.html
-
-
-Base Stories
-============
+======
+ TODO
+======
 
 * Extract superclass
 * Collapse hierarchy
@@ -21,9 +10,6 @@ Base Stories
 * Push down method
 * Introduce redirection
 
-
-Stories
-=======
 
 > Public Release 0.8
 
