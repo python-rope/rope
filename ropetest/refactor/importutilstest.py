@@ -884,6 +884,15 @@ class ImportUtilsTest(unittest.TestCase):
             'from pkg2 import *\n\nprint(var2)\n',
              self.import_tools.expand_stars(pymod, self._line_filter(1)))
 
+    def test_non_existent_module_and_used_imports(self):
+        self.mod.write(
+            'from does_not_exist import func\n\nfunc()\n')
+        pymod = self.pycore.get_module('mod')
+
+        module_with_imports = self.import_tools.get_module_imports(pymod)
+        imports = module_with_imports.get_used_imports(pymod)
+        self.assertEquals(1, len(imports))
+
 
 if __name__ == '__main__':
     unittest.main()
