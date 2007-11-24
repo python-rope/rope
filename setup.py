@@ -1,3 +1,6 @@
+import glob
+import os
+import shutil
 from distutils.core import setup
 
 import rope
@@ -5,7 +8,7 @@ import rope
 
 def make_temps():
     if not os.path.exists('rope/docs'):
-        os.mkdir('ropeide/docs')
+        os.mkdir('rope/docs')
     for name in glob.glob('docs/*.txt'):
         shutil.copy(name, 'rope/docs/')
 
