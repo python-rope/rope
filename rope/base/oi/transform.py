@@ -215,7 +215,7 @@ class TextualToPyObject(object):
                 # INFO: This is a project file; should not be absolute
                 return None
             return rope.base.project.get_no_project().get_resource(path)
-        except exceptions.RopeError:
+        except exceptions.ResourceNotFoundError:
             return None
 
 

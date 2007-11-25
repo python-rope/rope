@@ -127,7 +127,7 @@ class PyCore(object):
             try:
                 src_folder = rope.base.project.get_no_project().get_resource(src)
                 result.append(src_folder)
-            except rope.base.exceptions.RopeError:
+            except rope.base.exceptions.ResourceNotFoundError:
                 pass
         return result
 

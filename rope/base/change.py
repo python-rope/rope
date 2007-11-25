@@ -5,7 +5,7 @@ import time
 
 import rope.base.fscommands
 from rope.base import taskhandle
-from rope.base.exceptions import RopeError
+from rope.base import exceptions
 
 
 class Change(object):
@@ -337,9 +337,9 @@ class _ResourceOperations(object):
 
     def create(self, resource):
         if resource.is_folder():
-            self._create_folder(resource.path)
+            self._create_resource(resource.path, kind='folder')
         else:
-            self._create_file(resource.path)
+            self._create_resource(resource.path)
         for observer in list(self.project.observers):
             observer.resource_created(resource)
 
@@ -349,30 +349,23 @@ class _ResourceOperations(object):
         for observer in list(self.project.observers):
             observer.resource_removed(resource)
 
-    def _create_file(self, file_name):
-        file_path = self.project._get_resource_path(file_name)
-        if os.path.exists(file_path):
-            if os.path.isfile(file_path):
-                raise RopeError('File already exists')
-            else:
-                raise RopeError('A folder with the same name'
-                                ' as this file already exists')
+    def _create_resource(self, file_name, kind='file'):
+        resource_path = self.project._get_resource_path(file_name)
+        if os.path.exists(resource_path):
+            raise exceptions.RopeError('Resource <%s> already exists'
+                                       % resource_path)
+        resource = self.project.get_file(file_name)
+        if not resource.parent.exists():
+            raise exceptions.ResourceNotFoundError(
+                'Parent folder of <%s> does not exist' % resource.path)
+        fscommands = self._get_fscommands(resource)
         try:
-            fscommands = self._get_fscommands(self.project.get_file(file_name))
-            fscommands.create_file(file_path)
-        except IOError, e:
-            raise RopeError(e)
-
-    def _create_folder(self, folder_name):
-        folder_path = self.project._get_resource_path(folder_name)
-        if os.path.exists(folder_path):
-            if not os.path.isdir(folder_path):
-                raise RopeError('A file with the same name as'
-                                ' this folder already exists')
+            if kind == 'file':
+                fscommands.create_file(resource_path)
             else:
-                raise RopeError('Folder already exists')
-        fscommands = self._get_fscommands(self.project.get_folder(folder_name))
-        fscommands.create_folder(folder_path)
+                fscommands.create_folder(resource_path)
+        except IOError, e:
+            raise exceptions.RopeError(e)
 
 
 def _get_destination_for_move(resource, destination):

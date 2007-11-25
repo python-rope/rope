@@ -1,11 +1,11 @@
-import unittest
 import os
+import unittest
 
-from rope.base.project import Project, NoProject, FilteredResourceObserver
-from rope.base.exceptions import RopeError
-from rope.base.libutils import path_to_resource
-from ropetest import testutils
+from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
+from rope.base.libutils import path_to_resource
+from rope.base.project import Project, NoProject, FilteredResourceObserver
+from ropetest import testutils
 
 
 class ProjectTest(unittest.TestCase):
@@ -44,7 +44,7 @@ class ProjectTest(unittest.TestCase):
         projectFile = self.project.get_resource(self.sample_file)
         self.assertEquals('sample text\n', projectFile.read())
 
-    @testutils.assert_raises(RopeError)
+    @testutils.assert_raises(ResourceNotFoundError)
     def test_getting_not_existing_project_file(self):
         projectFile = self.project.get_resource('DoesNotExistFile.txt')
         self.fail('Should have failed')
@@ -112,7 +112,7 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals('sample notes', open(os.path.join(self.project.address,
                                                             file_path)).read())
 
-    @testutils.assert_raises(RopeError)
+    @testutils.assert_raises(ResourceNotFoundError)
     def test_failing_when_creating_file_inside_non_existent_folder(self):
         self.project.root.create_file('NonexistentFolder/SomeFile.txt')
 
@@ -141,7 +141,7 @@ class ProjectTest(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.project.address,
                                                      self.sample_folder)))
 
-    @testutils.assert_raises(RopeError)
+    @testutils.assert_raises(ResourceNotFoundError)
     def test_removing_non_existent_files(self):
         self.project.get_resource('NonExistentFile.txt').remove()
 
@@ -431,7 +431,7 @@ class ProjectTest(unittest.TestCase):
         myfile.create()
         myfile.create()
 
-    @testutils.assert_raises(RopeError)
+    @testutils.assert_raises(ResourceNotFoundError)
     def test_exception_when_parent_does_not_exist(self):
         myfile = self.project.get_file('myfolder/myfile.txt')
         myfile.create()

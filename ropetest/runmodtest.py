@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from rope.base.exceptions import RopeError
+from rope.base import exceptions
 from ropetest import testutils
 
 
@@ -34,7 +34,7 @@ class PythonFileRunnerTest(unittest.TestCase):
                 output_path = file_path[0:last_slash + 1]
             file = self.project.get_resource(output_path + 'output.txt')
             return file.read()
-        except RopeError:
+        except exceptions.ResourceNotFoundError:
             return ''
 
     def test_making_runner(self):

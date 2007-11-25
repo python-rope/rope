@@ -6,8 +6,7 @@ import rope.base.fscommands
 import rope.base.history
 import rope.base.prefs
 import rope.base.pycore
-from rope.base import taskhandle
-from rope.base.exceptions import RopeError
+from rope.base import exceptions, taskhandle
 from rope.base.resources import File, Folder
 
 
@@ -23,23 +22,25 @@ class _Project(object):
     def get_resource(self, resource_name):
         """Get a resource in a project.
 
-        `resource_name` is the path of a resource in a project.  It
-        is the path of a resource relative to project root.  Project
-        root folder address is an empty string.  If the resource does
-        not exist a `RopeError` exception would be raised.  Use
-        `get_file()` and `get_folder()` when you need to get non-
-        existent `Resource`\s.
+        `resource_name` is the path of a resource in a project.  It is
+        the path of a resource relative to project root.  Project root
+        folder address is an empty string.  If the resource does not
+        exist a `exceptions.ResourceNotFound` exception would be
+        raised.  Use `get_file()` and `get_folder()` when you need to
+        get non- existent `Resource`\s.
 
         """
         path = self._get_resource_path(resource_name)
         if not os.path.exists(path):
-            raise RopeError('Resource <%s> does not exist' % resource_name)
+            raise exceptions.ResourceNotFoundError(
+                'Resource <%s> does not exist' % resource_name)
         elif os.path.isfile(path):
             return File(self, resource_name)
         elif os.path.isdir(path):
             return Folder(self, resource_name)
         else:
-            raise RopeError('Unknown resource ' + resource_name)
+            raise exceptions.ResourceNotFoundError('Unknown resource '
+                                                   + resource_name)
 
     def validate(self, folder):
         """Validate files and folders contained in this folder
@@ -134,7 +135,8 @@ class Project(_Project):
         if not os.path.exists(self._address):
             os.mkdir(self._address)
         elif not os.path.isdir(self._address):
-            raise RopeError('Project root exists and is not a directory')
+            raise exceptions.RopeError('Project root exists and'
+                                       ' is not a directory')
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)

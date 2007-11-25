@@ -2,6 +2,10 @@ class RopeError(Exception):
     """Base exception for rope"""
 
 
+class ResourceNotFoundError(RopeError):
+    """Resource not found exception"""
+
+
 class RefactoringError(RopeError):
     """Errors for performing a refactoring"""
 

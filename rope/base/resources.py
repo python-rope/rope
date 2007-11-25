@@ -2,7 +2,7 @@ import os
 
 import rope.base.change
 import rope.base.fscommands
-from rope.base.exceptions import RopeError
+from rope.base import exceptions
 
 
 class Resource(object):
@@ -120,7 +120,7 @@ class Folder(Resource):
         for name in content:
             try:
                 child = self.get_child(name)
-            except RopeError:
+            except exceptions.ResourceNotFoundError:
                 continue
             if not self.project.is_ignored(child):
                 result.append(self.get_child(name))
@@ -155,7 +155,7 @@ class Folder(Resource):
         try:
             self.get_child(name)
             return True
-        except RopeError:
+        except exceptions.ResourceNotFoundError:
             return False
 
     def get_files(self):
