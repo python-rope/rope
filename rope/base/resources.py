@@ -118,7 +118,10 @@ class Folder(Resource):
         result = []
         content = os.listdir(path)
         for name in content:
-            child = self.get_child(name)
+            try:
+                child = self.get_child(name)
+            except RopeError:
+                continue
             if not self.project.is_ignored(child):
                 result.append(self.get_child(name))
         return result
