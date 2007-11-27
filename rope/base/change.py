@@ -83,8 +83,8 @@ class ChangeSet(Change):
     def get_description(self):
         result = [str(self) + ':\n\n\n']
         for change in self.changes:
-            result.append((' %s ' % str(change)).center(78, '=') + '\n')
             result.append(change.get_description())
+            result.append('\n')
         return ''.join(result)
 
     def __str__(self):
@@ -161,7 +161,7 @@ class ChangeContents(Change):
             self.old_contents.splitlines(True),
             self.new_contents.splitlines(True),
             'a/' + self.resource.path, 'b/' + self.resource.path)
-        return ''.join(list(result)[2:])
+        return ''.join(list(result))
 
     def get_changed_resources(self):
         return [self.resource]
@@ -201,8 +201,8 @@ class MoveResource(Change):
         return 'Move <%s>' % self.old_resource.path
 
     def get_description(self):
-        return 'Move <%s> to <%s>' % (self.old_resource.path,
-                                      self.new_resource.path)
+        return 'rename from %s\nrename to %s' % (self.old_resource.path,
+                                                 self.new_resource.path)
 
     def get_changed_resources(self):
         return [self.old_resource, self.new_resource]
@@ -231,6 +231,9 @@ class CreateResource(Change):
 
     def __str__(self):
         return 'Create Resource <%s>' % (self.resource.path)
+
+    def get_description(self):
+        return 'new file %s' % (self.resource.path)
 
     def get_changed_resources(self):
         return [self.resource]
