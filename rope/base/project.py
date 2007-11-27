@@ -130,8 +130,7 @@ class Project(_Project):
               overwrite config file preferences.
 
         """
-        self._address = os.path.abspath(
-            os.path.expanduser(projectroot)).rstrip('/\\')
+        self._address = _realpath(projectroot).rstrip('/\\')
         if not os.path.exists(self._address):
             os.mkdir(self._address)
         elif not os.path.isdir(self._address):
@@ -218,11 +217,11 @@ class NoProject(_Project):
         super(NoProject, self).__init__(fscommands)
 
     def _get_resource_path(self, name):
-        real_name = os.path.abspath(name).replace('/', os.path.sep)
-        return os.path.abspath(real_name)
+        real_name = name.replace('/', os.path.sep)
+        return _realpath(real_name)
 
     def get_resource(self, name):
-        universal_name = os.path.abspath(name).replace(os.path.sep, '/')
+        universal_name = _realpath(name).replace(os.path.sep, '/')
         return super(NoProject, self).get_resource(universal_name)
 
     def get_files(self):
@@ -593,3 +592,12 @@ class _FileListCacher(object):
 
     def _validate(self, resource):
         self._list = None
+
+
+def _realpath(path):
+    """Return the real path of `path`
+
+    Is equivalent to ``realpath(abspath(expanduser(path)))``.
+
+    """
+    return os.path.realpath(os.path.abspath(os.path.expanduser(path)))

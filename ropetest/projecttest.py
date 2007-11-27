@@ -4,7 +4,8 @@ import unittest
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
-from rope.base.project import Project, NoProject, FilteredResourceObserver
+from rope.base.project import (Project, NoProject,
+                               FilteredResourceObserver, _realpath)
 from ropetest import testutils
 
 
@@ -33,8 +34,8 @@ class ProjectTest(unittest.TestCase):
         unittest.TestCase.tearDown(self)
 
     def test_project_creation(self):
-        self.assertEquals(os.path.abspath(self.project_root),
-                          os.path.abspath(self.project.address))
+        self.assertEquals(_realpath(self.project_root),
+                          self.project.address)
 
     def test_getting_project_file(self):
         project_file = self.project.get_resource(self.sample_file)

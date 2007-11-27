@@ -28,7 +28,7 @@ class PythonFileRunner(object):
         source_folders = []
         file_path = self.file.real_path
         for folder in self.pycore.get_source_folders():
-            source_folders.append(os.path.abspath(folder.real_path))
+            source_folders.append(folder.real_path)
         env['PYTHONPATH'] = env.get('PYTHONPATH', '') + os.pathsep + \
                             os.pathsep.join(source_folders)
         runmod_path = self.pycore.find_module('rope.base.oi.runmod').real_path
@@ -38,8 +38,7 @@ class PythonFileRunner(object):
         if self.receiver:
             send_info = self.receiver.get_send_info()
         args = [sys.executable, runmod_path, send_info,
-                os.path.abspath(self.pycore.project.address),
-                os.path.abspath(self.file.real_path)]
+                self.pycore.project.address, self.file.real_path]
         if self.analyze_data is None:
             del args[1:4]
         if self.args is not None:

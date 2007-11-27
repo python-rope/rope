@@ -16,7 +16,7 @@ def path_to_resource(project, path, type=None):
     `Project.get_file()`, and `Project.get_folder()` methods.
 
     """
-    path = os.path.abspath(path)
+    path = rope.base.project._realpath(path)
     project_path = path
     if path.startswith(project.address):
         project_path = path[len(project.address):].lstrip('/' + os.sep)

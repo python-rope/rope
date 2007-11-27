@@ -191,11 +191,11 @@ class MoveResource(Change):
 
     @_handle_job_set
     def do(self):
-        self.operations.move(self.old_resource, self.new_resource.path)
+        self.operations.move(self.old_resource, self.new_resource)
 
     @_handle_job_set
     def undo(self):
-        self.operations.move(self.new_resource, self.old_resource.path)
+        self.operations.move(self.new_resource, self.old_resource)
 
     def __str__(self):
         return 'Move <%s>' % self.old_resource.path
@@ -326,12 +326,9 @@ class _ResourceOperations(object):
         for observer in list(self.project.observers):
             observer.resource_changed(resource)
 
-    def move(self, resource, new_location):
-        destination = _get_destination_for_move(resource, new_location)
+    def move(self, resource, new_resource):
         fscommands = self._get_fscommands(resource)
-        fscommands.move(resource.real_path,
-                        self.project._get_resource_path(destination))
-        new_resource = self.project.get_resource(destination)
+        fscommands.move(resource.real_path, new_resource.real_path)
         for observer in list(self.project.observers):
             observer.resource_moved(resource, new_resource)
 

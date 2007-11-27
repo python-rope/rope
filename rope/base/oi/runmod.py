@@ -85,18 +85,17 @@ def __rope_start_everything():
         def _is_code_inside_project(self, code):
             source = code.co_filename
             return source and source.endswith('.py') and os.path.exists(source) and \
-                   os.path.abspath(source).startswith(self.project_root)
+                   _realpath(source).startswith(self.project_root)
 
         def _get_persisted_code(self, object_):
             source = object_.co_filename
             if not os.path.exists(source):
                 raise TypeError('no source')
-            return ('defined', os.path.abspath(source),
-                    str(object_.co_firstlineno))
+            return ('defined', _realpath(source), str(object_.co_firstlineno))
 
         def _get_persisted_class(self, object_):
             try:
-                return ('defined', os.path.abspath(inspect.getsourcefile(object_)),
+                return ('defined', _realpath(inspect.getsourcefile(object_)),
                         object_.__name__)
             except (TypeError, AttributeError):
                 return ('unknown',)
@@ -145,13 +144,15 @@ def __rope_start_everything():
             if isinstance(object_, types.MethodType):
                 return self._get_persisted_code(object_.im_func.func_code)
             if isinstance(object_, types.ModuleType):
-                return ('defined', os.path.abspath(object_.__file__))
+                return ('defined', _realpath(object_.__file__))
             if isinstance(object_, (str, unicode, list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
             if isinstance(object_, (types.TypeType, types.ClassType)):
                 return self._get_persisted_class(object_)
             return ('instance', self._get_persisted_class(type(object_)))
 
+    def _realpath(path):
+        return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
 
     send_info = sys.argv[1]
     project_root = sys.argv[2]
