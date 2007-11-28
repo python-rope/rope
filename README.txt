@@ -14,6 +14,15 @@ Overview
 New Features
 ============
 
+* Asking the user about unsure occurrences
+* Better handling of symlinks in project path
+
+`Rename.get_changes()` has been changed so that the `unsure` optional
+parameter can be a function.  If it is not `None`, for each unsure
+occurrence this function is called with an instance of
+`rope.refactor.occurrence.Occurrence`; if it returns `True` the
+occurrence is renamed.
+
 
 Getting Started
 ===============
@@ -26,23 +35,6 @@ To change your project preferences edit
 ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT`` is
 the root folder of your project (this file is created the first time
 you open a project).
-
-
-Project Road Map
-================
-
-The main motive for starting this project was the lack of good
-refactoring tools for Python programming language.  Refactoring
-programs like "bicycle repair man" aren't reliable due to type
-inference problems and they support a limited number of refactorings.
-*Rope* tries to improve these limitations.
-
-The main goal of *rope* is to concentrate on the type inference and
-refactoring of python programs and not a state of art IDE (at least
-not in the first phase).  The type inference and refactoring parts
-will not be dependent on *rope* IDE and if successful, will be
-released as standalone programs and libraries so that other projects
-may use them.
 
 
 Bug Reports

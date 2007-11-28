@@ -3,6 +3,9 @@
 ===========
 
 
+- Better handling of symlinks in project path : November 27, 2007
+
+
 - Asking the user about unsure occurrences : November 10, 2007
 
 
