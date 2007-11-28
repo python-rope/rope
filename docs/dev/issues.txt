@@ -64,45 +64,29 @@ To Be Discussed
 Cross-Project Refactorings
 ==========================
 
-We might want to perform a refactoring on more than one project.
+We can add a new `MultiProjectRefactoring` class::
 
-Approach #1
------------
+  class MultiProjectRefactoring(object):
 
-Adding `ProjectBag`::
+      def __init__(self, refactoring, projects):
+          """Create a multiproject proxy for the main refactoring
 
-  class ProjectBag(object):
-      pass
+          `projects` are other project.
 
-  class PyCoreBag(object):
-      pass
+          """
 
-  class HistoryBag(object):
-      pass
+      def __call__(self, project, *args, **kwds):
+          """Create the refactoring"""
 
+      def get_all_changes(self, *args, **kwds):
+          """Get a project to changes dict"""
 
 Issues:
 
-* Implementing `ProjectBag` and `PyCoreBag`
-* Changing checks like ``resource.project == resource.no_project()``
-  with ``resource.project != project``
-* When saving objects SOI we should consider resource in other
-  projects like `NoProject` resources
-* Using history on different projects
-
-Approach #2
------------
-
-Passing all projects to refactorings:
-
-Approach #3
------------
-
-Actually we can do that even now.  What we should do is to add the
-dependency projects to the class path and try to apply the refactoring
-for each dependent project.  The dependencies don't change but the
-dependants do.  After that we can apply the refactoring on the
-dependencies.
+* Resources from other projects should be considered out of project
+* Undoing
+* Specifying the main project
+* Adding ``rope.refactor.multiproject.perform``
 
 
 Distributing Refactorings

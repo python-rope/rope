@@ -14,15 +14,6 @@ Overview
 New Features
 ============
 
-* Asking the user about unsure occurrences
-* Better handling of symlinks in project path
-
-`Rename.get_changes()` has been changed so that the `unsure` optional
-parameter can be a function.  If it is not `None`, for each unsure
-occurrence this function is called with an instance of
-`rope.refactor.occurrence.Occurrence`; if it returns `True` the
-occurrence is renamed.
-
 
 Getting Started
 ===============

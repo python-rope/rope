@@ -88,6 +88,3 @@
 
 
 * Performing refactorings across multiple projects
-
-
-> Public Release 0.7.1 : November 28, 2007

@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.7.1 : November 28, 2007
+
+
 - Better handling of symlinks in project path : November 27, 2007
 
 

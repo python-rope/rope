@@ -5,9 +5,11 @@ import sys
 import rope.base.project
 
 
-def sample_project(root=None, **kwds):
+def sample_project(root=None, foldername=None, **kwds):
     if root is None:
         root = 'sample_project'
+        if foldername:
+            root = foldername
         # HACK: Using ``/dev/shm/`` for faster tests
         if os.name == 'posix' and os.path.isdir('/dev/shm'):
             root = '/dev/shm/' + root
