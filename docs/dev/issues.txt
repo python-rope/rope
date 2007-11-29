@@ -64,29 +64,28 @@ To Be Discussed
 Cross-Project Refactorings
 ==========================
 
-We can add a new `MultiProjectRefactoring` class::
-
-  class MultiProjectRefactoring(object):
-
-      def __init__(self, refactoring, projects):
-          """Create a multiproject proxy for the main refactoring
-
-          `projects` are other project.
-
-          """
-
-      def __call__(self, project, *args, **kwds):
-          """Create the refactoring"""
-
-      def get_all_changes(self, *args, **kwds):
-          """Get a project to changes dict"""
-
 Issues:
 
-* Resources from other projects should be considered out of project
+* Some refactorings return changes to out of project resources
 * Undoing
 * Specifying the main project
 * Adding ``rope.refactor.multiproject.perform``
+
+Changing refactorings to handle source, goal resources in resource
+loop:
+
+* move
+* rename
+* change_signature
+* encapsulate_field
+* inline
+* introduce_factory
+* moduletopackage
+
+Possible approaches:
+
+* Changing all refactorings not to change out of project resources
+* Filtering ChangeSets by using change.resource.project
 
 
 Distributing Refactorings

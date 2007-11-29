@@ -44,12 +44,12 @@ class _MultiRefactoring(object):
         return getattr(self.main_refactoring, name)
 
     def _change_project_resources_for_args(self, args, kwds):
-        newargs = [self._change_project_resources(arg) for arg in args]
-        newkwds = dict((name, self._change_project_resources(value))
+        newargs = [self._change_project_resource(arg) for arg in args]
+        newkwds = dict((name, self._change_project_resource(value))
                        for name, value in kwds.items())
         return newargs, newkwds
         
-    def _change_project_resources(self, obj):
+    def _change_project_resource(self, obj):
         if isinstance(obj, resources.Resource) and \
            obj.project == self.project:
             return project.get_no_project().get_resource(obj.real_path)
