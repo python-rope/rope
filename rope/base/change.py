@@ -210,7 +210,7 @@ class MoveResource(Change):
 
     @property
     def old_resource(self):
-        warnings.warn('Use `TaskHandle.get_jobsets` instead',
+        warnings.warn('Use `MoveResource.resource` instead of `old_resource`',
                       DeprecationWarning, stacklevel=2)
         return self.resource
 
