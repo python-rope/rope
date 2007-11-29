@@ -14,6 +14,7 @@ class Rename(object):
 
     def __init__(self, project, resource, offset=None):
         """If `offset` is None, the `resource` itself will be renamed"""
+        self.project = project
         self.pycore = project.pycore
         self.resource = resource
         if offset is not None:
@@ -84,8 +85,8 @@ class Rename(object):
                 changes.add_change(ChangeContents(file_, new_content))
             job_set.finished_job()
         if self._is_renaming_a_module():
-            changes.add_change(self._rename_module(old_pynames[0].get_object(),
-                                                   new_name))
+            self._rename_module(old_pynames[0].get_object(),
+                                new_name, changes)
         return changes
 
     def _is_renaming_a_function_local_name(self):
@@ -121,16 +122,17 @@ class Rename(object):
                isinstance(pyname.get_object(), pyobjects.PyFunction) and \
                isinstance(pyname.get_object().parent, pyobjects.PyClass)
 
-    def _rename_module(self, pyobject, new_name):
+    def _rename_module(self, pyobject, new_name, changes):
         resource = pyobject.get_resource()
         if not resource.is_folder():
             new_name = new_name + '.py'
-        parent_path = resource.parent.path
-        if parent_path == '':
-            new_location = new_name
-        else:
-            new_location = parent_path + '/' + new_name
-        return MoveResource(resource, new_location)
+        if resource.project == self.project:
+            parent_path = resource.parent.path
+            if parent_path == '':
+                new_location = new_name
+            else:
+                new_location = parent_path + '/' + new_name
+            changes.add_change(MoveResource(resource, new_location))
 
 
 class ChangeOccurrences(object):
