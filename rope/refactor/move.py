@@ -55,16 +55,19 @@ class MoveMethod(object):
             raise exceptions.RefactoringError('Only normal methods'
                                               ' can be moved.')
 
-    def get_changes(self, dest_attr, new_name,
+    def get_changes(self, dest_attr, new_name=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Return the changes needed for this refactoring
 
         :parameters:
             - `dest_attr`: the name of the destination attribute
-            - `new_name`: the name of the new method
+            - `new_name`: the name of the new method; if `None` uses
+              the old name
 
         """
         changes = ChangeSet('Moving method <%s>' % self.method_name)
+        if new_name is None:
+            new_name = self.get_method_name()
         resource1, start1, end1, new_content1 = \
             self._get_changes_made_by_old_class(dest_attr, new_name)
         collector1 = sourceutils.ChangeCollector(resource1.read())

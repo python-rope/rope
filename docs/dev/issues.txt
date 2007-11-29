@@ -84,7 +84,8 @@ loop:
 
 Possible approaches:
 
-* Changing all refactorings not to change out of project resources
+* Changing all refactorings not to change out of project resources;
+  should be careful which change should happen first
 * Filtering ChangeSets by using change.resource.project
 
 
