@@ -1,3 +1,4 @@
+import warnings
 import datetime
 import difflib
 import os
@@ -172,7 +173,7 @@ class MoveResource(Change):
 
     Fields:
 
-    * `old_resource`: The `rope.base.resources.Resource` to move
+    * `resource`: The `rope.base.resources.Resource` to move
     * `new_resource`: The destination for move; It is the moved
       resource not the folder containing that resource.
 
@@ -181,7 +182,7 @@ class MoveResource(Change):
     def __init__(self, resource, new_location, exact=False):
         self.project = resource.project
         self.operations = resource.project.operations
-        self.old_resource = resource
+        self.resource = resource
         if not exact:
             new_location = _get_destination_for_move(resource, new_location)
         if resource.is_folder():
@@ -191,21 +192,27 @@ class MoveResource(Change):
 
     @_handle_job_set
     def do(self):
-        self.operations.move(self.old_resource, self.new_resource)
+        self.operations.move(self.resource, self.new_resource)
 
     @_handle_job_set
     def undo(self):
-        self.operations.move(self.new_resource, self.old_resource)
+        self.operations.move(self.new_resource, self.resource)
 
     def __str__(self):
-        return 'Move <%s>' % self.old_resource.path
+        return 'Move <%s>' % self.resource.path
 
     def get_description(self):
-        return 'rename from %s\nrename to %s' % (self.old_resource.path,
+        return 'rename from %s\nrename to %s' % (self.resource.path,
                                                  self.new_resource.path)
 
     def get_changed_resources(self):
-        return [self.old_resource, self.new_resource]
+        return [self.resource, self.new_resource]
+
+    @property
+    def old_resource(self):
+        warnings.warn('Use `TaskHandle.get_jobsets` instead',
+                      DeprecationWarning, stacklevel=2)
+        return self.resource
 
 
 class CreateResource(Change):
@@ -391,7 +398,7 @@ class ChangeToData(object):
         return (change.resource.path, change.new_contents, change.old_contents)
 
     def convertMoveResource(self, change):
-        return (change.old_resource.path, change.new_resource.path)
+        return (change.resource.path, change.new_resource.path)
 
     def convertCreateResource(self, change):
         return (change.resource.path, change.resource.is_folder())
