@@ -3,7 +3,7 @@ from rope.base import resources, project
 
 class MultiProjectRefactoring(object):
 
-    def __init__(self, refactoring, projects):
+    def __init__(self, refactoring, projects, addpath=True):
         """Create a multiproject proxy for the main refactoring
 
         `projects` are other project.
@@ -11,19 +11,23 @@ class MultiProjectRefactoring(object):
         """
         self.refactoring = refactoring
         self.projects = projects
+        self.addpath = addpath
 
     def __call__(self, project, *args, **kwds):
         """Create the refactoring"""
-        return _MultiRefactoring(self.refactoring, self.projects,
+        return _MultiRefactoring(self.refactoring, self.projects, self.addpath,
                                  project, *args, **kwds)
 
 
 class _MultiRefactoring(object):
 
-    def __init__(self, refactoring, other_projects, project, *args, **kwds):
+    def __init__(self, refactoring, other_projects, addpath,
+                 project, *args, **kwds):
         self.refactoring = refactoring
         self.projects = other_projects
         self.project = project
+        for other_project in self.projects:
+            other_project.get_prefs().add('python_path', self.project.address)
         self.main_refactoring = self.refactoring(project, *args, **kwds)
         args, kwds = self._change_project_resources_for_args(args, kwds)
         self.other_refactorings = [self.refactoring(other, *args, **kwds)

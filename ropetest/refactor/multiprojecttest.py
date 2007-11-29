@@ -11,8 +11,7 @@ class MultiProjectRefactoringTest(unittest.TestCase):
     def setUp(self):
         super(MultiProjectRefactoringTest, self).setUp()
         self.project1 = testutils.sample_project(foldername='testproject1')
-        self.project2 = testutils.sample_project(
-            foldername='testproject2', python_path=[self.project1.address])
+        self.project2 = testutils.sample_project(foldername='testproject2')
         self.mod1 = self.project1.root.create_file('mod1.py')
         self.other = self.project1.root.create_file('other.py')
         self.mod2 = self.project2.root.create_file('mod2.py')

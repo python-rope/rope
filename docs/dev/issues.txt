@@ -66,8 +66,7 @@ Cross-Project Refactorings
 
 Issues:
 
-* Adding base to project classpaths; requires not changing
-  sys.classpath?
+* Adding base to project classpaths
 * Some refactorings return changes to out of project
 * resources Undoing Specifying the main project Adding
 * ``rope.refactor.multiproject.perform``
