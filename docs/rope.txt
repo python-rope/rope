@@ -24,6 +24,7 @@ Features implemented so far:
 
   * Extracting similar statements in extract refactorings
   * Basic implicit interfaces handling in rename and change signature
+  * Cross-project refactorings
   * Fixing imports when needed
   * Previewing refactorings
   * Stopping refactorings

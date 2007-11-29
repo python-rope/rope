@@ -30,10 +30,35 @@ class IntroduceFactoryRefactoring(object):
             'Collecting Changes', len(self.pycore.get_python_files()))
         self._change_occurrences_in_other_modules(changes, factory_name,
                                                   global_factory, job_set)
-        job_set.started_job('Changing definition')
-        self._change_resource(changes, factory_name, global_factory)
-        job_set.finished_job()
         return changes
+
+    def _change_occurrences_in_other_modules(self, changes, factory_name,
+                                             global_factory, job_set):
+        changed_name = self._get_new_function_name(factory_name, global_factory)
+        import_tools = rope.refactor.importutils.ImportTools(self.pycore)
+        new_import = import_tools.get_import(self.resource)
+        if global_factory:
+            changed_name = new_import.names_and_aliases[0][0] + '.' + factory_name
+
+        for file_ in self.pycore.get_python_files():
+            if file_ == self.resource:
+                job_set.started_job('Changing definition')
+                self._change_resource(changes, factory_name, global_factory)
+                job_set.finished_job()
+                continue
+            job_set.started_job('Working on <%s>' % file_.path)
+            changed_code = self._rename_occurrences(file_, changed_name,
+                                                    global_factory)
+            if changed_code is not None:
+                if global_factory:
+                    new_pymodule = self.pycore.get_string_module(changed_code,
+                                                                 self.resource)
+                    module_with_imports = \
+                        import_tools.get_module_imports(new_pymodule)
+                    module_with_imports.add_import(new_import)
+                    changed_code = module_with_imports.get_changed_source()
+                changes.add_change(ChangeContents(file_, changed_code))
+            job_set.finished_job()
 
     def _change_resource(self, changes, factory_name, global_factory):
         class_scope = self.old_pyname.get_object().get_scope()
@@ -86,28 +111,6 @@ class IntroduceFactoryRefactoring(object):
             return factory_name
         else:
             return self.old_name + '.' + factory_name
-
-    def _change_occurrences_in_other_modules(self, changes, factory_name,
-                                             global_factory, job_set):
-        changed_name = self._get_new_function_name(factory_name, global_factory)
-        import_tools = rope.refactor.importutils.ImportTools(self.pycore)
-        new_import = import_tools.get_import(self.resource)
-        if global_factory:
-            changed_name = new_import.names_and_aliases[0][0] + '.' + factory_name
-
-        for file_ in self.pycore.get_python_files():
-            if file_ == self.resource:
-                continue
-            job_set.started_job('Working on <%s>' % file_.path)
-            changed_code = self._rename_occurrences(file_, changed_name, global_factory)
-            if changed_code is not None:
-                if global_factory:
-                    new_pymodule = self.pycore.get_string_module(changed_code, self.resource)
-                    module_with_imports = import_tools.get_module_imports(new_pymodule)
-                    module_with_imports.add_import(new_import)
-                    changed_code = module_with_imports.get_changed_source()
-                changes.add_change(ChangeContents(file_, changed_code))
-            job_set.finished_job()
 
     def _rename_occurrences(self, file_, changed_name, global_factory):
         occurrence_finder = occurrences.FilteredFinder(

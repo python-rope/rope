@@ -559,7 +559,7 @@ And you can create a project like this::
 
 
 `rope.contrib.codeassist`
-=========================
+-------------------------
 
 The `rope.contrib` package contains modules that use rope base parts
 and provide useful features.  `rope.contrib.codeassist` module can
@@ -592,3 +592,51 @@ be used in IDEs::
 See pydocs and source code for more information (other functions in
 that module might be interesting, too; like `get_doc`,
 `get_definition_location` and `find_occurrences`).
+
+
+Cross-Project Refactorings
+--------------------------
+
+`rope.refactor.multiproject` can be used to perform a refactoring
+across multiple projects.
+
+Before we begin, note that there should always be a main project.
+That is the project that contains the definition of the changing
+python name.  Other projects depend on the main one and uses of the
+changed name in them should be updated.
+
+Each refactoring changes only one project (the project passed to its
+constructor).  But we can use `MultiProjectRefactoring` proxy to
+perform a refactoring on other projects, too.
+
+First we need create a multi-project refactoring constructor.  As an
+example consider we want to perform a rename refactoring::
+
+  from rope.refactor import multiproject, rename
+
+
+  CrossRename = multiproject.MultiProjectRefactoring(rename.Rename,
+                                                     projects)
+
+
+Here `projects` is the list of dependant projects; it does not include
+the main project.  The first argument is the refactoring class (such
+as `Rename`) or factory function (like `create_move`).
+
+Next we can construct the refactoring::
+
+  renamer = CrossRename(project, resource, offset)
+
+We create the rename refactoring as we do for normal refactorings.
+Note that `project` is the main project.
+
+Finally we can calculate the changes.  But instead of calling
+`get_changes()` (which returns main project changes, only), we should
+call `get_all_changes()` with the same arguments.  It returns a list
+of ``(project, changes)`` tuples.  You can perform them manually by
+calling ``project.do(changes)`` for each tuple or use
+`multiproject.perform()`::
+
+  project_and_changes = renamer.get_all_changes('newname')
+
+  multiproject.perform(project_and_changes)

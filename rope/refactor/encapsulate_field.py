@@ -33,16 +33,14 @@ class EncapsulateField(object):
             'Collecting Changes', len(self.pycore.get_python_files()))
         rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
                                                       [self.pyname])
-        job_set.started_job('Working on defining file')
-        self._change_holding_module(changes, rename_in_module)
-        job_set.finished_job()
         for file in self.pycore.get_python_files():
-            if file == self.resource:
-                continue
             job_set.started_job('Working on <%s>' % file.path)
-            result = rename_in_module.get_changed_module(file)
-            if result is not None:
-                changes.add_change(ChangeContents(file, result))
+            if file == self.resource:
+                self._change_holding_module(changes, rename_in_module)
+            else:
+                result = rename_in_module.get_changed_module(file)
+                if result is not None:
+                    changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
         return changes
 

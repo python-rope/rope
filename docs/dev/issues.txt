@@ -61,34 +61,6 @@ To Be Discussed
 * Should `rope.base` be thread safe? which parts?
 
 
-Cross-Project Refactorings
-==========================
-
-Issues:
-
-* Adding base to project classpaths
-* Some refactorings return changes to out of project
-* resources Undoing Specifying the main project Adding
-* ``rope.refactor.multiproject.perform``
-
-Changing refactorings to handle source, goal resources in resource
-loop:
-
-* move
-* rename
-* change_signature
-* encapsulate_field
-* inline
-* introduce_factory
-* moduletopackage
-
-Possible approaches:
-
-* Changing all refactorings not to change out of project resources;
-  should be careful which change should happen first
-* Filtering ChangeSets by using change.resource.project
-
-
 Distributing Refactorings
 =========================
 

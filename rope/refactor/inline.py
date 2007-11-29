@@ -89,10 +89,20 @@ class InlineMethod(_Inliner):
         changes = ChangeSet('Inline method <%s>' % self.name)
         job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
-        job_set.started_job('Changing defining file')
-        self._change_defining_file(changes, remove=remove)
-        job_set.finished_job()
-        self._change_other_files(changes, job_set)
+        for file in self.pycore.get_python_files():
+            job_set.started_job('Working on <%s>' % file.path)
+            if file == self.resource:
+                changes.add_change(self._defining_file_changes(changes,
+                                                              remove=remove))
+            else:
+                handle = _InlineFunctionCallsForModuleHandle(
+                    self.pycore, file, self.others_generator)
+                result = move.ModuleSkipRenamer(
+                    self.occurrence_finder, file, handle).get_changed_module()
+                if result is not None:
+                    result = self._add_imports(result, file)
+                    changes.add_change(ChangeContents(file, result))
+            job_set.finished_job()
         return changes
 
     def _get_removed_range(self):
@@ -110,7 +120,7 @@ class InlineMethod(_Inliner):
                   len(self.pymodule.source_code))
         return (start, end)
 
-    def _change_defining_file(self, changes, remove):
+    def _defining_file_changes(self, changes, remove):
         start_offset, end_offset = self._get_removed_range()
         handle = _InlineFunctionCallsForModuleHandle(
             self.pycore, self.resource, self.normal_generator)
@@ -120,7 +130,7 @@ class InlineMethod(_Inliner):
         result = move.ModuleSkipRenamer(
             self.occurrence_finder, self.resource, handle, start_offset,
             end_offset, replacement).get_changed_module()
-        changes.add_change(ChangeContents(self.resource, result))
+        return ChangeContents(self.resource, result)
 
     def _get_method_replacement(self):
         if self._is_the_last_method_of_a_class():
@@ -141,20 +151,6 @@ class InlineMethod(_Inliner):
            source[func_end:class_end].strip() == '':
             return True
         return False
-
-    def _change_other_files(self, changes, job_set):
-        for file in self.pycore.get_python_files():
-            if file == self.resource:
-                continue
-            job_set.started_job('Working on <%s>' % file.path)
-            handle = _InlineFunctionCallsForModuleHandle(
-                self.pycore, file, self.others_generator)
-            result = move.ModuleSkipRenamer(
-                self.occurrence_finder, file, handle).get_changed_module()
-            if result is not None:
-                result = self._add_imports(result, file)
-                changes.add_change(ChangeContents(file, result))
-            job_set.finished_job()
 
     def _add_imports(self, source, file):
         if not self.imports:

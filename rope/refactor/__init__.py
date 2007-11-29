@@ -71,7 +71,8 @@ class ModuleToPackage(object):
         if not parent.path:
             parent_path = ''
         new_path = parent_path + '%s/__init__.py' % name
-        changes.add_change(MoveResource(self.resource, new_path))
+        if self.resource.project == self.project:
+            changes.add_change(MoveResource(self.resource, new_path))
         return changes
 
     def _transform_relatives_to_absolute(self, resource):
