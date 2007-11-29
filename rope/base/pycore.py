@@ -35,8 +35,6 @@ class PyCore(object):
         self._custom_source_folders = []
         for path in self.project.prefs.get('source_folders', []):
             self._custom_source_folders.append(path)
-        for path in self.project.prefs.get('python_path', []):
-            sys.path.append(path)
 
     def _init_automatic_soi(self):
         if not self.project.get_prefs().get('automatic_soi', False):
@@ -123,7 +121,7 @@ class PyCore(object):
 
     def get_python_path_folders(self):
         result = []
-        for src in sys.path:
+        for src in self.project.prefs.get('python_path', []) + sys.path:
             try:
                 src_folder = rope.base.project.get_no_project().get_resource(src)
                 result.append(src_folder)
