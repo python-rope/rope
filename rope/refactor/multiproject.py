@@ -1,3 +1,10 @@
+"""This module can be used for performing cross-project refactorings
+
+See the "cross-project refactorings" section of ``docs/library.txt``
+file.
+
+"""
+
 from rope.base import resources, project
 
 
