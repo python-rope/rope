@@ -437,11 +437,12 @@ Using rename refactoring::
   >>> mod1 = project.root.create_file('mod1.py')
   >>> mod1.write('a_var = 10\n')
 
-  # Alternatively you can use `PyCore` objects.
-  # Creating modules and packages using `PyCore` objects
+  # Alternatively you can use `generate` module.
+  # Creating modules and packages using `generate` module
+  >>> from rope.contrib import generate
   >>> pycore = project.get_pycore()
-  >>> pkg = pycore.create_package(project.root, 'pkg')
-  >>> mod2 = pycore.create_module(pkg, 'mod2')
+  >>> pkg = generate.create_package(project, 'pkg')
+  >>> mod2 = generate.create_module(project, 'mod2', pkg)
   >>> mod2.write('import mod1\nprint mod1.a_var\n')
 
   # We can use `PyCore.find_module` for finding modules, too

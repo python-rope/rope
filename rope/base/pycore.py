@@ -1,6 +1,7 @@
 import bisect
 import difflib
 import sys
+import warnings
 
 import rope.base.oi.objectinfer
 import rope.base.oi.objectinfo
@@ -78,18 +79,22 @@ class PyCore(object):
         for observer in self.cache_observers:
             observer(resource)
 
-    def create_module(self, src_folder, new_module):
-        """Creates a module and returns a `rope.project.File`"""
-        packages = new_module.split('.')
-        parent = src_folder
+    def create_module(self, sourcefolder, name, warn=True):
+        if warn:
+            warnings.warn('Use `rope.contrib.generate.create_module()`',
+                          DeprecationWarning, stacklevel=2)
+        packages = name.split('.')
+        parent = sourcefolder
         for package in packages[:-1]:
             parent = parent.get_child(package)
         return parent.create_file(packages[-1] + '.py')
 
-    def create_package(self, src_folder, new_package):
-        """Creates a package and returns a `rope.project.Folder`"""
-        packages = new_package.split('.')
-        parent = src_folder
+    def create_package(self, sourcefolder, name, warn=True):
+        if warn:
+            warnings.warn('Use `rope.contrib.generate.create_package()`',
+                          DeprecationWarning, stacklevel=2)
+        packages = name.split('.')
+        parent = sourcefolder
         for package in packages[:-1]:
             parent = parent.get_child(package)
         made_packages = parent.create_folder(packages[-1])

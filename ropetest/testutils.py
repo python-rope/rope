@@ -3,6 +3,7 @@ import shutil
 import sys
 
 import rope.base.project
+from rope.contrib import generate
 
 
 def sample_project(root=None, foldername=None, **kwds):
@@ -21,6 +22,8 @@ def sample_project(root=None, foldername=None, **kwds):
     project = rope.base.project.Project(root, **prefs)
     return project
 
+create_module = generate.create_module
+create_package = generate.create_package
 
 def remove_project(project):
     project.close()

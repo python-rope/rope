@@ -13,6 +13,19 @@ def create_generate(kind, project, resource, offset):
     return generate(project, resource, offset)
 
 
+def create_module(project, name, sourcefolder=None):
+    """Creates a module and returns a `rope.base.resources.File`"""
+    if sourcefolder is None:
+        sourcefolder = project.root
+    return project.pycore.create_module(sourcefolder, name, warn=False)
+
+def create_package(project, name, sourcefolder=None):
+    """Creates a package and returns a `rope.base.resources.Folder`"""
+    if sourcefolder is None:
+        sourcefolder = project.root
+    return project.pycore.create_package(sourcefolder, name, warn=False)
+
+
 class _Generate(object):
 
     def __init__(self, project, resource, offset):
