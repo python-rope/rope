@@ -143,7 +143,7 @@ class CheckingFinderTest(unittest.TestCase):
         super(CheckingFinderTest, self).setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
-        self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        self.mod1 = testutils.create_module(self.project, 'mod1')
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -210,7 +210,7 @@ class CheckingFinderTest(unittest.TestCase):
         self.assertEquals(1, len(result))
 
     def test_checking_equality_of_imported_pynames(self):
-        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod2 = testutils.create_module(self.project, 'mod2')
         mod2.write('class A(object):\n    pass\n')
         self.mod1.write('from mod2 import A\nan_a = A()\n')
         pymod2 = self.pycore.resource_to_pyobject(mod2)

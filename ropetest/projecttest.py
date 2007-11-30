@@ -871,7 +871,7 @@ class RopeFolderTest(unittest.TestCase):
         self.project = testutils.sample_project(ropefolder=None,
                                                 ignore_syntax_errors=True)
         pycore = self.project.pycore
-        mod = pycore.create_module(self.project.root, 'mod')
+        mod = testutils.create_module(self.project, 'mod')
         mod.write('xyz print')
         pymod = pycore.resource_to_pyobject(mod)
 

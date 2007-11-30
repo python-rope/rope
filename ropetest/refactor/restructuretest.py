@@ -10,7 +10,7 @@ class RestructureTest(unittest.TestCase):
         super(RestructureTest, self).setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
-        self.mod = self.pycore.create_module(self.project.root, 'mod')
+        self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):
         testutils.remove_project(self.project)

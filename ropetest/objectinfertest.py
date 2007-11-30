@@ -207,7 +207,7 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_handling_generator_functions_for_strs(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod = testutils.create_module(self.project, 'mod')
         mod.write('def f():\n    yield ""\n'
                   'for s in f():\n    a_var = s\n')
         pymod = self.pycore.resource_to_pyobject(mod)

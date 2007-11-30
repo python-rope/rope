@@ -11,9 +11,9 @@ class GenerateTest(unittest.TestCase):
         super(GenerateTest, self).setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
-        self.mod = self.pycore.create_module(self.project.root, 'mod1')
-        self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
-        self.pkg = self.pycore.create_package(self.project.root, 'pkg')
+        self.mod = testutils.create_module(self.project, 'mod1')
+        self.mod2 = testutils.create_module(self.project, 'mod2')
+        self.pkg = testutils.create_package(self.project, 'pkg')
 
     def tearDown(self):
         testutils.remove_project(self.project)

@@ -309,7 +309,7 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_modules_after_from_statements(self):
         root_folder = self.project.root
-        mod = self.pycore.create_module(root_folder, 'mod')
+        mod = testutils.create_module(self.project, 'mod', root_folder)
         mod.write('def a_func():\n    pass\n')
         code = 'from mod import a_func\n'
         scope = self.pycore.get_string_scope(code)
@@ -320,10 +320,10 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     @testutils.run_only_for_25
     def test_relative_modules_after_from_statements(self):
-        pkg1 = self.pycore.create_package(self.project.root, 'pkg1')
-        pkg2 = self.pycore.create_package(pkg1, 'pkg2')
-        mod1 = self.pycore.create_module(pkg1, 'mod1')
-        mod2 = self.pycore.create_module(pkg2, 'mod2')
+        pkg1 = testutils.create_package(self.project, 'pkg1')
+        pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
+        mod1 = testutils.create_module(self.project, 'mod1', pkg1)
+        mod2 = testutils.create_module(self.project, 'mod2', pkg2)
         mod1.write('def a_func():\n    pass\n')
         code = 'from ..mod1 import a_func\n'
         mod2.write(code)
@@ -334,10 +334,10 @@ class ScopeNameFinderTest(unittest.TestCase):
         self.assertEquals(mod1_pyobject, found_pyname.get_object())
 
     def test_relative_modules_after_from_statements2(self):
-        mod1 = self.pycore.create_module(self.project.root, 'mod1')
-        pkg1 = self.pycore.create_package(self.project.root, 'pkg1')
-        pkg2 = self.pycore.create_package(pkg1, 'pkg2')
-        mod2 = self.pycore.create_module(pkg2, 'mod2')
+        mod1 = testutils.create_module(self.project, 'mod1')
+        pkg1 = testutils.create_package(self.project, 'pkg1')
+        pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
+        mod2 = testutils.create_module(self.project, 'mod2', pkg2)
         mod1.write('import pkg1.pkg2.mod2')
 
         mod1_scope = self.pycore.resource_to_pyobject(mod1).get_scope()

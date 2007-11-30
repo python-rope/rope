@@ -4,6 +4,7 @@ import rope.base.codeanalyze
 import rope.base.exceptions
 import ropetest.testutils as testutils
 from rope.refactor import extract
+from ropetest import testutils
 
 
 class ExtractMethodTest(unittest.TestCase):
@@ -18,7 +19,7 @@ class ExtractMethodTest(unittest.TestCase):
         super(ExtractMethodTest, self).tearDown()
 
     def do_extract_method(self, source_code, start, end, extracted, **kwds):
-        testmod = self.pycore.create_module(self.project.root, 'testmod')
+        testmod = testutils.create_module(self.project, 'testmod')
         testmod.write(source_code)
         extractor = extract.ExtractMethod(
             self.project, testmod, start, end)
@@ -26,7 +27,7 @@ class ExtractMethodTest(unittest.TestCase):
         return testmod.read()
 
     def do_extract_variable(self, source_code, start, end, extracted, **kwds):
-        testmod = self.pycore.create_module(self.project.root, 'testmod')
+        testmod = testutils.create_module(self.project, 'testmod')
         testmod.write(source_code)
         extractor = extract.ExtractVariable( self.project, testmod, start, end)
         self.project.do(extractor.get_changes(extracted, **kwds))

@@ -11,8 +11,8 @@ class InlineTest(unittest.TestCase):
         super(InlineTest, self).setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
-        self.mod = self.pycore.create_module(self.project.root, 'mod')
-        self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        self.mod = testutils.create_module(self.project, 'mod')
+        self.mod2 = testutils.create_module(self.project, 'mod2')
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -115,14 +115,14 @@ class InlineTest(unittest.TestCase):
 
     def test_replacing_calls_with_function_definition_in_other_modules(self):
         self.mod.write('def a_func():\n    print(1)\n')
-        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('import mod\nmod.a_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('import mod\nprint(1)\n', mod1.read())
 
     def test_replacing_calls_with_function_definition_in_other_modules2(self):
         self.mod.write('def a_func():\n    print(1)\n')
-        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('import mod\nif True:\n    mod.a_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('import mod\nif True:\n    print(1)\n', mod1.read())
@@ -130,7 +130,7 @@ class InlineTest(unittest.TestCase):
     def test_replacing_calls_with_method_definition_in_other_modules(self):
         self.mod.write('class A(object):\n    var = 10\n'
                        '    def a_func(self):\n        print(1)\n')
-        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('import mod\nmod.A().a_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('import mod\nprint(1)\n', mod1.read())
@@ -440,9 +440,9 @@ class InlineTest(unittest.TestCase):
                           self.mod2.read())
 
     def test_handling_relative_imports_when_inlining(self):
-        pkg = self.pycore.create_package(self.project.root, 'pkg')
-        mod3 = self.pycore.create_module(pkg, 'mod3')
-        mod4 = self.pycore.create_module(pkg, 'mod4')
+        pkg = testutils.create_package(self.project, 'pkg')
+        mod3 = testutils.create_module(self.project, 'mod3', pkg)
+        mod4 = testutils.create_module(self.project, 'mod4', pkg)
         mod4.write('var = 1\n')
         mod3.write('from . import mod4\n\ndef f():\n    print(mod4.var)\n')
         self.mod.write('import pkg.mod3\n\npkg.mod3.f()\n')
@@ -458,9 +458,9 @@ class InlineTest(unittest.TestCase):
                           self.mod2.read())
 
     def test_relative_imports_and_changing_inlining_body(self):
-        pkg = self.pycore.create_package(self.project.root, 'pkg')
-        mod3 = self.pycore.create_module(pkg, 'mod3')
-        mod4 = self.pycore.create_module(pkg, 'mod4')
+        pkg = testutils.create_package(self.project, 'pkg')
+        mod3 = testutils.create_module(self.project, 'mod3', pkg)
+        mod4 = testutils.create_module(self.project, 'mod4', pkg)
         mod4.write('var = 1\n')
         mod3.write('import mod4\n\ndef f():\n    print(mod4.var)\n')
         self.mod.write('import pkg.mod3\n\npkg.mod3.f()\n')

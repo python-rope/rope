@@ -12,7 +12,7 @@ class ChangeSignatureTest(unittest.TestCase):
         super(ChangeSignatureTest, self).setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
-        self.mod = self.pycore.create_module(self.project.root, 'mod')
+        self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -78,7 +78,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def a_func(param, *args):\n    pass\na_func(*[1, 2, 3])\n', self.mod.read())
 
     def test_normalizing_functions_from_other_modules(self):
-        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('def a_func(param):\n    pass\n')
         self.mod.write('import mod1\nmod1.a_func(param=1)\n')
         signature = ChangeSignature(self.project, mod1,

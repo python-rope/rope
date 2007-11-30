@@ -325,8 +325,7 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals((None, 2), result)
 
     def test_get_definition_location_dotted_module_names(self):
-        module_resource = self.project.get_pycore().\
-                          create_module(self.project.root, 'mod')
+        module_resource = testutils.create_module(self.project, 'mod')
         module_resource.write('def a_func():\n    pass\n')
         code = 'import mod\nmod.a_func()'
         result = get_definition_location(self.project, code, len(code) - 3)
@@ -334,10 +333,10 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_get_definition_location_for_nested_packages(self):
         pycore = self.project.get_pycore()
-        mod1 = pycore.create_module(self.project.root, 'mod1')
-        pkg1 = pycore.create_package(self.project.root, 'pkg1')
-        pkg2 = pycore.create_package(pkg1, 'pkg2')
-        mod2 = pycore.create_module(pkg2, 'mod2')
+        mod1 = testutils.create_module(self.project, 'mod1')
+        pkg1 = testutils.create_package(self.project, 'pkg1')
+        pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
+        mod2 = testutils.create_module(self.project, 'mod2', pkg2)
         mod1.write('import pkg1.pkg2.mod2')
 
         mod1_scope = pycore.resource_to_pyobject(mod1).get_scope()
@@ -483,7 +482,7 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_get_pydoc_for_modules(self):
         pycore = self.project.get_pycore()
-        mod = pycore.create_module(self.project.root, 'mod')
+        mod = testutils.create_module(self.project, 'mod')
         mod.write('"""a module"""\n')
         src = 'import mod\nmod'
         self.assertEquals('a module', get_doc(self.project, src, len(src) - 1))
@@ -624,12 +623,12 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         super(CodeAssistInProjectsTest, self).setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
-        samplemod = self.pycore.create_module(self.project.root, 'samplemod')
+        samplemod = testutils.create_module(self.project, 'samplemod')
         samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
                         "\n\ndef sample_func():\n    pass\nsample_var = 10\n" + \
                         "\ndef _underlined_func():\n    pass\n\n")
-        package = self.pycore.create_package(self.project.root, 'package')
-        nestedmod = self.pycore.create_module(package, 'nestedmod')
+        package = testutils.create_package(self.project, 'package')
+        nestedmod = testutils.create_module(self.project, 'nestedmod', package)
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -735,18 +734,18 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_not_in_result('Sample', 'global', result)
 
     def test_assist_on_relative_imports(self):
-        pkg = self.pycore.create_package(self.project.root, 'pkg')
-        mod1 = self.pycore.create_module(pkg, 'mod1')
-        mod2 = self.pycore.create_module(pkg, 'mod2')
+        pkg = testutils.create_package(self.project, 'pkg')
+        mod1 = testutils.create_module(self.project, 'mod1', pkg)
+        mod2 = testutils.create_module(self.project, 'mod2', pkg)
         mod1.write('def a_func():\n    pass\n')
         code = 'import mod1\nmod1.'
         result = self._assist(code, resource=mod2)
         self.assert_completion_in_result('a_func', 'attribute', result)
 
     def test_get_location_on_relative_imports(self):
-        pkg = self.pycore.create_package(self.project.root, 'pkg')
-        mod1 = self.pycore.create_module(pkg, 'mod1')
-        mod2 = self.pycore.create_module(pkg, 'mod2')
+        pkg = testutils.create_package(self.project, 'pkg')
+        mod1 = testutils.create_module(self.project, 'mod1', pkg)
+        mod2 = testutils.create_module(self.project, 'mod2', pkg)
         mod1.write('def a_func():\n    pass\n')
         code = 'import mod1\nmod1.a_func\n'
         result = get_definition_location(self.project, code,
@@ -754,16 +753,16 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertEquals((mod1, 1), result)
 
     def test_get_doc_on_relative_imports(self):
-        pkg = self.pycore.create_package(self.project.root, 'pkg')
-        mod1 = self.pycore.create_module(pkg, 'mod1')
-        mod2 = self.pycore.create_module(pkg, 'mod2')
+        pkg = testutils.create_package(self.project, 'pkg')
+        mod1 = testutils.create_module(self.project, 'mod1', pkg)
+        mod2 = testutils.create_module(self.project, 'mod2', pkg)
         mod1.write('def a_func():\n    """hey"""\n    pass\n')
         code = 'import mod1\nmod1.a_func\n'
         result = get_doc(self.project, code, len(code) - 2, mod2)
         self.assertTrue(result.endswith('hey'))
 
     def test_finding_occurrences(self):
-        mod = self.pycore.create_module(self.project.root, 'mod')
+        mod = testutils.create_module(self.project, 'mod')
         mod.write('a_var = 1\n')
         result = find_occurrences(self.project, mod, 1)
         self.assertEquals(mod, result[0].resource)
@@ -771,8 +770,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertEquals(False, result[0].unsure)
 
     def test_finding_occurrences_in_more_than_one_module(self):
-        mod1 = self.pycore.create_module(self.project.root, 'mod1')
-        mod2 = self.pycore.create_module(self.project.root, 'mod2')
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
         mod1.write('a_var = 1\n')
         mod2.write('import mod1\nmy_var = mod1.a_var')
         result = find_occurrences(self.project, mod1, 1)
@@ -781,7 +780,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertTrue(mod1 in modules and mod2 in modules)
 
     def test_finding_occurrences_matching_when_unsure(self):
-        mod1 = self.pycore.create_module(self.project.root, 'mod1')
+        mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('class C(object):\n    def a_func(self):\n        pass\n'
                    'def f(arg):\n    arg.a_func()\n')
         result = find_occurrences(

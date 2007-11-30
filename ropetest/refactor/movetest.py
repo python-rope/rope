@@ -11,12 +11,12 @@ class MoveRefactoringTest(unittest.TestCase):
         super(MoveRefactoringTest, self).setUp()
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
-        self.mod1 = self.pycore.create_module(self.project.root, 'mod1')
-        self.mod2 = self.pycore.create_module(self.project.root, 'mod2')
-        self.mod3 = self.pycore.create_module(self.project.root, 'mod3')
-        self.pkg = self.pycore.create_package(self.project.root, 'pkg')
-        self.mod4 = self.pycore.create_module(self.pkg, 'mod4')
-        self.mod5 = self.pycore.create_module(self.pkg, 'mod5')
+        self.mod1 = testutils.create_module(self.project, 'mod1')
+        self.mod2 = testutils.create_module(self.project, 'mod2')
+        self.mod3 = testutils.create_module(self.project, 'mod3')
+        self.pkg = testutils.create_package(self.project, 'pkg')
+        self.mod4 = testutils.create_module(self.project, 'mod4', self.pkg)
+        self.mod5 = testutils.create_module(self.project, 'mod5', self.pkg)
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -147,7 +147,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('import pkg.mod5\nprint(pkg.mod5)\n', moved.read())
 
     def test_moving_packages(self):
-        pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
+        pkg2 = testutils.create_package(self.project, 'pkg2')
         self.mod1.write('import pkg.mod4\nprint(pkg.mod4)')
         self._move(self.mod1, self.mod1.read().index('pkg') + 1, pkg2)
         self.assertFalse(self.pkg.exists())
@@ -180,7 +180,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_resources_using_move_module_refactoring_for_packages(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
-        pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
+        pkg2 = testutils.create_package(self.project, 'pkg2')
         mover = move.create_move(self.project, self.pkg)
         mover.get_changes(pkg2).do()
         self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
@@ -188,7 +188,7 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_resources_using_move_module_refactoring_for_init_dot_py(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
-        pkg2 = self.pycore.create_package(self.project.root, 'pkg2')
+        pkg2 = testutils.create_package(self.project, 'pkg2')
         mover = move.create_move(self.project, self.pkg.get_child('__init__.py'))
         mover.get_changes(pkg2).do()
         self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
