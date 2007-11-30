@@ -1,4 +1,6 @@
-from rope.base import ast, pyobjects, pynames, evaluate, builtins
+#import rope.base.oi.objectinfer
+import rope.base.ast
+from rope.base import pyobjects, evaluate
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes):
@@ -18,18 +20,11 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes):
                           should_analyze, search_subscopes)
     if should_analyze(pydefined):
         visitor = SOIVisitor(pycore, pydefined)
-        for child in ast.get_child_nodes(pydefined.get_ast()):
-            ast.walk(child, visitor)
+        for child in rope.base.ast.get_child_nodes(pydefined.get_ast()):
+            rope.base.ast.walk(child, visitor)
 
 
-def _ignore_inferred(func):
-    def newfunc(*args, **kwds):
-        try:
-            return func(*args, **kwds)
-        except pyobjects.IsBeingInferredError:
-            pass
-    return newfunc
-
+_ignore_inferred = rope.base.oi.objectinfer._ignore_inferred
 
 class SOIVisitor(object):
 
@@ -46,8 +41,8 @@ class SOIVisitor(object):
 
     @_ignore_inferred
     def _Call(self, node):
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, self)
+        for child in rope.base.ast.get_child_nodes(node):
+            rope.base.ast.walk(child, self)
         primary, pyname = evaluate.get_primary_and_result(self.scope,
                                                           node.func)
         if pyname is None:
@@ -60,7 +55,7 @@ class SOIVisitor(object):
             pyclass = pyfunction
             if '__init__' in pyfunction.get_attributes():
                 pyfunction = pyfunction.get_attribute('__init__').get_object()
-            pyname = pynames.UnboundName(pyobjects.PyObject(pyclass))
+            pyname = rope.base.pynames.UnboundName(pyobjects.PyObject(pyclass))
             args = self._args_with_self(primary, pyname, pyfunction, node)
         elif '__call__' in pyfunction.get_attributes():
             pyfunction = pyfunction.get_attribute('__call__').get_object()
@@ -80,26 +75,26 @@ class SOIVisitor(object):
                 pyfunction, args.get_arguments(pyfunction.get_param_names()))
             pyfunction._set_parameter_pyobjects(None)
         # XXX: Maybe we should not call every builtin function
-        if isinstance(pyfunction, builtins.BuiltinFunction):
+        if isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
 
     @_ignore_inferred
     def _Assign(self, node):
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, self)
+        for child in rope.base.ast.get_child_nodes(node):
+            rope.base.ast.walk(child, self)
         visitor = _SOIAssignVisitor()
         nodes = []
         for child in node.targets:
-            ast.walk(child, visitor)
+            rope.base.ast.walk(child, visitor)
             nodes.extend(visitor.nodes)
         for subscript, levels in nodes:
             instance = evaluate.get_statement_result(self.scope, subscript.value)
             args_pynames = []
             args_pynames.append(evaluate.get_statement_result(
                                 self.scope, subscript.slice.value))
-            value = self.pycore.object_infer._infer_assignment(
-                pynames._Assigned(node.value, levels), self.pymodule)
-            args_pynames.append(pynames.UnboundName(value))
+            value = rope.base.oi.objectinfer._infer_assignment(
+                rope.base.pynames._Assigned(node.value, levels), self.pymodule)
+            args_pynames.append(rope.base.pynames.UnboundName(value))
             if instance is not None and value is not None:
                 pyobject = instance.get_object()
                 if '__setitem__' in pyobject.get_attributes():
@@ -116,6 +111,6 @@ class _SOIAssignVisitor(pyobjects._NodeNameCollector):
         self.nodes = []
 
     def _added(self, node, levels):
-        if isinstance(node, ast.Subscript) and \
-           isinstance(node.slice, ast.Index):
+        if isinstance(node, rope.base.ast.Subscript) and \
+           isinstance(node.slice, rope.base.ast.Index):
             self.nodes.append((node, levels))

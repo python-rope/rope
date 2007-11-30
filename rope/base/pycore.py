@@ -3,12 +3,12 @@ import difflib
 import sys
 import warnings
 
-import rope.base.oi.objectinfer
+import rope.base.oi.dynamicoi
 import rope.base.oi.objectinfo
+import rope.base.oi.staticoi
 import rope.base.project
 from rope.base import ast, exceptions, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.oi import dynamicoi, staticoi
 from rope.base.pyobjects import PyModule, PyPackage, PyClass
 
 
@@ -21,7 +21,6 @@ class PyCore(object):
         self.classes_cache = _ClassesCache(self)
         self.module_cache = _ModuleCache(self)
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
-        self.object_infer = rope.base.oi.objectinfer.ObjectInfer(self)
         self._init_automatic_soi()
         self._init_source_folders()
 
@@ -222,8 +221,8 @@ class PyCore(object):
         receiver = self.object_info.doi_data_received
         if not self.project.get_prefs().get('perform_doi', True):
             receiver = None
-        runner = dynamicoi.PythonFileRunner(self, resource, args, stdin,
-                                            stdout, receiver)
+        runner = rope.base.oi.dynamicoi.PythonFileRunner(
+            self, resource, args, stdin, stdout, receiver)
         runner.add_finishing_observer(self.module_cache.forget_all_data)
         runner.run()
         return runner
@@ -246,8 +245,8 @@ class PyCore(object):
         """
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
-        staticoi.analyze_module(self, pymodule,
-                                should_analyze, search_subscopes)
+        rope.base.oi.staticoi.analyze_module(self, pymodule,
+                                             should_analyze, search_subscopes)
 
     def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
         classes = self.classes_cache.get_classes(task_handle)

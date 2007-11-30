@@ -1,4 +1,5 @@
 import rope.base.pyobjects
+import rope.base.oi.objectinfer
 from rope.base.exceptions import (ModuleNotFoundError,
                                   AttributeNotFoundError)
 
@@ -37,8 +38,7 @@ class AssignedName(PyName):
 
     def _get_inferred(self):
         if self.module is not None:
-            object_infer = self.module.pycore.object_infer
-            return object_infer.infer_assigned_object(self)
+            return rope.base.oi.objectinfer.infer_assigned_object(self)
 
     def get_object(self):
         return self.pyobject.get()
@@ -112,8 +112,7 @@ class EvaluatedName(PyName):
                                   _get_concluded_data(module))
 
     def _get_inferred(self):
-        object_infer = self.module.pycore.object_infer
-        return object_infer.evaluate_object(self)
+        return rope.base.oi.objectinfer.evaluate_object(self)
 
     def get_object(self):
         return self.pyobject.get()
@@ -140,8 +139,8 @@ class ParameterName(PyName):
 
     def get_objects(self):
         """Returns the list of objects passed as this parameter"""
-        object_infer = self.pyfunction.pycore.object_infer
-        return object_infer.get_passed_objects(self.pyfunction, self.index)
+        return rope.base.oi.objectinfer.get_passed_objects(
+            self.pyfunction, self.index)
 
     def get_definition_location(self):
         return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)

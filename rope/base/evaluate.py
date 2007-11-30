@@ -1,6 +1,4 @@
-import rope.base.pyobjects
-import rope.base.pynames
-import rope.base.pyscopes
+import rope.base
 from rope.base import ast, exceptions
 
 

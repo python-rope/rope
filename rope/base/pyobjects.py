@@ -1,7 +1,7 @@
 import rope.base.evaluate
+import rope.base.oi.objectinfer
 import rope.base.pyscopes
-from rope.base import exceptions
-from rope.base import ast, pynames
+from rope.base import exceptions, ast, pynames
 
 
 class PyObject(object):
@@ -240,14 +240,12 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         return rope.base.pyscopes.FunctionScope(self.pycore, self)
 
     def _infer_parameters(self):
-        object_infer = self.pycore.object_infer
-        pyobjects = object_infer.infer_parameter_objects(self)
+        pyobjects = rope.base.oi.objectinfer.infer_parameter_objects(self)
         self._handle_special_args(pyobjects)
         return pyobjects
 
     def _infer_returned(self, args=None):
-        object_infer = self.pycore.object_infer
-        return object_infer.infer_returned_object(self, args)
+        return rope.base.oi.objectinfer.infer_returned_object(self, args)
 
     def _handle_special_args(self, pyobjects):
         if len(pyobjects) == len(self.arguments.args):
