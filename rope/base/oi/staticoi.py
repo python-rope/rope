@@ -1,4 +1,3 @@
-#import rope.base.oi.objectinfer
 import rope.base.ast
 from rope.base import pyobjects, evaluate
 
@@ -24,8 +23,6 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes):
             rope.base.ast.walk(child, visitor)
 
 
-_ignore_inferred = rope.base.oi.objectinfer._ignore_inferred
-
 class SOIVisitor(object):
 
     def __init__(self, pycore, pydefined):
@@ -39,7 +36,6 @@ class SOIVisitor(object):
     def _ClassDef(self, node):
         pass
 
-    @_ignore_inferred
     def _Call(self, node):
         for child in rope.base.ast.get_child_nodes(node):
             rope.base.ast.walk(child, self)
@@ -78,7 +74,6 @@ class SOIVisitor(object):
         if isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
 
-    @_ignore_inferred
     def _Assign(self, node):
         for child in rope.base.ast.get_child_nodes(node):
             rope.base.ast.walk(child, self)

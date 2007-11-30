@@ -18,6 +18,7 @@ def _ignore_inferred(func):
     return newfunc
 
 
+@_ignore_inferred
 def infer_returned_object(pyfunction, args):
     """Infer the `PyObject` this `PyFunction` returns after calling"""
     object_info = pyfunction.pycore.object_info
@@ -33,6 +34,7 @@ def infer_returned_object(pyfunction, args):
         return result
     return object_info.get_returned(pyfunction, args)
 
+@_ignore_inferred
 def infer_parameter_objects(pyfunction):
     """Infer the `PyObject`\s of parameters of this `PyFunction`"""
     object_info = pyfunction.pycore.object_info
@@ -55,6 +57,7 @@ def _handle_first_parameter(pyobject, parameters):
     if kind == 'classmethod':
         parameters[0] = pyobject.parent
 
+@_ignore_inferred
 def infer_assigned_object(pyname):
     if not pyname.assignments:
         return
