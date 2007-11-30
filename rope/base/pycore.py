@@ -6,9 +6,9 @@ import warnings
 import rope.base.oi.objectinfer
 import rope.base.oi.objectinfo
 import rope.base.project
-from rope.base import ast, exceptions, taskhandle, codeanalyze
+from rope.base import ast, exceptions, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.oi import dynamicoi
+from rope.base.oi import dynamicoi, staticoi
 from rope.base.pyobjects import PyModule, PyPackage, PyClass
 
 
@@ -212,9 +212,6 @@ class PyCore(object):
             result.extend(self._find_source_folders(resource))
         return result
 
-    def _get_object_infer(self):
-        return self.object_infer
-
     def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Run `resource` module
 
@@ -249,8 +246,8 @@ class PyCore(object):
         """
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
-        self.object_infer.soi.analyze_module(pymodule, should_analyze,
-                                             search_subscopes)
+        staticoi.analyze_module(self, pymodule,
+                                should_analyze, search_subscopes)
 
     def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
         classes = self.classes_cache.get_classes(task_handle)

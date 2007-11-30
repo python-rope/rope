@@ -240,13 +240,13 @@ class PyFunction(PyDefinedObject, AbstractFunction):
         return rope.base.pyscopes.FunctionScope(self.pycore, self)
 
     def _infer_parameters(self):
-        object_infer = self.pycore._get_object_infer()
+        object_infer = self.pycore.object_infer
         pyobjects = object_infer.infer_parameter_objects(self)
         self._handle_special_args(pyobjects)
         return pyobjects
 
     def _infer_returned(self, args=None):
-        object_infer = self.pycore._get_object_infer()
+        object_infer = self.pycore.object_infer
         return object_infer.infer_returned_object(self, args)
 
     def _handle_special_args(self, pyobjects):

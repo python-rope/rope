@@ -1,60 +1,14 @@
-import rope.base
 from rope.base import ast, pyobjects, pynames, evaluate, builtins
 
 
-class StaticObjectInference(object):
-    """Performs static object inference
+def analyze_module(pycore, pymodule, should_analyze, search_subscopes):
+    """Analyze `pymodule` for static object inference
 
-    It actually performs two things:
-
-    * Analyzes scopes for collection object information
-      (`analyze_module` method)
-    * Analyzes function body for infering the object that is returned
-      from a function (`infer_returned_object` method)
+    Analyzes scopes for collecting object information.  The analysis
+    starts from inner scopes.
 
     """
-
-    def __init__(self, pycore):
-        self.pycore = pycore
-
-    def infer_returned_object(self, pyobject, args):
-        if args:
-            # HACK: Setting parameter objects manually
-            # This is not thread safe and might cause problems if `args`
-            # does not come from a good call site
-            pyobject.get_scope().invalidate_data()
-            pyobject._set_parameter_pyobjects(
-                args.get_arguments(pyobject.get_param_names(special_args=False)))
-        scope = pyobject.get_scope()
-        if not scope._get_returned_asts():
-            return
-        for returned_node in reversed(scope._get_returned_asts()):
-            try:
-                resulting_pyname = evaluate.get_statement_result(scope,
-                                                                 returned_node)
-                if resulting_pyname is None:
-                    return None
-                pyobject = resulting_pyname.get_object()
-                if pyobject == pyobjects.get_unknown():
-                    return
-                if not scope._is_generator():
-                    return resulting_pyname.get_object()
-                else:
-                    return builtins.get_generator(resulting_pyname.get_object())
-            except pyobjects.IsBeingInferredError:
-                pass
-
-    def infer_parameter_objects(self, pyobject):
-        params = pyobject.get_param_names(special_args=False)
-        return [pyobjects.get_unknown()] * len(params)
-
-    def analyze_module(self, pymodule, should_analyze, search_subscopes):
-        """Analyze `pymodule` for static object inference
-
-        The analysis starts from inner scopes first.
-
-        """
-        _analyze_node(self.pycore, pymodule, should_analyze, search_subscopes)
+    _analyze_node(pycore, pymodule, should_analyze, search_subscopes)
 
 
 def _analyze_node(pycore, pydefined, should_analyze, search_subscopes):
@@ -66,6 +20,15 @@ def _analyze_node(pycore, pydefined, should_analyze, search_subscopes):
         visitor = SOIVisitor(pycore, pydefined)
         for child in ast.get_child_nodes(pydefined.get_ast()):
             ast.walk(child, visitor)
+
+
+def _ignore_inferred(func):
+    def newfunc(*args, **kwds):
+        try:
+            return func(*args, **kwds)
+        except pyobjects.IsBeingInferredError:
+            pass
+    return newfunc
 
 
 class SOIVisitor(object):
@@ -81,6 +44,7 @@ class SOIVisitor(object):
     def _ClassDef(self, node):
         pass
 
+    @_ignore_inferred
     def _Call(self, node):
         for child in ast.get_child_nodes(node):
             ast.walk(child, self)
@@ -119,6 +83,7 @@ class SOIVisitor(object):
         if isinstance(pyfunction, builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
 
+    @_ignore_inferred
     def _Assign(self, node):
         for child in ast.get_child_nodes(node):
             ast.walk(child, self)

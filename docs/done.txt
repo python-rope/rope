@@ -3,6 +3,9 @@
 ===========
 
 
+- Deprecated `Pycore.create_(module|package)` : November 29, 2007
+
+
 - Performing refactorings across multiple projects : November 29, 2007
 
 
