@@ -1,7 +1,6 @@
 import re
 
-import rope.base.pyobjects
-from rope.base import ast, builtins, codeanalyze, evaluate
+from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.refactor import sourceutils, similarfinder, patchedast, suites

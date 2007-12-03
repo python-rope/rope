@@ -247,8 +247,7 @@ class _ASTMatcher(object):
     def _match_normal_var(self, node1, node2, mapping):
         name = self.ropevar.get_base(node1.id)
         if name not in mapping:
-            if isinstance(node2, ast.Name) and node2.id == name or \
-               isinstance(node2, ast.Attribute) and node2.attr == name:
+            if isinstance(node2, ast.Name) and node2.id == name:
                 mapping[name] = node2
                 return True
             return False

@@ -664,6 +664,20 @@ class ExtractMethodTest(unittest.TestCase):
                    '    def f2(self):\n        print(str(1))\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_when_an_attribute_exists_in_function_scope(self):
+        code = 'class A(object):\n    def func(self):\n        pass\n' \
+               'a = A()\n' \
+               'def f():\n' \
+               '    func = a.func()\n' \
+               '    print func\n'
+
+        start, end = self._convert_line_range_to_offset(code, 6, 6)
+        refactored = self.do_extract_method(code, start, end, 'g')
+        refactored = refactored[refactored.index('A()') + 4:]
+        expected = 'def f():\n    func = g()\n    print func\n\n' \
+                   'def g():\n    func = a.func()\n    return func\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

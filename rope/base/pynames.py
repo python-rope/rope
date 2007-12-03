@@ -1,4 +1,3 @@
-import rope.base.pyobjects
 import rope.base.oi.objectinfer
 from rope.base.exceptions import (ModuleNotFoundError,
                                   AttributeNotFoundError)
