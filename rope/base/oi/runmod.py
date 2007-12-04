@@ -24,6 +24,9 @@ def __rope_start_everything():
         def send_data(self, data):
             pickle.dump(data, self.my_file)
 
+        def close(self):
+            self.my_file.close()
+
     class _FileSender(_MessageSender):
 
         def __init__(self, file_name):
@@ -31,6 +34,9 @@ def __rope_start_everything():
 
         def send_data(self, data):
             marshal.dump(data, self.my_file)
+
+        def close(self):
+            self.my_file.close()
 
     class _FunctionCallDataSender(object):
 
@@ -150,6 +156,9 @@ def __rope_start_everything():
             if isinstance(object_, (types.TypeType, types.ClassType)):
                 return self._get_persisted_class(object_)
             return ('instance', self._get_persisted_class(type(object_)))
+
+        def close(self):
+            self.sender.close()
 
     def _realpath(path):
         return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
