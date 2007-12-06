@@ -257,7 +257,7 @@ consumes:
 * ObjectInfo: for storing object information
 * History: for storing changes
 
-We should measure the amount of memory each of them uses to make
+We should measure the amount of memory each of them use to make
 decisions.
 
 
@@ -267,48 +267,26 @@ Getting Ready For Python 3.0
 This has been moved to a separate branch.
 
 
-What Rope Assumes...
-====================
-
-In order to simplify problems a bit, rope makes some assumptions about
-the source code.  In future some of this restrictions might be
-removed.
-
-* All files that end with ``.py`` are considered to be python files
-  and all others not.
-* Either all files that are not ignored should be under version
-  control or none.
-* All ``*.txt`` files are considered to be ReST.
-* XXX
-
-
 Unresolved Issues
 =================
 
-* Splitting history for being faster?
+* Commenting based on the line of syntax error in codeassist?
+* objectinfer:183; should we give up when the first attempt
+  returned None or unknown, user config?
 * Searching all files when extracting a global method?
 * Better tests in `patchedasttest`
-* Callbacks in keybinder hold their parent frame
 * Import actions with more that one phase and filtering problems
 * Handle long imports should work on filtered imports unconditionally?
-
-* A mode for removing trailing whitespaces
-* Renaming ``rope.py`` to ``ropeide.py`` and ``~/.rope`` to
-  ``~/.ropeide.py``?
-* Changing the default font on linux to courier?
-* Commenting based on the line of syntax error in codeassist?
 * Adding restructuring scope; local scope, module, all files?
-* Better search triggering in find type dialog
 * Changing `codeanalyze.WordFinder` to use ASTs?
 * Refactoring codeanalyze; lots of estimations
 * Assignment to parameters in inline method
-* Assignment to parameter warning
-
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
 * Using similarfinder in introduce_parameter?
-* Moving `PyCore.create_module()` and `PyCore.create_package()`?
 * Using GPLv3 from 0.7?
+* Removed unused refactorings
+* Unignored files that are not under version control
 
 
 Small Stories

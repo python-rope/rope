@@ -3,10 +3,10 @@ import re
 import sys
 
 import rope.base.codeanalyze
-from rope.base import pyobjects, pynames, taskhandle, builtins
-from rope.base.codeanalyze import (StatementRangeFinder, ArrayLinesAdapter,
-                                   WordRangeFinder, ScopeNameFinder,
-                                   SourceLinesAdapter, BadIdentifierError)
+from rope.base import pyobjects, pynames, taskhandle, builtins, codeanalyze
+from rope.base.codeanalyze import (ArrayLinesAdapter, BadIdentifierError,
+                                   LogicalLineFinder, ScopeNameFinder,
+                                   SourceLinesAdapter, WordRangeFinder)
 from rope.refactor import occurrences, functionutils
 
 
@@ -363,10 +363,9 @@ class _CodeCompletionCollector(object):
         return rope.base.codeanalyze.count_line_indents(line)
 
     def _comment_current_statement(self):
-        range_finder = StatementRangeFinder(ArrayLinesAdapter(self.lines),
-                                            self.lineno)
-        start = range_finder.get_statement_start() - 1
-        end = range_finder.get_block_end() - 1
+        logical_finder = LogicalLineFinder(ArrayLinesAdapter(self.lines))
+        start = logical_finder.get_logical_line_in(self.lineno)[0] - 1
+        end = self._get_block_end(start)
         last_indents = self._get_line_indents(self.lines[start])
         self.lines[start] = ' ' * last_indents + 'pass'
         for line in range(start + 1, end + 1):
@@ -374,6 +373,16 @@ class _CodeCompletionCollector(object):
             self.lines[line] = self.lines[start]
         self.lines.append('\n')
         self._fix_incomplete_try_blocks()
+
+    def _get_block_end(self, lineno):
+        end_line = lineno
+        base_indents = self._get_line_indents(self.lines[lineno])
+        for i in range(lineno + 1, len(self.lines)):
+            if self._get_line_indents(self.lines[i]) >= base_indents:
+                end_line = i
+            else:
+                break
+        return end_line
 
     def _fix_incomplete_try_blocks(self):
         block_start = self.lineno
@@ -473,7 +482,7 @@ class _CodeCompletionCollector(object):
         word_finder = WordRangeFinder(self.unchanged_source)
         lines = SourceLinesAdapter(self.unchanged_source)
         lineno = lines.get_line_number(offset)
-        stop_line = StatementRangeFinder(lines, lineno).get_statement_start()
+        stop_line = LogicalLineFinder(lines).get_logical_line_in(lineno)[0]
         stop = lines.get_line_start(stop_line)
         if word_finder.is_on_function_call_keyword(offset - 1, stop):
             name_finder = ScopeNameFinder(pymodule)
