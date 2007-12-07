@@ -31,4 +31,17 @@ class NameNotFoundError(RopeError):
 
 
 class ModuleSyntaxError(RopeError):
-    """Module has syntax errors"""
+    """Module has syntax errors
+
+    The `filename` and `lineno` fields indicate where the error has
+    occurred.
+
+    """
+
+    def __init__(self, filename, lineno, message):
+        self.filename = filename
+        self.lineno = lineno
+        self.message = message
+        super(ModuleSyntaxError, self).__init__(
+            'Syntax error in file <%s> line <%s>: %s' %
+            (filename, lineno, message))

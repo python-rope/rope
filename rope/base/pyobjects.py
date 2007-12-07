@@ -424,9 +424,7 @@ class PyModule(_PyModule):
                 filename = 'string'
                 if resource:
                     filename = resource.path
-                raise exceptions.ModuleSyntaxError(
-                    'Syntax error in file <%s> line <%s>: %s' %
-                    (filename, e.lineno, e.msg))
+                raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
             else:
                 ast_node = ast.parse('\n')
         self.star_imports = []

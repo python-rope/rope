@@ -486,6 +486,12 @@ class PyCoreTest(unittest.TestCase):
     def test_syntax_errors_in_code(self):
         mod = self.pycore.get_string_module('xyx print\n')
 
+    def test_holding_error_location_information(self):
+        try:
+            mod = self.pycore.get_string_module('xyx print\n')
+        except exceptions.ModuleSyntaxError, e:
+            self.assertEquals(1, e.lineno)
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
