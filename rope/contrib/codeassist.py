@@ -265,14 +265,14 @@ class _PythonCodeAssist(object):
             current_offset -= 1;
         return current_offset + 1
 
-    def _get_matching_keywords(self, starting):
+    def _matching_keywords(self, starting):
         result = []
         for kw in self.keywords:
             if kw.startswith(starting):
                 result.append(CompletionProposal(kw, 'keyword'))
         return result
 
-    def _get_template_proposals(self, starting):
+    def _template_proposals(self, starting):
         result = []
         for name, template in self.templates.items():
             if name.startswith(starting):
@@ -284,11 +284,11 @@ class _PythonCodeAssist(object):
             return []
         completions = list(self._code_completions().values())
         if self.expression.strip() == '' and self.starting.strip() != '':
-            completions.extend(self._get_matching_keywords(self.starting))
-            completions.extend(self._get_template_proposals(self.starting))
+            completions.extend(self._matching_keywords(self.starting))
+            completions.extend(self._template_proposals(self.starting))
         return completions
 
-    def _get_dotted_completions(self, module_scope, holding_scope):
+    def _dotted_completions(self, module_scope, holding_scope):
         result = {}
         pyname_finder = ScopeNameFinder(module_scope.pyobject)
         found_pyname = pyname_finder.get_pyname_in_scope(holding_scope,
@@ -301,11 +301,10 @@ class _PythonCodeAssist(object):
                         name, 'attribute', self._get_pyname_type(pyname))
         return result
 
-    def _get_undotted_completions(self, scope, result,
-                                  propagated=False, lineno=None):
+    def _undotted_completions(self, scope, result, propagated=False):
         if scope.parent != None:
-            self._get_undotted_completions(scope.parent, result,
-                                           propagated=True)
+            self._undotted_completions(scope.parent, result,
+                                       propagated=True)
         if propagated:
             names = scope.get_propagated_names()
         else:
@@ -317,11 +316,6 @@ class _PythonCodeAssist(object):
                     kind = 'builtin'
                 elif scope.get_kind() == 'Module':
                     kind = 'global'
-                if lineno is not None:
-                    location = pyname.get_definition_location()
-                    if location and location[1] is not None and \
-                       location[1] > lineno:
-                        continue
                 result[name] = CompletionProposal(
                     name, kind, self._get_pyname_type(pyname))
 
@@ -366,15 +360,14 @@ class _PythonCodeAssist(object):
         indents = _get_line_indents(lines[start - 1])
         inner_scope = module_scope.get_inner_scope_for_line(start, indents)
         if self.expression.strip() != '':
-            result.update(self._get_dotted_completions(module_scope,
-                                                       inner_scope))
+            result.update(self._dotted_completions(module_scope, inner_scope))
         else:
-            result.update(self._get_keyword_parameters(module_scope.pyobject,
-                                                       inner_scope))
-            self._get_undotted_completions(inner_scope, result, lineno=None)
+            result.update(self._keyword_parameters(module_scope.pyobject,
+                                                   inner_scope))
+            self._undotted_completions(inner_scope, result)
         return result
 
-    def _get_keyword_parameters(self, pymodule, scope):
+    def _keyword_parameters(self, pymodule, scope):
         offset = self.offset
         if offset == 0:
             return {}
