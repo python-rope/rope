@@ -3,14 +3,16 @@ import re
 import sys
 
 import rope.base.codeanalyze
-from rope.base import pyobjects, pynames, taskhandle, builtins, codeanalyze
+from rope.base import (pyobjects, pynames, taskhandle, builtins,
+                       codeanalyze, exceptions)
 from rope.base.codeanalyze import (ArrayLinesAdapter, BadIdentifierError,
                                    LogicalLineFinder, ScopeNameFinder,
                                    SourceLinesAdapter, WordRangeFinder)
 from rope.refactor import occurrences, functionutils
 
 
-def code_assist(project, source_code, offset, resource=None, templates={}):
+def code_assist(project, source_code, offset,
+                resource=None, templates={}, maxfixes=1):
     """Return python code completions as a list of `CodeAssistProposal`\s
 
     `resource` is a `rope.base.resources.Resource` object.  If
@@ -20,9 +22,13 @@ def code_assist(project, source_code, offset, resource=None, templates={}):
     objects.  The matches are returned as `TemplateProposal`
     instances.
 
+    `maxfixes` is the maximum number of errors to fix if the code has
+    errors in it.
+
     """
-    assist = _PythonCodeAssist(project, templates=templates)
-    return assist.assist(source_code, offset, resource)
+    assist = _PythonCodeAssist(project, source_code, offset, resource=resource,
+                               templates=templates, maxfixes=maxfixes)
+    return assist()
 
 
 def starting_offset(source_code, offset):
@@ -238,10 +244,19 @@ def default_templates():
 
 class _PythonCodeAssist(object):
 
-    def __init__(self, project, templates={}):
+    def __init__(self, project, source_code, offset, resource=None,
+                 templates={}, maxfixes=1):
         self.project = project
-        self.keywords = keyword.kwlist
+        self.pycore = self.project.get_pycore()
+        self.code = source_code
+        self.resource = resource
+        self.maxfixes = maxfixes
         self.templates = templates
+        word_finder = WordRangeFinder(source_code)
+        self.expression, self.starting, self.offset = \
+            word_finder.get_splitted_primary_before(offset)
+
+    keywords = keyword.kwlist
 
     def _find_starting_offset(self, source_code, offset):
         current_offset = offset - 1
@@ -257,9 +272,6 @@ class _PythonCodeAssist(object):
                 result.append(CompletionProposal(kw, 'keyword'))
         return result
 
-    def add_template(self, name, definition):
-        self.templates.append(TemplateProposal(name, Template(definition)))
-
     def _get_template_proposals(self, starting):
         result = []
         for name, template in self.templates.items():
@@ -267,25 +279,140 @@ class _PythonCodeAssist(object):
                 result.append(TemplateProposal(name, template))
         return result
 
-    def _get_code_completions(self, source_code, offset,
-                              expression, starting, resource):
-        collector = _CodeCompletionCollector(self.project, source_code, offset,
-                                             expression, starting, resource)
-        return collector.get_code_completions()
-
-    def assist(self, source_code, offset, resource=None):
-        if offset > len(source_code):
+    def __call__(self):
+        if self.offset > len(self.code):
             return []
-        word_finder = WordRangeFinder(source_code)
-        expression, starting, starting_offset = \
-            word_finder.get_splitted_primary_before(offset)
-        completions = list(
-            self._get_code_completions(source_code, offset, expression,
-                                       starting, resource).values())
-        if expression.strip() == '' and starting.strip() != '':
-            completions.extend(self._get_matching_keywords(starting))
-            completions.extend(self._get_template_proposals(starting))
+        completions = list(self._code_completions().values())
+        if self.expression.strip() == '' and self.starting.strip() != '':
+            completions.extend(self._get_matching_keywords(self.starting))
+            completions.extend(self._get_template_proposals(self.starting))
         return completions
+
+    def _get_dotted_completions(self, module_scope, holding_scope):
+        result = {}
+        pyname_finder = ScopeNameFinder(module_scope.pyobject)
+        found_pyname = pyname_finder.get_pyname_in_scope(holding_scope,
+                                                         self.expression)
+        if found_pyname is not None:
+            element = found_pyname.get_object()
+            for name, pyname in element.get_attributes().items():
+                if name.startswith(self.starting) or self.starting == '':
+                    result[name] = CompletionProposal(
+                        name, 'attribute', self._get_pyname_type(pyname))
+        return result
+
+    def _get_undotted_completions(self, scope, result,
+                                  propagated=False, lineno=None):
+        if scope.parent != None:
+            self._get_undotted_completions(scope.parent, result,
+                                           propagated=True)
+        if propagated:
+            names = scope.get_propagated_names()
+        else:
+            names = scope.get_names()
+        for name, pyname in names.items():
+            if name.startswith(self.starting):
+                kind = 'local'
+                if isinstance(pyname, builtins.BuiltinName):
+                    kind = 'builtin'
+                elif scope.get_kind() == 'Module':
+                    kind = 'global'
+                if lineno is not None:
+                    location = pyname.get_definition_location()
+                    if location and location[1] is not None and \
+                       location[1] > lineno:
+                        continue
+                result[name] = CompletionProposal(
+                    name, kind, self._get_pyname_type(pyname))
+
+    def _get_pyname_type(self, pyname):
+        if isinstance(pyname, (pynames.AssignedName, pynames.UnboundName)):
+            return 'variable'
+        if isinstance(pyname, pynames.ImportedName) or \
+           isinstance(pyname, pynames.ImportedModule):
+            return 'imported'
+        if isinstance(pyname, pynames.ParameterName):
+            return 'parameter'
+        if isinstance(pyname, builtins.BuiltinName) or \
+           isinstance(pyname, pynames.DefinedName):
+            pyobject = pyname.get_object()
+            if isinstance(pyobject, pyobjects.AbstractFunction):
+                return 'function'
+            if isinstance(pyobject, pyobjects.AbstractClass):
+                return 'class'
+
+    def _code_completions(self):
+        lines = self.code.split('\n')
+        code = self.code
+        lineno = self.code.count('\n', 0, self.offset) + 1
+        commenter = _Commenter(lines)
+        tries = 0
+        while True:
+            try:
+                module_scope = _get_pymodule(self.pycore, code,
+                                             self.resource).get_scope()
+            except exceptions.ModuleSyntaxError, e:
+                if tries < self.maxfixes:
+                    tries += 1
+                    commenter.comment(e.lineno)
+                    lines = commenter.lines
+                    code = '\n'.join(lines)
+                else:
+                    raise
+            else:
+                break
+        result = {}
+        start = _logical_start(lines, lineno)
+        indents = _get_line_indents(lines[start - 1])
+        inner_scope = module_scope.get_inner_scope_for_line(start, indents)
+        if self.expression.strip() != '':
+            result.update(self._get_dotted_completions(module_scope,
+                                                       inner_scope))
+        else:
+            result.update(self._get_keyword_parameters(module_scope.pyobject,
+                                                       inner_scope))
+            self._get_undotted_completions(inner_scope, result, lineno=None)
+        return result
+
+    def _get_keyword_parameters(self, pymodule, scope):
+        offset = self.offset
+        if offset == 0:
+            return {}
+        word_finder = WordRangeFinder(self.code)
+        lines = SourceLinesAdapter(self.code)
+        lineno = lines.get_line_number(offset)
+        stop_line = LogicalLineFinder(lines).get_logical_line_in(lineno)[0]
+        stop = lines.get_line_start(stop_line)
+        if word_finder.is_on_function_call_keyword(offset - 1, stop):
+            name_finder = ScopeNameFinder(pymodule)
+            function_parens = word_finder.\
+                find_parens_start_from_inside(offset - 1, stop)
+            primary = word_finder.get_primary_at(function_parens - 1)
+            try:
+                function_pyname = ScopeNameFinder.\
+                    get_pyname_in_scope(scope, primary)
+            except BadIdentifierError, e:
+                return {}
+            if function_pyname is not None:
+                pyobject = function_pyname.get_object()
+                if isinstance(pyobject, pyobjects.AbstractFunction):
+                    pass
+                elif isinstance(pyobject, pyobjects.AbstractClass) and \
+                     '__init__' in pyobject.get_attributes():
+                    pyobject = pyobject.get_attribute('__init__').get_object()
+                elif '__call__' in pyobject.get_attributes():
+                    pyobject = pyobject.get_attribute('__call__').get_object()
+                if isinstance(pyobject, pyobjects.AbstractFunction):
+                    param_names = []
+                    param_names.extend(
+                        pyobject.get_param_names(special_args=False))
+                    result = {}
+                    for name in param_names:
+                        if name.startswith(self.starting):
+                            result[name + '='] = CompletionProposal(
+                                name + '=', 'parameter_keyword')
+                    return result
+        return {}
 
 
 class _ProposalSorter(object):
@@ -337,128 +464,6 @@ class _ProposalSorter(object):
         if underline_count1 != underline_count2:
             return cmp(underline_count1, underline_count2)
         return cmp(name1, name2)
-
-
-class _CodeCompletionCollector(object):
-
-    def __init__(self, project, source_code,
-                 offset, expression, starting, resource):
-        self.project = project
-        self.expression = expression
-        self.starting = starting
-        self.offset = offset
-        self.pycore = self.project.get_pycore()
-        self.source_code = source_code
-        self.resource = resource
-
-    def _get_dotted_completions(self, module_scope, holding_scope):
-        result = {}
-        pyname_finder = ScopeNameFinder(module_scope.pyobject)
-        found_pyname = pyname_finder.get_pyname_in_scope(holding_scope,
-                                                         self.expression)
-        if found_pyname is not None:
-            element = found_pyname.get_object()
-            for name, pyname in element.get_attributes().items():
-                if name.startswith(self.starting) or self.starting == '':
-                    result[name] = CompletionProposal(
-                        name, 'attribute', self._get_pyname_type(pyname))
-        return result
-
-    def _get_undotted_completions(self, scope, result, propagated=False):
-        if scope.parent != None:
-            self._get_undotted_completions(scope.parent, result,
-                                           propagated=True)
-        if propagated:
-            names = scope.get_propagated_names()
-        else:
-            names = scope.get_names()
-        for name, pyname in names.items():
-            if name.startswith(self.starting):
-                kind = 'local'
-                if isinstance(pyname, builtins.BuiltinName):
-                    kind = 'builtin'
-                elif scope.get_kind() == 'Module':
-                    kind = 'global'
-                result[name] = CompletionProposal(
-                    name, kind, self._get_pyname_type(pyname))
-
-    def _get_pyname_type(self, pyname):
-        if isinstance(pyname, (pynames.AssignedName, pynames.UnboundName)):
-            return 'variable'
-        if isinstance(pyname, pynames.ImportedName) or \
-           isinstance(pyname, pynames.ImportedModule):
-            return 'imported'
-        if isinstance(pyname, pynames.ParameterName):
-            return 'parameter'
-        if isinstance(pyname, builtins.BuiltinName) or \
-           isinstance(pyname, pynames.DefinedName):
-            pyobject = pyname.get_object()
-            if isinstance(pyobject, pyobjects.AbstractFunction):
-                return 'function'
-            if isinstance(pyobject, pyobjects.AbstractClass):
-                return 'class'
-
-    def get_code_completions(self):
-        lines = self.source_code.split('\n')
-        lineno = self.source_code.count('\n', 0, self.offset) + 1
-        commenter = _Commenter(lines)
-        commenter.comment(lineno)
-        lines = commenter.lines
-        source_code = '\n'.join(lines)
-        module_scope = _get_pymodule(self.pycore, source_code,
-                                     self.resource).get_scope()
-        result = {}
-        start = _logical_start(lines, lineno)
-        indents = _get_line_indents(lines[start - 1])
-        inner_scope = module_scope.get_inner_scope_for_line(start, indents)
-        if self.expression.strip() != '':
-            result.update(self._get_dotted_completions(module_scope,
-                                                       inner_scope))
-        else:
-            result.update(self._get_keyword_parameters(module_scope.pyobject,
-                                                       inner_scope))
-            self._get_undotted_completions(inner_scope, result)
-        return result
-
-    def _get_keyword_parameters(self, pymodule, scope):
-        offset = self.offset
-        if offset == 0:
-            return {}
-        word_finder = WordRangeFinder(self.source_code)
-        lines = SourceLinesAdapter(self.source_code)
-        lineno = lines.get_line_number(offset)
-        stop_line = LogicalLineFinder(lines).get_logical_line_in(lineno)[0]
-        stop = lines.get_line_start(stop_line)
-        if word_finder.is_on_function_call_keyword(offset - 1, stop):
-            name_finder = ScopeNameFinder(pymodule)
-            function_parens = word_finder.\
-                find_parens_start_from_inside(offset - 1, stop)
-            primary = word_finder.get_primary_at(function_parens - 1)
-            try:
-                function_pyname = ScopeNameFinder.\
-                    get_pyname_in_scope(scope, primary)
-            except BadIdentifierError, e:
-                return {}
-            if function_pyname is not None:
-                pyobject = function_pyname.get_object()
-                if isinstance(pyobject, pyobjects.AbstractFunction):
-                    pass
-                elif isinstance(pyobject, pyobjects.AbstractClass) and \
-                     '__init__' in pyobject.get_attributes():
-                    pyobject = pyobject.get_attribute('__init__').get_object()
-                elif '__call__' in pyobject.get_attributes():
-                    pyobject = pyobject.get_attribute('__call__').get_object()
-                if isinstance(pyobject, pyobjects.AbstractFunction):
-                    param_names = []
-                    param_names.extend(
-                        pyobject.get_param_names(special_args=False))
-                    result = {}
-                    for name in param_names:
-                        if name.startswith(self.starting):
-                            result[name + '='] = CompletionProposal(
-                                name + '=', 'parameter_keyword')
-                    return result
-        return {}
 
 
 class _Commenter(object):

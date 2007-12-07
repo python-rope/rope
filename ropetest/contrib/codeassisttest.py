@@ -17,10 +17,11 @@ class CodeAssistTest(unittest.TestCase):
         testutils.remove_project(self.project)
         super(CodeAssistTest, self).tearDown()
 
-    def _assist(self, code, offset=None, templates={}):
+    def _assist(self, code, offset=None, templates={}, **args):
         if offset is None:
             offset = len(code)
-        return code_assist(self.project, code, offset, templates=templates)
+        return code_assist(self.project, code, offset,
+                           templates=templates, **args)
 
     def test_simple_assist(self):
         self._assist('', 0)
@@ -76,7 +77,12 @@ class CodeAssistTest(unittest.TestCase):
     @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_throwing_exception_in_case_of_syntax_errors(self):
         code = 'sample (sdf+)\n'
-        self._assist(code)
+        self._assist(code, maxfixes=0)
+
+    def test_fixing_errors_with_maxfixes(self):
+        code = 'def f():\n    sldj sldj\ndef g():\n    ran'
+        result = self._assist(code, maxfixes=2)
+        self.assertTrue(len(result) > 0)
 
     def test_ignoring_errors_in_current_line(self):
         code = 'def my_func():\n    return 2\nt = '
@@ -250,12 +256,14 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('my_var', 'global', result)
 
-    def test_not_proposing_later_defined_variables_in_current_block(self):
+    # XXX: should we report names defined later?
+    def xxx_test_not_proposing_later_defined_variables_in_current_block(self):
         code = "my_\nmy_var = 10\n"
         result = self._assist(code, 3)
         self.assert_completion_not_in_result('my_var', 'global', result)
 
-    def test_not_proposing_later_defined_variables_in_current_function(self):
+    # XXX: should we report names defined later?
+    def xxx_test_not_proposing_later_defined_variables_in_current_function(self):
         code = "def f():\n    my_\n    my_var = 10\n"
         result = self._assist(code, 16)
         self.assert_completion_not_in_result('my_var', 'local', result)
