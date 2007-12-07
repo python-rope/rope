@@ -408,9 +408,8 @@ class _CodeCompletionCollector(object):
         module_scope = _get_pymodule(self.pycore, source_code,
                                     self.resource).get_scope()
         result = {}
-        current_indents = _get_line_indents(lines[lineno - 1])
-        inner_scope = module_scope.get_inner_scope_for_line(lineno,
-                                                            current_indents)
+        indents = _get_line_indents(lines[_logical_start(lines, lineno) - 1])
+        inner_scope = module_scope.get_inner_scope_for_line(lineno, indents)
         if self.expression.strip() != '':
             result.update(self._get_dotted_completions(module_scope,
                                                        inner_scope))
@@ -466,16 +465,14 @@ class _Commenter(object):
         self.lines = lines
 
     def comment(self, lineno):
-        logical_finder = LogicalLineFinder(ArrayLinesAdapter(self.lines))
-        start = logical_finder.get_logical_line_in(lineno)[0] - 1
+        start = _logical_start(self.lines, lineno) - 1
         end = self._get_block_end(start)
         last_indents = _get_line_indents(self.lines[start])
         self.lines[start] = ' ' * last_indents + 'pass'
         for line in range(start + 1, end + 1):
-            #self.lines[line] = '#' # + lines[line]
             self.lines[line] = self.lines[start]
         self.lines.append('\n')
-        self._fix_incomplete_try_blocks(lineno)
+        self._fix_incomplete_try_blocks(lineno, last_indents)
 
     def _get_block_end(self, lineno):
         end_line = lineno
@@ -487,10 +484,9 @@ class _Commenter(object):
                 break
         return end_line
 
-    def _fix_incomplete_try_blocks(self, lineno):
+    def _fix_incomplete_try_blocks(self, lineno, indents):
         block_start = lineno
-        last_indents = current_indents = _get_line_indents(
-            self.lines[lineno - 1])
+        last_indents = current_indents = indents
         while block_start > 0:
             block_start = rope.base.codeanalyze.get_block_start(
                 ArrayLinesAdapter(self.lines), block_start) - 1
@@ -526,6 +522,11 @@ def _get_pymodule(pycore, source_code, resource):
 
 def _get_line_indents(line):
     return rope.base.codeanalyze.count_line_indents(line)
+
+
+def _logical_start(lines, lineno):
+    logical_finder = LogicalLineFinder(ArrayLinesAdapter(lines))
+    return logical_finder.get_logical_line_in(lineno)[0]
 
 
 class PyDocExtractor(object):
