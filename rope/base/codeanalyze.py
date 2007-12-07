@@ -628,7 +628,7 @@ class LogicalLineFinder(object):
 
 
 def get_block_start(lines, lineno, maximum_indents=80):
-    """Aproximate block start"""
+    """Approximate block start"""
     pattern = get_block_start_patterns()
     for i in range(lineno, 0, -1):
         match = pattern.search(lines.get_line(i))

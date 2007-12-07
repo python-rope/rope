@@ -66,9 +66,16 @@ class PyCore(object):
             raise ModuleNotFoundError('Module %s not found' % name)
         return self.resource_to_pyobject(module)
 
-    def get_string_module(self, module_content, resource=None):
-        """Returns a `PyObject` object for the given module_content"""
-        return PyModule(self, module_content, resource)
+    def get_string_module(self, module_content, resource=None,
+                          force_errors=False):
+        """Returns a `PyObject` object for the given module_content
+
+        If `force_errors` is `True`, `exceptions.ModuleSyntaxError` is
+        raised if module has syntax errors.  This overrides
+        ``ignore_syntax_errors`` project config.
+
+        """
+        return PyModule(self, module_content, resource, force_errors=True)
 
     def get_string_scope(self, module_content, resource=None):
         """Returns a `Scope` object for the given module_content"""

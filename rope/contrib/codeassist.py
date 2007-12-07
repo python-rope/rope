@@ -406,10 +406,11 @@ class _CodeCompletionCollector(object):
         lines = commenter.lines
         source_code = '\n'.join(lines)
         module_scope = _get_pymodule(self.pycore, source_code,
-                                    self.resource).get_scope()
+                                     self.resource).get_scope()
         result = {}
-        indents = _get_line_indents(lines[_logical_start(lines, lineno) - 1])
-        inner_scope = module_scope.get_inner_scope_for_line(lineno, indents)
+        start = _logical_start(lines, lineno)
+        indents = _get_line_indents(lines[start - 1])
+        inner_scope = module_scope.get_inner_scope_for_line(start, indents)
         if self.expression.strip() != '':
             result.update(self._get_dotted_completions(module_scope,
                                                        inner_scope))
@@ -430,11 +431,12 @@ class _CodeCompletionCollector(object):
         stop = lines.get_line_start(stop_line)
         if word_finder.is_on_function_call_keyword(offset - 1, stop):
             name_finder = ScopeNameFinder(pymodule)
-            function_parens = word_finder.find_parens_start_from_inside(offset - 1, stop)
+            function_parens = word_finder.\
+                find_parens_start_from_inside(offset - 1, stop)
             primary = word_finder.get_primary_at(function_parens - 1)
             try:
-                function_pyname = ScopeNameFinder.get_pyname_in_scope(scope,
-                                                                      primary)
+                function_pyname = ScopeNameFinder.\
+                    get_pyname_in_scope(scope, primary)
             except BadIdentifierError, e:
                 return {}
             if function_pyname is not None:
@@ -517,8 +519,8 @@ class _Commenter(object):
 def _get_pymodule(pycore, source_code, resource):
     if resource and resource.exists() and source_code == resource.read():
         return pycore.resource_to_pyobject(resource)
-    return pycore.get_string_module(source_code, resource=resource)
-
+    return pycore.get_string_module(source_code, resource=resource,
+                                    force_errors=True)
 
 def _get_line_indents(line):
     return rope.base.codeanalyze.count_line_indents(line)

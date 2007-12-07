@@ -410,7 +410,8 @@ class _PyModule(PyDefinedObject, AbstractModule):
 
 class PyModule(_PyModule):
 
-    def __init__(self, pycore, source_code, resource=None):
+    def __init__(self, pycore, source_code,
+                 resource=None, force_errors=False):
         if isinstance(source_code, unicode):
             source_code = source_code.encode('utf-8')
         self.source_code = source_code
@@ -418,7 +419,8 @@ class PyModule(_PyModule):
         try:
             ast_node = ast.parse(source_code.rstrip(' \t'))
         except SyntaxError, e:
-            if not pycore.project.prefs.get('ignore_syntax_errors', False):
+            ignore = pycore.project.prefs.get('ignore_syntax_errors', False)
+            if force_errors or not ignore:
                 filename = 'string'
                 if resource:
                     filename = resource.path
