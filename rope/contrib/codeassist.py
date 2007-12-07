@@ -14,7 +14,7 @@ def code_assist(project, source_code, offset, resource=None, templates={}):
     """Return python code completions as a list of `CodeAssistProposal`\s
 
     `resource` is a `rope.base.resources.Resource` object.  If
-    provided things relative imports are handled.
+    provided, relative imports are handled.
 
     `templates` should be a dictionary of template name to `Template`
     objects.  The matches are returned as `TemplateProposal`
@@ -348,70 +348,8 @@ class _CodeCompletionCollector(object):
         self.starting = starting
         self.offset = offset
         self.pycore = self.project.get_pycore()
-        self.unchanged_source = source_code
-        self.lines = source_code.split('\n')
         self.source_code = source_code
         self.resource = resource
-        source_lines = SourceLinesAdapter(source_code)
-        self.lineno = source_lines.get_line_number(offset)
-        self.current_indents = self._get_line_indents(
-            source_lines.get_line(self.lineno))
-        self._comment_current_statement()
-        self.source_code = '\n'.join(self.lines)
-
-    def _get_line_indents(self, line):
-        return rope.base.codeanalyze.count_line_indents(line)
-
-    def _comment_current_statement(self):
-        logical_finder = LogicalLineFinder(ArrayLinesAdapter(self.lines))
-        start = logical_finder.get_logical_line_in(self.lineno)[0] - 1
-        end = self._get_block_end(start)
-        last_indents = self._get_line_indents(self.lines[start])
-        self.lines[start] = ' ' * last_indents + 'pass'
-        for line in range(start + 1, end + 1):
-            #self.lines[line] = '#' # + lines[line]
-            self.lines[line] = self.lines[start]
-        self.lines.append('\n')
-        self._fix_incomplete_try_blocks()
-
-    def _get_block_end(self, lineno):
-        end_line = lineno
-        base_indents = self._get_line_indents(self.lines[lineno])
-        for i in range(lineno + 1, len(self.lines)):
-            if self._get_line_indents(self.lines[i]) >= base_indents:
-                end_line = i
-            else:
-                break
-        return end_line
-
-    def _fix_incomplete_try_blocks(self):
-        block_start = self.lineno
-        last_indents = self.current_indents
-        while block_start > 0:
-            block_start = rope.base.codeanalyze.get_block_start(
-                ArrayLinesAdapter(self.lines), block_start) - 1
-            if self.lines[block_start].strip().startswith('try:'):
-                indents = self._get_line_indents(self.lines[block_start])
-                if indents > last_indents:
-                    continue
-                last_indents = indents
-                block_end = self._find_matching_deindent(block_start)
-                if not self.lines[block_end].strip().startswith('finally:') and \
-                   not self.lines[block_end].strip().startswith('except '):
-                    self.lines.insert(block_end, ' ' * indents + 'finally:')
-                    self.lines.insert(block_end + 1, ' ' * indents + '    pass')
-
-    def _find_matching_deindent(self, line_number):
-        indents = self._get_line_indents(self.lines[line_number])
-        current_line = line_number + 1
-        while current_line < len(self.lines):
-            line = self.lines[current_line]
-            if not line.strip().startswith('#') and not line.strip() == '':
-                # HACK: We should have used logical lines here
-                if self._get_line_indents(self.lines[current_line]) <= indents:
-                    return current_line
-            current_line += 1
-        return len(self.lines) - 1
 
     def _get_dotted_completions(self, module_scope, holding_scope):
         result = {}
@@ -461,11 +399,18 @@ class _CodeCompletionCollector(object):
                 return 'class'
 
     def get_code_completions(self):
-        module_scope = _get_pymodule(self.pycore, self.source_code,
+        lines = self.source_code.split('\n')
+        lineno = self.source_code.count('\n', 0, self.offset) + 1
+        commenter = _Commenter(lines)
+        commenter.comment(lineno)
+        lines = commenter.lines
+        source_code = '\n'.join(lines)
+        module_scope = _get_pymodule(self.pycore, source_code,
                                     self.resource).get_scope()
         result = {}
-        inner_scope = module_scope.get_inner_scope_for_line(self.lineno,
-                                                            self.current_indents)
+        current_indents = _get_line_indents(lines[lineno - 1])
+        inner_scope = module_scope.get_inner_scope_for_line(lineno,
+                                                            current_indents)
         if self.expression.strip() != '':
             result.update(self._get_dotted_completions(module_scope,
                                                        inner_scope))
@@ -479,8 +424,8 @@ class _CodeCompletionCollector(object):
         offset = self.offset
         if offset == 0:
             return {}
-        word_finder = WordRangeFinder(self.unchanged_source)
-        lines = SourceLinesAdapter(self.unchanged_source)
+        word_finder = WordRangeFinder(self.source_code)
+        lines = SourceLinesAdapter(self.source_code)
         lineno = lines.get_line_number(offset)
         stop_line = LogicalLineFinder(lines).get_logical_line_in(lineno)[0]
         stop = lines.get_line_start(stop_line)
@@ -515,10 +460,72 @@ class _CodeCompletionCollector(object):
         return {}
 
 
+class _Commenter(object):
+
+    def __init__(self, lines):
+        self.lines = lines
+
+    def comment(self, lineno):
+        logical_finder = LogicalLineFinder(ArrayLinesAdapter(self.lines))
+        start = logical_finder.get_logical_line_in(lineno)[0] - 1
+        end = self._get_block_end(start)
+        last_indents = _get_line_indents(self.lines[start])
+        self.lines[start] = ' ' * last_indents + 'pass'
+        for line in range(start + 1, end + 1):
+            #self.lines[line] = '#' # + lines[line]
+            self.lines[line] = self.lines[start]
+        self.lines.append('\n')
+        self._fix_incomplete_try_blocks(lineno)
+
+    def _get_block_end(self, lineno):
+        end_line = lineno
+        base_indents = _get_line_indents(self.lines[lineno])
+        for i in range(lineno + 1, len(self.lines)):
+            if _get_line_indents(self.lines[i]) >= base_indents:
+                end_line = i
+            else:
+                break
+        return end_line
+
+    def _fix_incomplete_try_blocks(self, lineno):
+        block_start = lineno
+        last_indents = current_indents = _get_line_indents(
+            self.lines[lineno - 1])
+        while block_start > 0:
+            block_start = rope.base.codeanalyze.get_block_start(
+                ArrayLinesAdapter(self.lines), block_start) - 1
+            if self.lines[block_start].strip().startswith('try:'):
+                indents = _get_line_indents(self.lines[block_start])
+                if indents > last_indents:
+                    continue
+                last_indents = indents
+                block_end = self._find_matching_deindent(block_start)
+                if not self.lines[block_end].strip().startswith('finally:') and \
+                   not self.lines[block_end].strip().startswith('except '):
+                    self.lines.insert(block_end, ' ' * indents + 'finally:')
+                    self.lines.insert(block_end + 1, ' ' * indents + '    pass')
+
+    def _find_matching_deindent(self, line_number):
+        indents = _get_line_indents(self.lines[line_number])
+        current_line = line_number + 1
+        while current_line < len(self.lines):
+            line = self.lines[current_line]
+            if not line.strip().startswith('#') and not line.strip() == '':
+                # HACK: We should have used logical lines here
+                if _get_line_indents(self.lines[current_line]) <= indents:
+                    return current_line
+            current_line += 1
+        return len(self.lines) - 1
+
+
 def _get_pymodule(pycore, source_code, resource):
     if resource and resource.exists() and source_code == resource.read():
         return pycore.resource_to_pyobject(resource)
     return pycore.get_string_module(source_code, resource=resource)
+
+
+def _get_line_indents(line):
+    return rope.base.codeanalyze.count_line_indents(line)
 
 
 class PyDocExtractor(object):

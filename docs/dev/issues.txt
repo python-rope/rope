@@ -271,8 +271,9 @@ Unresolved Issues
 =================
 
 * Commenting based on the line of syntax error in codeassist?
-* objectinfer:183; should we give up when the first attempt
-  returned None or unknown, user config?
+* objectinfer._infer_returned; should we give up when the first
+  attempt returned None or unknown, user config?
+* Review objectinfo module
 * Searching all files when extracting a global method?
 * Better tests in `patchedasttest`
 * Import actions with more that one phase and filtering problems
@@ -284,9 +285,10 @@ Unresolved Issues
 * Extracting subexpressions; look at `extracttest` for more info
 * Remove ``change occurreces`` refactoring?
 * Using similarfinder in introduce_parameter?
-* Using GPLv3 from 0.7?
+* Switching to GPLv3?
 * Removed unused refactorings
 * Unignored files that are not under version control
+* Removing unused objectdbs?
 
 
 Small Stories
