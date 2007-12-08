@@ -3,8 +3,7 @@ import re
 import sys
 
 import rope.base.codeanalyze
-from rope.base import (pyobjects, pynames, taskhandle, builtins,
-                       codeanalyze, exceptions)
+from rope.base import pyobjects, pynames, taskhandle, builtins, exceptions
 from rope.base.codeanalyze import (ArrayLinesAdapter, BadIdentifierError,
                                    LogicalLineFinder, ScopeNameFinder,
                                    SourceLinesAdapter, WordRangeFinder)
@@ -53,7 +52,7 @@ def starting_offset(source_code, offset):
     return starting_offset
 
 
-def get_doc(project, source_code, offset, resource=None, maxfixes=1):
+def get_doc(project, source_code, offset, resource=None):
     """Get the pydoc
 
     `maxfixes` is the maximum number of errors to fix if the code has
@@ -61,7 +60,7 @@ def get_doc(project, source_code, offset, resource=None, maxfixes=1):
 
     """
     pymodule = _get_pymodule(project.pycore, source_code, resource,
-                             maxfixes=maxfixes, error_limit=offset)
+                             error_limit=offset)
     scope_finder = ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
     if element is None:

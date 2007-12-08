@@ -527,23 +527,10 @@ class CodeAssistTest(unittest.TestCase):
         doc = get_doc(self.project, src, src.rindex('replace') + 1)
         self.assertTrue(doc is not None)
 
-    def test_get_pydoc_and_passing_maxfixes(self):
-        src = 's = "hey"\ns.replace()\nsldjf sljdf'
-        doc = get_doc(self.project, src,
-                      src.rindex('replace') + 1, maxfixes=1)
-        self.assertTrue(doc is not None)
-
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
-    def test_get_pydoc_and_passing_zero_maxfixes(self):
-        src = 's = "hey"\ns.replace\nsdlj sldjf'
-        doc = get_doc(self.project, src,
-                      src.rindex('replace') + 1, maxfixes=0)
-
     @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_not_commenting_errors_before_offset(self):
         src = 'lsjd lsjdf\ns = "hey"\ns.replace()\n'
-        doc = get_doc(self.project, src,
-                      src.rindex('replace') + 1, maxfixes=1)
+        doc = get_doc(self.project, src, src.rindex('replace') + 1)
 
     def test_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'
