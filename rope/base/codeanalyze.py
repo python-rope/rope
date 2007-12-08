@@ -361,7 +361,7 @@ class ScopeNameFinder(object):
     def __init__(self, pymodule):
         self.source_code = pymodule.source_code
         self.module_scope = pymodule.get_scope()
-        self.lines = SourceLinesAdapter(self.source_code)
+        self.lines = pymodule.lines
         self.word_finder = WordRangeFinder(self.source_code)
 
     def _is_defined_in_class_body(self, holding_scope, offset, lineno):
