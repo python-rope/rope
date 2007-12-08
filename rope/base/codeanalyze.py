@@ -416,13 +416,13 @@ class ScopeNameFinder(object):
             module_pyname = self._find_module(module)
             return (None, module_pyname)
         name = self.word_finder.get_primary_at(offset)
-        return self.get_primary_and_pyname_in_scope(holding_scope, name)
+        return evaluate.get_primary_and_pyname_in_scope(holding_scope, name)
 
     def get_enclosing_function(self, offset):
         function_parens = self.word_finder.find_parens_start_from_inside(offset)
         try:
             function_pyname = self.get_pyname_at(function_parens - 1)
-        except BadIdentifierError:
+        except evaluate.BadIdentifierError:
             function_pyname = None
         if function_pyname is not None:
             pyobject = function_pyname.get_object()
@@ -445,25 +445,6 @@ class ScopeNameFinder(object):
                     break
         return rope.base.pynames.ImportedModule(
             self.module_scope.pyobject, module_name[dot_count:], dot_count)
-
-    @staticmethod
-    def get_pyname_in_scope(holding_scope, name):
-        return ScopeNameFinder.get_primary_and_pyname_in_scope(
-            holding_scope, name)[1]
-
-    # XXX: This might belong to `rope.base.evaluate` module
-    @staticmethod
-    def get_primary_and_pyname_in_scope(holding_scope, name):
-        try:
-            # parenthesizing for handling cases like 'a_var.\nattr'
-            node = ast.parse('(%s)' % name)
-        except SyntaxError:
-            raise BadIdentifierError('Not a resolvable python identifier selected.')
-        return evaluate.get_primary_and_result(holding_scope, node)
-
-
-class BadIdentifierError(rope.base.exceptions.RopeError):
-    pass
 
 
 def get_pyname_at(pycore, resource, offset):

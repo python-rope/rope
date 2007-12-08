@@ -2,6 +2,10 @@ import rope.base
 from rope.base import ast, exceptions
 
 
+class BadIdentifierError(rope.base.exceptions.RopeError):
+    pass
+
+
 class StatementEvaluator(object):
 
     def __init__(self, scope):
@@ -195,6 +199,19 @@ def get_string_result(scope, string):
     node = ast.parse(string)
     ast.walk(node, evaluator)
     return evaluator.result
+
+
+def get_pyname_in_scope(holding_scope, name):
+    return get_primary_and_pyname_in_scope(holding_scope, name)[1]
+
+
+def get_primary_and_pyname_in_scope(holding_scope, name):
+    try:
+        # parenthesizing for handling cases like 'a_var.\nattr'
+        node = ast.parse('(%s)' % name)
+    except SyntaxError:
+        raise BadIdentifierError('Not a resolvable python identifier selected.')
+    return get_primary_and_result(holding_scope, node)
 
 
 class Arguments(object):

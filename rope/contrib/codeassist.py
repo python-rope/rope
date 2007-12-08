@@ -4,8 +4,8 @@ import sys
 
 import rope.base.codeanalyze
 from rope.base import pyobjects, pynames, taskhandle, builtins, exceptions
-from rope.base.codeanalyze import (ArrayLinesAdapter, BadIdentifierError,
-                                   LogicalLineFinder, ScopeNameFinder,
+from rope.base.codeanalyze import (ArrayLinesAdapter, LogicalLineFinder,
+                                   ScopeNameFinder,
                                    SourceLinesAdapter, WordRangeFinder)
 from rope.refactor import occurrences, functionutils
 
@@ -301,8 +301,8 @@ class _PythonCodeAssist(object):
     def _dotted_completions(self, module_scope, holding_scope):
         result = {}
         pyname_finder = ScopeNameFinder(module_scope.pyobject)
-        found_pyname = pyname_finder.get_pyname_in_scope(holding_scope,
-                                                         self.expression)
+        found_pyname = rope.base.evaluate.get_pyname_in_scope(
+            holding_scope, self.expression)
         if found_pyname is not None:
             element = found_pyname.get_object()
             for name, pyname in element.get_attributes().items():
@@ -387,9 +387,9 @@ class _PythonCodeAssist(object):
                 find_parens_start_from_inside(offset - 1, stop)
             primary = word_finder.get_primary_at(function_parens - 1)
             try:
-                function_pyname = ScopeNameFinder.\
+                function_pyname = rope.base.evaluate.\
                     get_pyname_in_scope(scope, primary)
-            except BadIdentifierError, e:
+            except rope.base.evaluate.BadIdentifierError, e:
                 return {}
             if function_pyname is not None:
                 pyobject = function_pyname.get_object()
