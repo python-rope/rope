@@ -60,8 +60,8 @@ def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     errors in it.
 
     """
-    pymodule = _get_pymodule(project.pycore, source_code,
-                             resource, maxfixes=maxfixes)
+    pymodule = _get_pymodule(project.pycore, source_code, resource,
+                             maxfixes=maxfixes, error_limit=offset)
     scope_finder = ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
     if element is None:
@@ -520,7 +520,13 @@ class _Commenter(object):
         return len(self.lines) - 1
 
 
-def _get_pymodule(pycore, code, resource, maxfixes=1):
+def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
+    """Get a `PyModule`
+
+    Errors before `error_limit` offset arereported and are not never
+    fixed.
+
+    """
     if resource and resource.exists() and code == resource.read():
         return pycore.resource_to_pyobject(resource)
     commenter = None
@@ -534,6 +540,12 @@ def _get_pymodule(pycore, code, resource, maxfixes=1):
                 tries += 1
                 if commenter is None:
                     commenter = _Commenter(code.splitlines())
+                if error_limit is not None:
+                    offset = 0
+                    for line in commenter.lines[:e.lineno]:
+                        offset += len(line) + 1
+                    if offset <= error_limit:
+                        raise
                 commenter.comment(e.lineno)
                 code = '\n'.join(commenter.lines)
             else:
