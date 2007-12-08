@@ -53,9 +53,15 @@ def starting_offset(source_code, offset):
     return starting_offset
 
 
-def get_doc(project, source_code, offset, resource=None):
-    """Get the pydoc"""
-    pymodule = _get_pymodule(project.pycore, source_code, resource)
+def get_doc(project, source_code, offset, resource=None, maxfixes=1):
+    """Get the pydoc
+
+    `maxfixes` is the maximum number of errors to fix if the code has
+    errors in it.
+
+    """
+    pymodule = _get_pymodule(project.pycore, source_code,
+                             resource, maxfixes=maxfixes)
     scope_finder = ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
     if element is None:
@@ -349,25 +355,12 @@ class _PythonCodeAssist(object):
                 return 'class'
 
     def _code_completions(self):
-        lines = self.code.split('\n')
-        code = self.code
         lineno = self.code.count('\n', 0, self.offset) + 1
-        commenter = _Commenter(lines)
-        tries = 0
-        while True:
-            try:
-                module_scope = _get_pymodule(self.pycore, code,
-                                             self.resource).get_scope()
-            except exceptions.ModuleSyntaxError, e:
-                if tries < self.maxfixes:
-                    tries += 1
-                    commenter.comment(e.lineno)
-                    lines = commenter.lines
-                    code = '\n'.join(lines)
-                else:
-                    raise
-            else:
-                break
+        pymodule = _get_pymodule(self.pycore, self.code,
+                                 self.resource, self.maxfixes)
+        module_scope = pymodule.get_scope()
+        code = pymodule.source_code
+        lines = code.split('\n')
         result = {}
         start = _logical_start(lines, lineno)
         indents = _get_line_indents(lines[start - 1])
@@ -527,11 +520,25 @@ class _Commenter(object):
         return len(self.lines) - 1
 
 
-def _get_pymodule(pycore, source_code, resource):
-    if resource and resource.exists() and source_code == resource.read():
+def _get_pymodule(pycore, code, resource, maxfixes=1):
+    if resource and resource.exists() and code == resource.read():
         return pycore.resource_to_pyobject(resource)
-    return pycore.get_string_module(source_code, resource=resource,
-                                    force_errors=True)
+    commenter = None
+    tries = 0
+    while True:
+        try:
+            return pycore.get_string_module(code, resource=resource,
+                                            force_errors=True)
+        except exceptions.ModuleSyntaxError, e:
+            if tries < maxfixes:
+                tries += 1
+                if commenter is None:
+                    commenter = _Commenter(code.splitlines())
+                commenter.comment(e.lineno)
+                code = '\n'.join(commenter.lines)
+            else:
+                raise
+
 
 def _get_line_indents(line):
     return rope.base.codeanalyze.count_line_indents(line)
