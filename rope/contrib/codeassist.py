@@ -11,8 +11,8 @@ from rope.base.codeanalyze import (ArrayLinesAdapter, BadIdentifierError,
 from rope.refactor import occurrences, functionutils
 
 
-def code_assist(project, source_code, offset,
-                resource=None, templates={}, maxfixes=1):
+def code_assist(project, source_code, offset, resource=None,
+                templates={}, maxfixes=1, later_locals=True):
     """Return python code completions as a list of `CodeAssistProposal`\s
 
     `resource` is a `rope.base.resources.Resource` object.  If
@@ -25,9 +25,13 @@ def code_assist(project, source_code, offset,
     `maxfixes` is the maximum number of errors to fix if the code has
     errors in it.
 
+    If `later_locals` is `False` names defined in this scope and after
+    this line is ignored.
+
     """
-    assist = _PythonCodeAssist(project, source_code, offset, resource=resource,
-                               templates=templates, maxfixes=maxfixes)
+    assist = _PythonCodeAssist(
+        project, source_code, offset, resource=resource,
+        templates=templates, maxfixes=maxfixes, later_locals=later_locals)
     return assist()
 
 
@@ -245,12 +249,13 @@ def default_templates():
 class _PythonCodeAssist(object):
 
     def __init__(self, project, source_code, offset, resource=None,
-                 templates={}, maxfixes=1):
+                 templates={}, maxfixes=1, later_locals=True):
         self.project = project
         self.pycore = self.project.get_pycore()
         self.code = source_code
         self.resource = resource
         self.maxfixes = maxfixes
+        self.later_locals = later_locals
         self.templates = templates
         word_finder = WordRangeFinder(source_code)
         self.expression, self.starting, self.offset = \
@@ -301,11 +306,10 @@ class _PythonCodeAssist(object):
                         name, 'attribute', self._get_pyname_type(pyname))
         return result
 
-    def _undotted_completions(self, scope, result, propagated=False):
+    def _undotted_completions(self, scope, result, lineno=None):
         if scope.parent != None:
-            self._undotted_completions(scope.parent, result,
-                                       propagated=True)
-        if propagated:
+            self._undotted_completions(scope.parent, result)
+        if lineno is None:
             names = scope.get_propagated_names()
         else:
             names = scope.get_names()
@@ -316,8 +320,17 @@ class _PythonCodeAssist(object):
                     kind = 'builtin'
                 elif scope.get_kind() == 'Module':
                     kind = 'global'
-                result[name] = CompletionProposal(
-                    name, kind, self._get_pyname_type(pyname))
+                if lineno is None or self.later_locals or kind == 'builtin' or \
+                   not self._is_defined_after(scope, pyname, lineno):
+                    result[name] = CompletionProposal(
+                        name, kind, self._get_pyname_type(pyname))
+
+    def _is_defined_after(self, scope, pyname, lineno):
+        location = pyname.get_definition_location()
+        if location is not None and location[1] is not None:
+            if location[0] == scope.pyobject.get_module() and \
+               lineno <= location[1] <= scope.get_end():
+                return True
 
     def _get_pyname_type(self, pyname):
         if isinstance(pyname, (pynames.AssignedName, pynames.UnboundName)):
@@ -364,7 +377,7 @@ class _PythonCodeAssist(object):
         else:
             result.update(self._keyword_parameters(module_scope.pyobject,
                                                    inner_scope))
-            self._undotted_completions(inner_scope, result)
+            self._undotted_completions(inner_scope, result, lineno=lineno)
         return result
 
     def _keyword_parameters(self, pymodule, scope):

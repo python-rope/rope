@@ -256,16 +256,14 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('my_var', 'global', result)
 
-    # XXX: should we report names defined later?
-    def xxx_test_not_proposing_later_defined_variables_in_current_block(self):
+    def test_not_proposing_later_defined_variables_in_current_block(self):
         code = "my_\nmy_var = 10\n"
-        result = self._assist(code, 3)
+        result = self._assist(code, 3, later_locals=False)
         self.assert_completion_not_in_result('my_var', 'global', result)
 
-    # XXX: should we report names defined later?
-    def xxx_test_not_proposing_later_defined_variables_in_current_function(self):
+    def test_not_proposing_later_defined_variables_in_current_function(self):
         code = "def f():\n    my_\n    my_var = 10\n"
-        result = self._assist(code, 16)
+        result = self._assist(code, 16, later_locals=False)
         self.assert_completion_not_in_result('my_var', 'local', result)
 
     def test_ignoring_string_contents_with_triple_quotes(self):
