@@ -3,6 +3,9 @@
 ===========
 
 
+- Specifying the number of fixes in code_assist : December 10, 2007
+
+
 - Deprecated `Pycore.create_(module|package)` : November 29, 2007
 
 

@@ -359,7 +359,7 @@ class _PythonCodeAssist(object):
                                  self.resource, self.maxfixes)
         module_scope = pymodule.get_scope()
         code = pymodule.source_code
-        lines = code.split('\n')
+        lines = code.splitlines()
         result = {}
         start = _logical_start(lines, lineno)
         indents = _get_line_indents(lines[start - 1])
@@ -522,7 +522,7 @@ class _Commenter(object):
 def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
     """Get a `PyModule`
 
-    Errors before `error_limit` offset arereported and are not never
+    Errors before `error_limit` offset are reported and are not never
     fixed.
 
     """
@@ -541,7 +541,7 @@ def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
                     commenter = _Commenter(code.splitlines())
                 if error_limit is not None:
                     offset = 0
-                    for line in commenter.lines[:e.lineno]:
+                    for line in commenter.lines[:e.lineno - 1]:
                         offset += len(line) + 1
                     if offset <= error_limit:
                         raise
