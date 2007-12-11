@@ -1,14 +1,14 @@
 import unittest
 
-import rope.base.codeanalyze
 import rope.base.taskhandle
 import rope.refactor.introduce_parameter
 import ropetest.refactor.extracttest
 import ropetest.refactor.importutilstest
 import ropetest.refactor.inlinetest
 import ropetest.refactor.movetest
-import ropetest.refactor.renametest
+import ropetest.refactor.multiprojecttest
 import ropetest.refactor.patchedasttest
+import ropetest.refactor.renametest
 import ropetest.refactor.restructuretest
 import ropetest.refactor.suitestest
 from rope.base.exceptions import RefactoringError, InterruptedTaskError
@@ -730,6 +730,8 @@ def suite():
                                        restructuretest.RestructureTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.
                                        suitestest.SuiteTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.multiprojecttest.
+                                       MultiProjectRefactoringTest))
     return result
 
 
