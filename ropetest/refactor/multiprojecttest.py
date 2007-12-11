@@ -54,6 +54,19 @@ class MultiProjectRefactoringTest(unittest.TestCase):
             'import mod1\nimport other\nmyvar = other.a_func()\n',
             self.mod2.read())
 
+    def test_rename_from_the_project_not_containing_the_change(self):
+        self.project2.get_prefs().add('python_path', self.project1.address)
+        self.mod1.write('var = 1\n')
+        self.mod2.write('import mod1\nmyvar = mod1.var\n')
+        refactoring = multiproject.MultiProjectRefactoring(
+            rename.Rename, [self.project1])
+        renamer = refactoring(self.project2, self.mod2,
+                              self.mod2.read().rindex('var'))
+        multiproject.perform(renamer.get_all_changes('newvar'))
+        self.assertEquals('newvar = 1\n', self.mod1.read())
+        self.assertEquals('import mod1\nmyvar = mod1.newvar\n',
+                          self.mod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()

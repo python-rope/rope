@@ -5,7 +5,7 @@ file.
 
 """
 
-from rope.base import resources, project
+from rope.base import resources, project, libutils
 
 
 class MultiProjectRefactoring(object):
@@ -22,8 +22,8 @@ class MultiProjectRefactoring(object):
 
     def __call__(self, project, *args, **kwds):
         """Create the refactoring"""
-        return _MultiRefactoring(self.refactoring, self.projects, self.addpath,
-                                 project, *args, **kwds)
+        return _MultiRefactoring(self.refactoring, self.projects,
+                                 self.addpath, project, *args, **kwds)
 
 
 class _MultiRefactoring(object):
@@ -31,40 +31,46 @@ class _MultiRefactoring(object):
     def __init__(self, refactoring, other_projects, addpath,
                  project, *args, **kwds):
         self.refactoring = refactoring
-        self.projects = other_projects
-        self.project = project
-        for other_project in self.projects:
-            other_project.get_prefs().add('python_path', self.project.address)
-        self.main_refactoring = self.refactoring(project, *args, **kwds)
-        args, kwds = self._change_project_resources_for_args(args, kwds)
-        self.other_refactorings = [self.refactoring(other, *args, **kwds)
-                                   for other in self.projects]
+        self.projects = [project] + other_projects
+        for other_project in other_projects:
+            for folder in self.project.pycore.get_source_folders():
+                other_project.get_prefs().add('python_path', folder.real_path)
+        self.refactorings = []
+        for other in self.projects:
+            args, kwds = self._resources_for_args(other, args, kwds)
+            self.refactorings.append(
+                self.refactoring(other, *args, **kwds))
 
     def get_all_changes(self, *args, **kwds):
         """Get a project to changes dict"""
         result = []
-        result.append((self.project,
-                       self.main_refactoring.get_changes(*args, **kwds)))
-        args, kwds = self._change_project_resources_for_args(args, kwds)
-        for project, refactoring in zip(self.projects,
-                                        self.other_refactorings):
+        for project, refactoring in zip(self.projects, self.refactorings):
+            args, kwds = self._resources_for_args(project, args, kwds)
             result.append((project, refactoring.get_changes(*args, **kwds)))
         return result
 
     def __getattr__(self, name):
         return getattr(self.main_refactoring, name)
 
-    def _change_project_resources_for_args(self, args, kwds):
-        newargs = [self._change_project_resource(arg) for arg in args]
-        newkwds = dict((name, self._change_project_resource(value))
+    def _resources_for_args(self, project, args, kwds):
+        newargs = [self._change_project_resource(project, arg) for arg in args]
+        newkwds = dict((name, self._change_project_resource(project, value))
                        for name, value in kwds.items())
         return newargs, newkwds
         
-    def _change_project_resource(self, obj):
+    def _change_project_resource(self, project, obj):
         if isinstance(obj, resources.Resource) and \
-           obj.project == self.project:
-            return project.get_no_project().get_resource(obj.real_path)
+           obj.project != project:
+            return libutils.path_to_resource(project, obj.real_path)
         return obj
+
+    @property
+    def project(self):
+        return self.projects[0]
+
+    @property
+    def main_refactoring(self):
+        return self.refactorings[0]
 
 
 def perform(project_changes):

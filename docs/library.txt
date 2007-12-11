@@ -601,17 +601,17 @@ Cross-Project Refactorings
 `rope.refactor.multiproject` can be used to perform a refactoring
 across multiple projects.
 
-Before we begin, note that there should always be a main project.
-That is the project that contains the definition of the changing
-python name.  Other projects depend on the main one and uses of the
-changed name in them should be updated.
+Usually refactorings have a main project.  That is the project that
+contains the definition of the changing python name.  Other projects
+depend on the main one and uses of the changed name in them should be
+updated.
 
 Each refactoring changes only one project (the project passed to its
 constructor).  But we can use `MultiProjectRefactoring` proxy to
 perform a refactoring on other projects, too.
 
-First we need create a multi-project refactoring constructor.  As an
-example consider we want to perform a rename refactoring::
+First we need to create a multi-project refactoring constructor.  As
+an example consider we want to perform a rename refactoring::
 
   from rope.refactor import multiproject, rename
 
@@ -631,8 +631,12 @@ Next we can construct the refactoring::
 We create the rename refactoring as we do for normal refactorings.
 Note that `project` is the main project.
 
+As mentioned above, other projects use the main project; rope
+automatically adds the main project to the python path of other
+projects.
+
 Finally we can calculate the changes.  But instead of calling
-`get_changes()` (which returns main project changes, only), we should
+`get_changes()` (which returns main project changes, only), we can
 call `get_all_changes()` with the same arguments.  It returns a list
 of ``(project, changes)`` tuples.  You can perform them manually by
 calling ``project.do(changes)`` for each tuple or use
