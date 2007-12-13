@@ -34,7 +34,10 @@ class _Inliner(object):
         self.project = project
         self.pycore = project.pycore
         self.pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
-        self.name = codeanalyze.get_name_at(resource, offset)
+        range_finder = codeanalyze.WordRangeFinder(resource.read())
+        self.region = range_finder.get_primary_range(offset)
+        self.name = range_finder.get_word_at(offset)
+        self.offset = offset
 
     def get_changes(self, remove=True,
                     task_handle=taskhandle.NullTaskHandle()):
@@ -84,16 +87,19 @@ class InlineMethod(_Inliner):
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
 
-    def get_changes(self, remove=True,
+    def get_changes(self, remove=True, only_current=False,
                     task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Inline method <%s>' % self.name)
         job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
+        files = self.pycore.get_python_files()
+        if only_current:
+            files = [self.resource]
         for file in self.pycore.get_python_files():
             job_set.started_job('Working on <%s>' % file.path)
             if file == self.resource:
-                changes.add_change(self._defining_file_changes(changes,
-                                                              remove=remove))
+                changes.add_change(self._defining_file_changes(
+                        changes, remove=remove, only_current=only_current))
             else:
                 handle = _InlineFunctionCallsForModuleHandle(
                     self.pycore, file, self.others_generator)
@@ -120,10 +126,12 @@ class InlineMethod(_Inliner):
                   len(self.pymodule.source_code))
         return (start, end)
 
-    def _defining_file_changes(self, changes, remove):
+    def _defining_file_changes(self, changes, remove, only_current):
         start_offset, end_offset = self._get_removed_range()
+        aim = None if not only_current else self.offset
         handle = _InlineFunctionCallsForModuleHandle(
-            self.pycore, self.resource, self.normal_generator)
+            self.pycore, self.resource,
+            self.normal_generator, aim_offset=aim)
         replacement = None
         if remove:
             replacement = self._get_method_replacement()
@@ -182,16 +190,19 @@ class InlineVariable(_Inliner):
             raise rope.base.exceptions.RefactoringError(
                 'Local variable should be assigned once for inlining.')
 
-    def get_changes(self, remove=True,
+    def get_changes(self, remove=True, only_current=False,
                     task_handle=taskhandle.NullTaskHandle()):
-        source = self._get_changed_module(remove=remove)
+        source = self._get_changed_module(remove, only_current)
         changes = ChangeSet('Inline variable <%s>' % self.name)
         changes.add_change(ChangeContents(self.resource, source))
         return changes
 
-    def _get_changed_module(self, remove):
-        return _inline_variable(self.pycore, self.pymodule,
-                                self.pyname, self.name, remove=remove)
+    def _get_changed_module(self, remove, only_current):
+        region = None
+        if only_current:
+            region = self.region
+        return _inline_variable(self.pycore, self.pymodule, self.pyname,
+                                self.name, remove=remove, region=region)
 
     def get_kind(self):
         return 'variable'
@@ -320,10 +331,12 @@ class _DefinitionGenerator(object):
 
 class _InlineFunctionCallsForModuleHandle(object):
 
-    def __init__(self, pycore, resource, definition_generator):
+    def __init__(self, pycore, resource,
+                 definition_generator, aim_offset=None):
         self.pycore = pycore
         self.generator = definition_generator
         self.resource = resource
+        self.aim = aim_offset
         self._pymodule = None
         self._lines = None
         self._source = None
@@ -339,6 +352,8 @@ class _InlineFunctionCallsForModuleHandle(object):
             raise rope.base.exceptions.RefactoringError(
                 'Reference to inlining function other than function call'
                 ' in <file: %s, offset: %d>' % (self.resource.path, start))
+        if self.aim is not None and self.aim < start or self.aim > end:
+            return
         end_parens = self._find_end_parens(self.source, end - 1)
         lineno = self.lines.get_line_number(start)
         start_line, end_line = codeanalyze.LogicalLineFinder(self.lines).\
@@ -389,7 +404,8 @@ class _InlineFunctionCallsForModuleHandle(object):
     pymodule = property(_get_pymodule)
 
 
-def _inline_variable(pycore, pymodule, pyname, name, remove=True):
+def _inline_variable(pycore, pymodule, pyname, name,
+                     remove=True, region=None):
     assignment = pyname.assignments[0]
     definition_line = assignment.ast_node.lineno
     lines = pymodule.lines
@@ -406,7 +422,7 @@ def _inline_variable(pycore, pymodule, pyname, name, remove=True):
     occurrence_finder = occurrences.FilteredFinder(pycore, name, [pyname])
     changed_source = rename.rename_in_module(
         occurrence_finder, definition, pymodule=pymodule,
-        replace_primary=True, writes=False)
+        replace_primary=True, writes=False, region=region)
     if changed_source is None:
         changed_source = pymodule.source_code
     if remove:

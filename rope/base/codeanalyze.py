@@ -467,8 +467,7 @@ def get_primary_and_pyname_at(pycore, resource, offset):
 def get_name_at(resource, offset):
     source_code = resource.read()
     word_finder = rope.base.codeanalyze.WordRangeFinder(source_code)
-    name = word_finder.get_primary_at(offset).split('.')[-1]
-    return name
+    return word_finder.get_word_at(offset)
 
 
 class Lines(object):

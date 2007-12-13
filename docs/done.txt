@@ -3,6 +3,9 @@
 ===========
 
 
+- Inlining a single occurrence : December 13, 2007
+
+
 - Global extract method/variable : December 13, 2007
 
 

@@ -489,6 +489,20 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('def func():\n    print(1)\n\nprint(1)\n',
                           refactored)
 
+    def test_only_current_for_methods(self):
+        code = 'def func():\n    print(1)\n\nfunc()\nfunc()\n'
+        refactored = self._inline(code, code.rindex('func') + 1,
+                                  remove=False, only_current=True)
+        self.assertEquals('def func():\n    print(1)\n\nfunc()\nprint(1)\n',
+                          refactored)
+
+    def test_only_current_for_variables(self):
+        code = 'one = 1\n\na = one\nb = one\n'
+        refactored = self._inline(code, code.rindex('one') + 1,
+                                  remove=False, only_current=True)
+        self.assertEquals('one = 1\n\na = one\nb = 1\n',
+                          refactored)
+
 
 def suite():
     result = unittest.TestSuite()

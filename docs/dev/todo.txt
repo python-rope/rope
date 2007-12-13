@@ -81,7 +81,4 @@
   imports
 
 
-* Inlining a single occurrence
-
-
 > Public Release 0.7.3
