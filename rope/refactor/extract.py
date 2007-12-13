@@ -29,8 +29,12 @@ class _ExtractRefactoring(object):
     def get_changes(self, extracted_name, similar=False, global_=False):
         """Get the changes this refactoring makes
 
-        if `similar` is `True` similar expressions/statements are also
-        replaced.
+        :parameters:
+            - `similar`: if `True`, similar expressions/statements are also
+              replaced.
+            - `global_`: if `True`, the extracted method/variable will
+              be global.
+
         """
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
