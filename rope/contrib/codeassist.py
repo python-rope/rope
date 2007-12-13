@@ -359,7 +359,7 @@ class _PythonCodeAssist(object):
                                  self.resource, self.maxfixes)
         module_scope = pymodule.get_scope()
         code = pymodule.source_code
-        lines = code.splitlines()
+        lines = code.split('\n')
         result = {}
         start = _logical_start(lines, lineno)
         indents = _get_line_indents(lines[start - 1])
@@ -538,7 +538,7 @@ def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
             if tries < maxfixes:
                 tries += 1
                 if commenter is None:
-                    commenter = _Commenter(code.splitlines())
+                    commenter = _Commenter(code.split('\n'))
                 if error_limit is not None:
                     offset = 0
                     for line in commenter.lines[:e.lineno - 1]:
