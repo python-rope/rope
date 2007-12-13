@@ -678,6 +678,54 @@ class ExtractMethodTest(unittest.TestCase):
                    'def g():\n    func = a.func()\n    return func\n'
         self.assertEquals(expected, refactored)
 
+    def test_global_option_for_extract_method(self):
+        code = "def a_func():\n    print('one')\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        refactored = self.do_extract_method(code, start, end,
+                                            'extracted', global_=True)
+        expected = "def a_func():\n    extracted()\n\n" \
+                   "def extracted():\n    print('one')\n"
+        self.assertEquals(expected, refactored)
+
+    def test_simple_extract_method(self):
+        code = 'class AClass(object):\n\n' \
+               '    def a_func(self):\n        print(1)\n'
+        start, end = self._convert_line_range_to_offset(code, 4, 4)
+        refactored = self.do_extract_method(code, start, end,
+                                            'new_func', global_=True)
+        expected = 'class AClass(object):\n\n' \
+                   '    def a_func(self):\n        new_func()\n\n' \
+                   'def new_func():\n    print(1)\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_method_with_multiple_methods(self):
+        code = "class AClass(object):\n" \
+               "    def a_func(self):\n" \
+               "        print(1)\n\n" \
+               "    def another_func(self):\n" \
+               "        pass\n"
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end,
+                                            'new_func', global_=True)
+        expected = "class AClass(object):\n" \
+                   "    def a_func(self):\n" \
+                   "        new_func()\n\n" \
+                   "    def another_func(self):\n" \
+                   "        pass\n\n" \
+                   "def new_func():\n" \
+                   "    print(1)\n"
+        self.assertEquals(expected, refactored)
+
+    def test_where_to_seach_when_extracting_global_names(self):
+        code = 'def a():\n    return 1\ndef b():\n    return 1\nb = 1\n'
+        start = code.index('1')
+        end = start + 1
+        refactored = self.do_extract_variable(code, start, end, 'one',
+                                              similar=True, global_=True)
+        expected = 'def a():\n    return one\none = 1\n' \
+            'def b():\n    return one\nb = one\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,7 +15,6 @@ class _ExtractRefactoring(object):
         self.resource = resource
         self.start_offset = self._fix_start(resource.read(), start_offset)
         self.end_offset = self._fix_end(resource.read(), end_offset)
-        self.variable = variable
 
     def _fix_start(self, source, offset):
         while offset < len(source) and source[offset].isspace():
@@ -27,7 +26,7 @@ class _ExtractRefactoring(object):
             offset -= 1
         return offset
 
-    def get_changes(self, extracted_name, similar=False):
+    def get_changes(self, extracted_name, similar=False, global_=False):
         """Get the changes this refactoring makes
 
         if `similar` is `True` similar expressions/statements are also
@@ -35,23 +34,21 @@ class _ExtractRefactoring(object):
         """
         info = _ExtractInfo(
             self.project, self.resource, self.start_offset, self.end_offset,
-            extracted_name, variable=self.variable, similar=similar)
+            extracted_name, variable=self.kind == 'variable',
+            similar=similar, make_global=global_)
         new_contents = _ExtractPerformer(info).extract()
-        changes = ChangeSet('Extract %s <%s>' % (self._get_name(),
+        changes = ChangeSet('Extract %s <%s>' % (self.kind,
                                                  extracted_name))
         changes.add_change(ChangeContents(self.resource, new_contents))
         return changes
-
-    def _get_name(self):
-        if self.variable:
-            return 'variable'
-        return 'method'
 
 
 class ExtractMethod(_ExtractRefactoring):
 
     def __init__(self, *args, **kwds):
         super(ExtractMethod, self).__init__(*args, **kwds)
+
+    kind = 'method'
 
 
 class ExtractVariable(_ExtractRefactoring):
@@ -61,12 +58,14 @@ class ExtractVariable(_ExtractRefactoring):
         kwds['variable'] = True
         super(ExtractVariable, self).__init__(*args, **kwds)
 
+    kind = 'variable'
+
 
 class _ExtractInfo(object):
     """Holds information about the extract to be performed"""
 
     def __init__(self, project, resource, start, end, new_name,
-                 variable=False, similar=False):
+                 variable, similar, make_global):
         self.pycore = project.pycore
         self.resource = resource
         self.pymodule = self.pycore.resource_to_pyobject(resource)
@@ -78,6 +77,7 @@ class _ExtractInfo(object):
         self.similar = similar
         self._init_parts(start, end)
         self._init_scope()
+        self.make_global = make_global
 
     def _init_parts(self, start, end):
         self.logical_lines = codeanalyze.LogicalLineFinder(self.lines)
@@ -117,38 +117,36 @@ class _ExtractInfo(object):
             return min(line_end, len(self.source))
         return offset
 
-    def _is_one_line(self):
+    @property
+    def one_line(self):
         return self.region != self.lines_region and \
                (self.logical_lines.get_logical_line_in(self.region_lines[0]) ==
                 self.logical_lines.get_logical_line_in(self.region_lines[1]))
 
-    def _is_global(self):
+    @property
+    def global_(self):
         return self.scope.parent is None
 
-    def _is_method(self):
+    @property
+    def method(self):
         return self.scope.parent is not None and \
                self.scope.parent.get_kind() == 'Class'
 
-    one_line = property(_is_one_line)
-    global_ = property(_is_global)
-    method = property(_is_method)
-
-    def _get_indents(self):
+    @property
+    def indents(self):
         return sourceutils.get_indents(self.pymodule.lines,
                                        self.region_lines[0])
 
-    def _get_scope_indents(self):
+    @property
+    def scope_indents(self):
         if self.global_:
             return 0
         return sourceutils.get_indents(self.pymodule.lines,
                                        self.scope.get_start())
 
-    def _get_extracted(self):
+    @property
+    def extracted(self):
         return self.source[self.region[0]:self.region[1]]
-
-    indents = property(_get_indents)
-    scope_indents = property(_get_scope_indents)
-    extracted = property(_get_extracted)
 
 
 class _ExtractCollector(object):
@@ -217,6 +215,8 @@ class _ExtractPerformer(object):
 
     def _where_to_search(self):
         if self.info.similar:
+            if self.info.make_global:
+                return [(0, len(self.info.pymodule.source_code))]
             if self.info.method and not self.info.variable:
                 class_scope = self.info.scope.parent
                 regions = []
@@ -263,11 +263,25 @@ class _DefinitionLocationFinder(object):
         self.matched_lines = matched_lines
 
     def find_lineno(self):
+        if self.info.make_global and not self.info.global_:
+            toplevel = self._find_toplevel(self.info.scope)
+            ast = self.info.pymodule.get_ast()
+            newlines = sorted(self.matched_lines + [toplevel.get_end() + 1])
+            return suites.find_visible(ast, newlines)
         if self.info.global_ or self.info.variable:
             return self._get_before_line()
         return self._get_after_scope()
 
+    def _find_toplevel(self, scope):
+        toplevel = scope
+        if toplevel.parent is not None:
+            while toplevel.parent.parent is not None:
+                toplevel = toplevel.parent
+            return toplevel
+
     def find_indents(self):
+        if self.info.make_global:
+            return 0
         if self.info.global_ or self.info.variable:
             return sourceutils.get_indents(self.info.lines,
                                            self._get_before_line())
@@ -364,7 +378,7 @@ class _ExtractMethodParts(object):
         return similarfinder.make_pattern(body, variables)
 
     def get_checks(self):
-        if self.info.method:
+        if self.info.method and not self.info.make_global:
             if _get_function_kind(self.info.scope) == 'method':
                 return {'?%s.type' % self._get_self_name():
                         self.info.scope.parent.pyobject}
@@ -387,7 +401,8 @@ class _ExtractMethodParts(object):
         args = self._find_function_arguments()
         returns = self._find_function_returns()
         result = []
-        if self.info.method and _get_function_kind(self.info.scope) != 'method':
+        if self.info.method and not self.info.make_global and \
+           _get_function_kind(self.info.scope) != 'method':
             result.append('@staticmethod\n')
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
@@ -401,7 +416,8 @@ class _ExtractMethodParts(object):
     def _get_function_signature(self, args):
         args = list(args)
         prefix = ''
-        if self.info.method and _get_function_kind(self.info.scope) == 'method':
+        if self.info.method and not self.info.make_global and \
+                _get_function_kind(self.info.scope) == 'method':
             self_name = self._get_self_name()
             if self_name in args:
                 args.remove(self_name)
@@ -416,7 +432,7 @@ class _ExtractMethodParts(object):
 
     def _get_function_call(self, args):
         prefix = ''
-        if self.info.method:
+        if self.info.method and not self.info.make_global:
             if _get_function_kind(self.info.scope) == 'method':
                 self_name = self._get_self_name()
                 if  self_name in args:

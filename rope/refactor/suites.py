@@ -14,6 +14,14 @@ def find_visible_for_suite(root, lines):
     line2 = find_visible_for_suite(root, lines[1:])
     suite1 = root.find_suite(line1)
     suite2 = root.find_suite(line2)
+    def valid(suite):
+        return suite is not None and not suite.ignored
+    if valid(suite1) and not valid(suite2):
+        return line1
+    if not valid(suite1) and valid(suite2):
+        return line2
+    if not valid(suite1) and not valid(suite2):
+        return None
     while suite1 != suite2 and suite1.parent != suite2.parent:
         if suite1._get_level() < suite2._get_level():
             line2 = suite2.get_start()
@@ -41,11 +49,12 @@ def ast_suite_tree(node):
 
 class Suite(object):
 
-    def __init__(self, child_nodes, lineno, parent=None):
+    def __init__(self, child_nodes, lineno, parent=None, ignored=False):
         self.parent = parent
         self.lineno = lineno
         self.child_nodes = child_nodes
         self._children = None
+        self.ignored = ignored
 
     def get_start(self):
         if self.parent is None:
@@ -73,6 +82,8 @@ class Suite(object):
         return end
 
     def find_suite(self, line):
+        if line is None:
+            return None
         for child in self.get_children():
             if child.local_start() <= line <= child.local_end():
                 return child.find_suite(line)
@@ -123,7 +134,9 @@ class _SuiteWalker(object):
             self.suites.append(Suite(node.orelse, node.lineno, self.suite))
 
     def _FunctionDef(self, node):
-        pass
+        self.suites.append(Suite(node.body, node.lineno,
+                                 self.suite, ignored=True))
 
     def _ClassDef(self, node):
-        pass
+        self.suites.append(Suite(node.body, node.lineno,
+                                 self.suite, ignored=True))

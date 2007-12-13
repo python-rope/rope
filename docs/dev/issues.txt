@@ -270,7 +270,6 @@ This has been moved to a separate branch.
 Unresolved Issues
 =================
 
-* Commenting based on the line of syntax error in codeassist?
 * objectinfer._infer_returned; should we give up when the first
   attempt returned None or unknown, user config?
 * Review objectinfo module
@@ -286,7 +285,7 @@ Unresolved Issues
 * Remove ``change occurreces`` refactoring?
 * Using similarfinder in introduce_parameter?
 * Switching to GPLv3?
-* Removed unused refactorings
+* Remove unused refactorings?
 * Unignored files that are not under version control
 * Removing unused objectdbs?
 

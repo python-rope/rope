@@ -27,11 +27,6 @@ class SuiteTest(unittest.TestCase):
         self.assertEquals(2, len(root.get_children()))
         self.assertEquals(1, root.get_children()[1].get_start())
 
-    def test_ignoring_function_and_class_defs(self):
-        root = source_suite_tree(
-            'def f():\n    if True:        pass\nclass C(object):\n    pass\n')
-        self.assertEquals(0, len(root.get_children()))
-
     def test_for(self):
         root = source_suite_tree(
             '\nfor i in range(10):\n    pass\nelse:\n    pass\n')
@@ -124,6 +119,16 @@ class SuiteTest(unittest.TestCase):
         self.assertEquals(3, suites.find_visible_for_suite(root, [4, 6]))
         self.assertEquals(3, suites.find_visible_for_suite(root, [3, 5]))
         self.assertEquals(3, suites.find_visible_for_suite(root, [4, 5]))
+
+    def test_ignoring_functions(self):
+        root = source_suite_tree(
+            'def f():\n    pass\na = 1\n')
+        self.assertEquals(3, suites.find_visible_for_suite(root, [2, 3]))
+
+    def test_ignoring_classes(self):
+        root = source_suite_tree(
+            'a = 1\nclass C():\n    pass\n')
+        self.assertEquals(1, suites.find_visible_for_suite(root, [1, 3]))
 
 
 def source_suite_tree(source):

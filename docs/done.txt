@@ -3,6 +3,9 @@
 ===========
 
 
+- Global extract method/variable : December 13, 2007
+
+
 > Public Release 0.7.2 : December 13, 2007
 
 
