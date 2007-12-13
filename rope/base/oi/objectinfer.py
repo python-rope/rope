@@ -172,15 +172,16 @@ def _infer_returned(pyobject, args):
     scope = pyobject.get_scope()
     if not scope._get_returned_asts():
         return
-    for returned_node in reversed(scope._get_returned_asts()):
+    maxtries = 3
+    for returned_node in reversed(scope._get_returned_asts()[-maxtries:]):
         try:
             resulting_pyname = evaluate.get_statement_result(scope,
                                                              returned_node)
             if resulting_pyname is None:
-                return
+                continue
             pyobject = resulting_pyname.get_object()
             if pyobject == rope.base.pyobjects.get_unknown():
-                return
+                continue
             if not scope._is_generator():
                 return pyobject
             else:

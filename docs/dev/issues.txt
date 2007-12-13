@@ -270,8 +270,6 @@ This has been moved to a separate branch.
 Unresolved Issues
 =================
 
-* objectinfer._infer_returned; should we give up when the first
-  attempt returned None or unknown, user config?
 * Review objectinfo module
 * Searching all files when extracting a global method?
 * Better tests in `patchedasttest`
