@@ -589,9 +589,31 @@ be used in IDEs::
   new_source_code = (source_code[:starting_offset] +
                      replacement + source_code[offset:])
 
+`maxfixes` parameter of `code_assist` decides how many syntax errors
+to fix.  The default value is one.  For instance::
+
+  def f():
+      g(my^
+
+  myvariable = None
+
+  def g(p):
+      invalid syntax ...
+
+will report `myvariable`, only if `maxfixes` is bigger than 1.
+
+`later_locals`, if `True`, forces rope to propose names that are
+defined later in current scope.  It is `True` by default.  For
+instance::
+
+  def f():
+      my^
+      myvariable = None
+
+will not report `myvariable`, if `later_locals` is False.
 
 See pydocs and source code for more information (other functions in
-that module might be interesting, too; like `get_doc`,
+this module might be interesting, too; like `get_doc`,
 `get_definition_location` and `find_occurrences`).
 
 

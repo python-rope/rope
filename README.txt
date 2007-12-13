@@ -14,6 +14,32 @@ Overview
 New Features
 ============
 
+* Performing refactorings across multiple projects
+* Specifying the number of syntax error fixes in code_assist
+* Deprecated `Pycore.create_(module|package)`
+
+`Pycore.create_module()` and `create_package()` have been deprecated.
+Use `rope.contrib.generate.create_module()` and `create_package()`
+instead.
+
+
+Cross-Project Refactorings
+--------------------------
+
+`rope.refactor.multiproject` can be used to perform a refactoring
+across multiple projects.  See ``docs/library.txt`` for more
+information.
+
+
+`code_assist` Changes
+---------------------
+
+`rope.contrib.codeassist.code_assist()` takes two new optional
+parameters.  `maxfixes` parameter decides how many syntax errors to
+fix.  `later_locals`, if `True`, forces rope to propose names that are
+defined later in current scope.  See ``docs/library.txt`` for more
+information.
+
 
 Getting Started
 ===============
