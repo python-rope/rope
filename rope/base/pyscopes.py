@@ -77,10 +77,6 @@ class Scope(object):
     _end = None
 
     def get_end(self):
-        global_scope = self._get_global_scope()
-        return global_scope._get_scope_finder().find_scope_end(self)
-
-    def xget_end(self):
         if self._end is None:
             global_scope = self._get_global_scope()
             self._end = global_scope._get_scope_finder().find_scope_end(self)
