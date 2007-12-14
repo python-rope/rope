@@ -84,8 +84,6 @@ class _ExtractInfo(object):
         self.make_global = make_global
 
     def _init_parts(self, start, end):
-        self.logical_lines = codeanalyze.LogicalLineFinder(self.lines)
-
         self.region = (self._choose_closest_line_end(start),
                        self._choose_closest_line_end(end, end=True))
 
@@ -97,6 +95,10 @@ class _ExtractInfo(object):
 
         self.lines_region = (self.lines.get_line_start(self.region_lines[0]),
                              self.lines.get_line_end(self.region_lines[1]))
+
+    @property
+    def logical_lines(self):
+        return self.pymodule.logical_lines
 
 
     def _init_scope(self):

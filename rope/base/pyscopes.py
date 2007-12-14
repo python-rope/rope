@@ -206,8 +206,7 @@ class ClassScope(Scope):
 class _HoldingScopeFinder(object):
 
     def __init__(self, pymodule):
-        self.source_code = pymodule.source_code
-        self.lines = pymodule.lines
+        self.pymodule = pymodule
 
     def get_indents(self, lineno):
         return rope.base.codeanalyze.count_line_indents(
@@ -261,10 +260,9 @@ class _HoldingScopeFinder(object):
         if not scope.parent:
             return self.lines.length()
         end = scope.pyobject.get_ast().body[-1].lineno
-        finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
         body_indents = self._get_body_indents(scope)
-        for l in finder.generate_starts(min(end + 1, self.lines.length()),
-                                        self.lines.length() + 1):
+        for l in self.logical_lines.generate_starts(
+            min(end + 1, self.lines.length()), self.lines.length() + 1):
             if not self._is_empty_line(l):
                 if self.get_indents(l) < body_indents:
                     return end
@@ -272,6 +270,17 @@ class _HoldingScopeFinder(object):
                     end = l
         return end
 
+    @property
+    def lines(self):
+        return self.pymodule.lines
+
+    @property
+    def code(self):
+        return self.pymodule.source_code
+
+    @property
+    def logical_lines(self):
+        return self.pymodule.logical_lines
 
 class TemporaryScope(Scope):
     """Currently used for list comprehensions and generator expressions

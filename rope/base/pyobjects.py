@@ -415,7 +415,6 @@ class PyModule(_PyModule):
         if isinstance(source_code, unicode):
             source_code = source_code.encode('utf-8')
         self.source_code = source_code
-        self._lines = None
         try:
             ast_node = ast.parse(source_code.rstrip(' \t'))
         except SyntaxError, e:
@@ -430,14 +429,6 @@ class PyModule(_PyModule):
         self.star_imports = []
         self.defineds = None
         super(PyModule, self).__init__(pycore, ast_node, resource)
-
-    def _get_lines(self):
-        if self._lines is None:
-            self._lines = rope.base.codeanalyze.\
-                          SourceLinesAdapter(self.source_code)
-        return self._lines
-
-    lines = property(_get_lines, doc="return a `SourceLinesAdapter`")
 
     def _get_defined_objects(self):
         if self.defineds is None:
@@ -458,6 +449,23 @@ class PyModule(_PyModule):
 
     def _create_scope(self):
         return rope.base.pyscopes.GlobalScope(self.pycore, self)
+
+    _lines = None
+    @property
+    def lines(self):
+        """return a `SourceLinesAdapter`"""
+        if self._lines is None:
+            self._lines = rope.base.codeanalyze.\
+                          SourceLinesAdapter(self.source_code)
+        return self._lines
+
+    _logical_lines = None
+    @property
+    def logical_lines(self):
+        """return a `LogicalLinesFinder`"""
+        if self._logical_lines is None:
+            self._logical_lines = rope.base.codeanalyze.LogicalLineFinder(self.lines)
+        return self._logical_lines
 
 
 class PyPackage(_PyModule):

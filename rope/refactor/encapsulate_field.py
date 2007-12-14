@@ -109,7 +109,6 @@ class _FindChangesForModule(object):
 
     def get_changed_module(self):
         result = []
-        line_finder = None
         word_finder = rope.base.codeanalyze.WordRangeFinder(self.source)
         for occurrence in self.occurrences_finder.find_occurrences(self.resource,
                                                                    self.pymodule):
@@ -129,10 +128,9 @@ class _FindChangesForModule(object):
                     var_name = self.source[occurrence.get_primary_range()[0]:
                                            start] + self.getter + '()'
                     result.append(self.setter + '(' + var_name + ' %s ' % assignment_type[:-1])
-                if line_finder is None:
-                    line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
                 current_line = self.lines.get_line_number(start)
-                start_line, end_line = line_finder.get_logical_line_in(current_line)
+                start_line, end_line = self.pymodule.logical_lines.\
+                                       get_logical_line_in(current_line)
                 self.last_set = self.lines.get_line_end(end_line)
                 end = self.source.index('=', end) + 1
                 self.set_index = len(result)
@@ -155,10 +153,10 @@ class _FindChangesForModule(object):
             self.last_set = None
 
     def _is_assigned_in_a_tuple_assignment(self, occurance):
-        line_finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
         offset = occurance.get_word_range()[0]
         lineno = self.lines.get_line_number(offset)
-        start_line, end_line = line_finder.get_logical_line_in(lineno)
+        start_line, end_line = self.pymodule.logical_lines.\
+                               get_logical_line_in(lineno)
         start_offset = self.lines.get_line_start(start_line)
 
         line = self.source[start_offset:self.lines.get_line_end(end_line)]

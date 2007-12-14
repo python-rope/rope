@@ -77,14 +77,14 @@ class InlineMethod(_Inliner):
     def _get_scope_range(self):
         scope = self.pyfunction.get_scope()
         lines = self.pymodule.lines
+        logicals = self.pymodule.logical_lines
         start_line = scope.get_start()
         if self.pyfunction.get_ast().decorators:
             decorators = self.pyfunction.get_ast().decorators
             if hasattr(decorators[0], 'lineno'):
                 start_line = decorators[0].lineno
         start_offset = lines.get_line_start(start_line)
-        end_line = codeanalyze.LogicalLineFinder(lines).\
-                   get_logical_line_in(scope.get_end())[1]
+        end_line = logicals.get_logical_line_in(scope.get_end())[1]
         end_offset = min(lines.get_line_end(end_line) + 1,
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
@@ -116,10 +116,10 @@ class InlineMethod(_Inliner):
     def _get_removed_range(self):
         scope = self.pyfunction.get_scope()
         lines = self.pymodule.lines
+        logical = self.pymodule.logical_lines
         start_line = scope.get_start()
         start, end = self._get_scope_range()
-        end_line = codeanalyze.LogicalLineFinder(lines).\
-                   get_logical_line_in(scope.get_end())[1]
+        end_line = logical.get_logical_line_in(scope.get_end())[1]
         for i in range(end_line + 1, lines.length()):
             if lines.get_line(i).strip() == '':
                 end_line = i
@@ -359,7 +359,7 @@ class _InlineFunctionCallsForModuleHandle(object):
             return
         end_parens = self._find_end_parens(self.source, end - 1)
         lineno = self.lines.get_line_number(start)
-        start_line, end_line = codeanalyze.LogicalLineFinder(self.lines).\
+        start_line, end_line = self.pymodule.logical_lines.\
                                get_logical_line_in(lineno)
         line_start = self.lines.get_line_start(start_line)
         line_end = self.lines.get_line_end(end_line)
@@ -412,8 +412,8 @@ def _inline_variable(pycore, pymodule, pyname, name,
     assignment = pyname.assignments[0]
     definition_line = assignment.ast_node.lineno
     lines = pymodule.lines
-    start, end = codeanalyze.LogicalLineFinder(lines).\
-                 get_logical_line_in(definition_line)
+    logicals = pymodule.logical_lines
+    start, end = logicals.get_logical_line_in(definition_line)
     definition_with_assignment = _join_lines(
         [lines.get_line(n) for n in range(start, end + 1)])
     if assignment.levels:

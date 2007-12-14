@@ -46,9 +46,9 @@ class IntroduceParameter(object):
 
     def _get_header_offsets(self):
         lines = self.pymodule.lines
-        line_finder = codeanalyze.LogicalLineFinder(lines)
         start_line = self.pyfunction.get_scope().get_start()
-        end_line = line_finder.get_logical_line_in(start_line)[1]
+        end_line = self.pymodule.logical_lines.\
+                   get_logical_line_in(start_line)[1]
         start = lines.get_line_start(start_line)
         end = lines.get_line_end(end_line)
         start = self.pymodule.source_code.find('def', start) + 4

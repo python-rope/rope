@@ -205,7 +205,7 @@ class _GenerationInfo(object):
     def get_insertion_lineno(self):
         lines = self.goal_pymodule.lines
         if self.goal_scope == self.source_scope:
-            line_finder = codeanalyze.LogicalLineFinder(lines)
+            line_finder = self.goal_pymodule.logical_lines
             lineno = lines.get_line_number(self.offset)
             lineno = line_finder.get_logical_line_in(lineno)[0]
             root = suites.ast_suite_tree(self.goal_scope.pyobject.get_ast())
