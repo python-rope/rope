@@ -39,11 +39,13 @@ class _Inliner(object):
         self.name = range_finder.get_word_at(offset)
         self.offset = offset
 
-    def get_changes(self, remove=True,
+    def get_changes(self, remove=True, only_current=False,
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes this refactoring makes
 
-        If remove is `False` the definition will not be removed.
+        If `remove` is `False` the definition will not be removed.  If
+        `only_current` is `True`, the the current occurrence will be
+        inlined, only.
 
         """
 
