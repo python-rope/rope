@@ -77,10 +77,18 @@ class Scope(object):
     _end = None
 
     def get_end(self):
+        pymodule = self._get_global_scope().pyobject
+        return pymodule.logical_lines.logical_line_in(self.logical_end)[1]
+
+    def get_logical_end(self):
         if self._end is None:
             global_scope = self._get_global_scope()
             self._end = global_scope._get_scope_finder().find_scope_end(self)
         return self._end
+
+    start = property(get_start)
+    end = property(get_end)
+    logical_end = property(get_logical_end)
 
     def get_kind(self):
         pass

@@ -577,7 +577,7 @@ class CachingLogicalLineFinder(object):
     def _init_logicals(self):
         self._starts = [False] * (self.lines.length() + 1)
         self._ends = [False] * (self.lines.length() + 1)
-        for start, end in self.logical_lines.logical_lines():
+        for start, end in self.logical_lines.generate_regions():
             self._starts[start] = True
             self._ends[end] = True
 
@@ -585,6 +585,11 @@ class CachingLogicalLineFinder(object):
         start = line_number
         while start > 0 and not self.starts[start]:
             start -= 1
+        if start == 0:
+            try:
+                start = self.starts.index(True, line_number)
+            except ValueError:
+                return (line_number, line_number)
         return (start, self.ends.index(True, start))
 
     def generate_starts(self, start_line=1, end_line=None):
@@ -614,16 +619,11 @@ class LogicalLineFinder(object):
                 lineno = e.lineno + block_start - 1
                 indents = count_line_indents(self.lines.get_line(lineno))
 
-    def get_logical_line_in(self, line_number):
-        warnings.warn('Use `LogicalLineFinder.logical_line_in()` instead',
-                      DeprecationWarning, stacklevel=2)
-        return self.logical_line_in(line_number)
-
     def generate_starts(self, start_line=1, end_line=None):
-        for start, end in self.logical_lines(start_line, end_line):
+        for start, end in self.generate_regions(start_line, end_line):
             yield start
 
-    def logical_lines(self, start_line=1, end_line=None):
+    def generate_regions(self, start_line=1, end_line=None):
         # XXX: `block_start` should be at a better position!
         block_start = 1
         readline = LinesToReadline(self.lines, block_start)
@@ -636,6 +636,11 @@ class LogicalLineFinder(object):
             real_end = end + block_start - 1
             if real_start >= start_line:
                 yield (real_start, real_end)
+
+    def get_logical_line_in(self, line_number):
+        warnings.warn('Use `LogicalLineFinder.logical_line_in()` instead',
+                      DeprecationWarning, stacklevel=2)
+        return self.logical_line_in(line_number)
 
     def _block_logical_line(self, block_start, line_number):
         readline = LinesToReadline(self.lines, block_start)
@@ -662,15 +667,11 @@ class LogicalLineFinder(object):
 
     def _logical_lines(self, readline):
         last_end = 1
-        for current in self._logical_ends(readline):
-            yield (last_end, current)
-            last_end = current + 1
-
-    def _logical_ends(self, readline):
-        for current in tokenize.generate_tokens(readline):
-            current_lineno = current[2][0]
-            if current[0] == token.NEWLINE:
-                yield current_lineno
+        for current_token in tokenize.generate_tokens(readline):
+            current = current_token[2][0]
+            if current_token[0] == token.NEWLINE:
+                yield (last_end, current)
+                last_end = current + 1
 
     def _first_non_blank(self, line_number):
         current = line_number
