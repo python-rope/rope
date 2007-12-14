@@ -701,10 +701,12 @@ class _FunctionVisitor(_ScopeVisitor):
         self.generator = False
 
     def _Return(self, node):
-        self.returned_asts.append(node.value)
+        if node.value is not None:
+            self.returned_asts.append(node.value)
 
     def _Yield(self, node):
-        self.returned_asts.append(node.value)
+        if node.value is not None:
+            self.returned_asts.append(node.value)
         self.generator = True
 
 
