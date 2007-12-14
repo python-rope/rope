@@ -573,11 +573,23 @@ class LogicalLineFinder(object):
                 lineno = e.lineno + block_start - 1
                 indents = count_line_indents(self.lines.get_line(lineno))
 
+    def generate_starts(self, start_line=1, end_line=None):
+        block_start = get_block_start(self.lines, start_line)
+        readline = LinesToReadline(self.lines, block_start)
+        shifted = start_line - block_start + 1
+        for start, end in self._logical_lines(readline):
+            real_start = start + block_start - 1
+            real_start = self._first_non_blank(real_start)
+            if end_line is not None and real_start >= end_line:
+                break
+            if real_start >= start_line:
+                yield real_start
+
     def _block_logical_line(self, block_start, line_number):
         readline = LinesToReadline(self.lines, block_start)
         shifted = line_number - block_start + 1
         region = self._calculate_logical(readline, shifted)
-        start = self._get_first_non_blank(region[0] + block_start - 1)
+        start = self._first_non_blank(region[0] + block_start - 1)
         if region[1] is None:
             end = self.lines.length()
         else:
@@ -585,19 +597,29 @@ class LogicalLineFinder(object):
         return start, end
 
     def _calculate_logical(self, readline, line_number):
-        last_line_start = 1
+        last_end = 1
         try:
-            for current in tokenize.generate_tokens(readline):
-                current_lineno = current[2][0]
-                if current[0] == token.NEWLINE:
-                    if current_lineno >= line_number:
-                        return (last_line_start, current_lineno)
-                    last_line_start = current_lineno + 1
+            for start, end in self._logical_lines(readline):
+                if line_number <= end:
+                    return (start, end)
+                last_end = end
         except tokenize.TokenError:
-            return (last_line_start, None)
-        return (last_line_start, None)
+            return (last_end, None)
+        return (last_end, None)
 
-    def _get_first_non_blank(self, line_number):
+    def _logical_lines(self, readline):
+        last_end = 1
+        for current in self._logical_ends(readline):
+            yield (last_end, current)
+            last_end = current + 1
+
+    def _logical_ends(self, readline):
+        for current in tokenize.generate_tokens(readline):
+            current_lineno = current[2][0]
+            if current[0] == token.NEWLINE:
+                yield current_lineno
+
+    def _first_non_blank(self, line_number):
         current = line_number
         while current < self.lines.length():
             line = self.lines.get_line(current).strip()
