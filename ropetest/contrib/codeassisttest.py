@@ -627,6 +627,16 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code, code.rindex('f') + 1)
         self.assert_completion_not_in_result('a_var', 'global', result)
 
+    def test_codeassist_before_single_line_indents(self):
+        code = 'myvar = 1\nif True:\n    (myv\nif True:\n    pass\n'
+        result = self._assist(code, code.rindex('myv') + 3)
+        self.assert_completion_not_in_result('myvar', 'local', result)
+
+    def test_codeassist_before_line_indents_in_a_blank_line(self):
+        code = 'myvar = 1\nif True:\n    \nif True:\n    pass\n'
+        result = self._assist(code, code.rindex('    ') + 4)
+        self.assert_completion_not_in_result('myvar', 'local', result)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
@@ -711,35 +721,37 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_in_result('nestedmod', 'global', result)
 
     def test_completing_after_dot(self):
-        code = 'class SampleClass(object):\n    def sample_method(self):\n        pass\nSampleClass.sam'
+        code = 'class SampleClass(object):\n    def sample_method(self):\n' \
+               '        pass\nSampleClass.sam'
         result = self._assist(code)
         self.assert_completion_in_result('sample_method', 'attribute', result)
 
     def test_completing_after_multiple_dots(self):
-        code = 'class Class1(object):\n    class Class2(object):\n        def sample_method(self):\n' + \
+        code = 'class Class1(object):\n    class Class2(object):\n' \
+               '        def sample_method(self):\n' \
                '            pass\nClass1.Class2.sam'
         result = self._assist(code)
         self.assert_completion_in_result('sample_method', 'attribute', result)
 
     def test_completing_after_self_dot(self):
-        code = 'class Sample(object):\n    def method1(self):\n        pass\n' + \
+        code = 'class Sample(object):\n    def method1(self):\n        pass\n' \
                '    def method2(self):\n        self.m'
         result = self._assist(code)
         self.assert_completion_in_result('method1', 'attribute', result)
 
     def test_result_start_offset_for_dotted_completions(self):
-        code = 'class Sample(object):\n    def method1(self):\n        pass\n' + \
+        code = 'class Sample(object):\n    def method1(self):\n        pass\n' \
                'Sample.me'
         self.assertEquals(len(code) - 2, starting_offset(code, len(code)))
 
     def test_backslash_after_dots(self):
-        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' + \
+        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' \
                'Sample.\\\n       a_m'
         result = self._assist(code)
         self.assert_completion_in_result('a_method', 'attribute', result)
 
     def test_not_proposing_global_names_after_dot(self):
-        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' + \
+        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' \
                'Sample.'
         result = self._assist(code)
         self.assert_completion_not_in_result('Sample', 'global', result)

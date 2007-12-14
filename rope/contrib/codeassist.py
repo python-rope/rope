@@ -470,14 +470,24 @@ class _Commenter(object):
         self.lines = lines
 
     def comment(self, lineno):
-        start = _logical_start(self.lines, lineno) - 1
+        start = _logical_start(self.lines, lineno, check_prev=True) - 1
         end = self._get_block_end(start)
-        last_indents = _get_line_indents(self.lines[start])
-        self.lines[start] = ' ' * last_indents + 'pass'
+        indents = _get_line_indents(self.lines[start])
+        if 0 < start:
+            last_lineno = self._last_non_blank(start - 1)
+            last_line = self.lines[last_lineno]
+            if last_line.rstrip().endswith(':'):
+                indents = _get_line_indents(last_line) + 4            
+        self.lines[start] = ' ' * indents + 'pass'
         for line in range(start + 1, end + 1):
             self.lines[line] = self.lines[start]
         self.lines.append('\n')
-        self._fix_incomplete_try_blocks(lineno, last_indents)
+        self._fix_incomplete_try_blocks(lineno, indents)
+
+    def _last_non_blank(self, start):
+        while start > 0 and self.lines[start].strip() == '':
+            start -= 1
+        return start
 
     def _get_block_end(self, lineno):
         end_line = lineno
@@ -555,8 +565,17 @@ def _get_line_indents(line):
     return rope.base.codeanalyze.count_line_indents(line)
 
 
-def _logical_start(lines, lineno):
+def _logical_start(lines, lineno, check_prev=False):
     logical_finder = LogicalLineFinder(ArrayLinesAdapter(lines))
+    if check_prev:
+        prev = lineno - 1
+        while prev > 0:
+            start, end = logical_finder.get_logical_line_in(prev)
+            if end is None or start <= lineno < end:
+                return start
+            if start <= prev:
+                break
+            prev -= 1
     return logical_finder.get_logical_line_in(lineno)[0]
 
 
