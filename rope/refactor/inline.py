@@ -84,7 +84,7 @@ class InlineMethod(_Inliner):
             if hasattr(decorators[0], 'lineno'):
                 start_line = decorators[0].lineno
         start_offset = lines.get_line_start(start_line)
-        end_line = logicals.get_logical_line_in(scope.get_end())[1]
+        end_line = logicals.logical_line_in(scope.get_end())[1]
         end_offset = min(lines.get_line_end(end_line) + 1,
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
@@ -119,7 +119,7 @@ class InlineMethod(_Inliner):
         logical = self.pymodule.logical_lines
         start_line = scope.get_start()
         start, end = self._get_scope_range()
-        end_line = logical.get_logical_line_in(scope.get_end())[1]
+        end_line = logical.logical_line_in(scope.get_end())[1]
         for i in range(end_line + 1, lines.length()):
             if lines.get_line(i).strip() == '':
                 end_line = i
@@ -312,7 +312,7 @@ class _DefinitionGenerator(object):
         lines = codeanalyze.SourceLinesAdapter(source)
         lineno = lines.get_line_number(offset)
         logical_lines = codeanalyze.LogicalLineFinder(lines)
-        lineno = logical_lines.get_logical_line_in(lineno)[1]
+        lineno = logical_lines.logical_line_in(lineno)[1]
         if source[lines.get_line_end(lineno):len(source)].strip() != '':
             raise rope.base.exceptions.RefactoringError(
                 'Cannot inline functions with statements after return statement.')
@@ -360,7 +360,7 @@ class _InlineFunctionCallsForModuleHandle(object):
         end_parens = self._find_end_parens(self.source, end - 1)
         lineno = self.lines.get_line_number(start)
         start_line, end_line = self.pymodule.logical_lines.\
-                               get_logical_line_in(lineno)
+                               logical_line_in(lineno)
         line_start = self.lines.get_line_start(start_line)
         line_end = self.lines.get_line_end(end_line)
         returns = self.source[line_start:start].strip() != '' or \
@@ -413,7 +413,7 @@ def _inline_variable(pycore, pymodule, pyname, name,
     definition_line = assignment.ast_node.lineno
     lines = pymodule.lines
     logicals = pymodule.logical_lines
-    start, end = logicals.get_logical_line_in(definition_line)
+    start, end = logicals.logical_line_in(definition_line)
     definition_with_assignment = _join_lines(
         [lines.get_line(n) for n in range(start, end + 1)])
     if assignment.levels:

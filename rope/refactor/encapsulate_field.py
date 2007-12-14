@@ -130,7 +130,7 @@ class _FindChangesForModule(object):
                     result.append(self.setter + '(' + var_name + ' %s ' % assignment_type[:-1])
                 current_line = self.lines.get_line_number(start)
                 start_line, end_line = self.pymodule.logical_lines.\
-                                       get_logical_line_in(current_line)
+                                       logical_line_in(current_line)
                 self.last_set = self.lines.get_line_end(end_line)
                 end = self.source.index('=', end) + 1
                 self.set_index = len(result)
@@ -156,7 +156,7 @@ class _FindChangesForModule(object):
         offset = occurance.get_word_range()[0]
         lineno = self.lines.get_line_number(offset)
         start_line, end_line = self.pymodule.logical_lines.\
-                               get_logical_line_in(lineno)
+                               logical_line_in(lineno)
         start_offset = self.lines.get_line_start(start_line)
 
         line = self.source[start_offset:self.lines.get_line_end(end_line)]

@@ -207,7 +207,7 @@ class _GenerationInfo(object):
         if self.goal_scope == self.source_scope:
             line_finder = self.goal_pymodule.logical_lines
             lineno = lines.get_line_number(self.offset)
-            lineno = line_finder.get_logical_line_in(lineno)[0]
+            lineno = line_finder.logical_line_in(lineno)[0]
             root = suites.ast_suite_tree(self.goal_scope.pyobject.get_ast())
             suite = root.find_suite(lineno)
             indents = sourceutils.get_indents(lines, lineno)

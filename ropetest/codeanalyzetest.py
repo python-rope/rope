@@ -335,43 +335,43 @@ class LogicalLineFinderTest(unittest.TestCase):
     def test_normal_lines(self):
         code = 'a_var = 10'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((1, 1), line_finder.get_logical_line_in(1))
+        self.assertEquals((1, 1), line_finder.logical_line_in(1))
 
     def test_normal_lines2(self):
         code = 'another = 10\na_var = 20\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((1, 1), line_finder.get_logical_line_in(1))
-        self.assertEquals((2, 2), line_finder.get_logical_line_in(2))
+        self.assertEquals((1, 1), line_finder.logical_line_in(1))
+        self.assertEquals((2, 2), line_finder.logical_line_in(2))
 
     def test_implicit_continuation(self):
         code = 'a_var = 3 + \\\n    4 + \\\n    5'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((1, 3), line_finder.get_logical_line_in(2))
+        self.assertEquals((1, 3), line_finder.logical_line_in(2))
 
     def test_explicit_continuation(self):
         code = 'print 2\na_var = (3 + \n    4, \n    5)\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((2, 4), line_finder.get_logical_line_in(2))
+        self.assertEquals((2, 4), line_finder.logical_line_in(2))
 
     def test_explicit_continuation_comments(self):
         code = '#\na_var = 3\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((2, 2), line_finder.get_logical_line_in(2))
+        self.assertEquals((2, 2), line_finder.logical_line_in(2))
 
     def test_multiple_indented_ifs(self):
         code = 'if True:\n    if True:\n        if True:\n            pass\n    a = 10\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((5, 5), line_finder.get_logical_line_in(5))
+        self.assertEquals((5, 5), line_finder.logical_line_in(5))
 
     def test_list_comprehensions_and_fors(self):
         code = 'a_list = [i\n    for i in range(10)]\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((1, 2), line_finder.get_logical_line_in(2))
+        self.assertEquals((1, 2), line_finder.logical_line_in(2))
 
     def test_generator_expressions_and_fors(self):
         code = 'a_list = (i\n    for i in range(10))\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((1, 2), line_finder.get_logical_line_in(2))
+        self.assertEquals((1, 2), line_finder.logical_line_in(2))
 
     def test_fors_and_block_start(self):
         code = 'l = range(10)\nfor i in l:\n    print i\n'
@@ -381,13 +381,13 @@ class LogicalLineFinderTest(unittest.TestCase):
         code = 'if True:\n    if True:\n        if True:\n            pass\n' \
                '    a = \\\n        1\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((5, 6), line_finder.get_logical_line_in(6))
+        self.assertEquals((5, 6), line_finder.logical_line_in(6))
 
     def test_problems_with_inner_indentations2(self):
         code = 'if True:\n    if True:\n        pass\n' \
                'a = 1\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals((4, 4), line_finder.get_logical_line_in(4))
+        self.assertEquals((4, 4), line_finder.logical_line_in(4))
 
     def test_generating_line_starts(self):
         code = 'a = 1\na = 2\n\na = 3\n'

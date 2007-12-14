@@ -379,7 +379,7 @@ class _PythonCodeAssist(object):
         word_finder = WordRangeFinder(self.code)
         lines = SourceLinesAdapter(self.code)
         lineno = lines.get_line_number(offset)
-        stop_line = LogicalLineFinder(lines).get_logical_line_in(lineno)[0]
+        stop_line = LogicalLineFinder(lines).logical_line_in(lineno)[0]
         stop = lines.get_line_start(stop_line)
         if word_finder.is_on_function_call_keyword(offset - 1, stop):
             name_finder = ScopeNameFinder(pymodule)
@@ -570,13 +570,13 @@ def _logical_start(lines, lineno, check_prev=False):
     if check_prev:
         prev = lineno - 1
         while prev > 0:
-            start, end = logical_finder.get_logical_line_in(prev)
+            start, end = logical_finder.logical_line_in(prev)
             if end is None or start <= lineno < end:
                 return start
             if start <= prev:
                 break
             prev -= 1
-    return logical_finder.get_logical_line_in(lineno)[0]
+    return logical_finder.logical_line_in(lineno)[0]
 
 
 class PyDocExtractor(object):

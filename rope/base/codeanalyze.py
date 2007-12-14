@@ -581,7 +581,7 @@ class CachingLogicalLineFinder(object):
             self._starts[start] = True
             self._ends[end] = True
 
-    def get_logical_line_in(self, line_number):
+    def logical_line_in(self, line_number):
         start = line_number
         while start > 0 and not self.starts[start]:
             start -= 1
@@ -600,7 +600,7 @@ class LogicalLineFinder(object):
     def __init__(self, lines):
         self.lines = lines
 
-    def get_logical_line_in(self, line_number):
+    def logical_line_in(self, line_number):
         indents = count_line_indents(self.lines.get_line(line_number))
         tries = 0
         while True:
@@ -613,6 +613,11 @@ class LogicalLineFinder(object):
                     raise e
                 lineno = e.lineno + block_start - 1
                 indents = count_line_indents(self.lines.get_line(lineno))
+
+    def get_logical_line_in(self, line_number):
+        warnings.warn('Use `LogicalLineFinder.logical_line_in()` instead',
+                      DeprecationWarning, stacklevel=2)
+        return self.logical_line_in(line_number)
 
     def generate_starts(self, start_line=1, end_line=None):
         for start, end in self.logical_lines(start_line, end_line):

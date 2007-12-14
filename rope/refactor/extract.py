@@ -87,9 +87,9 @@ class _ExtractInfo(object):
         self.region = (self._choose_closest_line_end(start),
                        self._choose_closest_line_end(end, end=True))
 
-        start = self.logical_lines.get_logical_line_in(
+        start = self.logical_lines.logical_line_in(
             self.lines.get_line_number(self.region[0]))[0]
-        end = self.logical_lines.get_logical_line_in(
+        end = self.logical_lines.logical_line_in(
             self.lines.get_line_number(self.region[1]))[1]
         self.region_lines = (start, end)
 
@@ -126,8 +126,8 @@ class _ExtractInfo(object):
     @property
     def one_line(self):
         return self.region != self.lines_region and \
-               (self.logical_lines.get_logical_line_in(self.region_lines[0]) ==
-                self.logical_lines.get_logical_line_in(self.region_lines[1]))
+               (self.logical_lines.logical_line_in(self.region_lines[0]) ==
+                self.logical_lines.logical_line_in(self.region_lines[1]))
 
     @property
     def global_(self):
@@ -245,7 +245,7 @@ class _ExtractPerformer(object):
         for match in collector.matches:
             start = self.info.lines.get_line_number(match.get_region()[0])
             start_line = self.info.logical_lines.\
-                         get_logical_line_in(start)[0]
+                         logical_line_in(start)[0]
             matched_lines.append(start_line)
         location_finder = _DefinitionLocationFinder(self.info, matched_lines)
         collector.definition_location = (location_finder.find_lineno(),
