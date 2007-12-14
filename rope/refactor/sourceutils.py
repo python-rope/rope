@@ -106,9 +106,10 @@ def get_body_region(defined):
     elif len(node.body) > 1:
         start_line = node.body[1].lineno
 
+    end_line = codeanalyze.LogicalLineFinder(lines).\
+               get_logical_line_in(scope.get_end())[1]
     start = lines.get_line_start(start_line)
-    end = min(lines.get_line_end(scope.get_end()) + 1,
-              len(pymodule.source_code))
+    end = min(lines.get_line_end(end_line) + 1, len(pymodule.source_code))
     return start, end
 
 

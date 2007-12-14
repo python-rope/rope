@@ -404,14 +404,12 @@ class InlineTest(unittest.TestCase):
                        "a = A()\nname = a.get_name()\n")
         self._inline2(self.mod, self.mod.read().rindex('get_name') + 1)
         self.assertEquals("class A(object):\n    name = 'hey'\n"
-                          "a = A()\nname = a.name\n",
-                          self.mod.read())
+                          "a = A()\nname = a.name\n", self.mod.read())
 
     def test_simple_returns_with_backslashes(self):
         self.mod.write('def a_func():\n    return 1\\\n        + 2\na = a_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('a = 1 + 2\n',
-                          self.mod.read())
+        self.assertEquals('a = 1 + 2\n', self.mod.read())
 
     def test_a_function_with_pass_body(self):
         self.mod.write('def a_func():\n    print(1)\na = a_func()\n')

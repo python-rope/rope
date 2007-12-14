@@ -83,7 +83,9 @@ class InlineMethod(_Inliner):
             if hasattr(decorators[0], 'lineno'):
                 start_line = decorators[0].lineno
         start_offset = lines.get_line_start(start_line)
-        end_offset = min(lines.get_line_end(scope.get_end()) + 1,
+        end_line = codeanalyze.LogicalLineFinder(lines).\
+                   get_logical_line_in(scope.get_end())[1]
+        end_offset = min(lines.get_line_end(end_line) + 1,
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
 
@@ -116,7 +118,8 @@ class InlineMethod(_Inliner):
         lines = self.pymodule.lines
         start_line = scope.get_start()
         start, end = self._get_scope_range()
-        end_line = scope.get_end()
+        end_line = codeanalyze.LogicalLineFinder(lines).\
+                   get_logical_line_in(scope.get_end())[1]
         for i in range(end_line + 1, lines.length()):
             if lines.get_line(i).strip() == '':
                 end_line = i

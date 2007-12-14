@@ -74,9 +74,17 @@ class Scope(object):
             return body[0].lineno
         return self.get_start()
 
+    _end = None
+
     def get_end(self):
         global_scope = self._get_global_scope()
         return global_scope._get_scope_finder().find_scope_end(self)
+
+    def xget_end(self):
+        if self._end is None:
+            global_scope = self._get_global_scope()
+            self._end = global_scope._get_scope_finder().find_scope_end(self)
+        return self._end
 
     def get_kind(self):
         pass
@@ -217,7 +225,6 @@ class _HoldingScopeFinder(object):
         return self.get_indents(scope.get_start())
 
     def get_holding_scope(self, module_scope, lineno, line_indents=None):
-        line_indents = line_indents
         if line_indents is None:
             line_indents = self.get_indents(lineno)
         current_scope = module_scope
@@ -232,8 +239,9 @@ class _HoldingScopeFinder(object):
             new_scope = None
             for scope in current_scope.get_scopes():
                 if scope.get_start() <= lineno:
-                    if self.find_scope_end(scope) >= lineno:
+                    if lineno <= scope.get_end():
                         new_scope = scope
+                        break
                 else:
                     break
         return current_scope
@@ -253,9 +261,10 @@ class _HoldingScopeFinder(object):
         if not scope.parent:
             return self.lines.length()
         end = scope.pyobject.get_ast().body[-1].lineno
-        # IDEA: Can we use LogicalLineFinder here?
+        finder = rope.base.codeanalyze.LogicalLineFinder(self.lines)
         body_indents = self._get_body_indents(scope)
-        for l in range(end + 1, self.lines.length() + 1):
+        for l in finder.generate_starts(min(end + 1, self.lines.length()),
+                                        self.lines.length() + 1):
             if not self._is_empty_line(l):
                 if self.get_indents(l) < body_indents:
                     return end

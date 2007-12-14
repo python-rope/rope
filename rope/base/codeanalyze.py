@@ -602,9 +602,10 @@ class LogicalLineFinder(object):
             for start, end in self._logical_lines(readline):
                 if line_number <= end:
                     return (start, end)
-                last_end = end
-        except tokenize.TokenError:
-            return (last_end, None)
+                last_end = end + 1
+        except tokenize.TokenError, e:
+            current = e.args[1][0]
+            return (last_end, current)
         return (last_end, None)
 
     def _logical_lines(self, readline):
