@@ -574,7 +574,8 @@ class LogicalLineFinder(object):
                 indents = count_line_indents(self.lines.get_line(lineno))
 
     def generate_starts(self, start_line=1, end_line=None):
-        block_start = get_block_start(self.lines, start_line)
+        # XXX: `block_start` should be at a better position!
+        block_start = 1
         readline = LinesToReadline(self.lines, block_start)
         shifted = start_line - block_start + 1
         for start, end in self._logical_lines(readline):

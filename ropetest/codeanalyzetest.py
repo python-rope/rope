@@ -407,6 +407,12 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
         self.assertEquals([2], list(line_finder.generate_starts()))
 
+    def test_generating_line_starts_and_unmatched_deindents(self):
+        code = 'if True:\n    if True:\n        if True:\n' \
+               '            a = 1\n    b = 1\n'
+        line_finder = LogicalLineFinder(SourceLinesAdapter(code))
+        self.assertEquals([4, 5], list(line_finder.generate_starts(4)))
+
 
 def suite():
     result = unittest.TestSuite()
