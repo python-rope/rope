@@ -554,6 +554,47 @@ class LinesToReadline(object):
         return self.readline()
 
 
+class CachingLogicalLineFinder(object):
+
+    def __init__(self, lines):
+        self.lines = lines
+        self.logical_lines = LogicalLineFinder(lines)
+
+    _starts = None
+    @property
+    def starts(self):
+        if self._starts is None:
+            self._init_logicals()
+        return self._starts
+
+    _ends = None
+    @property
+    def ends(self):
+        if self._ends is None:
+            self._init_logicals()
+        return self._ends
+
+    def _init_logicals(self):
+        self._starts = [False] * (self.lines.length() + 1)
+        self._ends = [False] * (self.lines.length() + 1)
+        for start, end in self.logical_lines.logical_lines():
+            self._starts[start] = True
+            self._ends[end] = True
+
+    def get_logical_line_in(self, line_number):
+        start = line_number
+        while start > 0 and not self.starts[start]:
+            start -= 1
+        return (start, self.ends.index(True, start))
+
+    def generate_starts(self, start_line=1, end_line=None):
+        if end_line is None:
+            end_line = self.lines.length()
+        for index in range(start_line, end_line):
+            if self.starts[index]:
+                yield index
+
+
 class LogicalLineFinder(object):
 
     def __init__(self, lines):
@@ -574,6 +615,10 @@ class LogicalLineFinder(object):
                 indents = count_line_indents(self.lines.get_line(lineno))
 
     def generate_starts(self, start_line=1, end_line=None):
+        for start, end in self.logical_lines(start_line, end_line):
+            yield start
+
+    def logical_lines(self, start_line=1, end_line=None):
         # XXX: `block_start` should be at a better position!
         block_start = 1
         readline = LinesToReadline(self.lines, block_start)
@@ -583,8 +628,9 @@ class LogicalLineFinder(object):
             real_start = self._first_non_blank(real_start)
             if end_line is not None and real_start >= end_line:
                 break
+            real_end = end + block_start - 1
             if real_start >= start_line:
-                yield real_start
+                yield (real_start, real_end)
 
     def _block_logical_line(self, block_start, line_number):
         readline = LinesToReadline(self.lines, block_start)

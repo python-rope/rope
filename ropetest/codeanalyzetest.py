@@ -1,11 +1,13 @@
 import unittest
 
 from rope.base import exceptions
-from rope.base.codeanalyze import (ArrayLinesAdapter,
-                                   SourceLinesAdapter, WordRangeFinder,
-                                   ScopeNameFinder, LogicalLineFinder, get_block_start)
+from rope.base.codeanalyze import \
+    (CachingLogicalLineFinder, SourceLinesAdapter,
+     WordRangeFinder, ScopeNameFinder, LogicalLineFinder, get_block_start)
 from ropetest import testutils
 
+
+LogicalLineFinder = CachingLogicalLineFinder
 
 class StatementRangeFinderTest(unittest.TestCase):
 

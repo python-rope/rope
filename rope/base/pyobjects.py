@@ -464,7 +464,8 @@ class PyModule(_PyModule):
     def logical_lines(self):
         """return a `LogicalLinesFinder`"""
         if self._logical_lines is None:
-            self._logical_lines = rope.base.codeanalyze.LogicalLineFinder(self.lines)
+            self._logical_lines = \
+                rope.base.codeanalyze.CachingLogicalLineFinder(self.lines)
         return self._logical_lines
 
 
