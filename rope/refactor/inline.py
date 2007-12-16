@@ -356,7 +356,7 @@ class _InlineFunctionCallsForModuleHandle(object):
             raise rope.base.exceptions.RefactoringError(
                 'Reference to inlining function other than function call'
                 ' in <file: %s, offset: %d>' % (self.resource.path, start))
-        if self.aim is not None and self.aim < start or self.aim > end:
+        if self.aim is not None and (self.aim < start or self.aim > end):
             return
         end_parens = self._find_end_parens(self.source, end - 1)
         lineno = self.lines.get_line_number(start)
