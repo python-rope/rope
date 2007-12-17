@@ -557,11 +557,11 @@ def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
                 commenter.comment(e.lineno)
                 code = '\n'.join(commenter.lines)
                 errors.append('  * line %s: %s ... fixed' % (e.lineno,
-                                                             e.message))
+                                                             e.message_))
             else:
                 errors.append('  * line %s: %s ... raised!' % (e.lineno,
-                                                               e.message))
-                new_message = ('Syntax errors in file %s:\n' % e.filename) \
+                                                               e.message_))
+                new_message = ('\nSyntax errors in file %s:\n' % e.filename) \
                                + '\n'.join(errors)
                 raise exceptions.ModuleSyntaxError(e.filename, e.lineno,
                                                    new_message)

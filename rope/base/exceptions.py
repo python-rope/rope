@@ -41,7 +41,7 @@ class ModuleSyntaxError(RopeError):
     def __init__(self, filename, lineno, message):
         self.filename = filename
         self.lineno = lineno
-        self.message = message
+        self.message_ = message
         super(ModuleSyntaxError, self).__init__(
             'Syntax error in file <%s> line <%s>: %s' %
             (filename, lineno, message))
