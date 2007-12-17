@@ -1,12 +1,11 @@
 import re
-import tokenize
 import token
+import tokenize
 
-import rope.base.pyobjects
-import rope.base.pynames
-from rope.base import pyobjects, pynames
 import rope.base.exceptions
-from rope.base import ast, builtins, evaluate
+import rope.base.pynames
+import rope.base.pyobjects
+from rope.base import pyobjects, evaluate
 
 
 class WordRangeFinder(object):

@@ -655,8 +655,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         testutils.remove_project(self.project)
         super(self.__class__, self).tearDown()
 
-    def _assist(self, code, resource=None):
-        return code_assist(self.project, code, len(code), resource)
+    def _assist(self, code, resource=None, **kwds):
+        return code_assist(self.project, code, len(code), resource, **kwds)
 
     def assert_completion_in_result(self, name, kind, result):
         for proposal in result:
@@ -809,6 +809,13 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = find_occurrences(
             self.project, mod1, mod1.read().index('a_func'), unsure=True)
         self.assertEquals(2, len(result))
+
+    def test_fixing_errors_with_maxfixes_in_resources(self):
+        mod = testutils.create_module(self.project, 'mod')
+        code = 'def f():\n    sldj sldj\ndef g():\n    ran'
+        mod.write(code)
+        result = self._assist(code, maxfixes=2, resource=mod)
+        self.assertTrue(len(result) > 0)
 
 
 class TemplateTest(unittest.TestCase):

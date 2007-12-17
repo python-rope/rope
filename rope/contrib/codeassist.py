@@ -536,9 +536,8 @@ def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
     fixed.
 
     """
-    if resource and resource.exists() and code == resource.read():
-        return pycore.resource_to_pyobject(resource)
     commenter = None
+    errors = []
     tries = 0
     while True:
         try:
@@ -557,8 +556,15 @@ def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
                         raise
                 commenter.comment(e.lineno)
                 code = '\n'.join(commenter.lines)
+                errors.append('  * line %s: %s ... fixed' % (e.lineno,
+                                                             e.message))
             else:
-                raise
+                errors.append('  * line %s: %s ... raised!' % (e.lineno,
+                                                               e.message))
+                new_message = ('Syntax errors in file %s:\n' % e.filename) \
+                               + '\n'.join(errors)
+                raise exceptions.ModuleSyntaxError(e.filename, e.lineno,
+                                                   new_message)
 
 
 def _get_line_indents(line):
