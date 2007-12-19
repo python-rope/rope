@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.7.3 : December 19, 2007
+
+
 - Inlining a single occurrence : December 13, 2007
 
 
