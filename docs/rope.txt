@@ -9,9 +9,9 @@ Features implemented so far:
   * Extract method/local variable
   * Move class/function/module/package/method
   * Inline method/local variable
-  * Change method signature
   * Restructuring (like converting ``${?a}.f(${?b})`` to
     ``${?b}.g(${?a})`` where ``a.type == mymod.A``)
+  * Change method signature
   * Introduce factory method
   * Introduce parameter
   * Encapsulate field

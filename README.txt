@@ -14,22 +14,6 @@ Overview
 New Features
 ============
 
-* Inlining a single occurrence
-* Global extract method/variable
-* Reporting fixed errors when ``max_fixes`` errors were fixed but yet
-  there are more syntax errors when using code-assist
-* Better scope finding
-* Better return value inference
-
-``Inline(Method|Variable).get_changes()`` take a new parameter called
-``only_current``.  If ``True``, only the current occurrence will be
-inlined.
-
-``Extract(Variable|Method).get_changes()`` take a new parameter called
-``global_``.  If ``True``, the extracted variable|method will be made
-global and the whole file is searched for similar pieces instead of
-the original search scope.
-
 
 Getting Started
 ===============

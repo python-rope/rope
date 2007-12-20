@@ -219,14 +219,14 @@ we would have::
 
 Note that the global `a_func` was not renamed because we are sure that
 it is not a match.  But when using this option there might be some
-unexpected renames.  So only use this option when the name is not
-another python defined elements.
+unexpected renames.  So only use this option when the name is almost
+unique and is not defined in other places.
 
 Move Method Refactoring
 -----------------------
 
 It happens when you perform move refactoring on a method of a class.
-In this refactoring a method of a class is moved to the class of one
+In this refactoring, a method of a class is moved to the class of one
 of its attributes.  The old method will call the new method.  If you
 want to change all of the occurrences of the old method to use the new
 method you can inline it afterwards.
@@ -289,8 +289,8 @@ Moving Fields
 -------------
 
 Rope does not have a separate refactoring for moving fields.  Rope's
-refactorings are very flexible.  You can use the rename refactoring to
-rename fields.  For instance::
+refactorings are very flexible, though.  You can use the rename
+refactoring to move fields.  For instance::
 
   class A(object):
       pass
@@ -606,11 +606,7 @@ parameters that are passed to a function.
 Restructurings
 --------------
 
-Restructuring support was one of the main goals of the ``0.6`` release
-of rope.  `rope.refactor.restructure` can be used for performing
-restructurings.  Currently a simple dialog has been added for
-performing them in the IDE.
-
+`rope.refactor.restructure` can be used for performing restructurings.
 A restructuring is a program transformation; not as well defined as
 other refactorings like rename.  Let's see some examples.
 
@@ -727,9 +723,9 @@ it to `A.f1()` and `A.f2()`::
   a = A()
   a.f(1, 2)
 
-But who's going to fix all those nasty occurrences (Actually this
+But who's going to fix all those nasty occurrences (actually this
 situation can be handled using inline method refactoring but this is
-just an example; Consider inline refactoring is not implemented yet!).
+just an example; consider inline refactoring is not implemented yet!).
 Restructurings come to rescue::
 
   pattern: ${?inst}.f(${?p1}, ${?p2})
