@@ -347,7 +347,7 @@ do something like::
 
   handle.add_observer(update_progress)
 
-  changes = extractor.get_changes('extracted_variable', task_handle=handle)
+  changes = renamer.get_changes('new_name', task_handle=handle)
 
 
 Refactorings

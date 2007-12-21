@@ -3,104 +3,51 @@
 =============
 
 
-Release Schedule
-================
+Unresolved Issues
+=================
 
-The following policy is not followed anymore.  Instead, *rope* will
-use ``x.y.z`` release names and the hard two-week release schedule
-goes away.  One reason is rope is getting more stable and fewer
-features are added to it.  Each release includes more bugfixes and a
-few new features so milestones no longer make sense.
-
-Old Schedule:
-
-*rope* will be released every two weeks and each quarter a final
-version would be released.  That is:
-
-=======  ===============
-Week #   Release Name
-=======  ===============
-2        x.ym1
-4        x.ym2
-6        x.ym3
-8        x.ym4
-10       x.ym5
-12       x.ym6
-13       x.y
-=======  ===============
-
-This is only a rough plan.  For example we might have 1-week release
-candidates before the ``x.y``.
-
-
-Version 0.8
-===========
-
-From November 2, 2007
-
-
-Release Goals
--------------
-
-* Getting ready for Python 3.0
-
-
-Release Issues
---------------
+* changing the default value of max_history_items
+* compressing objectdb.pickle and history.pickle?
+* not applying all commenting mechanisms always in codeassist
+* fixing tries before current line in code_assist
+* searching all files when extracting a global method?
+* better tests in `patchedasttest`
+* import actions with more that one phase and filtering problems
+* handle long imports should work on filtered imports unconditionally?
+* adding restructuring scope; local scope, module, all files?
+* changing `codeanalyze.WordFinder` to use ASTs?
+* refactoring codeanalyze; lots of estimations
+* assignment to parameters in inline method
+* extracting subexpressions; look at `extracttest` for more info
+* remove ``change occurreces`` refactoring?
+* using similarfinder in introduce_parameter?
+* switching to GPLv3?
+* removing unused refactorings?
+* unignored files that are not under version control
+* removing unused objectdbs?
+* multiple ropes on one project; problems for objectdb and history
+* should `rope.base` be thread safe?
+* inline fails when there is an arg mismatch
+* evaluate function parameter defaults in staticoi?
+* recursive SOI; Go where the calls go with limited depth
+* adding ``do when unsure`` config to all refactorings?
+* importing star and removing self imports; stack overflow
+* python c extensions
+* supporting modules without source code and zip imports
+* extract class
+* analyzing function decorators
+* generate ... and implicit interfaces
+* generate method and class hierarchies
+* lambdas as functions; consider their parameters
+* renaming similarly named variables
+* handling the return type of ``yield`` keyword
+* extracting methods from pieces with only one return/yield statement
 
 
+To Be Reviewed
+==============
 
-Hot Topics
-==========
-
-
-To Be Discussed
-===============
-
-* `Memory management`_
-* Should `rope.base` be thread safe? which parts?
-
-
-Distributing Refactorings
-=========================
-
-When a library performs a refactoring, user code breaks.  There is
-noway of fixing that since library developers cannot access user code.
-One way for solve this might be writing scripts that can be used by
-users of the library to repeat the refactoring in their own projects.
-
-We can add a ``record_refactorings`` option to project config.  If
-`True` refactorings will be saved in the
-``.ropeproject/refactorings`` file.
-
-Issues:
-
-* Should users use the new version of the library or the old one?
-* Should the library be changed in parallel if using the old version?
-* What if there are more than one refactoring?
-* Refactorings are not the only cause for API changes
-* The outcome of the same refactoring might differ
-* Some refactorings are not important
-
-Arguments passed to refactorings:
-
-* Resources
-* ArgumentChangers
-
-Examples::
-
-  rename('rope.base.project.Project', 'NewProject', docs=True)
-  move_module('rope.ide', 'ropeide')
-  inline('rope.base.libutils.path_to_resource')
-  change_signature('mod.f', [ArgumentRemover(2)])
-
-Or::
-
-  def perform(project):
-      resource, offset = resource_and_offset(project,
-                                             'rope.base.project.Project')
-      renamer = Rename(project, resource, offset)
-      project.do(renamer.get_changes('NewProject', docs=True))
+* how concluded data are held for star imports
 
 
 Insert Before In Restructurings
@@ -111,140 +58,6 @@ Consider a restructuring like this::
   pattern: ${?a} if ${?b} else ${?c}
   goal: replacement
   before: if ${?b}:\n    replacement = ${?a}\nelse:\n    replacement = ${?c}
-
-
-Enhancing Refactorings
-======================
-
-* Ideas for new refactorings
-* Easier refactorings
-* Automating tasks
-* Better import handling
-
-
-Cache Invalidation Again ...
-============================
-
-When retrieving pyobjects from objectdb no dependencies between
-pymodules is added.  This might lead to references to invalidated
-modules.
-
-We should use an approach that:
-
-* Never should allow access to an invalidated object
-* Should not stop garbage collection from freeing invalidated objects
-
-The current approach achieves these but is very expensive.  Every
-change causes concluded data in all pymodules to be forgotten.
-
-Why weakref cannot be used in ConcludedData?
-  Concluded data can hold anything.  It can hold a `PyObject` whose
-  type might be a `PyDefinedObject`.  But since that pyobject is not
-  referenced it is considered garbage.
-
-
-How `_ConcludedData` Is Used
-----------------------------
-
-* Concluded attributes in `PyDefinedObject` -> list of `PyName`
-* Parameter pyobject cache in `PyFunction` -> list of `PyObject`
-* Superclasses in `PyClass` -> list of `PyObject`
-
-* Pyobject in `AssignedName` -> `PyObject`
-* Pyobject in `EvaluatedName` -> `PyObject`
-* Imported pymodule in `ImportedModule` -> `PyObject`
-
-
-Issues
-------
-
-We should be able to handle this:
-
-mod1::
-
-  class A(object):
-      pass
-
-
-mod2::
-
-  import mod1
-
-  B = mod1.A
-
-
-mod3::
-
-  import mod2
-
-  var = mod2.B()
-
-Now if we change mod2::
-
-  class B(object):
-      pass
-
-If we only care about the pyobject this will fail.  That's because
-although `mod1.A` is valid, `var` should be an instance of `mod2.B`
-and not `mod1.A`.
-
-So it seems we're merely adding another check to pyobject refs.  This
-new check can be done in two ways; We can either use weak refs and
-check every access to a pyobject or we can add register for
-invalidation in destination module.  Yet this does not solve all
-problems.  We should know what `PyDefinedObject`\s a pyobject
-references and for builtins this might be more than one.  What's more
-we should handle references in pymodules and a reference might be
-referenced by more than one pymodule.
-
-Actually there are two separate issues:
-
-* Invalidating based on definition location
-* Invalidating based on the referenced `PyDefinedObject`\s
-
-The former is already handled.  But the other problem exists mainly
-because of SOI.
-
-The other problem happens when data in our objectdb is retrieved.  No
-dependency is added to pycore for such things.
-
-So the easiest approach would be to forget all concluded data with
-every change.
-
-
-Removing `PyCore._add_dependency()`
------------------------------------
-
-After the discussions about concluded data invalidation, module
-dependency information is not used anymore.  Maybe we can remove them
-altogether in the hope that maybe in future a better approach is
-possible.
-
-
-Better Concluded Data
-=====================
-
-The main problem is when using star imports, after a module has been
-invalidated its concluded data still exist.  This does not seem to be
-a major memory leak, since these `_ConcludedData`\s are invalidated
-and contain `None`.
-
-* Using weak references for holding concluded data
-* Changing `ImportedName` not to store the imported object in a
-  concluded data.  This might slow things a bit.
-* Changing `StarImport` to use a mock concluded data for its
-  `ImportedModule` and `ImportedName`\s
-
-The other suggestion here is that currently `ImportedName`\s store
-object information in the concluded data of the importing module while
-they can get concluded data from imported module.  The problem happens
-when the imported module gets deleted.
-
-Note that concluded attributes are:
-
-* PyClass: superclass attributes
-* PyModule: star imports
-* PyPackage: ``__init__.py`` attributes
 
 
 Memory Management
@@ -265,46 +78,3 @@ Getting Ready For Python 3.0
 ============================
 
 This has been moved to a separate branch.
-
-
-Unresolved Issues
-=================
-
-* Review objectinfo module
-* Searching all files when extracting a global method?
-* Better tests in `patchedasttest`
-* Import actions with more that one phase and filtering problems
-* Handle long imports should work on filtered imports unconditionally?
-* Adding restructuring scope; local scope, module, all files?
-* Changing `codeanalyze.WordFinder` to use ASTs?
-* Refactoring codeanalyze; lots of estimations
-* Assignment to parameters in inline method
-* Extracting subexpressions; look at `extracttest` for more info
-* Remove ``change occurreces`` refactoring?
-* Using similarfinder in introduce_parameter?
-* Switching to GPLv3?
-* Remove unused refactorings?
-* Unignored files that are not under version control
-* Removing unused objectdbs?
-
-
-Small Stories
-=============
-
-Base:
-
-* Multiple ropes on one project; problems for objectdb and history
-* Inline fails when there is an arg mismatch
-* Evaluate function parameter defaults in staticoi?
-* Recursive SOI; Go where the calls go with limited depth
-* Adding ``do when unsure`` config to all refactorings?
-* Removing ``pass`` when introducing factory for empty classes
-* Importing star and removing self imports; stack overflow
-
-Docs:
-
-* Explain why rope does not stop users from performing wrong
-  refactorings
-* Add custom refactoring section to ``overview.txt`` file;
-  Extract field refactoring
-* Document why support for Python ``2.4`` was dropped

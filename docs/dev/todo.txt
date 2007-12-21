@@ -2,52 +2,13 @@
  TODO
 ======
 
-* Extract superclass
-* Collapse hierarchy
-* Python C extensions
-* Zip imports
-* Pull up method
-* Push down method
-* Introduce redirection
+See the `unresolved issues` section of ``issues.txt`` file for more.
 
 
 > Public Release 0.8
 
 
-* Handling the return type of ``yield`` keyword
-
-
-* Extracting methods from pieces with only one return/yield statement
-
-
-* Moving initialization to constructor in local variable to field
-
-
-* Encapsulate field using properties
-
-
-* Adding an option to remove old parameter in inline argument default
-
-
-* Renaming similarly named variables
-
-
-* Analyzing function decorators
-
-
-* Extract class
-
-
-* Supporting modules without source code
-
-
-* Moving `staticmethod`\s
-
-
-* Changing method to static method refactoring
-
-
-* Enhanced occurrence finding
+* Removing ``pass`` when introducing factory for empty classes
 
 
 * Move refactoring and moving a group of elements together
@@ -59,19 +20,10 @@
 * Renaming and moving normal files/folders
 
 
-* Generate ... and implicit interfaces
-
-
 * Using `svn` instead of `pysvn`
 
 
-* Generate method and class hierarchies
-
-
 * Handling tuple parameters
-
-
-* Lambdas as functions; consider their parameters
 
 
 * Split tuple assignment refactoring

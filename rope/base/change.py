@@ -1,12 +1,12 @@
-import warnings
-import datetime
 import difflib
 import os
+import warnings
+
+import datetime
 import time
 
 import rope.base.fscommands
-from rope.base import taskhandle
-from rope.base import exceptions
+from rope.base import taskhandle, exceptions
 
 
 class Change(object):
