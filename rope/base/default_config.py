@@ -57,6 +57,7 @@ def set_prefs(prefs):
     # `False`.
     prefs['save_history'] = True
     prefs['max_history_items'] = 80
+    prefs['compress_history'] = False
 
     # If `False` when running modules or unit tests "Dynamic Object
     # Inference" is turned off.  This makes them much faster.  The

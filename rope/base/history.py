@@ -1,4 +1,5 @@
 from rope.base import exceptions, change, taskhandle
+import gzip
 import cPickle as pickle
 
 
@@ -12,12 +13,16 @@ class History(object):
             self.max_undos = project.get_prefs().get('max_history_items', 100)
         else:
             self.max_undos = maxundos
+        self.compress = project.get_prefs().get('compress_history', False)
         self._load_history()
         self.current_change = None
 
     def _load_history(self):
         if self.history_file is not None and self.history_file.exists():
-            input_file = file(self.history_file.real_path)
+            if self.compress:
+                input_file = gzip.open(self.history_file.real_path)
+            else:
+                input_file = open(self.history_file.real_path)
             to_change = change.DataToChange(self.history_file.project)
             for data in pickle.load(input_file):
                 self._undo_list.append(to_change(data))
@@ -29,7 +34,11 @@ class History(object):
         if self.project.get_prefs().get('save_history', False):
             folder = self.project.ropefolder
             if folder is not None and folder.exists():
-                return self.project.get_file(folder.path + '/history.pickle')
+                if self.compress:
+                    return self.project.get_file(folder.path + '/history.gz')
+                else:
+                    return self.project.get_file(folder.path +
+                                                 '/history.pickle')
 
     history_file = property(_get_history_file)
 
@@ -121,7 +130,10 @@ class History(object):
 
     def sync(self):
         if self.history_file is not None:
-            output_file = file(self.history_file.real_path, 'w')
+            if self.compress:
+                output_file = gzip.open(self.history_file.real_path, 'w')
+            else:
+                output_file = open(self.history_file.real_path, 'w')
             to_data = change.ChangeToData()
             pickle.dump([to_data(change_) for change_ in self.undo_list],
                         output_file)
