@@ -224,6 +224,7 @@ class IsolatedHistoryTest(unittest.TestCase):
     @testutils.assert_raises(exceptions.HistoryError)
     def test_undoing_a_not_yet_performed_change(self):
         change = ChangeContents(self.file1, '1')
+        str(change)
         change.undo()
 
 

@@ -158,9 +158,15 @@ class ChangeContents(Change):
         return 'Change <%s>' % self.resource.path
 
     def get_description(self):
+        new = self.new_contents
+        old = self.old_contents
+        if old is None:
+            if self.resource.exists():
+                old = self.resource.read()
+            else:
+                old = ''
         result = difflib.unified_diff(
-            self.old_contents.splitlines(True),
-            self.new_contents.splitlines(True),
+            old.splitlines(True), new.splitlines(True),
             'a/' + self.resource.path, 'b/' + self.resource.path)
         return ''.join(list(result))
 
