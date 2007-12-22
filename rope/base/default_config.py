@@ -52,6 +52,7 @@ def set_prefs(prefs):
     # project is very large, you might consider 'shelve' or the
     # slower 'sqlite'.
     prefs['objectdb_type'] = 'persisted_memory'
+    prefs['compress_objectdb'] = False
 
     # Shows whether to save history across sessions.  Defaults to
     # `False`.

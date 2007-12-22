@@ -3,6 +3,9 @@
 ===========
 
 
+- Added compress_history and compress_objectdb configs : December 22, 2007
+
+
 > Public Release 0.7.3 : December 19, 2007
 
 

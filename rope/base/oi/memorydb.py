@@ -9,20 +9,29 @@ class MemoryDB(objectdb.FileDict):
     def __init__(self, project, persist=False):
         self.project = project
         self.persist = persist
-        self._load_files()
         self.files = self
+        self.compress = project.prefs.get('compress_objectdb', False)
+        if self.compress:
+            import gzip
+            self.opener = gzip.open
+        else:
+            self.opener = open
+        self._load_files()
 
     def _get_persisted_file(self):
-        resource = self.project.get_file(
-            self.project.ropefolder.path + '/objectdb.pickle')
-        return resource
+        if self.compress:
+            return self.project.get_file(
+                self.project.ropefolder.path + '/objectdb.gz')
+        else:
+            return self.project.get_file(
+                self.project.ropefolder.path + '/objectdb.pickle')
 
     def _load_files(self):
         self._files = {}
         if self.persist:
             persisted = self._get_persisted_file()
             if persisted.exists():
-                output = open(persisted.real_path, 'rb')
+                output = self.opener(persisted.real_path, 'rb')
                 self._files = pickle.load(output)
                 output.close()
 
@@ -51,7 +60,7 @@ class MemoryDB(objectdb.FileDict):
         if self.persist:
             persisted = self._get_persisted_file()
             if persisted.exists():
-                output = open(persisted.real_path, 'wb')
+                output = self.opener(persisted.real_path, 'wb')
                 pickle.dump(self._files, output)
                 output.close()
 

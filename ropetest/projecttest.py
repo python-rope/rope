@@ -875,6 +875,16 @@ class RopeFolderTest(unittest.TestCase):
         mod.write('xyz print')
         pymod = pycore.resource_to_pyobject(mod)
 
+    def test_compressed_history(self):
+        self.project = testutils.sample_project(compress_history=True)
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write('')
+
+    def test_compressed_objectdb(self):
+        self.project = testutils.sample_project(compress_objectdb=True)
+        mod = testutils.create_module(self.project, 'mod')
+        self.project.pycore.analyze_module(mod)
+
 
 def suite():
     result = unittest.TestSuite()

@@ -7,7 +7,6 @@ Unresolved Issues
 =================
 
 * changing the default value of max_history_items
-* compressing objectdb.pickle and history.pickle?
 * not applying all commenting mechanisms always in codeassist
 * fixing tries before current line in code_assist
 * searching all files when extracting a global method?
