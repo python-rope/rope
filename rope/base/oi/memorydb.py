@@ -59,10 +59,9 @@ class MemoryDB(objectdb.FileDict):
     def sync(self):
         if self.persist:
             persisted = self._get_persisted_file()
-            if persisted.exists():
-                output = self.opener(persisted.real_path, 'wb')
-                pickle.dump(self._files, output)
-                output.close()
+            output = self.opener(persisted.real_path, 'wb')
+            pickle.dump(self._files, output)
+            output.close()
 
 
 class FileInfo(objectdb.FileInfo):
