@@ -139,9 +139,6 @@ class ChangeContents(Change):
         # IDEA: Only saving diffs; possible problems when undo/redoing
         self.new_contents = new_contents
         self.old_contents = old_contents
-        if self.old_contents is None:
-            if self.resource.exists():
-                self.old_contents = self.resource.read()
         self.operations = self.resource.project.operations
 
     @_handle_job_set
@@ -152,6 +149,9 @@ class ChangeContents(Change):
 
     @_handle_job_set
     def undo(self):
+        if self.old_contents is None:
+            raise exceptions.HistoryError(
+                'Undoing a change that is not performed yet!')
         self.operations.write_file(self.resource, self.old_contents)
 
     def __str__(self):

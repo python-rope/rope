@@ -52,13 +52,13 @@ def set_prefs(prefs):
     # project is very large, you might consider 'shelve' or the
     # slower 'sqlite'.
     prefs['objectdb_type'] = 'persisted_memory'
-    prefs['compress_objectdb'] = False
+    prefs['compress_objectdb'] = True
 
     # Shows whether to save history across sessions.  Defaults to
     # `False`.
     prefs['save_history'] = True
-    prefs['max_history_items'] = 80
-    prefs['compress_history'] = False
+    prefs['max_history_items'] = 32
+    prefs['compress_history'] = True
 
     # If `False` when running modules or unit tests "Dynamic Object
     # Inference" is turned off.  This makes them much faster.  The

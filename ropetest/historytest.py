@@ -221,6 +221,11 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.history.do(change)
         self.assertEquals(0, len(self.history.redo_list))
 
+    @testutils.assert_raises(exceptions.HistoryError)
+    def test_undoing_a_not_yet_performed_change(self):
+        change = ChangeContents(self.file1, '1')
+        change.undo()
+
 
 class SavingHistoryTest(unittest.TestCase):
 
