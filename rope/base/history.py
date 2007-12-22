@@ -1,6 +1,6 @@
-from rope.base import exceptions, change, taskhandle
-import gzip
 import cPickle as pickle
+
+from rope.base import exceptions, change, taskhandle
 
 
 class History(object):
@@ -14,15 +14,17 @@ class History(object):
         else:
             self.max_undos = maxundos
         self.compress = project.get_prefs().get('compress_history', False)
+        if self.compress:
+            import gzip
+            self.opener = gzip.open
+        else:
+            self.opener = open
         self._load_history()
         self.current_change = None
 
     def _load_history(self):
         if self.history_file is not None and self.history_file.exists():
-            if self.compress:
-                input_file = gzip.open(self.history_file.real_path)
-            else:
-                input_file = open(self.history_file.real_path)
+            input_file = self.opener(self.history_file.real_path)
             to_change = change.DataToChange(self.history_file.project)
             for data in pickle.load(input_file):
                 self._undo_list.append(to_change(data))
@@ -130,10 +132,7 @@ class History(object):
 
     def sync(self):
         if self.history_file is not None:
-            if self.compress:
-                output_file = gzip.open(self.history_file.real_path, 'w')
-            else:
-                output_file = open(self.history_file.real_path, 'w')
+            output_file = self.opener(self.history_file.real_path, 'w')
             to_data = change.ChangeToData()
             pickle.dump([to_data(change_) for change_ in self.undo_list],
                         output_file)
