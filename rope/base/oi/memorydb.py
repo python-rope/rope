@@ -1,5 +1,6 @@
 import cPickle as pickle
 import UserDict
+import shutil
 
 from rope.base.oi import objectdb
 
@@ -24,12 +25,21 @@ class MemoryDB(objectdb.FileDict):
                 self.project.ropefolder.path + '/objectdb.gz')
         else:
             return self.project.get_file(
-                self.project.ropefolder.path + '/objectdb.pickle')
+                self.project.ropefolder.path + '/objectdb')
+
+    def _import_old_files(self):
+        persisted = self._get_persisted_file()
+        old = self.project.get_file(self.project.ropefolder.path +
+                                    '/objectdb.pickle')
+        if not persisted.exists() and old.exists() and not self.compress:
+            shutil.move(old.real_path, persisted.real_path)
 
     def _load_files(self):
         self._files = {}
         if self.persist:
             persisted = self._get_persisted_file()
+            if not persisted.exists():
+                self._import_old_files()
             if persisted.exists():
                 output = self.opener(persisted.real_path, 'rb')
                 self._files = pickle.load(output)
