@@ -69,7 +69,7 @@ class MemoryDB(objectdb.FileDict):
         if self.persist:
             persisted = self._get_persisted_file()
             output = self.opener(persisted.real_path, 'wb')
-            pickle.dump(self._files, output)
+            pickle.dump(self._files, output, 2)
             output.close()
 
 
