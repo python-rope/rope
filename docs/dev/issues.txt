@@ -6,7 +6,6 @@
 Unresolved Issues
 =================
 
-* changing the default value of max_history_items
 * not applying all commenting mechanisms always in codeassist
 * fixing tries before current line in code_assist
 * searching all files when extracting a global method?
@@ -23,7 +22,6 @@ Unresolved Issues
 * switching to GPLv3?
 * removing unused refactorings?
 * unignored files that are not under version control
-* removing unused objectdbs?
 * multiple ropes on one project; problems for objectdb and history
 * should `rope.base` be thread safe?
 * inline fails when there is an arg mismatch

@@ -150,9 +150,9 @@ class History(object):
             output_file = self.opener(self.history_file.real_path, 'w')
             to_data = change.ChangeToData()
             pickle.dump([to_data(change_) for change_ in self.undo_list],
-                        output_file)
+                        output_file, 2)
             pickle.dump([to_data(change_) for change_ in self.redo_list],
-                        output_file)
+                        output_file, 2)
             output_file.close()
 
     def get_file_undo_list(self, resource):
