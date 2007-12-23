@@ -1,6 +1,5 @@
-import cPickle as pickle
-import UserDict
 import shutil
+import cPickle as pickle
 
 from rope.base.oi import objectdb
 

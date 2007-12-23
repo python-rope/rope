@@ -1,3 +1,4 @@
+import shutil
 import cPickle as pickle
 
 from rope.base import exceptions, change, taskhandle
@@ -23,7 +24,11 @@ class History(object):
         self.current_change = None
 
     def _load_history(self):
-        if self.history_file is not None and self.history_file.exists():
+        if self.history_file is not None:
+            if not self.history_file.exists():
+                self._import_old_files()
+            if not self.history_file.exists():
+                return
             input_file = self.opener(self.history_file.real_path)
             to_change = change.DataToChange(self.history_file.project)
             for data in pickle.load(input_file):
@@ -32,6 +37,13 @@ class History(object):
                 self._redo_list.append(to_change(data))
             input_file.close()
 
+    def _import_old_files(self):
+        old = self.project.get_file(self.project.ropefolder.path +
+                                    '/history.pickle')
+        if not self.history_file.exists() and \
+           old.exists() and not self.compress:
+            shutil.move(old.real_path, self.history_file.real_path)
+
     def _get_history_file(self):
         if self.project.get_prefs().get('save_history', False):
             folder = self.project.ropefolder
@@ -39,8 +51,7 @@ class History(object):
                 if self.compress:
                     return self.project.get_file(folder.path + '/history.gz')
                 else:
-                    return self.project.get_file(folder.path +
-                                                 '/history.pickle')
+                    return self.project.get_file(folder.path + '/history')
 
     history_file = property(_get_history_file)
 
