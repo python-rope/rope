@@ -15,7 +15,7 @@ def sample_project(root=None, foldername=None, **kwds):
         if os.name == 'posix' and os.path.isdir('/dev/shm'):
             root = '/dev/shm/' + root
     # Using these prefs for faster tests
-    prefs = {'objectdb_type': 'memory', 'save_history': False,
+    prefs = {'save_objectdb': False, 'save_history': False,
              'validate_objectdb': False, 'automatic_soi': False}
     prefs.update(kwds)
     remove_recursively(root)

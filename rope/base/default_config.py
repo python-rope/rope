@@ -22,36 +22,8 @@ def set_prefs(prefs):
     # You can extend python path:
     #prefs.add('python_path', '~/python/')
 
-    # This option tells rope how to hold and save object information.
-    # Possible values are:
-    #
-    # * 'memory': It holds all information in
-    #   memory.  So it is the fastest and the least memory efficient.
-    #   Its biggest problem is that the data is not saved and
-    #   the information is lost when you open a project in future.
-    #   You probably never want to use this (it is used in unit
-    #   tests), but if you decide not to have rope folder (see ~/.rope
-    #   file) this db is used.
-    #
-    # * 'persisted_memory': Exactly like 'memory' but the information is
-    #   saved for future sessions.  The problem with this approach is
-    #   that it might take lots of memory (this is not an issue for
-    #   small to medium-sized projects).
-    #
-    # * 'shelve': It stores data in `shelve` files.  This solves
-    #   both the memory efficiency and the persistency problems.  But
-    #   `shelve` is known to cause misterious problems in rare
-    #   conditions.
-    #
-    # * 'sqlite': It uses `sqlite3` module which is available in
-    #   Python distributions starting from ``2.5``.  It is like
-    #   'shelve' but probably more reliable.  But it is much less CPU
-    #   efficient.
-    #
-    # 'persisted_memory' is the best most of the time.  If your
-    # project is very large, you might consider 'shelve' or the
-    # slower 'sqlite'.
-    prefs['objectdb_type'] = 'persisted_memory'
+    # Should rope save object information or not.
+    prefs['save_objectdb'] = True
     prefs['compress_objectdb'] = False
 
     # Shows whether to save history across sessions.  Defaults to

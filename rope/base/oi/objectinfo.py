@@ -1,8 +1,9 @@
 import sys
+import warnings
 
 import rope.base.project
 from rope.base import exceptions
-from rope.base.oi import objectdb, memorydb, shelvedb, transform
+from rope.base.oi import objectdb, memorydb, transform
 
 
 class ObjectInfoManager(object):
@@ -23,17 +24,21 @@ class ObjectInfoManager(object):
             self._init_validation()
 
     def _init_objectdb(self):
-        preferred = self.project.get_prefs().get('objectdb_type', 'memory')
+        dbtype = self.project.get_prefs().get('objectdb_type', None)
+        if dbtype is not None:
+            warnings.warn(
+                '"objectdb_type" project config is deprecated;\n'
+                'Use "save_objectdb" instead in your project '
+                'config file.\n(".ropeproject/config.py" by default)\n',
+                DeprecationWarning)
+            save = dbtype != 'memory'
+        else:
+            save = self.project.get_prefs().get('save_objectdb', False)
         self.validation = TextualValidation(self.to_pyobject)
-        if preferred == 'memory' or self.project.ropefolder is None:
-            db = memorydb.MemoryDB(self.project)
-        elif preferred == 'sqlite' and sys.version_info >= (2, 5, 0):
-            import rope.base.oi.sqlitedb
-            db = rope.base.oi.sqlitedb.SqliteDB(self.project)
-        elif preferred == 'shelve':
-            db = shelvedb.ShelveDB(self.project)
-        elif True or preferred == 'persisted_memory':
+        if save and self.project.ropefolder is not None:
             db = memorydb.MemoryDB(self.project, persist=True)
+        else:
+            db = memorydb.MemoryDB(self.project, persist=False)
         self.objectdb = objectdb.ObjectDB(db, self.validation)
 
     def _init_validation(self):
