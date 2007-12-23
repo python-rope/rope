@@ -52,9 +52,12 @@ class History(object):
             self.current_change = None
         if self._is_change_interesting(changes):
             self.undo_list.append(changes)
-            if len(self.undo_list) > self.max_undos:
-                del self.undo_list[0]
+            self._remove_extra_items()
         del self.redo_list[:]
+
+    def _remove_extra_items(self):
+        if len(self.undo_list) > self.max_undos:
+            del self.undo_list[0:len(self.undo_list) - self.max_undos]
 
     def _is_change_interesting(self, changes):
         for resource in changes.get_changed_resources():
@@ -132,6 +135,7 @@ class History(object):
 
     def sync(self):
         if self.history_file is not None:
+            self._remove_extra_items()
             output_file = self.opener(self.history_file.real_path, 'w')
             to_data = change.ChangeToData()
             pickle.dump([to_data(change_) for change_ in self.undo_list],
