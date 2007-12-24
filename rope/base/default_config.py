@@ -26,24 +26,22 @@ def set_prefs(prefs):
     prefs['save_objectdb'] = True
     prefs['compress_objectdb'] = False
 
-    # Shows whether to save history across sessions.  Defaults to
-    # `False`.
-    prefs['save_history'] = True
-    prefs['max_history_items'] = 32
-    prefs['compress_history'] = False
+    # If `True`, rope analyzes each module when it is being saved.
+    prefs['automatic_soi'] = True
 
-    # If `False` when running modules or unit tests "Dynamic Object
-    # Inference" is turned off.  This makes them much faster.  The
-    # default is `True`.
+    # If `False` when running modules or unit tests "dynamic object
+    # inference" is turned off.  This makes them much faster.
     prefs['perform_doi'] = True
 
-    # Rope can test the validity of its object DB when running.  You
-    # can turn this feature off by using `False`.  Defaults to
-    # `True`.
+    # Rope can check the validity of its object DB when running.
     prefs['validate_objectdb'] = True
 
-    # If `True`, rope will analyze each module when it is saved.
-    prefs['automatic_soi'] = True
+    # How many undos to hold?
+    prefs['max_history_items'] = 32
+
+    # Shows whether to save history across sessions.
+    prefs['save_history'] = True
+    prefs['compress_history'] = False
 
     # Set the number spaces used for indenting.  According to
     # :PEP:`8`, it is best to use 4 spaces.  Since most of rope's
