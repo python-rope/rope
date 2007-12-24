@@ -336,13 +336,16 @@ do something like::
       jobset = handle.current_jobsets()
       if jobset:
           text = ''
+          # getting current job set name
           if jobset.get_name() is not None:
               text += jobset.get_name()
+          # getting active job name
           if jobset.get_active_job_name() is not None:
               text += ' : ' + jobset.get_active_job_name()
+          # adding done percent
           percent = jobset.get_percent_done()
           if percent is not None:
-              text = ' ... %s percent done' % percent
+              text += ' ... %s percent done' % percent
           print text
 
   handle.add_observer(update_progress)
