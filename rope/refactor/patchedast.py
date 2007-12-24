@@ -1,4 +1,5 @@
 import re
+import warnings
 
 from rope.base import ast, codeanalyze, exceptions
 
@@ -71,14 +72,20 @@ class _PatchingASTWalker(object):
         method = getattr(self, '_' + node.__class__.__name__, None)
         if method is not None:
             return method(node)
-        # ???: Unknown node; What should we do here?
-        raise RuntimeError('Unknown node type <%s>' %
-                           node.__class__.__name__)
+        # ???: Unknown node; what should we do here?
+        warnings.warn('Unknown node type <%s>; please report!'
+                      % node.__class__.__name__, RuntimeWarning)
+        node.region = (self.source.offset, self.source.offset)
+        if self.children:
+            node.sorted_children = ast.get_children(node)
 
     def _handle(self, node, base_children, eat_parens=False, eat_spaces=False):
         if hasattr(node, 'region'):
-            raise RuntimeError('Node <%s> has been already patched!' %
-                               node.__class__.__name__)
+            # ???: The same node was seen twice; what should we do?
+            warnings.warn(
+                'Node <%s> has been already patched; please report!' %
+                node.__class__.__name__, RuntimeWarning)
+            return
         self.children_stack.append(base_children)
         children = []
         formats = []
