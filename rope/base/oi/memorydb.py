@@ -12,9 +12,12 @@ class MemoryDB(objectdb.FileDict):
         self.files = self
         self.compress = project.prefs.get('compress_objectdb', False)
         if self.compress:
-            import gzip
-            self.opener = gzip.open
-        else:
+            try:
+                import gzip
+                self.opener = gzip.open
+            except ImportError:
+                self.compress = False
+        if not self.compress:
             self.opener = open
         self._load_files()
 

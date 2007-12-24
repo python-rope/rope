@@ -16,9 +16,12 @@ class History(object):
             self.max_undos = maxundos
         self.compress = project.get_prefs().get('compress_history', False)
         if self.compress:
-            import gzip
-            self.opener = gzip.open
-        else:
+            try:
+                import gzip
+                self.opener = gzip.open
+            except ImportError:
+                self.compress = False
+        if not self.compress:
             self.opener = open
         self._load_history()
         self.current_change = None
@@ -29,7 +32,7 @@ class History(object):
                 self._import_old_files()
             if not self.history_file.exists():
                 return
-            input_file = self.opener(self.history_file.real_path)
+            input_file = self.opener(self.history_file.real_path, 'rb')
             to_change = change.DataToChange(self.history_file.project)
             for data in pickle.load(input_file):
                 self._undo_list.append(to_change(data))
@@ -147,7 +150,7 @@ class History(object):
     def sync(self):
         if self.history_file is not None:
             self._remove_extra_items()
-            output_file = self.opener(self.history_file.real_path, 'w')
+            output_file = self.opener(self.history_file.real_path, 'wb')
             to_data = change.ChangeToData()
             pickle.dump([to_data(change_) for change_ in self.undo_list],
                         output_file, 2)
