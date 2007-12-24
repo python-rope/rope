@@ -440,11 +440,11 @@ class ExtractMethodTest(unittest.TestCase):
 
     # TODO: Handle when extracting a subexpression
     def xxx_test_extract_variable_for_a_subexpression(self):
-        code = 'if True:\n    a = 3 + 1 \\\n + 2\n'
+        code = 'a = 3 + 1 + 2\n'
         start = code.index('1')
         end = code.index('2') + 1
         refactored = self.do_extract_variable(code, start, end, 'b')
-        expected = 'if True:\n    b = 1 + 2\n    a = 3 + b\n'
+        expected = 'b = 1 + 2\na = 3 + b\n'
         self.assertEquals(expected, refactored)
 
     def test_extract_variable_starting_from_the_start_of_the_line(self):

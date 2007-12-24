@@ -244,8 +244,7 @@ class _ExtractPerformer(object):
         matched_lines = []
         for match in collector.matches:
             start = self.info.lines.get_line_number(match.get_region()[0])
-            start_line = self.info.logical_lines.\
-                         logical_line_in(start)[0]
+            start_line = self.info.logical_lines.logical_line_in(start)[0]
             matched_lines.append(start_line)
         location_finder = _DefinitionLocationFinder(self.info, matched_lines)
         collector.definition_location = (location_finder.find_lineno(),
@@ -267,6 +266,9 @@ class _DefinitionLocationFinder(object):
     def __init__(self, info, matched_lines):
         self.info = info
         self.matched_lines = matched_lines
+        # This only happens when subexpressions cannot be matched
+        if not matched_lines:
+            self.matched_lines.append(self.info.region_lines[0])
 
     def find_lineno(self):
         if self.info.make_global and not self.info.global_:
