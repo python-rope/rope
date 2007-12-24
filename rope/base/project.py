@@ -131,6 +131,7 @@ class Project(_Project):
 
         """
         self._address = _realpath(projectroot).rstrip('/\\')
+        self._ropefolder_name = ropefolder
         if not os.path.exists(self._address):
             os.mkdir(self._address)
         elif not os.path.isdir(self._address):
@@ -143,7 +144,6 @@ class Project(_Project):
         self.file_list = _FileListCacher(self)
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
         self.prefs['ignored_resources'] = ['*.pyc', '.svn', '*~', '.ropeproject']
-        self._init_rope_folder(ropefolder)
         self._init_prefs(prefs)
 
     def get_files(self):
@@ -152,38 +152,39 @@ class Project(_Project):
     def _get_resource_path(self, name):
         return os.path.join(self._address, *name.split('/'))
 
-    def _init_rope_folder(self, ropefolder):
-        self._ropefolder = None
-        if ropefolder is not None:
-            self._ropefolder = self.get_folder(ropefolder)
-            if not self._ropefolder.exists():
-                self._ropefolder.create()
+    def _init_ropefolder(self):
+        if self.ropefolder is not None:
+            if not self.ropefolder.exists():
+                self.ropefolder.create()
+            if not self.ropefolder.has_child('config.py'):
+                config = self.ropefolder.create_file('config.py')
+                config.write(self._default_config())
 
     def _init_prefs(self, prefs):
         run_globals = {}
         if self.ropefolder is not None:
-            if not self._ropefolder.has_child('config.py'):
-                config = self._write_config()
-            config = self._ropefolder.get_child('config.py')
+            config = self.get_file(self.ropefolder.path + '/config.py')
             run_globals.update({'__name__': '__main__',
                                 '__builtins__': __builtins__,
                                 '__file__': config.real_path})
-            execfile(config.real_path, run_globals)
+            if config.exists():
+                config = self.ropefolder.get_child('config.py')
+                execfile(config.real_path, run_globals)
+            else:
+                exec(self._default_config(), run_globals)
             if 'set_prefs' in run_globals:
                 run_globals['set_prefs'](self.prefs)
         for key, value in prefs.items():
             self.prefs[key] = value
         self._init_other_parts()
+        self._init_ropefolder()
         if 'project_opened' in run_globals:
             run_globals['project_opened'](self)
 
-    def _write_config(self):
+    def _default_config(self):
         import rope.base.default_config
         import inspect
-        text = inspect.getsource(rope.base.default_config)
-        config = self._ropefolder.create_file('config.py')
-        config.write(text)
-        return config
+        return inspect.getsource(rope.base.default_config)
 
     def _init_other_parts(self):
         # Forcing the creation of `self.pycore` to register observers
@@ -200,9 +201,13 @@ class Project(_Project):
         """Set the `key` preference to `value`"""
         self.prefs.set(key, value)
 
+    @property
+    def ropefolder(self):
+        if self._ropefolder_name is not None:
+            return self.get_folder(self._ropefolder_name)
+
     root = property(lambda self: self.get_resource(''))
     address = property(lambda self: self._address)
-    ropefolder = property(lambda self: self._ropefolder)
 
 
 class NoProject(_Project):
