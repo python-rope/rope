@@ -3,10 +3,7 @@ import re
 
 import rope.base.change
 import rope.base.fscommands
-import rope.base.history
-import rope.base.prefs
-import rope.base.pycore
-from rope.base import exceptions, taskhandle
+from rope.base import exceptions, taskhandle, prefs, pycore, history
 from rope.base.resources import File, Folder
 
 
@@ -16,7 +13,7 @@ class _Project(object):
         self.observers = []
         self._history = None
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
-        self.prefs = rope.base.prefs.Prefs()
+        self.prefs = prefs.Prefs()
         self._pycore = None
 
     def get_resource(self, resource_name):
@@ -74,7 +71,7 @@ class _Project(object):
 
     def get_pycore(self):
         if self._pycore is None:
-            self._pycore = rope.base.pycore.PyCore(self)
+            self._pycore = pycore.PyCore(self)
         return self._pycore
 
     def get_file(self, path):
@@ -105,7 +102,7 @@ class _Project(object):
 
     def _get_history(self):
         if self._history is None:
-            self._history = rope.base.history.History(self)
+            self._history = history.History(self)
         return self._history
 
     history = property(_get_history)
