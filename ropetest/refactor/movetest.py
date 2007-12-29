@@ -420,6 +420,15 @@ class MoveRefactoringTest(unittest.TestCase):
             'def f():\n    print(sys.version, os.path)\n',
             self.mod2.read())
 
+    def test_moving_a_global_when_it_is_used_after_a_multiline_str(self):
+        self.mod1.write('def f():\n    pass\ns = """\\\n"""\nr = f()\n')
+        mover = move.create_move(self.project, self.mod1,
+                                 self.mod1.read().index('f()') + 1)
+        self.project.do(mover.get_changes(self.mod2))
+        self.assertEquals(
+            'import mod2\ns = """\\\n"""\nr = mod2.f()\n',
+            self.mod1.read())
+
 
 if __name__ == '__main__':
     unittest.main()

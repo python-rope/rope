@@ -326,11 +326,9 @@ class MoveGlobal(object):
         scope = self.old_pyname.get_object().get_scope()
         start = lines.get_line_start(scope.get_start())
         end_line = scope.get_end()
-        for i in range(end_line + 1, lines.length()):
-            if lines.get_line(i).strip() == '':
-                end_line = i
-            else:
-                break
+        while end_line < lines.length() and \
+              lines.get_line(end_line + 1).strip() == '':
+            end_line += 1
         end = min(lines.get_line_end(end_line) + 1, len(pymodule.source_code))
         return start, end
 
