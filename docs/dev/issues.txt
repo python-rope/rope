@@ -7,26 +7,26 @@ Unresolved Issues
 =================
 
 * not applying all commenting mechanisms always in codeassist
-* fixing tries before current line in code_assist
+* fixing try blocks before current line in code_assist
 * searching all files when extracting a global method?
 * better tests in `patchedasttest`
 * import actions with more that one phase and filtering problems
 * handle long imports should work on filtered imports unconditionally?
 * adding restructuring scope; local scope, module, all files?
-* changing `codeanalyze.WordFinder` to use ASTs?
+* changing `codeanalyze.WordFinder` to use asts?
 * refactoring codeanalyze; lots of estimations
 * assignment to parameters in inline method
 * extracting subexpressions; look at `extracttest` for more info
 * remove ``change occurreces`` refactoring?
 * using similarfinder in introduce_parameter?
-* switching to GPLv3?
+* switching to gplv3?
 * removing unused refactorings?
 * unignored files that are not under version control
 * multiple ropes on one project; problems for objectdb and history
 * should `rope.base` be thread safe?
 * inline fails when there is an arg mismatch
 * evaluate function parameter defaults in staticoi?
-* recursive SOI; Go where the calls go with limited depth
+* recursive soi; go where the calls go with limited depth
 * adding ``do when unsure`` config to all refactorings?
 * importing star and removing self imports; stack overflow
 * python c extensions

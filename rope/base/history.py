@@ -113,7 +113,7 @@ class History(object):
             self.redo_list.append(self.undo_list.pop())
 
     def redo(self, task_handle=taskhandle.NullTaskHandle()):
-        """Return the list of undone changes"""
+        """Return the list of redone changes"""
         if not self.redo_list:
             raise exceptions.HistoryError('Redo list is empty')
         self.current_change = self.redo_list[-1]
