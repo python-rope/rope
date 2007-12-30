@@ -724,7 +724,7 @@ def get_block_start_patterns():
 
 def count_line_indents(line):
     indents = 0
-    for index, char in enumerate(line):
+    for char in line:
         if char == ' ':
             indents += 1
         elif char == '\t':
