@@ -736,10 +736,10 @@ def count_line_indents(line):
 
 def get_string_pattern():
     start = r'(\b[uU]?[rR]?)?'
-    return '|'.join([r"%s'''[^'\\]*((\\.|'(?!'')|\\\n)[^'\\]*)*(''')?" % start,
-                     r'%s"""[^"\\]*((\\.|"(?!"")|\\\n)[^"\\]*)*(""")?' % start,
-                     r"%s'[^'\\\n]*(\\.[^'\\\n]*)*'?" % start,
-                     r'%s"[^"\\\n]*(\\.[^"\\\n]*)*"?' % start])
+    longstr = r'%s"""(\\.|"(?!"")|\\\n|[^"\\])*"""' % start
+    shortstr = r'%s"(\\.|[^"\\\n])*"' % start
+    return '|'.join([longstr, longstr.replace('"', "'"),
+                     shortstr, shortstr.replace('"', "'")])
 
 def get_comment_pattern():
     return r'#[^\n]*'
