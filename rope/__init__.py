@@ -3,7 +3,7 @@
 INFO = __doc__
 VERSION = '0.7.4'
 COPYRIGHT = """\
-Copyright (C) 2006-2007 Ali Gholami Rudi
+Copyright (C) 2006-2008 Ali Gholami Rudi
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of GNU General Public License as published by the
