@@ -6,6 +6,8 @@
 Unresolved Issues
 =================
 
+* files with multi-byte chars and ast.parse()
+* not reimporting back imports after moving
 * not applying all commenting mechanisms always in codeassist
 * fixing try blocks before current line in code_assist
 * searching all files when extracting a global method?
@@ -21,6 +23,7 @@ Unresolved Issues
 * using similarfinder in introduce_parameter?
 * switching to gplv3?
 * removing unused refactorings?
+* assignments and overwriting parameter, imported and evaluated names
 * unignored files that are not under version control
 * multiple ropes on one project; problems for objectdb and history
 * should `rope.base` be thread safe?
@@ -29,6 +32,8 @@ Unresolved Issues
 * recursive soi; go where the calls go with limited depth
 * adding ``do when unsure`` config to all refactorings?
 * importing star and removing self imports; stack overflow
+* adding contributors file?
+* saving diffs instead of old contents in ChangeContents?
 * python c extensions
 * supporting modules without source code and zip imports
 * extract class
