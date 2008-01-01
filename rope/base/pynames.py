@@ -25,9 +25,7 @@ class DefinedName(PyName):
 
 
 class AssignedName(PyName):
-
-    def __init__(self, *args, **kwds):
-        raise RuntimeError('This is not a definition; use defpynames')
+    """Only a placeholder"""
 
 
 class UnboundName(PyName):
@@ -68,16 +66,11 @@ class _Assigned(object):
 
 
 class EvaluatedName(PyName):
-    """A `PyName` that will be assigned an expression"""
-
-    def __init__(self, *args, **kwds):
-        raise RuntimeError('This is not a definition; use evalute')
+    """Only a placeholder"""
 
 
 class ParameterName(PyName):
-
-    def __init__(self, *args, **kwds):
-        raise RuntimeError('This is not a definition; use defpynames')
+    """Only a placeholder"""
 
 
 class ImportedModule(PyName):

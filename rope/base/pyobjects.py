@@ -216,11 +216,11 @@ class PyDefinedObject(object):
 
 
 class PyFunction(PyDefinedObject, AbstractFunction):
-    pass
+    """Only a placeholder"""
 
 
 class PyClass(PyDefinedObject, AbstractClass):
-    pass
+    """Only a placeholder"""
 
 
 class _ConcludedData(object):
@@ -272,11 +272,11 @@ class _PyModule(PyDefinedObject, AbstractModule):
 
 
 class PyModule(_PyModule):
-    pass
+    """Only a placeholder"""
 
 
 class PyPackage(_PyModule):
-    pass
+    """Only a placeholder"""
 
 
 class IsBeingInferredError(exceptions.RopeError):
