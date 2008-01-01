@@ -4,7 +4,6 @@ import tokenize
 
 import rope.base.exceptions
 import rope.base.pynames
-import rope.base.pyobjects
 from rope.base import pyobjects, evaluate
 
 

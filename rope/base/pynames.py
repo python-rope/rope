@@ -31,7 +31,7 @@ class AssignedName(PyName):
 
 
 class UnboundName(PyName):
-    
+
     def __init__(self, pyobject=None):
         self.pyobject = pyobject
         if self.pyobject is None:

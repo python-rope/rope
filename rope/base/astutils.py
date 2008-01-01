@@ -2,6 +2,17 @@ from rope.base import ast
 
 
 def get_name_levels(node):
+    """Return a list of ``(name, level)`` tuples for assigned names
+
+    The `level` is `None` for simple assignments and is a list of
+    numbers for tuple assignments for example in::
+
+      a, (b, c) = x
+
+    The levels for for `a` is ``[0]``, for `b` is ``[1, 0]`` and for
+    `c` is ``[1, 1]``.
+
+    """
     visitor = _NodeNameCollector()
     ast.walk(node, visitor)
     return visitor.names
