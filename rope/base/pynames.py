@@ -1,6 +1,5 @@
-import rope.base.oi.objectinfer
-from rope.base.exceptions import (ModuleNotFoundError,
-                                  AttributeNotFoundError)
+import rope.base.pyobjects
+from rope.base import exceptions
 
 
 class PyName(object):
@@ -27,30 +26,8 @@ class DefinedName(PyName):
 
 class AssignedName(PyName):
 
-    def __init__(self, lineno=None, module=None, pyobject=None):
-        self.lineno = lineno
-        self.module = module
-        self.assignments = []
-        self.pyobject = _Inferred(self._get_inferred,
-                                  _get_concluded_data(module))
-        self.pyobject.set(pyobject)
-
-    def _get_inferred(self):
-        if self.module is not None:
-            return rope.base.oi.objectinfer.infer_assigned_object(self)
-
-    def get_object(self):
-        return self.pyobject.get()
-
-    def get_definition_location(self):
-        """Returns a (module, lineno) tuple"""
-        if self.lineno is None and self.assignments:
-            self.lineno = self.assignments[0].get_lineno()
-        return (self.module, self.lineno)
-
-    def invalidate(self):
-        """Forget the `PyObject` this `PyName` holds"""
-        self.pyobject.set(None)
+    def __init__(self, *args, **kwds):
+        raise RuntimeError('This is not a definition; use defpynames')
 
 
 class UnboundName(PyName):
@@ -93,56 +70,14 @@ class _Assigned(object):
 class EvaluatedName(PyName):
     """A `PyName` that will be assigned an expression"""
 
-    def __init__(self, assignment=None, module=None, evaluation= '',
-                 lineno=None):
-        """
-        `evaluation` is a `str` that specifies what to do with the
-        `assignment`.  For example for a for object the evaluation is
-        '.__iter__().next()'.  That means first call the `__iter__()`
-        method and then call `next()` from the resulting object.  As
-        another example for with variables it is '.__enter__()'
-
-        """
-        self.module = module
-        self.assignment = assignment
-        self.lineno = lineno
-        self.evaluation = evaluation
-        self.pyobject = _Inferred(self._get_inferred,
-                                  _get_concluded_data(module))
-
-    def _get_inferred(self):
-        return rope.base.oi.objectinfer.evaluate_object(self)
-
-    def get_object(self):
-        return self.pyobject.get()
-
-    def get_definition_location(self):
-        return (self.module, self.lineno)
-
-    def invalidate(self):
-        """Forget the `PyObject` this `PyName` holds"""
-        self.pyobject.set(None)
+    def __init__(self, *args, **kwds):
+        raise RuntimeError('This is not a definition; use evalute')
 
 
 class ParameterName(PyName):
 
-    def __init__(self, pyfunction, index):
-        self.pyfunction = pyfunction
-        self.index = index
-
-    def get_object(self):
-        result = self.pyfunction.get_parameter(self.index)
-        if result is None:
-            result = rope.base.pyobjects.get_unknown()
-        return result
-
-    def get_objects(self):
-        """Returns the list of objects passed as this parameter"""
-        return rope.base.oi.objectinfer.get_passed_objects(
-            self.pyfunction, self.index)
-
-    def get_definition_location(self):
-        return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)
+    def __init__(self, *args, **kwds):
+        raise RuntimeError('This is not a definition; use defpynames')
 
 
 class ImportedModule(PyName):
@@ -177,7 +112,7 @@ class ImportedModule(PyName):
                                           self.module_name,
                                           self._get_current_folder(),
                                           self.level))
-                except ModuleNotFoundError:
+                except exceptions.ModuleNotFoundError:
                     pass
         return self.pymodule.get()
 
@@ -202,8 +137,8 @@ class ImportedName(PyName):
         try:
             return self.imported_module.get_object().get_attribute(
                 self.imported_name)
-        except AttributeNotFoundError:
-            return AssignedName()
+        except exceptions.AttributeNotFoundError:
+            return UnboundName()
 
     def get_object(self):
         return self._get_imported_pyname().get_object()

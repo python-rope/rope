@@ -2,6 +2,7 @@
 import os
 import re
 
+import rope.base.builtins
 import rope.base.project
 from rope.base import exceptions
 

@@ -1,8 +1,6 @@
-import sys
 import warnings
 
-import rope.base.project
-from rope.base import exceptions
+from rope.base import exceptions, resourceobserver
 from rope.base.oi import objectdb, memorydb, transform
 
 
@@ -43,7 +41,7 @@ class ObjectInfoManager(object):
 
     def _init_validation(self):
         self.objectdb.validate_files()
-        observer = rope.base.project.ResourceObserver(
+        observer = resourceobserver.ResourceObserver(
             changed=self._resource_changed, moved=self._resource_moved,
             removed=self._resource_moved)
         files = []
@@ -51,8 +49,8 @@ class ObjectInfoManager(object):
             resource = self.to_pyobject.path_to_resource(path)
             if resource is not None and resource.project == self.project:
                 files.append(resource)
-        self.observer = rope.base.project.FilteredResourceObserver(observer,
-                                                                   files)
+        self.observer = resourceobserver.FilteredResourceObserver(observer,
+                                                                  files)
         self.objectdb.add_file_list_observer(_FileListObserver(self))
         self.project.add_observer(self.observer)
 

@@ -4,9 +4,9 @@ import unittest
 from rope.base.exceptions import RopeError, ResourceNotFoundError
 from rope.base.fscommands import FileSystemCommands
 from rope.base.libutils import path_to_resource
-from rope.base.project import (Project, NoProject,
-                               FilteredResourceObserver, _realpath)
+from rope.base.project import Project, NoProject, _realpath
 from ropetest import testutils
+import rope.base.resourceobserver
 
 
 class ProjectTest(unittest.TestCase):
@@ -473,7 +473,7 @@ class ResourceObserverTest(unittest.TestCase):
         sample_file = self.project.root.create_file('my_file.txt')
         sample_file.write('text')
         sample_observer = _SampleObserver()
-        self.project.add_observer(FilteredResourceObserver(sample_observer,
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(sample_observer,
                                                            [sample_file]))
         sample_file.remove()
         self.assertEquals(1, sample_observer.change_count)
@@ -492,9 +492,9 @@ class ResourceObserverTest(unittest.TestCase):
         my_folder = root_folder.create_folder('my_folder')
         my_folder_observer = _SampleObserver()
         root_folder_observer = _SampleObserver()
-        self.project.add_observer(FilteredResourceObserver(my_folder_observer,
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(my_folder_observer,
                                                            [my_folder]))
-        self.project.add_observer(FilteredResourceObserver(root_folder_observer,
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(root_folder_observer,
                                                            [root_folder]))
         my_file = my_folder.create_file('my_file.txt')
         self.assertEquals(1, my_folder_observer.change_count)
@@ -518,7 +518,7 @@ class ResourceObserverTest(unittest.TestCase):
         root = self.project.root
         my_file = root.create_file('my_file.txt')
         sample_observer = _SampleObserver()
-        self.project.add_observer(FilteredResourceObserver(sample_observer,
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(sample_observer,
                                                            [my_file]))
         os.remove(my_file.real_path)
         self.project.validate(root)
@@ -529,7 +529,7 @@ class ResourceObserverTest(unittest.TestCase):
         root = self.project.root
         my_file = root.create_file('my_file.txt')
         sample_observer = _SampleObserver()
-        self.project.add_observer(FilteredResourceObserver(sample_observer,
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(sample_observer,
                                                            [my_file]))
         self.project.validate(root)
         self.assertEquals(None, sample_observer.last_moved)
@@ -540,7 +540,7 @@ class ResourceObserverTest(unittest.TestCase):
         my_folder = root.create_folder('myfolder')
         my_file = my_folder.create_file('myfile.txt')
         sample_observer = _SampleObserver()
-        self.project.add_observer(FilteredResourceObserver(sample_observer,
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(sample_observer,
                                                            [my_folder]))
         testutils.remove_recursively(my_folder.real_path)
         self.project.validate(root)
@@ -550,7 +550,7 @@ class ResourceObserverTest(unittest.TestCase):
     def test_removing_and_adding_resources_to_filtered_observer(self):
         my_file = self.project.root.create_file('my_file.txt')
         sample_observer = _SampleObserver()
-        filtered_observer = FilteredResourceObserver(sample_observer)
+        filtered_observer = rope.base.resourceobserver.FilteredResourceObserver(sample_observer)
         self.project.add_observer(filtered_observer)
         my_file.write('1')
         self.assertEquals(0, sample_observer.change_count)
@@ -565,7 +565,7 @@ class ResourceObserverTest(unittest.TestCase):
         my_file = self.project.root.create_file('my_file.txt')
         sample_observer = _SampleObserver()
         timekeeper = _MockChangeIndicator()
-        filtered_observer = FilteredResourceObserver(sample_observer, [my_file],
+        filtered_observer = rope.base.resourceobserver.FilteredResourceObserver(sample_observer, [my_file],
                                                      timekeeper=timekeeper)
         self.project.add_observer(filtered_observer)
         self._write_file(my_file.real_path)
@@ -577,7 +577,7 @@ class ResourceObserverTest(unittest.TestCase):
         my_file = self.project.root.create_file('my_file.txt')
         sample_observer = _SampleObserver()
         timekeeper = _MockChangeIndicator()
-        self.project.add_observer(FilteredResourceObserver(
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(
                                   sample_observer, [my_file],
                                   timekeeper=timekeeper))
         timekeeper.set_indicator(my_file, 1)
@@ -591,7 +591,7 @@ class ResourceObserverTest(unittest.TestCase):
         file1 = root.create_file('file1.txt')
         file2 = root.create_file('file2.txt')
         sample_observer = _SampleObserver()
-        self.project.add_observer(FilteredResourceObserver(
+        self.project.add_observer(rope.base.resourceobserver.FilteredResourceObserver(
                                   sample_observer, [root, file1, file2]))
         os.remove(file1.real_path)
         os.remove(file2.real_path)
@@ -608,7 +608,7 @@ class ResourceObserverTest(unittest.TestCase):
         my_folder = self.project.root.create_folder('my_folder')
         my_file = my_folder.create_file('my_file.txt')
         sample_observer = _SampleObserver()
-        filtered_observer = FilteredResourceObserver(
+        filtered_observer = rope.base.resourceobserver.FilteredResourceObserver(
             sample_observer, [my_folder, my_file])
         self.project.add_observer(filtered_observer)
         my_folder.move('new_folder')
@@ -624,7 +624,7 @@ class ResourceObserverTest(unittest.TestCase):
         my_file = self.project.get_file('my_file.txt')
         sample_observer = _SampleObserver()
         self.project.add_observer(
-            FilteredResourceObserver(sample_observer, [my_file]))
+            rope.base.resourceobserver.FilteredResourceObserver(sample_observer, [my_file]))
         file(my_file.real_path, 'w').close()
         self.project.validate(root)
         self.assertEquals(my_file, sample_observer.last_created)
@@ -635,7 +635,7 @@ class ResourceObserverTest(unittest.TestCase):
         my_file = self.project.get_file('my_file.txt')
         sample_observer = _SampleObserver()
         self.project.add_observer(
-            FilteredResourceObserver(sample_observer, [my_file]))
+            rope.base.resourceobserver.FilteredResourceObserver(sample_observer, [my_file]))
         file(my_file.real_path, 'w').close()
         self.project.validate(root)
         self.project.validate(root)
@@ -649,7 +649,7 @@ class ResourceObserverTest(unittest.TestCase):
         file1.create()
         sample_observer = _SampleObserver()
         self.project.add_observer(
-            FilteredResourceObserver(sample_observer, [file1, file2]))
+            rope.base.resourceobserver.FilteredResourceObserver(sample_observer, [file1, file2]))
         file1.move(file2.path)
         self.assertEquals(2, sample_observer.change_count)
         self.assertEquals(file2, sample_observer.last_created)

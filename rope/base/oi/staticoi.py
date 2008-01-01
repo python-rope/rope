@@ -99,7 +99,7 @@ class SOIVisitor(object):
                 # IDEA: handle `__setslice__`, too
 
 
-class _SOIAssignVisitor(pyobjects._NodeNameCollector):
+class _SOIAssignVisitor(evaluate._NodeNameCollector):
 
     def __init__(self):
         super(_SOIAssignVisitor, self).__init__()

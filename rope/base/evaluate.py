@@ -1,4 +1,6 @@
-import rope.base
+import rope.base.pynames
+import rope.base.exceptions
+import rope.base.pyobjects
 from rope.base import ast, exceptions
 
 
@@ -121,7 +123,7 @@ class StatementEvaluator(object):
         module = scope.pyobject.get_module()
         names = {}
         for comp in node.generators:
-            new_names = rope.base.pyobjects._get_evaluated_names(
+            new_names = _get_evaluated_names(
                 comp.target, comp.iter, evaluation='.__iter__().next()',
                 lineno=node.lineno, module=module)
             names.update(new_names)
@@ -321,3 +323,95 @@ def _is_method_call(primary, pyfunction):
        isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
         return True
     return False
+
+
+def _get_evaluated_names(targets, assigned, **kwds):
+    """Get `pynames.EvaluatedName`\s
+
+    `kwds` is passed to `pynames.EvaluatedName` and should hold
+    things like lineno, evaluation, and module.
+    """
+    result = {}
+    names = _get_name_levels(targets)
+    for name, levels in names:
+        assignment = rope.base.pynames._Assigned(assigned, levels)
+        result[name] = EvaluatedName(assignment=assignment, **kwds)
+    return result
+
+
+class EvaluatedName(rope.base.pynames.EvaluatedName):
+    """A `PyName` that will be assigned an expression"""
+
+    def __init__(self, assignment=None, module=None, evaluation= '',
+                 lineno=None):
+        """
+        `evaluation` is a `str` that specifies what to do with the
+        `assignment`.  For example for a for object the evaluation is
+        '.__iter__().next()'.  That means first call the `__iter__()`
+        method and then call `next()` from the resulting object.  As
+        another example for with variables it is '.__enter__()'
+
+        """
+        self.module = module
+        self.assignment = assignment
+        self.lineno = lineno
+        self.evaluation = evaluation
+        self.pyobject = rope.base.pynames._Inferred(
+            self._get_inferred,
+            rope.base.pynames._get_concluded_data(module))
+
+    def _get_inferred(self):
+        return rope.base.oi.objectinfer.evaluate_object(self)
+
+    def get_object(self):
+        return self.pyobject.get()
+
+    def get_definition_location(self):
+        return (self.module, self.lineno)
+
+    def invalidate(self):
+        """Forget the `PyObject` this `PyName` holds"""
+        self.pyobject.set(None)
+
+
+def _get_name_levels(node):
+    visitor = _NodeNameCollector()
+    ast.walk(node, visitor)
+    return visitor.names
+
+
+class _NodeNameCollector(object):
+
+    def __init__(self, levels=None):
+        self.names = []
+        self.levels = levels
+        self.index = 0
+
+    def _add_node(self, node):
+        new_levels = []
+        if self.levels is not None:
+            new_levels = list(self.levels)
+            new_levels.append(self.index)
+        self.index += 1
+        self._added(node, new_levels)
+
+    def _added(self, node, levels):
+        if hasattr(node, 'id'):
+            self.names.append((node.id, levels))
+
+    def _Name(self, node):
+        self._add_node(node)
+
+    def _Tuple(self, node):
+        new_levels = []
+        if self.levels is not None:
+            new_levels = list(self.levels)
+            new_levels.append(self.index)
+        self.index += 1
+        visitor = _NodeNameCollector(new_levels)
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, visitor)
+        self.names.extend(visitor.names)
+
+    def _Subscript(self, node):
+        self._add_node(node)

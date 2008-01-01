@@ -9,7 +9,8 @@ import rope.base.oi.staticoi
 import rope.base.project
 from rope.base import ast, exceptions, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.pyobjects import PyModule, PyPackage, PyClass
+from rope.base.defpyobjects import PyModule, PyPackage, PyClass
+import rope.base.resourceobserver
 
 
 class PyCore(object):
@@ -26,9 +27,9 @@ class PyCore(object):
 
     def _init_resource_observer(self):
         callback = self._invalidate_resource_cache
-        observer = rope.base.project.ResourceObserver(
+        observer = rope.base.resourceobserver.ResourceObserver(
             changed=callback, moved=callback, removed=callback)
-        self.observer = rope.base.project.FilteredResourceObserver(observer)
+        self.observer = rope.base.resourceobserver.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
 
     def _init_source_folders(self):
@@ -40,7 +41,7 @@ class PyCore(object):
         if not self.project.get_prefs().get('automatic_soi', False):
             return
         callback = self._file_changed_for_soi
-        observer = rope.base.project.ResourceObserver(
+        observer = rope.base.resourceobserver.ResourceObserver(
             changed=callback, moved=callback, removed=callback)
         self.project.add_observer(observer)
 

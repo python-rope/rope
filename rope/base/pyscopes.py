@@ -1,5 +1,4 @@
 import rope.base.pynames
-import rope.base.pyobjects
 from rope.base import ast, exceptions
 
 
@@ -141,13 +140,14 @@ class GlobalScope(Scope):
 
 class FunctionScope(Scope):
 
-    def __init__(self, pycore, pyobject):
+    def __init__(self, pycore, pyobject, visitor):
         super(FunctionScope, self).__init__(pycore, pyobject,
                                             pyobject.parent.get_scope())
         self.names = None
         self.returned_asts = None
         self.is_generator = None
         self.defineds = None
+        self.visitor = visitor
 
     def _get_names(self):
         if self.names is None:
@@ -156,8 +156,7 @@ class FunctionScope(Scope):
 
     def _visit_function(self):
         if self.names is None:
-            new_visitor = rope.base.pyobjects._FunctionVisitor(self.pycore,
-                                                               self.pyobject)
+            new_visitor = self.visitor(self.pycore, self.pyobject)
             for n in ast.get_child_nodes(self.pyobject.get_ast()):
                 ast.walk(n, new_visitor)
             self.names = self.pyobject.get_parameters()
