@@ -9,7 +9,7 @@ import rope.base.oi.staticoi
 import rope.base.project
 from rope.base import ast, exceptions, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
-from rope.base.defpyobjects import PyModule, PyPackage, PyClass
+from rope.base.pyobjectsdef import PyModule, PyPackage, PyClass
 import rope.base.resourceobserver
 
 
