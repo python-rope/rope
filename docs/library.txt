@@ -144,7 +144,8 @@ using `Project.do()`.
 
 The other is to perform the changes manually based on the returned
 `changes` object (again see the documentation in `rope.base.change`
-module).
+module).  If this approach is used you cannot undo the refactoring
+using ``project.history.undo()``.
 
 
 Validating The Project
