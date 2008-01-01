@@ -26,7 +26,7 @@ except ImportError:
 
 
 def create_fscommands(root):
-    if 'pysvn' in globals() and '.svn' in os.listdir(root):
+    if 'pysvn' in globals() and '_svn' in os.listdir(root):
         return SubversionCommands()
     if 'mercurial' in globals() and '.hg' in os.listdir(root):
         return MercurialCommands(root)
