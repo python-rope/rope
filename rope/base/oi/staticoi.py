@@ -1,4 +1,6 @@
 import rope.base.ast
+import rope.base.oi.objectinfer
+import rope.base.pynames
 from rope.base import pyobjects, evaluate, astutils
 
 

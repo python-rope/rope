@@ -7,8 +7,7 @@ import rope.base.pycore
 import rope.base.resourceobserver
 from rope.base import exceptions, taskhandle, prefs, history
 from rope.base.resources import File, Folder
-from rope.base.resourceobserver import (ResourceObserver,
-                                        FilteredResourceObserver)
+from rope.base.resourceobserver import *
 
 
 class _Project(object):

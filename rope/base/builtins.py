@@ -2,7 +2,8 @@
 import __builtin__
 import inspect
 
-from rope.base import pynames, pyobjects, evaluate
+import rope.base.evaluate
+from rope.base import pynames, pyobjects
 
 
 class BuiltinClass(pyobjects.AbstractClass):
@@ -292,7 +293,7 @@ class Dict(BuiltinClass):
             return
         new_dict = context.get_pynames(['self', 'd'])[1]
         if new_dict and isinstance(new_dict.get_object().get_type(), Dict):
-            args = evaluate.ObjectArguments([new_dict])
+            args = rope.base.evaluate.ObjectArguments([new_dict])
             items = new_dict.get_object().get_attribute('popitem').\
                     get_object().get_returned_object(args)
             context.save_per_name(items)
@@ -526,7 +527,8 @@ class Lambda(pyobjects.AbstractFunction):
         self.scope = scope
 
     def get_returned_object(self, args):
-        result = evaluate.get_statement_result(self.scope, self.node.body)
+        result = rope.base.evaluate.get_statement_result(self.scope,
+                                                         self.node.body)
         if result is not None:
             return result.get_object()
         else:
@@ -552,7 +554,7 @@ def _infer_sequence_for_pyname(pyname):
     if pyname is None:
         return None
     seq = pyname.get_object()
-    args = evaluate.ObjectArguments([pyname])
+    args = rope.base.evaluate.ObjectArguments([pyname])
     if '__iter__' in seq.get_attributes():
         iter = seq.get_attribute('__iter__').get_object().\
                get_returned_object(args)

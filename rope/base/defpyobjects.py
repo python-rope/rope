@@ -1,5 +1,6 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
+import rope.base.builtins
 import rope.base.oi.objectinfer
 import rope.base.pyscopes
 from rope.base import (defpynames as pynames, exceptions,
@@ -86,8 +87,6 @@ class PyFunction(pyobjects.PyFunction):
         'classmethod' strs.
 
         """
-        import rope.base.evaluate
-        import rope.base.builtins
         scope = self.parent.get_scope()
         if isinstance(self.parent, PyClass):
             for decorator in self.get_ast().decorators:

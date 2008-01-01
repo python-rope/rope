@@ -1,5 +1,5 @@
-import rope.base.pynames
 import rope.base.exceptions
+import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import ast, astutils, exceptions
 

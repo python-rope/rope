@@ -1,7 +1,7 @@
 """This module can be used for finding similar code"""
 import re
 
-from rope.base import codeanalyze, evaluate, exceptions, pyobjects, ast
+from rope.base import codeanalyze, evaluate, exceptions, ast
 from rope.refactor import patchedast, sourceutils, occurrences
 
 
