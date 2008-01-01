@@ -8,7 +8,7 @@ import ropetest.objectinfertest
 import ropetest.objectdbtest
 import ropetest.advanced_oi_test
 import ropetest.runmodtest
-import ropetest.builtintest
+import ropetest.builtinstest
 import ropetest.historytest
 
 
@@ -22,7 +22,7 @@ def suite():
     result.addTests(ropetest.objectdbtest.suite())
     result.addTests(ropetest.advanced_oi_test.suite())
     result.addTests(ropetest.runmodtest.suite())
-    result.addTests(unittest.makeSuite(ropetest.builtintest.BuiltinTypesTest))
+    result.addTests(unittest.makeSuite(ropetest.builtinstest.BuiltinTypesTest))
     result.addTests(ropetest.historytest.suite())
     return result
 
