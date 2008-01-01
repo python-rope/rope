@@ -462,6 +462,7 @@ Using rename refactoring::
 
   # Undoing rename refactoring
   >>> project.history.undo()
+  ...
   >>> mod1.read()
   u'a_var = 10\n'
   >>> mod2.read()

@@ -1,10 +1,9 @@
+import rope.base.codeanalyze
 import rope.base.evaluate
 import rope.base.oi.objectinfer
 import rope.base.pyscopes
-from rope.base import defpynames as pynames
-from rope.base import exceptions, ast, pyobjects
+from rope.base import defpynames as pynames, exceptions, ast, pyobjects
 from rope.base.pyobjects import *
-
 
 
 class PyFunction(pyobjects.PyFunction):
