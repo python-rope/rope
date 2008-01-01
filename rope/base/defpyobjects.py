@@ -2,7 +2,8 @@ import rope.base.codeanalyze
 import rope.base.evaluate
 import rope.base.oi.objectinfer
 import rope.base.pyscopes
-from rope.base import defpynames as pynames, exceptions, ast, pyobjects
+from rope.base import (defpynames as pynames, exceptions,
+                       ast, astutils, pyobjects)
 from rope.base.pyobjects import *
 
 
@@ -290,7 +291,7 @@ class _AssignVisitor(object):
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
-        names = rope.base.evaluate._get_name_levels(node)
+        names = astutils.get_name_levels(node)
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:

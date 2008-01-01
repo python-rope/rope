@@ -1,5 +1,5 @@
 import rope.base.ast
-from rope.base import pyobjects, evaluate
+from rope.base import pyobjects, evaluate, astutils
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes):
@@ -99,7 +99,7 @@ class SOIVisitor(object):
                 # IDEA: handle `__setslice__`, too
 
 
-class _SOIAssignVisitor(evaluate._NodeNameCollector):
+class _SOIAssignVisitor(astutils._NodeNameCollector):
 
     def __init__(self):
         super(_SOIAssignVisitor, self).__init__()

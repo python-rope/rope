@@ -1,7 +1,7 @@
 import rope.base.pynames
 import rope.base.exceptions
 import rope.base.pyobjects
-from rope.base import ast, exceptions
+from rope.base import ast, astutils, exceptions
 
 
 class BadIdentifierError(rope.base.exceptions.RopeError):
@@ -332,7 +332,7 @@ def _get_evaluated_names(targets, assigned, **kwds):
     things like lineno, evaluation, and module.
     """
     result = {}
-    names = _get_name_levels(targets)
+    names = astutils.get_name_levels(targets)
     for name, levels in names:
         assignment = rope.base.pynames._Assigned(assigned, levels)
         result[name] = EvaluatedName(assignment=assignment, **kwds)
@@ -372,46 +372,3 @@ class EvaluatedName(rope.base.pynames.EvaluatedName):
     def invalidate(self):
         """Forget the `PyObject` this `PyName` holds"""
         self.pyobject.set(None)
-
-
-def _get_name_levels(node):
-    visitor = _NodeNameCollector()
-    ast.walk(node, visitor)
-    return visitor.names
-
-
-class _NodeNameCollector(object):
-
-    def __init__(self, levels=None):
-        self.names = []
-        self.levels = levels
-        self.index = 0
-
-    def _add_node(self, node):
-        new_levels = []
-        if self.levels is not None:
-            new_levels = list(self.levels)
-            new_levels.append(self.index)
-        self.index += 1
-        self._added(node, new_levels)
-
-    def _added(self, node, levels):
-        if hasattr(node, 'id'):
-            self.names.append((node.id, levels))
-
-    def _Name(self, node):
-        self._add_node(node)
-
-    def _Tuple(self, node):
-        new_levels = []
-        if self.levels is not None:
-            new_levels = list(self.levels)
-            new_levels.append(self.index)
-        self.index += 1
-        visitor = _NodeNameCollector(new_levels)
-        for child in ast.get_child_nodes(node):
-            ast.walk(child, visitor)
-        self.names.extend(visitor.names)
-
-    def _Subscript(self, node):
-        self._add_node(node)
