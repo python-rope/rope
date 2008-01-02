@@ -109,60 +109,60 @@ class MercurialCommands(object):
         self.normal_actions.write(path, data)
 
 
-def unicode_to_file_data(contents):
-    return _TransformUnicode.get_instance().unicode_to_file_data(contents)
+def unicode_to_file_data(contents, encoding=None):
+    if not isinstance(contents, unicode):
+        return contents
+    if encoding is None:
+        encoding = read_str_coding(contents)
+    if encoding is not None:
+        return contents.encode(encoding)
+    try:
+        return contents.encode()
+    except UnicodeEncodeError:
+        return contents.encode('utf-8')
+
+def file_data_to_unicode(data, encoding=None):
+    if encoding is None:
+        encoding = read_str_coding(data)
+    if encoding is not None:
+        return unicode(data, encoding)
+    try:
+        return unicode(data)
+    except UnicodeDecodeError:
+        # Using ``utf-8`` if guessed encoding fails
+        return unicode(data, 'utf-8')
 
 
-def file_data_to_unicode(contents):
-    return _TransformUnicode.get_instance().file_data_to_unicode(contents)
+def read_file_coding(path):
+    file = open(path, 'b')
+    count = 0
+    result = []
+    buffsize = 10
+    while True:
+        current = file.read(10)
+        if not current:
+            break
+        count += current.count('\n')
+        result.append(current)
+    file.close()
+    return _find_coding(''.join(result))
 
 
-class _TransformUnicode(object):
+def read_str_coding(source):
+    try:
+        first = source.index('\n') + 1
+        second = source.index('\n', first) + 1
+    except ValueError:
+        second = len(source)
+    return _find_coding(source[:second])
 
-    def unicode_to_file_data(self, contents):
-        encoding = self._conclude_file_encoding(contents)
-        if encoding is not None and isinstance(contents, unicode):
-            return contents.encode(encoding)
-        try:
-            return contents.encode()
-        except UnicodeEncodeError:
-            return contents.encode('utf-8')
 
-    def file_data_to_unicode(self, data):
-        encoding = self._conclude_file_encoding(data)
-        if encoding is not None:
-            return unicode(data, encoding)
-        try:
-            return unicode(data)
-        except UnicodeDecodeError:
-            # Using ``utf-8`` if guessed encoding fails
-            return unicode(data, 'utf-8')
+_encoding_pattern = None
 
-    def _find_line_end(self, source_bytes, start):
-        try:
-            return source_bytes.index('\n', start) + 1
-        except ValueError:
-            return len(source_bytes)
-
-    def _get_second_line_end(self, source_bytes):
-        line1_end = self._find_line_end(source_bytes, 0)
-        if line1_end != len(source_bytes):
-            return self._find_line_end(source_bytes, line1_end)
-        else:
-            return line1_end
-
-    encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
-
-    def _conclude_file_encoding(self, source_bytes):
-        first_two_lines = source_bytes[:self._get_second_line_end(source_bytes)]
-        match = _TransformUnicode.encoding_pattern.search(first_two_lines)
-        if match is not None:
-            return match.group(1)
-
-    file_access = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls.file_access is None:
-            cls.file_access = _TransformUnicode()
-        return cls.file_access
+def _find_coding(first_two_lines):
+    global _encoding_pattern
+    if _encoding_pattern is None:
+        _encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
+    match = _encoding_pattern.search(first_two_lines)
+    if match is not None:
+        return match.group(1)

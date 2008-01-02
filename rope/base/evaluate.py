@@ -1,3 +1,4 @@
+import rope.base.builtins
 import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
