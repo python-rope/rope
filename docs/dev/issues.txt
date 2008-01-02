@@ -7,7 +7,10 @@ Unresolved Issues
 =================
 
 * files with multi-byte chars and ast.parse()
+* custom restructuring wildcard patterns and replacements
+* line-endings and offsets
 * not reimporting back imports after moving
+* importing compressed objectdb/history data?
 * not applying all commenting mechanisms always in codeassist
 * fixing try blocks before current line in code_assist
 * searching all files when extracting a global method?
@@ -16,7 +19,6 @@ Unresolved Issues
 * handle long imports should work on filtered imports unconditionally?
 * adding restructuring scope; local scope, module, all files?
 * changing `codeanalyze.WordFinder` to use asts?
-* refactoring codeanalyze; lots of estimations
 * assignment to parameters in inline method
 * extracting subexpressions; look at `extracttest` for more info
 * remove ``change occurreces`` refactoring?
@@ -44,11 +46,15 @@ Unresolved Issues
 * renaming similarly named variables
 * handling the return type of ``yield`` keyword
 * extracting methods from pieces with only one return/yield statement
+* not writing unchanged objectdb and history?
 
 
 To Be Reviewed
 ==============
 
+* lots of estimations in codeanalyze in WordRangeFinder and
+  ScopeNameFinder
+* review objectdb modules
 * how concluded data are held for star imports
 
 
