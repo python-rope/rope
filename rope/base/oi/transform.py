@@ -3,7 +3,6 @@ import os
 import re
 
 import rope.base.builtins
-import rope.base.project
 from rope.base import exceptions
 
 
@@ -215,6 +214,7 @@ class TextualToPyObject(object):
             if path.startswith(root):
                 # INFO: This is a project file; should not be absolute
                 return None
+            import rope.base.project
             return rope.base.project.get_no_project().get_resource(path)
         except exceptions.ResourceNotFoundError:
             return None
