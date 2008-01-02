@@ -3,9 +3,8 @@ import re
 
 import rope.base.change
 import rope.base.fscommands
-import rope.base.pycore
 import rope.base.resourceobserver
-from rope.base import exceptions, taskhandle, prefs, history
+from rope.base import exceptions, taskhandle, prefs, history, pycore
 from rope.base.resources import File, Folder
 from rope.base.resourceobserver import *
 
@@ -74,7 +73,7 @@ class _Project(object):
 
     def get_pycore(self):
         if self._pycore is None:
-            self._pycore = rope.base.pycore.PyCore(self)
+            self._pycore = pycore.PyCore(self)
         return self._pycore
 
     def get_file(self, path):

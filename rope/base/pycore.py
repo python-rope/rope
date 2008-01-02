@@ -6,7 +6,6 @@ import warnings
 import rope.base.oi.dynamicoi
 import rope.base.oi.objectinfo
 import rope.base.oi.staticoi
-import rope.base.project
 from rope.base import ast, exceptions, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.pyobjectsdef import PyModule, PyPackage, PyClass
@@ -132,6 +131,7 @@ class PyCore(object):
         return None
 
     def get_python_path_folders(self):
+        import rope.base.project
         result = []
         for src in sys.path + self.project.prefs.get('python_path', []):
             try:
