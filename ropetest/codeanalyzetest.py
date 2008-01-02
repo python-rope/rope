@@ -288,6 +288,17 @@ class ScopeNameFinderTest(unittest.TestCase):
         found_pyname = name_finder.get_pyname_at(code.index('mod') + 1)
         self.assertEquals(mod_pyobject, found_pyname.get_object())
 
+    def test_renaming_functions_with_from_import_and_parens(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('def afunc():\n    pass\n')
+        code = 'from mod1 import (\n    afunc as func)\n'
+        scope = self.pycore.get_string_scope(code)
+        name_finder = ScopeNameFinder(scope.pyobject)
+        mod_pyobject = self.pycore.resource_to_pyobject(mod1)
+        afunc = mod_pyobject.get_attribute('afunc')
+        found_pyname = name_finder.get_pyname_at(code.index('afunc') + 1)
+        self.assertEquals(afunc.get_object(), found_pyname.get_object())
+
     @testutils.run_only_for_25
     def test_relative_modules_after_from_statements(self):
         pkg1 = testutils.create_package(self.project, 'pkg1')

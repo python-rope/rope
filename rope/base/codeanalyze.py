@@ -264,6 +264,28 @@ class WordRangeFinder(object):
             return False
         return self._find_import_pair_end(from_names) >= offset
 
+    def is_from_aliased(self, offset):
+        if not self.is_a_name_after_from_import(offset):
+            return False
+        try:
+            # XXX: what if as is inside multi-line parens
+            end = self._find_word_end(offset)
+            as_ = self._find_word_end(end + 1)
+            if self.source[as_ - 1:as_ + 1] == 'as':
+                return True
+        except ValueError:
+            return False
+
+    def get_from_aliased(self, offset):
+        try:
+            end = self._find_word_end(offset)
+            as_ = self._find_word_end(end + 1)
+            alias = self._find_word_end(as_ + 1)
+            start = self._find_word_start(alias)
+            return self.source[start:alias + 1]
+        except ValueError:
+            pass
+
     def is_function_keyword_parameter(self, offset):
         word_end = self._find_word_end(offset)
         if word_end + 1 == len(self.source):
@@ -413,7 +435,10 @@ class ScopeNameFinder(object):
             module = self.word_finder.get_primary_at(offset)
             module_pyname = self._find_module(module)
             return (None, module_pyname)
-        name = self.word_finder.get_primary_at(offset)
+        if self.word_finder.is_from_aliased(offset):
+            name = self.word_finder.get_from_aliased(offset)
+        else:
+            name = self.word_finder.get_primary_at(offset)
         return evaluate.get_primary_and_pyname_in_scope(holding_scope, name)
 
     def get_enclosing_function(self, offset):
