@@ -1,0 +1,6 @@
+===================
+ Rope Contributors
+===================
+
+
+* Alexander Solovyov <piranha@piranha.org.ua>
