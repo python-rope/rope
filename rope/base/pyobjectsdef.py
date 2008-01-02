@@ -3,7 +3,7 @@ import rope.base.evaluate
 import rope.base.builtins
 import rope.base.oi.objectinfer
 import rope.base.pyscopes
-from rope.base import (defpynames as pynames, exceptions,
+from rope.base import (pynamesdef as pynames, exceptions,
                        ast, astutils, pyobjects)
 from rope.base.pyobjects import *
 
