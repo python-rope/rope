@@ -14,6 +14,16 @@ Overview
 New Features
 ============
 
+* deprecated ``objectdb_type`` project config; use ``save_objectdb``
+* added ``compress_history`` project config
+* added ``compress_objectdb`` project configs
+* removed sqlite and shelve objectdb types
+* fixed removing history items when ``max_history_items`` is decreased
+* fixed creating objectdb file if it is missing
+* fixed renaming imported names that are aliased
+* fixed some importing problems
+* fixed string literal pattern
+
 
 Getting Started
 ===============
