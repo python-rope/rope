@@ -153,8 +153,6 @@ class PyModule(pyobjects.PyModule):
 
     def __init__(self, pycore, source_code,
                  resource=None, force_errors=False):
-        if isinstance(source_code, unicode):
-            source_code = source_code.encode('utf-8')
         self.source_code = source_code
         try:
             ast_node = ast.parse(source_code.rstrip(' \t'))

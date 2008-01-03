@@ -6,9 +6,7 @@
 Unresolved Issues
 =================
 
-* files with multi-byte chars and ast.parse()
 * custom restructuring wildcard patterns and replacements
-* line-endings and offsets
 * not reimporting back imports after moving
 * importing compressed objectdb/history data?
 * not applying all commenting mechanisms always in codeassist

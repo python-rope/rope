@@ -105,7 +105,10 @@ So we can make our Refactoring class::
   extractor = ExtractVariable(myproject, resource, start, end)
 
 Where `start` and `end` are the offsets of the region to extract in
-resource.
+resource.  Be careful when calculating the offsets.  Dos line-endings
+and multi-byte characters are considered to be only one character.
+This is actually easier for IDEs, since most GUI libraries do that
+when calculating offsets.
 
 Next we need to perform the refactoring.  IDE's usually pop up a
 dialog for letting the user configure refactoring option like the name
