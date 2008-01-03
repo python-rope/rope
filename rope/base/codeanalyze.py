@@ -8,6 +8,7 @@ from rope.base import pyobjects, evaluate
 
 
 class WordRangeFinder(object):
+    # XXX: many of these methods fail on comments
 
     def __init__(self, source_code):
         self.source = source_code
@@ -30,17 +31,10 @@ class WordRangeFinder(object):
             return 0
         current_offset = offset
         while current_offset >= 0 and self.source[current_offset] in ' \t\n':
-            while current_offset >= 0 and self.source[current_offset] in ' \t':
+            if self.source[current_offset - 1:current_offset + 1] == '\\\n':
                 current_offset -= 1
-            if current_offset >= 0 and self.source[current_offset] == '\n':
-                current_offset -= 1
-                if current_offset >= 0 and self.source[current_offset] == '\\':
-                    current_offset -= 1
+            current_offset -= 1
         return current_offset
-
-    def get_word_before(self, offset):
-        return self.source[self._find_word_start(offset - 1):offset]
-
 
     def get_word_at(self, offset):
         offset = self._get_fixed_offset(offset)
@@ -61,6 +55,7 @@ class WordRangeFinder(object):
         return self.source[offset].isalnum() or self.source[offset] == '_'
 
     def _find_string_start(self, offset):
+        # XXX: should it handle triple quotes?
         kind = self.source[offset]
         current_offset = offset - 1
         while self.source[current_offset] != kind:
@@ -90,20 +85,21 @@ class WordRangeFinder(object):
         return old_offset
 
     def _find_primary_without_dot_start(self, offset):
-        last_parens = offset
-        current_offset = self._find_last_non_space_char(offset)
-        while current_offset > 0 and self.source[current_offset] in ')]}':
-            last_parens = self._find_parens_start(current_offset)
-            current_offset = self._find_last_non_space_char(last_parens - 1)
-        if self.source[last_parens] == '(' and self._is_id_char(current_offset):
-            return self._find_primary_without_dot_start(current_offset)
+        """It tries to find the undotted primary start
 
+        It is different from `self._get_atom_start()` in that it
+        follows function calls, too; such as in ``f(x)``.
 
-        if current_offset > 0 and self.source[current_offset] in '\'"':
-            return self._find_string_start(current_offset)
-        elif current_offset > 0 and self._is_id_char(current_offset):
-            return self._find_word_start(current_offset)
-        return last_parens
+        """
+        last_atom = offset
+        current_offset = self._find_last_non_space_char(last_atom)
+        while current_offset > 0 and self.source[current_offset] in ')]':
+            last_atom = self._find_parens_start(current_offset)
+            current_offset = self._find_last_non_space_char(last_atom - 1)
+        if current_offset >= 0 and (self.source[current_offset] in '"\'})]' or
+                                   self._is_id_char(current_offset)):
+            return self._find_atom_start(current_offset)
+        return last_atom
 
     def _find_primary_start(self, offset):
         if offset >= len(self.source):

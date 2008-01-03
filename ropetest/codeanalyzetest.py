@@ -176,7 +176,7 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_dictionaries(self):
         word_finder = WordRangeFinder('print {1: "one", 2: "two"}.keys()')
-        self.assertEquals('print {1: "one", 2: "two"}.keys',
+        self.assertEquals('{1: "one", 2: "two"}.keys',
                           word_finder.get_primary_at(29))
 
     def test_following_parens(self):
@@ -185,7 +185,7 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals('a_func()()',
                           word_finder.get_primary_at(code.index(')(') + 3))
 
-    # TODO: eliminating comments
+    # XXX: eliminating comments
     def xxx_test_comments_for_finding_statements(self):
         word_finder = WordRangeFinder('# var2 . \n  var3')
         self.assertEquals('var3',
@@ -212,6 +212,32 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder(code)
         result = word_finder.get_word_parens_range(code.rindex('()') - 1)
         self.assertEquals((len(code) - 3, len(code) - 1), result)
+
+    def test_getting_primary_before_get_index(self):
+        code = '\na = (b + c).d[0]()\n'
+        word_finder = WordRangeFinder(code)
+        result = word_finder.get_primary_at(len(code) - 2)
+        self.assertEquals('(b + c).d[0]()', result)
+
+    # XXX: not crossing new lines
+    def xxx_test_getting_primary_and_not_crossing_newlines(self):
+        code = '\na = (b + c)\n(4 + 1).x\n'
+        word_finder = WordRangeFinder(code)
+        result = word_finder.get_primary_at(len(code) - 1)
+        self.assertEquals('(4 + 1).x', result)
+
+    # XXX: cancatenated string literals
+    def xxx_test_getting_primary_cancatenating_strs(self):
+        code = 's = "a"\n"b" "c"\n'
+        word_finder = WordRangeFinder(code)
+        result = word_finder.get_primary_at(len(code) - 1)
+        self.assertEquals('"b" "c"', result)
+
+    # XXX: not crossing new lines
+    def xxx_test_is_a_function_being_called_with_parens_on_next_line(self):
+        code = 'func\n(1, 2)\n'
+        word_finder = WordRangeFinder(code)
+        self.assertFalse(word_finder.is_a_function_being_called(1))
 
 
 class ScopeNameFinderTest(unittest.TestCase):
