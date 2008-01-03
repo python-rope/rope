@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.7.4 : January 3, 2008
+
+
 - Deprecated objectdb_type project config : December 23, 2007
 
 

@@ -33,4 +33,4 @@ See the `unresolved issues` section of ``issues.txt`` file for more.
   imports
 
 
-> Public Release 0.7.4
+> Public Release 0.7.5
