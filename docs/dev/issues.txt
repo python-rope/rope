@@ -80,6 +80,61 @@ We should measure the amount of memory each of them use to make
 decisions.
 
 
+Custom Restructoring Wildcards
+==============================
+
+There is a need to add more custom wildcards in restructuring
+patterns.  For instance, one might want to match any parameters such
+as in::
+
+  pattern: ${?obj}.f(${%params})
+
+where ``${%params}`` should match all of the parameters that are
+passed to `f()`.  But adding all such needs to `similarfinder` module
+makes it really complex.  So I think adding the ability to extend them
+is useful.
+
+Sometimes wildcards can be customized.  For instance
+``${%params:p1,p2}`` should match any parameters only if p1 and p2
+appear in it.
+
+
+Wildcards Format
+----------------
+
+This format should be easy to recognize.  Candidate:
+
+* ``name``: match name
+* ``?name``: match any name
+* ``%name:args``: match a custom wildcard with args
+* ``%name>type:args``: match `type` custom wildcard with args
+
+
+Implementation
+--------------
+
+Sample code::
+
+  class WildcardPattern(object):
+
+      name = None
+
+      def does_apply(self, node):
+          """Return `True` if `node` it applies"""
+
+      def matches(self, node, mapping):
+          """Return True if matches"""
+
+
+  class WildcardReplacement(object):
+
+      def does_apply(self, node, match):
+          """Return `True` if `node` it applies"""
+
+      def replacement(self, node, match):
+          """Return the replacement string"""
+
+
 Getting Ready For Python 3.0
 ============================
 
