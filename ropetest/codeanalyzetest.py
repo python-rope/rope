@@ -267,6 +267,11 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder(code)
         self.assertTrue(word_finder.is_assigned_here(0))
 
+    def test_renaming_functions_with_from_import_and_parens2(self):
+        code = 'from mod import \\\n  (f,\n  g, h)\n'
+        word_finder = WordRangeFinder(code)
+        self.assertTrue(word_finder.is_from_statement(code.rindex('g')))
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 

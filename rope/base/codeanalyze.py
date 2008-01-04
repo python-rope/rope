@@ -187,14 +187,14 @@ class WordRangeFinder(object):
         if offset >= len(self.source):
             return len(self.source)
         current_offset = offset
-        while current_offset < len(self.source) and\
-              self.source[current_offset] in ' \t\n':
-            while current_offset < len(self.source) and \
-                  self.source[current_offset] in ' \t\n':
-                current_offset += 1
+        while current_offset < len(self.source):
             if current_offset + 1 < len(self.source) and \
                self.source[current_offset] == '\\':
                 current_offset += 2
+            elif self.source[current_offset] in ' \t\n':
+                current_offset += 1
+            else:
+                break
         return current_offset
 
     def is_a_function_being_called(self, offset):
@@ -235,6 +235,7 @@ class WordRangeFinder(object):
             from_names = from_import + 8
         except ValueError:
             return False
+        from_names = self._find_first_non_space_char(from_names)
         return self._find_import_pair_end(from_names) >= offset
 
     def is_from_statement_module(self, offset):
