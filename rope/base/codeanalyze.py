@@ -9,6 +9,7 @@ from rope.base import pyobjects, evaluate
 
 class WordRangeFinder(object):
     # XXX: many of these methods fail on comments
+    # TODO: make disabled tests run
 
     def __init__(self, source_code):
         self.source = source_code
@@ -55,7 +56,6 @@ class WordRangeFinder(object):
         return self.source[offset].isalnum() or self.source[offset] == '_'
 
     def _find_string_start(self, offset):
-        # XXX: should it handle triple quotes?
         kind = self.source[offset]
         current_offset = offset - 1
         while self.source[current_offset] != kind:

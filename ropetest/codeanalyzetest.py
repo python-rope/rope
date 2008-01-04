@@ -57,87 +57,85 @@ class WordRangeFinderTest(unittest.TestCase):
         super(WordRangeFinderTest, self).tearDown()
 
     def test_inside_parans(self):
-        word_finder = WordRangeFinder('a_func(a_var)')
-        self.assertEquals('a_var', word_finder.get_primary_at(10))
+        code = 'a_func(a_var)'
+        self.assertEquals('a_var', self._find_primary(code, 10))
 
     def test_simple_names(self):
-        word_finder = WordRangeFinder('a_var = 10')
-        self.assertEquals('a_var', word_finder.get_primary_at(3))
+        code = 'a_var = 10'
+        self.assertEquals('a_var', self._find_primary(code, 3))
 
     def test_function_calls(self):
-        word_finder = WordRangeFinder('sample_function()')
-        self.assertEquals('sample_function', word_finder.get_primary_at(10))
+        code = 'sample_function()'
+        self.assertEquals('sample_function', self._find_primary(code, 10))
 
     def test_attribute_accesses(self):
-        word_finder = WordRangeFinder('a_var.an_attr')
-        self.assertEquals('a_var.an_attr', word_finder.get_primary_at(10))
+        code = 'a_var.an_attr'
+        self.assertEquals('a_var.an_attr', self._find_primary(code, 10))
 
     def test_word_finder_on_word_beginning(self):
         code = 'print a_var\n'
         word_finder = WordRangeFinder(code)
-        self.assertEquals('a_var', word_finder.get_word_at(code.index('a_var')))
+        result = word_finder.get_word_at(code.index('a_var'))
+        self.assertEquals('a_var', result)
 
     def test_word_finder_on_primary_beginning(self):
         code = 'print a_var\n'
-        word_finder = WordRangeFinder(code)
-        self.assertEquals('a_var', word_finder.get_primary_at(code.index('a_var')))
+        result = self._find_primary(code, code.index('a_var'))
+        self.assertEquals('a_var', result)
 
     def test_word_finder_on_word_ending(self):
         code = 'print a_var\n'
         word_finder = WordRangeFinder(code)
-        self.assertEquals('a_var', word_finder.get_word_at(code.index('a_var') + 5))
+        result = word_finder.get_word_at(code.index('a_var') + 5)
+        self.assertEquals('a_var', result)
 
     def test_word_finder_on_primary_ending(self):
         code = 'print a_var\n'
-        word_finder = WordRangeFinder(code)
-        self.assertEquals('a_var', word_finder.get_primary_at(code.index('a_var') + 5))
+        result = self._find_primary(code, code.index('a_var') + 5)
+        self.assertEquals('a_var', result)
 
     def test_word_finder_on_primaries_with_dots_inside_parens(self):
         code = '(a_var.\nattr)'
-        word_finder = WordRangeFinder(code)
-        self.assertEquals('a_var.\nattr', word_finder.get_primary_at(code.index('attr') + 1))
+        result = self._find_primary(code, code.index('attr') + 1)
+        self.assertEquals('a_var.\nattr', result)
 
     def test_strings(self):
-        word_finder = WordRangeFinder('"a string".split()')
-        self.assertEquals('"a string".split', word_finder.get_primary_at(14))
+        code = '"a string".split()'
+        self.assertEquals('"a string".split', self._find_primary(code, 14))
 
     def test_function_calls2(self):
-        word_finder = WordRangeFinder('file("afile.txt").read()')
-        self.assertEquals('file("afile.txt").read',
-                          word_finder.get_primary_at(18))
+        code = 'file("afile.txt").read()'
+        self.assertEquals('file("afile.txt").read', self._find_primary(code, 18))
 
     def test_parens(self):
-        word_finder = WordRangeFinder('("afile.txt").split()')
-        self.assertEquals('("afile.txt").split',
-                          word_finder.get_primary_at(18))
+        code = '("afile.txt").split()'
+        self.assertEquals('("afile.txt").split', self._find_primary(code, 18))
 
     def test_function_with_no_param(self):
-        word_finder = WordRangeFinder('AClass().a_func()')
-        self.assertEquals('AClass().a_func', word_finder.get_primary_at(12))
+        code = 'AClass().a_func()'
+        self.assertEquals('AClass().a_func', self._find_primary(code, 12))
 
     def test_function_with_multiple_param(self):
-        word_finder = WordRangeFinder('AClass(a_param, another_param, "a string").a_func()')
+        code = 'AClass(a_param, another_param, "a string").a_func()'
         self.assertEquals('AClass(a_param, another_param, "a string").a_func',
-                          word_finder.get_primary_at(44))
+                          self._find_primary(code, 44))
 
     def test_param_expressions(self):
-        word_finder = WordRangeFinder('AClass(an_object.an_attr).a_func()')
-        self.assertEquals('an_object.an_attr',
-                          word_finder.get_primary_at(20))
+        code = 'AClass(an_object.an_attr).a_func()'
+        self.assertEquals('an_object.an_attr', self._find_primary(code, 20))
 
     def test_string_parens(self):
-        word_finder = WordRangeFinder('a_func("(").an_attr')
-        self.assertEquals('a_func("(").an_attr',
-                          word_finder.get_primary_at(16))
+        code = 'a_func("(").an_attr'
+        self.assertEquals('a_func("(").an_attr', self._find_primary(code, 16))
 
     def test_extra_spaces(self):
-        word_finder = WordRangeFinder('a_func  (  "(" ) .   an_attr')
+        code = 'a_func  (  "(" ) .   an_attr'
         self.assertEquals('a_func  (  "(" ) .   an_attr',
-                          word_finder.get_primary_at(26))
+                          self._find_primary(code, 26))
 
     def test_functions_on_ending_parens(self):
-        word_finder = WordRangeFinder('A()')
-        self.assertEquals('A()', word_finder.get_primary_at(2))
+        code = 'A()'
+        self.assertEquals('A()', self._find_primary(code, 2))
 
     def test_splitted_statement(self):
         word_finder = WordRangeFinder('an_object.an_attr')
@@ -170,31 +168,28 @@ class WordRangeFinderTest(unittest.TestCase):
                           word_finder.get_splitted_primary_before(2))
 
     def test_operators_inside_parens(self):
-        word_finder = WordRangeFinder('(a_var + another_var).reverse()')
+        code = '(a_var + another_var).reverse()'
         self.assertEquals('(a_var + another_var).reverse',
-                          word_finder.get_primary_at(25))
+                          self._find_primary(code, 25))
 
     def test_dictionaries(self):
-        word_finder = WordRangeFinder('print {1: "one", 2: "two"}.keys()')
+        code = 'print {1: "one", 2: "two"}.keys()'
         self.assertEquals('{1: "one", 2: "two"}.keys',
-                          word_finder.get_primary_at(29))
+                          self._find_primary(code, 29))
 
     def test_following_parens(self):
         code = 'a_var = a_func()()'
-        word_finder = WordRangeFinder(code)
-        self.assertEquals('a_func()()',
-                          word_finder.get_primary_at(code.index(')(') + 3))
+        result = self._find_primary(code, code.index(')(') + 3)
+        self.assertEquals('a_func()()', result)
 
     # XXX: eliminating comments
     def xxx_test_comments_for_finding_statements(self):
-        word_finder = WordRangeFinder('# var2 . \n  var3')
-        self.assertEquals('var3',
-                          word_finder.get_primary_at(14))
+        code = '# var2 . \n  var3'
+        self.assertEquals('var3', self._find_primary(code, 14))
 
     def test_comments_for_finding_statements2(self):
-        word_finder = WordRangeFinder('var1 + "# var2".\n  var3')
-        self.assertEquals('"# var2".\n  var3',
-                          word_finder.get_primary_at(21))
+        code = 'var1 + "# var2".\n  var3'
+        self.assertEquals('"# var2".\n  var3', self._find_primary(code, 21))
 
     def test_import_statement_finding(self):
         code = 'import mod\na_var = 10\n'
@@ -215,29 +210,50 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_getting_primary_before_get_index(self):
         code = '\na = (b + c).d[0]()\n'
-        word_finder = WordRangeFinder(code)
-        result = word_finder.get_primary_at(len(code) - 2)
+        result = self._find_primary(code, len(code) - 2)
         self.assertEquals('(b + c).d[0]()', result)
 
     # XXX: not crossing new lines
     def xxx_test_getting_primary_and_not_crossing_newlines(self):
         code = '\na = (b + c)\n(4 + 1).x\n'
-        word_finder = WordRangeFinder(code)
-        result = word_finder.get_primary_at(len(code) - 1)
+        result = self._find_primary(code, len(code) - 1)
         self.assertEquals('(4 + 1).x', result)
 
     # XXX: cancatenated string literals
     def xxx_test_getting_primary_cancatenating_strs(self):
         code = 's = "a"\n"b" "c"\n'
-        word_finder = WordRangeFinder(code)
-        result = word_finder.get_primary_at(len(code) - 1)
+        result = self._find_primary(code, len(code) - 1)
         self.assertEquals('"b" "c"', result)
+
+    def _find_primary(self, code, offset):
+        word_finder = WordRangeFinder(code)
+        result = word_finder.get_primary_at(offset)
+        return result
 
     # XXX: not crossing new lines
     def xxx_test_is_a_function_being_called_with_parens_on_next_line(self):
         code = 'func\n(1, 2)\n'
         word_finder = WordRangeFinder(code)
         self.assertFalse(word_finder.is_a_function_being_called(1))
+
+    # XXX: handling triple quotes
+    def xxx_test_triple_quotes(self):
+        code = 's = """string"""\n'
+        result = self._find_primary(code, len(code) - 1)
+        self.assertEquals('"""string"""', result)
+
+    # XXX: handling triple quotes spanning multiple lines
+    def xxx_test_triple_quotes_spanning_multiple_lines(self):
+        code = 's = """\\\nl1\nl2\n """\n'
+        result = self._find_primary(code, len(code) - 1)
+        self.assertEquals('"""\\\nl1\nl2\n """', result)
+
+    # XXX: get_word_parens_range should ignore string literals
+    def xxx_test_get_word_parens_range_and_string_literals(self):
+        code = 'f(1, ")", 2)'
+        word_finder = WordRangeFinder(code)
+        result = word_finder.get_word_parens_range(0)
+        self.assertEquals((1, len(code) - 1), result)
 
 
 class ScopeNameFinderTest(unittest.TestCase):
