@@ -99,19 +99,50 @@ Sometimes wildcards can be customized.  For instance
 appear in it.
 
 
-Wildcards Format
-----------------
+Wildcard Format
+---------------
 
 This format should be easy to recognize.  Candidate:
 
 * ``name``: match name
 * ``?name``: match any name
 * ``%name:args``: match a custom wildcard with args
-* ``%name>type:args``: match `type` custom wildcard with args
+* ``%name>wtype:args``: match `wtype` custom wildcard with args
+
+Issues:
+
+* Is there any need to start custom wildcards with a hash sign?
+* Maybe we can put checks inside args, too::
+
+    pattern: ${?project:type=rope.base.project.Project}.pycore
+
+* Or maybe we can put args in a separate location, like::
+
+    pattern: ${?obj}.f({%param>args})
+    args: ?obj: type=mod.C
+          %param: p1
+
+* What should we do when a variable appears twice.  Which
+  of the args should be considered? like:
+
+    pattern: ${?a:type=__builtin__.int} + ${?a}
+
+* Should replacements accept args, too::
+
+    # match f when p1 is passed to it
+    pattern: ${?obj}.f({%param>args:p1})
+    # pass p2=23 and remove p1 parameter
+    goal: ${?obj}.f({%param>args:+p2=23,-p1})
+
+  If so, each replacement occurrence should have its own args.
 
 
 Implementation
 --------------
+
+Matchers should update matched mappings and also they should be
+informed about wildcard arguments.  We probably have to introduce a
+`MatchContext` object.
 
 Sample code::
 
