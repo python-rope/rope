@@ -12,7 +12,8 @@ class IntroduceFactoryRefactoring(object):
         self.pycore = project.pycore
         self.offset = offset
 
-        self.old_pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
+        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.old_pyname = evaluate.get_pyname_at(this_pymodule, offset)
         if self.old_pyname is None or not isinstance(self.old_pyname.get_object(),
                                                      rope.base.pyobjects.PyClass):
             raise rope.base.exceptions.RefactoringError(

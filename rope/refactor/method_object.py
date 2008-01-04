@@ -6,7 +6,8 @@ class MethodObject(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
-        pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
+        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        pyname = evaluate.get_pyname_at(this_pymodule, offset)
         if pyname is None or not isinstance(pyname.get_object(),
                                             pyobjects.PyFunction):
             raise exceptions.RefactoringError(

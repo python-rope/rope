@@ -18,7 +18,8 @@ def create_move(project, resource, offset=None):
     """
     if offset is None:
         return MoveModule(project, resource)
-    pyname = evaluate.get_pyname_at(project.pycore, resource, offset)
+    this_pymodule = project.pycore.resource_to_pyobject(resource)
+    pyname = evaluate.get_pyname_at(this_pymodule, offset)
     if pyname is None:
         raise exceptions.RefactoringError(
             'Move only works on classes, functions, modules and methods.')
@@ -48,7 +49,8 @@ class MoveMethod(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.pycore = project.pycore
-        pyname = evaluate.get_pyname_at(project.pycore, resource, offset)
+        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        pyname = evaluate.get_pyname_at(this_pymodule, offset)
         self.method_name = codeanalyze.get_name_at(resource, offset)
         self.pyfunction = pyname.get_object()
         if self.pyfunction.get_kind() != 'method':
@@ -192,7 +194,8 @@ class MoveGlobal(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
-        self.old_pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
+        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.old_pyname = evaluate.get_pyname_at(this_pymodule, offset)
         self.old_name = self.old_pyname.get_object().get_name()
         pymodule = self.old_pyname.get_object().get_module()
         self.source = pymodule.get_resource()

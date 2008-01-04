@@ -6,23 +6,22 @@ from rope.base import ast, astutils, exceptions, pyobjects
 from rope.base.codeanalyze import WordRangeFinder
 
 
-def get_primary_and_pyname_at(pycore, resource, offset):
+def get_primary_and_pyname_at(pymodule, offset):
     """Finds the primary and pyname at offset
 
     See notes about `get_pyname_at`.
     """
-    pymodule = pycore.resource_to_pyobject(resource)
     pyname_finder = ScopeNameFinder(pymodule)
     return pyname_finder.get_primary_and_pyname_at(offset)
 
 
-def get_pyname_at(pycore, resource, offset):
+def get_pyname_at(pymodule, offset):
     """Finds the pyname at the offset
 
     This function is inefficient for multiple calls because of the
     recalculation of initialization data.
     """
-    return get_primary_and_pyname_at(pycore, resource, offset)[1]
+    return get_primary_and_pyname_at(pymodule, offset)[1]
 
 
 def get_statement_result(scope, node):

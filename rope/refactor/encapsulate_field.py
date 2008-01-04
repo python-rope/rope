@@ -8,7 +8,8 @@ class EncapsulateField(object):
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
         self.name = codeanalyze.get_name_at(resource, offset)
-        self.pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
+        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.pyname = evaluate.get_pyname_at(this_pymodule, offset)
         if not self._is_an_attribute(self.pyname):
             raise exceptions.RefactoringError(
                 'Encapsulate field should be performed on class attributes.')

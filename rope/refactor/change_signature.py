@@ -20,8 +20,9 @@ class ChangeSignature(object):
 
     def _set_name_and_pyname(self):
         self.name = codeanalyze.get_name_at(self.resource, self.offset)
+        this_pymodule = self.pycore.resource_to_pyobject(self.resource)
         self.primary, self.pyname = evaluate.get_primary_and_pyname_at(
-            self.pycore, self.resource, self.offset)
+            this_pymodule, self.offset)
         if self.pyname is None:
             return
         pyobject = self.pyname.get_object()

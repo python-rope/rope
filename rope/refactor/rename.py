@@ -20,9 +20,9 @@ class Rename(object):
         self.resource = resource
         if offset is not None:
             self.old_name = codeanalyze.get_name_at(self.resource, offset)
+            this_pymodule = self.pycore.resource_to_pyobject(self.resource)
             self.old_instance, self.old_pyname = \
-                evaluate.get_primary_and_pyname_at(self.pycore,
-                                                   resource, offset)
+                evaluate.get_primary_and_pyname_at(this_pymodule, offset)
             if self.old_pyname is None:
                 raise exceptions.RefactoringError(
                     'Rename refactoring should be performed'
@@ -154,8 +154,8 @@ class ChangeOccurrences(object):
         self.resource = resource
         self.offset = offset
         self.old_name = codeanalyze.get_name_at(resource, offset)
-        self.old_pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
         self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+        self.old_pyname = evaluate.get_pyname_at(self.pymodule, offset)
 
     def get_old_name(self):
         word_finder = codeanalyze.WordRangeFinder(self.resource.read())

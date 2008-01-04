@@ -15,7 +15,8 @@ def create_inline(project, resource, offset):
 
     """
     pycore = project.pycore
-    pyname = evaluate.get_pyname_at(pycore, resource, offset)
+    this_pymodule = pycore.resource_to_pyobject(resource)
+    pyname = evaluate.get_pyname_at(this_pymodule, offset)
     if pyname is None:
         raise rope.base.exceptions.RefactoringError(
             'Inline refactoring should be performed on a method/local variable.')
@@ -33,7 +34,8 @@ class _Inliner(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.pycore = project.pycore
-        self.pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
+        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.pyname = evaluate.get_pyname_at(this_pymodule, offset)
         range_finder = codeanalyze.WordRangeFinder(resource.read())
         self.region = range_finder.get_primary_range(offset)
         self.name = range_finder.get_word_at(offset)
