@@ -3,9 +3,9 @@ import re
 import sys
 
 import rope.base.codeanalyze
+import rope.base.evaluate
 from rope.base import pyobjects, pynames, taskhandle, builtins, exceptions
 from rope.base.codeanalyze import (ArrayLinesAdapter, LogicalLineFinder,
-                                   ScopeNameFinder,
                                    SourceLinesAdapter, WordRangeFinder)
 from rope.refactor import occurrences, functionutils
 
@@ -61,7 +61,7 @@ def get_doc(project, source_code, offset, resource=None):
     """
     pymodule = _get_pymodule(project.pycore, source_code, resource,
                              error_limit=offset)
-    scope_finder = ScopeNameFinder(pymodule)
+    scope_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
     if element is None:
         return None
@@ -72,7 +72,7 @@ def get_doc(project, source_code, offset, resource=None):
 def get_definition_location(project, source_code, offset, resource=None):
     """Return a (`rope.base.resources.Resource`, lineno) tuple"""
     pymodule = project.pycore.get_string_module(source_code, resource)
-    scope_finder = ScopeNameFinder(pymodule)
+    scope_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
     if element is not None:
         module, lineno = element.get_definition_location()
@@ -89,8 +89,8 @@ def find_occurrences(project, resource, offset, unsure=False,
 
     """
     name = rope.base.codeanalyze.get_name_at(resource, offset)
-    pyname = rope.base.codeanalyze.get_pyname_at(project.get_pycore(),
-                                                 resource, offset)
+    pyname = rope.base.evaluate.get_pyname_at(project.get_pycore(),
+                                              resource, offset)
     def is_match(occurrence):
         return unsure
     finder = occurrences.FilteredFinder(
@@ -300,7 +300,7 @@ class _PythonCodeAssist(object):
 
     def _dotted_completions(self, module_scope, holding_scope):
         result = {}
-        pyname_finder = ScopeNameFinder(module_scope.pyobject)
+        pyname_finder = rope.base.evaluate.ScopeNameFinder(module_scope.pyobject)
         found_pyname = rope.base.evaluate.get_pyname_in_scope(
             holding_scope, self.expression)
         if found_pyname is not None:
@@ -382,7 +382,7 @@ class _PythonCodeAssist(object):
         stop_line = LogicalLineFinder(lines).logical_line_in(lineno)[0]
         stop = lines.get_line_start(stop_line)
         if word_finder.is_on_function_call_keyword(offset - 1, stop):
-            name_finder = ScopeNameFinder(pymodule)
+            name_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
             function_parens = word_finder.\
                 find_parens_start_from_inside(offset - 1, stop)
             primary = word_finder.get_primary_at(function_parens - 1)

@@ -3,8 +3,9 @@ import unittest
 from rope.base import exceptions
 from rope.base.codeanalyze import \
     (CachingLogicalLineFinder, SourceLinesAdapter,
-     WordRangeFinder, ScopeNameFinder, LogicalLineFinder, get_block_start)
+     WordRangeFinder, LogicalLineFinder, get_block_start)
 from ropetest import testutils
+import rope.base.evaluate
 
 
 LogicalLineFinder = CachingLogicalLineFinder
@@ -255,6 +256,17 @@ class WordRangeFinderTest(unittest.TestCase):
         result = word_finder.get_word_parens_range(0)
         self.assertEquals((1, len(code) - 1), result)
 
+    def test_is_assigned_here_for_equality_test(self):
+        code = 'a == 1\n'
+        word_finder = WordRangeFinder(code)
+        self.assertFalse(word_finder.is_assigned_here(0))
+
+    # XXX: is assigned here should work for tuple assignments
+    def xxx_test_is_assigned_here_for_tuple_assignment(self):
+        code = 'a, b == (1, 2)\n'
+        word_finder = WordRangeFinder(code)
+        self.assertTrue(word_finder.is_assigned_here(0))
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 
@@ -270,54 +282,62 @@ class ScopeNameFinderTest(unittest.TestCase):
     # FIXME: in normal scopes the interpreter raises `UnboundLocalName`
     # exception, but not in class bodies
     def xxx_test_global_name_in_class_body(self):
-        code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
+        code = 'a_var = 10\nclass C(object):\n    a_var = a_var\n'
         scope = self.pycore.get_string_scope(code)
-        name_finder = ScopeNameFinder(scope.pyobject)
-        self.assertEquals(scope.get_name('a_var'), name_finder.get_pyname_at(len(code) - 3))
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
+        result = name_finder.get_pyname_at(len(code) - 3)
+        self.assertEquals(scope.get_name('a_var'), result)
 
     def test_class_variable_attribute_in_class_body(self):
-        code = 'a_var = 10\nclass Sample(object):\n    a_var = a_var\n'
+        code = 'a_var = 10\nclass C(object):\n    a_var = a_var\n'
         scope = self.pycore.get_string_scope(code)
-        name_finder = ScopeNameFinder(scope.pyobject)
-        a_var_pyname = scope.get_name('Sample').get_object().get_attribute('a_var')
-        self.assertEquals(a_var_pyname, name_finder.get_pyname_at(len(code) - 12))
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
+        a_var_pyname = scope.get_name('C').\
+                       get_object().get_attribute('a_var')
+        result = name_finder.get_pyname_at(len(code) - 12)
+        self.assertEquals(a_var_pyname, result)
 
     def test_class_variable_attribute_in_class_body2(self):
-        code = 'a_var = 10\nclass Sample(object):\n    a_var \\\n= a_var\n'
+        code = 'a_var = 10\nclass C(object):\n    a_var \\\n= a_var\n'
         scope = self.pycore.get_string_scope(code)
-        name_finder = ScopeNameFinder(scope.pyobject)
-        a_var_pyname = scope.get_name('Sample').get_object().get_attribute('a_var')
-        self.assertEquals(a_var_pyname, name_finder.get_pyname_at(len(code) - 12))
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
+        a_var_pyname = scope.get_name('C').\
+                       get_object().get_attribute('a_var')
+        result = name_finder.get_pyname_at(len(code) - 12)
+        self.assertEquals(a_var_pyname, result)
 
     def test_class_method_attribute_in_class_body(self):
-        code = 'class Sample(object):\n    def a_method(self):\n        pass\n'
+        code = 'class C(object):\n    def a_method(self):\n        pass\n'
         scope = self.pycore.get_string_scope(code)
-        name_finder = ScopeNameFinder(scope.pyobject)
-        a_method_pyname = scope.get_name('Sample').get_object().get_attribute('a_method')
-        self.assertEquals(a_method_pyname,
-                          name_finder.get_pyname_at(code.index('a_method') + 2))
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
+        a_method_pyname = scope.get_name('C').\
+                          get_object().get_attribute('a_method')
+        result = name_finder.get_pyname_at(code.index('a_method') + 2)
+        self.assertEquals(a_method_pyname, result)
 
     def test_inner_class_attribute_in_class_body(self):
-        code = 'class Sample(object):\n    class AClass(object):\n        pass\n'
+        code = 'class C(object):\n    class CC(object):\n        pass\n'
         scope = self.pycore.get_string_scope(code)
-        name_finder = ScopeNameFinder(scope.pyobject)
-        a_class_pyname = scope.get_name('Sample').get_object().get_attribute('AClass')
-        self.assertEquals(a_class_pyname,
-                          name_finder.get_pyname_at(code.index('AClass') + 2))
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
+        a_class_pyname = scope.get_name('C').get_object().get_attribute('CC')
+        result = name_finder.get_pyname_at(code.index('CC') + 2)
+        self.assertEquals(a_class_pyname, result)
 
     def test_class_method_in_class_body_but_not_indexed(self):
-        code = 'class Sample(object):\n    def a_func(self, a_func):\n        pass\n'
+        code = 'class C(object):\n    def func(self, func):\n        pass\n'
         scope = self.pycore.get_string_scope(code)
-        a_func_pyname = scope.get_scopes()[0].get_scopes()[0].get_name('a_func')
-        name_finder = ScopeNameFinder(scope.pyobject)
-        self.assertEquals(a_func_pyname, name_finder.get_pyname_at(code.index(', a_func') + 3))
+        a_func_pyname = scope.get_scopes()[0].get_scopes()[0].get_name('func')
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
+        result = name_finder.get_pyname_at(code.index(', func') + 3)
+        self.assertEquals(a_func_pyname, result)
 
     def test_function_but_not_indexed(self):
         code = 'def a_func(a_func):\n    pass\n'
         scope = self.pycore.get_string_scope(code)
         a_func_pyname = scope.get_name('a_func')
-        name_finder = ScopeNameFinder(scope.pyobject)
-        self.assertEquals(a_func_pyname, name_finder.get_pyname_at(code.index('a_func') + 3))
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
+        result = name_finder.get_pyname_at(code.index('a_func') + 3)
+        self.assertEquals(a_func_pyname, result)
 
     def test_modules_after_from_statements(self):
         root_folder = self.project.root
@@ -325,7 +345,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod.write('def a_func():\n    pass\n')
         code = 'from mod import a_func\n'
         scope = self.pycore.get_string_scope(code)
-        name_finder = ScopeNameFinder(scope.pyobject)
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         mod_pyobject = self.pycore.resource_to_pyobject(mod)
         found_pyname = name_finder.get_pyname_at(code.index('mod') + 1)
         self.assertEquals(mod_pyobject, found_pyname.get_object())
@@ -335,7 +355,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod1.write('def afunc():\n    pass\n')
         code = 'from mod1 import (\n    afunc as func)\n'
         scope = self.pycore.get_string_scope(code)
-        name_finder = ScopeNameFinder(scope.pyobject)
+        name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         mod_pyobject = self.pycore.resource_to_pyobject(mod1)
         afunc = mod_pyobject.get_attribute('afunc')
         found_pyname = name_finder.get_pyname_at(code.index('afunc') + 1)
@@ -351,7 +371,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         code = 'from ..mod1 import a_func\n'
         mod2.write(code)
         mod2_scope = self.pycore.resource_to_pyobject(mod2).get_scope()
-        name_finder = ScopeNameFinder(mod2_scope.pyobject)
+        name_finder = rope.base.evaluate.ScopeNameFinder(mod2_scope.pyobject)
         mod1_pyobject = self.pycore.resource_to_pyobject(mod1)
         found_pyname = name_finder.get_pyname_at(code.index('mod1') + 1)
         self.assertEquals(mod1_pyobject, found_pyname.get_object())
@@ -364,7 +384,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod1.write('import pkg1.pkg2.mod2')
 
         mod1_scope = self.pycore.resource_to_pyobject(mod1).get_scope()
-        name_finder = ScopeNameFinder(mod1_scope.pyobject)
+        name_finder = rope.base.evaluate.ScopeNameFinder(mod1_scope.pyobject)
         pkg2_pyobject = self.pycore.resource_to_pyobject(pkg2)
         found_pyname = name_finder.get_pyname_at(mod1.read().index('pkg2') + 1)
         self.assertEquals(pkg2_pyobject, found_pyname.get_object())
@@ -373,7 +393,7 @@ class ScopeNameFinderTest(unittest.TestCase):
     def test_get_pyname_at_on_language_keywords(self):
         code = 'def a_func(a_func):\n    pass\n'
         pymod = self.pycore.get_string_module(code)
-        name_finder = ScopeNameFinder(pymod)
+        name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         name_finder.get_pyname_at(code.index('pass'))
 
 

@@ -1,7 +1,8 @@
-from rope.base import exceptions, codeanalyze, pyobjects, pynames, taskhandle
+import warnings
+
+from rope.base import exceptions, codeanalyze, pyobjects, pynames, taskhandle, evaluate
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences, sourceutils
-import warnings
 
 
 class Rename(object):
@@ -20,8 +21,8 @@ class Rename(object):
         if offset is not None:
             self.old_name = codeanalyze.get_name_at(self.resource, offset)
             self.old_instance, self.old_pyname = \
-                codeanalyze.get_primary_and_pyname_at(self.pycore,
-                                                      resource, offset)
+                evaluate.get_primary_and_pyname_at(self.pycore,
+                                                   resource, offset)
             if self.old_pyname is None:
                 raise exceptions.RefactoringError(
                     'Rename refactoring should be performed'
@@ -153,8 +154,7 @@ class ChangeOccurrences(object):
         self.resource = resource
         self.offset = offset
         self.old_name = codeanalyze.get_name_at(resource, offset)
-        self.old_pyname = codeanalyze.get_pyname_at(self.pycore,
-                                                    resource, offset)
+        self.old_pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
         self.pymodule = self.pycore.resource_to_pyobject(self.resource)
 
     def get_old_name(self):

@@ -2,10 +2,6 @@ import re
 import token
 import tokenize
 
-import rope.base.exceptions
-import rope.base.pynames
-from rope.base import pyobjects, evaluate
-
 
 class WordRangeFinder(object):
     # XXX: many of these methods fail on comments
@@ -371,117 +367,6 @@ class WordRangeFinder(object):
             return (start_parens, index)
         return (None, None)
 
-
-class ScopeNameFinder(object):
-
-    def __init__(self, pymodule):
-        self.source_code = pymodule.source_code
-        self.module_scope = pymodule.get_scope()
-        self.lines = pymodule.lines
-        self.word_finder = WordRangeFinder(self.source_code)
-
-    def _is_defined_in_class_body(self, holding_scope, offset, lineno):
-        if lineno == holding_scope.get_start() and \
-           holding_scope.parent is not None and \
-           holding_scope.parent.get_kind() == 'Class' and \
-           self.word_finder.is_a_class_or_function_name_in_header(offset):
-            return True
-        if lineno != holding_scope.get_start() and \
-           holding_scope.get_kind() == 'Class' and \
-           self.word_finder._is_name_assigned_in_class_body(offset):
-            return True
-        return False
-
-    def _is_function_name_in_function_header(self, scope, offset, lineno):
-        if scope.get_start() <= lineno <= scope.get_body_start() and \
-           scope.get_kind() == 'Function' and \
-           self.word_finder.is_a_class_or_function_name_in_header(offset):
-            return True
-        return False
-
-    def get_pyname_at(self, offset):
-        return self.get_primary_and_pyname_at(offset)[1]
-
-    def get_primary_and_pyname_at(self, offset):
-        lineno = self.lines.get_line_number(offset)
-        holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
-        # function keyword parameter
-        if self.word_finder.is_function_keyword_parameter(offset):
-            keyword_name = self.word_finder.get_word_at(offset)
-            pyobject = self.get_enclosing_function(offset)
-            if isinstance(pyobject, pyobjects.PyFunction):
-                return (None, pyobject.get_parameters().get(keyword_name, None))
-
-        # class body
-        if self._is_defined_in_class_body(holding_scope, offset, lineno):
-            class_scope = holding_scope
-            if lineno == holding_scope.get_start():
-                class_scope = holding_scope.parent
-            name = self.word_finder.get_primary_at(offset).strip()
-            try:
-                return (None, class_scope.pyobject.get_attribute(name))
-            except rope.base.exceptions.AttributeNotFoundError:
-                return (None, None)
-        # function header
-        if self._is_function_name_in_function_header(holding_scope, offset, lineno):
-            name = self.word_finder.get_primary_at(offset).strip()
-            return (None, holding_scope.parent.get_name(name))
-        # from statement module
-        if self.word_finder.is_from_statement_module(offset):
-            module = self.word_finder.get_primary_at(offset)
-            module_pyname = self._find_module(module)
-            return (None, module_pyname)
-        if self.word_finder.is_from_aliased(offset):
-            name = self.word_finder.get_from_aliased(offset)
-        else:
-            name = self.word_finder.get_primary_at(offset)
-        return evaluate.get_primary_and_pyname_in_scope(holding_scope, name)
-
-    def get_enclosing_function(self, offset):
-        function_parens = self.word_finder.find_parens_start_from_inside(offset)
-        try:
-            function_pyname = self.get_pyname_at(function_parens - 1)
-        except evaluate.BadIdentifierError:
-            function_pyname = None
-        if function_pyname is not None:
-            pyobject = function_pyname.get_object()
-            if isinstance(pyobject, pyobjects.AbstractFunction):
-                return pyobject
-            elif isinstance(pyobject, pyobjects.AbstractClass) and \
-                 '__init__' in pyobject.get_attributes():
-                return pyobject.get_attribute('__init__').get_object()
-            elif '__call__' in pyobject.get_attributes():
-                return pyobject.get_attribute('__call__').get_object()
-        return None
-
-    def _find_module(self, module_name):
-        dot_count = 0
-        if module_name.startswith('.'):
-            for c in module_name:
-                if c == '.':
-                    dot_count += 1
-                else:
-                    break
-        return rope.base.pynames.ImportedModule(
-            self.module_scope.pyobject, module_name[dot_count:], dot_count)
-
-
-def get_pyname_at(pycore, resource, offset):
-    """Finds the pyname at the offset
-
-    This function is inefficient for multiple calls because of the
-    recalculation of initialization data.
-    """
-    return get_primary_and_pyname_at(pycore, resource, offset)[1]
-
-def get_primary_and_pyname_at(pycore, resource, offset):
-    """Finds the primary and pyname at offset
-
-    See notes about `get_pyname_at`.
-    """
-    pymodule = pycore.resource_to_pyobject(resource)
-    pyname_finder = ScopeNameFinder(pymodule)
-    return pyname_finder.get_primary_and_pyname_at(offset)
 
 def get_name_at(resource, offset):
     source_code = resource.read()

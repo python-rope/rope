@@ -1,3 +1,4 @@
+import rope.base.evaluate
 from rope.base import change, codeanalyze, pyobjects, exceptions, pynames
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
@@ -172,7 +173,7 @@ class _GenerationInfo(object):
         self.resource = resource
         self.offset = offset
         self.source_pymodule = self.pycore.resource_to_pyobject(resource)
-        finder = codeanalyze.ScopeNameFinder(self.source_pymodule)
+        finder = rope.base.evaluate.ScopeNameFinder(self.source_pymodule)
         self.primary, self.pyname = finder.get_primary_and_pyname_at(offset)
         self._init_fields()
 

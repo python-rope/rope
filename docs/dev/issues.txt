@@ -80,7 +80,7 @@ We should measure the amount of memory each of them use to make
 decisions.
 
 
-Custom Restructoring Wildcards
+Custom Restructuring Wildcards
 ==============================
 
 There is a need to add more custom wildcards in restructuring

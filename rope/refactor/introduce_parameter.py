@@ -1,5 +1,5 @@
 import rope.base.change
-from rope.base import codeanalyze, exceptions
+from rope.base import codeanalyze, exceptions, evaluate
 from rope.refactor import functionutils, sourceutils, occurrences
 
 
@@ -26,7 +26,7 @@ class IntroduceParameter(object):
 
     def _get_name_and_pyname(self):
         return (codeanalyze.get_name_at(self.resource, self.offset),
-                codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset))
+                evaluate.get_pyname_at(self.pycore, self.resource, self.offset))
 
     def get_changes(self, new_parameter):
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)

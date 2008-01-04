@@ -1,5 +1,4 @@
-import rope.base.codeanalyze
-from rope.base import pynames
+from rope.base import pynames, codeanalyze, evaluate, exceptions
 from rope.refactor.rename import Rename
 
 
@@ -12,10 +11,10 @@ class LocalToField(object):
         self.offset = offset
 
     def get_changes(self):
-        name = rope.base.codeanalyze.get_name_at(self.resource, self.offset)
-        pyname = rope.base.codeanalyze.get_pyname_at(self.pycore, self.resource, self.offset)
+        name = codeanalyze.get_name_at(self.resource, self.offset)
+        pyname = evaluate.get_pyname_at(self.pycore, self.resource, self.offset)
         if not self._is_a_method_local(pyname):
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 'Convert local variable to field should be performed on \n'
                 'a local variable of a method.')
 
@@ -32,7 +31,7 @@ class LocalToField(object):
     def _check_redefinition(self, name, function_scope):
         class_scope = function_scope.parent
         if name in class_scope.pyobject.get_attributes():
-            raise rope.base.exceptions.RefactoringError(
+            raise exceptions.RefactoringError(
                 'The field %s already exists' % name)
 
     def _get_field_name(self, pyfunction, name):

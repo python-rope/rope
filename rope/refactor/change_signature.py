@@ -1,7 +1,7 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import pyobjects, codeanalyze, taskhandle
+from rope.base import pyobjects, codeanalyze, taskhandle, evaluate
 from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, sourceutils, functionutils, rename
 
@@ -20,7 +20,7 @@ class ChangeSignature(object):
 
     def _set_name_and_pyname(self):
         self.name = codeanalyze.get_name_at(self.resource, self.offset)
-        self.primary, self.pyname = codeanalyze.get_primary_and_pyname_at(
+        self.primary, self.pyname = evaluate.get_primary_and_pyname_at(
             self.pycore, self.resource, self.offset)
         if self.pyname is None:
             return

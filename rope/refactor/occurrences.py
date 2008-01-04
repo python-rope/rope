@@ -1,6 +1,6 @@
 import re
 
-from rope.base import pynames, pyobjects, codeanalyze
+from rope.base import pynames, pyobjects, codeanalyze, evaluate
 
 
 class FilteredFinder(object):
@@ -199,7 +199,7 @@ class _OccurrenceToolsCreator(object):
         if self._name_finder is None:
             if self.pymodule is None:
                 self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-            self._name_finder = codeanalyze.ScopeNameFinder(self.pymodule)
+            self._name_finder = evaluate.ScopeNameFinder(self.pymodule)
         return self._name_finder
 
     def get_source_code(self):

@@ -1,4 +1,4 @@
-from rope.base import codeanalyze, pyobjects, exceptions, change
+from rope.base import pyobjects, exceptions, change, evaluate
 from rope.refactor import sourceutils, occurrences, rename
 
 
@@ -6,7 +6,7 @@ class MethodObject(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
-        pyname = codeanalyze.get_pyname_at(self.pycore, resource, offset)
+        pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
         if pyname is None or not isinstance(pyname.get_object(),
                                             pyobjects.PyFunction):
             raise exceptions.RefactoringError(

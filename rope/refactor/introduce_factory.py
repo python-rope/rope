@@ -1,8 +1,7 @@
-import rope.base.codeanalyze
 import rope.base.exceptions
 import rope.base.pyobjects
 import rope.refactor.importutils
-from rope.base import taskhandle
+from rope.base import taskhandle, evaluate
 from rope.base.change import (ChangeSet, ChangeContents)
 from rope.refactor import rename, occurrences, sourceutils
 
@@ -13,10 +12,9 @@ class IntroduceFactoryRefactoring(object):
         self.pycore = project.pycore
         self.offset = offset
 
-        self.old_pyname = \
-            rope.base.codeanalyze.get_pyname_at(self.pycore, resource, offset)
-        if self.old_pyname is None or \
-           not isinstance(self.old_pyname.get_object(), rope.base.pyobjects.PyClass):
+        self.old_pyname = evaluate.get_pyname_at(self.pycore, resource, offset)
+        if self.old_pyname is None or not isinstance(self.old_pyname.get_object(),
+                                                     rope.base.pyobjects.PyClass):
             raise rope.base.exceptions.RefactoringError(
                 'Introduce factory should be performed on a class.')
         self.old_name = self.old_pyname.get_object().get_name()
