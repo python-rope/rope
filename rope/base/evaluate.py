@@ -7,27 +7,20 @@ from rope.base.codeanalyze import WordRangeFinder
 
 
 def get_primary_and_pyname_at(pymodule, offset):
-    """Finds the primary and pyname at offset
-
-    See notes about `get_pyname_at`.
-    """
+    """Find the primary and pyname at offset"""
     pyname_finder = ScopeNameFinder(pymodule)
     return pyname_finder.get_primary_and_pyname_at(offset)
 
 
 def get_pyname_at(pymodule, offset):
-    """Finds the pyname at the offset
-
-    This function is inefficient for multiple calls because of the
-    recalculation of initialization data.
-    """
+    """Find the pyname at the offset"""
     return get_primary_and_pyname_at(pymodule, offset)[1]
 
 
 def get_statement_result(scope, node):
     """Evaluate a `ast.AST` node and return a PyName
 
-    Returns `None` if the expression cannot be evaluated.
+    Return `None` if the expression cannot be evaluated.
 
     """
     return get_primary_and_result(scope, node)[1]
@@ -333,8 +326,8 @@ class StatementEvaluator(object):
 class Arguments(object):
     """A class for evaluating parameters passed to a function
 
-    You can use the `create_arguments` factory.  It handles when the
-    first argument is implicit
+    You can use the `create_arguments` factory.  It handles implicit
+    first arguments.
 
     """
 
@@ -414,7 +407,7 @@ class MixedArguments(object):
 
 
 def create_arguments(primary, pyfunction, call_node, scope):
-    """A factory for creating `Arguments`'"""
+    """A factory for creating `Arguments`"""
     args = list(call_node.args)
     args.extend(call_node.keywords)
     called = call_node.func
@@ -458,7 +451,8 @@ class EvaluatedName(rope.base.pynames.EvaluatedName):
 
     def __init__(self, assignment=None, module=None, evaluation= '',
                  lineno=None):
-        """
+        """Initialize it
+
         `evaluation` is a `str` that specifies what to do with the
         `assignment`.  For example for a for object the evaluation is
         '.__iter__().next()'.  That means first call the `__iter__()`
