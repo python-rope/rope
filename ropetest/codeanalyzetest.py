@@ -57,6 +57,11 @@ class WordRangeFinderTest(unittest.TestCase):
     def tearDown(self):
         super(WordRangeFinderTest, self).tearDown()
 
+    def _find_primary(self, code, offset):
+        word_finder = WordRangeFinder(code)
+        result = word_finder.get_primary_at(offset)
+        return result
+
     def test_inside_parans(self):
         code = 'a_func(a_var)'
         self.assertEquals('a_var', self._find_primary(code, 10))
@@ -226,11 +231,6 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, len(code) - 1)
         self.assertEquals('"b" "c"', result)
 
-    def _find_primary(self, code, offset):
-        word_finder = WordRangeFinder(code)
-        result = word_finder.get_primary_at(offset)
-        return result
-
     # XXX: not crossing new lines
     def xxx_test_is_a_function_being_called_with_parens_on_next_line(self):
         code = 'func\n(1, 2)\n'
@@ -261,13 +261,13 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder(code)
         self.assertFalse(word_finder.is_assigned_here(0))
 
-    # XXX: is assigned here should work for tuple assignments
+    # XXX: is_assigned_here should work for tuple assignments
     def xxx_test_is_assigned_here_for_tuple_assignment(self):
         code = 'a, b == (1, 2)\n'
         word_finder = WordRangeFinder(code)
         self.assertTrue(word_finder.is_assigned_here(0))
 
-    def test_renaming_functions_with_from_import_and_parens2(self):
+    def test_is_from_with_from_import_and_multiline_parens(self):
         code = 'from mod import \\\n  (f,\n  g, h)\n'
         word_finder = WordRangeFinder(code)
         self.assertTrue(word_finder.is_from_statement(code.rindex('g')))
