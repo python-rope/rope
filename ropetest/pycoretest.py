@@ -697,6 +697,13 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertTrue('func' in func_scope.get_name('self').
                         get_object().get_attributes())
 
+    def test_none_assignments_in_classes(self):
+        scope = self.pycore.get_string_scope(
+            'class C(object):\n    var = ""\n'
+            '    def f(self):\n        self.var += "".join([])\n')
+        c_class = scope.get_name('C').get_object()
+        self.assertTrue('var' in c_class.get_attributes())
+
     def test_self_in_methods_with_decorators(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    @staticmethod\n' +
                                              '    def func(self):\n        pass\n')

@@ -332,6 +332,9 @@ class _ScopeVisitor(object):
     def _Assign(self, node):
         ast.walk(node, _AssignVisitor(self))
 
+    def _AugAssign(self, node):
+        pass
+
     def _For(self, node):
         names = rope.base.evaluate._get_evaluated_names(
             node.target, node.iter, evaluation='.__iter__().next()',
@@ -449,8 +452,9 @@ class _ClassInitVisitor(_AssignVisitor):
             if node.attr not in self.scope_visitor.names:
                 self.scope_visitor.names[node.attr] = pynames.AssignedName(
                     lineno=node.lineno, module=self.scope_visitor.get_module())
-            self.scope_visitor.names[node.attr].assignments.append(
-                pynames._Assigned(self.assigned_ast))
+            if self.assigned_ast is not None:
+                self.scope_visitor.names[node.attr].assignments.append(
+                    pynames._Assigned(self.assigned_ast))
 
     def _Tuple(self, node):
         if not isinstance(node.ctx, ast.Store):
