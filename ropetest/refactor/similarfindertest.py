@@ -8,12 +8,17 @@ class SimilarFinderTest(unittest.TestCase):
 
     def setUp(self):
         super(SimilarFinderTest, self).setUp()
+        self.project = testutils.sample_project()
+        self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):
+        testutils.remove_project(self.project)
         super(SimilarFinderTest, self).tearDown()
 
-    def _create_finder(self, source):
-        return similarfinder.RawSimilarFinder(source)
+    def _create_finder(self, source, **kwds):
+        self.mod.write(source)
+        pymodule = self.project.pycore.resource_to_pyobject(self.mod)
+        return similarfinder.CheckingFinder(pymodule, **kwds)
 
     def test_trivial_case(self):
         finder = self._create_finder('')
@@ -75,14 +80,14 @@ class SimilarFinderTest(unittest.TestCase):
     def test_matching_basic_patterns(self):
         source = 'b = a\n'
         finder = self._create_finder(source)
-        result = list(finder.get_match_regions('${a}'))
+        result = list(finder.get_match_regions('${a}', args={'a': 'exact'}))
         start = source.rfind('a')
         self.assertEquals([(start, start + 1)], result)
 
     def test_match_get_ast(self):
         source = 'b = a\n'
         finder = self._create_finder(source)
-        result = list(finder.get_matches('${a}'))
+        result = list(finder.get_matches('${a}', args={'a': 'exact'}))
         self.assertEquals('a', result[0].get_ast('a').id)
 
     def test_match_get_ast_for_statements(self):
@@ -125,13 +130,13 @@ class SimilarFinderTest(unittest.TestCase):
     def test_matching_normal_names_and_assname2(self):
         source = 'a = 1\n'
         finder = self._create_finder(source)
-        result = list(finder.get_matches('${a}'))
+        result = list(finder.get_matches('${a}', args={'a': 'exact'}))
         self.assertEquals(1, len(result))
 
     def test_matching_normal_names_and_attributes(self):
         source = 'x.a = 1\n'
         finder = self._create_finder(source)
-        result = list(finder.get_matches('${a} = 1'))
+        result = list(finder.get_matches('${a} = 1', args={'a': 'exact'}))
         self.assertEquals(0, len(result))
 
     def test_functions_not_matching_when_only_first_parameters(self):
@@ -155,8 +160,8 @@ class CheckingFinderTest(unittest.TestCase):
     def test_trivial_case(self):
         self.mod1.write('')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(pymodule, {})
-        self.assertEquals([], list(finder.get_matches('10')))
+        finder = similarfinder.CheckingFinder(pymodule)
+        self.assertEquals([], list(finder.get_matches('10', args={})))
 
     def test_simple_finding(self):
         self.mod1.write('class A(object):\n    pass\na = A()\n')

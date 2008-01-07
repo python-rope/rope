@@ -1,6 +1,7 @@
 """This module can be used for finding similar code"""
 import re
 
+import rope.refactor.wildcards
 from rope.base import codeanalyze, evaluate, exceptions, ast
 from rope.refactor import patchedast, sourceutils, occurrences, wildcards
 
@@ -27,23 +28,28 @@ class CheckingFinder(object):
 
     """
 
-    def __init__(self, pymodule, checks, check_all=True):
+    def __init__(self, pymodule, checks={}, wildcards=None, check_all=True):
         """Construct a CheckingFinder
 
         The `check_all` is `False` missing names are ignored.
 
         """
         self.source = pymodule.source_code
-        self.raw_finder = RawSimilarFinder(pymodule.source_code,
-                                           pymodule.get_ast())
+        self.raw_finder = RawSimilarFinder(
+            pymodule.source_code, pymodule.get_ast(), self._does_match)
         self.pymodule = pymodule
         self.checks = checks
         self.check_all = check_all
-        self.wildcards = {}
-        for wildcard in [wildcards.DefaultWildcard()]:
-            self.wildcards[wildcard.get_name()] = wildcard
+        if wildcards is None:
+            self.wildcards = {}
+            for wildcard in [rope.refactor.wildcards.DefaultWildcard()]:
+                self.wildcards[wildcard.get_name()] = wildcard
+        else:
+            self.wildcards = wildcards
 
-    def get_matches(self, code, start=0, end=None):
+    def get_matches(self, code, args={}, start=0, end=None):
+        # XXX: args is a temporary attribute; remove it
+        self.args = args
         if end is None:
             end = len(self.source)
         for match in self.raw_finder.get_matches(code, start=start, end=end):
@@ -69,12 +75,13 @@ class CheckingFinder(object):
             else:
                 yield match
 
+    def get_match_regions(self, *args, **kwds):
+        for match in self.get_matches(*args, **kwds):
+            yield match.get_region()
+
     def _does_match(self, node, name):
-        arg = ''
-        # XXX: for backword compatibility
-        if not name.startswith('?'):
-            arg = 'exact'
-        suspect = wildcards.Suspect(None, node, name)
+        arg = self.args.get(name, '')
+        suspect = wildcards.Suspect(self.pymodule, node, name)
         return wildcards.DefaultWildcard().matches(suspect, arg)
 
     def _same_pyobject(self, expected, pyobject):
@@ -105,18 +112,17 @@ class CheckingFinder(object):
 class RawSimilarFinder(object):
     """A class for finding similar expressions and statements"""
 
-    def __init__(self, source, node=None):
+    def __init__(self, source, node=None, does_match=None):
         if node is None:
             node = ast.parse(source)
+        if does_match is None:
+            self.does_match = self._simple_does_match
+        else:
+            self.does_match = does_match
         self._init_using_ast(node, source)
 
-    def _does_match(self, node, name):
-        arg = ''
-        # XXX: for backword compatibility
-        if not name.startswith('?'):
-            arg = 'exact'
-        suspect = wildcards.Suspect(None, node, name)
-        return wildcards.DefaultWildcard().matches(suspect, arg)
+    def _simple_does_match(self, node, name):
+        return isinstance(node, (ast.expr, ast.Name))
 
     def _init_using_ast(self, node, source):
         self.source = source
@@ -144,13 +150,9 @@ class RawSimilarFinder(object):
         if code not in self._matched_asts:
             wanted = self._create_pattern(code)
             matches = _ASTMatcher(self.ast, wanted,
-                                  self._does_match).find_matches()
+                                  self.does_match).find_matches()
             self._matched_asts[code] = matches
         return self._matched_asts[code]
-
-    def get_match_regions(self, code, start=0, end=None):
-        for match in self.get_matches(code, start=start, end=end):
-            yield match.get_region()
 
     def _create_pattern(self, expression):
         expression = self._replace_wildcards(expression)
