@@ -2,7 +2,7 @@
 import re
 
 from rope.base import codeanalyze, evaluate, exceptions, ast
-from rope.refactor import patchedast, sourceutils, occurrences
+from rope.refactor import patchedast, sourceutils, occurrences, wildcards
 
 
 class SimilarFinder(object):
@@ -12,6 +12,9 @@ class SimilarFinder(object):
         if node is None:
             node = ast.parse(source)
         self._init_using_ast(node, source)
+        self.wildcards = {}
+        for wildcard in [wildcards.DefaultWildcard()]:
+            self.wildcards[wildcard.get_name()] = wildcard
 
     def _init_using_ast(self, node, source):
         self.source = source
@@ -38,7 +41,8 @@ class SimilarFinder(object):
     def _get_matched_asts(self, code):
         if code not in self._matched_asts:
             wanted = self._create_pattern(code)
-            matches = _ASTMatcher(self.ast, wanted).find_matches()
+            matches = _ASTMatcher(None, self.ast, wanted,
+                                  self.wildcards).find_matches()
             self._matched_asts[code] = matches
         return self._matched_asts[code]
 
@@ -158,16 +162,18 @@ class CheckingFinder(SimilarFinder):
 
 class _ASTMatcher(object):
 
-    def __init__(self, body, pattern):
+    def __init__(self, pymodule, body, pattern, wildcards):
         """Searches the given pattern in the body AST.
 
         body is an AST node and pattern can be either an AST node or
         a list of ASTs nodes
         """
+        self.pymodule = pymodule
         self.body = body
         self.pattern = pattern
         self.matches = None
         self.ropevar = _RopeVariable()
+        self.wildcards = wildcards
 
     def find_matches(self):
         if self.matches is None:
@@ -247,7 +253,8 @@ class _ASTMatcher(object):
     def _match_normal_var(self, node1, node2, mapping):
         name = self.ropevar.get_base(node1.id)
         if name not in mapping:
-            if isinstance(node2, ast.Name) and node2.id == name:
+            suspect = wildcards.Suspect(self.pymodule, node2, name)
+            if self.wildcards['default'].matches(suspect, 'exact'):
                 mapping[name] = node2
                 return True
             return False
@@ -257,7 +264,8 @@ class _ASTMatcher(object):
     def _match_any_var(self, node1, node2, mapping):
         name = self.ropevar.get_base(node1.id)
         if name not in mapping:
-            if isinstance(node2, ast.expr):
+            suspect = wildcards.Suspect(self.pymodule, node2, name)
+            if self.wildcards['default'].matches(suspect):
                 mapping[name] = node2
                 return True
             return False

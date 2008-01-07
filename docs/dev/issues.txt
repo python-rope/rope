@@ -50,8 +50,7 @@ Unresolved Issues
 To Be Reviewed
 ==============
 
-* lots of estimations in codeanalyze in WordRangeFinder and
-  ScopeNameFinder
+* lots of estimations in codeanalyze in WordRangeFinder
 * review objectdb modules
 * how concluded data are held for star imports
 
@@ -87,83 +86,73 @@ There is a need to add more custom wildcards in restructuring
 patterns.  For instance, one might want to match any parameters such
 as in::
 
-  pattern: ${?obj}.f(${%params})
+  pattern: ${obj}.f(${params})
 
-where ``${%params}`` should match all of the parameters that are
-passed to `f()`.  But adding all such needs to `similarfinder` module
-makes it really complex.  So I think adding the ability to extend them
-is useful.
+where ``${params}`` should match all of the parameters that are passed
+to `f()`.  But adding all such needs to `similarfinder` module makes
+it really complex.  So I think adding the ability to extend them is
+useful.
 
-Sometimes wildcards can be customized.  For instance
-``${%params:p1,p2}`` should match any parameters only if p1 and p2
-appear in it.
+Sometimes wildcards can be customized.  For instance one might want to
+match the parameters only if ``p1`` appears in them.  They can be
+specified in wildcard parameters.
+
+Since matched wildcards can appear in the goal pattern, each wildcard
+should have a corresponding replacement wildcard.  Each replacement
+might be customized in each place it appears; for instance
+``${params:-p1}`` might mean to remove ``p1`` argument.
 
 
 Wildcard Format
 ---------------
 
-This format should be easy to recognize.  Candidate:
+All wildcards should appear as ``${name}``.  The type of wildcards and
+their parameters can be specified using the parameters argument of
+``Restructuring.get_changes()``.
 
-* ``name``: match name
-* ``?name``: match any name
-* ``%name:args``: match a custom wildcard with args
-* ``%name>wtype:args``: match `wtype` custom wildcard with args
+Ideas:
 
-Issues:
-
-* Is there any need to start custom wildcards with a hash sign?
+* Should each wildcard match one ast node?
 * Maybe we can put checks inside args, too::
 
-    pattern: ${?project:type=rope.base.project.Project}.pycore
+    pattern: ${project:type=rope.base.project.Project}.pycore
 
-* Or maybe we can put args in a separate location, like::
+  But what should be done when a variable appears twice::
 
-    pattern: ${?obj}.f({%param>args})
-    args: ?obj: type=mod.C
-          %param: p1
+    pattern: ${a:type=__builtin__.int} + ${a}
 
-* What should we do when a variable appears twice.  Which
-  of the args should be considered? like:
 
-    pattern: ${?a:type=__builtin__.int} + ${?a}
+Process
+-------
 
-* Should replacements accept args, too::
+We should remain backward compatible for at least one major release.
+There seem to be two backward incompatible changes.
 
-    # match f when p1 is passed to it
-    pattern: ${?obj}.f({%param>args:p1})
-    # pass p2=23 and remove p1 parameter
-    goal: ${?obj}.f({%param>args:+p2=23,-p1})
+Wildcards starting with a ``?`` sign used to match any corresponding
+ast expression.  Now all normal variables are so by default unless
+something like ``exact`` parameter is passed to them.
 
-  If so, each replacement occurrence should have its own args.
+Because of the addition of ``parameters`` argument, the ``checks``
+parameter of ``Restructuring.get_changes()`` will be deprecated.
+
+
+Examples
+--------
+
+.. ...
 
 
 Implementation
 --------------
 
-Matchers should update matched mappings and also they should be
-informed about wildcard arguments.  We probably have to introduce a
-`MatchContext` object.
-
-Sample code::
-
-  class WildcardPattern(object):
-
-      name = None
-
-      def does_apply(self, node):
-          """Return `True` if `node` it applies"""
-
-      def matches(self, node, mapping):
-          """Return True if matches"""
-
-
-  class WildcardReplacement(object):
-
-      def does_apply(self, node, match):
-          """Return `True` if `node` it applies"""
-
-      def replacement(self, node, match):
-          """Return the replacement string"""
+* how to decide which wildcard should be used when searching?
+* how to pass wildcard parameters to matchers
+* matchers might need to type-check or use other matchers
+* matchers may update ast mappings
+* how to say what matched a node in replacements?
+* how to pass replacement args to replacements?
+* how to decide which wildcard should be used when replacing?
+* recursive matching
 
 
 Getting Ready For Python 3.0
