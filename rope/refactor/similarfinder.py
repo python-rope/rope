@@ -12,9 +12,14 @@ class SimilarFinder(object):
         if node is None:
             node = ast.parse(source)
         self._init_using_ast(node, source)
-        self.wildcards = {}
-        for wildcard in [wildcards.DefaultWildcard()]:
-            self.wildcards[wildcard.get_name()] = wildcard
+
+    def _does_match(self, node, name):
+        arg = ''
+        # XXX: for backword compatibility
+        if not name.startswith('?'):
+            arg = 'exact'
+        suspect = wildcards.Suspect(None, node, name)
+        return wildcards.DefaultWildcard().matches(suspect, arg)
 
     def _init_using_ast(self, node, source):
         self.source = source
@@ -41,8 +46,8 @@ class SimilarFinder(object):
     def _get_matched_asts(self, code):
         if code not in self._matched_asts:
             wanted = self._create_pattern(code)
-            matches = _ASTMatcher(None, self.ast, wanted,
-                                  self.wildcards).find_matches()
+            matches = _ASTMatcher(self.ast, wanted,
+                                  self._does_match).find_matches()
             self._matched_asts[code] = matches
         return self._matched_asts[code]
 
@@ -102,11 +107,14 @@ class CheckingFinder(SimilarFinder):
         The `check_all` is `False` missing names are ignored.
 
         """
-        super(CheckingFinder, self).__init__(
-            pymodule.source_code, pymodule.get_ast())
+        super(CheckingFinder, self).__init__(pymodule.source_code,
+                                             pymodule.get_ast())
         self.pymodule = pymodule
         self.checks = checks
         self.check_all = check_all
+        self.wildcards = {}
+        for wildcard in [wildcards.DefaultWildcard()]:
+            self.wildcards[wildcard.get_name()] = wildcard
 
     def get_matches(self, code, start=0, end=None):
         if end is None:
@@ -135,6 +143,14 @@ class CheckingFinder(SimilarFinder):
             else:
                 yield match
 
+    def _does_match(self, node, name):
+        arg = ''
+        # XXX: for backword compatibility
+        if not name.startswith('?'):
+            arg = 'exact'
+        suspect = wildcards.Suspect(None, node, name)
+        return wildcards.DefaultWildcard().matches(suspect, arg)
+
     def _same_pyobject(self, expected, pyobject):
         return expected == pyobject
 
@@ -162,18 +178,17 @@ class CheckingFinder(SimilarFinder):
 
 class _ASTMatcher(object):
 
-    def __init__(self, pymodule, body, pattern, wildcards):
+    def __init__(self, body, pattern, does_match):
         """Searches the given pattern in the body AST.
 
         body is an AST node and pattern can be either an AST node or
         a list of ASTs nodes
         """
-        self.pymodule = pymodule
         self.body = body
         self.pattern = pattern
         self.matches = None
         self.ropevar = _RopeVariable()
-        self.wildcards = wildcards
+        self.matches_callback = does_match
 
     def find_matches(self):
         if self.matches is None:
@@ -208,9 +223,9 @@ class _ASTMatcher(object):
     def _match_nodes(self, expected, node, mapping):
         if isinstance(expected, ast.Name):
            if self.ropevar.is_normal(expected.id):
-               return self._match_normal_var(expected, node, mapping)
+               return self._match_wildcard(expected, node, mapping)
            if self.ropevar.is_any(expected.id):
-               return self._match_any_var(expected, node, mapping)
+               return self._match_wildcard(expected, node, mapping)
         if not isinstance(expected, ast.AST):
             return expected == node
         if expected.__class__ != node.__class__:
@@ -250,22 +265,10 @@ class _ASTMatcher(object):
                 return False
         return True
 
-    def _match_normal_var(self, node1, node2, mapping):
+    def _match_wildcard(self, node1, node2, mapping):
         name = self.ropevar.get_base(node1.id)
         if name not in mapping:
-            suspect = wildcards.Suspect(self.pymodule, node2, name)
-            if self.wildcards['default'].matches(suspect, 'exact'):
-                mapping[name] = node2
-                return True
-            return False
-        else:
-            return self._match_nodes(mapping[name], node2, {})
-
-    def _match_any_var(self, node1, node2, mapping):
-        name = self.ropevar.get_base(node1.id)
-        if name not in mapping:
-            suspect = wildcards.Suspect(self.pymodule, node2, name)
-            if self.wildcards['default'].matches(suspect):
+            if self.matches_callback(node2, name):
                 mapping[name] = node2
                 return True
             return False
