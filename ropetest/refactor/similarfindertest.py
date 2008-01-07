@@ -161,38 +161,38 @@ class CheckingFinderTest(unittest.TestCase):
         self.mod1.write('')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
         finder = similarfinder.CheckingFinder(pymodule)
-        self.assertEquals([], list(finder.get_matches('10', args={})))
+        self.assertEquals([], list(finder.get_matches('10', {})))
 
     def test_simple_finding(self):
         self.mod1.write('class A(object):\n    pass\na = A()\n')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(pymodule, {})
-        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        finder = similarfinder.CheckingFinder(pymodule)
+        result = list(finder.get_matches('${?anything} = ${?A}()', {}))
         self.assertEquals(1, len(result))
 
-    def test_finding2(self):
+    def test_not_matching_when_the_name_does_not_match(self):
         self.mod1.write('class A(object):\n    pass\na = list()\n')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(
-            pymodule, {'?A': pymodule.get_attribute('A')})
-        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        finder = similarfinder.CheckingFinder(pymodule)
+        result = list(finder.get_matches('${anything} = ${C}()',
+                                         {'C': 'name=mod1.A'}))
         self.assertEquals(0, len(result))
 
     def test_not_matching_unknowns_finding(self):
         self.mod1.write('class A(object):\n    pass\na = unknown()\n')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(
-            pymodule, {'?A': pymodule.get_attribute('A')})
-        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        finder = similarfinder.CheckingFinder(pymodule)
+        result = list(finder.get_matches('${anything} = ${C}()',
+                                         {'C': 'name=mod1.A'}))
         self.assertEquals(0, len(result))
 
     def test_finding_and_matching_pyobjects(self):
         source = 'class A(object):\n    pass\nNewA = A\na = NewA()\n'
         self.mod1.write(source)
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(
-            pymodule, {'?A.object': pymodule.get_attribute('A').get_object()})
-        result = list(finder.get_matches('${?anything} = ${?A}()'))
+        finder = similarfinder.CheckingFinder(pymodule)
+        result = list(finder.get_matches('${anything} = ${A}()',
+                                         {'A': 'object=mod1.A'}))
         self.assertEquals(1, len(result))
         start = source.rindex('a =')
         self.assertEquals((start, len(source) - 1), result[0].get_region())
@@ -202,9 +202,9 @@ class CheckingFinderTest(unittest.TestCase):
                  'a = A()\nb = a.f()\n'
         self.mod1.write(source)
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(
-            pymodule, {'?inst.type': pymodule.get_attribute('A').get_object()})
-        result = list(finder.get_matches('${?anything} = ${?inst}.f()'))
+        finder = similarfinder.CheckingFinder(pymodule)
+        result = list(finder.get_matches('${anything} = ${inst}.f()',
+                                         {'inst': 'type=mod1.A'}))
         self.assertEquals(1, len(result))
         start = source.rindex('b')
         self.assertEquals((start, len(source) - 1), result[0].get_region())
@@ -212,9 +212,9 @@ class CheckingFinderTest(unittest.TestCase):
     def test_checking_the_type_of_an_ass_name_node(self):
         self.mod1.write('class A(object):\n    pass\nan_a = A()\n')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(
-            pymodule, {'?a.type':pymodule.get_attribute('A').get_object()})
-        result = list(finder.get_matches('${?a} = ${?assigned}'))
+        finder = similarfinder.CheckingFinder(pymodule)
+        result = list(finder.get_matches('${a} = ${assigned}',
+                                         {'a': 'type=mod1.A'}))
         self.assertEquals(1, len(result))
 
     def test_checking_equality_of_imported_pynames(self):
@@ -223,18 +223,19 @@ class CheckingFinderTest(unittest.TestCase):
         self.mod1.write('from mod2 import A\nan_a = A()\n')
         pymod2 = self.pycore.resource_to_pyobject(mod2)
         pymod1 = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(
-            pymod1, {'?a_class':pymod2.get_attribute('A')})
-        result = list(finder.get_matches('${?a_class}()'))
+        finder = similarfinder.CheckingFinder(pymod1)
+        result = list(finder.get_matches('${a_class}()',
+                                         {'a_class': 'name=mod2.A'}))
         self.assertEquals(1, len(result))
 
+    # XXX: complain if an arg is passed to an unknown wildcard name
     @testutils.assert_raises(similarfinder.BadNameInCheckError)
-    def test_reporting_exception_when_bad_checks_are_given(self):
+    def xxx_test_reporting_exception_when_bad_checks_are_given(self):
         self.mod1.write('1\n')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(
-            pymodule, {'does_not_exist': pymodule})
-        result = list(finder.get_matches('${?a}'))
+        finder = similarfinder.CheckingFinder(pymodule)
+        result = list(finder.get_matches('${?a}', {'does_not_exist': 'mod1'}))
+
 
 class TemplateTest(unittest.TestCase):
 

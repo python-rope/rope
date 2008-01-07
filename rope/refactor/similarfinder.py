@@ -28,7 +28,7 @@ class CheckingFinder(object):
 
     """
 
-    def __init__(self, pymodule, checks={}, wildcards=None, check_all=True):
+    def __init__(self, pymodule, wildcards=None, check_all=True):
         """Construct a CheckingFinder
 
         The `check_all` is `False` missing names are ignored.
@@ -38,42 +38,20 @@ class CheckingFinder(object):
         self.raw_finder = RawSimilarFinder(
             pymodule.source_code, pymodule.get_ast(), self._does_match)
         self.pymodule = pymodule
-        self.checks = checks
         self.check_all = check_all
         if wildcards is None:
             self.wildcards = {}
-            for wildcard in [rope.refactor.wildcards.DefaultWildcard()]:
+            for wildcard in [rope.refactor.wildcards.
+                             DefaultWildcard(pymodule.pycore.project)]:
                 self.wildcards[wildcard.get_name()] = wildcard
         else:
             self.wildcards = wildcards
 
     def get_matches(self, code, args={}, start=0, end=None):
-        # XXX: args is a temporary attribute; remove it
         self.args = args
         if end is None:
             end = len(self.source)
-        for match in self.raw_finder.get_matches(code, start=start, end=end):
-            matched = True
-            for check, expected in self.checks.items():
-                name, kind = self._split_name(check)
-                node = match.get_ast(name)
-                if node is None:
-                    if self.check_all:
-                        raise BadNameInCheckError('Unknown name <%s>' % name)
-                    else:
-                        continue
-                pyname = self._evaluate_node(node)
-                if kind == 'name':
-                    if not self._same_pyname(expected, pyname):
-                        break
-                else:
-                    pyobject = pyname.get_object()
-                    if kind == 'type':
-                        pyobject = pyobject.get_type()
-                    if not self._same_pyobject(expected, pyobject):
-                        break
-            else:
-                yield match
+        return self.raw_finder.get_matches(code, start=start, end=end)
 
     def get_match_regions(self, *args, **kwds):
         for match in self.get_matches(*args, **kwds):
@@ -82,31 +60,7 @@ class CheckingFinder(object):
     def _does_match(self, node, name):
         arg = self.args.get(name, '')
         suspect = wildcards.Suspect(self.pymodule, node, name)
-        return wildcards.DefaultWildcard().matches(suspect, arg)
-
-    def _same_pyobject(self, expected, pyobject):
-        return expected == pyobject
-
-    def _same_pyname(self, expected, pyname):
-        return occurrences.same_pyname(expected, pyname)
-
-    def _split_name(self, name):
-        parts = name.split('.')
-        expression, kind = parts[0], parts[-1]
-        if len(parts) == 1:
-            kind = 'name'
-        return expression, kind
-
-    def _evaluate_node(self, node):
-        scope = self.pymodule.get_scope().get_inner_scope_for_line(node.lineno)
-        expression = node
-        if isinstance(expression, ast.Name) and \
-           isinstance(expression.ctx, ast.Store):
-            start, end = patchedast.node_region(expression)
-            text = self.pymodule.source_code[start:end]
-            return evaluate.get_string_result(scope, text)
-        else:
-            return evaluate.get_statement_result(scope, expression)
+        return self.wildcards['default'].matches(suspect, arg)
 
 
 class RawSimilarFinder(object):
