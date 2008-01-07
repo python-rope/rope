@@ -12,43 +12,46 @@ class SimilarFinderTest(unittest.TestCase):
     def tearDown(self):
         super(SimilarFinderTest, self).tearDown()
 
+    def _create_finder(self, source):
+        return similarfinder.RawSimilarFinder(source)
+
     def test_trivial_case(self):
-        finder = similarfinder.SimilarFinder('')
+        finder = self._create_finder('')
         self.assertEquals([], list(finder.get_match_regions('10')))
 
     def test_constant_integer(self):
         source = 'a = 10\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = [(source.index('10'), source.index('10') + 2)]
         self.assertEquals(result, list(finder.get_match_regions('10')))
 
     def test_simple_addition(self):
         source = 'a = 1 + 2\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = [(source.index('1'), source.index('2') + 1)]
         self.assertEquals(result, list(finder.get_match_regions('1 + 2')))
 
     def test_simple_addition2(self):
         source = 'a = 1 +2\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = [(source.index('1'), source.index('2') + 1)]
         self.assertEquals(result, list(finder.get_match_regions('1 + 2')))
 
     def test_simple_assign_statements(self):
         source = 'a = 1 + 2\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         self.assertEquals([(0, len(source) - 1)],
                           list(finder.get_match_regions('a = 1 + 2')))
 
     def test_simple_multiline_statements(self):
         source = 'a = 1\nb = 2\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         self.assertEquals([(0, len(source) - 1)],
                           list(finder.get_match_regions('a = 1\nb = 2')))
 
     def test_multiple_matches(self):
         source = 'a = 1 + 1\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_match_regions('1'))
         self.assertEquals(2, len(result))
         start1 = source.index('1')
@@ -58,82 +61,82 @@ class SimilarFinderTest(unittest.TestCase):
 
     def test_multiple_matches2(self):
         source = 'a = 1\nb = 2\n\na = 1\nb = 2\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         self.assertEquals(
             2, len(list(finder.get_match_regions('a = 1\nb = 2'))))
 
     def test_restricting_the_region_to_search(self):
         source = '1\n\n1\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_match_regions('1', start=2))
         start = source.rfind('1')
         self.assertEquals([(start, start + 1)], result)
 
     def test_matching_basic_patterns(self):
         source = 'b = a\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_match_regions('${a}'))
         start = source.rfind('a')
         self.assertEquals([(start, start + 1)], result)
 
     def test_match_get_ast(self):
         source = 'b = a\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('${a}'))
         self.assertEquals('a', result[0].get_ast('a').id)
 
     def test_match_get_ast_for_statements(self):
         source = 'b = a\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('b = ${a}'))
         self.assertEquals('a', result[0].get_ast('a').id)
 
     def test_matching_multiple_patterns(self):
         source = 'c = a + b\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('${a} + ${b}'))
         self.assertEquals('a', result[0].get_ast('a').id)
         self.assertEquals('b', result[0].get_ast('b').id)
 
     def test_matching_any_patterns(self):
         source = 'b = a\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('b = ${?x}'))
         self.assertEquals('a', result[0].get_ast('?x').id)
 
     def test_matching_any_patterns_repeating(self):
         source = 'b = 1 + 1\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('b = ${?x} + ${?x}'))
         self.assertEquals(1, result[0].get_ast('?x').n)
 
     def test_matching_any_patterns_not_matching_different_nodes(self):
         source = 'b = 1 + 2\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('b = ${?x} + ${?x}'))
         self.assertEquals(0, len(result))
 
     def test_matching_normal_names_and_assname(self):
         source = 'a = 1\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('${a} = 1'))
         self.assertEquals('a', result[0].get_ast('a').id)
 
     def test_matching_normal_names_and_assname2(self):
         source = 'a = 1\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('${a}'))
         self.assertEquals(1, len(result))
 
     def test_matching_normal_names_and_attributes(self):
         source = 'x.a = 1\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         result = list(finder.get_matches('${a} = 1'))
         self.assertEquals(0, len(result))
 
     def test_functions_not_matching_when_only_first_parameters(self):
         source = 'f(1, 2)\n'
-        finder = similarfinder.SimilarFinder(source)
+        finder = self._create_finder(source)
         self.assertEquals(0, len(list(finder.get_matches('f(1)'))))
 
 
@@ -153,7 +156,7 @@ class CheckingFinderTest(unittest.TestCase):
         self.mod1.write('')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
         finder = similarfinder.CheckingFinder(pymodule, {})
-        self.assertEquals([], list(finder.get_match_regions('10')))
+        self.assertEquals([], list(finder.get_matches('10')))
 
     def test_simple_finding(self):
         self.mod1.write('class A(object):\n    pass\na = A()\n')

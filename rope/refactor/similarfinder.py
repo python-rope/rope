@@ -5,7 +5,104 @@ from rope.base import codeanalyze, evaluate, exceptions, ast
 from rope.refactor import patchedast, sourceutils, occurrences, wildcards
 
 
-class SimilarFinder(object):
+class BadNameInCheckError(exceptions.RefactoringError):
+    pass
+
+
+class CheckingFinder(object):
+    """A `RawSimilarFinder` that can perform object and name checks
+
+    The constructor takes a `checks` dictionary.  This dictionary
+    contains checks to be performed.  As an example::
+
+      pattern: '${?a}.set(${?b})'
+      checks: {'?a.type': type_pyclass}
+
+      pattern: '${?c} = ${?C}())'
+      checks: {'C': c_pyname}
+
+    This means only match expressions as '?a' only if its type is
+    type_pyclass.  Each matched expression is a `PyName`.  By using
+    nothing, `.object` or `.type` you can specify a check.
+
+    """
+
+    def __init__(self, pymodule, checks, check_all=True):
+        """Construct a CheckingFinder
+
+        The `check_all` is `False` missing names are ignored.
+
+        """
+        self.source = pymodule.source_code
+        self.raw_finder = RawSimilarFinder(pymodule.source_code,
+                                           pymodule.get_ast())
+        self.pymodule = pymodule
+        self.checks = checks
+        self.check_all = check_all
+        self.wildcards = {}
+        for wildcard in [wildcards.DefaultWildcard()]:
+            self.wildcards[wildcard.get_name()] = wildcard
+
+    def get_matches(self, code, start=0, end=None):
+        if end is None:
+            end = len(self.source)
+        for match in self.raw_finder.get_matches(code, start=start, end=end):
+            matched = True
+            for check, expected in self.checks.items():
+                name, kind = self._split_name(check)
+                node = match.get_ast(name)
+                if node is None:
+                    if self.check_all:
+                        raise BadNameInCheckError('Unknown name <%s>' % name)
+                    else:
+                        continue
+                pyname = self._evaluate_node(node)
+                if kind == 'name':
+                    if not self._same_pyname(expected, pyname):
+                        break
+                else:
+                    pyobject = pyname.get_object()
+                    if kind == 'type':
+                        pyobject = pyobject.get_type()
+                    if not self._same_pyobject(expected, pyobject):
+                        break
+            else:
+                yield match
+
+    def _does_match(self, node, name):
+        arg = ''
+        # XXX: for backword compatibility
+        if not name.startswith('?'):
+            arg = 'exact'
+        suspect = wildcards.Suspect(None, node, name)
+        return wildcards.DefaultWildcard().matches(suspect, arg)
+
+    def _same_pyobject(self, expected, pyobject):
+        return expected == pyobject
+
+    def _same_pyname(self, expected, pyname):
+        return occurrences.same_pyname(expected, pyname)
+
+    def _split_name(self, name):
+        parts = name.split('.')
+        expression, kind = parts[0], parts[-1]
+        if len(parts) == 1:
+            kind = 'name'
+        return expression, kind
+
+    def _evaluate_node(self, node):
+        scope = self.pymodule.get_scope().get_inner_scope_for_line(node.lineno)
+        expression = node
+        if isinstance(expression, ast.Name) and \
+           isinstance(expression.ctx, ast.Store):
+            start, end = patchedast.node_region(expression)
+            text = self.pymodule.source_code[start:end]
+            return evaluate.get_string_result(scope, text)
+        else:
+            return evaluate.get_statement_result(scope, expression)
+
+
+class RawSimilarFinder(object):
     """A class for finding similar expressions and statements"""
 
     def __init__(self, source, node=None):
@@ -77,103 +174,6 @@ class SimilarFinder(object):
             else:
                 mapping[name] = ropevar.get_normal(name)
         return template.substitute(mapping)
-
-
-class BadNameInCheckError(exceptions.RefactoringError):
-    pass
-
-
-class CheckingFinder(SimilarFinder):
-    """A `SimilarFinder` that can perform object and name checks
-
-    The constructor takes a `checks` dictionary.  This dictionary
-    contains checks to be performed.  As an example::
-
-      pattern: '${?a}.set(${?b})'
-      checks: {'?a.type': type_pyclass}
-
-      pattern: '${?c} = ${?C}())'
-      checks: {'C': c_pyname}
-
-    This means only match expressions as '?a' only if its type is
-    type_pyclass.  Each matched expression is a `PyName`.  By using
-    nothing, `.object` or `.type` you can specify a check.
-
-    """
-
-    def __init__(self, pymodule, checks, check_all=True):
-        """Construct a CheckingFinder
-
-        The `check_all` is `False` missing names are ignored.
-
-        """
-        super(CheckingFinder, self).__init__(pymodule.source_code,
-                                             pymodule.get_ast())
-        self.pymodule = pymodule
-        self.checks = checks
-        self.check_all = check_all
-        self.wildcards = {}
-        for wildcard in [wildcards.DefaultWildcard()]:
-            self.wildcards[wildcard.get_name()] = wildcard
-
-    def get_matches(self, code, start=0, end=None):
-        if end is None:
-            end = len(self.source)
-        for match in SimilarFinder.get_matches(self, code,
-                                               start=start, end=end):
-            matched = True
-            for check, expected in self.checks.items():
-                name, kind = self._split_name(check)
-                node = match.get_ast(name)
-                if node is None:
-                    if self.check_all:
-                        raise BadNameInCheckError('Unknown name <%s>' % name)
-                    else:
-                        continue
-                pyname = self._evaluate_node(node)
-                if kind == 'name':
-                    if not self._same_pyname(expected, pyname):
-                        break
-                else:
-                    pyobject = pyname.get_object()
-                    if kind == 'type':
-                        pyobject = pyobject.get_type()
-                    if not self._same_pyobject(expected, pyobject):
-                        break
-            else:
-                yield match
-
-    def _does_match(self, node, name):
-        arg = ''
-        # XXX: for backword compatibility
-        if not name.startswith('?'):
-            arg = 'exact'
-        suspect = wildcards.Suspect(None, node, name)
-        return wildcards.DefaultWildcard().matches(suspect, arg)
-
-    def _same_pyobject(self, expected, pyobject):
-        return expected == pyobject
-
-    def _same_pyname(self, expected, pyname):
-        return occurrences.same_pyname(expected, pyname)
-
-    def _split_name(self, name):
-        parts = name.split('.')
-        expression, kind = parts[0], parts[-1]
-        if len(parts) == 1:
-            kind = 'name'
-        return expression, kind
-
-    def _evaluate_node(self, node):
-        scope = self.pymodule.get_scope().get_inner_scope_for_line(node.lineno)
-        expression = node
-        if isinstance(expression, ast.Name) and \
-           isinstance(expression.ctx, ast.Store):
-            start, end = patchedast.node_region(expression)
-            text = self.pymodule.source_code[start:end]
-            return evaluate.get_string_result(scope, text)
-        else:
-            return evaluate.get_statement_result(scope, expression)
 
 
 class _ASTMatcher(object):
@@ -379,7 +379,7 @@ class _RopeVariable(object):
 def make_pattern(code, variables):
     variables = set(variables)
     collector = sourceutils.ChangeCollector(code)
-    finder = SimilarFinder(code)
+    finder = RawSimilarFinder(code)
     for variable in variables:
         for match in finder.get_matches('${%s}' % variable):
             start, end = match.get_region()
