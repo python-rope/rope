@@ -22,7 +22,7 @@ class RenameRefactoringTest(unittest.TestCase):
         testmod = testutils.create_module(self.project, 'testmod')
         testmod.write(source_code)
         changes = Rename(self.project, testmod, offset).\
-                  get_changes(new_name, in_file=True)
+            get_changes(new_name, in_file=True)
         self.project.do(changes)
         return testmod.read()
 
@@ -530,6 +530,21 @@ class RenameRefactoringTest(unittest.TestCase):
                'def f():\n    a_var = 1\n    print(a_var)\n'
         refactored = self._local_rename(code, code.index('a_var') + 1, 'new_var')
         self.assertEquals(code.replace('a_var', 'new_var', 2), refactored)
+
+    def test_dos_line_ending_and_renaming(self):
+        code = '\r\na = 1\r\n\r\nprint(2 + a + 2)\r\n'
+        offset = code.replace('\r\n', '\n').rindex('a')
+        refactored = self._local_rename(code, offset, 'b')
+        self.assertEquals('\nb = 1\n\nprint(2 + b + 2)\n',
+                          refactored.replace('\r\n', '\n'))
+
+    def test_multi_byte_strs_and_renaming(self):
+        s = u'{LATIN SMALL LETTER I WITH DIAERESIS}' * 4
+        code = u'# -*- coding: utf-8 -*-\n# ' + s + \
+                '\na = 1\nprint(2 + a + 2)\n'
+        refactored = self._local_rename(code, code.rindex('a'), 'b')
+        self.assertEquals(u'# -*- coding: utf-8 -*-\n# ' + s +
+                          '\nb = 1\nprint(2 + b + 2)\n', refactored)
 
 
 class ChangeOccurrencesTest(unittest.TestCase):
