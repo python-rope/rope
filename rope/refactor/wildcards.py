@@ -1,4 +1,4 @@
-from rope.base import ast, evaluate
+from rope.base import ast, evaluate, builtins
 from rope.refactor import patchedast, occurrences
 
 

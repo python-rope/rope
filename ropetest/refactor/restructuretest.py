@@ -53,11 +53,9 @@ class RestructureTest(unittest.TestCase):
 
     def test_replacing_patterns_with_checks(self):
         self.mod.write('def f(p=1):\n    return p\ng = f\ng()\n')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
-        f_pyobject = pymod.get_attribute('f').get_object()
-        refactoring = restructure.Restructure(
-            self.project, '${f}()', '${f}(2)')
-        self.project.do(refactoring.get_changes({'f.object':f_pyobject}))
+        refactoring = restructure.Restructure(self.project,
+                                              '${f}()', '${f}(2)')
+        self.project.do(refactoring.get_changes(args={'f': 'object=mod.f'}))
         self.assertEquals('def f(p=1):\n    return p\ng = f\ng(2)\n',
                           self.mod.read())
 
@@ -77,10 +75,9 @@ class RestructureTest(unittest.TestCase):
 
     def test_using_make_checks(self):
         self.mod.write('def f(p=1):\n    return p\ng = f\ng()\n')
-        refactoring = restructure.Restructure(
-            self.project, '${f}()', '${f}(2)')
-        checks = refactoring.make_checks({'f.object': 'mod.f'})
-        self.project.do(refactoring.get_changes(checks))
+        refactoring = restructure.Restructure(self.project,
+                                              '${f}()', '${f}(2)')
+        self.project.do(refactoring.get_changes(args={'f': 'object=mod.f'}))
         self.assertEquals('def f(p=1):\n    return p\ng = f\ng(2)\n',
                           self.mod.read())
 
@@ -88,8 +85,8 @@ class RestructureTest(unittest.TestCase):
         self.mod.write('a = 1 + 1\n')
         refactoring = restructure.Restructure(
             self.project, '${i} + ${i}', '${i} * 2')
-        checks = refactoring.make_checks({'i.type': '__builtin__.int'})
-        self.project.do(refactoring.get_changes(checks))
+        self.project.do(refactoring.get_changes(
+                args={'i': 'type=__builtin__.int'}))
         self.assertEquals('a = 1 * 2\n', self.mod.read())
 
     def test_auto_indentation_when_no_indentation(self):
