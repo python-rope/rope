@@ -126,10 +126,7 @@ class RawSimilarFinder(object):
         template = CodeTemplate(expression)
         mapping = {}
         for name in template.get_names():
-            if name.startswith('?'):
-                mapping[name] = ropevar.get_any(name)
-            else:
-                mapping[name] = ropevar.get_normal(name)
+            mapping[name] = ropevar.get_var(name)
         return template.substitute(mapping)
 
 
@@ -179,8 +176,7 @@ class _ASTMatcher(object):
 
     def _match_nodes(self, expected, node, mapping):
         if isinstance(expected, ast.Name):
-           if self.ropevar.is_normal(expected.id) or \
-                   self.ropevar.is_any(expected.id):
+           if self.ropevar.is_var(expected.id):
                return self._match_wildcard(expected, node, mapping)
         if not isinstance(expected, ast.AST):
             return expected == node
@@ -313,23 +309,32 @@ class _RopeVariable(object):
     _normal_prefix = '__rope__variable_normal_'
     _any_prefix = '__rope__variable_any_'
 
-    def get_normal(self, name):
-        return self._normal_prefix + name
+    def get_var(self, name):
+        if name.startswith('?'):
+            return self._get_any(name)
+        else:
+            return self._get_normal(name)
 
-    def get_any(self, name):
-        return self._any_prefix + name[1:]
-
-    def is_normal(self, name):
-        return name.startswith(self._normal_prefix)
-
-    def is_any(self, name):
-        return name.startswith(self._any_prefix)
+    def is_var(self, name):
+        return self._is_normal(name) or self._is_var(name)
 
     def get_base(self, name):
-        if self.is_normal(name):
+        if self._is_normal(name):
             return name[len(self._normal_prefix):]
-        if self.is_any(name):
+        if self._is_var(name):
             return '?' + name[len(self._any_prefix):]
+
+    def _get_normal(self, name):
+        return self._normal_prefix + name
+
+    def _get_any(self, name):
+        return self._any_prefix + name[1:]
+
+    def _is_normal(self, name):
+        return name.startswith(self._normal_prefix)
+
+    def _is_var(self, name):
+        return name.startswith(self._any_prefix)
 
 
 def make_pattern(code, variables):
