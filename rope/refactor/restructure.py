@@ -24,13 +24,7 @@ class Restructure(object):
 
     def get_changes(self, checks=None, imports=None,
                     task_handle=taskhandle.NullTaskHandle()):
-        """Get the changes needed by this restructuring
-        
-        `checks` is the checks that should hold for changing an
-        occurrence.  `imports` are the imports that should be added
-        modules that have at least one occurrence.
-
-        """
+        """Get the changes needed by this restructuring"""
         if checks is not None:
             warnings.warn(
                 'The use of checks parameter is deprecated; '
@@ -51,7 +45,8 @@ class Restructure(object):
         for resource in files:
             job_set.started_job('Working on <%s>' % resource.path)
             pymodule = self.pycore.resource_to_pyobject(resource)
-            finder = similarfinder.CheckingFinder(pymodule)
+            finder = similarfinder.SimilarFinder(pymodule,
+                                                  wildcards=self.wildcards)
             computer = _ChangeComputer(pymodule, self.template,
                                        list(finder.get_matches(self.pattern,
                                                                self.args)))

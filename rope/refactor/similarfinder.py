@@ -11,26 +11,11 @@ class BadNameInCheckError(exceptions.RefactoringError):
     pass
 
 
-class CheckingFinder(object):
-    """A `RawSimilarFinder` that can perform object and name checks
-
-    The constructor takes a `checks` dictionary.  This dictionary
-    contains checks to be performed.  As an example::
-
-      pattern: '${?a}.set(${?b})'
-      checks: {'?a.type': type_pyclass}
-
-      pattern: '${?c} = ${?C}())'
-      checks: {'C': c_pyname}
-
-    This means only match expressions as '?a' only if its type is
-    type_pyclass.  Each matched expression is a `PyName`.  By using
-    nothing, `.object` or `.type` you can specify a check.
-
-    """
+class SimilarFinder(object):
+    """`SimilarFinder` can be used to find similar pieces of code"""
 
     def __init__(self, pymodule, wildcards=None):
-        """Construct a CheckingFinder"""
+        """Construct a SimilarFinder"""
         self.source = pymodule.source_code
         self.raw_finder = RawSimilarFinder(
             pymodule.source_code, pymodule.get_ast(), self._does_match)
