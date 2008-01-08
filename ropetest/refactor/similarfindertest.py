@@ -228,14 +228,6 @@ class CheckingFinderTest(unittest.TestCase):
                                          {'a_class': 'name=mod2.A'}))
         self.assertEquals(1, len(result))
 
-    # XXX: complain if an arg is passed to an unknown wildcard name
-    @testutils.assert_raises(similarfinder.BadNameInCheckError)
-    def xxx_test_reporting_exception_when_bad_checks_are_given(self):
-        self.mod1.write('1\n')
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
-        finder = similarfinder.CheckingFinder(pymodule)
-        result = list(finder.get_matches('${?a}', {'does_not_exist': 'mod1'}))
-
 
 class TemplateTest(unittest.TestCase):
 

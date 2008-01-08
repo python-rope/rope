@@ -29,17 +29,12 @@ class CheckingFinder(object):
 
     """
 
-    def __init__(self, pymodule, wildcards=None, check_all=True):
-        """Construct a CheckingFinder
-
-        The `check_all` is `False` missing names are ignored.
-
-        """
+    def __init__(self, pymodule, wildcards=None):
+        """Construct a CheckingFinder"""
         self.source = pymodule.source_code
         self.raw_finder = RawSimilarFinder(
             pymodule.source_code, pymodule.get_ast(), self._does_match)
         self.pymodule = pymodule
-        self.check_all = check_all
         if wildcards is None:
             self.wildcards = {}
             for wildcard in [rope.refactor.wildcards.

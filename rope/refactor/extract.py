@@ -210,8 +210,7 @@ class _ExtractPerformer(object):
 
     def _find_matches(self, collector):
         regions = self._where_to_search()
-        finder = similarfinder.CheckingFinder(self.info.pymodule,
-                                              check_all=False)
+        finder = similarfinder.CheckingFinder(self.info.pymodule)
         matches = []
         for start, end in regions:
             matches.extend((finder.get_matches(collector.body_pattern,
