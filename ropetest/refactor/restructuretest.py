@@ -31,10 +31,10 @@ class RestructureTest(unittest.TestCase):
         self.assertEquals('a = int(1)\nb = 1\n', self.mod.read())
 
     def test_replacing_patterns_with_normal_names(self):
-        refactoring = restructure.Restructure(self.project,
-                                              '${a} = 1', '${a} = int(1)')
+        refactoring = restructure.Restructure(
+            self.project, '${a} = 1', '${a} = int(1)', args={'a': 'exact'})
         self.mod.write('a = 1\nb = 1\n')
-        self.project.do(refactoring.get_changes(args={'a': 'exact'}))
+        self.project.do(refactoring.get_changes())
         self.assertEquals('a = int(1)\nb = 1\n', self.mod.read())
 
     def test_replacing_patterns_with_any_names(self):
@@ -53,9 +53,9 @@ class RestructureTest(unittest.TestCase):
 
     def test_replacing_patterns_with_checks(self):
         self.mod.write('def f(p=1):\n    return p\ng = f\ng()\n')
-        refactoring = restructure.Restructure(self.project,
-                                              '${f}()', '${f}(2)')
-        self.project.do(refactoring.get_changes(args={'f': 'object=mod.f'}))
+        refactoring = restructure.Restructure(
+            self.project, '${f}()', '${f}(2)', args={'f': 'object=mod.f'})
+        self.project.do(refactoring.get_changes())
         self.assertEquals('def f(p=1):\n    return p\ng = f\ng(2)\n',
                           self.mod.read())
 
@@ -75,18 +75,18 @@ class RestructureTest(unittest.TestCase):
 
     def test_using_make_checks(self):
         self.mod.write('def f(p=1):\n    return p\ng = f\ng()\n')
-        refactoring = restructure.Restructure(self.project,
-                                              '${f}()', '${f}(2)')
-        self.project.do(refactoring.get_changes(args={'f': 'object=mod.f'}))
+        refactoring = restructure.Restructure(
+            self.project, '${f}()', '${f}(2)', args={'f': 'object=mod.f'})
+        self.project.do(refactoring.get_changes())
         self.assertEquals('def f(p=1):\n    return p\ng = f\ng(2)\n',
                           self.mod.read())
 
     def test_using_make_checking_builtin_types(self):
         self.mod.write('a = 1 + 1\n')
         refactoring = restructure.Restructure(
-            self.project, '${i} + ${i}', '${i} * 2')
-        self.project.do(refactoring.get_changes(
-                args={'i': 'type=__builtin__.int'}))
+            self.project, '${i} + ${i}', '${i} * 2',
+            args={'i': 'type=__builtin__.int'})
+        self.project.do(refactoring.get_changes())
         self.assertEquals('a = 1 * 2\n', self.mod.read())
 
     def test_auto_indentation_when_no_indentation(self):
@@ -114,16 +114,18 @@ class RestructureTest(unittest.TestCase):
     def test_importing_names(self):
         self.mod.write('a = 2\n')
         refactoring = restructure.Restructure(
-            self.project, '${a} = 2', '${a} = myconsts.two')
-        self.project.do(refactoring.get_changes(imports=['import myconsts']))
+            self.project, '${a} = 2', '${a} = myconsts.two',
+            imports=['import myconsts'])
+        self.project.do(refactoring.get_changes())
         self.assertEquals('import myconsts\na = myconsts.two\n',
                           self.mod.read())
 
     def test_not_importing_names_when_there_are_no_changes(self):
         self.mod.write('a = True\n')
         refactoring = restructure.Restructure(
-            self.project, '${a} = 2', '${a} = myconsts.two')
-        self.project.do(refactoring.get_changes(imports=['import myconsts']))
+            self.project, '${a} = 2', '${a} = myconsts.two',
+            imports=['import myconsts'])
+        self.project.do(refactoring.get_changes())
         self.assertEquals('a = True\n', self.mod.read())
 
     def test_handling_containing_matches(self):

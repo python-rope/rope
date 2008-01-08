@@ -8,13 +8,21 @@ from rope.refactor.importutils import module_imports
 class Restructure(object):
     """A class to perform python restructurings"""
 
-    def __init__(self, project, pattern, goal):
+    def __init__(self, project, pattern, goal, args=None,
+                 imports=None, wildcards=None):
         self.pycore = project.pycore
         self.pattern = pattern
         self.goal = goal
+        self.args = args
+        if self.args is None:
+            self.args = {}
+        self.imports = imports
+        if self.imports is None:
+            self.imports = []
+        self.wildcards = wildcards
         self.template = similarfinder.CodeTemplate(self.goal)
 
-    def get_changes(self, checks=None, imports=[], args=None,
+    def get_changes(self, checks=None, imports=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed by this restructuring
         
@@ -23,14 +31,19 @@ class Restructure(object):
         modules that have at least one occurrence.
 
         """
-        if args is None:
-            args = {}
         if checks is not None:
             warnings.warn(
                 'The use of checks parameter is deprecated; '
-                'use args instead.', DeprecationWarning, stacklevel=2)
+                'use the args parameter of the constructor instead.',
+                DeprecationWarning, stacklevel=2)
             for name, value in checks.items():
-                args[name] = similarfinder._pydefined_to_str(value)
+                self.args[name] = similarfinder._pydefined_to_str(value)
+        if imports is not None:
+            warnings.warn(
+                'The use of imports parameter is deprecated; '
+                'use imports parameter of the constructor, instead.',
+                DeprecationWarning, stacklevel=2)
+            self.imports = imports
         changes = change.ChangeSet('Restructuring <%s> to <%s>' %
                                    (self.pattern, self.goal))
         files = self.pycore.get_python_files()
@@ -41,10 +54,10 @@ class Restructure(object):
             finder = similarfinder.CheckingFinder(pymodule)
             computer = _ChangeComputer(pymodule, self.template,
                                        list(finder.get_matches(self.pattern,
-                                                               args)))
+                                                               self.args)))
             result = computer.get_changed()
             if result is not None:
-                imported_source = self._add_imports(resource, result, imports)
+                imported_source = self._add_imports(resource, result, self.imports)
                 changes.add_change(change.ChangeContents(resource,
                                                          imported_source))
             job_set.finished_job()
