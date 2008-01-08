@@ -12,7 +12,12 @@ class BadNameInCheckError(exceptions.RefactoringError):
 
 
 class SimilarFinder(object):
-    """`SimilarFinder` can be used to find similar pieces of code"""
+    """`SimilarFinder` can be used to find similar pieces of code
+
+    See the notes in the `rope.refactor.restructure` module for more
+    info.
+
+    """
 
     def __init__(self, pymodule, wildcards=None):
         """Construct a SimilarFinder"""
@@ -40,8 +45,12 @@ class SimilarFinder(object):
 
     def _does_match(self, node, name):
         arg = self.args.get(name, '')
+        kind = 'default'
+        if isinstance(arg, (tuple, list)):
+            kind = arg[0]
+            arg = arg[1]
         suspect = wildcards.Suspect(self.pymodule, node, name)
-        return self.wildcards['default'].matches(suspect, arg)
+        return self.wildcards[kind].matches(suspect, arg)
 
 
 class RawSimilarFinder(object):

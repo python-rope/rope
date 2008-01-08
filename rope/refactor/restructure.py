@@ -6,7 +6,29 @@ from rope.refactor.importutils import module_imports
 
 
 class Restructure(object):
-    """A class to perform python restructurings"""
+    """A class to perform python restructurings
+
+    A restructuring transforms pieces of code matching `pattern` to
+    `goal`.  In the `pattern` wildcards can appear.  Wildcards match
+    some piece of code based on their kind and arguments that are
+    passed to them through `args`.
+
+    `args` is a dictionary of wildcard names to wildcard arguments.
+    If the argument is a tuple, the first item of the tuple is
+    considered to be the name of the wildcard to use; otherwise the
+    "default" wildcard is used.
+
+    `wildcards` is the list of wildcard types that can appear in
+    `pattern`.  See `rope.refactor.wildcards`.  If a wildcard does not
+    specify its kind (by using a tuple in args), the wildcard named
+    "default" is used.  So there should be a wildcard with "default"
+    name in `wildcards`.
+
+    `imports` is the list of imports that changed modules should
+    import.  Note that rope handles duplicate imports and does not add
+    the import if it already appears.
+
+    """
 
     def __init__(self, project, pattern, goal, args=None,
                  imports=None, wildcards=None):
@@ -46,7 +68,7 @@ class Restructure(object):
             job_set.started_job('Working on <%s>' % resource.path)
             pymodule = self.pycore.resource_to_pyobject(resource)
             finder = similarfinder.SimilarFinder(pymodule,
-                                                  wildcards=self.wildcards)
+                                                 wildcards=self.wildcards)
             computer = _ChangeComputer(pymodule, self.template,
                                        list(finder.get_matches(self.pattern,
                                                                self.args)))
