@@ -3,7 +3,8 @@ import re
 
 import rope.refactor.wildcards
 from rope.base import codeanalyze, evaluate, exceptions, ast
-from rope.refactor import patchedast, sourceutils, occurrences, wildcards
+from rope.refactor import (patchedast, sourceutils, occurrences,
+                           wildcards, importutils)
 
 
 class BadNameInCheckError(exceptions.RefactoringError):
@@ -178,9 +179,8 @@ class _ASTMatcher(object):
 
     def _match_nodes(self, expected, node, mapping):
         if isinstance(expected, ast.Name):
-           if self.ropevar.is_normal(expected.id):
-               return self._match_wildcard(expected, node, mapping)
-           if self.ropevar.is_any(expected.id):
+           if self.ropevar.is_normal(expected.id) or \
+                   self.ropevar.is_any(expected.id):
                return self._match_wildcard(expected, node, mapping)
         if not isinstance(expected, ast.AST):
             return expected == node
@@ -335,10 +335,21 @@ class _RopeVariable(object):
 def make_pattern(code, variables):
     variables = set(variables)
     collector = sourceutils.ChangeCollector(code)
-    finder = RawSimilarFinder(code)
+    def does_match(node, name):
+        return isinstance(node, ast.Name) and node.id == name
+    finder = RawSimilarFinder(code, does_match=does_match)
     for variable in variables:
         for match in finder.get_matches('${%s}' % variable):
             start, end = match.get_region()
-            collector.add_change(start, end, '${?%s}' % variable)
+            collector.add_change(start, end, '${%s}' % variable)
     result = collector.get_changed()
     return result if result is not None else code
+
+
+def _pydefined_to_str(pydefined):
+    address = []
+    while pydefined.parent is not None:
+        address.insert(0, pydefined.get_name())
+        pydefined = pydefined.parent
+    module_name = importutils.get_module_name(pydefined.pycore, pydefined.resource)
+    return '.'.join(module_name.split('.') + address)

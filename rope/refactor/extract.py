@@ -196,7 +196,7 @@ class _ExtractPerformer(object):
                     start, end = patchedast.node_region(match.get_ast(name))
                     mapping[name] = self.info.source[start:end]
                 else:
-                    mapping[name] = name[1:]
+                    mapping[name] = name
             region = match.get_region()
             content.add_change(region[0], region[1],
                                replacement.substitute(mapping))
@@ -211,12 +211,11 @@ class _ExtractPerformer(object):
     def _find_matches(self, collector):
         regions = self._where_to_search()
         finder = similarfinder.CheckingFinder(self.info.pymodule,
-                                              collector.checks,
                                               check_all=False)
         matches = []
         for start, end in regions:
-            matches.extend((finder.get_matches(
-                            collector.body_pattern, start, end)))
+            matches.extend((finder.get_matches(collector.body_pattern,
+                                               collector.checks, start, end)))
         collector.matches = matches
 
     def _where_to_search(self):
@@ -388,8 +387,9 @@ class _ExtractMethodParts(object):
     def get_checks(self):
         if self.info.method and not self.info.make_global:
             if _get_function_kind(self.info.scope) == 'method':
-                return {'?%s.type' % self._get_self_name():
-                        self.info.scope.parent.pyobject}
+                class_name = similarfinder._pydefined_to_str(
+                    self.info.scope.parent.pyobject)
+                return {self._get_self_name(): 'type=' + class_name}
         return {}
 
     def _create_info_collector(self):
