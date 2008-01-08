@@ -106,19 +106,19 @@ class SimilarFinderTest(unittest.TestCase):
     def test_matching_any_patterns(self):
         source = 'b = a\n'
         finder = self._create_finder(source)
-        result = list(finder.get_matches('b = ${?x}'))
-        self.assertEquals('a', result[0].get_ast('?x').id)
+        result = list(finder.get_matches('b = ${x}'))
+        self.assertEquals('a', result[0].get_ast('x').id)
 
     def test_matching_any_patterns_repeating(self):
         source = 'b = 1 + 1\n'
         finder = self._create_finder(source)
-        result = list(finder.get_matches('b = ${?x} + ${?x}'))
-        self.assertEquals(1, result[0].get_ast('?x').n)
+        result = list(finder.get_matches('b = ${x} + ${x}'))
+        self.assertEquals(1, result[0].get_ast('x').n)
 
     def test_matching_any_patterns_not_matching_different_nodes(self):
         source = 'b = 1 + 2\n'
         finder = self._create_finder(source)
-        result = list(finder.get_matches('b = ${?x} + ${?x}'))
+        result = list(finder.get_matches('b = ${x} + ${x}'))
         self.assertEquals(0, len(result))
 
     def test_matching_normal_names_and_assname(self):
@@ -167,7 +167,7 @@ class CheckingFinderTest(unittest.TestCase):
         self.mod1.write('class A(object):\n    pass\na = A()\n')
         pymodule = self.pycore.resource_to_pyobject(self.mod1)
         finder = similarfinder.CheckingFinder(pymodule)
-        result = list(finder.get_matches('${?anything} = ${?A}()', {}))
+        result = list(finder.get_matches('${anything} = ${A}()', {}))
         self.assertEquals(1, len(result))
 
     def test_not_matching_when_the_name_does_not_match(self):
