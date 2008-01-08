@@ -34,7 +34,7 @@ class RestructureTest(unittest.TestCase):
         refactoring = restructure.Restructure(self.project,
                                               '${a} = 1', '${a} = int(1)')
         self.mod.write('a = 1\nb = 1\n')
-        self.project.do(refactoring.get_changes())
+        self.project.do(refactoring.get_changes(args={'a': 'exact'}))
         self.assertEquals('a = int(1)\nb = 1\n', self.mod.read())
 
     def test_replacing_patterns_with_any_names(self):

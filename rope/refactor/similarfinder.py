@@ -2,7 +2,7 @@
 import re
 
 import rope.refactor.wildcards
-from rope.base import codeanalyze, evaluate, exceptions, ast
+from rope.base import codeanalyze, evaluate, exceptions, ast, builtins
 from rope.refactor import (patchedast, sourceutils, occurrences,
                            wildcards, importutils)
 
@@ -348,8 +348,11 @@ def make_pattern(code, variables):
 
 def _pydefined_to_str(pydefined):
     address = []
-    while pydefined.parent is not None:
-        address.insert(0, pydefined.get_name())
-        pydefined = pydefined.parent
-    module_name = importutils.get_module_name(pydefined.pycore, pydefined.resource)
+    if isinstance(pydefined, (builtins.BuiltinClass, builtins.BuiltinFunction)):
+        return '__builtins__.' + pydefined.get_name()
+    else:
+        while pydefined.parent is not None:
+            address.insert(0, pydefined.get_name())
+            pydefined = pydefined.parent
+        module_name = importutils.get_module_name(pydefined.pycore, pydefined.resource)
     return '.'.join(module_name.split('.') + address)

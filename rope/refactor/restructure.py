@@ -1,3 +1,5 @@
+import warnings
+
 from rope.base import change, taskhandle, builtins, ast
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
@@ -12,7 +14,7 @@ class Restructure(object):
         self.goal = goal
         self.template = similarfinder.CodeTemplate(self.goal)
 
-    def get_changes(self, checks={}, imports=[],
+    def get_changes(self, checks=None, imports=[], args=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed by this restructuring
         
@@ -21,6 +23,14 @@ class Restructure(object):
         modules that have at least one occurrence.
 
         """
+        if args is None:
+            args = {}
+        if checks is not None:
+            warnings.warn(
+                'The use of checks parameter is deprecated; '
+                'use args instead.', DeprecationWarning, stacklevel=2)
+            for name, value in checks.items():
+                args[name] = similarfinder._pydefined_to_str(value)
         changes = change.ChangeSet('Restructuring <%s> to <%s>' %
                                    (self.pattern, self.goal))
         files = self.pycore.get_python_files()
@@ -28,9 +38,10 @@ class Restructure(object):
         for resource in files:
             job_set.started_job('Working on <%s>' % resource.path)
             pymodule = self.pycore.resource_to_pyobject(resource)
-            finder = similarfinder.CheckingFinder(pymodule, checks)
+            finder = similarfinder.CheckingFinder(pymodule)
             computer = _ChangeComputer(pymodule, self.template,
-                                       list(finder.get_matches(self.pattern)))
+                                       list(finder.get_matches(self.pattern,
+                                                               args)))
             result = computer.get_changed()
             if result is not None:
                 imported_source = self._add_imports(resource, result, imports)
