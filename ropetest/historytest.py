@@ -63,6 +63,24 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.history.undo()
         self.assertEquals('', self.file1.read())
 
+    def test_tobe_undone(self):
+        change1 = ChangeContents(self.file1, '1')
+        self.assertEquals(None, self.history.tobe_undone)
+        self.history.do(change1)
+        self.assertEquals(change1, self.history.tobe_undone)
+        change2 = ChangeContents(self.file1, '2')
+        self.history.do(change2)
+        self.assertEquals(change2, self.history.tobe_undone)
+        self.history.undo()
+        self.assertEquals(change1, self.history.tobe_undone)
+
+    def test_tobe_redone(self):
+        change = ChangeContents(self.file1, '1')
+        self.history.do(change)
+        self.assertEquals(None, self.history.tobe_redone)
+        self.history.undo()
+        self.assertEquals(change, self.history.tobe_redone)
+
     @testutils.assert_raises(exceptions.HistoryError)
     def test_undo_limit(self):
         history = rope.base.history.History(self.project, maxundos=1)

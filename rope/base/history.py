@@ -172,6 +172,16 @@ class History(object):
     undo_list = property(lambda self: self._undo_list)
     redo_list = property(lambda self: self._redo_list)
 
+    @property
+    def tobe_undone(self):
+        if self.undo_list:
+            return self.undo_list[-1]
+
+    @property
+    def tobe_redone(self):
+        if self.redo_list:
+            return self.redo_list[-1]
+
 
 class _FindChangeDependencies(object):
 

@@ -112,7 +112,6 @@ their parameters can be specified using the parameters argument of
 
 Ideas:
 
-* Should each wildcard match one ast node?
 * Maybe we can put checks inside args, too::
 
     pattern: ${project:type=rope.base.project.Project}.pycore
@@ -145,10 +144,7 @@ Examples
 Implementation
 --------------
 
-* how to decide which wildcard should be used when searching?
-* how to pass wildcard parameters to matchers
 * matchers might need to type-check or use other matchers
-* matchers may update ast mappings
 * how to say what matched a node in replacements?
 * how to pass replacement args to replacements?
 * how to decide which wildcard should be used when replacing?
