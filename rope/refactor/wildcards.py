@@ -55,9 +55,9 @@ def parse_arg(arg):
     for token in tokens:
         if '=' in token:
             parts = token.split('=', 1)
-            result[parts[0]] = parts[1]
+            result[parts[0].strip()] = parts[1].strip()
         else:
-            result[token] = True
+            result[token.strip()] = True
     return result
 
 

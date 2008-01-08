@@ -497,13 +497,13 @@ operator (see the restructuring section of `overview.txt`_)::
 
   >>> from rope.refactor import restructure
 
-  >>> pattern = '${?pow_func}(${?param1}, ${?param2})'
-  >>> goal = '${?param1} ** ${?param2}'
+  >>> pattern = '${pow_func}(${param1}, ${param2})'
+  >>> goal = '${param1} ** ${param2}'
+  >>> args = {'pow_func': 'name=mod1.pow'}
 
-  >>> restructuring = restructure.Restructure(project, pattern, goal)
-  >>> checks = restructuring.make_checks({'?pow_func': 'mod1.pow'})
+  >>> restructuring = restructure.Restructure(project, pattern, goal, args)
 
-  >>> project.do(restructuring.get_changes(checks))
+  >>> project.do(restructuring.get_changes())
   >>> mod2.read()
   u'import mod1\nprint(2 ** 3)\n'
   
