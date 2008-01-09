@@ -53,12 +53,7 @@ def starting_offset(source_code, offset):
 
 
 def get_doc(project, source_code, offset, resource=None):
-    """Get the pydoc
-
-    `maxfixes` is the maximum number of errors to fix if the code has
-    errors in it.
-
-    """
+    """Get the pydoc"""
     pymodule = _get_pymodule(project.pycore, source_code, resource,
                              error_limit=offset)
     scope_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
@@ -70,7 +65,14 @@ def get_doc(project, source_code, offset, resource=None):
 
 
 def get_definition_location(project, source_code, offset, resource=None):
-    """Return a (`rope.base.resources.Resource`, lineno) tuple"""
+    """Return the definition location of the python name at `offset`
+
+    Return a (`rope.base.resources.Resource`, lineno) tuple.  If no
+    `resource` is given and the definition is inside the same module,
+    the first element of the returned tuple would be `None`.  If the
+    location cannot be determined ``(None, None)`` is returned.
+
+    """
     pymodule = project.pycore.get_string_module(source_code, resource)
     scope_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
     element = scope_finder.get_pyname_at(offset)
@@ -85,7 +87,8 @@ def find_occurrences(project, resource, offset, unsure=False,
                      task_handle=taskhandle.NullTaskHandle()):
     """Return a list of `Location`\s
 
-    if `unsure` is `True`, possible matches are returned, too.
+    If `unsure` is `True`, possible matches are returned, too.  You
+    can use `Location.unsure` to see which are unsure occurrences.
 
     """
     name = rope.base.codeanalyze.get_name_at(resource, offset)
