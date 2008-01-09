@@ -52,6 +52,22 @@ class Restructure(object):
         apply the restructuring on.  If `None`, the restructuring will
         be applied to all python files.
 
+        `checks` argument has been deprecated.  Use the `args` argument
+        of the constructor.  The usage of::
+
+
+          strchecks = {'obj1.type': 'mod.A', 'obj2': 'mod.B',
+                       'obj3.object': 'mod.C'}
+          checks = restructuring.make_checks(strchecks)
+
+        can be replaced with::
+
+          args = {'obj1': 'type=mod.A', 'obj2': 'name=mod.B',
+                  'obj3': 'object=mod.C'}
+
+        where obj1, obj2 and obj3 are wildcard names that appear
+        in restructuring pattern.
+
         """
         if checks is not None:
             warnings.warn(
