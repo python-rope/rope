@@ -15,7 +15,6 @@ Unresolved Issues
 * better tests in `patchedasttest`
 * import actions with more that one phase and filtering problems
 * handle long imports should work on filtered imports unconditionally?
-* adding restructuring scope; local scope, module, all files?
 * changing `codeanalyze.WordFinder` to use asts?
 * assignment to parameters in inline method
 * extracting subexpressions; look at `extracttest` for more info

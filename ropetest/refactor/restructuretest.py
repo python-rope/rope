@@ -144,10 +144,27 @@ class RestructureTest(unittest.TestCase):
 
     def test_preventing_stack_overflow_when_matching(self):
         self.mod.write('1\n')
-        refactoring = restructure.Restructure(
-            self.project, '${a}', '${a}')
+        refactoring = restructure.Restructure(self.project, '${a}', '${a}')
         self.project.do(refactoring.get_changes())
         self.assertEquals('1\n', self.mod.read())
+
+    def test_performing_a_restructuring_to_all_modules(self):
+        mod2 = testutils.create_module(self.project, 'mod2')
+        self.mod.write('a = 1\n')
+        mod2.write('b = 1\n')
+        refactoring = restructure.Restructure(self.project, '1', '2 / 1')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('a = 2 / 1\n', self.mod.read())
+        self.assertEquals('b = 2 / 1\n', mod2.read())
+
+    def test_performing_a_restructuring_to_selected_modules(self):
+        mod2 = testutils.create_module(self.project, 'mod2')
+        self.mod.write('a = 1\n')
+        mod2.write('b = 1\n')
+        refactoring = restructure.Restructure(self.project, '1', '2 / 1')
+        self.project.do(refactoring.get_changes(resources=[mod2]))
+        self.assertEquals('a = 1\n', self.mod.read())
+        self.assertEquals('b = 2 / 1\n', mod2.read())
 
 
 if __name__ == '__main__':

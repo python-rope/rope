@@ -44,9 +44,15 @@ class Restructure(object):
         self.wildcards = wildcards
         self.template = similarfinder.CodeTemplate(self.goal)
 
-    def get_changes(self, checks=None, imports=None,
+    def get_changes(self, checks=None, imports=None, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
-        """Get the changes needed by this restructuring"""
+        """Get the changes needed by this restructuring
+
+        `resources` can be a list of `rope.base.resources.File`\s to
+        apply the restructuring on.  If `None`, the restructuring will
+        be applied to all python files.
+
+        """
         if checks is not None:
             warnings.warn(
                 'The use of checks parameter is deprecated; '
@@ -62,7 +68,11 @@ class Restructure(object):
             self.imports = imports
         changes = change.ChangeSet('Restructuring <%s> to <%s>' %
                                    (self.pattern, self.goal))
-        files = self.pycore.get_python_files()
+        if resources is not None:
+            files = [resource for resource in resources
+                     if self.pycore.is_python_file(resource)]
+        else:
+            files = self.pycore.get_python_files()
         job_set = task_handle.create_jobset('Collecting Changes', len(files))
         for resource in files:
             job_set.started_job('Working on <%s>' % resource.path)
@@ -74,7 +84,8 @@ class Restructure(object):
                                                                self.args)))
             result = computer.get_changed()
             if result is not None:
-                imported_source = self._add_imports(resource, result, self.imports)
+                imported_source = self._add_imports(resource, result,
+                                                    self.imports)
                 changes.add_change(change.ChangeContents(resource,
                                                          imported_source))
             job_set.finished_job()
