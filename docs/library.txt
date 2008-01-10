@@ -128,14 +128,20 @@ As mentioned in the last section each refactoring returns a
 `rope.base.change.Change` object.  Now how can we know what it
 contains and how to perform it?
 
-For previewing the changes see the documentation in `rope.base.change`
-module.
+*Previewing*:
+
+``str(changes)`` returns a short description of the changes.  You can
+use ``changes.get_description()`` to get a preview; it is useful when
+you don't care much about the format.  Otherwise you can use the
+``changes`` object directly.  See the documentation in
+`rope.base.change` module.
+
+*Performing*:
 
 The easiest way for performing the refactoring is to use
 `Project.do()`_ method::
 
   myproject.do(changes)
-
 
 If you want to perform the changes yourself, you have two options.
 Note that the main reason for performing the changes manually is
@@ -149,6 +155,12 @@ The other is to perform the changes manually based on the returned
 `changes` object (again see the documentation in `rope.base.change`
 module).  If this approach is used you cannot undo the refactoring
 using ``project.history.undo()``.
+
+*Updating Open Buffers In IDEs*:
+
+Usually editors need to reload the files changed by rope.  You can use
+``Change.get_changed_resources()`` to get the list of resources that
+need to be reloaded.
 
 
 Validating The Project
