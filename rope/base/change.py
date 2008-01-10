@@ -32,10 +32,15 @@ class Change(object):
         """
 
     def get_description(self):
-        """Return the description of this change"""
+        """Return the description of this change
+
+        This can be used for previewing the changes.
+
+        """
         return str(self)
 
     def get_changed_resources(self):
+        """Return the list of resources that will be changed"""
         return []
 
 
@@ -46,7 +51,7 @@ class ChangeSet(Change):
     these fields:
 
     * `changes`: the list of changes
-    * `description`: the reason of these changes
+    * `description`: the goal of these changes
 
     """
 

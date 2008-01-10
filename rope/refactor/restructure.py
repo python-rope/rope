@@ -32,6 +32,11 @@ class Restructure(object):
 
     def __init__(self, project, pattern, goal, args=None,
                  imports=None, wildcards=None):
+        """Construct a restructuring
+
+        See class pydoc for more info about the arguments.
+
+        """
         self.pycore = project.pycore
         self.pattern = pattern
         self.goal = goal
@@ -54,7 +59,6 @@ class Restructure(object):
 
         `checks` argument has been deprecated.  Use the `args` argument
         of the constructor.  The usage of::
-
 
           strchecks = {'obj1.type': 'mod.A', 'obj2': 'mod.B',
                        'obj3.object': 'mod.C'}
