@@ -408,8 +408,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         pyname = name_finder.get_pyname_at(code.rindex('var'))
         self.assertEquals(pymod.get_attribute('var'), pyname)
 
-    # XXX: one-liners with line breaks
-    def xxx_test_one_liners_with_line_breaks(self):
+    def test_one_liners_with_line_breaks(self):
         code = 'var = 1\ndef f(\n): var = 2\nprint var\n'
         pymod = self.pycore.get_string_module(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
