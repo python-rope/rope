@@ -3,6 +3,9 @@
 ===========
 
 
+- Better handling of one-liners : January 10, 2008
+
+
 - Choosing which files to apply a restructuring on : January 9, 2008
 
 

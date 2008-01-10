@@ -339,6 +339,12 @@ class _InlineFunctionCallsForModuleHandle(object):
 
     def __init__(self, pycore, resource,
                  definition_generator, aim_offset=None):
+        """Inlines occurrences
+
+        If `aim` is not `None` only the occurrences that intersect
+        `aim` offset will be inlined.
+
+        """
         self.pycore = pycore
         self.generator = definition_generator
         self.resource = resource

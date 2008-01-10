@@ -105,8 +105,13 @@ def get_body_region(defined):
         start_line = node.body[0].lineno
     elif len(node.body) > 1:
         start_line = node.body[1].lineno
-
     start = lines.get_line_start(start_line)
+    if scope.start == start_line:
+        # a one-liner!
+        # XXX: one-liners with line breaks
+        start = pymodule.source_code.index(':', start) + 1
+        while pymodule.source_code[start].isspace():
+            start += 1
     end = min(lines.get_line_end(scope.end) + 1, len(pymodule.source_code))
     return start, end
 

@@ -498,8 +498,12 @@ class InlineTest(unittest.TestCase):
         code = 'one = 1\n\na = one\nb = one\n'
         refactored = self._inline(code, code.rindex('one') + 1,
                                   remove=False, only_current=True)
-        self.assertEquals('one = 1\n\na = one\nb = 1\n',
-                          refactored)
+        self.assertEquals('one = 1\n\na = one\nb = 1\n', refactored)
+
+    def test_inlining_one_line_functions(self):
+        code = 'def f(): return 1\nvar = f()\n'
+        refactored = self._inline(code, code.rindex('f'))
+        self.assertEquals('var = 1\n', refactored)
 
 
 def suite():
