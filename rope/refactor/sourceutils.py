@@ -106,9 +106,10 @@ def get_body_region(defined):
     elif len(node.body) > 1:
         start_line = node.body[1].lineno
     start = lines.get_line_start(start_line)
-    if scope.start == start_line:
+    scope_start = pymodule.logical_lines.logical_line_in(scope.start)
+    if scope_start[1] >= start_line:
         # a one-liner!
-        # XXX: one-liners with line breaks
+        # XXX: what if colon appears in a string
         start = pymodule.source_code.index(':', start) + 1
         while pymodule.source_code[start].isspace():
             start += 1
