@@ -104,6 +104,8 @@ Rope uses Mercurial_ CMS:
 * Rope main branch: http://rope.sourceforge.net/hg/rope
 * Rope py3k branch: http://rope.sourceforge.net/hg/rope_py3k
 
+.. _Mercurial: http://selenic.com/mercurial
+
 
 Submitting patches
 ==================
@@ -116,6 +118,4 @@ Patch style
 * Follow :PEP:`8`.
 * Use four spaces for indentation.
 * Include good unit-tests if possible.
-* Rope test suite should pass after patching (``python runtests.py``).
-
-.. _Mercurial: http://selenic.com/mercurial
+* Rope test suite should pass after patching
