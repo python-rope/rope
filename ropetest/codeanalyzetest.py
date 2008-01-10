@@ -401,6 +401,13 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         name_finder.get_pyname_at(code.index('pass'))
 
+    def test_one_liners(self):
+        code = 'var = 1\ndef f(): var = 2\nprint var\n'
+        pymod = self.pycore.get_string_module(code)
+        name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
+        pyname = name_finder.get_pyname_at(code.rindex('var'))
+        self.assertEquals(pymod.get_attribute('var'), pyname)
+
 
 class LogicalLineFinderTest(unittest.TestCase):
 

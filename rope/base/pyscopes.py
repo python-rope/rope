@@ -265,7 +265,11 @@ class _HoldingScopeFinder(object):
         if not scope.parent:
             return self.lines.length()
         end = scope.pyobject.get_ast().body[-1].lineno
-        body_indents = self._get_body_indents(scope)
+        if end == scope.start:
+            # handling one-liners
+            body_indents = self._get_scope_indents(scope) + 4
+        else:
+            body_indents = self._get_body_indents(scope)
         for l in self.logical_lines.generate_starts(
             min(end + 1, self.lines.length()), self.lines.length() + 1):
             if not self._is_empty_line(l):
