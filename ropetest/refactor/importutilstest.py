@@ -183,7 +183,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_imports(pymod)
         imports = module_with_imports.get_used_imports(
-            pymod.get_attribute('a_func').get_object())
+            pymod['a_func'].get_object())
         self.assertEquals(0, len(imports))
 
     def test_getting_used_imports_for_nested_scopes2(self):
@@ -191,7 +191,7 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod')
         module_with_imports = self.import_tools.get_module_imports(pymod)
         imports = module_with_imports.get_used_imports(
-            pymod.get_attribute('a_func').get_object())
+            pymod['a_func'].get_object())
         self.assertEquals(1, len(imports))
         self.assertEquals('from pkg1 import mod1', imports[0].get_import_statement())
 

@@ -23,8 +23,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        self.assertEquals(pymod.get_attribute('a_func').get_object(),
-                          pymod.get_attribute('a_var').get_object())
+        self.assertEquals(pymod['a_func'].get_object(),
+                          pymod['a_var'].get_object())
 
     def test_module_dti(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -35,7 +35,7 @@ class DynamicOITest(unittest.TestCase):
         self.pycore.run_module(mod2).wait_process()
         pymod2 = self.pycore.resource_to_pyobject(mod2)
         self.assertEquals(self.pycore.resource_to_pyobject(mod1),
-                          pymod2.get_attribute('a_var').get_object())
+                          pymod2['a_var'].get_object())
 
     def test_class_from_another_module_dti(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -49,8 +49,8 @@ class DynamicOITest(unittest.TestCase):
         self.pycore.run_module(mod2).wait_process()
         pymod1 = self.pycore.resource_to_pyobject(mod1)
         pymod2 = self.pycore.resource_to_pyobject(mod2)
-        self.assertEquals(pymod2.get_attribute('AClass').get_object(),
-                          pymod2.get_attribute('a_var').get_object())
+        self.assertEquals(pymod2['AClass'].get_object(),
+                          pymod2['a_var'].get_object())
 
 
     def test_class_dti(self):
@@ -61,8 +61,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        self.assertEquals(pymod.get_attribute('AClass').get_object(),
-                          pymod.get_attribute('a_var').get_object())
+        self.assertEquals(pymod['AClass'].get_object(),
+                          pymod['a_var'].get_object())
 
     def test_instance_dti(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -72,8 +72,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        self.assertEquals(pymod.get_attribute('AClass').get_object(),
-                          pymod.get_attribute('a_var').get_object().get_type())
+        self.assertEquals(pymod['AClass'].get_object(),
+                          pymod['a_var'].get_object().get_type())
 
     def test_method_dti(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -83,8 +83,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        self.assertEquals(pymod.get_attribute('AClass').get_object(),
-                          pymod.get_attribute('a_var').get_object().get_type())
+        self.assertEquals(pymod['AClass'].get_object(),
+                          pymod['a_var'].get_object().get_type())
 
     def test_function_argument_dti(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -104,8 +104,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        self.assertEquals(pymod.get_attribute('AClass').get_object(),
-                          pymod.get_attribute('a_var').get_object())
+        self.assertEquals(pymod['AClass'].get_object(),
+                          pymod['a_var'].get_object())
 
     def test_nested_classes(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -134,10 +134,10 @@ class DynamicOITest(unittest.TestCase):
                'a_var = a_func(a_func)\n'
         mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
-        pymod.get_attribute('a_var').get_object()
+        pymod['a_var'].get_object()
         self.pycore.run_module(mod).wait_process()
-        self.assertEquals(pymod.get_attribute('a_func').get_object(),
-                          pymod.get_attribute('a_var').get_object())
+        self.assertEquals(pymod['a_func'].get_object(),
+                          pymod['a_var'].get_object())
 
     def test_list_objects_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -146,8 +146,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_for_loops_and_dynamicoi(self):
@@ -157,8 +157,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_objects_and_dynamicoi(self):
@@ -169,8 +169,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_keys_and_dynamicoi(self):
@@ -181,8 +181,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_keys_and_dynamicoi2(self):
@@ -193,10 +193,10 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -207,7 +207,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        a_var = pymod.get_attribute('a_var').get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
 
     def test_textual_transformations(self):
@@ -222,7 +222,7 @@ class DynamicOITest(unittest.TestCase):
             return to_textual.transform(
                 to_pyobject.transform(to_textual.transform(pyobject)))
         for name in ('C', 'f', 'a_var', 'a_list', 'a_str', 'a_file'):
-            var = pymod.get_attribute(name).get_object()
+            var = pymod[name].get_object()
             self.assertEquals(to_textual.transform(var), complex_to_textual(var))
         self.assertEquals(to_textual.transform(pymod), complex_to_textual(pymod))
         enumerate_func = rope.base.builtins.builtins['enumerate'].get_object()
@@ -237,10 +237,10 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -252,10 +252,10 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -268,10 +268,10 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -284,10 +284,10 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -300,10 +300,10 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.pycore.resource_to_pyobject(mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -316,8 +316,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code.replace('a_func', 'newfunc'))
         mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
-        self.assertNotEquals(pymod.get_attribute('a_func').get_object(),
-                             pymod.get_attribute('a_var').get_object())
+        self.assertNotEquals(pymod['a_func'].get_object(),
+                             pymod['a_var'].get_object())
 
     def test_invalidating_data_after_moving(self):
         mod2 = testutils.create_module(self.project, 'mod2')
@@ -330,8 +330,8 @@ class DynamicOITest(unittest.TestCase):
         mod.move('newmod.py')
         pymod = self.pycore.get_module('newmod')
         pymod2 = self.pycore.resource_to_pyobject(mod2)
-        self.assertEquals(pymod2.get_attribute('C').get_object(),
-                          pymod.get_attribute('a_var').get_object())
+        self.assertEquals(pymod2['C'].get_object(),
+                          pymod['a_var'].get_object())
 
 
 class NewStaticOITest(unittest.TestCase):
@@ -351,8 +351,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        c_class = pymod['C'].get_object()
+        f_scope = pymod['f'].get_object().get_scope()
         p_type = f_scope.get_name('p').get_object().get_type()
         self.assertEquals(c_class, p_type)
 
@@ -367,8 +367,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        c_class = pymod['C'].get_object()
+        f_scope = pymod['f'].get_object().get_scope()
         p_type = f_scope.get_name('p').get_object().get_type()
         self.assertEquals(c_class, p_type)
 
@@ -378,8 +378,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        f_scope = c_class.get_attribute('f').get_object().get_scope()
+        c_class = pymod['C'].get_object()
+        f_scope = c_class['f'].get_object().get_scope()
         p_type = f_scope.get_name('p').get_object().get_type()
         self.assertEquals(c_class, p_type)
 
@@ -396,8 +396,8 @@ class NewStaticOITest(unittest.TestCase):
                'a_var = func(C())\n'
         self.mod.write(code)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_a_function_with_different_returns(self):
@@ -406,10 +406,10 @@ class NewStaticOITest(unittest.TestCase):
                'a = a_func(C1())\nb = a_func(C2())\n'
         self.mod.write(code)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -418,14 +418,14 @@ class NewStaticOITest(unittest.TestCase):
                'def f(arg):\n    return C1()\na_var = f('')\n'
         self.mod.write(code)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c1_class = pymod['C1'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
 
         self.mod.write(code.replace('C1', 'C2'))
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c2_class, a_var.get_type())
 
     def test_invalidating_concluded_data_in_a_function(self):
@@ -437,22 +437,22 @@ class NewStaticOITest(unittest.TestCase):
                    'class C2(object):\n    pass\n'
                    'a_var = mod1.func(C1())\n')
         pymod2 = self.pycore.resource_to_pyobject(mod2)
-        c1_class = pymod2.get_attribute('C1').get_object()
-        a_var = pymod2.get_attribute('a_var').get_object()
+        c1_class = pymod2['C1'].get_object()
+        a_var = pymod2['a_var'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
 
         mod2.write(mod2.read()[:mod2.read().rfind('C1()')] + 'C2())\n')
         pymod2 = self.pycore.resource_to_pyobject(mod2)
-        c2_class = pymod2.get_attribute('C2').get_object()
-        a_var = pymod2.get_attribute('a_var').get_object()
+        c2_class = pymod2['C2'].get_object()
+        a_var = pymod2['a_var'].get_object()
         self.assertEquals(c2_class, a_var.get_type())
 
     def test_handling_generator_functions_for_strs(self):
         self.mod.write('class C(object):\n    pass\ndef f(p):\n    yield p()\n'
                        'for c in f(C):\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     # TODO: Returning a generator for functions that yield unknowns
@@ -460,7 +460,7 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write('class C(object):\n    pass\ndef f():\n    yield eval("C()")\n'
                        'a_var = f()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        a_var = pymod.get_attribute('a_var').get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertTrue(isinstance(a_var.get_type(),
                                    rope.base.builtins.Generator))
 
@@ -470,8 +470,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_get_item(self):
@@ -480,8 +480,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_fields(self):
@@ -492,8 +492,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_set_item(self):
@@ -502,8 +502,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_extending_lists(self):
@@ -512,8 +512,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_iters(self):
@@ -522,8 +522,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_append_function(self):
@@ -532,10 +532,10 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -545,10 +545,10 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -558,10 +558,10 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -571,10 +571,10 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        c2_class = pymod.get_attribute('C2').get_object()
-        a_var = pymod.get_attribute('a').get_object()
-        b_var = pymod.get_attribute('b').get_object()
+        c1_class = pymod['C1'].get_object()
+        c2_class = pymod['C2'].get_object()
+        a_var = pymod['a'].get_object()
+        b_var = pymod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -584,8 +584,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c_class = pymod['C'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_properties_and_calling_get_property(self):
@@ -595,8 +595,8 @@ class NewStaticOITest(unittest.TestCase):
                '    p = property(get_c1)\nc2 = C2()\na_var = c2.p\n'
         self.mod.write(code)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c1_class = pymod['C1'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
 
     def test_soi_on_constructors(self):
@@ -607,8 +607,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        c1_class = pymod['C1'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
 
     def test_not_saving_unknown_function_returns(self):
@@ -617,8 +617,8 @@ class NewStaticOITest(unittest.TestCase):
         mod2.write('import mod\ndef f():\n    return mod.l.pop()\na_var = f()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         pymod2 = self.pycore.resource_to_pyobject(mod2)
-        c_class = pymod.get_attribute('C').get_object()
-        a_var = pymod2.get_attribute('a_var')
+        c_class = pymod['C'].get_object()
+        a_var = pymod2['a_var']
 
         self.pycore.analyze_module(mod2)
         self.assertNotEquals(c_class, a_var.get_object().get_type())
@@ -633,8 +633,8 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c1_class = pymod.get_attribute('C1').get_object()
-        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        c1_class = pymod['C1'].get_object()
+        f_scope = pymod['f'].get_object().get_scope()
         arg2 = f_scope.get_name('arg2').get_object()
         self.assertEquals(c1_class, arg2.get_type())
 
@@ -656,8 +656,8 @@ class NewStaticOITest(unittest.TestCase):
         mod_file.close()
         rope.base.libutils.report_change(self.project, self.mod.real_path, '')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        c_class = pymod.get_attribute('C').get_object()
-        f_scope = pymod.get_attribute('f').get_object().get_scope()
+        c_class = pymod['C'].get_object()
+        f_scope = pymod['f'].get_object().get_scope()
         p_type = f_scope.get_name('p').get_object().get_type()
         self.assertEquals(c_class, p_type)
 
@@ -670,9 +670,9 @@ class NewStaticOITest(unittest.TestCase):
         self.pycore.analyze_module(mod2)
 
         pymod2 = self.pycore.resource_to_pyobject(mod2)
-        c_class = pymod2.get_attribute('C').get_object()
+        c_class = pymod2['C'].get_object()
         pymod1 = self.pycore.resource_to_pyobject(mod1)
-        var_pyname = pymod1.get_attribute('var')
+        var_pyname = pymod1['var']
         self.assertEquals(c_class, var_pyname.get_object().get_type())
         mod2.write('import mod1\n\nmod1.l.append("")\n')
         # Either `pymod1` should be invalid or should not reference to `pymod2`
@@ -686,7 +686,7 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        a_class = pymod.get_attribute('A').get_object()
+        a_class = pymod['A'].get_object()
         f_scope = a_class.get_scope().get_scopes()[0]
         p_type = f_scope.get_name('p').get_object().get_type()
         self.assertEquals(a_class, p_type)

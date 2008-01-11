@@ -22,6 +22,10 @@ class PyObject(object):
     def get_type(self):
         return self.type
 
+    def __getitem__(self, key):
+        """The same as ``get_attribute(key)``"""
+        return self.get_attribute(key)
+
     def __eq__(self, obj):
         """Check the equality of two `PyObject`\s
 

@@ -387,7 +387,7 @@ class _ScopeVisitor(object):
         for name in node.names:
             if module is not None:
                 try:
-                    pyname = module.get_attribute(name)
+                    pyname = module[name]
                 except exceptions.AttributeNotFoundError:
                     pyname = pynames.AssignedName(node.lineno)
             self.names[name] = pyname

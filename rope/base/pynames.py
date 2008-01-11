@@ -128,8 +128,7 @@ class ImportedName(PyName):
 
     def _get_imported_pyname(self):
         try:
-            return self.imported_module.get_object().get_attribute(
-                self.imported_name)
+            return self.imported_module.get_object()[self.imported_name]
         except exceptions.AttributeNotFoundError:
             return UnboundName()
 

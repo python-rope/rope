@@ -400,9 +400,9 @@ class _PythonCodeAssist(object):
                     pass
                 elif isinstance(pyobject, pyobjects.AbstractClass) and \
                      '__init__' in pyobject.get_attributes():
-                    pyobject = pyobject.get_attribute('__init__').get_object()
+                    pyobject = pyobject['__init__'].get_object()
                 elif '__call__' in pyobject.get_attributes():
-                    pyobject = pyobject.get_attribute('__call__').get_object()
+                    pyobject = pyobject['__call__'].get_object()
                 if isinstance(pyobject, pyobjects.AbstractFunction):
                     param_names = []
                     param_names.extend(
@@ -605,7 +605,7 @@ class PyDocExtractor(object):
         doc = 'class %s(%s):\n\n' % (pyclass.get_name(), ', '.join(supers)) + contents
 
         if '__init__' in pyclass.get_attributes():
-            init = pyclass.get_attribute('__init__').get_object()
+            init = pyclass['__init__'].get_object()
             if isinstance(init, pyobjects.AbstractFunction):
                 doc += '\n\n' + self._get_single_function_docstring(init)
         return doc
@@ -634,7 +634,7 @@ class PyDocExtractor(object):
         result = []
         for super_class in pyclass.get_superclasses():
             if name in super_class.get_attributes():
-                function = super_class.get_attribute(name).get_object()
+                function = super_class[name].get_object()
                 if isinstance(function, pyobjects.AbstractFunction):
                     result.append(function)
             result.extend(self._get_super_methods(super_class, name))

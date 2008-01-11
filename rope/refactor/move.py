@@ -124,7 +124,7 @@ class MoveMethod(object):
         if dest_attr not in old_pyclass.get_attributes():
             raise exceptions.RefactoringError(
                 'Destination attribute <%s> not found' % dest_attr)
-        pyclass = old_pyclass.get_attribute(dest_attr).get_object().get_type()
+        pyclass = old_pyclass[dest_attr].get_object().get_type()
         if not isinstance(pyclass, pyobjects.PyClass):
             raise exceptions.RefactoringError(
                 'Unknown class type for attribute <%s>' % dest_attr)
@@ -154,7 +154,7 @@ class MoveMethod(object):
         body = self_name + ' = None\n' + self._get_unchanged_body()
         pymodule = self.pycore.get_string_module(body)
         finder = occurrences.FilteredFinder(
-            self.pycore, self_name, [pymodule.get_attribute(self_name)])
+            self.pycore, self_name, [pymodule[self_name]])
         result = rename.rename_in_module(finder, host, pymodule=pymodule)
         if result is None:
             result = body
@@ -469,7 +469,7 @@ class _MoveTools(object):
             def __call__(self, name):
                 try:
                     if name == self.old_name and \
-                       pymodule.get_attribute(name).get_object() == \
+                       pymodule[name].get_object() == \
                        self.old_pyname.get_object():
                         self.changed = True
                         return False

@@ -230,7 +230,7 @@ class FindMatchingPyNames(object):
         if isinstance(self.instance, pynames.ParameterName):
             for pyobject in self.instance.get_objects():
                 try:
-                    result.add(pyobject.get_attribute(self.name))
+                    result.add(pyobject[self.name])
                 except exceptions.AttributeNotFoundError:
                     pass
         if self.in_hierarchy:
@@ -259,7 +259,7 @@ class FindMatchingPyNames(object):
         return result
 
     def _get_all_methods_in_subclasses(self, pyclass, attr_name):
-        result = set([pyclass.get_attribute(attr_name)])
+        result = set([pyclass[attr_name]])
         for subclass in pyclass.pycore.get_subclasses(pyclass, self.handle):
             result.update(self._get_all_methods_in_subclasses(subclass, attr_name))
         return result

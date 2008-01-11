@@ -115,7 +115,7 @@ class _CheckObject(object):
         else:
             pyobject = self.project.pycore.get_module(attributes[0])
         for attribute in attributes[1:]:
-            pyname = pyobject.get_attribute(attribute)
+            pyname = pyobject[attribute]
             if pyname is None:
                 return None
             pyobject = pyname.get_object()

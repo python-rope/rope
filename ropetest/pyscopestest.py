@@ -101,7 +101,7 @@ class PyCoreScopesTest(unittest.TestCase):
 
     def test_function_getting_scope(self):
         mod = self.pycore.get_string_module('def func():    var = 10\n')
-        func_scope = mod.get_attribute('func').get_object().get_scope()
+        func_scope = mod['func'].get_object().get_scope()
         self.assertTrue('var' in func_scope.get_names())
 
     def test_scopes_in_function_scopes(self):
@@ -124,9 +124,8 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_first_parameter_of_a_method(self):
         code = 'class AClass(object):\n' \
                '    def a_func(self, param):\n        pass\n'
-        a_class = self.pycore.get_string_module(code).\
-                  get_attribute('AClass'). get_object()
-        function_scope = a_class.get_attribute('a_func').\
+        a_class = self.pycore.get_string_module(code)['AClass']. get_object()
+        function_scope = a_class['a_func'].\
                          get_object().get_scope()
         self.assertEquals(a_class, function_scope.
                           get_name('self').get_object().get_type())
@@ -136,9 +135,8 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_first_parameter_of_static_methods(self):
         code = 'class AClass(object):\n' \
                '    @staticmethod\n    def a_func(param):\n        pass\n'
-        a_class = self.pycore.get_string_module(code).\
-                  get_attribute('AClass'). get_object()
-        function_scope = a_class.get_attribute('a_func').\
+        a_class = self.pycore.get_string_module(code)['AClass']. get_object()
+        function_scope = a_class['a_func'].\
                          get_object().get_scope()
         self.assertNotEquals(a_class, function_scope.
                              get_name('param').get_object().get_type())
@@ -146,9 +144,8 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_first_parameter_of_class_methods(self):
         code = 'class AClass(object):\n' \
             '    @classmethod\n    def a_func(cls):\n        pass\n'
-        a_class = self.pycore.get_string_module(code).\
-                  get_attribute('AClass'). get_object()
-        function_scope = a_class.get_attribute('a_func').\
+        a_class = self.pycore.get_string_module(code)['AClass']. get_object()
+        function_scope = a_class['a_func'].\
                          get_object().get_scope()
         self.assertEquals(a_class, function_scope.get_name('cls').get_object())
 
@@ -156,9 +153,8 @@ class PyCoreScopesTest(unittest.TestCase):
         code = 'def my_decorator(func):\n    return func\n'\
                'class AClass(object):\n' \
                '    @my_decorator\n    def a_func(self):\n        pass\n'
-        a_class = self.pycore.get_string_module(code).\
-                  get_attribute('AClass'). get_object()
-        function_scope = a_class.get_attribute('a_func').\
+        a_class = self.pycore.get_string_module(code)['AClass']. get_object()
+        function_scope = a_class['a_func'].\
                          get_object().get_scope()
         self.assertEquals(a_class, function_scope.get_name('self').
                           get_object().get_type())

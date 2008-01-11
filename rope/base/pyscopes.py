@@ -22,6 +22,10 @@ class Scope(object):
             raise exceptions.NameNotFoundError('name %s not found' % name)
         return self.get_names()[name]
 
+    def __getitem__(self, key):
+        """The same as ``get_name(key)``"""
+        return self.get_name(key)
+
     def get_scopes(self):
         """Return the subscopes of this scope.
 
@@ -110,7 +114,7 @@ class GlobalScope(Scope):
 
     def get_name(self, name):
         try:
-            return self.pyobject.get_attribute(name)
+            return self.pyobject[name]
         except exceptions.AttributeNotFoundError:
             if name in self.builtin_names:
                 return self.builtin_names[name]

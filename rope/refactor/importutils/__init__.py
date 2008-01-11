@@ -9,8 +9,6 @@ from rope.refactor import occurrences, rename
 from rope.refactor.importutils import module_imports
 from rope.refactor.importutils.importinfo import \
      (NormalImport, FromImport, get_module_name)
-
-
 class ImportTools(object):
 
     def __init__(self, pycore):
@@ -63,7 +61,7 @@ class ImportTools(object):
             if alias is not None:
                 imported = alias
             occurrence_finder = occurrences.FilteredFinder(
-                self.pycore, imported, [pymodule.get_attribute(imported)],
+                self.pycore, imported, [pymodule[imported]],
                 imports=False)
             source = rename.rename_in_module(
                 occurrence_finder, module_name + '.' + name,

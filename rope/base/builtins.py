@@ -294,7 +294,7 @@ class Dict(BuiltinClass):
         new_dict = context.get_pynames(['self', 'd'])[1]
         if new_dict and isinstance(new_dict.get_object().get_type(), Dict):
             args = rope.base.evaluate.ObjectArguments([new_dict])
-            items = new_dict.get_object().get_attribute('popitem').\
+            items = new_dict.get_object()['popitem'].\
                     get_object().get_returned_object(args)
             context.save_per_name(items)
         else:
@@ -556,10 +556,10 @@ def _infer_sequence_for_pyname(pyname):
     seq = pyname.get_object()
     args = rope.base.evaluate.ObjectArguments([pyname])
     if '__iter__' in seq.get_attributes():
-        iter = seq.get_attribute('__iter__').get_object().\
+        iter = seq['__iter__'].get_object().\
                get_returned_object(args)
         if iter is not None and 'next' in iter.get_attributes():
-            holding = iter.get_attribute('next').get_object().\
+            holding = iter['next'].get_object().\
                       get_returned_object(args)
             return holding
 

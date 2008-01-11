@@ -38,7 +38,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         sample_class = scope.get_name('Sample').get_object()
         another_class = scope.get_name('Another').get_object()
-        a_var = another_class.get_attribute('a_method').\
+        a_var = another_class['a_method'].\
                 get_object().get_scope().get_name('a_var').get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
@@ -49,7 +49,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         sample_class = scope.get_name('Sample').get_object()
         another_class = scope.get_name('Another').get_object()
-        a_var = another_class.get_attribute('a_var').get_object()
+        a_var = another_class['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_for_in_class_assignments(self):
@@ -57,7 +57,7 @@ class ObjectInferTest(unittest.TestCase):
                                              'class Another(object):\n    an_attr = Sample()\n')
         sample_class = scope.get_name('Sample').get_object()
         another_class = scope.get_name('Another').get_object()
-        an_attr = another_class.get_attribute('an_attr').get_object()
+        an_attr = another_class['an_attr'].get_object()
         self.assertEquals(sample_class, an_attr.get_type())
 
     def test_simple_type_inferencing_for_chained_assignments(self):
@@ -130,7 +130,7 @@ class ObjectInferTest(unittest.TestCase):
               '    def set(self):\n        self.a_var = Sample()\n'
         scope = self.pycore.get_string_scope(src)
         sample_class = scope.get_name('Sample').get_object()
-        a_var = sample_class.get_attribute('a_var').get_object()
+        a_var = sample_class['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_getting_property_attributes(self):
@@ -139,8 +139,8 @@ class ObjectInferTest(unittest.TestCase):
               'class B(object):\n    p = property(f)\n' \
               'a_var = B().p\n'
         pymod = self.pycore.get_string_module(src)
-        a_class = pymod.get_attribute('A').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        a_class = pymod['A'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(a_class, a_var.get_type())
 
     def test_getting_property_attributes_with_method_getters(self):
@@ -149,51 +149,51 @@ class ObjectInferTest(unittest.TestCase):
               '    p = property(p_get)\n' \
               'a_var = B().p\n'
         pymod = self.pycore.get_string_module(src)
-        a_class = pymod.get_attribute('A').get_object()
-        a_var = pymod.get_attribute('a_var').get_object()
+        a_class = pymod['A'].get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertEquals(a_class, a_var.get_type())
 
     def test_lambda_functions(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    pass\n'
             'l = lambda: C()\na_var = l()')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('a_var').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_mixing_subscript_with_tuple_assigns(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    attr = 0\n'
             'd = {}\nd[0], b = (0, C())\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('b').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['b'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_mixing_ass_attr_with_tuple_assignment(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    attr = 0\n'
             'c = C()\nc.attr, b = (0, C())\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('b').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['b'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_mixing_slice_with_tuple_assigns(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    attr = 0\n'
             'd = [None] * 3\nd[0:2], b = ((0,), C())\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('b').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['b'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_nested_tuple_assignments(self):
         mod = self.pycore.get_string_module(
             'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
             'a, (b, c) = (C1(), (C2(), C1()))\n')
-        c1_class = mod.get_attribute('C1').get_object()
-        c2_class = mod.get_attribute('C2').get_object()
-        a_var = mod.get_attribute('a').get_object()
-        b_var = mod.get_attribute('b').get_object()
-        c_var = mod.get_attribute('c').get_object()
+        c1_class = mod['C1'].get_object()
+        c2_class = mod['C2'].get_object()
+        a_var = mod['a'].get_object()
+        b_var = mod['b'].get_object()
+        c_var = mod['c'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
         self.assertEquals(c1_class, c_var.get_type())
@@ -202,8 +202,8 @@ class ObjectInferTest(unittest.TestCase):
         mod = self.pycore.get_string_module(
             'class C(object):\n    pass\ndef f():\n    yield C()\n'
             'for c in f():\n    a_var = c\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('a_var').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_handling_generator_functions_for_strs(self):
@@ -211,31 +211,31 @@ class ObjectInferTest(unittest.TestCase):
         mod.write('def f():\n    yield ""\n'
                   'for s in f():\n    a_var = s\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        a_var = pymod.get_attribute('a_var').get_object()
+        a_var = pymod['a_var'].get_object()
         self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
 
     def test_considering_nones_to_be_unknowns(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    pass\n'
             'a_var = None\na_var = C()\na_var = None\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('a_var').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_basic_list_comprehensions(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    pass\n'
             'l = [C() for i in range(1)]\na_var = l[0]\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('a_var').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_basic_generator_expressions(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    pass\n'
             'l = (C() for i in range(1))\na_var = list(l)[0]\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('a_var').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_list_comprehensions_and_loop_var(self):
@@ -243,8 +243,8 @@ class ObjectInferTest(unittest.TestCase):
             'class C(object):\n    pass\n'
             'c_objects = [C(), C()]\n'
             'l = [c for c in c_objects]\na_var = l[0]\n')
-        c_class = mod.get_attribute('C').get_object()
-        a_var = mod.get_attribute('a_var').get_object()
+        c_class = mod['C'].get_object()
+        a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_list_comprehensions_and_multiple_loop_var(self):
@@ -252,10 +252,10 @@ class ObjectInferTest(unittest.TestCase):
             'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
             'l = [(c1, c2) for c1 in [C1()] for c2 in [C2()]]\n'
             'a, b = l[0]\n')
-        c1_class = mod.get_attribute('C1').get_object()
-        c2_class = mod.get_attribute('C2').get_object()
-        a_var = mod.get_attribute('a').get_object()
-        b_var = mod.get_attribute('b').get_object()
+        c1_class = mod['C1'].get_object()
+        c2_class = mod['C2'].get_object()
+        a_var = mod['a'].get_object()
+        b_var = mod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
@@ -264,10 +264,10 @@ class ObjectInferTest(unittest.TestCase):
             'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
             'l = [(c1, c2) for c1, c2 in [(C1(), C2())]]\n'
             'a, b = l[0]\n')
-        c1_class = mod.get_attribute('C1').get_object()
-        c2_class = mod.get_attribute('C2').get_object()
-        a_var = mod.get_attribute('a').get_object()
-        b_var = mod.get_attribute('b').get_object()
+        c1_class = mod['C1'].get_object()
+        c2_class = mod['C2'].get_object()
+        a_var = mod['a'].get_object()
+        b_var = mod['b'].get_object()
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 

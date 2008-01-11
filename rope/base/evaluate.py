@@ -103,7 +103,7 @@ class ScopeNameFinder(object):
                 class_scope = holding_scope.parent
             name = self.word_finder.get_primary_at(offset).strip()
             try:
-                return (None, class_scope.pyobject.get_attribute(name))
+                return (None, class_scope.pyobject[name])
             except rope.base.exceptions.AttributeNotFoundError:
                 return (None, None)
         # function header
@@ -133,9 +133,9 @@ class ScopeNameFinder(object):
                 return pyobject
             elif isinstance(pyobject, pyobjects.AbstractClass) and \
                  '__init__' in pyobject.get_attributes():
-                return pyobject.get_attribute('__init__').get_object()
+                return pyobject['__init__'].get_object()
             elif '__call__' in pyobject.get_attributes():
-                return pyobject.get_attribute('__call__').get_object()
+                return pyobject['__call__'].get_object()
         return None
 
     def _find_module(self, module_name):
@@ -167,7 +167,7 @@ class StatementEvaluator(object):
         self.old_result = pyname
         if pyname.get_object() != rope.base.pyobjects.get_unknown():
             try:
-                self.result = pyname.get_object().get_attribute(node.attr)
+                self.result = pyname.get_object()[node.attr]
             except exceptions.AttributeNotFoundError:
                 self.result = None
 
@@ -181,7 +181,7 @@ class StatementEvaluator(object):
         if isinstance(pyobject, rope.base.pyobjects.AbstractClass):
             result = None
             if '__new__' in pyobject.get_attributes():
-                new_function = pyobject.get_attribute('__new__').get_object()
+                new_function = pyobject['__new__'].get_object()
                 result = _get_returned(new_function)
             if result is None or \
                result == rope.base.pyobjects.get_unknown():
@@ -193,7 +193,7 @@ class StatementEvaluator(object):
         if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
             pyfunction = pyobject
         elif '__call__' in pyobject.get_attributes():
-            pyfunction = pyobject.get_attribute('__call__').get_object()
+            pyfunction = pyobject['__call__'].get_object()
         if pyfunction is not None:
             self.result = rope.base.pynames.UnboundName(
                 pyobject=_get_returned(pyfunction))
@@ -310,7 +310,7 @@ class StatementEvaluator(object):
         else:
             return
         if function_name in pyobject.get_attributes():
-            call_function = pyobject.get_attribute(function_name).get_object()
+            call_function = pyobject[function_name].get_object()
             args = [node]
             if other_args:
                 args += other_args

@@ -28,7 +28,7 @@ class ChangeSignature(object):
         pyobject = self.pyname.get_object()
         if isinstance(pyobject, pyobjects.PyClass) and \
            '__init__' in pyobject.get_attributes():
-            self.pyname = pyobject.get_attribute('__init__')
+            self.pyname = pyobject['__init__']
             self.name = '__init__'
         pyobject = self.pyname.get_object()
         self.others = None
@@ -37,7 +37,7 @@ class ChangeSignature(object):
            isinstance(pyobject.parent, pyobjects.PyClass):
             pyclass = pyobject.parent
             self.others = (pyclass.get_name(),
-                           pyclass.parent.get_attribute(pyclass.get_name()))
+                           pyclass.parent[pyclass.get_name()])
 
     def _change_calls(self, call_changer, in_hierarchy=False,
                       handle=taskhandle.NullTaskHandle()):

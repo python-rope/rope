@@ -53,7 +53,7 @@ class MethodObject(object):
         for param in self._get_parameter_names():
             body = param + ' = None\n' + body
             pymod = self.pycore.get_string_module(body, self.resource)
-            pyname = pymod.get_attribute(param)
+            pyname = pymod[param]
             finder = occurrences.FilteredFinder(
                 self.pycore, param, [pyname])
             result = rename.rename_in_module(finder, 'self.' + param,

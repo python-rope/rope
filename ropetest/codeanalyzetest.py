@@ -298,7 +298,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope.get_name('C').\
-                       get_object().get_attribute('a_var')
+                               get_object()['a_var']
         result = name_finder.get_pyname_at(len(code) - 12)
         self.assertEquals(a_var_pyname, result)
 
@@ -307,7 +307,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope.get_name('C').\
-                       get_object().get_attribute('a_var')
+                               get_object()['a_var']
         result = name_finder.get_pyname_at(len(code) - 12)
         self.assertEquals(a_var_pyname, result)
 
@@ -316,7 +316,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_method_pyname = scope.get_name('C').\
-                          get_object().get_attribute('a_method')
+                                  get_object()['a_method']
         result = name_finder.get_pyname_at(code.index('a_method') + 2)
         self.assertEquals(a_method_pyname, result)
 
@@ -324,7 +324,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         code = 'class C(object):\n    class CC(object):\n        pass\n'
         scope = self.pycore.get_string_scope(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
-        a_class_pyname = scope.get_name('C').get_object().get_attribute('CC')
+        a_class_pyname = scope.get_name('C').get_object()['CC']
         result = name_finder.get_pyname_at(code.index('CC') + 2)
         self.assertEquals(a_class_pyname, result)
 
@@ -362,7 +362,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         mod_pyobject = self.pycore.resource_to_pyobject(mod1)
-        afunc = mod_pyobject.get_attribute('afunc')
+        afunc = mod_pyobject['afunc']
         found_pyname = name_finder.get_pyname_at(code.index('afunc') + 1)
         self.assertEquals(afunc.get_object(), found_pyname.get_object())
 
@@ -406,14 +406,14 @@ class ScopeNameFinderTest(unittest.TestCase):
         pymod = self.pycore.get_string_module(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
-        self.assertEquals(pymod.get_attribute('var'), pyname)
+        self.assertEquals(pymod['var'], pyname)
 
     def test_one_liners_with_line_breaks(self):
         code = 'var = 1\ndef f(\n): var = 2\nprint var\n'
         pymod = self.pycore.get_string_module(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
-        self.assertEquals(pymod.get_attribute('var'), pyname)
+        self.assertEquals(pymod['var'], pyname)
 
 
 class LogicalLineFinderTest(unittest.TestCase):

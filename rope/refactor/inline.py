@@ -283,7 +283,7 @@ class _DefinitionGenerator(object):
         source = header + self.body
         for name in to_be_inlined:
             pymodule = self.pycore.get_string_module(source, self.resource)
-            pyname = pymodule.get_attribute(name)
+            pyname = pymodule[name]
             source = _inline_variable(self.pycore, pymodule, pyname, name)
         return self._replace_returns_with(source, returns)
 

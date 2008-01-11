@@ -30,7 +30,7 @@ class PyCoreTest(unittest.TestCase):
         package = self.pycore.get_module('pkg')
         self.assertEquals(get_base_type('Module'), package.get_type())
         self.assertEquals(1, len(package.get_attributes()))
-        module = package.get_attribute('mod').get_object()
+        module = package['mod'].get_object()
         self.assertEquals(get_base_type('Module'), module.get_type())
 
     def test_package(self):
@@ -43,51 +43,51 @@ class PyCoreTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class SampleClass(object):\n    pass\n')
         mod_element = self.pycore.get_module('mod')
-        result = mod_element.get_attribute('SampleClass').get_object()
+        result = mod_element['SampleClass'].get_object()
         self.assertEquals(get_base_type('Type'), result.get_type())
 
     def test_simple_function(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('def sample_function():\n    pass\n')
         mod_element = self.pycore.get_module('mod')
-        result = mod_element.get_attribute('sample_function').get_object()
+        result = mod_element['sample_function'].get_object()
         self.assertEquals(get_base_type('Function'), result.get_type())
 
     def test_class_methods(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class SampleClass(object):\n    def sample_method(self):\n        pass\n')
         mod_element = self.pycore.get_module('mod')
-        sample_class = mod_element.get_attribute('SampleClass').get_object()
+        sample_class = mod_element['SampleClass'].get_object()
         self.assertEquals(1, len(sample_class.get_attributes()))
-        method = sample_class.get_attribute('sample_method').get_object()
+        method = sample_class['sample_method'].get_object()
         self.assertEquals(get_base_type('Function'), method.get_type())
 
     def test_global_variables(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('var = 10')
         mod_element = self.pycore.get_module('mod')
-        result = mod_element.get_attribute('var')
+        result = mod_element['var']
 
     def test_class_variables(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class SampleClass(object):\n    var = 10\n')
         mod_element = self.pycore.get_module('mod')
-        sample_class = mod_element.get_attribute('SampleClass').get_object()
-        var = sample_class.get_attribute('var')
+        sample_class = mod_element['SampleClass'].get_object()
+        var = sample_class['var']
 
     def test_class_attributes_set_in_init(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class SampleClass(object):\n    def __init__(self):\n        self.var = 20\n')
         mod_element = self.pycore.get_module('mod')
-        sample_class = mod_element.get_attribute('SampleClass').get_object()
-        var = sample_class.get_attribute('var')
+        sample_class = mod_element['SampleClass'].get_object()
+        var = sample_class['var']
 
     def test_classes_inside_other_classes(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class SampleClass(object):\n    class InnerClass(object):\n        pass\n\n')
         mod_element = self.pycore.get_module('mod')
-        sample_class = mod_element.get_attribute('SampleClass').get_object()
-        var = sample_class.get_attribute('InnerClass').get_object()
+        sample_class = mod_element['SampleClass'].get_object()
+        var = sample_class['InnerClass'].get_object()
         self.assertEquals(get_base_type('Type'), var.get_type())
 
     @testutils.assert_raises(exceptions.ModuleNotFoundError)
@@ -99,7 +99,7 @@ class PyCoreTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod2')
         mod.write('import mod1\n')
         module = self.pycore.get_module('mod2')
-        imported_sys = module.get_attribute('mod1').get_object()
+        imported_sys = module['mod1'].get_object()
         self.assertEquals(get_base_type('Module'), imported_sys.get_type())
 
     def test_imported_as_names(self):
@@ -107,12 +107,12 @@ class PyCoreTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod2')
         mod.write('import mod1 as my_import\n')
         module = self.pycore.get_module('mod2')
-        imported_mod = module.get_attribute('my_import').get_object()
+        imported_mod = module['my_import'].get_object()
         self.assertEquals(get_base_type('Module'), imported_mod.get_type())
 
     def test_get_string_module(self):
         mod = self.pycore.get_string_module('class Sample(object):\n    pass\n')
-        sample_class = mod.get_attribute('Sample').get_object()
+        sample_class = mod['Sample'].get_object()
         self.assertEquals(get_base_type('Type'), sample_class.get_type())
 
     def test_get_string_module_with_extra_spaces(self):
@@ -121,7 +121,7 @@ class PyCoreTest(unittest.TestCase):
     def test_parameter_info_for_functions(self):
         mod = self.pycore.get_string_module('def sample_function(param1, param2=10,' +
                                             ' *param3, **param4):\n    pass')
-        sample_function = mod.get_attribute('sample_function')
+        sample_function = mod['sample_function']
         self.assertEquals(['param1', 'param2', 'param3', 'param4'],
                           sample_function.get_object().get_param_names())
 
@@ -129,7 +129,7 @@ class PyCoreTest(unittest.TestCase):
     def xxx_test_not_found_module_is_module(self):
         mod = self.pycore.get_string_module('import doesnotexist\n')
         self.assertEquals(get_base_type('Module'),
-                          mod.get_attribute('doesnotexist').
+                          mod['doesnotexist'].
                           get_object().get_type())
 
     def test_mixing_scopes_and_objects_hierarchy(self):
@@ -140,17 +140,17 @@ class PyCoreTest(unittest.TestCase):
     def test_inheriting_base_class_attributes(self):
         mod = self.pycore.get_string_module('class Base(object):\n    def method(self):\n        pass\n' +
                                              'class Derived(Base):\n    pass\n')
-        derived = mod.get_attribute('Derived').get_object()
+        derived = mod['Derived'].get_object()
         self.assertTrue('method' in derived.get_attributes())
         self.assertEquals(get_base_type('Function'),
-                          derived.get_attribute('method').get_object().get_type())
+                          derived['method'].get_object().get_type())
 
     def test_inheriting_multiple_base_class_attributes(self):
         code = 'class Base1(object):\n    def method1(self):\n        pass\n' \
                'class Base2(object):\n    def method2(self):\n        pass\n' \
                'class Derived(Base1, Base2):\n    pass\n'
         mod = self.pycore.get_string_module(code)
-        derived = mod.get_attribute('Derived').get_object()
+        derived = mod['Derived'].get_object()
         self.assertTrue('method1' in derived.get_attributes())
         self.assertTrue('method2' in derived.get_attributes())
 
@@ -159,15 +159,15 @@ class PyCoreTest(unittest.TestCase):
                'class Base2(object):\n    def method(self):\n        pass\n' \
                'class Derived(Base1, Base2):\n    pass\n'
         mod = self.pycore.get_string_module(code)
-        base1 = mod.get_attribute('Base1').get_object()
-        derived = mod.get_attribute('Derived').get_object()
-        self.assertEquals(base1.get_attribute('method').get_object(),
-                          derived.get_attribute('method').get_object())
+        base1 = mod['Base1'].get_object()
+        derived = mod['Derived'].get_object()
+        self.assertEquals(base1['method'].get_object(),
+                          derived['method'].get_object())
 
     def test_inheriting_unknown_base_class(self):
         mod = self.pycore.get_string_module('class Derived(NotFound):\n' \
                                             '    def f(self):\n        pass\n')
-        derived = mod.get_attribute('Derived').get_object()
+        derived = mod['Derived'].get_object()
         self.assertTrue('f' in derived.get_attributes())
 
     def test_module_creation(self):
@@ -295,17 +295,17 @@ class PyCoreTest(unittest.TestCase):
 
     def test_get_pyname_definition_location(self):
         mod = self.pycore.get_string_module('a_var = 20\n')
-        a_var = mod.get_attribute('a_var')
+        a_var = mod['a_var']
         self.assertEquals((mod, 1), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_functions(self):
         mod = self.pycore.get_string_module('def a_func():\n    pass\n')
-        a_func = mod.get_attribute('a_func')
+        a_func = mod['a_func']
         self.assertEquals((mod, 1), a_func.get_definition_location())
 
     def test_get_pyname_definition_location_class(self):
         mod = self.pycore.get_string_module('class AClass(object):\n    pass\n\n')
-        a_class = mod.get_attribute('AClass')
+        a_class = mod['AClass']
         self.assertEquals((mod, 1), a_class.get_definition_location())
 
     def test_get_pyname_definition_location_local_variables(self):
@@ -316,14 +316,14 @@ class PyCoreTest(unittest.TestCase):
 
     def test_get_pyname_definition_location_reassigning(self):
         mod = self.pycore.get_string_module('a_var = 20\na_var=30\n')
-        a_var = mod.get_attribute('a_var')
+        a_var = mod['a_var']
         self.assertEquals((mod, 1), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_importes(self):
         module = testutils.create_module(self.project, 'mod')
         mod = self.pycore.get_string_module('import mod\n')
         imported_module = self.pycore.get_module('mod')
-        module_pyname = mod.get_attribute('mod')
+        module_pyname = mod['mod']
         self.assertEquals((imported_module, 1),
                           module_pyname.get_definition_location())
 
@@ -332,7 +332,7 @@ class PyCoreTest(unittest.TestCase):
         module_resource.write('\ndef a_func():\n    pass\n')
         imported_module = self.pycore.get_module('mod')
         mod = self.pycore.get_string_module('from mod import a_func\n')
-        a_func = mod.get_attribute('a_func')
+        a_func = mod['a_func']
         self.assertEquals((imported_module, 2), a_func.get_definition_location())
 
     def test_get_pyname_definition_location_parameters(self):
@@ -353,18 +353,18 @@ class PyCoreTest(unittest.TestCase):
     def test_get_pyname_definition_location_class2(self):
         mod = self.pycore.get_string_module('class AClass(object):\n    def __init__(self):\n' + \
                                             '        self.an_attr = 10\n')
-        a_class = mod.get_attribute('AClass').get_object()
-        an_attr = a_class.get_attribute('an_attr')
+        a_class = mod['AClass'].get_object()
+        an_attr = a_class['an_attr']
         self.assertEquals((mod, 3), an_attr.get_definition_location())
 
     def test_import_not_found_module_get_definition_location(self):
         mod = self.pycore.get_string_module('import doesnotexist\n')
-        does_not_exist = mod.get_attribute('doesnotexist')
+        does_not_exist = mod['doesnotexist']
         self.assertEquals((None, None), does_not_exist.get_definition_location())
 
     def test_from_not_found_module_get_definition_location(self):
         mod = self.pycore.get_string_module('from doesnotexist import Sample\n')
-        sample = mod.get_attribute('Sample')
+        sample = mod['Sample']
         self.assertEquals((None, None), sample.get_definition_location())
 
     def test_from_package_import_module_get_definition_location(self):
@@ -372,20 +372,20 @@ class PyCoreTest(unittest.TestCase):
         testutils.create_module(self.project, 'mod', pkg)
         pkg_mod = self.pycore.get_module('pkg.mod')
         mod = self.pycore.get_string_module('from pkg import mod\n')
-        imported_mod = mod.get_attribute('mod')
+        imported_mod = mod['mod']
         self.assertEquals((pkg_mod, 1),
                           imported_mod.get_definition_location())
 
     def test_get_module_for_defined_pyobjects(self):
         mod = self.pycore.get_string_module('class AClass(object):\n    pass\n')
-        a_class = mod.get_attribute('AClass').get_object()
+        a_class = mod['AClass'].get_object()
         self.assertEquals(mod, a_class.get_module())
 
     def test_get_definition_location_for_packages(self):
         pkg = testutils.create_package(self.project, 'pkg')
         init_module = self.pycore.get_module('pkg.__init__')
         mod = self.pycore.get_string_module('import pkg\n')
-        pkg_pyname = mod.get_attribute('pkg')
+        pkg_pyname = mod['pkg']
         self.assertEquals((init_module, 1), pkg_pyname.get_definition_location())
 
     def test_get_definition_location_for_filtered_packages(self):
@@ -393,7 +393,7 @@ class PyCoreTest(unittest.TestCase):
         testutils.create_module(self.project, 'mod', pkg)
         init_module = self.pycore.get_module('pkg.__init__')
         mod = self.pycore.get_string_module('import pkg.mod')
-        pkg_pyname = mod.get_attribute('pkg')
+        pkg_pyname = mod['pkg']
         self.assertEquals((init_module, 1), pkg_pyname.get_definition_location())
 
     def test_out_of_project_modules(self):
@@ -410,8 +410,8 @@ class PyCoreTest(unittest.TestCase):
     def test_global_keyword(self):
         contents = 'a_var = 1\ndef a_func():\n    global a_var\n'
         mod = self.pycore.get_string_module(contents)
-        global_var = mod.get_attribute('a_var')
-        func_scope = mod.get_attribute('a_func').get_object().get_scope()
+        global_var = mod['a_var']
+        func_scope = mod['a_func'].get_object().get_scope()
         local_var = func_scope.get_name('a_var')
         self.assertEquals(global_var, local_var)
 
@@ -420,7 +420,7 @@ class PyCoreTest(unittest.TestCase):
         mod.write('class C(object):\n    def f(self):\n'
                   '        for my_var1, my_var2 in []:\n            pass\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
+        c_class = pymod['C'].get_object()
         self.assertFalse('my_var1' in c_class.get_attributes())
         self.assertFalse('my_var2' in c_class.get_attributes())
 
@@ -429,7 +429,7 @@ class PyCoreTest(unittest.TestCase):
         mod.write('class C(object):\n    def f(self):\n'
                   '        for my_var in []:\n            pass\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
+        c_class = pymod['C'].get_object()
         self.assertFalse('my_var' in c_class.get_attributes())
 
     def test_not_leaking_tuple_assigned_names_inside_parent_scope(self):
@@ -437,7 +437,7 @@ class PyCoreTest(unittest.TestCase):
         mod.write('class C(object):\n    def f(self):\n'
                   '        var1, var2 = range(2)\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        c_class = pymod.get_attribute('C').get_object()
+        c_class = pymod['C'].get_object()
         self.assertFalse('var1' in c_class.get_attributes())
 
     @testutils.run_only_for_25
@@ -467,19 +467,19 @@ class PyCoreTest(unittest.TestCase):
         if sys.version_info < (2, 6, 0):
             code = 'from __future__ import with_statement\n' + code
         pymod = self.pycore.get_string_module(code)
-        a_class = pymod.get_attribute('A').get_object()
-        var = pymod.get_attribute('var').get_object()
+        a_class = pymod['A'].get_object()
+        var = pymod['var'].get_object()
         self.assertEquals(a_class, var.get_type())
 
     def test_check_for_else_block(self):
         mod = self.pycore.get_string_module('for i in range(10):\n    pass\n'
                                             'else:\n    myvar = 1\n')
-        a_var = mod.get_attribute('myvar')
+        a_var = mod['myvar']
         self.assertEquals((mod, 4), a_var.get_definition_location())
 
     def test_check_names_defined_in_whiles(self):
         mod = self.pycore.get_string_module('while False:\n    myvar = 1\n')
-        a_var = mod.get_attribute('myvar')
+        a_var = mod['myvar']
         self.assertEquals((mod, 2), a_var.get_definition_location())
 
     @testutils.assert_raises(exceptions.ModuleSyntaxError)
@@ -512,29 +512,29 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_simple_import(self):
         mod = self.pycore.get_string_module('import samplemod\n')
-        samplemod = mod.get_attribute('samplemod').get_object()
+        samplemod = mod['samplemod'].get_object()
         self.assertEquals(get_base_type('Module'), samplemod.get_type())
 
     def test_from_import_class(self):
         mod = self.pycore.get_string_module('from samplemod import SampleClass\n')
-        result = mod.get_attribute('SampleClass').get_object()
+        result = mod['SampleClass'].get_object()
         self.assertEquals(get_base_type('Type'), result.get_type())
         self.assertTrue('sample_func' not in mod.get_attributes())
 
     def test_from_import_star(self):
         mod = self.pycore.get_string_module('from samplemod import *\n')
         self.assertEquals(get_base_type('Type'),
-                          mod.get_attribute('SampleClass').get_object().get_type())
+                          mod['SampleClass'].get_object().get_type())
         self.assertEquals(get_base_type('Function'),
-                          mod.get_attribute('sample_func').get_object().get_type())
-        self.assertTrue(mod.get_attribute('sample_var') is not None)
+                          mod['sample_func'].get_object().get_type())
+        self.assertTrue(mod['sample_var'] is not None)
 
     def test_from_import_star_overwriting(self):
         code = 'from samplemod import *\n' \
                'class SampleClass(object):\n    pass\n'
         mod = self.pycore.get_string_module(code)
         samplemod = self.pycore.get_module('samplemod')
-        sample_class = samplemod.get_attribute('SampleClass').get_object()
+        sample_class = samplemod['SampleClass'].get_object()
         self.assertNotEquals(sample_class,
                              mod.get_attributes()['SampleClass'].get_object())
 
@@ -545,7 +545,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_from_package_import_mod(self):
         mod = self.pycore.get_string_module('from package import nestedmod\n')
         self.assertEquals(get_base_type('Module'),
-                          mod.get_attribute('nestedmod').get_object().get_type())
+                          mod['nestedmod'].get_object().get_type())
 
     # XXX: Deciding to import everything on import start from packages
     def xxx_test_from_package_import_star(self):
@@ -583,7 +583,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod = self.pycore.get_string_module('import pkg.mod\n')
         self.assertTrue('pkg' in mod.get_attributes())
         self.assertTrue('sample_func' in
-                        mod.get_attribute('pkg').get_object().get_attribute('mod').
+                        mod['pkg'].get_object()['mod'].
                         get_object().get_attributes())
 
     def test_multi_dot_imports2(self):
@@ -591,7 +591,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, 'mod1', pkg)
         mod2 = testutils.create_module(self.project, 'mod2', pkg)
         mod = self.pycore.get_string_module('import pkg.mod1\nimport pkg.mod2\n')
-        package = mod.get_attribute('pkg').get_object()
+        package = mod['pkg'].get_object()
         self.assertEquals(2, len(package.get_attributes()))
         self.assertTrue('mod1' in package.get_attributes() and
                         'mod2' in package.get_attributes())
@@ -602,8 +602,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, 'mod1', pkg2)
         mod2 = testutils.create_module(self.project, 'mod2', pkg2)
         mod = self.pycore.get_string_module('import pkg1.pkg2.mod1\nimport pkg1.pkg2.mod2\n')
-        package1 = mod.get_attribute('pkg1').get_object()
-        package2 = package1.get_attribute('pkg2').get_object()
+        package1 = mod['pkg1'].get_object()
+        package2 = package1['pkg2'].get_object()
         self.assertEquals(2, len(package2.get_attributes()))
         self.assertTrue('mod1' in package2.get_attributes() and
                         'mod2' in package2.get_attributes())
@@ -613,7 +613,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, 'mod1', pkg)
         mod1.write('def f():\n    pass\n')
         mod = self.pycore.get_string_module('import pkg.mod1 as mod1\n')
-        module = mod.get_attribute('mod1').get_object()
+        module = mod['mod1'].get_object()
         self.assertTrue('f' in module.get_attributes())
 
     # TODO: not showing unimported names as attributes of packages
@@ -622,7 +622,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
         module = testutils.create_module(self.project, 'mod', pkg2)
         mod = self.pycore.get_string_module('from pkg1 import pkg2\n')
-        package = mod.get_attribute('pkg2')
+        package = mod['pkg2']
         self.assertEquals(0, len(package.get_attributes()))
 
     def test_invalidating_cache_after_resource_change(self):
@@ -641,9 +641,9 @@ class PyCoreInProjectsTest(unittest.TestCase):
         init_dot_py.write('a_var = 10\n')
         mod.write('import pkg\n')
         pymod = self.pycore.get_module('mod')
-        self.assertTrue('a_var' in pymod.get_attribute('pkg').get_object().get_attributes())
+        self.assertTrue('a_var' in pymod['pkg'].get_object().get_attributes())
         init_dot_py.write('new_var = 10\n')
-        self.assertTrue('a_var' not in pymod.get_attribute('pkg').get_object().get_attributes())
+        self.assertTrue('a_var' not in pymod['pkg'].get_object().get_attributes())
 
     def test_invalidating_cache_after_resource_change_for_nested_init_dot_pys(self):
         pkg1 = testutils.create_package(self.project, 'pkg1')
@@ -653,24 +653,22 @@ class PyCoreInProjectsTest(unittest.TestCase):
         init_dot_py.write('a_var = 10\n')
         mod.write('import pkg1\n')
         pymod = self.pycore.get_module('mod')
-        self.assertTrue('a_var' in pymod.get_attribute('pkg1').get_object().
-                        get_attribute('pkg2').get_object().get_attributes())
+        self.assertTrue('a_var' in pymod['pkg1'].get_object()['pkg2'].get_object().get_attributes())
         init_dot_py.write('new_var = 10\n')
-        self.assertTrue('a_var' not in pymod.get_attribute('pkg1').get_object().
-                        get_attribute('pkg2').get_object().get_attributes())
+        self.assertTrue('a_var' not in pymod['pkg1'].get_object()['pkg2'].get_object().get_attributes())
 
     def test_from_import_nonexistent_module(self):
         mod = self.pycore.get_string_module('from doesnotexistmod import DoesNotExistClass\n')
         self.assertTrue('DoesNotExistClass' in mod.get_attributes())
         self.assertEquals(get_base_type('Unknown'),
-                          mod.get_attribute('DoesNotExistClass').
+                          mod['DoesNotExistClass'].
                           get_object().get_type())
 
     def test_from_import_nonexistent_name(self):
         mod = self.pycore.get_string_module('from samplemod import DoesNotExistClass\n')
         self.assertTrue('DoesNotExistClass' in mod.get_attributes())
         self.assertEquals(get_base_type('Unknown'),
-                          mod.get_attribute('DoesNotExistClass').
+                          mod['DoesNotExistClass'].
                           get_object().get_type())
 
     def test_not_considering_imported_names_as_sub_scopes(self):
@@ -684,7 +682,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_inheriting_dotted_base_class(self):
         mod = self.pycore.get_string_module('import samplemod\n' +
                                             'class Derived(samplemod.SampleClass):\n    pass\n')
-        derived = mod.get_attribute('Derived').get_object()
+        derived = mod['Derived'].get_object()
         self.assertTrue('sample_method' in derived.get_attributes())
 
     def test_self_in_methods(self):
@@ -725,7 +723,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod', pkg)
         imported_module = self.pycore.get_module('pkg.mod')
         scope = self.pycore.get_string_scope('import pkg.mod\n')
-        mod_pyobject = scope.get_name('pkg').get_object().get_attribute('mod')
+        mod_pyobject = scope.get_name('pkg').get_object()['mod']
         self.assertEquals((imported_module, 1),
                           mod_pyobject.get_definition_location())
 
@@ -753,8 +751,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2.write('from mod1 import a_func\n')
         mod1_object = self.pycore.resource_to_pyobject(mod1)
         mod2_object = self.pycore.resource_to_pyobject(mod2)
-        self.assertEquals(mod1_object.get_attribute('a_func').get_object(),
-                          mod2_object.get_attribute('a_func').get_object())
+        self.assertEquals(mod1_object['a_func'].get_object(),
+                          mod2_object['a_func'].get_object())
 
     def test_relative_imports_for_string_modules(self):
         pkg = testutils.create_package(self.project, 'pkg')
@@ -763,7 +761,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2.write('import mod1\n')
         mod1_object = self.pycore.resource_to_pyobject(mod1)
         mod2_object = self.pycore.get_string_module(mod2.read(), mod2)
-        self.assertEquals(mod1_object, mod2_object.get_attribute('mod1').get_object())
+        self.assertEquals(mod1_object, mod2_object['mod1'].get_object())
 
     def test_relative_imports_for_string_scopes(self):
         pkg = testutils.create_package(self.project, 'pkg')
@@ -782,7 +780,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2.write('from . import mod1\n')
         mod1_object = self.pycore.resource_to_pyobject(mod1)
         mod2_object = self.pycore.resource_to_pyobject(mod2)
-        self.assertEquals(mod1_object, mod2_object.get_attribute('mod1').get_object())
+        self.assertEquals(mod1_object, mod2_object['mod1'].get_object())
 
     @testutils.run_only_for_25
     def test_new_style_relative_imports2(self):
@@ -793,8 +791,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2.write('from ..mod1 import a_func\n')
         mod1_object = self.pycore.resource_to_pyobject(mod1)
         mod2_object = self.pycore.resource_to_pyobject(mod2)
-        self.assertEquals(mod1_object.get_attribute('a_func').get_object(),
-                          mod2_object.get_attribute('a_func').get_object())
+        self.assertEquals(mod1_object['a_func'].get_object(),
+                          mod2_object['a_func'].get_object())
 
     def test_invalidating_cache_for_from_imports_after_resource_change(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -804,12 +802,12 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
         pymod1 = self.pycore.get_module('mod1')
         pymod2 = self.pycore.get_module('mod2')
-        self.assertEquals(pymod1.get_attribute('a_func').get_object(),
-                          pymod2.get_attribute('a_func').get_object())
+        self.assertEquals(pymod1['a_func'].get_object(),
+                          pymod2['a_func'].get_object())
         mod2.write(mod2.read() + '\n')
         pymod2 = self.pycore.get_module('mod2')
-        self.assertEquals(pymod1.get_attribute('a_func').get_object(),
-                          pymod2.get_attribute('a_func').get_object())
+        self.assertEquals(pymod1['a_func'].get_object(),
+                          pymod2['a_func'].get_object())
 
     def test_invalidating_superclasses_after_change(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -817,7 +815,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod1.write('class A(object):\n    def func1(self):\n        pass\n')
         mod2.write('import mod1\nclass B(mod1.A):\n    pass\n')
 
-        b_class = self.pycore.get_module('mod2').get_attribute('B').get_object()
+        b_class = self.pycore.get_module('mod2')['B'].get_object()
         self.assertTrue('func1' in b_class.get_attributes())
 
         mod1.write('class A(object):\n    def func2(self):\n        pass\n')
@@ -845,15 +843,15 @@ class ClassHierarchyTest(unittest.TestCase):
     def test_empty_get_superclasses(self):
         code = 'class AClass(object):\n    pass\n'
         mod = self.pycore.get_string_module(code)
-        a_class = mod.get_attribute('AClass').get_object()
+        a_class = mod['AClass'].get_object()
         self.assertTrue(len(a_class.get_superclasses()) <= 1)
 
     def test_simple_get_superclasses(self):
         code = 'class A(object):\n    pass\n' \
                'class B(A):\n    pass\n'
         mod = self.pycore.get_string_module(code)
-        a_class = mod.get_attribute('A').get_object()
-        b_class = mod.get_attribute('B').get_object()
+        a_class = mod['A'].get_object()
+        b_class = mod['B'].get_object()
         self.assertEquals([a_class], b_class.get_superclasses())
 
     def test_get_superclasses_with_two_superclasses(self):
@@ -861,16 +859,16 @@ class ClassHierarchyTest(unittest.TestCase):
                'class B(object):\n    pass\n' \
                'class C(A, B):\n    pass\n'
         mod = self.pycore.get_string_module(code)
-        a_class = mod.get_attribute('A').get_object()
-        b_class = mod.get_attribute('B').get_object()
-        c_class = mod.get_attribute('C').get_object()
+        a_class = mod['A'].get_object()
+        b_class = mod['B'].get_object()
+        c_class = mod['C'].get_object()
         self.assertEquals([a_class, b_class], c_class.get_superclasses())
 
     def test_empty_get_subclasses(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class A(object):\n    pass\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod.get_attribute('A')
+        a_class = pymod['A']
         self.assertEquals([], self.pycore.get_subclasses(a_class))
 
     def test_get_subclasses(self):
@@ -878,8 +876,8 @@ class ClassHierarchyTest(unittest.TestCase):
         mod.write('class A(object):\n    pass\n\n'
                   'class B(A):\n    pass\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod.get_attribute('A').get_object()
-        b_class = pymod.get_attribute('B').get_object()
+        a_class = pymod['A'].get_object()
+        b_class = pymod['B'].get_object()
         self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
 
     def test_get_subclasses_in_multiple_modules(self):
@@ -889,8 +887,8 @@ class ClassHierarchyTest(unittest.TestCase):
         mod2.write('import mod1\nclass B(mod1.A):\n    pass\n')
         pymod1 = self.pycore.resource_to_pyobject(mod1)
         pymod2 = self.pycore.resource_to_pyobject(mod2)
-        a_class = pymod1.get_attribute('A').get_object()
-        b_class = pymod2.get_attribute('B').get_object()
+        a_class = pymod1['A'].get_object()
+        b_class = pymod2['B'].get_object()
         self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
 
     def test_get_subclasses_reversed(self):
@@ -898,8 +896,8 @@ class ClassHierarchyTest(unittest.TestCase):
         mod.write('class B(A):\n    pass\n'
                   'class A(object):\n    pass\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod.get_attribute('A').get_object()
-        b_class = pymod.get_attribute('B').get_object()
+        a_class = pymod['A'].get_object()
+        b_class = pymod['B'].get_object()
         self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
 
     def test_get_subclasses_for_in_string_definitions(self):
@@ -907,7 +905,7 @@ class ClassHierarchyTest(unittest.TestCase):
         mod.write('"""\nclass B(A):\n    pass\n"""\n'
                   'class A(object):\n    pass\n')
         pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod.get_attribute('A').get_object()
+        a_class = pymod['A'].get_object()
         self.assertEquals([], self.pycore.get_subclasses(a_class))
 
     def test_get_classes_for_in_string_definitions(self):

@@ -225,7 +225,7 @@ class SelfImportVisitor(ImportInfoVisitor):
         new_pairs = []
         for name, alias in import_info.names_and_aliases:
             try:
-                result = pymodule.get_attribute(name).get_object()
+                result = pymodule[name].get_object()
                 if isinstance(result, pyobjects.PyModule) and \
                    result.get_resource() == self.resource:
                     imported = name

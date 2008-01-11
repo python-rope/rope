@@ -154,7 +154,7 @@ class Restructure(object):
         else:
             pyobject = self.pycore.get_module(attributes[0])
         for attribute in attributes[1:]:
-            pyname = pyobject.get_attribute(attribute)
+            pyname = pyobject[attribute]
             if pyname is None:
                 return None
             pyobject = pyname.get_object()

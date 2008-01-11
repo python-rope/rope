@@ -52,11 +52,11 @@ class SOIVisitor(object):
         elif isinstance(pyfunction, pyobjects.PyClass):
             pyclass = pyfunction
             if '__init__' in pyfunction.get_attributes():
-                pyfunction = pyfunction.get_attribute('__init__').get_object()
+                pyfunction = pyfunction['__init__'].get_object()
             pyname = rope.base.pynames.UnboundName(pyobjects.PyObject(pyclass))
             args = self._args_with_self(primary, pyname, pyfunction, node)
         elif '__call__' in pyfunction.get_attributes():
-            pyfunction = pyfunction.get_attribute('__call__').get_object()
+            pyfunction = pyfunction['__call__'].get_object()
             args = self._args_with_self(primary, pyname, pyfunction, node)
         else:
             return
@@ -95,7 +95,7 @@ class SOIVisitor(object):
             if instance is not None and value is not None:
                 pyobject = instance.get_object()
                 if '__setitem__' in pyobject.get_attributes():
-                    pyfunction = pyobject.get_attribute('__setitem__').get_object()
+                    pyfunction = pyobject['__setitem__'].get_object()
                     args = evaluate.ObjectArguments([instance] + args_pynames)
                     self._call(pyfunction, args)
                 # IDEA: handle `__setslice__`, too
