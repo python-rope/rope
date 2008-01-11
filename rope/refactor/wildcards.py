@@ -1,4 +1,4 @@
-from rope.base import ast, evaluate, builtins
+from rope.base import ast, evaluate, builtins, pyobjects
 from rope.refactor import patchedast, occurrences
 
 
@@ -39,7 +39,7 @@ class DefaultWildcard(object):
                 return False
         kind = None
         expected = None
-        for check in ['name', 'object', 'type']:
+        for check in ['name', 'object', 'type', 'instance']:
             if check in args:
                 kind = check
                 expected = args[check]
@@ -76,9 +76,26 @@ class _CheckObject(object):
             return self._same_pyname(self.expected, pyname)
         else:
             pyobject = pyname.get_object()
+            if self.kind == 'object':
+                objects = [pyobject]
             if self.kind == 'type':
-                pyobject = pyobject.get_type()
-            return self._same_pyobject(self.expected.get_object(), pyobject)
+                objects = [pyobject.get_type()]
+            if self.kind == 'instance':
+                objects = [pyobject]
+                objects.extend(self._get_super_classes(pyobject))
+                objects.extend(self._get_super_classes(pyobject.get_type()))
+            for pyobject in objects:
+                if self._same_pyobject(self.expected.get_object(), pyobject):
+                    return True
+            return False
+
+    def _get_super_classes(self, pyobject):
+        result = []
+        if isinstance(pyobject, pyobjects.AbstractClass):
+            for superclass in pyobject.get_superclasses():
+                result.append(superclass)
+                result.extend(self._get_super_classes(superclass))
+        return result
 
     def _same_pyobject(self, expected, pyobject):
         return expected == pyobject

@@ -3,6 +3,9 @@
 ===========
 
 
+- Checking isinstance in restructurings : January 11, 2008
+
+
 - Better handling of one-liners : January 10, 2008
 
 

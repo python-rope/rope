@@ -217,6 +217,15 @@ class CheckingFinderTest(unittest.TestCase):
                                          {'a': 'type=mod1.A'}))
         self.assertEquals(1, len(result))
 
+    def test_checking_instance_of_an_ass_name_node(self):
+        self.mod1.write('class A(object):\n    pass\n'
+                        'class B(A):\n    pass\nb = B()\n')
+        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        finder = similarfinder.SimilarFinder(pymodule)
+        result = list(finder.get_matches('${a} = ${assigned}',
+                                         {'a': 'instance=mod1.A'}))
+        self.assertEquals(1, len(result))
+
     def test_checking_equality_of_imported_pynames(self):
         mod2 = testutils.create_module(self.project, 'mod2')
         mod2.write('class A(object):\n    pass\n')

@@ -32,13 +32,13 @@ class Restructure(object):
 
       pattern ${pyobject}.get_attribute(${name})
       goal ${pyobject}[${name}]
-      args pyobject: type=rope.base.pyobjects.PyObject
+      args pyobject: instance=rope.base.pyobjects.PyObject
 
     Example #2::
 
       pattern ${name} in ${pyobject}.get_attributes()
       goal ${name} in {pyobject}
-      args pyobject: type=rope.base.pyobjects.PyObject
+      args pyobject: instance=rope.base.pyobjects.PyObject
 
     Example #3::
 
