@@ -28,6 +28,45 @@ class Restructure(object):
     import.  Note that rope handles duplicate imports and does not add
     the import if it already appears.
 
+    Example #1::
+
+      pattern ${pyobject}.get_attribute(${name})
+      goal ${pyobject}[${name}]
+      args pyobject: type=rope.base.pyobjects.PyObject
+
+    Example #2::
+
+      pattern ${name} in ${pyobject}.get_attributes()
+      goal ${name} in {pyobject}
+      args pyobject: type=rope.base.pyobjects.PyObject
+
+    Example #3::
+
+      pattern ${pycore}.create_module(${project}.root, ${name})
+      goal generate.create_module(${project}, ${name})
+
+      imports
+       from rope.contrib import generate
+
+      args
+       pycore: type=rope.base.pycore.PyCore
+       project: type=rope.base.project.Project
+
+    Example #4::
+
+      pattern ${pow}(${param1}, ${param2})
+      goal ${param1} ** ${param2}
+      args pow: name=mod.pow, exact
+
+    Example #5::
+
+      pattern ${inst}.f(${p1}, ${p2})
+      goal
+       ${inst}.f1(${p1})
+       ${inst}.f2(${p2})
+      checks
+       inst: type=mod.A
+
     """
 
     def __init__(self, project, pattern, goal, args=None,
