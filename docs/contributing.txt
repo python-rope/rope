@@ -34,26 +34,30 @@ If you're interested you are welcome to discuss your ideas in
 `rope-dev (at) googlegroups.com`_ mailing list or send your patches.
 Here is only a list of suggestions.
 
+Issues
+------
+
+The `dev/issues.txt`_ file is actually the main rope todo file.  There
+is a section called "unresolved issues"; it contains almost every kind
+of task.  Most of them need some thought or discussion.  Pickup
+whichever you are most interested in.  If you have ideas or questions
+about them, don't hesitate to discuss it in the mailing list.
+
+.. _`dev/issues.txt`: dev/issues.html
+
 Getting Ready For Python 3.0
 ----------------------------
 
-Checkout http://rope.sourceforge.net/hg/rope_py3k Mercurial_
-repository.  Contributions are welcome.
-
-Enhance ropemacs
-----------------
-
-Ropemacs_ can be enhanced very much and many of rope's features can be
-added to it.  Any help is welcome.
-
-.. _ropemacs: http://rope.sf.net/ropemacs.html
+Checkout http://rope.sf.net/hg/rope_py3k Mercurial_ repository.
+Contributions are welcome.
 
 Write Plugins For Other IDEs
 ----------------------------
 
-See ropemacs_ and Ropeide_.
+See ropemacs_ and ropeide_.
 
 
+.. _ropemacs: http://rope.sf.net/ropemacs.html
 .. _ropeide: http://rope.sf.net/ropeide.html
 
 

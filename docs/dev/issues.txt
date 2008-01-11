@@ -6,7 +6,8 @@
 Unresolved Issues
 =================
 
-* how to port rope to python 2.6?
+* ideas for more custom wildcards
+* how to adapt future python 2.6 ast changes?
 * custom wildcards and recursive patterns
 * codeassist is slow on large files
 * custom restructuring wildcard patterns and replacements
