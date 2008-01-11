@@ -109,7 +109,7 @@ class ScopeNameFinder(object):
         # function header
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
             name = self.word_finder.get_primary_at(offset).strip()
-            return (None, holding_scope.parent.get_name(name))
+            return (None, holding_scope.parent[name])
         # from statement module
         if self.word_finder.is_from_statement_module(offset):
             module = self.word_finder.get_primary_at(offset)

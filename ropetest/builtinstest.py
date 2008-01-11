@@ -333,8 +333,8 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('def func(p, *args, **kwds):\n    pass\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         func_scope = pymod['func'].get_object().get_scope()
-        args = func_scope.get_name('args').get_object()
-        kwds = func_scope.get_name('kwds').get_object()
+        args = func_scope['args'].get_object()
+        kwds = func_scope['kwds'].get_object()
         self.assertTrue(isinstance(args.get_type(), builtins.List))
         self.assertTrue(isinstance(kwds.get_type(), builtins.Dict))
 

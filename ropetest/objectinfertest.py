@@ -19,16 +19,16 @@ class ObjectInferTest(unittest.TestCase):
     def test_simple_type_inferencing(self):
         scope = self.pycore.get_string_scope(
             'class Sample(object):\n    pass\na_var = Sample()\n')
-        sample_class = scope.get_name('Sample').get_object()
-        a_var = scope.get_name('a_var').get_object()
+        sample_class = scope['Sample'].get_object()
+        a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
                                              'def a_func():\n    a_var = Sample()\n')
-        sample_class = scope.get_name('Sample').get_object()
-        a_var = scope.get_name('a_func').get_object().\
-                get_scope().get_name('a_var').get_object()
+        sample_class = scope['Sample'].get_object()
+        a_var = scope['a_func'].get_object().\
+                        get_scope()['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_classes_in_class_methods(self):
@@ -36,10 +36,10 @@ class ObjectInferTest(unittest.TestCase):
                'class Another(object):\n' \
                '    def a_method():\n        a_var = Sample()\n'
         scope = self.pycore.get_string_scope(code)
-        sample_class = scope.get_name('Sample').get_object()
-        another_class = scope.get_name('Another').get_object()
+        sample_class = scope['Sample'].get_object()
+        another_class = scope['Another'].get_object()
         a_var = another_class['a_method'].\
-                get_object().get_scope().get_name('a_var').get_object()
+                        get_object().get_scope()['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_class_attributes(self):
@@ -47,16 +47,16 @@ class ObjectInferTest(unittest.TestCase):
                'class Another(object):\n' \
                '    def __init__(self):\n        self.a_var = Sample()\n'
         scope = self.pycore.get_string_scope(code)
-        sample_class = scope.get_name('Sample').get_object()
-        another_class = scope.get_name('Another').get_object()
+        sample_class = scope['Sample'].get_object()
+        another_class = scope['Another'].get_object()
         a_var = another_class['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_for_in_class_assignments(self):
         scope = self.pycore.get_string_scope('class Sample(object):\n    pass\n' +
                                              'class Another(object):\n    an_attr = Sample()\n')
-        sample_class = scope.get_name('Sample').get_object()
-        another_class = scope.get_name('Another').get_object()
+        sample_class = scope['Sample'].get_object()
+        another_class = scope['Another'].get_object()
         an_attr = another_class['an_attr'].get_object()
         self.assertEquals(sample_class, an_attr.get_type())
 
@@ -64,8 +64,8 @@ class ObjectInferTest(unittest.TestCase):
         mod = 'class Sample(object):\n    pass\n' \
               'copied_sample = Sample'
         mod_scope = self.project.get_pycore().get_string_scope(mod)
-        sample_class = mod_scope.get_name('Sample')
-        copied_sample = mod_scope.get_name('copied_sample')
+        sample_class = mod_scope['Sample']
+        copied_sample = mod_scope['copied_sample']
         self.assertEquals(sample_class.get_object(),
                           copied_sample.get_object())
 
@@ -74,8 +74,8 @@ class ObjectInferTest(unittest.TestCase):
               'sample_class = Sample\n' \
               'sample_class = sample_class\n'
         mod_scope = self.project.get_pycore().get_string_scope(mod)
-        sample_class = mod_scope.get_name('Sample')
-        sample_class_var = mod_scope.get_name('sample_class')
+        sample_class = mod_scope['Sample']
+        sample_class_var = mod_scope['sample_class']
         self.assertEquals(sample_class.get_object(),
                           sample_class_var.get_object())
 
@@ -84,8 +84,8 @@ class ObjectInferTest(unittest.TestCase):
               'def a_func():\n    return Sample\n' \
               'a_var = a_func()\n'
         scope = self.project.get_pycore().get_string_scope(src)
-        sample_class = scope.get_name('Sample')
-        a_var = scope.get_name('a_var')
+        sample_class = scope['Sample']
+        a_var = scope['a_var']
         self.assertEquals(sample_class.get_object(), a_var.get_object())
 
     def test_function_returned_object_static_type_inference2(self):
@@ -93,8 +93,8 @@ class ObjectInferTest(unittest.TestCase):
               'def a_func():\n    return Sample()\n' \
               'a_var = a_func()\n'
         scope = self.project.get_pycore().get_string_scope(src)
-        sample_class = scope.get_name('Sample').get_object()
-        a_var = scope.get_name('a_var').get_object()
+        sample_class = scope['Sample'].get_object()
+        a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_recursive_function_returned_object_static_type_inference(self):
@@ -104,8 +104,8 @@ class ObjectInferTest(unittest.TestCase):
               '    else:\n        return a_func()\n' \
               'a_var = a_func()\n'
         scope = self.project.get_pycore().get_string_scope(src)
-        sample_class = scope.get_name('Sample').get_object()
-        a_var = scope.get_name('a_var').get_object()
+        sample_class = scope['Sample'].get_object()
+        a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_function_returned_object_using_call_special_function_static_type_inference(self):
@@ -113,15 +113,15 @@ class ObjectInferTest(unittest.TestCase):
               '    def __call__(self):\n        return Sample\n' \
               'sample = Sample()\na_var = sample()'
         scope = self.project.get_pycore().get_string_scope(src)
-        sample_class = scope.get_name('Sample')
-        a_var = scope.get_name('a_var')
+        sample_class = scope['Sample']
+        a_var = scope['a_var']
         self.assertEquals(sample_class.get_object(), a_var.get_object())
 
     def test_list_type_inferencing(self):
         src = 'class Sample(object):\n    pass\na_var = [Sample()]\n'
         scope = self.pycore.get_string_scope(src)
-        sample_class = scope.get_name('Sample').get_object()
-        a_var = scope.get_name('a_var').get_object()
+        sample_class = scope['Sample'].get_object()
+        a_var = scope['a_var'].get_object()
         self.assertNotEquals(sample_class, a_var.get_type())
 
     def test_attributed_object_inference(self):
@@ -129,7 +129,7 @@ class ObjectInferTest(unittest.TestCase):
               '    def __init__(self):\n        self.a_var = None\n' \
               '    def set(self):\n        self.a_var = Sample()\n'
         scope = self.pycore.get_string_scope(src)
-        sample_class = scope.get_name('Sample').get_object()
+        sample_class = scope['Sample'].get_object()
         a_var = sample_class['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 

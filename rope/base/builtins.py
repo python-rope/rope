@@ -80,7 +80,7 @@ class _CallContext(object):
             name = None
             while name is None and scope is not None:
                 for current in scope.get_names():
-                    if scope.get_name(current) is pyname:
+                    if scope[current] is pyname:
                         name = current
                         break
                 else:

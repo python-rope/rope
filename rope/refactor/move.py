@@ -121,7 +121,7 @@ class MoveMethod(object):
 
     def _get_changes_made_by_new_class(self, dest_attr, new_name):
         old_pyclass = self.pyfunction.parent
-        if dest_attr not in old_pyclass.get_attributes():
+        if dest_attr not in old_pyclass:
             raise exceptions.RefactoringError(
                 'Destination attribute <%s> not found' % dest_attr)
         pyclass = old_pyclass[dest_attr].get_object().get_type()

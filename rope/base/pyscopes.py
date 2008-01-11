@@ -26,6 +26,10 @@ class Scope(object):
         """The same as ``get_name(key)``"""
         return self.get_name(key)
 
+    def __contains__(self, key):
+        """The same as ``key in self.get_names()``"""
+        return key in self.get_names()
+
     def get_scopes(self):
         """Return the subscopes of this scope.
 

@@ -183,7 +183,7 @@ class TextualToPyObject(object):
                 return None
             if isinstance(pyobject, rope.base.pyobjects.PyDefinedObject):
                 try:
-                    pyobject = pyobject.get_scope().get_name(name).get_object()
+                    pyobject = pyobject.get_scope()[name].get_object()
                 except exceptions.NameNotFoundError:
                     return None
             else:
@@ -249,7 +249,7 @@ class DOITextualToPyObject(TextualToPyObject):
         module_scope = pymodule.get_scope()
         suspected = None
         if name in module_scope.get_names():
-            suspected = module_scope.get_name(name).get_object()
+            suspected = module_scope[name].get_object()
         if suspected is not None and \
            isinstance(suspected, rope.base.pyobjects.PyClass):
             return suspected

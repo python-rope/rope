@@ -77,7 +77,8 @@ class DynamicOITest(unittest.TestCase):
 
     def test_method_dti(self):
         mod = testutils.create_module(self.project, 'mod')
-        code = 'class AClass(object):\n    def a_method(self, arg):\n        return eval("arg()")\n' \
+        code = 'class AClass(object):\n    def a_method(self, arg):\n' \
+               '        return eval("arg()")\n' \
                'an_instance = AClass()\n' \
                'a_var = an_instance.a_method(AClass)\n'
         mod.write(code)
@@ -93,12 +94,13 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
-        self.assertEquals(pyscope.get_name('a_func').get_object(),
-                          pyscope.get_scopes()[0].get_name('arg').get_object())
+        self.assertEquals(pyscope['a_func'].get_object(),
+                          pyscope.get_scopes()[0]['arg'].get_object())
 
     def test_classes_with_the_same_name(self):
         mod = testutils.create_module(self.project, 'mod')
-        code = 'def a_func(arg):\n    class AClass(object):\n        pass\n    return eval("arg")\n' \
+        code = 'def a_func(arg):\n    class AClass(object):\n' \
+               '        pass\n    return eval("arg")\n' \
                'class AClass(object):\n    pass\n' \
                'a_var = a_func(AClass)\n'
         mod.write(code)
@@ -109,14 +111,15 @@ class DynamicOITest(unittest.TestCase):
 
     def test_nested_classes(self):
         mod = testutils.create_module(self.project, 'mod')
-        code = 'def a_func():\n    class AClass(object):\n        pass\n    return AClass\n' \
+        code = 'def a_func():\n    class AClass(object):\n' \
+               '        pass\n    return AClass\n' \
                'def another_func(arg):\n    return eval("arg")\n' \
                'a_var = another_func(a_func())\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
-        self.assertEquals(pyscope.get_scopes()[0].get_name('AClass').get_object(),
-                          pyscope.get_name('a_var').get_object())
+        self.assertEquals(pyscope.get_scopes()[0]['AClass'].get_object(),
+                          pyscope['a_var'].get_object())
 
     def test_function_argument_dti2(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -125,8 +128,8 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.pycore.resource_to_pyobject(mod).get_scope()
-        self.assertEquals(pyscope.get_name('a_func').get_object(),
-                          pyscope.get_scopes()[0].get_name('arg').get_object())
+        self.assertEquals(pyscope['a_func'].get_object(),
+                          pyscope.get_scopes()[0]['arg'].get_object())
 
     def test_dti_and_concluded_data_invalidation(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -141,7 +144,8 @@ class DynamicOITest(unittest.TestCase):
 
     def test_list_objects_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
-        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return eval("arg")\n' \
+        code = 'class C(object):\n    pass\n' \
+               'def a_func(arg):\n    return eval("arg")\n' \
                'a_var = a_func([C()])[0]\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -152,7 +156,8 @@ class DynamicOITest(unittest.TestCase):
 
     def test_for_loops_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
-        code = 'class C(object):\n    pass\ndef a_func(arg):\n    return eval("arg")\n' \
+        code = 'class C(object):\n    pass\n' \
+               'def a_func(arg):\n    return eval("arg")\n' \
                'for c in a_func([C()]):\n    a_var = c\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
@@ -353,7 +358,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
-        p_type = f_scope.get_name('p').get_object().get_type()
+        p_type = f_scope['p'].get_object().get_type()
         self.assertEquals(c_class, p_type)
 
     def test_static_oi_not_failing_when_callin_callables(self):
@@ -369,7 +374,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
-        p_type = f_scope.get_name('p').get_object().get_type()
+        p_type = f_scope['p'].get_object().get_type()
         self.assertEquals(c_class, p_type)
 
     def test_static_oi_class_methods(self):
@@ -380,7 +385,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         f_scope = c_class['f'].get_object().get_scope()
-        p_type = f_scope.get_name('p').get_object().get_type()
+        p_type = f_scope['p'].get_object().get_type()
         self.assertEquals(c_class, p_type)
 
     def test_static_oi_preventing_soi_maximum_recursion_exceptions(self):
@@ -635,7 +640,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c1_class = pymod['C1'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
-        arg2 = f_scope.get_name('arg2').get_object()
+        arg2 = f_scope['arg2'].get_object()
         self.assertEquals(c1_class, arg2.get_type())
 
     def test_call_function_and_parameters(self):
@@ -644,8 +649,7 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         scope = self.pycore.resource_to_pyobject(self.mod).get_scope()
-        p_object = scope.get_scopes()[0].get_scopes()[0].\
-                   get_name('p').get_object()
+        p_object = scope.get_scopes()[0].get_scopes()[0]['p'].get_object()
         self.assertTrue(isinstance(p_object.get_type(),
                                    rope.base.builtins.Str))
 
@@ -658,7 +662,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
-        p_type = f_scope.get_name('p').get_object().get_type()
+        p_type = f_scope['p'].get_object().get_type()
         self.assertEquals(c_class, p_type)
 
     def test_validation_problems_for_objectdb_retrievals(self):
@@ -688,7 +692,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         a_class = pymod['A'].get_object()
         f_scope = a_class.get_scope().get_scopes()[0]
-        p_type = f_scope.get_name('p').get_object().get_type()
+        p_type = f_scope['p'].get_object().get_type()
         self.assertEquals(a_class, p_type)
 
 
