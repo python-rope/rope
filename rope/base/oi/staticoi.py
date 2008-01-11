@@ -51,11 +51,11 @@ class SOIVisitor(object):
                                              node, self.scope)
         elif isinstance(pyfunction, pyobjects.PyClass):
             pyclass = pyfunction
-            if '__init__' in pyfunction.get_attributes():
+            if '__init__' in pyfunction:
                 pyfunction = pyfunction['__init__'].get_object()
             pyname = rope.base.pynames.UnboundName(pyobjects.PyObject(pyclass))
             args = self._args_with_self(primary, pyname, pyfunction, node)
-        elif '__call__' in pyfunction.get_attributes():
+        elif '__call__' in pyfunction:
             pyfunction = pyfunction['__call__'].get_object()
             args = self._args_with_self(primary, pyname, pyfunction, node)
         else:
@@ -94,7 +94,7 @@ class SOIVisitor(object):
             args_pynames.append(rope.base.pynames.UnboundName(value))
             if instance is not None and value is not None:
                 pyobject = instance.get_object()
-                if '__setitem__' in pyobject.get_attributes():
+                if '__setitem__' in pyobject:
                     pyfunction = pyobject['__setitem__'].get_object()
                     args = evaluate.ObjectArguments([instance] + args_pynames)
                     self._call(pyfunction, args)

@@ -159,7 +159,7 @@ def evaluate_object(evaluated):
     return _infer_assignment_object(evaluated.assignment, pyobject)
 
 def _get_attribute(pyobject, name):
-    if pyobject is not None and name in pyobject.get_attributes():
+    if pyobject is not None and name in pyobject:
         return pyobject[name]
 
 

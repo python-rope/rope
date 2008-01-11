@@ -19,7 +19,7 @@ class BuiltinTypesTest(unittest.TestCase):
     def test_simple_case(self):
         self.mod.write('l = []\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('append' in pymod['l'].get_object().get_attributes())
+        self.assertTrue('append' in pymod['l'].get_object())
 
     def test_holding_type_information(self):
         self.mod.write('class C(object):\n    pass\nl = [C()]\na_var = l.pop()\n')
@@ -68,7 +68,7 @@ class BuiltinTypesTest(unittest.TestCase):
     def test_simple_case_for_dicts(self):
         self.mod.write('d = {}\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('get' in pymod['d'].get_object().get_attributes())
+        self.assertTrue('get' in pymod['d'].get_object())
 
     def test_get_item_for_dicts(self):
         self.mod.write('class C(object):\n    pass\nd = {1: C()}\na_var = d[1]\n')
@@ -176,12 +176,12 @@ class BuiltinTypesTest(unittest.TestCase):
     def test_simple_builtin_scope_test(self):
         self.mod.write('l = list()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('append' in pymod['l'].get_object().get_attributes())
+        self.assertTrue('append' in pymod['l'].get_object())
 
     def test_simple_sets(self):
         self.mod.write('s = set()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('add' in pymod['s'].get_object().get_attributes())
+        self.assertTrue('add' in pymod['s'].get_object())
 
     def test_making_lists_using_the_passed_argument_to_init(self):
         self.mod.write('class C(object):\n    pass\nl1 = [C()]\n'
@@ -223,7 +223,7 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('l = range(1)\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         l = pymod['l'].get_object()
-        self.assertTrue('append' in l.get_attributes())
+        self.assertTrue('append' in l)
 
     def test_reversed_builtin_function(self):
         self.mod.write('class C(object):\n    pass\nl = [C()]\n'
@@ -262,7 +262,7 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write('p = property()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         p_var = pymod['p'].get_object()
-        self.assertTrue('fget' in p_var.get_attributes())
+        self.assertTrue('fget' in p_var)
 
     def test_lambda_functions(self):
         self.mod.write('l = lambda: 1\n')

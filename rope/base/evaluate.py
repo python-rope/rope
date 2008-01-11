@@ -132,9 +132,9 @@ class ScopeNameFinder(object):
             if isinstance(pyobject, pyobjects.AbstractFunction):
                 return pyobject
             elif isinstance(pyobject, pyobjects.AbstractClass) and \
-                 '__init__' in pyobject.get_attributes():
+                 '__init__' in pyobject:
                 return pyobject['__init__'].get_object()
-            elif '__call__' in pyobject.get_attributes():
+            elif '__call__' in pyobject:
                 return pyobject['__call__'].get_object()
         return None
 
@@ -180,7 +180,7 @@ class StatementEvaluator(object):
             return pyobject.get_returned_object(args)
         if isinstance(pyobject, rope.base.pyobjects.AbstractClass):
             result = None
-            if '__new__' in pyobject.get_attributes():
+            if '__new__' in pyobject:
                 new_function = pyobject['__new__'].get_object()
                 result = _get_returned(new_function)
             if result is None or \
@@ -192,7 +192,7 @@ class StatementEvaluator(object):
         pyfunction = None
         if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
             pyfunction = pyobject
-        elif '__call__' in pyobject.get_attributes():
+        elif '__call__' in pyobject:
             pyfunction = pyobject['__call__'].get_object()
         if pyfunction is not None:
             self.result = rope.base.pynames.UnboundName(
@@ -309,7 +309,7 @@ class StatementEvaluator(object):
             pyobject = pyname.get_object()
         else:
             return
-        if function_name in pyobject.get_attributes():
+        if function_name in pyobject:
             call_function = pyobject[function_name].get_object()
             args = [node]
             if other_args:

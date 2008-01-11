@@ -555,10 +555,10 @@ def _infer_sequence_for_pyname(pyname):
         return None
     seq = pyname.get_object()
     args = rope.base.evaluate.ObjectArguments([pyname])
-    if '__iter__' in seq.get_attributes():
+    if '__iter__' in seq:
         iter = seq['__iter__'].get_object().\
                get_returned_object(args)
-        if iter is not None and 'next' in iter.get_attributes():
+        if iter is not None and 'next' in iter:
             holding = iter['next'].get_object().\
                       get_returned_object(args)
             return holding

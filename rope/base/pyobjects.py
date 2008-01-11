@@ -26,6 +26,10 @@ class PyObject(object):
         """The same as ``get_attribute(key)``"""
         return self.get_attribute(key)
 
+    def __contains__(self, key):
+        """The same as ``key in self.get_attributes()``"""
+        return key in self.get_attributes()
+
     def __eq__(self, obj):
         """Check the equality of two `PyObject`\s
 

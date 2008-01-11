@@ -27,7 +27,7 @@ class ChangeSignature(object):
             return
         pyobject = self.pyname.get_object()
         if isinstance(pyobject, pyobjects.PyClass) and \
-           '__init__' in pyobject.get_attributes():
+           '__init__' in pyobject:
             self.pyname = pyobject['__init__']
             self.name = '__init__'
         pyobject = self.pyname.get_object()

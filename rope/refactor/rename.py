@@ -251,7 +251,7 @@ class FindMatchingPyNames(object):
     def _get_superclasses_defining_method(self, pyclass, attr_name):
         result = set()
         for superclass in pyclass.get_superclasses():
-            if attr_name in superclass.get_attributes():
+            if attr_name in superclass:
                 result.update(self._get_superclasses_defining_method(
                               superclass, attr_name))
         if not result:
