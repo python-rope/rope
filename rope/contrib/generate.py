@@ -290,7 +290,7 @@ class _FunctionGenerationInfo(_GenerationInfo):
     def element_already_exists(self):
         if self.pyname is None or isinstance(self.pyname, pynames.UnboundName):
             return False
-        if self.get_name() not in self.goal_scope.get_names():
+        if self.get_name() not in self.goal_scope:
             return False
         return True
 

@@ -46,7 +46,7 @@ class PyCoreScopesTest(unittest.TestCase):
         self.assertEquals(1, len(sample_class_scope.get_names()))
         self.assertEquals(1, len(sample_class_scope.get_scopes()))
         f_in_class = sample_class_scope.get_scopes()[0]
-        self.assertTrue('var' in f_in_class.get_names())
+        self.assertTrue('var' in f_in_class)
 
     def test_get_lineno(self):
         scope = self.pycore.get_string_scope(
@@ -70,13 +70,13 @@ class PyCoreScopesTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(
             'def sample_func(param):\n    a = 10\n')
         sample_func_scope = scope.get_scopes()[0]
-        self.assertTrue('param' in sample_func_scope.get_names())
+        self.assertTrue('param' in sample_func_scope)
 
     def test_get_names_contains_only_names_defined_in_a_scope(self):
         scope = self.pycore.get_string_scope(
             'var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
         sample_func_scope = scope.get_scopes()[0]
-        self.assertTrue('var1' not in sample_func_scope.get_names())
+        self.assertTrue('var1' not in sample_func_scope)
 
     def test_scope_lookup(self):
         scope = self.pycore.get_string_scope(
@@ -90,35 +90,35 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_function_scopes(self):
         scope = self.pycore.get_string_scope('def func():\n    var = 10\n')
         func_scope = scope.get_scopes()[0]
-        self.assertTrue('var' in func_scope.get_names())
+        self.assertTrue('var' in func_scope)
 
     def test_function_scopes_classes(self):
         scope = self.pycore.get_string_scope(
             'def func():\n    class Sample(object):\n        pass\n')
         func_scope = scope.get_scopes()[0]
-        self.assertTrue('Sample' in func_scope.get_names())
+        self.assertTrue('Sample' in func_scope)
 
     def test_function_getting_scope(self):
         mod = self.pycore.get_string_module('def func():    var = 10\n')
         func_scope = mod['func'].get_object().get_scope()
-        self.assertTrue('var' in func_scope.get_names())
+        self.assertTrue('var' in func_scope)
 
     def test_scopes_in_function_scopes(self):
         scope = self.pycore.get_string_scope(
             'def func():\n    def inner():\n        var = 10\n')
         func_scope = scope.get_scopes()[0]
         inner_scope = func_scope.get_scopes()[0]
-        self.assertTrue('var' in inner_scope.get_names())
+        self.assertTrue('var' in inner_scope)
 
     def test_for_variables_in_scopes(self):
         scope = self.pycore.get_string_scope(
             'for a_var in range(10):\n    pass\n')
-        self.assertTrue('a_var' in scope.get_names())
+        self.assertTrue('a_var' in scope)
 
     def test_assists_inside_fors(self):
         scope = self.pycore.get_string_scope(
             'for i in range(10):\n    a_var = i\n')
-        self.assertTrue('a_var' in scope.get_names())
+        self.assertTrue('a_var' in scope)
 
     def test_first_parameter_of_a_method(self):
         code = 'class AClass(object):\n' \

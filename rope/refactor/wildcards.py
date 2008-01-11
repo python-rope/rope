@@ -111,6 +111,10 @@ class _CheckObject(object):
             class _BuiltinsStub(object):
                 def get_attribute(self, name):
                     return builtins.builtins[name]
+                def __getitem__(self, name):
+                    return builtins.builtins[name]
+                def __contains__(self, name):
+                    return name in builtins.builtins
             pyobject = _BuiltinsStub()
         else:
             pyobject = self.project.pycore.get_module(attributes[0])
