@@ -16,7 +16,10 @@ class Restructure(object):
     `args` is a dictionary of wildcard names to wildcard arguments.
     If the argument is a tuple, the first item of the tuple is
     considered to be the name of the wildcard to use; otherwise the
-    "default" wildcard is used.
+    "default" wildcard is used.  For getting the list arguments a
+    wildcard supports, see the pydoc of the wildcard.  (see
+    `rope.refactor.wildcard.DefaultWildcard` for the default
+    wildcard.)
 
     `wildcards` is the list of wildcard types that can appear in
     `pattern`.  See `rope.refactor.wildcards`.  If a wildcard does not

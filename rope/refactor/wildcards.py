@@ -20,6 +20,18 @@ class Suspect(object):
 
 
 class DefaultWildcard(object):
+    """The default restructuring wildcard
+
+    The argument passed to this wildcard is in the
+    ``key1=value1,key2=value2,...`` format.  Possible keys are:
+
+    * name - for checking the reference
+    * type - for checking the type
+    * object - for checking the object
+    * instance - for checking types but similar to builtin isinstance
+    * exact - matching only occurrences with the same name as the wildcard
+
+    """
 
     def __init__(self, project):
         self.project = project
