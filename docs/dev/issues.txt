@@ -6,6 +6,9 @@
 Unresolved Issues
 =================
 
+* how to port rope to python 2.6?
+* custom wildcards and recursive patterns
+* codeassist is slow on large files
 * custom restructuring wildcard patterns and replacements
 * not reimporting back imports after moving
 * importing compressed objectdb/history data?
@@ -49,6 +52,7 @@ Unresolved Issues
 To Be Reviewed
 ==============
 
+* review patchedast; make it faster
 * lots of estimations in codeanalyze in WordRangeFinder
 * review objectdb modules
 * how concluded data are held for star imports
@@ -82,32 +86,26 @@ Custom Restructuring Wildcards
 ==============================
 
 There is a need to add more custom wildcards in restructuring
-patterns.  For instance, one might want to match any parameters such
-as in::
-
-  pattern: ${obj}.f(${params})
-
-where ``${params}`` should match all of the parameters that are passed
-to `f()`.  But adding all such needs to `similarfinder` module makes
+patterns.  But adding all such needs to `similarfinder` module makes
 it really complex.  So I think adding the ability to extend them is
 useful.
 
 Sometimes wildcards can be customized.  For instance one might want to
-match the parameters only if ``p1`` appears in them.  They can be
-specified in wildcard parameters.
+match the function calls only if ``p1`` is passed in the arguments.
+They can be specified in wildcard arguments.
 
 Since matched wildcards can appear in the goal pattern, each wildcard
 should have a corresponding replacement wildcard.  Each replacement
 might be customized in each place it appears; for instance
-``${params:-p1}`` might mean to remove ``p1`` argument.
+``${mycall:-p1}`` might mean to remove ``p1`` argument.
 
 
 Wildcard Format
 ---------------
 
 All wildcards should appear as ``${name}``.  The type of wildcards and
-their parameters can be specified using the parameters argument of
-``Restructuring.get_changes()``.
+their parameters can be specified using the ``args`` argument of
+``Restructuring()``.
 
 Ideas:
 
@@ -120,34 +118,10 @@ Ideas:
     pattern: ${a:type=__builtin__.int} + ${a}
 
 
-Process
--------
-
-We should remain backward compatible for at least one major release.
-There seem to be two backward incompatible changes.
-
-Wildcards starting with a ``?`` sign used to match any corresponding
-ast expression.  Now all normal variables are so by default unless
-something like ``exact`` parameter is passed to them.
-
-Because of the addition of ``parameters`` argument, the ``checks``
-parameter of ``Restructuring.get_changes()`` will be deprecated.
-
-
 Examples
 --------
 
 .. ...
-
-
-Implementation
---------------
-
-* matchers might need to type-check or use other matchers
-* how to say what matched a node in replacements?
-* how to pass replacement args to replacements?
-* how to decide which wildcard should be used when replacing?
-* recursive matching
 
 
 Getting Ready For Python 3.0
