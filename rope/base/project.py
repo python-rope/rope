@@ -205,6 +205,11 @@ class Project(_Project):
         if self._ropefolder_name is not None:
             return self.get_folder(self._ropefolder_name)
 
+    def validate(self, folder=None):
+        if folder is None:
+            folder = self.root
+        super(Project, self).validate(folder)
+
     root = property(lambda self: self.get_resource(''))
     address = property(lambda self: self._address)
 

@@ -169,10 +169,10 @@ Validating The Project
 When using rope as a library you probably change the files in it in
 parallel (for example in IDEs).  To force rope to invalidate cached
 information about resources that have been removed or changed outside
-rope you should call `Project.validate()`_ method.  You should pass a
+rope you should call `Project.validate()`_ method.  You can pass a
 resource to this method.  For example::
 
-  myproject.validate(myproject.root)
+  myproject.validate()
 
 validates all files and directories in the project.  So call this
 function every time you want use rope (before performing refactorings,
