@@ -5,13 +5,10 @@
 See the `unresolved issues` section of ``issues.txt`` file for more.
 
 
+> Public Release 1.0
+
+
 > Public Release 0.8
-
-
-* Removing ``pass`` when introducing factory for empty classes
-
-
-* Move refactoring and moving a group of elements together
 
 
 * Removing files/folders
@@ -23,14 +20,8 @@ See the `unresolved issues` section of ``issues.txt`` file for more.
 * Using `svn` instead of `pysvn`
 
 
-* Handling tuple parameters
-
-
-* Split tuple assignment refactoring
-
-
 * An option to decide whether to use froms or normal imports for back
   imports
 
 
-> Public Release 0.7.5
+> Public Release 0.7.5 : January 17, 2008
