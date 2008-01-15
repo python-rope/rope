@@ -266,6 +266,10 @@ class _IgnoredResources(object):
         for pattern in self.ignored_patterns:
             if pattern.match(resource.path):
                 return True
+            path = os.path.join(resource.project.address,
+                                *resource.path.split('/'))
+            if os.path.islink(path):
+                return True
         return False
 
     def _get_compiled_patterns(self):
