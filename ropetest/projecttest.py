@@ -450,7 +450,8 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals(myfolder, path_to_resource(
                           self.project, myfolder.real_path, type='folder'))
 
-    def test_getting_files(self):
+    @testutils.run_only_for_unix
+    def test_ignoring_symlinks_inside_project(self):
         project2 = testutils.sample_project(folder_name='sampleproject2')
         mod = project2.root.create_file('mod.py')
         try:

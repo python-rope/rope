@@ -62,6 +62,16 @@ def run_only_for_25(func):
         return do_nothing
 
 
+def run_only_for_unix(func):
+    """Should be used as a decorator for a unittest.TestCase test method"""
+    if os.name == 'posix':
+        return func
+    else:
+        def do_nothing(self):
+            pass
+        return do_nothing
+
+
 def assert_raises(exception_class):
     """Should be used as a decorator for a unittest.TestCase test method"""
     def _assert_raises(func):
