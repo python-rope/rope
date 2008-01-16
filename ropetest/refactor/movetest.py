@@ -429,6 +429,11 @@ class MoveRefactoringTest(unittest.TestCase):
             'import mod2\ns = """\\\n"""\nr = mod2.f()\n',
             self.mod1.read())
 
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_raising_an_exception_when_moving_non_package_folders(self):
+        dir = self.project.root.create_folder('dir')
+        mover = move.create_move(self.project, dir)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -354,6 +354,9 @@ class MoveModule(object):
         self.pycore = project.pycore
         if not resource.is_folder() and resource.name == '__init__.py':
             resource = resource.parent
+        if resource.is_folder() and not resource.has_child('__init__.py'):
+            raise exceptions.RefactoringError(
+                'Cannot move non-package folder.')
         dummy_pymodule = self.pycore.get_string_module('')
         self.old_pyname = pynames.ImportedModule(dummy_pymodule,
                                                  resource=resource)
