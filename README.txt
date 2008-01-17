@@ -14,10 +14,10 @@ Overview
 New Features
 ============
 
+* Adding restructuring arguments
 * Checking isinstance in restructurings
 * Better handling of one-liners
 * Choosing which files to apply a restructuring on
-* Allowing customizable restructuring wild-cards
 
 Restructuring ``checks`` has been deprecated in favor of restructuring
 ``arguments``.  This change is the first step towards custom
@@ -46,7 +46,7 @@ similar to ``isinstance`` built-in function.  ``obj: instance=mod.A``
 means either `obj` is an instance of `mod.A` or it is an instance of a
 subclass of it.
 
-A new parameter called ``resources`` is added to
+A new parameter called ``resources`` has been added to
 `Restructure.get_changes()`.  It can be used to limit the list of
 resources to apply a restructuring on; restructurings are applied on
 all python files in the project, by default.

@@ -24,4 +24,4 @@ See the `unresolved issues` section of ``issues.txt`` file for more.
   imports
 
 
-> Public Release 0.7.5 : January 17, 2008
+> Public Release 0.7.6

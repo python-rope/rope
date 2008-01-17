@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.7.5 : January 17, 2008
+
+
 - Checking isinstance in restructurings : January 11, 2008
 
 
