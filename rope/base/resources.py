@@ -159,18 +159,12 @@ class Folder(Resource):
             return False
 
     def get_files(self):
-        result = []
-        for resource in self.get_children():
-            if not resource.is_folder():
-                result.append(resource)
-        return result
+        return [resource for resource in self.get_children()
+                if not resource.is_folder()]
 
     def get_folders(self):
-        result = []
-        for resource in self.get_children():
-            if resource.is_folder():
-                result.append(resource)
-        return result
+        return [resource for resource in self.get_children()
+                if resource.is_folder()]
 
     def contains(self, resource):
         if self == resource:
