@@ -104,6 +104,10 @@ class FilteredResourceObserver(object):
         if resource in self.resources:
             del self.resources[resource]
 
+    def clear_resources(self, resource):
+        """Removes all registered resources"""
+        self.resources.clear()
+
     def resource_changed(self, resource):
         changes = _Changes()
         self._update_changes_caused_by_changed(changes, resource)

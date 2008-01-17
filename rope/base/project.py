@@ -299,6 +299,10 @@ class _FileListCacher(object):
             if self.observer is None:
                 self._init_observer()
             self._list = self._get_files_recursively(self.project.root)
+            folders = [resource for resource in self._list
+                       if resource.is_folder()]
+            for resource in folders:
+                self.observer.add_resource(resource)
         return self._list
 
     def _get_files_recursively(self, folder):
@@ -313,9 +317,11 @@ class _FileListCacher(object):
 
     def _init_observer(self):
         if self.observer is None:
-            self.observer = rope.base.resourceobserver.ResourceObserver(
+            self.rawobserver = ResourceObserver(
                 self._changed, self._moved, self._created,
                 self._removed, self._validate)
+            self.observer = FilteredResourceObserver(self.rawobserver)
+            self.project.add_observer(self.rawobserver)
             self.project.add_observer(self.observer)
 
     def _changed(self, resource):
@@ -342,7 +348,7 @@ class _FileListCacher(object):
                 self._list.remove(resource)
 
     def _validate(self, resource):
-        self._list = None
+        pass
 
 
 def _realpath(path):
