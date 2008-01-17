@@ -67,7 +67,7 @@ class Restructure(object):
       goal
        ${inst}.f1(${p1})
        ${inst}.f2(${p2})
-      checks
+      args
        inst: type=mod.A
 
     """
