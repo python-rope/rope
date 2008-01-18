@@ -245,6 +245,16 @@ class IsolatedHistoryTest(unittest.TestCase):
         str(change)
         change.undo()
 
+    def test_clearing_up_the_history(self):
+        change1 = ChangeContents(self.file1, '1')
+        change2 = ChangeContents(self.file1, '2')
+        self.history.do(change1)
+        self.history.do(change2)
+        self.history.undo()
+        self.history.clear()
+        self.assertEquals(0, len(self.history.undo_list))
+        self.assertEquals(0, len(self.history.redo_list))
+
 
 class SavingHistoryTest(unittest.TestCase):
 

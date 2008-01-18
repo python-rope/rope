@@ -182,6 +182,11 @@ class History(object):
         if self.redo_list:
             return self.redo_list[-1]
 
+    def clear(self):
+        """Remove all undo and redo information"""
+        del self.undo_list[:]
+        del self.redo_list[:]
+
 
 class _FindChangeDependencies(object):
 
