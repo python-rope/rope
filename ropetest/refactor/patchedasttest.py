@@ -789,6 +789,8 @@ class _ResultChecker(object):
             if expected == '' or isinstance(child, basestring):
                 self.test_case.assertEquals(expected, child)
             else:
+                self.test_case.assertNotEquals(
+                    '', text, 'probably ignoring some node')
                 self.test_case.assertTrue(
                     child.__class__.__name__.startswith(expected),
                     msg='Expected <%s> but was <%s>' %
