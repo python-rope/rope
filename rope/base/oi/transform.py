@@ -93,8 +93,7 @@ class PyObjectToTextual(object):
         return self.resource_to_path(pymodule.get_resource())
 
     def resource_to_path(self, resource):
-        real_path = resource.real_path
-        if real_path.startswith(self.project.address):
+        if resource.project == self.project:
             return resource.path
         else:
             return real_path
@@ -211,7 +210,7 @@ class TextualToPyObject(object):
             root = self.project.address
             if not os.path.isabs(path):
                 return self.project.get_resource(path)
-            if path.startswith(root):
+            if path == root or path.startswith(root + '/'):
                 # INFO: This is a project file; should not be absolute
                 return None
             import rope.base.project
@@ -279,7 +278,8 @@ class DOITextualToPyObject(TextualToPyObject):
 
     def path_to_resource(self, path):
         root = self.project.address
-        if os.path.isabs(path) and path.startswith(root):
+        if os.path.isabs(path) and (path == root or
+                                    path.startswith(root + '/')):
             path = path[len(root):].replace(os.sep, '/')
             if path.startswith('/'):
                 path = path[1:]
