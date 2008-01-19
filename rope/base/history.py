@@ -5,6 +5,7 @@ from rope.base import exceptions, change, taskhandle
 
 
 class History(object):
+    """A class that holds project history"""
 
     def __init__(self, project, maxundos=None):
         self.project = project
@@ -59,6 +60,12 @@ class History(object):
     history_file = property(_get_history_file)
 
     def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
+        """Perform the change and add it to the `self.undo_list`
+
+        Note that uninteresting changes (changes to ignored files)
+        will not be appended to `self.undo_list`.
+
+        """
         self.current_change = changes
         try:
             changes.do(change.create_job_set(task_handle, changes))
@@ -80,24 +87,40 @@ class History(object):
         return False
 
     def undo(self, change=None, task_handle=taskhandle.NullTaskHandle()):
-        """Returns the list of undone changes"""
+        """Redo done changes from the history
+
+        When `change` is `None`, the last done change will be undone.
+        If change is not `None` it should be an item from
+        `self.undo_list`; this change and all changes that depend on
+        it will be undone.  In both cases the list of undone changes
+        will be returned.
+
+        """
         if not self._undo_list:
             raise exceptions.HistoryError('Undo list is empty')
         if change is None:
             change = self.undo_list[-1]
-        dependencies = self.find_dependencies(self.undo_list, change)
+        dependencies = self._find_dependencies(self.undo_list, change)
         self._move_front(self.undo_list, dependencies)
         index = self.undo_list.index(change)
         self._perform_undos(len(dependencies), task_handle)
         return self.redo_list[-len(dependencies):]
 
     def redo(self, change=None, task_handle=taskhandle.NullTaskHandle()):
-        """Return the list of redone changes"""
+        """Redo undone changes from the history
+
+        When `change` is `None`, the last undone change will be
+        redone.  If change is not `None` it should be an item from
+        `self.redo_list`; this change and all changes that depend on
+        it will be redone.  In both cases the list of redone changes
+        will be returned.
+
+        """
         if not self.redo_list:
             raise exceptions.HistoryError('Redo list is empty')
         if change is None:
             change = self.redo_list[-1]
-        dependencies = self.find_dependencies(self.redo_list, change)
+        dependencies = self._find_dependencies(self.redo_list, change)
         self._move_front(self.redo_list, dependencies)
         index = self.redo_list.index(change)
         self._perform_redos(len(dependencies), task_handle)
@@ -108,7 +131,7 @@ class History(object):
             change_list.remove(change)
             change_list.append(change)
 
-    def find_dependencies(self, change_list, change):
+    def _find_dependencies(self, change_list, change):
         index = change_list.index(change)
         return _FindChangeDependencies(change_list[index:]).\
                find_dependencies()
@@ -184,16 +207,18 @@ class History(object):
 
     @property
     def tobe_undone(self):
+        """The last done change if available, `None` otherwise"""
         if self.undo_list:
             return self.undo_list[-1]
 
     @property
     def tobe_redone(self):
+        """The last undone change if available, `None` otherwise"""
         if self.redo_list:
             return self.redo_list[-1]
 
     def clear(self):
-        """Remove all undo and redo information"""
+        """Forget all undo and redo information"""
         del self.undo_list[:]
         del self.redo_list[:]
 
