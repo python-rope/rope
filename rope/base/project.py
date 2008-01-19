@@ -142,7 +142,8 @@ class Project(_Project):
         self.ignored = _IgnoredResources()
         self.file_list = _FileListCacher(self)
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
-        self.prefs['ignored_resources'] = ['*.pyc', '.svn', '*~', '.ropeproject']
+        if ropefolder is not None:
+            self.prefs['ignored_resources'] = [ropefolder]
         self._init_prefs(prefs)
 
     def get_files(self):

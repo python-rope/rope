@@ -14,16 +14,17 @@ class ProjectTest(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.project_root = 'sample_project'
-        testutils.remove_recursively(self.project_root)
+        self.project = testutils.sample_project(foldername='sampleproject',
+                                                ropefolder=None)
+        self.project_root = self.project.address
         self._make_sample_project()
-        self.project = Project(self.project_root, ropefolder=None)
         self.no_project = NoProject()
 
     def _make_sample_project(self):
         self.sample_file = 'sample_file.txt'
         self.sample_path = os.path.join(self.project_root, 'sample_file.txt')
-        os.mkdir(self.project_root)
+        if not os.path.exists(self.project_root):
+            os.mkdir(self.project_root)
         self.sample_folder = 'sample_folder'
         os.mkdir(os.path.join(self.project_root, self.sample_folder))
         sample = open(self.sample_path, 'w')

@@ -16,7 +16,8 @@ def sample_project(root=None, foldername=None, **kwds):
             root = '/dev/shm/' + root
     # Using these prefs for faster tests
     prefs = {'save_objectdb': False, 'save_history': False,
-             'validate_objectdb': False, 'automatic_soi': False}
+             'validate_objectdb': False, 'automatic_soi': False,
+             'ignored_resources': ['.ropeproject', '*.pyc']}
     prefs.update(kwds)
     remove_recursively(root)
     project = rope.base.project.Project(root, **prefs)
