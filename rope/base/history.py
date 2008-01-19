@@ -85,20 +85,32 @@ class History(object):
             raise exceptions.HistoryError('Undo list is empty')
         if change is None:
             change = self.undo_list[-1]
-        dependencies = self.find_dependencies(change)
-        self._move_front(dependencies)
+        dependencies = self.find_dependencies(self.undo_list, change)
+        self._move_front(self.undo_list, dependencies)
         index = self.undo_list.index(change)
-        self._perform_undos(len(self.undo_list) - index, task_handle)
-        return self.redo_list[index - len(self.undo_list):]
+        self._perform_undos(len(dependencies), task_handle)
+        return self.redo_list[-len(dependencies):]
 
-    def _move_front(self, changes):
+    def redo(self, change=None, task_handle=taskhandle.NullTaskHandle()):
+        """Return the list of redone changes"""
+        if not self.redo_list:
+            raise exceptions.HistoryError('Redo list is empty')
+        if change is None:
+            change = self.redo_list[-1]
+        dependencies = self.find_dependencies(self.redo_list, change)
+        self._move_front(self.redo_list, dependencies)
+        index = self.redo_list.index(change)
+        self._perform_redos(len(dependencies), task_handle)
+        return self.undo_list[-len(dependencies):]
+
+    def _move_front(self, change_list, changes):
         for change in changes:
-            self.undo_list.remove(change)
-            self.undo_list.append(change)
+            change_list.remove(change)
+            change_list.append(change)
 
-    def find_dependencies(self, change):
-        index = self.undo_list.index(change)
-        return _FindChangeDependencies(self.undo_list[index:]).\
+    def find_dependencies(self, change_list, change):
+        index = change_list.index(change)
+        return _FindChangeDependencies(change_list[index:]).\
                find_dependencies()
 
     def _perform_undos(self, count, task_handle):
@@ -112,18 +124,16 @@ class History(object):
                 self.current_change = None
             self.redo_list.append(self.undo_list.pop())
 
-    def redo(self, task_handle=taskhandle.NullTaskHandle()):
-        """Return the list of redone changes"""
-        if not self.redo_list:
-            raise exceptions.HistoryError('Redo list is empty')
-        self.current_change = self.redo_list[-1]
-        try:
-            job_set = change.create_job_set(task_handle, self.current_change)
-            self.current_change.do(job_set=job_set)
-        finally:
-            self.current_change = None
-        self.undo_list.append(self.redo_list.pop())
-        return self.undo_list[-1:]
+    def _perform_redos(self, count, task_handle):
+        for i in range(count):
+            self.current_change = self.redo_list[-1]
+            try:
+                job_set = change.create_job_set(task_handle,
+                                                self.current_change)
+                self.current_change.do(job_set)
+            finally:
+                self.current_change = None
+            self.undo_list.append(self.redo_list.pop())
 
     def contents_before_current_change(self, file):
         if self.current_change is None:

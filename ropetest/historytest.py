@@ -255,6 +255,18 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEquals(0, len(self.history.undo_list))
         self.assertEquals(0, len(self.history.redo_list))
 
+    def test_redoing_choosen_changes_not_undoing_others(self):
+        change1 = ChangeContents(self.file1, '1')
+        change2 = ChangeContents(self.file2, '2')
+        self.history.do(change1)
+        self.history.do(change2)
+        self.history.undo()
+        self.history.undo()
+        redone = self.history.redo(change2)
+        self.assertEquals([change2], redone)
+        self.assertEquals('', self.file1.read())
+        self.assertEquals('2', self.file2.read())
+
 
 class SavingHistoryTest(unittest.TestCase):
 
