@@ -851,6 +851,14 @@ class RopeFolderTest(unittest.TestCase):
         self.assertTrue(self.project.is_ignored(myfile))
         self.assertFalse(self.project.is_ignored(file2))
 
+    def test_star_should_not_include_slashes(self):
+        self.project = testutils.sample_project(ignored_resources=['f*.txt'])
+        folder = self.project.root.create_folder('folder')
+        file1 = folder.create_file('myfile.txt')
+        file2 = folder.create_file('file2.txt')
+        self.assertFalse(self.project.is_ignored(file1))
+        self.assertTrue(self.project.is_ignored(file2))
+
     def test_normal_fscommands(self):
         fscommands = _MockFSCommands()
         self.project = testutils.sample_project(fscommands=fscommands)

@@ -6,7 +6,8 @@ def set_prefs(prefs):
 
     # Specify which files and folders to ignore in the project.
     # Changes to ignored resources are not added to the history and
-    # VCSs.  Also they are not shown in "Find File" dialog.
+    # VCSs.  Also they are not returned in `Project.get_files()`.
+    # Note that ``?`` and ``*`` match all characters but slashes.
     prefs['ignored_resources'] = ['*.pyc', '*~', '.ropeproject',
                                   '.hg', '.svn', '_svn']
 
