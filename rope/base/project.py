@@ -264,7 +264,8 @@ class _IgnoredResources(object):
 
     def _add_ignored_pattern(self, pattern):
         re_pattern = pattern.replace('.', '\\.').\
-                     replace('*', '[^/]*').replace('?', '[^/]')
+                     replace('*', '[^/]*').replace('?', '[^/]').\
+                     replace('//', '/(.*/)?')
         re_pattern = '(.*/)?' + re_pattern + '(/.*)?'
         self.ignored_patterns.append(re.compile(re_pattern))
 

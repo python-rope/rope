@@ -8,6 +8,11 @@ def set_prefs(prefs):
     # Changes to ignored resources are not added to the history and
     # VCSs.  Also they are not returned in `Project.get_files()`.
     # Note that ``?`` and ``*`` match all characters but slashes.
+    # '*.pyc': matches 'test.pyc' and 'pkg/test.pyc'
+    # 'mod*.pyc': matches 'test/mod1.pyc' but not 'mod/1.pyc'
+    # '.svn': matches 'pkg/.svn' and all of its children
+    # 'build/*.o': matches 'build/lib.o' but not 'build/sub/lib.o'
+    # 'build//*.o': matches 'build/lib.o' and 'build/sub/lib.o'
     prefs['ignored_resources'] = ['*.pyc', '*~', '.ropeproject',
                                   '.hg', '.svn', '_svn']
 
