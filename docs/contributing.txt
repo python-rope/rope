@@ -67,13 +67,6 @@ Formatting
 You can format python source code.  This probably needs using ASTs and
 writing them.
 
-Detecting Warnings
-------------------
-
-This might include detecting unused variables and imports or
-unreachable statements.  `rope.base` can help, too.  Currently rope
-detects things like redefined elements and assignment to self.
-
 Modules Without Source Code
 ---------------------------
 
