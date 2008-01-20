@@ -372,64 +372,64 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.mod = testutils.create_module(self.project, 'mod')
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.a_class = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n'
-        self.setter_and_getter = '\n    def get_attr(self):\n        return self.attr\n\n' \
-                                 '    def set_attr(self, value):\n        self.attr = value\n'
-        self.encapsulated = self.a_class + self.setter_and_getter
+        self.added_methods = '\n    def get_attr(self):\n        return self.attr\n\n' \
+                             '    def set_attr(self, value):\n        self.attr = value\n'
+        self.encapsulated = self.a_class + self.added_methods
 
     def tearDown(self):
         testutils.remove_project(self.project)
         super(EncapsulateFieldTest, self).tearDown()
 
-    def _perform_encapsulate_field(self, resource, offset):
+    def _encapsulate(self, resource, offset, **args):
         changes = EncapsulateField(self.project, resource, offset).\
-                  get_changes()
+                  get_changes(**args)
         self.project.do(changes)
 
     def test_adding_getters_and_setters(self):
         code = self.a_class
         self.mod.write(code)
-        self._perform_encapsulate_field(self.mod, code.index('attr') + 1)
+        self._encapsulate(self.mod, code.index('attr') + 1)
         self.assertEquals(self.encapsulated, self.mod.read())
 
     def test_changing_getters_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
                           self.mod1.read())
 
     def test_changing_setters_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals('import mod\na_var = mod.A()\na_var.set_attr(1)\n',
                           self.mod1.read())
 
     def test_changing_getters_in_setters(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1 + a_var.attr\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(1 + a_var.get_attr())\n',
             self.mod1.read())
 
     def test_appending_to_class_end(self):
         self.mod1.write(self.a_class + 'a_var = A()\n')
-        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(self.encapsulated + 'a_var = A()\n',
                           self.mod1.read())
 
     def test_performing_in_other_modules(self):
         self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(self.encapsulated, self.mod.read())
         self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
                           self.mod1.read())
 
     def test_changing_main_module_occurances(self):
         self.mod1.write(self.a_class + 'a_var = A()\na_var.attr = a_var.attr * 2\n')
-        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(
             self.encapsulated +
             'a_var = A()\na_var.set_attr(a_var.get_attr() * 2)\n',
@@ -438,25 +438,25 @@ class EncapsulateFieldTest(unittest.TestCase):
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_non_attributes(self):
         self.mod1.write('attr = 10')
-        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments(self):
         self.mod.write(self.a_class)
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\na_var.attr, b = 1, 2\n')
-        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments2(self):
         self.mod.write(self.a_class)
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\nb, a_var.attr = 1, 2\n')
-        self._perform_encapsulate_field(self.mod1, self.mod1.read().index('attr') + 1)
+        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
     def test_tuple_assignments_and_function_calls(self):
         self.mod1.write('import mod\ndef func(a1=0, a2=0):\n    pass\n'
                         'a_var = mod.A()\nfunc(a_var.attr, a2=2)\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals('import mod\ndef func(a1=0, a2=0):\n    pass\n'
                           'a_var = mod.A()\nfunc(a_var.get_attr(), a2=2)\n',
                           self.mod1.read())
@@ -464,7 +464,7 @@ class EncapsulateFieldTest(unittest.TestCase):
     def test_tuple_assignments(self):
         self.mod1.write('import mod\na_var = mod.A()\na, b = a_var.attr, 1\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na, b = a_var.get_attr(), 1\n',
             self.mod1.read())
@@ -472,7 +472,7 @@ class EncapsulateFieldTest(unittest.TestCase):
     def test_changing_augmented_assignments(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr += 1\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() + 1)\n',
             self.mod1.read())
@@ -480,7 +480,7 @@ class EncapsulateFieldTest(unittest.TestCase):
     def test_changing_augmented_assignments2(self):
         self.mod1.write('import mod\na_var = mod.A()\na_var.attr <<= 1\n')
         self.mod.write(self.a_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         self.assertEquals(
             'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() << 1)\n',
             self.mod1.read())
@@ -488,9 +488,18 @@ class EncapsulateFieldTest(unittest.TestCase):
     def test_changing_occurrences_inside_the_class(self):
         new_class = self.a_class + '\n    def a_func(self):\n        self.attr = 1\n'
         self.mod.write(new_class)
-        self._perform_encapsulate_field(self.mod, self.mod.read().index('attr') + 1)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
         expected = self.a_class + '\n    def a_func(self):\n        self.set_attr(1)\n' + \
-                   self.setter_and_getter
+                   self.added_methods
+        self.assertEquals(expected, self.mod.read())
+
+    def test_getter_and_setter_parameters(self):
+        self.mod.write(self.a_class)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1,
+                          getter='getAttr', setter='setAttr')
+        new_methods = self.added_methods.replace('get_attr', 'getAttr').\
+                      replace('set_attr', 'setAttr')
+        expected = self.a_class + new_methods
         self.assertEquals(expected, self.mod.read())
 
 

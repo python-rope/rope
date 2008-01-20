@@ -26,22 +26,31 @@ class EncapsulateField(object):
                 return True
         return False
 
-    def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, getter=None, setter=None,
+                    task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Encapsulate field <%s>' % self.name)
         job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
-        rename_in_module = GetterSetterRenameInModule(self.pycore, self.name,
-                                                      [self.pyname])
+        if getter is None:
+            getter = 'get_' + self.name
+        if setter is None:
+            setter = 'set_' + self.name
+        rename_in_module = GetterSetterRenameInModule(
+            self.pycore, self.name, [self.pyname], getter, setter)
         for file in self.pycore.get_python_files():
             job_set.started_job('Working on <%s>' % file.path)
             if file == self.resource:
-                self._change_holding_module(changes, rename_in_module)
+                self._change_holding_module(changes, rename_in_module,
+                                            getter, setter)
             else:
                 result = rename_in_module.get_changed_module(file)
                 if result is not None:
                     changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
         return changes
+
+    def get_field_name(self):
+        return self.name
 
     def _get_defining_class_scope(self):
         defining_scope = self._get_defining_scope()
@@ -53,7 +62,7 @@ class EncapsulateField(object):
         pymodule, line = self.pyname.get_definition_location()
         return pymodule.get_scope().get_inner_scope_for_line(line)
 
-    def _change_holding_module(self, changes, rename_in_module):
+    def _change_holding_module(self, changes, rename_in_module, getter, setter):
         pymodule = self.pycore.resource_to_pyobject(self.resource)
         class_scope = self._get_defining_class_scope()
         defining_object = self._get_defining_scope().pyobject
@@ -65,10 +74,10 @@ class EncapsulateField(object):
             class_scope = pymodule.get_scope().\
                           get_inner_scope_for_line(class_scope.get_start())
         indents = sourceutils.get_indent(self.pycore) * ' '
-        getter = 'def get_%s(self):\n%sreturn self.%s' % \
-                 (self.name, indents, self.name)
-        setter = 'def set_%s(self, value):\n%sself.%s = value' % \
-                 (self.name, indents, self.name)
+        getter = 'def %s(self):\n%sreturn self.%s' % \
+                 (getter, indents, self.name)
+        setter = 'def %s(self, value):\n%sself.%s = value' % \
+                 (setter, indents, self.name)
         new_source = sourceutils.add_methods(pymodule, class_scope,
                                              [getter, setter])
         changes.add_change(ChangeContents(pymodule.get_resource(), new_source))
@@ -76,17 +85,18 @@ class EncapsulateField(object):
 
 class GetterSetterRenameInModule(object):
 
-    def __init__(self, pycore, name, pynames):
+    def __init__(self, pycore, name, pynames, getter, setter):
         self.pycore = pycore
         self.name = name
         self.occurrences_finder = occurrences.FilteredFinder(pycore, name,
                                                              pynames)
-        self.getter = 'get_' + name
-        self.setter = 'set_' + name
+        self.getter = getter
+        self.setter = setter
 
     def get_changed_module(self, resource=None, pymodule=None, skip_start=0, skip_end=0):
-        return _FindChangesForModule(self, resource, pymodule,
-                                     skip_start, skip_end).get_changed_module()
+        finder = _FindChangesForModule(self, resource, pymodule,
+                                       skip_start, skip_end)
+        return finder.get_changed_module()
 
 
 class _FindChangesForModule(object):

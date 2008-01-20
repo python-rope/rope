@@ -60,6 +60,7 @@ class DefinitionInfo(object):
         start = lines.get_line_start(start_line)
         end = lines.get_line_end(end_line)
         start = pymodule.source_code.find('def ', start) + 4
+        # XXX: problems for one-liners with a colon in a str
         end = pymodule.source_code.rfind(':', start, end)
         return DefinitionInfo._read(pyfunction, pymodule.source_code[start:end])
 
