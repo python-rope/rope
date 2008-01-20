@@ -96,7 +96,7 @@ class PyObjectToTextual(object):
         if resource.project == self.project:
             return resource.path
         else:
-            return real_path
+            return resource.real_path
 
 
 class TextualToPyObject(object):
