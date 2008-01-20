@@ -15,19 +15,15 @@ class EncapsulateField(object):
                 'Encapsulate field should be performed on class attributes.')
         self.resource = self.pyname.get_definition_location()[0].get_resource()
 
-    def _is_an_attribute(self, pyname):
-        if pyname is not None and isinstance(pyname, pynames.AssignedName):
-            defining_pymodule, defining_line = self.pyname.get_definition_location()
-            defining_scope = defining_pymodule.get_scope().\
-                             get_inner_scope_for_line(defining_line)
-            parent = defining_scope.parent
-            if defining_scope.get_kind() == 'Class' or \
-               (parent is not None and parent.get_kind() == 'Class'):
-                return True
-        return False
-
     def get_changes(self, getter=None, setter=None,
                     task_handle=taskhandle.NullTaskHandle()):
+        """Get the changes this refactoring makes
+
+        If getter is not None, that will be the name of the getter,
+        otherwise get_${field_name} will be used.  The same is true
+        for setter and if it is None set_${field_name} is used.
+
+        """
         changes = ChangeSet('Encapsulate field <%s>' % self.name)
         job_set = task_handle.create_jobset(
             'Collecting Changes', len(self.pycore.get_python_files()))
@@ -35,22 +31,36 @@ class EncapsulateField(object):
             getter = 'get_' + self.name
         if setter is None:
             setter = 'set_' + self.name
-        rename_in_module = GetterSetterRenameInModule(
+        renamer = GetterSetterRenameInModule(
             self.pycore, self.name, [self.pyname], getter, setter)
         for file in self.pycore.get_python_files():
             job_set.started_job('Working on <%s>' % file.path)
             if file == self.resource:
-                self._change_holding_module(changes, rename_in_module,
-                                            getter, setter)
+                result = self._change_holding_module(changes, renamer,
+                                                     getter, setter)
+                changes.add_change(ChangeContents(self.resource, result))
             else:
-                result = rename_in_module.get_changed_module(file)
+                result = renamer.get_changed_module(file)
                 if result is not None:
                     changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
         return changes
 
     def get_field_name(self):
+        """Get the name of the field to be encapsulated"""
         return self.name
+
+    def _is_an_attribute(self, pyname):
+        if pyname is not None and isinstance(pyname, pynames.AssignedName):
+            pymodule, lineno = self.pyname.get_definition_location()
+            scope = pymodule.get_scope().\
+                             get_inner_scope_for_line(lineno)
+            if scope.get_kind() == 'Class':
+                return pyname in scope.get_names().values()
+            parent = scope.parent
+            if parent is not None and parent.get_kind() == 'Class':
+                return pyname in parent.get_names().values()
+        return False
 
     def _get_defining_class_scope(self):
         defining_scope = self._get_defining_scope()
@@ -62,13 +72,14 @@ class EncapsulateField(object):
         pymodule, line = self.pyname.get_definition_location()
         return pymodule.get_scope().get_inner_scope_for_line(line)
 
-    def _change_holding_module(self, changes, rename_in_module, getter, setter):
+    def _change_holding_module(self, changes, renamer, getter, setter):
         pymodule = self.pycore.resource_to_pyobject(self.resource)
         class_scope = self._get_defining_class_scope()
         defining_object = self._get_defining_scope().pyobject
-        skip_start, skip_end = sourceutils.get_body_region(defining_object)
-        new_source = rename_in_module.get_changed_module(
-            pymodule=pymodule, skip_start=skip_start, skip_end=skip_end)
+        start, end = sourceutils.get_body_region(defining_object)
+
+        new_source = renamer.get_changed_module(pymodule=pymodule,
+                                                skip_start=start, skip_end=end)
         if new_source is not None:
             pymodule = self.pycore.get_string_module(new_source, self.resource)
             class_scope = pymodule.get_scope().\
@@ -80,7 +91,7 @@ class EncapsulateField(object):
                  (setter, indents, self.name)
         new_source = sourceutils.add_methods(pymodule, class_scope,
                                              [getter, setter])
-        changes.add_change(ChangeContents(pymodule.get_resource(), new_source))
+        return new_source
 
 
 class GetterSetterRenameInModule(object):
@@ -88,24 +99,24 @@ class GetterSetterRenameInModule(object):
     def __init__(self, pycore, name, pynames, getter, setter):
         self.pycore = pycore
         self.name = name
-        self.occurrences_finder = occurrences.FilteredFinder(pycore, name,
-                                                             pynames)
+        self.finder = occurrences.FilteredFinder(pycore, name, pynames)
         self.getter = getter
         self.setter = setter
 
-    def get_changed_module(self, resource=None, pymodule=None, skip_start=0, skip_end=0):
-        finder = _FindChangesForModule(self, resource, pymodule,
-                                       skip_start, skip_end)
-        return finder.get_changed_module()
+    def get_changed_module(self, resource=None, pymodule=None,
+                           skip_start=0, skip_end=0):
+        change_finder = _FindChangesForModule(self, resource, pymodule,
+                                              skip_start, skip_end)
+        return change_finder.get_changed_module()
 
 
 class _FindChangesForModule(object):
 
-    def __init__(self, occurrence_finder, resource, pymodule, skip_start, skip_end):
-        self.pycore = occurrence_finder.pycore
-        self.occurrences_finder = occurrence_finder.occurrences_finder
-        self.getter = occurrence_finder.getter
-        self.setter = occurrence_finder.setter
+    def __init__(self, finder, resource, pymodule, skip_start, skip_end):
+        self.pycore = finder.pycore
+        self.finder = finder.finder
+        self.getter = finder.getter
+        self.setter = finder.setter
         self.resource = resource
         self.pymodule = pymodule
         self._source = None
@@ -119,8 +130,8 @@ class _FindChangesForModule(object):
     def get_changed_module(self):
         result = []
         word_finder = codeanalyze.WordRangeFinder(self.source)
-        for occurrence in self.occurrences_finder.find_occurrences(self.resource,
-                                                                   self.pymodule):
+        for occurrence in self.finder.find_occurrences(self.resource,
+                                                       self.pymodule):
             start, end = occurrence.get_word_range()
             if self.skip_start <= start < self.skip_end:
                 continue
@@ -136,7 +147,8 @@ class _FindChangesForModule(object):
                 else:
                     var_name = self.source[occurrence.get_primary_range()[0]:
                                            start] + self.getter + '()'
-                    result.append(self.setter + '(' + var_name + ' %s ' % assignment_type[:-1])
+                    result.append(self.setter + '(' + var_name
+                                  + ' %s ' % assignment_type[:-1])
                 current_line = self.lines.get_line_number(start)
                 start_line, end_line = self.pymodule.logical_lines.\
                                        logical_line_in(current_line)
@@ -171,11 +183,11 @@ class _FindChangesForModule(object):
         line = self.source[start_offset:self.lines.get_line_end(end_line)]
         word_finder = codeanalyze.WordRangeFinder(line)
 
-        relative_offset = offset - start_offset
-        relative_primary_start = occurance.get_primary_range()[0] - start_offset
-        relative_primary_end = occurance.get_primary_range()[1] - start_offset
-        prev_char_offset = word_finder._find_last_non_space_char(relative_primary_start - 1)
-        next_char_offset = word_finder._find_first_non_space_char(relative_primary_end)
+        rel_word_start = offset - start_offset
+        rel_start = occurance.get_primary_range()[0] - start_offset
+        rel_end = occurance.get_primary_range()[1] - start_offset
+        prev_char_offset = word_finder._find_last_non_space_char(rel_start - 1)
+        next_char_offset = word_finder._find_first_non_space_char(rel_end)
         next_char = prev_char = ''
         if prev_char_offset >= 0:
             prev_char = line[prev_char_offset]
@@ -187,9 +199,9 @@ class _FindChangesForModule(object):
             return False
         if prev_char != ',' and next_char not in ',)':
             return False
-        parens_start = word_finder.find_parens_start_from_inside(relative_offset)
-        return relative_offset < equals_offset and (parens_start <= 0 or
-                                                    line[:parens_start].strip() == '')
+        parens_start = word_finder.find_parens_start_from_inside(rel_word_start)
+        return rel_word_start < equals_offset and \
+               (parens_start <= 0 or line[:parens_start].strip() == '')
 
     def _get_source(self):
         if self._source is None:
