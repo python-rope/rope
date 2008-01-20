@@ -17,7 +17,9 @@ in your head, you are welcome to get involved.
 How to Help Rope?
 =================
 
-Rope mailing list:  `rope-dev (at) googlegroups.com`_
+Rope mailing list is `rope-dev (at) googlegroups.com`_.  You can send
+a mail to ``rope-dev-subscribe (at) googlegroups [dot] com`` to
+subscribe.
 
 * Use rope
 * Send bugs reports and request features
