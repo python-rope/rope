@@ -47,7 +47,7 @@ class IntroduceParameter(object):
         self.name, self.pyname = self._get_name_and_pyname()
         if self.pyname is None:
             raise exceptions.RefactoringError(
-                'Cannot find the definition of <%s>', self.name)
+                'Cannot find the definition of <%s>' % self.name)
 
     def _get_primary(self):
         word_finder = codeanalyze.WordRangeFinder(self.resource.read())
