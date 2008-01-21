@@ -4,6 +4,35 @@ from rope.refactor import functionutils, sourceutils, occurrences
 
 
 class IntroduceParameter(object):
+    """Introduce parameter refactoring
+
+    This refactoring adds a new parameter to a function and replaces
+    references to an expression in it with the new parameter.
+
+    The parameter finding part is different from finding similar
+    pieces in extract refactorings.  In this refactoring parameters
+    are found based on the object they reference to.  For instance
+    in::
+
+      class A(object):
+          var = None
+
+      class B(object):
+          a = A()
+
+      b = B()
+      a = b.a
+
+      def f(a):
+          x = b.a.var + a.var
+
+    using this refactoring on ``a.var`` with ``p`` as the new
+    parameter name, will result in::
+
+      def f(p=a.var):
+          x = p + p
+
+    """
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
@@ -32,16 +61,18 @@ class IntroduceParameter(object):
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
         definition_info.args_with_defaults.append((new_parameter,
                                                    self._get_primary()))
-        change_collector = sourceutils.ChangeCollector(self.resource.read())
+        collector = sourceutils.ChangeCollector(self.resource.read())
         header_start, header_end = self._get_header_offsets()
         body_start, body_end = sourceutils.get_body_region(self.pyfunction)
-        change_collector.add_change(header_start, header_end,
-                                    definition_info.to_string())
-        self._change_function_occurances(change_collector, body_start,
+        collector.add_change(header_start, header_end,
+                             definition_info.to_string())
+        self._change_function_occurances(collector, body_start,
                                          body_end, new_parameter)
-        changes = rope.base.change.ChangeSet('Introduce parameter <%s>' % new_parameter)
-        changes.add_change(rope.base.change.ChangeContents(self.resource,
-                                                 change_collector.get_changed()))
+        changes = rope.base.change.ChangeSet('Introduce parameter <%s>' %
+                                             new_parameter)
+        change = rope.base.change.ChangeContents(self.resource,
+                                                 collector.get_changed())
+        changes.add_change(change)
         return changes
 
     def _get_header_offsets(self):
@@ -55,11 +86,11 @@ class IntroduceParameter(object):
         end = self.pymodule.source_code.rfind(':', start, end)
         return start, end
 
-    def _change_function_occurances(self, change_collector, function_start,
+    def _change_function_occurances(self, collector, function_start,
                                     function_end, new_name):
         finder = occurrences.FilteredFinder(self.pycore, self.name,
-                                                      [self.pyname])
+                                            [self.pyname])
         for occurrence in finder.find_occurrences(resource=self.resource):
             start, end = occurrence.get_primary_range()
             if function_start <= start < function_end:
-                change_collector.add_change(start, end, new_name)
+                collector.add_change(start, end, new_name)
