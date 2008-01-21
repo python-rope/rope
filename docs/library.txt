@@ -47,7 +47,7 @@ It's good to know that:
   information.
 * All configurations that are available in the ``config.py`` file can
   be specified as keyword parameters to `Project` constructor.  These
-  parameters override the ones in the ``config.py`` file.
+  parameters overwrite the ones in the ``config.py`` file.
 * Each project has a set of ignored resource patterns; You can use it
   to ask rope to ignore files and folders matching certain patterns.
 
@@ -184,7 +184,7 @@ Activating Static Object Inference
 
 One of the greatest strengths of rope is its static object inference,
 SOI.  You can perform SOI on a module using `PyCore.analyze_module()`
-method but performing SOI on a module is not cheap.  So we decided
+method but performing SOI on a module is not cheap.  So I decided
 that the best time for performing SOI is when saving files and only
 performing it on changed scopes.
 
@@ -368,6 +368,15 @@ do something like::
 
   changes = renamer.get_changes('new_name', task_handle=handle)
 
+Also you can use something like this for stopping the task::
+
+  def stop():
+      handle.stop()
+
+After calling ``stop()``, the thread that is executing the task will
+be interrupted by a `rope.base.exceptions.InterruptedTaskError`
+exception.
+
 
 Refactorings
 ============
@@ -407,14 +416,14 @@ see pydocs in their modules and the unit-tests in the
 * `rope.refactor.restructure.Restructure`:
   Restructures code.  See the example below.
 
-* `rope.refactor.method_object.MethodObject`:
-  Transforms a function or a method to a method object.
-
 * `rope.refactor.extract.Extract...`:
   Extracts methods/variables.
 
 * `rope.refactor.inline.Inline`:
   Inlines occurrences of a method/variable.
+
+* `rope.refactor.method_object.MethodObject`:
+  Transforms a function or a method to a method object.
 
 * `rope.refactor.change_signature.ChangeSignature`:
   Changes the signature of a function/method.
