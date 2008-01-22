@@ -142,11 +142,10 @@ class IntroduceFactoryTest(unittest.TestCase):
         testutils.remove_project(self.project)
         super(IntroduceFactoryTest, self).tearDown()
 
-    def _introduce_factory(self, resource, offset, factory_name,
-                                   global_factory=False):
+    def _introduce_factory(self, resource, offset, *args, **kwds):
         factory_introducer = IntroduceFactory(self.project,
-                                                         resource, offset)
-        changes = factory_introducer.get_changes(factory_name, global_factory)
+                                              resource, offset)
+        changes = factory_introducer.get_changes(*args, **kwds)
         self.project.do(changes)
 
     def test_adding_the_method(self):
@@ -361,6 +360,21 @@ class IntroduceFactoryTest(unittest.TestCase):
         new_init = self.project.get_resource('pkg/mod1/__init__.py')
         self.assertEquals('import pkg.mod2\nfrom pkg.mod2 import AClass\n',
                           new_init.read())
+
+    def test_resources_parameter(self):
+        code = 'class A(object):\n    an_attr = 10\n'
+        code1 = 'import mod\na = mod.A()\n'
+        mod = testutils.create_module(self.project, 'mod')
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod.write(code)
+        mod1.write(code1)
+        expected = 'class A(object):\n    an_attr = 10\n\n' \
+                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+                   '        return A(*args, **kwds)\n'
+        self._introduce_factory(mod, mod.read().index('A') + 1,
+                                'create', resources=[mod])
+        self.assertEquals(expected, mod.read())
+        self.assertEquals(code1, mod1.read())
 
 
 class EncapsulateFieldTest(unittest.TestCase):

@@ -3,16 +3,7 @@
 ===========
 
 
-- Choosing which files to apply a encapsulate_field on : January 22, 2008
-
-
-- Choosing which files to apply a change_signature on : January 22, 2008
-
-
-- Choosing which files to search in find_occurrences : January 22, 2008
-
-
-- Choosing which files to apply a rename on : January 22, 2008
+- Adding resources parameter to some refactorings : January 22, 2008
 
 
 - Deprecated in_file argument of `Rename.get_changes()` : January 22, 2008

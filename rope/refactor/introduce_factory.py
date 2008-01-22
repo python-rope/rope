@@ -22,15 +22,19 @@ class IntroduceFactory(object):
         self.pymodule = self.old_pyname.get_object().get_module()
         self.resource = self.pymodule.get_resource()
 
-    def get_changes(self, factory_name, global_factory=False,
+    def get_changes(self, factory_name, global_factory=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
+        if resources is None:
+            resources = self.pycore.get_python_files()
         changes = ChangeSet('Introduce factory method <%s>' % factory_name)
-        job_set = task_handle.create_jobset(
-            'Collecting Changes', len(self.pycore.get_python_files()))
-        self._change_module(changes, factory_name, global_factory, job_set)
+        job_set = task_handle.create_jobset('Collecting Changes',
+                                            len(resources))
+        self._change_module(resources, changes, factory_name,
+                            global_factory, job_set)
         return changes
 
-    def _change_module(self, changes, factory_name, global_, job_set):
+    def _change_module(self, resources, changes,
+                       factory_name, global_, job_set):
         import_tools = rope.refactor.importutils.ImportTools(self.pycore)
         new_import = import_tools.get_import(self.resource)
         if global_:
@@ -38,7 +42,7 @@ class IntroduceFactory(object):
         else:
             replacement = self._new_function_name(factory_name, global_)
 
-        for file_ in self.pycore.get_python_files():
+        for file_ in resources:
             if file_ == self.resource:
                 job_set.started_job('Changing definition')
                 self._change_resource(changes, factory_name, global_)
