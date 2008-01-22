@@ -6,7 +6,7 @@ from rope.base.change import (ChangeSet, ChangeContents)
 from rope.refactor import rename, occurrences, sourceutils
 
 
-class IntroduceFactoryRefactoring(object):
+class IntroduceFactory(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
@@ -113,3 +113,5 @@ class IntroduceFactoryRefactoring(object):
         result = rename.rename_in_module(finder, changed_name, resource=file_,
                                          replace_primary=global_factory)
         return result
+
+IntroduceFactoryRefactoring = IntroduceFactory

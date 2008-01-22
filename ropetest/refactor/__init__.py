@@ -13,7 +13,7 @@ import ropetest.refactor.restructuretest
 import ropetest.refactor.suitestest
 from rope.base.exceptions import RefactoringError, InterruptedTaskError
 from rope.refactor.encapsulate_field import EncapsulateField
-from rope.refactor.introduce_factory import IntroduceFactoryRefactoring
+from rope.refactor.introduce_factory import IntroduceFactory
 from rope.refactor.localtofield import LocalToField
 from rope.refactor.method_object import MethodObject
 from ropetest import testutils
@@ -144,7 +144,7 @@ class IntroduceFactoryTest(unittest.TestCase):
 
     def _introduce_factory(self, resource, offset, factory_name,
                                    global_factory=False):
-        factory_introducer = IntroduceFactoryRefactoring(self.project,
+        factory_introducer = IntroduceFactory(self.project,
                                                          resource, offset)
         changes = factory_introducer.get_changes(factory_name, global_factory)
         self.project.do(changes)
