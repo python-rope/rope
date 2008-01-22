@@ -57,7 +57,7 @@ class MoveMethod(object):
             raise exceptions.RefactoringError('Only normal methods'
                                               ' can be moved.')
 
-    def get_changes(self, dest_attr, new_name=None,
+    def get_changes(self, dest_attr, new_name=None, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Return the changes needed for this refactoring
 
@@ -68,6 +68,8 @@ class MoveMethod(object):
 
         """
         changes = ChangeSet('Moving method <%s>' % self.method_name)
+        if resources is None:
+            resources = self.pycore.get_python_files()
         if new_name is None:
             new_name = self.get_method_name()
         resource1, start1, end1, new_content1 = \
@@ -90,10 +92,10 @@ class MoveMethod(object):
                                                               resource2)
                 result = _add_imports_to_module(
                     import_tools, goal_pymodule, new_imports)
-            if resource2.project == self.project:
+            if resource2 in resources:
                 changes.add_change(ChangeContents(resource2, result))
 
-        if resource1.project == self.project:
+        if resource1 in resources:
             changes.add_change(ChangeContents(resource1,
                                               collector1.get_changed()))
         return changes
@@ -217,7 +219,10 @@ class MoveGlobal(object):
     def _is_global(self, pyobject):
         return pyobject.get_scope().parent == pyobject.get_module().get_scope()
 
-    def get_changes(self, dest, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, dest, resources=None,
+                    task_handle=taskhandle.NullTaskHandle()):
+        if resources is None:
+            resources = self.pycore.get_python_files()
         if dest.is_folder() and dest.has_child('__init__.py'):
             dest = dest.get_child('__init__.py')
         if dest.is_folder():
@@ -226,13 +231,13 @@ class MoveGlobal(object):
         if self.source == dest:
             raise exceptions.RefactoringError(
                 'Moving global elements to the same module.')
-        return self._calculate_changes(dest, task_handle)
+        return self._calculate_changes(dest, resources, task_handle)
 
-    def _calculate_changes(self, dest, task_handle):
+    def _calculate_changes(self, dest, resources, task_handle):
         changes = ChangeSet('Moving global <%s>' % self.old_name)
-        job_set = task_handle.create_jobset(
-            'Collecting Changes', len(self.pycore.get_python_files()))
-        for file_ in self.pycore.get_python_files():
+        job_set = task_handle.create_jobset('Collecting Changes',
+                                            len(resources))
+        for file_ in resources:
             job_set.started_job('Working on <%s>' % file_.path)
             if file_ == self.source:
                 changes.add_change(self._source_module_changes(dest))
@@ -369,18 +374,21 @@ class MoveModule(object):
                                 self.old_pyname, self.old_name)
         self.import_tools = self.tools.import_tools
 
-    def get_changes(self, dest, task_handle=taskhandle.NullTaskHandle()):
+    def get_changes(self, dest, resources=None,
+                    task_handle=taskhandle.NullTaskHandle()):
         moving_pyobject = self.old_pyname.get_object()
+        if resources is None:
+            resources = self.pycore.get_python_files()
         if dest is None or not dest.is_folder():
             raise exceptions.RefactoringError(
                 'Move destination for modules should be packages.')
-        return self._calculate_changes(dest, task_handle)
+        return self._calculate_changes(dest, resources, task_handle)
 
-    def _calculate_changes(self, dest, task_handle):
+    def _calculate_changes(self, dest, resources, task_handle):
         changes = ChangeSet('Moving module <%s>' % self.old_name)
-        job_set = task_handle.create_jobset(
-            'Collecting changes', len(self.pycore.get_python_files()))
-        for module in self.pycore.get_python_files():
+        job_set = task_handle.create_jobset('Collecting changes',
+                                            len(resources))
+        for module in resources:
             job_set.started_job('Working on <%s>' % module.path)
             if module == self.source:
                 self._change_moving_module(changes, dest)
