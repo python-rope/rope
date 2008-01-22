@@ -373,6 +373,17 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def f(b, c, a):\n    pass\nf(2, 3, 1)\n',
                           self.mod.read())
 
+    def test_resources_parameter(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('def a_func(param):\n    pass\n')
+        self.mod.write('import mod1\nmod1.a_func(1)\n')
+        signature = ChangeSignature(self.project, mod1,
+                                    mod1.read().index('a_func') + 1)
+        signature.get_changes([change_signature.ArgumentRemover(0)],
+                              resources=[mod1]).do()
+        self.assertEquals('import mod1\nmod1.a_func(1)\n', self.mod.read())
+        self.assertEquals('def a_func():\n    pass\n', mod1.read())
+
 
 if __name__ == '__main__':
     unittest.main()

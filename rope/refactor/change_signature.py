@@ -39,11 +39,12 @@ class ChangeSignature(object):
             self.others = (pyclass.get_name(),
                            pyclass.parent[pyclass.get_name()])
 
-    def _change_calls(self, call_changer, in_hierarchy=False,
+    def _change_calls(self, call_changer, in_hierarchy=None, resources=None,
                       handle=taskhandle.NullTaskHandle()):
+        if resources is None:
+            resources = self.pycore.get_python_files()
         changes = ChangeSet('Changing signature of <%s>' % self.name)
-        job_set = handle.create_jobset('Collecting Changes',
-                                        len(self.pycore.get_python_files()))
+        job_set = handle.create_jobset('Collecting Changes', len(resources))
         pynames = rename.FindMatchingPyNames(
             self.primary, self.pyname, self.name,
             in_hierarchy and self.is_method(), handle).get_all()
@@ -52,9 +53,8 @@ class ChangeSignature(object):
             name, pyname = self.others
             constructor_finder = occurrences.FilteredFinder(
                 self.pycore, name, [pyname], only_calls=True)
-            finder = occurrences.MultipleFinders(
-                [finder, constructor_finder])
-        for file in self.pycore.get_python_files():
+            finder = occurrences.MultipleFinders([finder, constructor_finder])
+        for file in resources:
             job_set.started_job('Working on <%s>' % file.path)
             change_calls = _ChangeCallsInModule(
                 self.pycore, finder, file, call_changer)
@@ -101,18 +101,22 @@ class ChangeSignature(object):
             [ArgumentReorderer(new_ordering)])
         return self._change_calls(changer)
 
-    def get_changes(self, changers, in_hierarchy=False,
+    def get_changes(self, changers, in_hierarchy=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Get changes caused by this refactoring
 
         `changers` is a list of `_ArgumentChanger`\s.  If `in_hierarchy`
         is `True` the changers are applyed to all matching methods in
         the class hierarchy.
+        `resources` can be a list of `rope.base.resource.File`\s that
+        should be searched for occurrences; if `None` all python files
+        in the project are searched.
 
         """
         function_changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(), changers)
-        return self._change_calls(function_changer, in_hierarchy, task_handle)
+        return self._change_calls(function_changer, in_hierarchy, 
+                                  resources, task_handle)
 
 
 class _FunctionChangers(object):
