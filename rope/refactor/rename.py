@@ -49,8 +49,6 @@ class Rename(object):
 
         Parameters:
 
-        - `in_file`: if True implies only renaming occurrences in the
-          passed resource.
         - `in_hierarchy`: when renaming a method this keyword forces
           to rename all matching methods in the hierarchy
         - `docs`: when `True` rename refactoring will rename
@@ -79,7 +77,8 @@ class Rename(object):
             warnings.warn(
                 '`in_file` argument has been deprecated; use `resources` '
                 'instead. ', DeprecationWarning, stacklevel=2)
-            resources = [self.resource]
+            if in_file:
+                resources = [self.resource]
         old_pynames = self._get_old_pynames(in_hierarchy, task_handle)
         if len(old_pynames) == 1 and \
            self._is_renaming_a_function_local_name():
