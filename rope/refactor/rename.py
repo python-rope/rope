@@ -97,9 +97,19 @@ class Rename(object):
                 changes.add_change(ChangeContents(file_, new_content))
             job_set.finished_job()
         if self._is_renaming_a_module():
-            self._rename_module(old_pynames[0].get_object(),
-                                new_name, changes)
+            resource = old_pynames[0].get_object().get_resource()
+            if self._is_allowed_to_move(resources, resource):
+                self._rename_module(resource, new_name, changes)
         return changes
+
+    def _is_allowed_to_move(self, resources, resource):
+        if resource.is_folder():
+            try:
+                return resource.get_child('__init__.py') in resources
+            except exceptions.ResourceNotFoundError:
+                return False
+        else:
+            return resource in resources
 
     def _is_renaming_a_function_local_name(self):
         module, lineno = self.old_pyname.get_definition_location()
@@ -129,17 +139,15 @@ class Rename(object):
                isinstance(pyname.get_object(), pyobjects.PyFunction) and \
                isinstance(pyname.get_object().parent, pyobjects.PyClass)
 
-    def _rename_module(self, pyobject, new_name, changes):
-        resource = pyobject.get_resource()
+    def _rename_module(self, resource, new_name, changes):
         if not resource.is_folder():
             new_name = new_name + '.py'
-        if resource.project == self.project:
-            parent_path = resource.parent.path
-            if parent_path == '':
-                new_location = new_name
-            else:
-                new_location = parent_path + '/' + new_name
-            changes.add_change(MoveResource(resource, new_location))
+        parent_path = resource.parent.path
+        if parent_path == '':
+            new_location = new_name
+        else:
+            new_location = parent_path + '/' + new_name
+        changes.add_change(MoveResource(resource, new_location))
 
 
 class ChangeOccurrences(object):
