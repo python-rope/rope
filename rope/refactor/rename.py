@@ -47,25 +47,25 @@ class Rename(object):
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed for this refactoring
 
-        :parameters:
-            - `in_file`: if True implies only renaming occurrences in the
-              passed resource.
-            - `in_hierarchy`: when renaming a method this keyword forces
-              to rename all matching methods in the hierarchy
-            - `docs`: when `True` rename refactoring will rename
-              occurrences in comments and strings where the name is
-              visible.  Setting it will make renames faster, too.
-            - `unsure`: decides what to do about unsure occurrences.
-              If `None`, they are ignored.  Otherwise `unsure` is
-              called with an instance of `occurrence.Occurrence` as
-              parameter.  If it returns `True`, the occurrence is
-              considered to be a match.
-            - `resources` can be a list of
-              `rope.base.resources.File`\s to apply this refactoring
-              on.  If `None`, the restructuring will be applied to all
-              python files.
-            - `in_file`: this argument has been deprecated; use
-              `resources` instead.
+        Parameters:
+
+        - `in_file`: if True implies only renaming occurrences in the
+          passed resource.
+        - `in_hierarchy`: when renaming a method this keyword forces
+          to rename all matching methods in the hierarchy
+        - `docs`: when `True` rename refactoring will rename
+          occurrences in comments and strings where the name is
+          visible.  Setting it will make renames faster, too.
+        - `unsure`: decides what to do about unsure occurrences.
+          If `None`, they are ignored.  Otherwise `unsure` is
+          called with an instance of `occurrence.Occurrence` as
+          parameter.  If it returns `True`, the occurrence is
+          considered to be a match.
+        - `resources` can be a list of `rope.base.resources.File`\s to
+          apply this refactoring on.  If `None`, the restructuring
+          will be applied to all python files.
+        - `in_file`: this argument has been deprecated; use
+          `resources` instead.
 
         """
         if unsure in (True, False):

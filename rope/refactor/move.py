@@ -61,10 +61,14 @@ class MoveMethod(object):
                     task_handle=taskhandle.NullTaskHandle()):
         """Return the changes needed for this refactoring
 
-        :parameters:
-            - `dest_attr`: the name of the destination attribute
-            - `new_name`: the name of the new method; if `None` uses
-              the old name
+        Parameters:
+
+        - `dest_attr`: the name of the destination attribute
+        - `new_name`: the name of the new method; if `None` uses
+          the old name
+        - `resources` can be a list of `rope.base.resources.File`\s to
+          apply this refactoring on.  If `None`, the restructuring
+          will be applied to all python files.
 
         """
         changes = ChangeSet('Moving method <%s>' % self.method_name)
@@ -576,10 +580,10 @@ class ModuleSkipRenamer(object):
     def __init__(self, occurrence_finder, resource, handle=None,
                  skip_start=0, skip_end=0, replacement=''):
         """Constructor
-        
+
         if replacement is `None` the region is not changed.  Otherwise
         it is replaced with `replacement`.
-    
+
         """
         self.occurrence_finder = occurrence_finder
         self.resource = resource
