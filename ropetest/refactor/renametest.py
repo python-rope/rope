@@ -546,6 +546,16 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals(u'# -*- coding: utf-8 -*-\n# ' + s +
                           '\nb = 1\nprint(2 + b + 2)\n', refactored)
 
+    def test_resources_parameter(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod1.write('def f():\n    pass\n')
+        mod2.write('import mod1\nmod1.f()\n')
+        self._rename(mod1, mod1.read().rindex('f'), 'g',
+                     resources=[mod1])
+        self.assertEquals('def g():\n    pass\n', mod1.read())
+        self.assertEquals('import mod1\nmod1.f()\n', mod2.read())
+
 
 class ChangeOccurrencesTest(unittest.TestCase):
 

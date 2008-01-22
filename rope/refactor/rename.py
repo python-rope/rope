@@ -42,8 +42,8 @@ class Rename(object):
     def get_old_name(self):
         return self.old_name
 
-    def get_changes(self, new_name, in_file=False, in_hierarchy=False,
-                    unsure=None, docs=False,
+    def get_changes(self, new_name, in_file=None, in_hierarchy=False,
+                    unsure=None, docs=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes needed for this refactoring
 
@@ -60,26 +60,38 @@ class Rename(object):
               called with an instance of `occurrence.Occurrence` as
               parameter.  If it returns `True`, the occurrence is
               considered to be a match.
+            - `resources` can be a list of
+              `rope.base.resources.File`\s to apply this refactoring
+              on.  If `None`, the restructuring will be applied to all
+              python files.
+            - `in_file`: this argument has been deprecated; use
+              `resources` instead.
 
         """
         if unsure in (True, False):
             warnings.warn(
-                'unsure parameter should be a function that returns'
-                ' True or False', DeprecationWarning, stacklevel=2)
+                'unsure parameter should be a function that returns '
+                'True or False', DeprecationWarning, stacklevel=2)
             def unsure_func(value=unsure):
                 return value
             unsure = unsure_func
-        old_pynames = self._get_old_pynames(in_file, in_hierarchy, task_handle)
-        if not in_file and len(old_pynames) == 1 and \
+        if in_file is not None:
+            warnings.warn(
+                '`in_file` argument has been deprecated; use `resources` '
+                'instead. ', DeprecationWarning, stacklevel=2)
+            resources = [self.resource]
+        old_pynames = self._get_old_pynames(in_hierarchy, task_handle)
+        if len(old_pynames) == 1 and \
            self._is_renaming_a_function_local_name():
-            in_file = True
-        files = self._get_interesting_files(in_file)
+            resources = [self.resource]
+        if resources is None:
+            resources = self.pycore.get_python_files()
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
         finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, old_pynames, unsure=unsure, docs=docs)
-        job_set = task_handle.create_jobset('Collecting Changes', len(files))
-        for file_ in files:
+        job_set = task_handle.create_jobset('Collecting Changes', len(resources))
+        for file_ in resources:
             job_set.started_job('Working on <%s>' % file_.path)
             new_content = rename_in_module(finder, new_name, resource=file_)
             if new_content is not None:
@@ -107,15 +119,10 @@ class Rename(object):
             return True
         return False
 
-    def _get_old_pynames(self, in_file, in_hierarchy, handle):
+    def _get_old_pynames(self, in_hierarchy, handle):
         return FindMatchingPyNames(
             self.old_instance, self.old_pyname, self.old_name,
-            in_file, in_hierarchy and self.is_method(), handle).get_all()
-
-    def _get_interesting_files(self, in_file):
-        if not in_file:
-            return self.pycore.get_python_files()
-        return [self.resource]
+            False, in_hierarchy and self.is_method(), handle).get_all()
 
     def is_method(self):
         pyname = self.old_pyname
