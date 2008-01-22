@@ -26,7 +26,7 @@ class LocalToField(object):
 
         new_name = self._get_field_name(function_scope.pyobject, name)
         changes = Rename(self.project, self.resource, self.offset).\
-                  get_changes(new_name, in_file=True)
+                  get_changes(new_name, resources=[self.resource])
         return changes
 
     def _check_redefinition(self, name, function_scope):
