@@ -810,6 +810,15 @@ class CodeAssistInProjectsTest(unittest.TestCase):
             self.project, mod1, mod1.read().index('a_func'), unsure=True)
         self.assertEquals(2, len(result))
 
+    def test_find_occurrences_resources_parameter(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod1.write('a_var = 1\n')
+        mod2.write('import mod1\nmy_var = mod1.a_var')
+        result = find_occurrences(self.project, mod1, 1, resources=[mod1])
+        self.assertEquals(1, len(result))
+        self.assertEquals((mod1, 0), (result[0].resource, result[0].offset))
+
     def test_fixing_errors_with_maxfixes_in_resources(self):
         mod = testutils.create_module(self.project, 'mod')
         code = 'def f():\n    sldj sldj\ndef g():\n    ran'

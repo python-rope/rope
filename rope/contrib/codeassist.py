@@ -83,12 +83,15 @@ def get_definition_location(project, source_code, offset, resource=None):
     return (None, None)
 
 
-def find_occurrences(project, resource, offset, unsure=False,
+def find_occurrences(project, resource, offset, unsure=False, resources=None,
                      task_handle=taskhandle.NullTaskHandle()):
     """Return a list of `Location`\s
 
     If `unsure` is `True`, possible matches are returned, too.  You
     can use `Location.unsure` to see which are unsure occurrences.
+    `resources` can be a list of `rope.base.resource.File`\s that
+    should be searched for occurrences; if `None` all python files
+    in the project are searched.
 
     """
     name = rope.base.codeanalyze.get_name_at(resource, offset)
@@ -98,11 +101,12 @@ def find_occurrences(project, resource, offset, unsure=False,
         return unsure
     finder = occurrences.FilteredFinder(
         project.pycore, name, [pyname], unsure=is_match)
-    files = project.pycore.get_python_files()
+    if resources is None:
+        resources = project.pycore.get_python_files()
     job_set = task_handle.create_jobset('Finding Occurrences',
-                                        count=len(files))
+                                        count=len(resources))
     result = []
-    for resource in files:
+    for resource in resources:
         job_set.started_job('Working On <%s>' % resource.path)
         for occurrence in finder.find_occurrences(resource):
             location = Location()

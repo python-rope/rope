@@ -3,6 +3,9 @@
 ===========
 
 
+- Choosing which files to search in find_occurrences : January 22, 2008
+
+
 - Choosing which files to apply a rename on : January 22, 2008
 
 
