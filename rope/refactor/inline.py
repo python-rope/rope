@@ -197,11 +197,12 @@ class InlineVariable(_Inliner):
             raise rope.base.exceptions.RefactoringError(
                 'Local variable should be assigned once for inlining.')
 
-    def get_changes(self, remove=True, only_current=False,
+    def get_changes(self, remove=True, only_current=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         source = self._get_changed_module(remove, only_current)
         changes = ChangeSet('Inline variable <%s>' % self.name)
-        changes.add_change(ChangeContents(self.resource, source))
+        if resources is None or self.resource in resources:
+            changes.add_change(ChangeContents(self.resource, source))
         return changes
 
     def _get_changed_module(self, remove, only_current):
