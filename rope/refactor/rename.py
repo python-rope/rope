@@ -122,7 +122,7 @@ class Rename(object):
     def _get_old_pynames(self, in_hierarchy, handle):
         return FindMatchingPyNames(
             self.old_instance, self.old_pyname, self.old_name,
-            False, in_hierarchy and self.is_method(), handle).get_all()
+            in_hierarchy and self.is_method(), handle).get_all()
 
     def is_method(self):
         pyname = self.old_pyname
@@ -221,12 +221,11 @@ class FindMatchingPyNames(object):
     class hierarchy and attributes concluded from implicit interfaces.
     """
 
-    def __init__(self, primary, pyname, name, in_file,
-                 in_hierarchy, handle=taskhandle.NullTaskHandle()):
+    def __init__(self, primary, pyname, name, in_hierarchy,
+                 handle=taskhandle.NullTaskHandle()):
         self.name = name
         self.pyname = pyname
         self.instance = primary
-        self.in_file = in_file
         self.in_hierarchy = in_hierarchy
         self.handle = handle
 

@@ -45,7 +45,7 @@ class ChangeSignature(object):
         job_set = handle.create_jobset('Collecting Changes',
                                         len(self.pycore.get_python_files()))
         pynames = rename.FindMatchingPyNames(
-            self.primary, self.pyname, self.name, False,
+            self.primary, self.pyname, self.name,
             in_hierarchy and self.is_method(), handle).get_all()
         finder = occurrences.FilteredFinder(self.pycore, self.name, pynames)
         if self.others:
