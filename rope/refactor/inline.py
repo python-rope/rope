@@ -92,15 +92,16 @@ class InlineMethod(_Inliner):
                          len(self.pymodule.source_code))
         return (start_offset, end_offset)
 
-    def get_changes(self, remove=True, only_current=False,
+    def get_changes(self, remove=True, only_current=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         changes = ChangeSet('Inline method <%s>' % self.name)
-        job_set = task_handle.create_jobset(
-            'Collecting Changes', len(self.pycore.get_python_files()))
-        files = self.pycore.get_python_files()
+        if resources is None:
+            resources = self.pycore.get_python_files()
         if only_current:
-            files = [self.resource]
-        for file in self.pycore.get_python_files():
+            resources = [self.resource]
+        job_set = task_handle.create_jobset('Collecting Changes',
+                                            len(resources))
+        for file in resources:
             job_set.started_job('Working on <%s>' % file.path)
             if file == self.resource:
                 changes.add_change(self._defining_file_changes(

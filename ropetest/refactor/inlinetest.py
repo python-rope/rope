@@ -510,6 +510,15 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.rindex('f'))
         self.assertEquals('var = 1\n', refactored)
 
+    def test_resources_parameter(self):
+        self.mod.write('def a_func():\n    print(1)\n')
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('import mod\nmod.a_func()\n')
+        self._inline2(self.mod, self.mod.read().index('a_func'),
+                      resources=[self.mod])
+        self.assertEquals('', self.mod.read())
+        self.assertEquals('import mod\nmod.a_func()\n', mod1.read())
+
 
 def suite():
     result = unittest.TestSuite()
