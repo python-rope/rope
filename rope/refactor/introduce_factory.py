@@ -24,6 +24,17 @@ class IntroduceFactory(object):
 
     def get_changes(self, factory_name, global_factory=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
+        """Get the changes this refactoring makes
+
+        `factory_name` indicates the name of the factory function to
+        be added.  If `global_factory` is `True` the factory will be
+        global otherwise a static method is added to the class.
+
+        `resources` can be a list of `rope.base.resource.File`\s that
+        this refactoring should be applied on; if `None` all python
+        files in the project are searched.
+
+        """
         if resources is None:
             resources = self.pycore.get_python_files()
         changes = ChangeSet('Introduce factory method <%s>' % factory_name)
