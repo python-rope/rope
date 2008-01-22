@@ -22,7 +22,7 @@ class RenameRefactoringTest(unittest.TestCase):
         testmod = testutils.create_module(self.project, 'testmod')
         testmod.write(source_code)
         changes = Rename(self.project, testmod, offset).\
-            get_changes(new_name, in_file=True)
+            get_changes(new_name, resources=[testmod])
         self.project.do(changes)
         return testmod.read()
 
