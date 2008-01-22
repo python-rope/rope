@@ -3,6 +3,9 @@
 ===========
 
 
+- Choosing which files to apply a encapsulate_field on : January 22, 2008
+
+
 - Choosing which files to apply a change_signature on : January 22, 2008
 
 

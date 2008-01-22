@@ -15,25 +15,32 @@ class EncapsulateField(object):
                 'Encapsulate field should be performed on class attributes.')
         self.resource = self.pyname.get_definition_location()[0].get_resource()
 
-    def get_changes(self, getter=None, setter=None,
+    def get_changes(self, getter=None, setter=None, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         """Get the changes this refactoring makes
 
-        If getter is not None, that will be the name of the getter,
-        otherwise get_${field_name} will be used.  The same is true
-        for setter and if it is None set_${field_name} is used.
+        If `getter` is not `None`, that will be the name of the
+        getter, otherwise ``get_${field_name}`` will be used.  The
+        same is true for `setter` and if it is None set_${field_name} is
+        used.
+
+        `resources` can be a list of `rope.base.resource.File`\s that
+        the refactoring should be applied on; if `None` all python
+        files in the project are searched.
 
         """
+        if resources is None:
+            resources = self.pycore.get_python_files()
         changes = ChangeSet('Encapsulate field <%s>' % self.name)
-        job_set = task_handle.create_jobset(
-            'Collecting Changes', len(self.pycore.get_python_files()))
+        job_set = task_handle.create_jobset('Collecting Changes',
+                                            len(resources))
         if getter is None:
             getter = 'get_' + self.name
         if setter is None:
             setter = 'set_' + self.name
         renamer = GetterSetterRenameInModule(
             self.pycore, self.name, [self.pyname], getter, setter)
-        for file in self.pycore.get_python_files():
+        for file in resources:
             job_set.started_job('Working on <%s>' % file.path)
             if file == self.resource:
                 result = self._change_holding_module(changes, renamer,

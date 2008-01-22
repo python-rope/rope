@@ -502,6 +502,16 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = self.a_class + new_methods
         self.assertEquals(expected, self.mod.read())
 
+    def test_using_resources_parameter(self):
+        self.mod1.write('import mod\na = mod.A()\nvar = a.attr\n')
+        self.mod.write(self.a_class)
+        self._encapsulate(self.mod, self.mod.read().index('attr') + 1,
+                          resources=[self.mod])
+        self.assertEquals('import mod\na = mod.A()\nvar = a.attr\n',
+                          self.mod1.read())
+        expected = self.a_class + self.added_methods
+        self.assertEquals(expected, self.mod.read())
+
 
 class LocalToFieldTest(unittest.TestCase):
 
