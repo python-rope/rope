@@ -3,6 +3,12 @@
 ===========
 
 
+- Choosing which files to apply a rename on : January 22, 2008
+
+
+- Deprecated in_file argument of `Rename.get_changes()` : January 22, 2008
+
+
 > Public Release 0.7.5 : January 17, 2008
 
 
