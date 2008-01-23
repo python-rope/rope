@@ -349,8 +349,8 @@ class _PythonCodeAssist(object):
         result = {}
         for name, pyname in pymodule.get_attributes().items():
             if name.startswith(self.starting):
-                result[name] = CompletionProposal(
-                    name, 'imported', self._get_pyname_type(pyname))
+                result[name] = CompletionProposal(name, kind='global',
+                                                  type='imported')
         return result
 
     def _is_defined_after(self, scope, pyname, lineno):

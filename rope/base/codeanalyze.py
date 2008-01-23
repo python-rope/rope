@@ -262,8 +262,7 @@ class WordRangeFinder(object):
     def get_from_module_start(self, offset):
         try:
             last_from = self.source.rindex('from ', 0, offset)
-            start = self._find_first_non_space_char(last_from + 4)
-            return start
+            return self._find_first_non_space_char(last_from + 4)
         except ValueError:
             pass
 
