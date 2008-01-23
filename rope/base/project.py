@@ -3,10 +3,9 @@ import re
 
 import rope.base.change
 import rope.base.fscommands
-import rope.base.resourceobserver
 from rope.base import exceptions, taskhandle, prefs, history, pycore
-from rope.base.resources import File, Folder
 from rope.base.resourceobserver import *
+from rope.base.resources import File, Folder
 
 
 class _Project(object):
