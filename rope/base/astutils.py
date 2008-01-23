@@ -53,3 +53,9 @@ class _NodeNameCollector(object):
 
     def _Subscript(self, node):
         self._add_node(node)
+
+    def _Attribute(self, node):
+        self._add_node(node)
+
+    def _Slice(self, node):
+        self._add_node(node)

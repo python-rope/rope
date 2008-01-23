@@ -484,6 +484,14 @@ class PyCoreTest(unittest.TestCase):
         a_var = mod['myvar']
         self.assertEquals((mod, 2), a_var.get_definition_location())
 
+    def test_get_definition_location_in_tuple_assnames(self):
+        mod = self.pycore.get_string_module(
+            'def f(x):\n    x.z, a = range(2)\n')
+        x = mod['f'].get_object().get_scope()['x']
+        a = mod['f'].get_object().get_scope()['a']
+        self.assertEquals((mod, 1), x.get_definition_location())
+        self.assertEquals((mod, 2), a.get_definition_location())
+
     @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_syntax_errors_in_code(self):
         mod = self.pycore.get_string_module('xyx print\n')
