@@ -843,9 +843,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertTrue(len(result) > 0)
         self.assert_completion_in_result('myvar', 'global', result)
 
-    # XXX: handling no words after from-import
-    def xxx_test_completing_names_after_from_import2(self):
-        mod1 = testutils.create_module(self.project, 'mod')
+    def test_completing_names_after_from_import2(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
         mod2 = testutils.create_module(self.project, 'mod2')
         mod1.write('myvar = None\n')
         result = self._assist('from mod1 import ', resource=mod2)

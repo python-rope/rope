@@ -3,6 +3,9 @@
 ===========
 
 
+- Completing names after from-imports : January 23, 2008
+
+
 - Adding resources parameter to some refactorings : January 22, 2008
 
 

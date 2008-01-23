@@ -338,20 +338,24 @@ class _PythonCodeAssist(object):
                         name, kind, self._get_pyname_type(pyname))
 
     def _from_import_completions(self, pymodule):
-        module_start = self.word_finder.get_from_module_start(self.offset)
-        if module_start is None:
+        module_name = self.word_finder.get_from_module(self.offset)
+        if module_name is None:
             return {}
-        pyname_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
-        pyname = pyname_finder.get_pyname_at(module_start + 1)
-        if pyname is None:
-            return None
-        pymodule = pyname.get_object()
+        pymodule = self._find_module(pymodule, module_name)
         result = {}
         for name, pyname in pymodule.get_attributes().items():
             if name.startswith(self.starting):
                 result[name] = CompletionProposal(name, kind='global',
                                                   type='imported')
         return result
+
+    def _find_module(self, pymodule, module_name):
+        dots = 0
+        while module_name[dots] == '.':
+            dots += 1
+        pyname = pynames.ImportedModule(pymodule,
+                                        module_name[dots:], dots)
+        return pyname.get_object()
 
     def _is_defined_after(self, scope, pyname, lineno):
         location = pyname.get_definition_location()

@@ -130,6 +130,8 @@ class WordRangeFinder(object):
         real_start = self._find_primary_start(end)
         if self.source[word_start:offset].strip() == '':
             word_start = end
+        if self.source[end].isspace():
+            word_start = end
         if self.source[real_start:word_start].strip() == '':
             real_start = word_start
         if real_start == word_start == end and not self._is_id_char(end):
@@ -143,6 +145,8 @@ class WordRangeFinder(object):
             if self.source[word_start] != '.':
                 last_dot_position = self._find_last_non_space_char(word_start - 1)
             last_char_position = self._find_last_non_space_char(last_dot_position - 1)
+            if self.source[word_start].isspace():
+                word_start = offset
             return (self.source[real_start:last_char_position + 1],
                     self.source[word_start:offset], word_start)
 
@@ -206,6 +210,8 @@ class WordRangeFinder(object):
 
     def _find_import_pair_end(self, start):
         next_char = self._find_first_non_space_char(start)
+        if next_char >= len(self.source):
+            return (start, len(self.source))
         if self.source[next_char] == '(':
             try:
                 return self.source.index(')', next_char) + 1
@@ -255,14 +261,16 @@ class WordRangeFinder(object):
             from_names = from_import + 8
         except ValueError:
             return False
-        if from_names - 1 >= offset:
+        if from_names - 1 > offset:
             return False
         return self._find_import_pair_end(from_names) >= offset
 
-    def get_from_module_start(self, offset):
+    def get_from_module(self, offset):
         try:
             last_from = self.source.rindex('from ', 0, offset)
-            return self._find_first_non_space_char(last_from + 4)
+            import_offset = self.source.index(' import ', last_from)
+            end = self._find_last_non_space_char(import_offset)
+            return self.get_primary_at(end)
         except ValueError:
             pass
 
