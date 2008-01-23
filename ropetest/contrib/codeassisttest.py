@@ -826,6 +826,15 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self._assist(code, maxfixes=2, resource=mod)
         self.assertTrue(len(result) > 0)
 
+    def test_completing_names_after_from_import(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        code = 'myvar = None\n'
+        mod1.write(code)
+        result = self._assist('from mod1 import myva', resource=mod2)
+        self.assertTrue(len(result) > 0)
+        self.assert_completion_in_result('myvar', 'imported', result)
+
 
 class TemplateTest(unittest.TestCase):
 

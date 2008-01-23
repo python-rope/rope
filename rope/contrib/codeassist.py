@@ -269,9 +269,9 @@ class _PythonCodeAssist(object):
         self.maxfixes = maxfixes
         self.later_locals = later_locals
         self.templates = templates
-        word_finder = WordRangeFinder(source_code)
+        self.word_finder = WordRangeFinder(source_code)
         self.expression, self.starting, self.offset = \
-            word_finder.get_splitted_primary_before(offset)
+            self.word_finder.get_splitted_primary_before(offset)
 
     keywords = keyword.kwlist
 
@@ -313,7 +313,7 @@ class _PythonCodeAssist(object):
         if found_pyname is not None:
             element = found_pyname.get_object()
             for name, pyname in element.get_attributes().items():
-                if name.startswith(self.starting) or self.starting == '':
+                if name.startswith(self.starting):
                     result[name] = CompletionProposal(
                         name, 'attribute', self._get_pyname_type(pyname))
         return result
@@ -336,6 +336,22 @@ class _PythonCodeAssist(object):
                    not self._is_defined_after(scope, pyname, lineno):
                     result[name] = CompletionProposal(
                         name, kind, self._get_pyname_type(pyname))
+
+    def _from_import_completions(self, pymodule):
+        module_start = self.word_finder.get_from_module_start(self.offset)
+        if module_start is None:
+            return {}
+        pyname_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
+        pyname = pyname_finder.get_pyname_at(module_start + 1)
+        if pyname is None:
+            return None
+        pymodule = pyname.get_object()
+        result = {}
+        for name, pyname in pymodule.get_attributes().items():
+            if name.startswith(self.starting):
+                result[name] = CompletionProposal(
+                    name, 'imported', self._get_pyname_type(pyname))
+        return result
 
     def _is_defined_after(self, scope, pyname, lineno):
         location = pyname.get_definition_location()
@@ -371,6 +387,8 @@ class _PythonCodeAssist(object):
         start = _logical_start(lines, lineno)
         indents = _get_line_indents(lines[start - 1])
         inner_scope = module_scope.get_inner_scope_for_line(start, indents)
+        if self.word_finder.is_a_name_after_from_import(self.offset):
+            return self._from_import_completions(pymodule)
         if self.expression.strip() != '':
             result.update(self._dotted_completions(module_scope, inner_scope))
         else:

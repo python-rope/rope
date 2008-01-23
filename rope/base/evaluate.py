@@ -139,15 +139,11 @@ class ScopeNameFinder(object):
         return None
 
     def _find_module(self, module_name):
-        dot_count = 0
-        if module_name.startswith('.'):
-            for c in module_name:
-                if c == '.':
-                    dot_count += 1
-                else:
-                    break
+        dots = 0
+        while module_name[dots] == '.':
+            dots += 1
         return rope.base.pynames.ImportedModule(
-            self.module_scope.pyobject, module_name[dot_count:], dot_count)
+            self.module_scope.pyobject, module_name[dots:], dots)
 
 
 class StatementEvaluator(object):

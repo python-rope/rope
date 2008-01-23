@@ -248,14 +248,24 @@ class WordRangeFinder(object):
 
     def is_a_name_after_from_import(self, offset):
         try:
+            # XXX: what if there is the char after from or around
+            # import is not space?
             last_from = self.source.rindex('from ', 0, offset)
             from_import = self.source.index(' import ', last_from)
             from_names = from_import + 8
         except ValueError:
             return False
-        if from_names >= offset:
+        if from_names - 1 >= offset:
             return False
         return self._find_import_pair_end(from_names) >= offset
+
+    def get_from_module_start(self, offset):
+        try:
+            last_from = self.source.rindex('from ', 0, offset)
+            start = self._find_first_non_space_char(last_from + 4)
+            return start
+        except ValueError:
+            pass
 
     def is_from_aliased(self, offset):
         if not self.is_a_name_after_from_import(offset):

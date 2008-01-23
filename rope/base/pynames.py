@@ -83,7 +83,7 @@ class ImportedModule(PyName):
         self.resource = resource
         self.pymodule = _get_concluded_data(self.importing_module)
 
-    def _get_current_folder(self):
+    def _current_folder(self):
         resource = self.importing_module.get_module().get_resource()
         if resource is None:
             return None
@@ -97,14 +97,12 @@ class ImportedModule(PyName):
             elif self.module_name is not None:
                 try:
                     if self.level == 0:
-                        self.pymodule.set(
-                            pycore.get_module(self.module_name,
-                                              self._get_current_folder()))
+                        pymodule = pycore.get_module(self.module_name,
+                                                     self._current_folder())
                     else:
-                        self.pymodule.set(pycore.get_relative_module(
-                                          self.module_name,
-                                          self._get_current_folder(),
-                                          self.level))
+                        pymodule = pycore.get_relative_module(
+                            self.module_name, self._current_folder(), self.level)
+                    self.pymodule.set(pymodule)
                 except exceptions.ModuleNotFoundError:
                     pass
         return self.pymodule.get()
