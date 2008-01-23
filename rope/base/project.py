@@ -309,11 +309,9 @@ class _FileListCacher(object):
     def _get_files_recursively(self, folder):
         result = set()
         for file in folder.get_files():
-            if not self.project.is_ignored(file):
-                result.add(file)
+            result.add(file)
         for child in folder.get_folders():
-            if not self.project.is_ignored(child):
-                result.update(self._get_files_recursively(child))
+            result.update(self._get_files_recursively(child))
         return result
 
     def _init_observer(self):
