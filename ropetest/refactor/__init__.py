@@ -11,6 +11,7 @@ import ropetest.refactor.patchedasttest
 import ropetest.refactor.renametest
 import ropetest.refactor.restructuretest
 import ropetest.refactor.suitestest
+import ropetest.refactor.usefunctiontest
 from rope.base.exceptions import RefactoringError, InterruptedTaskError
 from rope.refactor.encapsulate_field import EncapsulateField
 from rope.refactor.introduce_factory import IntroduceFactory
@@ -765,6 +766,8 @@ def suite():
                                        suitestest.SuiteTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.multiprojecttest.
                                        MultiProjectRefactoringTest))
+    result.addTests(unittest.makeSuite(ropetest.refactor.usefunctiontest.
+                                       UseFunctionTest))
     return result
 
 
