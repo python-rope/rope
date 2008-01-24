@@ -16,8 +16,7 @@ class UseFunctionTest(unittest.TestCase):
         testutils.remove_project(self.project)
         super(UseFunctionTest, self).tearDown()
 
-    # XXX: the function body should be skipped
-    def xxx_test_simple_case(self):
+    def test_simple_case(self):
         code = 'def f():\n    pass\n'
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))

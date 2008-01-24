@@ -37,7 +37,13 @@ class SimilarFinder(object):
         self.args = args
         if end is None:
             end = len(self.source)
-        return self.raw_finder.get_matches(code, start=start, end=end)
+        skip_region = None
+        if 'skip' in args.get('', {}):
+            resource, region = args['']['skip']
+            if resource == self.pymodule.get_resource():
+                skip_region = region            
+        return self.raw_finder.get_matches(code, start=start, end=end,
+                                           skip=skip_region)
 
     def get_match_regions(self, *args, **kwds):
         for match in self.get_matches(*args, **kwds):
@@ -74,7 +80,7 @@ class RawSimilarFinder(object):
         if not hasattr(node, 'sorted_children'):
             self.ast = patchedast.patch_ast(node, source)
 
-    def get_matches(self, code, start=0, end=None):
+    def get_matches(self, code, start=0, end=None, skip=None):
         """Search for `code` in source and return a list of `Match`\es
 
         `code` can contain wildcards.  ``${name}`` matches normal
@@ -88,6 +94,9 @@ class RawSimilarFinder(object):
         for match in self._get_matched_asts(code):
             match_start, match_end = match.get_region()
             if start <= match_start and match_end <= end:
+                if skip is not None and (skip[0] < match_end and
+                                         skip[1] > match_start):
+                    continue                    
                 yield match
 
     def _get_matched_asts(self, code):

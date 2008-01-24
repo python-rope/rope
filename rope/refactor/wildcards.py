@@ -42,6 +42,25 @@ class DefaultWildcard(object):
     def matches(self, suspect, arg=''):
         args = parse_arg(arg)
 
+        if not self._check_exact(args, suspect):
+            return False
+        if not self._check_object(args, suspect):
+            return False
+        return True
+
+    def _check_object(self, args, suspect):
+        kind = None
+        expected = None
+        for check in ['name', 'object', 'type', 'instance']:
+            if check in args:
+                kind = check
+                expected = args[check]
+            if expected is not None:
+                checker = _CheckObject(self.project, expected, kind)
+                return checker(suspect.pymodule, suspect.node)
+        return True
+
+    def _check_exact(self, args, suspect):
         node = suspect.node
         if args.get('exact'):
             if not isinstance(node, ast.Name) or not node.id == suspect.name:
@@ -49,19 +68,12 @@ class DefaultWildcard(object):
         else:
             if not isinstance(node, ast.expr):
                 return False
-        kind = None
-        expected = None
-        for check in ['name', 'object', 'type', 'instance']:
-            if check in args:
-                kind = check
-                expected = args[check]
-        if expected is not None:
-            return _CheckObject(self.project, expected, kind)(suspect.pymodule,
-                                                              suspect.node)
         return True
 
 
 def parse_arg(arg):
+    if isinstance(arg, dict):
+        return arg
     result = {}
     tokens = arg.split(',')
     for token in tokens:
