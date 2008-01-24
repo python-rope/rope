@@ -15,9 +15,8 @@ class UseFunction(object):
     def get_changes(self, task_handle=taskhandle.NullTaskHandle()):
         body = sourceutils.get_body(self.pyfunction)
         params = self.pyfunction.get_param_names()
-        pattern = similarfinder.make_pattern(body, params)
-        goal = '%s(%s)' % (self.pyfunction.get_name(),
-                           ', ' .join(('${%s}' % p) for p in params))
+        pattern = self._make_pattern(params)
+        goal = self._make_goal(params)
 
         defining_resource = self.pyfunction.get_module().get_resource()
         body_region = sourceutils.get_body_region(self.pyfunction)
@@ -27,3 +26,28 @@ class UseFunction(object):
         restructuring = restructure.Restructure(
             self.project, pattern, goal, args=args)
         return restructuring.get_changes(task_handle=task_handle)
+
+    def _make_pattern(self, params):
+        body = sourceutils.get_body(self.pyfunction)
+        body = restructure.replace(body, 'return', 'pass')
+        if self._does_return():
+            body = restructure.replace(
+                body, 'return ${%s}' % self._rope_returned,
+                '%s = ${%s}' % (self._rope_result, self._rope_returned))
+            params = list(params) + [self._rope_result]
+        return similarfinder.make_pattern(body, params)
+
+    def _make_goal(self, params):
+        goal = '%s(%s)' % (self.pyfunction.get_name(),
+                           ', ' .join(('${%s}' % p) for p in params))
+        if self._does_return():
+            goal = '${%s} = %s' % (self._rope_result, goal)
+        return goal
+
+    def _does_return(self):
+        body = sourceutils.get_body(self.pyfunction)
+        removed_return = restructure.replace(body, 'return ${result}', '')
+        return removed_return != body
+
+    _rope_result = '_rope__result'
+    _rope_returned = '_rope__returned'
