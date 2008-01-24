@@ -56,6 +56,15 @@ class UseFunctionTest(unittest.TestCase):
             'def f(p):\n    return p + 1\nr = f(2)\nprint(r)\n',
             self.mod1.read())
 
+    def test_returning_a_single_expression(self):
+        code = 'def f(p):\n    return p + 1\nprint(2 + 1)\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.rindex('f'))
+        self.project.do(user.get_changes())
+        self.assertEquals(
+            'def f(p):\n    return p + 1\nprint(f(2))\n',
+            self.mod1.read())
+
 
 if __name__ == '__main__':
     unittest.main()
