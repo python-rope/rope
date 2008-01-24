@@ -6,7 +6,12 @@
 Unresolved Issues
 =================
 
+* using wild-cards for temps in extracted function pattern
+* adding "referenced later" wildcard argument to restructurings?
+* adding "change references" wildcard argument to restructurings?
+* restructurings and unsure occurrences
 * limiting the resources to apply a refactoring?
+* adding custom wild-card replacements; needs use cases
 * ideas for more custom wildcards
 * adapting future python 2.6 ast changes
 * custom wildcards and recursive patterns
@@ -33,7 +38,6 @@ Unresolved Issues
 * inline fails when there is an arg mismatch
 * evaluate function parameter defaults in staticoi?
 * recursive soi; go where the calls go with limited depth
-* adding ``do when unsure`` config to all refactorings?
 * importing star and removing self imports; stack overflow
 * saving diffs instead of old contents in ChangeContents?
 * python c extensions
