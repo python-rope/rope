@@ -65,6 +65,15 @@ class UseFunctionTest(unittest.TestCase):
             'def f(p):\n    return p + 1\nprint(f(2))\n',
             self.mod1.read())
 
+    def test_occurrences_in_other_modules(self):
+        code = 'def f(p):\n    return p + 1\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.rindex('f'))
+        self.mod2.write('print(2 + 1)\n')
+        self.project.do(user.get_changes())
+        self.assertEquals('import mod1\nprint(mod1.f(2))\n',
+                          self.mod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()
