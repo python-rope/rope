@@ -39,6 +39,14 @@ class UseFunctionTest(unittest.TestCase):
         self.assertEquals('def f(p):\n    print(p + 1)\nf(1)\n',
                           self.mod1.read())
 
+    def test_functions_with_multiple_statements(self):
+        code = 'def f(p):\n    r = p + 1\n    print(r)\nr = 2 + 1\nprint(r)\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.rindex('f'))
+        self.project.do(user.get_changes())
+        self.assertEquals('def f(p):\n    r = p + 1\n    print(r)\nf(2)\n',
+                          self.mod1.read())
+
 
 if __name__ == '__main__':
     unittest.main()
