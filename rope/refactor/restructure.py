@@ -1,6 +1,6 @@
 import warnings
 
-from rope.base import change, taskhandle, builtins, ast
+from rope.base import change, taskhandle, builtins, ast, codeanalyze
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
 
@@ -141,9 +141,8 @@ class Restructure(object):
             pymodule = self.pycore.resource_to_pyobject(resource)
             finder = similarfinder.SimilarFinder(pymodule,
                                                  wildcards=self.wildcards)
-            computer = _ChangeComputer(pymodule, self.template,
-                                       list(finder.get_matches(self.pattern,
-                                                               self.args)))
+            matches = list(finder.get_matches(self.pattern, self.args))
+            computer = self._compute_changes(matches, pymodule)
             result = computer.get_changed()
             if result is not None:
                 imported_source = self._add_imports(resource, result,
@@ -152,6 +151,11 @@ class Restructure(object):
                                                          imported_source))
             job_set.finished_job()
         return changes
+
+    def _compute_changes(self, matches, pymodule):
+        return _ChangeComputer(
+            pymodule.source_code, pymodule.get_ast(),
+            pymodule.lines, self.template, matches)
 
     def _add_imports(self, resource, source, imports):
         if not imports:
@@ -203,13 +207,28 @@ class Restructure(object):
         return pyname if is_pyname else pyobject
 
 
+def replace(code, pattern, goal):
+    """used by other refactorings"""
+    finder = similarfinder.RawSimilarFinder(code)
+    matches = list(finder.get_matches(pattern))
+    ast = patchedast.get_patched_ast(code)
+    lines = codeanalyze.SourceLinesAdapter(code)
+    template = similarfinder.CodeTemplate(goal)
+    computer = _ChangeComputer(code, ast, lines, template, matches)
+    result = computer.get_changed()
+    if result is None:
+        return code
+    return result
+
+
 class _ChangeComputer(object):
 
-    def __init__(self, pymodule, goal, matches):
-        self.pymodule = pymodule
-        self.source = pymodule.source_code
+    def __init__(self, code, ast, lines, goal, matches):
+        self.source = code
         self.goal = goal
         self.matches = matches
+        self.ast = ast
+        self.lines = lines
         self.matched_asts = {}
         self._nearest_roots = {}
         if self._is_expression():
@@ -218,7 +237,7 @@ class _ChangeComputer(object):
 
     def get_changed(self):
         if self._is_expression():
-            result = self._get_node_text(self.pymodule.get_ast())
+            result = self._get_node_text(self.ast)
             if result == self.source:
                 return None
             return result
@@ -267,8 +286,8 @@ class _ChangeComputer(object):
         return result
 
     def _auto_indent(self, offset, text):
-        lineno = self.pymodule.lines.get_line_number(offset)
-        indents = sourceutils.get_indents(self.pymodule.lines, lineno)
+        lineno = self.lines.get_line_number(offset)
+        indents = sourceutils.get_indents(self.lines, lineno)
         result = []
         for index, line in enumerate(text.splitlines(True)):
             if index != 0 and line.strip():
