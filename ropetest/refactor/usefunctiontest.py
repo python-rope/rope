@@ -1,6 +1,7 @@
 import unittest
 
-import ropetest.testutils as testutils
+from rope.base import exceptions
+from ropetest import testutils
 from rope.refactor.usefunction import UseFunction
 
 
@@ -73,6 +74,12 @@ class UseFunctionTest(unittest.TestCase):
         self.project.do(user.get_changes())
         self.assertEquals('import mod1\nprint(mod1.f(2))\n',
                           self.mod2.read())
+
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_when_performing_on_non_functions(self):
+        code = 'var = 1\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.rindex('var'))
 
 
 if __name__ == '__main__':

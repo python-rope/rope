@@ -1,4 +1,4 @@
-from rope.base import change, taskhandle, evaluate
+from rope.base import change, taskhandle, evaluate, exceptions, pyobjects
 from rope.refactor import restructure, sourceutils, similarfinder, importutils
 
 
@@ -9,7 +9,14 @@ class UseFunction(object):
         self.offset = offset
         this_pymodule = project.pycore.resource_to_pyobject(resource)
         pyname = evaluate.get_pyname_at(this_pymodule, offset)
+        if pyname is None:
+            raise exceptions.RefactoringError(
+                'Unresolvable name selected')
         self.pyfunction = pyname.get_object()
+        if not isinstance(self.pyfunction, pyobjects.PyFunction) or \
+           not isinstance(self.pyfunction.parent, pyobjects.PyModule):
+            raise exceptions.RefactoringError(
+                'Use function works for global functions, only.')
         self.resource = self.pyfunction.get_module().get_resource()
 
     def get_changes(self, resources=None,
