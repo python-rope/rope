@@ -89,13 +89,6 @@ class _Project(object):
     def is_ignored(self, resource):
         return False
 
-    def close(self):
-        """Closes project open resources"""
-
-    def sync(self):
-        """Closes project open resources"""
-        self.close()
-
     def get_prefs(self):
         return self.prefs
 
@@ -194,9 +187,13 @@ class Project(_Project):
     def is_ignored(self, resource):
         return self.ignored.is_ignored(resource)
 
+    def sync(self):
+        """Closes project open resources"""
+        self.close()
+
     def close(self):
+        """Closes project open resources"""
         self.data_files.write()
-        super(Project, self).close()
 
     def set(self, key, value):
         """Set the `key` preference to `value`"""
