@@ -108,8 +108,11 @@ class _ExtractInfo(object):
         if scope.get_kind() != 'Module' and scope.get_start() == start_line:
             scope = scope.parent
         self.scope = scope
-        self.scope_region = (self.lines.get_line_start(self.scope.get_start()),
-                             self.lines.get_line_end(self.scope.get_end()) + 1)
+        self.scope_region = self._get_scope_region(self.scope)
+
+    def _get_scope_region(self, scope):
+        return (self.lines.get_line_start(scope.get_start()),
+                self.lines.get_line_end(scope.get_end()) + 1)
 
     def _choose_closest_line_end(self, offset, end=False):
         lineno = self.lines.get_line_number(offset)
@@ -220,11 +223,8 @@ class _ExtractPerformer(object):
 
     def _where_to_search(self):
         if self.info.similar:
-            if self.info.make_global:
+            if self.info.make_global or self.info.global_:
                 return [(0, len(self.info.pymodule.source_code))]
-            if not self.info.variable and not self.info.global_:
-                if self.info.scope.parent.parent is None:
-                    return [(0, len(self.info.pymodule.source_code))]
             if self.info.method and not self.info.variable:
                 class_scope = self.info.scope.parent
                 regions = []
@@ -238,7 +238,10 @@ class _ExtractPerformer(object):
                     regions.append((start, end))
                 return regions
             else:
-                return [self.info.scope_region]
+                if self.info.variable:
+                    return [self.info.scope_region]
+                else:
+                    return [self.info._get_scope_region(self.info.scope.parent)]
         else:
             return [self.info.region]
 
