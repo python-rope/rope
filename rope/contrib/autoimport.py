@@ -1,5 +1,5 @@
+from rope.base import exceptions, pynames
 from rope.refactor import importutils
-from rope.base import exceptions
 
 
 class AutoImport(object):
@@ -34,7 +34,10 @@ class AutoImport(object):
 
     def _add_names(self, pymodule, modname):
         # XXX: exclude imported names
-        globals = [x for x in pymodule._get_structural_attributes()]
+        globals = []
+        for name, pyname in pymodule._get_structural_attributes().items():
+            if isinstance(pyname, (pynames.AssignedName, pynames.DefinedName)):
+                globals.append(name)
         self.names[modname] = globals
 
     def update_module(self, modname):

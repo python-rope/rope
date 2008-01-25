@@ -42,6 +42,11 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.assertEquals([], self.importer.get_imports('myva'))
 
+    def test_excluding_imported_names(self):
+        self.mod1.write('import pkg\n')
+        self.importer.update_resource(self.mod1)
+        self.assertEquals([], self.importer.get_imports('pkg'))
+
 
 if __name__ == '__main__':
     unittest.main()
