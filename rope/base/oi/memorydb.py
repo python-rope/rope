@@ -11,26 +11,11 @@ class MemoryDB(objectdb.FileDict):
         self.persist = persist
         self.files = self
         self.compress = project.prefs.get('compress_objectdb', False)
-        if self.compress:
-            try:
-                import gzip
-                self.opener = gzip.open
-            except ImportError:
-                self.compress = False
-        if not self.compress:
-            self.opener = open
         self._load_files()
-
-    def _get_persisted_file(self):
-        if self.compress:
-            return self.project.get_file(
-                self.project.ropefolder.path + '/objectdb.gz')
-        else:
-            return self.project.get_file(
-                self.project.ropefolder.path + '/objectdb')
+        self.project.data_files.add_write_hook(self.write)
 
     def _import_old_files(self):
-        persisted = self._get_persisted_file()
+        persisted = self.project.get_file( self.project.ropefolder.path + '/objectdb')
         old = self.project.get_file(self.project.ropefolder.path +
                                     '/objectdb.pickle')
         if not persisted.exists() and old.exists() and not self.compress:
@@ -67,7 +52,7 @@ class MemoryDB(objectdb.FileDict):
     def __delitem__(self, file):
         del self._files[file]
 
-    def sync(self):
+    def write(self):
         if self.persist:
             self.project.data_files.write_data('objectdb', self._files,
                                                self.compress)

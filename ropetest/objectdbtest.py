@@ -48,7 +48,7 @@ class ObjectDBTest(unittest.TestCase):
 
     def tearDown(self):
         for db in self.dbs:
-            db.sync()
+            db.write()
         testutils.remove_project(self.project)
         super(ObjectDBTest, self).tearDown()
 
@@ -64,7 +64,7 @@ class ObjectDBTest(unittest.TestCase):
     @_do_for_all_dbs
     def test_simple_per_name_after_syncing(self, db):
         db.add_pername('file', 'key', 'name', 1)
-        db.sync()
+        db.write()
         self.assertEquals(1, db.get_pername('file', 'key', 'name'))
 
     @_do_for_all_dbs

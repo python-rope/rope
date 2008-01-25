@@ -195,7 +195,7 @@ class Project(_Project):
         return self.ignored.is_ignored(resource)
 
     def close(self):
-        self.pycore.object_info.sync()
+        self.data_files.write()
         super(Project, self).close()
 
     def set(self, key, value):

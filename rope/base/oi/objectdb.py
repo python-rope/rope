@@ -63,8 +63,8 @@ class ObjectDB(object):
     def add_file_list_observer(self, observer):
         self.observers.append(observer)
 
-    def sync(self):
-        self.db.sync()
+    def write(self):
+        self.db.write()
 
     def _get_scope_info(self, path, key, readonly=True):
         if path not in self.files:
