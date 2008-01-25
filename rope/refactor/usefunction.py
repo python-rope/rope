@@ -54,12 +54,7 @@ class UseFunction(object):
                                          task_handle=task_handle)
 
     def _find_temps(self):
-        pymodule = self.project.pycore.get_string_module(self._get_body())
-        result = []
-        for name, pyname in pymodule.get_scope().get_names().items():
-            if isinstance(pyname, pynames.AssignedName):
-                result.append(name)
-        return result
+        return find_temps(self.project, self._get_body())
 
     def _module_name(self):
         return importutils.get_module_name(self.project.pycore,
@@ -107,3 +102,12 @@ class UseFunction(object):
 
     _rope_result = '_rope__result'
     _rope_returned = '_rope__returned'
+
+
+def find_temps(project, code):
+    pymodule = project.pycore.get_string_module(code)
+    result = []
+    for name, pyname in pymodule.get_scope().get_names().items():
+        if isinstance(pyname, pynames.AssignedName):
+            result.append(name)
+    return result

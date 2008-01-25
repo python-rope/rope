@@ -749,6 +749,15 @@ class ExtractMethodTest(unittest.TestCase):
             'def b():\n    return one\nb = one\n'
         self.assertEquals(expected, refactored)
 
+    def test_extracting_pieces_with_distinct_temp_names(self):
+        code = 'a = 1\nprint a\nb = 1\nprint b\n'
+        start = code.index('a')
+        end = code.index('\nb')
+        refactored = self.do_extract_method(code, start, end, 'f',
+                                            similar=True, global_=True)
+        expected = '\ndef f():\n    a = 1\n    print a\n\nf()\nf()\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -3,7 +3,8 @@ import re
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
-from rope.refactor import sourceutils, similarfinder, patchedast, suites
+from rope.refactor import (sourceutils, similarfinder,
+                           patchedast, suites, usefunction)
 
 
 class _ExtractRefactoring(object):
@@ -380,8 +381,15 @@ class _ExtractMethodParts(object):
         variables = []
         variables.extend(self._find_function_arguments())
         variables.extend(self._find_function_returns())
-        body = sourceutils.fix_indentation(self.info.extracted, 0)
-        return similarfinder.make_pattern(body, variables)
+        variables.extend(self._find_temps())
+        return similarfinder.make_pattern(self._get_body(), variables)
+
+    def _get_body(self):
+        return sourceutils.fix_indentation(self.info.extracted, 0)
+
+    def _find_temps(self):
+        return usefunction.find_temps(self.info.pycore.project,
+                                      self._get_body())
 
     def get_checks(self):
         if self.info.method and not self.info.make_global:
