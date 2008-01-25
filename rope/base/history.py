@@ -15,49 +15,21 @@ class History(object):
             self.max_undos = project.get_prefs().get('max_history_items', 100)
         else:
             self.max_undos = maxundos
+        self.save = self.project.get_prefs().get('save_history', False)
         self.compress = project.get_prefs().get('compress_history', False)
-        if self.compress:
-            try:
-                import gzip
-                self.opener = gzip.open
-            except ImportError:
-                self.compress = False
-        if not self.compress:
-            self.opener = open
         self._load_history()
         self.current_change = None
 
     def _load_history(self):
-        if self.history_file is not None:
-            if not self.history_file.exists():
-                self._import_old_files()
-            if not self.history_file.exists():
-                return
-            input_file = self.opener(self.history_file.real_path, 'rb')
-            to_change = change.DataToChange(self.history_file.project)
-            for data in pickle.load(input_file):
-                self._undo_list.append(to_change(data))
-            for data in pickle.load(input_file):
-                self._redo_list.append(to_change(data))
-            input_file.close()
-
-    def _import_old_files(self):
-        old = self.project.get_file(self.project.ropefolder.path +
-                                    '/history.pickle')
-        if not self.history_file.exists() and \
-           old.exists() and not self.compress:
-            shutil.move(old.real_path, self.history_file.real_path)
-
-    def _get_history_file(self):
-        if self.project.get_prefs().get('save_history', False):
-            folder = self.project.ropefolder
-            if folder is not None and folder.exists():
-                if self.compress:
-                    return self.project.get_file(folder.path + '/history.gz')
-                else:
-                    return self.project.get_file(folder.path + '/history')
-
-    history_file = property(_get_history_file)
+        if self.save:
+            result = self.project.data_files.read_data(
+                'history', compress=self.compress, import_=True)
+            if result is not None:
+                to_change = change.DataToChange(self.project)
+                for data in result[0]:
+                    self._undo_list.append(to_change(data))
+                for data in result[1]:
+                    self._redo_list.append(to_change(data))
 
     def do(self, changes, task_handle=taskhandle.NullTaskHandle()):
         """Perform the change and add it to the `self.undo_list`
@@ -181,15 +153,14 @@ class History(object):
                 return change_.old_contents
 
     def sync(self):
-        if self.history_file is not None:
-            self._remove_extra_items()
-            output_file = self.opener(self.history_file.real_path, 'wb')
+        if self.save:
+            data = []
             to_data = change.ChangeToData()
-            pickle.dump([to_data(change_) for change_ in self.undo_list],
-                        output_file, 2)
-            pickle.dump([to_data(change_) for change_ in self.redo_list],
-                        output_file, 2)
-            output_file.close()
+            self._remove_extra_items()
+            data.append([to_data(change_) for change_ in self.undo_list])
+            data.append([to_data(change_) for change_ in self.redo_list])
+            self.project.data_files.write_data('history', data,
+                                               compress=self.compress)
 
     def get_file_undo_list(self, resource):
         result = []

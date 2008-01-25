@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import cPickle as pickle
 
 import rope.base.change
@@ -358,16 +359,27 @@ class _DataFiles(object):
         self.project = project
         self.hooks = []
 
-    def read_data(self, name, compress=False):
+    def read_data(self, name, compress=False, import_=False):
         if self.project.ropefolder is None:
             return None
         opener = self._get_opener(compress)
         compress = opener != open
         file = self._get_file(name, compress)
+        if not compress and import_:
+            self._import_old_files(name)
         if file.exists():
             input = opener(file.real_path, 'rb')
             try:
-                return pickle.load(output)
+                result = []
+                try:
+                    while True:
+                        result.append(pickle.load(input))
+                except EOFError:
+                    pass
+                if len(result) == 1:
+                    return result[0]
+                if len(result) > 1:
+                    return result
             finally:
                 input.close()
 
@@ -388,6 +400,12 @@ class _DataFiles(object):
     def write(self):
         for hook in self.hooks:
             hook()
+
+    def _import_old_files(self, name):
+        old = self._get_file(name + '.pickle', False)
+        new = self._get_file(name, False)
+        if old.exists() and not new.exists():
+            shutil.move(old.real_path, new.real_path)
 
     def _get_opener(self, compress):
         if compress:
