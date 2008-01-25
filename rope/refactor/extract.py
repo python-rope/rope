@@ -315,8 +315,6 @@ class _ExceptionalConditionChecker(object):
             self.multi_line_conditions(info)
 
     def base_conditions(self, info):
-        if info.scope.get_kind() == 'Class':
-            raise RefactoringError('Can not extract in class body')
         if info.region[1] > info.scope_region[1]:
             raise RefactoringError('Bad region selected for extract method')
         end_line = info.region_lines[1]
