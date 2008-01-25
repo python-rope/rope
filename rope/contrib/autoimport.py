@@ -19,7 +19,7 @@ class AutoImport(object):
     def write(self):
         self.project.data_files.write_data('globalnames', self.names)
 
-    def get_imports(self, starting):
+    def import_assist(self, starting):
         # XXX: breaking if gave up! use generators
         result = []
         for module in self.names:
