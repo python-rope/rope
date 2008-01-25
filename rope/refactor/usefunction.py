@@ -1,4 +1,4 @@
-from rope.base import change, taskhandle, evaluate, exceptions, pyobjects
+from rope.base import change, taskhandle, evaluate, exceptions, pyobjects, pynames
 from rope.refactor import restructure, sourceutils, similarfinder, importutils
 
 
@@ -37,7 +37,7 @@ class UseFunction(object):
         return changes
 
     def _restructure(self, resources, task_handle, others=True):
-        body = sourceutils.get_body(self.pyfunction)
+        body = self._get_body()
         pattern = self._make_pattern()
         goal = self._make_goal(import_=others)
         imports = None
@@ -53,6 +53,13 @@ class UseFunction(object):
         return restructuring.get_changes(resources=resources,
                                          task_handle=task_handle)
 
+    def _find_temps(self):
+        pymodule = self.project.pycore.get_string_module(self._get_body())
+        result = []
+        for name, pyname in pymodule.get_scope().get_names().items():
+            if isinstance(pyname, pynames.AssignedName):
+                result.append(name)
+        return result
 
     def _module_name(self):
         return importutils.get_module_name(self.project.pycore,
@@ -60,8 +67,10 @@ class UseFunction(object):
 
     def _make_pattern(self):
         params = self.pyfunction.get_param_names()
-        body = sourceutils.get_body(self.pyfunction)
+        body = self._get_body()
         body = restructure.replace(body, 'return', 'pass')
+        wildcards = list(params)
+        wildcards.extend(self._find_temps())
         if self._does_return():
             if self._is_expression():
                 replacement = '${%s}' % self._rope_returned
@@ -71,8 +80,11 @@ class UseFunction(object):
             body = restructure.replace(
                 body, 'return ${%s}' % self._rope_returned,
                 replacement)
-            params = list(params) + [self._rope_result]
-        return similarfinder.make_pattern(body, params)
+            wildcards.append(self._rope_result)
+        return similarfinder.make_pattern(body, wildcards)
+
+    def _get_body(self):
+        return sourceutils.get_body(self.pyfunction)
 
     def _make_goal(self, import_=False):
         params = self.pyfunction.get_param_names()
@@ -86,7 +98,7 @@ class UseFunction(object):
         return goal
 
     def _does_return(self):
-        body = sourceutils.get_body(self.pyfunction)
+        body = self._get_body()
         removed_return = restructure.replace(body, 'return ${result}', '')
         return removed_return != body
 

@@ -81,6 +81,15 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('var'))
 
+    def test_differing_in_the_inner_temp_names(self):
+        code = 'def f(p):\n    a = p + 1\n    print(a)\nb = 2 + 1\nprint(b)\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.rindex('f'))
+        self.project.do(user.get_changes())
+        self.assertEquals(
+            'def f(p):\n    a = p + 1\n    print(a)\nf(2)\n',
+            self.mod1.read())
+
 
 if __name__ == '__main__':
     unittest.main()
