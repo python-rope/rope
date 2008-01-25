@@ -1,3 +1,5 @@
+import warnings
+
 from rope.base import pyobjects, exceptions, change, evaluate
 from rope.refactor import sourceutils, occurrences, rename
 
@@ -24,18 +26,23 @@ class MethodObject(object):
                (name, self._get_init(),
                 ' ' * sourceutils.get_indent(self.pycore), body)
 
-    def get_changes(self, new_class_name):
+    def get_changes(self, classname=None, new_class_name=None):
+        if new_class_name is not None:
+            warnings.warn(
+                'new_class_name parameter is deprecated; use classname',
+                DeprecationWarning, stacklevel=2)
+            classname = new_class_name
         collector = sourceutils.ChangeCollector(self.pymodule.source_code)
         start, end = sourceutils.get_body_region(self.pyfunction)
         indents = sourceutils.get_indents(
             self.pymodule.lines, self.pyfunction.get_scope().get_start()) + \
             sourceutils.get_indent(self.pycore)
         new_contents = ' ' * indents + 'return %s(%s)()\n' % \
-                       (new_class_name, ', '.join(self._get_parameter_names()))
+                       (classname, ', '.join(self._get_parameter_names()))
         collector.add_change(start, end, new_contents)
         insertion = self._get_class_insertion_point()
         collector.add_change(insertion, insertion,
-                             '\n\n' + self.get_new_class(new_class_name))
+                             '\n\n' + self.get_new_class(classname))
         changes = change.ChangeSet('Replace method with method object refactoring')
         changes.add_change(change.ChangeContents(self.resource,
                                                  collector.get_changed()))
