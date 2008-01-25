@@ -12,7 +12,7 @@ class AutoImportTest(unittest.TestCase):
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.pkg = testutils.create_package(self.project, 'pkg')
         self.mod2 = testutils.create_module(self.project, 'mod2', self.pkg)
-        self.importer = autoimport.AutoImport(self.project)
+        self.importer = autoimport.AutoImport(self.project, observe=False)
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -59,6 +59,30 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod2)
         self.assertEquals(set(['mod1', 'pkg.mod2']),
                           set(self.importer.get_modules('myvar')))
+
+
+class AutoImportObservingTest(unittest.TestCase):
+
+    def setUp(self):
+        super(AutoImportObservingTest, self).setUp()
+        self.project = testutils.sample_project()
+        self.mod1 = testutils.create_module(self.project, 'mod1')
+        self.pkg = testutils.create_package(self.project, 'pkg')
+        self.mod2 = testutils.create_module(self.project, 'mod2', self.pkg)
+        self.importer = autoimport.AutoImport(self.project, observe=True)
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(AutoImportObservingTest, self).tearDown()
+
+    def test_writing_files(self):
+        self.mod1.write('myvar = None\n')
+        self.assertEquals(['mod1'], self.importer.get_modules('myvar'))
+
+    def test_moving_files(self):
+        self.mod1.write('myvar = None\n')
+        self.mod1.move('mod3.py')
+        self.assertEquals(['mod3'], self.importer.get_modules('myvar'))
 
 
 if __name__ == '__main__':

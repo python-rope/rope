@@ -12,7 +12,7 @@ class AutoImport(object):
         project.data_files.add_write_hook(self.write)
         # XXX: handle moved and removed
         observer = resourceobserver.ResourceObserver(
-            changed=self._changed)
+            changed=self._changed, moved=self._moved)
         if observe:
             project.add_observer(observer)
 
@@ -38,11 +38,13 @@ class AutoImport(object):
     def update_resource(self, resource):
         try:
             pymodule = self.project.pycore.resource_to_pyobject(resource)
-            modname = importutils.get_module_name(self.project.pycore,
-                                                  resource)
+            modname = self._module_name(resource)
             self._add_names(pymodule, modname)
         except exceptions.ModuleSyntaxError:
             pass
+
+    def _module_name(self, resource):
+        return importutils.get_module_name(self.project.pycore, resource)
 
     def _add_names(self, pymodule, modname):
         # XXX: exclude imported names
@@ -62,3 +64,10 @@ class AutoImport(object):
     def _changed(self, resource):
         if not resource.is_folder():
             self.update_resource(resource)
+
+    def _moved(self, resource, newresource):
+        if not resource.is_folder():
+            modname = self._module_name(resource)
+            if modname in self.names:
+                del self.names[modname]
+            self.update_resource(newresource)
