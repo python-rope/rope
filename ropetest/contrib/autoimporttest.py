@@ -90,5 +90,11 @@ class AutoImportObservingTest(unittest.TestCase):
         self.assertEquals([], self.importer.get_modules('myvar'))
 
 
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(AutoImportTest))
+    result.addTests(unittest.makeSuite(AutoImportObservingTest))
+    return result
+
 if __name__ == '__main__':
     unittest.main()
