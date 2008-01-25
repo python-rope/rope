@@ -12,7 +12,7 @@ class AutoImport(object):
         project.data_files.add_write_hook(self.write)
         # XXX: handle moved and removed
         observer = resourceobserver.ResourceObserver(
-            changed=self._changed, moved=self._moved)
+            changed=self._changed, moved=self._moved, removed=self._removed)
         if observe:
             project.add_observer(observer)
 
@@ -71,3 +71,9 @@ class AutoImport(object):
             if modname in self.names:
                 del self.names[modname]
             self.update_resource(newresource)
+
+    def _removed(self, resource):
+        if not resource.is_folder():
+            modname = self._module_name(resource)
+            if modname in self.names:
+                del self.names[modname]

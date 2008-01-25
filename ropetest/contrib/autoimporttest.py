@@ -84,6 +84,11 @@ class AutoImportObservingTest(unittest.TestCase):
         self.mod1.move('mod3.py')
         self.assertEquals(['mod3'], self.importer.get_modules('myvar'))
 
+    def test_removing_files(self):
+        self.mod1.write('myvar = None\n')
+        self.mod1.remove()
+        self.assertEquals([], self.importer.get_modules('myvar'))
+
 
 if __name__ == '__main__':
     unittest.main()
