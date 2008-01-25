@@ -1,15 +1,20 @@
-from rope.base import exceptions, pynames
+from rope.base import exceptions, pynames, resourceobserver
 from rope.refactor import importutils
 
 
 class AutoImport(object):
 
-    def __init__(self, project):
+    def __init__(self, project, observe=False):
         self.project = project
         self.names = project.data_files.read_data('globalnames')
         if self.names is None:
             self.names = {}
         project.data_files.add_write_hook(self.write)
+        # XXX: handle moved and removed
+        observer = resourceobserver.ResourceObserver(
+            changed=self._changed)
+        if observe:
+            project.add_observer(observer)
 
     def write(self):
         self.project.data_files.write_data('globalnames', self.names)
@@ -46,3 +51,7 @@ class AutoImport(object):
             self._add_names(pymodule, modname)
         except exceptions.ModuleNotFoundError:
             pass
+
+    def _changed(self, resource):
+        if not resource.is_folder():
+            self.update_resource(resource)
