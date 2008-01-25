@@ -18,6 +18,7 @@ class _Project(object):
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
         self.prefs = prefs.Prefs()
         self._pycore = None
+        self.data_files = _DataFiles(self)
 
     def get_resource(self, resource_name):
         """Get a resource in a project.
@@ -90,8 +91,6 @@ class _Project(object):
 
     def close(self):
         """Closes project open resources"""
-        if self._history is not None:
-            self.history.sync()
 
     def sync(self):
         """Closes project open resources"""
@@ -110,6 +109,7 @@ class _Project(object):
 
     history = property(_get_history)
     pycore = property(get_pycore)
+    ropefolder = None
 
 
 class Project(_Project):
@@ -142,7 +142,6 @@ class Project(_Project):
         super(Project, self).__init__(fscommands)
         self.ignored = _IgnoredResources()
         self.file_list = _FileListCacher(self)
-        self.data_files = _DataFiles(self)
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
         if ropefolder is not None:
             self.prefs['ignored_resources'] = [ropefolder]

@@ -374,7 +374,7 @@ class SavingHistoryTest(unittest.TestCase):
         history = rope.base.history.History(self.project)
         myfile = self.project.get_file('myfile.txt')
         history.do(CreateResource(myfile))
-        history.sync()
+        history.write()
 
         history = rope.base.history.History(self.project)
         history.undo()
@@ -387,7 +387,7 @@ class SavingHistoryTest(unittest.TestCase):
         myfile = self.project.get_file('myfile.txt')
         history.do(CreateResource(myfile))
         history.undo()
-        history.sync()
+        history.write()
 
         history = rope.base.history.History(self.project)
         history.redo()

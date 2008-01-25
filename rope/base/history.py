@@ -18,6 +18,7 @@ class History(object):
         self.save = self.project.get_prefs().get('save_history', False)
         self.compress = project.get_prefs().get('compress_history', False)
         self._load_history()
+        self.project.data_files.add_write_hook(self.write)
         self.current_change = None
 
     def _load_history(self):
@@ -152,7 +153,7 @@ class History(object):
                change_.resource == file:
                 return change_.old_contents
 
-    def sync(self):
+    def write(self):
         if self.save:
             data = []
             to_data = change.ChangeToData()
