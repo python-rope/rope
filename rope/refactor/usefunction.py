@@ -3,6 +3,7 @@ from rope.refactor import restructure, sourceutils, similarfinder, importutils
 
 
 class UseFunction(object):
+    """Try to use a function wherever possible"""
 
     def __init__(self, project, resource, offset):
         self.project = project

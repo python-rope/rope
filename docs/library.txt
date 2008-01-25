@@ -422,6 +422,9 @@ see pydocs in their modules and the unit-tests in the
 * `rope.refactor.inline.Inline`:
   Inlines occurrences of a method/variable.
 
+* `rope.refactor.usefunction`:
+  Tries to use a function wherever possible.
+
 * `rope.refactor.method_object.MethodObject`:
   Transforms a function or a method to a method object.
 
