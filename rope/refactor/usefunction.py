@@ -105,9 +105,11 @@ class UseFunction(object):
 
 
 def find_temps(project, code):
+    code = 'def f():\n' + sourceutils.indent_lines(code, 4)
     pymodule = project.pycore.get_string_module(code)
     result = []
-    for name, pyname in pymodule.get_scope().get_names().items():
+    function_scope = pymodule.get_scope().get_scopes()[0]
+    for name, pyname in function_scope.get_names().items():
         if isinstance(pyname, pynames.AssignedName):
             result.append(name)
     return result
