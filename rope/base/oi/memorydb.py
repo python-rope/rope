@@ -14,20 +14,11 @@ class MemoryDB(objectdb.FileDict):
         self._load_files()
         self.project.data_files.add_write_hook(self.write)
 
-    def _import_old_files(self):
-        persisted = self.project.get_file( self.project.ropefolder.path + '/objectdb')
-        old = self.project.get_file(self.project.ropefolder.path +
-                                    '/objectdb.pickle')
-        if not persisted.exists() and old.exists() and not self.compress:
-            shutil.move(old.real_path, persisted.real_path)
-
     def _load_files(self):
         self._files = {}
         if self.persist:
-            # importing old objectdb.pickle file
-            self._import_old_files()
-            result = self.project.data_files.read_data('objectdb',
-                                                       self.compress)
+            result = self.project.data_files.read_data(
+                'objectdb', compress=self.compress, import_=True)
             if result is not None:
                 self._files = result
 
