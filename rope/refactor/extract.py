@@ -222,6 +222,9 @@ class _ExtractPerformer(object):
         if self.info.similar:
             if self.info.make_global:
                 return [(0, len(self.info.pymodule.source_code))]
+            if not self.info.variable and not self.info.global_:
+                if self.info.scope.parent.parent is None:
+                    return [(0, len(self.info.pymodule.source_code))]
             if self.info.method and not self.info.variable:
                 class_scope = self.info.scope.parent
                 regions = []

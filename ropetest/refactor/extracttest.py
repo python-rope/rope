@@ -758,6 +758,15 @@ class ExtractMethodTest(unittest.TestCase):
         expected = '\ndef f():\n    a = 1\n    print a\n\nf()\nf()\n'
         self.assertEquals(expected, refactored)
 
+    def test_extracting_methods_in_global_functions_should_be_global(self):
+        code = 'def f():\n    a = 1\ndef g():\n    b = 1\n'
+        start = code.rindex('1')
+        refactored = self.do_extract_method(code, start, start + 1, 'one',
+                                            similar=True, global_=False)
+        expected = 'def f():\n    a = one()\ndef g():\n    b = one()\n\n' \
+                   'def one():\n    return 1\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()
