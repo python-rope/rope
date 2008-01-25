@@ -1,4 +1,6 @@
 from rope.refactor import importutils
+from rope.base import exceptions
+
 
 class AutoImport(object):
 
@@ -22,11 +24,13 @@ class AutoImport(object):
         return result
 
     def update_resource(self, resource):
-        # XXX: what if there are syntax errors
-        pymodule = self.project.pycore.resource_to_pyobject(resource)
-        modname = importutils.get_module_name(self.project.pycore,
-                                              resource)
-        self._add_names(pymodule, modname)
+        try:
+            pymodule = self.project.pycore.resource_to_pyobject(resource)
+            modname = importutils.get_module_name(self.project.pycore,
+                                                  resource)
+            self._add_names(pymodule, modname)
+        except exceptions.ModuleSyntaxError:
+            pass
 
     def _add_names(self, pymodule, modname):
         # XXX: exclude imported names
@@ -34,6 +38,8 @@ class AutoImport(object):
         self.names[modname] = globals
 
     def update_module(self, modname):
-        # XXX: what if module cannot be found?
-        pymodule = self.project.pycore.get_module(modname)
-        self._add_names(pymodule, modname)
+        try:
+            pymodule = self.project.pycore.get_module(modname)
+            self._add_names(pymodule, modname)
+        except exceptions.ModuleNotFoundError:
+            pass

@@ -12,28 +12,35 @@ class AutoImportTest(unittest.TestCase):
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.pkg = testutils.create_package(self.project, 'pkg')
         self.mod2 = testutils.create_module(self.project, 'mod2', self.pkg)
+        self.importer = autoimport.AutoImport(self.project)
 
     def tearDown(self):
         testutils.remove_project(self.project)
         super(AutoImportTest, self).tearDown()
 
     def test_simple_case(self):
-        importer = autoimport.AutoImport(self.project)
-        self.assertEquals([], importer.get_imports('A'))
+        self.assertEquals([], self.importer.get_imports('A'))
 
     def test_update_resource(self):
-        importer = autoimport.AutoImport(self.project)
-        self.mod1.write('myvar = None')
-        importer.update_resource(self.mod1)
+        self.mod1.write('myvar = None\n')
+        self.importer.update_resource(self.mod1)
         self.assertEquals([('myvar', 'mod1')],
-                          importer.get_imports('myva'))
+                          self.importer.get_imports('myva'))
 
     def test_update_module(self):
-        importer = autoimport.AutoImport(self.project)
         self.mod1.write('myvar = None')
-        importer.update_module('mod1')
+        self.importer.update_module('mod1')
         self.assertEquals([('myvar', 'mod1')],
-                          importer.get_imports('myva'))
+                          self.importer.get_imports('myva'))
+
+    def test_update_non_existent_module(self):
+        self.importer.update_module('does_not_exists_this')
+        self.assertEquals([], self.importer.get_imports('myva'))
+
+    def test_module_with_syntax_errors(self):
+        self.mod1.write('this is a syntax error\n')
+        self.importer.update_resource(self.mod1)
+        self.assertEquals([], self.importer.get_imports('myva'))
 
 
 if __name__ == '__main__':
