@@ -47,6 +47,19 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1)
         self.assertEquals([], self.importer.import_assist('pkg'))
 
+    def test_get_modules(self):
+        self.mod1.write('myvar = None\n')
+        self.importer.update_resource(self.mod1)
+        self.assertEquals(['mod1'], self.importer.get_modules('myvar'))
+
+    def test_get_modules_inside_packages(self):
+        self.mod1.write('myvar = None\n')
+        self.mod2.write('myvar = None\n')
+        self.importer.update_resource(self.mod1)
+        self.importer.update_resource(self.mod2)
+        self.assertEquals(set(['mod1', 'pkg.mod2']),
+                          set(self.importer.get_modules('myvar')))
+
 
 if __name__ == '__main__':
     unittest.main()

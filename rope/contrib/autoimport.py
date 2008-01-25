@@ -28,6 +28,13 @@ class AutoImport(object):
                     result.append((global_name, module))
         return result
 
+    def get_modules(self, name):
+        result = []
+        for module in self.names:
+            if name in self.names[module]:
+                result.append(module)
+        return result
+
     def update_resource(self, resource):
         try:
             pymodule = self.project.pycore.resource_to_pyobject(resource)
