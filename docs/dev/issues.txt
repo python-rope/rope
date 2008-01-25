@@ -6,6 +6,8 @@
 Unresolved Issues
 =================
 
+* extracted functions should be inserted before using class bodies
+* temps might be read after body in usefunction or extract
 * using wild-cards for temps in extracted function pattern
 * adding "referenced later" wildcard argument to restructurings?
 * adding "change references" wildcard argument to restructurings?
@@ -128,6 +130,34 @@ Examples
 --------
 
 .. ...
+
+
+Possible Module Renamings
+=========================
+
+*First level*:
+
+These module names are somehow inconsistent.
+
+* change -> changes
+* method_object -> methodobject
+* default_config -> defaultconfig
+
+*Second level*
+
+Many modules use long names.  They can be shortened without loss of
+readability.
+
+* methodobject -> methobj or funcobj
+* usefunction -> usefunc
+* multiproject -> mulprj
+* functionutils -> funcutils
+* importutils -> imputils
+* introduce_factory -> factory
+* change_signature -> signature
+* encapsulate_field -> encapsulate
+* sourceutils -> srcutils
+* resourceobserver -> observer
 
 
 Getting Ready For Python 3.0
