@@ -1,5 +1,6 @@
 import os
 import re
+import cPickle as pickle
 
 import rope.base.change
 import rope.base.fscommands
@@ -140,6 +141,7 @@ class Project(_Project):
         super(Project, self).__init__(fscommands)
         self.ignored = _IgnoredResources()
         self.file_list = _FileListCacher(self)
+        self.data_files = _DataFiles(self)
         self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
         if ropefolder is not None:
             self.prefs['ignored_resources'] = [ropefolder]
@@ -348,6 +350,59 @@ class _FileListCacher(object):
 
     def _validate(self, resource):
         pass
+
+
+class _DataFiles(object):
+
+    def __init__(self, project):
+        self.project = project
+        self.hooks = []
+
+    def read_data(self, name, compress=False):
+        if self.project.ropefolder is None:
+            return None
+        opener = self._get_opener(compress)
+        compress = opener != open
+        file = self._get_file(name, compress)
+        if file.exists():
+            input = opener(file.real_path, 'rb')
+            try:
+                return pickle.load(output)
+            finally:
+                input.close()
+
+    def write_data(self, name, data, compress=False):
+        if self.project.ropefolder:
+            file = self._get_file(name, compress)
+            opener = self._get_opener(compress)
+            compress = opener != open
+            output = opener(file.real_path, 'wb')
+            try:
+                pickle.dump(data, output, 2)
+            finally:
+                output.close()
+
+    def add_write_hook(self, hook):
+        self.hooks.append(hook)
+
+    def write(self):
+        for hook in self.hooks:
+            hook()
+
+    def _get_opener(self, compress):
+        if compress:
+            try:
+                import gzip
+                return gzip.open
+            except ImportError:
+                pass
+        return open
+
+    def _get_file(self, name, compress):
+        path = self.project.ropefolder.path + '/' + name
+        if compress:
+            name += '.gz'
+        return self.project.get_file(path)
 
 
 def _realpath(path):

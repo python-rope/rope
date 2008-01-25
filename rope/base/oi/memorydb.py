@@ -39,13 +39,12 @@ class MemoryDB(objectdb.FileDict):
     def _load_files(self):
         self._files = {}
         if self.persist:
-            persisted = self._get_persisted_file()
-            if not persisted.exists():
-                self._import_old_files()
-            if persisted.exists():
-                output = self.opener(persisted.real_path, 'rb')
-                self._files = pickle.load(output)
-                output.close()
+            # importing old objectdb.pickle file
+            self._import_old_files()
+            result = self.project.data_files.read_data('objectdb',
+                                                       self.compress)
+            if result is not None:
+                self._files = result
 
     def keys(self):
         return self._files.keys()
@@ -70,10 +69,8 @@ class MemoryDB(objectdb.FileDict):
 
     def sync(self):
         if self.persist:
-            persisted = self._get_persisted_file()
-            output = self.opener(persisted.real_path, 'wb')
-            pickle.dump(self._files, output, 2)
-            output.close()
+            self.project.data_files.write_data('objectdb', self._files,
+                                               self.compress)
 
 
 class FileInfo(objectdb.FileInfo):
