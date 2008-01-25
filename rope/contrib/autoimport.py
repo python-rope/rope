@@ -10,7 +10,7 @@ class AutoImport(object):
 
     """
 
-    def __init__(self, project, observe=False):
+    def __init__(self, project, observe=True):
         """Construct an AutoImport object
 
         If `observe` is `True`, listen for project changes and update
