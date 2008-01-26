@@ -1,4 +1,4 @@
-from rope.base import exceptions, pynames, resourceobserver
+from rope.base import exceptions, pynames, resourceobserver, taskhandle
 from rope.refactor import importutils
 
 
@@ -100,3 +100,24 @@ class AutoImport(object):
             modname = self._module_name(resource)
             if modname in self.names:
                 del self.names[modname]
+
+    def generate_cache(self, resources=None,
+                       task_handle=taskhandle.NullTaskHandle()):
+        if resources is None:
+            resources = self.project.pycore.get_python_files()
+        job_set = task_handle.create_jobset(
+            'Generatig autoimport cache', len(resources))
+        for file in resources:
+            job_set.started_job('Working on <%s>' % file.path)
+            self.update_resource(file)
+            job_set.finished_job()
+
+    def generate_modules_cache(self, modules,
+                               task_handle=taskhandle.NullTaskHandle()):
+        job_set = task_handle.create_jobset(
+            'Generatig autoimport cache for modules', len(modules))
+        for modname in modules:
+            job_set.started_job('Working on <%s>' % modname)
+            self.update_module(modname)
+            job_set.finished_job()
+
