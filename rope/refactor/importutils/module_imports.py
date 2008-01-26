@@ -374,6 +374,7 @@ class _GlobalImportFinder(object):
             self.pymodule = pymodule
         self.pycore = pycore
         self.imports = []
+        self.pymodule = pymodule
         self.lines = self.pymodule.lines
 
     def visit_import(self, node, end_line):

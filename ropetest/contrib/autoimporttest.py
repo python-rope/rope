@@ -60,6 +60,24 @@ class AutoImportTest(unittest.TestCase):
         self.assertEquals(set(['mod1', 'pkg.mod2']),
                           set(self.importer.get_modules('myvar')))
 
+    def test_trivial_insertion_line(self):
+        result = self.importer.find_insertion_line('')
+        self.assertEquals(1, result)
+
+    def test_insertion_line(self):
+        result = self.importer.find_insertion_line('import mod\n')
+        self.assertEquals(2, result)
+
+    def test_insertion_line_with_pydocs(self):
+        result = self.importer.find_insertion_line(
+            '"""docs\n\ndocs"""\nimport mod\n')
+        self.assertEquals(5, result)
+
+    def test_insertion_line_with_multiple_imports(self):
+        result = self.importer.find_insertion_line(
+            'import mod1\n\nimport mod2\n')
+        self.assertEquals(4, result)
+
 
 class AutoImportObservingTest(unittest.TestCase):
 

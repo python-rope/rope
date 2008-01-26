@@ -9,6 +9,8 @@ from rope.refactor import occurrences, rename
 from rope.refactor.importutils import module_imports
 from rope.refactor.importutils.importinfo import \
      (NormalImport, FromImport, get_module_name)
+
+
 class ImportTools(object):
 
     def __init__(self, pycore):

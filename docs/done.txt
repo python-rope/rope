@@ -3,6 +3,9 @@
 ===========
 
 
+- Added rope.contrib.autoimport : January 25, 2008
+
+
 - Added use function refactoring : January 25, 2008
 
 

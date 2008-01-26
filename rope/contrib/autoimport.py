@@ -1,4 +1,6 @@
-from rope.base import exceptions, pynames, resourceobserver, taskhandle
+import re
+
+from rope.base import exceptions, pynames, resourceobserver, taskhandle, ast
 from rope.refactor import importutils
 
 
@@ -121,3 +123,19 @@ class AutoImport(object):
             self.update_module(modname)
             job_set.finished_job()
 
+    def find_insertion_line(self, code):
+        """Guess at what line the new import should be inserted"""
+        match = re.search(r'^(def|class)\s+', code)
+        if match is not None:
+            code = code[:match.start()]
+        try:
+            pymodule = self.project.pycore.get_string_module(code)
+        except exceptions.ModuleSyntaxError:
+            return 1
+        testmodname = '__rope_testmodule_rope'
+        importinfo = importutils.NormalImport(((testmodname, None),))
+        module_imports = importutils.get_module_imports(
+            self.project.pycore, pymodule)
+        module_imports.add_import(importinfo)
+        offset = module_imports.get_changed_source().index(testmodname)
+        return code[:offset].count('\n') + 1
