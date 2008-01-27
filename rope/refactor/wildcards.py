@@ -51,12 +51,14 @@ class DefaultWildcard(object):
     def _check_object(self, args, suspect):
         kind = None
         expected = None
+        unsure = args.get('unsure', False)
         for check in ['name', 'object', 'type', 'instance']:
             if check in args:
                 kind = check
                 expected = args[check]
             if expected is not None:
-                checker = _CheckObject(self.project, expected, kind)
+                checker = _CheckObject(self.project, expected,
+                                       kind, unsure=unsure)
                 return checker(suspect.pymodule, suspect.node)
         return True
 
@@ -87,15 +89,18 @@ def parse_arg(arg):
 
 class _CheckObject(object):
 
-    def __init__(self, project, expected, kind='object'):
+    def __init__(self, project, expected, kind='object', unsure=False):
         self.project = project
         self.kind = kind
+        self.unsure = unsure
         self.expected = self._evaluate(expected)
 
     def __call__(self, pymodule, node):
         pyname = self._evaluate_node(pymodule, node)
-        if self.expected is None or pyname is None:
-            return False
+        if pyname is None or self.expected is None:
+            return self.unsure
+        if self._unsure_pyname(pyname, unbound=self.kind=='name'):
+            return True
         if self.kind == 'name':
             return self._same_pyname(self.expected, pyname)
         else:
@@ -126,6 +131,9 @@ class _CheckObject(object):
 
     def _same_pyname(self, expected, pyname):
         return occurrences.same_pyname(expected, pyname)
+
+    def _unsure_pyname(self, pyname, unbound=True):
+        return self.unsure and occurrences.unsure_pyname(pyname, unbound)
 
     def _split_name(self, name):
         parts = name.split('.')

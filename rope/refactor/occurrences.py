@@ -35,17 +35,10 @@ class FilteredFinder(object):
             if same_pyname(pyname, new_pyname):
                 return True
             elif self.unsure is not None and \
-                 self._unsure_match(pyname, new_pyname):
+                 unsure_pyname(new_pyname):
                 occurrence._unsure = self.unsure(occurrence)
                 return occurrence._unsure
         return False
-
-    def _unsure_match(self, expected, pyname):
-        if pyname is None:
-            return True
-        if isinstance(pyname, pynames.UnboundName) and \
-           pyname.get_object() == pyobjects.get_unknown():
-            return True
 
 
 class Occurrence(object):
@@ -117,6 +110,15 @@ def same_pyname(expected, pyname):
         return False
     return expected.get_definition_location() == pyname.get_definition_location() and \
            expected.get_object() == pyname.get_object()
+
+def unsure_pyname(pyname, unbound=True):
+    """Return `True` if we don't know what this name references"""
+    if pyname is None:
+        return True
+    if unbound and not isinstance(pyname, pynames.UnboundName):
+        return False
+    if pyname.get_object() == pyobjects.get_unknown():
+        return True
 
 
 class _TextualFinder(object):

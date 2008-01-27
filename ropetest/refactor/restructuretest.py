@@ -166,6 +166,15 @@ class RestructureTest(unittest.TestCase):
         self.assertEquals('a = 1\n', self.mod.read())
         self.assertEquals('b = 2 / 1\n', mod2.read())
 
+    def test_unsure_argument_of_default_wildcard(self):
+        self.mod.write('def f(p):\n    return p * 2\nx = "" * 2\ni = 1 * 2\n')
+        refactoring = restructure.Restructure(
+            self.project, '${s} * 2', 'dup(${s})',
+            args={'s': {'type': '__builtins__.str','unsure': True}})
+        self.project.do(refactoring.get_changes())
+        self.assertEquals('def f(p):\n    return dup(p)\nx = dup("")\n'
+                          'i = 1 * 2\n', self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()
