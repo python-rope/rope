@@ -500,6 +500,35 @@ inlining `say_hello` will result in::
   hello = 'Saying hello to %s from %s' % ('Rope', C.__name__)
 
 
+Use Function Refactoring
+------------------------
+
+It tries to find the places in which a function can be used and
+changes the code to call it instead.  For instance if mod1 is::
+
+  def square(p):
+      return p ** 2
+
+  my_var = 3 ** 2
+
+
+and mod2 is::
+
+  another_var = 4 ** 2
+
+if we perform "use function" on square function, mod1 will be::
+
+  def square(p):
+      return p ** 2
+
+  my_var = square(3)
+
+and mod2 will be::
+
+  import mod1
+  another_var = mod1.square(4)
+
+
 Sorting Imports
 ---------------
 
