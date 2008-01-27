@@ -63,12 +63,12 @@ class Restructure(object):
 
     Example #5::
 
-      pattern ${inst}.f(${p1}, ${p2})
+      pattern ${inst}.longtask(${p1}, ${p2})
       goal
-       ${inst}.f1(${p1})
-       ${inst}.f2(${p2})
+       ${inst}.subtask1(${p1})
+       ${inst}.subtask2(${p2})
       args
-       inst: type=mod.A
+       inst: type=mod.A,unsure
 
     """
 
