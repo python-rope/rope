@@ -30,6 +30,7 @@ class DefaultWildcard(object):
     * object - for checking the object
     * instance - for checking types but similar to builtin isinstance
     * exact - matching only occurrences with the same name as the wildcard
+    * unsure - matching unsure occurrences
 
     """
 
