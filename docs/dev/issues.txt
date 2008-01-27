@@ -6,13 +6,11 @@
 Unresolved Issues
 =================
 
+* usefunction on methods
 * extracted functions should be inserted before using class bodies
 * temps might be read after body in usefunction or extract
-* using wild-cards for temps in extracted function pattern
 * adding "referenced later" wildcard argument to restructurings?
 * adding "change references" wildcard argument to restructurings?
-* restructurings and unsure occurrences
-* limiting the resources to apply a refactoring?
 * adding custom wild-card replacements; needs use cases
 * ideas for more custom wildcards
 * adapting future python 2.6 ast changes
