@@ -452,6 +452,17 @@ see pydocs in their modules and the unit-tests in the
   Lets you perform things like organize imports.
 
 
+Refactoring Resources Parameter
+-------------------------------
+
+Some refactorings, restructure and find occurrences accept an argument
+called ``resources``.  If it is a list of `File`\s, all other
+resources in the project are ignored and the refactoring only analyzes
+them; if it is `None` all python module in the project will be
+analyzed.  Using this parameter, IDEs can let the user limit the files
+on which a refactoring should be applied.
+
+
 Examples
 ========
 
@@ -647,6 +658,16 @@ will not report `myvariable`, if `later_locals` is False.
 See pydocs and source code for more information (other functions in
 this module might be interesting, too; like `get_doc`,
 `get_definition_location` and `find_occurrences`).
+
+
+`rope.contrib.autoimport`
+-------------------------
+
+This module can be used to find the modules that provide a name.  IDEs
+can use this module to auto-import names.  `AutoImport.get_modules()`
+returns the list of modules with the given global name.
+`AutoImport.import_assist()` tries to find the modules that have a
+global name that starts with the given prefix.
 
 
 Cross-Project Refactorings
