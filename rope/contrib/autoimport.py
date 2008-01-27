@@ -53,6 +53,53 @@ class AutoImport(object):
                 result.append(module)
         return result
 
+    def generate_cache(self, resources=None,
+                       task_handle=taskhandle.NullTaskHandle()):
+        """Generate global name cache for project files
+
+        If `resources` is a list of `rope.base.resource.File`\s, only
+        those files are searched; otherwise all python modules in the
+        project are cached.
+
+        """
+        if resources is None:
+            resources = self.project.pycore.get_python_files()
+        job_set = task_handle.create_jobset(
+            'Generatig autoimport cache', len(resources))
+        for file in resources:
+            job_set.started_job('Working on <%s>' % file.path)
+            self.update_resource(file)
+            job_set.finished_job()
+
+    def generate_modules_cache(self, modules,
+                               task_handle=taskhandle.NullTaskHandle()):
+        """Generate global name cache for modules listed in `modules`"""
+        job_set = task_handle.create_jobset(
+            'Generatig autoimport cache for modules', len(modules))
+        for modname in modules:
+            job_set.started_job('Working on <%s>' % modname)
+            self.update_module(modname)
+            job_set.finished_job()
+
+    def find_insertion_line(self, code):
+        """Guess at what line the new import should be inserted"""
+        match = re.search(r'^(def|class)\s+', code)
+        if match is not None:
+            code = code[:match.start()]
+        try:
+            pymodule = self.project.pycore.get_string_module(code)
+        except exceptions.ModuleSyntaxError:
+            return 1
+        testmodname = '__rope_testmodule_rope'
+        importinfo = importutils.NormalImport(((testmodname, None),))
+        module_imports = importutils.get_module_imports(
+            self.project.pycore, pymodule)
+        module_imports.add_import(importinfo)
+        code = module_imports.get_changed_source()
+        offset = code.index(testmodname)
+        lineno = code.count('\n', 0, offset) + 1
+        return lineno
+
     def update_resource(self, resource):
         """Update the cache for global names in `resource`"""
         try:
@@ -102,42 +149,3 @@ class AutoImport(object):
             modname = self._module_name(resource)
             if modname in self.names:
                 del self.names[modname]
-
-    def generate_cache(self, resources=None,
-                       task_handle=taskhandle.NullTaskHandle()):
-        if resources is None:
-            resources = self.project.pycore.get_python_files()
-        job_set = task_handle.create_jobset(
-            'Generatig autoimport cache', len(resources))
-        for file in resources:
-            job_set.started_job('Working on <%s>' % file.path)
-            self.update_resource(file)
-            job_set.finished_job()
-
-    def generate_modules_cache(self, modules,
-                               task_handle=taskhandle.NullTaskHandle()):
-        job_set = task_handle.create_jobset(
-            'Generatig autoimport cache for modules', len(modules))
-        for modname in modules:
-            job_set.started_job('Working on <%s>' % modname)
-            self.update_module(modname)
-            job_set.finished_job()
-
-    def find_insertion_line(self, code):
-        """Guess at what line the new import should be inserted"""
-        match = re.search(r'^(def|class)\s+', code)
-        if match is not None:
-            code = code[:match.start()]
-        try:
-            pymodule = self.project.pycore.get_string_module(code)
-        except exceptions.ModuleSyntaxError:
-            return 1
-        testmodname = '__rope_testmodule_rope'
-        importinfo = importutils.NormalImport(((testmodname, None),))
-        module_imports = importutils.get_module_imports(
-            self.project.pycore, pymodule)
-        module_imports.add_import(importinfo)
-        code = module_imports.get_changed_source()
-        offset = code.index(testmodname)
-        lineno = code.count('\n', 0, offset) + 1
-        return lineno
