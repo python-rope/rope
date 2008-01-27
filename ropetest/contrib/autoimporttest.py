@@ -78,6 +78,11 @@ class AutoImportTest(unittest.TestCase):
             'import mod1\n\nimport mod2\n')
         self.assertEquals(4, result)
 
+    def test_insertion_line_with_blank_lines(self):
+        result = self.importer.find_insertion_line(
+            'import mod1\n\n# comment\n')
+        self.assertEquals(2, result)
+
 
 class AutoImportObservingTest(unittest.TestCase):
 

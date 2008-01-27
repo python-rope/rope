@@ -137,5 +137,7 @@ class AutoImport(object):
         module_imports = importutils.get_module_imports(
             self.project.pycore, pymodule)
         module_imports.add_import(importinfo)
-        offset = module_imports.get_changed_source().index(testmodname)
-        return code[:offset].count('\n') + 1
+        code = module_imports.get_changed_source()
+        offset = code.index(testmodname)
+        lineno = code.count('\n', 0, offset) + 1
+        return lineno

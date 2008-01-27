@@ -125,9 +125,7 @@ class ModuleImports(object):
                                blank_lines=blanks))
 
     def _get_new_import_blanks(self):
-        if self.get_import_statements():
-            return 0
-        return 2
+        return 0
 
     def _get_new_import_lineno(self):
         imports = self.get_import_statements()
@@ -197,14 +195,21 @@ class ModuleImports(object):
 
     def _first_import_line(self):
         nodes = self.pymodule.get_ast().body
-        first_child = 0
+        lineno = 0
         if self.pymodule.get_doc() is not None:
-            first_child = 1
-        if len(nodes) > first_child:
-            last_index = nodes[first_child].lineno
+            lineno = 1
+        if len(nodes) > lineno:
+            lineno = self.pymodule.logical_lines.logical_line_in(
+                nodes[lineno].lineno)[0]
         else:
-            last_index = self.pymodule.lines.length()
-        return last_index
+            lineno = self.pymodule.lines.length()
+        while lineno > 1:
+            line = self.pymodule.lines.get_line(lineno - 1)
+            if line.strip() == '' or line.rstrip().startswith('#'):
+                lineno -= 1
+            else:
+                break
+        return lineno
 
     def _compare_imports(self, stmt1, stmt2):
         str1 = stmt1.get_import_statement()
@@ -438,11 +443,8 @@ class _GlobalImportFinder(object):
         nodes = self.pymodule.get_ast().body
         for index, node in enumerate(nodes):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
-                end_line = self.lines.length() + 1
-                if index + 1 < len(nodes):
-                    end_line = nodes[index + 1].lineno
-                while self.lines.get_line(end_line - 1).strip() == '':
-                    end_line -= 1
+                lines = self.pymodule.logical_lines
+                end_line = lines.logical_line_in(node.lineno)[1] + 1
             if isinstance(node, ast.Import):
                 self.visit_import(node, end_line)
             if isinstance(node, ast.ImportFrom):
