@@ -3,10 +3,13 @@
 ===========
 
 
-- Handling unsure matches in restructurings : January 25, 2008
+> Public Release 0.7.6 : January 28, 2008
 
 
-- Added rope.contrib.autoimport : January 25, 2008
+- Handling unsure matches in restructurings : January 27, 2008
+
+
+- Added rope.contrib.autoimport : January 26, 2008
 
 
 - Added use function refactoring : January 25, 2008

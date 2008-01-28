@@ -11,12 +11,6 @@ See the `unresolved issues` section of ``issues.txt`` file for more.
 > Public Release 0.8
 
 
-* Removing files/folders
-
-
-* Renaming and moving normal files/folders
-
-
 * Using `svn` instead of `pysvn`
 
 
@@ -24,4 +18,4 @@ See the `unresolved issues` section of ``issues.txt`` file for more.
   imports
 
 
-> Public Release 0.7.6
+> Public Release 0.7.7
