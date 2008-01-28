@@ -289,7 +289,7 @@ class _ModuleCache(object):
         if resource.is_folder():
             result = PyPackage(self.pycore, resource)
         else:
-            result = PyModule(self.pycore, resource.read(), resource=resource)
+            result = PyModule(self.pycore, resource=resource)
         self.module_map[resource] = result
         self.observer.add_resource(resource)
         return result

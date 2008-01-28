@@ -151,20 +151,30 @@ class PyClass(pyobjects.PyClass):
 
 class PyModule(pyobjects.PyModule):
 
-    def __init__(self, pycore, source_code,
+    def __init__(self, pycore, source_code=None,
                  resource=None, force_errors=False):
-        self.source_code = source_code
+        syntax_errors = (force_errors or
+                         not pycore.project.prefs.get('ignore_syntax_errors',
+                                                      False))
         try:
+            if source_code is None:
+                source_code = resource.read()
             ast_node = ast.parse(source_code.rstrip(' \t'))
         except SyntaxError, e:
-            ignore = pycore.project.prefs.get('ignore_syntax_errors', False)
-            if force_errors or not ignore:
+            if syntax_errors:
                 filename = 'string'
                 if resource:
                     filename = resource.path
                 raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
             else:
                 ast_node = ast.parse('\n')
+        except exceptions.ModuleSyntaxError:
+            if syntax_errors:
+                raise
+            else:
+                source_code = '\n'
+                ast_node = ast.parse('\n')
+        self.source_code = source_code
         self.star_imports = []
         self.defineds = None
         super(PyModule, self).__init__(pycore, ast_node, resource)
