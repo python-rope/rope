@@ -131,7 +131,11 @@ def file_data_to_unicode(data, encoding=None):
         return unicode(data)
     except UnicodeDecodeError:
         # Using ``utf-8`` if guessed encoding fails
-        return unicode(data, 'utf-8')
+        try:
+            return unicode(data, 'utf-8')
+        except UnicodeDecodeError, e:
+            e.lineno = data[:e.start].count('\n') + 1
+            raise e
 
 
 def read_file_coding(path):
