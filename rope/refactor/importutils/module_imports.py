@@ -205,7 +205,7 @@ class ModuleImports(object):
             lineno = self.pymodule.lines.length()
         while lineno > 1:
             line = self.pymodule.lines.get_line(lineno - 1)
-            if line.strip() == '' or line.rstrip().startswith('#'):
+            if line.strip() == '':
                 lineno -= 1
             else:
                 break
