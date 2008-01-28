@@ -6,7 +6,14 @@ def parse(source, filename='<string>'):
     # NOTE: the raw string should be given to `compile` function
     if isinstance(source, unicode):
         source = source.encode('utf-8')
-    return compile(source, filename, 'exec', _ast.PyCF_ONLY_AST)
+    try:
+        return compile(source, filename, 'exec', _ast.PyCF_ONLY_AST)
+    except TypeError, e:
+        error = SyntaxError()
+        error.lineno = 1
+        error.filename = filename
+        error.msg = str(e)
+        raise error
 
 
 def walk(node, walker):

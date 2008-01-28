@@ -520,6 +520,15 @@ class PyCoreTest(unittest.TestCase):
         file.close()
         self.pycore.resource_to_pyobject(mod)
 
+    @testutils.assert_raises(exceptions.ModuleSyntaxError)
+    def test_syntax_errors_when_null_bytes(self):
+        mod = testutils.create_module(self.project, 'mod')
+        contents = '\n\x00\n'
+        file = open(mod.real_path, 'wb')
+        file.write(contents)
+        file.close()
+        self.pycore.resource_to_pyobject(mod)
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
