@@ -133,7 +133,7 @@ class PyCore(object):
     def get_python_path_folders(self):
         import rope.base.project
         result = []
-        for src in sys.path + self.project.prefs.get('python_path', []):
+        for src in self.project.prefs.get('python_path', []) + sys.path:
             try:
                 src_folder = rope.base.project.get_no_project().get_resource(src)
                 result.append(src_folder)
