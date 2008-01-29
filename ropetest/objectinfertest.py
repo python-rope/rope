@@ -271,6 +271,24 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c1_class, a_var.get_type())
         self.assertEquals(c2_class, b_var.get_type())
 
+    def test_we_know_the_type_of_catched_exceptions(self):
+        mod = self.pycore.get_string_module(
+            'class MyError(Exception):\n    pass\n'
+            'try:\n    raise MyError()\nexcept MyError, e:\n    pass\n')
+        my_error = mod['MyError'].get_object()
+        e_var = mod['e'].get_object()
+        self.assertEquals(my_error, e_var.get_type())
+
+    # TODO: handling catching multiple exceptions
+    def xxx_test_we_know_the_type_of_catched_exceptions_with_multiple_excepts(self):
+        mod = self.pycore.get_string_module(
+            'class MyError(Exception):\n    pass\n'
+            'try:\n    raise MyError()\n'
+            'except (MyError, Exception), e:\n    pass\n')
+        my_error = mod['MyError'].get_object()
+        e_var = mod['e'].get_object()
+        self.assertEquals(my_error, e_var.get_type())
+
 
 def suite():
     result = unittest.TestSuite()

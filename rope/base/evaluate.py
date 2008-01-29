@@ -446,7 +446,7 @@ class EvaluatedName(rope.base.pynames.EvaluatedName):
     """A `PyName` that will be assigned an expression"""
 
     def __init__(self, assignment=None, module=None, evaluation= '',
-                 lineno=None):
+                 lineno=None, eval_type=False):
         """Initialize it
 
         `evaluation` is a `str` that specifies what to do with the
@@ -460,12 +460,16 @@ class EvaluatedName(rope.base.pynames.EvaluatedName):
         self.assignment = assignment
         self.lineno = lineno
         self.evaluation = evaluation
+        self.eval_type = eval_type
         self.pyobject = rope.base.pynames._Inferred(
             self._get_inferred,
             rope.base.pynames._get_concluded_data(module))
 
     def _get_inferred(self):
-        return rope.base.oi.objectinfer.evaluate_object(self)
+        result = rope.base.oi.objectinfer.evaluate_object(self)
+        if result is not None and self.eval_type:
+            result = pyobjects.PyObject(type_=result)
+        return result
 
     def get_object(self):
         return self.pyobject.get()

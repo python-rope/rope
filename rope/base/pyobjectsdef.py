@@ -362,6 +362,14 @@ class _ScopeVisitor(object):
         for child in node.body:
             ast.walk(child, self)
 
+    def _excepthandler(self, node):
+        if node.name and isinstance(node.name, ast.Name) and \
+           node.type and isinstance(node.type, ast.Name):
+            pynames = rope.base.evaluate._get_evaluated_names(
+                node.name, node.type, lineno=node.lineno,
+                module=self.get_module(), eval_type=True)
+            self.names.update(pynames)
+
     def _Import(self, node):
         for import_pair in node.names:
             module_name = import_pair.name
