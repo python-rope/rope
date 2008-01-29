@@ -363,10 +363,12 @@ class _ScopeVisitor(object):
             ast.walk(child, self)
 
     def _excepthandler(self, node):
-        if node.name and isinstance(node.name, ast.Name) and \
-           node.type and isinstance(node.type, ast.Name):
+        if node.name is not None and isinstance(node.name, ast.Name):
+            type_node = node.type
+            if isinstance(node.type, ast.Tuple) and type_node.elts:
+                type_node = type_node.elts[0]
             pynames = rope.base.evaluate._get_evaluated_names(
-                node.name, node.type, lineno=node.lineno,
+                node.name, type_node, lineno=node.lineno,
                 module=self.get_module(), eval_type=True)
             self.names.update(pynames)
 
