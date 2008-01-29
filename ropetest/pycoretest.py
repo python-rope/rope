@@ -529,6 +529,14 @@ class PyCoreTest(unittest.TestCase):
         file.close()
         self.pycore.resource_to_pyobject(mod)
 
+    def test_not_reaching_maximum_recursions_with_from_star_imports(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod1.write('from mod2 import *\n')
+        mod2.write('from mod1 import *\n')
+        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        pymod1.get_attributes()
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 

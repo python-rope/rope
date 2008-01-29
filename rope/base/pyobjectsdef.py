@@ -177,6 +177,7 @@ class PyModule(pyobjects.PyModule):
         self.source_code = source_code
         self.star_imports = []
         self.defineds = None
+        self.making_concluded = False
         super(PyModule, self).__init__(pycore, ast_node, resource)
 
     def _get_defined_objects(self):
@@ -185,10 +186,16 @@ class PyModule(pyobjects.PyModule):
         return self.defineds
 
     def _create_concluded_attributes(self):
-        result = {}
-        for star_import in self.star_imports:
-            result.update(star_import.get_names())
-        return result
+        if self.making_concluded:
+            return {}
+        try:
+            self.making_concluded = True
+            result = {}
+            for star_import in self.star_imports:
+                result.update(star_import.get_names())
+            return result
+        finally:
+            self.making_concluded = False
 
     def _create_structural_attributes(self):
         visitor = _GlobalVisitor(self.pycore, self)
