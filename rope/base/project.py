@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import cPickle as pickle
+import warnings
 
 import rope.base.change
 import rope.base.fscommands
@@ -99,6 +100,10 @@ class _Project(object):
         if self._history is None:
             self._history = history.History(self)
         return self._history
+
+    def close(self):
+        warnings.warn('Cannot close a NoProject',
+                      DeprecationWarning, stacklevel=2)
 
     history = property(_get_history)
     pycore = property(get_pycore)
