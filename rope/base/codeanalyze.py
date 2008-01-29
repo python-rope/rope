@@ -550,14 +550,17 @@ class LogicalLineFinder(object):
         block_start = 1
         readline = LinesToReadline(self.lines, block_start)
         shifted = start_line - block_start + 1
-        for start, end in self._logical_lines(readline):
-            real_start = start + block_start - 1
-            real_start = self._first_non_blank(real_start)
-            if end_line is not None and real_start >= end_line:
-                break
-            real_end = end + block_start - 1
-            if real_start >= start_line:
-                yield (real_start, real_end)
+        try:
+            for start, end in self._logical_lines(readline):
+                real_start = start + block_start - 1
+                real_start = self._first_non_blank(real_start)
+                if end_line is not None and real_start >= end_line:
+                    break
+                real_end = end + block_start - 1
+                if real_start >= start_line:
+                    yield (real_start, real_end)
+        except tokenize.TokenError, e:
+            pass
 
     def get_logical_line_in(self, line_number):
         warnings.warn('Use `LogicalLineFinder.logical_line_in()` instead',
