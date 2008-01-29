@@ -88,9 +88,7 @@ class File(Resource):
         try:
             return rope.base.fscommands.file_data_to_unicode(data)
         except UnicodeDecodeError, e:
-            lineno = getattr(e, 'lineno', 1)
-            raise exceptions.ModuleSyntaxError(self.path, lineno,
-                                               '%s' % (e.reason))
+            raise exceptions.ModuleSyntaxError(self.path, 1, '%s' % (e.reason))
 
     def write(self, contents):
         try:
