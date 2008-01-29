@@ -466,7 +466,8 @@ class EvaluatedName(rope.base.pynames.EvaluatedName):
             rope.base.pynames._get_concluded_data(module))
 
     def _get_inferred(self):
-        result = rope.base.oi.objectinfer.evaluate_object(self)
+        result = rope.base.oi.objectinfer.evaluate_object(
+            self.assignment, self.evaluation, self.module, self.lineno)
         if result is not None and self.eval_type:
             result = pyobjects.PyObject(type_=result)
         return result

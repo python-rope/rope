@@ -130,13 +130,12 @@ def _get_lineno_for_node(assign_node):
     return 1
 
 @_ignore_inferred
-def evaluate_object(evaluated):
-    pyobject = _infer_pyobject_for_assign_node(
-        evaluated.assignment.ast_node, evaluated.module, evaluated.lineno)
-    pyname = _infer_pyname_for_assign_node(
-        evaluated.assignment.ast_node, evaluated.module, evaluated.lineno)
+def evaluate_object(assignment, evaluation, module, lineno):
+    node = assignment.ast_node
+    pyobject = _infer_pyobject_for_assign_node(node, module, lineno)
+    pyname = _infer_pyname_for_assign_node(node, module, lineno)
     new_pyname = pyname
-    tokens = evaluated.evaluation.split('.')
+    tokens = evaluation.split('.')
     for token in tokens:
         call = token.endswith('()')
         if call:
@@ -154,9 +153,9 @@ def evaluate_object(evaluated):
                 pyobject = None
         if pyobject is None:
             break
-    if evaluated is None or pyobject is None:
+    if pyname is None or pyobject is None:
         return pyobject
-    return _infer_assignment_object(evaluated.assignment, pyobject)
+    return _infer_assignment_object(assignment, pyobject)
 
 def _get_attribute(pyobject, name):
     if pyobject is not None and name in pyobject:
