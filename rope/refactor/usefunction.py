@@ -37,6 +37,9 @@ class UseFunction(object):
                 changes.add_change(c)
         return changes
 
+    def get_function_name(self):
+        return self.pyfunction.get_name()
+
     def _restructure(self, resources, task_handle, others=True):
         body = self._get_body()
         pattern = self._make_pattern()
