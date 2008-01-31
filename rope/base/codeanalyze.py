@@ -57,20 +57,20 @@ class WordRangeFinder(object):
 
     def _find_string_start(self, offset):
         kind = self.source[offset]
-        current_offset = offset - 1
-        while self.source[current_offset] != kind:
-            current_offset -= 1
-        return current_offset
+        offset -= 1
+        while self.source[offset] != kind:
+            offset -= 1
+        return offset
 
     def _find_parens_start(self, offset):
-        current_offset = self._find_last_non_space_char(offset - 1)
-        while current_offset >= 0 and self.source[current_offset] not in '[({':
-            if self.source[current_offset] in ':,':
+        offset = self._find_last_non_space_char(offset - 1)
+        while offset >= 0 and self.source[offset] not in '[({':
+            if self.source[offset] in ':,':
                 pass
             else:
-                current_offset = self._find_primary_start(current_offset)
-            current_offset = self._find_last_non_space_char(current_offset - 1)
-        return current_offset
+                offset = self._find_primary_start(offset)
+            offset = self._find_last_non_space_char(offset - 1)
+        return offset
 
     def _find_atom_start(self, offset):
         old_offset = offset
@@ -92,13 +92,13 @@ class WordRangeFinder(object):
 
         """
         last_atom = offset
-        current_offset = self._find_last_non_space_char(last_atom)
-        while current_offset > 0 and self.source[current_offset] in ')]':
-            last_atom = self._find_parens_start(current_offset)
-            current_offset = self._find_last_non_space_char(last_atom - 1)
-        if current_offset >= 0 and (self.source[current_offset] in '"\'})]' or
-                                   self._is_id_char(current_offset)):
-            return self._find_atom_start(current_offset)
+        offset = self._find_last_non_space_char(last_atom)
+        while offset > 0 and self.source[offset] in ')]':
+            last_atom = self._find_parens_start(offset)
+            offset = self._find_last_non_space_char(last_atom - 1)
+        if offset >= 0 and (self.source[offset] in '"\'})]' or
+                                   self._is_id_char(offset)):
+            return self._find_atom_start(offset)
         return last_atom
 
     def _find_primary_start(self, offset):
@@ -195,16 +195,15 @@ class WordRangeFinder(object):
     def _find_first_non_space_char(self, offset):
         if offset >= len(self.source):
             return len(self.source)
-        current_offset = offset
-        while current_offset < len(self.source):
-            if current_offset + 1 < len(self.source) and \
-               self.source[current_offset] == '\\':
-                current_offset += 2
-            elif self.source[current_offset] in ' \t\n':
-                current_offset += 1
+        while offset < len(self.source):
+            if offset + 1 < len(self.source) and \
+               self.source[offset] == '\\':
+                offset += 2
+            elif self.source[offset] in ' \t\n':
+                offset += 1
             else:
                 break
-        return current_offset
+        return offset
 
     def is_a_function_being_called(self, offset):
         word_end = self._find_word_end(offset) + 1
@@ -223,14 +222,14 @@ class WordRangeFinder(object):
             except ValueError:
                 return SyntaxError('Unmatched Parens')
         else:
-            current_offset = next_char
-            while current_offset < len(self.source):
-                if self.source[current_offset] == '\n':
+            offset = next_char
+            while offset < len(self.source):
+                if self.source[offset] == '\n':
                     break
-                if self.source[current_offset] == '\\':
-                    current_offset += 1
-                current_offset += 1
-            return current_offset
+                if self.source[offset] == '\\':
+                    offset += 1
+                offset += 1
+            return offset
 
     def is_import_statement(self, offset):
         try:
@@ -317,12 +316,11 @@ class WordRangeFinder(object):
         return True
 
     def is_on_function_call_keyword(self, offset, stop_searching=0):
-        current_offset = offset
-        if self._is_id_char(current_offset):
-            current_offset = self._find_word_start(current_offset) - 1
-        current_offset = self._find_last_non_space_char(current_offset)
-        if current_offset <= stop_searching or \
-           self.source[current_offset] not in '(,':
+        if self._is_id_char(offset):
+            offset = self._find_word_start(offset) - 1
+        offset = self._find_last_non_space_char(offset)
+        if offset <= stop_searching or \
+           self.source[offset] not in '(,':
             return False
         parens_start = self.find_parens_start_from_inside(offset, stop_searching)
         if stop_searching < parens_start:
@@ -330,17 +328,16 @@ class WordRangeFinder(object):
         return False
 
     def find_parens_start_from_inside(self, offset, stop_searching=0):
-        current_offset = offset
         opens = 1
-        while current_offset > stop_searching:
-            if self.source[current_offset] == '(':
+        while offset > stop_searching:
+            if self.source[offset] == '(':
                 opens -= 1
             if opens == 0:
                 break
-            if self.source[current_offset] == ')':
+            if self.source[offset] == ')':
                 opens += 1
-            current_offset -= 1
-        return current_offset
+            offset -= 1
+        return offset
 
     def is_assigned_here(self, offset):
         operation = self.get_assignment_type(offset)
