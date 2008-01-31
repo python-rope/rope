@@ -669,6 +669,14 @@ class ResourceObserverTest(unittest.TestCase):
         self.assertEquals(file2, sample_observer.last_created)
         self.assertEquals((file1, file2), sample_observer.last_moved)
 
+    def test_validating_get_files_list(self):
+        root = self.project.root
+        self.assertEquals(0, len(self.project.get_files()))
+        file = open(os.path.join(self.project.address, 'myfile.txt'), 'w')
+        file.close()
+        self.project.validate()
+        self.assertEquals(1, len(self.project.get_files()))
+
 
 class _MockChangeIndicator(object):
 

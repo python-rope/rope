@@ -304,8 +304,7 @@ class _FileListCacher(object):
             if self.observer is None:
                 self._init_observer()
             self._list = self._get_files_recursively(self.project.root)
-            folders = [resource for resource in self._list
-                       if resource.is_folder()]
+            folders = self._get_folders_recursively(self.project.root)
             for resource in folders:
                 self.observer.add_resource(resource)
         return self._list
@@ -314,6 +313,13 @@ class _FileListCacher(object):
         result = set()
         for file in folder.get_files():
             result.add(file)
+        for child in folder.get_folders():
+            result.update(self._get_files_recursively(child))
+        return result
+
+    def _get_folders_recursively(self, folder):
+        result = set()
+        result.add(folder)
         for child in folder.get_folders():
             result.update(self._get_files_recursively(child))
         return result
