@@ -305,6 +305,7 @@ class _FileListCacher(object):
                 self._init_observer()
             self._list = self._get_files_recursively(self.project.root)
             folders = self._get_folders_recursively(self.project.root)
+            self.observer.clear_resources()
             for resource in folders:
                 self.observer.add_resource(resource)
         return self._list
