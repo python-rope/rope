@@ -677,6 +677,16 @@ class ResourceObserverTest(unittest.TestCase):
         self.project.validate()
         self.assertEquals(1, len(self.project.get_files()))
 
+    def test_clear_observered_resources_for_filtered_observers(self):
+        sample_file = self.project.root.create_file('myfile.txt')
+        sample_observer = _SampleObserver()
+        filtered = FilteredResourceObserver(sample_observer)
+        self.project.add_observer(filtered)
+        filtered.add_resource(sample_file)
+        filtered.clear_resources()
+        sample_file.write('1')
+        self.assertEquals(0, sample_observer.change_count)
+
 
 class _MockChangeIndicator(object):
 

@@ -104,7 +104,7 @@ class FilteredResourceObserver(object):
         if resource in self.resources:
             del self.resources[resource]
 
-    def clear_resources(self, resource):
+    def clear_resources(self):
         """Removes all registered resources"""
         self.resources.clear()
 
