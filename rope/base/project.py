@@ -324,6 +324,8 @@ class _FileListCacher(object):
         return self._observer
 
     def _updated_resources(self, folder):
+        if not folder.exists():
+            return set(), set()
         files = set()
         folders = set([folder])
         files.update(folder.get_files())

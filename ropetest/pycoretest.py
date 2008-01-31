@@ -3,7 +3,7 @@ import unittest
 
 from rope.base import exceptions
 from rope.base.pycore import _TextChangeDetector
-from rope.base.pyobjects import get_base_type
+from rope.base.pyobjects import get_base_type, AbstractFunction
 from ropetest import testutils
 
 
@@ -77,10 +77,21 @@ class PyCoreTest(unittest.TestCase):
 
     def test_class_attributes_set_in_init(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class SampleClass(object):\n    def __init__(self):\n        self.var = 20\n')
+        mod.write('class C(object):\n'
+                  '    def __init__(self):\n        self.var = 20\n')
         mod_element = self.pycore.get_module('mod')
-        sample_class = mod_element['SampleClass'].get_object()
+        sample_class = mod_element['C'].get_object()
         var = sample_class['var']
+
+    def test_class_attributes_set_in_init_overwriting_a_defined(self):
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write('class C(object):\n'
+                  '    def __init__(self):\n        self.f = 20\n'
+                  '    @property\n    def f():\n        pass')
+        mod_element = self.pycore.get_module('mod')
+        sample_class = mod_element['C'].get_object()
+        f = sample_class['f'].get_object()
+        self.assertTrue(isinstance(f, AbstractFunction))
 
     def test_classes_inside_other_classes(self):
         mod = testutils.create_module(self.project, 'mod')

@@ -481,8 +481,10 @@ class _ClassInitVisitor(_AssignVisitor):
                 self.scope_visitor.names[node.attr] = pynames.AssignedName(
                     lineno=node.lineno, module=self.scope_visitor.get_module())
             if self.assigned_ast is not None:
-                self.scope_visitor.names[node.attr].assignments.append(
-                    pynames._Assigned(self.assigned_ast))
+                pyname = self.scope_visitor.names[node.attr]
+                if isinstance(pyname, pynames.AssignedName):
+                    pyname.assignments.append(
+                        pynames._Assigned(self.assigned_ast))
 
     def _Tuple(self, node):
         if not isinstance(node.ctx, ast.Store):
