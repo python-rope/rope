@@ -176,13 +176,11 @@ class FilteredResourceObserver(object):
             self.resources[resource] = self.timekeeper.get_indicator(resource)
 
     def validate(self, resource):
-        moved = self._search_resource_moves(resource)
-        changed = self._search_resource_changes(resource)
         changes = _Changes()
-        for file in moved:
+        for file in self._search_resource_moves(resource):
             if file in self.resources:
                 self._update_changes_caused_by_moved(changes, file)
-        for file in changed:
+        for file in self._search_resource_changes(resource):
             if file in self.resources:
                 self._update_changes_caused_by_changed(changes, file)
         for file in self._search_resource_creations(resource):
@@ -193,12 +191,12 @@ class FilteredResourceObserver(object):
     def _search_resource_creations(self, resource):
         creations = set()
         if resource in self.resources and resource.exists() and \
-           self.resources[resource] == None:
+           self.resources[resource] is None:
             creations.add(resource)
         if resource.is_folder():
             for file in self.resources:
                 if file.exists() and resource.contains(file) and \
-                   self.resources[file] == None:
+                   self.resources[file] is None:
                     creations.add(file)
         return creations
 
