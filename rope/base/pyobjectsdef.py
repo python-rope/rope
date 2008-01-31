@@ -291,12 +291,13 @@ class _AssignVisitor(object):
             ast.walk(child_node, self)
 
     def _assigned(self, name, assignment=None):
-        old_pyname = self.scope_visitor.names.get(name, None)
-        if not isinstance(old_pyname, pynames.AssignedName):
-            self.scope_visitor.names[name] = pynames.AssignedName(
+        pyname = self.scope_visitor.names.get(name, None)
+        if pyname is None:
+            pyname = pynames.AssignedName(
                 module=self.scope_visitor.get_module())
-        if assignment is not None:
-            self.scope_visitor.names[name].assignments.append(assignment)
+        if isinstance(pyname, pynames.AssignedName):
+            pyname.assignments.append(assignment)
+            self.scope_visitor.names[name] = pyname
 
     def _Name(self, node):
         assignment = None

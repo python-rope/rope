@@ -169,8 +169,8 @@ class FunctionScope(Scope):
             new_visitor = self.visitor(self.pycore, self.pyobject)
             for n in ast.get_child_nodes(self.pyobject.get_ast()):
                 ast.walk(n, new_visitor)
-            self.names = self.pyobject.get_parameters()
-            self.names.update(new_visitor.names)
+            self.names = new_visitor.names
+            self.names.update(self.pyobject.get_parameters())
             self.returned_asts = new_visitor.returned_asts
             self.is_generator = new_visitor.generator
             self.defineds = new_visitor.defineds

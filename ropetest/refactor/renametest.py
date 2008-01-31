@@ -339,6 +339,12 @@ class RenameRefactoringTest(unittest.TestCase):
         self.assertEquals('def a_func(new_param):\n    print(new_param)\n'
                           'a_func(new_param=hey)\n', refactored)
 
+    def test_renaming_assigned_parameters(self):
+        code = 'def f(p):\n    p = p + 1\n    return p\nf(p=1)\n'
+        refactored = self._local_rename(code, code.find('p'), 'arg')
+        self.assertEquals('def f(arg):\n    arg = arg + 1\n'
+                          '    return arg\nf(arg=1)\n', refactored)
+
     def test_renaming_parameters_not_renaming_others(self):
         code = 'def a_func(param):\n    print(param)\nparam=10\na_func(param)\n'
         refactored = self._local_rename(code, code.find('param') + 1, 'new_param')
