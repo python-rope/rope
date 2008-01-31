@@ -298,15 +298,14 @@ class _FileListCacher(object):
     def __init__(self, project):
         self.project = project
         self.needs_gc = True
-        self.observer = None
+        self._observer = None
         self.files = set()
         self.folders = set()
 
     def get_files(self):
         if self.needs_gc:
-            if self.observer is None:
-                self._init_observer()
-                self._update_folder(self.project.root)
+            # forcing the creation of the observer
+            self.observer
             for file in list(self.files):
                 if not file.exists():
                     self.files.remove(file)
@@ -317,36 +316,38 @@ class _FileListCacher(object):
             self.needs_gc = False
         return self.files
 
-    def _get_files_recursively(self, folder):
-        result = set()
-        for file in folder.get_files():
-            result.add(file)
-        for child in folder.get_folders():
-            result.update(self._get_files_recursively(child))
-        return result
+    @property
+    def observer(self):
+        if self._observer is None:
+            self._init_observer()
+            self._update_folder(self.project.root)
+        return self._observer
 
-    def _get_folders_recursively(self, folder):
-        result = set()
-        result.add(folder)
+    def _updated_resources(self, folder):
+        files = set()
+        folders = set([folder])
+        files.update(folder.get_files())
         for child in folder.get_folders():
-            result.update(self._get_folders_recursively(child))
-        return result
+            if child not in self.folders:
+                newfiles, newfolders = self._updated_resources(child)
+                files.update(newfiles)
+                folders.update(newfolders)
+        return files, folders
 
     def _update_folder(self, folder):
-        self.files.update(self._get_files_recursively(folder))
-        newfolders = self._get_folders_recursively(folder)
-        for folder in newfolders - self.folders:
-            self.folders.add(folder)
-            self.observer.add_resource(folder)
+        files, folders = self._updated_resources(folder)
+        self.files.update(files)
+        for child in folders - self.folders:
+            self.folders.add(child)
+            self.observer.add_resource(child)
         self.needs_gc = True
 
     def _init_observer(self):
-        if self.observer is None:
-            self.rawobserver = ResourceObserver(
-                self._changed, self._moved, self._created,
-                self._removed, self._validate)
-            self.observer = FilteredResourceObserver(self.rawobserver)
-            self.project.add_observer(self.observer)
+        self.rawobserver = ResourceObserver(
+            self._changed, self._moved, self._created,
+            self._removed, self._validate)
+        self._observer = FilteredResourceObserver(self.rawobserver)
+        self.project.add_observer(self._observer)
 
     def _changed(self, resource):
         if resource.is_folder():
