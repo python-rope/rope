@@ -321,7 +321,7 @@ class _FileListCacher(object):
         result = set()
         result.add(folder)
         for child in folder.get_folders():
-            result.update(self._get_files_recursively(child))
+            result.update(self._get_folders_recursively(child))
         return result
 
     def _init_observer(self):
