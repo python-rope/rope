@@ -9,6 +9,7 @@ import rope.base.fscommands
 from rope.base import exceptions, taskhandle, prefs, history, pycore
 from rope.base.resourceobserver import *
 from rope.base.resources import File, Folder
+from rope.refactor.sourceutils import add_methods
 
 
 class _Project(object):
@@ -296,19 +297,25 @@ class _FileListCacher(object):
 
     def __init__(self, project):
         self.project = project
-        self._list = None
+        self.needs_gc = True
         self.observer = None
+        self.files = set()
+        self.folders = set()
 
     def get_files(self):
-        if self._list is None:
+        if self.needs_gc:
             if self.observer is None:
                 self._init_observer()
-            self._list = self._get_files_recursively(self.project.root)
-            folders = self._get_folders_recursively(self.project.root)
-            self.observer.clear_resources()
-            for resource in folders:
-                self.observer.add_resource(resource)
-        return self._list
+                self._update_folder(self.project.root)
+            for file in list(self.files):
+                if not file.exists():
+                    self.files.remove(file)
+            for folder in list(self.folders):
+                if not folder.exists():
+                    self.folders.remove(folder)
+                    self.observer.remove_resource(folder)
+            self.needs_gc = False
+        return self.files
 
     def _get_files_recursively(self, folder):
         result = set()
@@ -325,37 +332,47 @@ class _FileListCacher(object):
             result.update(self._get_folders_recursively(child))
         return result
 
+    def _update_folder(self, folder):
+        self.files.update(self._get_files_recursively(folder))
+        newfolders = self._get_folders_recursively(folder)
+        for folder in newfolders - self.folders:
+            self.folders.add(folder)
+            self.observer.add_resource(folder)
+        self.needs_gc = True
+
     def _init_observer(self):
         if self.observer is None:
             self.rawobserver = ResourceObserver(
                 self._changed, self._moved, self._created,
                 self._removed, self._validate)
             self.observer = FilteredResourceObserver(self.rawobserver)
-            self.project.add_observer(self.rawobserver)
             self.project.add_observer(self.observer)
 
     def _changed(self, resource):
         if resource.is_folder():
-            self._list = None
+            self._update_folder(resource)
 
     def _moved(self, resource, new_resource):
         if resource.is_folder():
-            self._list = None
-        elif self._list is not None:
+            self._update_folder(resource)
+            self._update_folder(new_resource)
+        else:
             self._removed(resource)
             self._created(new_resource)
 
     def _created(self, resource):
-        if not resource.is_folder() and self._list is not None:
+        if resource.is_folder():
+            self._update_folder(resource)
+        else:
             if not self.project.is_ignored(resource):
-                self._list.add(resource)
+                self.files.add(resource)
 
     def _removed(self, resource):
         if resource.is_folder():
-            self._list = None
+            self._update_folder(resource)
         else:
-            if self._list is not None and resource in self._list:
-                self._list.remove(resource)
+            if resource in self.files:
+                self.files.remove(resource)
 
     def _validate(self, resource):
         pass
