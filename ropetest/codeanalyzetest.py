@@ -272,6 +272,12 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder(code)
         self.assertTrue(word_finder.is_from_statement(code.rindex('g')))
 
+    def test_one_letter_function_keyword_arguments(self):
+        code = 'f(p=1)\n'
+        word_finder = WordRangeFinder(code)
+        index = code.rindex('p')
+        self.assertTrue(word_finder.is_function_keyword_parameter(index))
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 

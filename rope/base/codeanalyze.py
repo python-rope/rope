@@ -4,6 +4,13 @@ import tokenize
 
 
 class WordRangeFinder(object):
+    """A class for finding boundaries of words and expressions
+
+    Note that in these methods, offset should be the index of the
+    character not the index of the character after it.
+
+    """
+
     # XXX: many of these methods fail on comments
     # TODO: make disabled tests run
 
@@ -17,21 +24,18 @@ class WordRangeFinder(object):
         return current_offset + 1
 
     def _find_word_end(self, offset):
-        current_offset = offset + 1
-        while current_offset < len(self.source) and \
-              self._is_id_char(current_offset):
-            current_offset += 1;
-        return current_offset - 1
+        while offset + 1 < len(self.source) and self._is_id_char(offset + 1):
+            offset += 1;
+        return offset
 
     def _find_last_non_space_char(self, offset):
         if offset <= 0:
             return 0
-        current_offset = offset
-        while current_offset >= 0 and self.source[current_offset] in ' \t\n':
-            if self.source[current_offset - 1:current_offset + 1] == '\\\n':
-                current_offset -= 1
-            current_offset -= 1
-        return current_offset
+        while offset >= 0 and self.source[offset] in ' \t\n':
+            if self.source[offset - 1:offset + 1] == '\\\n':
+                offset -= 1
+            offset -= 1
+        return offset
 
     def get_word_at(self, offset):
         offset = self._get_fixed_offset(offset)
@@ -100,18 +104,19 @@ class WordRangeFinder(object):
     def _find_primary_start(self, offset):
         if offset >= len(self.source):
             offset = len(self.source) - 1
-        current_offset = offset + 1
         if self.source[offset] != '.':
-            current_offset = self._find_primary_without_dot_start(offset)
-        while current_offset > 0 and \
-              self.source[self._find_last_non_space_char(current_offset - 1)] == '.':
-            dot_position = self._find_last_non_space_char(current_offset - 1)
-            current_offset = self._find_primary_without_dot_start(dot_position - 1)
-
-            if not self._is_id_char(current_offset):
+            offset = self._find_primary_without_dot_start(offset)
+        else:
+            offset = offset + 1
+        while offset > 0:
+            prev = self._find_last_non_space_char(offset - 1)
+            if offset <= 0 or self.source[prev] != '.':
+                break
+            offset = self._find_primary_without_dot_start(prev - 1)
+            if not self._is_id_char(offset):
                 break
 
-        return current_offset
+        return offset
 
     def get_primary_at(self, offset):
         offset = self._get_fixed_offset(offset)
@@ -172,7 +177,7 @@ class WordRangeFinder(object):
 
     def _is_name_assigned_in_class_body(self, offset):
         word_start = self._find_word_start(offset - 1)
-        word_end = self._find_word_end(offset - 1) + 1
+        word_end = self._find_word_end(offset) + 1
         if '.' in self.source[word_start:word_end]:
             return False
         line_start = self._get_line_start(word_start)
@@ -202,7 +207,7 @@ class WordRangeFinder(object):
         return current_offset
 
     def is_a_function_being_called(self, offset):
-        word_end = self._find_word_end(offset - 1) + 1
+        word_end = self._find_word_end(offset) + 1
         next_char = self._find_first_non_space_char(word_end)
         return next_char < len(self.source) and \
                self.source[next_char] == '(' and \
@@ -356,13 +361,13 @@ class WordRangeFinder(object):
         return operation
 
     def get_primary_range(self, offset):
-        offset = max(0, offset - 1)
+        offset = max(0, offset)
         start = self._find_primary_start(offset)
         end = self._find_word_end(offset) + 1
         return (start, end)
 
     def get_word_range(self, offset):
-        offset = max(0, offset - 1)
+        offset = max(0, offset)
         start = self._find_word_start(offset)
         end = self._find_word_end(offset) + 1
         return (start, end)

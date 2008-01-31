@@ -139,7 +139,7 @@ class _TextualFinder(object):
         else:
             searcher = self._re_search
         for matched in searcher(source):
-            yield matched + 1
+            yield matched
 
     def _re_search(self, source):
         for match in self.pattern.finditer(source):
