@@ -6,31 +6,22 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 `MercurialCommands` for example.
 
 """
-
 import os
 import re
 import shutil
 
 
-try:
-    import pysvn
-except ImportError:
-    pass
-
-try:
-    import mercurial.commands
-    import mercurial.hg
-    import mercurial.ui
-except ImportError:
-    pass
-
-
 def create_fscommands(root):
     dirlist = os.listdir(root)
-    if 'pysvn' in globals() and ('_svn' in dirlist or '.svn' in dirlist):
-        return SubversionCommands()
-    if 'mercurial' in globals() and '.hg' in dirlist:
-        return MercurialCommands(root)
+    commands = {'.hg': MercurialCommands,
+                '.svn': SubversionCommands,
+                '_svn': SubversionCommands}
+    for key in commands:
+        if key in dirlist:
+            try:
+                return commands[key](root)
+            except ImportError:
+                pass
     return FileSystemCommands()
 
 
@@ -61,8 +52,9 @@ class FileSystemCommands(object):
 
 class SubversionCommands(object):
 
-    def __init__(self):
+    def __init__(self, *args):
         self.normal_actions = FileSystemCommands()
+        import pysvn
         self.client = pysvn.Client()
 
     def create_file(self, path):
@@ -86,25 +78,32 @@ class SubversionCommands(object):
 class MercurialCommands(object):
 
     def __init__(self, root):
+        self.hg = self._import_mercurial()
         self.normal_actions = FileSystemCommands()
-        self.ui = mercurial.ui.ui(
+        self.ui = self.hg.ui.ui(
             verbose=False, debug=False, quiet=True,
             interactive=False, traceback=False, report_untrusted=False)
-        self.repo = mercurial.hg.repository(self.ui, root)
+        self.repo = self.hg.hg.repository(self.ui, root)
+
+    def _import_mercurial(self):
+        import mercurial.commands
+        import mercurial.hg
+        import mercurial.ui
+        return mercurial
 
     def create_file(self, path):
         self.normal_actions.create_file(path)
-        mercurial.commands.add(self.ui, self.repo, path)
+        self.hg.commands.add(self.ui, self.repo, path)
 
     def create_folder(self, path):
         self.normal_actions.create_folder(path)
 
     def move(self, path, new_location):
-        mercurial.commands.rename(self.ui, self.repo, path,
+        self.hg.commands.rename(self.ui, self.repo, path,
                                   new_location, after=False)
 
     def remove(self, path):
-        mercurial.commands.remove(self.ui, self.repo, path)
+        self.hg.commands.remove(self.ui, self.repo, path)
 
     def write(self, path, data):
         self.normal_actions.write(path, data)
