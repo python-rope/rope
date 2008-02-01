@@ -276,13 +276,13 @@ class _DefinitionLocationFinder(object):
             self.matched_lines.append(self.info.region_lines[0])
 
     def find_lineno(self):
-        if self.info.make_global and not self.info.global_:
+        if self.info.variable and not self.info.make_global:
+            return self._get_before_line()
+        if self.info.make_global or self.info.global_:
             toplevel = self._find_toplevel(self.info.scope)
             ast = self.info.pymodule.get_ast()
             newlines = sorted(self.matched_lines + [toplevel.get_end() + 1])
             return suites.find_visible(ast, newlines)
-        if self.info.global_ or self.info.variable:
-            return self._get_before_line()
         return self._get_after_scope()
 
     def _find_toplevel(self, scope):
@@ -290,14 +290,15 @@ class _DefinitionLocationFinder(object):
         if toplevel.parent is not None:
             while toplevel.parent.parent is not None:
                 toplevel = toplevel.parent
-            return toplevel
+        return toplevel
 
     def find_indents(self):
-        if self.info.make_global:
-            return 0
-        if self.info.global_ or self.info.variable:
+        if self.info.variable and not self.info.make_global:
             return sourceutils.get_indents(self.info.lines,
                                            self._get_before_line())
+        else:
+            if self.info.global_ or self.info.make_global:
+                return 0
         return self.info.scope_indents
 
     def _get_before_line(self):

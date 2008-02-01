@@ -191,8 +191,8 @@ class ExtractMethodTest(unittest.TestCase):
         code = 'if True:\n    a = 10\n'
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = 'if True:\n\n    ' \
-                   'def new_func():\n        a = 10\n\n    new_func()\n'
+        expected = '\ndef new_func():\n    a = 10\n\nif True:\n' \
+                   '    new_func()\n'
         self.assertEquals(expected, refactored)
 
     def test_extract_function_while_inner_function_reads(self):
@@ -765,6 +765,14 @@ class ExtractMethodTest(unittest.TestCase):
                                             similar=True, global_=False)
         expected = 'def f():\n    a = one()\ndef g():\n    b = one()\n\n' \
                    'def one():\n    return 1\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extracting_methods_in_global_functions_should_be_global(self):
+        code = 'if 1:\n    var = 2\n'
+        start = code.rindex('2')
+        refactored = self.do_extract_method(code, start, start + 1, 'two',
+                                            similar=True, global_=False)
+        expected = '\ndef two():\n    return 2\n\nif 1:\n    var = two()\n'
         self.assertEquals(expected, refactored)
 
 
