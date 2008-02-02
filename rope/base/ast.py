@@ -8,7 +8,7 @@ def parse(source, filename='<string>'):
         source = source.encode('utf-8')
     try:
         return compile(source, filename, 'exec', _ast.PyCF_ONLY_AST)
-    except TypeError, e:
+    except (TypeError, ValueError), e:
         error = SyntaxError()
         error.lineno = 1
         error.filename = filename

@@ -540,6 +540,15 @@ class PyCoreTest(unittest.TestCase):
         file.close()
         self.pycore.resource_to_pyobject(mod)
 
+    @testutils.assert_raises(exceptions.ModuleSyntaxError)
+    def test_syntax_errors_when_bad_strs(self):
+        mod = testutils.create_module(self.project, 'mod')
+        contents = '\n"\\x0"\n'
+        file = open(mod.real_path, 'wb')
+        file.write(contents)
+        file.close()
+        self.pycore.resource_to_pyobject(mod)
+
     def test_not_reaching_maximum_recursions_with_from_star_imports(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod2 = testutils.create_module(self.project, 'mod2')
