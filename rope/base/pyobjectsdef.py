@@ -4,7 +4,7 @@ import rope.base.builtins
 import rope.base.oi.objectinfer
 import rope.base.pyscopes
 from rope.base import (pynamesdef as pynames, exceptions,
-                       ast, astutils, pyobjects)
+                       ast, astutils, pyobjects, fscommands)
 from rope.base.pyobjects import *
 
 
@@ -158,7 +158,9 @@ class PyModule(pyobjects.PyModule):
                                                       False))
         try:
             if source_code is None:
-                source_code = resource.read()
+                source_code = resource.read_bytes()
+            if isinstance(source_code, unicode):
+                source_code = fscommands.unicode_to_file_data(source_code)
             ast_node = ast.parse(source_code.rstrip(' \t'))
         except SyntaxError, e:
             if syntax_errors:
