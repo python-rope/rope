@@ -1,7 +1,7 @@
+import cPickle as pickle
 import os
 import re
 import shutil
-import cPickle as pickle
 import warnings
 
 import rope.base.change
@@ -9,7 +9,6 @@ import rope.base.fscommands
 from rope.base import exceptions, taskhandle, prefs, history, pycore
 from rope.base.resourceobserver import *
 from rope.base.resources import File, Folder
-from rope.refactor.sourceutils import add_methods
 
 
 class _Project(object):

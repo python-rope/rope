@@ -390,6 +390,14 @@ class ProjectTest(unittest.TestCase):
         file.close()
         self.assertEquals(contents, sample_file.read().encode('latin-1'))
 
+    def test_read_bytes(self):
+        sample_file = self.project.root.create_file('my_file.txt')
+        contents = '\n# -*- coding: latin-1 -*-\n\xa9\n'
+        file = open(sample_file.real_path, 'wb')
+        file.write(contents)
+        file.close()
+        self.assertEquals(contents, sample_file.read_bytes())
+
     # TODO: Detecting utf-16 encoding
     def xxx_test_using_utf16(self):
         sample_file = self.project.root.create_file('my_file.txt')
