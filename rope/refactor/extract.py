@@ -726,8 +726,6 @@ def _get_function_kind(scope):
 
 
 def _parse_text(body):
-    if isinstance(body, unicode):
-        body = body.encode('utf-8')
     node = ast.parse(body)
     return node
 

@@ -1,11 +1,15 @@
 import _ast
 from _ast import *
 
+import fscommands
+
 
 def parse(source, filename='<string>'):
     # NOTE: the raw string should be given to `compile` function
     if isinstance(source, unicode):
-        source = source.encode('utf-8')
+        source = fscommands.unicode_to_file_data(source)
+    if not source.endswith('\n'):
+        source += '\n'
     try:
         return compile(source, filename, 'exec', _ast.PyCF_ONLY_AST)
     except (TypeError, ValueError), e:

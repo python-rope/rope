@@ -159,9 +159,7 @@ class PyModule(pyobjects.PyModule):
         try:
             if source_code is None:
                 source_code = resource.read_bytes()
-            if isinstance(source_code, unicode):
-                source_code = fscommands.unicode_to_file_data(source_code)
-            ast_node = ast.parse(source_code.rstrip(' \t'))
+            ast_node = ast.parse(source_code)
         except SyntaxError, e:
             if syntax_errors:
                 filename = 'string'
