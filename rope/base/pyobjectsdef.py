@@ -151,34 +151,44 @@ class PyClass(pyobjects.PyClass):
 
 class PyModule(pyobjects.PyModule):
 
-    def __init__(self, pycore, source_code=None,
+    def __init__(self, pycore, source=None,
                  resource=None, force_errors=False):
         syntax_errors = (force_errors or
                          not pycore.project.prefs.get('ignore_syntax_errors',
                                                       False))
         try:
-            if source_code is None:
-                source_code = resource.read_bytes()
-            ast_node = ast.parse(source_code)
-        except SyntaxError, e:
-            if syntax_errors:
-                filename = 'string'
-                if resource:
-                    filename = resource.path
-                raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
-            else:
-                ast_node = ast.parse('\n')
+            source, node = self._init_source(pycore, source, resource)
         except exceptions.ModuleSyntaxError:
             if syntax_errors:
                 raise
             else:
-                source_code = '\n'
-                ast_node = ast.parse('\n')
-        self.source_code = source_code
+                source = '\n'
+                node = ast.parse('\n')
+        self.source_code = source
         self.star_imports = []
         self.defineds = None
         self.making_concluded = False
-        super(PyModule, self).__init__(pycore, ast_node, resource)
+        super(PyModule, self).__init__(pycore, node, resource)
+
+    def _init_source(self, pycore, source_code, resource):
+        filename = 'string'
+        if resource:
+            filename = resource.path
+        try:
+            if source_code is None:
+                source_bytes = resource.read_bytes()
+                source_code = fscommands.file_data_to_unicode(source_bytes)
+            else:
+                if isinstance(source_code, unicode):
+                    source_bytes = fscommands.unicode_to_file_data(source_code)
+                else:
+                    source_bytes = source_code
+            ast_node = ast.parse(source_bytes)
+        except SyntaxError, e:
+            raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
+        except UnicodeDecodeError, e:
+            raise exceptions.ModuleSyntaxError(filename, 1, '%s' % (e.reason))
+        return source_code, ast_node
 
     def _get_defined_objects(self):
         if self.defineds is None:

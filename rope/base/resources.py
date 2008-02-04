@@ -85,10 +85,7 @@ class File(Resource):
 
     def read(self):
         data = self.read_bytes()
-        try:
-            return rope.base.fscommands.file_data_to_unicode(data)
-        except UnicodeDecodeError, e:
-            raise exceptions.ModuleSyntaxError(self.path, 1, '%s' % (e.reason))
+        return rope.base.fscommands.file_data_to_unicode(data)
 
     def read_bytes(self):
         return open(self.real_path, 'U').read()
