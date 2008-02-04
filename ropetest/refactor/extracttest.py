@@ -775,6 +775,15 @@ class ExtractMethodTest(unittest.TestCase):
         expected = '\ndef two():\n    return 2\n\nif 1:\n    var = two()\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_and_try_blocks(self):
+        code = 'def f():\n    try:\n        pass\n' \
+               '    except Exception:\n        pass\n'
+        start, end = self._convert_line_range_to_offset(code, 2, 5)
+        refactored = self.do_extract_method(code, start, end, 'g')
+        expected = 'def f():\n    g()\n\ndef g():\n    try:\n        pass\n' \
+                   '    except Exception:\n        pass\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

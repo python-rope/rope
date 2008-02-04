@@ -144,6 +144,12 @@ class SimilarFinderTest(unittest.TestCase):
         finder = self._create_finder(source)
         self.assertEquals(0, len(list(finder.get_matches('f(1)'))))
 
+    def test_matching_nested_try_finally(self):
+        source = 'if 1:\n    try:\n        pass\n    except:\n        pass\n'
+        pattern = 'try:\n    pass\nexcept:\n    pass\n'
+        finder = self._create_finder(source)
+        self.assertEquals(1, len(list(finder.get_matches(pattern))))
+
 
 class CheckingFinderTest(unittest.TestCase):
 

@@ -58,6 +58,8 @@ def get_children(node):
     result = []
     if node._fields is not None:
         for name in node._fields:
+            if name in ['lineno', 'col_offset']:
+                continue
             child = getattr(node, name)
             result.append(child)
     return result
