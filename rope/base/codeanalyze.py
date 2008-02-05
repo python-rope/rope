@@ -562,7 +562,7 @@ class ASTLogicalLineFinder(CachingLogicalLineFinder):
     def __analyze_node(self, node):
         if isinstance(node, rope.base.ast.stmt):
             line = self.lines.get_line(node.lineno)
-            if line[:node.col_offset].strip() != '':
+            if self._last_stmt and line[:node.col_offset].strip() != '':
                 self.__update_last_min(self._last_stmt.lineno, node.lineno)
             self._last_stmt = node
             self._starts[node.lineno] = True
