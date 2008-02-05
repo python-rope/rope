@@ -217,7 +217,7 @@ class WordRangeFinder(object):
     def _find_import_pair_end(self, start):
         next_char = self._find_first_non_space_char(start)
         if next_char >= len(self.source):
-            return (start, len(self.source))
+            return len(self.source)
         if self.source[next_char] == '(':
             try:
                 return self.source.index(')', next_char) + 1
