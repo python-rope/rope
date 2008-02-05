@@ -2,6 +2,8 @@ import re
 import token
 import tokenize
 
+import rope.base.ast
+
 
 class WordRangeFinder(object):
     """A class for finding boundaries of words and expressions
@@ -522,6 +524,49 @@ class CachingLogicalLineFinder(object):
         for index in range(start_line, end_line):
             if self.starts[index]:
                 yield index
+
+
+class ASTLogicalLineFinder(CachingLogicalLineFinder):
+
+    def __init__(self, node, lines):
+        self.node = node
+        super(ASTLogicalLineFinder, self).__init__(lines)
+        self._min_ends = {}
+
+    def _init_logicals(self):
+        self._starts = [False] * (self.lines.length() + 1)
+        self._ends = [False] * (self.lines.length() + 1)
+        rope.base.ast.call_for_nodes(self.node, self.__analyze_node, True)
+        current = self.lines.length()
+        while current > 0:
+            while current > 0:
+                line = self.lines.get_line(current)
+                if line.strip() == '' or line.startswith('#'):
+                    current -= 1
+                else:
+                    break
+            last_end = current
+            while current > 0:
+                if self._starts[current]:
+                    if last_end >= self._min_ends.get(current, 0):
+                        self._ends[last_end] = True
+                    break
+                current -= 1
+            current -= 1
+
+    _last_stmt = None
+    def __analyze_node(self, node):
+        if isinstance(node, rope.base.ast.stmt):
+            self._last_stmt = node
+            self._starts[node.lineno] = True
+            min_end = 0
+        elif isinstance(node, rope.base.ast.expr):
+            if self._last_stmt is not None:
+                start = self._last_stmt.lineno
+                last_min = self._min_ends.get(start, 0)
+                min_end = max(last_min, node.lineno)
+                if min_end > 0:
+                    self._min_ends[start] = min_end
 
 
 class LogicalLineFinder(object):
