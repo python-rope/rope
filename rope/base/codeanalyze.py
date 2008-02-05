@@ -419,9 +419,13 @@ class SourceLinesAdapter(Lines):
     def _initialize_line_starts(self):
         self.line_starts = []
         self.line_starts.append(0)
-        for i, c in enumerate(self.source_code):
-            if c == '\n':
+        try:
+            i = -1
+            while True:
+                i = self.source_code.index('\n', i + 1)
                 self.line_starts.append(i + 1)
+        except ValueError:
+            pass
         self.line_starts.append(len(self.source_code) + 1)
 
     def get_line(self, line_number):
