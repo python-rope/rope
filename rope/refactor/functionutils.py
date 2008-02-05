@@ -55,8 +55,8 @@ class DefinitionInfo(object):
         pymodule = pyfunction.get_module()
         source = pymodule.source_code
         lines = pymodule.lines
-        start_line = pyfunction.get_ast().lineno
-        end_line = pyfunction.get_ast().body[0].lineno - 1
+        lineno = pyfunction.get_ast().lineno
+        start_line, end_line = pymodule.logical_lines.logical_line_in(lineno)
         start = lines.get_line_start(start_line)
         end = lines.get_line_end(end_line)
         start = pymodule.source_code.find('def ', start) + 4

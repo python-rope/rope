@@ -506,13 +506,12 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('var = 1\n', refactored)
 
     # XXX: funcutils fails on overlapping logical lines
-    def xxx_test_inlining_one_line_functions_with_breaks(self):
+    def test_inlining_one_line_functions_with_breaks(self):
         code = 'def f(\np): return p\nvar = f(1)\n'
         refactored = self._inline(code, code.rindex('f'))
         self.assertEquals('var = 1\n', refactored)
 
-    # XXX: should have a more accurate logical line finder
-    def xxx_test_inlining_one_line_functions_with_breaks2(self):
+    def test_inlining_one_line_functions_with_breaks2(self):
         code = 'def f(\n): return 1\nvar = f()\n'
         refactored = self._inline(code, code.rindex('f'))
         self.assertEquals('var = 1\n', refactored)
