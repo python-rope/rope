@@ -1,7 +1,7 @@
 import _ast
 from _ast import *
 
-import fscommands
+from rope.base import fscommands
 
 
 def parse(source, filename='<string>'):
