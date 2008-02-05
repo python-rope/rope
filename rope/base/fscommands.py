@@ -122,6 +122,12 @@ def unicode_to_file_data(contents, encoding=None):
         return contents.encode('utf-8')
 
 def file_data_to_unicode(data, encoding=None):
+    result = _decode_data(data, encoding)
+    if '\r\n' in result:
+        return result.replace('\r\n', '\n')
+    return result
+
+def _decode_data(data, encoding):
     if encoding is None:
         encoding = read_str_coding(data)
     if encoding is not None:

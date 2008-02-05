@@ -88,7 +88,7 @@ class File(Resource):
         return rope.base.fscommands.file_data_to_unicode(data)
 
     def read_bytes(self):
-        return open(self.real_path, 'U').read()
+        return open(self.real_path, 'rb').read()
 
     def write(self, contents):
         try:
