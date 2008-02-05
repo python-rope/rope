@@ -560,13 +560,15 @@ class ASTLogicalLineFinder(CachingLogicalLineFinder):
             self._last_stmt = node
             self._starts[node.lineno] = True
             min_end = 0
-        elif isinstance(node, rope.base.ast.expr):
+            return False
+        if isinstance(node, rope.base.ast.expr):
             if self._last_stmt is not None:
                 start = self._last_stmt.lineno
                 last_min = self._min_ends.get(start, 0)
                 min_end = max(last_min, node.lineno)
                 if min_end > 0:
                     self._min_ends[start] = min_end
+            return True
 
 
 class LogicalLineFinder(object):
