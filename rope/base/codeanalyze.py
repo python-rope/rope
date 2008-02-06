@@ -582,6 +582,60 @@ class ASTLogicalLineFinder(CachingLogicalLineFinder):
             self._min_ends[start] = min_end
 
 
+class CustomLogicalLineFinder(CachingLogicalLineFinder):
+    """A method object for finding the range of a statement"""
+
+    def __init__(self, lines, code):
+        self.code = code
+        super(CustomLogicalLineFinder, self).__init__(lines)
+        self.in_string = ''
+        self.open_count = 0
+        self.explicit_continuation = False
+
+    def _init_logicals(self):
+        size = self.lines.length()
+        self._starts = [False] * (size + 1)
+        self._ends = [False] * (size + 1)
+        i = 1
+        while i <= size:
+            while i <= size and self.lines.get_line(i).strip() == '':
+                i += 1
+            if i <= size:
+                self._starts[i] = True
+                self._analyze_line(i)
+                while (self.explicit_continuation
+                       or self.open_count or self.in_string):
+                    i += 1
+                    self._analyze_line(i)
+                self._ends[i] = True
+                i += 1
+
+    def _analyze_line(self, lineno):
+        current_line = self.lines.get_line(lineno)
+        for i, char in enumerate(current_line):
+            if char in '\'"':
+                if self.in_string == '':
+                    self.in_string = char
+                    if char * 3 == current_line[i:i + 3]:
+                        self.in_string = char * 3
+                elif self.in_string == current_line[i:i + len(self.in_string)] and \
+                     not (i > 0 and current_line[i - 1] == '\\' and
+                          not (i > 1 and current_line[i - 2:i] == '\\\\')):
+                    self.in_string = ''
+            if self.in_string != '':
+                continue
+            if char == '#':
+                break
+            if char in '([{':
+                self.open_count += 1
+            if char in ')]}':
+                self.open_count -= 1
+        if current_line and char != '#' and current_line.endswith('\\'):
+            self.explicit_continuation = True
+        else:
+            self.explicit_continuation = False
+
+
 class LogicalLineFinder(object):
 
     def __init__(self, lines):

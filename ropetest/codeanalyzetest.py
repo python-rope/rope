@@ -4,7 +4,7 @@ import rope.base.evaluate
 from rope.base import exceptions, ast
 from rope.base.codeanalyze import \
     (CachingLogicalLineFinder, SourceLinesAdapter, WordRangeFinder,
-     LogicalLineFinder, get_block_start, ASTLogicalLineFinder)
+     LogicalLineFinder, get_block_start, ASTLogicalLineFinder, CustomLogicalLineFinder)
 from ropetest import testutils
 
 
@@ -520,6 +520,11 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._logical_finder(code)
         self.assertEquals([4, 5], list(line_finder.generate_starts(4)))
 
+    def test_logical_lines_for_else(self):
+        code = 'if True:\n    pass\nelse:\n    pass\n'
+        line_finder = self._logical_finder(code)
+        self.assertEquals([3, 4], list(line_finder.generate_starts(3)))
+
 class CachingLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
@@ -530,6 +535,11 @@ class ASTLogicalLineFinderTest(LogicalLineFinderTest):
     def _logical_finder(self, code):
         node = ast.parse(code)
         return ASTLogicalLineFinder(node, SourceLinesAdapter(code))
+
+class ASTLogicalLineFinderTest(LogicalLineFinderTest):
+
+    def _logical_finder(self, code):
+        return CustomLogicalLineFinder(SourceLinesAdapter(code), code)
 
 
 def suite():
