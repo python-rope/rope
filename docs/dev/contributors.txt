@@ -2,5 +2,5 @@
  Rope Contributors
 ===================
 
-
 * Alexander Solovyov <piranha@piranha.org.ua>
+* Sebastjan Trepca <trepca@gmail.com>
