@@ -231,8 +231,7 @@ class PyModule(pyobjects.PyModule):
         """return a `LogicalLinesFinder`"""
         if self._logical_lines is None:
             self._logical_lines = \
-                rope.base.codeanalyze.ASTLogicalLineFinder(self.ast_node,
-                                                           self.lines)
+                rope.base.codeanalyze.CustomLogicalLineFinder(self.lines)
         return self._logical_lines
 
 
