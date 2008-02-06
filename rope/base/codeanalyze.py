@@ -1,6 +1,7 @@
 import re
 import token
 import tokenize
+import warnings
 
 import rope.base.ast
 
