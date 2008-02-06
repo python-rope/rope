@@ -539,7 +539,7 @@ class ASTLogicalLineFinderTest(LogicalLineFinderTest):
 class ASTLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
-        return CustomLogicalLineFinder(SourceLinesAdapter(code), code)
+        return CustomLogicalLineFinder(SourceLinesAdapter(code))
 
 
 def suite():

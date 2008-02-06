@@ -585,8 +585,7 @@ class ASTLogicalLineFinder(CachingLogicalLineFinder):
 class CustomLogicalLineFinder(CachingLogicalLineFinder):
     """A method object for finding the range of a statement"""
 
-    def __init__(self, lines, code):
-        self.code = code
+    def __init__(self, lines):
         super(CustomLogicalLineFinder, self).__init__(lines)
         self.in_string = ''
         self.open_count = 0
@@ -614,7 +613,7 @@ class CustomLogicalLineFinder(CachingLogicalLineFinder):
         current_line = self.lines.get_line(lineno)
         for i, char in enumerate(current_line):
             if char in '\'"':
-                if self.in_string == '':
+                if not self.in_string:
                     self.in_string = char
                     if char * 3 == current_line[i:i + 3]:
                         self.in_string = char * 3
