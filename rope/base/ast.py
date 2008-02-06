@@ -8,6 +8,8 @@ def parse(source, filename='<string>'):
     # NOTE: the raw string should be given to `compile` function
     if isinstance(source, unicode):
         source = fscommands.unicode_to_file_data(source)
+    if '\r\n' in source:
+        source = source.replace('\r\n', '\n')
     if not source.endswith('\n'):
         source += '\n'
     try:
