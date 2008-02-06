@@ -484,11 +484,10 @@ class LinesToReadline(object):
         return self.readline()
 
 
-class CachingLogicalLineFinder(object):
+class _CachingLogicalLineFinder(object):
 
     def __init__(self, lines):
         self.lines = lines
-        self.logical_lines = LogicalLineFinder(lines)
 
     _starts = None
     @property
@@ -505,11 +504,7 @@ class CachingLogicalLineFinder(object):
         return self._ends
 
     def _init_logicals(self):
-        self._starts = [False] * (self.lines.length() + 1)
-        self._ends = [False] * (self.lines.length() + 1)
-        for start, end in self.logical_lines.generate_regions():
-            self._starts[start] = True
-            self._ends[end] = True
+        """Should initialize _starts and _ends attributes"""
 
     def logical_line_in(self, line_number):
         start = line_number
@@ -530,7 +525,21 @@ class CachingLogicalLineFinder(object):
                 yield index
 
 
-class ASTLogicalLineFinder(CachingLogicalLineFinder):
+class TokenizerLogicalLineFinder(_CachingLogicalLineFinder):
+
+    def __init__(self, lines):
+        super(TokenizerLogicalLineFinder, self).__init__(lines)
+        self.logical_lines = LogicalLineFinder(lines)
+
+    def _init_logicals(self):
+        self._starts = [False] * (self.lines.length() + 1)
+        self._ends = [False] * (self.lines.length() + 1)
+        for start, end in self.logical_lines.generate_regions():
+            self._starts[start] = True
+            self._ends[end] = True
+
+
+class ASTLogicalLineFinder(_CachingLogicalLineFinder):
 
     def __init__(self, node, lines):
         self.node = node
@@ -582,7 +591,7 @@ class ASTLogicalLineFinder(CachingLogicalLineFinder):
             self._min_ends[start] = min_end
 
 
-class CustomLogicalLineFinder(CachingLogicalLineFinder):
+class CustomLogicalLineFinder(_CachingLogicalLineFinder):
     """A method object for finding the range of a statement"""
 
     def __init__(self, lines):
@@ -609,9 +618,13 @@ class CustomLogicalLineFinder(CachingLogicalLineFinder):
                 self._ends[i] = True
                 i += 1
 
+    _main_chars = re.compile(r'[\'|"|#|\\|\[|\]|\{|\}|\(|\)]')
     def _analyze_line(self, lineno):
         current_line = self.lines.get_line(lineno)
-        for i, char in enumerate(current_line):
+        char = None
+        for match in self._main_chars.finditer(current_line):
+            char = match.group()
+            i = match.start()
             if char in '\'"':
                 if not self.in_string:
                     self.in_string = char

@@ -3,12 +3,10 @@ import unittest
 import rope.base.evaluate
 from rope.base import exceptions, ast
 from rope.base.codeanalyze import \
-    (CachingLogicalLineFinder, SourceLinesAdapter, WordRangeFinder,
+    (TokenizerLogicalLineFinder, SourceLinesAdapter, WordRangeFinder,
      LogicalLineFinder, get_block_start, ASTLogicalLineFinder, CustomLogicalLineFinder)
 from ropetest import testutils
 
-
-LogicalLineFinder = CachingLogicalLineFinder
 
 class StatementRangeFinderTest(unittest.TestCase):
 
@@ -528,7 +526,7 @@ class LogicalLineFinderTest(unittest.TestCase):
 class CachingLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
-        return CachingLogicalLineFinder(SourceLinesAdapter(code))
+        return TokenizerLogicalLineFinder(SourceLinesAdapter(code))
 
 class ASTLogicalLineFinderTest(LogicalLineFinderTest):
 
