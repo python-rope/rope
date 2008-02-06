@@ -56,6 +56,12 @@ class DefinitionInfo(object):
         source = pymodule.source_code
         lines = pymodule.lines
         lineno = pyfunction.get_ast().lineno
+        if pyfunction.decorators:
+            lineno = max(lineno, getattr(pyfunction.decorators[-1],
+                                         'lineno', lineno))
+            # XXX: problems when 'def ' happens inside a string
+            if 'def ' not in lines.get_line(lineno):
+                lineno += 1
         start_line, end_line = pymodule.logical_lines.logical_line_in(lineno)
         start = lines.get_line_start(start_line)
         end = lines.get_line_end(end_line)
