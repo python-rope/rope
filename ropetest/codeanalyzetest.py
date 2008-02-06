@@ -492,6 +492,11 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._logical_finder(code)
         self.assertEquals((4, 4), line_finder.logical_line_in(4))
 
+    def test_logical_lines_for_else(self):
+        code = 'if True:\n    pass\nelse:\n    pass\n'
+        line_finder = self._logical_finder(code)
+        self.assertEquals((3, 3), line_finder.logical_line_in(3))
+
     def test_generating_line_starts(self):
         code = 'a = 1\na = 2\n\na = 3\n'
         line_finder = self._logical_finder(code)
@@ -517,11 +522,6 @@ class LogicalLineFinderTest(unittest.TestCase):
                '            a = 1\n    b = 1\n'
         line_finder = self._logical_finder(code)
         self.assertEquals([4, 5], list(line_finder.generate_starts(4)))
-
-    def test_logical_lines_for_else(self):
-        code = 'if True:\n    pass\nelse:\n    pass\n'
-        line_finder = self._logical_finder(code)
-        self.assertEquals([3, 4], list(line_finder.generate_starts(3)))
 
 class CachingLogicalLineFinderTest(LogicalLineFinderTest):
 
