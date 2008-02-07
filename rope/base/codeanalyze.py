@@ -3,8 +3,6 @@ import token
 import tokenize
 import warnings
 
-import rope.base.ast
-
 
 class WordRangeFinder(object):
     """A class for finding boundaries of words and expressions
@@ -538,58 +536,6 @@ class TokenizerLogicalLineFinder(_CachingLogicalLineFinder):
         for start, end in self.logical_lines.generate_regions():
             self._starts[start] = True
             self._ends[end] = True
-
-
-class ASTLogicalLineFinder(_CachingLogicalLineFinder):
-
-    def __init__(self, node, lines):
-        self.node = node
-        super(ASTLogicalLineFinder, self).__init__(lines)
-        self._min_ends = {}
-
-    def _init_logicals(self):
-        self._starts = [False] * (self.lines.length() + 1)
-        self._ends = [False] * (self.lines.length() + 1)
-        rope.base.ast.call_for_nodes(self.node, self.__analyze_node, True)
-        current = self.lines.length()
-        while current > 0:
-            while current > 0:
-                line = self.lines.get_line(current)
-                if line.strip() == '' or line.startswith('#'):
-                    current -= 1
-                else:
-                    break
-            last_end = current
-            while current > 0:
-                if self._starts[current]:
-                    if last_end >= self._min_ends.get(current, 0):
-                        self._ends[last_end] = True
-                    break
-                current -= 1
-            current -= 1
-
-    _last_stmt = None
-    def __analyze_node(self, node):
-        if isinstance(node, rope.base.ast.stmt):
-            line = self.lines.get_line(node.lineno)
-            offset = node.col_offset
-            if offset > 0 and not line[:node.col_offset].isspace():
-                self.__update_last_min(node.lineno)
-            self._last_stmt = node
-            self._starts[node.lineno] = True
-            return False
-        if isinstance(node, rope.base.ast.expr):
-            self.__update_last_min(node.lineno)
-            return True
-
-    def __update_last_min(self, lineno):
-        if self._last_stmt is None:
-            return
-        start = self._last_stmt.lineno
-        if lineno > start:
-            last_min = self._min_ends.get(start, 0)
-            min_end = max(last_min, lineno)
-            self._min_ends[start] = min_end
 
 
 class CustomLogicalLineFinder(_CachingLogicalLineFinder):

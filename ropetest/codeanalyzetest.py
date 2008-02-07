@@ -4,7 +4,7 @@ import rope.base.evaluate
 from rope.base import exceptions, ast
 from rope.base.codeanalyze import \
     (TokenizerLogicalLineFinder, SourceLinesAdapter, WordRangeFinder,
-     LogicalLineFinder, get_block_start, ASTLogicalLineFinder, CustomLogicalLineFinder)
+     LogicalLineFinder, get_block_start, CustomLogicalLineFinder)
 from ropetest import testutils
 
 
@@ -523,18 +523,12 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._logical_finder(code)
         self.assertEquals([4, 5], list(line_finder.generate_starts(4)))
 
-class CachingLogicalLineFinderTest(LogicalLineFinderTest):
+class TokenizerLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
         return TokenizerLogicalLineFinder(SourceLinesAdapter(code))
 
-class ASTLogicalLineFinderTest(LogicalLineFinderTest):
-
-    def _logical_finder(self, code):
-        node = ast.parse(code)
-        return ASTLogicalLineFinder(node, SourceLinesAdapter(code))
-
-class ASTLogicalLineFinderTest(LogicalLineFinderTest):
+class CustomLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
         return CustomLogicalLineFinder(SourceLinesAdapter(code))
@@ -546,8 +540,8 @@ def suite():
     result.addTests(unittest.makeSuite(WordRangeFinderTest))
     result.addTests(unittest.makeSuite(ScopeNameFinderTest))
     result.addTests(unittest.makeSuite(LogicalLineFinderTest))
-    result.addTests(unittest.makeSuite(CachingLogicalLineFinderTest))
-    result.addTests(unittest.makeSuite(ASTLogicalLineFinderTest))
+    result.addTests(unittest.makeSuite(TokenizerLogicalLineFinderTest))
+    result.addTests(unittest.makeSuite(CustomLogicalLineFinderTest))
     return result
 
 if __name__ == '__main__':
