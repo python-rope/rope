@@ -83,6 +83,13 @@ class AutoImportTest(unittest.TestCase):
             'import mod1\n\n# comment\n')
         self.assertEquals(2, result)
 
+    def test_empty_cache(self):
+        self.mod1.write('myvar = None\n')
+        self.importer.update_resource(self.mod1)
+        self.assertEquals(['mod1'], self.importer.get_modules('myvar'))
+        self.importer.clear_cache()
+        self.assertEquals([], self.importer.get_modules('myvar'))
+
     def test_not_caching_underlined_names(self):
         self.mod1.write('_myvar = None\n')
         self.importer.update_resource(self.mod1, underlined=False)

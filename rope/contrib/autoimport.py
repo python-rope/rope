@@ -81,6 +81,15 @@ class AutoImport(object):
             self.update_module(modname, underlined)
             job_set.finished_job()
 
+    def clear_cache(self):
+        """Clear all entries in global-name cache
+
+        It might be a good idea to use this function before
+        regenerating global names.
+
+        """
+        self.names.clear()
+
     def find_insertion_line(self, code):
         """Guess at what line the new import should be inserted"""
         match = re.search(r'^(def|class)\s+', code)
