@@ -53,7 +53,7 @@ class AutoImport(object):
                 result.append(module)
         return result
 
-    def generate_cache(self, resources=None,
+    def generate_cache(self, resources=None, underlined=False,
                        task_handle=taskhandle.NullTaskHandle()):
         """Generate global name cache for project files
 
@@ -68,17 +68,17 @@ class AutoImport(object):
             'Generatig autoimport cache', len(resources))
         for file in resources:
             job_set.started_job('Working on <%s>' % file.path)
-            self.update_resource(file)
+            self.update_resource(file, underlined)
             job_set.finished_job()
 
-    def generate_modules_cache(self, modules,
+    def generate_modules_cache(self, modules, underlined=False,
                                task_handle=taskhandle.NullTaskHandle()):
         """Generate global name cache for modules listed in `modules`"""
         job_set = task_handle.create_jobset(
             'Generatig autoimport cache for modules', len(modules))
         for modname in modules:
             job_set.started_job('Working on <%s>' % modname)
-            self.update_module(modname)
+            self.update_module(modname, underlined)
             job_set.finished_job()
 
     def find_insertion_line(self, code):
@@ -100,32 +100,34 @@ class AutoImport(object):
         lineno = code.count('\n', 0, offset) + 1
         return lineno
 
-    def update_resource(self, resource):
+    def update_resource(self, resource, underlined=False):
         """Update the cache for global names in `resource`"""
         try:
             pymodule = self.project.pycore.resource_to_pyobject(resource)
             modname = self._module_name(resource)
-            self._add_names(pymodule, modname)
+            self._add_names(pymodule, modname, underlined)
         except exceptions.ModuleSyntaxError:
             pass
 
-    def update_module(self, modname):
+    def update_module(self, modname, underlined=False):
         """Update the cache for global names in `modname` module
 
         `modname` is the name of a module.
         """
         try:
             pymodule = self.project.pycore.get_module(modname)
-            self._add_names(pymodule, modname)
+            self._add_names(pymodule, modname, underlined)
         except exceptions.ModuleNotFoundError:
             pass
 
     def _module_name(self, resource):
         return importutils.get_module_name(self.project.pycore, resource)
 
-    def _add_names(self, pymodule, modname):
+    def _add_names(self, pymodule, modname, underlined):
         globals = []
         for name, pyname in pymodule._get_structural_attributes().items():
+            if not underlined and name.startswith('_'):
+                continue
             if isinstance(pyname, (pynames.AssignedName, pynames.DefinedName)):
                 globals.append(name)
         self.names[modname] = globals
