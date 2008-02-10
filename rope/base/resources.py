@@ -183,7 +183,7 @@ class _ResourceMatcher(object):
 
     def __init__(self):
         self.patterns = []
-        self._ignored_patterns = []
+        self._compiled_patterns = []
 
     def set_patterns(self, patterns):
         """Specify which resources to match
@@ -192,7 +192,7 @@ class _ResourceMatcher(object):
         ``?`` signs for matching resource names.
 
         """
-        self._ignored_patterns = None
+        self._compiled_patterns = None
         self.patterns = patterns
 
     def _add_pattern(self, pattern):
@@ -212,11 +212,10 @@ class _ResourceMatcher(object):
             return True
         return False
 
-    def _get_compiled_patterns(self):
-        if self._ignored_patterns is None:
-            self._ignored_patterns = []
+    @property
+    def compiled_patterns(self):
+        if self._compiled_patterns is None:
+            self._compiled_patterns = []
             for pattern in self.patterns:
                 self._add_pattern(pattern)
-        return self._ignored_patterns
-
-    compiled_patterns = property(_get_compiled_patterns)
+        return self._compiled_patterns

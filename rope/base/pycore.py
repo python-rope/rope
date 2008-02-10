@@ -9,6 +9,7 @@ import rope.base.oi.staticoi
 from rope.base import ast, exceptions, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.pyobjectsdef import PyModule, PyPackage, PyClass
+import rope.base.resources
 import rope.base.resourceobserver
 
 
@@ -21,8 +22,16 @@ class PyCore(object):
         self.classes_cache = _ClassesCache(self)
         self.module_cache = _ModuleCache(self)
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
+        self._init_python_files()
         self._init_automatic_soi()
         self._init_source_folders()
+
+    def _init_python_files(self):
+        self.python_matcher = None
+        patterns = self.project.prefs.get('python_files', None)
+        if patterns is not None:
+            self.python_matcher = rope.base.resources._ResourceMatcher()
+            self.python_matcher.set_patterns(patterns)
 
     def _init_resource_observer(self):
         callback = self._invalidate_resource_cache
@@ -51,7 +60,11 @@ class PyCore(object):
             perform_soi_on_changed_scopes(self.project, resource, old_contents)
 
     def is_python_file(self, resource):
-        return not resource.is_folder() and resource.name.endswith('.py')
+        if resource.is_folder():
+            return False
+        if self.python_matcher is None:
+            return resource.name.endswith('.py')
+        return self.python_matcher.does_match(resource)
 
     def get_module(self, name, current_folder=None):
         """Returns a `PyObject` if the module was found."""

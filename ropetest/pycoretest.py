@@ -1015,12 +1015,30 @@ class TextChangeDetectorTest(unittest.TestCase):
         self.assertFalse(detector.is_changed(1, 2))
 
 
+class PyCoreProjectConfigsTest(unittest.TestCase):
+
+    def setUp(self):
+        super(PyCoreProjectConfigsTest, self).setUp()
+        self.project = None
+
+    def tearDown(self):
+        if self.project:
+            testutils.remove_project(self.project)
+        super(PyCoreProjectConfigsTest, self).tearDown()
+
+    def test_python_files_config(self):
+        self.project = testutils.sample_project(python_files=['myscript'])
+        myscript = self.project.root.create_file('myscript')
+        self.assertTrue(self.project.pycore.is_python_file(myscript))
+
+
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(PyCoreTest))
     result.addTests(unittest.makeSuite(PyCoreInProjectsTest))
     result.addTests(unittest.makeSuite(ClassHierarchyTest))
     result.addTests(unittest.makeSuite(TextChangeDetectorTest))
+    result.addTests(unittest.makeSuite(PyCoreProjectConfigsTest))
     return result
 
 
