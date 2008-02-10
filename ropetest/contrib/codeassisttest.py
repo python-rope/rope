@@ -2,7 +2,7 @@ import unittest
 
 from rope.base import exceptions
 from rope.contrib.codeassist import \
-     (Template, get_definition_location, get_doc,
+     (Template, get_definition_location, get_doc, starting_expression,
       find_occurrences, code_assist, sorted_proposals, starting_offset)
 from ropetest import testutils
 
@@ -850,6 +850,10 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = self._assist('from mod1 import ', resource=mod2)
         self.assertTrue(len(result) > 0)
         self.assert_completion_in_result('myvar', 'global', result)
+
+    def test_starting_expression(self):
+        code = 'l = list()\nl.app'
+        self.assertEquals('l.app', starting_expression(code, len(code)))
 
 
 class TemplateTest(unittest.TestCase):

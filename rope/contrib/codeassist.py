@@ -238,6 +238,20 @@ def sorted_proposals(proposals, kindpref=None, typepref=None):
     return sorter.get_sorted_proposal_list()
 
 
+def starting_expression(source_code, offset):
+    """Return the expression to complete
+
+    For instance completing 
+
+    """
+    word_finder = WordRangeFinder(source_code)
+    expression, starting, starting_offset = \
+        word_finder.get_splitted_primary_before(offset)
+    if expression:
+        return expression + '.' + starting
+    return starting
+
+
 def default_templates():
     templates = {}
     templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
