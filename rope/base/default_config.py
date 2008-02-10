@@ -16,6 +16,12 @@ def set_prefs(prefs):
     prefs['ignored_resources'] = ['*.pyc', '*~', '.ropeproject',
                                   '.hg', '.svn', '_svn']
 
+    # Specifies which files should be considered python files.  It is
+    # useful when you have scripts inside your project.  Only files
+    # with ending with ``.py`` are considered to be python files by
+    # default.
+    #prefs['python_files'] = ['*.py']
+
     # Custom source folders:  By default rope searches the project
     # for finding source folders (folders that should be searched
     # for finding modules).  You can add paths to that list.  Note
