@@ -8,7 +8,7 @@ import rope.base.change
 import rope.base.fscommands
 from rope.base import exceptions, taskhandle, prefs, history, pycore
 from rope.base.resourceobserver import *
-from rope.base.resources import File, Folder
+from rope.base.resources import File, Folder, _ResourceMatcher
 
 
 class _Project(object):
@@ -138,9 +138,9 @@ class Project(_Project):
         if fscommands is None:
             fscommands = rope.base.fscommands.create_fscommands(self._address)
         super(Project, self).__init__(fscommands)
-        self.ignored = _IgnoredResources()
+        self.ignored = _ResourceMatcher()
         self.file_list = _FileListCacher(self)
-        self.prefs.add_callback('ignored_resources', self.ignored.set_ignored)
+        self.prefs.add_callback('ignored_resources', self.ignored.set_patterns)
         if ropefolder is not None:
             self.prefs['ignored_resources'] = [ropefolder]
         self._init_prefs(prefs)
@@ -190,7 +190,7 @@ class Project(_Project):
         self.pycore
 
     def is_ignored(self, resource):
-        return self.ignored.is_ignored(resource)
+        return self.ignored.does_match(resource)
 
     def sync(self):
         """Closes project open resources"""
@@ -247,49 +247,6 @@ def get_no_project():
     if NoProject._no_project is None:
         NoProject._no_project = NoProject()
     return NoProject._no_project
-
-
-class _IgnoredResources(object):
-
-    def __init__(self):
-        self.patterns = []
-        self._ignored_patterns = []
-
-    def set_ignored(self, patterns):
-        """Specify which resources to ignore
-
-        `patterns` is a `list` of `str`\s that can contain ``*`` and
-        ``?`` signs for matching resource names.
-
-        """
-        self._ignored_patterns = None
-        self.patterns = patterns
-
-    def _add_ignored_pattern(self, pattern):
-        re_pattern = pattern.replace('.', '\\.').\
-                     replace('*', '[^/]*').replace('?', '[^/]').\
-                     replace('//', '/(.*/)?')
-        re_pattern = '(.*/)?' + re_pattern + '(/.*)?'
-        self.ignored_patterns.append(re.compile(re_pattern))
-
-    def is_ignored(self, resource):
-        for pattern in self.ignored_patterns:
-            if pattern.match(resource.path):
-                return True
-        path = os.path.join(resource.project.address,
-                            *resource.path.split('/'))
-        if os.path.islink(path):
-            return True
-        return False
-
-    def _get_compiled_patterns(self):
-        if self._ignored_patterns is None:
-            self._ignored_patterns = []
-            for pattern in self.patterns:
-                self._add_ignored_pattern(pattern)
-        return self._ignored_patterns
-
-    ignored_patterns = property(_get_compiled_patterns)
 
 
 class _FileListCacher(object):

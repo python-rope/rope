@@ -1,4 +1,5 @@
 import os
+import re
 
 import rope.base.change
 import rope.base.fscommands
@@ -176,3 +177,46 @@ class Folder(Resource):
 
     def create(self):
         self.parent.create_folder(self.name)
+
+
+class _ResourceMatcher(object):
+
+    def __init__(self):
+        self.patterns = []
+        self._ignored_patterns = []
+
+    def set_patterns(self, patterns):
+        """Specify which resources to match
+
+        `patterns` is a `list` of `str`\s that can contain ``*`` and
+        ``?`` signs for matching resource names.
+
+        """
+        self._ignored_patterns = None
+        self.patterns = patterns
+
+    def _add_pattern(self, pattern):
+        re_pattern = pattern.replace('.', '\\.').\
+                     replace('*', '[^/]*').replace('?', '[^/]').\
+                     replace('//', '/(.*/)?')
+        re_pattern = '(.*/)?' + re_pattern + '(/.*)?'
+        self.compiled_patterns.append(re.compile(re_pattern))
+
+    def does_match(self, resource):
+        for pattern in self.compiled_patterns:
+            if pattern.match(resource.path):
+                return True
+        path = os.path.join(resource.project.address,
+                            *resource.path.split('/'))
+        if os.path.islink(path):
+            return True
+        return False
+
+    def _get_compiled_patterns(self):
+        if self._ignored_patterns is None:
+            self._ignored_patterns = []
+            for pattern in self.patterns:
+                self._add_pattern(pattern)
+        return self._ignored_patterns
+
+    compiled_patterns = property(_get_compiled_patterns)
