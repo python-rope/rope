@@ -18,7 +18,7 @@ def set_prefs(prefs):
 
     # Specifies which files should be considered python files.  It is
     # useful when you have scripts inside your project.  Only files
-    # with ending with ``.py`` are considered to be python files by
+    # ending with ``.py`` are considered to be python files by
     # default.
     #prefs['python_files'] = ['*.py']
 
