@@ -6,6 +6,18 @@
 - Added python_files project config : February 10, 2008
 
 
+- Added codeassist.starting_expression() : February 10, 2008
+
+
+- Added AutoImport.clear_cache() : February 7, 2008
+
+
+- Improved extract function : February 1, 2008
+
+
+- Handling except variables : January 29, 2008
+
+
 > Public Release 0.7.6 : January 28, 2008
 
 
