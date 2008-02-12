@@ -126,15 +126,32 @@ class ImportedName(PyName):
 
     def _get_imported_pyname(self):
         try:
-            return self.imported_module.get_object()[self.imported_name]
+            result = self.imported_module.get_object()[self.imported_name]
+            if result != self:
+                return result
         except exceptions.AttributeNotFoundError:
-            return UnboundName()
+            pass
+        return UnboundName()
 
+    _getting_object = False
     def get_object(self):
-        return self._get_imported_pyname().get_object()
+        if not self._getting_object:
+            try:
+                self._getting_object = True
+                return self._get_imported_pyname().get_object()
+            finally:
+                self._getting_object = False
+        return rope.base.pyobjects.get_unknown()
 
+    _getting_location = False
     def get_definition_location(self):
-        return self._get_imported_pyname().get_definition_location()
+        if not self._getting_location:
+            try:
+                self._getting_location = True
+                return self._get_imported_pyname().get_definition_location()
+            finally:
+                self._getting_location = False
+        return (None, None)
 
 
 class StarImport(object):

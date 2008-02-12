@@ -557,6 +557,20 @@ class PyCoreTest(unittest.TestCase):
         pymod1 = self.pycore.resource_to_pyobject(mod1)
         pymod1.get_attributes()
 
+    def test_not_reaching_maximum_recursions_when_importing_variables(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod1.write('from mod2 import myvar\n')
+        mod2.write('from mod1 import myvar\n')
+        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        pymod1['myvar'].get_object()
+
+    def test_not_reaching_maximum_recursions_when_importing_variables2(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('from mod1 import myvar\n')
+        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        pymod1['myvar'].get_object()
+
 
 class PyCoreInProjectsTest(unittest.TestCase):
 
