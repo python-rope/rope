@@ -18,4 +18,4 @@ See the `unresolved issues` section of ``issues.txt`` file for more.
   imports
 
 
-> Public Release 0.7.7
+> Public Release 0.7.8

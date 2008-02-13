@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.7.7 : February 13, 2008
+
+
 - Added python_files project config : February 10, 2008
 
 

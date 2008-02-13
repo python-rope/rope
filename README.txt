@@ -14,34 +14,6 @@ Overview
 New Features
 ============
 
-* added python_files project config
-* python_path project config should be searched before sys.path
-* added AutoImport.clear_cache()
-* added codeassist.starting_expression()
-* inferring the type of except variables
-
-* refactorings and code-assists are considerably faster
-* better import insertion location
-* better syntax errors
-* fixed preventing maximum recursion for mutual star imports
-* re-added deprecated NoProject.close() to make ropeide work
-* better handling of parameters that are assigned
-* fixed updating project file cache
-* better global function extraction
-* importing version control modules lazily
-
-python_files
-------------
-
-The ``python_files`` project config can be used to tell rope which
-files in the project are python modules.  By default it is
-``['*.py']``.  If you have scripts in your project it can be useful;
-for instance add::
-
-  ``prefs['python_files'] = ['*.py', ``*.pyw``, ``scripts/*``]``
-
-to your ``.ropeproject/config.py``.
-
 
 Getting Started
 ===============
