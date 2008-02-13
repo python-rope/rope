@@ -124,7 +124,7 @@ class prevent_recursion(object):
         self.default = default
 
     def __call__(self, func):
-        name = '_%s_cache' % func.__name__
+        name = '_calling_%s_' % func.__name__
         def newfunc(host, *args, **kwds):
             if getattr(host, name, False):
                 return self.default()
@@ -180,25 +180,22 @@ def _get_concluded_data(module):
     return module._get_concluded_data()
 
 
+def _circular_inference():
+    raise rope.base.pyobjects.IsBeingInferredError(
+        'Circular Object Inference')
+
 class _Inferred(object):
 
     def __init__(self, get_inferred, concluded=None):
         self.get_inferred = get_inferred
         self.concluded = concluded
-        self.is_being_inferred = False
         if self.concluded is None:
             self.temp = None
 
+    @prevent_recursion(_circular_inference)
     def get(self, *args, **kwds):
-        if self.is_being_inferred:
-            raise rope.base.pyobjects.IsBeingInferredError(
-                'Circular Object Inference')
         if self.concluded is None or self.concluded.get() is None:
-            self.is_being_inferred = True
-            try:
-                self.set(self.get_inferred(*args, **kwds))
-            finally:
-                self.is_being_inferred = False
+            self.set(self.get_inferred(*args, **kwds))
         if self._get() is None:
             self.set(rope.base.pyobjects.get_unknown())
         return self._get()
