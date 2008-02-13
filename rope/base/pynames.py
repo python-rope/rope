@@ -118,6 +118,24 @@ class ImportedModule(PyName):
         return (self._get_pymodule().get_module(), 1)
 
 
+class prevent_recursion(object):
+
+    def __init__(self, default):
+        self.default = default
+
+    def __call__(self, func):
+        name = '_%s_cache' % func.__name__
+        def newfunc(host, *args, **kwds):
+            if getattr(host, name, False):
+                return self.default()
+            setattr(host, name, True)
+            try:
+                return func(host, *args, **kwds)
+            finally:
+                setattr(host, name, False)
+        return newfunc
+
+
 class ImportedName(PyName):
 
     def __init__(self, imported_module, imported_name):
@@ -133,25 +151,13 @@ class ImportedName(PyName):
             pass
         return UnboundName()
 
-    _getting_object = False
+    @prevent_recursion(rope.base.pyobjects.get_unknown)
     def get_object(self):
-        if not self._getting_object:
-            try:
-                self._getting_object = True
-                return self._get_imported_pyname().get_object()
-            finally:
-                self._getting_object = False
-        return rope.base.pyobjects.get_unknown()
+        return self._get_imported_pyname().get_object()
 
-    _getting_location = False
+    @prevent_recursion(lambda: (None, None))
     def get_definition_location(self):
-        if not self._getting_location:
-            try:
-                self._getting_location = True
-                return self._get_imported_pyname().get_definition_location()
-            finally:
-                self._getting_location = False
-        return (None, None)
+        return self._get_imported_pyname().get_definition_location()
 
 
 class StarImport(object):
