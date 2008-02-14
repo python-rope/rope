@@ -661,11 +661,10 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('a_var = 1\nprint(var)\n\n',
                           self.import_tools.organize_imports(pymod))
 
-    # XXX: causes stack overflow
-    def xxx_test_removing_self_imports_for_from_import_star(self):
+    def test_removing_self_imports_for_from_import_star(self):
         self.mod.write('from mod import *\na_var = 1\nprint(myvar)\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertEquals('a_var = 1\nprint(a_var)\n',
+        self.assertEquals('a_var = 1\nprint(myvar)\n',
                           self.import_tools.organize_imports(pymod))
 
     def test_sorting_empty_imports(self):
