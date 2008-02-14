@@ -410,7 +410,7 @@ see pydocs in their modules and the unit-tests in the
 * `rope.refactor.rename`:
   Rename something in the project.  See the example below.
 
-* `rope.refactor.move...`:
+* `rope.refactor.move`:
   Move a python element in the project.
 
 * `rope.refactor.restructure`:
@@ -431,7 +431,7 @@ see pydocs in their modules and the unit-tests in the
 * `rope.refactor.change_signature`:
   Change the signature of a function/method.
 
-* `rope.refactor.introduce_factory.IntroduceFactory`:
+* `rope.refactor.introduce_factory`:
   Introduce a factory for a class and changes all constructors to use
   it.
 
@@ -445,11 +445,11 @@ see pydocs in their modules and the unit-tests in the
 * `rope.refactor.localtofield`:
   Change a local variable to field
 
-* `rope.refactor.ModuleToPackage`:
+* `rope.refactor.topackage`:
   Transform a module to a package with the same name.
 
 * `rope.refactor.importutils`:
-  Let you perform things like organize imports.
+  Perform actions like organize imports.
 
 
 Refactoring Resources Parameter
