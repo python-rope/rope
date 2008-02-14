@@ -284,7 +284,7 @@ class WordRangeFinder(object):
             return False
         try:
             end = self._find_word_end(offset)
-            as_end = self._find_word_end(end + 1)
+            as_end = min(self._find_word_end(end + 1), len(self.source))
             as_start = self._find_word_start(as_end)
             if self.source[as_start:as_end + 1] == 'as':
                 return True
