@@ -226,7 +226,6 @@ class NoProject(_Project):
 
     def __init__(self):
         fscommands = rope.base.fscommands.FileSystemCommands()
-        self.root = None
         super(NoProject, self).__init__(fscommands)
 
     def _get_resource_path(self, name):
