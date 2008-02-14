@@ -7,6 +7,30 @@ from rope.refactor import (sourceutils, similarfinder,
                            patchedast, suites, usefunction)
 
 
+# Extract refactoring has lots of special cases.  I tried to split it
+# to smaller parts to make it more manageable:
+#
+# _ExtractInfo: holds information about the refactoring; it is passed
+# to the parts that need to have information about the refactoring
+# 
+# _ExtractCollector: merely saves all of the information necessary for
+# performing the refactoring.
+#
+# _DefinitionLocationFinder: finds where to insert the definition.
+#
+# _ExceptionalConditionChecker: checks for exceptional conditions in
+# which the refactoring cannot be applied.
+#
+# _ExtractMethodParts: generates the pieces of code (like definition)
+# needed for performing extract method.
+#
+# _ExtractVariableParts: like _ExtractMethodParts for variables.
+#
+# _ExtractPerformer: Uses above classes to collect refactoring
+# changes.
+#
+# There are a few more helper functions and classes used by above
+# classes.
 class _ExtractRefactoring(object):
 
     def __init__(self, project, resource, start_offset, end_offset,
@@ -332,8 +356,8 @@ class _ExceptionalConditionChecker(object):
                                        'contain return statements.')
             if _UnmatchedBreakOrContinueFinder.has_errors(
                 info.source[info.region[0]:info.region[1]]):
-                raise RefactoringError('A break/continue without matching '
-                                       'having a for/while loop.')
+                raise RefactoringError('A break/continue without having a '
+                                       'matching for/while loop.')
         except SyntaxError:
             raise RefactoringError('Extracted piece should '
                                    'contain complete statements.')
