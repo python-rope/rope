@@ -86,9 +86,18 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEquals(
-            'def f(p):\n    a = p + 1\n    print(a)\nf(2)\n',
-            self.mod1.read())
+        self.assertEquals('def f(p):\n    a = p + 1\n    print(a)\nf(2)\n',
+                          self.mod1.read())
+
+    # TODO: probably new options should be added to restructure
+    def xxx_test_being_a_bit_more_intelligent_when_returning_assigneds(self):
+        code = 'def f(p):\n    a = p + 1\n    return a\n'\
+               'var = 2 + 1\nprint(var)\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.rindex('f'))
+        self.project.do(user.get_changes())
+        self.assertEquals('def f(p):\n    a = p + 1\n    return a\n'
+                          'var = f(p)\nprint(var)\n', self.mod1.read())
 
 
 if __name__ == '__main__':
