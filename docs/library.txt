@@ -407,49 +407,49 @@ might be out of date.  For more information about these refactoring
 see pydocs in their modules and the unit-tests in the
 ``ropetest/refactor/`` folder.
 
-* `rope.refactor.rename.Rename`:
-  Renames something in the project.  See the example below.
+* `rope.refactor.rename`:
+  Rename something in the project.  See the example below.
 
-* `rope.refactor.move.Move...`:
-   Move a python element in the project.
+* `rope.refactor.move...`:
+  Move a python element in the project.
 
-* `rope.refactor.restructure.Restructure`:
-  Restructures code.  See the example below.
+* `rope.refactor.restructure`:
+  Restructure code.  See the example below.
 
-* `rope.refactor.extract.Extract...`:
-  Extracts methods/variables.
+* `rope.refactor.extract`:
+  Extract methods/variables.
 
-* `rope.refactor.inline.Inline`:
-  Inlines occurrences of a method/variable.
+* `rope.refactor.inline`:
+  Inline occurrences of a method/variable.
 
 * `rope.refactor.usefunction`:
-  Tries to use a function wherever possible.
+  Try to use a function wherever possible.
 
-* `rope.refactor.method_object.MethodObject`:
-  Transforms a function or a method to a method object.
+* `rope.refactor.method_object`:
+  Transform a function or a method to a method object.
 
-* `rope.refactor.change_signature.ChangeSignature`:
-  Changes the signature of a function/method.
+* `rope.refactor.change_signature`:
+  Change the signature of a function/method.
 
 * `rope.refactor.introduce_factory.IntroduceFactory`:
-  Introduces a factory for a class and changes all constructors to use
+  Introduce a factory for a class and changes all constructors to use
   it.
 
-* `rope.refactor.introduce_parameter.IntroduceParameter`:
-  Introduces a parameter in a function.
+* `rope.refactor.introduce_parameter`:
+  Introduce a parameter in a function.
 
-* `rope.refactor.encapsulate_field.EncapsulateField`:
-  Generates a getter/setter for a field and changes its occurrences to
+* `rope.refactor.encapsulate_field`:
+  Generate a getter/setter for a field and changes its occurrences to
   use them.
 
-* `rope.refactor.localtofield.LocalToField`:
+* `rope.refactor.localtofield`:
   Change a local variable to field
 
 * `rope.refactor.ModuleToPackage`:
   Transform a module to a package with the same name.
 
-* `rope.refactor.ImportOrganizer`:
-  Lets you perform things like organize imports.
+* `rope.refactor.importutils`:
+  Let you perform things like organize imports.
 
 
 Refactoring Resources Parameter

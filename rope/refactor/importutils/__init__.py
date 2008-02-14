@@ -13,6 +13,11 @@ from rope.refactor.importutils.importinfo import \
 
 
 class ImportOrganizer(object):
+    """Perform some import-related commands
+
+    Each method returns a `rope.base.change.Change` object.
+
+    """
 
     def __init__(self, project):
         self.project = project
