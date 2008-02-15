@@ -32,11 +32,13 @@ class Resource(object):
     def exists(self):
         return os.path.exists(self.real_path)
 
-    def _get_parent(self):
+    @property
+    def parent(self):
         parent = '/'.join(self.path.split('/')[0:-1])
         return self.project.get_resource(parent)
 
-    def _get_path(self):
+    @property
+    def path(self):
         """Return the path of this resource relative to the project root
 
         The path is the list of parent directories separated by '/' followed
@@ -44,11 +46,13 @@ class Resource(object):
         """
         return self._path
 
-    def _get_name(self):
+    @property
+    def name(self):
         """Return the name of this resource"""
         return self.path.split('/')[-1]
 
-    def _get_real_path(self):
+    @property
+    def real_path(self):
         """Return the file system path of this resource"""
         return self.project._get_resource_path(self.path)
 
@@ -60,11 +64,6 @@ class Resource(object):
             else:
                 return self.name
         return destination
-
-    parent = property(_get_parent)
-    name = property(_get_name)
-    path = property(_get_path)
-    real_path = property(_get_real_path)
 
     def __eq__(self, obj):
         return self.__class__ == obj.__class__ and self.path == obj.path
