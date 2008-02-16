@@ -458,7 +458,7 @@ Refactoring Resources Parameter
 Some refactorings, restructure and find occurrences accept an argument
 called ``resources``.  If it is a list of `File`\s, all other
 resources in the project are ignored and the refactoring only analyzes
-them; if it is `None` all python module in the project will be
+them; if it is `None` all python modules in the project will be
 analyzed.  Using this parameter, IDEs can let the user limit the files
 on which a refactoring should be applied.
 
