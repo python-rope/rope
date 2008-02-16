@@ -690,13 +690,19 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('import pkg2.mod2\nfrom pkg1 import mod1\n',
                           self.import_tools.sort_imports(pymod))
 
-    def test_sorting_imports_and_standard_modles(self):
+    def test_sorting_imports_and_standard_modules(self):
         self.mod.write('import pkg1\nimport sys\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals('import sys\n\nimport pkg1\n',
                           self.import_tools.sort_imports(pymod))
 
-    def test_sorting_only_standard_modles(self):
+    def test_sorting_imports_and_standard_modules2(self):
+        self.mod.write('import sys\n\nimport time\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import sys\nimport time\n',
+                          self.import_tools.sort_imports(pymod))
+
+    def test_sorting_only_standard_modules(self):
         self.mod.write('import sys\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals('import sys\n',

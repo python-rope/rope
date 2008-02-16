@@ -286,9 +286,10 @@ class SortingVisitor(ImportInfoVisitor):
             result = set(sys.builtin_module_names)
             if os.name != 'nt':
                 lib_path = os.path.join(
-                    sys.prefix, 'lib%spython%s' % (os.sep, sys.version[:3]))
+                    sys.prefix, 'lib', 'python' + sys.version[:3])
             else:
                 lib_path = os.path.join(sys.prefix, 'lib%s' % os.sep)
+            dynload_path = os.path.join(lib_path, 'lib-dynload')
             if os.path.exists(lib_path):
                 for name in os.listdir(lib_path):
                     path = os.path.join(lib_path, name)
@@ -297,6 +298,12 @@ class SortingVisitor(ImportInfoVisitor):
                             result.add(name)
                     else:
                         if name.endswith('.py'):
+                            result.add(name[:-3])
+            if os.path.exists(dynload_path):
+                for name in os.listdir(dynload_path):
+                    path = os.path.join(dynload_path, name)
+                    if os.path.isfile(path):
+                        if name.endswith('.so'):
                             result.add(name[:-3])
             cls._standard_modules = result
         return cls._standard_modules
