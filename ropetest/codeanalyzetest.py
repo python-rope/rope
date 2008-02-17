@@ -8,13 +8,13 @@ from rope.base.codeanalyze import \
 from ropetest import testutils
 
 
-class StatementRangeFinderTest(unittest.TestCase):
+class SourceLinesAdapterTest(unittest.TestCase):
 
     def setUp(self):
-        super(StatementRangeFinderTest, self).setUp()
+        super(SourceLinesAdapterTest, self).setUp()
 
     def tearDown(self):
-        super(StatementRangeFinderTest, self).tearDown()
+        super(SourceLinesAdapterTest, self).tearDown()
 
     def test_source_lines_simple(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')
@@ -188,11 +188,11 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_comments_for_finding_statements(self):
         code = '# var2 . \n  var3'
-        self.assertEquals('var3', self._find_primary(code, 14))
+        self.assertEquals('var3', self._find_primary(code, code.index('3')))
 
     def test_str_in_comments_for_finding_statements(self):
         code = '# "var2" . \n  var3'
-        self.assertEquals('var3', self._find_primary(code, 14))
+        self.assertEquals('var3', self._find_primary(code, code.index('3')))
 
     def test_comments_for_finding_statements2(self):
         code = 'var1 + "# var2".\n  var3'
@@ -539,7 +539,7 @@ class CustomLogicalLineFinderTest(LogicalLineFinderTest):
 
 def suite():
     result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(StatementRangeFinderTest))
+    result.addTests(unittest.makeSuite(SourceLinesAdapterTest))
     result.addTests(unittest.makeSuite(WordRangeFinderTest))
     result.addTests(unittest.makeSuite(ScopeNameFinderTest))
     result.addTests(unittest.makeSuite(LogicalLineFinderTest))
