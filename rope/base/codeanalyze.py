@@ -29,12 +29,22 @@ class WordRangeFinder(object):
             offset += 1;
         return offset
 
+    _char_pat = re.compile(r'[\'"#\n]')
     def _find_last_non_space_char(self, offset):
         if offset <= 0:
             return 0
-        while offset >= 0 and self.source[offset] in ' \t\n':
-            if self.source[offset - 1:offset + 1] == '\\\n':
-                offset -= 1
+        while offset >= 0 and self.source[offset].isspace():
+            if self.source[offset] == '\n':
+                if offset > 0 and self.source[offset - 1] == '\\':
+                    offset -= 1
+                try:
+                    start = self.source.rindex('\n', 0, offset)
+                except ValueError:
+                    start = 0
+
+                match = self._char_pat.search(self.source[start:offset][::-1])
+                if match and match.group() == '#':
+                    offset = self.source.rindex('#', 0, offset)
             offset -= 1
         return offset
 

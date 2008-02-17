@@ -186,8 +186,7 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, code.index(')(') + 3)
         self.assertEquals('a_func()()', result)
 
-    # XXX: eliminating comments
-    def xxx_test_comments_for_finding_statements(self):
+    def test_comments_for_finding_statements(self):
         code = '# var2 . \n  var3'
         self.assertEquals('var3', self._find_primary(code, 14))
 
