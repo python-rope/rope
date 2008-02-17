@@ -6,44 +6,36 @@
 Unresolved Issues
 =================
 
+* moving a group of elements together
+* temps might be read after body in usefunction or extract
+* usefunction and function returns
+* using directory children in change indicator
 * usefunction on methods
 * extracted functions should be inserted before using class bodies
-* temps might be read after body in usefunction or extract
 * adding "referenced later" wildcard argument to restructurings?
 * adding "change references" wildcard argument to restructurings?
-* adding custom wild-card replacements; needs use cases
 * ideas for more custom wildcards
 * adapting future python 2.6 ast changes
 * custom wildcards and recursive patterns
-* codeassist is slow on large files
 * custom restructuring wildcard patterns and replacements
 * not reimporting back imports after moving
 * importing compressed objectdb/history data?
 * not applying all commenting mechanisms always in codeassist
 * fixing try blocks before current line in code_assist
 * searching all files when extracting a global method?
-* better tests in `patchedasttest`
+* better tests for patchedast
 * import actions with more that one phase and filtering problems
 * handle long imports should work on filtered imports unconditionally?
-* changing `codeanalyze.WordFinder` to use asts?
-* assignment to parameters in inline method
 * extracting subexpressions; look at `extracttest` for more info
-* using similarfinder in introduce_parameter?
 * switching to gplv3?
-* removing unused refactorings?
-* assignments and overwriting parameter, imported and evaluated names
 * unignored files that are not under version control
-* multiple ropes on one project; problems for objectdb and history
-* should `rope.base` be thread safe?
 * inline fails when there is an arg mismatch
 * evaluate function parameter defaults in staticoi?
 * recursive soi; go where the calls go with limited depth
-* importing star and removing self imports; stack overflow
 * saving diffs instead of old contents in ChangeContents?
 * python c extensions
 * supporting modules without source code and zip imports
 * handling tuple parameters
-* moving a group of elements together
 * extract class
 * analyzing function decorators
 * generate ... and implicit interfaces
