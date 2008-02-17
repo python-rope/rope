@@ -29,7 +29,7 @@ class WordRangeFinder(object):
             offset += 1;
         return offset
 
-    _char_pat = re.compile(r'[\'"#\n]')
+    _char_pat = re.compile(r'[\'"#]')
     def _find_last_non_space_char(self, offset):
         if offset <= 0:
             return 0
@@ -42,9 +42,9 @@ class WordRangeFinder(object):
                 except ValueError:
                     start = 0
 
-                match = self._char_pat.search(self.source[start:offset][::-1])
+                match = self._char_pat.search(self.source[start:offset])
                 if match and match.group() == '#':
-                    offset = self.source.rindex('#', 0, offset)
+                    offset = self.source.rindex('#', start, offset)
             offset -= 1
         return offset
 

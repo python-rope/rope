@@ -190,6 +190,10 @@ class WordRangeFinderTest(unittest.TestCase):
         code = '# var2 . \n  var3'
         self.assertEquals('var3', self._find_primary(code, 14))
 
+    def test_str_in_comments_for_finding_statements(self):
+        code = '# "var2" . \n  var3'
+        self.assertEquals('var3', self._find_primary(code, 14))
+
     def test_comments_for_finding_statements2(self):
         code = 'var1 + "# var2".\n  var3'
         self.assertEquals('"# var2".\n  var3', self._find_primary(code, 21))
