@@ -786,6 +786,13 @@ class ImportUtilsTest(unittest.TestCase):
             '"""\ndocs\n"""\nimport mod\n\n\ndef f():\n    print(mod)\n',
             self.import_tools.sort_imports(pymod))
 
+    def test_sorting_future_imports(self):
+        self.mod.write('import os\nfrom __future__ import devision\n')
+        pymod = self.pycore.get_module('mod')
+        self.assertEquals(
+            'from __future__ import devision\n\nimport os\n',
+            self.import_tools.sort_imports(pymod))
+
     def test_customized_import_organization(self):
         self.mod.write('import sys\nimport sys\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)

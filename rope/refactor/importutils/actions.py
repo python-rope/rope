@@ -257,6 +257,7 @@ class SortingVisitor(ImportInfoVisitor):
         self.standard = set()
         self.third_party = set()
         self.in_project = set()
+        self.future = set()
         self.context = importinfo.ImportContext(pycore, current_folder)
 
     def visitNormalImport(self, import_stmt, import_info):
@@ -272,13 +273,16 @@ class SortingVisitor(ImportInfoVisitor):
                                       import_info.module_name)
 
     def _check_imported_resource(self, import_stmt, resource, imported_name):
+        info = import_stmt.import_info
         if resource is not None and resource.project == self.pycore.project:
             self.in_project.add(import_stmt)
+        elif isinstance(info, importinfo.FromImport) and \
+             info.module_name == '__future__':
+            self.future.add(import_stmt)
+        elif imported_name.split('.')[0] in SortingVisitor.standard_modules():
+            self.standard.add(import_stmt)
         else:
-            if imported_name.split('.')[0] in SortingVisitor.standard_modules():
-                self.standard.add(import_stmt)
-            else:
-                self.third_party.add(import_stmt)
+            self.third_party.add(import_stmt)
 
     @classmethod
     def standard_modules(cls):

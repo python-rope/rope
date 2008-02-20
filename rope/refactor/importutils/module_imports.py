@@ -186,9 +186,11 @@ class ModuleImports(object):
         in_projects = sorted(visitor.in_project, self._compare_imports)
         third_party = sorted(visitor.third_party, self._compare_imports)
         standards = sorted(visitor.standard, self._compare_imports)
+        future = sorted(visitor.future, self._compare_imports)
         blank_lines = 0
         last_index = self._first_import_line()
-        last_index = self._move_imports(standards, last_index, 0)
+        last_index = self._move_imports(future, last_index, 0)
+        last_index = self._move_imports(standards, last_index, 1)
         last_index = self._move_imports(third_party, last_index, 1)
         last_index = self._move_imports(in_projects, last_index, 1)
         self.separating_lines = 2
