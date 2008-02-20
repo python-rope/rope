@@ -1,6 +1,5 @@
 import cPickle as pickle
 import os
-import re
 import shutil
 import warnings
 

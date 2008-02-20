@@ -1,3 +1,4 @@
+import cPickle as pickle
 import marshal
 import os
 import socket
@@ -5,8 +6,6 @@ import subprocess
 import sys
 import tempfile
 import threading
-
-import cPickle as pickle
 
 
 class PythonFileRunner(object):

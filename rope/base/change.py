@@ -1,9 +1,8 @@
+import datetime
 import difflib
 import os
-import warnings
-
-import datetime
 import time
+import warnings
 
 import rope.base.fscommands
 from rope.base import taskhandle, exceptions

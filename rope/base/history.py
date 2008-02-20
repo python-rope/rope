@@ -1,6 +1,3 @@
-import shutil
-import cPickle as pickle
-
 from rope.base import exceptions, change, taskhandle
 
 

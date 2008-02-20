@@ -4,7 +4,6 @@ For more information see the documentation in `rope.base.oi`
 package.
 
 """
-
 import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects

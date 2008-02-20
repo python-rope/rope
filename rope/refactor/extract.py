@@ -1,6 +1,6 @@
 import re
 
-from rope.base import ast, codeanalyze
+from rope.base import ast
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.refactor import (sourceutils, similarfinder,

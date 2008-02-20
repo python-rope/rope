@@ -1,6 +1,6 @@
 import re
 
-from rope.base import exceptions, pynames, resourceobserver, taskhandle, ast
+from rope.base import exceptions, pynames, resourceobserver, taskhandle
 from rope.refactor import importutils
 
 
