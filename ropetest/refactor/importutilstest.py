@@ -667,6 +667,12 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('a_var = 1\nprint(myvar)\n',
                           self.import_tools.organize_imports(pymod))
 
+    def test_not_removing_future_imports(self):
+        self.mod.write('from __future__ import division\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('from __future__ import division\n',
+                          self.import_tools.organize_imports(pymod))
+
     def test_sorting_empty_imports(self):
         self.mod.write('')
         pymod = self.pycore.resource_to_pyobject(self.mod)

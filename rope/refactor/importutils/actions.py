@@ -94,6 +94,8 @@ class FilteringVisitor(ImportInfoVisitor):
         return importinfo.NormalImport(new_pairs)
 
     def visitFromImport(self, import_stmt, import_info):
+        if _is_future(import_info):
+            return import_info
         new_pairs = []
         if import_info.is_star_import():
             for name in import_info.get_imported_names(self.context):
@@ -276,8 +278,7 @@ class SortingVisitor(ImportInfoVisitor):
         info = import_stmt.import_info
         if resource is not None and resource.project == self.pycore.project:
             self.in_project.add(import_stmt)
-        elif isinstance(info, importinfo.FromImport) and \
-             info.module_name == '__future__':
+        elif _is_future(info):
             self.future.add(import_stmt)
         elif imported_name.split('.')[0] in SortingVisitor.standard_modules():
             self.standard.add(import_stmt)
@@ -337,3 +338,8 @@ class LongImportVisitor(ImportInfoVisitor):
     def _is_long(self, name):
         return name.count('.') > self.maxdots or \
                ('.' in name and len(name) > self.maxlength)
+
+
+def _is_future(info):
+    return isinstance(info, importinfo.FromImport) and \
+           info.module_name == '__future__'
