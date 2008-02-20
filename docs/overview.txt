@@ -28,27 +28,18 @@ library).  You can also force rope not to make such a folder by using
 Currently it is used for things such as:
 
 * There is a ``config.py`` file in this folder in which you can change
-  project configurations.  Look at the default ``config.py`` file,
-  that is created when there is none available, for more information.
-  When a project is open you can edit this file using ``"Edit Project
-  config.py"`` action or ``C-x p c``.
+  project configurations.  Have look at the default ``config.py`` file
+  (is created when it does not exist) for more information.  (``C-x p
+  c`` open this file automatically in ropemacs or ropeide).
 * It can be used for saving project history, so that the next time you
-  open the project you can see and undo past changes.  If you're new
-  to rope use ``"Project History"`` (``C-x p h``) for more
-  information.
-* It can be used for saving object information.  Before this release
-  all object information where kept in memory.  Saving them on disk
-  has two advantages.  First, rope will need less memory and second,
-  the calculated and collected information is not thrown away each
-  time you close a project.
+  open the project you can see and undo past changes.  (see ``project
+  history`` of ropeide)
+* It can be used for saving object information to help rope object
+  inference.
+* It can be used for saving global names cache which is used in
+  auto-import.
 
 You can change what to save and what not to in the ``config.py`` file.
-
-Since files on disk change overtime project object DB might hold
-invalid information.  Currently there is a basic incremental object DB
-validation that can be used to remove or fix out of date information.
-Rope uses this feature by default but you can disable it by editing
-``config.py``.
 
 
 Refactorings
@@ -150,7 +141,7 @@ You can tell rope to rename all occurrences of a name in comments and
 strings.  This can be done in rename refactoring dialog by selecting
 its radio button or by passing ``docs=True`` to `Rename.get_changes()`
 method when using rope as a library.  Rope renames names in comments
-and strings only when the name is visible there.  For example in::
+and strings only where the name is visible.  For example in::
 
   def f():
       a_var = 1
@@ -170,8 +161,8 @@ would get::
   # f prints a_var
 
 This makes it safe to assume that this option does not perform wrong
-renames most of the time and for this reason it is by default on in
-the UI (though not in `Rename.get_changes()`).
+renames most of the time and for this reason it is on by default in
+the ropeide (though not in `Rename.get_changes()`).
 
 This also changes occurrences inside evaluated strings::
 
@@ -386,7 +377,7 @@ Extracting ``2 * 3`` will result in::
       x = six + 1
 
 
-Extract Method In Staticmethods/Classmethods
+Extract Method In staticmethods/classmethods
 --------------------------------------------
 
 The extract method refactoring has been enhanced to handle static and
@@ -534,6 +525,8 @@ Sorting Imports
 
 Organize imports now sorts imports, too.  It will sort imports
 according to :PEP:`8`::
+
+  [__future__ imports]
 
   [standard imports]
 
@@ -1075,14 +1068,24 @@ you can turn it off by editing your project ``config.py`` file
 you're new to rope), though that is not recommended.
 
 
+Validating ObjectDB
+-------------------
+
+Since files on disk change over time project objectdb might hold
+invalid information.  Currently there is a basic incremental objectdb
+validation that can be used to remove or fix out of date information.
+Rope uses this feature by default but you can disable it by editing
+``config.py``.
+
+
 Custom Source Folders
----------------------
+=====================
 
 By default rope searches the project for finding source folders
 (folders that should be searched for finding modules).  You can add
-paths to that list using ``source_folders`` config.  Note that rope
-guesses project source folders correctly most of the time.  You can
-also extend python path using ``python_path`` config.
+paths to that list using ``source_folders`` project config.  Note that
+rope guesses project source folders correctly most of the time.  You
+can also extend python path using ``python_path`` config.
 
 
 Version Control Systems Support
