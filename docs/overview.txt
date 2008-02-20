@@ -433,17 +433,6 @@ defaults, ``*args``, ``**keywords``).  Rope won't complain if you
 don't but python will.
 
 
-Change Occurrences Refactoring
-------------------------------
-
-Change occurrences refactoring is a special refactoring.  It replaces
-occurrences of something with what you want.  This refactoring is
-different from rename refactoring; It only changes the scope it was
-invoked from.  Second it does not rename anything it only replaces
-occurrences and has no side-effects.  This refactoring can be used to
-perform some non-standard refactorings.
-
-
 Inline Method Refactoring
 -------------------------
 
@@ -541,7 +530,7 @@ according to :PEP:`8`::
 Handling Long Imports
 ---------------------
 
-"Handle long imports" command trys to make long imports look better by
+``Handle long imports`` command trys to make long imports look better by
 transforming ``import pkg1.pkg2.pkg3.pkg4.mod1`` to ``from
 pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
 either by having lots of dots or being very long.  The default
