@@ -131,8 +131,8 @@ class WordRangeFinder(object):
 
     def get_primary_at(self, offset):
         offset = self._get_fixed_offset(offset)
-        return self.source[self._find_primary_start(offset):
-                           self._find_word_end(offset) + 1].strip()
+        start, end = self.get_primary_range(offset)
+        return self.source[start:end].strip()
 
     def get_splitted_primary_before(self, offset):
         """returns expression, starting, starting_offset
@@ -369,7 +369,6 @@ class WordRangeFinder(object):
         return operation
 
     def get_primary_range(self, offset):
-        offset = max(0, offset)
         start = self._find_primary_start(offset)
         end = self._find_word_end(offset) + 1
         return (start, end)
