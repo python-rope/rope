@@ -47,3 +47,9 @@ monitoring the progress of refactorings.
 """
 from rope.refactor.importutils import ImportOrganizer
 from rope.refactor.topackage import ModuleToPackage
+
+
+__all__ = ['rename', 'move', 'inline', 'extract', 'restructure', 'topackage',
+           'importutils', 'usefunction', 'change_signature',
+           'encapsulate_field', 'introduce_factory', 'introduce_parameter',
+           'localtofield', 'method_object', 'multiproject']
