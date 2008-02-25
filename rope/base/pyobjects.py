@@ -33,10 +33,11 @@ class PyObject(object):
     def __eq__(self, obj):
         """Check the equality of two `PyObject`\s
 
-        Currently it is assumed that two instances(The direct instances
-        of `PyObject` are equal if their types are equal.  For every
-        other object like defineds or builtins we assume objects are
-        reference objects.
+        Currently it is assumed that instances (the direct instances
+        of `PyObject`, not the instances of its subclasses) are equal
+        if their types are equal.  For every other object like
+        defineds or builtins rope assumes objects are reference
+        objects and their identities should match.
 
         """
         if self.__class__ != obj.__class__:
