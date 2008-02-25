@@ -1,9 +1,8 @@
 import rope.base.exceptions
 import rope.base.pyobjects
-import rope.refactor.importutils
 from rope.base import taskhandle, evaluate
 from rope.base.change import (ChangeSet, ChangeContents)
-from rope.refactor import rename, occurrences, sourceutils
+from rope.refactor import rename, occurrences, sourceutils, importutils
 
 
 class IntroduceFactory(object):
@@ -46,10 +45,8 @@ class IntroduceFactory(object):
 
     def _change_module(self, resources, changes,
                        factory_name, global_, job_set):
-        import_tools = rope.refactor.importutils.ImportTools(self.pycore)
-        new_import = import_tools.get_import(self.resource)
         if global_:
-            replacement = new_import.names_and_aliases[0][0] + '.' + factory_name
+            replacement = '__rope_factory_%s_' % factory_name
         else:
             replacement = self._new_function_name(factory_name, global_)
 
@@ -66,9 +63,11 @@ class IntroduceFactory(object):
                 if global_:
                     new_pymodule = self.pycore.get_string_module(changed_code,
                                                                  self.resource)
-                    imports = import_tools.get_module_imports(new_pymodule)
-                    imports.add_import(new_import)
-                    changed_code = imports.get_changed_source()
+                    modname = importutils.get_module_name(self.pycore,
+                                                          self.resource)
+                    changed_code, imported = importutils.add_import(
+                        self.pycore, new_pymodule, modname, factory_name)
+                    changed_code = changed_code.replace(replacement, imported)
                 changes.add_change(ChangeContents(file_, changed_code))
             job_set.finished_job()
 

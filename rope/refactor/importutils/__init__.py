@@ -264,7 +264,7 @@ def add_import(pycore, pymodule, module_name, name):
     from_import = FromImport(module_name, 0, [(name, None)])
     candidates = [from_import]
     if '.' in module_name:
-        pkg, mod = module_name.rsplit('.')
+        pkg, mod = module_name.rsplit('.', 1)
         candidates.append(FromImport(pkg, 0, [(mod, None)]))
     normal_import = NormalImport([(module_name, None)])
     candidates.append(normal_import)

@@ -300,7 +300,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
                     'def create(*args, **kwds):\n' \
                     '    return AClass(*args, **kwds)\n'
-        expected2 = 'from mod1 import AClass\nimport mod1\npair = mod1.create(), AClass\n'
+        expected2 = 'from mod1 import AClass, create\npair = create(), AClass\n'
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
