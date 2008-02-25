@@ -124,10 +124,24 @@ class RemovingVisitor(ImportInfoVisitor):
 
 
 class AddingVisitor(ImportInfoVisitor):
+    """A class for adding imports
 
-    def __init__(self, pycore, import_info):
+    Given a list of `ImportInfo`\s, it tries to add each import to the
+    module and returns `True` and gives up when an import can be added
+    to older ones.
+
+    """
+
+    def __init__(self, pycore, import_list):
         self.pycore = pycore
-        self.import_info = import_info
+        self.import_list = import_list
+        self.import_info = None
+
+    def dispatch(self, import_):
+        for import_info in self.import_list:
+            self.import_info = import_info
+            if ImportInfoVisitor.dispatch(self, import_):
+                return True
 
     # TODO: Handle adding relative and absolute imports
     def visitNormalImport(self, import_stmt, import_info):

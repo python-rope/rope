@@ -255,5 +255,23 @@ def get_imports(pycore, pydefined):
 
 
 def get_module_imports(pycore, pymodule):
-    """A shortcut creating a `module_imports.ModuleImports` object"""
+    """A shortcut for creating a `module_imports.ModuleImports` object"""
     return module_imports.ModuleImports(pycore, pymodule)
+
+
+def add_import(pycore, pymodule, module_name, name):
+    imports = get_module_imports(pycore, pymodule)
+    normal_import = NormalImport([(module_name, None)])
+    from_import = FromImport(module_name, 0, [(name, None)])
+    visitor = actions.AddingVisitor(pycore, [from_import, normal_import])
+    selected_import = normal_import
+    for import_statement in imports.get_import_statements():
+        if import_statement.accept(visitor):
+            selected_import = visitor.import_info
+            break
+    imports.add_import(selected_import)
+    if isinstance(selected_import, NormalImport):
+        imported_name = module_name + '.' + name
+    else:
+        imported_name = name
+    return imports.get_changed_source(), imported_name

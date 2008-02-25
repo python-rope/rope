@@ -1,6 +1,6 @@
 import unittest
 
-from rope.refactor.importutils import ImportTools, importinfo
+from rope.refactor.importutils import ImportTools, importinfo, add_import
 from ropetest import testutils
 
 
@@ -911,6 +911,45 @@ class ImportUtilsTest(unittest.TestCase):
         imports = module_with_imports.get_used_imports(pymod)
         self.assertEquals(1, len(imports))
 
+
+class AddImportTest(unittest.TestCase):
+
+    def setUp(self):
+        super(AddImportTest, self).setUp()
+        self.project = testutils.sample_project()
+        self.pycore = self.project.get_pycore()
+
+        self.mod1 = testutils.create_module(self.project, 'mod1')
+        self.mod2 = testutils.create_module(self.project, 'mod2')
+        self.pkg = testutils.create_package(self.project, 'pkg')
+        self.mod3 = testutils.create_module(self.project, 'mod3', self.pkg)
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(AddImportTest, self).tearDown()
+
+    def test_normal_imports(self):
+        self.mod2.write('myvar = None\n')
+        self.mod1.write('\n')
+        pymod = self.pycore.get_module('mod1')
+        result, name = add_import(self.pycore, pymod, 'mod2', 'myvar')
+        self.assertEquals('import mod2\n', result)
+        self.assertEquals('mod2.myvar', name)
+
+    def test_not_reimporting_a_name(self):
+        self.mod2.write('myvar = None\n')
+        self.mod1.write('from mod2 import myvar\n')
+        pymod = self.pycore.get_module('mod1')
+        result, name = add_import(self.pycore, pymod, 'mod2', 'myvar')
+        self.assertEquals('from mod2 import myvar\n', result)
+        self.assertEquals('myvar', name)
+
+
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(ImportUtilsTest))
+    result.addTests(unittest.makeSuite(AddImportTest))
+    return result
 
 if __name__ == '__main__':
     unittest.main()

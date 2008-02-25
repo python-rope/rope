@@ -112,7 +112,7 @@ class ModuleImports(object):
         return result
 
     def add_import(self, import_info):
-        visitor = actions.AddingVisitor(self.pycore, import_info)
+        visitor = actions.AddingVisitor(self.pycore, [import_info])
         for import_statement in self.get_import_statements():
             if import_statement.accept(visitor):
                 break
@@ -151,7 +151,7 @@ class ModuleImports(object):
         added_imports = []
         for import_stmt in imports:
             visitor = actions.AddingVisitor(self.pycore,
-                                            import_stmt.import_info)
+                                            [import_stmt.import_info])
             for added_import in added_imports:
                 if added_import.accept(visitor):
                     import_stmt.empty_import()
