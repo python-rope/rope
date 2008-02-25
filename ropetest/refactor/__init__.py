@@ -756,8 +756,7 @@ def suite():
     result.addTests(unittest.makeSuite(
                     change_signature_test.ChangeSignatureTest))
     result.addTests(unittest.makeSuite(IntroduceParameterTest))
-    result.addTests(unittest.makeSuite(ropetest.refactor.
-                                       importutilstest.ImportUtilsTest))
+    result.addTests(ropetest.refactor.importutilstest.suite())
     result.addTests(similarfindertest.suite())
     result.addTests(unittest.makeSuite(TaskHandleTest))
     result.addTests(unittest.makeSuite(ropetest.refactor.
