@@ -961,6 +961,24 @@ class AddImportTest(unittest.TestCase):
         self.assertEquals('from pkg import var1, mod3\n', result)
         self.assertEquals('mod3.var2', name)
 
+    def test_adding_import_for_modules_instead_of_names(self):
+        self.pkg.get_child('__init__.py').write('var1 = None\n')
+        self.mod3.write('\n')
+        self.mod1.write('from pkg import var1\n')
+        pymod = self.pycore.get_module('mod1')
+        result, name = add_import(self.pycore, pymod, 'pkg.mod3', None)
+        self.assertEquals('from pkg import var1, mod3\n', result)
+        self.assertEquals('mod3', name)
+
+    def test_adding_import_for_modules_with_normal_duplicate_imports(self):
+        self.pkg.get_child('__init__.py').write('var1 = None\n')
+        self.mod3.write('\n')
+        self.mod1.write('import pkg.mod3\n')
+        pymod = self.pycore.get_module('mod1')
+        result, name = add_import(self.pycore, pymod, 'pkg.mod3', None)
+        self.assertEquals('import pkg.mod3\n', result)
+        self.assertEquals('pkg.mod3', name)
+
 
 def suite():
     result = unittest.TestSuite()

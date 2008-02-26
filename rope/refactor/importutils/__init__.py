@@ -259,14 +259,30 @@ def get_module_imports(pycore, pymodule):
     return module_imports.ModuleImports(pycore, pymodule)
 
 
-def add_import(pycore, pymodule, module_name, name):
+def add_import(pycore, pymodule, module_name, name=None):
     imports = get_module_imports(pycore, pymodule)
-    from_import = FromImport(module_name, 0, [(name, None)])
-    candidates = [from_import]
+    candidates = []
+    names = []
+    # from mod import name
+    if name is not None:
+        from_import = FromImport(module_name, 0, [(name, None)])
+        names.append(name)
+        candidates.append(from_import)
+    # from pkg import mod
     if '.' in module_name:
         pkg, mod = module_name.rsplit('.', 1)
         candidates.append(FromImport(pkg, 0, [(mod, None)]))
+        if name:
+            names.append(mod + '.' + name)
+        else:
+            names.append(mod)
+    # import mod
     normal_import = NormalImport([(module_name, None)])
+    if name:
+        names.append(module_name + '.' + name)
+    else:
+        names.append(module_name)
+
     candidates.append(normal_import)
 
     visitor = actions.AddingVisitor(pycore, candidates)
@@ -276,10 +292,5 @@ def add_import(pycore, pymodule, module_name, name):
             selected_import = visitor.import_info
             break
     imports.add_import(selected_import)
-    if selected_import == normal_import:
-        imported_name = module_name + '.' + name
-    elif selected_import == from_import:
-        imported_name = name
-    else:
-        imported_name = mod + '.' + name
+    imported_name = names[candidates.index(selected_import)]
     return imports.get_changed_source(), imported_name
