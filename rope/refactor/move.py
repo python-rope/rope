@@ -398,9 +398,8 @@ class MoveModule(object):
             if module == self.source:
                 self._change_moving_module(changes, dest)
             else:
-                source = self._change_occurrences_in_module(
-                    self._new_import(dest), self._new_name(dest),
-                    resource=module)
+                source = self._change_occurrences_in_module(dest,
+                                                            resource=module)
                 if source is not None:
                     changes.add_change(ChangeContents(module, source))
             job_set.finished_job()
@@ -408,35 +407,34 @@ class MoveModule(object):
             changes.add_change(MoveResource(self.source, dest.path))
         return changes
 
-    def _new_import(self, dest):
-        return importutils.NormalImport([(self._new_name(dest), None)])
+    def _new_modname(self, dest):
+        destname = importutils.get_module_name(self.pycore, dest)
+        if destname:
+            return destname + '.' + self.old_name
+        return self.old_name
 
-    def _new_name(self, dest):
-        package = importutils.get_module_name(self.pycore, dest)
-        if package:
-            new_name = package + '.' + self.old_name
-        else:
-            new_name = self.old_name
-        return new_name
+    def _new_import(self, dest):
+        return importutils.NormalImport([(self._new_modname(dest), None)])
 
     def _change_moving_module(self, changes, dest):
         if not self.source.is_folder():
             pymodule = self.pycore.resource_to_pyobject(self.source)
             source = self.import_tools.relatives_to_absolutes(pymodule)
             pymodule = self.tools.new_pymodule(pymodule, source)
-            source = self._change_occurrences_in_module(
-                self._new_import(dest), self._new_name(dest), pymodule)
+            source = self._change_occurrences_in_module(dest, pymodule)
             source = self.tools.new_source(pymodule, source)
             if source != self.source.read():
                 changes.add_change(ChangeContents(self.source, source))
 
-    def _change_occurrences_in_module(self, new_import, new_name,
-                                      pymodule=None, resource=None):
+    def _change_occurrences_in_module(self, dest, pymodule=None,
+                                      resource=None):
         if not self.tools.occurs_in_module(pymodule=pymodule,
-                                            resource=resource):
+                                           resource=resource):
             return
         if pymodule is None:
             pymodule = self.pycore.resource_to_pyobject(resource)
+        new_name = self._new_modname(dest)
+        new_import = self._new_import(dest)
         source = self.tools.rename_in_module(
             new_name, imports=True, pymodule=pymodule, resource=resource)
         should_import = self.tools.occurs_in_module(
@@ -500,20 +498,22 @@ class _MoveTools(object):
 
     def rename_in_module(self, new_name, pymodule=None,
                           imports=False, resource=None):
-        occurrence_finder = occurrences.FilteredFinder(
-            self.pycore, self.old_name, [self.old_pyname], imports=imports)
+        occurrence_finder = self._create_finder(imports)
         source = rename.rename_in_module(
             occurrence_finder, new_name, replace_primary=True,
             pymodule=pymodule, resource=resource)
         return source
 
     def occurs_in_module(self, pymodule=None, resource=None, imports=True):
-        finder = occurrences.FilteredFinder(
-            self.pycore, self.old_name, [self.old_pyname], imports=imports)
+        finder = self._create_finder(imports)
         for occurrence in finder.find_occurrences(pymodule=pymodule,
                                                   resource=resource):
             return True
         return False
+
+    def _create_finder(self, imports):
+        return occurrences.FilteredFinder(self.pycore, self.old_name,
+                                          [self.old_pyname], imports=imports)
 
     def new_pymodule(self, pymodule, source):
         if source is not None:
