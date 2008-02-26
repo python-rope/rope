@@ -250,7 +250,8 @@ class MoveGlobal(object):
             elif self.tools.occurs_in_module(resource=file_):
                 pymodule = self.pycore.resource_to_pyobject(file_)
                 # Changing occurrences
-                source = self.tools.rename_in_module(self._new_name(dest),
+                placeholder = '__rope_renaming_%s_' % self.old_name
+                source = self.tools.rename_in_module(placeholder,
                                                      resource=file_)
                 should_import = source is not None
                 # Removing out of date imports
@@ -259,22 +260,18 @@ class MoveGlobal(object):
                 # Adding new import
                 if should_import:
                     pymodule = self.tools.new_pymodule(pymodule, source)
-                    source = self.tools.add_imports(pymodule,
-                                                    [self._new_import(dest)])
+                    source, imported = importutils.add_import(
+                        self.pycore, pymodule, self._new_modname(dest), self.old_name)
+                    source = source.replace(placeholder, imported)
                 source = self.tools.new_source(pymodule, source)
                 if source != file_.read():
                     changes.add_change(ChangeContents(file_, source))
             job_set.finished_job()
         return changes
 
-    def _new_name(self, dest):
-        return importutils.get_module_name(self.pycore, dest) + '.' + self.old_name
-
-    def _new_import(self, dest):
-        return self.import_tools.get_import(dest)
-
     def _source_module_changes(self, dest):
-        handle = _ChangeMoveOccurrencesHandle(self._new_name(dest))
+        placeholder = '__rope_moving_%s_' % self.old_name
+        handle = _ChangeMoveOccurrencesHandle(placeholder)
         occurrence_finder = occurrences.FilteredFinder(
             self.pycore, self.old_name, [self.old_pyname])
         start, end = self._get_moving_region()
@@ -284,9 +281,13 @@ class MoveGlobal(object):
         if handle.occurred:
             pymodule = self.pycore.get_string_module(source, self.source)
             # Adding new import
-            source = self.tools.add_imports(
-                pymodule, [self._new_import(dest)])
+            source, imported = importutils.add_import(
+                self.pycore, pymodule, self._new_modname(dest), self.old_name)
+            source = source.replace(placeholder, imported)
         return ChangeContents(self.source, source)
+
+    def _new_modname(self, dest):
+        return importutils.get_module_name(self.pycore, dest)
 
     def _dest_module_changes(self, dest):
         # Changing occurrences
