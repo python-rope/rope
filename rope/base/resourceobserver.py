@@ -244,8 +244,14 @@ class ChangeIndicator(object):
 
     def get_indicator(self, resource):
         """Return the modification time and size of a `Resource`."""
-        return (os.path.getmtime(resource.real_path),
-                os.path.getsize(resource.real_path))
+        path = resource.real_path
+        # on dos, mtime does not change for a folder when files are added
+        if os.name != 'posix' and os.path.isdir(path):
+            return (os.path.getmtime(path),
+                    len(os.listdir(path)),
+                    os.path.getsize(path))
+        return (os.path.getmtime(path),
+                os.path.getsize(path))
 
 
 class _Changes(object):
