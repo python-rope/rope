@@ -43,7 +43,7 @@ class FileSystemCommands(object):
             shutil.rmtree(path)
 
     def write(self, path, data):
-        file_ = open(path, 'w')
+        file_ = open(path, 'wb')
         try:
             file_.write(data)
         finally:
