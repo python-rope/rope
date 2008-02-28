@@ -18,7 +18,7 @@ def path_to_resource(project, path, type=None):
     """
     path = rope.base.project._realpath(path)
     project_path = path
-    if path == project.address or path.startswith(project.address + '/'):
+    if path == project.address or path.startswith(project.address + os.sep):
         project_path = path[len(project.address):].lstrip('/' + os.sep)
     else:
         project = rope.base.project.get_no_project()
