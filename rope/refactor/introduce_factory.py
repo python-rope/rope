@@ -43,6 +43,10 @@ class IntroduceFactory(object):
                             global_factory, job_set)
         return changes
 
+    def get_name(self):
+        """Return the name of the class"""
+        return self.old_name
+
     def _change_module(self, resources, changes,
                        factory_name, global_, job_set):
         if global_:

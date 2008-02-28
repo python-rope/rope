@@ -253,6 +253,14 @@ class IntroduceFactoryTest(unittest.TestCase):
                                         'create', global_factory=True)
         self.assertEquals(expected, mod.read())
 
+    def test_get_name_for_factories(self):
+        code = 'class C(object):\n    pass\n'
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write(code)
+        factory = IntroduceFactory(self.project, mod,
+                                   mod.read().index('C') + 1)
+        self.assertEquals('C', factory.get_name())
+
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_for_global_factory_for_nested_classes(self):
         code = 'def create_var():\n'\
