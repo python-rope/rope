@@ -507,6 +507,10 @@ class _ExtractMethodParts(object):
         return call_prefix + self._get_function_call(args)
 
     def _find_function_arguments(self):
+        # if not make_global, do not pass any global names; they are
+        # all visible.
+        if self.info.global_ and not self.info.make_global:
+            return ()
         if not self.info.one_line:
             return list(self.info_collector.prewritten.
                         intersection(self.info_collector.read))

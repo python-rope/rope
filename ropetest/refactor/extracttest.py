@@ -527,7 +527,8 @@ class ExtractMethodTest(unittest.TestCase):
         code = 'a = 1\na = 1 + a\n'
         start = code.index('\n') + 1
         end = len(code)
-        refactored = self.do_extract_method(code, start, end, 'new_f')
+        refactored = self.do_extract_method(code, start, end, 'new_f',
+                                            global_=True)
         expected = 'a = 1\n\ndef new_f(a):\n    a = 1 + a\n\nnew_f(a)\n'
         self.assertEquals(expected, refactored)
 
@@ -535,7 +536,8 @@ class ExtractMethodTest(unittest.TestCase):
         code = 'a = 1\na += 1\n'
         start = code.index('\n') + 1
         end = len(code)
-        refactored = self.do_extract_method(code, start, end, 'new_f')
+        refactored = self.do_extract_method(code, start, end, 'new_f',
+                                            global_=True)
         expected = 'a = 1\n\ndef new_f():\n    a += 1\n\nnew_f()\n'
         self.assertEquals(expected, refactored)
 
@@ -782,6 +784,14 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(code, start, end, 'g')
         expected = 'def f():\n    g()\n\ndef g():\n    try:\n        pass\n' \
                    '    except Exception:\n        pass\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extract_and_not_passing_global_functions(self):
+        code = 'def next(p):\n    return p + 1\nvar = next(1)\n'
+        start = code.rindex('next')
+        refactored = self.do_extract_method(code, start, len(code) - 1, 'two')
+        expected = 'def next(p):\n    return p + 1\n' \
+                   '\ndef two():\n    return next(1)\n\nvar = two()\n'
         self.assertEquals(expected, refactored)
 
 
