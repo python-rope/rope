@@ -186,7 +186,8 @@ class _ExtractInfo(object):
     def returned(self):
         """Does the extracted piece contain return statement"""
         if self._returned is None:
-            self._returned = _returns_last(self.extracted)
+            node = _parse_text(self.extracted)
+            self._returned = usefunction._returns_last(node)
         return self._returned
 
 
@@ -373,12 +374,15 @@ class _ExceptionalConditionChecker(object):
                                    'span multiple lines.')
 
     def multi_line_conditions(self, info):
-        code = info.source[info.region[0]:info.region[1]]
-        count = _return_count(code)
+        node = _parse_text(info.source[info.region[0]:info.region[1]])
+        count = usefunction._return_count(node)
         if count > 1:
             raise RefactoringError('Extracted piece can have only one '
                                    'return statement.')
-        if count == 1 and not _returns_last(code):
+        if usefunction._yield_count(node):
+            raise RefactoringError('Extracted piece cannot '
+                                   'have yield statements.')
+        if count == 1 and not usefunction._returns_last(node):
             raise RefactoringError('Return should be the last statement.')
         if info.region != info.lines_region:
             raise RefactoringError('Extracted piece should '
@@ -444,9 +448,8 @@ class _ExtractMethodParts(object):
         end_line = self.info.region_lines[1] - zero
         info_collector = _FunctionInformationCollector(start_line, end_line,
                                                        self.info.global_)
-        indented_body = self.info.source[self.info.scope_region[0]:
-                                         self.info.scope_region[1]]
-        body = sourceutils.fix_indentation(indented_body, 0)
+        body = self.info.source[self.info.scope_region[0]:
+                                self.info.scope_region[1]]
         node = _parse_text(body)
         ast.walk(node, info_collector)
         return info_collector
@@ -664,10 +667,9 @@ class _VariableReadsAndWritesFinder(object):
     def find_reads_and_writes(code):
         if code.strip() == '':
             return set(), set()
-        indented_code = sourceutils.fix_indentation(code, 0)
-        if isinstance(indented_body, unicode):
-            indented_body = indented_body.encode('utf-8')
-        node = _parse_text(indented_code)
+        if isinstance(code, unicode):
+            code = code.encode('utf-8')
+        node = _parse_text(code)
         visitor = _VariableReadsAndWritesFinder()
         ast.walk(node, visitor)
         return visitor.read, visitor.written
@@ -680,40 +682,6 @@ class _VariableReadsAndWritesFinder(object):
         visitor = _VariableReadsAndWritesFinder()
         ast.walk(node, visitor)
         return visitor.read
-
-
-class _ReturnOrYieldFinder(object):
-
-    def __init__(self):
-        self.returns = 0
-
-    def _Return(self, node):
-        self.returns += 1
-
-    def _Yield(self, node):
-        self.returns += 1
-
-    def _FunctionDef(self, node):
-        pass
-
-    def _ClassDef(self, node):
-        pass
-
-def _return_count(code):
-    if code.strip() == '':
-        return False
-    indented_code = sourceutils.fix_indentation(code, 0)
-    node = _parse_text(indented_code)
-    visitor = _ReturnOrYieldFinder()
-    ast.walk(node, visitor)
-    return visitor.returns
-
-def _returns_last(code):
-    if code.strip() == '':
-        return False
-    indented_code = sourceutils.fix_indentation(code, 0)
-    node = _parse_text(indented_code)
-    return node.body and isinstance(node.body[-1], ast.Return)
 
 
 class _UnmatchedBreakOrContinueFinder(object):
@@ -756,8 +724,7 @@ class _UnmatchedBreakOrContinueFinder(object):
     def has_errors(code):
         if code.strip() == '':
             return False
-        indented_code = sourceutils.fix_indentation(code, 0)
-        node = _parse_text(indented_code)
+        node = _parse_text(code)
         visitor = _UnmatchedBreakOrContinueFinder()
         ast.walk(node, visitor)
         return visitor.error
@@ -767,6 +734,7 @@ def _get_function_kind(scope):
 
 
 def _parse_text(body):
+    body = sourceutils.fix_indentation(body, 0)
     node = ast.parse(body)
     return node
 

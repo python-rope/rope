@@ -22,27 +22,17 @@ class UseFunction(object):
         self._check_returns()
 
     def _check_returns(self):
-        class CountReturns(object):
-            returns = 0
-            yields = 0
-            def __call__(self, node):
-                if isinstance(node, ast.Return):
-                    self.returns += 1
-                if isinstance(node, ast.Yield):
-                    self.yields += 1
-        counter = CountReturns()
         node = self.pyfunction.get_ast()
-        ast.call_for_nodes(node, counter, recursive=True)
-        if counter.yields:
+        if _yield_count(node):
             raise exceptions.RefactoringError('Use function should not '
                                               'be used on generators.')
-        if counter.returns > 1:
-            raise exceptions.RefactoringError(
-                'usefunction: Function has more than '
-                'one return statement.')
-        if counter.returns == 1 and not isinstance(node.body[-1], ast.Return):
-            raise exceptions.RefactoringError(
-                'usefunction: return should be the last statement.')
+        returns = _return_count(node)
+        if returns > 1:
+            raise exceptions.RefactoringError('usefunction: Function has more '
+                                              'than one return statement.')
+        if returns == 1 and not _returns_last(node):
+            raise exceptions.RefactoringError('usefunction: return should '
+                                              'be the last statement.')
 
     def get_changes(self, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
@@ -141,3 +131,42 @@ def find_temps(project, code):
         if isinstance(pyname, pynames.AssignedName):
             result.append(name)
     return result
+
+
+def _returns_last(node):
+    return node.body and isinstance(node.body[-1], ast.Return)
+
+def _yield_count(node):
+    visitor = _ReturnOrYieldFinder()
+    visitor.start_walking(node)
+    return visitor.yields
+
+def _return_count(node):
+    visitor = _ReturnOrYieldFinder()
+    visitor.start_walking(node)
+    return visitor.returns
+
+class _ReturnOrYieldFinder(object):
+
+    def __init__(self):
+        self.returns = 0
+        self.yields = 0
+
+    def _Return(self, node):
+        self.returns += 1
+
+    def _Yield(self, node):
+        self.yields += 1
+
+    def _FunctionDef(self, node):
+        pass
+
+    def _ClassDef(self, node):
+        pass
+
+    def start_walking(self, node):
+        nodes = [node]
+        if isinstance(node, ast.FunctionDef):
+            nodes = ast.get_child_nodes(node)
+        for child in nodes:
+            ast.walk(child, self)
