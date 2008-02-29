@@ -375,9 +375,11 @@ class _ExceptionalConditionChecker(object):
     def multi_line_conditions(self, info):
         code = info.source[info.region[0]:info.region[1]]
         count = _return_count(code)
-        if count > 0 and not (count == 1 and _returns_last(code)):
-            raise RefactoringError('Extracted piece should not '
-                                   'contain more than one return statements.')
+        if count > 1:
+            raise RefactoringError('Extracted piece can have only one '
+                                   'return statement.')
+        if count == 1 and not _returns_last(code):
+            raise RefactoringError('Return should be the last statement.')
         if info.region != info.lines_region:
             raise RefactoringError('Extracted piece should '
                                    'contain complete statements.')
