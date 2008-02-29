@@ -222,8 +222,8 @@ class ExtractMethodTest(unittest.TestCase):
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_containing_return(self):
-        code = "def a_func(arg):\n    return arg * 2\n"
-        start, end = self._convert_line_range_to_offset(code, 2, 2)
+        code = 'def a_func(arg):\n    if arg:\n        return arg * 2\n    return 1'
+        start, end = self._convert_line_range_to_offset(code, 2, 4)
         self.do_extract_method(code, start, end, 'new_func')
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
@@ -792,6 +792,14 @@ class ExtractMethodTest(unittest.TestCase):
         refactored = self.do_extract_method(code, start, len(code) - 1, 'two')
         expected = 'def next(p):\n    return p + 1\n' \
                    '\ndef two():\n    return next(1)\n\nvar = two()\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extracting_with_only_one_return(self):
+        code = 'def f():\n    var = 1\n    return var\n'
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        refactored = self.do_extract_method(code, start, end, 'g')
+        expected = 'def f():\n    return g()\n\n' \
+                   'def g():\n    var = 1\n    return var\n'
         self.assertEquals(expected, refactored)
 
 

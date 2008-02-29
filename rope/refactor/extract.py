@@ -125,7 +125,6 @@ class _ExtractInfo(object):
     def logical_lines(self):
         return self.pymodule.logical_lines
 
-
     def _init_scope(self):
         start_line = self.region_lines[0]
         scope = self.global_scope.get_inner_scope_for_line(start_line)
@@ -181,6 +180,14 @@ class _ExtractInfo(object):
     @property
     def extracted(self):
         return self.source[self.region[0]:self.region[1]]
+
+    _returned = None
+    @property
+    def returned(self):
+        """Does the extracted piece contain return statement"""
+        if self._returned is None:
+            self._returned = _returns_last(self.extracted)
+        return self._returned
 
 
 class _ExtractCollector(object):
@@ -350,12 +357,8 @@ class _ExceptionalConditionChecker(object):
         if end_scope != info.scope and end_scope.get_end() != end_line:
             raise RefactoringError('Bad region selected for extract method')
         try:
-            if _ReturnOrYieldFinder.does_it_return(
-                info.source[info.region[0]:info.region[1]]):
-                raise RefactoringError('Extracted piece should not '
-                                       'contain return statements.')
             if _UnmatchedBreakOrContinueFinder.has_errors(
-                info.source[info.region[0]:info.region[1]]):
+               info.source[info.region[0]:info.region[1]]):
                 raise RefactoringError('A break/continue without having a '
                                        'matching for/while loop.')
         except SyntaxError:
@@ -370,9 +373,14 @@ class _ExceptionalConditionChecker(object):
                                    'span multiple lines.')
 
     def multi_line_conditions(self, info):
+        code = info.source[info.region[0]:info.region[1]]
+        count = _return_count(code)
+        if count > 0 and not (count == 1 and _returns_last(code)):
+            raise RefactoringError('Extracted piece should not '
+                                   'contain more than one return statements.')
         if info.region != info.lines_region:
-            raise RefactoringError('Extracted piece should'
-                                   ' contain complete statements.')
+            raise RefactoringError('Extracted piece should '
+                                   'contain complete statements.')
 
     def _is_region_on_a_word(self, info):
         if info.region[0] > 0 and self._is_on_a_word(info, info.region[0] - 1) or \
@@ -504,6 +512,8 @@ class _ExtractMethodParts(object):
         call_prefix = ''
         if returns:
             call_prefix = self._get_comma_form(returns) + ' = '
+        if self.info.returned:
+            call_prefix = 'return '
         return call_prefix + self._get_function_call(args)
 
     def _find_function_arguments(self):
@@ -523,7 +533,7 @@ class _ExtractMethodParts(object):
         return list(self.info_collector.prewritten.intersection(read))
 
     def _find_function_returns(self):
-        if self.info.one_line:
+        if self.info.one_line or self.info.returned:
             return []
         return list(self.info_collector.written.
                     intersection(self.info_collector.postread))
@@ -673,18 +683,13 @@ class _VariableReadsAndWritesFinder(object):
 class _ReturnOrYieldFinder(object):
 
     def __init__(self):
-        self.returns = False
-        self.loop_count = 0
-
-    def check_loop(self):
-        if self.loop_count < 1:
-            self.error = True
+        self.returns = 0
 
     def _Return(self, node):
-        self.returns = True
+        self.returns += 1
 
     def _Yield(self, node):
-        self.returns = True
+        self.returns += 1
 
     def _FunctionDef(self, node):
         pass
@@ -692,15 +697,21 @@ class _ReturnOrYieldFinder(object):
     def _ClassDef(self, node):
         pass
 
-    @staticmethod
-    def does_it_return(code):
-        if code.strip() == '':
-            return False
-        indented_code = sourceutils.fix_indentation(code, 0)
-        node = _parse_text(indented_code)
-        visitor = _ReturnOrYieldFinder()
-        ast.walk(node, visitor)
-        return visitor.returns
+def _return_count(code):
+    if code.strip() == '':
+        return False
+    indented_code = sourceutils.fix_indentation(code, 0)
+    node = _parse_text(indented_code)
+    visitor = _ReturnOrYieldFinder()
+    ast.walk(node, visitor)
+    return visitor.returns
+
+def _returns_last(code):
+    if code.strip() == '':
+        return False
+    indented_code = sourceutils.fix_indentation(code, 0)
+    node = _parse_text(indented_code)
+    return node.body and isinstance(node.body[-1], ast.Return)
 
 
 class _UnmatchedBreakOrContinueFinder(object):
