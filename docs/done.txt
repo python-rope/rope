@@ -2,6 +2,29 @@
  Done List
 ===========
 
+- Extracting functions with only one return statement : February 29, 2008
+
+
+- Reporting errors for exceptional conditions in usefunction : February 29, 2008
+
+
+- more intelligent import handling for factory and move : February 25, 2008
+
+
+- Handling future imports in organize imports : February 20, 2008
+
+
+- Codeanalyze ignores comments when finding primaries : February 17, 2008
+
+
+- Organize import and dynload builtin modules on unix : February 16, 2008
+
+
+- Moved ImportOrganizer to rope.refactor.importutils : February 14, 2008
+
+
+- Moved ModuleToPackage to rope.refactor.topackage : February 14, 2008
+
 
 > Public Release 0.7.7 : February 13, 2008
 
