@@ -115,7 +115,7 @@ class ChangeSignature(object):
         """
         function_changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(), changers)
-        return self._change_calls(function_changer, in_hierarchy, 
+        return self._change_calls(function_changer, in_hierarchy,
                                   resources, task_handle)
 
 
@@ -213,7 +213,7 @@ class ArgumentDefaultInliner(_ArgumentChanger):
 
     def __init__(self, index):
         self.index = index
-        self.remove = remove = False
+        self.remove = False
 
     def change_definition_info(self, definition_info):
         if self.remove:
@@ -279,12 +279,14 @@ class _ChangeCallsInModule(object):
                 change_collector.add_change(start, end_parens, changed_call)
         return change_collector.get_changed()
 
-    def _get_pymodule(self):
+    @property
+    def pymodule(self):
         if self._pymodule is None:
             self._pymodule = self.pycore.resource_to_pyobject(self.resource)
         return self._pymodule
 
-    def _get_source(self):
+    @property
+    def source(self):
         if self._source is None:
             if self.resource is not None:
                 self._source = self.resource.read()
@@ -292,11 +294,8 @@ class _ChangeCallsInModule(object):
                 self._source = self.pymodule.source_code
         return self._source
 
-    def _get_lines(self):
+    @property
+    def lines(self):
         if self._lines is None:
             self._lines = self.pymodule.lines
         return self._lines
-
-    source = property(_get_source)
-    lines = property(_get_lines)
-    pymodule = property(_get_pymodule)
