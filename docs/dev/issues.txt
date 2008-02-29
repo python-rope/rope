@@ -6,10 +6,11 @@
 Unresolved Issues
 =================
 
+* merging extract and usefunction
+* caching instances of PyObject
 * moving a group of elements together
 * temps might be read after body in usefunction or extract
 * usefunction and function returns
-* using directory children in change indicator
 * usefunction on methods
 * extracted functions should be inserted before using class bodies
 * adding "referenced later" wildcard argument to restructurings?
@@ -22,7 +23,6 @@ Unresolved Issues
 * importing compressed objectdb/history data?
 * not applying all commenting mechanisms always in codeassist
 * fixing try blocks before current line in code_assist
-* searching all files when extracting a global method?
 * better tests for patchedast
 * import actions with more that one phase and filtering problems
 * handle long imports should work on filtered imports unconditionally?
