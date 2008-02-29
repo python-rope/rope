@@ -99,6 +99,24 @@ class UseFunctionTest(unittest.TestCase):
         self.assertEquals('def f(p):\n    a = p + 1\n    return a\n'
                           'var = f(p)\nprint(var)\n', self.mod1.read())
 
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_exception_when_performing_a_function_with_yield(self):
+        code = 'def func():\n    yield 1\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.index('func'))
+
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_exception_when_performing_a_function_two_returns(self):
+        code = 'def func():\n    return 1\n    return 2\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.index('func'))
+
+    @testutils.assert_raises(exceptions.RefactoringError)
+    def test_exception_when_returns_is_not_the_last_statement(self):
+        code = 'def func():\n    return 2\n    a = 1\n'
+        self.mod1.write(code)
+        user = UseFunction(self.project, self.mod1, code.index('func'))
+
 
 if __name__ == '__main__':
     unittest.main()

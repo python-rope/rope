@@ -1,4 +1,5 @@
-from rope.base import change, taskhandle, evaluate, exceptions, pyobjects, pynames
+from rope.base import (change, taskhandle, evaluate,
+                       exceptions, pyobjects, pynames, ast)
 from rope.refactor import restructure, sourceutils, similarfinder, importutils
 
 
@@ -11,14 +12,37 @@ class UseFunction(object):
         this_pymodule = project.pycore.resource_to_pyobject(resource)
         pyname = evaluate.get_pyname_at(this_pymodule, offset)
         if pyname is None:
-            raise exceptions.RefactoringError(
-                'Unresolvable name selected')
+            raise exceptions.RefactoringError('Unresolvable name selected')
         self.pyfunction = pyname.get_object()
         if not isinstance(self.pyfunction, pyobjects.PyFunction) or \
            not isinstance(self.pyfunction.parent, pyobjects.PyModule):
             raise exceptions.RefactoringError(
                 'Use function works for global functions, only.')
         self.resource = self.pyfunction.get_module().get_resource()
+        self._check_returns()
+
+    def _check_returns(self):
+        class CountReturns(object):
+            returns = 0
+            yields = 0
+            def __call__(self, node):
+                if isinstance(node, ast.Return):
+                    self.returns += 1
+                if isinstance(node, ast.Yield):
+                    self.yields += 1
+        counter = CountReturns()
+        node = self.pyfunction.get_ast()
+        ast.call_for_nodes(node, counter, recursive=True)
+        if counter.yields:
+            raise exceptions.RefactoringError('Use function should not '
+                                              'be used on generators.')
+        if counter.returns > 1:
+            raise exceptions.RefactoringError(
+                'usefunction: Function has more than '
+                'one return statement.')
+        if counter.returns == 1 and not isinstance(node.body[-1], ast.Return):
+            raise exceptions.RefactoringError(
+                'usefunction: return should be the last statement.')
 
     def get_changes(self, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
