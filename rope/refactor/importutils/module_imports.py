@@ -415,7 +415,7 @@ class _GlobalImportFinder(object):
     def get_separating_line_count(self):
         if not self.imports:
             return 0
-        return self._count_empty_lines_after(self.imports[-1].start_line)
+        return self._count_empty_lines_after(self.imports[-1].end_line - 1)
 
     def _get_text(self, start_line, end_line):
         result = []
