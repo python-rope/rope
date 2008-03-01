@@ -11,26 +11,23 @@ Features implemented so far:
   * Inline method/local variable
   * Restructuring (like converting ``${a}.f(${b})`` to
     ``${b}.g(${a})`` where ``a: type=mymod.A``)
+  * Introduce factory
   * Change method signature
-  * Introduce factory method
-  * Introduce parameter
-  * Encapsulate field
   * Transform module to package
-  * Convert local variable to field
+  * Encapsulate field
   * Replace method with method object
-  * Inline argument default value
+  * And a few others
 
 * Refactoring Features
 
   * Extracting similar statements in extract refactorings
-  * Basic implicit interfaces handling in rename and change signature
-  * Cross-project refactorings
   * Fixing imports when needed
   * Previewing refactorings
-  * Stopping refactorings
   * Undo/redo refactorings
-  * Mercurial_ support in refactorings
-  * SVN support in refactorings using pysvn_ library
+  * Stopping refactorings
+  * Cross-project refactorings
+  * Basic implicit interfaces handling in rename and change signature
+  * Mercurial_ and SVN (pysvn_ library) support in refactorings
 
 * IDE helpers
 
@@ -49,12 +46,10 @@ Features implemented so far:
 
 * Object Inference
 
-  * A static object inference approach
-  * A dynamic object inference approach
-  * Automatic SOI analysis
+  * Static and dynamic object inference approaches
   * Handling built-in container types
   * Saving object information on disk
-  * Stored object information validation
+  * Validating stored object information
 
 
 For more information see `overview.txt`_.
