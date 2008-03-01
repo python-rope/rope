@@ -14,6 +14,18 @@ Overview
 New Features
 ============
 
+* extracting functions ending with a return statement
+* handling future imports in organize imports
+* more intelligent import addition in introduce factory and move global
+
+* reporting errors for exceptional conditions in usefunction
+* fixed a few problems on windows
+* organize import and builtin dynload modules on unix
+* ignoring comments for finding primaries in codeanalyze
+
+* moved ImportOrganizer to rope.refactor.importutils
+* moved ModuleToPackage to rope.refactor.topackage
+
 
 Getting Started
 ===============
