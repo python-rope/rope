@@ -11,11 +11,4 @@ See the `unresolved issues` section of ``issues.txt`` file for more.
 > Public Release 0.8
 
 
-* Using `svn` instead of `pysvn`
-
-
-* An option to decide whether to use froms or normal imports for back
-  imports
-
-
-> Public Release 0.7.8
+> Public Release 0.7.9

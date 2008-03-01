@@ -2,6 +2,10 @@
  Done List
 ===========
 
+
+> Public Release 0.7.8 : March 1, 2008
+
+
 - Extracting functions with only one return statement : February 29, 2008
 
 
