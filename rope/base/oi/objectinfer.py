@@ -89,7 +89,10 @@ def _infer_assignment_object(assignment, pyobject):
     for index in assignment.levels:
         if isinstance(pyobject.get_type(), rope.base.builtins.Tuple):
             holdings = pyobject.get_type().get_holding_objects()
-            pyobject = holdings[min(len(holdings) - 1, index)]
+            if holdings:
+                pyobject = holdings[min(len(holdings) - 1, index)]
+            else:
+                pyobject = None
         elif isinstance(pyobject.get_type(), rope.base.builtins.List):
             pyobject = pyobject.get_type().holding
         else:

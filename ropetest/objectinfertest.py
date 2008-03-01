@@ -198,6 +198,12 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
         self.assertEquals(c1_class, c_var.get_type())
 
+    def test_empty_tuples(self):
+        mod = self.pycore.get_string_module(
+            't = ()\n'
+            'a, b = t\n')
+        a = mod['a'].get_object()
+
     def test_handling_generator_functions(self):
         mod = self.pycore.get_string_module(
             'class C(object):\n    pass\ndef f():\n    yield C()\n'
