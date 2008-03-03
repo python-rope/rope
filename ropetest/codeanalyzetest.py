@@ -500,6 +500,11 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._logical_finder(code)
         self.assertEquals((3, 3), line_finder.logical_line_in(3))
 
+    def test_logical_lines_for_lines_with_wrong_continues(self):
+        code = 'var = 1 + \\'
+        line_finder = self._logical_finder(code)
+        self.assertEquals((1, 1), line_finder.logical_line_in(1))
+
     def test_generating_line_starts(self):
         code = 'a = 1\na = 2\n\na = 3\n'
         line_finder = self._logical_finder(code)

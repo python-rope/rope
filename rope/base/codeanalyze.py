@@ -569,8 +569,8 @@ class CustomLogicalLineFinder(_CachingLogicalLineFinder):
                 while True:
                     line = self.lines.get_line(i)
                     self._analyze_line(line)
-                    if not (self.continuation 
-                            or self.open_count or self.in_string):
+                    if not (self.continuation or self.open_count or
+                            self.in_string) or i == size:
                         break
                     i += 1
                 self._ends[i] = True
@@ -670,7 +670,7 @@ class LogicalLineFinder(object):
                 last_end = end + 1
         except tokenize.TokenError, e:
             current = e.args[1][0]
-            return (last_end, current)
+            return (last_end, max(last_end, current - 1))
         return (last_end, None)
 
     def _logical_lines(self, readline):
