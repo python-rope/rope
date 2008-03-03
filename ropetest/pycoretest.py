@@ -631,6 +631,10 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod = self.pycore.get_string_module('from samplemod import *')
         self.assertTrue('_underlined_func' not in mod.get_attributes())
 
+    def test_from_import_star_imports_in_functions(self):
+        mod = self.pycore.get_string_module('def f():\n    from os import *\n')
+        mod['f'].get_object().get_scope().get_names()
+
     def test_from_package_import_mod(self):
         mod = self.pycore.get_string_module('from package import nestedmod\n')
         self.assertEquals(get_base_type('Module'),

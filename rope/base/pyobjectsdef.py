@@ -411,8 +411,9 @@ class _ScopeVisitor(object):
         imported_module = pynames.ImportedModule(self.get_module(),
                                                  node.module, level)
         if len(node.names) == 1 and node.names[0].name == '*':
-            self.owner_object.star_imports.append(
-                pynames.StarImport(imported_module))
+            if isinstance(self.owner_object, PyModule):
+                self.owner_object.star_imports.append(
+                    pynames.StarImport(imported_module))
         else:
             for imported_name in node.names:
                 imported = imported_name.name
