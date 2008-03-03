@@ -35,22 +35,14 @@ Features implemented so far:
   * Definition location
   * Get PyDoc
   * Find occurrences
-  * Import tools
-
-    * Organize imports (remove unused and duplicate imports and sort them)
-    * Change relative imports to absolute
-    * Change from imports to normal imports
-    * Expand ``from ... import *`` imports
-
+  * Organize imports (remove unused and duplicate imports and sort them)
   * Generating python elements
 
 * Object Inference
 
   * Static and dynamic object inference approaches
   * Handling built-in container types
-  * Saving object information on disk
-  * Validating stored object information
-
+  * Saving object information on disk and validating them
 
 For more information see `overview.txt`_.
 
