@@ -445,6 +445,15 @@ class PyCoreTest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         self.assertFalse('my_var' in c_class)
 
+    def test_variables_defined_in_excepts(self):
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write('try:\n    myvar1 = 1\nexcept:\n    myvar2 = 1\n'
+                  'finally:\n    myvar3 = 1\n')
+        pymod = self.pycore.resource_to_pyobject(mod)
+        self.assertTrue('myvar1' in pymod)
+        self.assertTrue('myvar2' in pymod)
+        self.assertTrue('myvar3' in pymod)
+
     def test_not_leaking_tuple_assigned_names_inside_parent_scope(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class C(object):\n    def f(self):\n'

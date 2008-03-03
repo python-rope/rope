@@ -389,6 +389,8 @@ class _ScopeVisitor(object):
                 node.name, type_node, lineno=node.lineno,
                 module=self.get_module(), eval_type=True)
             self.names.update(pynames)
+        for child in node.body:
+            ast.walk(child, self)
 
     def _Import(self, node):
         for import_pair in node.names:
