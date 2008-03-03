@@ -372,11 +372,11 @@ class _ScopeVisitor(object):
             ast.walk(child, self)
 
     def _With(self, node):
-        # ???: What if there are no optional vars?
-        names = rope.base.evaluate._get_evaluated_names(
-            node.optional_vars, node.context_expr, evaluation='.__enter__()',
-            lineno=node.lineno, module=self.get_module())
-        self.names.update(names)
+        if node.optional_vars:
+            names = rope.base.evaluate._get_evaluated_names(
+                node.optional_vars, node.context_expr, lineno=node.lineno,
+                evaluation='.__enter__()', module=self.get_module())
+            self.names.update(names)
         for child in node.body:
             ast.walk(child, self)
 

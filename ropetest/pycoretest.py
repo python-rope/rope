@@ -493,6 +493,14 @@ class PyCoreTest(unittest.TestCase):
         var = pymod['var'].get_object()
         self.assertEquals(a_class, var.get_type())
 
+    @testutils.run_only_for_25
+    def test_with_statement_with_no_vars(self):
+        code = 'with open("file"):    pass\n'
+        if sys.version_info < (2, 6, 0):
+            code = 'from __future__ import with_statement\n' + code
+        pymod = self.pycore.get_string_module(code)
+        pymod.get_attributes()
+
     def test_check_for_else_block(self):
         mod = self.pycore.get_string_module('for i in range(10):\n    pass\n'
                                             'else:\n    myvar = 1\n')
