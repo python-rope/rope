@@ -12,10 +12,16 @@ class BuiltinModule(pyobjects.AbstractModule):
         super(BuiltinModule, self).__init__()
         self.name = name
         self.attributes = None
-        self.module = __import__(name)
+        try:
+            self.module = __import__(name)
+        except:
+            self.module = None
         self._calculate_attributes()
 
     def _calculate_attributes(self):
+        if self.module is None:
+            self.attributes = {}
+            return
         attributes = {}
         for name in dir(self.module):
             obj = getattr(self.module, name)
@@ -29,7 +35,8 @@ class BuiltinModule(pyobjects.AbstractModule):
         return self.attributes
 
     def get_doc(self):
-        return self.module.__doc__
+        if self.module:
+            return self.module.__doc__
 
     def get_name(self):
         return self.name
