@@ -54,21 +54,15 @@ def starting_offset(source_code, offset):
 
 def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     """Get the pydoc"""
-    word_finder = WordRangeFinder(source_code)
-    lineno = source_code[:offset].count('\n')
-    expression = word_finder.get_primary_at(offset)
-    pymodule = _get_pymodule(project.pycore, source_code,
-                             resource, maxfixes=maxfixes)
-    scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-    element = rope.base.evaluate.get_string_result(scope, expression)
-
-    if element is None:
+    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
+    if pyname is None:
         return None
-    pyobject = element.get_object()
+    pyobject = pyname.get_object()
     return PyDocExtractor().get_doc(pyobject)
 
 
-def get_definition_location(project, source_code, offset, resource=None):
+def get_definition_location(project, source_code, offset,
+                            resource=None, maxfixes=1):
     """Return the definition location of the python name at `offset`
 
     Return a (`rope.base.resources.Resource`, lineno) tuple.  If no
@@ -77,11 +71,9 @@ def get_definition_location(project, source_code, offset, resource=None):
     location cannot be determined ``(None, None)`` is returned.
 
     """
-    pymodule = project.pycore.get_string_module(source_code, resource)
-    scope_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
-    element = scope_finder.get_pyname_at(offset)
-    if element is not None:
-        module, lineno = element.get_definition_location()
+    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
+    if pyname is not None:
+        module, lineno = pyname.get_definition_location()
         if module is not None:
             return module.get_module().get_resource(), lineno
     return (None, None)
@@ -574,6 +566,17 @@ class _Commenter(object):
                     return current_line
             current_line += 1
         return len(self.lines) - 1
+
+
+def _find_pyname_at(project, source_code, offset, resource, maxfixes):
+    word_finder = WordRangeFinder(source_code)
+    lineno = source_code[:offset].count('\n')
+    expression = word_finder.get_primary_at(offset)
+    expression = expression.replace('\\\n', ' ').replace('\n', ' ')
+    pymodule = _get_pymodule(project.pycore, source_code,
+                             resource, maxfixes=maxfixes)
+    scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+    return rope.base.evaluate.get_string_result(scope, expression)
 
 
 def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
