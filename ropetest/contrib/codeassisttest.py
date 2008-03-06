@@ -527,8 +527,7 @@ class CodeAssistTest(unittest.TestCase):
         doc = get_doc(self.project, src, src.rindex('replace') + 1)
         self.assertTrue(doc is not None)
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
-    def test_not_commenting_errors_before_offset(self):
+    def test_commenting_errors_before_offset(self):
         src = 'lsjd lsjdf\ns = "hey"\ns.replace()\n'
         doc = get_doc(self.project, src, src.rindex('replace') + 1)
 

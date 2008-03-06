@@ -54,10 +54,13 @@ def starting_offset(source_code, offset):
 
 def get_doc(project, source_code, offset, resource=None):
     """Get the pydoc"""
-    pymodule = _get_pymodule(project.pycore, source_code, resource,
-                             error_limit=offset)
-    scope_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
-    element = scope_finder.get_pyname_at(offset)
+    word_finder = WordRangeFinder(source_code)
+    lineno = source_code[:offset].count('\n')
+    expression = word_finder.get_primary_at(offset)
+    pymodule = _get_pymodule(project.pycore, source_code, resource)
+    scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+    element = rope.base.evaluate.get_string_result(scope, expression)
+
     if element is None:
         return None
     pyobject = element.get_object()
