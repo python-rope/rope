@@ -350,6 +350,16 @@ class WordRangeFinder(object):
             offset -= 1
         return offset
 
+    def find_parens_start_from_inside(self, offset, stop_searching=0):
+        opens = 1
+        while offset > stop_searching:
+            if self.source[offset] == '(':
+                break
+            if self.source[offset] != ',':
+                offset = self._find_primary_start(offset)
+            offset -= 1
+        return max(stop_searching, offset)
+
     def is_assigned_here(self, offset):
         operation = self.get_assignment_type(offset)
         operations = ('=', '-=', '+=', '*=', '/=', '%=', '**=',

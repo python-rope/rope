@@ -279,6 +279,35 @@ class WordRangeFinderTest(unittest.TestCase):
         index = code.rindex('p')
         self.assertTrue(word_finder.is_function_keyword_parameter(index))
 
+    def test_find_parens_start(self):
+        code = 'f(p)\n'
+        finder = WordRangeFinder(code)
+        self.assertEquals(1, finder.find_parens_start_from_inside(2))
+
+    def test_find_parens_start_with_multiple_entries(self):
+        code = 'myfunc(p1, p2, p3\n'
+        finder = WordRangeFinder(code)
+        self.assertEquals(code.index('('),
+                          finder.find_parens_start_from_inside(len(code) - 1))
+
+    def test_find_parens_start_with_nested_parens(self):
+        code = 'myfunc(p1, (p2, p3), p4\n'
+        finder = WordRangeFinder(code)
+        self.assertEquals(code.index('('),
+                          finder.find_parens_start_from_inside(len(code) - 1))
+
+    def test_find_parens_start_with_parens_in_strs(self):
+        code = 'myfunc(p1, "(", p4\n'
+        finder = WordRangeFinder(code)
+        self.assertEquals(code.index('('),
+                          finder.find_parens_start_from_inside(len(code) - 1))
+
+    def test_find_parens_start_with_parens_in_strs_in_multiple_lines(self):
+        code = 'myfunc  (\np1\n , \n "(" \n, \np4\n'
+        finder = WordRangeFinder(code)
+        self.assertEquals(code.index('('),
+                          finder.find_parens_start_from_inside(len(code) - 1))
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 
