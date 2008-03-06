@@ -63,21 +63,6 @@ See ropemacs_ and ropeide_.
 .. _ropeide: http://rope.sf.net/ropeide.html
 
 
-Formatting
-----------
-
-You can format python source code.  This probably needs using ASTs and
-writing them.
-
-Modules Without Source Code
----------------------------
-
-Rope cannot know anything about python C extensions and modules
-without matching source code.  Some information can be gathered using
-`inspect` module.  But it's not safe; Yet better than nothing.  This
-requires a good knowledge of `rope.base`.
-
-
 Rope Structure
 ==============
 
