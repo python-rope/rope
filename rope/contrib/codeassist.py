@@ -579,13 +579,8 @@ def _find_pyname_at(project, source_code, offset, resource, maxfixes):
     return rope.base.evaluate.get_string_result(scope, expression)
 
 
-def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
-    """Get a `PyModule`
-
-    Errors before `error_limit` offset are reported and are not never
-    fixed.
-
-    """
+def _get_pymodule(pycore, code, resource, maxfixes=1):
+    """Get a `PyModule`"""
     commenter = None
     errors = []
     tries = 0
@@ -598,12 +593,6 @@ def _get_pymodule(pycore, code, resource, maxfixes=1, error_limit=None):
                 tries += 1
                 if commenter is None:
                     commenter = _Commenter(code.split('\n'))
-                if error_limit is not None:
-                    offset = 0
-                    for line in commenter.lines[:e.lineno - 1]:
-                        offset += len(line) + 1
-                    if offset <= error_limit:
-                        raise
                 commenter.comment(e.lineno)
                 code = '\n'.join(commenter.lines)
                 errors.append('  * line %s: %s ... fixed' % (e.lineno,
