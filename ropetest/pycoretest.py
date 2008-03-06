@@ -1071,7 +1071,7 @@ class BuiltinModulesTest(unittest.TestCase):
 
     def setUp(self):
         super(BuiltinModulesTest, self).setUp()
-        self.project = testutils.sample_project()
+        self.project = testutils.sample_project(extension_modules=['time'])
         self.pycore = self.project.get_pycore()
         self.mod = testutils.create_module(self.project, 'mod')
 
@@ -1080,9 +1080,14 @@ class BuiltinModulesTest(unittest.TestCase):
         super(BuiltinModulesTest, self).tearDown()
 
     def test_simple_case(self):
+        self.mod.write('import time')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertTrue('time' in pymod['time'].get_object())
+
+    def test_ignored_extensions(self):
         self.mod.write('import os')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('rename' in pymod['os'].get_object())
+        self.assertTrue('rename' not in pymod['os'].get_object())
 
 
 def suite():

@@ -66,6 +66,10 @@ def set_prefs(prefs):
     # `rope.base.exceptions.ModuleSyntaxError` exception.
     prefs['ignore_syntax_errors'] = False
 
+    # Builtin and c-extension modules that are allowed to be inspected
+    # by rope.
+    prefs['extension_modules'] = ['posix']
+
 
 def project_opened(project):
     """This function is called after the project is opened"""

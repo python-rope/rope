@@ -78,11 +78,9 @@ class PyCore(object):
         return self.resource_to_pyobject(module)
 
     def _builtin_module(self, name):
-        try:
-            __import__(name)
-        except ImportError:
-            return None
-        return builtins.BuiltinModule(name)
+        extensions = self.project.get_prefs().get('extension_modules', [])
+        if name in extensions:
+            return builtins.BuiltinModule(name)
 
     def get_relative_module(self, name, current_folder, level):
         module = self.find_relative_module(name, current_folder, level)
