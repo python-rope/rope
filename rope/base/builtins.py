@@ -6,6 +6,35 @@ import rope.base.evaluate
 from rope.base import pynames, pyobjects
 
 
+class BuiltinModule(pyobjects.AbstractModule):
+
+    def __init__(self, name):
+        super(BuiltinModule, self).__init__()
+        self.name = name
+        self.attributes = None
+        self.module = __import__(name)
+        self._calculate_attributes()
+
+    def _calculate_attributes(self):
+        attributes = {}
+        for name in dir(self.module):
+            obj = getattr(self.module, name)
+            if inspect.isclass(obj):
+                attributes[name] = BuiltinName(BuiltinClass(obj, {}))
+            else:
+                attributes[name] = BuiltinName(BuiltinFunction(builtin=obj))
+        self.attributes = attributes
+
+    def get_attributes(self):
+        return self.attributes
+
+    def get_doc(self):
+        return self.module.__doc__
+
+    def get_name(self):
+        return self.name
+
+
 class BuiltinClass(pyobjects.AbstractClass):
 
     def __init__(self, builtin, attributes):

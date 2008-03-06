@@ -11,6 +11,7 @@ from rope.base.exceptions import ModuleNotFoundError
 from rope.base.pyobjectsdef import PyModule, PyPackage, PyClass
 import rope.base.resources
 import rope.base.resourceobserver
+from rope.base import builtins
 
 
 class PyCore(object):
@@ -70,8 +71,18 @@ class PyCore(object):
         """Returns a `PyObject` if the module was found."""
         module = self.find_module(name, current_folder)
         if module is None:
-            raise ModuleNotFoundError('Module %s not found' % name)
+            module = self._builtin_module(name)
+            if module is None:
+                raise ModuleNotFoundError('Module %s not found' % name)
+            return module
         return self.resource_to_pyobject(module)
+
+    def _builtin_module(self, name):
+        try:
+            __import__(name)
+        except ImportError:
+            return None
+        return builtins.BuiltinModule(name)
 
     def get_relative_module(self, name, current_folder, level):
         module = self.find_relative_module(name, current_folder, level)
