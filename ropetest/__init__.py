@@ -22,7 +22,7 @@ def suite():
     result.addTests(ropetest.objectdbtest.suite())
     result.addTests(ropetest.advanced_oi_test.suite())
     result.addTests(ropetest.runmodtest.suite())
-    result.addTests(unittest.makeSuite(ropetest.builtinstest.BuiltinTypesTest))
+    result.addTests(ropetest.builtinstest.suite())
     result.addTests(ropetest.historytest.suite())
     return result
 

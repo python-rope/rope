@@ -1067,40 +1067,6 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
         self.assertTrue(self.project.pycore.is_python_file(myscript))
 
 
-class BuiltinModulesTest(unittest.TestCase):
-
-    def setUp(self):
-        super(BuiltinModulesTest, self).setUp()
-        self.project = testutils.sample_project(
-            extension_modules=['time', 'invalid_module'])
-        self.pycore = self.project.get_pycore()
-        self.mod = testutils.create_module(self.project, 'mod')
-
-    def tearDown(self):
-        testutils.remove_project(self.project)
-        super(BuiltinModulesTest, self).tearDown()
-
-    def test_simple_case(self):
-        self.mod.write('import time')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('time' in pymod['time'].get_object())
-
-    def test_ignored_extensions(self):
-        self.mod.write('import os')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('rename' not in pymod['os'].get_object())
-
-    def test_ignored_extensions(self):
-        self.mod.write('import os')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
-        self.assertTrue('rename' not in pymod['os'].get_object())
-
-    def test_nonexistent_modules(self):
-        self.mod.write('import invalid_module')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
-        pymod['invalid_module'].get_object()
-
-
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(PyCoreTest))
@@ -1108,7 +1074,6 @@ def suite():
     result.addTests(unittest.makeSuite(ClassHierarchyTest))
     result.addTests(unittest.makeSuite(TextChangeDetectorTest))
     result.addTests(unittest.makeSuite(PyCoreProjectConfigsTest))
-    result.addTests(unittest.makeSuite(BuiltinModulesTest))
     return result
 
 
