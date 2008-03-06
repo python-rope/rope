@@ -12,26 +12,10 @@ class BuiltinModule(pyobjects.AbstractModule):
         super(BuiltinModule, self).__init__()
         self.name = name
         self.attributes = None
-        try:
-            self.module = __import__(name)
-        except:
-            self.module = None
-        self._calculate_attributes()
-
-    def _calculate_attributes(self):
-        if self.module is None:
-            self.attributes = {}
-            return
-        attributes = {}
-        for name in dir(self.module):
-            obj = getattr(self.module, name)
-            if inspect.isclass(obj):
-                attributes[name] = BuiltinName(BuiltinClass(obj, {}))
-            else:
-                attributes[name] = BuiltinName(BuiltinFunction(builtin=obj))
-        self.attributes = attributes
 
     def get_attributes(self):
+        if self.attributes is None:
+            self._calculate_attributes()
         return self.attributes
 
     def get_doc(self):
@@ -40,6 +24,29 @@ class BuiltinModule(pyobjects.AbstractModule):
 
     def get_name(self):
         return self.name
+
+    def _calculate_attributes(self):
+        self.attributes = {}
+        if self.module is None:
+            return
+        for name in dir(self.module):
+            obj = getattr(self.module, name)
+            if inspect.isclass(obj):
+                self.attributes[name] = BuiltinName(BuiltinClass(obj, {}))
+            else:
+                self.attributes[name] = BuiltinName(BuiltinFunction(builtin=obj))
+
+    _loaded = False
+    _module = None
+    @property
+    def module(self):
+        if not self._loaded:
+            self._loaded = True
+            try:
+                self._module = __import__(self.name)
+            except ImportError:
+                self._module = None
+        return self._module
 
 
 class BuiltinClass(pyobjects.AbstractClass):
