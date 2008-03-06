@@ -142,10 +142,9 @@ class GlobalScope(Scope):
             self.scope_finder = _HoldingScopeFinder(self.pyobject)
         return self.scope_finder
 
-    def _get_builtin_names(self):
-        return rope.base.builtins.builtins
-
-    builtin_names = property(_get_builtin_names)
+    @property
+    def builtin_names(self):
+        return rope.base.builtins.builtins.get_attributes()
 
 
 class FunctionScope(Scope):

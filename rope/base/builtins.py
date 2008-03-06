@@ -1,5 +1,4 @@
 """This module trys to support builtin types and functions."""
-import __builtin__
 import inspect
 
 import rope.base.evaluate
@@ -8,9 +7,10 @@ from rope.base import pynames, pyobjects
 
 class BuiltinModule(pyobjects.AbstractModule):
 
-    def __init__(self, name):
+    def __init__(self, name, initial={}):
         super(BuiltinModule, self).__init__()
         self.name = name
+        self.initial = initial
         self.attributes = None
 
     def get_attributes(self):
@@ -30,11 +30,14 @@ class BuiltinModule(pyobjects.AbstractModule):
         if self.module is None:
             return
         for name in dir(self.module):
+            if name in self.initial or name == 'None':
+                continue
             obj = getattr(self.module, name)
             if inspect.isclass(obj):
                 self.attributes[name] = BuiltinName(BuiltinClass(obj, {}))
             else:
                 self.attributes[name] = BuiltinName(BuiltinFunction(builtin=obj))
+        self.attributes.update(self.initial)
 
     _loaded = False
     _module = None
@@ -674,7 +677,7 @@ def _input_function(args):
     return get_str()
 
 
-builtins = {
+_initial_builtins = {
     'list': BuiltinName(get_list_type()),
     'dict': BuiltinName(get_dict_type()),
     'tuple': BuiltinName(get_tuple_type()),
@@ -693,13 +696,7 @@ builtins = {
     'object': BuiltinName(BuiltinObject()),
     'type': BuiltinName(BuiltinType()),
     'iter': BuiltinName(BuiltinFunction(function=_iter_function, builtin=iter)),
-    'raw_input': BuiltinName(BuiltinFunction(function=_input_function, builtin=raw_input))}
+    'raw_input': BuiltinName(BuiltinFunction(function=_input_function, builtin=raw_input)),
+    }
 
-
-for name in dir(__builtin__):
-    if name not in builtins and name not in ['None']:
-        obj = getattr(__builtin__, name)
-        if inspect.isclass(obj):
-            builtins[name] = BuiltinName(BuiltinClass(obj, {}))
-        else:
-            builtins[name] = BuiltinName(BuiltinFunction(builtin=obj))
+builtins = BuiltinModule('__builtin__', _initial_builtins)

@@ -22,6 +22,7 @@ class PyCore(object):
         self.cache_observers = []
         self.classes_cache = _ClassesCache(self)
         self.module_cache = _ModuleCache(self)
+        self.extension_cache = _ExtensionCache(self)
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self._init_python_files()
         self._init_automatic_soi()
@@ -78,9 +79,7 @@ class PyCore(object):
         return self.resource_to_pyobject(module)
 
     def _builtin_module(self, name):
-        extensions = self.project.get_prefs().get('extension_modules', [])
-        if name in extensions:
-            return builtins.BuiltinModule(name)
+        return self.extension_cache.get_pymodule(name)
 
     def get_relative_module(self, name, current_folder, level):
         module = self.find_relative_module(name, current_folder, level)
@@ -322,6 +321,20 @@ class _ModuleCache(object):
 
     def __str__(self):
         return 'PyCore caches %d PyModules\n' % len(self.module_map)
+
+
+class _ExtensionCache(object):
+
+    def __init__(self, pycore):
+        self.extensions = {}
+        self.allowed = pycore.project.get_prefs().get('extension_modules', [])
+
+    def get_pymodule(self, name):
+        if name == '__builtin__':
+            return builtins.builtins
+        if name not in self.extensions and name in self.allowed:
+            self.extensions[name] = builtins.BuiltinModule(name)
+        return self.extensions.get(name)
 
 
 class _ClassesCache(object):
