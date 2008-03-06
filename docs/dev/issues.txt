@@ -33,8 +33,6 @@ Unresolved Issues
 * evaluate function parameter defaults in staticoi?
 * recursive soi; go where the calls go with limited depth
 * saving diffs instead of old contents in ChangeContents?
-* python c extensions
-* supporting modules without source code and zip imports
 * handling tuple parameters
 * extract class
 * analyzing function decorators
@@ -43,7 +41,6 @@ Unresolved Issues
 * lambdas as functions; consider their parameters
 * renaming similarly named variables
 * handling the return type of ``yield`` keyword
-* extracting methods from pieces with only one return/yield statement
 * not writing unchanged objectdb and history?
 
 
