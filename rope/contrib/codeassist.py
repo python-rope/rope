@@ -52,12 +52,13 @@ def starting_offset(source_code, offset):
     return starting_offset
 
 
-def get_doc(project, source_code, offset, resource=None):
+def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     """Get the pydoc"""
     word_finder = WordRangeFinder(source_code)
     lineno = source_code[:offset].count('\n')
     expression = word_finder.get_primary_at(offset)
-    pymodule = _get_pymodule(project.pycore, source_code, resource)
+    pymodule = _get_pymodule(project.pycore, source_code,
+                             resource, maxfixes=maxfixes)
     scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
     element = rope.base.evaluate.get_string_result(scope, expression)
 
