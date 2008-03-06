@@ -66,9 +66,12 @@ def set_prefs(prefs):
     # `rope.base.exceptions.ModuleSyntaxError` exception.
     prefs['ignore_syntax_errors'] = False
 
-    # Builtin and c-extension modules that are allowed to be inspected
-    # by rope.
-    prefs['extension_modules'] = ['posix']
+    # Builtin and c-extension modules that are allowed to be imported
+    # and inspected by rope.
+    prefs['extension_modules'] = [
+        'posix', 'nt', 'array', 'binascii', 'cmath', 'bz2', 'collections',
+        'cPickle', 'crypt', 'cStringIO', 'datetime', 'grp',
+        'itertools', 'math', 'mmap', 'operator', 'select', 'zlib']
 
 
 def project_opened(project):
