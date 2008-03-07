@@ -58,7 +58,7 @@ class PyCoreTest(unittest.TestCase):
         mod.write('class SampleClass(object):\n    def sample_method(self):\n        pass\n')
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element['SampleClass'].get_object()
-        self.assertEquals(1, len(sample_class.get_attributes()))
+        self.assertTrue('sample_method' in sample_class)
         method = sample_class['sample_method'].get_object()
         self.assertEquals(get_base_type('Function'), method.get_type())
 
