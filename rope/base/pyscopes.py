@@ -13,8 +13,12 @@ class Scope(object):
         self.scopes = None
 
     def get_names(self):
-        """Return the names defined in this scope"""
+        """Return the names defined or imported in this scope"""
         return self.pyobject.get_attributes()
+
+    def get_defined_names(self):
+        """Return the names defined in this scope"""
+        return self.pyobject._get_structural_attributes()
 
     def get_name(self, name):
         """Return name `PyName` defined in this scope"""
@@ -312,6 +316,9 @@ class TemporaryScope(Scope):
         self.names = names
 
     def get_names(self):
+        return self.names
+
+    def get_defined_names(self):
         return self.names
 
     def _create_scopes(self):

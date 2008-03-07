@@ -43,7 +43,7 @@ class PyCoreScopesTest(unittest.TestCase):
             '    def f(self):\n        var = 10\n')
         self.assertEquals(1, len(scope.get_scopes()))
         sample_class_scope = scope.get_scopes()[0]
-        self.assertEquals(1, len(sample_class_scope.get_names()))
+        self.assertTrue('f' in sample_class_scope)
         self.assertEquals(1, len(sample_class_scope.get_scopes()))
         f_in_class = sample_class_scope.get_scopes()[0]
         self.assertTrue('var' in f_in_class)
@@ -160,7 +160,7 @@ class PyCoreScopesTest(unittest.TestCase):
             '    def a_func(self):\n        pass')
         self.assertEquals(1, len(scope.get_scopes()))
         c_scope = scope.get_scopes()[0]
-        self.assertEquals(2, len(c_scope.get_names()))
+        self.assertTrue('an_attr'in c_scope.get_names())
         self.assertTrue(c_scope.lookup('an_attr') is not None)
         f_in_c = c_scope.get_scopes()[0]
         self.assertTrue(f_in_c.lookup('an_attr') is None)
@@ -204,6 +204,25 @@ class PyCoreScopesTest(unittest.TestCase):
         c_scope = scope.get_scopes()[0]
         f_in_c = c_scope.get_scopes()[0]
         self.assertEquals(f_in_c, scope.get_inner_scope_for_line(7))
+
+    def test_getting_defined_names_for_classes(self):
+        scope = self.pycore.get_string_scope(
+            'class A(object):\n    def a(self):\n        pass\n'
+            'class B(A):\n    def b(self):\n        pass\n')
+        a_scope = scope['A'].get_object().get_scope()
+        b_scope = scope['B'].get_object().get_scope()
+        self.assertTrue('a' in b_scope.get_names())
+        self.assertTrue('b' in b_scope.get_names())
+        self.assertTrue('a' not in b_scope.get_defined_names())
+        self.assertTrue('b' in b_scope.get_defined_names())
+
+    def test_getting_defined_names_for_modules(self):
+        scope = self.pycore.get_string_scope(
+            'class A(object):\n    pass\n')
+        self.assertTrue('open' in scope.get_names())
+        self.assertTrue('A' in scope.get_names())
+        self.assertTrue('open' not in scope.get_defined_names())
+        self.assertTrue('A' in scope.get_defined_names())
 
 
 def suite():
