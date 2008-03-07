@@ -783,6 +783,13 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = get_doc(self.project, code, len(code) - 2, mod2)
         self.assertTrue(result.endswith('hey'))
 
+    def test_get_doc_on_from_import_module(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('"""mod1 docs"""\nvar = 1\n')
+        code = 'from mod1 import var\n'
+        result = get_doc(self.project, code, code.index('mod1'))
+        result.index('mod1 docs')
+
     def test_finding_occurrences(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('a_var = 1\n')
