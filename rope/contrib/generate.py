@@ -266,7 +266,7 @@ class _GenerationInfo(object):
     def element_already_exists(self):
         if self.pyname is None or isinstance(self.pyname, pynames.UnboundName):
             return False
-        return True
+        return self.get_name() in self.goal_scope.get_defined_names()
 
     def get_name(self):
         return codeanalyze.get_name_at(self.resource, self.offset)
@@ -290,9 +290,7 @@ class _FunctionGenerationInfo(_GenerationInfo):
     def element_already_exists(self):
         if self.pyname is None or isinstance(self.pyname, pynames.UnboundName):
             return False
-        if self.get_name() not in self.goal_scope:
-            return False
-        return True
+        return self.get_name() in self.goal_scope.get_defined_names()
 
     def is_static_method(self):
         return self.primary is not None and \
