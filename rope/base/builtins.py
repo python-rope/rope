@@ -215,8 +215,6 @@ class List(BuiltinClass):
 
         collector('__iter__', function=self._iterator_get)
         collector('__new__', function=self._new_list)
-        for method in ['count', 'index', 'remove', 'reverse', 'sort']:
-            collector(method)
 
         # Adding methods
         collector('append', function=self._list_add, argnames=['self', 'value'])
@@ -276,8 +274,6 @@ class Dict(BuiltinClass):
         item = get_tuple(self.keys, self.values)
         collector = _AttributeCollector(dict)
         collector('__new__', function=self._new_dict)
-        for method in ['clear', 'setdefault']:
-            collector(method)
         collector('__setitem__', function=self._dict_add)
         collector('popitem', function=self._item_get)
         collector('pop', function=self._value_get)
@@ -401,10 +397,6 @@ class Set(BuiltinClass):
                         'symmetric_difference', 'union']
         for method in self_methods:
             collector(method, function=self._self_get)
-        normal_methods = ['discard', 'remove',
-                          'issuperset', 'issubset', 'clear']
-        for method in normal_methods:
-            collector(method)
         collector('add', function=self._set_add)
         collector('update', function=self._self_set)
         collector('update', function=self._self_set)
@@ -466,10 +458,6 @@ class Str(BuiltinClass):
         for method in ['rsplit', 'split', 'splitlines']:
             collector(method, get_list(self_object))
 
-        for method in ['count', 'endswith', 'find', 'index', 'isalnum',
-                       'isalpha', 'isdigit', 'islower', 'isspace', 'istitle',
-                       'isupper', 'rfind', 'rindex', 'startswith']:
-            collector(method)
         super(Str, self).__init__(str, collector.attributes)
 
     def get_doc(self):
