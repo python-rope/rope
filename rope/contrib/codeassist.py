@@ -220,14 +220,14 @@ def sorted_proposals(proposals, kindpref=None, typepref=None):
 
     Return a sorted list of the given `CodeAssistProposal`\s.
 
-    `typepref` can be a list of proposal kinds.  Defaults to ``['local',
-    'parameter_keyword', 'global', 'attribute', 'template', 'builtin',
-    'keyword']``.
+    `kindpref` can be a list of proposal kinds.  Defaults to
+    ``['local', 'parameter_keyword', 'global', 'attribute',
+    'template', 'keyword']``.
 
     `typepref` can be a list of proposal types.  Defaults to
     ``['class', 'function', 'variable', 'parameter', 'imported',
-    None]``.  (`None` stands for completions with no type like
-    keywords.)
+    'builtin', None]``.  (`None` stands for completions with no type
+    like keywords.)
 
     """
     sorter = _ProposalSorter(proposals, kindpref, typepref)
@@ -338,11 +338,9 @@ class _PythonCodeAssist(object):
         for name, pyname in names.items():
             if name.startswith(self.starting):
                 kind = 'local'
-                if isinstance(pyname, builtins.BuiltinName):
-                    kind = 'builtin'
-                elif scope.get_kind() == 'Module':
+                if scope.get_kind() == 'Module':
                     kind = 'global'
-                if lineno is None or self.later_locals or kind == 'builtin' or \
+                if lineno is None or self.later_locals or \
                    not self._is_defined_after(scope, pyname, lineno):
                     result[name] = CompletionProposal(
                         name, kind, self._get_pyname_type(pyname))
@@ -461,11 +459,11 @@ class _ProposalSorter(object):
         self.proposals = code_assist_proposals
         if kindpref is None:
             kindpref = ['local', 'parameter_keyword', 'global', 'attribute',
-                        'template', 'builtin', 'keyword']
+                        'template', 'keyword']
         self.kindpref = kindpref
         if typepref is None:
             typepref = ['class', 'function', 'variable',
-                        'parameter', 'imported', None]
+                        'parameter', 'imported', 'builtin', None]
         self.typerank = dict((type, index)
                               for index, type in enumerate(typepref))
 

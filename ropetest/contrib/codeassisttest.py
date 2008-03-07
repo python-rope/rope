@@ -116,13 +116,13 @@ class CodeAssistTest(unittest.TestCase):
     def test_including_matching_builtins_types(self):
         code = 'my_var = Excep'
         result = self._assist(code)
-        self.assert_completion_in_result('Exception', 'builtin', result)
-        self.assert_completion_not_in_result('zip', 'builtin', result)
+        self.assert_completion_in_result('Exception', 'global', result)
+        self.assert_completion_not_in_result('zip', 'global', result)
 
     def test_including_matching_builtins_functions(self):
         code = 'my_var = zi'
         result = self._assist(code)
-        self.assert_completion_in_result('zip', 'builtin', result)
+        self.assert_completion_in_result('zip', 'global', result)
 
     def test_including_keywords(self):
         code = 'fo'
@@ -580,7 +580,7 @@ class CodeAssistTest(unittest.TestCase):
     def test_completing_excepts_in_uncomplete_try_blocks(self):
         code = 'try:\n    pass\nexcept Exc'
         result = self._assist(code)
-        self.assert_completion_in_result('Exception', 'builtin', result)
+        self.assert_completion_in_result('Exception', 'global', result)
 
     def test_nested_blocks(self):
         code = 'a_var = 10\ntry:\n    try:\n        a_v'
