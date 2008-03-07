@@ -33,10 +33,14 @@ class BuiltinModule(pyobjects.AbstractModule):
             if name in self.initial or name == 'None':
                 continue
             obj = getattr(self.module, name)
+            pyobject = None
             if inspect.isclass(obj):
-                self.attributes[name] = BuiltinName(BuiltinClass(obj, {}))
+                pyobject = BuiltinClass(obj, {})
+            elif inspect.isroutine(obj):
+                pyobject = BuiltinFunction(builtin=obj)
             else:
-                self.attributes[name] = BuiltinName(BuiltinFunction(builtin=obj))
+                pyobject = pyobjects.get_unknown()
+            self.attributes[name] = BuiltinName(pyobject)
         self.attributes.update(self.initial)
 
     _loaded = False
