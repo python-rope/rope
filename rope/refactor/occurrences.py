@@ -30,7 +30,10 @@ class FilteredFinder(object):
             return False
         if not self.imports and occurrence.is_in_import_statement():
             return False
-        new_pyname = occurrence.get_pyname()
+        try:
+            new_pyname = occurrence.get_pyname()
+        except evaluate.BadIdentifierError:
+            return False
         for pyname in self.pynames:
             if same_pyname(pyname, new_pyname):
                 return True
