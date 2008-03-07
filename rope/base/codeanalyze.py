@@ -342,18 +342,6 @@ class WordRangeFinder(object):
         opens = 1
         while offset > stop_searching:
             if self.source[offset] == '(':
-                opens -= 1
-            if opens == 0:
-                break
-            if self.source[offset] == ')':
-                opens += 1
-            offset -= 1
-        return offset
-
-    def find_parens_start_from_inside(self, offset, stop_searching=0):
-        opens = 1
-        while offset > stop_searching:
-            if self.source[offset] == '(':
                 break
             if self.source[offset] != ',':
                 offset = self._find_primary_start(offset)
