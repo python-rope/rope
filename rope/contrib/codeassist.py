@@ -375,6 +375,8 @@ class _PythonCodeAssist(object):
                 return True
 
     def _get_pyname_type(self, pyname):
+        if isinstance(pyname, builtins.BuiltinName):
+            return 'builtin'
         if isinstance(pyname, (pynames.AssignedName, pynames.UnboundName)):
             return 'variable'
         if isinstance(pyname, pynames.ImportedName) or \
