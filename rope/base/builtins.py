@@ -27,20 +27,8 @@ class BuiltinModule(pyobjects.AbstractModule):
 
     def _calculate_attributes(self):
         self.attributes = {}
-        if self.module is None:
-            return
-        for name in dir(self.module):
-            if name in self.initial or name == 'None':
-                continue
-            obj = getattr(self.module, name)
-            pyobject = None
-            if inspect.isclass(obj):
-                pyobject = BuiltinClass(obj, {})
-            elif inspect.isroutine(obj):
-                pyobject = BuiltinFunction(builtin=obj)
-            else:
-                pyobject = pyobjects.get_unknown()
-            self.attributes[name] = BuiltinName(pyobject)
+        if self.module is not None:
+            self.attributes = _object_attributes(self.module)
         self.attributes.update(self.initial)
 
     _loaded = False
@@ -56,14 +44,34 @@ class BuiltinModule(pyobjects.AbstractModule):
         return self._module
 
 
+def _object_attributes(obj):
+    attributes = {}
+    for name in dir(obj):
+        if name == 'None':
+            continue
+        child = getattr(obj, name)
+        pyobject = None
+        if inspect.isclass(child):
+            pyobject = BuiltinClass(child, {})
+        elif inspect.isroutine(child):
+            pyobject = BuiltinFunction(builtin=child)
+        else:
+            pyobject = pyobjects.get_unknown()
+        attributes[name] = BuiltinName(pyobject)
+    return attributes
+
 class BuiltinClass(pyobjects.AbstractClass):
 
     def __init__(self, builtin, attributes):
         super(BuiltinClass, self).__init__()
         self.builtin = builtin
-        self.attributes = attributes
+        self.initial = attributes
+        self.attributes = None
 
     def get_attributes(self):
+        if self.attributes is None:
+            self.attributes = _object_attributes(self.builtin)
+            self.attributes.update(self.initial)
         return self.attributes
 
     def get_doc(self):
