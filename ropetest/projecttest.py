@@ -900,6 +900,12 @@ class RopeFolderTest(unittest.TestCase):
         myfile.create()
         self.assertEquals('', fscommands.log)
 
+    def test_ignored_resources_and_prefixes(self):
+        self.project = testutils.sample_project(
+            ignored_resources=['.hg'])
+        myfile = self.project.root.create_file('.hgignore')
+        self.assertFalse(self.project.is_ignored(myfile))
+
     def test_loading_config_dot_py(self):
         self.project = testutils.sample_project(ropefolder='.ropeproject')
         config = self.project.get_file('.ropeproject/config.py')

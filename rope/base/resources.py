@@ -201,7 +201,7 @@ class _ResourceMatcher(object):
         re_pattern = pattern.replace('.', '\\.').\
                      replace('*', '[^/]*').replace('?', '[^/]').\
                      replace('//', '/(.*/)?')
-        re_pattern = '(.*/)?' + re_pattern + '(/.*)?'
+        re_pattern = '^(.*/)?' + re_pattern + '(/.*)?$'
         self.compiled_patterns.append(re.compile(re_pattern))
 
     def does_match(self, resource):
