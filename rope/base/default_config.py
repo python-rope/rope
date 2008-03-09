@@ -69,9 +69,10 @@ def set_prefs(prefs):
     # Builtin and c-extension modules that are allowed to be imported
     # and inspected by rope.
     prefs['extension_modules'] = [
-        'posix', 'nt', 'array', 'binascii', 'cmath', 'bz2', 'collections',
-        'cPickle', 'crypt', 'cStringIO', 'datetime', 'grp',
-        'itertools', 'math', 'mmap', 'operator', 'select', 'zlib']
+        'array', 'binascii', 'cmath', 'bz2', 'collections', 'cPickle', 'crypt',
+        'cStringIO', 'datetime', 'errno', 'exceptions', 'gc', 'grp', 'imp',
+        'itertools', 'marshal', 'math', 'mmap', 'nt', 'operator', 'posix',
+        'pwd', 'select', 'signal', 'sys', 'thread', 'zlib', 'zipimport']
 
 
 def project_opened(project):
