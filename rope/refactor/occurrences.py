@@ -3,29 +3,53 @@ import re
 from rope.base import pynames, pyobjects, codeanalyze, evaluate
 
 
-class FilteredFinder(object):
-    """For finding occurrences of a name"""
+class Finder(object):
+    """For finding occurrences of a name
 
-    def __init__(self, pycore, name, pynames, only_calls=False,
-                 imports=True, unsure=None, docs=False):
+    The constructor takes a `filters` argument.  It should be a list
+    of functions that take a single argument.  For each possible
+    occurrence, these functions are called in order with the an
+    instance of `Occurrence`:
+
+      * If it returns `None` other filters are tried.
+      * If it returns `True`, the occurrence will be a match.
+      * If it returns `False`, the occurrence will be skipped.
+      * If all of the filters return `None`, it is skipped also.
+
+    """
+
+    def __init__(self, pycore, name, filters=[lambda o: True], docs=False):
         self.pycore = pycore
-        self.pynames = pynames
         self.name = name
-        self.only_calls = only_calls
-        self.imports = imports
-        self.unsure = unsure
-        self.occurrence_finder = _TextualFinder(name, docs=docs)
+        self.filters = filters
+        self._textual_finder = _TextualFinder(name, docs=docs)
 
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
         tools = _OccurrenceToolsCreator(self.pycore, resource=resource,
                                         pymodule=pymodule)
-        for offset in self.occurrence_finder.find_offsets(tools.source_code):
+        for offset in self._textual_finder.find_offsets(tools.source_code):
             occurrence = Occurrence(tools, offset)
-            if self._is_a_match(occurrence):
-                yield occurrence
+            for filter in self.filters:
+                result = filter(occurrence)
+                if result is None:
+                    continue
+                if result:
+                    yield occurrence
+                else:
+                    break
 
-    def _is_a_match(self, occurrence):
+
+class PyNameFilter(object):
+    """For finding occurrences of a name"""
+
+    def __init__(self, pynames, only_calls=False, imports=True, unsure=None):
+        self.pynames = pynames
+        self.only_calls = only_calls
+        self.imports = imports
+        self.unsure = unsure
+
+    def __call__(self, occurrence):
         if self.only_calls and not occurrence.is_called():
             return False
         if not self.imports and occurrence.is_in_import_statement():
@@ -42,6 +66,19 @@ class FilteredFinder(object):
                 occurrence._unsure = self.unsure(occurrence)
                 return occurrence._unsure
         return False
+
+
+class FilteredFinder(object):
+    """For finding occurrences of a name"""
+
+    def __init__(self, pycore, name, pynames, only_calls=False,
+                 imports=True, unsure=None, docs=False):
+        filters = [PyNameFilter(pynames, only_calls, imports, unsure)]
+        self.finder = Finder(pycore, name, filters=filters, docs=docs)
+
+    def find_occurrences(self, resource=None, pymodule=None):
+        """Generate `Occurrence` instances"""
+        return self.finder.find_occurrences(resource, pymodule)
 
 
 class Occurrence(object):
