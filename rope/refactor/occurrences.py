@@ -43,17 +43,11 @@ class Finder(object):
 class PyNameFilter(object):
     """For finding occurrences of a name"""
 
-    def __init__(self, pynames, only_calls=False, imports=True, unsure=None):
+    def __init__(self, pynames, unsure=None):
         self.pynames = pynames
-        self.only_calls = only_calls
-        self.imports = imports
         self.unsure = unsure
 
     def __call__(self, occurrence):
-        if self.only_calls and not occurrence.is_called():
-            return False
-        if not self.imports and occurrence.is_in_import_statement():
-            return False
         try:
             new_pyname = occurrence.get_pyname()
         except evaluate.BadIdentifierError:
@@ -68,12 +62,31 @@ class PyNameFilter(object):
         return False
 
 
+class NoImportsFilter(object):
+
+    def __call__(self, occurrence):
+        if occurrence.is_in_import_statement():
+            return False
+
+
+class CallsFilter(object):
+
+    def __call__(self, occurrence):
+        if not occurrence.is_called():
+            return False
+
+
 class FilteredFinder(object):
     """For finding occurrences of a name"""
 
     def __init__(self, pycore, name, pynames, only_calls=False,
                  imports=True, unsure=None, docs=False):
-        filters = [PyNameFilter(pynames, only_calls, imports, unsure)]
+        filters = []
+        if only_calls:
+            filters.append(CallsFilter())
+        if not imports:
+            filters.append(NoImportsFilter())
+        filters.append(PyNameFilter(pynames, unsure))
         self.finder = Finder(pycore, name, filters=filters, docs=docs)
 
     def find_occurrences(self, resource=None, pymodule=None):
