@@ -332,6 +332,10 @@ parameter called ``task_handle``.  You can pass a `TaskHandle` object
 to them.  A `TaskHandle` can be used for interrupting or observing a
 task.
 
+Always pass ``task_handle`` as keyword argument; it will always be the
+last argument and new arguments of the refactoring are added before
+it.
+
 A task might consist of a few `JobSet`\s.  Each `JobSet` does a few
 jobs.  For instance calculating the changes for renaming a method in a
 class hierarchy has two job sets; We need to find the classes for
