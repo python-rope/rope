@@ -47,11 +47,8 @@ class PyNameFilter(object):
         self.pyname = pyname
 
     def __call__(self, occurrence):
-        try:
-            if same_pyname(self.pyname, occurrence.get_pyname()):
-                return True
-        except evaluate.BadIdentifierError:
-            return
+        if same_pyname(self.pyname, occurrence.get_pyname()):
+            return True
 
 
 class InHierarchyFilter(object):
@@ -67,16 +64,13 @@ class InHierarchyFilter(object):
             self.roots = None
 
     def __call__(self, occurrence):
-        try:
-            if self.roots is None:
-                return
-            pyclass = self._get_containing_class(occurrence.get_pyname())
-            if pyclass is not None:
-                roots = self._get_root_classes(pyclass, self.name)
-                if self.roots.intersection(roots):
-                    return True
-        except evaluate.BadIdentifierError:
+        if self.roots is None:
             return
+        pyclass = self._get_containing_class(occurrence.get_pyname())
+        if pyclass is not None:
+            roots = self._get_root_classes(pyclass, self.name)
+            if self.roots.intersection(roots):
+                return True
 
     def _get_containing_class(self, pyname):
         if isinstance(pyname, pynames.DefinedName):
@@ -156,7 +150,10 @@ class Occurrence(object):
         return self.tools.word_finder.get_primary_range(self.offset)
 
     def get_pyname(self):
-        return self.tools.name_finder.get_pyname_at(self.offset)
+        try:
+            return self.tools.name_finder.get_pyname_at(self.offset)
+        except evaluate.BadIdentifierError:
+            pass
 
     def get_primary_and_pyname(self):
         return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
