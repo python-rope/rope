@@ -79,17 +79,16 @@ class Rename(object):
                 'instead. ', DeprecationWarning, stacklevel=2)
             if in_file:
                 resources = [self.resource]
-        old_pynames = self._get_old_pynames(in_hierarchy, task_handle)
-        if len(old_pynames) == 1 and \
-           self._is_renaming_a_function_local_name():
+        if self._is_renaming_a_function_local_name():
             resources = [self.resource]
         if resources is None:
             resources = self.pycore.get_python_files()
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
         finder = occurrences.create_finder(
-            self.pycore, self.old_name, old_pynames, unsure=unsure,
-            docs=docs, instance=self.old_instance)
+            self.pycore, self.old_name, [self.old_pyname], unsure=unsure,
+            docs=docs, instance=self.old_instance,
+            in_hierarchy=in_hierarchy and self.is_method())
         job_set = task_handle.create_jobset('Collecting Changes', len(resources))
         for file_ in resources:
             job_set.started_job('Working on <%s>' % file_.path)
@@ -98,7 +97,7 @@ class Rename(object):
                 changes.add_change(ChangeContents(file_, new_content))
             job_set.finished_job()
         if self._is_renaming_a_module():
-            resource = old_pynames[0].get_object().get_resource()
+            resource = self.old_pyname.get_object().get_resource()
             if self._is_allowed_to_move(resources, resource):
                 self._rename_module(resource, new_name, changes)
         return changes
@@ -128,11 +127,6 @@ class Rename(object):
         if isinstance(self.old_pyname.get_object(), pyobjects.AbstractModule):
             return True
         return False
-
-    def _get_old_pynames(self, in_hierarchy, handle):
-        return FindMatchingPyNames(
-            self.old_instance, self.old_pyname, self.old_name,
-            in_hierarchy and self.is_method(), handle).get_all()
 
     def is_method(self):
         pyname = self.old_pyname
@@ -220,60 +214,3 @@ def rename_in_module(occurrences_finder, new_name, resource=None, pymodule=None,
         if region is None or region[0] <= start < region[1]:
             change_collector.add_change(start, end, new_name)
     return change_collector.get_changed()
-
-
-class FindMatchingPyNames(object):
-    """Find matching pynames
-
-    This is useful for finding overriding and overridden methods in
-    class hierarchy and attributes concluded from implicit interfaces.
-    """
-
-    def __init__(self, primary, pyname, name, in_hierarchy,
-                 handle=taskhandle.NullTaskHandle()):
-        self.name = name
-        self.pyname = pyname
-        self.instance = primary
-        self.in_hierarchy = in_hierarchy
-        self.handle = handle
-
-    def get_all(self):
-        result = set()
-        if self.pyname is not None:
-            result.add(self.pyname)
-        if isinstance(self.instance, pynames.ParameterName):
-            for pyobject in self.instance.get_objects():
-                try:
-                    result.add(pyobject[self.name])
-                except exceptions.AttributeNotFoundError:
-                    pass
-        if self.in_hierarchy:
-            for pyname in set(result):
-                result.update(self.get_all_methods_in_hierarchy(
-                              self.pyname.get_object().parent, self.name))
-        return list(result)
-
-    def get_all_methods_in_hierarchy(self, pyclass, attr_name):
-        superclasses = self._get_superclasses_defining_method(pyclass,
-                                                              attr_name)
-        methods = set()
-        for superclass in superclasses:
-            methods.update(self._get_all_methods_in_subclasses(
-                           superclass, attr_name))
-        return methods
-
-    def _get_superclasses_defining_method(self, pyclass, attr_name):
-        result = set()
-        for superclass in pyclass.get_superclasses():
-            if attr_name in superclass:
-                result.update(self._get_superclasses_defining_method(
-                              superclass, attr_name))
-        if not result:
-            return set([pyclass])
-        return result
-
-    def _get_all_methods_in_subclasses(self, pyclass, attr_name):
-        result = set([pyclass[attr_name]])
-        for subclass in pyclass.pycore.get_subclasses(pyclass, self.handle):
-            result.update(self._get_all_methods_in_subclasses(subclass, attr_name))
-        return result
