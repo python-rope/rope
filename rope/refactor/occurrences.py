@@ -64,7 +64,7 @@ def create_finder(pycore, name, pyname, only_calls=False, imports=True,
 
 
 def _cacheit(func):
-    name = '_' + func.__name__ + '_cache'
+    name = '_' + func.__name__
     def _wrapper(self, *args, **kwds):
         if not hasattr(self, name):
             setattr(self, name, func(self, *args, **kwds))
@@ -305,31 +305,23 @@ class _OccurrenceToolsCreator(object):
         self.pycore = pycore
         self.resource = resource
         self.pymodule = pymodule
-        self._name_finder = None
-        self._source_code = None
-        self._word_finder = None
 
-    def get_name_finder(self):
-        if self._name_finder is None:
-            if self.pymodule is None:
-                self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-            self._name_finder = evaluate.ScopeNameFinder(self.pymodule)
-        return self._name_finder
+    @property
+    @_cacheit
+    def name_finder(self):
+        if self.pymodule is None:
+            self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+        return evaluate.ScopeNameFinder(self.pymodule)
 
-    def get_source_code(self):
-        if self._source_code is None:
-            if self.resource is not None:
-                self._source_code = self.resource.read()
-            else:
-                self._source_code = self.pymodule.source_code
-        return self._source_code
+    @property
+    @_cacheit
+    def source_code(self):
+        if self.resource is not None:
+            return self.resource.read()
+        else:
+            return self.pymodule.source_code
 
-    def get_word_finder(self):
-        if self._word_finder is None:
-            self._word_finder = codeanalyze.WordRangeFinder(
-                self.get_source_code())
-        return self._word_finder
-
-    name_finder = property(get_name_finder)
-    word_finder = property(get_word_finder)
-    source_code = property(get_source_code)
+    @property
+    @_cacheit
+    def word_finder(self):
+        return codeanalyze.WordRangeFinder(self.source_code)
