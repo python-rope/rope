@@ -106,7 +106,7 @@ class GetterSetterRenameInModule(object):
     def __init__(self, pycore, name, pynames, getter, setter):
         self.pycore = pycore
         self.name = name
-        self.finder = occurrences.FilteredFinder(pycore, name, pynames)
+        self.finder = occurrences.create_finder(pycore, name, pynames)
         self.getter = getter
         self.setter = setter
 

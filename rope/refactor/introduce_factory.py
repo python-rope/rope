@@ -126,7 +126,7 @@ class IntroduceFactory(object):
             return self.old_name + '.' + factory_name
 
     def _rename_occurrences(self, file_, changed_name, global_factory):
-        finder = occurrences.FilteredFinder(self.pycore, self.old_name,
+        finder = occurrences.create_finder(self.pycore, self.old_name,
                                             [self.old_pyname], only_calls=True)
         result = rename.rename_in_module(finder, changed_name, resource=file_,
                                          replace_primary=global_factory)

@@ -95,7 +95,7 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
     pyname = rope.base.evaluate.get_pyname_at(this_pymodule, offset)
     def is_match(occurrence):
         return unsure
-    finder = occurrences.FilteredFinder(
+    finder = occurrences.create_finder(
         project.pycore, name, [pyname], unsure=is_match)
     if resources is None:
         resources = project.pycore.get_python_files()

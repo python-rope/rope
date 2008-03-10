@@ -48,10 +48,10 @@ class ChangeSignature(object):
         pynames = rename.FindMatchingPyNames(
             self.primary, self.pyname, self.name,
             in_hierarchy and self.is_method(), handle).get_all()
-        finder = occurrences.FilteredFinder(self.pycore, self.name, pynames)
+        finder = occurrences.create_finder(self.pycore, self.name, pynames)
         if self.others:
             name, pyname = self.others
-            constructor_finder = occurrences.FilteredFinder(
+            constructor_finder = occurrences.create_finder(
                 self.pycore, name, [pyname], only_calls=True)
             finder = occurrences.MultipleFinders([finder, constructor_finder])
         for file in resources:

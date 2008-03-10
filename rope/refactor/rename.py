@@ -87,7 +87,7 @@ class Rename(object):
             resources = self.pycore.get_python_files()
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
-        finder = occurrences.FilteredFinder(
+        finder = occurrences.create_finder(
             self.pycore, self.old_name, old_pynames, unsure=unsure, docs=docs)
         job_set = task_handle.create_jobset('Collecting Changes', len(resources))
         for file_ in resources:
@@ -187,7 +187,7 @@ class ChangeOccurrences(object):
         changes = ChangeSet('Changing <%s> occurrences to <%s>' %
                             (self.old_name, new_name))
         scope_start, scope_end = self._get_scope_offset()
-        finder = occurrences.FilteredFinder(
+        finder = occurrences.create_finder(
             self.pycore, self.old_name, [self.old_pyname],
             imports=False, only_calls=only_calls)
         new_contents = rename_in_module(

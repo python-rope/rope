@@ -62,7 +62,7 @@ class InlineMethod(_Inliner):
         self.pyfunction = self.pyname.get_object()
         self.pymodule = self.pyfunction.get_module()
         self.resource = self.pyfunction.get_module().get_resource()
-        self.occurrence_finder = rope.refactor.occurrences.FilteredFinder(
+        self.occurrence_finder = occurrences.create_finder(
             self.pycore, self.name, [self.pyname])
         self.normal_generator = _DefinitionGenerator(self.project,
                                                      self.pyfunction)
@@ -433,7 +433,7 @@ def _inline_variable(pycore, pymodule, pyname, name,
     definition = definition_with_assignment[definition_with_assignment.\
                                             index('=') + 1:].strip()
 
-    occurrence_finder = occurrences.FilteredFinder(pycore, name, [pyname])
+    occurrence_finder = occurrences.create_finder(pycore, name, [pyname])
     changed_source = rename.rename_in_module(
         occurrence_finder, definition, pymodule=pymodule,
         replace_primary=True, writes=False, region=region)

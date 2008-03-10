@@ -159,7 +159,7 @@ class MoveMethod(object):
         self_name = self._get_self_name()
         body = self_name + ' = None\n' + self._get_unchanged_body()
         pymodule = self.pycore.get_string_module(body)
-        finder = occurrences.FilteredFinder(
+        finder = occurrences.create_finder(
             self.pycore, self_name, [pymodule[self_name]])
         result = rename.rename_in_module(finder, host, pymodule=pymodule)
         if result is None:
@@ -272,7 +272,7 @@ class MoveGlobal(object):
     def _source_module_changes(self, dest):
         placeholder = '__rope_moving_%s_' % self.old_name
         handle = _ChangeMoveOccurrencesHandle(placeholder)
-        occurrence_finder = occurrences.FilteredFinder(
+        occurrence_finder = occurrences.create_finder(
             self.pycore, self.old_name, [self.old_pyname])
         start, end = self._get_moving_region()
         renamer = ModuleSkipRenamer(occurrence_finder, self.source,
@@ -512,7 +512,7 @@ class _MoveTools(object):
         return False
 
     def _create_finder(self, imports):
-        return occurrences.FilteredFinder(self.pycore, self.old_name,
+        return occurrences.create_finder(self.pycore, self.old_name,
                                           [self.old_pyname], imports=imports)
 
     def new_pymodule(self, pymodule, source):
