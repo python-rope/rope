@@ -40,6 +40,126 @@ class Finder(object):
                 break
 
 
+def create_finder(pycore, name, pyname, only_calls=False, imports=True,
+                  unsure=None, docs=False, instance=None, in_hierarchy=False):
+    pynames = set([pyname])
+    filters = []
+    if only_calls:
+        filters.append(CallsFilter())
+    if not imports:
+        filters.append(NoImportsFilter())
+    if isinstance(instance, rope.base.pynames.ParameterName):
+        for pyobject in instance.get_objects():
+            try:
+                pynames.add(pyobject[name])
+            except exceptions.AttributeNotFoundError:
+                pass
+    for pyname in pynames:
+        filters.append(PyNameFilter(pyname))
+        if in_hierarchy:
+            filters.append(InHierarchyFilter(pyname))
+    if unsure:
+        filters.append(UnsureFilter(unsure))
+    return Finder(pycore, name, filters=filters, docs=docs)
+
+
+def _cacheit(func):
+    name = '_' + func.__name__ + '_cache'
+    def _wrapper(self, *args, **kwds):
+        if not hasattr(self, name):
+            setattr(self, name, func(self, *args, **kwds))
+        return getattr(self, name)
+    return _wrapper
+
+class Occurrence(object):
+
+    def __init__(self, tools, offset):
+        self.tools = tools
+        self.offset = offset
+        self.resource = tools.resource
+
+    @_cacheit
+    def get_word_range(self):
+        return self.tools.word_finder.get_word_range(self.offset)
+
+    @_cacheit
+    def get_primary_range(self):
+        return self.tools.word_finder.get_primary_range(self.offset)
+
+    @_cacheit
+    def get_pyname(self):
+        try:
+            return self.tools.name_finder.get_pyname_at(self.offset)
+        except evaluate.BadIdentifierError:
+            pass
+
+    @_cacheit
+    def get_primary_and_pyname(self):
+        try:
+            return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
+        except evaluate.BadIdentifierError:
+            pass
+
+    @_cacheit
+    def is_in_import_statement(self):
+        return (self.tools.word_finder.is_from_statement(self.offset) or
+                self.tools.word_finder.is_import_statement(self.offset))
+
+    def is_called(self):
+        return self.tools.word_finder.is_a_function_being_called(self.offset)
+
+    def is_defined(self):
+        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
+
+    def is_a_fixed_primary(self):
+        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset) or \
+               self.tools.word_finder.is_a_name_after_from_import(self.offset)
+
+    def is_written(self):
+        return self.tools.word_finder.is_assigned_here(self.offset)
+
+    def is_unsure(self):
+        return unsure_pyname(self.get_pyname())
+
+
+class MultipleFinders(object):
+
+    def __init__(self, finders):
+        self.finders = finders
+
+    def find_occurrences(self, resource=None, pymodule=None):
+        all_occurrences = []
+        for finder in self.finders:
+            all_occurrences.extend(finder.find_occurrences(resource, pymodule))
+        all_occurrences.sort(self._cmp_occurrences)
+        return all_occurrences
+
+    def _cmp_occurrences(self, o1, o2):
+        return cmp(o1.get_primary_range(), o2.get_primary_range())
+
+
+def same_pyname(expected, pyname):
+    """Check whether `expected` and `pyname` are the same"""
+    if expected is None or pyname is None:
+        return False
+    if expected == pyname:
+        return True
+    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and \
+       type(pyname) not in (pynames.ImportedModule, pynames.ImportedName):
+        return False
+    return expected.get_definition_location() == pyname.get_definition_location() and \
+           expected.get_object() == pyname.get_object()
+
+def unsure_pyname(pyname, unbound=True):
+    """Return `True` if we don't know what this name references"""
+    if pyname is None:
+        return True
+    if unbound and not isinstance(pyname, pynames.UnboundName):
+        return False
+    if pyname.get_object() == pyobjects.get_unknown():
+        return True
+
+
 class PyNameFilter(object):
     """For finding occurrences of a name"""
 
@@ -111,110 +231,6 @@ class CallsFilter(object):
     def __call__(self, occurrence):
         if not occurrence.is_called():
             return False
-
-
-def create_finder(pycore, name, pyname, only_calls=False, imports=True,
-                  unsure=None, docs=False, instance=None, in_hierarchy=False):
-    pynames = set([pyname])
-    filters = []
-    if only_calls:
-        filters.append(CallsFilter())
-    if not imports:
-        filters.append(NoImportsFilter())
-    if isinstance(instance, rope.base.pynames.ParameterName):
-        for pyobject in instance.get_objects():
-            try:
-                pynames.add(pyobject[name])
-            except exceptions.AttributeNotFoundError:
-                pass
-    for pyname in pynames:
-        filters.append(PyNameFilter(pyname))
-        if in_hierarchy:
-            filters.append(InHierarchyFilter(pyname))
-    if unsure:
-        filters.append(UnsureFilter(unsure))
-    return Finder(pycore, name, filters=filters, docs=docs)
-
-
-class Occurrence(object):
-
-    def __init__(self, tools, offset):
-        self.tools = tools
-        self.offset = offset
-        self.resource = tools.resource
-
-    def get_word_range(self):
-        return self.tools.word_finder.get_word_range(self.offset)
-
-    def get_primary_range(self):
-        return self.tools.word_finder.get_primary_range(self.offset)
-
-    def get_pyname(self):
-        try:
-            return self.tools.name_finder.get_pyname_at(self.offset)
-        except evaluate.BadIdentifierError:
-            pass
-
-    def get_primary_and_pyname(self):
-        return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
-
-    def is_in_import_statement(self):
-        return (self.tools.word_finder.is_from_statement(self.offset) or
-                self.tools.word_finder.is_import_statement(self.offset))
-
-    def is_called(self):
-        return self.tools.word_finder.is_a_function_being_called(self.offset)
-
-    def is_defined(self):
-        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset)
-
-    def is_a_fixed_primary(self):
-        return self.tools.word_finder.is_a_class_or_function_name_in_header(self.offset) or \
-               self.tools.word_finder.is_a_name_after_from_import(self.offset)
-
-    def is_written(self):
-        return self.tools.word_finder.is_assigned_here(self.offset)
-
-    def is_unsure(self):
-        return unsure_pyname(self.get_pyname())
-
-
-class MultipleFinders(object):
-
-    def __init__(self, finders):
-        self.finders = finders
-
-    def find_occurrences(self, resource=None, pymodule=None):
-        all_occurrences = []
-        for finder in self.finders:
-            all_occurrences.extend(finder.find_occurrences(resource, pymodule))
-        all_occurrences.sort(self._cmp_occurrences)
-        return all_occurrences
-
-    def _cmp_occurrences(self, o1, o2):
-        return cmp(o1.get_primary_range(), o2.get_primary_range())
-
-
-def same_pyname(expected, pyname):
-    """Check whether `expected` and `pyname` are the same"""
-    if expected is None or pyname is None:
-        return False
-    if expected == pyname:
-        return True
-    if type(expected) not in (pynames.ImportedModule, pynames.ImportedName) and \
-       type(pyname) not in (pynames.ImportedModule, pynames.ImportedName):
-        return False
-    return expected.get_definition_location() == pyname.get_definition_location() and \
-           expected.get_object() == pyname.get_object()
-
-def unsure_pyname(pyname, unbound=True):
-    """Return `True` if we don't know what this name references"""
-    if pyname is None:
-        return True
-    if unbound and not isinstance(pyname, pynames.UnboundName):
-        return False
-    if pyname.get_object() == pyobjects.get_unknown():
-        return True
 
 
 class _TextualFinder(object):
