@@ -321,7 +321,7 @@ class RenameRefactoringTest(unittest.TestCase):
         pymod = self.pycore.get_module('mod1')
         old_pyname = pymod['a']
         finder = rope.refactor.occurrences.create_finder(
-            self.pycore, 'a', [old_pyname])
+            self.pycore, 'a', old_pyname)
         refactored = rename.rename_in_module(
             finder, 'new_var', pymodule=pymod, replace_primary=True)
         self.assertEquals('new_var = 10\nprint(1+new_var)\n', refactored)

@@ -39,7 +39,7 @@ class EncapsulateField(object):
         if setter is None:
             setter = 'set_' + self.name
         renamer = GetterSetterRenameInModule(
-            self.pycore, self.name, [self.pyname], getter, setter)
+            self.pycore, self.name, self.pyname, getter, setter)
         for file in resources:
             job_set.started_job('Working on <%s>' % file.path)
             if file == self.resource:
@@ -103,10 +103,10 @@ class EncapsulateField(object):
 
 class GetterSetterRenameInModule(object):
 
-    def __init__(self, pycore, name, pynames, getter, setter):
+    def __init__(self, pycore, name, pyname, getter, setter):
         self.pycore = pycore
         self.name = name
-        self.finder = occurrences.create_finder(pycore, name, pynames)
+        self.finder = occurrences.create_finder(pycore, name, pyname)
         self.getter = getter
         self.setter = setter
 

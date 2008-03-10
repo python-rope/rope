@@ -119,9 +119,9 @@ class CallsFilter(object):
             return False
 
 
-def create_finder(pycore, name, pynames, only_calls=False, imports=True,
+def create_finder(pycore, name, pyname, only_calls=False, imports=True,
                   unsure=None, docs=False, instance=None, in_hierarchy=False):
-    pynames = set(pynames)
+    pynames = set([pyname])
     filters = []
     if only_calls:
         filters.append(CallsFilter())

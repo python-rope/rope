@@ -96,7 +96,7 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
     def is_match(occurrence):
         return unsure
     finder = occurrences.create_finder(
-        project.pycore, name, [pyname], unsure=is_match)
+        project.pycore, name, pyname, unsure=is_match)
     if resources is None:
         resources = project.pycore.get_python_files()
     job_set = task_handle.create_jobset('Finding Occurrences',

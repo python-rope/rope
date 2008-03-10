@@ -88,8 +88,7 @@ class IntroduceParameter(object):
 
     def _change_function_occurances(self, collector, function_start,
                                     function_end, new_name):
-        finder = occurrences.create_finder(self.pycore, self.name,
-                                            [self.pyname])
+        finder = occurrences.create_finder(self.pycore, self.name, self.pyname)
         for occurrence in finder.find_occurrences(resource=self.resource):
             start, end = occurrence.get_primary_range()
             if function_start <= start < function_end:

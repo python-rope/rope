@@ -46,12 +46,12 @@ class ChangeSignature(object):
         changes = ChangeSet('Changing signature of <%s>' % self.name)
         job_set = handle.create_jobset('Collecting Changes', len(resources))
         finder = occurrences.create_finder(
-            self.pycore, self.name, [self.pyname], instance=self.primary,
+            self.pycore, self.name, self.pyname, instance=self.primary,
             in_hierarchy=in_hierarchy and self.is_method())
         if self.others:
             name, pyname = self.others
             constructor_finder = occurrences.create_finder(
-                self.pycore, name, [pyname], only_calls=True)
+                self.pycore, name, pyname, only_calls=True)
             finder = occurrences.MultipleFinders([finder, constructor_finder])
         for file in resources:
             job_set.started_job('Working on <%s>' % file.path)

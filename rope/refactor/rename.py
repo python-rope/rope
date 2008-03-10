@@ -86,7 +86,7 @@ class Rename(object):
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
         finder = occurrences.create_finder(
-            self.pycore, self.old_name, [self.old_pyname], unsure=unsure,
+            self.pycore, self.old_name, self.old_pyname, unsure=unsure,
             docs=docs, instance=self.old_instance,
             in_hierarchy=in_hierarchy and self.is_method())
         job_set = task_handle.create_jobset('Collecting Changes', len(resources))
@@ -183,7 +183,7 @@ class ChangeOccurrences(object):
                             (self.old_name, new_name))
         scope_start, scope_end = self._get_scope_offset()
         finder = occurrences.create_finder(
-            self.pycore, self.old_name, [self.old_pyname],
+            self.pycore, self.old_name, self.old_pyname,
             imports=False, only_calls=only_calls)
         new_contents = rename_in_module(
             finder, new_name, pymodule=self.pymodule, replace_primary=True,

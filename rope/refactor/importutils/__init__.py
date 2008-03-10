@@ -116,8 +116,7 @@ class ImportTools(object):
             if alias is not None:
                 imported = alias
             occurrence_finder = occurrences.create_finder(
-                self.pycore, imported, [pymodule[imported]],
-                imports=False)
+                self.pycore, imported, pymodule[imported], imports=False)
             source = rename.rename_in_module(
                 occurrence_finder, module_name + '.' + name,
                 pymodule=pymodule, replace_primary=True)
@@ -204,7 +203,7 @@ class ImportTools(object):
         old_pyname = rope.base.evaluate.get_string_result(
             pymodule.get_scope(), name)
         occurrence_finder = occurrences.create_finder(
-            self.pycore, old_name, [old_pyname], imports=False)
+            self.pycore, old_name, old_pyname, imports=False)
         changes = rope.refactor.sourceutils.ChangeCollector(pymodule.source_code)
         for occurrence in occurrence_finder.find_occurrences(pymodule=pymodule):
             start, end = occurrence.get_primary_range()

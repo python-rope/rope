@@ -61,8 +61,7 @@ class MethodObject(object):
             body = param + ' = None\n' + body
             pymod = self.pycore.get_string_module(body, self.resource)
             pyname = pymod[param]
-            finder = occurrences.create_finder(
-                self.pycore, param, [pyname])
+            finder = occurrences.create_finder(self.pycore, param, pyname)
             result = rename.rename_in_module(finder, 'self.' + param,
                                              pymodule=pymod)
             body = result[result.index('\n') + 1:]
