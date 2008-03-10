@@ -37,8 +37,7 @@ class Finder(object):
                     continue
                 if result:
                     yield occurrence
-                else:
-                    break
+                break
 
 
 class PyNameFilter(object):
@@ -62,14 +61,14 @@ class InHierarchyFilter(object):
         self.pyname = pyname
         pyclass = self._get_containing_class(pyname)
         if pyclass is not None:
-            self.name = scope.pyobject.get_name()
-            self.roots = self._get_root_classes(pyclass, name)
+            self.name = pyname.get_object().get_name()
+            self.roots = self._get_root_classes(pyclass, self.name)
         else:
             self.roots = None
 
     def __call__(self, occurrence):
         try:
-            if self.root is None:
+            if self.roots is None:
                 return
             pyclass = self._get_containing_class(occurrence.get_pyname())
             if pyclass is not None:
@@ -80,10 +79,10 @@ class InHierarchyFilter(object):
             return
 
     def _get_containing_class(self, pyname):
-        if isinstance(pyname, pynames.DefinedNames):
+        if isinstance(pyname, pynames.DefinedName):
             scope = pyname.get_object().get_scope()
-            parent = scope.get_parent()
-            if parent is not None and parent.get_kind() == 'class':
+            parent = scope.parent
+            if parent is not None and parent.get_kind() == 'Class':
                 return parent.pyobject
 
     def _get_root_classes(self, pyclass, name):
@@ -121,7 +120,7 @@ class CallsFilter(object):
 
 
 def create_finder(pycore, name, pynames, only_calls=False, imports=True,
-                  unsure=None, docs=False, instance=None):
+                  unsure=None, docs=False, instance=None, in_hierarchy=False):
     pynames = set(pynames)
     filters = []
     if only_calls:
@@ -136,6 +135,8 @@ def create_finder(pycore, name, pynames, only_calls=False, imports=True,
                 pass
     for pyname in pynames:
         filters.append(PyNameFilter(pyname))
+        if in_hierarchy:
+            filters.append(InHierarchyFilter(pyname))
     if unsure:
         filters.append(UnsureFilter(unsure))
     return Finder(pycore, name, filters=filters, docs=docs)
