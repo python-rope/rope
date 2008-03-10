@@ -43,21 +43,26 @@ class Finder(object):
 class PyNameFilter(object):
     """For finding occurrences of a name"""
 
-    def __init__(self, pynames, unsure=None):
-        self.pynames = pynames
-        self.unsure = unsure
+    def __init__(self, pyname):
+        self.pyname = pyname
 
     def __call__(self, occurrence):
         try:
             new_pyname = occurrence.get_pyname()
         except evaluate.BadIdentifierError:
-            return False
-        for pyname in self.pynames:
-            if same_pyname(pyname, new_pyname):
-                return True
-            elif self.unsure is not None and occurrence.is_unsure():
-                return self.unsure(occurrence)
-        return False
+            return
+        if same_pyname(self.pyname, new_pyname):
+            return True
+
+
+class UnsureFilter(object):
+
+    def __init__(self, unsure):
+        self.unsure = unsure
+
+    def __call__(self, occurrence):
+        if occurrence.is_unsure() and self.unsure(occurrence):
+            return True
 
 
 class NoImportsFilter(object):
@@ -84,7 +89,10 @@ class FilteredFinder(object):
             filters.append(CallsFilter())
         if not imports:
             filters.append(NoImportsFilter())
-        filters.append(PyNameFilter(pynames, unsure))
+        for pyname in pynames:
+            filters.append(PyNameFilter(pyname))
+        if unsure:
+            filters.append(UnsureFilter(unsure))
         self.finder = Finder(pycore, name, filters=filters, docs=docs)
 
     def find_occurrences(self, resource=None, pymodule=None):
