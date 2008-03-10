@@ -88,7 +88,8 @@ class Rename(object):
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
         finder = occurrences.create_finder(
-            self.pycore, self.old_name, old_pynames, unsure=unsure, docs=docs)
+            self.pycore, self.old_name, old_pynames, unsure=unsure,
+            docs=docs, instance=self.old_instance)
         job_set = task_handle.create_jobset('Collecting Changes', len(resources))
         for file_ in resources:
             job_set.started_job('Working on <%s>' % file_.path)

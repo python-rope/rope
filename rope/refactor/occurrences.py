@@ -1,6 +1,7 @@
 import re
 
-from rope.base import pynames, pyobjects, codeanalyze, evaluate
+import rope.base.pynames
+from rope.base import pynames, pyobjects, codeanalyze, evaluate, exceptions
 
 
 class Finder(object):
@@ -54,6 +55,47 @@ class PyNameFilter(object):
             return
 
 
+class InHierarchyFilter(object):
+    """For finding occurrences of a name"""
+
+    def __init__(self, pyname):
+        self.pyname = pyname
+        pyclass = self._get_containing_class(pyname)
+        if pyclass is not None:
+            self.name = scope.pyobject.get_name()
+            self.roots = self._get_root_classes(pyclass, name)
+        else:
+            self.roots = None
+
+    def __call__(self, occurrence):
+        try:
+            if self.root is None:
+                return
+            pyclass = self._get_containing_class(occurrence.get_pyname())
+            if pyclass is not None:
+                roots = self._get_root_classes(pyclass, self.name)
+                if self.roots.intersection(roots):
+                    return True
+        except evaluate.BadIdentifierError:
+            return
+
+    def _get_containing_class(self, pyname):
+        if isinstance(pyname, pynames.DefinedNames):
+            scope = pyname.get_object().get_scope()
+            parent = scope.get_parent()
+            if parent is not None and parent.get_kind() == 'class':
+                return parent.pyobject
+
+    def _get_root_classes(self, pyclass, name):
+        result = set()
+        for superclass in pyclass.get_superclasses():
+            if name in superclass:
+                result.update(self._get_root_classes(superclass, name))
+        if not result:
+            return set([pyclass])
+        return result
+
+
 class UnsureFilter(object):
 
     def __init__(self, unsure):
@@ -79,12 +121,19 @@ class CallsFilter(object):
 
 
 def create_finder(pycore, name, pynames, only_calls=False, imports=True,
-                  unsure=None, docs=False):
+                  unsure=None, docs=False, instance=None):
+    pynames = set(pynames)
     filters = []
     if only_calls:
         filters.append(CallsFilter())
     if not imports:
         filters.append(NoImportsFilter())
+    if isinstance(instance, rope.base.pynames.ParameterName):
+        for pyobject in instance.get_objects():
+            try:
+                pynames.add(pyobject[name])
+            except exceptions.AttributeNotFoundError:
+                pass
     for pyname in pynames:
         filters.append(PyNameFilter(pyname))
     if unsure:
