@@ -825,6 +825,17 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertEquals(1, len(result))
         self.assertEquals((mod1, 0), (result[0].resource, result[0].offset))
 
+    def test_find_occurrences_and_class_hierarchies(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('class A(object):\n    def f():\n        pass\n'
+                   'class B(A):\n    def f():\n        pass\n')
+        offset = mod1.read().rindex('f')
+        result1 = find_occurrences(self.project, mod1, offset)
+        result2 = find_occurrences(self.project, mod1,
+                                   offset, in_hierarchy=True)
+        self.assertEquals(1, len(result1))
+        self.assertEquals(2, len(result2))
+
     def test_fixing_errors_with_maxfixes_in_resources(self):
         mod = testutils.create_module(self.project, 'mod')
         code = 'def f():\n    sldj sldj\ndef g():\n    ran'

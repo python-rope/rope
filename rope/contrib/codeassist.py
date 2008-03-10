@@ -80,7 +80,7 @@ def get_definition_location(project, source_code, offset,
 
 
 def find_occurrences(project, resource, offset, unsure=False, resources=None,
-                     task_handle=taskhandle.NullTaskHandle()):
+                     in_hierarchy=False, task_handle=taskhandle.NullTaskHandle()):
     """Return a list of `Location`\s
 
     If `unsure` is `True`, possible matches are returned, too.  You
@@ -92,11 +92,13 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
     """
     name = rope.base.codeanalyze.get_name_at(resource, offset)
     this_pymodule = project.pycore.resource_to_pyobject(resource)
-    pyname = rope.base.evaluate.get_pyname_at(this_pymodule, offset)
+    primary, pyname = rope.base.evaluate.get_primary_and_pyname_at(
+        this_pymodule, offset)
     def is_match(occurrence):
         return unsure
     finder = occurrences.create_finder(
-        project.pycore, name, pyname, unsure=is_match)
+        project.pycore, name, pyname, unsure=is_match,
+        in_hierarchy=in_hierarchy, instance=primary)
     if resources is None:
         resources = project.pycore.get_python_files()
     job_set = task_handle.create_jobset('Finding Occurrences',
@@ -237,7 +239,7 @@ def sorted_proposals(proposals, kindpref=None, typepref=None):
 def starting_expression(source_code, offset):
     """Return the expression to complete
 
-    For instance completing 
+    For instance completing
 
     """
     word_finder = WordRangeFinder(source_code)
@@ -516,7 +518,7 @@ class _Commenter(object):
             last_lineno = self._last_non_blank(start - 1)
             last_line = self.lines[last_lineno]
             if last_line.rstrip().endswith(':'):
-                indents = _get_line_indents(last_line) + 4            
+                indents = _get_line_indents(last_line) + 4
         self.lines[start] = ' ' * indents + 'pass'
         for line in range(start + 1, end + 1):
             self.lines[line] = self.lines[start]
