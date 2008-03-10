@@ -45,10 +45,9 @@ class ChangeSignature(object):
             resources = self.pycore.get_python_files()
         changes = ChangeSet('Changing signature of <%s>' % self.name)
         job_set = handle.create_jobset('Collecting Changes', len(resources))
-        pynames = rename.FindMatchingPyNames(
-            self.primary, self.pyname, self.name,
-            in_hierarchy and self.is_method(), handle).get_all()
-        finder = occurrences.create_finder(self.pycore, self.name, pynames)
+        finder = occurrences.create_finder(
+            self.pycore, self.name, [self.pyname], instance=self.primary,
+            in_hierarchy=in_hierarchy and self.is_method())
         if self.others:
             name, pyname = self.others
             constructor_finder = occurrences.create_finder(
