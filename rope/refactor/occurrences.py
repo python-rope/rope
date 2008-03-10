@@ -55,10 +55,8 @@ class PyNameFilter(object):
         for pyname in self.pynames:
             if same_pyname(pyname, new_pyname):
                 return True
-            elif self.unsure is not None and \
-                 unsure_pyname(new_pyname):
-                occurrence._unsure = self.unsure(occurrence)
-                return occurrence._unsure
+            elif self.unsure is not None and occurrence.is_unsure():
+                return self.unsure(occurrence)
         return False
 
 
@@ -101,8 +99,6 @@ class Occurrence(object):
         self.offset = offset
         self.resource = tools.resource
 
-    _unsure = False
-
     def get_word_range(self):
         return self.tools.word_finder.get_word_range(self.offset)
 
@@ -133,7 +129,7 @@ class Occurrence(object):
         return self.tools.word_finder.is_assigned_here(self.offset)
 
     def is_unsure(self):
-        return self._unsure
+        return unsure_pyname(self.get_pyname())
 
 
 class MultipleFinders(object):
