@@ -42,6 +42,13 @@ class Finder(object):
 
 def create_finder(pycore, name, pyname, only_calls=False, imports=True,
                   unsure=None, docs=False, instance=None, in_hierarchy=False):
+    """A factory for `Finder`
+
+    Based on the arguments it creates a list of filters.  `instance`
+    argument is needed only when you want implicit interfaces to be
+    considered.
+
+    """
     pynames = set([pyname])
     filters = []
     if only_calls:
