@@ -129,22 +129,6 @@ class Occurrence(object):
         return unsure_pyname(self.get_pyname())
 
 
-class MultipleFinders(object):
-
-    def __init__(self, finders):
-        self.finders = finders
-
-    def find_occurrences(self, resource=None, pymodule=None):
-        all_occurrences = []
-        for finder in self.finders:
-            all_occurrences.extend(finder.find_occurrences(resource, pymodule))
-        all_occurrences.sort(self._cmp_occurrences)
-        return all_occurrences
-
-    def _cmp_occurrences(self, o1, o2):
-        return cmp(o1.get_primary_range(), o2.get_primary_range())
-
-
 def same_pyname(expected, pyname):
     """Check whether `expected` and `pyname` are the same"""
     if expected is None or pyname is None:

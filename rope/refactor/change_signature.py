@@ -52,7 +52,7 @@ class ChangeSignature(object):
             name, pyname = self.others
             constructor_finder = occurrences.create_finder(
                 self.pycore, name, pyname, only_calls=True)
-            finder = occurrences.MultipleFinders([finder, constructor_finder])
+            finder = _MultipleFinders([finder, constructor_finder])
         for file in resources:
             job_set.started_job('Working on <%s>' % file.path)
             change_calls = _ChangeCallsInModule(
@@ -298,3 +298,18 @@ class _ChangeCallsInModule(object):
         if self._lines is None:
             self._lines = self.pymodule.lines
         return self._lines
+
+class _MultipleFinders(object):
+
+    def __init__(self, finders):
+        self.finders = finders
+
+    def find_occurrences(self, resource=None, pymodule=None):
+        all_occurrences = []
+        for finder in self.finders:
+            all_occurrences.extend(finder.find_occurrences(resource, pymodule))
+        all_occurrences.sort(self._cmp_occurrences)
+        return all_occurrences
+
+    def _cmp_occurrences(self, o1, o2):
+        return cmp(o1.get_primary_range(), o2.get_primary_range())
