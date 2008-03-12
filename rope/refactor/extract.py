@@ -657,7 +657,8 @@ class _VariableReadsAndWritesFinder(object):
     def _FunctionDef(self, node):
         self.written.add(node.name)
         visitor = _VariableReadsAndWritesFinder()
-        ast.walk(node.code, visitor)
+        for child in ast.get_child_nodes(node):
+            ast.walk(child, visitor)
         self.read.update(visitor.read - visitor.written)
 
     def _Class(self, node):
