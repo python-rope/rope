@@ -446,20 +446,13 @@ class _ClassVisitor(_ScopeVisitor):
         super(_ClassVisitor, self).__init__(pycore, owner_object)
 
     def _FunctionDef(self, node):
-        pyfunction = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = pynames.DefinedName(pyfunction)
-        self.defineds.append(pyfunction)
+        _ScopeVisitor._FunctionDef(self, node)
         if len(node.args.args) > 0:
             first = node.args.args[0]
             if isinstance(first, ast.Name):
                 new_visitor = _ClassInitVisitor(self, first.id)
                 for child in ast.get_child_nodes(node):
                     ast.walk(child, new_visitor)
-
-    def _ClassDef(self, node):
-        pyclass = PyClass(self.pycore, node, self.owner_object)
-        self.names[node.name] = pynames.DefinedName(pyclass)
-        self.defineds.append(pyclass)
 
 
 class _FunctionVisitor(_ScopeVisitor):
