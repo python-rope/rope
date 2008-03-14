@@ -3,6 +3,24 @@
 ===========
 
 
+- Deprecated codeassist templates : March 14, 2008
+
+
+- Added in_hierarchy option to find occurrences : March 10, 2008
+
+
+- Faster class hierarchy analysis for refactorings : March 10, 2008
+
+
+- Added maxfixes to get doc and get definition location : March 6, 2008
+
+
+- Added extension_modules project config : March 6, 2008
+
+
+- Supporting builtin and c-extension modules : March 6, 2008
+
+
 > Public Release 0.7.8 : March 1, 2008
 
 
@@ -12,7 +30,7 @@
 - Reporting errors for exceptional conditions in usefunction : February 29, 2008
 
 
-- more intelligent import handling for factory and move : February 25, 2008
+- More intelligent import handling for factory and move : February 25, 2008
 
 
 - Handling future imports in organize imports : February 20, 2008
