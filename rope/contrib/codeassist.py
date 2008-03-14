@@ -157,66 +157,6 @@ class CompletionProposal(CodeAssistProposal):
         return str(self)
 
 
-class TemplateProposal(CodeAssistProposal):
-    """A template proposal
-
-    The `template` attribute is a `Template` object.
-    """
-
-    def __init__(self, name, template):
-        super(TemplateProposal, self).__init__(name, 'template')
-        self.template = template
-
-
-class Template(object):
-    """Templates that are used in code assists
-
-    Variables in templates are in ``${variable}`` format. To put a
-    dollar sign in the template put $$.  To specify cursor position
-    use ${cursor}.
-
-    """
-
-    def __init__(self, template):
-        self.template = template
-
-    var_pattern = re.compile(r'((?<=[^\$])|^)\${(?P<variable>\w+)}')
-
-    def variables(self):
-        """Get template variables
-
-        Return the list of variables sorted by their order of
-        occurence in the template.
-
-        """
-        result = []
-        for match in self.var_pattern.finditer(self.template):
-            new_var = match.group('variable')
-            if new_var not in result and new_var != 'cursor':
-                result.append(new_var)
-        return result
-
-    def _substitute(self, input_string, mapping):
-        import string
-        single_dollar = re.compile('((?<=[^\$])|^)\$((?=[^{\$])|$)')
-        template = single_dollar.sub('$$', input_string)
-        t = string.Template(template)
-        return t.substitute(mapping, cursor='')
-
-    def substitute(self, mapping):
-        return self._substitute(self.template, mapping)
-
-    def get_cursor_location(self, mapping):
-        cursor_index = len(self.template)
-        for match in self.var_pattern.finditer(self.template):
-            new_var = match.group('variable')
-            if new_var == 'cursor':
-                cursor_index = match.start('variable') - 2
-        new_template = self.template[0:cursor_index]
-        start = len(self._substitute(new_template, mapping))
-        return start
-
-
 def sorted_proposals(proposals, kindpref=None, typepref=None):
     """Sort a list of proposals
 
@@ -686,3 +626,30 @@ class PyDocExtractor(object):
             trimmed.pop(0)
         # Return a single string:
         return '\n'.join((' ' * indents + line for line in trimmed))
+
+
+# Deprecated classes
+
+class TemplateProposal(CodeAssistProposal):
+    def __init__(self, name, template):
+        warnings.warn('TemplateProposal is deprecated.',
+                      DeprecationWarning, stacklevel=2)
+        super(TemplateProposal, self).__init__(name, 'template')
+        self.template = template
+
+
+class Template(object):
+
+    def __init__(self, template):
+        self.template = template
+        warnings.warn('Template is deprecated.',
+                      DeprecationWarning, stacklevel=2)
+
+    def variables(self):
+        return []
+
+    def substitute(self, mapping):
+        return self.template
+
+    def get_cursor_location(self, mapping):
+        return len(self.template)
