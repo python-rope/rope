@@ -626,12 +626,7 @@ be used in IDEs::
 
   # Applying a proposal
   proposal = proposals[x]
-  if isinstance(proposal, codeassist.CompletionProposal):
-      replacement = proposal.name
-  else:
-      # isinstance(proposal, codeassist.TemplateProposal) == True
-      # mapping is a proposal.template.variables() -> str dict
-      replacement = proposal.template.substitute(mapping)
+  replacement = proposal.name
 
   new_source_code = (source_code[:starting_offset] +
                      replacement + source_code[offset:])
