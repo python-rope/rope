@@ -14,6 +14,30 @@ Overview
 New Features
 ============
 
+* supporting builtin and c-extension modules
+* added in_hierarchy option to find occurrences
+* faster class hierarchy analysis for refactorings
+* added maxfixes to get doc and get definition location
+* deprecated codeassist templates
+* added extension_modules project config
+
+If a module cannot be found in python path, rope looks it up in
+``extension_modules`` project config; if it exists there, rope imports
+it and analyzes its contents (rather than analyzing the source code
+which is done for normal modules).
+
+``in_hierarchy`` parameter (for matching all matching methods in class
+hierarchies) and implicit interfaces (activated on attributes of
+function parameters) have been added to
+`codeassist.find_occurrences()` (rename and change signature already
+support them).  Also ``in_hierarchy`` option no longer requires
+scanning all files for making the class hierarchy, so it is much
+faster.
+
+`codeassist` module used to support templates.  But templates are much
+more related to IDEs and most IDEs support them separately; so
+functions and parameters related to them are deprecated now.
+
 
 Getting Started
 ===============

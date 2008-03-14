@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.7.9 : March 14, 2008
+
+
 - Deprecated codeassist templates : March 14, 2008
 
 
