@@ -1,6 +1,7 @@
 import keyword
 import re
 import sys
+import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
@@ -11,15 +12,11 @@ from rope.refactor import occurrences, functionutils
 
 
 def code_assist(project, source_code, offset, resource=None,
-                templates={}, maxfixes=1, later_locals=True):
+                templates=None, maxfixes=1, later_locals=True):
     """Return python code completions as a list of `CodeAssistProposal`\s
 
     `resource` is a `rope.base.resources.Resource` object.  If
     provided, relative imports are handled.
-
-    `templates` should be a dictionary of template name to `Template`
-    objects.  The matches are returned as `TemplateProposal`
-    instances.
 
     `maxfixes` is the maximum number of errors to fix if the code has
     errors in it.
@@ -28,9 +25,12 @@ def code_assist(project, source_code, offset, resource=None,
     this line is ignored.
 
     """
+    if templates is not None:
+        warnings.warn('Codeassist no longer supports templates',
+                      DeprecationWarning, stacklevel=2)
     assist = _PythonCodeAssist(
         project, source_code, offset, resource=resource,
-        templates=templates, maxfixes=maxfixes, later_locals=later_locals)
+        maxfixes=maxfixes, later_locals=later_locals)
     return assist()
 
 
@@ -39,7 +39,7 @@ def starting_offset(source_code, offset):
 
     Usually code assist proposals should be inserted like::
 
-        completion = proposal.name # not for templates
+        completion = proposal.name
         result = (source_code[:starting_offset] +
                   completion + source_code[offset:])
 
@@ -128,7 +128,7 @@ class CodeAssistProposal(object):
 
     The `kind` instance variable shows the kind of the proposal and
     can be 'global', 'local', 'builtin', 'attribute', 'keyword',
-    'parameter_keyword' and 'template'.
+    'parameter_keyword'.
 
     """
 
@@ -224,24 +224,19 @@ def sorted_proposals(proposals, kindpref=None, typepref=None):
 
     `kindpref` can be a list of proposal kinds.  Defaults to
     ``['local', 'parameter_keyword', 'global', 'attribute',
-    'template', 'keyword']``.
+    'keyword']``.
 
     `typepref` can be a list of proposal types.  Defaults to
     ``['class', 'function', 'variable', 'parameter', 'imported',
     'builtin', None]``.  (`None` stands for completions with no type
     like keywords.)
-
     """
     sorter = _ProposalSorter(proposals, kindpref, typepref)
     return sorter.get_sorted_proposal_list()
 
 
 def starting_expression(source_code, offset):
-    """Return the expression to complete
-
-    For instance completing
-
-    """
+    """Return the expression to complete"""
     word_finder = WordRangeFinder(source_code)
     expression, starting, starting_offset = \
         word_finder.get_splitted_primary_before(offset)
@@ -251,36 +246,21 @@ def starting_expression(source_code, offset):
 
 
 def default_templates():
-    templates = {}
-    templates['main'] = Template("if __name__ == '__main__':\n    ${cursor}\n")
-    test_case_template = \
-        ('import unittest\n\n\n'
-         'class ${TestClass}(unittest.TestCase):\n\n'
-         '    def setUp(self):\n        super(${TestClass}, self).setUp()\n\n'
-         '    def tearDown(self):\n        super(${TestClass}, self).tearDown()\n\n'
-         '    def test_trivial_case${cursor}(self):\n        pass\n\n\n'
-         'if __name__ == \'__main__\':\n'
-         '    unittest.main()\n')
-    templates['testcase'] = Template(test_case_template)
-    templates['hash'] = Template('\n    def __hash__(self):\n' +
-                                 '        return 1${cursor}\n')
-    templates['eq'] = Template('\n    def __eq__(self, obj):\n' +
-                               '        ${cursor}return obj is self\n')
-    templates['super'] = Template('super(${class}, self)')
-    return templates
+    warnings.warn('default_templates() is deprecated.',
+                  DeprecationWarning, stacklevel=2)
+    return {}
 
 
 class _PythonCodeAssist(object):
 
     def __init__(self, project, source_code, offset, resource=None,
-                 templates={}, maxfixes=1, later_locals=True):
+                 maxfixes=1, later_locals=True):
         self.project = project
         self.pycore = self.project.get_pycore()
         self.code = source_code
         self.resource = resource
         self.maxfixes = maxfixes
         self.later_locals = later_locals
-        self.templates = templates
         self.word_finder = WordRangeFinder(source_code)
         self.expression, self.starting, self.offset = \
             self.word_finder.get_splitted_primary_before(offset)
@@ -301,20 +281,12 @@ class _PythonCodeAssist(object):
                 result.append(CompletionProposal(kw, 'keyword'))
         return result
 
-    def _template_proposals(self, starting):
-        result = []
-        for name, template in self.templates.items():
-            if name.startswith(starting):
-                result.append(TemplateProposal(name, template))
-        return result
-
     def __call__(self):
         if self.offset > len(self.code):
             return []
         completions = list(self._code_completions().values())
         if self.expression.strip() == '' and self.starting.strip() != '':
             completions.extend(self._matching_keywords(self.starting))
-            completions.extend(self._template_proposals(self.starting))
         return completions
 
     def _dotted_completions(self, module_scope, holding_scope):
@@ -460,8 +432,8 @@ class _ProposalSorter(object):
     def __init__(self, code_assist_proposals, kindpref=None, typepref=None):
         self.proposals = code_assist_proposals
         if kindpref is None:
-            kindpref = ['local', 'parameter_keyword', 'global', 'attribute',
-                        'template', 'keyword']
+            kindpref = ['local', 'parameter_keyword', 'global',
+                        'attribute', 'keyword']
         self.kindpref = kindpref
         if typepref is None:
             typepref = ['class', 'function', 'variable',
@@ -477,16 +449,14 @@ class _ProposalSorter(object):
         result = []
         for kind in self.kindpref:
             kind_proposals = proposals.get(kind, [])
-            if kind != 'template':
-                kind_proposals = [proposal for proposal in kind_proposals
-                                  if proposal.type in self.typerank]
+            kind_proposals = [proposal for proposal in kind_proposals
+                              if proposal.type in self.typerank]
             kind_proposals.sort(self._proposal_cmp)
             result.extend(kind_proposals)
         return result
 
     def _proposal_cmp(self, proposal1, proposal2):
-        if 'template' not in (proposal1.kind, proposal2.kind) and \
-           proposal1.type != proposal2.type:
+        if proposal1.type != proposal2.type:
             return cmp(self.typerank.get(proposal1.type, 100),
                        self.typerank.get(proposal2.type, 100))
         return self._compare_underlined_names(proposal1.name,

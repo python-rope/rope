@@ -2,7 +2,7 @@ import unittest
 
 from rope.base import exceptions
 from rope.contrib.codeassist import \
-     (Template, get_definition_location, get_doc, starting_expression,
+     (get_definition_location, get_doc, starting_expression,
       find_occurrences, code_assist, sorted_proposals, starting_offset)
 from ropetest import testutils
 
@@ -17,11 +17,10 @@ class CodeAssistTest(unittest.TestCase):
         testutils.remove_project(self.project)
         super(CodeAssistTest, self).tearDown()
 
-    def _assist(self, code, offset=None, templates={}, **args):
+    def _assist(self, code, offset=None, **args):
         if offset is None:
             offset = len(code)
-        return code_assist(self.project, code, offset,
-                           templates=templates, **args)
+        return code_assist(self.project, code, offset,  **args)
 
     def test_simple_assist(self):
         self._assist('', 0)
@@ -286,24 +285,6 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('param', 'local', result)
 
-    def assert_template_in_result(self, name, result):
-        for template in result:
-            if template.name == name:
-                break
-        else:
-            self.fail('template <%s> was not proposed' % name)
-
-    def assert_template_not_in_result(self, name, result):
-        for template in result:
-            if template.name == name:
-                self.fail('template <%s> was proposed' % name)
-
-    def test_proposing_basic_templates(self):
-        templates = {'my_template': Template('print("hello")')}
-        code = 'my_te'
-        result = self._assist(code, templates=templates)
-        self.assert_template_in_result('my_template', result)
-
     def test_code_assist_when_having_a_two_line_function_header(self):
         code = 'def f(param1,\n      param2):\n    para'
         result = self._assist(code)
@@ -388,17 +369,14 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result('a_method', 'attribute', result)
 
     def test_proposals_sorter(self):
-        templates = {'my_sample_template': Template('')}
         code = 'def my_sample_function(self):\n' + \
                '    my_sample_var = 20\n' + \
                '    my_sample_'
-        proposals = sorted_proposals(self._assist(code, templates=templates))
+        proposals = sorted_proposals(self._assist(code))
         self.assertEquals('my_sample_var', proposals[0].name)
         self.assertEquals('my_sample_function', proposals[1].name)
-        self.assertEquals('my_sample_template', proposals[2].name)
 
     def test_proposals_sorter_for_methods_and_attributes(self):
-        templates = {'my_sample_template': Template('')}
         code = 'class A(object):\n' + \
                '    def __init__(self):\n' + \
                '        self.my_a_var = 10\n' + \
@@ -408,7 +386,7 @@ class CodeAssistTest(unittest.TestCase):
                '        pass\n' + \
                'a_var = A()\n' + \
                'a_var.my_'
-        proposals = sorted_proposals(self._assist(code, templates=templates))
+        proposals = sorted_proposals(self._assist(code))
         self.assertEquals('my_b_func', proposals[0].name)
         self.assertEquals('my_c_func', proposals[1].name)
         self.assertEquals('my_a_var', proposals[2].name)
@@ -423,7 +401,6 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals('my_a_var', proposals[1].name)
 
     def test_proposals_sorter_underlined_methods(self):
-        templates = {'my_sample_template': Template('')}
         code = 'class A(object):\n' + \
                '    def _my_func(self):\n' + \
                '        self.my_a_var = 10\n' + \
@@ -431,7 +408,7 @@ class CodeAssistTest(unittest.TestCase):
                '        pass\n' + \
                'a_var = A()\n' + \
                'a_var.'
-        proposals = sorted_proposals(self._assist(code, templates=templates))
+        proposals = sorted_proposals(self._assist(code))
         self.assertEquals('my_func', proposals[0].name)
         self.assertEquals('_my_func', proposals[1].name)
 
@@ -454,15 +431,6 @@ class CodeAssistTest(unittest.TestCase):
         proposals = sorted_proposals(result, typepref=['variable', 'function'])
         self.assertEquals('my_global_var', proposals[0].name)
         self.assertEquals('my_global_func', proposals[1].name)
-
-    def test_proposals_sorter_sorting_templates(self):
-        templates = {'my_first_template': Template(''),
-                     'my_second_template': Template('')}
-        code = 'my_'
-        result = self._assist(code, templates=templates)
-        proposals = sorted_proposals(result, kindpref=['template'])
-        self.assertEquals('my_first_template', proposals[0].name)
-        self.assertEquals('my_second_template', proposals[1].name)
 
     def test_proposals_sorter_and_missing_type_in_typepref(self):
         code = 'my_global_var = 1\n' \
@@ -873,74 +841,10 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertEquals('l.app', starting_expression(code, len(code)))
 
 
-class TemplateTest(unittest.TestCase):
-
-    def test_template_get_variables(self):
-        template = Template('Name = ${name}')
-        self.assertEquals(['name'], template.variables())
-
-    def test_template_get_variables_multiple_variables(self):
-        template = Template('Name = ${name}\nAge = ${age}\n')
-        self.assertEquals(['name', 'age'], template.variables())
-
-    def test_substitution(self):
-        template = Template('Name = ${name}\nAge = ${age}\n')
-        self.assertEquals('Name = Ali\nAge = 20\n',
-                          template.substitute({'name': 'Ali', 'age': '20'}))
-
-    def test_underlined_variables(self):
-        template = Template('Name = ${name_var}')
-        self.assertEquals(['name_var'], template.variables())
-        self.assertEquals('Name = Ali', template.substitute({'name_var': 'Ali'}))
-
-    @testutils.assert_raises(KeyError)
-    def test_unmapped_variable(self):
-        template = Template('Name = ${name}')
-        template.substitute({})
-
-    def test_double_dollar_sign(self):
-        template = Template('Name = $${name}')
-        self.assertEquals([], template.variables())
-        self.assertEquals('Name = ${name}', template.substitute({'name': 'Ali'}))
-
-    def test_untemplate_dollar_signs(self):
-        template = Template('$name = ${value}')
-        self.assertEquals(['value'], template.variables())
-        self.assertEquals('$name = Ali', template.substitute({'value': 'Ali'}))
-
-    def test_template_get_variables_multiple_variables2(self):
-        template = Template('Name = ${name}${age}\n')
-        self.assertEquals(['name', 'age'], template.variables())
-
-    def test_template_get_variables_start_of_the_string(self):
-        template = Template('${name}\n')
-        self.assertEquals(['name'], template.variables())
-
-    def test_the_same_variable_many_times(self):
-        template = Template("Today is ${today}, the day after ${today} is ${tomorrow}")
-        self.assertEquals(['today', 'tomorrow'], template.variables())
-        self.assertEquals("Today is 26th, the day after 26th is 27th",
-                         template.substitute({'today': '26th', 'tomorrow': '27th'}))
-
-    def test_cursor_in_templates(self):
-        template = Template('My name is ${name}${cursor}.')
-        self.assertEquals(['name'], template.variables())
-        self.assertEquals('My name is Ali.', template.substitute({'name': 'Ali'}))
-
-    def test_get_cursor_location(self):
-        template = Template('My name is ${name}${cursor}.')
-        self.assertEquals(14, template.get_cursor_location({'name': 'Ali'}))
-
-    def test_get_cursor_location_with_no_cursor(self):
-        template = Template('My name is ${name}.')
-        self.assertEquals(15, template.get_cursor_location({'name': 'Ali'}))
-
-
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(CodeAssistTest))
     result.addTests(unittest.makeSuite(CodeAssistInProjectsTest))
-    result.addTests(unittest.makeSuite(TemplateTest))
     return result
 
 if __name__ == '__main__':
