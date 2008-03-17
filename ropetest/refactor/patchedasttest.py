@@ -330,6 +330,17 @@ class PatchedASTTest(unittest.TestCase):
             ['@', '', 'Name', '\n', 'def', ' ', 'f', '', '(', '', 'arguments',
              '', ')', '', ':', '\n    ', 'Pass'])
 
+    @testutils.only_for('2.6')
+    def test_decorators_for_classes(self):
+        source = '@d\nclass C(object):\n    pass\n'
+        ast = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('ClassDef', 0, len(source) - 1)
+        checker.check_children(
+            'ClassDef',
+            ['@', '', 'Name', '\n', 'class', ' ', 'C', '', '(', '', 'Name',
+             '', ')', '', ':', '\n    ', 'Pass'])
+
     def test_both_varargs_and_kwargs(self):
         source = 'def f(*args, **kwds):\n    pass\n'
         ast = patchedast.get_patched_ast(source, True)

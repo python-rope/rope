@@ -261,6 +261,10 @@ class _PatchingASTWalker(object):
 
     def _ClassDef(self, node):
         children = []
+        if getattr(node, 'decorator_list', None):
+            for decorator in node.decorator_list:
+                children.append('@')
+                children.append(decorator)
         children.extend(['class', node.name])
         if node.bases:
             children.append('(')
