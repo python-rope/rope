@@ -166,6 +166,9 @@ class PyDefinedObject(object):
         self.structural_attributes = None
         self.concluded_attributes = self.get_module()._get_concluded_data()
         self.attributes = self.get_module()._get_concluded_data()
+        self.defineds = None
+
+    visitor_class = None
 
     def _get_structural_attributes(self):
         if self.structural_attributes is None:
@@ -211,8 +214,19 @@ class PyDefinedObject(object):
                isinstance(expr.value, ast.Str):
                 return expr.value.s
 
+    def _get_defined_objects(self):
+        if self.defineds is None:
+            self._get_structural_attributes()
+        return self.defineds
+
     def _create_structural_attributes(self):
-        return {}
+        if self.visitor_class is None:
+            return {}
+        new_visitor = self.visitor_class(self.pycore, self)
+        for child in ast.get_child_nodes(self.ast_node):
+            ast.walk(child, new_visitor)
+        self.defineds = new_visitor.defineds
+        return new_visitor.names
 
     def _create_concluded_attributes(self):
         return {}

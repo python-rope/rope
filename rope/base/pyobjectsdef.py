@@ -109,11 +109,11 @@ class PyFunction(pyobjects.PyFunction):
 class PyClass(pyobjects.PyClass):
 
     def __init__(self, pycore, ast_node, parent):
+        self.visitor_class = _ClassVisitor
         AbstractClass.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.parent = parent
         self._superclasses = self.get_module()._get_concluded_data()
-        self.defineds = None
 
     def get_superclasses(self):
         if self._superclasses.get() is None:
@@ -122,18 +122,6 @@ class PyClass(pyobjects.PyClass):
 
     def get_name(self):
         return self.get_ast().name
-
-    def _get_defined_objects(self):
-        if self.defineds is None:
-            self._get_structural_attributes()
-        return self.defineds
-
-    def _create_structural_attributes(self):
-        new_visitor = _ClassVisitor(self.pycore, self)
-        for child in ast.get_child_nodes(self.ast_node):
-            ast.walk(child, new_visitor)
-        self.defineds = new_visitor.defineds
-        return new_visitor.names
 
     def _create_concluded_attributes(self):
         result = {}
@@ -172,8 +160,8 @@ class PyModule(pyobjects.PyModule):
                 node = ast.parse('\n')
         self.source_code = source
         self.star_imports = []
-        self.defineds = None
         self.making_concluded = False
+        self.visitor_class = _GlobalVisitor
         super(PyModule, self).__init__(pycore, node, resource)
 
     def _init_source(self, pycore, source_code, resource):
@@ -196,11 +184,6 @@ class PyModule(pyobjects.PyModule):
             raise exceptions.ModuleSyntaxError(filename, 1, '%s' % (e.reason))
         return source_code, ast_node
 
-    def _get_defined_objects(self):
-        if self.defineds is None:
-            self._get_structural_attributes()
-        return self.defineds
-
     def _create_concluded_attributes(self):
         if self.making_concluded:
             return {}
@@ -212,12 +195,6 @@ class PyModule(pyobjects.PyModule):
             return result
         finally:
             self.making_concluded = False
-
-    def _create_structural_attributes(self):
-        visitor = _GlobalVisitor(self.pycore, self)
-        ast.walk(self.ast_node, visitor)
-        self.defineds = visitor.defineds
-        return visitor.names
 
     def _create_scope(self):
         return rope.base.pyscopes.GlobalScope(self.pycore, self)
