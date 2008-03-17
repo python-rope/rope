@@ -83,8 +83,8 @@ class InlineMethod(_Inliner):
         lines = self.pymodule.lines
         logicals = self.pymodule.logical_lines
         start_line = scope.get_start()
-        if self.pyfunction.get_ast().decorators:
-            decorators = self.pyfunction.get_ast().decorators
+        if self.pyfunction.decorators:
+            decorators = self.pyfunction.decorators
             if hasattr(decorators[0], 'lineno'):
                 start_line = decorators[0].lineno
         start_offset = lines.get_line_start(start_line)

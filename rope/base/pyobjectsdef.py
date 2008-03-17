@@ -14,7 +14,6 @@ class PyFunction(pyobjects.PyFunction):
         AbstractFunction.__init__(self)
         PyDefinedObject.__init__(self, pycore, ast_node, parent)
         self.arguments = self.ast_node.args
-        self.decorators = self.ast_node.decorators
         self.parameter_pyobjects = pynames._Inferred(
             self._infer_parameters, self.get_module()._get_concluded_data())
         self.returned = pynames._Inferred(self._infer_returned)
@@ -89,7 +88,7 @@ class PyFunction(pyobjects.PyFunction):
         """
         scope = self.parent.get_scope()
         if isinstance(self.parent, PyClass):
-            for decorator in self.get_ast().decorators:
+            for decorator in self.decorators:
                 pyname = rope.base.evaluate.get_statement_result(scope,
                                                                  decorator)
                 if pyname == rope.base.builtins.builtins['staticmethod']:
@@ -98,6 +97,12 @@ class PyFunction(pyobjects.PyFunction):
                     return 'classmethod'
             return 'method'
         return 'function'
+
+    @property
+    def decorators(self):
+        if hasattr(self.ast_node, 'decorator_list'):
+            return self.ast_node.decorators
+        return self.ast_node.decorators
 
 
 class PyClass(pyobjects.PyClass):
