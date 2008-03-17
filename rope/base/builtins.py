@@ -307,7 +307,7 @@ class Dict(BuiltinClass):
         if self.keys is not None:
             return get_tuple(self.keys, self.values)
         item = context.get_per_name()
-        if item is None:
+        if item is None or not isinstance(item.get_type(), Tuple):
             return get_tuple(self.keys, self.values)
         return item
 

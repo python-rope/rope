@@ -682,6 +682,15 @@ class NewStaticOITest(unittest.TestCase):
         self.assertNotEquals(c_class, var_pyname.get_object().get_type(),
                              'Class `C` no more exists')
 
+    def test_validation_problems_for_changing_builtin_types(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('l = []\nl.append("")\n')
+        self.pycore.analyze_module(mod1)
+
+        mod1.write('l = {}\nv = l["key"]\n')
+        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        var = pymod1['v'].get_object()
+
     def test_always_returning_containing_class_for_selfs(self):
         code = 'class A(object):\n    def f(p):\n        return p\n' \
                'class B(object):\n    pass\nb = B()\nb.f()\n'
