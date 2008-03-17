@@ -53,6 +53,13 @@ class AutoImport(object):
                 result.append(module)
         return result
 
+    def get_all_names(self):
+        """Return the list of all cached global names"""
+        result = set()
+        for module in self.names:
+            result.update(set(self.names[module]))
+        return result
+
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples"""
         result = []
