@@ -53,6 +53,25 @@ class AutoImport(object):
                 result.append(module)
         return result
 
+    def get_name_locations(self, name):
+        """Return a list of ``(resource, lineno)`` tuples"""
+        result = []
+        pycore = self.project.pycore
+        for module in self.names:
+            if name in self.names[module]:
+                try:
+                    pymodule = pycore.get_module(module)
+                    if name in pymodule:
+                        pyname = pymodule[name]
+                        module, lineno = pyname.get_definition_location()
+                        if module is not None:
+                            resource = module.get_module().get_resource()
+                            if resource is not None and lineno is not None:
+                                result.append((resource, lineno))
+                except exceptions.ModuleNotFoundError:
+                    pass
+        return result
+
     def generate_cache(self, resources=None, underlined=False,
                        task_handle=taskhandle.NullTaskHandle()):
         """Generate global name cache for project files

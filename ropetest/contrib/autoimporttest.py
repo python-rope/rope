@@ -97,6 +97,20 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1, underlined=True)
         self.assertEquals(['mod1'], self.importer.get_modules('_myvar'))
 
+    def test_name_locations(self):
+        self.mod1.write('myvar = None\n')
+        self.importer.update_resource(self.mod1)
+        self.assertEquals([(self.mod1, 1)],
+                          self.importer.get_name_locations('myvar'))
+
+    def test_name_locations_with_multiple_occurrences(self):
+        self.mod1.write('myvar = None\n')
+        self.mod2.write('\nmyvar = None\n')
+        self.importer.update_resource(self.mod1)
+        self.importer.update_resource(self.mod2)
+        self.assertEquals(set([(self.mod1, 1), (self.mod2, 2)]),
+                          set(self.importer.get_name_locations('myvar')))
+
 
 class AutoImportObservingTest(unittest.TestCase):
 
