@@ -63,6 +63,18 @@ def run_only_for_25(func):
         return do_nothing
 
 
+def only_for(version):
+    """Should be used as a decorator for a unittest.TestCase test method"""
+    def decorator(func):
+        if sys.version >= version:
+            return func
+        else:
+            def do_nothing(self):
+                pass
+            return do_nothing
+    return decorator
+
+
 def run_only_for_unix(func):
     """Should be used as a decorator for a unittest.TestCase test method"""
     if os.name == 'posix':
