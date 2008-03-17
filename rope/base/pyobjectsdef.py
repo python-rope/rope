@@ -100,9 +100,10 @@ class PyFunction(pyobjects.PyFunction):
 
     @property
     def decorators(self):
-        if hasattr(self.ast_node, 'decorator_list'):
-            return self.ast_node.decorators
-        return self.ast_node.decorators
+        try:
+            return getattr(self.ast_node, 'decorator_list')
+        except AttributeError:
+            return getattr(self.ast_node, 'decorators', None)
 
 
 class PyClass(pyobjects.PyClass):

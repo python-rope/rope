@@ -340,8 +340,10 @@ class _PatchingASTWalker(object):
 
     def _FunctionDef(self, node):
         children = []
-        decorators = getattr(node, 'decorator_list',
-                             getattr(node, 'decorators'))
+        try:
+            decorators = getattr(node, 'decorator_list')
+        except AttributeError:
+            decorators = getattr(node, 'decorators', None)
         if decorators:
             for decorator in decorators:
                 children.append('@')
