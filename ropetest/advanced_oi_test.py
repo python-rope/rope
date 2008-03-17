@@ -679,10 +679,8 @@ class NewStaticOITest(unittest.TestCase):
         var_pyname = pymod1['var']
         self.assertEquals(c_class, var_pyname.get_object().get_type())
         mod2.write('import mod1\n\nmod1.l.append("")\n')
-        # Either `pymod1` should be invalid or should not reference to `pymod2`
-        if pymod1.is_valid():
-            self.assertNotEquals(c_class, var_pyname.get_object().get_type(),
-                                 'Class `C` no more exists')
+        self.assertNotEquals(c_class, var_pyname.get_object().get_type(),
+                             'Class `C` no more exists')
 
     def test_always_returning_containing_class_for_selfs(self):
         code = 'class A(object):\n    def f(p):\n        return p\n' \
