@@ -488,7 +488,7 @@ def _find_pyname_at(project, source_code, offset, resource, maxfixes):
     pymodule = _get_pymodule(project.pycore, source_code,
                              resource, maxfixes=maxfixes)
     scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-    result = rope.base.evaluate.get_string_result(scope, expression)
+    result = rope.base.evaluate.get_pyname_in_scope(scope, expression)
     new_code = pymodule.source_code
     if result is None or new_code.startswith(source_code[:offset]):
         if offset < len(new_code):

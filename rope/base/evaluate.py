@@ -32,13 +32,6 @@ def get_primary_and_result(scope, node):
     return evaluator.old_result, evaluator.result
 
 
-def get_string_result(scope, string):
-    evaluator = StatementEvaluator(scope)
-    node = ast.parse(string)
-    ast.walk(node, evaluator)
-    return evaluator.result
-
-
 def get_pyname_in_scope(holding_scope, name):
     return get_primary_and_pyname_in_scope(holding_scope, name)[1]
 
@@ -50,6 +43,14 @@ def get_primary_and_pyname_in_scope(holding_scope, name):
     except SyntaxError:
         raise BadIdentifierError('Not a resolvable python identifier selected.')
     return get_primary_and_result(holding_scope, node)
+
+
+def get_string_result(scope, string):
+    """use `get_pyname_in_scope` instead"""
+    evaluator = StatementEvaluator(scope)
+    node = ast.parse(string)
+    ast.walk(node, evaluator)
+    return evaluator.result
 
 
 class BadIdentifierError(rope.base.exceptions.RopeError):
