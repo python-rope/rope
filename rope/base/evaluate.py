@@ -1,10 +1,11 @@
 import rope.base.builtins
-import rope.base.exceptions
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import ast, astutils, exceptions, pyobjects
 from rope.base.codeanalyze import WordRangeFinder
 
+
+BadIdentifierError = exceptions.BadIdentifierError
 
 def get_primary_and_pyname_at(pymodule, offset):
     """Find the primary and pyname at offset"""
@@ -51,10 +52,6 @@ def get_string_result(scope, string):
     node = ast.parse(string)
     ast.walk(node, evaluator)
     return evaluator.result
-
-
-class BadIdentifierError(rope.base.exceptions.RopeError):
-    pass
 
 
 class ScopeNameFinder(object):

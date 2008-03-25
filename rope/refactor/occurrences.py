@@ -97,14 +97,14 @@ class Occurrence(object):
     def get_pyname(self):
         try:
             return self.tools.name_finder.get_pyname_at(self.offset)
-        except evaluate.BadIdentifierError:
+        except exceptions.BadIdentifierError:
             pass
 
     @_cacheit
     def get_primary_and_pyname(self):
         try:
             return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
-        except evaluate.BadIdentifierError:
+        except exceptions.BadIdentifierError:
             pass
 
     @_cacheit

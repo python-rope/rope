@@ -30,6 +30,10 @@ class NameNotFoundError(RopeError):
     """Attribute not found exception"""
 
 
+class BadIdentifierError(RopeError):
+    """The name cannot be resolved"""
+
+
 class ModuleSyntaxError(RopeError):
     """Module has syntax errors
 
