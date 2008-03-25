@@ -113,9 +113,10 @@ class ImportedModule(PyName):
         return self._get_pymodule()
 
     def get_definition_location(self):
-        if self._get_pymodule() is None:
+        pymodule = self._get_pymodule()
+        if not isinstance(pymodule, rope.base.pyobjects.PyDefinedObject):
             return (None, None)
-        return (self._get_pymodule().get_module(), 1)
+        return (pymodule.get_module(), 1)
 
 
 class prevent_recursion(object):

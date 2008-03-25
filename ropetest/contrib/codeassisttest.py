@@ -742,6 +742,12 @@ class CodeAssistInProjectsTest(unittest.TestCase):
                                          len(code) - 2, mod2)
         self.assertEquals((mod1, 1), result)
 
+    def test_get_definition_location_for_builtins(self):
+        code = 'import sys\n'
+        result = get_definition_location(self.project, code,
+                                         len(code) - 2)
+        self.assertEquals((None, None), result)
+
     def test_get_doc_on_relative_imports(self):
         pkg = testutils.create_package(self.project, 'pkg')
         mod1 = testutils.create_module(self.project, 'mod1', pkg)
