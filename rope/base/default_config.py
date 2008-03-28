@@ -61,11 +61,6 @@ def set_prefs(prefs):
     # unit-tests use 4 spaces it is more reliable, too.
     prefs['indent_size'] = 4
 
-    # If `True` modules with syntax errors are considered to be empty.
-    # The default value is `False`; When `False` syntax errors raise
-    # `rope.base.exceptions.ModuleSyntaxError` exception.
-    prefs['ignore_syntax_errors'] = False
-
     # Builtin and c-extension modules that are allowed to be imported
     # and inspected by rope.
     prefs['extension_modules'] = [
@@ -73,6 +68,15 @@ def set_prefs(prefs):
         'cStringIO', 'datetime', 'errno', 'exceptions', 'gc', 'grp', 'imp',
         'itertools', 'marshal', 'math', 'mmap', 'nt', 'operator', 'posix',
         'pwd', 'select', 'signal', 'sys', 'thread', 'zlib', 'zipimport']
+
+    # If `True` modules with syntax errors are considered to be empty.
+    # The default value is `False`; When `False` syntax errors raise
+    # `rope.base.exceptions.ModuleSyntaxError` exception.
+    prefs['ignore_syntax_errors'] = False
+
+    # If `True`, rope ignores unresolvable imports.  Otherwise, they
+    # appear in the importing namespace.
+    prefs['ignore_bad_imports'] = False
 
 
 def project_opened(project):

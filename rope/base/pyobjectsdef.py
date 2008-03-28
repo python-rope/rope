@@ -381,11 +381,15 @@ class _ScopeVisitor(object):
             alias = import_pair.asname
             first_package = module_name.split('.')[0]
             if alias is not None:
-                self.names[alias] = \
-                    pynames.ImportedModule(self.get_module(), module_name)
+                imported = pynames.ImportedModule(self.get_module(),
+                                                  module_name)
+                if not self._is_ignored_import(imported):
+                    self.names[alias] = imported
             else:
-                self.names[first_package] = \
-                    pynames.ImportedModule(self.get_module(), first_package)
+                imported = pynames.ImportedModule(self.get_module(),
+                                                  first_package)
+                if not self._is_ignored_import(imported):
+                    self.names[first_package] = imported
 
     def _ImportFrom(self, node):
         level = 0
@@ -393,6 +397,8 @@ class _ScopeVisitor(object):
             level = node.level
         imported_module = pynames.ImportedModule(self.get_module(),
                                                  node.module, level)
+        if self._is_ignored_import(imported_module):
+            return
         if len(node.names) == 1 and node.names[0].name == '*':
             if isinstance(self.owner_object, PyModule):
                 self.owner_object.star_imports.append(
@@ -405,6 +411,11 @@ class _ScopeVisitor(object):
                     imported = alias
                 self.names[imported] = pynames.ImportedName(imported_module,
                                                             imported_name.name)
+
+    def _is_ignored_import(self, imported_module):
+        if not self.pycore.project.prefs.get('ignore_bad_imports', False):
+            return False
+        return not isinstance(imported_module.get_object(), AbstractModule)
 
     def _Global(self, node):
         module = self.get_module()

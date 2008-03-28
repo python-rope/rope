@@ -1059,6 +1059,18 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
         myscript = self.project.root.create_file('myscript')
         self.assertTrue(self.project.pycore.is_python_file(myscript))
 
+    def test_ignore_bad_imports(self):
+        self.project = testutils.sample_project(ignore_bad_imports=True)
+        pymod = self.project.pycore.get_string_module(
+            'import some_nonexistent_module\n')
+        self.assertFalse('some_nonexistent_module' in pymod)
+
+    def test_ignore_bad_imports_for_froms(self):
+        self.project = testutils.sample_project(ignore_bad_imports=True)
+        pymod = self.project.pycore.get_string_module(
+            'from some_nonexistent_module import var\n')
+        self.assertFalse('var' in pymod)
+
 
 def suite():
     result = unittest.TestSuite()
