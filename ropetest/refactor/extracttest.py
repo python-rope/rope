@@ -802,6 +802,22 @@ class ExtractMethodTest(unittest.TestCase):
                    'def g():\n    var = 1\n    return var\n'
         self.assertEquals(expected, refactored)
 
+    def test_extracting_variable_and_implicit_continuations(self):
+        code = 's = ("1"\n  "2")\n'
+        start = code.index('"')
+        end = code.rindex('"') + 1
+        refactored = self.do_extract_variable(code, start, end, 's2')
+        expected = 's2 = "1" "2"\ns = (s2)\n'
+        self.assertEquals(expected, refactored)
+
+    def test_extracting_method_and_implicit_continuations(self):
+        code = 's = ("1"\n  "2")\n'
+        start = code.index('"')
+        end = code.rindex('"') + 1
+        refactored = self.do_extract_method(code, start, end, 'f')
+        expected = '\ndef f():\n    return "1" "2"\n\ns = (f())\n'
+        self.assertEquals(expected, refactored)
+
 
 if __name__ == '__main__':
     unittest.main()

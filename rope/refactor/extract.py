@@ -358,8 +358,10 @@ class _ExceptionalConditionChecker(object):
         if end_scope != info.scope and end_scope.get_end() != end_line:
             raise RefactoringError('Bad region selected for extract method')
         try:
-            if _UnmatchedBreakOrContinueFinder.has_errors(
-               info.source[info.region[0]:info.region[1]]):
+            extracted = info.source[info.region[0]:info.region[1]]
+            if info.one_line:
+                extracted = '(%s)' % extracted
+            if _UnmatchedBreakOrContinueFinder.has_errors(extracted):
                 raise RefactoringError('A break/continue without having a '
                                        'matching for/while loop.')
         except SyntaxError:
@@ -428,7 +430,10 @@ class _ExtractMethodParts(object):
         return similarfinder.make_pattern(self._get_body(), variables)
 
     def _get_body(self):
-        return sourceutils.fix_indentation(self.info.extracted, 0)
+        result = sourceutils.fix_indentation(self.info.extracted, 0)
+        if self.info.one_line:
+            result = '(%s)' % result
+        return result
 
     def _find_temps(self):
         return usefunction.find_temps(self.info.pycore.project,
@@ -564,7 +569,7 @@ class _ExtractVariableParts(object):
         return result
 
     def get_body_pattern(self):
-        return self.info.extracted.strip()
+        return '(%s)' % self.info.extracted.strip()
 
     def get_replacement_pattern(self):
         return self.info.new_name
