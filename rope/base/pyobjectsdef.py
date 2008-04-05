@@ -375,6 +375,9 @@ class _ScopeVisitor(object):
         for child in node.body:
             ast.walk(child, self)
 
+    def _ExceptHandler(self, node):
+        self._excepthandler(node)
+
     def _Import(self, node):
         for import_pair in node.names:
             module_name = import_pair.name
