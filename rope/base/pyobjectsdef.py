@@ -344,7 +344,7 @@ class _ScopeVisitor(object):
                 def _eval():
                     return property_type.get_property_object(
                         rope.base.evaluate.ObjectArguments([arg]))
-                self.names[node.name] = rope.base.evaluate.CustomEvalName(_eval)
+                self.names[node.name] = pynames.EvaluatedName(_eval)
                 break
         else:
             self.names[node.name] = pynames.DefinedName(pyfunction)

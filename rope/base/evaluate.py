@@ -426,7 +426,8 @@ def _is_method_call(primary, pyfunction):
     return False
 
 
-def _get_evaluated_names(targets, assigned, **kwds):
+def _get_evaluated_names(targets, assigned, module=None, evaluation= '',
+                         lineno=None, eval_type=False):
     """Get `pynames.EvaluatedName`\s
 
     `kwds` is passed to `pynames.EvaluatedName` and should hold
@@ -436,72 +437,11 @@ def _get_evaluated_names(targets, assigned, **kwds):
     names = astutils.get_name_levels(targets)
     for name, levels in names:
         assignment = rope.base.pynames._Assigned(assigned, levels)
-        result[name] = EvaluatedName(assignment=assignment, **kwds)
+        def _eval(assignment=assignment):
+            result = rope.base.oi.objectinfer.evaluate_object(
+                assignment, evaluation, module, lineno)
+            if result is not None and eval_type:
+                result = pyobjects.PyObject(type_=result)
+            return result
+        result[name] = rope.base.pynames.EvaluatedName(_eval, module, lineno)
     return result
-
-
-class EvaluatedName(rope.base.pynames.EvaluatedName):
-    """A `PyName` that will be assigned an expression"""
-
-    def __init__(self, assignment=None, module=None, evaluation= '',
-                 lineno=None, eval_type=False):
-        """Initialize it
-
-        `evaluation` is a `str` that specifies what to do with the
-        `assignment`.  For example for a for object the evaluation is
-        '.__iter__().next()'.  That means first call the `__iter__()`
-        method and then call `next()` from the resulting object.  As
-        another example for with variables it is '.__enter__()'
-
-        """
-        self.module = module
-        self.assignment = assignment
-        self.lineno = lineno
-        self.evaluation = evaluation
-        self.eval_type = eval_type
-        self.pyobject = rope.base.pynames._Inferred(
-            self._get_inferred,
-            rope.base.pynames._get_concluded_data(module))
-
-    def _get_inferred(self):
-        result = rope.base.oi.objectinfer.evaluate_object(
-            self.assignment, self.evaluation, self.module, self.lineno)
-        if result is not None and self.eval_type:
-            result = pyobjects.PyObject(type_=result)
-        return result
-
-    def get_object(self):
-        return self.pyobject.get()
-
-    def get_definition_location(self):
-        return (self.module, self.lineno)
-
-    def invalidate(self):
-        """Forget the `PyObject` this `PyName` holds"""
-        self.pyobject.set(None)
-
-
-class CustomEvalName(rope.base.pynames.EvaluatedName):
-    """A `PyName` that will be assigned an expression"""
-
-    def __init__(self, callback=None, module=None, lineno=None):
-        self.module = module
-        self.lineno = lineno
-        self.callback = callback
-        self.pyobject = rope.base.pynames._Inferred(
-            self._get_inferred,
-            rope.base.pynames._get_concluded_data(module))
-
-    def _get_inferred(self):
-        if self.callback:
-            return self.callback()
-
-    def get_object(self):
-        return self.pyobject.get()
-
-    def get_definition_location(self):
-        return (self.module, self.lineno)
-
-    def invalidate(self):
-        """Forget the `PyObject` this `PyName` holds"""
-        self.pyobject.set(None)

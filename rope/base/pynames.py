@@ -66,7 +66,23 @@ class _Assigned(object):
 
 
 class EvaluatedName(PyName):
-    """Only a placeholder"""
+    """A name whose object will be evaluated later"""
+
+    def __init__(self, callback, module=None, lineno=None):
+        self.module = module
+        self.lineno = lineno
+        self.callback = callback
+        self.pyobject = _Inferred(callback, _get_concluded_data(module))
+
+    def get_object(self):
+        return self.pyobject.get()
+
+    def get_definition_location(self):
+        return (self.module, self.lineno)
+
+    def invalidate(self):
+        """Forget the `PyObject` this `PyName` holds"""
+        self.pyobject.set(None)
 
 
 class ParameterName(PyName):
