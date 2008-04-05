@@ -297,8 +297,7 @@ class ObjectInferTest(unittest.TestCase):
         e_var = mod['e'].get_object()
         self.assertEquals(my_error, e_var.get_type())
 
-    # TODO: properties as decorators
-    def xxx_test_using_property_as_decorators(self):
+    def test_using_property_as_decorators(self):
         code = 'class A(object):\n    pass\n' \
                'class B(object):\n' \
                '    @property\n    def f(self):\n        return A()\n' \

@@ -479,3 +479,29 @@ class EvaluatedName(rope.base.pynames.EvaluatedName):
     def invalidate(self):
         """Forget the `PyObject` this `PyName` holds"""
         self.pyobject.set(None)
+
+
+class CustomEvalName(rope.base.pynames.EvaluatedName):
+    """A `PyName` that will be assigned an expression"""
+
+    def __init__(self, callback=None, module=None, lineno=None):
+        self.module = module
+        self.lineno = lineno
+        self.callback = callback
+        self.pyobject = rope.base.pynames._Inferred(
+            self._get_inferred,
+            rope.base.pynames._get_concluded_data(module))
+
+    def _get_inferred(self):
+        if self.callback:
+            return self.callback()
+
+    def get_object(self):
+        return self.pyobject.get()
+
+    def get_definition_location(self):
+        return (self.module, self.lineno)
+
+    def invalidate(self):
+        """Forget the `PyObject` this `PyName` holds"""
+        self.pyobject.set(None)
