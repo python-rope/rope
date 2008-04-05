@@ -3,6 +3,15 @@
 ===========
 
 
+> Public Release 0.8 : April 5, 2008
+
+
+- ignore_bad_imports project config : March 28, 2008
+
+
+- added AutoImport.get_name_locations() : March 17, 2008
+
+
 > Public Release 0.7.9 : March 14, 2008
 
 
