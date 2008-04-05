@@ -544,6 +544,9 @@ class _PatchingASTWalker(object):
             children.extend(node.orelse)
         self._handle(node, children)
 
+    def _ExceptHandler(self, node):
+        self._excepthandler(node)
+
     def _excepthandler(self, node):
         children = ['except']
         if node.type:

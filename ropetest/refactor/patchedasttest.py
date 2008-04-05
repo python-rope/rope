@@ -702,10 +702,12 @@ class PatchedASTTest(unittest.TestCase):
         ast = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast)
         checker.check_children(
-            'TryExcept', ['try', '', ':', '\n    ', 'Pass', '\n', 'excepthandler'])
+            'TryExcept', ['try', '', ':', '\n    ', 'Pass', '\n',
+                          ('excepthandler', 'ExceptHandler')])
         checker.check_children(
-            'excepthandler', ['except', ' ', 'Name', '', ',', ' ', 'Name', '', ':',
-                              '\n    ', 'Pass'])
+            ('excepthandler', 'ExceptHandler'),
+            ['except', ' ', 'Name', '', ',', ' ', 'Name', '', ':',
+             '\n    ', 'Pass'])
 
     @testutils.run_only_for_25
     def test_try_except_and_finally_node(self):
@@ -778,13 +780,19 @@ class _ResultChecker(object):
         self.test_case.assertEquals((start, end), node.region)
 
     def _find_node(self, text):
+        goal = text
+        if not isinstance(text, (tuple, list)):
+            goal = [text]
         class Search(object):
             result = None
             def __call__(self, node):
-                if str(node).startswith(text):
-                    self.result = node
-                elif node.__class__.__name__.startswith(text):
-                    self.result = node
+                for text in goal:
+                    if str(node).startswith(text):
+                        self.result = node
+                        break
+                    if node.__class__.__name__.startswith(text):
+                        self.result = node
+                        break
                 return self.result is not None
         search = Search()
         ast.call_for_nodes(self.ast, search, recursive=True)
@@ -797,8 +805,13 @@ class _ResultChecker(object):
         result = list(node.sorted_children)
         self.test_case.assertEquals(len(children), len(result))
         for expected, child in zip(children, result):
-            if expected == '' or isinstance(child, basestring):
-                self.test_case.assertEquals(expected, child)
+            goals = expected
+            if not isinstance(expected, (tuple, list)):
+                goals = [expected]
+            for goal in goals:
+                if goal == '' or isinstance(child, basestring):
+                    self.test_case.assertEquals(goal, child)
+                    break
             else:
                 self.test_case.assertNotEquals(
                     '', text, 'probably ignoring some node')
