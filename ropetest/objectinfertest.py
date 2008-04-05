@@ -297,8 +297,7 @@ class ObjectInferTest(unittest.TestCase):
         e_var = mod['e'].get_object()
         self.assertEquals(my_error, e_var.get_type())
 
-    # TODO: properties as decorators
-    def xxx_test_using_property_as_decorators(self):
+    def test_using_property_as_decorators(self):
         code = 'class A(object):\n    pass\n' \
                'class B(object):\n' \
                '    @property\n    def f(self):\n        return A()\n' \
@@ -306,6 +305,15 @@ class ObjectInferTest(unittest.TestCase):
         mod = self.pycore.get_string_module(code)
         var = mod['var'].get_object()
         a = mod['A'].get_object()
+        self.assertEquals(a, var.get_type())
+
+    def test_using_property_as_decorators_and_passing_parameter(self):
+        code = 'class B(object):\n' \
+               '    @property\n    def f(self):\n        return self\n' \
+               'b = B()\nvar = b.f\n'
+        mod = self.pycore.get_string_module(code)
+        var = mod['var'].get_object()
+        a = mod['B'].get_object()
         self.assertEquals(a, var.get_type())
 
 

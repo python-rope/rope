@@ -337,7 +337,19 @@ class _ScopeVisitor(object):
 
     def _FunctionDef(self, node):
         pyfunction = PyFunction(self.pycore, node, self.owner_object)
-        self.names[node.name] = pynames.DefinedName(pyfunction)
+        for decorator in pyfunction.decorators:
+            if isinstance(decorator, ast.Name) and decorator.id == 'property':
+                if isinstance(self, _ClassVisitor):
+                    type_ = rope.base.builtins.Property(pyfunction)
+                    arg = pynames.UnboundName(PyObject(self.owner_object))
+                    def _eval(type_=type_, arg=arg):
+                        return type_.get_property_object(
+                            rope.base.evaluate.ObjectArguments([arg]))
+                    self.names[node.name] = pynames.EvaluatedName(
+                        _eval, module=self.get_module(), lineno=node.lineno)
+                    break
+        else:
+            self.names[node.name] = pynames.DefinedName(pyfunction)
         self.defineds.append(pyfunction)
 
     def _Assign(self, node):
