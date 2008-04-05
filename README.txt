@@ -14,24 +14,6 @@ Overview
 New Features
 ============
 
-Changes since 0.7.9:
-
-* added `AutoImport.get_name_locations()`
-* ``ignore_bad_imports`` project config
-* supporting python 2.6a2
-
-Some of the changes since 0.7:
-
-* specifying the number of syntax fixes for codeassist commands
-* supporting builtin and c-extension modules
-* handling future imports in organize imports
-* added `rope.contrib.autoimport`
-* added use function refactoring
-* choosing which files to perform refactorings on
-* global extract method/variable
-* performing refactorings across multiple projects
-* deprecated codeassist templates
-
 
 Getting Started
 ===============
