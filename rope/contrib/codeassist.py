@@ -289,8 +289,6 @@ class _PythonCodeAssist(object):
     def _get_pyname_type(self, pyname):
         if isinstance(pyname, builtins.BuiltinName):
             return 'builtin'
-        if isinstance(pyname, (pynames.AssignedName, pynames.UnboundName)):
-            return 'variable'
         if isinstance(pyname, pynames.ImportedName) or \
            isinstance(pyname, pynames.ImportedModule):
             return 'imported'
@@ -303,6 +301,7 @@ class _PythonCodeAssist(object):
                 return 'function'
             if isinstance(pyobject, pyobjects.AbstractClass):
                 return 'class'
+        return 'variable'
 
     def _code_completions(self):
         lineno = self.code.count('\n', 0, self.offset) + 1
