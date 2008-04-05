@@ -87,7 +87,7 @@ class PyCoreTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class C(object):\n'
                   '    def __init__(self):\n        self.f = 20\n'
-                  '    @property\n    def f():\n        pass')
+                  '    def f():\n        pass\n')
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element['C'].get_object()
         f = sample_class['f'].get_object()
