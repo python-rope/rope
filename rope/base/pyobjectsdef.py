@@ -340,12 +340,13 @@ class _ScopeVisitor(object):
         for decorator in pyfunction.decorators:
             if isinstance(decorator, ast.Name) and decorator.id == 'property':
                 if isinstance(self, _ClassVisitor):
-                    property_type = rope.base.builtins.Property(pyfunction)
+                    type_ = rope.base.builtins.Property(pyfunction)
                     arg = pynames.UnboundName(PyObject(self.owner_object))
-                    def _eval(property_type=property_type, arg=arg):
-                        return property_type.get_property_object(
+                    def _eval(type_=type_, arg=arg):
+                        return type_.get_property_object(
                             rope.base.evaluate.ObjectArguments([arg]))
-                    self.names[node.name] = pynames.EvaluatedName(_eval)
+                    self.names[node.name] = pynames.EvaluatedName(
+                        _eval, module=self.get_module(), lineno=node.lineno)
                     break
         else:
             self.names[node.name] = pynames.DefinedName(pyfunction)
