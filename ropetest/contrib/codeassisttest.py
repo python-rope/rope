@@ -612,9 +612,12 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.project = testutils.sample_project()
         self.pycore = self.project.get_pycore()
         samplemod = testutils.create_module(self.project, 'samplemod')
-        samplemod.write("class SampleClass(object):\n    def sample_method():\n        pass" + \
-                        "\n\ndef sample_func():\n    pass\nsample_var = 10\n" + \
-                        "\ndef _underlined_func():\n    pass\n\n")
+        code = 'class SampleClass(object):\n' \
+               '    def sample_method():\n        pass\n\n' \
+               'def sample_func():\n    pass\n' \
+               'sample_var = 10\n\n' \
+               'def _underlined_func():\n    pass\n\n'
+        samplemod.write(code)
         package = testutils.create_package(self.project, 'package')
         nestedmod = testutils.create_module(self.project, 'nestedmod', package)
 

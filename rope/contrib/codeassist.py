@@ -502,6 +502,8 @@ def _get_pymodule(pycore, code, resource, maxfixes=1):
     tries = 0
     while True:
         try:
+            if tries == 0 and resource is not None and resource.read() == code:
+                return pycore.resource_to_pyobject(resource, force_errors=True)
             return pycore.get_string_module(code, resource=resource,
                                             force_errors=True)
         except exceptions.ModuleSyntaxError, e:
