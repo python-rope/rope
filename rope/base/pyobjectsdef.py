@@ -220,11 +220,12 @@ class PyModule(pyobjects.PyModule):
 
 class PyPackage(pyobjects.PyPackage):
 
-    def __init__(self, pycore, resource=None):
+    def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource
         if resource is not None and resource.has_child('__init__.py'):
             ast_node = pycore.resource_to_pyobject(
-                resource.get_child('__init__.py')).get_ast()
+                resource.get_child('__init__.py'),
+                force_errors=force_errors).get_ast()
         else:
             ast_node = ast.parse('\n')
         super(PyPackage, self).__init__(pycore, ast_node, resource)

@@ -308,7 +308,8 @@ class _ModuleCache(object):
         if resource in self.module_map:
             return self.module_map[resource]
         if resource.is_folder():
-            result = PyPackage(self.pycore, resource)
+            result = PyPackage(self.pycore, resource,
+                               force_errors=force_errors)
         else:
             result = PyModule(self.pycore, resource=resource,
                               force_errors=force_errors)

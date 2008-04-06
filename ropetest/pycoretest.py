@@ -1077,16 +1077,23 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('syntax error ...\n')
         self.project.pycore.resource_to_pyobject(mod, force_errors=True)
-        
+
     @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_reporting_syntax_errors_in_strings_with_force_errors(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
         self.project.pycore.get_string_module('syntax error ...',
                                               force_errors=True)
-        
+
     def test_not_raising_errors_for_strings_with_ignore_errors(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
         self.project.pycore.get_string_module('syntax error ...')
+
+    @testutils.assert_raises(exceptions.ModuleSyntaxError)
+    def test_reporting_syntax_errors_with_force_errors_for_packages(self):
+        self.project = testutils.sample_project(ignore_syntax_errors=True)
+        pkg = testutils.create_package(self.project, 'pkg')
+        pkg.get_child('__init__.py').write('syntax error ...\n')
+        self.project.pycore.resource_to_pyobject(pkg, force_errors=True)
 
 
 def suite():
