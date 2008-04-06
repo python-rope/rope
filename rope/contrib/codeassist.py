@@ -431,7 +431,6 @@ class _Commenter(object):
         self.lines[start] = ' ' * indents + 'pass'
         for line in range(start + 1, end + 1):
             self.lines[line] = self.lines[start]
-        self.lines.append('\n')
         self._fix_incomplete_try_blocks(lineno, indents)
 
     def _last_non_blank(self, start):
@@ -461,8 +460,10 @@ class _Commenter(object):
                     continue
                 last_indents = indents
                 block_end = self._find_matching_deindent(block_start)
-                if not self.lines[block_end].strip().startswith('finally:') and \
-                   not self.lines[block_end].strip().startswith('except'):
+                line = self.lines[block_end].strip()
+                if not (line.startswith('finally:') or
+                        line.startswith('except ') or
+                        line.startswith('except:')):
                     self.lines.insert(block_end, ' ' * indents + 'finally:')
                     self.lines.insert(block_end + 1, ' ' * indents + '    pass')
 
@@ -510,7 +511,9 @@ def _get_pymodule(pycore, code, resource, maxfixes=1):
             if tries < maxfixes:
                 tries += 1
                 if commenter is None:
-                    commenter = _Commenter(code.split('\n'))
+                    lines = code.split('\n')
+                    lines.append('\n')
+                    commenter = _Commenter(lines)
                 commenter.comment(e.lineno)
                 code = '\n'.join(commenter.lines)
                 errors.append('  * line %s: %s ... fixed' % (e.lineno,
