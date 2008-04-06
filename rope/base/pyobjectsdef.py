@@ -222,10 +222,10 @@ class PyPackage(pyobjects.PyPackage):
 
     def __init__(self, pycore, resource=None, force_errors=False):
         self.resource = resource
-        if resource is not None and resource.has_child('__init__.py'):
+        init_dot_py = self._get_init_dot_py()
+        if init_dot_py is not None:
             ast_node = pycore.resource_to_pyobject(
-                resource.get_child('__init__.py'),
-                force_errors=force_errors).get_ast()
+                init_dot_py, force_errors=force_errors).get_ast()
         else:
             ast_node = ast.parse('\n')
         super(PyPackage, self).__init__(pycore, ast_node, resource)
