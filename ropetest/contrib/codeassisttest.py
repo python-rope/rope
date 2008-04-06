@@ -550,6 +550,10 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('Exception', 'global', result)
 
+    def test_and_normal_complete_blocks_and_single_fixing(self):
+        code = 'try:\n    range.\nexcept:\n    pass\n'
+        result = self._assist(code, code.index('.'), maxfixes=1)
+
     def test_nested_blocks(self):
         code = 'a_var = 10\ntry:\n    try:\n        a_v'
         result = self._assist(code)

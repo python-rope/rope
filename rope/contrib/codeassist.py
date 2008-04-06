@@ -462,7 +462,7 @@ class _Commenter(object):
                 last_indents = indents
                 block_end = self._find_matching_deindent(block_start)
                 if not self.lines[block_end].strip().startswith('finally:') and \
-                   not self.lines[block_end].strip().startswith('except '):
+                   not self.lines[block_end].strip().startswith('except'):
                     self.lines.insert(block_end, ' ' * indents + 'finally:')
                     self.lines.insert(block_end + 1, ' ' * indents + '    pass')
 
