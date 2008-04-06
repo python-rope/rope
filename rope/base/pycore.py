@@ -96,7 +96,8 @@ class PyCore(object):
         ``ignore_syntax_errors`` project config.
 
         """
-        return PyModule(self, module_content, resource, force_errors=True)
+        return PyModule(self, module_content, resource,
+                        force_errors=force_errors)
 
     def get_string_scope(self, module_content, resource=None):
         """Returns a `Scope` object for the given module_content"""

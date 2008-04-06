@@ -1071,6 +1071,23 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
             'from some_nonexistent_module import var\n')
         self.assertFalse('var' in pymod)
 
+    @testutils.assert_raises(exceptions.ModuleSyntaxError)
+    def test_reporting_syntax_errors_with_force_errors(self):
+        self.project = testutils.sample_project(ignore_syntax_errors=True)
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write('syntax error ...\n')
+        self.project.pycore.resource_to_pyobject(mod, force_errors=True)
+        
+    @testutils.assert_raises(exceptions.ModuleSyntaxError)
+    def test_reporting_syntax_errors_in_strings_with_force_errors(self):
+        self.project = testutils.sample_project(ignore_syntax_errors=True)
+        self.project.pycore.get_string_module('syntax error ...',
+                                              force_errors=True)
+        
+    def test_not_raising_errors_for_strings_with_ignore_errors(self):
+        self.project = testutils.sample_project(ignore_syntax_errors=True)
+        self.project.pycore.get_string_module('syntax error ...')
+
 
 def suite():
     result = unittest.TestSuite()
