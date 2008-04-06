@@ -212,8 +212,8 @@ class PyCore(object):
         result.extend(self._find_source_folders(self.project.root))
         return result
 
-    def resource_to_pyobject(self, resource):
-        return self.module_cache.get_pymodule(resource)
+    def resource_to_pyobject(self, resource, force_errors=False):
+        return self.module_cache.get_pymodule(resource, force_errors) 
 
     def get_python_files(self):
         """Returns all python files available in the project"""
@@ -303,13 +303,14 @@ class _ModuleCache(object):
             self.observer.remove_resource(resource)
             del self.module_map[resource]
 
-    def get_pymodule(self, resource):
+    def get_pymodule(self, resource, force_errors=False):
         if resource in self.module_map:
             return self.module_map[resource]
         if resource.is_folder():
             result = PyPackage(self.pycore, resource)
         else:
-            result = PyModule(self.pycore, resource=resource)
+            result = PyModule(self.pycore, resource=resource,
+                              force_errors=force_errors)
         self.module_map[resource] = result
         self.observer.add_resource(resource)
         return result
