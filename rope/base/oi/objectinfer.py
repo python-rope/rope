@@ -7,16 +7,11 @@ package.
 import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.base import evaluate
+from rope.base import evaluate, utils
 
 
-def _ignore_inferred(func):
-    def newfunc(*args, **kwds):
-        try:
-            return func(*args, **kwds)
-        except rope.base.pyobjects.IsBeingInferredError:
-            pass
-    return newfunc
+_ignore_inferred = utils.ignore_exception(
+    rope.base.pyobjects.IsBeingInferredError)
 
 
 @_ignore_inferred
