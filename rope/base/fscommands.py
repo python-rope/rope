@@ -7,7 +7,6 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 
 """
 import os
-import re
 import shutil
 
 
@@ -163,12 +162,20 @@ def read_str_coding(source):
     return _find_coding(source[:second])
 
 
-_encoding_pattern = None
-
 def _find_coding(first_two_lines):
-    global _encoding_pattern
-    if _encoding_pattern is None:
-        _encoding_pattern = re.compile(r'coding[=:]\s*([-\w.]+)')
-    match = _encoding_pattern.search(first_two_lines)
-    if match is not None:
-        return match.group(1)
+    coding = 'coding'
+    try:
+        start = first_two_lines.index(coding) + len(coding)
+        while start < len(first_two_lines):
+            if first_two_lines[start] not in '=: \t':
+                break
+            start += 1
+        end = start
+        while end < len(first_two_lines):
+            c = first_two_lines[end]
+            if not c.isalnum() and c not in '-_':
+                break
+            end += 1
+        return first_two_lines[start:end]
+    except ValueError:
+        pass
