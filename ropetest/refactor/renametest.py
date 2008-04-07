@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 import rope.base.codeanalyze
@@ -571,6 +572,18 @@ class RenameRefactoringTest(unittest.TestCase):
                      resources=[mod2])
         self.assertEquals('def f():\n    pass\n', mod1.read())
         self.assertEquals('import mod1\nmod1.g()\n', mod2.read())
+
+    # XXX: with variables should not leak
+    @testutils.only_for('2.5')
+    def xxx_test_with_statement_variables_should_not_leak(self):
+        code = 'f = 1\nwith open("1.txt") as f:\n    print(f)\n'
+        if sys.version_info < (2, 6, 0):
+            code = 'from __future__ import with_statement\n' + code
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write(code)
+        self._rename(mod1, code.rindex('f'), 'file')
+        expected = 'f = 1\nwith open("1.txt") as file:\n    print(file)\n'
+        self.assertEquals(expected, mod1.read())
 
 
 class ChangeOccurrencesTest(unittest.TestCase):
