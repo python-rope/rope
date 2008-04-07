@@ -256,7 +256,7 @@ class List(BuiltinClass):
         return context.get_per_name()
 
     def _iterator_get(self, context):
-        return Iterator(self._list_get(context))
+        return get_iterator(self._list_get(context))
 
     def _self_get(self, context):
         return get_list(self._list_get(context))
@@ -372,7 +372,7 @@ class Tuple(BuiltinClass):
             '__getitem__': BuiltinName(BuiltinFunction(first)),
             '__getslice__': BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             '__new__': BuiltinName(BuiltinFunction(function=self._new_tuple)),
-            '__iter__': BuiltinName(BuiltinFunction(Iterator(first)))}
+            '__iter__': BuiltinName(BuiltinFunction(get_iterator(first)))}
         super(Tuple, self).__init__(tuple, attributes)
 
     def get_holding_objects(self):
@@ -431,7 +431,7 @@ class Set(BuiltinClass):
         return context.get_per_name()
 
     def _iterator_get(self, context):
-        return Iterator(self._set_get(context))
+        return get_iterator(self._set_get(context))
 
     def _self_get(self, context):
         return get_list(self._set_get(context))
@@ -446,7 +446,7 @@ class Str(BuiltinClass):
     def __init__(self):
         self_object = pyobjects.PyObject(self)
         collector = _AttributeCollector(str)
-        collector('__iter__', Iterator(self_object), check_existence=False)
+        collector('__iter__', get_iterator(self_object), check_existence=False)
 
         self_methods = ['__getitem__', '__getslice__', 'capitalize', 'center',
                         'decode', 'encode', 'expandtabs', 'join', 'ljust',
@@ -626,10 +626,10 @@ def _range_function(args):
     return get_list()
 
 def _reversed_function(args):
-    return _create_builtin(args, Iterator)
+    return _create_builtin(args, get_iterator)
 
 def _sorted_function(args):
-    return _create_builtin(args, List)
+    return _create_builtin(args, get_list)
 
 def _super_function(args):
     passed_class, passed_self = args.get_arguments(['type', 'self'])
@@ -663,7 +663,7 @@ def _enumerate_function(args):
     else:
         holding = _infer_sequence_for_pyname(passed)
     tuple = get_tuple(None, holding)
-    return Iterator(tuple)
+    return get_iterator(tuple)
 
 def _iter_function(args):
     passed = args.get_pynames(['sequence'])[0]
@@ -671,7 +671,7 @@ def _iter_function(args):
         holding = None
     else:
         holding = _infer_sequence_for_pyname(passed)
-    return Iterator(holding)
+    return get_iterator(holding)
 
 def _input_function(args):
     return get_str()
