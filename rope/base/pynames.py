@@ -1,5 +1,5 @@
 import rope.base.pyobjects
-from rope.base import exceptions
+from rope.base import exceptions, utils
 
 
 class PyName(object):
@@ -138,24 +138,6 @@ class ImportedModule(PyName):
         return (pymodule.get_module(), 1)
 
 
-class prevent_recursion(object):
-
-    def __init__(self, default):
-        self.default = default
-
-    def __call__(self, func):
-        name = '_calling_%s_' % func.__name__
-        def newfunc(host, *args, **kwds):
-            if getattr(host, name, False):
-                return self.default()
-            setattr(host, name, True)
-            try:
-                return func(host, *args, **kwds)
-            finally:
-                setattr(host, name, False)
-        return newfunc
-
-
 class ImportedName(PyName):
 
     def __init__(self, imported_module, imported_name):
@@ -171,11 +153,11 @@ class ImportedName(PyName):
             pass
         return UnboundName()
 
-    @prevent_recursion(rope.base.pyobjects.get_unknown)
+    @utils.prevent_recursion(rope.base.pyobjects.get_unknown)
     def get_object(self):
         return self._get_imported_pyname().get_object()
 
-    @prevent_recursion(lambda: (None, None))
+    @utils.prevent_recursion(lambda: (None, None))
     def get_definition_location(self):
         return self._get_imported_pyname().get_definition_location()
 
@@ -198,7 +180,7 @@ class _Inferred(object):
         if self.concluded is None:
             self.temp = None
 
-    @prevent_recursion(_circular_inference)
+    @utils.prevent_recursion(_circular_inference)
     def get(self, *args, **kwds):
         if self.concluded is None or self.concluded.get() is None:
             self.set(self.get_inferred(*args, **kwds))
