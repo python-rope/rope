@@ -436,7 +436,7 @@ def _get_evaluated_names(targets, assigned, module=None, evaluation= '',
     result = {}
     names = astutils.get_name_levels(targets)
     for name, levels in names:
-        assignment = rope.base.pynames._Assigned(assigned, levels)
+        assignment = rope.base.pynames.AssignmentValue(assigned, levels)
         def _eval(assignment=assignment):
             result = rope.base.oi.objectinfer.evaluate_object(
                 assignment, evaluation, module, lineno)

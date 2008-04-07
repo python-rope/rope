@@ -296,7 +296,7 @@ class _AssignVisitor(object):
     def _Name(self, node):
         assignment = None
         if self.assigned_ast is not None:
-            assignment = pynames._Assigned(self.assigned_ast)
+            assignment = pynames.AssignmentValue(self.assigned_ast)
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
@@ -304,7 +304,7 @@ class _AssignVisitor(object):
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
-                assignment = pynames._Assigned(self.assigned_ast, levels)
+                assignment = pynames.AssignmentValue(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
     def _Attribute(self, node):
@@ -500,7 +500,7 @@ class _ClassInitVisitor(_AssignVisitor):
                 pyname = self.scope_visitor.names[node.attr]
                 if isinstance(pyname, pynames.AssignedName):
                     pyname.assignments.append(
-                        pynames._Assigned(self.assigned_ast))
+                        pynames.AssignmentValue(self.assigned_ast))
 
     def _Tuple(self, node):
         if not isinstance(node.ctx, ast.Store):

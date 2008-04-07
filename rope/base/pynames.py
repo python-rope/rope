@@ -42,7 +42,7 @@ class UnboundName(PyName):
         return (None, None)
 
 
-class _Assigned(object):
+class AssignmentValue(object):
     """An assigned expression"""
 
     def __init__(self, ast_node, levels=None):
