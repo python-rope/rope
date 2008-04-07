@@ -428,11 +428,6 @@ def _is_method_call(primary, pyfunction):
 
 def _get_evaluated_names(targets, assigned, module=None, evaluation= '',
                          lineno=None, eval_type=False):
-    """Get `pynames.EvaluatedName`\s
-
-    `kwds` is passed to `pynames.EvaluatedName` and should hold
-    things like lineno, evaluation, and module.
-    """
     result = {}
     names = astutils.get_name_levels(targets)
     for name, levels in names:
