@@ -177,20 +177,6 @@ class ImportedName(PyName):
         return self._get_imported_pyname().get_definition_location()
 
 
-class StarImport(object):
-
-    def __init__(self, imported_module):
-        self.imported_module = imported_module
-
-    def get_names(self):
-        result = {}
-        imported = self.imported_module.get_object()
-        for name, pyname in imported.get_attributes().items():
-            if not name.startswith('_'):
-                result[name] = ImportedName(self.imported_module, name)
-        return result
-
-
 def _get_concluded_data(module):
     if module is None:
         return rope.base.pyobjects._ConcludedData()

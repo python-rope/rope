@@ -418,7 +418,7 @@ class _ScopeVisitor(object):
         if len(node.names) == 1 and node.names[0].name == '*':
             if isinstance(self.owner_object, PyModule):
                 self.owner_object.star_imports.append(
-                    pynames.StarImport(imported_module))
+                    StarImport(imported_module))
         else:
             for imported_name in node.names:
                 imported = imported_name.name
@@ -522,3 +522,17 @@ class _ClassInitVisitor(_AssignVisitor):
 
     def _With(self, node):
         pass
+
+
+class StarImport(object):
+
+    def __init__(self, imported_module):
+        self.imported_module = imported_module
+
+    def get_names(self):
+        result = {}
+        imported = self.imported_module.get_object()
+        for name, pyname in imported.get_attributes().items():
+            if not name.startswith('_'):
+                result[name] = pynames.ImportedName(self.imported_module, name)
+        return result
