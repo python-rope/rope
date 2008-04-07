@@ -1,7 +1,8 @@
 import re
 
 import rope.base.pynames
-from rope.base import pynames, pyobjects, codeanalyze, evaluate, exceptions
+from rope.base import (pynames, pyobjects, codeanalyze,
+                       evaluate, exceptions, utils)
 
 
 class Finder(object):
@@ -70,14 +71,6 @@ def create_finder(pycore, name, pyname, only_calls=False, imports=True,
     return Finder(pycore, name, filters=filters, docs=docs)
 
 
-def _cacheit(func):
-    name = '_' + func.__name__
-    def _wrapper(self, *args, **kwds):
-        if not hasattr(self, name):
-            setattr(self, name, func(self, *args, **kwds))
-        return getattr(self, name)
-    return _wrapper
-
 class Occurrence(object):
 
     def __init__(self, tools, offset):
@@ -85,29 +78,29 @@ class Occurrence(object):
         self.offset = offset
         self.resource = tools.resource
 
-    @_cacheit
+    @utils.cacheit
     def get_word_range(self):
         return self.tools.word_finder.get_word_range(self.offset)
 
-    @_cacheit
+    @utils.cacheit
     def get_primary_range(self):
         return self.tools.word_finder.get_primary_range(self.offset)
 
-    @_cacheit
+    @utils.cacheit
     def get_pyname(self):
         try:
             return self.tools.name_finder.get_pyname_at(self.offset)
         except exceptions.BadIdentifierError:
             pass
 
-    @_cacheit
+    @utils.cacheit
     def get_primary_and_pyname(self):
         try:
             return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
         except exceptions.BadIdentifierError:
             pass
 
-    @_cacheit
+    @utils.cacheit
     def is_in_import_statement(self):
         return (self.tools.word_finder.is_from_statement(self.offset) or
                 self.tools.word_finder.is_import_statement(self.offset))
@@ -298,14 +291,14 @@ class _OccurrenceToolsCreator(object):
         self.pymodule = pymodule
 
     @property
-    @_cacheit
+    @utils.cacheit
     def name_finder(self):
         if self.pymodule is None:
             self.pymodule = self.pycore.resource_to_pyobject(self.resource)
         return evaluate.ScopeNameFinder(self.pymodule)
 
     @property
-    @_cacheit
+    @utils.cacheit
     def source_code(self):
         if self.resource is not None:
             return self.resource.read()
@@ -313,6 +306,6 @@ class _OccurrenceToolsCreator(object):
             return self.pymodule.source_code
 
     @property
-    @_cacheit
+    @utils.cacheit
     def word_finder(self):
         return codeanalyze.WordRangeFinder(self.source_code)
