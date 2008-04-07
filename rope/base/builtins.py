@@ -256,7 +256,7 @@ class List(BuiltinClass):
         return context.get_per_name()
 
     def _iterator_get(self, context):
-        return Iterator(self._list_get(context))
+        return get_iterator(self._list_get(context))
 
     def _self_get(self, context):
         return get_list(self._list_get(context))

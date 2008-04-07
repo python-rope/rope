@@ -522,8 +522,9 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_iters(self):
-        code = 'class C(object):\n    pass\nl = []\n' \
-               'l.append(C())\nfor c in l:\n    a_var = c\n'
+        code = 'class C(object):\n    pass\n' \
+               'l = []\nl.append(C())\n' \
+               'for c in l:\n    a_var = c\n'
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)

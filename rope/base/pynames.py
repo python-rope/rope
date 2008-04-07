@@ -45,7 +45,8 @@ class UnboundName(PyName):
 class AssignmentValue(object):
     """An assigned expression"""
 
-    def __init__(self, ast_node, levels=None):
+    def __init__(self, ast_node, levels=None, evaluation='',
+                 assign_type=False):
         """The `level` is `None` for simple assignments and is
         a list of numbers for tuple assignments for example in::
 
@@ -60,6 +61,8 @@ class AssignmentValue(object):
             self.levels = []
         else:
             self.levels = levels
+        self.evaluation = evaluation
+        self.assign_type = assign_type
 
     def get_lineno(self):
         return self.ast_node.lineno
