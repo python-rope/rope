@@ -22,7 +22,8 @@ def __rope_start_everything():
             self.my_file = s.makefile('w')
 
         def send_data(self, data):
-            pickle.dump(data, self.my_file)
+            if not self.my_file.closed:
+                pickle.dump(data, self.my_file)
 
         def close(self):
             self.my_file.close()
@@ -33,7 +34,8 @@ def __rope_start_everything():
             self.my_file = open(file_name, 'wb')
 
         def send_data(self, data):
-            marshal.dump(data, self.my_file)
+            if not self.my_file.closed:
+                marshal.dump(data, self.my_file)
 
         def close(self):
             self.my_file.close()
@@ -174,6 +176,8 @@ def __rope_start_everything():
         data_sender = _FunctionCallDataSender(send_info, project_root)
     del sys.argv[1:4]
     execfile(file_to_run, run_globals)
+    if send_info != '-':
+        data_sender.close()
 
 
 if __name__ == '__main__':
