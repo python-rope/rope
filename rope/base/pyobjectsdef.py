@@ -285,18 +285,12 @@ class _AssignVisitor(object):
             ast.walk(child_node, self)
 
     def _assigned(self, name, assignment=None):
-        pyname = self.scope_visitor.names.get(name, None)
-        if pyname is None:
-            pyname = pynames.AssignedName(
-                module=self.scope_visitor.get_module())
-        if isinstance(pyname, pynames.AssignedName):
-            pyname.assignments.append(assignment)
-            self.scope_visitor.names[name] = pyname
+        self.scope_visitor._assigned(name, assignment)
 
     def _Name(self, node):
         assignment = None
         if self.assigned_ast is not None:
-            assignment = pynames._Assigned(self.assigned_ast)
+            assignment = pynames.AssignmentValue(self.assigned_ast)
         self._assigned(node.id, assignment)
 
     def _Tuple(self, node):
@@ -304,7 +298,7 @@ class _AssignVisitor(object):
         for name, levels in names:
             assignment = None
             if self.assigned_ast is not None:
-                assignment = pynames._Assigned(self.assigned_ast, levels)
+                assignment = pynames.AssignmentValue(self.assigned_ast, levels)
             self._assigned(name, assignment)
 
     def _Attribute(self, node):
@@ -360,19 +354,34 @@ class _ScopeVisitor(object):
         pass
 
     def _For(self, node):
-        names = rope.base.evaluate._get_evaluated_names(
-            node.target, node.iter, evaluation='.__iter__().next()',
-            lineno=node.lineno, module=self.get_module())
-        self.names.update(names)
+        names = self._update_evaluated(node.target, node.iter,
+                                       '.__iter__().next()')
         for child in node.body + node.orelse:
             ast.walk(child, self)
 
+    def _assigned(self, name, assignment):
+        pyname = self.names.get(name, None)
+        if pyname is None:
+            pyname = pynames.AssignedName(module=self.get_module())
+        if isinstance(pyname, pynames.AssignedName):
+            if assignment is not None:
+                pyname.assignments.append(assignment)
+            self.names[name] = pyname
+
+    def _update_evaluated(self, targets, assigned,
+                          evaluation= '', eval_type=False):
+        result = {}
+        names = astutils.get_name_levels(targets)
+        for name, levels in names:
+            assignment = pynames.AssignmentValue(assigned, levels,
+                                                 evaluation, eval_type)
+            self._assigned(name, assignment)
+        return result
+
     def _With(self, node):
         if node.optional_vars:
-            names = rope.base.evaluate._get_evaluated_names(
-                node.optional_vars, node.context_expr, lineno=node.lineno,
-                evaluation='.__enter__()', module=self.get_module())
-            self.names.update(names)
+            self._update_evaluated(node.optional_vars,
+                                   node.context_expr, '.__enter__()')
         for child in node.body:
             ast.walk(child, self)
 
@@ -381,10 +390,7 @@ class _ScopeVisitor(object):
             type_node = node.type
             if isinstance(node.type, ast.Tuple) and type_node.elts:
                 type_node = type_node.elts[0]
-            pynames = rope.base.evaluate._get_evaluated_names(
-                node.name, type_node, lineno=node.lineno,
-                module=self.get_module(), eval_type=True)
-            self.names.update(pynames)
+            self._update_evaluated(node.name, type_node, eval_type=True)
         for child in node.body:
             ast.walk(child, self)
 
@@ -500,7 +506,7 @@ class _ClassInitVisitor(_AssignVisitor):
                 pyname = self.scope_visitor.names[node.attr]
                 if isinstance(pyname, pynames.AssignedName):
                     pyname.assignments.append(
-                        pynames._Assigned(self.assigned_ast))
+                        pynames.AssignmentValue(self.assigned_ast))
 
     def _Tuple(self, node):
         if not isinstance(node.ctx, ast.Store):

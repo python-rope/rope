@@ -90,7 +90,7 @@ class SOIVisitor(object):
             args_pynames.append(evaluate.get_statement_result(
                                 self.scope, subscript.slice.value))
             value = rope.base.oi.objectinfer._infer_assignment(
-                rope.base.pynames._Assigned(node.value, levels), self.pymodule)
+                rope.base.pynames.AssignmentValue(node.value, levels), self.pymodule)
             args_pynames.append(rope.base.pynames.UnboundName(value))
             if instance is not None and value is not None:
                 pyobject = instance.get_object()

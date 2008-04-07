@@ -51,6 +51,4 @@ class ParameterName(pynames.ParameterName):
     def get_definition_location(self):
         return (self.pyfunction.get_module(), self.pyfunction.get_ast().lineno)
 
-
 _Inferred = pynames._Inferred
-_Assigned = pynames._Assigned

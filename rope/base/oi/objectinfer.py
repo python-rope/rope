@@ -77,93 +77,6 @@ def get_passed_objects(pyfunction, parameter_index):
             result.append(statically_inferred[parameter_index])
     return result
 
-@_ignore_inferred
-def _infer_assignment(assignment, pymodule):
-    pyobject = _infer_pyobject_for_assign_node(
-        assignment.ast_node, pymodule)
-    if pyobject is None:
-        return None
-    return _infer_assignment_object(assignment, pyobject)
-
-def _infer_assignment_object(assignment, pyobject):
-    for index in assignment.levels:
-        if isinstance(pyobject.get_type(), rope.base.builtins.Tuple):
-            holdings = pyobject.get_type().get_holding_objects()
-            if holdings:
-                pyobject = holdings[min(len(holdings) - 1, index)]
-            else:
-                pyobject = None
-        elif isinstance(pyobject.get_type(), rope.base.builtins.List):
-            pyobject = pyobject.get_type().holding
-        else:
-            pyobject = None
-        if pyobject is None:
-            break
-    return pyobject
-
-@_ignore_inferred
-def _infer_pyobject_for_assign_node(assign_node, pymodule, lineno=None):
-    if lineno is None:
-        lineno = _get_lineno_for_node(assign_node)
-    holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-    primary, pyname = evaluate.get_primary_and_result(holding_scope,
-                                                      assign_node)
-    if pyname is not None:
-        result = pyname.get_object()
-        if isinstance(result.get_type(), rope.base.builtins.Property) and \
-           holding_scope.get_kind() == 'Class':
-            arg = rope.base.pynames.UnboundName(
-                rope.base.pyobjects.PyObject(holding_scope.pyobject))
-            return result.get_type().get_property_object(
-                evaluate.ObjectArguments([arg]))
-        return result
-
-@_ignore_inferred
-def _infer_pyname_for_assign_node(assign_node, pymodule, lineno=None):
-    if lineno is None:
-        lineno = _get_lineno_for_node(assign_node)
-    holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-    return evaluate.get_statement_result(holding_scope, assign_node)
-
-def _get_lineno_for_node(assign_node):
-    if hasattr(assign_node, 'lineno') and \
-       assign_node.lineno is not None:
-        return assign_node.lineno
-    return 1
-
-@_ignore_inferred
-def evaluate_object(assignment, evaluation, module, lineno):
-    node = assignment.ast_node
-    pyobject = _infer_pyobject_for_assign_node(node, module, lineno)
-    pyname = _infer_pyname_for_assign_node(node, module, lineno)
-    new_pyname = pyname
-    tokens = evaluation.split('.')
-    for token in tokens:
-        call = token.endswith('()')
-        if call:
-            token = token[:-2]
-        if token:
-            pyname = new_pyname
-            new_pyname = _get_attribute(pyobject, token)
-            if new_pyname is not None:
-                pyobject = new_pyname.get_object()
-        if pyobject is not None and call:
-            if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
-                args = evaluate.ObjectArguments([pyname])
-                pyobject = pyobject.get_returned_object(args)
-            else:
-                pyobject = None
-        if pyobject is None:
-            break
-    if pyname is None or pyobject is None:
-        return pyobject
-    return _infer_assignment_object(assignment, pyobject)
-
-def _get_attribute(pyobject, name):
-    if pyobject is not None and name in pyobject:
-        return pyobject[name]
-
-
 def _infer_returned(pyobject, args):
     if args:
         # HACK: Setting parameter objects manually
@@ -195,3 +108,85 @@ def _infer_returned(pyobject, args):
 def _parameter_objects(pyobject):
     params = pyobject.get_param_names(special_args=False)
     return [rope.base.pyobjects.get_unknown()] * len(params)
+
+# handling `rope.base.pynames.AssignmentValue`
+
+@_ignore_inferred
+def _infer_assignment(assignment, pymodule):
+    result = _follow_pyname(assignment, pymodule)
+    if result is None:
+        return None
+    pyname, pyobject = result
+    pyobject = _follow_evaluations(assignment, pyname, pyobject)
+    if pyobject is None:
+        return None
+    return _follow_levels(assignment, pyobject)
+
+def _follow_levels(assignment, pyobject):
+    for index in assignment.levels:
+        if isinstance(pyobject.get_type(), rope.base.builtins.Tuple):
+            holdings = pyobject.get_type().get_holding_objects()
+            if holdings:
+                pyobject = holdings[min(len(holdings) - 1, index)]
+            else:
+                pyobject = None
+        elif isinstance(pyobject.get_type(), rope.base.builtins.List):
+            pyobject = pyobject.get_type().holding
+        else:
+            pyobject = None
+        if pyobject is None:
+            break
+    return pyobject
+
+@_ignore_inferred
+def _follow_pyname(assignment, pymodule, lineno=None):
+    assign_node = assignment.ast_node
+    if lineno is None:
+        lineno = _get_lineno_for_node(assign_node)
+    holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+    pyname = evaluate.get_statement_result(holding_scope, assign_node)
+    if pyname is not None:
+        result = pyname.get_object()
+        if isinstance(result.get_type(), rope.base.builtins.Property) and \
+           holding_scope.get_kind() == 'Class':
+            arg = rope.base.pynames.UnboundName(
+                rope.base.pyobjects.PyObject(holding_scope.pyobject))
+            return pyname, result.get_type().get_property_object(
+                evaluate.ObjectArguments([arg]))
+        return pyname, result
+
+@_ignore_inferred
+def _follow_evaluations(assignment, pyname, pyobject):
+    new_pyname = pyname
+    tokens = assignment.evaluation.split('.')
+    for token in tokens:
+        call = token.endswith('()')
+        if call:
+            token = token[:-2]
+        if token:
+            pyname = new_pyname
+            new_pyname = _get_attribute(pyobject, token)
+            if new_pyname is not None:
+                pyobject = new_pyname.get_object()
+        if pyobject is not None and call:
+            if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
+                args = evaluate.ObjectArguments([pyname])
+                pyobject = pyobject.get_returned_object(args)
+            else:
+                pyobject = None
+        if pyobject is None:
+            break
+    if pyobject is not None and assignment.assign_type:
+        return rope.base.pyobjects.PyObject(pyobject)
+    return pyobject
+
+
+def _get_lineno_for_node(assign_node):
+    if hasattr(assign_node, 'lineno') and \
+       assign_node.lineno is not None:
+        return assign_node.lineno
+    return 1
+
+def _get_attribute(pyobject, name):
+    if pyobject is not None and name in pyobject:
+        return pyobject[name]

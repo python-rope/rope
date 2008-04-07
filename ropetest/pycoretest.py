@@ -483,7 +483,8 @@ class PyCoreTest(unittest.TestCase):
 
     @testutils.run_only_for_25
     def test_with_statement_variable_type(self):
-        code = 'class A(object):\n    def __enter__(self):        return self\n'\
+        code = 'class A(object):\n' \
+               '    def __enter__(self):        return self\n'\
                '    def __exit__(self, type, value, tb):\n        pass\n'\
                'with A() as var:    pass\n'
         if sys.version_info < (2, 6, 0):

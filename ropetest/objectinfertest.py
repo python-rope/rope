@@ -280,9 +280,11 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
 
     def test_we_know_the_type_of_catched_exceptions(self):
+        code = 'class MyError(Exception):\n    pass\n' \
+               'try:\n    raise MyError()\n' \
+               'except MyError, e:\n    pass\n'
         mod = self.pycore.get_string_module(
-            'class MyError(Exception):\n    pass\n'
-            'try:\n    raise MyError()\nexcept MyError, e:\n    pass\n')
+            code)
         my_error = mod['MyError'].get_object()
         e_var = mod['e'].get_object()
         self.assertEquals(my_error, e_var.get_type())

@@ -260,8 +260,8 @@ class StatementEvaluator(object):
         names = {}
         for comp in node.generators:
             new_names = _get_evaluated_names(
-                comp.target, comp.iter, evaluation='.__iter__().next()',
-                lineno=node.lineno, module=module)
+                comp.target, comp.iter, module,
+                '.__iter__().next()', node.lineno)
             names.update(new_names)
         return rope.base.pyscopes.TemporaryScope(scope.pycore, scope, names)
 
@@ -426,22 +426,13 @@ def _is_method_call(primary, pyfunction):
     return False
 
 
-def _get_evaluated_names(targets, assigned, module=None, evaluation= '',
-                         lineno=None, eval_type=False):
-    """Get `pynames.EvaluatedName`\s
-
-    `kwds` is passed to `pynames.EvaluatedName` and should hold
-    things like lineno, evaluation, and module.
-    """
+def _get_evaluated_names(targets, assigned, module, evaluation, lineno):
     result = {}
-    names = astutils.get_name_levels(targets)
-    for name, levels in names:
-        assignment = rope.base.pynames._Assigned(assigned, levels)
-        def _eval(assignment=assignment):
-            result = rope.base.oi.objectinfer.evaluate_object(
-                assignment, evaluation, module, lineno)
-            if result is not None and eval_type:
-                result = pyobjects.PyObject(type_=result)
-            return result
-        result[name] = rope.base.pynames.EvaluatedName(_eval, module, lineno)
+    for name, levels in astutils.get_name_levels(targets):
+        assignment = rope.base.pynames.AssignmentValue(assigned, levels,
+                                                       evaluation)
+        # XXX: this module should not access `rope.base.pynamesdef`!
+        pyname = rope.base.pynamesdef.AssignedName(lineno, module)
+        pyname.assignments.append(assignment)
+        result[name] = pyname
     return result
