@@ -2,7 +2,7 @@
 import inspect
 
 import rope.base.evaluate
-from rope.base import pynames, pyobjects
+from rope.base import pynames, pyobjects, arguments
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -347,7 +347,7 @@ class Dict(BuiltinClass):
             return
         new_dict = context.get_pynames(['self', 'd'])[1]
         if new_dict and isinstance(new_dict.get_object().get_type(), Dict):
-            args = rope.base.evaluate.ObjectArguments([new_dict])
+            args = arguments.ObjectArguments([new_dict])
             items = new_dict.get_object()['popitem'].\
                     get_object().get_returned_object(args)
             context.save_per_name(items)
@@ -600,7 +600,7 @@ def _infer_sequence_for_pyname(pyname):
     if pyname is None:
         return None
     seq = pyname.get_object()
-    args = rope.base.evaluate.ObjectArguments([pyname])
+    args = arguments.ObjectArguments([pyname])
     if '__iter__' in seq:
         iter = seq['__iter__'].get_object().\
                get_returned_object(args)

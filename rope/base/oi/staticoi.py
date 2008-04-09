@@ -1,7 +1,7 @@
 import rope.base.ast
 import rope.base.oi.objectinfer
 import rope.base.pynames
-from rope.base import pyobjects, evaluate, astutils
+from rope.base import pyobjects, evaluate, astutils, arguments
 
 
 def analyze_module(pycore, pymodule, should_analyze, search_subscopes):
@@ -47,8 +47,8 @@ class SOIVisitor(object):
             return
         pyfunction = pyname.get_object()
         if isinstance(pyfunction, pyobjects.AbstractFunction):
-            args = evaluate.create_arguments(primary, pyfunction,
-                                             node, self.scope)
+            args = arguments.create_arguments(primary, pyfunction,
+                                              node, self.scope)
         elif isinstance(pyfunction, pyobjects.PyClass):
             pyclass = pyfunction
             if '__init__' in pyfunction:
@@ -63,9 +63,9 @@ class SOIVisitor(object):
         self._call(pyfunction, args)
 
     def _args_with_self(self, primary, self_pyname, pyfunction, node):
-        base_args = evaluate.create_arguments(primary, pyfunction,
-                                              node, self.scope)
-        return evaluate.MixedArguments(self_pyname, base_args, self.scope)
+        base_args = arguments.create_arguments(primary, pyfunction,
+                                               node, self.scope)
+        return arguments.MixedArguments(self_pyname, base_args, self.scope)
 
     def _call(self, pyfunction, args):
         if isinstance(pyfunction, pyobjects.PyFunction):
@@ -96,7 +96,7 @@ class SOIVisitor(object):
                 pyobject = instance.get_object()
                 if '__setitem__' in pyobject:
                     pyfunction = pyobject['__setitem__'].get_object()
-                    args = evaluate.ObjectArguments([instance] + args_pynames)
+                    args = arguments.ObjectArguments([instance] + args_pynames)
                     self._call(pyfunction, args)
                 # IDEA: handle `__setslice__`, too
 

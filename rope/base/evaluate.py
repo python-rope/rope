@@ -1,7 +1,7 @@
 import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.base import ast, astutils, exceptions, pyobjects
+from rope.base import ast, astutils, exceptions, pyobjects, arguments
 from rope.base.codeanalyze import WordRangeFinder
 
 
@@ -170,7 +170,8 @@ class StatementEvaluator(object):
         if pyobject is None:
             return
         def _get_returned(pyobject):
-            args = create_arguments(primary, pyobject, node, self.scope)
+            args = arguments.create_arguments(primary, pyobject,
+                                              node, self.scope)
             return pyobject.get_returned_object(args)
         if isinstance(pyobject, rope.base.pyobjects.AbstractClass):
             result = None
@@ -308,122 +309,13 @@ class StatementEvaluator(object):
             args = [node]
             if other_args:
                 args += other_args
-            arguments = Arguments(args, self.scope)
+            arguments_ = arguments.Arguments(args, self.scope)
             self.result = rope.base.pynames.UnboundName(
-                pyobject=call_function.get_returned_object(arguments))
+                pyobject=call_function.get_returned_object(arguments_))
 
     def _Lambda(self, node):
         self.result = rope.base.pynames.UnboundName(
             pyobject=rope.base.builtins.Lambda(node, self.scope))
-
-
-class Arguments(object):
-    """A class for evaluating parameters passed to a function
-
-    You can use the `create_arguments` factory.  It handles implicit
-    first arguments.
-
-    """
-
-    def __init__(self, args, scope):
-        self.args = args
-        self.scope = scope
-        self.instance = None
-
-    def get_arguments(self, parameters):
-        result = []
-        for pyname in self.get_pynames(parameters):
-            if pyname is None:
-                result.append(None)
-            else:
-                result.append(pyname.get_object())
-        return result
-
-    def get_pynames(self, parameters):
-        result = [None] * max(len(parameters), len(self.args))
-        for index, arg in enumerate(self.args):
-            if isinstance(arg, ast.keyword) and arg.arg in parameters:
-                result[parameters.index(arg.arg)] = self._evaluate(arg.value)
-            else:
-                result[index] = self._evaluate(arg)
-        return result
-
-    def get_instance_pyname(self):
-        if self.args:
-            return self._evaluate(self.args[0])
-
-    def _evaluate(self, ast_node):
-        return get_statement_result(self.scope, ast_node)
-
-
-class ObjectArguments(object):
-
-    def __init__(self, pynames):
-        self.pynames = pynames
-
-    def get_arguments(self, parameters):
-        result = []
-        for pyname in self.pynames:
-            if pyname is None:
-                result.append(None)
-            else:
-                result.append(pyname.get_object())
-        return result
-
-    def get_pynames(self, parameters):
-        return self.pynames
-
-    def get_instance_pyname(self):
-        return self.pynames[0]
-
-
-class MixedArguments(object):
-
-    def __init__(self, pyname, arguments, scope):
-        """`argumens` is an instance of `Arguments`"""
-        self.pyname = pyname
-        self.args = arguments
-
-    def get_pynames(self, parameters):
-        return [self.pyname] + self.args.get_pynames(parameters[1:])
-
-    def get_arguments(self, parameters):
-        result = []
-        for pyname in self.get_pynames(parameters):
-            if pyname is None:
-                result.append(None)
-            else:
-                result.append(pyname.get_object())
-        return result
-
-    def get_instance_pyname(self):
-        return self.pyname
-
-
-def create_arguments(primary, pyfunction, call_node, scope):
-    """A factory for creating `Arguments`"""
-    args = list(call_node.args)
-    args.extend(call_node.keywords)
-    called = call_node.func
-    # XXX: Handle constructors
-    if _is_method_call(primary, pyfunction) and \
-       isinstance(called, ast.Attribute):
-        args.insert(0, called.value)
-    return Arguments(args, scope)
-
-
-def _is_method_call(primary, pyfunction):
-    if primary is None:
-        return False
-    pyobject = primary.get_object()
-    if isinstance(pyobject.get_type(), rope.base.pyobjects.PyClass) and \
-       isinstance(pyfunction, rope.base.pyobjects.PyFunction) and \
-       isinstance(pyfunction.parent, rope.base.pyobjects.PyClass):
-        return True
-    if isinstance(pyobject.get_type(), rope.base.pyobjects.AbstractClass) and \
-       isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
-        return True
-    return False
 
 
 def _get_evaluated_names(targets, assigned, module, evaluation, lineno):

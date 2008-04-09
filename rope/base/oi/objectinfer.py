@@ -7,7 +7,7 @@ package.
 import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
-from rope.base import evaluate, utils
+from rope.base import evaluate, utils, arguments
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -147,7 +147,7 @@ def _follow_pyname(assignment, pymodule, lineno=None):
             arg = rope.base.pynames.UnboundName(
                 rope.base.pyobjects.PyObject(holding_scope.pyobject))
             return pyname, result.get_type().get_property_object(
-                evaluate.ObjectArguments([arg]))
+                arguments.ObjectArguments([arg]))
         return pyname, result
 
 @_ignore_inferred
@@ -165,7 +165,7 @@ def _follow_evaluations(assignment, pyname, pyobject):
                 pyobject = new_pyname.get_object()
         if pyobject is not None and call:
             if isinstance(pyobject, rope.base.pyobjects.AbstractFunction):
-                args = evaluate.ObjectArguments([pyname])
+                args = arguments.ObjectArguments([pyname])
                 pyobject = pyobject.get_returned_object(args)
             else:
                 pyobject = None

@@ -3,8 +3,7 @@ import rope.base.evaluate
 import rope.base.builtins
 import rope.base.oi.objectinfer
 import rope.base.pyscopes
-from rope.base import (pynamesdef as pynames, exceptions,
-                       ast, astutils, pyobjects, fscommands)
+from rope.base import pynamesdef as pynames, exceptions, ast, astutils, pyobjects, fscommands, arguments
 from rope.base.pyobjects import *
 
 
@@ -339,7 +338,7 @@ class _ScopeVisitor(object):
                     arg = pynames.UnboundName(PyObject(self.owner_object))
                     def _eval(type_=type_, arg=arg):
                         return type_.get_property_object(
-                            rope.base.evaluate.ObjectArguments([arg]))
+                            arguments.ObjectArguments([arg]))
                     self.names[node.name] = pynames.EvaluatedName(
                         _eval, module=self.get_module(), lineno=node.lineno)
                     break
