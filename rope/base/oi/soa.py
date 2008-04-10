@@ -24,10 +24,12 @@ def _analyze_node(pycore, pydefined, should_analyze,
                           search_subscopes, followed_calls)
     if should_analyze(pydefined):
         new_followed_calls = max(0, followed_calls - 1)
+        return_true = lambda pydefined: True
+        return_false = lambda pydefined: False
         def _called(pyfunction):
             if followed_calls:
-                _analyze_node(pycore, pyfunction, should_analyze,
-                              search_subscopes, new_followed_calls)
+                _analyze_node(pycore, pyfunction, return_true,
+                              return_false, new_followed_calls)
         visitor = SOIVisitor(pycore, pydefined, _called)
         for child in rope.base.ast.get_child_nodes(pydefined.get_ast()):
             rope.base.ast.walk(child, visitor)
