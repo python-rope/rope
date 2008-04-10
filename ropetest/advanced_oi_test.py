@@ -703,6 +703,20 @@ class NewStaticOITest(unittest.TestCase):
         p_type = f_scope['p'].get_object().get_type()
         self.assertEquals(a_class, p_type)
 
+    def test_following_function_calls_when_asked_to(self):
+        code = 'class A(object):\n    pass\n' \
+               'class C(object):\n' \
+               '    def __init__(self, arg):\n' \
+               '        self.attr = arg\n' \
+               'def f(p):\n    return C(p)\n' \
+               'c = f(A())\nx = c.attr\n'
+        self.mod.write(code)
+        self.pycore.analyze_module(self.mod, followed_calls=1)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        a_class = pymod['A'].get_object()
+        x_var = pymod['x'].get_object().get_type()
+        self.assertEquals(a_class, x_var)
+
 
 def suite():
     result = unittest.TestSuite()

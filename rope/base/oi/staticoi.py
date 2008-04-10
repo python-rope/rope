@@ -4,33 +4,42 @@ import rope.base.pynames
 from rope.base import pyobjects, evaluate, astutils, arguments
 
 
-def analyze_module(pycore, pymodule, should_analyze, search_subscopes):
+def analyze_module(pycore, pymodule, should_analyze,
+                   search_subscopes, followed_calls):
     """Analyze `pymodule` for static object inference
 
     Analyzes scopes for collecting object information.  The analysis
     starts from inner scopes.
 
     """
-    _analyze_node(pycore, pymodule, should_analyze, search_subscopes)
+    _analyze_node(pycore, pymodule, should_analyze,
+                  search_subscopes, followed_calls)
 
 
-def _analyze_node(pycore, pydefined, should_analyze, search_subscopes):
+def _analyze_node(pycore, pydefined, should_analyze,
+                  search_subscopes, followed_calls):
     if search_subscopes(pydefined):
         for scope in pydefined.get_scope().get_scopes():
-            _analyze_node(pycore, scope.pyobject,
-                          should_analyze, search_subscopes)
+            _analyze_node(pycore, scope.pyobject, should_analyze,
+                          search_subscopes, followed_calls)
     if should_analyze(pydefined):
-        visitor = SOIVisitor(pycore, pydefined)
+        new_followed_calls = max(0, followed_calls - 1)
+        def _called(pyfunction):
+            if followed_calls:
+                _analyze_node(pycore, pyfunction, should_analyze,
+                              search_subscopes, new_followed_calls)
+        visitor = SOIVisitor(pycore, pydefined, _called)
         for child in rope.base.ast.get_child_nodes(pydefined.get_ast()):
             rope.base.ast.walk(child, visitor)
 
 
 class SOIVisitor(object):
 
-    def __init__(self, pycore, pydefined):
+    def __init__(self, pycore, pydefined, called_callback=None):
         self.pycore = pycore
         self.pymodule = pydefined.get_module()
         self.scope = pydefined.get_scope()
+        self.called = called_callback
 
     def _FunctionDef(self, node):
         pass
@@ -72,6 +81,8 @@ class SOIVisitor(object):
             self.pycore.object_info.function_called(
                 pyfunction, args.get_arguments(pyfunction.get_param_names()))
             pyfunction._set_parameter_pyobjects(None)
+            if self.called is not None:
+                self.called(pyfunction)
         # XXX: Maybe we should not call every builtin function
         if isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)

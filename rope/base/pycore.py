@@ -214,7 +214,7 @@ class PyCore(object):
         return result
 
     def resource_to_pyobject(self, resource, force_errors=False):
-        return self.module_cache.get_pymodule(resource, force_errors) 
+        return self.module_cache.get_pymodule(resource, force_errors)
 
     def get_python_files(self):
         """Returns all python files available in the project"""
@@ -258,7 +258,7 @@ class PyCore(object):
         return runner
 
     def analyze_module(self, resource, should_analyze=lambda py: True,
-                       search_subscopes=lambda py: True):
+                       search_subscopes=lambda py: True, followed_calls=0):
         """Analyze `resource` module for static object inference
 
         This function forces rope to analyze this module to collect
@@ -275,8 +275,8 @@ class PyCore(object):
         """
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
-        rope.base.oi.staticoi.analyze_module(self, pymodule,
-                                             should_analyze, search_subscopes)
+        rope.base.oi.staticoi.analyze_module(
+            self, pymodule, should_analyze, search_subscopes, followed_calls)
 
     def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
         classes = self.classes_cache.get_classes(task_handle)
