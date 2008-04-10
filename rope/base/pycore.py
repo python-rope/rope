@@ -48,14 +48,17 @@ class PyCore(object):
             self._custom_source_folders.append(path)
 
     def _init_automatic_soi(self):
-        auto_soa = self.project.get_prefs().get('automatic_soi', None)
-        auto_soa = self.project.get_prefs().get('automatic_soa', auto_soa)
-        if not auto_soa:
+        if not self.automatic_soa:
             return
         callback = self._file_changed_for_soi
         observer = rope.base.resourceobserver.ResourceObserver(
             changed=callback, moved=callback, removed=callback)
         self.project.add_observer(observer)
+
+    @property
+    def automatic_soa(self):
+        auto_soa = self.project.get_prefs().get('automatic_soi', None)
+        return self.project.get_prefs().get('automatic_soa', auto_soa)
 
     def _file_changed_for_soi(self, resource, new_resource=None):
         old_contents = self.project.history.\
