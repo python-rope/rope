@@ -1,7 +1,7 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
 import rope.base.builtins
-import rope.base.oi.objectinfer
+import rope.base.oi.soi
 import rope.base.pyscopes
 from rope.base import pynamesdef as pynames, exceptions, ast, astutils, pyobjects, fscommands, arguments
 from rope.base.pyobjects import *
@@ -29,12 +29,12 @@ class PyFunction(pyobjects.PyFunction):
                                                 _FunctionVisitor)
 
     def _infer_parameters(self):
-        pyobjects = rope.base.oi.objectinfer.infer_parameter_objects(self)
+        pyobjects = rope.base.oi.soi.infer_parameter_objects(self)
         self._handle_special_args(pyobjects)
         return pyobjects
 
     def _infer_returned(self, args=None):
-        return rope.base.oi.objectinfer.infer_returned_object(self, args)
+        return rope.base.oi.soi.infer_returned_object(self, args)
 
     def _handle_special_args(self, pyobjects):
         if len(pyobjects) == len(self.arguments.args):

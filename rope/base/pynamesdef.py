@@ -1,4 +1,4 @@
-import rope.base.oi.objectinfer
+import rope.base.oi.soi
 from rope.base import pynames
 from rope.base.pynames import *
 
@@ -15,7 +15,7 @@ class AssignedName(pynames.AssignedName):
 
     def _get_inferred(self):
         if self.module is not None:
-            return rope.base.oi.objectinfer.infer_assigned_object(self)
+            return rope.base.oi.soi.infer_assigned_object(self)
 
     def get_object(self):
         return self.pyobject.get()
@@ -45,7 +45,7 @@ class ParameterName(pynames.ParameterName):
 
     def get_objects(self):
         """Returns the list of objects passed as this parameter"""
-        return rope.base.oi.objectinfer.get_passed_objects(
+        return rope.base.oi.soi.get_passed_objects(
             self.pyfunction, self.index)
 
     def get_definition_location(self):

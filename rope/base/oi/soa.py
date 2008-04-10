@@ -1,5 +1,5 @@
 import rope.base.ast
-import rope.base.oi.objectinfer
+import rope.base.oi.soi
 import rope.base.pynames
 from rope.base import pyobjects, evaluate, astutils, arguments
 
@@ -100,7 +100,7 @@ class SOIVisitor(object):
             args_pynames = []
             args_pynames.append(evaluate.get_statement_result(
                                 self.scope, subscript.slice.value))
-            value = rope.base.oi.objectinfer._infer_assignment(
+            value = rope.base.oi.soi._infer_assignment(
                 rope.base.pynames.AssignmentValue(node.value, levels), self.pymodule)
             args_pynames.append(rope.base.pynames.UnboundName(value))
             if instance is not None and value is not None:

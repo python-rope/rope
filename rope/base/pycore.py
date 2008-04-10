@@ -3,9 +3,9 @@ import difflib
 import sys
 import warnings
 
-import rope.base.oi.dynamicoi
+import rope.base.oi.doa
 import rope.base.oi.objectinfo
-import rope.base.oi.staticoi
+import rope.base.oi.soa
 from rope.base import ast, exceptions, taskhandle
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.pyobjectsdef import PyModule, PyPackage, PyClass
@@ -244,14 +244,14 @@ class PyCore(object):
     def run_module(self, resource, args=None, stdin=None, stdout=None):
         """Run `resource` module
 
-        Returns a `rope.base.oi.dynamicoi.PythonFileRunner` object for
+        Returns a `rope.base.oi.doa.PythonFileRunner` object for
         controlling the process.
 
         """
         receiver = self.object_info.doi_data_received
         if not self.project.get_prefs().get('perform_doi', True):
             receiver = None
-        runner = rope.base.oi.dynamicoi.PythonFileRunner(
+        runner = rope.base.oi.doa.PythonFileRunner(
             self, resource, args, stdin, stdout, receiver)
         runner.add_finishing_observer(self.module_cache.forget_all_data)
         runner.run()
@@ -275,7 +275,7 @@ class PyCore(object):
         """
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
-        rope.base.oi.staticoi.analyze_module(
+        rope.base.oi.soa.analyze_module(
             self, pymodule, should_analyze, search_subscopes, followed_calls)
 
     def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
