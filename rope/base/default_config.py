@@ -40,7 +40,7 @@ def set_prefs(prefs):
     prefs['compress_objectdb'] = False
 
     # If `True`, rope analyzes each module when it is being saved.
-    prefs['automatic_soi'] = True
+    prefs['automatic_soa'] = True
 
     # If `False` when running modules or unit tests "dynamic object
     # inference" is turned off.  This makes them much faster.

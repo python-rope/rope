@@ -48,7 +48,9 @@ class PyCore(object):
             self._custom_source_folders.append(path)
 
     def _init_automatic_soi(self):
-        if not self.project.get_prefs().get('automatic_soi', False):
+        auto_soa = self.project.get_prefs().get('automatic_soi', None)
+        auto_soa = self.project.get_prefs().get('automatic_soa', auto_soa)
+        if not auto_soa:
             return
         callback = self._file_changed_for_soi
         observer = rope.base.resourceobserver.ResourceObserver(
