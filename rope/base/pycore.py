@@ -260,7 +260,7 @@ class PyCore(object):
         return runner
 
     def analyze_module(self, resource, should_analyze=lambda py: True,
-                       search_subscopes=lambda py: True, followed_calls=0):
+                       search_subscopes=lambda py: True, followed_calls=None):
         """Analyze `resource` module for static object inference
 
         This function forces rope to analyze this module to collect
@@ -274,7 +274,11 @@ class PyCore(object):
         That is it is assumed that `should_analyze` returns `False for
         all of its subscopes.
 
+        `followed_calls` override the value of ``soa_followed_calls``
+        project config.
         """
+        if followed_calls is None:
+            followed_calls = self.project.prefs.get('soa_followed_calls', 0)
         pymodule = self.resource_to_pyobject(resource)
         self.module_cache.forget_all_data()
         rope.base.oi.soa.analyze_module(

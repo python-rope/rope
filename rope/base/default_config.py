@@ -41,6 +41,8 @@ def set_prefs(prefs):
 
     # If `True`, rope analyzes each module when it is being saved.
     prefs['automatic_soa'] = True
+    # The depth of calls to follow in static object analysis
+    prefs['soa_followed_calls'] = 0
 
     # If `False` when running modules or unit tests "dynamic object
     # inference" is turned off.  This makes them much faster.
