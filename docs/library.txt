@@ -179,13 +179,13 @@ function every time you want use rope (before performing refactorings,
 for instance).
 
 
-Activating Static Object Inference
-----------------------------------
+Activating Static Object Analysis
+---------------------------------
 
-One of the greatest strengths of rope is its static object inference,
-SOI.  You can perform SOI on a module using `PyCore.analyze_module()`
-method but performing SOI on a module is not cheap.  So I decided
-that the best time for performing SOI is when saving files and only
+One of the greatest strengths of rope is its static object analysis,
+SOA.  You can perform SOA on a module using `PyCore.analyze_module()`
+method but performing SOA on a module is not cheap.  So I decided that
+the best time for performing SOA is when saving files and only
 performing it on changed scopes.
 
 But since rope is not notified about the changes the IDE performs, you
