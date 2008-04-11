@@ -12,15 +12,7 @@ tests.
 This file is more suitable for the users.  Developers that plan to use
 rope as a library might find library.txt_ more useful.
 
-Most of this document was written before breaking rope and ropeide
-into two separate projects.  That's why some parts of this file
-specifically talks about ropeide_.  Also most of the keys mentioned in
-this file are the ones that are used in ropeide_ but ropemacs_ uses
-similar keys most of the time.
-
 .. contents:: Table of Contents
-.. _ropeide: http://rope.sf.net/ropeide.html
-.. _ropemacs: http://rope.sf.net/ropemacs.html
 .. _library.txt: library.html
 
 
@@ -28,20 +20,16 @@ similar keys most of the time.
 =======================
 
 Rope uses a folder inside projects for holding project configuration
-and data.  Its default name is ``.ropeproject``, but it can be changed
-in ``~/.ropeide`` or `Project` constructor (if using rope as a
-library).  You can also force rope not to make such a folder by using
-`None` instead of a `str`.
+and data.  Its default name is ``.ropeproject``, but it can be
+changed (you can even tell rope not to create this folder).
 
 Currently it is used for things such as:
 
 * There is a ``config.py`` file in this folder in which you can change
   project configurations.  Have look at the default ``config.py`` file
-  (is created when it does not exist) for more information.  (``C-x p
-  c`` open this file automatically in ropemacs_ or ropeide_).
+  (is created when it does not exist) for more information.
 * It can be used for saving project history, so that the next time you
-  open the project you can see and undo past changes.  (see ``project
-  history`` of ropeide_)
+  open the project you can undo past changes.
 * It can be used for saving object information to help rope object
   inference.
 * It can be used for saving global names cache which is used in
@@ -146,11 +134,9 @@ Renaming Occurrences In Strings And Comments
 --------------------------------------------
 
 You can tell rope to rename all occurrences of a name in comments and
-strings.  This can be done in rename refactoring dialog of ropeide_ by
-selecting its radio button or by passing ``docs=True`` to
-`Rename.get_changes()` method when using rope as a library.  Rope
-renames names in comments and strings only where the name is visible.
-For example in::
+strings.  This can be done by passing ``docs=True`` to
+`Rename.get_changes()` method.  Rope renames names in comments and
+strings only where the name is visible.  For example in::
 
   def f():
       a_var = 1
@@ -170,8 +156,7 @@ would get::
   # f prints a_var
 
 This makes it safe to assume that this option does not perform wrong
-renames most of the time and for this reason it is on by default in
-the ropeide_ (though not in `Rename.get_changes()`).
+renames most of the time.
 
 This also changes occurrences inside evaluated strings::
 
@@ -411,38 +396,6 @@ if you extract ``a * 2`` as a method you'll get::
           return a * 2
 
 
-Change Method Signature
------------------------
-
-In the change method signature dialog (for ropeide_) these shortcuts
-work:
-
-======  ======================
-key     binding
-======  ======================
-C-n     move downward
-C-p     move upward
-M-n     move parameter down
-M-p     move parameter up
-M-r     remove parameter
-M-a     add new parameter
-======  ======================
-
-The ``value`` field in add new parameter dialog changes all calls
-to pass ``value`` as this new parameter if it is non-empty.  You
-can do the same thing for existing arguments using inline argument
-default value.
-
-Inline argument default changes all function calls that don't pass any
-value as this argument to pass the default value specified in function
-definition.
-
-While reordering arguments you should consider the python
-language order for argument types (i.e. : normal args, args with
-defaults, ``*args``, ``**keywords``).  Rope won't complain if you
-don't but python will.
-
-
 Inline Method Refactoring
 -------------------------
 
@@ -560,14 +513,11 @@ Stoppable Refactorings
 ----------------------
 
 Some refactorings might take a long time to finish (based on the size
-of your project).  Ropeide_ shows a dialog that has a progress bar and
-a stop button for these refactorings (ropemacs uses something similar,
-also).  You can also use this feature when using rope as a library.
-The `get_changes()` method of these refactorings take a new parameter
-called `task_handle`.  If you want to monitor or stop these
-refactoring you can pass a `rope.refactor.  taskhandle.TaskHandle` to
-this method.  See `rope.refactor.taskhandle` module for more
-information.
+of your project).  The `get_changes()` method of these refactorings
+take a parameter called `task_handle`.  If you want to monitor or stop
+these refactoring you can pass a `rope.refactor.
+taskhandle.TaskHandle` to this method.  See `rope.refactor.taskhandle`
+module for more information.
 
 
 Basic Implicit Interfaces
@@ -917,11 +867,6 @@ Supporting generator functions::
 
 Here the objects `a_var` and `c` hold are known.
 
-Static object analysis analysis (``C-c x s`` in ropeide_) analyzes a
-module for finding useful object information.  Rope runs SOA whenever
-a files is changed on the changed scopes automatically. (This can be
-overridden in project ``config.py``.)
-
 Many kinds of information is collected during SOA like per name data
 for builtin container types::
 
@@ -957,12 +902,11 @@ situations.) One advantage of SOA is that it is much faster than DOA.
 Dynamic Object Analysis
 -----------------------
 
-Dynamic type analysis collects object information by running modules
-(``C-c x p`` in ropeide_) or unit tests (``C-c x t`` in ropeide_).
-Since as the program runs rope gathers type information, the program
-runs slower.  Right now rope doesn't have a good interface for running
-programs.  After the program is run, you can get better code assists
-and some of the refactorings perform much better.
+`PyCore.run_module()` runs a module and collects object information if
+``perform_doi`` project config is set.  Since as the program runs rope
+gathers type information, the program runs slower.  After the program
+is run, you can get better code assists and some of the refactorings
+perform much better.
 
 ``mod1.py``::
 
