@@ -9,7 +9,7 @@ old and do not show what rope can do in extremes.  So if you really
 want to feel the power of rope try its features and see its unit
 tests.
 
-This file is more suitable for the users.  Developers that plan to use
+This file is more suitable for the users.  Developers who plan to use
 rope as a library might find library.txt_ more useful.
 
 .. contents:: Table of Contents
@@ -79,7 +79,7 @@ After renaming ``an_attr`` to ``new_attr`` and ``a_method`` to
 Renaming Function Keyword Parameters
 ------------------------------------
 
-We have::
+On::
 
   def a_func(a_param):
       print a_param
@@ -87,8 +87,8 @@ We have::
   a_func(a_param=10)
   a_func(10)
 
-After performing rename refactoring on any occurrence of ``a_param``
-we will have::
+performing rename refactoring on any occurrence of ``a_param`` will
+result in::
 
   def a_func(new_param):
       print new_param
