@@ -25,7 +25,7 @@ class PyCore(object):
         self.extension_cache = _ExtensionCache(self)
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
         self._init_python_files()
-        self._init_automatic_soi()
+        self._init_automatic_soa()
         self._init_source_folders()
 
     def _init_python_files(self):
@@ -47,10 +47,10 @@ class PyCore(object):
         for path in self.project.prefs.get('source_folders', []):
             self._custom_source_folders.append(path)
 
-    def _init_automatic_soi(self):
+    def _init_automatic_soa(self):
         if not self.automatic_soa:
             return
-        callback = self._file_changed_for_soi
+        callback = self._file_changed_for_soa
         observer = rope.base.resourceobserver.ResourceObserver(
             changed=callback, moved=callback, removed=callback)
         self.project.add_observer(observer)
@@ -60,11 +60,11 @@ class PyCore(object):
         auto_soa = self.project.get_prefs().get('automatic_soi', None)
         return self.project.get_prefs().get('automatic_soa', auto_soa)
 
-    def _file_changed_for_soi(self, resource, new_resource=None):
+    def _file_changed_for_soa(self, resource, new_resource=None):
         old_contents = self.project.history.\
                        contents_before_current_change(resource)
         if old_contents is not None:
-            perform_soi_on_changed_scopes(self.project, resource, old_contents)
+            perform_soa_on_changed_scopes(self.project, resource, old_contents)
 
     def is_python_file(self, resource):
         if resource.is_folder():
@@ -417,7 +417,7 @@ class _ClassesCache(object):
             return self.class_lines
 
 
-def perform_soi_on_changed_scopes(project, resource, old_contents):
+def perform_soa_on_changed_scopes(project, resource, old_contents):
     pycore = project.pycore
     if resource.exists() and pycore.is_python_file(resource):
         try:

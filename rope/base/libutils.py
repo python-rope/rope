@@ -43,5 +43,5 @@ def report_change(project, path, old_content):
     for observer in list(project.observers):
         observer.resource_changed(resource)
     if project.pycore.automatic_soa:
-        rope.base.pycore.perform_soi_on_changed_scopes(project, resource,
+        rope.base.pycore.perform_soa_on_changed_scopes(project, resource,
                                                        old_content)
