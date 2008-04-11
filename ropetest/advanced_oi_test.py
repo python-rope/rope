@@ -655,6 +655,7 @@ class NewStaticOITest(unittest.TestCase):
                                    rope.base.builtins.Str))
 
     def test_report_change_in_libutils(self):
+        self.project.prefs['automatic_soa'] = True
         code = 'class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n'
         mod_file = open(self.mod.real_path, 'w')
         mod_file.write(code)
