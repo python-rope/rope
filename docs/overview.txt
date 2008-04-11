@@ -433,9 +433,9 @@ to pass ``value`` as this new parameter if it is non-empty.  You
 can do the same thing for existing arguments using inline argument
 default value.
 
-Inline argument default value changes all function calls that don't
-pass any value as this argument to pass the default value specified
-in function definition.
+Inline argument default changes all function calls that don't pass any
+value as this argument to pass the default value specified in function
+definition.
 
 While reordering arguments you should consider the python
 language order for argument types (i.e. : normal args, args with
@@ -846,8 +846,9 @@ using a ``${var}.name`` pattern.
 Object Inference
 ================
 
-This section is a bit out of date.  SOI can do more than described
-here (see unittests).  Hope to update this someday!
+This section is a bit out of date.  Static object inference can do
+more than described here (see unittests).  Hope to update this
+someday!
 
 
 Static Object Inference
@@ -916,12 +917,12 @@ Supporting generator functions::
 
 Here the objects `a_var` and `c` hold are known.
 
-SOI analysis (``C-c x s`` in ropeide_) analyzes a module for finding
-useful object information.  Rope runs SOI analysis whenever a files is
-changed on the changed scopes automatically. (This can be overridden
-in project ``config.py``.)
+Static object analysis analysis (``C-c x s`` in ropeide_) analyzes a
+module for finding useful object information.  Rope runs SOA whenever
+a files is changed on the changed scopes automatically. (This can be
+overridden in project ``config.py``.)
 
-Many kinds of information is collected during SOI like per name data
+Many kinds of information is collected during SOA like per name data
 for builtin container types::
 
   l1 = [C()]
@@ -934,10 +935,10 @@ for builtin container types::
 Here rope knows the type of `var1` without doing anything.  But for
 knowing the type of `var2` we need to analyze the items added to `l2`
 which might happen in other modules.  Rope can find out that by
-running SOI analysis on this module.
+running SOA on this module.
 
-You might be wondering is there any reason for using DOI instead of
-SOI.  The answer is that DOI might be more accurate and handles
+You might be wondering is there any reason for using DOA instead of
+SOA.  The answer is that DOA might be more accurate and handles
 complex and dynamic situations.  For example in::
 
   def f(arg):
@@ -945,25 +946,23 @@ complex and dynamic situations.  For example in::
 
   a_var = f('C')
 
-SOI can no way conclude the object `a_var` holds but it is really
-trivial for DOI.  What's more SOI analyzes calls only in one module
-while DOI analyzes any call that happens when running a module.  That
-is, for achieving the same result as DOI you might need to run SOI on
+SOA can no way conclude the object `a_var` holds but it is really
+trivial for DOA.  What's more SOA analyzes calls only in one module
+while DOA analyzes any call that happens when running a module.  That
+is, for achieving the same result as DOA you might need to run SOA on
 more than one module and more than once (not considering dynamic
-situations.) One advantage of SOI is that it is much faster than DOI.
+situations.) One advantage of SOA is that it is much faster than DOA.
 
 
-Dynamic Object Inference
-------------------------
+Dynamic Object Analysis
+-----------------------
 
-Dynamic type inference collects its information by running modules
+Dynamic type analysis collects object information by running modules
 (``C-c x p`` in ropeide_) or unit tests (``C-c x t`` in ropeide_).
-Since as the program runs, rope gathers type information, the program
+Since as the program runs rope gathers type information, the program
 runs slower.  Right now rope doesn't have a good interface for running
-programs.  It just prints the output to the terminal and does not get
-inputs.  This will be enhanced in future releases. After the program
-is run, you can get better code assists and some of the refactorings
-perform much better.
+programs.  After the program is run, you can get better code assists
+and some of the refactorings perform much better.
 
 ``mod1.py``::
 
@@ -1042,7 +1041,7 @@ Guessing Function Returned Value Based On Parameters
   func(C1())
   func(C2())
 
-After running `mod1` either SOI or DOI on this module you can test:
+After running `mod1` either SOA or DOA on this module you can test:
 
 ``mod2.py``::
 
@@ -1054,19 +1053,18 @@ After running `mod1` either SOI or DOI on this module you can test:
   mod1.func(mod1.C2()).${codeassist}
 
 
-Automatic SOI Analysis
-----------------------
+Automatic SOA
+-------------
 
 When turned on, it analyzes the changed scopes of a file when saving
 for obtaining object information; So this might make saving files a
 bit more time consuming.  This feature is by default turned on, but
-you can turn it off by editing your project ``config.py`` file
-(available in ``${your_project_root}/.ropeproject/config.py``, if
-you're new to rope), though that is not recommended.
+you can turn it off by editing your project ``config.py`` file, though
+that is not recommended.
 
 
-Validating ObjectDB
--------------------
+Validating Object DB
+--------------------
 
 Since files on disk change over time project objectdb might hold
 invalid information.  Currently there is a basic incremental objectdb

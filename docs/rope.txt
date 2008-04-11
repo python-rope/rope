@@ -33,14 +33,14 @@ Features implemented so far:
 
   * Auto-completion
   * Definition location
-  * Get PyDoc
+  * Get pydoc
   * Find occurrences
   * Organize imports (remove unused and duplicate imports and sort them)
   * Generating python elements
 
 * Object Inference
 
-  * Static and dynamic object inference approaches
+  * Static and dynamic object analysis
   * Handling built-in container types
   * Saving object information on disk and validating them
 
