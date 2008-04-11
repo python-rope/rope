@@ -903,7 +903,7 @@ Dynamic Object Analysis
 -----------------------
 
 `PyCore.run_module()` runs a module and collects object information if
-``perform_doi`` project config is set.  Since as the program runs rope
+``perform_doa`` project config is set.  Since as the program runs rope
 gathers type information, the program runs slower.  After the program
 is run, you can get better code assists and some of the refactorings
 perform much better.

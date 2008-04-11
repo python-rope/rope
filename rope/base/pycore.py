@@ -253,8 +253,10 @@ class PyCore(object):
         controlling the process.
 
         """
-        receiver = self.object_info.doi_data_received
-        if not self.project.get_prefs().get('perform_doi', True):
+        perform_doa = self.project.get_prefs().get('perform_doi', True)
+        perform_doa = self.project.get_prefs().get('perform_doa', perform_doa)
+        receiver = self.object_info.doa_data_received
+        if not perform_doa:
             receiver = None
         runner = rope.base.oi.doa.PythonFileRunner(
             self, resource, args, stdin, stdout, receiver)

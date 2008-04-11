@@ -135,7 +135,7 @@ class ObjectInfoManager(object):
                     result.append(parameter)
         return result
 
-    def doi_data_received(self, data):
+    def doa_data_received(self, data):
         def doi_to_normal(textual):
             pyobject = self.doi_to_pyobject(textual)
             return self.to_textual(pyobject)

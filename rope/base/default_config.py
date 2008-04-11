@@ -45,8 +45,8 @@ def set_prefs(prefs):
     prefs['soa_followed_calls'] = 0
 
     # If `False` when running modules or unit tests "dynamic object
-    # inference" is turned off.  This makes them much faster.
-    prefs['perform_doi'] = True
+    # analysis" is turned off.  This makes them much faster.
+    prefs['perform_doa'] = True
 
     # Rope can check the validity of its object DB when running.
     prefs['validate_objectdb'] = True
