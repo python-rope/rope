@@ -589,7 +589,7 @@ class PyCoreTest(unittest.TestCase):
         pymod1 = self.pycore.resource_to_pyobject(mod1)
         pymod1['myvar'].get_object()
 
-    def test_not_reaching_maximum_recursions_when_importing_variables2(self):
+    def test_pyobject_equality_should_compare_types(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('var1 = ""\nvar2 = ""\n')
         pymod1 = self.pycore.resource_to_pyobject(mod1)
