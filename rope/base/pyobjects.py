@@ -44,7 +44,7 @@ class PyObject(object):
             return False
         if type(self) == PyObject:
             if self is not self.type:
-                self.type == obj.type
+                return self.type == obj.type
             else:
                 return self.type is obj.type
         return self is obj
