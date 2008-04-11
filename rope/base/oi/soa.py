@@ -26,22 +26,23 @@ def _analyze_node(pycore, pydefined, should_analyze,
         new_followed_calls = max(0, followed_calls - 1)
         return_true = lambda pydefined: True
         return_false = lambda pydefined: False
-        def _called(pyfunction):
-            if followed_calls:
-                _analyze_node(pycore, pyfunction, return_true,
-                              return_false, new_followed_calls)
-        visitor = SOIVisitor(pycore, pydefined, _called)
+        def _follow(pyfunction):
+            _analyze_node(pycore, pyfunction, return_true,
+                          return_false, new_followed_calls)
+        if not followed_calls:
+            _follow = None
+        visitor = SOIVisitor(pycore, pydefined, _follow)
         for child in rope.base.ast.get_child_nodes(pydefined.get_ast()):
             rope.base.ast.walk(child, visitor)
 
 
 class SOIVisitor(object):
 
-    def __init__(self, pycore, pydefined, called_callback=None):
+    def __init__(self, pycore, pydefined, follow_callback=None):
         self.pycore = pycore
         self.pymodule = pydefined.get_module()
         self.scope = pydefined.get_scope()
-        self.called = called_callback
+        self.follow = follow_callback
 
     def _FunctionDef(self, node):
         pass
@@ -80,14 +81,24 @@ class SOIVisitor(object):
 
     def _call(self, pyfunction, args):
         if isinstance(pyfunction, pyobjects.PyFunction):
+            if self.follow is not None:
+                before = self._parameter_objects(pyfunction)
             self.pycore.object_info.function_called(
                 pyfunction, args.get_arguments(pyfunction.get_param_names()))
             pyfunction._set_parameter_pyobjects(None)
-            if self.called is not None:
-                self.called(pyfunction)
+            if self.follow is not None:
+                after = self._parameter_objects(pyfunction)
+                if after != before:
+                    self.follow(pyfunction)
         # XXX: Maybe we should not call every builtin function
         if isinstance(pyfunction, rope.base.builtins.BuiltinFunction):
             pyfunction.get_returned_object(args)
+
+    def _parameter_objects(self, pyfunction):
+        result = []
+        for i in range(len(pyfunction.get_param_names(False))):
+            result.append(pyfunction.get_parameter(i))
+        return result
 
     def _Assign(self, node):
         for child in rope.base.ast.get_child_nodes(node):
