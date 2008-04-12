@@ -8,12 +8,7 @@ class History(object):
         self.project = project
         self._undo_list = []
         self._redo_list = []
-        if maxundos is None:
-            self.max_undos = project.get_prefs().get('max_history_items', 100)
-        else:
-            self.max_undos = maxundos
-        self.save = self.project.get_prefs().get('save_history', False)
-        self.compress = project.get_prefs().get('compress_history', False)
+        self._maxundos = maxundos
         self._load_history()
         self.project.data_files.add_write_hook(self.write)
         self.current_change = None
@@ -185,6 +180,21 @@ class History(object):
         """The last undone change if available, `None` otherwise"""
         if self.redo_list:
             return self.redo_list[-1]
+
+    @property
+    def max_undos(self):
+        if self._maxundos is None:
+            return self.project.prefs.get('max_history_items', 100)
+        else:
+            return self._maxundos
+
+    @property
+    def save(self):
+        return self.project.prefs.get('save_history', False)
+
+    @property
+    def compress(self):
+        return self.project.prefs.get('compress_history', False)
 
     def clear(self):
         """Forget all undo and redo information"""
