@@ -667,6 +667,16 @@ class NewStaticOITest(unittest.TestCase):
         p_type = f_scope['p'].get_object().get_type()
         self.assertEquals(c_class, p_type)
 
+    def test_report_libutils_and_analyze_all_modules(self):
+        code = 'class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n'
+        self.mod.write(code)
+        rope.base.libutils.analyze_modules(self.project)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        c_class = pymod['C'].get_object()
+        f_scope = pymod['f'].get_object().get_scope()
+        p_type = f_scope['p'].get_object().get_type()
+        self.assertEquals(c_class, p_type)
+
     def test_validation_problems_for_objectdb_retrievals(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod2 = testutils.create_module(self.project, 'mod2')

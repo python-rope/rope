@@ -3,6 +3,7 @@ import os.path
 
 import rope.base.project
 import rope.base.pycore
+from rope.base import taskhandle
 
 
 def path_to_resource(project, path, type=None):
@@ -45,3 +46,15 @@ def report_change(project, path, old_content):
     if project.pycore.automatic_soa:
         rope.base.pycore.perform_soa_on_changed_scopes(project, resource,
                                                        old_content)
+
+def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
+    """Perform static object analysis on all python files in the project
+
+    Note that this might be really time consuming.
+    """
+    resources = project.pycore.get_python_files()
+    job_set = task_handle.create_jobset('Analyzing Modules', len(resources))
+    for resource in resources:
+        job_set.started_job('Working on <%s>' % resource.path)
+        project.pycore.analyze_module(resource)
+        job_set.finished_job()
