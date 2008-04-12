@@ -146,9 +146,8 @@ class PyModule(pyobjects.PyModule):
 
     def __init__(self, pycore, source=None,
                  resource=None, force_errors=False):
-        syntax_errors = (force_errors or
-                         not pycore.project.prefs.get('ignore_syntax_errors',
-                                                      False))
+        ignore = pycore.project.prefs.get('ignore_syntax_errors', False)
+        syntax_errors = force_errors or not ignore
         try:
             source, node = self._init_source(pycore, source, resource)
         except exceptions.ModuleSyntaxError:
