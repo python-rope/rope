@@ -57,8 +57,8 @@ class PyCore(object):
 
     @property
     def automatic_soa(self):
-        auto_soa = self.project.get_prefs().get('automatic_soi', None)
-        return self.project.get_prefs().get('automatic_soa', auto_soa)
+        auto_soa = self.project.prefs.get('automatic_soi', None)
+        return self.project.prefs.get('automatic_soa', auto_soa)
 
     def _file_changed_for_soa(self, resource, new_resource=None):
         old_contents = self.project.history.\
@@ -253,8 +253,8 @@ class PyCore(object):
         controlling the process.
 
         """
-        perform_doa = self.project.get_prefs().get('perform_doi', True)
-        perform_doa = self.project.get_prefs().get('perform_doa', perform_doa)
+        perform_doa = self.project.prefs.get('perform_doi', True)
+        perform_doa = self.project.prefs.get('perform_doa', perform_doa)
         receiver = self.object_info.doa_data_received
         if not perform_doa:
             receiver = None
@@ -339,8 +339,8 @@ class _ModuleCache(object):
 class _ExtensionCache(object):
 
     def __init__(self, pycore):
+        self.project = pycore.project
         self.extensions = {}
-        self.allowed = pycore.project.get_prefs().get('extension_modules', [])
 
     def get_pymodule(self, name):
         if name == '__builtin__':
@@ -348,6 +348,10 @@ class _ExtensionCache(object):
         if name not in self.extensions and name in self.allowed:
             self.extensions[name] = builtins.BuiltinModule(name)
         return self.extensions.get(name)
+
+    @property
+    def allowed(self):
+        return self.project.prefs.get('extension_modules', [])
 
 
 class _ClassesCache(object):
