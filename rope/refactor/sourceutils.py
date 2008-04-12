@@ -119,4 +119,4 @@ def get_body_region(defined):
 
 def get_indent(pycore):
     project = pycore.project
-    return project.get_prefs().get('indent_size', 4)
+    return project.prefs.get('indent_size', 4)
