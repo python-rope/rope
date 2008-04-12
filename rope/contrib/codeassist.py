@@ -61,6 +61,14 @@ def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     return PyDocExtractor().get_doc(pyobject)
 
 
+def get_calltip(project, source_code, offset, resource=None, maxfixes=1):
+    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
+    if pyname is None:
+        return None
+    pyobject = pyname.get_object()
+    return PyDocExtractor().get_calltip(pyobject)
+
+
 def get_definition_location(project, source_code, offset,
                             resource=None, maxfixes=1):
     """Return the definition location of the python name at `offset`
@@ -556,6 +564,17 @@ class PyDocExtractor(object):
             return self._trim_docstring(pyobject.get_doc())
         return None
 
+    def get_calltip(self, pyobject):
+        try:
+            if isinstance(pyobject, pyobjects.AbstractClass):
+                pyobject = pyobject['__init__'].get_object()
+            if not isinstance(pyobject, pyobjects.AbstractFunction):
+                pyobject = pyobject['__call__'].get_object()
+        except exceptions.AttributeNotFoundError:
+            return None
+        if isinstance(pyobject, pyobjects.AbstractFunction):
+            return self._get_function_signature(pyobject)
+
     def _get_class_docstring(self, pyclass):
         contents = self._trim_docstring(pyclass.get_doc(), 2)
         supers = [super.get_name() for super in pyclass.get_superclasses()]
@@ -581,11 +600,8 @@ class PyDocExtractor(object):
 
     def _get_single_function_docstring(self, pyfunction):
         signature = self._get_function_signature(pyfunction)
-        if self._is_method(pyfunction):
-            signature = pyfunction.parent.get_name() + '.' + signature
-            self._get_super_methods(pyfunction.parent, pyfunction.get_name())
-        return signature + ':\n\n' + self._trim_docstring(pyfunction.get_doc(),
-                                                         indents=2)
+        docs = self._trim_docstring(pyfunction.get_doc(), indents=2)
+        return signature + ':\n\n' + docs
 
     def _get_super_methods(self, pyclass, name):
         result = []
@@ -599,8 +615,12 @@ class PyDocExtractor(object):
 
     def _get_function_signature(self, pyfunction):
         if isinstance(pyfunction, pyobjects.PyFunction):
+            if self._is_method(pyfunction):
+                prefix = pyfunction.parent.get_name() + '.'
+            else:
+                prefix = ''
             info = functionutils.DefinitionInfo.read(pyfunction)
-            return info.to_string()
+            return prefix + info.to_string()
         else:
             return '%s(%s)' % (pyfunction.get_name(),
                                ', '.join(pyfunction.get_param_names()))

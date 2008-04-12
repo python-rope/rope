@@ -3,7 +3,8 @@ import unittest
 from rope.base import exceptions
 from rope.contrib.codeassist import \
      (get_definition_location, get_doc, starting_expression,
-      find_occurrences, code_assist, sorted_proposals, starting_offset)
+      find_occurrences, code_assist, sorted_proposals,
+      starting_offset, get_calltip)
 from ropetest import testutils
 
 
@@ -607,6 +608,24 @@ class CodeAssistTest(unittest.TestCase):
         code = 'myvar = 1\nif True:\n    \nif True:\n    pass\n'
         result = self._assist(code, code.rindex('    ') + 4)
         self.assert_completion_not_in_result('myvar', 'local', result)
+
+    def test_simple_get_calltips(self):
+        src = 'def f():\n    pass\n'
+        doc = get_calltip(self.project, src, src.rindex('f'))
+        self.assertEquals('f()', doc)
+
+    def test_get_calltips_for_classes(self):
+        src = 'class C(object):\n' \
+              '    def __init__(self):\n        pass\n'
+        doc = get_calltip(self.project, src, src.index('C'))
+        self.assertEquals('C.__init__(self)', doc)
+
+    def test_get_calltips_for_objects_with_call(self):
+        src = 'class C(object):\n' \
+              '    def __call__(self, p):\n        pass\n' \
+              'c = C()\n'
+        doc = get_calltip(self.project, src, src.rindex('c'))
+        self.assertEquals('C.__call__(self, p)', doc)
 
 
 class CodeAssistInProjectsTest(unittest.TestCase):
