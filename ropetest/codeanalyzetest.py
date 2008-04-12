@@ -220,6 +220,10 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, len(code) - 2)
         self.assertEquals('(b + c).d[0]()', result)
 
+    def test_getting_primary_and_strings_at_the_end_of_line(self):
+        code = 'f(\'\\\'\')\n'
+        result = self._find_primary(code, len(code) - 1)
+
     # XXX: not crossing new lines
     def xxx_test_getting_primary_and_not_crossing_newlines(self):
         code = '\na = (b + c)\n(4 + 1).x\n'

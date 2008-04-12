@@ -69,7 +69,10 @@ class WordRangeFinder(object):
     def _find_string_start(self, offset):
         kind = self.source[offset]
         offset -= 1
-        while self.source[offset] != kind:
+        while offset > 0:
+            if self.source[offset] == kind and \
+                    (offset == 0 or self.source[offset - 1] != '\\'):
+                break
             offset -= 1
         return offset
 
