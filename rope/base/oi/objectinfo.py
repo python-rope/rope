@@ -18,25 +18,22 @@ class ObjectInfoManager(object):
         self.to_pyobject = transform.TextualToPyObject(project)
         self.doi_to_pyobject = transform.DOITextualToPyObject(project)
         self._init_objectdb()
-        if project.get_prefs().get('validate_objectdb', False):
+        if project.prefs.get('validate_objectdb', False):
             self._init_validation()
 
     def _init_objectdb(self):
         dbtype = self.project.get_prefs().get('objectdb_type', None)
+        persist = None
         if dbtype is not None:
             warnings.warn(
                 '"objectdb_type" project config is deprecated;\n'
                 'Use "save_objectdb" instead in your project '
                 'config file.\n(".ropeproject/config.py" by default)\n',
                 DeprecationWarning)
-            save = dbtype != 'memory'
-        else:
-            save = self.project.get_prefs().get('save_objectdb', False)
+            if dbtype != 'memory' and self.project.ropefolder is not None:
+                persist = True
         self.validation = TextualValidation(self.to_pyobject)
-        if save and self.project.ropefolder is not None:
-            db = memorydb.MemoryDB(self.project, persist=True)
-        else:
-            db = memorydb.MemoryDB(self.project, persist=False)
+        db = memorydb.MemoryDB(self.project, persist=persist)
         self.objectdb = objectdb.ObjectDB(db, self.validation)
 
     def _init_validation(self):
