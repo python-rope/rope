@@ -610,30 +610,30 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_not_in_result('myvar', 'local', result)
 
     def test_simple_get_calltips(self):
-        src = 'def f():\n    pass\n'
-        doc = get_calltip(self.project, src, src.rindex('f'))
+        src = 'def f():\n    pass\nvar = f()\n'
+        doc = get_calltip(self.project, src, src.rindex(')'))
         self.assertEquals('f()', doc)
 
     def test_get_calltips_for_classes(self):
         src = 'class C(object):\n' \
-              '    def __init__(self):\n        pass\n'
-        doc = get_calltip(self.project, src, src.index('C'))
+              '    def __init__(self):\n        pass\nC('
+        doc = get_calltip(self.project, src, len(src))
         self.assertEquals('C.__init__(self)', doc)
 
     def test_get_calltips_for_objects_with_call(self):
         src = 'class C(object):\n' \
               '    def __call__(self, p):\n        pass\n' \
-              'c = C()\n'
-        doc = get_calltip(self.project, src, src.rindex('c'))
+              'c = C()\nc(1,'
+        doc = get_calltip(self.project, src, len(src))
         self.assertEquals('C.__call__(self, p)', doc)
 
     def test_get_calltips_and_including_module_name(self):
         src = 'class C(object):\n' \
               '    def __call__(self, p):\n        pass\n' \
-              'c = C()\n'
+              'c = C()\nc(1,'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(src)
-        doc = get_calltip(self.project, src, src.rindex('c'), mod)
+        doc = get_calltip(self.project, src, len(src), mod)
         self.assertEquals('mod.C.__call__(self, p)', doc)
 
 

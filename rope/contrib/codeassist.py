@@ -62,7 +62,9 @@ def get_doc(project, source_code, offset, resource=None, maxfixes=1):
 
 
 def get_calltip(project, source_code, offset, resource=None, maxfixes=1):
-    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
+    finder = WordRangeFinder(source_code)
+    start = finder.find_parens_start_from_inside(max(0, offset - 1))
+    pyname = _find_pyname_at(project, source_code, start, resource, maxfixes)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
