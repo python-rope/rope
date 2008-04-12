@@ -8,7 +8,7 @@ import rope.base.evaluate
 from rope.base import pyobjects, pynames, taskhandle, builtins, exceptions
 from rope.base.codeanalyze import (ArrayLinesAdapter, LogicalLineFinder,
                                    SourceLinesAdapter, WordRangeFinder)
-from rope.refactor import occurrences, functionutils
+from rope.refactor import occurrences, functionutils, importutils
 
 
 def code_assist(project, source_code, offset, resource=None,
@@ -573,7 +573,7 @@ class PyDocExtractor(object):
         except exceptions.AttributeNotFoundError:
             return None
         if isinstance(pyobject, pyobjects.AbstractFunction):
-            return self._get_function_signature(pyobject)
+            return self._get_function_signature(pyobject, add_module=True)
 
     def _get_class_docstring(self, pyclass):
         contents = self._trim_docstring(pyclass.get_doc(), 2)
@@ -613,17 +613,31 @@ class PyDocExtractor(object):
             result.extend(self._get_super_methods(super_class, name))
         return result
 
-    def _get_function_signature(self, pyfunction):
+    def _get_function_signature(self, pyfunction, add_module=False):
         if isinstance(pyfunction, pyobjects.PyFunction):
-            if self._is_method(pyfunction):
-                prefix = pyfunction.parent.get_name() + '.'
-            else:
-                prefix = ''
+            prefixes = []
+            module = pyfunction.get_module()
+            if add_module:
+                prefixes.append(self._get_module(pyfunction))
+            parent = pyfunction.parent
+            while not isinstance(parent, pyobjects.AbstractModule):
+                prefixes.append(parent.get_name())
+                prefixes.append('.')
+                parent = parent.parent
             info = functionutils.DefinitionInfo.read(pyfunction)
-            return prefix + info.to_string()
+            return ''.join(prefixes) + info.to_string()
         else:
             return '%s(%s)' % (pyfunction.get_name(),
                                ', '.join(pyfunction.get_param_names()))
+
+    def _get_module(self, pyfunction):
+        module = pyfunction.get_module()
+        if module is not None:
+            resource = module.get_resource()
+            if resource is not None:
+                return importutils.get_module_name(
+                    pyfunction.pycore, resource) + '.'
+        return ''
 
     def _trim_docstring(self, docstring, indents=0):
         """The sample code from :PEP:`257`"""

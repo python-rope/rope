@@ -627,6 +627,15 @@ class CodeAssistTest(unittest.TestCase):
         doc = get_calltip(self.project, src, src.rindex('c'))
         self.assertEquals('C.__call__(self, p)', doc)
 
+    def test_get_calltips_and_including_module_name(self):
+        src = 'class C(object):\n' \
+              '    def __call__(self, p):\n        pass\n' \
+              'c = C()\n'
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write(src)
+        doc = get_calltip(self.project, src, src.rindex('c'), mod)
+        self.assertEquals('mod.C.__call__(self, p)', doc)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
