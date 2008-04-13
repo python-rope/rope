@@ -13,6 +13,8 @@ class BuiltinModule(pyobjects.AbstractModule):
         self.initial = initial
         self.attributes = None
 
+    parent = None
+
     def get_attributes(self):
         if self.attributes is None:
             self._calculate_attributes()
@@ -28,7 +30,7 @@ class BuiltinModule(pyobjects.AbstractModule):
     def _calculate_attributes(self):
         self.attributes = {}
         if self.module is not None:
-            self.attributes = _object_attributes(self.module)
+            self.attributes = _object_attributes(self.module, self)
         self.attributes.update(self.initial)
 
     _loaded = False
@@ -44,7 +46,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         return self._module
 
 
-def _object_attributes(obj):
+def _object_attributes(obj, parent):
     attributes = {}
     for name in dir(obj):
         if name == 'None':
@@ -52,9 +54,9 @@ def _object_attributes(obj):
         child = getattr(obj, name)
         pyobject = None
         if inspect.isclass(child):
-            pyobject = BuiltinClass(child, {})
+            pyobject = BuiltinClass(child, {}, parent=parent)
         elif inspect.isroutine(child):
-            pyobject = BuiltinFunction(builtin=child)
+            pyobject = BuiltinFunction(builtin=child, parent=parent)
         else:
             pyobject = pyobjects.get_unknown()
         attributes[name] = BuiltinName(pyobject)
@@ -62,15 +64,16 @@ def _object_attributes(obj):
 
 class BuiltinClass(pyobjects.AbstractClass):
 
-    def __init__(self, builtin, attributes):
+    def __init__(self, builtin, attributes, parent=None):
         super(BuiltinClass, self).__init__()
         self.builtin = builtin
         self.initial = attributes
         self.attributes = None
+        self.parent = parent
 
     def get_attributes(self):
         if self.attributes is None:
-            self.attributes = _object_attributes(self.builtin)
+            self.attributes = _object_attributes(self.builtin, self)
             self.attributes.update(self.initial)
         return self.attributes
 
@@ -83,12 +86,14 @@ class BuiltinClass(pyobjects.AbstractClass):
 
 class BuiltinFunction(pyobjects.AbstractFunction):
 
-    def __init__(self, returned=None, function=None, builtin=None, argnames=[]):
+    def __init__(self, returned=None, function=None, builtin=None,
+                 argnames=[], parent=None):
         super(BuiltinFunction, self).__init__()
         self.argnames = argnames
         self.returned = returned
         self.function = function
         self.builtin = builtin
+        self.parent = parent
 
     def get_returned_object(self, args):
         if self.function is not None:

@@ -616,21 +616,28 @@ class PyDocExtractor(object):
         return result
 
     def _get_function_signature(self, pyfunction, add_module=False):
+        location = self._location(pyfunction, add_module)
         if isinstance(pyfunction, pyobjects.PyFunction):
-            prefixes = []
-            module = pyfunction.get_module()
-            if add_module:
-                prefixes.append(self._get_module(pyfunction))
-            parent = pyfunction.parent
-            while not isinstance(parent, pyobjects.AbstractModule):
-                prefixes.append(parent.get_name())
-                prefixes.append('.')
-                parent = parent.parent
             info = functionutils.DefinitionInfo.read(pyfunction)
-            return ''.join(prefixes) + info.to_string()
+            return location + info.to_string()
         else:
-            return '%s(%s)' % (pyfunction.get_name(),
+            return '%s(%s)' % (location + pyfunction.get_name(),
                                ', '.join(pyfunction.get_param_names()))
+
+    def _location(self, pyobject, add_module=False):
+        location = []
+        parent = pyobject.parent
+        while parent and not isinstance(parent, pyobjects.AbstractModule):
+            location.append(parent.get_name())
+            location.append('.')
+            parent = parent.parent
+        if add_module:
+            if isinstance(pyobject, pyobjects.PyFunction):
+                module = pyobject.get_module()
+                location.insert(0, self._get_module(pyobject))
+            if isinstance(parent, builtins.BuiltinModule):
+                location.insert(0, parent.get_name() + '.')
+        return ''.join(location)
 
     def _get_module(self, pyfunction):
         module = pyfunction.get_module()
