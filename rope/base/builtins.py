@@ -46,6 +46,62 @@ class BuiltinModule(pyobjects.AbstractModule):
         return self._module
 
 
+class _BuiltinElement(object):
+
+    def __init__(self, builtin, parent=None):
+        self.builtin = builtin
+        self._parent = parent
+
+    def get_doc(self):
+        if self.builtin:
+            return self.builtin.__doc__
+
+    def get_name(self):
+        if self.builtin:
+            return self.builtin.__name__
+
+    @property
+    def parent(self):
+        if self._parent is None:
+            return builtins
+        return self._parent
+
+
+class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
+
+    def __init__(self, builtin, attributes, parent=None):
+        _BuiltinElement.__init__(self, builtin, parent)
+        pyobjects.AbstractClass.__init__(self)
+        self.initial = attributes
+        self.attributes = None
+
+    def get_attributes(self):
+        if self.attributes is None:
+            self.attributes = _object_attributes(self.builtin, self)
+            self.attributes.update(self.initial)
+        return self.attributes
+
+
+class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
+
+    def __init__(self, returned=None, function=None, builtin=None,
+                 argnames=[], parent=None):
+        _BuiltinElement.__init__(self, builtin, parent)
+        pyobjects.AbstractFunction.__init__(self)
+        self.argnames = argnames
+        self.returned = returned
+        self.function = function
+
+    def get_returned_object(self, args):
+        if self.function is not None:
+            return self.function(_CallContext(self.argnames, args))
+        else:
+            return self.returned
+
+    def get_param_names(self):
+        return self.argnames
+
+
 def _object_attributes(obj, parent):
     attributes = {}
     for name in dir(obj):
@@ -61,56 +117,6 @@ def _object_attributes(obj, parent):
             pyobject = pyobjects.get_unknown()
         attributes[name] = BuiltinName(pyobject)
     return attributes
-
-class BuiltinClass(pyobjects.AbstractClass):
-
-    def __init__(self, builtin, attributes, parent=None):
-        super(BuiltinClass, self).__init__()
-        self.builtin = builtin
-        self.initial = attributes
-        self.attributes = None
-        self.parent = parent
-
-    def get_attributes(self):
-        if self.attributes is None:
-            self.attributes = _object_attributes(self.builtin, self)
-            self.attributes.update(self.initial)
-        return self.attributes
-
-    def get_doc(self):
-        return self.builtin.__doc__
-
-    def get_name(self):
-        return self.builtin.__name__
-
-
-class BuiltinFunction(pyobjects.AbstractFunction):
-
-    def __init__(self, returned=None, function=None, builtin=None,
-                 argnames=[], parent=None):
-        super(BuiltinFunction, self).__init__()
-        self.argnames = argnames
-        self.returned = returned
-        self.function = function
-        self.builtin = builtin
-        self.parent = parent
-
-    def get_returned_object(self, args):
-        if self.function is not None:
-            return self.function(_CallContext(self.argnames, args))
-        else:
-            return self.returned
-
-    def get_doc(self):
-        if self.builtin:
-            return self.builtin.__doc__
-
-    def get_name(self):
-        if self.builtin:
-            return self.builtin.__name__
-
-    def get_param_names(self):
-        return self.argnames
 
 
 def _create_builtin_type_getter(cls):
