@@ -104,6 +104,9 @@ class BuiltinFunction(pyobjects.AbstractFunction):
         if self.builtin:
             return self.builtin.__name__
 
+    def get_param_names(self):
+        return self.argnames
+
 
 def _create_builtin_type_getter(cls):
     def _get_builtin(*args):
