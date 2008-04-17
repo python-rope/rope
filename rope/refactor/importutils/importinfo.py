@@ -128,7 +128,7 @@ class FromImport(ImportInfo):
     def get_imported_primaries(self, context):
         if self.names_and_aliases[0][0] == '*':
             module = self.get_imported_module(context)
-            return [name for name in module.get_attributes()
+            return [name for name in module
                     if not name.startswith('_')]
         result = []
         for name, alias in self.names_and_aliases:

@@ -531,7 +531,7 @@ class StarImport(object):
     def get_names(self):
         result = {}
         imported = self.imported_module.get_object()
-        for name in imported.get_attributes():
+        for name in imported:
             if not name.startswith('_'):
                 result[name] = pynames.ImportedName(self.imported_module, name)
         return result

@@ -56,6 +56,10 @@ class PyObject(object):
         else:
             return super(PyObject, self).__hash__()
 
+    def __iter__(self):
+        """The same as ``iter(self.get_attributes())``"""
+        return iter(self.get_attributes())
+
     _types = None
     _unknown = None
 

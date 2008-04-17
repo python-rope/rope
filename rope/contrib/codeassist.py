@@ -275,7 +275,7 @@ class _PythonCodeAssist(object):
             return {}
         pymodule = self._find_module(pymodule, module_name)
         result = {}
-        for name, pyname in pymodule.get_attributes().items():
+        for name in pymodule:
             if name.startswith(self.starting):
                 result[name] = CompletionProposal(name, kind='global',
                                                   type='imported')
