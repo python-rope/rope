@@ -3,7 +3,8 @@ import rope.base.evaluate
 import rope.base.builtins
 import rope.base.oi.soi
 import rope.base.pyscopes
-from rope.base import pynamesdef as pynames, exceptions, ast, astutils, pyobjects, fscommands, arguments
+from rope.base import (pynamesdef as pynames, exceptions, ast,
+                       astutils, pyobjects, fscommands, arguments, utils)
 from rope.base.pyobjects import *
 
 
@@ -158,7 +159,6 @@ class PyModule(pyobjects.PyModule):
                 node = ast.parse('\n')
         self.source_code = source
         self.star_imports = []
-        self.making_concluded = False
         self.visitor_class = _GlobalVisitor
         super(PyModule, self).__init__(pycore, node, resource)
 
@@ -182,17 +182,12 @@ class PyModule(pyobjects.PyModule):
             raise exceptions.ModuleSyntaxError(filename, 1, '%s' % (e.reason))
         return source_code, ast_node
 
+    @utils.prevent_recursion(lambda: {})
     def _create_concluded_attributes(self):
-        if self.making_concluded:
-            return {}
-        try:
-            self.making_concluded = True
-            result = {}
-            for star_import in self.star_imports:
-                result.update(star_import.get_names())
-            return result
-        finally:
-            self.making_concluded = False
+        result = {}
+        for star_import in self.star_imports:
+            result.update(star_import.get_names())
+        return result
 
     def _create_scope(self):
         return rope.base.pyscopes.GlobalScope(self.pycore, self)
