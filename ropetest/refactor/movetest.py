@@ -103,59 +103,67 @@ class MoveRefactoringTest(unittest.TestCase):
                           self.mod2.read())
 
     def test_moving_and_used_relative_imports(self):
-        self.mod4.write('import mod5\n' \
-                        'def a_func():\n    print(mod5)\n')
-        self._move(self.mod4, self.mod4.read().index('a_func') + 1,
-                   self.mod1)
-        self.assertEquals('import pkg.mod5\n\n\ndef a_func():\n    print(pkg.mod5)\n',
-                          self.mod1.read())
+        code = 'import mod5\n' \
+               'def a_func():\n' \
+               '    print(mod5)\n'
+        self.mod4.write(code)
+        self._move(self.mod4, code.index('a_func') + 1, self.mod1)
+        expected = 'import pkg.mod5\n\n\n' \
+                   'def a_func():\n' \
+                   '    print(pkg.mod5)\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_moving_modules(self):
-        self.mod2.write('import mod1\nprint(mod1)')
-        self._move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
-        self.assertEquals('import pkg.mod1\nprint(pkg.mod1)', self.mod2.read())
+        code = 'import mod1\nprint(mod1)'
+        self.mod2.write(code)
+        self._move(self.mod2, code.index('mod1') + 1, self.pkg)
+        expected = 'import pkg.mod1\nprint(pkg.mod1)'
+        self.assertEquals(expected, self.mod2.read())
         self.assertTrue(not self.mod1.exists() and
                         self.pycore.find_module('pkg.mod1') is not None)
 
     def test_moving_modules_and_removing_out_of_date_imports(self):
-        self.mod2.write('import pkg.mod4\nprint(pkg.mod4)')
-        self._move(self.mod2, self.mod2.read().index('mod4') + 1,
-                   self.project.root)
-        self.assertEquals('import mod4\nprint(mod4)', self.mod2.read())
+        code = 'import pkg.mod4\nprint(pkg.mod4)'
+        self.mod2.write(code)
+        self._move(self.mod2, code.index('mod4') + 1, self.project.root)
+        expected = 'import mod4\nprint(mod4)'
+        self.assertEquals(expected, self.mod2.read())
         self.assertTrue(self.pycore.find_module('mod4') is not None)
 
     def test_moving_modules_and_removing_out_of_date_froms(self):
-        self.mod2.write('from pkg import mod4\nprint(mod4)')
-        self._move(self.mod2, self.mod2.read().index('mod4') + 1,
-                   self.project.root)
+        code = 'from pkg import mod4\nprint(mod4)'
+        self.mod2.write(code)
+        self._move(self.mod2, code.index('mod4') + 1, self.project.root)
         self.assertEquals('import mod4\nprint(mod4)', self.mod2.read())
 
     def test_moving_modules_and_removing_out_of_date_froms2(self):
         self.mod4.write('a_var = 10')
-        self.mod2.write('from pkg.mod4 import a_var\nprint(a_var)\n')
-        self._move(self.mod2, self.mod2.read().index('mod4') + 1,
-                   self.project.root)
-        self.assertEquals('from mod4 import a_var\nprint(a_var)\n',
-                          self.mod2.read())
+        code = 'from pkg.mod4 import a_var\nprint(a_var)\n'
+        self.mod2.write(code)
+        self._move(self.mod2, code.index('mod4') + 1, self.project.root)
+        expected = 'from mod4 import a_var\nprint(a_var)\n'
+        self.assertEquals(expected, self.mod2.read())
 
     def test_moving_modules_and_relative_import(self):
         self.mod4.write('import mod5\nprint(mod5)\n')
-        self.mod2.write('import pkg.mod4\nprint(pkg.mod4)')
-        self._move(self.mod2, self.mod2.read().index('mod4') + 1,
-                   self.project.root)
+        code = 'import pkg.mod4\nprint(pkg.mod4)'
+        self.mod2.write(code)
+        self._move(self.mod2, code.index('mod4') + 1, self.project.root)
         moved = self.pycore.find_module('mod4')
-        self.assertEquals('import pkg.mod5\nprint(pkg.mod5)\n', moved.read())
+        expected = 'import pkg.mod5\nprint(pkg.mod5)\n'
+        self.assertEquals(expected, moved.read())
 
     def test_moving_packages(self):
         pkg2 = testutils.create_package(self.project, 'pkg2')
-        self.mod1.write('import pkg.mod4\nprint(pkg.mod4)')
-        self._move(self.mod1, self.mod1.read().index('pkg') + 1, pkg2)
+        code = 'import pkg.mod4\nprint(pkg.mod4)'
+        self.mod1.write(code)
+        self._move(self.mod1, code.index('pkg') + 1, pkg2)
         self.assertFalse(self.pkg.exists())
         self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
         self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
         self.assertTrue(self.pycore.find_module('pkg2.pkg.mod5') is not None)
-        self.assertEquals('import pkg2.pkg.mod4\nprint(pkg2.pkg.mod4)',
-                          self.mod1.read())
+        expected = 'import pkg2.pkg.mod4\nprint(pkg2.pkg.mod4)'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_moving_modules_with_self_imports(self):
         self.mod1.write('import mod1\nprint(mod1)\n')
@@ -165,43 +173,54 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('import pkg.mod1\nprint(pkg.mod1)\n', moved.read())
 
     def test_moving_funtions_to_imported_module(self):
+        code = 'import mod1\n' \
+               'def a_func():\n' \
+               '    var = mod1.a_var\n'
         self.mod1.write('a_var = 1\n')
-        self.mod2.write('import mod1\ndef a_func():\n    var = mod1.a_var\n')
-        self._move(self.mod2, self.mod2.read().index('a_func') + 1, self.mod1)
-        self.assertEquals('def a_func():\n    var = a_var\na_var = 1\n', self.mod1.read())
+        self.mod2.write(code)
+        self._move(self.mod2, code.index('a_func') + 1, self.mod1)
+        expected = 'def a_func():\n' \
+                   '    var = a_var\n' \
+                   'a_var = 1\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_moving_resources_using_move_module_refactoring(self):
         self.mod1.write('a_var = 1')
         self.mod2.write('import mod1\nmy_var = mod1.a_var\n')
         mover = move.create_move(self.project, self.mod1)
         mover.get_changes(self.pkg).do()
-        self.assertEquals('import pkg.mod1\nmy_var = pkg.mod1.a_var\n', self.mod2.read())
+        expected = 'import pkg.mod1\nmy_var = pkg.mod1.a_var\n'
+        self.assertEquals(expected, self.mod2.read())
         self.assertTrue(self.pkg.get_child('mod1.py') is not None)
 
-    def test_moving_resources_using_move_module_refactoring_for_packages(self):
+    def test_moving_resources_using_move_module_for_packages(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
         pkg2 = testutils.create_package(self.project, 'pkg2')
         mover = move.create_move(self.project, self.pkg)
         mover.get_changes(pkg2).do()
-        self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
+        expected = 'import pkg2.pkg\nmy_pkg = pkg2.pkg'
+        self.assertEquals(expected, self.mod1.read())
         self.assertTrue(pkg2.get_child('pkg') is not None)
 
-    def test_moving_resources_using_move_module_refactoring_for_init_dot_py(self):
+    def test_moving_resources_using_move_module_for_init_dot_py(self):
         self.mod1.write('import pkg\nmy_pkg = pkg')
         pkg2 = testutils.create_package(self.project, 'pkg2')
-        mover = move.create_move(self.project, self.pkg.get_child('__init__.py'))
+        init = self.pkg.get_child('__init__.py')
+        mover = move.create_move(self.project, init)
         mover.get_changes(pkg2).do()
-        self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg', self.mod1.read())
+        self.assertEquals('import pkg2.pkg\nmy_pkg = pkg2.pkg',
+                          self.mod1.read())
         self.assertTrue(pkg2.get_child('pkg') is not None)
 
-    def test_moving_module_refactoring_and_star_imports(self):
+    def test_moving_module_and_star_imports(self):
         self.mod1.write('a_var = 1')
         self.mod2.write('from mod1 import *\na = a_var\n')
         mover = move.create_move(self.project, self.mod1)
         mover.get_changes(self.pkg).do()
-        self.assertEquals('from pkg.mod1 import *\na = a_var\n', self.mod2.read())
+        self.assertEquals('from pkg.mod1 import *\na = a_var\n',
+                          self.mod2.read())
 
-    def test_moving_module_refactoring_and_not_removing_blanks_after_imports(self):
+    def test_moving_module_and_not_removing_blanks_after_imports(self):
         self.mod4.write('a_var = 1')
         self.mod2.write('from pkg import mod4\n'
                         'import os\n\n\nprint(mod4.a_var)\n')
@@ -278,17 +297,20 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_methods_gettin_new_method_with_many_kinds_arguments(self):
         code = 'class A(object):\n    attr = 1\n' \
-               '    def a_method(self, p1, *args, **kwds):\n        return self.attr\n'
+               '    def a_method(self, p1, *args, **kwds):\n' \
+               '        return self.attr\n'
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
-        self.assertEquals('def new_method(self, host, p1, *args, **kwds):\n'
-                          '    return host.attr\n',
-                          mover.get_new_method('new_method'))
+        expected = 'def new_method(self, host, p1, *args, **kwds):\n' \
+                   '    return host.attr\n'
+        self.assertEquals(expected, mover.get_new_method('new_method'))
 
     def test_moving_methods_getting_new_method_for_multi_line_methods(self):
         code = 'class A(object):\n' \
-               '    def a_method(self):\n        a = 2\n        return a\n'
+               '    def a_method(self):\n' \
+               '        a = 2\n' \
+               '        return a\n'
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
@@ -298,29 +320,38 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_methods_getting_old_method_for_constant_methods(self):
         self.mod2.write('class B(object):\n    pass\n')
-        code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
-               '    def a_method(self):\n        return 1\n'
+        code = 'import mod2\n\n' \
+               'class A(object):\n' \
+               '    attr = mod2.B()\n' \
+               '    def a_method(self):\n' \
+               '        return 1\n'
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
         mover.get_changes('attr', 'new_method').do()
-        self.assertEquals(
-            'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
-            '    def a_method(self):\n        return self.attr.new_method()\n',
-            self.mod1.read())
+        expected = 'import mod2\n\n' \
+                   'class A(object):\n' \
+                   '    attr = mod2.B()\n' \
+                   '    def a_method(self):\n' \
+                   '        return self.attr.new_method()\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_moving_methods_getting_getting_changes_for_goal_class(self):
         self.mod2.write('class B(object):\n    var = 1\n')
-        code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
-               '    def a_method(self):\n        return 1\n'
+        code = 'import mod2\n\n' \
+               'class A(object):\n' \
+               '    attr = mod2.B()\n' \
+               '    def a_method(self):\n' \
+               '        return 1\n'
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
         mover.get_changes('attr', 'new_method').do()
-        self.assertEquals(
-            'class B(object):\n    var = 1\n\n\n'
-            '    def new_method(self):\n        return 1\n',
-            self.mod2.read())
+        expected = 'class B(object):\n' \
+                   '    var = 1\n\n\n' \
+                   '    def new_method(self):\n' \
+                   '        return 1\n'
+        self.assertEquals(expected, self.mod2.read())
 
     def test_moving_methods_getting_getting_changes_for_goal_class2(self):
         code = 'class B(object):\n    var = 1\n\n' \
@@ -332,9 +363,11 @@ class MoveRefactoringTest(unittest.TestCase):
         mover.get_changes('attr', 'new_method').do()
         self.assertEquals(
             'class B(object):\n    var = 1\n\n\n'
-            '    def new_method(self):\n        return 1\n\n'
+            '    def new_method(self):\n'
+            '        return 1\n\n'
             'class A(object):\n    attr = B()\n'
-            '    def a_method(self):\n        return self.attr.new_method()\n',
+            '    def a_method(self):\n'
+            '        return self.attr.new_method()\n',
             self.mod1.read())
 
     @testutils.assert_raises(exceptions.RefactoringError)
@@ -357,45 +390,58 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_methods_and_moving_used_imports(self):
         self.mod2.write('class B(object):\n    var = 1\n')
-        code = 'import sys\nimport mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
-               '    def a_method(self):\n        return sys.version\n'
+        code = 'import sys\nimport mod2\n\n' \
+               'class A(object):\n' \
+               '    attr = mod2.B()\n' \
+               '    def a_method(self):\n' \
+               '        return sys.version\n'
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
         mover.get_changes('attr', 'new_method').do()
-        self.assertEquals(
-            'import sys\n'
-            'class B(object):\n    var = 1\n\n\n'
-            '    def new_method(self):\n        return sys.version\n',
-            self.mod2.read())
+        code = 'import sys\n' \
+               'class B(object):\n' \
+               '    var = 1\n\n\n' \
+               '    def new_method(self):\n' \
+               '        return sys.version\n'
+        self.assertEquals(code, self.mod2.read())
 
     def test_moving_methods_getting_getting_changes_for_goal_class3(self):
         self.mod2.write('class B(object):\n    pass\n')
-        code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
-               '    def a_method(self):\n        return 1\n'
+        code = 'import mod2\n\n' \
+               'class A(object):\n' \
+               '    attr = mod2.B()\n' \
+               '    def a_method(self):\n' \
+               '        return 1\n'
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
         mover.get_changes('attr', 'new_method').do()
-        self.assertEquals(
-            'class B(object):\n\n    def new_method(self):\n        return 1\n',
-            self.mod2.read())
+        expected = 'class B(object):\n\n' \
+                   '    def new_method(self):\n' \
+                   '        return 1\n'
+        self.assertEquals(expected, self.mod2.read())
 
     def test_moving_methods_and_source_class_with_parameters(self):
         self.mod2.write('class B(object):\n    pass\n')
-        code = 'import mod2\n\nclass A(object):\n    attr = mod2.B()\n' \
+        code = 'import mod2\n\n' \
+               'class A(object):\n' \
+               '    attr = mod2.B()\n' \
                '    def a_method(self, p):\n        return p\n'
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
         mover.get_changes('attr', 'new_method').do()
-        self.assertEquals(
-            'import mod2\n\nclass A(object):\n    attr = mod2.B()\n'
-            '    def a_method(self, p):\n        return self.attr.new_method(p)\n',
-            self.mod1.read())
-        self.assertEquals(
-            'class B(object):\n\n    def new_method(self, p):\n        return p\n',
-            self.mod2.read())
+        expected1 = 'import mod2\n\n' \
+                    'class A(object):\n' \
+                    '    attr = mod2.B()\n' \
+                    '    def a_method(self, p):\n' \
+                    '        return self.attr.new_method(p)\n'
+        self.assertEquals(expected1, self.mod1.read())
+        expected2 = 'class B(object):\n\n' \
+                    '    def new_method(self, p):\n' \
+                    '        return p\n'
+        self.assertEquals(expected2, self.mod2.read())
 
     def test_moving_globals_to_a_module_with_only_docstrings(self):
         self.mod1.write('import sys\n\n\ndef f():\n    print(sys.version)\n')
@@ -409,25 +455,30 @@ class MoveRefactoringTest(unittest.TestCase):
             self.mod2.read())
 
     def test_moving_globals_to_a_module_with_only_docstrings2(self):
-        self.mod1.write('import os\nimport sys\n\n\n'
-                        'def f():\n    print(sys.version, os.path)\n')
+        code = 'import os\n' \
+               'import sys\n\n\n' \
+               'def f():\n' \
+               '    print(sys.version, os.path)\n'
+        self.mod1.write(code)
         self.mod2.write('"""doc\n\nMore docs ...\n\n"""\n')
         mover = move.create_move(self.project, self.mod1,
                                  self.mod1.read().index('f()') + 1)
         self.project.do(mover.get_changes(self.mod2))
-        self.assertEquals(
-            '"""doc\n\nMore docs ...\n\n"""\nimport os\nimport sys\n\n\n'
-            'def f():\n    print(sys.version, os.path)\n',
-            self.mod2.read())
+        expected = '"""doc\n\nMore docs ...\n\n"""\n' \
+                   'import os\n' \
+                   'import sys\n\n\n' \
+                   'def f():\n' \
+                   '    print(sys.version, os.path)\n'
+        self.assertEquals(expected, self.mod2.read())
 
     def test_moving_a_global_when_it_is_used_after_a_multiline_str(self):
-        self.mod1.write('def f():\n    pass\ns = """\\\n"""\nr = f()\n')
+        code = 'def f():\n    pass\ns = """\\\n"""\nr = f()\n'
+        self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
-                                 self.mod1.read().index('f()') + 1)
+                                 code.index('f()') + 1)
         self.project.do(mover.get_changes(self.mod2))
-        self.assertEquals(
-            'import mod2\ns = """\\\n"""\nr = mod2.f()\n',
-            self.mod1.read())
+        expected = 'import mod2\ns = """\\\n"""\nr = mod2.f()\n'
+        self.assertEquals(expected, self.mod1.read())
 
     @testutils.assert_raises(exceptions.RefactoringError)
     def test_raising_an_exception_when_moving_non_package_folders(self):
