@@ -62,9 +62,24 @@ def get_doc(project, source_code, offset, resource=None, maxfixes=1):
 
 
 def get_calltip(project, source_code, offset, resource=None, maxfixes=1):
-    finder = WordRangeFinder(source_code)
-    start = finder.find_parens_start_from_inside(max(0, offset - 1))
-    pyname = _find_pyname_at(project, source_code, start, resource, maxfixes)
+    """Get the calltip of a function
+
+    The format of the returned string is
+    ``module_name.holding_scope_names.function_name(arguments)``.  For
+    classes `__init__()` and for normal objects `__call__()` function
+    is used.
+
+    Note that the offset is on the function itself *not* after the its
+    open parenthesis.  (Actually it used to be the other way but it
+    was easily confused when string literals were involved.  So I
+    decided it is better for it not to try to be too clever when it
+    cannot be clever enough).  You can use a simple search like::
+
+        offset = source_code.rindex('(', 0, offset) - 1
+
+    to handle simple situations.
+    """
+    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
@@ -500,7 +515,7 @@ def _find_pyname_at(project, source_code, offset, resource, maxfixes):
     scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
     result = rope.base.evaluate.get_pyname_in_scope(scope, expression)
     new_code = pymodule.source_code
-    if result is None or new_code.startswith(source_code[:offset]):
+    if result is None or new_code.startswith(source_code[:offset + 1]):
         if offset < len(new_code):
             return rope.base.evaluate.get_pyname_at(pymodule, offset)
     return result
