@@ -8,12 +8,14 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 """
 import os
 import shutil
+import subprocess
 
 
 def create_fscommands(root):
     dirlist = os.listdir(root)
     commands = {'.hg': MercurialCommands,
                 '.svn': SubversionCommands,
+                '.git': GITCommands,
                 '_svn': SubversionCommands}
     for key in commands:
         if key in dirlist:
@@ -99,13 +101,50 @@ class MercurialCommands(object):
 
     def move(self, path, new_location):
         self.hg.commands.rename(self.ui, self.repo, path,
-                                  new_location, after=False)
+                                new_location, after=False)
 
     def remove(self, path):
         self.hg.commands.remove(self.ui, self.repo, path)
 
     def write(self, path, data):
         self.normal_actions.write(path, data)
+
+
+class GITCommands(object):
+
+    def __init__(self, root):
+        self.root = root
+        self.normal_actions = FileSystemCommands()
+
+    def create_file(self, path):
+        self.normal_actions.create_file(path)
+        self._do(['add', self._in_dir(path)])
+
+    def create_folder(self, path):
+        self.normal_actions.create_folder(path)
+
+    def move(self, path, new_location):
+        self._do(['mv', self._in_dir(path), self._in_dir(new_location)])
+
+    def remove(self, path):
+        self._do(['rm', self._in_dir(path)])
+
+    def write(self, path, data):
+        # XXX: should we use ``git add``?
+        self.normal_actions.write(path, data)
+
+    def _do(self, args):
+        _execute(['git'] + args, cwd=self.root)
+
+    def _in_dir(self, path):
+        if path.startswith(self.root):
+            return path[len(self.root) + 1:]
+        return self.root
+
+
+def _execute(args, cwd=None):
+    process = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE)
+    process.wait()
 
 
 def unicode_to_file_data(contents, encoding=None):
