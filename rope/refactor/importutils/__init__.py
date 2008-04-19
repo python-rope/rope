@@ -77,7 +77,12 @@ class ImportTools(object):
     def get_from_import(self, resource, name):
         """The from import statement for `name` in `resource`"""
         module_name = get_module_name(self.pycore, resource)
-        return FromImport(module_name, 0, ((name, None),))
+        names = []
+        if isinstance(name, list):
+            names = [(imported, None) for imported in name]
+        else:
+            names = [(name, None),]
+        return FromImport(module_name, 0, tuple(names))
 
     def get_module_imports(self, module, imports_filter=None):
         return module_imports.ModuleImports(self.pycore, module,

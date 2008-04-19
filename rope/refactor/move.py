@@ -540,16 +540,23 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
 def _get_moving_element_with_imports(pycore, resource, source, imports):
     import_tools = importutils.ImportTools(pycore)
     new_imports = list(imports)
-    new_imports.append(import_tools.get_from_import(resource, '*'))
-
     pymodule = pycore.get_string_module(source, resource)
+
+    back_names = []
+    for name in pycore.resource_to_pyobject(resource):
+        if name not in pymodule:
+            back_names.append(name)
+    new_imports.append(import_tools.get_from_import(resource, back_names))
+
     source = _add_imports_to_module(import_tools, pymodule, new_imports)
     pymodule = pycore.get_string_module(source, resource)
 
     source = import_tools.relatives_to_absolutes(pymodule)
     pymodule = pycore.get_string_module(source, resource)
-    source = import_tools.expand_stars(pymodule)
+    source = import_tools.organize_imports(pymodule, selfs=False)
     pymodule = pycore.get_string_module(source, resource)
+
+    # extracting imports after changes
     module_with_imports = import_tools.get_module_imports(pymodule)
     imports = [import_stmt.import_info
                for import_stmt in module_with_imports.get_import_statements()]
@@ -557,6 +564,8 @@ def _get_moving_element_with_imports(pycore, resource, source, imports):
     if module_with_imports.get_import_statements():
         start = module_with_imports.get_import_statements()[-1].end_line
     lines = codeanalyze.SourceLinesAdapter(source)
+    while start < lines.length() and not lines.get_line(start).strip():
+        start += 1
     moving = source[lines.get_line_start(start):]
     return moving, imports
 

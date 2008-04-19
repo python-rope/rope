@@ -85,22 +85,39 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_used_imports_to_destination_module(self):
         self.mod3.write('a_var = 10')
-        self.mod1.write('import mod3\nfrom mod3 import a_var\n' \
-                        'def a_func():\n    print(mod3, a_var)\n')
-        self._move(self.mod1, self.mod1.read().index('a_func') + 1,
-                   self.mod2)
-        self.assertEquals('import mod3\nfrom mod3 import a_var\n\n\n' \
-                          'def a_func():\n    print(mod3, a_var)\n',
-                          self.mod2.read())
+        code = 'import mod3\n' \
+               'from mod3 import a_var\n' \
+               'def a_func():\n' \
+               '    print(mod3, a_var)\n'
+        self.mod1.write(code)
+        self._move(self.mod1, code.index('a_func') + 1, self.mod2)
+        expected = 'import mod3\n' \
+                   'from mod3 import a_var\n\n\n' \
+                   'def a_func():\n    print(mod3, a_var)\n'
+        self.assertEquals(expected, self.mod2.read())
 
     def test_moving_used_names_to_destination_module2(self):
-        self.mod1.write('a_var = 10\n' \
-                        'def a_func():\n    print(a_var)\n')
-        self._move(self.mod1, self.mod1.read().index('a_func') + 1,
-                   self.mod2)
+        code = 'a_var = 10\n' \
+               'def a_func():\n' \
+               '    print(a_var)\n'
+        self.mod1.write(code)
+        self._move(self.mod1, code.index('a_func') + 1, self.mod2)
         self.assertEquals('a_var = 10\n', self.mod1.read())
-        self.assertEquals('from mod1 import a_var\n\n\ndef a_func():\n    print(a_var)\n',
-                          self.mod2.read())
+        expected = 'from mod1 import a_var\n\n\n' \
+                   'def a_func():\n' \
+                   '    print(a_var)\n'
+        self.assertEquals(expected, self.mod2.read())
+
+    def test_moving_used_underlined_names_to_destination_module(self):
+        code = '_var = 10\n' \
+               'def a_func():\n' \
+               '    print(_var)\n'
+        self.mod1.write(code)
+        self._move(self.mod1, code.index('a_func') + 1, self.mod2)
+        expected = 'from mod1 import _var\n\n\n' \
+                   'def a_func():\n' \
+                   '    print(_var)\n'
+        self.assertEquals(expected, self.mod2.read())
 
     def test_moving_and_used_relative_imports(self):
         code = 'import mod5\n' \
