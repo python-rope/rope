@@ -27,7 +27,7 @@ Features implemented so far:
   * Stopping refactorings
   * Cross-project refactorings
   * Basic implicit interfaces handling in rename and change signature
-  * Mercurial_ and SVN (pysvn_ library) support in refactorings
+  * Mercurial_, GIT_ and SVN (pysvn_ library) support in refactorings
 
 * IDE helpers
 
@@ -50,3 +50,4 @@ For more information see `overview.txt`_.
 .. _overview.txt: overview.html
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
+.. _GIT: http://git.or.cz
