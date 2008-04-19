@@ -61,7 +61,8 @@ def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     return PyDocExtractor().get_doc(pyobject)
 
 
-def get_calltip(project, source_code, offset, resource=None, maxfixes=1):
+def get_calltip(project, source_code, offset, resource=None,
+                maxfixes=1, ignore_unknown=False):
     """Get the calltip of a function
 
     The format of the returned string is
@@ -78,12 +79,15 @@ def get_calltip(project, source_code, offset, resource=None, maxfixes=1):
         offset = source_code.rindex('(', 0, offset) - 1
 
     to handle simple situations.
+
+    If `ignore_unknown` is `True`, `None` is returned for functions
+    without source-code like builtins and extensions.
     """
     pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
-    return PyDocExtractor().get_calltip(pyobject)
+    return PyDocExtractor().get_calltip(pyobject, ignore_unknown)
 
 
 def get_definition_location(project, source_code, offset,
@@ -581,7 +585,7 @@ class PyDocExtractor(object):
             return self._trim_docstring(pyobject.get_doc())
         return None
 
-    def get_calltip(self, pyobject):
+    def get_calltip(self, pyobject, ignore_unknown=False):
         try:
             if isinstance(pyobject, pyobjects.AbstractClass):
                 pyobject = pyobject['__init__'].get_object()
@@ -589,6 +593,8 @@ class PyDocExtractor(object):
                 pyobject = pyobject['__call__'].get_object()
         except exceptions.AttributeNotFoundError:
             return None
+        if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunction):
+            return
         if isinstance(pyobject, pyobjects.AbstractFunction):
             return self._get_function_signature(pyobject, add_module=True)
 

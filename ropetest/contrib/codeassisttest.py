@@ -636,6 +636,11 @@ class CodeAssistTest(unittest.TestCase):
         doc = get_calltip(self.project, src, src.rindex('c'), mod)
         self.assertEquals('mod.C.__call__(self, p)', doc)
 
+    def test_get_calltips_and_including_module_name(self):
+        src = 'range()\n'
+        doc = get_calltip(self.project, src, 1, ignore_unknown=True)
+        self.assertTrue(doc is None)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
