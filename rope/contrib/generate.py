@@ -159,7 +159,7 @@ class GeneratePackage(_Generate):
 def _add_import_to_module(pycore, resource, imported):
     pymodule = pycore.resource_to_pyobject(resource)
     import_tools = importutils.ImportTools(pycore)
-    module_imports = import_tools.get_module_imports(pymodule)
+    module_imports = import_tools.module_imports(pymodule)
     module_name = importutils.get_module_name(pycore, imported)
     new_import = importutils.NormalImport(((module_name, None), ))
     module_imports.add_import(new_import)

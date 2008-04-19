@@ -300,7 +300,7 @@ class MoveGlobal(object):
         pymodule = self.tools.new_pymodule(pymodule, source)
         pymodule, has_changed = self._add_imports2(pymodule, imports)
 
-        module_with_imports = self.import_tools.get_module_imports(pymodule)
+        module_with_imports = self.import_tools.module_imports(pymodule)
         source = pymodule.source_code
         if module_with_imports.get_import_statements():
             start = pymodule.lines.get_line_end(
@@ -319,13 +319,12 @@ class MoveGlobal(object):
         return ChangeContents(dest, source)
 
     def _get_moving_element_with_imports(self):
-        return _get_moving_element_with_imports(
-            self.pycore, self.source, self._get_moving_element(),
-            self._get_used_imports_by_the_moving_element())
+        return moving_code_with_imports(
+            self.pycore, self.source, self._get_moving_element())
 
     def _get_module_with_imports(self, source_code, resource):
         pymodule = self.pycore.get_string_module(source_code, resource)
-        return self.import_tools.get_module_imports(pymodule)
+        return self.import_tools.module_imports(pymodule)
 
     def _get_moving_element(self):
         start, end = self._get_moving_region()
@@ -343,10 +342,6 @@ class MoveGlobal(object):
             end_line += 1
         end = min(lines.get_line_end(end_line) + 1, len(pymodule.source_code))
         return start, end
-
-    def _get_used_imports_by_the_moving_element(self):
-        return importutils.get_imports(self.pycore,
-                                       self.old_pyname.get_object())
 
     def _add_imports2(self, pymodule, new_imports):
         source = self.tools.add_imports(pymodule, new_imports)
@@ -475,7 +470,7 @@ class _MoveTools(object):
 
     def remove_old_imports(self, pymodule):
         old_source = pymodule.source_code
-        module_with_imports = self.import_tools.get_module_imports(pymodule)
+        module_with_imports = self.import_tools.module_imports(pymodule)
         class CanSelect(object):
             changed = False
             old_name = self.old_name
@@ -531,24 +526,28 @@ class _MoveTools(object):
 
 
 def _add_imports_to_module(import_tools, pymodule, new_imports):
-    module_with_imports = import_tools.get_module_imports(pymodule)
+    module_with_imports = import_tools.module_imports(pymodule)
     for new_import in new_imports:
         module_with_imports.add_import(new_import)
     return module_with_imports.get_changed_source()
 
 
-def _get_moving_element_with_imports(pycore, resource, source, imports):
+def moving_code_with_imports(pycore, resource, source):
     import_tools = importutils.ImportTools(pycore)
-    new_imports = list(imports)
     pymodule = pycore.get_string_module(source, resource)
+    origin = pycore.resource_to_pyobject(resource)
+
+    imports = []
+    for stmt in import_tools.module_imports(origin).get_import_statements():
+        imports.append(stmt.import_info)
 
     back_names = []
-    for name in pycore.resource_to_pyobject(resource):
+    for name in origin:
         if name not in pymodule:
             back_names.append(name)
-    new_imports.append(import_tools.get_from_import(resource, back_names))
+    imports.append(import_tools.get_from_import(resource, back_names))
 
-    source = _add_imports_to_module(import_tools, pymodule, new_imports)
+    source = _add_imports_to_module(import_tools, pymodule, imports)
     pymodule = pycore.get_string_module(source, resource)
 
     source = import_tools.relatives_to_absolutes(pymodule)
@@ -557,7 +556,7 @@ def _get_moving_element_with_imports(pycore, resource, source, imports):
     pymodule = pycore.get_string_module(source, resource)
 
     # extracting imports after changes
-    module_with_imports = import_tools.get_module_imports(pymodule)
+    module_with_imports = import_tools.module_imports(pymodule)
     imports = [import_stmt.import_info
                for import_stmt in module_with_imports.get_import_statements()]
     start = 1

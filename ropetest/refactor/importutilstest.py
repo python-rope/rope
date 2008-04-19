@@ -67,7 +67,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_get_import_statements(self):
         self.mod.write('import pkg1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         self.assertEquals('import pkg1',
                           imports[0].import_info.get_import_statement())
@@ -75,7 +75,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_get_import_statements_with_alias(self):
         self.mod.write('import pkg1.mod1 as mod1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         self.assertEquals('import pkg1.mod1 as mod1',
                           imports[0].import_info.get_import_statement())
@@ -83,7 +83,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_get_import_statements_for_froms(self):
         self.mod.write('from pkg1 import mod1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         self.assertEquals('from pkg1 import mod1',
                           imports[0].import_info.get_import_statement())
@@ -91,7 +91,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_get_multi_line_import_statements_for_froms(self):
         self.mod.write('from pkg1 \\\n    import mod1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         self.assertEquals('from pkg1 import mod1',
                           imports[0].import_info.get_import_statement())
@@ -99,7 +99,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_get_import_statements_for_from_star(self):
         self.mod.write('from pkg1 import *\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         self.assertEquals('from pkg1 import *',
                           imports[0].import_info.get_import_statement())
@@ -108,7 +108,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_get_import_statements_for_new_relatives(self):
         self.mod2.write('from .mod3 import x\n')
         pymod = self.pycore.get_module('pkg2.mod2')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         self.assertEquals('from .mod3 import x',
                           imports[0].import_info.get_import_statement())
@@ -116,14 +116,14 @@ class ImportUtilsTest(unittest.TestCase):
     def test_ignoring_indented_imports(self):
         self.mod.write('if True:\n    import pkg1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         self.assertEquals(0, len(imports))
 
     def test_import_get_names(self):
         self.mod.write('import pkg1 as pkg\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         context = importinfo.ImportContext(self.pycore, self.project.root)
         self.assertEquals(['pkg'],
@@ -132,7 +132,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_import_get_names_with_alias(self):
         self.mod.write('import pkg1.mod1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         context = importinfo.ImportContext(self.pycore, self.project.root)
         self.assertEquals(['pkg1'],
@@ -142,7 +142,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import *\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_import_statements()
         context = importinfo.ImportContext(self.pycore, self.project.root)
         self.assertEquals(['a_func'],
@@ -151,21 +151,21 @@ class ImportUtilsTest(unittest.TestCase):
     def test_empty_getting_used_imports(self):
         self.mod.write('')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod)
         self.assertEquals(0, len(imports))
 
     def test_empty_getting_used_imports2(self):
         self.mod.write('import pkg\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod)
         self.assertEquals(0, len(imports))
 
     def test_simple_getting_used_imports(self):
         self.mod.write('import pkg\nprint(pkg)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod)
         self.assertEquals(1, len(imports))
         self.assertEquals('import pkg', imports[0].get_import_statement())
@@ -173,7 +173,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_simple_getting_used_imports2(self):
         self.mod.write('import pkg\ndef a_func():\n    print(pkg)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod)
         self.assertEquals(1, len(imports))
         self.assertEquals('import pkg', imports[0].get_import_statement())
@@ -181,7 +181,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_getting_used_imports_for_nested_scopes(self):
         self.mod.write('import pkg1\nprint(pkg1)\ndef a_func():\n    pass\nprint(pkg1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(
             pymod['a_func'].get_object())
         self.assertEquals(0, len(imports))
@@ -189,7 +189,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_getting_used_imports_for_nested_scopes2(self):
         self.mod.write('from pkg1 import mod1\ndef a_func():\n    print(mod1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(
             pymod['a_func'].get_object())
         self.assertEquals(1, len(imports))
@@ -198,7 +198,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_empty_removing_unused_imports(self):
         self.mod.write('import pkg1\nprint(pkg1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('import pkg1\nprint(pkg1)\n',
                           module_with_imports.get_changed_source())
@@ -206,7 +206,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_simple_removing_unused_imports(self):
         self.mod.write('import pkg1\n\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('', module_with_imports.get_changed_source())
 
@@ -214,7 +214,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import a_func, another_func\n\na_func()\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('from pkg1.mod1 import a_func\n\na_func()\n',
                           module_with_imports.get_changed_source())
@@ -222,7 +222,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_simple_removing_unused_imports_for_from_stars(self):
         self.mod.write('from pkg1.mod1 import *\n\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('', module_with_imports.get_changed_source())
 
@@ -230,7 +230,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\n')
         self.mod.write('import pkg1.mod1\npkg1.mod1.a_func()')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('import pkg1.mod1\npkg1.mod1.a_func()',
                           module_with_imports.get_changed_source())
@@ -238,7 +238,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_removing_unused_imports_and_functions_of_the_same_name(self):
         self.mod.write('def a_func():\n    pass\ndef a_func():\n    pass\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('def a_func():\n    pass\ndef a_func():\n    pass\n',
                           module_with_imports.get_changed_source())
@@ -247,7 +247,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('a_var = 1\n')
         self.mod1.write('from mod import a_var as myvar\na_var = myvar\n')
         pymod = self.pycore.resource_to_pyobject(self.mod1)
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('from mod import a_var as myvar\na_var = myvar\n',
                           module_with_imports.get_changed_source())
@@ -257,14 +257,14 @@ class ImportUtilsTest(unittest.TestCase):
                '    def f(self):\n        a_var = pkg1\n'
         self.mod.write(code)
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals(code, module_with_imports.get_changed_source())
 
     def test_adding_imports(self):
         self.mod.write('\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         new_import = self.import_tools.get_import(self.mod1)
         module_with_imports.add_import(new_import)
         self.assertEquals('import pkg1.mod1\n',
@@ -274,7 +274,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import a_func\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         new_import = self.import_tools.get_from_import(
             self.mod1, 'another_func')
         module_with_imports.add_import(new_import)
@@ -285,7 +285,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import *\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         new_import = self.import_tools.get_from_import(
             self.mod1, 'another_func')
         module_with_imports.add_import(new_import)
@@ -296,7 +296,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import a_func\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         new_import = self.import_tools.get_from_import(self.mod1,
                                                                   '*')
         module_with_imports.add_import(new_import)
@@ -306,7 +306,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_adding_imports_and_preserving_spaces_after_imports(self):
         self.mod.write('import pkg1\n\n\nprint(pkg1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         new_import = self.import_tools.get_import(self.pkg2)
         module_with_imports.add_import(new_import)
         self.assertEquals('import pkg1\nimport pkg2\n\n\nprint(pkg1)\n',
@@ -316,7 +316,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import (a_func,\n    another_func)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         self.assertEquals(
             'from pkg1.mod1 import (a_func,\n    another_func)\n',
             module_with_imports.get_changed_source())
@@ -325,7 +325,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import (a_func)\na_func()\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('from pkg1.mod1 import (a_func)\na_func()\n',
                           module_with_imports.get_changed_source())
@@ -336,7 +336,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('from pkg1.mod1 import *\n'
                        'from pkg1.mod1 import a_func\na_func()\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('from pkg1.mod1 import *\na_func()\n',
                           module_with_imports.get_changed_source())
@@ -345,7 +345,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('import pkg2.mod2\nimport pkg2.mod3\n'
                        'print(pkg2.mod2, pkg2.mod3)')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals(
             'import pkg2.mod2\nimport pkg2.mod3\nprint(pkg2.mod2, pkg2.mod3)',
@@ -354,7 +354,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_removing_unused_imports_and_common_packages(self):
         self.mod.write('import pkg1.mod1\nimport pkg1\nprint(pkg1, pkg1.mod1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('import pkg1.mod1\nprint(pkg1, pkg1.mod1)\n',
                           module_with_imports.get_changed_source())
@@ -362,7 +362,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_removing_unused_imports_and_common_packages_reversed(self):
         self.mod.write('import pkg1\nimport pkg1.mod1\nprint(pkg1, pkg1.mod1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_duplicates()
         self.assertEquals('import pkg1.mod1\nprint(pkg1, pkg1.mod1)\n',
                           module_with_imports.get_changed_source())
@@ -370,7 +370,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_removing_unused_imports_and_common_packages2(self):
         self.mod.write('import pkg1.mod1\nimport pkg1.mod2\nprint(pkg1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('import pkg1.mod1\nprint(pkg1)\n',
                           module_with_imports.get_changed_source())
@@ -379,7 +379,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def func1():\n    pass\n')
         self.mod.write('from pkg1.mod1 import func1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('', module_with_imports.get_changed_source())
 
@@ -387,7 +387,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def func1():\n    pass\n')
         self.mod.write('from pkg1.mod1 import func1\nfunc1()')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('from pkg1.mod1 import func1\nfunc1()',
                           module_with_imports.get_changed_source())
@@ -397,7 +397,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('from pkg1.mod1 import func1\n'
                        'def a_func():\n    func1()\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals(
             'from pkg1.mod1 import func1\ndef a_func():\n    func1()\n',
@@ -408,7 +408,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('from pkg1.mod1 import func1\nclass A(object):\n'
                        '    def a_func(self):\n        func1()\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('from pkg1.mod1 import func1\nclass A(object):\n'
                           '    def a_func(self):\n        func1()\n',
@@ -418,7 +418,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('class A(object):\n    def f(self):\n        pass\n')
         self.mod.write('from pkg1.mod1 import A\nvar = A().f()')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('from pkg1.mod1 import A\nvar = A().f()',
                           module_with_imports.get_changed_source())
@@ -427,7 +427,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def func1():\n    pass\n')
         self.mod.write('import pkg1\ndef a_func(pkg1):\n    my_var = pkg1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('def a_func(pkg1):\n    my_var = pkg1\n',
                           module_with_imports.get_changed_source())
@@ -436,7 +436,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import *\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.expand_stars()
         self.assertEquals('', module_with_imports.get_changed_source())
 
@@ -444,7 +444,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod1.write('def a_func():\n    pass\ndef another_func():\n    pass\n')
         self.mod.write('from pkg1.mod1 import *\na_func()\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.expand_stars()
         self.assertEquals('from pkg1.mod1 import a_func\na_func()\n',
                           module_with_imports.get_changed_source())
@@ -452,7 +452,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_removing_duplicate_imports(self):
         self.mod.write('import pkg1\nimport pkg1\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_duplicates()
         self.assertEquals('import pkg1\n',
                           module_with_imports.get_changed_source())
@@ -460,7 +460,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_removing_duplicates_and_reoccuring_names(self):
         self.mod.write('import pkg2.mod2\nimport pkg2.mod3\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_duplicates()
         self.assertEquals('import pkg2.mod2\nimport pkg2.mod3\n',
                           module_with_imports.get_changed_source())
@@ -471,7 +471,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('from pkg1 import a_func\n'
                        'from pkg1 import a_func, another_func\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_duplicates()
         self.assertEquals('from pkg1 import a_func, another_func\n',
                           module_with_imports.get_changed_source())
@@ -766,7 +766,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_empty_removing_unused_imports_and_eating_blank_lines(self):
         self.mod.write('import pkg1\nimport pkg2\n\n\nprint(pkg1)\n')
         pymod = self.pycore.get_module('mod')
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         module_with_imports.remove_unused_imports()
         self.assertEquals('import pkg1\n\n\nprint(pkg1)\n',
                           module_with_imports.get_changed_source())
@@ -907,7 +907,7 @@ class ImportUtilsTest(unittest.TestCase):
             'from does_not_exist import func\n\nfunc()\n')
         pymod = self.pycore.get_module('mod')
 
-        module_with_imports = self.import_tools.get_module_imports(pymod)
+        module_with_imports = self.import_tools.module_imports(pymod)
         imports = module_with_imports.get_used_imports(pymod)
         self.assertEquals(1, len(imports))
 

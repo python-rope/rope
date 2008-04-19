@@ -70,10 +70,9 @@ class InlineMethod(_Inliner):
 
     def _init_imports(self):
         self.import_tools = importutils.ImportTools(self.pycore)
-        imports = importutils.get_imports(self.pycore, self.pyfunction)
         body = sourceutils.get_body(self.pyfunction)
-        body, imports = move._get_moving_element_with_imports(
-            self.pycore, self.resource, body, imports)
+        body, imports = move.moving_code_with_imports(
+            self.pycore, self.resource, body)
         self.imports = imports
         self.others_generator = _DefinitionGenerator(
             self.project, self.pyfunction, body=body)
