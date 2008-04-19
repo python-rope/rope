@@ -314,8 +314,8 @@ class MoveGlobal(object):
         # Organizing imports
         source = result
         pymodule = self.pycore.get_string_module(source, dest)
-        source = self.import_tools.organize_imports(pymodule,
-                                                    sort=False, unused=False)
+        source = self.import_tools.organize_imports(pymodule, sort=False,
+                                                    unused=False)
         return ChangeContents(dest, source)
 
     def _get_moving_element_with_imports(self):
@@ -348,7 +348,9 @@ class MoveGlobal(object):
         if source is None:
             return pymodule, False
         else:
-            return self.pycore.get_string_module(source, pymodule.get_resource()), True
+            resource = pymodule.get_resource()
+            pymodule = self.pycore.get_string_module(source, resource)
+            return pymodule, True
 
 
 class MoveModule(object):
@@ -556,12 +558,12 @@ def moving_code_with_imports(pycore, resource, source):
     pymodule = pycore.get_string_module(source, resource)
 
     # extracting imports after changes
-    module_with_imports = import_tools.module_imports(pymodule)
+    module_imports = import_tools.module_imports(pymodule)
     imports = [import_stmt.import_info
-               for import_stmt in module_with_imports.imports]
+               for import_stmt in module_imports.imports]
     start = 1
-    if module_with_imports.imports:
-        start = module_with_imports.imports[-1].end_line
+    if module_imports.imports:
+        start = module_imports.imports[-1].end_line
     lines = codeanalyze.SourceLinesAdapter(source)
     while start < lines.length() and not lines.get_line(start).strip():
         start += 1
