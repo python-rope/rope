@@ -21,7 +21,7 @@ def create_fscommands(root):
         if key in dirlist:
             try:
                 return commands[key](root)
-            except ImportError:
+            except (ImportError, OSError):
                 pass
     return FileSystemCommands()
 
@@ -114,6 +114,7 @@ class GITCommands(object):
 
     def __init__(self, root):
         self.root = root
+        self._do(['version'])
         self.normal_actions = FileSystemCommands()
 
     def create_file(self, path):
@@ -145,6 +146,7 @@ class GITCommands(object):
 def _execute(args, cwd=None):
     process = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE)
     process.wait()
+    return process.returncode
 
 
 def unicode_to_file_data(contents, encoding=None):
