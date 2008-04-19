@@ -91,7 +91,7 @@ class ImportTools(object):
     def froms_to_imports(self, pymodule, import_filter=None):
         pymodule = self._clean_up_imports(pymodule, import_filter)
         module_imports = self.module_imports(pymodule, import_filter)
-        for import_stmt in module_imports.get_import_statements():
+        for import_stmt in module_imports.imports:
             if import_stmt.readonly or \
                not self._is_transformable_to_normal(import_stmt.import_info):
                 continue
@@ -99,7 +99,7 @@ class ImportTools(object):
 
         # Adding normal imports in place of froms
         module_imports = self.module_imports(pymodule, import_filter)
-        for import_stmt in module_imports.get_import_statements():
+        for import_stmt in module_imports.imports:
             if not import_stmt.readonly and \
                self._is_transformable_to_normal(import_stmt.import_info):
                 import_stmt.import_info = \
@@ -254,7 +254,7 @@ def get_imports(pycore, pydefined):
     pymodule = pydefined.get_module()
     module = module_imports.ModuleImports(pycore, pymodule)
     if pymodule == pydefined:
-        return [stmt.import_info for stmt in module.get_import_statements()]
+        return [stmt.import_info for stmt in module.imports]
     return module.get_used_imports(pydefined)
 
 
@@ -291,7 +291,7 @@ def add_import(pycore, pymodule, module_name, name=None):
 
     visitor = actions.AddingVisitor(pycore, candidates)
     selected_import = normal_import
-    for import_statement in imports.get_import_statements():
+    for import_statement in imports.imports:
         if import_statement.accept(visitor):
             selected_import = visitor.import_info
             break

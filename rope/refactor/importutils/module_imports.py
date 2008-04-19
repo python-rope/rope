@@ -1,5 +1,5 @@
 import rope.base.pynames
-from rope.base import ast
+from rope.base import ast, utils
 from rope.refactor.importutils import importinfo
 from rope.refactor.importutils import actions
 
@@ -9,20 +9,20 @@ class ModuleImports(object):
     def __init__(self, pycore, pymodule, import_filter=None):
         self.pycore = pycore
         self.pymodule = pymodule
-        self.import_statements = None
         self.separating_lines = 0
         self.filter = import_filter
 
-    def get_import_statements(self):
-        if self.import_statements is None:
-            finder = _GlobalImportFinder(self.pymodule, self.pycore)
-            self.import_statements = finder.find_import_statements()
-            self.separating_lines = finder.get_separating_line_count()
-            if self.filter is not None:
-                for import_stmt in self.import_statements:
-                    if not self.filter(import_stmt):
-                        import_stmt.readonly = True
-        return self.import_statements
+    @property
+    @utils.cacheit
+    def imports(self):
+        finder = _GlobalImportFinder(self.pymodule, self.pycore)
+        result = finder.find_import_statements()
+        self.separating_lines = finder.get_separating_line_count()
+        if self.filter is not None:
+            for import_stmt in result:
+                if not self.filter(import_stmt):
+                    import_stmt.readonly = True
+        return result
 
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
@@ -33,23 +33,22 @@ class ModuleImports(object):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         visitor = actions.RemovingVisitor(
             self.pycore, self._current_folder(), can_select)
-        for import_statement in self.get_import_statements():
+        for import_statement in self.imports:
             import_statement.accept(visitor)
 
     def get_used_imports(self, defined_pyobject):
-        all_import_statements = self.get_import_statements()
         result = []
         can_select = _OneTimeSelector(self._get_unbound_names(defined_pyobject))
         visitor = actions.FilteringVisitor(
             self.pycore, self._current_folder(), can_select)
-        for import_statement in all_import_statements:
+        for import_statement in self.imports:
             new_import = import_statement.accept(visitor)
             if new_import is not None and not new_import.is_empty():
                 result.append(new_import)
         return result
 
     def get_changed_source(self):
-        imports = self.get_import_statements()
+        imports = self.imports
         after_removing = self._remove_imports(imports)
         imports = [stmt for stmt in imports
                    if not stmt.import_info.is_empty()]
@@ -113,43 +112,40 @@ class ModuleImports(object):
 
     def add_import(self, import_info):
         visitor = actions.AddingVisitor(self.pycore, [import_info])
-        for import_statement in self.get_import_statements():
+        for import_statement in self.imports:
             if import_statement.accept(visitor):
                 break
         else:
-            all_imports = self.get_import_statements()
             lineno = self._get_new_import_lineno()
             blanks = self._get_new_import_blanks()
-            all_imports.append(importinfo.ImportStatement(
-                               import_info, lineno, lineno,
-                               blank_lines=blanks))
+            self.imports.append(importinfo.ImportStatement(
+                                import_info, lineno, lineno,
+                                blank_lines=blanks))
 
     def _get_new_import_blanks(self):
         return 0
 
     def _get_new_import_lineno(self):
-        imports = self.get_import_statements()
-        if imports:
-            return imports[-1].end_line
+        if self.imports:
+            return self.imports[-1].end_line
         return 1
 
     def filter_names(self, can_select):
         visitor = actions.RemovingVisitor(
             self.pycore, self._current_folder(), can_select)
-        for import_statement in self.get_import_statements():
+        for import_statement in self.imports:
             import_statement.accept(visitor)
 
     def expand_stars(self):
         can_select = _OneTimeSelector(self._get_unbound_names(self.pymodule))
         visitor = actions.ExpandStarsVisitor(
             self.pycore, self._current_folder(), can_select)
-        for import_statement in self.get_import_statements():
+        for import_statement in self.imports:
             import_statement.accept(visitor)
 
     def remove_duplicates(self):
-        imports = self.get_import_statements()
         added_imports = []
-        for import_stmt in imports:
+        for import_stmt in self.imports:
             visitor = actions.AddingVisitor(self.pycore,
                                             [import_stmt.import_info])
             for added_import in added_imports:
@@ -161,7 +157,7 @@ class ModuleImports(object):
     def get_relative_to_absolute_list(self):
         visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
             self.pycore, self._current_folder())
-        for import_stmt in self.get_import_statements():
+        for import_stmt in self.imports:
             if not import_stmt.readonly:
                 import_stmt.accept(visitor)
         return visitor.to_be_absolute
@@ -169,7 +165,7 @@ class ModuleImports(object):
     def get_self_import_fix_and_rename_list(self):
         visitor = rope.refactor.importutils.actions.SelfImportVisitor(
             self.pycore, self._current_folder(), self.pymodule.get_resource())
-        for import_stmt in self.get_import_statements():
+        for import_stmt in self.imports:
             if not import_stmt.readonly:
                 import_stmt.accept(visitor)
         return visitor.to_be_fixed, visitor.to_be_renamed
@@ -179,9 +175,8 @@ class ModuleImports(object):
 
     def sort_imports(self):
         # IDEA: Sort from import list
-        all_import_statements = self.get_import_statements()
         visitor = actions.SortingVisitor(self.pycore, self._current_folder())
-        for import_statement in all_import_statements:
+        for import_statement in self.imports:
             import_statement.accept(visitor)
         in_projects = sorted(visitor.in_project, self._compare_imports)
         third_party = sorted(visitor.third_party, self._compare_imports)
@@ -235,7 +230,7 @@ class ModuleImports(object):
     def handle_long_imports(self, maxdots, maxlength):
         visitor = actions.LongImportVisitor(
             self._current_folder(), self.pycore, maxdots, maxlength)
-        for import_statement in self.get_import_statements():
+        for import_statement in self.imports:
             if not import_statement.readonly:
                 import_statement.accept(visitor)
         for import_info in visitor.new_imports:

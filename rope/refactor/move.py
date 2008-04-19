@@ -302,9 +302,9 @@ class MoveGlobal(object):
 
         module_with_imports = self.import_tools.module_imports(pymodule)
         source = pymodule.source_code
-        if module_with_imports.get_import_statements():
+        if module_with_imports.imports:
             start = pymodule.lines.get_line_end(
-                module_with_imports.get_import_statements()[-1].end_line - 1)
+                module_with_imports.imports[-1].end_line - 1)
             result = source[:start + 1] + '\n\n'
         else:
             result = ''
@@ -538,7 +538,7 @@ def moving_code_with_imports(pycore, resource, source):
     origin = pycore.resource_to_pyobject(resource)
 
     imports = []
-    for stmt in import_tools.module_imports(origin).get_import_statements():
+    for stmt in import_tools.module_imports(origin).imports:
         imports.append(stmt.import_info)
 
     back_names = []
@@ -558,10 +558,10 @@ def moving_code_with_imports(pycore, resource, source):
     # extracting imports after changes
     module_with_imports = import_tools.module_imports(pymodule)
     imports = [import_stmt.import_info
-               for import_stmt in module_with_imports.get_import_statements()]
+               for import_stmt in module_with_imports.imports]
     start = 1
-    if module_with_imports.get_import_statements():
-        start = module_with_imports.get_import_statements()[-1].end_line
+    if module_with_imports.imports:
+        start = module_with_imports.imports[-1].end_line
     lines = codeanalyze.SourceLinesAdapter(source)
     while start < lines.length() and not lines.get_line(start).strip():
         start += 1

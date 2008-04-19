@@ -172,7 +172,7 @@ class Restructure(object):
                                                  resource)
         imports = module_imports.ModuleImports(self.pycore, pymodule)
         return [imports.import_info
-                for imports in imports.get_import_statements()]
+                for imports in imports.imports]
 
     def make_checks(self, string_checks):
         """Convert str to str dicts to str to PyObject dicts
