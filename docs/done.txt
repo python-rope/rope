@@ -3,6 +3,36 @@
 ===========
 
 
+- added GIT support in fscommands : April 19, 2008
+
+
+- back importing underlined names in move : April 19, 2008
+
+
+- added `codeassist.get_calltip()` : April 12, 2008
+
+
+- added `libutils.analyze_modules()` : April 12, 2008
+
+
+- added ``soa_followed_calls`` project config : April 11, 2008
+
+
+- `libutils.report_change()` reads `automatic_soa` : April 10, 2008
+
+
+- SOA can follow functions : April 10, 2008
+
+
+- better handling of for, with and except variables : April 7, 2008
+
+
+- not reparsing unchanged modules for code assists : April 6, 2008
+
+
+- handling property as decorator : April 5, 2008
+
+
 > Public Release 0.8 : April 5, 2008
 
 
