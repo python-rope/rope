@@ -3,6 +3,9 @@
 ===========
 
 
+> Public Release 0.8.1 : April 20, 2008
+
+
 - added GIT support in fscommands : April 19, 2008
 
 

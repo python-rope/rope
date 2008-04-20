@@ -50,6 +50,8 @@ It's good to know that:
   parameters overwrite the ones in the ``config.py`` file.
 * Each project has a set of ignored resource patterns; You can use it
   to ask rope to ignore files and folders matching certain patterns.
+* The ``.ropeproject`` folder can be safely copied in other clones of
+  a project if you don't want to lose your objectdb and history.
 
 
 Library Utilities
