@@ -127,7 +127,9 @@ class Project(_Project):
               overwrite config file preferences.
 
         """
-        self._address = _realpath(projectroot).rstrip('/\\')
+        if projectroot != '/':
+            projectroot = _realpath(projectroot).rstrip('/\\')
+        self._address = projectroot
         self._ropefolder_name = ropefolder
         if not os.path.exists(self._address):
             os.mkdir(self._address)
