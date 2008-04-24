@@ -150,6 +150,12 @@ class SimilarFinderTest(unittest.TestCase):
         finder = self._create_finder(source)
         self.assertEquals(1, len(list(finder.get_matches(pattern))))
 
+    def test_matching_dicts_inside_functions(self):
+        source = 'def f(p):\n    d = {1: p.x}\n'
+        pattern = '{1: ${a}.x}'
+        finder = self._create_finder(source)
+        self.assertEquals(1, len(list(finder.get_matches(pattern))))
+
 
 class CheckingFinderTest(unittest.TestCase):
 
