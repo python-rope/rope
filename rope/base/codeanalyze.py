@@ -12,8 +12,8 @@ class WordRangeFinder(object):
 
     """
 
-    # XXX: many of these methods fail on comments
-    # TODO: make disabled tests run
+    # XXX: some of these methods fail on badly formatted or less
+    # common code; see disabled testcases for some of them
 
     def __init__(self, source_code):
         self.source = source_code
@@ -21,12 +21,12 @@ class WordRangeFinder(object):
     def _find_word_start(self, offset):
         current_offset = offset
         while current_offset >= 0 and self._is_id_char(current_offset):
-            current_offset -= 1;
+            current_offset -= 1
         return current_offset + 1
 
     def _find_word_end(self, offset):
         while offset + 1 < len(self.source) and self._is_id_char(offset + 1):
-            offset += 1;
+            offset += 1
         return offset
 
     _char_pat = re.compile(r'[\'"#]')
@@ -69,12 +69,13 @@ class WordRangeFinder(object):
     def _find_string_start(self, offset):
         kind = self.source[offset]
         offset -= 1
-        while offset > 0:
-            if self.source[offset] == kind and \
-                    (offset == 0 or self.source[offset - 1] != '\\'):
-                break
-            offset -= 1
-        return offset
+        while True:
+            try:
+                offset = self.source.rindex(kind, 0, offset)
+                if offset == 0 or self.source[offset - 1] != '\\':
+                    return offset
+            except ValueError:
+                return 0
 
     def _find_parens_start(self, offset):
         offset = self._find_last_non_space_char(offset - 1)
@@ -111,7 +112,7 @@ class WordRangeFinder(object):
             last_atom = self._find_parens_start(offset)
             offset = self._find_last_non_space_char(last_atom - 1)
         if offset >= 0 and (self.source[offset] in '"\'})]' or
-                                   self._is_id_char(offset)):
+                            self._is_id_char(offset)):
             return self._find_atom_start(offset)
         return last_atom
 
@@ -170,19 +171,21 @@ class WordRangeFinder(object):
                     self.source[word_start:offset], word_start)
 
     def _get_line_start(self, offset):
-        while offset > 0 and self.source[offset] != '\n':
-            offset -= 1
-        return offset
+        try:
+            return self.source.rindex('\n', 0, offset + 1)
+        except ValueError:
+            return 0
 
     def _get_line_end(self, offset):
-        while offset < len(self.source) and self.source[offset] != '\n':
-            offset += 1
-        return offset
+        try:
+            return self.source.index('\n', offset)
+        except ValueError:
+            return len(self.source)
 
     def _is_followed_by_equals(self, offset):
-        while offset < len(self.source) and self.source[offset] in ' \\':
+        while offset < len(self.source) and self.source[offset] in ' \\\t':
             if self.source[offset] == '\\':
-                offset = self._get_line_end(offset)
+                offset += 1
             offset += 1
         if offset + 1 < len(self.source) and \
            self.source[offset] == '=' and self.source[offset + 1] != '=':
@@ -196,11 +199,12 @@ class WordRangeFinder(object):
             return False
         line_start = self._get_line_start(word_start)
         line = self.source[line_start:word_start].strip()
-        if line == '' and self._is_followed_by_equals(word_end):
+        if not line and self._is_followed_by_equals(word_end):
             return True
         return False
 
     def is_a_class_or_function_name_in_header(self, offset):
+        # XXX: does not handle line breaks after def
         word_start = self._find_word_start(offset - 1)
         line_start = self._get_line_start(word_start)
         prev_word = self.source[line_start:word_start].strip()
@@ -237,13 +241,13 @@ class WordRangeFinder(object):
                 return SyntaxError('Unmatched Parens')
         else:
             offset = next_char
-            while offset < len(self.source):
-                if self.source[offset] == '\n':
-                    break
-                if self.source[offset] == '\\':
-                    offset += 1
-                offset += 1
-            return offset
+            while True:
+                try:
+                    offset = self.source.index('\n', offset)
+                    if offset == 0 or self.source[offset - 1] != '\\':
+                        return offset
+                except ValueError:
+                    return len(self.source)
 
     def is_import_statement(self, offset):
         try:
@@ -272,8 +276,8 @@ class WordRangeFinder(object):
 
     def is_a_name_after_from_import(self, offset):
         try:
-            # XXX: what if there is the char after from or around
-            # import is not space?
+            # XXX: what if the char after from or around import is not
+            # space?
             last_from = self.source.rindex('from ', 0, offset)
             from_import = self.source.index(' import ', last_from)
             from_names = from_import + 8
