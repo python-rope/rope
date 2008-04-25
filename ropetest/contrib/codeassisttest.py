@@ -804,6 +804,53 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         result = get_doc(self.project, code, code.index('mod1'))
         result.index('mod1 docs')
 
+    def test_fixing_errors_with_maxfixes_in_resources(self):
+        mod = testutils.create_module(self.project, 'mod')
+        code = 'def f():\n    sldj sldj\ndef g():\n    ran'
+        mod.write(code)
+        result = self._assist(code, maxfixes=2, resource=mod)
+        self.assertTrue(len(result) > 0)
+
+    def test_completing_names_after_from_import(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod1.write('myvar = None\n')
+        result = self._assist('from mod1 import myva', resource=mod2)
+        self.assertTrue(len(result) > 0)
+        self.assert_completion_in_result('myvar', 'global', result)
+
+    def test_completing_names_after_from_import_and_sorted_proposals(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod1.write('myvar = None\n')
+        result = self._assist('from mod1 import myva', resource=mod2)
+        result = sorted_proposals(result)
+        self.assertTrue(len(result) > 0)
+        self.assert_completion_in_result('myvar', 'global', result)
+
+    def test_completing_names_after_from_import2(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod2 = testutils.create_module(self.project, 'mod2')
+        mod1.write('myvar = None\n')
+        result = self._assist('from mod1 import ', resource=mod2)
+        self.assertTrue(len(result) > 0)
+        self.assert_completion_in_result('myvar', 'global', result)
+
+    def test_starting_expression(self):
+        code = 'l = list()\nl.app'
+        self.assertEquals('l.app', starting_expression(code, len(code)))
+
+
+class FindItTest(unittest.TestCase):
+
+    def setUp(self):
+        super(FindItTest, self).setUp()
+        self.project = testutils.sample_project()
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(FindItTest, self).tearDown()
+
     def test_finding_occurrences(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('a_var = 1\n')
@@ -850,47 +897,12 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assertEquals(1, len(result1))
         self.assertEquals(2, len(result2))
 
-    def test_fixing_errors_with_maxfixes_in_resources(self):
-        mod = testutils.create_module(self.project, 'mod')
-        code = 'def f():\n    sldj sldj\ndef g():\n    ran'
-        mod.write(code)
-        result = self._assist(code, maxfixes=2, resource=mod)
-        self.assertTrue(len(result) > 0)
-
-    def test_completing_names_after_from_import(self):
-        mod1 = testutils.create_module(self.project, 'mod1')
-        mod2 = testutils.create_module(self.project, 'mod2')
-        mod1.write('myvar = None\n')
-        result = self._assist('from mod1 import myva', resource=mod2)
-        self.assertTrue(len(result) > 0)
-        self.assert_completion_in_result('myvar', 'global', result)
-
-    def test_completing_names_after_from_import_and_sorted_proposals(self):
-        mod1 = testutils.create_module(self.project, 'mod1')
-        mod2 = testutils.create_module(self.project, 'mod2')
-        mod1.write('myvar = None\n')
-        result = self._assist('from mod1 import myva', resource=mod2)
-        result = sorted_proposals(result)
-        self.assertTrue(len(result) > 0)
-        self.assert_completion_in_result('myvar', 'global', result)
-
-    def test_completing_names_after_from_import2(self):
-        mod1 = testutils.create_module(self.project, 'mod1')
-        mod2 = testutils.create_module(self.project, 'mod2')
-        mod1.write('myvar = None\n')
-        result = self._assist('from mod1 import ', resource=mod2)
-        self.assertTrue(len(result) > 0)
-        self.assert_completion_in_result('myvar', 'global', result)
-
-    def test_starting_expression(self):
-        code = 'l = list()\nl.app'
-        self.assertEquals('l.app', starting_expression(code, len(code)))
-
 
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(CodeAssistTest))
     result.addTests(unittest.makeSuite(CodeAssistInProjectsTest))
+    result.addTests(unittest.makeSuite(FindItTest))
     return result
 
 if __name__ == '__main__':
