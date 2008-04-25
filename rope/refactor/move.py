@@ -227,6 +227,9 @@ class MoveGlobal(object):
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
             resources = self.pycore.get_python_files()
+        if dest is None or not dest.exists():
+            raise exceptions.RefactoringError(
+                'Move destination does not exist.')
         if dest.is_folder() and dest.has_child('__init__.py'):
             dest = dest.get_child('__init__.py')
         if dest.is_folder():
