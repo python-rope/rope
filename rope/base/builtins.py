@@ -98,7 +98,7 @@ class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
         else:
             return self.returned
 
-    def get_param_names(self):
+    def get_param_names(self, special_args=True):
         return self.argnames
 
 
