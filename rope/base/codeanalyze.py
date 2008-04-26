@@ -650,11 +650,6 @@ class LogicalLineFinder(object):
         except tokenize.TokenError, e:
             pass
 
-    def get_logical_line_in(self, line_number):
-        warnings.warn('Use `LogicalLineFinder.logical_line_in()` instead',
-                      DeprecationWarning, stacklevel=2)
-        return self.logical_line_in(line_number)
-
     def _block_logical_line(self, block_start, line_number):
         readline = LinesToReadline(self.lines, block_start)
         shifted = line_number - block_start + 1
