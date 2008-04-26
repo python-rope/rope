@@ -1,11 +1,12 @@
 import unittest
 
 from rope.base import exceptions
-from rope.contrib.codeassist import \
-     (get_definition_location, get_doc, starting_expression,
-      find_occurrences, code_assist, sorted_proposals,
-      starting_offset, get_calltip)
+from rope.contrib.codeassist import (get_definition_location, get_doc,
+                                     starting_expression, code_assist,
+                                     sorted_proposals, starting_offset,
+                                     get_calltip)
 from ropetest import testutils
+from rope.contrib.findit import find_occurrences
 
 
 class CodeAssistTest(unittest.TestCase):
