@@ -18,13 +18,23 @@ def create_module(project, name, sourcefolder=None):
     """Creates a module and returns a `rope.base.resources.File`"""
     if sourcefolder is None:
         sourcefolder = project.root
-    return project.pycore.create_module(sourcefolder, name, warn=False)
+    packages = name.split('.')
+    parent = sourcefolder
+    for package in packages[:-1]:
+        parent = parent.get_child(package)
+    return parent.create_file(packages[-1] + '.py')
 
 def create_package(project, name, sourcefolder=None):
     """Creates a package and returns a `rope.base.resources.Folder`"""
     if sourcefolder is None:
         sourcefolder = project.root
-    return project.pycore.create_package(sourcefolder, name, warn=False)
+    packages = name.split('.')
+    parent = sourcefolder
+    for package in packages[:-1]:
+        parent = parent.get_child(package)
+    made_packages = parent.create_folder(packages[-1])
+    made_packages.create_file('__init__.py')
+    return made_packages
 
 
 class _Generate(object):

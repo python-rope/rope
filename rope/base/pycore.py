@@ -111,28 +111,6 @@ class PyCore(object):
         for observer in self.cache_observers:
             observer(resource)
 
-    def create_module(self, sourcefolder, name, warn=True):
-        if warn:
-            warnings.warn('Use `rope.contrib.generate.create_module()`',
-                          DeprecationWarning, stacklevel=2)
-        packages = name.split('.')
-        parent = sourcefolder
-        for package in packages[:-1]:
-            parent = parent.get_child(package)
-        return parent.create_file(packages[-1] + '.py')
-
-    def create_package(self, sourcefolder, name, warn=True):
-        if warn:
-            warnings.warn('Use `rope.contrib.generate.create_package()`',
-                          DeprecationWarning, stacklevel=2)
-        packages = name.split('.')
-        parent = sourcefolder
-        for package in packages[:-1]:
-            parent = parent.get_child(package)
-        made_packages = parent.create_folder(packages[-1])
-        made_packages.create_file('__init__.py')
-        return made_packages
-
     def _find_module_in_source_folder(self, source_folder, module_name):
         result = []
         module = source_folder
