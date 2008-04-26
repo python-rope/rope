@@ -931,93 +931,6 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertTrue('func2' in b_class)
 
 
-class ClassHierarchyTest(unittest.TestCase):
-
-    def setUp(self):
-        super(ClassHierarchyTest, self).setUp()
-        self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
-
-    def tearDown(self):
-        testutils.remove_project(self.project)
-        super(ClassHierarchyTest, self).tearDown()
-
-    def test_empty_get_superclasses(self):
-        code = 'class AClass(object):\n    pass\n'
-        mod = self.pycore.get_string_module(code)
-        a_class = mod['AClass'].get_object()
-        self.assertTrue(len(a_class.get_superclasses()) <= 1)
-
-    def test_simple_get_superclasses(self):
-        code = 'class A(object):\n    pass\n' \
-               'class B(A):\n    pass\n'
-        mod = self.pycore.get_string_module(code)
-        a_class = mod['A'].get_object()
-        b_class = mod['B'].get_object()
-        self.assertEquals([a_class], b_class.get_superclasses())
-
-    def test_get_superclasses_with_two_superclasses(self):
-        code = 'class A(object):\n    pass\n' \
-               'class B(object):\n    pass\n' \
-               'class C(A, B):\n    pass\n'
-        mod = self.pycore.get_string_module(code)
-        a_class = mod['A'].get_object()
-        b_class = mod['B'].get_object()
-        c_class = mod['C'].get_object()
-        self.assertEquals([a_class, b_class], c_class.get_superclasses())
-
-    def test_empty_get_subclasses(self):
-        mod = testutils.create_module(self.project, 'mod')
-        mod.write('class A(object):\n    pass\n')
-        pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod['A']
-        self.assertEquals([], self.pycore.get_subclasses(a_class))
-
-    def test_get_subclasses(self):
-        mod = testutils.create_module(self.project, 'mod')
-        mod.write('class A(object):\n    pass\n\n'
-                  'class B(A):\n    pass\n')
-        pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod['A'].get_object()
-        b_class = pymod['B'].get_object()
-        self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
-
-    def test_get_subclasses_in_multiple_modules(self):
-        mod1 = testutils.create_module(self.project, 'mod1')
-        mod2 = testutils.create_module(self.project, 'mod2')
-        mod1.write('class A(object):\n    pass\n')
-        mod2.write('import mod1\nclass B(mod1.A):\n    pass\n')
-        pymod1 = self.pycore.resource_to_pyobject(mod1)
-        pymod2 = self.pycore.resource_to_pyobject(mod2)
-        a_class = pymod1['A'].get_object()
-        b_class = pymod2['B'].get_object()
-        self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
-
-    def test_get_subclasses_reversed(self):
-        mod = testutils.create_module(self.project, 'mod')
-        mod.write('class B(A):\n    pass\n'
-                  'class A(object):\n    pass\n')
-        pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod['A'].get_object()
-        b_class = pymod['B'].get_object()
-        self.assertEquals([b_class], self.pycore.get_subclasses(a_class))
-
-    def test_get_subclasses_for_in_string_definitions(self):
-        mod = testutils.create_module(self.project, 'mod')
-        mod.write('"""\nclass B(A):\n    pass\n"""\n'
-                  'class A(object):\n    pass\n')
-        pymod = self.pycore.resource_to_pyobject(mod)
-        a_class = pymod['A'].get_object()
-        self.assertEquals([], self.pycore.get_subclasses(a_class))
-
-    def test_get_classes_for_in_string_definitions(self):
-        mod = testutils.create_module(self.project, 'mod')
-        mod.write('class A(object):\n    pass\n')
-        self.assertEquals(1, len(self.pycore.get_classes()))
-        mod.write('')
-        self.assertEquals(0, len(self.pycore.get_classes()))
-
-
 class TextChangeDetectorTest(unittest.TestCase):
 
     def test_trivial_case(self):
@@ -1108,7 +1021,6 @@ def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(PyCoreTest))
     result.addTests(unittest.makeSuite(PyCoreInProjectsTest))
-    result.addTests(unittest.makeSuite(ClassHierarchyTest))
     result.addTests(unittest.makeSuite(TextChangeDetectorTest))
     result.addTests(unittest.makeSuite(PyCoreProjectConfigsTest))
     return result

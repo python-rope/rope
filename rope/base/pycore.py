@@ -20,7 +20,6 @@ class PyCore(object):
         self.project = project
         self._init_resource_observer()
         self.cache_observers = []
-        self.classes_cache = _ClassesCache(self)
         self.module_cache = _ModuleCache(self)
         self.extension_cache = _ExtensionCache(self)
         self.object_info = rope.base.oi.objectinfo.ObjectInfoManager(project)
@@ -289,13 +288,10 @@ class PyCore(object):
         rope.base.oi.soa.analyze_module(
             self, pymodule, should_analyze, search_subscopes, followed_calls)
 
-    def get_subclasses(self, pyclass, task_handle=taskhandle.NullTaskHandle()):
-        classes = self.classes_cache.get_classes(task_handle)
-        return [class_ for class_ in classes
-                if pyclass in class_.get_superclasses()]
-
     def get_classes(self, task_handle=taskhandle.NullTaskHandle()):
-        return self.classes_cache.get_classes(task_handle)
+        warnings.warn('`PyCore.get_classes()` is deprecated',
+                      DeprecationWarning, stacklevel=2)
+        return []
 
     def __str__(self):
         return str(self.module_cache) + str(self.object_info)
@@ -352,73 +348,6 @@ class _ExtensionCache(object):
     @property
     def allowed(self):
         return self.project.prefs.get('extension_modules', [])
-
-
-class _ClassesCache(object):
-
-    def __init__(self, pycore):
-        self.pycore = pycore
-        self.pycore.cache_observers.append(self._invalidate_resource)
-        self.cache = {}
-        self.changed = True
-
-    def _invalidate_resource(self, resource):
-        if resource in self.cache:
-            self.changed = True
-            del self.cache[resource]
-
-    def get_classes(self, task_handle):
-        files = self.pycore.get_python_files()
-        job_set = self._get_job_set(files, task_handle)
-        result = []
-        for resource in files:
-            job_set.started_job('Working On <%s>' % resource.path)
-            result.extend(self._get_resource_classes(resource))
-            job_set.finished_job()
-        self.changed = False
-        return result
-
-    def _get_job_set(self, files, task_handle):
-        if self.changed:
-            job_set = task_handle.create_jobset(name='Looking For Classes',
-                                                 count=len(files))
-        else:
-            job_set = taskhandle.NullJobSet()
-        return job_set
-
-    def _get_resource_classes(self, resource):
-        if resource not in self.cache:
-            try:
-                classes = self._calculate_resource_classes(resource)
-                self.cache[resource] = classes
-            except exceptions.ModuleSyntaxError:
-                return []
-        return self.cache[resource]
-
-    def _calculate_resource_classes(self, resource):
-        classes = []
-        pymodule = self.pycore.resource_to_pyobject(resource)
-        pyscope = pymodule.get_scope()
-        for line in _ClassesCache._ClassFinder().\
-            find_class_lines(pymodule.get_ast()):
-            holding_scope = pyscope.get_inner_scope_for_line(line)
-            if isinstance(holding_scope.pyobject, PyClass):
-                classes.append(holding_scope.pyobject)
-        return classes
-
-    class _ClassFinder(object):
-
-        def __init__(self):
-            self.class_lines = []
-
-        def _ClassDef(self, node):
-            self.class_lines.append(node.lineno)
-            self.find_class_lines(node)
-
-        def find_class_lines(self, node):
-            for child in ast.get_child_nodes(node):
-                ast.walk(child, self)
-            return self.class_lines
 
 
 def perform_soa_on_changed_scopes(project, resource, old_contents):
