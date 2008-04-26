@@ -218,12 +218,6 @@ class MoveResource(Change):
     def get_changed_resources(self):
         return [self.resource, self.new_resource]
 
-    @property
-    def old_resource(self):
-        warnings.warn('Use `MoveResource.resource` instead of `old_resource`',
-                      DeprecationWarning, stacklevel=2)
-        return self.resource
-
 
 class CreateResource(Change):
     """A class to create a resource
