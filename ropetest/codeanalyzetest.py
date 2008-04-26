@@ -277,6 +277,11 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = WordRangeFinder(code)
         self.assertTrue(word_finder.is_from_statement(code.rindex('g')))
 
+    def test_is_from_with_from_import_and_line_breaks_in_the_middle(self):
+        code = 'from mod import f,\\\n g\n'
+        word_finder = WordRangeFinder(code)
+        self.assertTrue(word_finder.is_from_statement(code.rindex('g')))
+
     def test_one_letter_function_keyword_arguments(self):
         code = 'f(p=1)\n'
         word_finder = WordRangeFinder(code)

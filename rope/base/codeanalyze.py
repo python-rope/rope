@@ -246,6 +246,7 @@ class WordRangeFinder(object):
                     offset = self.source.index('\n', offset)
                     if offset == 0 or self.source[offset - 1] != '\\':
                         return offset
+                    offset += 1
                 except ValueError:
                     return len(self.source)
 
