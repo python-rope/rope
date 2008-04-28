@@ -1,6 +1,7 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
-from rope.base import taskhandle
+import rope.base.pyobjects
+from rope.base import taskhandle, exceptions
 from rope.refactor import occurrences
 
 
@@ -37,11 +38,17 @@ def find_implementations(project, resource, offset, resources=None,
 
     Finds the places a method is implemented.  Returns a list of
     `Location`\s.
-
     """
     name = rope.base.codeanalyze.get_name_at(resource, offset)
     this_pymodule = project.pycore.resource_to_pyobject(resource)
     pyname = rope.base.evaluate.get_pyname_at(this_pymodule, offset)
+    if pyname is not None:
+        pyobject = pyname.get_object()
+        if not isinstance(pyobject, rope.base.pyobjects.PyFunction) or \
+           pyobject.get_kind() != 'method':
+            raise exceptions.BadIdentifierError('Not a method!')
+    else:
+        raise exceptions.BadIdentifierError('Cannot resolve the identifier!')
     def is_defined(occurrence):
         if not occurrence.is_defined():
             return False

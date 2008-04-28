@@ -1,3 +1,4 @@
+from rope.base import exceptions
 import unittest
 
 from rope.contrib.findit import find_occurrences, find_implementations
@@ -63,15 +64,16 @@ class FindItTest(unittest.TestCase):
     def test_trivial_find_implementations(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('class A(object):\n    def f(self):\n        pass\n')
-        offset = mod1.read().rindex('f')
+        offset = mod1.read().rindex('f(')
         result = find_implementations(self.project, mod1, offset)
         self.assertEquals([], result)
 
-    def test_find_implementations_and_not_returning_parents(self):
+    # XXX: should not report parents
+    def xxx_test_find_implementations_and_not_returning_parents(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('class A(object):\n    def f(self):\n        pass\n'
                    'class B(A):\n    def f(self):\n        pass\n')
-        offset = mod1.read().rindex('f')
+        offset = mod1.read().rindex('f(')
         result = find_implementations(self.project, mod1, offset)
         self.assertEquals([], result)
 
@@ -83,6 +85,13 @@ class FindItTest(unittest.TestCase):
         result = find_implementations(self.project, mod1, offset)
         self.assertEquals(1, len(result))
         self.assertEquals(mod1.read().rindex('f('), result[0].offset)
+
+    @testutils.assert_raises(exceptions.BadIdentifierError)
+    def test_find_implementations_real_implementation(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('class A(object):\n    pass\n')
+        offset = mod1.read().index('A')
+        result = find_implementations(self.project, mod1, offset)
 
 
 def suite():
