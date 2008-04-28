@@ -137,7 +137,7 @@ class Restructure(object):
             files = self.pycore.get_python_files()
         job_set = task_handle.create_jobset('Collecting Changes', len(files))
         for resource in files:
-            job_set.started_job('Working on <%s>' % resource.path)
+            job_set.started_job(resource.path)
             pymodule = self.pycore.resource_to_pyobject(resource)
             finder = similarfinder.SimilarFinder(pymodule,
                                                  wildcards=self.wildcards)

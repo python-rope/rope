@@ -55,6 +55,6 @@ def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
     resources = project.pycore.get_python_files()
     job_set = task_handle.create_jobset('Analyzing Modules', len(resources))
     for resource in resources:
-        job_set.started_job('Working on <%s>' % resource.path)
+        job_set.started_job(resource.path)
         project.pycore.analyze_module(resource)
         job_set.finished_job()

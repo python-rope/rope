@@ -41,7 +41,7 @@ class EncapsulateField(object):
         renamer = GetterSetterRenameInModule(
             self.pycore, self.name, self.pyname, getter, setter)
         for file in resources:
-            job_set.started_job('Working on <%s>' % file.path)
+            job_set.started_job(file.path)
             if file == self.resource:
                 result = self._change_holding_module(changes, renamer,
                                                      getter, setter)

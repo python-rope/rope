@@ -54,7 +54,7 @@ class ChangeSignature(object):
                 self.pycore, name, pyname, only_calls=True)
             finder = _MultipleFinders([finder, constructor_finder])
         for file in resources:
-            job_set.started_job('Working on <%s>' % file.path)
+            job_set.started_job(file.path)
             change_calls = _ChangeCallsInModule(
                 self.pycore, finder, file, call_changer)
             changed_file = change_calls.get_changed_module()

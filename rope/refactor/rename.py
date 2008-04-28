@@ -91,7 +91,7 @@ class Rename(object):
             in_hierarchy=in_hierarchy and self.is_method())
         job_set = task_handle.create_jobset('Collecting Changes', len(resources))
         for file_ in resources:
-            job_set.started_job('Working on <%s>' % file_.path)
+            job_set.started_job(file_.path)
             new_content = rename_in_module(finder, new_name, resource=file_)
             if new_content is not None:
                 changes.add_change(ChangeContents(file_, new_content))

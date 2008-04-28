@@ -101,7 +101,7 @@ class InlineMethod(_Inliner):
         job_set = task_handle.create_jobset('Collecting Changes',
                                             len(resources))
         for file in resources:
-            job_set.started_job('Working on <%s>' % file.path)
+            job_set.started_job(file.path)
             if file == self.resource:
                 changes.add_change(self._defining_file_changes(
                         changes, remove=remove, only_current=only_current))

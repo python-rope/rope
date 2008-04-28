@@ -245,7 +245,7 @@ class MoveGlobal(object):
         job_set = task_handle.create_jobset('Collecting Changes',
                                             len(resources))
         for file_ in resources:
-            job_set.started_job('Working on <%s>' % file_.path)
+            job_set.started_job(file_.path)
             if file_ == self.source:
                 changes.add_change(self._source_module_changes(dest))
             elif file_ == dest:
@@ -394,7 +394,7 @@ class MoveModule(object):
         job_set = task_handle.create_jobset('Collecting changes',
                                             len(resources))
         for module in resources:
-            job_set.started_job('Working on <%s>' % module.path)
+            job_set.started_job(module.path)
             if module == self.source:
                 self._change_moving_module(changes, dest)
             else:

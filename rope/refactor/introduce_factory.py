@@ -55,12 +55,11 @@ class IntroduceFactory(object):
             replacement = self._new_function_name(factory_name, global_)
 
         for file_ in resources:
+            job_set.started_job(file_.path)
             if file_ == self.resource:
-                job_set.started_job('Changing definition')
                 self._change_resource(changes, factory_name, global_)
                 job_set.finished_job()
                 continue
-            job_set.started_job('Working on <%s>' % file_.path)
             changed_code = self._rename_occurrences(file_, replacement,
                                                     global_)
             if changed_code is not None:
