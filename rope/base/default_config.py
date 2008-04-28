@@ -69,7 +69,8 @@ def set_prefs(prefs):
         'array', 'binascii', 'cmath', 'bz2', 'collections', 'cPickle', 'crypt',
         'cStringIO', 'datetime', 'errno', 'exceptions', 'gc', 'grp', 'imp',
         'itertools', 'marshal', 'math', 'mmap', 'nt', 'operator', 'posix',
-        'pwd', 'select', 'signal', 'sys', 'thread', 'zlib', 'zipimport']
+        'pwd', 'select', 'signal', 'sys', 'thread', 'unicodedata', 'zlib',
+        'zipimport']
 
     # If `True` modules with syntax errors are considered to be empty.
     # The default value is `False`; When `False` syntax errors raise
