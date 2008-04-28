@@ -28,17 +28,7 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
         resources = project.pycore.get_python_files()
     job_set = task_handle.create_jobset('Finding Occurrences',
                                         count=len(resources))
-    result = []
-    for resource in resources:
-        job_set.started_job('Working On <%s>' % resource.path)
-        for occurrence in finder.find_occurrences(resource):
-            location = Location()
-            location.resource = resource
-            location.offset = occurrence.get_word_range()[0]
-            location.unsure = occurrence.is_unsure()
-            result.append(location)
-        job_set.finished_job()
-    return result
+    return _find_locations(finder, resources, job_set)
 
 
 def find_implementations(project, resource, offset, resources=None,
@@ -64,16 +54,7 @@ def find_implementations(project, resource, offset, resources=None,
         resources = project.pycore.get_python_files()
     job_set = task_handle.create_jobset('Finding Implementations',
                                         count=len(resources))
-    result = []
-    for resource in resources:
-        job_set.started_job(resource.path)
-        for occurrence in finder.find_occurrences(resource):
-            location = Location()
-            location.resource = resource
-            location.offset = occurrence.get_word_range()[0]
-            result.append(location)
-        job_set.finished_job()
-    return result
+    return _find_locations(finder, resources, job_set)
 
 
 class Location(object):
@@ -81,3 +62,17 @@ class Location(object):
     resource = None
     offset = None
     unsure = False
+
+
+def _find_locations(finder, resources, job_set):
+    result = []
+    for resource in resources:
+        job_set.started_job(resource.path)
+        for occurrence in finder.find_occurrences(resource):
+            location = Location()
+            location.resource = resource
+            location.offset = occurrence.get_word_range()[0]
+            location.unsure = occurrence.is_unsure()
+            result.append(location)
+        job_set.finished_job()
+    return result

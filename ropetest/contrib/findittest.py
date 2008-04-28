@@ -62,10 +62,27 @@ class FindItTest(unittest.TestCase):
 
     def test_trivial_find_implementations(self):
         mod1 = testutils.create_module(self.project, 'mod1')
-        mod1.write('class A(object):\n    def f():\n        pass\n')
+        mod1.write('class A(object):\n    def f(self):\n        pass\n')
         offset = mod1.read().rindex('f')
         result = find_implementations(self.project, mod1, offset)
         self.assertEquals([], result)
+
+    def test_find_implementations_and_not_returning_parents(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('class A(object):\n    def f(self):\n        pass\n'
+                   'class B(A):\n    def f(self):\n        pass\n')
+        offset = mod1.read().rindex('f')
+        result = find_implementations(self.project, mod1, offset)
+        self.assertEquals([], result)
+
+    def test_find_implementations_real_implementation(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('class A(object):\n    def f(self):\n        pass\n'
+                   'class B(A):\n    def f(self):\n        pass\n')
+        offset = mod1.read().index('f(')
+        result = find_implementations(self.project, mod1, offset)
+        self.assertEquals(1, len(result))
+        self.assertEquals(mod1.read().rindex('f('), result[0].offset)
 
 
 def suite():
