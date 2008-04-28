@@ -74,15 +74,14 @@ class WordRangeFinder(object):
                 offset = self.source.rindex(kind, 0, offset)
                 if offset == 0 or self.source[offset - 1] != '\\':
                     return offset
+                offset -= 1
             except ValueError:
                 return 0
 
     def _find_parens_start(self, offset):
         offset = self._find_last_non_space_char(offset - 1)
         while offset >= 0 and self.source[offset] not in '[({':
-            if self.source[offset] in ':,':
-                pass
-            else:
+            if self.source[offset] not in ':,':
                 offset = self._find_primary_start(offset)
             offset = self._find_last_non_space_char(offset - 1)
         return offset
