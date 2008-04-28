@@ -158,12 +158,13 @@ class PyNameFilter(object):
 class InHierarchyFilter(object):
     """For finding occurrences of a name"""
 
-    def __init__(self, pyname):
+    def __init__(self, pyname, implementations_only=False):
         self.pyname = pyname
-        pyclass = self._get_containing_class(pyname)
-        if pyclass is not None:
+        self.impl_only = implementations_only
+        self.pyclass = self._get_containing_class(pyname)
+        if self.pyclass is not None:
             self.name = pyname.get_object().get_name()
-            self.roots = self._get_root_classes(pyclass, self.name)
+            self.roots = self._get_root_classes(self.pyclass, self.name)
         else:
             self.roots = None
 
@@ -184,6 +185,8 @@ class InHierarchyFilter(object):
                 return parent.pyobject
 
     def _get_root_classes(self, pyclass, name):
+        if self.impl_only and pyclass == self.pyclass:
+            return set([pyclass])
         result = set()
         for superclass in pyclass.get_superclasses():
             if name in superclass:

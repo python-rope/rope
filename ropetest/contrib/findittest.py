@@ -68,8 +68,7 @@ class FindItTest(unittest.TestCase):
         result = find_implementations(self.project, mod1, offset)
         self.assertEquals([], result)
 
-    # XXX: should not report parents
-    def xxx_test_find_implementations_and_not_returning_parents(self):
+    def test_find_implementations_and_not_returning_parents(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('class A(object):\n    def f(self):\n        pass\n'
                    'class B(A):\n    def f(self):\n        pass\n')

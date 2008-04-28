@@ -55,7 +55,8 @@ def find_implementations(project, resource, offset, resources=None,
     def not_self(occurrence):
         if occurrence.get_pyname().get_object() == pyname.get_object():
             return False
-    filters = [is_defined, not_self, occurrences.InHierarchyFilter(pyname)]
+    filters = [is_defined, not_self,
+               occurrences.InHierarchyFilter(pyname, True)]
     finder = occurrences.Finder(project.pycore, name, filters=filters)
     if resources is None:
         resources = project.pycore.get_python_files()
