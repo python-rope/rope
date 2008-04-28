@@ -1,6 +1,6 @@
 import unittest
 
-from rope.contrib.findit import find_occurrences
+from rope.contrib.findit import find_occurrences, find_implementations
 from ropetest import testutils
 
 
@@ -59,6 +59,13 @@ class FindItTest(unittest.TestCase):
                                    offset, in_hierarchy=True)
         self.assertEquals(1, len(result1))
         self.assertEquals(2, len(result2))
+
+    def test_trivial_find_implementations(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('class A(object):\n    def f():\n        pass\n')
+        offset = mod1.read().rindex('f')
+        result = find_implementations(self.project, mod1, offset)
+        self.assertEquals([], result)
 
 
 def suite():
