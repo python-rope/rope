@@ -198,6 +198,11 @@ class WordRangeFinderTest(unittest.TestCase):
         code = 'var1 + "# var2".\n  var3'
         self.assertEquals('"# var2".\n  var3', self._find_primary(code, 21))
 
+    # XXX: handling string literals before comments
+    def xxx_test_comments_for_finding_statements3(self):
+        code = '"" + # var2.\n  var3'
+        self.assertEquals('var3', self._find_primary(code, 21))
+
     def test_import_statement_finding(self):
         code = 'import mod\na_var = 10\n'
         word_finder = WordRangeFinder(code)
