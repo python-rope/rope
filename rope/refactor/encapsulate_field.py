@@ -1,4 +1,4 @@
-from rope.base import pynames, taskhandle, codeanalyze, evaluate, exceptions
+from rope.base import pynames, taskhandle, codeanalyze, evaluate, exceptions, worder
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 
@@ -136,7 +136,7 @@ class _FindChangesForModule(object):
 
     def get_changed_module(self):
         result = []
-        word_finder = codeanalyze.WordRangeFinder(self.source)
+        word_finder = worder.Worder(self.source)
         for occurrence in self.finder.find_occurrences(self.resource,
                                                        self.pymodule):
             start, end = occurrence.get_word_range()
@@ -188,7 +188,7 @@ class _FindChangesForModule(object):
         start_offset = self.lines.get_line_start(start_line)
 
         line = self.source[start_offset:self.lines.get_line_end(end_line)]
-        word_finder = codeanalyze.WordRangeFinder(line)
+        word_finder = worder.Worder(line)
 
         rel_word_start = offset - start_offset
         rel_start = occurance.get_primary_range()[0] - start_offset

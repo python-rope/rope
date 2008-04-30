@@ -1,8 +1,7 @@
 import re
 
 import rope.base.pynames
-from rope.base import (pynames, pyobjects, codeanalyze,
-                       evaluate, exceptions, utils)
+from rope.base import pynames, pyobjects, codeanalyze, evaluate, exceptions, utils, worder
 
 
 class Finder(object):
@@ -311,4 +310,4 @@ class _OccurrenceToolsCreator(object):
     @property
     @utils.cacheit
     def word_finder(self):
-        return codeanalyze.WordRangeFinder(self.source_code)
+        return worder.Worder(self.source_code)

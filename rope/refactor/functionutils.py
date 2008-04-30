@@ -1,6 +1,6 @@
 import rope.base.exceptions
 import rope.base.pyobjects
-from rope.base import codeanalyze
+from rope.base import codeanalyze, worder
 
 
 class DefinitionInfo(object):
@@ -197,7 +197,7 @@ class _FunctionParser(object):
     def __init__(self, call, implicit_arg):
         self.call = call
         self.implicit_arg = implicit_arg
-        self.word_finder = codeanalyze.WordRangeFinder(self.call)
+        self.word_finder = worder.Worder(self.call)
         self.last_parens = self.call.rindex(')')
         self.first_parens = self.word_finder._find_parens_start(self.last_parens)
 

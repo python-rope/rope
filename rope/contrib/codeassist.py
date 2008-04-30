@@ -5,9 +5,8 @@ import warnings
 import rope.base.codeanalyze
 import rope.base.evaluate
 import rope.contrib.findit
-from rope.base import pyobjects, pynames, builtins, exceptions
-from rope.base.codeanalyze import (ArrayLinesAdapter, LogicalLineFinder,
-                                   SourceLinesAdapter, WordRangeFinder)
+from rope.base import pyobjects, pynames, builtins, exceptions, worder
+from rope.base.codeanalyze import ArrayLinesAdapter, LogicalLineFinder, SourceLinesAdapter
 from rope.refactor import functionutils, importutils
 
 
@@ -46,7 +45,7 @@ def starting_offset(source_code, offset):
     Where starting_offset is the offset returned by this function.
 
     """
-    word_finder = WordRangeFinder(source_code)
+    word_finder = worder.Worder(source_code)
     expression, starting, starting_offset = \
         word_finder.get_splitted_primary_before(offset)
     return starting_offset
@@ -168,7 +167,7 @@ def sorted_proposals(proposals, kindpref=None, typepref=None):
 
 def starting_expression(source_code, offset):
     """Return the expression to complete"""
-    word_finder = WordRangeFinder(source_code)
+    word_finder = worder.Worder(source_code)
     expression, starting, starting_offset = \
         word_finder.get_splitted_primary_before(offset)
     if expression:
@@ -192,7 +191,7 @@ class _PythonCodeAssist(object):
         self.resource = resource
         self.maxfixes = maxfixes
         self.later_locals = later_locals
-        self.word_finder = WordRangeFinder(source_code)
+        self.word_finder = worder.Worder(source_code)
         self.expression, self.starting, self.offset = \
             self.word_finder.get_splitted_primary_before(offset)
 
@@ -319,7 +318,7 @@ class _PythonCodeAssist(object):
         offset = self.offset
         if offset == 0:
             return {}
-        word_finder = WordRangeFinder(self.code)
+        word_finder = worder.Worder(self.code)
         lines = SourceLinesAdapter(self.code)
         lineno = lines.get_line_number(offset)
         stop_line = LogicalLineFinder(lines).logical_line_in(lineno)[0]
@@ -472,7 +471,7 @@ class _Commenter(object):
 
 
 def _find_pyname_at(project, source_code, offset, resource, maxfixes):
-    word_finder = WordRangeFinder(source_code)
+    word_finder = worder.Worder(source_code)
     lineno = source_code[:offset].count('\n')
     expression = word_finder.get_primary_at(offset)
     expression = expression.replace('\\\n', ' ').replace('\n', ' ')

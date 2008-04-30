@@ -1,5 +1,5 @@
 import rope.base.evaluate
-from rope.base import change, codeanalyze, pyobjects, exceptions, pynames
+from rope.base import change, codeanalyze, pyobjects, exceptions, pynames, worder
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
 
@@ -330,7 +330,7 @@ class _FunctionGenerationInfo(_GenerationInfo):
     def get_passed_args(self):
         result = []
         source = self.source_pymodule.source_code
-        finder = codeanalyze.WordRangeFinder(source)
+        finder = worder.Worder(source)
         if finder.is_a_function_being_called(self.offset):
             start, end = finder.get_primary_range(self.offset)
             parens_start, parens_end = finder.get_word_parens_range(end - 1)

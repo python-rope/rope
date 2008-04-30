@@ -2,7 +2,7 @@ import re
 
 import rope.base.exceptions
 import rope.refactor.functionutils
-from rope.base import pynames, pyobjects, codeanalyze, taskhandle, evaluate
+from rope.base import pynames, pyobjects, codeanalyze, taskhandle, evaluate, worder
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import occurrences, rename, sourceutils, importutils, move
 
@@ -36,7 +36,7 @@ class _Inliner(object):
         self.pycore = project.pycore
         this_pymodule = self.pycore.resource_to_pyobject(resource)
         self.pyname = evaluate.get_pyname_at(this_pymodule, offset)
-        range_finder = codeanalyze.WordRangeFinder(resource.read())
+        range_finder = worder.Worder(resource.read())
         self.region = range_finder.get_primary_range(offset)
         self.name = range_finder.get_word_at(offset)
         self.offset = offset
@@ -391,7 +391,7 @@ class _InlineFunctionCallsForModuleHandle(object):
                 self.source[end_parens:end])
 
     def _find_end_parens(self, source, offset):
-        finder = codeanalyze.WordRangeFinder(source)
+        finder = worder.Worder(source)
         return finder.get_word_parens_range(offset)[1]
 
     def _get_pymodule(self):

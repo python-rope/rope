@@ -1,10 +1,8 @@
 import unittest
 
 import rope.base.evaluate
-from rope.base import exceptions, ast
-from rope.base.codeanalyze import \
-    (TokenizerLogicalLineFinder, SourceLinesAdapter, WordRangeFinder,
-     LogicalLineFinder, get_block_start, CustomLogicalLineFinder)
+from rope.base import exceptions, ast, worder
+from rope.base.codeanalyze import TokenizerLogicalLineFinder, SourceLinesAdapter, LogicalLineFinder, get_block_start, CustomLogicalLineFinder
 from ropetest import testutils
 
 
@@ -56,7 +54,7 @@ class WordRangeFinderTest(unittest.TestCase):
         super(WordRangeFinderTest, self).tearDown()
 
     def _find_primary(self, code, offset):
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         result = word_finder.get_primary_at(offset)
         return result
 
@@ -78,7 +76,7 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_word_finder_on_word_beginning(self):
         code = 'print a_var\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         result = word_finder.get_word_at(code.index('a_var'))
         self.assertEquals('a_var', result)
 
@@ -89,7 +87,7 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_word_finder_on_word_ending(self):
         code = 'print a_var\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         result = word_finder.get_word_at(code.index('a_var') + 5)
         self.assertEquals('a_var', result)
 
@@ -142,32 +140,32 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals('A()', self._find_primary(code, 2))
 
     def test_splitted_statement(self):
-        word_finder = WordRangeFinder('an_object.an_attr')
+        word_finder = worder.Worder('an_object.an_attr')
         self.assertEquals(('an_object', 'an_at', 10),
                           word_finder.get_splitted_primary_before(15))
 
     def test_empty_splitted_statement(self):
-        word_finder = WordRangeFinder('an_attr')
+        word_finder = worder.Worder('an_attr')
         self.assertEquals(('', 'an_at', 0),
                           word_finder.get_splitted_primary_before(5))
 
     def test_empty_splitted_statement2(self):
-        word_finder = WordRangeFinder('an_object.')
+        word_finder = worder.Worder('an_object.')
         self.assertEquals(('an_object', '', 10),
                           word_finder.get_splitted_primary_before(10))
 
     def test_empty_splitted_statement3(self):
-        word_finder = WordRangeFinder('')
+        word_finder = worder.Worder('')
         self.assertEquals(('', '', 0),
                           word_finder.get_splitted_primary_before(0))
 
     def test_empty_splitted_statement4(self):
-        word_finder = WordRangeFinder('a_var = ')
+        word_finder = worder.Worder('a_var = ')
         self.assertEquals(('', '', 8),
                           word_finder.get_splitted_primary_before(8))
 
     def test_empty_splitted_statement5(self):
-        word_finder = WordRangeFinder('a.')
+        word_finder = worder.Worder('a.')
         self.assertEquals(('a', '', 2),
                           word_finder.get_splitted_primary_before(2))
 
@@ -205,18 +203,18 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_import_statement_finding(self):
         code = 'import mod\na_var = 10\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_import_statement(code.index('mod') + 1))
         self.assertFalse(word_finder.is_import_statement(code.index('a_var') + 1))
 
     def test_import_statement_finding2(self):
         code = 'import a.b.c.d\nresult = a.b.c.d.f()\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         self.assertFalse(word_finder.is_import_statement(code.rindex('d') + 1))
 
     def test_word_parens_range(self):
         code = 's = str()\ns.title()\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         result = word_finder.get_word_parens_range(code.rindex('()') - 1)
         self.assertEquals((len(code) - 3, len(code) - 1), result)
 
@@ -244,7 +242,7 @@ class WordRangeFinderTest(unittest.TestCase):
     # XXX: not crossing new lines
     def xxx_test_is_a_function_being_called_with_parens_on_next_line(self):
         code = 'func\n(1, 2)\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         self.assertFalse(word_finder.is_a_function_being_called(1))
 
     # XXX: handling triple quotes
@@ -262,63 +260,63 @@ class WordRangeFinderTest(unittest.TestCase):
     # XXX: get_word_parens_range should ignore string literals
     def xxx_test_get_word_parens_range_and_string_literals(self):
         code = 'f(1, ")", 2)'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         result = word_finder.get_word_parens_range(0)
         self.assertEquals((1, len(code) - 1), result)
 
     def test_is_assigned_here_for_equality_test(self):
         code = 'a == 1\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         self.assertFalse(word_finder.is_assigned_here(0))
 
     # XXX: is_assigned_here should work for tuple assignments
     def xxx_test_is_assigned_here_for_tuple_assignment(self):
         code = 'a, b == (1, 2)\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_assigned_here(0))
 
     def test_is_from_with_from_import_and_multiline_parens(self):
         code = 'from mod import \\\n  (f,\n  g, h)\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_from_statement(code.rindex('g')))
 
     def test_is_from_with_from_import_and_line_breaks_in_the_middle(self):
         code = 'from mod import f,\\\n g\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_from_statement(code.rindex('g')))
 
     def test_one_letter_function_keyword_arguments(self):
         code = 'f(p=1)\n'
-        word_finder = WordRangeFinder(code)
+        word_finder = worder.Worder(code)
         index = code.rindex('p')
         self.assertTrue(word_finder.is_function_keyword_parameter(index))
 
     def test_find_parens_start(self):
         code = 'f(p)\n'
-        finder = WordRangeFinder(code)
+        finder = worder.Worder(code)
         self.assertEquals(1, finder.find_parens_start_from_inside(2))
 
     def test_find_parens_start_with_multiple_entries(self):
         code = 'myfunc(p1, p2, p3\n'
-        finder = WordRangeFinder(code)
+        finder = worder.Worder(code)
         self.assertEquals(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
     def test_find_parens_start_with_nested_parens(self):
         code = 'myfunc(p1, (p2, p3), p4\n'
-        finder = WordRangeFinder(code)
+        finder = worder.Worder(code)
         self.assertEquals(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
     def test_find_parens_start_with_parens_in_strs(self):
         code = 'myfunc(p1, "(", p4\n'
-        finder = WordRangeFinder(code)
+        finder = worder.Worder(code)
         self.assertEquals(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
     def test_find_parens_start_with_parens_in_strs_in_multiple_lines(self):
         code = 'myfunc  (\np1\n , \n "(" \n, \np4\n'
-        finder = WordRangeFinder(code)
+        finder = worder.Worder(code)
         self.assertEquals(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 

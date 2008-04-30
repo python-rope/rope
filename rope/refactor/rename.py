@@ -1,6 +1,7 @@
 import warnings
 
-from rope.base import exceptions, codeanalyze, pyobjects, pynames, taskhandle, evaluate
+from rope.base import (exceptions, codeanalyze, pyobjects,
+                       pynames, taskhandle, evaluate, worder)
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences, sourceutils
 
@@ -167,7 +168,7 @@ class ChangeOccurrences(object):
         self.old_pyname = evaluate.get_pyname_at(self.pymodule, offset)
 
     def get_old_name(self):
-        word_finder = codeanalyze.WordRangeFinder(self.resource.read())
+        word_finder = worder.Worder(self.resource.read())
         return word_finder.get_primary_at(self.offset)
 
     def _get_scope_offset(self):

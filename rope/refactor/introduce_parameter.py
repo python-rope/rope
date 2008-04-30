@@ -1,5 +1,5 @@
 import rope.base.change
-from rope.base import codeanalyze, exceptions, evaluate
+from rope.base import codeanalyze, exceptions, evaluate, worder
 from rope.refactor import functionutils, sourceutils, occurrences
 
 
@@ -50,7 +50,7 @@ class IntroduceParameter(object):
                 'Cannot find the definition of <%s>' % self.name)
 
     def _get_primary(self):
-        word_finder = codeanalyze.WordRangeFinder(self.resource.read())
+        word_finder = worder.Worder(self.resource.read())
         return word_finder.get_primary_at(self.offset)
 
     def _get_name_and_pyname(self):

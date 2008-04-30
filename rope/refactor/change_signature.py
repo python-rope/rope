@@ -1,7 +1,7 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import pyobjects, codeanalyze, taskhandle, evaluate
+from rope.base import pyobjects, codeanalyze, taskhandle, evaluate, worder
 from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, sourceutils, functionutils, rename
 
@@ -260,7 +260,7 @@ class _ChangeCallsInModule(object):
         self._source = None
 
     def get_changed_module(self):
-        word_finder = codeanalyze.WordRangeFinder(self.source)
+        word_finder = worder.Worder(self.source)
         change_collector = sourceutils.ChangeCollector(self.source)
         for occurrence in self.occurrence_finder.find_occurrences(self.resource):
             if not occurrence.is_called() and not occurrence.is_defined():
