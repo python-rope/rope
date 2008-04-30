@@ -10,10 +10,8 @@ from rope.base import codeanalyze
 def real_code(source):
     import rope.refactor.sourceutils
     collector = rope.refactor.sourceutils.ChangeCollector(source)
-    for match in _str.finditer(source):
-        start = match.start()
-        end = match.end()
-        if match.group().startswith('#'):
+    for start, end in ignored_regions(source):
+        if source[start] == '#':
             replacement = ' ' * (end - start)
         else:
             replacement = '"%s"' % (' ' * (end - start - 2))
@@ -30,6 +28,11 @@ def real_code(source):
             collector.add_change(i, i + 1, ' ')
     source = collector.get_changed() or source
     return source.replace('\\\n', '  ')
+
+
+def ignored_regions(source):
+    return [(match.start(), match.end()) for match in _str.finditer(source)]
+
 
 _str = re.compile('%s|%s' % (codeanalyze.get_comment_pattern(),
                              codeanalyze.get_string_pattern()))
