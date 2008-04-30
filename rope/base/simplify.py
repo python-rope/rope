@@ -13,8 +13,12 @@ def real_code(source):
     for match in _str.finditer(source):
         start = match.start()
         end = match.end()
-        replacement = '"%s"' % (' ' * (end - start - 2))
+        if match.group().startswith('#'):
+            replacement = ' ' * (end - start)
+        else:
+            replacement = '"%s"' % (' ' * (end - start - 2))
         collector.add_change(start, end, replacement)
     return collector.get_changed() or source
 
-_str = re.compile(codeanalyze.get_string_pattern())
+_str = re.compile('%s|%s' % (codeanalyze.get_comment_pattern(),
+                             codeanalyze.get_string_pattern()))

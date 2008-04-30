@@ -30,6 +30,10 @@ class SimplifyTest(unittest.TestCase):
         code = 's = """\n"""\n'
         self.assertEquals('s = "     "\n', simplify.real_code(code))
 
+    def test_removing_comments(self):
+        code = '# c\n'
+        self.assertEquals('   \n', simplify.real_code(code))
+
 
 if __name__ == '__main__':
     unittest.main()
