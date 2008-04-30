@@ -34,6 +34,22 @@ class SimplifyTest(unittest.TestCase):
         code = '# c\n'
         self.assertEquals('   \n', simplify.real_code(code))
 
+    def test_removing_comments_that_contain_strings(self):
+        code = '# "c"\n'
+        self.assertEquals('     \n', simplify.real_code(code))
+
+    def test_removing_strings_containing_comments(self):
+        code = '"#c"\n'
+        self.assertEquals('"  "\n', simplify.real_code(code))
+
+    def test_joining_implicit_continuations(self):
+        code = '(\n)\n'
+        self.assertEquals('( )\n', simplify.real_code(code))
+
+    def test_joining_explicit_continuations(self):
+        code = '1 + \\\n 2\n'
+        self.assertEquals('1 +    2\n', simplify.real_code(code))
+
 
 if __name__ == '__main__':
     unittest.main()
