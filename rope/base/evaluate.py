@@ -69,7 +69,7 @@ class ScopeNameFinder(object):
             return True
         if lineno != holding_scope.get_start() and \
            holding_scope.get_kind() == 'Class' and \
-           self.word_finder._is_name_assigned_in_class_body(offset):
+           self.word_finder.is_name_assigned_in_class_body(offset):
             return True
         return False
 

@@ -202,30 +202,10 @@ class _FunctionParser(object):
         self.first_parens = self.word_finder._find_parens_start(self.last_parens)
 
     def get_parameters(self):
-        keywords = []
-        args = []
-        current = self.last_parens - 1
-        current = self.word_finder._find_last_non_space_char(current)
-        while current > self.first_parens:
-            primary_start = current
-            current = self.word_finder._find_primary_start(current)
-            while current != self.first_parens and self.call[current] not in '=,':
-                current = self.word_finder._find_last_non_space_char(current - 1)
-            primary = self.call[current + 1:primary_start + 1].strip()
-            if self.call[current] == '=':
-                primary_start = current - 1
-                current -= 1
-                while current != self.first_parens and self.call[current] not in ',':
-                    current = self.word_finder._find_last_non_space_char(current - 1)
-                param_name = self.call[current + 1:primary_start + 1].strip()
-                keywords.append((param_name, primary))
-            else:
-                args.append(primary)
-            current = self.word_finder._find_last_non_space_char(current - 1)
+        args, keywords = self.word_finder.get_parameters(self.first_parens,
+                                                         self.last_parens)
         if self.is_called_as_a_method():
             args.append(self.call[:self.call.rindex('.', 0, self.first_parens)].strip())
-        args.reverse()
-        keywords.reverse()
         return args, keywords
 
     def get_instance(self):

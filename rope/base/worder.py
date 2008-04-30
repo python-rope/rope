@@ -1,4 +1,5 @@
 import re
+import bisect
 
 
 class Worder(object):
@@ -6,16 +7,97 @@ class Worder(object):
 
     Note that in these methods, offset should be the index of the
     character not the index of the character after it.
-
     """
 
-    # XXX: some of these methods fail on badly formatted or less
-    # common code; see disabled testcases for some of them
-
-    def __init__(self, source_code):
+    def __init__(self, code):
         import rope.base.simplify
-        self.raw = source_code
-        self.code = rope.base.simplify.real_code(source_code)
+        simplified = rope.base.simplify.real_code(code)
+        self._init_ignores(rope.base.simplify.ignored_regions(code))
+        self.dumb_finder = _DumbWorder(code, code)
+        self.code_finder = _DumbWorder(simplified, code)
+
+    def _init_ignores(self, ignores):
+        self.starts = [ignored[0] for ignored in ignores]
+        self.ends = [ignored[1] for ignored in ignores]
+
+    def _context_call(self, name, offset):
+        start = bisect.bisect(self.starts, offset)
+        if start > 0 and offset < self.ends[start - 1]:
+            return getattr(self.dumb_finder, name)(offset)
+        return getattr(self.code_finder, name)(offset)
+
+    def get_primary_at(self, offset):
+        return self._context_call('get_primary_at', offset)
+
+    def get_word_at(self, offset):
+        return self._context_call('get_word_at', offset)
+
+    def get_primary_range(self, offset):
+        return self._context_call('get_primary_range', offset)
+
+    def get_splitted_primary_before(self, offset):
+        return self._context_call('get_splitted_primary_before', offset)
+
+    def get_word_range(self, offset):
+        return self._context_call('get_word_range', offset)
+
+    def is_function_keyword_parameter(self, offset):
+        return self.code_finder.is_function_keyword_parameter(offset)
+
+    def is_a_class_or_function_name_in_header(self, offset):
+        return self.code_finder.is_a_class_or_function_name_in_header(offset)
+
+    def is_from_statement_module(self, offset):
+        return self.code_finder.is_from_statement_module(offset)
+
+    def is_from_aliased(self, offset):
+        return self.code_finder.is_from_aliased(offset)
+
+    def find_parens_start_from_inside(self, offset, stop=0):
+        return self.code_finder.find_parens_start_from_inside(offset, stop)
+
+    def is_a_name_after_from_import(self, offset):
+        return self.code_finder.is_a_name_after_from_import(offset)
+
+    def is_from_statement(self, offset):
+        return self.code_finder.is_from_statement(offset)
+
+    def get_from_aliased(self, offset):
+        return self.code_finder.get_from_aliased(offset)
+
+    def is_import_statement(self, offset):
+        return self.code_finder.is_import_statement(offset)
+
+    def is_assigned_here(self, offset):
+        return self.code_finder.is_assigned_here(offset)
+
+    def is_a_function_being_called(self, offset):
+        return self.code_finder.is_a_function_being_called(offset)
+
+    def get_word_parens_range(self, offset):
+        return self.code_finder.get_word_parens_range(offset)
+
+    def is_name_assigned_in_class_body(self, offset):
+        return self.code_finder._is_name_assigned_in_class_body(offset)
+
+    def is_on_function_call_keyword(self, offset, stop=0):
+        return self.code_finder.is_on_function_call_keyword(offset, stop)
+
+    def _find_parens_start(self, offset):
+        return self.code_finder._find_parens_start(offset)
+
+    def get_parameters(self, first, last):
+        return self.code_finder.get_parameters(first, last)
+
+    def get_from_module(self, offset):
+        return self.code_finder.get_from_module(offset)
+
+
+class _DumbWorder(object):
+
+    def __init__(self, code, raw):
+        self.code = code
+        self.raw = raw
 
     def _find_word_start(self, offset):
         current_offset = offset
@@ -400,3 +482,27 @@ class Worder(object):
                 index += 1
             return (start_parens, index)
         return (None, None)
+
+    def get_parameters(self, first, last):
+        keywords = []
+        args = []
+        current = self._find_last_non_space_char(last - 1)
+        while current > first:
+            primary_start = current
+            current = self._find_primary_start(current)
+            while current != first and self.code[current] not in '=,':
+                current = self._find_last_non_space_char(current - 1)
+            primary = self.code[current + 1:primary_start + 1].strip()
+            if self.code[current] == '=':
+                primary_start = current - 1
+                current -= 1
+                while current != first and self.code[current] not in ',':
+                    current = self._find_last_non_space_char(current - 1)
+                param_name = self.code[current + 1:primary_start + 1].strip()
+                keywords.append((param_name, primary))
+            else:
+                args.append(primary)
+            current = self._find_last_non_space_char(current - 1)
+        args.reverse()
+        keywords.reverse()
+        return args, keywords
