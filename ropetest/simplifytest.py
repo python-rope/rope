@@ -59,5 +59,10 @@ class SimplifyTest(unittest.TestCase):
         self.assertEquals('a = 1\nb = 2\n', simplify.real_code(code))
 
 
+def suite():
+    result = unittest.TestSuite()
+    result.addTests(unittest.makeSuite(SimplifyTest))
+    return result
+
 if __name__ == '__main__':
     unittest.main()

@@ -10,6 +10,7 @@ import ropetest.advanced_oi_test
 import ropetest.runmodtest
 import ropetest.builtinstest
 import ropetest.historytest
+import ropetest.simplifytest
 
 
 def suite():
@@ -24,6 +25,7 @@ def suite():
     result.addTests(ropetest.runmodtest.suite())
     result.addTests(ropetest.builtinstest.suite())
     result.addTests(ropetest.historytest.suite())
+    result.addTests(ropetest.simplifytest.suite())
     return result
 
 
