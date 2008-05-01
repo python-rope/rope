@@ -1,5 +1,5 @@
 import rope.base.change
-from rope.base import codeanalyze, exceptions, evaluate, worder
+from rope.base import exceptions, evaluate, worder
 from rope.refactor import functionutils, sourceutils, occurrences
 
 
@@ -54,7 +54,7 @@ class IntroduceParameter(object):
         return word_finder.get_primary_at(self.offset)
 
     def _get_name_and_pyname(self):
-        return (codeanalyze.get_name_at(self.resource, self.offset),
+        return (worder.get_name_at(self.resource, self.offset),
                 evaluate.get_pyname_at(self.pymodule, self.offset))
 
     def get_changes(self, new_parameter):

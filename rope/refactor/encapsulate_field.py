@@ -1,4 +1,4 @@
-from rope.base import pynames, taskhandle, codeanalyze, evaluate, exceptions, worder, utils
+from rope.base import pynames, taskhandle, evaluate, exceptions, worder, utils
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 
@@ -7,7 +7,7 @@ class EncapsulateField(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
-        self.name = codeanalyze.get_name_at(resource, offset)
+        self.name = worder.get_name_at(resource, offset)
         this_pymodule = self.pycore.resource_to_pyobject(resource)
         self.pyname = evaluate.get_pyname_at(this_pymodule, offset)
         if not self._is_an_attribute(self.pyname):

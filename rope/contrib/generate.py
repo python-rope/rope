@@ -1,5 +1,5 @@
 import rope.base.evaluate
-from rope.base import change, codeanalyze, pyobjects, exceptions, pynames, worder
+from rope.base import change, pyobjects, exceptions, pynames, worder
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
 
@@ -279,7 +279,7 @@ class _GenerationInfo(object):
         return self.get_name() in self.goal_scope.get_defined_names()
 
     def get_name(self):
-        return codeanalyze.get_name_at(self.resource, self.offset)
+        return worder.get_name_at(self.resource, self.offset)
 
 
 class _FunctionGenerationInfo(_GenerationInfo):
@@ -325,7 +325,7 @@ class _FunctionGenerationInfo(_GenerationInfo):
             return '__init__'
         if self.is_instance():
             return '__call__'
-        return codeanalyze.get_name_at(self.resource, self.offset)
+        return worder.get_name_at(self.resource, self.offset)
 
     def get_passed_args(self):
         result = []

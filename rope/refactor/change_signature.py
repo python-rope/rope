@@ -1,9 +1,9 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import pyobjects, codeanalyze, taskhandle, evaluate, worder
+from rope.base import pyobjects, taskhandle, evaluate, worder
 from rope.base.change import ChangeContents, ChangeSet
-from rope.refactor import occurrences, sourceutils, functionutils, rename
+from rope.refactor import occurrences, sourceutils, functionutils
 
 
 class ChangeSignature(object):
@@ -19,7 +19,7 @@ class ChangeSignature(object):
                 'Change method signature should be performed on functions')
 
     def _set_name_and_pyname(self):
-        self.name = codeanalyze.get_name_at(self.resource, self.offset)
+        self.name = worder.get_name_at(self.resource, self.offset)
         this_pymodule = self.pycore.resource_to_pyobject(self.resource)
         self.primary, self.pyname = evaluate.get_primary_and_pyname_at(
             this_pymodule, self.offset)

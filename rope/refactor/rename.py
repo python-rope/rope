@@ -1,7 +1,6 @@
 import warnings
 
-from rope.base import (exceptions, codeanalyze, pyobjects,
-                       pynames, taskhandle, evaluate, worder)
+from rope.base import exceptions, pyobjects, pynames, taskhandle, evaluate, worder
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences, sourceutils
 
@@ -20,7 +19,7 @@ class Rename(object):
         self.pycore = project.pycore
         self.resource = resource
         if offset is not None:
-            self.old_name = codeanalyze.get_name_at(self.resource, offset)
+            self.old_name = worder.get_name_at(self.resource, offset)
             this_pymodule = self.pycore.resource_to_pyobject(self.resource)
             self.old_instance, self.old_pyname = \
                 evaluate.get_primary_and_pyname_at(this_pymodule, offset)
@@ -163,7 +162,7 @@ class ChangeOccurrences(object):
         self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
-        self.old_name = codeanalyze.get_name_at(resource, offset)
+        self.old_name = worder.get_name_at(resource, offset)
         self.pymodule = self.pycore.resource_to_pyobject(self.resource)
         self.old_pyname = evaluate.get_pyname_at(self.pymodule, offset)
 

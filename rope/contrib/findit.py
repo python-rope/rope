@@ -1,7 +1,7 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
 import rope.base.pyobjects
-from rope.base import taskhandle, exceptions
+from rope.base import taskhandle, exceptions, worder
 from rope.refactor import occurrences
 
 
@@ -16,7 +16,7 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
     in the project are searched.
 
     """
-    name = rope.base.codeanalyze.get_name_at(resource, offset)
+    name = worder.get_name_at(resource, offset)
     this_pymodule = project.pycore.resource_to_pyobject(resource)
     primary, pyname = rope.base.evaluate.get_primary_and_pyname_at(
         this_pymodule, offset)
@@ -39,7 +39,7 @@ def find_implementations(project, resource, offset, resources=None,
     Finds the places a method is implemented.  Returns a list of
     `Location`\s.
     """
-    name = rope.base.codeanalyze.get_name_at(resource, offset)
+    name = worder.get_name_at(resource, offset)
     this_pymodule = project.pycore.resource_to_pyobject(resource)
     pyname = rope.base.evaluate.get_pyname_at(this_pymodule, offset)
     if pyname is not None:

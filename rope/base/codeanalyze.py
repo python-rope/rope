@@ -2,14 +2,6 @@ import re
 import token
 import tokenize
 
-import rope.base.worder
-
-
-def get_name_at(resource, offset):
-    source_code = resource.read()
-    word_finder = rope.base.worder.Worder(source_code)
-    return word_finder.get_word_at(offset)
-
 
 class Lines(object):
 

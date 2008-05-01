@@ -1,4 +1,4 @@
-from rope.base import pynames, codeanalyze, evaluate, exceptions
+from rope.base import pynames, evaluate, exceptions, worder
 from rope.refactor.rename import Rename
 
 
@@ -11,7 +11,7 @@ class LocalToField(object):
         self.offset = offset
 
     def get_changes(self):
-        name = codeanalyze.get_name_at(self.resource, self.offset)
+        name = worder.get_name_at(self.resource, self.offset)
         this_pymodule = self.pycore.resource_to_pyobject(self.resource)
         pyname = evaluate.get_pyname_at(this_pymodule, self.offset)
         if not self._is_a_method_local(pyname):

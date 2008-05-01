@@ -4,7 +4,7 @@
 based on inputs.
 
 """
-from rope.base import pyobjects, codeanalyze, exceptions, pynames, taskhandle, evaluate
+from rope.base import pyobjects, codeanalyze, exceptions, pynames, taskhandle, evaluate, worder
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences, sourceutils, functionutils
 
@@ -51,7 +51,7 @@ class MoveMethod(object):
         self.pycore = project.pycore
         this_pymodule = self.pycore.resource_to_pyobject(resource)
         pyname = evaluate.get_pyname_at(this_pymodule, offset)
-        self.method_name = codeanalyze.get_name_at(resource, offset)
+        self.method_name = worder.get_name_at(resource, offset)
         self.pyfunction = pyname.get_object()
         if self.pyfunction.get_kind() != 'method':
             raise exceptions.RefactoringError('Only normal methods'

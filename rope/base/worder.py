@@ -1,5 +1,13 @@
-import re
 import bisect
+import re
+
+import rope.base.simplify
+
+
+def get_name_at(resource, offset):
+    source_code = resource.read()
+    word_finder = Worder(source_code)
+    return word_finder.get_word_at(offset)
 
 
 class Worder(object):
@@ -10,14 +18,12 @@ class Worder(object):
     """
 
     def __init__(self, code, handle_ignores=False):
-        import rope.base.simplify
         simplified = rope.base.simplify.real_code(code)
         self.code_finder = _DumbWorder(simplified, code)
         self.handle_ignores = handle_ignores
         self.code = code
 
     def _init_ignores(self):
-        import rope.base.simplify
         ignores = rope.base.simplify.ignored_regions(self.code)
         self.dumb_finder = _DumbWorder(self.code, self.code)
         self.starts = [ignored[0] for ignored in ignores]
