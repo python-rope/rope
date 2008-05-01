@@ -89,17 +89,19 @@ class MethodObjectTest(unittest.TestCase):
 
     def test_self_keywords_and_args_parameters(self):
         code = 'def func(arg, *args, **kwds):\n' \
-               '    result = arg + args[0] + kwds[arg]\n    return result\n'
+               '    result = arg + args[0] + kwds[arg]\n' \
+               '    return result\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
-        self.assertEquals(
-            'class _New(object):\n\n'
-            '    def __init__(self, arg, args, kwds):\n'
-            '        self.arg = arg\n        self.args = args\n        self.kwds = kwds\n\n'
-            '    def __call__(self):\n'
-            '        result = self.arg + self.args[0] + self.kwds[self.arg]\n'
-            '        return result\n',
-            replacer.get_new_class('_New'))
+        expected = 'class _New(object):\n\n' \
+                   '    def __init__(self, arg, args, kwds):\n' \
+                   '        self.arg = arg\n' \
+                   '        self.args = args\n' \
+                   '        self.kwds = kwds\n\n' \
+                   '    def __call__(self):\n' \
+                   '        result = self.arg + self.args[0] + self.kwds[self.arg]\n' \
+                   '        return result\n'
+        self.assertEquals(expected, replacer.get_new_class('_New'))
 
     @testutils.assert_raises(RefactoringError)
     def test_performing_on_not_a_function(self):
@@ -112,24 +114,33 @@ class MethodObjectTest(unittest.TestCase):
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.project.do(replacer.get_changes('_New'))
-        self.assertEquals(
-            'def func():\n    return _New()()\n\n\n'
-            'class _New(object):\n\n    def __call__(self):\n        return 1\n',
-            self.mod.read())
+        expected = 'def func():\n' \
+                   '    return _New()()\n\n\n' \
+                   'class _New(object):\n\n' \
+                   '    def __call__(self):\n' \
+                   '        return 1\n'
+        self.assertEquals(expected, self.mod.read())
 
     def test_changing_the_module_and_class_methods(self):
-        code = 'class C(object):\n\n    def a_func(self):\n        return 1\n\n' \
-               '    def another_func(self):\n        pass\n'
+        code = 'class C(object):\n\n' \
+               '    def a_func(self):\n' \
+               '        return 1\n\n' \
+               '    def another_func(self):\n' \
+               '        pass\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
         self.project.do(replacer.get_changes('_New'))
-        self.assertEquals(
-            'class C(object):\n\n    def a_func(self):\n        return _New(self)()\n\n'
-            '    def another_func(self):\n        pass\n\n\n'
-            'class _New(object):\n\n'
-            '    def __init__(self, host):\n        self.self = host\n\n'
-            '    def __call__(self):\n        return 1\n',
-            self.mod.read())
+        expected = 'class C(object):\n\n' \
+                   '    def a_func(self):\n' \
+                   '        return _New(self)()\n\n' \
+                   '    def another_func(self):\n' \
+                   '        pass\n\n\n' \
+                   'class _New(object):\n\n' \
+                   '    def __init__(self, host):\n' \
+                   '        self.self = host\n\n' \
+                   '    def __call__(self):\n' \
+                   '        return 1\n'
+        self.assertEquals(expected, self.mod.read())
 
 
 class IntroduceFactoryTest(unittest.TestCase):
@@ -153,30 +164,41 @@ class IntroduceFactoryTest(unittest.TestCase):
         code = 'class AClass(object):\n    an_attr = 10\n'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(code)
-        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+        expected = 'class AClass(object):\n' \
+                   '    an_attr = 10\n\n' \
+                   '    @staticmethod\n' \
+                   '    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
         self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_the_main_module(self):
-        code = 'class AClass(object):\n    an_attr = 10\na_var = AClass()'
+        code = 'class AClass(object):\n' \
+               '    an_attr = 10\n' \
+               'a_var = AClass()'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(code)
-        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+        expected = 'class AClass(object):\n' \
+                   '    an_attr = 10\n\n' \
+                   '    @staticmethod\n' \
+                   '    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'\
                    'a_var = AClass.create()'
         self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
         self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_with_arguments(self):
-        code = 'class AClass(object):\n    def __init__(self, arg):\n        pass\n' \
+        code = 'class AClass(object):\n' \
+               '    def __init__(self, arg):\n' \
+               '        pass\n' \
                'a_var = AClass(10)\n'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(code)
-        expected = 'class AClass(object):\n    def __init__(self, arg):\n        pass\n\n' \
-                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+        expected = 'class AClass(object):\n' \
+                   '    def __init__(self, arg):\n' \
+                   '        pass\n\n' \
+                   '    @staticmethod\n' \
+                   '    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n' \
                    'a_var = AClass.create(10)\n'
         self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
@@ -188,10 +210,13 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
         self._introduce_factory(mod1, mod1.read().index('AClass') + 1, 'create')
-        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kwds):\n' \
-                   '        return AClass(*args, **kwds)\n'
-        expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
+        expected1 = 'class AClass(object):\n' \
+                    '    an_attr = 10\n\n' \
+                    '    @staticmethod\n' \
+                    '    def create(*args, **kwds):\n' \
+                    '        return AClass(*args, **kwds)\n'
+        expected2 = 'import mod1\n' \
+                    'a_var = mod1.AClass.create()\n'
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
@@ -219,10 +244,13 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod1.write('class AClass(object):\n    an_attr = 10\n')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
         self._introduce_factory(mod2, mod2.read().index('AClass') + 1, 'create')
-        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kwds):\n' \
-                   '        return AClass(*args, **kwds)\n'
-        expected2 = 'import mod1\na_var = mod1.AClass.create()\n'
+        expected1 = 'class AClass(object):\n' \
+                    '    an_attr = 10\n\n' \
+                    '    @staticmethod\n' \
+                    '    def create(*args, **kwds):\n' \
+                    '        return AClass(*args, **kwds)\n'
+        expected2 = 'import mod1\n' \
+                    'a_var = mod1.AClass.create()\n'
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
@@ -246,7 +274,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         code = 'class AClass(object):\n    an_attr = 10\n'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(code)
-        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
+        expected = 'class AClass(object):\n' \
+                   '    an_attr = 10\n\n' \
                    'def create(*args, **kwds):\n' \
                    '    return AClass(*args, **kwds)\n'
         self._introduce_factory(mod, mod.read().index('AClass') + 1,
@@ -273,7 +302,9 @@ class IntroduceFactoryTest(unittest.TestCase):
                                            'create', global_factory=True)
 
     def test_changing_occurances_in_the_main_module_for_global_factories(self):
-        code = 'class AClass(object):\n    an_attr = 10\na_var = AClass()'
+        code = 'class AClass(object):\n' \
+               '    an_attr = 10\n' \
+               'a_var = AClass()'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(code)
         expected = 'class AClass(object):\n    an_attr = 10\n\n' \
@@ -291,10 +322,12 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2.write('import mod1\na_var = mod1.AClass()\n')
         self._introduce_factory(mod1, mod1.read().index('AClass') + 1,
                                            'create', global_factory=True)
-        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+        expected1 = 'class AClass(object):\n' \
+                    '    an_attr = 10\n\n' \
                     'def create(*args, **kwds):\n' \
                     '    return AClass(*args, **kwds)\n'
-        expected2 = 'import mod1\na_var = mod1.create()\n'
+        expected2 = 'import mod1\n' \
+                    'a_var = mod1.create()\n'
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
@@ -305,20 +338,23 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2.write('from mod1 import AClass\npair = AClass(), AClass\n')
         self._introduce_factory(mod1, mod1.read().index('AClass') + 1,
                                            'create', global_factory=True)
-        expected1 = 'class AClass(object):\n    an_attr = 10\n\n' \
+        expected1 = 'class AClass(object):\n' \
+                    '    an_attr = 10\n\n' \
                     'def create(*args, **kwds):\n' \
                     '    return AClass(*args, **kwds)\n'
-        expected2 = 'from mod1 import AClass, create\npair = create(), AClass\n'
+        expected2 = 'from mod1 import AClass, create\n' \
+                    'pair = create(), AClass\n'
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
-    # XXX: Should we replace `a_class` here with `AClass.create` too
     def test_changing_occurances_for_renamed_classes(self):
         code = 'class AClass(object):\n    an_attr = 10\na_class = AClass\na_var = a_class()'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(code)
-        expected = 'class AClass(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+        expected = 'class AClass(object):\n' \
+                   '    an_attr = 10\n\n' \
+                   '    @staticmethod\n' \
+                   '    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n' \
                    'a_class = AClass\n' \
                    'a_var = a_class()'
@@ -327,11 +363,15 @@ class IntroduceFactoryTest(unittest.TestCase):
 
     def test_changing_occurrences_in_the_same_module_with_conflicting_ranges(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class C(object):\n'
-                  '    def create(self):\n        return C()\n')
+        code = 'class C(object):\n' \
+               '    def create(self):\n' \
+               '        return C()\n'
+        mod.write(code)
         self._introduce_factory(mod, mod.read().index('C'), 'create_c', True)
-        self.assertTrue(mod.read().startswith(
-                        'class C(object):\n    def create(self):\n        return create_c()\n'))
+        expected = 'class C(object):\n' \
+                   '    def create(self):\n' \
+                   '        return create_c()\n'
+        self.assertTrue(mod.read().startswith(expected))
 
     def _transform_module_to_package(self, resource):
         self.project.do(rope.refactor.ModuleToPackage(
@@ -346,7 +386,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.project.get_resource('mod2')
         root_folder = self.project.root
         self.assertFalse(root_folder.has_child('mod2.py'))
-        self.assertEquals('class AClass(object):\n    pass\n', root_folder.get_child('mod2').
+        self.assertEquals('class AClass(object):\n    pass\n',
+                          root_folder.get_child('mod2').
                           get_child('__init__.py').read())
 
     def test_transform_module_to_package_undoing(self):
@@ -377,8 +418,10 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod.write(code)
         mod1.write(code1)
-        expected = 'class A(object):\n    an_attr = 10\n\n' \
-                   '    @staticmethod\n    def create(*args, **kwds):\n' \
+        expected = 'class A(object):\n' \
+                   '    an_attr = 10\n\n' \
+                   '    @staticmethod\n' \
+                   '    def create(*args, **kwds):\n' \
                    '        return A(*args, **kwds)\n'
         self._introduce_factory(mod, mod.read().index('A') + 1,
                                 'create', resources=[mod])
@@ -394,9 +437,14 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.pycore = self.project.get_pycore()
         self.mod = testutils.create_module(self.project, 'mod')
         self.mod1 = testutils.create_module(self.project, 'mod1')
-        self.a_class = 'class A(object):\n    def __init__(self):\n        self.attr = 1\n'
-        self.added_methods = '\n    def get_attr(self):\n        return self.attr\n\n' \
-                             '    def set_attr(self, value):\n        self.attr = value\n'
+        self.a_class = 'class A(object):\n' \
+                       '    def __init__(self):\n' \
+                       '        self.attr = 1\n'
+        self.added_methods = '\n' \
+            '    def get_attr(self):\n' \
+            '        return self.attr\n\n' \
+            '    def set_attr(self, value):\n' \
+            '        self.attr = value\n'
         self.encapsulated = self.a_class + self.added_methods
 
     def tearDown(self):
@@ -415,26 +463,40 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.assertEquals(self.encapsulated, self.mod.read())
 
     def test_changing_getters_in_other_modules(self):
-        self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'range(a_var.attr)\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
-                          self.mod1.read())
+        expected = 'import mod\n' \
+                   'a_var = mod.A()\n' \
+                   'range(a_var.get_attr())\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_setters_in_other_modules(self):
-        self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'a_var.attr = 1\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        self.assertEquals('import mod\na_var = mod.A()\na_var.set_attr(1)\n',
-                          self.mod1.read())
+        expected = 'import mod\n' \
+                   'a_var = mod.A()\n' \
+                   'a_var.set_attr(1)\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_getters_in_setters(self):
-        self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1 + a_var.attr\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'a_var.attr = 1 + a_var.attr\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        self.assertEquals(
-            'import mod\na_var = mod.A()\na_var.set_attr(1 + a_var.get_attr())\n',
-            self.mod1.read())
+        expected = 'import mod\n' \
+                   'a_var = mod.A()\n' \
+                   'a_var.set_attr(1 + a_var.get_attr())\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_appending_to_class_end(self):
         self.mod1.write(self.a_class + 'a_var = A()\n')
@@ -443,20 +505,28 @@ class EncapsulateFieldTest(unittest.TestCase):
                           self.mod1.read())
 
     def test_performing_in_other_modules(self):
-        self.mod1.write('import mod\na_var = mod.A()\nrange(a_var.attr)\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'range(a_var.attr)\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
         self.assertEquals(self.encapsulated, self.mod.read())
-        self.assertEquals('import mod\na_var = mod.A()\nrange(a_var.get_attr())\n',
-                          self.mod1.read())
+        expected = 'import mod\n' \
+                   'a_var = mod.A()\n' \
+                   'range(a_var.get_attr())\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_main_module_occurances(self):
-        self.mod1.write(self.a_class + 'a_var = A()\na_var.attr = a_var.attr * 2\n')
+        code = self.a_class + \
+               'a_var = A()\n' \
+               'a_var.attr = a_var.attr * 2\n'
+        self.mod1.write(code)
         self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
-        self.assertEquals(
-            self.encapsulated +
-            'a_var = A()\na_var.set_attr(a_var.get_attr() * 2)\n',
-            self.mod1.read())
+        expected = self.encapsulated + \
+                   'a_var = A()\n' \
+                   'a_var.set_attr(a_var.get_attr() * 2)\n'
+        self.assertEquals(expected, self.mod1.read())
 
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_non_attributes(self):
@@ -466,53 +536,84 @@ class EncapsulateFieldTest(unittest.TestCase):
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments(self):
         self.mod.write(self.a_class)
-        self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\na_var.attr, b = 1, 2\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'a_var.attr = 1\n' \
+               'a_var.attr, b = 1, 2\n'
+        self.mod1.write(code)
         self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments2(self):
         self.mod.write(self.a_class)
-        self.mod1.write('import mod\na_var = mod.A()\na_var.attr = 1\nb, a_var.attr = 1, 2\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'a_var.attr = 1\n' \
+               'b, a_var.attr = 1, 2\n'
+        self.mod1.write(code)
         self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
     def test_tuple_assignments_and_function_calls(self):
-        self.mod1.write('import mod\ndef func(a1=0, a2=0):\n    pass\n'
-                        'a_var = mod.A()\nfunc(a_var.attr, a2=2)\n')
+        code = 'import mod\n' \
+               'def func(a1=0, a2=0):\n' \
+               '    pass\n' \
+               'a_var = mod.A()\n' \
+               'func(a_var.attr, a2=2)\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        self.assertEquals('import mod\ndef func(a1=0, a2=0):\n    pass\n'
-                          'a_var = mod.A()\nfunc(a_var.get_attr(), a2=2)\n',
-                          self.mod1.read())
+        expected = 'import mod\n' \
+                   'def func(a1=0, a2=0):\n' \
+                   '    pass\n' \
+                   'a_var = mod.A()\n' \
+                   'func(a_var.get_attr(), a2=2)\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_tuple_assignments(self):
-        self.mod1.write('import mod\na_var = mod.A()\na, b = a_var.attr, 1\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'a, b = a_var.attr, 1\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        self.assertEquals(
-            'import mod\na_var = mod.A()\na, b = a_var.get_attr(), 1\n',
-            self.mod1.read())
+        expected = 'import mod\n' \
+                   'a_var = mod.A()\n' \
+                   'a, b = a_var.get_attr(), 1\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_augmented_assignments(self):
-        self.mod1.write('import mod\na_var = mod.A()\na_var.attr += 1\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'a_var.attr += 1\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        self.assertEquals(
-            'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() + 1)\n',
-            self.mod1.read())
+        expected = 'import mod\n' \
+                   'a_var = mod.A()\n' \
+                   'a_var.set_attr(a_var.get_attr() + 1)\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_augmented_assignments2(self):
-        self.mod1.write('import mod\na_var = mod.A()\na_var.attr <<= 1\n')
+        code = 'import mod\n' \
+               'a_var = mod.A()\n' \
+               'a_var.attr <<= 1\n'
+        self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        self.assertEquals(
-            'import mod\na_var = mod.A()\na_var.set_attr(a_var.get_attr() << 1)\n',
-            self.mod1.read())
+        expected = 'import mod\n' \
+                   'a_var = mod.A()\n' \
+                   'a_var.set_attr(a_var.get_attr() << 1)\n'
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_occurrences_inside_the_class(self):
-        new_class = self.a_class + '\n    def a_func(self):\n        self.attr = 1\n'
+        new_class = self.a_class + '\n' \
+                    '    def a_func(self):\n' \
+                    '        self.attr = 1\n'
         self.mod.write(new_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1)
-        expected = self.a_class + '\n    def a_func(self):\n        self.set_attr(1)\n' + \
+        expected = self.a_class + '\n' \
+                   '    def a_func(self):\n' \
+                   '        self.set_attr(1)\n' + \
                    self.added_methods
         self.assertEquals(expected, self.mod.read())
 
@@ -554,12 +655,14 @@ class LocalToFieldTest(unittest.TestCase):
         self.project.do(changes)
 
     def test_simple_local_to_field(self):
-        code = 'class A(object):\n    def a_func(self):\n' \
+        code = 'class A(object):\n' \
+               '    def a_func(self):\n' \
                '        var = 10\n'
         self.mod.write(code)
         self._perform_convert_local_variable_to_field(self.mod,
                                                       code.index('var') + 1)
-        expected = 'class A(object):\n    def a_func(self):\n' \
+        expected = 'class A(object):\n' \
+                   '    def a_func(self):\n' \
                    '        self.var = 10\n'
         self.assertEquals(expected, self.mod.read())
 
@@ -571,7 +674,8 @@ class LocalToFieldTest(unittest.TestCase):
 
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_field(self):
-        code = 'class A(object):\n    def a_func(self):\n' \
+        code = 'class A(object):\n' \
+               '    def a_func(self):\n' \
                '        self.var = 10\n'
         self.mod.write(code)
         self._perform_convert_local_variable_to_field(
@@ -579,7 +683,8 @@ class LocalToFieldTest(unittest.TestCase):
 
     @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_a_parameter(self):
-        code = 'class A(object):\n    def a_func(self, var):\n' \
+        code = 'class A(object):\n' \
+               '    def a_func(self, var):\n' \
                '        a = var\n'
         self.mod.write(code)
         self._perform_convert_local_variable_to_field(
@@ -588,19 +693,23 @@ class LocalToFieldTest(unittest.TestCase):
     # NOTE: This situation happens alot and is normally not an error
     #@testutils.assert_raises(RefactoringError)
     def test_not_raising_exception_when_there_is_a_field_with_the_same_name(self):
-        code = 'class A(object):\n    def __init__(self):\n        self.var = 1\n' \
+        code = 'class A(object):\n' \
+               '    def __init__(self):\n' \
+               '        self.var = 1\n' \
                '    def a_func(self):\n        var = 10\n'
         self.mod.write(code)
         self._perform_convert_local_variable_to_field(
             self.mod, self.mod.read().rindex('var') + 1)
 
     def test_local_to_field_with_self_renamed(self):
-        code = 'class A(object):\n    def a_func(myself):\n' \
+        code = 'class A(object):\n' \
+               '    def a_func(myself):\n' \
                '        var = 10\n'
         self.mod.write(code)
         self._perform_convert_local_variable_to_field(self.mod,
                                                          code.index('var') + 1)
-        expected = 'class A(object):\n    def a_func(myself):\n' \
+        expected = 'class A(object):\n' \
+                   '    def a_func(myself):\n' \
                    '        myself.var = 10\n'
         self.assertEquals(expected, self.mod.read())
 
@@ -622,23 +731,36 @@ class IntroduceParameterTest(unittest.TestCase):
             self.project, self.mod, offset).get_changes(name).do()
 
     def test_simple_case(self):
-        self.mod.write('var = 1\ndef f():\n    b = var\n')
+        code = 'var = 1\n' \
+               'def f():\n' \
+               '    b = var\n'
+        self.mod.write(code)
         offset = self.mod.read().rindex('var')
         self._introduce_parameter(offset, 'var')
-        self.assertEquals('var = 1\ndef f(var=var):\n    b = var\n', self.mod.read())
+        expected = 'var = 1\n' \
+                   'def f(var=var):\n' \
+                   '    b = var\n'
+        self.assertEquals(expected, self.mod.read())
 
     def test_changing_function_body(self):
-        self.mod.write('var = 1\ndef f():\n    b = var\n')
+        code = 'var = 1\n' \
+               'def f():\n' \
+               '    b = var\n'
+        self.mod.write(code)
         offset = self.mod.read().rindex('var')
         self._introduce_parameter(offset, 'p1')
-        self.assertEquals('var = 1\ndef f(p1=var):\n    b = p1\n', self.mod.read())
+        expected = 'var = 1\n' \
+                   'def f(p1=var):\n' \
+                   '    b = p1\n'
+        self.assertEquals(expected, self.mod.read())
 
     @testutils.assert_raises(RefactoringError)
     def test_unknown_variables(self):
         self.mod.write('def f():\n    b = var + c\n')
         offset = self.mod.read().rindex('var')
         self._introduce_parameter(offset, 'p1')
-        self.assertEquals('def f(p1=var):\n    b = p1 + c\n', self.mod.read())
+        self.assertEquals('def f(p1=var):\n    b = p1 + c\n',
+                          self.mod.read())
 
     @testutils.assert_raises(RefactoringError)
     def test_failing_when_not_inside(self):
@@ -647,18 +769,33 @@ class IntroduceParameterTest(unittest.TestCase):
         self._introduce_parameter(offset, 'p1')
 
     def test_attribute_accesses(self):
-        self.mod.write('class C(object):\n    a = 10\nc = C()\ndef f():\n    b = c.a\n')
+        code = 'class C(object):\n' \
+               '    a = 10\nc = C()\n' \
+               'def f():\n' \
+               '    b = c.a\n'
+        self.mod.write(code)
         offset = self.mod.read().rindex('a')
         self._introduce_parameter(offset, 'p1')
-        self.assertEquals('class C(object):\n    a = 10\nc = C()\ndef f(p1=c.a):\n    b = p1\n',
-                          self.mod.read())
+        expected = 'class C(object):\n' \
+                   '    a = 10\n' \
+                   'c = C()\n' \
+                   'def f(p1=c.a):\n' \
+                   '    b = p1\n'
+        self.assertEquals(expected, self.mod.read())
 
     def test_introducing_parameters_for_methods(self):
-        self.mod.write('var = 1\nclass C(object):\n    def f(self):\n        b = var\n')
+        code = 'var = 1\n' \
+               'class C(object):\n' \
+               '    def f(self):\n' \
+               '        b = var\n'
+        self.mod.write(code)
         offset = self.mod.read().rindex('var')
         self._introduce_parameter(offset, 'p1')
-        self.assertEquals('var = 1\nclass C(object):\n    def f(self, p1=var):\n        b = p1\n',
-                          self.mod.read())
+        expected = 'var = 1\n' \
+                   'class C(object):\n' \
+                   '    def f(self, p1=var):\n' \
+                   '        b = p1\n'
+        self.assertEquals(expected, self.mod.read())
 
 
 class _MockTaskObserver(object):
