@@ -2,7 +2,8 @@ import unittest
 
 import rope.base.evaluate
 from rope.base import exceptions, ast, worder
-from rope.base.codeanalyze import TokenizerLogicalLineFinder, SourceLinesAdapter, LogicalLineFinder, get_block_start, CustomLogicalLineFinder
+from rope.base.codeanalyze import (TokenizerLogicalLineFinder, SourceLinesAdapter,
+                                   LogicalLineFinder, get_block_start, CustomLogicalLineFinder)
 from ropetest import testutils
 
 
@@ -194,10 +195,9 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_comments_for_finding_statements2(self):
         code = 'var1 + "# var2".\n  var3'
-        self.assertEquals('"# var2".\n  var3', self._find_primary(code, 21))
+        self.assertEquals('var3', self._find_primary(code, 21))
 
-    # XXX: handling string literals before comments
-    def xxx_test_comments_for_finding_statements3(self):
+    def test_comments_for_finding_statements3(self):
         code = '"" + # var2.\n  var3'
         self.assertEquals('var3', self._find_primary(code, 21))
 
@@ -227,8 +227,7 @@ class WordRangeFinderTest(unittest.TestCase):
         code = 'f(\'\\\'\')\n'
         result = self._find_primary(code, len(code) - 1)
 
-    # XXX: not crossing new lines
-    def xxx_test_getting_primary_and_not_crossing_newlines(self):
+    def test_getting_primary_and_not_crossing_newlines(self):
         code = '\na = (b + c)\n(4 + 1).x\n'
         result = self._find_primary(code, len(code) - 1)
         self.assertEquals('(4 + 1).x', result)
@@ -239,8 +238,7 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, len(code) - 1)
         self.assertEquals('"b" "c"', result)
 
-    # XXX: not crossing new lines
-    def xxx_test_is_a_function_being_called_with_parens_on_next_line(self):
+    def test_is_a_function_being_called_with_parens_on_next_line(self):
         code = 'func\n(1, 2)\n'
         word_finder = worder.Worder(code)
         self.assertFalse(word_finder.is_a_function_being_called(1))
@@ -257,9 +255,8 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, len(code) - 1)
         self.assertEquals('"""\\\nl1\nl2\n """', result)
 
-    # XXX: get_word_parens_range should ignore string literals
-    def xxx_test_get_word_parens_range_and_string_literals(self):
-        code = 'f(1, ")", 2)'
+    def test_get_word_parens_range_and_string_literals(self):
+        code = 'f(1, ")", 2)\n'
         word_finder = worder.Worder(code)
         result = word_finder.get_word_parens_range(0)
         self.assertEquals((1, len(code) - 1), result)

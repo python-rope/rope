@@ -19,13 +19,13 @@ class Worder(object):
 
     def __init__(self, code, handle_ignores=False):
         simplified = rope.base.simplify.real_code(code)
-        self.code_finder = _DumbWorder(simplified, code)
+        self.code_finder = _RealFinder(simplified, code)
         self.handle_ignores = handle_ignores
         self.code = code
 
     def _init_ignores(self):
         ignores = rope.base.simplify.ignored_regions(self.code)
-        self.dumb_finder = _DumbWorder(self.code, self.code)
+        self.dumb_finder = _RealFinder(self.code, self.code)
         self.starts = [ignored[0] for ignored in ignores]
         self.ends = [ignored[1] for ignored in ignores]
 
@@ -111,7 +111,7 @@ class Worder(object):
         return self.code_finder.get_assignment_type(offset)
 
 
-class _DumbWorder(object):
+class _RealFinder(object):
 
     def __init__(self, code, raw):
         self.code = code
@@ -128,24 +128,12 @@ class _DumbWorder(object):
             offset += 1
         return offset
 
-    _char_pat = re.compile(r'[\'"#]')
     def _find_last_non_space_char(self, offset):
-        if offset <= 0:
-            return 0
         while offset >= 0 and self.code[offset].isspace():
             if self.code[offset] == '\n':
-                if offset > 0 and self.code[offset - 1] == '\\':
-                    offset -= 1
-                try:
-                    start = self.code.rindex('\n', 0, offset)
-                except ValueError:
-                    start = 0
-
-                match = self._char_pat.search(self.code[start:offset])
-                if match and match.group() == '#':
-                    offset = self.code.rindex('#', start, offset)
+                return offset
             offset -= 1
-        return offset
+        return max(-1, offset)
 
     def get_word_at(self, offset):
         offset = self._get_fixed_offset(offset)
@@ -168,14 +156,10 @@ class _DumbWorder(object):
     def _find_string_start(self, offset):
         kind = self.code[offset]
         offset -= 1
-        while True:
-            try:
-                offset = self.code.rindex(kind, 0, offset)
-                if offset == 0 or self.code[offset - 1] != '\\':
-                    return offset
-                offset -= 1
-            except ValueError:
-                return 0
+        try:
+            return self.code.rindex(kind, 0, offset)
+        except ValueError:
+            return 0
 
     def _find_parens_start(self, offset):
         offset = self._find_last_non_space_char(offset - 1)
@@ -187,7 +171,9 @@ class _DumbWorder(object):
 
     def _find_atom_start(self, offset):
         old_offset = offset
-        if self.code[offset] in '\n\t ':
+        if self.code[offset] == '\n':
+            return offset + 1
+        if self.code[offset].isspace():
             offset = self._find_last_non_space_char(offset)
         if self.code[offset] in '\'"':
             return self._find_string_start(offset)
@@ -281,10 +267,7 @@ class _DumbWorder(object):
             return len(self.code)
 
     def _is_followed_by_equals(self, offset):
-        while offset < len(self.code) and self.code[offset] in ' \\\t':
-            if self.code[offset] == '\\':
-                offset += 1
-            offset += 1
+        offset = self._find_first_non_space_char(offset)
         if offset + 1 < len(self.code) and \
            self.code[offset] == '=' and self.code[offset + 1] != '=':
             return True
@@ -302,7 +285,6 @@ class _DumbWorder(object):
         return False
 
     def is_a_class_or_function_name_in_header(self, offset):
-        # XXX: does not handle line breaks after def
         word_start = self._find_word_start(offset - 1)
         line_start = self._get_line_start(word_start)
         prev_word = self.code[line_start:word_start].strip()
@@ -311,14 +293,10 @@ class _DumbWorder(object):
     def _find_first_non_space_char(self, offset):
         if offset >= len(self.code):
             return len(self.code)
-        while offset < len(self.code):
-            if offset + 1 < len(self.code) and \
-               self.code[offset] == '\\':
-                offset += 2
-            elif self.code[offset] in ' \t\n':
-                offset += 1
-            else:
-                break
+        while offset < len(self.code) and self.code[offset].isspace():
+            if self.code[offset] == '\n':
+                return offset
+            offset += 1
         return offset
 
     def is_a_function_being_called(self, offset):
@@ -328,32 +306,15 @@ class _DumbWorder(object):
                self.code[next_char] == '(' and \
                not self.is_a_class_or_function_name_in_header(offset)
 
-    def _find_import_pair_end(self, start):
-        next_char = self._find_first_non_space_char(start)
-        if next_char >= len(self.code):
-            return len(self.code)
-        if self.code[next_char] == '(':
-            try:
-                return self.code.index(')', next_char) + 1
-            except ValueError:
-                return SyntaxError('Unmatched Parens')
-        else:
-            offset = next_char
-            while True:
-                try:
-                    offset = self.code.index('\n', offset)
-                    if offset == 0 or self.code[offset - 1] != '\\':
-                        return offset
-                    offset += 1
-                except ValueError:
-                    return len(self.code)
+    def _find_import_end(self, start):
+        return self._get_line_end(start)
 
     def is_import_statement(self, offset):
         try:
             last_import = self.code.rindex('import ', 0, offset)
         except ValueError:
             return False
-        return self._find_import_pair_end(last_import + 7) >= offset
+        return self._find_import_end(last_import + 7) >= offset
 
     def is_from_statement(self, offset):
         try:
@@ -363,7 +324,7 @@ class _DumbWorder(object):
         except ValueError:
             return False
         from_names = self._find_first_non_space_char(from_names)
-        return self._find_import_pair_end(from_names) >= offset
+        return self._find_import_end(from_names) >= offset
 
     def is_from_statement_module(self, offset):
         if offset >= len(self.code) - 1:
@@ -384,7 +345,7 @@ class _DumbWorder(object):
             return False
         if from_names - 1 > offset:
             return False
-        return self._find_import_pair_end(from_names) >= offset
+        return self._find_import_end(from_names) >= offset
 
     def get_from_module(self, offset):
         try:
