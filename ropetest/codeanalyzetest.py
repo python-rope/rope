@@ -235,7 +235,7 @@ class WordRangeFinderTest(unittest.TestCase):
     # XXX: cancatenated string literals
     def xxx_test_getting_primary_cancatenating_strs(self):
         code = 's = "a"\n"b" "c"\n'
-        result = self._find_primary(code, len(code) - 1)
+        result = self._find_primary(code, len(code) - 2)
         self.assertEquals('"b" "c"', result)
 
     def test_is_a_function_being_called_with_parens_on_next_line(self):
