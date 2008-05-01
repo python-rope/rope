@@ -205,7 +205,8 @@ class _FunctionParser(object):
         args, keywords = self.word_finder.get_parameters(self.first_parens,
                                                          self.last_parens)
         if self.is_called_as_a_method():
-            args.append(self.call[:self.call.rindex('.', 0, self.first_parens)].strip())
+            instance = self.call[:self.call.rindex('.', 0, self.first_parens)]
+            args.insert(0, instance.strip())
         return args, keywords
 
     def get_instance(self):

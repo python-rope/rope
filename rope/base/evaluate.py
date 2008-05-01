@@ -59,7 +59,7 @@ class ScopeNameFinder(object):
         self.source_code = pymodule.source_code
         self.module_scope = pymodule.get_scope()
         self.lines = pymodule.lines
-        self.word_finder = worder.Worder(self.source_code)
+        self.word_finder = worder.Worder(self.source_code, True)
 
     def _is_defined_in_class_body(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \

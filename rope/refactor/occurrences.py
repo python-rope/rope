@@ -22,13 +22,14 @@ class Finder(object):
     def __init__(self, pycore, name, filters=[lambda o: True], docs=False):
         self.pycore = pycore
         self.name = name
+        self.docs = docs
         self.filters = filters
         self._textual_finder = _TextualFinder(name, docs=docs)
 
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
         tools = _OccurrenceToolsCreator(self.pycore, resource=resource,
-                                        pymodule=pymodule)
+                                        pymodule=pymodule, docs=self.docs)
         for offset in self._textual_finder.find_offsets(tools.source_code):
             occurrence = Occurrence(tools, offset)
             for filter in self.filters:
@@ -287,10 +288,11 @@ class _TextualFinder(object):
 
 class _OccurrenceToolsCreator(object):
 
-    def __init__(self, pycore, resource=None, pymodule=None):
+    def __init__(self, pycore, resource=None, pymodule=None, docs=False):
         self.pycore = pycore
         self.resource = resource
         self.pymodule = pymodule
+        self.docs = docs
 
     @property
     @utils.cacheit
@@ -310,4 +312,4 @@ class _OccurrenceToolsCreator(object):
     @property
     @utils.cacheit
     def word_finder(self):
-        return worder.Worder(self.source_code)
+        return worder.Worder(self.source_code, self.docs)

@@ -9,21 +9,27 @@ class Worder(object):
     character not the index of the character after it.
     """
 
-    def __init__(self, code):
+    def __init__(self, code, handle_ignores=False):
         import rope.base.simplify
         simplified = rope.base.simplify.real_code(code)
-        self._init_ignores(rope.base.simplify.ignored_regions(code))
-        self.dumb_finder = _DumbWorder(code, code)
         self.code_finder = _DumbWorder(simplified, code)
+        self.handle_ignores = handle_ignores
+        self.code = code
 
-    def _init_ignores(self, ignores):
+    def _init_ignores(self):
+        import rope.base.simplify
+        ignores = rope.base.simplify.ignored_regions(self.code)
+        self.dumb_finder = _DumbWorder(self.code, self.code)
         self.starts = [ignored[0] for ignored in ignores]
         self.ends = [ignored[1] for ignored in ignores]
 
     def _context_call(self, name, offset):
-        start = bisect.bisect(self.starts, offset)
-        if start > 0 and offset < self.ends[start - 1]:
-            return getattr(self.dumb_finder, name)(offset)
+        if self.handle_ignores:
+            if not hasattr(self, 'starts'):
+                self._init_ignores()
+            start = bisect.bisect(self.starts, offset)
+            if start > 0 and offset < self.ends[start - 1]:
+                return getattr(self.dumb_finder, name)(offset)
         return getattr(self.code_finder, name)(offset)
 
     def get_primary_at(self, offset):
@@ -91,6 +97,12 @@ class Worder(object):
 
     def get_from_module(self, offset):
         return self.code_finder.get_from_module(offset)
+
+    def is_assigned_in_a_tuple_assignment(self, offset):
+        return self.code_finder.is_assigned_in_a_tuple_assignment(offset)
+
+    def get_assignment_type(self, offset):
+        return self.code_finder.get_assignment_type(offset)
 
 
 class _DumbWorder(object):
@@ -506,3 +518,26 @@ class _DumbWorder(object):
         args.reverse()
         keywords.reverse()
         return args, keywords
+
+    def is_assigned_in_a_tuple_assignment(self, offset):
+        start = self._get_line_start(offset)
+        end = self._get_line_end(offset)
+        primary_start = self._find_primary_start(offset)
+        primary_end = self._find_word_end(offset)
+
+        prev_char_offset = self._find_last_non_space_char(primary_start - 1)
+        next_char_offset = self._find_first_non_space_char(primary_end + 1)
+        next_char = prev_char = ''
+        if prev_char_offset >= start:
+            prev_char = self.code[prev_char_offset]
+        if next_char_offset < end:
+            next_char = self.code[next_char_offset]
+        try:
+            equals_offset = self.code.index('=', start, end)
+        except ValueError:
+            return False
+        if prev_char != ',' and next_char not in ',)':
+            return False
+        parens_start = self.find_parens_start_from_inside(offset, start)
+        return offset < equals_offset and \
+               (parens_start <= 0 or self.code[start:parens_start].strip() == '')

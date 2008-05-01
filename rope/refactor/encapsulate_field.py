@@ -1,4 +1,4 @@
-from rope.base import pynames, taskhandle, codeanalyze, evaluate, exceptions, worder
+from rope.base import pynames, taskhandle, codeanalyze, evaluate, exceptions, worder, utils
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 
@@ -126,8 +126,6 @@ class _FindChangesForModule(object):
         self.setter = finder.setter
         self.resource = resource
         self.pymodule = pymodule
-        self._source = None
-        self._lines = None
         self.last_modified = 0
         self.last_set = None
         self.set_index = None
@@ -136,7 +134,6 @@ class _FindChangesForModule(object):
 
     def get_changed_module(self):
         result = []
-        word_finder = worder.Worder(self.source)
         for occurrence in self.finder.find_occurrences(self.resource,
                                                        self.pymodule):
             start, end = occurrence.get_word_range()
@@ -148,7 +145,7 @@ class _FindChangesForModule(object):
                 raise exceptions.RefactoringError(
                     'Cannot handle tuple assignments in encapsulate field.')
             if occurrence.is_written():
-                assignment_type = word_finder.get_assignment_type(start)
+                assignment_type = self.worder.get_assignment_type(start)
                 if assignment_type == '=':
                     result.append(self.setter + '(')
                 else:
@@ -182,48 +179,24 @@ class _FindChangesForModule(object):
 
     def _is_assigned_in_a_tuple_assignment(self, occurance):
         offset = occurance.get_word_range()[0]
-        lineno = self.lines.get_line_number(offset)
-        start_line, end_line = self.pymodule.logical_lines.\
-                               logical_line_in(lineno)
-        start_offset = self.lines.get_line_start(start_line)
+        return self.worder.is_assigned_in_a_tuple_assignment(offset)
 
-        line = self.source[start_offset:self.lines.get_line_end(end_line)]
-        word_finder = worder.Worder(line)
+    @property
+    @utils.cacheit
+    def source(self):
+        if self.resource is not None:
+            return self.resource.read()
+        else:
+            return self.pymodule.source_code
 
-        rel_word_start = offset - start_offset
-        rel_start = occurance.get_primary_range()[0] - start_offset
-        rel_end = occurance.get_primary_range()[1] - start_offset
-        prev_char_offset = word_finder._find_last_non_space_char(rel_start - 1)
-        next_char_offset = word_finder._find_first_non_space_char(rel_end)
-        next_char = prev_char = ''
-        if prev_char_offset >= 0:
-            prev_char = line[prev_char_offset]
-        if next_char_offset < len(line):
-            next_char = line[next_char_offset]
-        try:
-            equals_offset = line.index('=')
-        except ValueError:
-            return False
-        if prev_char != ',' and next_char not in ',)':
-            return False
-        parens_start = word_finder.find_parens_start_from_inside(rel_word_start)
-        return rel_word_start < equals_offset and \
-               (parens_start <= 0 or line[:parens_start].strip() == '')
+    @property
+    @utils.cacheit
+    def lines(self):
+        if self.pymodule is None:
+            self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+        return self.pymodule.lines
 
-    def _get_source(self):
-        if self._source is None:
-            if self.resource is not None:
-                self._source = self.resource.read()
-            else:
-                self._source = self.pymodule.source_code
-        return self._source
-
-    def _get_lines(self):
-        if self._lines is None:
-            if self.pymodule is None:
-                self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-            self._lines = self.pymodule.lines
-        return self._lines
-
-    source = property(_get_source)
-    lines = property(_get_lines)
+    @property
+    @utils.cacheit
+    def worder(self):
+        return worder.Worder(self.source)
