@@ -1,9 +1,8 @@
 import unittest
 
 import rope.base.evaluate
-from rope.base import exceptions, ast, worder
-from rope.base.codeanalyze import (TokenizerLogicalLineFinder, SourceLinesAdapter,
-                                   LogicalLineFinder, get_block_start, CustomLogicalLineFinder)
+from rope.base import exceptions, ast, worder, codeanalyze
+from rope.base.codeanalyze import SourceLinesAdapter, LogicalLineFinder, get_block_start
 from ropetest import testutils
 
 
@@ -572,12 +571,16 @@ class LogicalLineFinderTest(unittest.TestCase):
 class TokenizerLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
-        return TokenizerLogicalLineFinder(SourceLinesAdapter(code))
+        lines = SourceLinesAdapter(code)
+        return codeanalyze.CachingLogicalLineFinder(
+            lines, codeanalyze.tokenizer_generator)
 
 class CustomLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
-        return CustomLogicalLineFinder(SourceLinesAdapter(code))
+        lines = SourceLinesAdapter(code)
+        return codeanalyze.CachingLogicalLineFinder(
+            lines, codeanalyze.custom_generator)
 
 
 def suite():

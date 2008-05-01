@@ -44,43 +44,43 @@ class Lines(object):
 
 
 class SourceLinesAdapter(Lines):
-    """Adapts source_code to Lines interface
+    """Adapts source to Lines interface
 
     Note: The creation of this class is expensive.
     """
 
     def __init__(self, source_code):
-        self.source_code = source_code
-        self.line_starts = None
+        self.code = source_code
+        self.starts = None
         self._initialize_line_starts()
 
     def _initialize_line_starts(self):
-        self.line_starts = []
-        self.line_starts.append(0)
+        self.starts = []
+        self.starts.append(0)
         try:
             i = -1
             while True:
-                i = self.source_code.index('\n', i + 1)
-                self.line_starts.append(i + 1)
+                i = self.code.index('\n', i + 1)
+                self.starts.append(i + 1)
         except ValueError:
             pass
-        self.line_starts.append(len(self.source_code) + 1)
+        self.starts.append(len(self.code) + 1)
 
-    def get_line(self, line_number):
-        return self.source_code[self.line_starts[line_number - 1]:
-                                self.line_starts[line_number] - 1]
+    def get_line(self, lineno):
+        return self.code[self.starts[lineno - 1]:
+                         self.starts[lineno] - 1]
 
     def length(self):
-        return len(self.line_starts) - 1
+        return len(self.starts) - 1
 
     def get_line_number(self, offset):
-        return bisect.bisect(self.line_starts, offset)
+        return bisect.bisect(self.starts, offset)
 
-    def get_line_start(self, line_number):
-        return self.line_starts[line_number - 1]
+    def get_line_start(self, lineno):
+        return self.starts[lineno - 1]
 
-    def get_line_end(self, line_number):
-        return self.line_starts[line_number] - 1
+    def get_line_end(self, lineno):
+        return self.starts[lineno] - 1
 
 
 class ArrayLinesAdapter(Lines):
@@ -111,80 +111,24 @@ class LinesToReadline(object):
         return self.readline()
 
 
-class _CachingLogicalLineFinder(object):
-
-    def __init__(self, lines):
-        self.lines = lines
-
-    _starts = None
-    @property
-    def starts(self):
-        if self._starts is None:
-            self._init_logicals()
-        return self._starts
-
-    _ends = None
-    @property
-    def ends(self):
-        if self._ends is None:
-            self._init_logicals()
-        return self._ends
-
-    def _init_logicals(self):
-        """Should initialize _starts and _ends attributes"""
-
-    def logical_line_in(self, line_number):
-        start = line_number
-        while start > 0 and not self.starts[start]:
-            start -= 1
-        if start == 0:
-            try:
-                start = self.starts.index(True, line_number)
-            except ValueError:
-                return (line_number, line_number)
-        return (start, self.ends.index(True, start))
-
-    def generate_starts(self, start_line=1, end_line=None):
-        if end_line is None:
-            end_line = self.lines.length()
-        for index in range(start_line, end_line):
-            if self.starts[index]:
-                yield index
-
-
-class TokenizerLogicalLineFinder(_CachingLogicalLineFinder):
-
-    def __init__(self, lines):
-        super(TokenizerLogicalLineFinder, self).__init__(lines)
-        self.logical_lines = LogicalLineFinder(lines)
-
-    def _init_logicals(self):
-        self._starts = [False] * (self.lines.length() + 1)
-        self._ends = [False] * (self.lines.length() + 1)
-        for start, end in self.logical_lines.generate_regions():
-            self._starts[start] = True
-            self._ends[end] = True
-
-
-class CustomLogicalLineFinder(_CachingLogicalLineFinder):
+class CustomLogicalLineFinder(object):
     """A method object for finding the range of a statement"""
 
     def __init__(self, lines):
-        super(CustomLogicalLineFinder, self).__init__(lines)
+        self.lines = lines
         self.in_string = ''
         self.open_count = 0
         self.continuation = False
 
-    def _init_logicals(self):
+    def __call__(self):
         size = self.lines.length()
-        self._starts = [False] * (size + 1)
-        self._ends = [False] * (size + 1)
+        result = []
         i = 1
         while i <= size:
             while i <= size and not self.lines.get_line(i).strip():
                 i += 1
             if i <= size:
-                self._starts[i] = True
+                start = i
                 while True:
                     line = self.lines.get_line(i)
                     self._analyze_line(line)
@@ -192,8 +136,9 @@ class CustomLogicalLineFinder(_CachingLogicalLineFinder):
                             self.in_string) or i == size:
                         break
                     i += 1
-                self._ends[i] = True
+                result.append((start, i))
                 i += 1
+        return result
 
     _main_chars = re.compile(r'[\'|"|#|\\|\[|\]|\{|\}|\(|\)]')
     def _analyze_line(self, line):
@@ -222,6 +167,9 @@ class CustomLogicalLineFinder(_CachingLogicalLineFinder):
             self.continuation = True
         else:
             self.continuation = False
+
+def custom_generator(lines):
+    return CustomLogicalLineFinder(lines)()
 
 
 class LogicalLineFinder(object):
@@ -303,6 +251,58 @@ class LogicalLineFinder(object):
                 return current
             current += 1
         return current
+
+
+def tokenizer_generator(lines):
+    return LogicalLineFinder(lines).generate_regions()
+
+
+class CachingLogicalLineFinder(object):
+
+    def __init__(self, lines, generate=custom_generator):
+        self.lines = lines
+        self._generate = generate
+
+    _starts = None
+    @property
+    def starts(self):
+        if self._starts is None:
+            self._init_logicals()
+        return self._starts
+
+    _ends = None
+    @property
+    def ends(self):
+        if self._ends is None:
+            self._init_logicals()
+        return self._ends
+
+    def _init_logicals(self):
+        """Should initialize _starts and _ends attributes"""
+        size = self.lines.length() + 1
+        self._starts = [None] * size
+        self._ends = [None] * size
+        for start, end in self._generate(self.lines):
+            self._starts[start] = True
+            self._ends[end] = True
+
+    def logical_line_in(self, line_number):
+        start = line_number
+        while start > 0 and not self.starts[start]:
+            start -= 1
+        if start == 0:
+            try:
+                start = self.starts.index(True, line_number)
+            except ValueError:
+                return (line_number, line_number)
+        return (start, self.ends.index(True, start))
+
+    def generate_starts(self, start_line=1, end_line=None):
+        if end_line is None:
+            end_line = self.lines.length()
+        for index in range(start_line, end_line):
+            if self.starts[index]:
+                yield index
 
 
 def get_block_start(lines, lineno, maximum_indents=80):
