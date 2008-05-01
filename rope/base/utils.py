@@ -35,3 +35,28 @@ def ignore_exception(exception_class):
                 pass
         return newfunc
     return _decorator
+
+def cached(count):
+    """A caching decorator based on parameter objects"""
+    def decorator(func):
+        return _Cached(func, count)
+    return decorator
+
+
+class _Cached(object):
+
+    def __init__(self, func, count):
+        self.func = func
+        self.cache = []
+        self.count = count
+
+    def __call__(self, *args, **kwds):
+        key = (args, kwds)
+        for cached_key, cached_result in self.cache:
+            if cached_key == key:
+                return cached_result
+        result = self.func(*args, **kwds)
+        self.cache.append((key, result))
+        if len(self.cache) > self.count:
+            del self.cache[0]
+        return result
