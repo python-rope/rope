@@ -9,6 +9,18 @@ from rope.base import codeanalyze, utils
 
 @utils.cached(7)
 def real_code(source):
+    """Simplify `source` for analysis
+
+    It replaces:
+
+    * comments with spaces
+    * strs with a new str filled with spaces
+    * implicit and explicit continuations with spaces
+    * tabs and semicolons with spaces
+
+    The resulting code is a lot easier to analyze if we are interested
+    only in offsets.
+    """
     collector = codeanalyze.ChangeCollector(source)
     for start, end in ignored_regions(source):
         if source[start] == '#':
@@ -34,6 +46,7 @@ def real_code(source):
 
 @utils.cached(7)
 def ignored_regions(source):
+    """Return ignored regions like strings and comments in `source` """
     return [(match.start(), match.end()) for match in _str.finditer(source)]
 
 
