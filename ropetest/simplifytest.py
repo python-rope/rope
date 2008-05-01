@@ -54,6 +54,10 @@ class SimplifyTest(unittest.TestCase):
         code = '1\t+\t2\n'
         self.assertEquals('1 + 2\n', simplify.real_code(code))
 
+    def test_replacing_semicolons(self):
+        code = 'a = 1;b = 2\n'
+        self.assertEquals('a = 1\nb = 2\n', simplify.real_code(code))
+
 
 if __name__ == '__main__':
     unittest.main()

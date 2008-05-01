@@ -26,7 +26,7 @@ def real_code(source):
         if c == '\n' and parens > 0:
             collector.add_change(i, i + 1, ' ')
     source = collector.get_changed() or source
-    return source.replace('\\\n', '  ').replace('\t', ' ')
+    return source.replace('\\\n', '  ').replace('\t', ' ').replace(';', '\n')
 
 
 def ignored_regions(source):
