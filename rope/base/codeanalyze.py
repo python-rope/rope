@@ -111,7 +111,7 @@ class LinesToReadline(object):
         return self.readline()
 
 
-class CustomLogicalLineFinder(object):
+class _CustomGenerator(object):
     """A method object for finding the range of a statement"""
 
     def __init__(self, lines):
@@ -169,7 +169,7 @@ class CustomLogicalLineFinder(object):
             self.continuation = False
 
 def custom_generator(lines):
-    return CustomLogicalLineFinder(lines)()
+    return _CustomGenerator(lines)()
 
 
 class LogicalLineFinder(object):
