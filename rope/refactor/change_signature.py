@@ -1,7 +1,7 @@
 import copy
 
 import rope.base.exceptions
-from rope.base import pyobjects, taskhandle, evaluate, worder, codeanalyze
+from rope.base import pyobjects, taskhandle, evaluate, worder, codeanalyze, utils
 from rope.base.change import ChangeContents, ChangeSet
 from rope.refactor import occurrences, sourceutils, functionutils
 
@@ -255,9 +255,6 @@ class _ChangeCallsInModule(object):
         self.occurrence_finder = occurrence_finder
         self.resource = resource
         self.call_changer = call_changer
-        self._pymodule = None
-        self._lines = None
-        self._source = None
 
     def get_changed_module(self):
         word_finder = worder.Worder(self.source)
@@ -279,25 +276,23 @@ class _ChangeCallsInModule(object):
         return change_collector.get_changed()
 
     @property
+    @utils.cacheit
     def pymodule(self):
-        if self._pymodule is None:
-            self._pymodule = self.pycore.resource_to_pyobject(self.resource)
-        return self._pymodule
+        return self.pycore.resource_to_pyobject(self.resource)
 
     @property
+    @utils.cacheit
     def source(self):
-        if self._source is None:
-            if self.resource is not None:
-                self._source = self.resource.read()
-            else:
-                self._source = self.pymodule.source_code
-        return self._source
+        if self.resource is not None:
+            return self.resource.read()
+        else:
+            return self.pymodule.source_code
 
     @property
+    @utils.cacheit
     def lines(self):
-        if self._lines is None:
-            self._lines = self.pymodule.lines
-        return self._lines
+        return self.pymodule.lines
+
 
 class _MultipleFinders(object):
 
