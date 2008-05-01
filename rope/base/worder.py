@@ -471,13 +471,13 @@ class _RealFinder(object):
             current = self._find_primary_start(current)
             while current != first and self.code[current] not in '=,':
                 current = self._find_last_non_space_char(current - 1)
-            primary = self.code[current + 1:primary_start + 1].strip()
+            primary = self.raw[current + 1:primary_start + 1].strip()
             if self.code[current] == '=':
                 primary_start = current - 1
                 current -= 1
                 while current != first and self.code[current] not in ',':
                     current = self._find_last_non_space_char(current - 1)
-                param_name = self.code[current + 1:primary_start + 1].strip()
+                param_name = self.raw[current + 1:primary_start + 1].strip()
                 keywords.append((param_name, primary))
             else:
                 args.append(primary)
