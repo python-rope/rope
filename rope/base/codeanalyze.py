@@ -1,3 +1,4 @@
+import bisect
 import re
 import token
 import tokenize
@@ -73,18 +74,7 @@ class SourceLinesAdapter(Lines):
         return len(self.line_starts) - 1
 
     def get_line_number(self, offset):
-        down = 0
-        up = len(self.line_starts)
-        current = (down + up) // 2
-        while down <= current < up:
-            if self.line_starts[current] <= offset < self.line_starts[current + 1]:
-                return current + 1
-            if offset < self.line_starts[current]:
-                up = current - 1
-            else:
-                down = current + 1
-            current = (down + up) // 2
-        return current + 1
+        return bisect.bisect(self.line_starts, offset)
 
     def get_line_start(self, line_number):
         return self.line_starts[line_number - 1]
