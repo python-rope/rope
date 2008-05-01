@@ -1,5 +1,5 @@
 import rope.base.change
-from rope.base import exceptions, evaluate, worder
+from rope.base import exceptions, evaluate, worder, codeanalyze
 from rope.refactor import functionutils, sourceutils, occurrences
 
 
@@ -61,7 +61,7 @@ class IntroduceParameter(object):
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)
         definition_info.args_with_defaults.append((new_parameter,
                                                    self._get_primary()))
-        collector = sourceutils.ChangeCollector(self.resource.read())
+        collector = codeanalyze.ChangeCollector(self.resource.read())
         header_start, header_end = self._get_header_offsets()
         body_start, body_end = sourceutils.get_body_region(self.pyfunction)
         collector.add_change(header_start, header_end,

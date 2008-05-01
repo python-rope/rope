@@ -1,6 +1,6 @@
 import re
 
-from rope.base import ast
+from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.refactor import (sourceutils, similarfinder,
@@ -212,7 +212,7 @@ class _ExtractPerformer(object):
 
     def extract(self):
         extract_info = self._collect_info()
-        content = sourceutils.ChangeCollector(self.info.source)
+        content = codeanalyze.ChangeCollector(self.info.source)
         definition = extract_info.definition
         lineno, indents = extract_info.definition_location
         offset = self.info.lines.get_line_start(lineno)

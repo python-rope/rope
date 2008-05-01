@@ -280,7 +280,7 @@ class CodeTemplate(object):
         return self.names.keys()
 
     def substitute(self, mapping):
-        collector = sourceutils.ChangeCollector(self.template)
+        collector = codeanalyze.ChangeCollector(self.template)
         for name, occurrences in self.names.items():
             for region in occurrences:
                 collector.add_change(region[0], region[1], mapping[name])
@@ -337,7 +337,7 @@ class _RopeVariable(object):
 
 def make_pattern(code, variables):
     variables = set(variables)
-    collector = sourceutils.ChangeCollector(code)
+    collector = codeanalyze.ChangeCollector(code)
     def does_match(node, name):
         return isinstance(node, ast.Name) and node.id == name
     finder = RawSimilarFinder(code, does_match=does_match)

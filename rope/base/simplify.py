@@ -8,8 +8,7 @@ from rope.base import codeanalyze
 
 
 def real_code(source):
-    import rope.refactor.sourceutils
-    collector = rope.refactor.sourceutils.ChangeCollector(source)
+    collector = codeanalyze.ChangeCollector(source)
     for start, end in ignored_regions(source):
         if source[start] == '#':
             replacement = ' ' * (end - start)
@@ -17,7 +16,7 @@ def real_code(source):
             replacement = '"%s"' % (' ' * (end - start - 2))
         collector.add_change(start, end, replacement)
     source = collector.get_changed() or source
-    collector = rope.refactor.sourceutils.ChangeCollector(source)
+    collector = codeanalyze.ChangeCollector(source)
     parens = 0
     for i, c in enumerate(source):
         if c in '({[':

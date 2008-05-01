@@ -242,7 +242,7 @@ class _ChangeComputer(object):
                 return None
             return result
         else:
-            collector = sourceutils.ChangeCollector(self.source)
+            collector = codeanalyze.ChangeCollector(self.source)
             last_end = -1
             for match in self.matches:
                 start, end = match.get_region()
@@ -275,7 +275,7 @@ class _ChangeComputer(object):
             return self._get_matched_text(self.matched_asts[node])
         start, end = patchedast.node_region(node)
         main_text = self.source[start:end]
-        collector = sourceutils.ChangeCollector(main_text)
+        collector = codeanalyze.ChangeCollector(main_text)
         for node in self._get_nearest_roots(node):
             sub_start, sub_end = patchedast.node_region(node)
             collector.add_change(sub_start - start, sub_end - start,

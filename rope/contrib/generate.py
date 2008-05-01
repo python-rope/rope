@@ -1,5 +1,5 @@
 import rope.base.evaluate
-from rope.base import change, pyobjects, exceptions, pynames, worder
+from rope.base import change, pyobjects, exceptions, pynames, worder, codeanalyze
 from rope.refactor import sourceutils, importutils, functionutils, suites
 
 
@@ -68,7 +68,7 @@ class _Generate(object):
         resource = self.info.get_insertion_resource()
         start, end = self.info.get_insertion_offsets()
 
-        collector = sourceutils.ChangeCollector(resource.read())
+        collector = codeanalyze.ChangeCollector(resource.read())
         collector.add_change(start, end, definition)
         changes.add_change(change.ChangeContents(
                            resource, collector.get_changed()))

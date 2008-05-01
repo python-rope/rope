@@ -1,6 +1,6 @@
 import warnings
 
-from rope.base import exceptions, pyobjects, pynames, taskhandle, evaluate, worder
+from rope.base import exceptions, pyobjects, pynames, taskhandle, evaluate, worder, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences, sourceutils
 
@@ -200,7 +200,7 @@ def rename_in_module(occurrences_finder, new_name, resource=None, pymodule=None,
         source_code = resource.read()
     else:
         source_code = pymodule.source_code
-    change_collector = sourceutils.ChangeCollector(source_code)
+    change_collector = codeanalyze.ChangeCollector(source_code)
     for occurrence in occurrences_finder.find_occurrences(resource, pymodule):
         if replace_primary and occurrence.is_a_fixed_primary():
             continue

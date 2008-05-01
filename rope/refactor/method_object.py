@@ -1,6 +1,6 @@
 import warnings
 
-from rope.base import pyobjects, exceptions, change, evaluate
+from rope.base import pyobjects, exceptions, change, evaluate, codeanalyze
 from rope.refactor import sourceutils, occurrences, rename
 
 
@@ -32,7 +32,7 @@ class MethodObject(object):
                 'new_class_name parameter is deprecated; use classname',
                 DeprecationWarning, stacklevel=2)
             classname = new_class_name
-        collector = sourceutils.ChangeCollector(self.pymodule.source_code)
+        collector = codeanalyze.ChangeCollector(self.pymodule.source_code)
         start, end = sourceutils.get_body_region(self.pyfunction)
         indents = sourceutils.get_indents(
             self.pymodule.lines, self.pyfunction.get_scope().get_start()) + \

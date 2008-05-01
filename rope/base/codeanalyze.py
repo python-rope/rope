@@ -3,6 +3,36 @@ import token
 import tokenize
 
 
+class ChangeCollector(object):
+
+    def __init__(self, text):
+        self.text = text
+        self.changes = []
+
+    def add_change(self, start, end, new_text=None):
+        if new_text is None:
+            new_text = self.text[start:end]
+        self.changes.append((start, end, new_text))
+
+    def get_changed(self):
+        if not self.changes:
+            return None
+        def compare_changes(change1, change2):
+            return cmp(change1[:2], change2[:2])
+        self.changes.sort(compare_changes)
+        pieces = []
+        last_changed = 0
+        for change in self.changes:
+            start, end, text = change
+            pieces.append(self.text[last_changed:start] + text)
+            last_changed = end
+        if last_changed < len(self.text):
+            pieces.append(self.text[last_changed:])
+        result = ''.join(pieces)
+        if result != self.text:
+            return result
+
+
 class Lines(object):
 
     def get_line(self, line_number):

@@ -78,7 +78,7 @@ class MoveMethod(object):
             new_name = self.get_method_name()
         resource1, start1, end1, new_content1 = \
             self._get_changes_made_by_old_class(dest_attr, new_name)
-        collector1 = sourceutils.ChangeCollector(resource1.read())
+        collector1 = codeanalyze.ChangeCollector(resource1.read())
         collector1.add_change(start1, end1, new_content1)
 
         resource2, start2, end2, new_content2 = \
@@ -86,7 +86,7 @@ class MoveMethod(object):
         if resource1 == resource2:
             collector1.add_change(start2, end2, new_content2)
         else:
-            collector2 = sourceutils.ChangeCollector(resource2.read())
+            collector2 = codeanalyze.ChangeCollector(resource2.read())
             collector2.add_change(start2, end2, new_content2)
             result = collector2.get_changed()
             import_tools = importutils.ImportTools(self.pycore)
@@ -610,7 +610,7 @@ class ModuleSkipRenamer(object):
 
     def get_changed_module(self):
         source = self.resource.read()
-        change_collector = sourceutils.ChangeCollector(source)
+        change_collector = codeanalyze.ChangeCollector(source)
         if self.replacement is not None:
             change_collector.add_change(self.skip_start, self.skip_end,
                                         self.replacement)

@@ -10,6 +10,7 @@ from rope.refactor import occurrences, rename
 from rope.refactor.importutils import module_imports
 from rope.refactor.importutils.importinfo import \
      (NormalImport, FromImport, get_module_name)
+import rope.base.codeanalyze
 
 
 class ImportOrganizer(object):
@@ -209,7 +210,7 @@ class ImportTools(object):
             pymodule.get_scope(), name)
         occurrence_finder = occurrences.create_finder(
             self.pycore, old_name, old_pyname, imports=False)
-        changes = rope.refactor.sourceutils.ChangeCollector(pymodule.source_code)
+        changes = rope.base.codeanalyze.ChangeCollector(pymodule.source_code)
         for occurrence in occurrence_finder.find_occurrences(pymodule=pymodule):
             start, end = occurrence.get_primary_range()
             if till_dot:
