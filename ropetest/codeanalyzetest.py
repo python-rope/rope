@@ -316,6 +316,11 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
+    def test_is_on_function_keyword(self):
+        code = 'myfunc(va'
+        finder = worder.Worder(code)
+        self.assertTrue(finder.is_on_function_call_keyword(len(code) - 1))
+
 
 class ScopeNameFinderTest(unittest.TestCase):
 

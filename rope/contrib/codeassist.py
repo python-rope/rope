@@ -321,12 +321,10 @@ class _PythonCodeAssist(object):
         word_finder = worder.Worder(self.code, True)
         lines = SourceLinesAdapter(self.code)
         lineno = lines.get_line_number(offset)
-        stop_line = LogicalLineFinder(lines).logical_line_in(lineno)[0]
-        stop = lines.get_line_start(stop_line)
-        if word_finder.is_on_function_call_keyword(offset - 1, stop):
+        if word_finder.is_on_function_call_keyword(offset - 1):
             name_finder = rope.base.evaluate.ScopeNameFinder(pymodule)
             function_parens = word_finder.\
-                find_parens_start_from_inside(offset - 1, stop)
+                find_parens_start_from_inside(offset - 1)
             primary = word_finder.get_primary_at(function_parens - 1)
             try:
                 function_pyname = rope.base.evaluate.\

@@ -65,8 +65,8 @@ class Worder(object):
     def is_from_aliased(self, offset):
         return self.code_finder.is_from_aliased(offset)
 
-    def find_parens_start_from_inside(self, offset, stop=0):
-        return self.code_finder.find_parens_start_from_inside(offset, stop)
+    def find_parens_start_from_inside(self, offset):
+        return self.code_finder.find_parens_start_from_inside(offset)
 
     def is_a_name_after_from_import(self, offset):
         return self.code_finder.is_a_name_after_from_import(offset)
@@ -90,10 +90,10 @@ class Worder(object):
         return self.code_finder.get_word_parens_range(offset)
 
     def is_name_assigned_in_class_body(self, offset):
-        return self.code_finder._is_name_assigned_in_class_body(offset)
+        return self.code_finder.is_name_assigned_in_class_body(offset)
 
-    def is_on_function_call_keyword(self, offset, stop=0):
-        return self.code_finder.is_on_function_call_keyword(offset, stop)
+    def is_on_function_call_keyword(self, offset):
+        return self.code_finder.is_on_function_call_keyword(offset)
 
     def _find_parens_start(self, offset):
         return self.code_finder._find_parens_start(offset)
@@ -266,23 +266,14 @@ class _RealFinder(object):
         except ValueError:
             return len(self.code)
 
-    def _is_followed_by_equals(self, offset):
-        offset = self._find_first_non_space_char(offset)
-        if offset + 1 < len(self.code) and \
-           self.code[offset] == '=' and self.code[offset + 1] != '=':
-            return True
-        return False
-
-    def _is_name_assigned_in_class_body(self, offset):
+    def is_name_assigned_in_class_body(self, offset):
         word_start = self._find_word_start(offset - 1)
         word_end = self._find_word_end(offset) + 1
         if '.' in self.code[word_start:word_end]:
             return False
         line_start = self._get_line_start(word_start)
         line = self.code[line_start:word_start].strip()
-        if not line and self._is_followed_by_equals(word_end):
-            return True
-        return False
+        return not line and self.get_assignment_type(offset) == '='
 
     def is_a_class_or_function_name_in_header(self, offset):
         word_start = self._find_word_start(offset - 1)
@@ -336,9 +327,8 @@ class _RealFinder(object):
 
     def is_a_name_after_from_import(self, offset):
         try:
-            # XXX: what if the char after from or around import is not
-            # space?
-            last_from = self.code.rindex('from ', 0, offset)
+            line_start = self._get_line_start(offset)
+            last_from = self.code.rindex('from ', line_start, offset)
             from_import = self.code.index(' import ', last_from)
             from_names = from_import + 8
         except ValueError:
@@ -383,55 +373,48 @@ class _RealFinder(object):
         if word_end + 1 == len(self.code):
             return False
         next_char = self._find_first_non_space_char(word_end + 1)
-        if next_char + 2 >= len(self.code) or \
-           self.code[next_char] != '=' or \
-           self.code[next_char + 1] == '=':
+        equals = self.code[next_char:next_char + 2]
+        if equals == '==' or not equals.startswith('='):
             return False
         word_start = self._find_word_start(offset)
         prev_char = self._find_last_non_space_char(word_start - 1)
-        if prev_char - 1 < 0 or self.code[prev_char] not in ',(':
-            return False
-        return True
+        return prev_char - 1 >= 0 and self.code[prev_char] in ',('
 
-    def is_on_function_call_keyword(self, offset, stop_searching=0):
+    def is_on_function_call_keyword(self, offset):
+        stop = self._get_line_start(offset)
         if self._is_id_char(offset):
             offset = self._find_word_start(offset) - 1
         offset = self._find_last_non_space_char(offset)
-        if offset <= stop_searching or \
-           self.code[offset] not in '(,':
+        if offset <= stop or self.code[offset] not in '(,':
             return False
-        parens_start = self.find_parens_start_from_inside(offset, stop_searching)
-        if stop_searching < parens_start:
-            return True
-        return False
+        parens_start = self.find_parens_start_from_inside(offset)
+        return stop < parens_start
 
-    def find_parens_start_from_inside(self, offset, stop_searching=0):
+    def find_parens_start_from_inside(self, offset):
+        stop = self._get_line_start(offset)
         opens = 1
-        while offset > stop_searching:
+        while offset > stop:
             if self.code[offset] == '(':
                 break
             if self.code[offset] != ',':
                 offset = self._find_primary_start(offset)
             offset -= 1
-        return max(stop_searching, offset)
+        return max(stop, offset)
 
     def is_assigned_here(self, offset):
-        operation = self.get_assignment_type(offset)
-        operations = ('=', '-=', '+=', '*=', '/=', '%=', '**=',
-                      '>>=', '<<=', '&=', '^=', '|=')
-        return operation in operations
+        return self.get_assignment_type(offset) is not None
 
     def get_assignment_type(self, offset):
+        # XXX: does not handle tuple assignments
         word_end = self._find_word_end(offset)
         next_char = self._find_first_non_space_char(word_end + 1)
-        current_char = next_char
-        while current_char + 1 < len(self.code) and \
-              (self.code[current_char] != '=' or \
-               self.code[current_char + 1] == '=') and \
-              current_char < next_char + 3:
-            current_char += 1
-        operation = self.code[next_char:current_char + 1]
-        return operation
+        single = self.code[next_char:next_char + 1]
+        double = self.code[next_char:next_char + 2]
+        triple = self.code[next_char:next_char + 3]
+        if double != '==':
+            for op in [single, double, triple]:
+                if op.endswith('='):
+                    return op
 
     def get_primary_range(self, offset):
         start = self._find_primary_start(offset)
@@ -503,8 +486,9 @@ class _RealFinder(object):
             equals_offset = self.code.index('=', start, end)
         except ValueError:
             return False
-        if prev_char != ',' and next_char not in ',)':
+        if prev_char not in '(,' and next_char not in ',)':
             return False
-        parens_start = self.find_parens_start_from_inside(offset, start)
+        parens_start = self.find_parens_start_from_inside(offset)
+        # XXX: only handling (x, y) = value
         return offset < equals_offset and \
-               (parens_start <= 0 or self.code[start:parens_start].strip() == '')
+               self.code[start:parens_start].strip() == ''
