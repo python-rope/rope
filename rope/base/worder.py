@@ -155,9 +155,8 @@ class _RealFinder(object):
 
     def _find_string_start(self, offset):
         kind = self.code[offset]
-        offset -= 1
         try:
-            return self.code.rindex(kind, 0, offset)
+            return self.code.rindex(kind, 0, offset - 1)
         except ValueError:
             return 0
 
