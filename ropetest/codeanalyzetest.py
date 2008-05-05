@@ -248,10 +248,9 @@ class WordRangeFinderTest(unittest.TestCase):
         result = self._find_primary(code, len(code) - 1)
         self.assertEquals('"""string"""', result)
 
-    # XXX: handling triple quotes spanning multiple lines
-    def xxx_test_triple_quotes_spanning_multiple_lines(self):
+    def test_triple_quotes_spanning_multiple_lines(self):
         code = 's = """\\\nl1\nl2\n """\n'
-        result = self._find_primary(code, len(code) - 1)
+        result = self._find_primary(code, len(code) - 2)
         self.assertEquals('"""\\\nl1\nl2\n """', result)
 
     def test_get_word_parens_range_and_string_literals(self):
@@ -267,7 +266,7 @@ class WordRangeFinderTest(unittest.TestCase):
 
     # XXX: is_assigned_here should work for tuple assignments
     def xxx_test_is_assigned_here_for_tuple_assignment(self):
-        code = 'a, b == (1, 2)\n'
+        code = 'a, b = (1, 2)\n'
         word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_assigned_here(0))
 
