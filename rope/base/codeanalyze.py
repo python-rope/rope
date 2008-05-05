@@ -58,10 +58,10 @@ class SourceLinesAdapter(Lines):
         self.starts = []
         self.starts.append(0)
         try:
-            i = -1
+            i = 0
             while True:
-                i = self.code.index('\n', i + 1)
-                self.starts.append(i + 1)
+                i = self.code.index('\n', i) + 1
+                self.starts.append(i)
         except ValueError:
             pass
         self.starts.append(len(self.code) + 1)
