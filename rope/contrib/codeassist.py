@@ -469,18 +469,23 @@ class _Commenter(object):
 
 
 def _find_pyname_at(project, source_code, offset, resource, maxfixes):
-    word_finder = worder.Worder(source_code, True)
-    lineno = source_code[:offset].count('\n')
-    expression = word_finder.get_primary_at(offset)
-    expression = expression.replace('\\\n', ' ').replace('\n', ' ')
     pymodule = _get_pymodule(project.pycore, source_code,
                              resource, maxfixes=maxfixes)
-    scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-    result = rope.base.evaluate.get_pyname_in_scope(scope, expression)
+    def old_pyname():
+        word_finder = worder.Worder(source_code, True)
+        expression = word_finder.get_primary_at(offset)
+        expression = expression.replace('\\\n', ' ').replace('\n', ' ')
+        lineno = source_code.count('\n', 0, offset)
+        scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+        return rope.base.evaluate.get_pyname_in_scope(scope, expression)
+    def new_pyname():
+        return rope.base.evaluate.get_pyname_at(pymodule, offset)
     new_code = pymodule.source_code
-    if result is None or new_code.startswith(source_code[:offset + 1]):
-        if offset < len(new_code):
-            return rope.base.evaluate.get_pyname_at(pymodule, offset)
+    if new_code.startswith(source_code[:offset + 1]):
+        return new_pyname()
+    result = old_pyname()
+    if result is None and offset < len(new_code):
+        return new_pyname()
     return result
 
 
