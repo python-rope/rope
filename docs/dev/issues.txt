@@ -6,6 +6,10 @@
 Unresolved Issues
 =================
 
+* purging out less accurate callinfos when better ones appear?
+* using properties without calling its get?
+* global variable inlines
+* transform and extension modules
 * merging extract and usefunction
 * caching instances of PyObject
 * moving a group of elements together
@@ -31,7 +35,6 @@ Unresolved Issues
 * unignored files that are not under version control
 * inline fails when there is an arg mismatch
 * evaluate function parameter defaults in staticoi?
-* recursive soi; go where the calls go with limited depth
 * saving diffs instead of old contents in ChangeContents?
 * handling tuple parameters
 * extract class
