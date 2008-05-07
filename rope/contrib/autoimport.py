@@ -12,14 +12,16 @@ class AutoImport(object):
 
     """
 
-    def __init__(self, project, observe=True):
+    def __init__(self, project, observe=True, underlined=False):
         """Construct an AutoImport object
 
         If `observe` is `True`, listen for project changes and update
         the cache.
 
+        If `underlined` is `True`, underlined names are cached, too.
         """
         self.project = project
+        self.underlined = underlined
         self.names = project.data_files.read_data('globalnames')
         if self.names is None:
             self.names = {}
@@ -35,7 +37,6 @@ class AutoImport(object):
 
         This function tries to find modules that have a global name
         that starts with `starting`.
-
         """
         # XXX: breaking if gave up! use generators
         result = []
@@ -79,7 +80,7 @@ class AutoImport(object):
                     pass
         return result
 
-    def generate_cache(self, resources=None, underlined=False,
+    def generate_cache(self, resources=None, underlined=None,
                        task_handle=taskhandle.NullTaskHandle()):
         """Generate global name cache for project files
 
@@ -97,7 +98,7 @@ class AutoImport(object):
             self.update_resource(file, underlined)
             job_set.finished_job()
 
-    def generate_modules_cache(self, modules, underlined=False,
+    def generate_modules_cache(self, modules, underlined=None,
                                task_handle=taskhandle.NullTaskHandle()):
         """Generate global name cache for modules listed in `modules`"""
         job_set = task_handle.create_jobset(
@@ -135,7 +136,7 @@ class AutoImport(object):
         lineno = code.count('\n', 0, offset) + 1
         return lineno
 
-    def update_resource(self, resource, underlined=False):
+    def update_resource(self, resource, underlined=None):
         """Update the cache for global names in `resource`"""
         try:
             pymodule = self.project.pycore.resource_to_pyobject(resource)
@@ -144,7 +145,7 @@ class AutoImport(object):
         except exceptions.ModuleSyntaxError:
             pass
 
-    def update_module(self, modname, underlined=False):
+    def update_module(self, modname, underlined=None):
         """Update the cache for global names in `modname` module
 
         `modname` is the name of a module.
@@ -159,6 +160,8 @@ class AutoImport(object):
         return importutils.get_module_name(self.project.pycore, resource)
 
     def _add_names(self, pymodule, modname, underlined):
+        if underlined is None:
+            underlined = self.underlined
         globals = []
         for name, pyname in pymodule._get_structural_attributes().items():
             if not underlined and name.startswith('_'):

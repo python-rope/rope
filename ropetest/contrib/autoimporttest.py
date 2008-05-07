@@ -97,6 +97,12 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_resource(self.mod1, underlined=True)
         self.assertEquals(['mod1'], self.importer.get_modules('_myvar'))
 
+    def test_caching_underlined_names_passing_to_the_constructor(self):
+        importer = autoimport.AutoImport(self.project, False, True)
+        self.mod1.write('_myvar = None\n')
+        importer.update_resource(self.mod1)
+        self.assertEquals(['mod1'], importer.get_modules('_myvar'))
+
     def test_name_locations(self):
         self.mod1.write('myvar = None\n')
         self.importer.update_resource(self.mod1)
