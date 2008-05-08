@@ -2,7 +2,7 @@
 
 
 def set_prefs(prefs):
-    """This function is called before the project is opened"""
+    """This function is called before opening the project"""
 
     # Specify which files and folders to ignore in the project.
     # Changes to ignored resources are not added to the history and
@@ -32,7 +32,7 @@ def set_prefs(prefs):
     # 'src/my_source_folder' for instance.
     #prefs.add('source_folders', 'src')
 
-    # You can extend python path:
+    # You can extend python path for looking up modules
     #prefs.add('python_path', '~/python/')
 
     # Should rope save object information or not.
@@ -83,5 +83,5 @@ def set_prefs(prefs):
 
 
 def project_opened(project):
-    """This function is called after the project is opened"""
+    """This function is called after opening the project"""
     # Do whatever you like here!
