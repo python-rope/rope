@@ -238,6 +238,13 @@ class ArgumentReorderer(_ArgumentChanger):
         For example changing ``f(a, b, c)`` to ``f(c, a, b)``
         requires passing ``[2, 0, 1]`` and *not* ``[1, 2, 0]``.
 
+        The `autodef` (automatic default) argument, forces rope to use
+        it as a default if a default is needed after the change.  That
+        happens when an argument without default is moved after
+        another that has a default value.  Note that `autodef` should
+        be a string or `None`; the latter disables adding automatic
+        default.
+
         """
         self.new_order = new_order
         self.autodef = autodef
