@@ -384,6 +384,20 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('import mod1\nmod1.a_func(1)\n', self.mod.read())
         self.assertEquals('def a_func():\n    pass\n', mod1.read())
 
+    def test_reordering_and_automatic_defaults(self):
+        code = 'def f(p1, p2=2):\n' \
+               '    pass\n' \
+               'f(1, 2)\n'
+        self.mod.write(code)
+        signature = ChangeSignature(self.project, self.mod,
+                                    code.index('f('))
+        reorder = change_signature.ArgumentReorderer([1, 0], autodef='1')
+        signature.get_changes([reorder]).do()
+        expected = 'def f(p2=2, p1=1):\n' \
+                   '    pass\n' \
+                   'f(2, 1)\n'
+        self.assertEquals(expected, self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()

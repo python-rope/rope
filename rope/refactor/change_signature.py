@@ -3,7 +3,7 @@ import copy
 import rope.base.exceptions
 from rope.base import pyobjects, taskhandle, evaluate, worder, codeanalyze, utils
 from rope.base.change import ChangeContents, ChangeSet
-from rope.refactor import occurrences, sourceutils, functionutils
+from rope.refactor import occurrences, functionutils
 
 
 class ChangeSignature(object):
@@ -228,7 +228,7 @@ class ArgumentDefaultInliner(_ArgumentChanger):
 
 class ArgumentReorderer(_ArgumentChanger):
 
-    def __init__(self, new_order):
+    def __init__(self, new_order, autodef=None):
         """Construct an `ArgumentReorderer`
 
         Note that the `new_order` is a list containing the new
@@ -240,11 +240,18 @@ class ArgumentReorderer(_ArgumentChanger):
 
         """
         self.new_order = new_order
+        self.autodef = autodef
 
     def change_definition_info(self, definition_info):
         new_args = list(definition_info.args_with_defaults)
         for new_index, index in enumerate(self.new_order):
             new_args[new_index] = definition_info.args_with_defaults[index]
+        seen_default = False
+        for index, (arg, default) in enumerate(list(new_args)):
+            if default is not None:
+                seen_default = True
+            if seen_default and default is None and self.autodef is not None:
+                new_args[index] = (arg, self.autodef)
         definition_info.args_with_defaults = new_args
 
 
