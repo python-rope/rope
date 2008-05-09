@@ -70,11 +70,6 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index('a_var') + 1)
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
-    def test_on_parameters(self):
-        code = 'def a_func(a_param):\n    pass\n'
-        refactored = self._inline(code, code.index('a_param') + 1)
-
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_tuple_assignments(self):
         code = 'a_var, another_var = (20, 30)\n'
         refactored = self._inline(code, code.index('a_var') + 1)
@@ -359,11 +354,12 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
     def test_function_parameters_and_returns_in_other_functions(self):
-        self.mod.write('def a_func(param1, param2):\n    return param1 + param2\n'
-                       'range(a_func(20, param2=abs(10)))\n')
+        code = 'def a_func(param1, param2):\n' \
+               '    return param1 + param2\n' \
+               'range(a_func(20, param2=abs(10)))\n'
+        self.mod.write(code)
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('range(20 + abs(10))\n',
-                          self.mod.read())
+        self.assertEquals('range(20 + abs(10))\n', self.mod.read())
 
     @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_function_references_other_than_call(self):
@@ -505,7 +501,6 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.rindex('f'))
         self.assertEquals('var = 1\n', refactored)
 
-    # XXX: funcutils fails on overlapping logical lines
     def test_inlining_one_line_functions_with_breaks(self):
         code = 'def f(\np): return p\nvar = f(1)\n'
         refactored = self._inline(code, code.rindex('f'))
@@ -524,6 +519,11 @@ class InlineTest(unittest.TestCase):
                       resources=[self.mod])
         self.assertEquals('', self.mod.read())
         self.assertEquals('import mod\nmod.a_func()\n', mod1.read())
+
+    def test_inlining_parameters(self):
+        code = 'def f(p=1):\n    pass\nf()\n'
+        result = self._inline(code, code.index('p'))
+        self.assertEquals('def f(p=1):\n    pass\nf(1)\n', result)
 
 
 def suite():

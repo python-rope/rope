@@ -4,7 +4,8 @@ import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import pynames, pyobjects, codeanalyze, taskhandle, evaluate, worder
 from rope.base.change import ChangeSet, ChangeContents
-from rope.refactor import occurrences, rename, sourceutils, importutils, move
+from rope.refactor import (occurrences, rename, sourceutils,
+                           importutils, move, change_signature)
 
 
 def create_inline(project, resource, offset):
@@ -22,7 +23,9 @@ def create_inline(project, resource, offset):
             'Inline refactoring should be performed on a method/local variable.')
     if isinstance(pyname, pynames.AssignedName):
         return InlineVariable(project, resource, offset)
-    elif isinstance(pyname.get_object(), pyobjects.PyFunction):
+    if isinstance(pyname, pynames.ParameterName):
+        return InlineParameter(project, resource, offset)
+    if isinstance(pyname.get_object(), pyobjects.PyFunction):
         return InlineMethod(project, resource, offset)
     else:
         raise rope.base.exceptions.RefactoringError(
@@ -41,18 +44,11 @@ class _Inliner(object):
         self.name = range_finder.get_word_at(offset)
         self.offset = offset
 
-    def get_changes(self, remove=True, only_current=False,
-                    task_handle=taskhandle.NullTaskHandle()):
-        """Get the changes this refactoring makes
-
-        If `remove` is `False` the definition will not be removed.  If
-        `only_current` is `True`, the the current occurrence will be
-        inlined, only.
-
-        """
+    def get_changes(self, *args, **kwds):
+        pass
 
     def get_kind(self):
-        """Return either 'variable' or 'method'"""
+        """Return either 'variable', 'method' or 'parameter'"""
 
 
 class InlineMethod(_Inliner):
@@ -93,6 +89,12 @@ class InlineMethod(_Inliner):
 
     def get_changes(self, remove=True, only_current=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
+        """Get the changes this refactoring makes
+
+        If `remove` is `False` the definition will not be removed.  If
+        `only_current` is `True`, the the current occurrence will be
+        inlined, only.
+        """
         changes = ChangeSet('Inline method <%s>' % self.name)
         if resources is None:
             resources = self.pycore.get_python_files()
@@ -213,6 +215,31 @@ class InlineVariable(_Inliner):
 
     def get_kind(self):
         return 'variable'
+
+
+class InlineParameter(_Inliner):
+
+    def __init__(self, *args, **kwds):
+        super(InlineParameter, self).__init__(*args, **kwds)
+        pymodule, lineno = self.pyname.get_definition_location()
+        resource = pymodule.get_resource()
+        start = pymodule.logical_lines.logical_line_in(lineno)[0]
+        start_offset = pymodule.lines.get_line_start(start)
+        def_ = pymodule.source_code.index('def', start_offset)
+        offset = def_ + 4
+        while pymodule.source_code[offset].isspace():
+            offset += 1
+
+        index = self.pyname.index
+        self.changers = [change_signature.ArgumentDefaultInliner(index)]
+        self.signature = change_signature.ChangeSignature(
+            self.project, resource, offset)
+
+    def get_changes(self, **kwds):
+        return self.signature.get_changes(self.changers, **kwds)
+
+    def get_kind(self):
+        return 'parameter'
 
 
 def _join_lines(lines):
