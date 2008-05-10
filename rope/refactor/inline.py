@@ -11,16 +11,17 @@ from rope.refactor import (occurrences, rename, sourceutils,
 def create_inline(project, resource, offset):
     """Create a refactoring object for inlining
 
-    Based on `resource` and `offset` will return an `InlineMethod` or
-    an `InlineVariable` object.
+    Based on `resource` and `offset` it returns an instance of
+    `InlineMethod`, `InlineVariable` or `InlineParameter`.
 
     """
     pycore = project.pycore
     this_pymodule = pycore.resource_to_pyobject(resource)
     pyname = evaluate.get_pyname_at(this_pymodule, offset)
+    message = 'Inline refactoring should be performed on ' \
+              'a method, local variable or parameter.'
     if pyname is None:
-        raise rope.base.exceptions.RefactoringError(
-            'Inline refactoring should be performed on a method/local variable.')
+        raise rope.base.exceptions.RefactoringError(message)
     if isinstance(pyname, pynames.AssignedName):
         return InlineVariable(project, resource, offset)
     if isinstance(pyname, pynames.ParameterName):
@@ -28,8 +29,7 @@ def create_inline(project, resource, offset):
     if isinstance(pyname.get_object(), pyobjects.PyFunction):
         return InlineMethod(project, resource, offset)
     else:
-        raise rope.base.exceptions.RefactoringError(
-            'Inline refactoring should be performed on a method/local variable.')
+        raise rope.base.exceptions.RefactoringError(message)
 
 
 class _Inliner(object):
