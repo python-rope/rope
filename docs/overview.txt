@@ -443,6 +443,31 @@ inlining `say_hello` will result in::
   hello = 'Saying hello to %s from %s' % ('Rope', C.__name__)
 
 
+Inlining Parameters
+-------------------
+
+`rope.refactor.inline.create_inline()` creates an `InlineParameter`
+object when it is performed on a parameter.  It passes the default
+value of the parameter wherever its function is called without passing
+it.  For instance in::
+
+  def f(p1=1, p2=1):
+      pass
+
+  f(3)
+  f()
+  f(3, 4)
+
+after inlining p2 parameter will have::
+
+  def f(p1=1, p2=1):
+      pass
+
+  f(3, 2)
+  f(p2=2)
+  f(3, 4)
+
+
 Use Function Refactoring
 ------------------------
 
@@ -470,6 +495,28 @@ and mod2 will be::
 
   import mod1
   another_var = mod1.square(4)
+
+
+Automatic Default Insertion In Change Signature
+-----------------------------------------------
+
+The `rope.refactor.change_signature.ArgumentReorderer` signature
+changer takes a parameter called ``autodef``.  If not `None`, its
+value is used whenever rope needs to insert a default for a parameter
+(that happens when an argument without default is moved after another
+that has a default value).  For instance in::
+
+  def f(p1, p2=2):
+      pass
+
+if we reorder using::
+
+  changers = [ArgumentReorderer([1, 0], autodef='1')]
+
+will result in::
+
+  def f(p2=2, p1=1):
+      pass
 
 
 Sorting Imports
