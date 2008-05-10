@@ -432,22 +432,19 @@ class _RealFinder(object):
         return (start, end)
 
     def get_word_parens_range(self, offset):
-        if self.is_a_function_being_called(offset) or \
-           self.is_a_class_or_function_name_in_header(offset):
-            end = self._find_word_end(offset)
-            start_parens = self.code.index('(', end)
-            index = start_parens
-            open_count = 0
-            while index < len(self.code):
-                if self.code[index] == '(':
-                    open_count += 1
-                if self.code[index] == ')':
-                    open_count -= 1
-                if open_count == 0:
-                    return (start_parens, index + 1)
-                index += 1
-            return (start_parens, index)
-        return (None, None)
+        end = self._find_word_end(offset)
+        start_parens = self.code.index('(', end)
+        index = start_parens
+        open_count = 0
+        while index < len(self.code):
+            if self.code[index] == '(':
+                open_count += 1
+            if self.code[index] == ')':
+                open_count -= 1
+            if open_count == 0:
+                return (start_parens, index + 1)
+            index += 1
+        return (start_parens, index)
 
     def get_parameters(self, first, last):
         keywords = []
@@ -499,13 +496,8 @@ class _RealFinder(object):
 
     def get_function_and_args_in_header(self, offset):
         offset = self.find_function_offset(offset)
-        offset = self._get_line_end(offset)
-        colon = self.code.rindex(':', 0, offset)
-        rparens = self.code.rindex(')', 0, colon)
-        lparens = self._find_parens_start(rparens)
-        end = self._find_last_non_space_char(lparens - 1)
-        start = self._find_primary_start(end)
-        return self.raw[start:colon]
+        lparens, rparens = self.get_word_parens_range(offset)
+        return self.raw[offset:rparens + 1]
 
     def find_function_offset(self, offset):
         while True:
