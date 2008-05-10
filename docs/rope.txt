@@ -8,7 +8,7 @@ Features implemented so far:
   * Rename everything!
   * Extract method/local variable
   * Move class/function/module/package/method
-  * Inline method/local variable
+  * Inline method/local variable/parameter
   * Restructuring (like converting ``${a}.f(${b})`` to
     ``${b}.g(${a})`` where ``a: type=mymod.A``)
   * Introduce factory
