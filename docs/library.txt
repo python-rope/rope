@@ -426,7 +426,7 @@ see pydocs in their modules and the unit-tests in the
   Extract methods/variables.
 
 * `rope.refactor.inline`:
-  Inline occurrences of a method/variable.
+  Inline occurrences of a method/variable/parameter.
 
 * `rope.refactor.usefunction`:
   Try to use a function wherever possible.
@@ -658,7 +658,15 @@ will not report `myvariable`, if `later_locals` is False.
 
 See pydocs and source code for more information (other functions in
 this module might be interesting, too; like `get_doc`,
-`get_definition_location` and `find_occurrences`).
+`get_definition_location`).
+
+
+`rope.contrib.findit`
+---------------------
+
+`findit` module provides `find_occurrences()` for finding occurrences
+of a name.  Also `find_implementations()` function finds the places in
+which a method is overridden.
 
 
 `rope.contrib.autoimport`
