@@ -221,6 +221,13 @@ class InlineParameter(_Inliner):
 
     def __init__(self, *args, **kwds):
         super(InlineParameter, self).__init__(*args, **kwds)
+        resource, offset = self._function_location()
+        index = self.pyname.index
+        self.changers = [change_signature.ArgumentDefaultInliner(index)]
+        self.signature = change_signature.ChangeSignature(self.project,
+                                                          resource, offset)
+
+    def _function_location(self):
         pymodule, lineno = self.pyname.get_definition_location()
         resource = pymodule.get_resource()
         start = pymodule.logical_lines.logical_line_in(lineno)[0]
@@ -229,11 +236,7 @@ class InlineParameter(_Inliner):
         offset = def_ + 4
         while pymodule.source_code[offset].isspace():
             offset += 1
-
-        index = self.pyname.index
-        self.changers = [change_signature.ArgumentDefaultInliner(index)]
-        self.signature = change_signature.ChangeSignature(
-            self.project, resource, offset)
+        return resource, offset
 
     def get_changes(self, **kwds):
         return self.signature.get_changes(self.changers, **kwds)
