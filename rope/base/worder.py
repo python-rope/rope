@@ -1,5 +1,4 @@
 import bisect
-import re
 
 import rope.base.simplify
 
@@ -109,6 +108,12 @@ class Worder(object):
 
     def get_assignment_type(self, offset):
         return self.code_finder.get_assignment_type(offset)
+
+    def get_function_and_args_in_header(self, offset):
+        return self.code_finder.get_function_and_args_in_header(offset)
+
+    def find_function_offset(self, offset):
+        return self.code_finder.find_function_offset(offset)
 
 
 class _RealFinder(object):
@@ -491,3 +496,22 @@ class _RealFinder(object):
         # XXX: only handling (x, y) = value
         return offset < equals_offset and \
                self.code[start:parens_start].strip() == ''
+
+    def get_function_and_args_in_header(self, offset):
+        offset = self.find_function_offset(offset)
+        offset = self._get_line_end(offset)
+        colon = self.code.rindex(':', 0, offset)
+        rparens = self.code.rindex(')', 0, colon)
+        lparens = self._find_parens_start(rparens)
+        end = self._find_last_non_space_char(lparens - 1)
+        start = self._find_primary_start(end)
+        return self.raw[start:colon]
+
+    def find_function_offset(self, offset):
+        while True:
+            offset = self.code.index('def ', offset)
+            if offset == 0 or not self._is_id_char(offset - 1):
+                break
+            offset += 1
+        def_ = offset + 4
+        return self._find_first_non_space_char(def_)

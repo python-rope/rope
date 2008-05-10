@@ -230,12 +230,9 @@ class InlineParameter(_Inliner):
     def _function_location(self):
         pymodule, lineno = self.pyname.get_definition_location()
         resource = pymodule.get_resource()
-        start = pymodule.logical_lines.logical_line_in(lineno)[0]
-        start_offset = pymodule.lines.get_line_start(start)
-        def_ = pymodule.source_code.index('def', start_offset)
-        offset = def_ + 4
-        while pymodule.source_code[offset].isspace():
-            offset += 1
+        start = pymodule.lines.get_line_start(lineno)
+        word_finder = worder.Worder(pymodule.source_code)
+        offset = word_finder.find_function_offset(start)
         return resource, offset
 
     def get_changes(self, **kwds):

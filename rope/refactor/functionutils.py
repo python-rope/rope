@@ -1,6 +1,6 @@
 import rope.base.exceptions
 import rope.base.pyobjects
-from rope.base import codeanalyze, worder
+from rope.base import worder
 
 
 class DefinitionInfo(object):
@@ -53,22 +53,11 @@ class DefinitionInfo(object):
     @staticmethod
     def read(pyfunction):
         pymodule = pyfunction.get_module()
-        source = pymodule.source_code
-        lines = pymodule.lines
+        word_finder = worder.Worder(pymodule.source_code)
         lineno = pyfunction.get_ast().lineno
-        if pyfunction.decorators:
-            lineno = max(lineno, getattr(pyfunction.decorators[-1],
-                                         'lineno', lineno))
-            # XXX: problems when 'def ' happens inside a string
-            if 'def ' not in lines.get_line(lineno):
-                lineno += 1
-        start_line, end_line = pymodule.logical_lines.logical_line_in(lineno)
-        start = lines.get_line_start(start_line)
-        end = lines.get_line_end(end_line)
-        start = pymodule.source_code.find('def ', start) + 4
-        # XXX: problems for one-liners with a colon in a str
-        end = pymodule.source_code.rfind(':', start, end)
-        return DefinitionInfo._read(pyfunction, pymodule.source_code[start:end])
+        start = pymodule.lines.get_line_start(lineno)
+        call = word_finder.get_function_and_args_in_header(start)
+        return DefinitionInfo._read(pyfunction, call)
 
 
 class CallInfo(object):
