@@ -27,7 +27,7 @@ class AttributeNotFoundError(RopeError):
 
 
 class NameNotFoundError(RopeError):
-    """Attribute not found exception"""
+    """Name not found exception"""
 
 
 class BadIdentifierError(RopeError):
