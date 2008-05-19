@@ -1,3 +1,6 @@
+import warnings
+
+
 def cacheit(func):
     """A decorator that caches the return value of a function"""
 
@@ -36,12 +39,24 @@ def ignore_exception(exception_class):
         return newfunc
     return _decorator
 
+
+def deprecated(message=None):
+    """A decorator for deprecated functions"""
+    def _decorator(func, message=message):
+        if message is None:
+            message = '%s is deprecated' % func.__name__
+        def newfunc(*args, **kwds):
+            warnings.warn(message, DeprecationWarning, stacklevel=2)
+            return func(*args, **kwds)
+        return newfunc
+    return _decorator
+
+
 def cached(count):
     """A caching decorator based on parameter objects"""
     def decorator(func):
         return _Cached(func, count)
     return decorator
-
 
 class _Cached(object):
 
