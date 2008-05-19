@@ -63,11 +63,24 @@ class ChangeSignature(object):
             job_set.finished_job()
         return changes
 
+    def get_args(self):
+        """Get function arguments.
+
+        Return a list of ``(name, default)`` tuples for all but star
+        and double star arguments.  For arguments that don't have a
+        default, `None` will be used.
+        """
+        return self._definfo().args_with_defaults
+
     def is_method(self):
         pyfunction = self.pyname.get_object()
         return isinstance(pyfunction.parent, pyobjects.PyClass)
 
+    @utils.deprecated('Use `ChangeSignature.get_args()` instead')
     def get_definition_info(self):
+        return self._definfo()
+
+    def _definfo(self):
         return functionutils.DefinitionInfo.read(self.pyname.get_object())
 
     @utils.deprecated()
@@ -117,8 +130,8 @@ class ChangeSignature(object):
         in the project are searched.
 
         """
-        function_changer = _FunctionChangers(
-            self.pyname.get_object(), self.get_definition_info(), changers)
+        function_changer = _FunctionChangers(self.pyname.get_object(),
+                                             self._definfo(), changers)
         return self._change_calls(function_changer, in_hierarchy,
                                   resources, task_handle)
 
