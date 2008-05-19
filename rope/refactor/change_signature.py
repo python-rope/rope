@@ -70,30 +70,35 @@ class ChangeSignature(object):
     def get_definition_info(self):
         return functionutils.DefinitionInfo.read(self.pyname.get_object())
 
+    @utils.deprecated()
     def normalize(self):
         changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(),
             [ArgumentNormalizer()])
         return self._change_calls(changer)
 
+    @utils.deprecated()
     def remove(self, index):
         changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(),
             [ArgumentRemover(index)])
         return self._change_calls(changer)
 
+    @utils.deprecated()
     def add(self, index, name, default=None, value=None):
         changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(),
             [ArgumentAdder(index, name, default, value)])
         return self._change_calls(changer)
 
+    @utils.deprecated()
     def inline_default(self, index):
         changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(),
             [ArgumentDefaultInliner(index)])
         return self._change_calls(changer)
 
+    @utils.deprecated()
     def reorder(self, new_ordering):
         changer = _FunctionChangers(
             self.pyname.get_object(), self.get_definition_info(),

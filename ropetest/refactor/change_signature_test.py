@@ -2,7 +2,7 @@ import unittest
 
 import rope.base.exceptions
 from rope.refactor import change_signature
-from rope.refactor.change_signature import ChangeSignature
+from rope.refactor.change_signature import *
 from ropetest import testutils
 
 
@@ -23,7 +23,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write(code)
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals(code, self.mod.read())
 
     def test_normalizing_parameters_for_trivial_case2(self):
@@ -31,31 +31,38 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write(code)
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals(code, self.mod.read())
 
     def test_normalizing_parameters_for_unneeded_keyword(self):
         self.mod.write('def a_func(param):\n    pass\na_func(param=1)')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals('def a_func(param):\n    pass\na_func(1)', self.mod.read())
 
     def test_normalizing_parameters_for_unneeded_keyword_for_methods(self):
-        self.mod.write('class A(object):\n    def a_func(self, param):\n        pass\n'
-                       'a_var = A()\na_var.a_func(param=1)')
+        code = 'class A(object):\n' \
+               '    def a_func(self, param):\n' \
+               '        pass\n' \
+               'a_var = A()\n' \
+               'a_var.a_func(param=1)\n'
+        self.mod.write(code)
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
-        self.assertEquals(
-            'class A(object):\n    def a_func(self, param):\n        pass\n'
-            'a_var = A()\na_var.a_func(1)', self.mod.read())
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
+        expected = 'class A(object):\n' \
+                   '    def a_func(self, param):\n' \
+                   '        pass\n' \
+                   'a_var = A()\n' \
+                   'a_var.a_func(1)\n'
+        self.assertEquals(expected, self.mod.read())
 
     def test_normalizing_parameters_for_unsorted_keyword(self):
         self.mod.write('def a_func(p1, p2):\n    pass\na_func(p2=2, p1=1)')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals('def a_func(p1, p2):\n    pass\na_func(1, 2)',
                           self.mod.read())
 
@@ -69,7 +76,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(*arg):\n    pass\na_func(1, 2)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals('def a_func(*arg):\n    pass\na_func(1, 2)\n',
                           self.mod.read())
 
@@ -77,7 +84,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(param, *args):\n    pass\na_func(*[1, 2, 3])\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals('def a_func(param, *args):\n    pass\n'
                           'a_func(*[1, 2, 3])\n', self.mod.read())
 
@@ -87,7 +94,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('import mod1\nmod1.a_func(param=1)\n')
         signature = ChangeSignature(self.project, mod1,
                                     mod1.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals('import mod1\nmod1.a_func(1)\n', self.mod.read())
 
     def test_normalizing_parameters_for_keyword_parameters(self):
@@ -95,7 +102,7 @@ class ChangeSignatureTest(unittest.TestCase):
                        'a_func(p2=2, p1=1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals('def a_func(p1, **kwds):\n    pass\n'
                           'a_func(1, p2=2)\n', self.mod.read())
 
@@ -103,7 +110,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(0).do()
+        self.project.do(signature.get_changes([ArgumentRemover(0)]))
         self.assertEquals('def a_func():\n    pass\na_func()\n',
                           self.mod.read())
 
@@ -111,7 +118,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1, p2):\n    pass\na_func(1, 2)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(0).do()
+        self.project.do(signature.get_changes([ArgumentRemover(0)]))
         self.assertEquals('def a_func(p2):\n    pass\na_func(2)\n',
                           self.mod.read())
 
@@ -119,7 +126,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1):\n    pass\na_func(p1=1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(0).do()
+        self.project.do(signature.get_changes([ArgumentRemover(0)]))
         self.assertEquals('def a_func():\n    pass\na_func()\n',
                           self.mod.read())
 
@@ -127,7 +134,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1=1):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(0).do()
+        self.project.do(signature.get_changes([ArgumentRemover(0)]))
         self.assertEquals('def a_func():\n    pass\na_func()\n',
                           self.mod.read())
 
@@ -135,7 +142,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1, *args):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(1).do()
+        self.project.do(signature.get_changes([ArgumentRemover(1)]))
         self.assertEquals('def a_func(p1):\n    pass\na_func(1)\n',
                           self.mod.read())
 
@@ -143,7 +150,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1, **kwds):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(1).do()
+        self.project.do(signature.get_changes([ArgumentRemover(1)]))
         self.assertEquals('def a_func(p1):\n    pass\na_func(1)\n',
                           self.mod.read())
 
@@ -151,7 +158,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1, *args, **kwds):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(2).do()
+        self.project.do(signature.get_changes([ArgumentRemover(2)]))
         self.assertEquals('def a_func(p1, *args):\n    pass\na_func(1)\n',
                           self.mod.read())
 
@@ -161,7 +168,7 @@ class ChangeSignatureTest(unittest.TestCase):
                        'a_func(2, 3, p1=1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(1).do()
+        self.project.do(signature.get_changes([ArgumentRemover(1)]))
         self.assertEquals('def a_func(p1):\n    pass\na_func(p1=1)\n',
                           self.mod.read())
 
@@ -171,7 +178,7 @@ class ChangeSignatureTest(unittest.TestCase):
                        'a_func(*[1, 2, 3])\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(1).do()
+        self.project.do(signature.get_changes([ArgumentRemover(1)]))
         self.assertEquals('def a_func(p1):\n    pass\na_func(*[1, 2, 3])\n',
                           self.mod.read())
 
@@ -179,15 +186,15 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func():\n    pass\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.add(0, 'p1').do()
-        self.assertEquals('def a_func(p1):\n    pass\n',
-                          self.mod.read())
+        self.project.do(signature.get_changes([ArgumentAdder(0, 'p1')]))
+        self.assertEquals('def a_func(p1):\n    pass\n', self.mod.read())
 
     def test_adding_arguments_for_normal_args_with_defaults(self):
         self.mod.write('def a_func():\n    pass\na_func()\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.add(0, 'p1', 'None').do()
+        adder = ArgumentAdder(0, 'p1', 'None')
+        self.project.do(signature.get_changes([adder]))
         self.assertEquals('def a_func(p1=None):\n    pass\na_func()\n',
                           self.mod.read())
 
@@ -195,7 +202,8 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func():\n    pass\na_func()\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.add(0, 'p1', 'None', '1').do()
+        adder = ArgumentAdder(0, 'p1', 'None', '1')
+        self.project.do(signature.get_changes([adder]))
         self.assertEquals('def a_func(p1=None):\n    pass\na_func(1)\n',
                           self.mod.read())
 
@@ -203,7 +211,8 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1=0):\n    pass\na_func()\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.add(1, 'p2', '0', '1').do()
+        adder = ArgumentAdder(1, 'p2', '0', '1')
+        self.project.do(signature.get_changes([adder]))
         self.assertEquals('def a_func(p1=0, p2=0):\n    pass\na_func(p2=1)\n',
                           self.mod.read())
 
@@ -211,7 +220,8 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p2=0):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.add(0, 'p1', '0', None).do()
+        adder = ArgumentAdder(0, 'p1', '0', None)
+        self.project.do(signature.get_changes([adder]))
         self.assertEquals('def a_func(p1=0, p2=0):\n    pass\na_func(p2=1)\n',
                           self.mod.read())
 
@@ -220,13 +230,13 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1):\n    pass\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.add(1, 'p1').do()
+        self.project.do(signature.get_changes([ArgumentAdder(1, 'p1')]))
 
     def test_inlining_default_arguments(self):
         self.mod.write('def a_func(p1=0):\n    pass\na_func()\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.inline_default(0).do()
+        self.project.do(signature.get_changes([ArgumentDefaultInliner(0)]))
         self.assertEquals('def a_func(p1=0):\n    pass\n'
                           'a_func(0)\n', self.mod.read())
 
@@ -234,7 +244,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1=0):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.inline_default(0).do()
+        self.project.do(signature.get_changes([ArgumentDefaultInliner(0)]))
         self.assertEquals('def a_func(p1=0):\n    pass\n'
                           'a_func(1)\n', self.mod.read())
 
@@ -243,7 +253,7 @@ class ChangeSignatureTest(unittest.TestCase):
                        'a_func(3, 1, 2, a=1, c=3, b=2)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.normalize().do()
+        self.project.do(signature.get_changes([ArgumentNormalizer()]))
         self.assertEquals('def a_func(*args, **kwds):\n    pass\n'
                           'a_func(3, 1, 2, a=1, c=3, b=2)\n', self.mod.read())
 
@@ -251,7 +261,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1):\n    pass\na_func(1)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.reorder([0]).do()
+        self.project.do(signature.get_changes([ArgumentReorderer([0])]))
         self.assertEquals('def a_func(p1):\n    pass\na_func(1)\n',
                           self.mod.read())
 
@@ -259,7 +269,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1, p2):\n    pass\na_func(1, 2)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.reorder([1, 0]).do()
+        self.project.do(signature.get_changes([ArgumentReorderer([1, 0])]))
         self.assertEquals('def a_func(p2, p1):\n    pass\na_func(2, 1)\n',
                           self.mod.read())
 
@@ -267,7 +277,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1,\n p2):\n    pass\na_func(1, 2)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.reorder([1, 0]).do()
+        self.project.do(signature.get_changes([ArgumentReorderer([1, 0])]))
         self.assertEquals('def a_func(p2, p1):\n    pass\na_func(2, 1)\n',
                           self.mod.read())
 
@@ -275,7 +285,7 @@ class ChangeSignatureTest(unittest.TestCase):
         self.mod.write('def a_func(p1, p2=0, p3=0):\n    pass\na_func(1, 2)\n')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.reorder([0, 2, 1]).do()
+        self.project.do(signature.get_changes([ArgumentReorderer([0, 2, 1])]))
         self.assertEquals('def a_func(p1, p3=0, p2=0):\n    pass\n'
                           'a_func(1, p2=2)\n', self.mod.read())
 
@@ -321,7 +331,7 @@ class ChangeSignatureTest(unittest.TestCase):
             'a_var = A()\nA.a_func(a_var, param=1)')
         signature = ChangeSignature(self.project, self.mod,
                                     self.mod.read().index('a_func') + 1)
-        signature.remove(1).do()
+        self.project.do(signature.get_changes([ArgumentRemover(1)]))
         self.assertEquals(
             'class A(object):\n    def a_func(self):\n        pass\n'
             'a_var = A()\nA.a_func(a_var)', self.mod.read())
