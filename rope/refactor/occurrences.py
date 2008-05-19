@@ -121,6 +121,12 @@ class Occurrence(object):
     def is_unsure(self):
         return unsure_pyname(self.get_pyname())
 
+    @property
+    @utils.cacheit
+    def lineno(self):
+        offset = self.get_word_range()[0]
+        return self.tools.pymodule.lines.get_line_number(offset)
+
 
 def same_pyname(expected, pyname):
     """Check whether `expected` and `pyname` are the same"""
@@ -291,7 +297,7 @@ class _OccurrenceToolsCreator(object):
     def __init__(self, pycore, resource=None, pymodule=None, docs=False):
         self.pycore = pycore
         self.resource = resource
-        self.pymodule = pymodule
+        self.__pymodule = pymodule
         self.docs = docs
 
     @property
@@ -313,3 +319,10 @@ class _OccurrenceToolsCreator(object):
     @utils.cacheit
     def word_finder(self):
         return worder.Worder(self.source_code, self.docs)
+
+    @property
+    @utils.cacheit
+    def pymodule(self):
+        if self.__pymodule is not None:
+            return self.__pymodule
+        return self.pycore.resource_to_pyobject(self.resource)

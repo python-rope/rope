@@ -69,6 +69,7 @@ class Location(object):
 
     resource = None
     offset = None
+    lineno = None
     unsure = False
 
 
@@ -81,6 +82,7 @@ def _find_locations(finder, resources, job_set):
             location.resource = resource
             location.offset = occurrence.get_word_range()[0]
             location.unsure = occurrence.is_unsure()
+            location.lineno = occurrence.lineno
             result.append(location)
         job_set.finished_job()
     return result
