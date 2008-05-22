@@ -525,6 +525,11 @@ class InlineTest(unittest.TestCase):
         result = self._inline(code, code.index('p'))
         self.assertEquals('def f(p=1):\n    pass\nf(1)\n', result)
 
+    def test_inlining_function_with_line_breaks_in_args(self):
+        code = 'def f(p): return p\nvar = f(1 +\n1)\n'
+        refactored = self._inline(code, code.rindex('f'))
+        self.assertEquals('var = 1 + 1\n', refactored)
+
 
 def suite():
     result = unittest.TestSuite()

@@ -306,7 +306,7 @@ class _DefinitionGenerator(object):
         to_be_inlined = []
         for name, value in paramdict.items():
             if name != value and value is not None:
-                header += name + ' = ' + value + '\n'
+                header += name + ' = ' + value.replace('\n', ' ') + '\n'
                 to_be_inlined.append(name)
         source = header + self.body
         for name in to_be_inlined:
