@@ -77,7 +77,9 @@ class PythonFileRunner(object):
 
     def kill_process(self):
         """Stop the process"""
-        if os.name != 'nt':
+        if hasattr(self.process, 'terminate'):
+            self.process.terminate()
+        elif os.name != 'nt':
             os.kill(self.process.pid, 9)
         else:
             import ctypes
