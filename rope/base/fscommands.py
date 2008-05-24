@@ -170,11 +170,11 @@ def file_data_to_unicode(data, encoding=None):
 def _decode_data(data, encoding):
     if encoding is None:
         encoding = read_str_coding(data)
-    if encoding is not None:
-        return unicode(data, encoding)
     try:
+        if encoding is not None:
+            return unicode(data, encoding)
         return unicode(data)
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, LookupError):
         # Using ``utf-8`` if guessed encoding fails
         return unicode(data, 'utf-8')
 
