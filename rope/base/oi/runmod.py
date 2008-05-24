@@ -91,12 +91,12 @@ def __rope_start_everything():
             return True
 
         def _is_code_inside_project(self, code):
-            source = code.co_filename
-            return source and source.endswith('.py') and os.path.exists(source) and \
+            source = self._path(code.co_filename)
+            return source is not None and os.path.exists(source) and \
                    _realpath(source).startswith(self.project_root)
 
         def _get_persisted_code(self, object_):
-            source = object_.co_filename
+            source = self._path(object_.co_filename)
             if not os.path.exists(source):
                 raise TypeError('no source')
             return ('defined', _realpath(source), str(object_.co_firstlineno))
@@ -152,12 +152,24 @@ def __rope_start_everything():
             if isinstance(object_, types.MethodType):
                 return self._get_persisted_code(object_.im_func.func_code)
             if isinstance(object_, types.ModuleType):
-                return ('defined', _realpath(object_.__file__))
+                return self._get_persisted_module(object_)
             if isinstance(object_, (str, unicode, list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
             if isinstance(object_, (types.TypeType, types.ClassType)):
                 return self._get_persisted_class(object_)
             return ('instance', self._get_persisted_class(type(object_)))
+
+        def _get_persisted_module(self, object_):
+            path = self._path(object_.__file__)
+            if path and os.path.exists(path):
+                return ('defined', _realpath(path))
+            return ('unknown',)
+
+        def _path(self, path):
+            if path.endswith('.pyc'):
+                path = path[:-1]
+            if path.endswith('.py'):
+                return path
 
         def close(self):
             self.sender.close()
