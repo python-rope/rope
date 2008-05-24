@@ -5,7 +5,7 @@ import warnings
 
 import rope.base.change
 import rope.base.fscommands
-from rope.base import exceptions, taskhandle, prefs, history, pycore
+from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
 from rope.base.resourceobserver import *
 from rope.base.resources import File, Folder, _ResourceMatcher
 
@@ -14,10 +14,8 @@ class _Project(object):
 
     def __init__(self, fscommands):
         self.observers = []
-        self._history = None
         self.operations = rope.base.change._ResourceOperations(self, fscommands)
         self.prefs = prefs.Prefs()
-        self._pycore = None
         self.data_files = _DataFiles(self)
 
     def get_resource(self, resource_name):
@@ -74,9 +72,7 @@ class _Project(object):
         self.history.do(changes, task_handle=task_handle)
 
     def get_pycore(self):
-        if self._pycore is None:
-            self._pycore = pycore.PyCore(self)
-        return self._pycore
+        return self.pycore
 
     def get_file(self, path):
         """Get the file with `path` (it may not exist)"""
@@ -95,17 +91,20 @@ class _Project(object):
     def _get_resource_path(self, name):
         pass
 
-    def _get_history(self):
-        if self._history is None:
-            self._history = history.History(self)
-        return self._history
+    @property
+    @utils.cacheit
+    def history(self):
+        return history.History(self)
+
+    @property
+    @utils.cacheit
+    def pycore(self):
+        return pycore.PyCore(self)
 
     def close(self):
         warnings.warn('Cannot close a NoProject',
                       DeprecationWarning, stacklevel=2)
 
-    history = property(_get_history)
-    pycore = property(get_pycore)
     ropefolder = None
 
 
