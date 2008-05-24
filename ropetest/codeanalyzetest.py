@@ -326,7 +326,7 @@ class ScopeNameFinderTest(unittest.TestCase):
     def setUp(self):
         super(ScopeNameFinderTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)

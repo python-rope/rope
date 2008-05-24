@@ -320,7 +320,7 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals((module_resource, 1), result)
 
     def test_get_definition_location_for_nested_packages(self):
-        pycore = self.project.get_pycore()
+        pycore = self.project.pycore
         mod1 = testutils.create_module(self.project, 'mod1')
         pkg1 = testutils.create_package(self.project, 'pkg1')
         pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
@@ -456,7 +456,7 @@ class CodeAssistTest(unittest.TestCase):
         get_doc(self.project, src, src.index('AClass') + 1).index('AClass')
 
     def test_get_pydoc_for_modules(self):
-        pycore = self.project.get_pycore()
+        pycore = self.project.pycore
         mod = testutils.create_module(self.project, 'mod')
         mod.write('"""a module"""\n')
         src = 'import mod\nmod'
@@ -647,7 +647,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def setUp(self):
         super(CodeAssistInProjectsTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, 'samplemod')
         code = 'class SampleClass(object):\n' \
                '    def sample_method():\n        pass\n\n' \

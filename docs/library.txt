@@ -488,7 +488,7 @@ Using rename refactoring::
   # Alternatively you can use `generate` module.
   # Creating modules and packages using `generate` module
   >>> from rope.contrib import generate
-  >>> pycore = project.get_pycore()
+  >>> pycore = project.pycore
   >>> pkg = generate.create_package(project, 'pkg')
   >>> mod2 = generate.create_module(project, 'mod2', pkg)
   >>> mod2.write('import mod1\nprint mod1.a_var\n')

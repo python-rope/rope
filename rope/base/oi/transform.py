@@ -203,7 +203,7 @@ class TextualToPyObject(object):
     def _get_pymodule(self, path):
         resource = self.path_to_resource(path)
         if resource is not None:
-            return self.project.get_pycore().resource_to_pyobject(resource)
+            return self.project.pycore.resource_to_pyobject(resource)
 
     def path_to_resource(self, path):
         try:

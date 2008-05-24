@@ -26,7 +26,7 @@ class MethodObjectTest(unittest.TestCase):
     def setUp(self):
         super(MethodObjectTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):
@@ -148,7 +148,7 @@ class IntroduceFactoryTest(unittest.TestCase):
     def setUp(self):
         super(IntroduceFactoryTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -434,7 +434,7 @@ class EncapsulateFieldTest(unittest.TestCase):
     def setUp(self):
         super(EncapsulateFieldTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod')
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.a_class = 'class A(object):\n' \
@@ -642,7 +642,7 @@ class LocalToFieldTest(unittest.TestCase):
     def setUp(self):
         super(LocalToFieldTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):
@@ -719,7 +719,7 @@ class IntroduceParameterTest(unittest.TestCase):
     def setUp(self):
         super(IntroduceParameterTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):

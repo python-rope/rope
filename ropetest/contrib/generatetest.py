@@ -10,7 +10,7 @@ class GenerateTest(unittest.TestCase):
     def setUp(self):
         super(GenerateTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod1')
         self.mod2 = testutils.create_module(self.project, 'mod2')
         self.pkg = testutils.create_package(self.project, 'pkg')

@@ -10,7 +10,7 @@ class ObjectInferTest(unittest.TestCase):
     def setUp(self):
         super(ObjectInferTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -65,7 +65,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_simple_type_inferencing_for_chained_assignments(self):
         mod = 'class Sample(object):\n    pass\n' \
               'copied_sample = Sample'
-        mod_scope = self.project.get_pycore().get_string_scope(mod)
+        mod_scope = self.project.pycore.get_string_scope(mod)
         sample_class = mod_scope['Sample']
         copied_sample = mod_scope['copied_sample']
         self.assertEquals(sample_class.get_object(),
@@ -75,7 +75,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = 'class Sample(object):\n    pass\n' \
               'sample_class = Sample\n' \
               'sample_class = sample_class\n'
-        mod_scope = self.project.get_pycore().get_string_scope(mod)
+        mod_scope = self.project.pycore.get_string_scope(mod)
         sample_class = mod_scope['Sample']
         sample_class_var = mod_scope['sample_class']
         self.assertEquals(sample_class.get_object(),
@@ -85,7 +85,7 @@ class ObjectInferTest(unittest.TestCase):
         src = 'class Sample(object):\n    pass\n' \
               'def a_func():\n    return Sample\n' \
               'a_var = a_func()\n'
-        scope = self.project.get_pycore().get_string_scope(src)
+        scope = self.project.pycore.get_string_scope(src)
         sample_class = scope['Sample']
         a_var = scope['a_var']
         self.assertEquals(sample_class.get_object(), a_var.get_object())
@@ -94,7 +94,7 @@ class ObjectInferTest(unittest.TestCase):
         src = 'class Sample(object):\n    pass\n' \
               'def a_func():\n    return Sample()\n' \
               'a_var = a_func()\n'
-        scope = self.project.get_pycore().get_string_scope(src)
+        scope = self.project.pycore.get_string_scope(src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
@@ -105,7 +105,7 @@ class ObjectInferTest(unittest.TestCase):
               '    if True:\n        return Sample()\n' \
               '    else:\n        return a_func()\n' \
               'a_var = a_func()\n'
-        scope = self.project.get_pycore().get_string_scope(src)
+        scope = self.project.pycore.get_string_scope(src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
@@ -114,7 +114,7 @@ class ObjectInferTest(unittest.TestCase):
         src = 'class Sample(object):\n' \
               '    def __call__(self):\n        return Sample\n' \
               'sample = Sample()\na_var = sample()'
-        scope = self.project.get_pycore().get_string_scope(src)
+        scope = self.project.pycore.get_string_scope(src)
         sample_class = scope['Sample']
         a_var = scope['a_var']
         self.assertEquals(sample_class.get_object(), a_var.get_object())

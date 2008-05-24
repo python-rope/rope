@@ -9,7 +9,7 @@ class ImportUtilsTest(unittest.TestCase):
     def setUp(self):
         super(ImportUtilsTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.import_tools = ImportTools(self.pycore)
 
         self.mod = testutils.create_module(self.project, 'mod')
@@ -917,7 +917,7 @@ class AddImportTest(unittest.TestCase):
     def setUp(self):
         super(AddImportTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
 
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.mod2 = testutils.create_module(self.project, 'mod2')

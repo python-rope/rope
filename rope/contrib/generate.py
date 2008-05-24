@@ -136,7 +136,7 @@ class GenerateModule(_Generate):
                 'Module <%s> already exists' % new_resource.path)
         changes.add_change(change.CreateResource(new_resource))
         changes.add_change(_add_import_to_module(
-                           self.project.get_pycore(), self.resource, new_resource))
+                           self.project.pycore, self.resource, new_resource))
         return changes
 
     def get_location(self):
@@ -155,7 +155,7 @@ class GeneratePackage(_Generate):
                 'Package <%s> already exists' % new_resource.path)
         changes.add_change(change.CreateResource(new_resource))
         changes.add_change(_add_import_to_module(
-                           self.project.get_pycore(), self.resource, new_resource))
+                           self.project.pycore, self.resource, new_resource))
         child = self.project.get_folder(package.path + '/' + self.name)
         changes.add_change(change.CreateFile(child, '__init__.py'))
         return changes

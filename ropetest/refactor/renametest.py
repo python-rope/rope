@@ -13,7 +13,7 @@ class RenameRefactoringTest(unittest.TestCase):
     def setUp(self):
         super(RenameRefactoringTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -635,7 +635,7 @@ class ImplicitInterfacesTest(unittest.TestCase):
     def setUp(self):
         super(ImplicitInterfacesTest, self).setUp()
         self.project = testutils.sample_project(validate_objectdb=True)
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.mod2 = testutils.create_module(self.project, 'mod2')
 

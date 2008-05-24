@@ -186,7 +186,7 @@ class _PythonCodeAssist(object):
     def __init__(self, project, source_code, offset, resource=None,
                  maxfixes=1, later_locals=True):
         self.project = project
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.code = source_code
         self.resource = resource
         self.maxfixes = maxfixes

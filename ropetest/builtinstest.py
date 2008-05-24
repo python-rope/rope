@@ -9,7 +9,7 @@ class BuiltinTypesTest(unittest.TestCase):
     def setUp(self):
         super(BuiltinTypesTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):
@@ -413,7 +413,7 @@ class BuiltinModulesTest(unittest.TestCase):
         super(BuiltinModulesTest, self).setUp()
         self.project = testutils.sample_project(
             extension_modules=['time', 'invalid_module'])
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod')
 
     def tearDown(self):

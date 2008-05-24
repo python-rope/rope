@@ -12,7 +12,7 @@ class PyCoreTest(unittest.TestCase):
     def setUp(self):
         super(PyCoreTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -602,7 +602,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def setUp(self):
         super(self.__class__, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.get_pycore()
+        self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, 'samplemod')
         samplemod.write(
             'class SampleClass(object):\n    def sample_method():\n        pass'
