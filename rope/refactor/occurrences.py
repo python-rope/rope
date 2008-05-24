@@ -303,8 +303,6 @@ class _OccurrenceToolsCreator(object):
     @property
     @utils.cacheit
     def name_finder(self):
-        if self.pymodule is None:
-            self.pymodule = self.pycore.resource_to_pyobject(self.resource)
         return evaluate.ScopeNameFinder(self.pymodule)
 
     @property
