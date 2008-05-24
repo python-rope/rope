@@ -203,20 +203,21 @@ def read_str_coding(source):
     return _find_coding(source[:second])
 
 
-def _find_coding(first_two_lines):
+def _find_coding(text):
     coding = 'coding'
     try:
-        start = first_two_lines.index(coding) + len(coding)
-        while start < len(first_two_lines):
-            if first_two_lines[start] not in '=: \t':
-                break
+        start = text.index(coding) + len(coding)
+        if text[start] not in '=:':
+            return
+        start += 1
+        while start < len(text) and text[start].isspace():
             start += 1
         end = start
-        while end < len(first_two_lines):
-            c = first_two_lines[end]
+        while end < len(text):
+            c = text[end]
             if not c.isalnum() and c not in '-_':
                 break
             end += 1
-        return first_two_lines[start:end]
+        return text[start:end]
     except ValueError:
         pass
