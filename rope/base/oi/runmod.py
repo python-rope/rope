@@ -40,6 +40,17 @@ def __rope_start_everything():
         def close(self):
             self.my_file.close()
 
+
+    def _cached(func):
+        cache = {}
+        def newfunc(self, arg):
+            if arg in cache:
+                return cache[arg]
+            result = func(self, arg)
+            cache[arg] = result
+            return result
+        return newfunc
+
     class _FunctionCallDataSender(object):
 
         def __init__(self, send_info, project_root):
@@ -95,12 +106,14 @@ def __rope_start_everything():
             return source is not None and os.path.exists(source) and \
                    _realpath(source).startswith(self.project_root)
 
+        @_cached
         def _get_persisted_code(self, object_):
             source = self._path(object_.co_filename)
             if not os.path.exists(source):
                 raise TypeError('no source')
             return ('defined', _realpath(source), str(object_.co_firstlineno))
 
+        @_cached
         def _get_persisted_class(self, object_):
             try:
                 return ('defined', _realpath(inspect.getsourcefile(object_)),
@@ -159,6 +172,7 @@ def __rope_start_everything():
                 return self._get_persisted_class(object_)
             return ('instance', self._get_persisted_class(type(object_)))
 
+        @_cached
         def _get_persisted_module(self, object_):
             path = self._path(object_.__file__)
             if path and os.path.exists(path):
