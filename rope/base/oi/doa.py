@@ -77,13 +77,17 @@ class PythonFileRunner(object):
 
     def kill_process(self):
         """Stop the process"""
-        if hasattr(self.process, 'terminate'):
-            self.process.terminate()
-        elif os.name != 'nt':
-            os.kill(self.process.pid, 9)
-        else:
-            import ctypes
-            ctypes.windll.kernel32.TerminateProcess(int(self.process._handle), -1)
+        try:
+            if hasattr(self.process, 'terminate'):
+                self.process.terminate()
+            elif os.name != 'nt':
+                os.kill(self.process.pid, 9)
+            else:
+                import ctypes
+                handle = int(self.process._handle)
+                ctypes.windll.kernel32.TerminateProcess(handle, -1)
+        except OSError:
+            pass
 
     def add_finishing_observer(self, observer):
         """Notify this observer when execution finishes"""
