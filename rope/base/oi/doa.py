@@ -77,7 +77,7 @@ class PythonFileRunner(object):
 
     def kill_process(self):
         """Stop the process"""
-        if self.process.returncode is not None:
+        if self.process.poll() is not None:
             return
         try:
             if hasattr(self.process, 'terminate'):
