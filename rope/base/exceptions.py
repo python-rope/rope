@@ -11,7 +11,7 @@ class RefactoringError(RopeError):
 
 
 class InterruptedTaskError(RopeError):
-    """Errors for performing a refactoring"""
+    """The task has been interrupted"""
 
 
 class HistoryError(RopeError):
