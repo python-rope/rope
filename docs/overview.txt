@@ -310,9 +310,8 @@ You can move the definition of `attr` manually.
 Extract Method
 --------------
 
-The position of the mark would be region start and the current
-cursor position would be region end. (You can set the mark as in
-emacs copy and paste with ``C-space``). ::
+In these examples ``${region_start}`` and ``${region_end}`` show the
+selected region for extraction::
 
   def a_func():
       a = 1
@@ -522,8 +521,8 @@ will result in::
 Sorting Imports
 ---------------
 
-Organize imports now sorts imports, too.  It will sort imports
-according to :PEP:`8`::
+Organize imports sorts imports, too.  It does that according to
+:PEP:`8`::
 
   [__future__ imports]
 
@@ -546,14 +545,6 @@ pkg1.pkg2.pkg3.pkg4 import mod1``.  Long imports can be identified
 either by having lots of dots or being very long.  The default
 configuration considers imported modules with more than 2 dots or with
 more than 27 characters to be long.
-
-
-Import Actions On Individual Imports
-------------------------------------
-
-You can perform import actions on individual imports by using action
-prefix.  For instance for expanding an star import just move to that
-line and use ``C-u C-c i x``.
 
 
 Stoppable Refactorings
@@ -627,7 +618,8 @@ Restructurings
 
 `rope.refactor.restructure` can be used for performing restructurings.
 A restructuring is a program transformation; not as well defined as
-other refactorings like rename.  Let's see some examples.
+other refactorings like rename.  Let's see some examples (for more
+examples, see the pydocs in `rope.base.restructure` module).
 
 Example 1
 '''''''''
@@ -648,7 +640,7 @@ used (there might be hundreds of them!).  We can use a pattern like::
 
   pattern: pow(${param1}, ${param2})
 
-Goal can be some thing like::
+Goal can be something like::
 
   goal: ${param1} ** ${param2}
 
@@ -670,13 +662,11 @@ restructuring will be::
 It seems to be working but what if `pow` is imported in some module or
 we have some other function defined in some other module that uses the
 same name and we don't want to change it.  Wildcard arguments come to
-rescue.  As already seen, arguments are mappings; Its keys are
-wildcard names that appear in the pattern (the names inside
-``${...}``).
+rescue.  Wildcard arguments is a mapping; Its keys are wildcard names
+that appear in the pattern (the names inside ``${...}``).
 
 The values are the parameters that are passed to wildcard matchers.
-The default wildcard takes ``name``, ``object`` and ``type`` arguments
-for checking the reference/object/type of a wildcard.
+The arguments a wildcard takes is based on its type.
 
 For checking the type of a wildcard, we can pass ``type=value`` as an
 arg; ``value`` should be resolved to a python variable (or reference).
@@ -765,10 +755,12 @@ just an example; consider inline refactoring is not implemented yet!).
 Restructurings come to rescue::
 
   pattern: ${inst}.f(${p1}, ${p2})
-  goal: ${inst}.f1(${p1})
-        ${inst}.f2(${p2})
+  goal:
+   ${inst}.f1(${p1})
+   ${inst}.f2(${p2})
   
-  checks: inst: type=mod.A
+  args:
+   inst: type=mod.A
 
 After performing we will have::
 
@@ -807,14 +799,7 @@ We can perform a restructuring with these information::
   pattern: ${x}.set(${y})
   goal: ${x} = ${y}
 
-  checks: x: type=mod.A
-
-The names in checks as you see should be the name of a wild card
-pattern like ``x`` or ``y`` in the above example.  They can have a
-``.type`` or ``.object`` prefix if you want to match the type of the
-object or the type a name holds instead of the reference itself.  The
-values in checks are the representation of python references.  They
-should start from the module that contains the element.
+  args: x: type=mod.A
 
 After performing the above restructuring we'll have::
 
@@ -834,10 +819,10 @@ Note that ``mod.py`` contains something like::
 Issues
 ''''''
 
-Pattern names can only appear in at the start of an expression.  For
+Pattern names can appear only at the start of an expression.  For
 instance ``var.${name}`` is invalid.  These situations can usually be
 fixed by specifying good checks, for example on the type of `var` and
-using a ``${var}.name`` pattern.
+using a ``${var}.name``.
 
 
 Object Inference
@@ -914,7 +899,7 @@ Supporting generator functions::
 
 Here the objects `a_var` and `c` hold are known.
 
-Many kinds of information is collected during SOA like per name data
+Rope collects different types of data during SOA, like per name data
 for builtin container types::
 
   l1 = [C()]
@@ -924,10 +909,10 @@ for builtin container types::
   l2.append(C())
   var2 = l2.pop()
 
-Here rope knows the type of `var1` without doing anything.  But for
-knowing the type of `var2` we need to analyze the items added to `l2`
-which might happen in other modules.  Rope can find out that by
-running SOA on this module.
+Here rope can easily infer the type of `var1`.  But for knowing the
+type of `var2`, it needs to analyze the items inserted into `l2` which
+might happen in other modules.  Rope can do that by running SOA on
+that module.
 
 You might be wondering is there any reason for using DOA instead of
 SOA.  The answer is that DOA might be more accurate and handles
@@ -939,7 +924,7 @@ complex and dynamic situations.  For example in::
   a_var = f('C')
 
 SOA can no way conclude the object `a_var` holds but it is really
-trivial for DOA.  What's more SOA analyzes calls only in one module
+trivial for DOA.  What's more SOA only analyzes calls in one module
 while DOA analyzes any call that happens when running a module.  That
 is, for achieving the same result as DOA you might need to run SOA on
 more than one module and more than once (not considering dynamic
@@ -951,9 +936,9 @@ Dynamic Object Analysis
 
 `PyCore.run_module()` runs a module and collects object information if
 ``perform_doa`` project config is set.  Since as the program runs rope
-gathers type information, the program runs slower.  After the program
-is run, you can get better code assists and some of the refactorings
-perform much better.
+gathers type information, the program runs much slower.  After the
+program is run, you can get better code assists and some of the
+refactorings perform much better.
 
 ``mod1.py``::
 
@@ -968,7 +953,7 @@ perform much better.
 
 Using code assist in specified places does not give any information
 and there is actually no information about the return type of `f2` or
-the parameter `param` of `f1`.
+`param` parameter of `f1`.
 
 ``mod2.py``::
 
@@ -982,8 +967,7 @@ the parameter `param` of `f1`.
   a_var = A()
   mod1.f1(a_var)
 
-After running `mod2` module using rope's `Run Module`, we get good
-code assists in `mod1`.
+Retry those code assists after performing DOA on `mod2` module.
 
 
 Builtin Container Types
@@ -1049,7 +1033,7 @@ Automatic SOA
 
 When turned on, it analyzes the changed scopes of a file when saving
 for obtaining object information; So this might make saving files a
-bit more time consuming.  This feature is by default turned on, but
+bit more time consuming.  By default, this feature is turned on, but
 you can turn it off by editing your project ``config.py`` file, though
 that is not recommended.
 

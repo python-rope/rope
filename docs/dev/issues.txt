@@ -61,9 +61,9 @@ Insert Before In Restructurings
 
 Consider a restructuring like this::
 
-  pattern: ${?a} if ${?b} else ${?c}
+  pattern: ${a} if ${b} else ${c}
   goal: replacement
-  before: if ${?b}:\n    replacement = ${?a}\nelse:\n    replacement = ${?c}
+  before: if ${b}:\n    replacement = ${a}\nelse:\n    replacement = ${c}
 
 
 Memory Management
