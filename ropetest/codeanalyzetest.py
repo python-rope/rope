@@ -291,6 +291,11 @@ class WordRangeFinderTest(unittest.TestCase):
         finder = worder.Worder(code)
         self.assertEquals(1, finder.find_parens_start_from_inside(2))
 
+    def test_underlined_find_parens_start(self):
+        code = 'f(p="")\n'
+        finder = worder.Worder(code)
+        self.assertEquals(1, finder._find_parens_start(len(code) - 2))
+
     def test_find_parens_start_with_multiple_entries(self):
         code = 'myfunc(p1, p2, p3\n'
         finder = worder.Worder(code)
