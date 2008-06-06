@@ -35,7 +35,7 @@ class Resource(object):
     @property
     def parent(self):
         parent = '/'.join(self.path.split('/')[0:-1])
-        return self.project.get_resource(parent)
+        return self.project.get_folder(parent)
 
     @property
     def path(self):
@@ -177,7 +177,9 @@ class Folder(Resource):
             return False
         return self.path == '' or resource.path.startswith(self.path + '/')
 
-    def create(self):
+    def create(self, recursive=False):
+        if recursive and not self.parent.exists():
+            self.parent.create(recursive)
         self.parent.create_folder(self.name)
 
 
