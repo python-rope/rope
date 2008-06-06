@@ -47,9 +47,9 @@ It's good to know that:
   information.
 * All configurations that are available in the ``config.py`` file can
   be specified as keyword parameters to `Project` constructor.  These
-  parameters overwrite the ones in the ``config.py`` file.
+  parameters override the ones in the ``config.py`` file.
 * Each project has a set of ignored resource patterns; You can use it
-  to ask rope to ignore files and folders matching certain patterns.
+  to tell rope to ignore files and folders matching certain patterns.
 * The ``.ropeproject`` folder can be safely copied in other clones of
   a project if you don't want to lose your objectdb and history.
 
@@ -70,7 +70,7 @@ and `Folder`.  What we care about is that refactorings and `Change`\s
 (we'll talk about them later) use resources.
 
 In order to create a `Resource` for a path in a project we have two
-options.  The first approach uses the `Project` object (Use
+options.  The first approach uses the `Project` object (use
 `Project.get_resource()`_ method).  I prefer to describe the second
 approach since it needs less to know.
 
@@ -82,11 +82,11 @@ We can use `libutils` module.  It has a function named
   myresource = libutils.path_to_resource(myproject, '/path/to/resource')
 
 
-But this is only half of the answer.  Consider we have a resource.  How
-can we know anything about it? The answer is to use its ``path`` and
-``real_path`` fields.  `Resource.real_path` is the path of the
-resource in the file-system.  The `Resource.path` field contains the
-address of a resource relative to project root (The same format as
+But this is only half of the answer.  Consider we have a resource.
+How can we know anything about it? The answer is to use its ``path``
+and ``real_path`` fields.  `Resource.real_path` is the absolute path
+of the resource in the file-system.  `Resource.path` field contains
+the address of a resource relative to project root (the same format as
 needed by `Project.get_resource()`_).
 
 
@@ -112,9 +112,10 @@ and multi-byte characters are considered to be only one character.
 This is actually easier for IDEs, since most GUI libraries do that
 when calculating offsets.
 
-Next we need to perform the refactoring.  IDE's usually pop up a
-dialog for letting the user configure refactoring option like the name
-of the extracted variable.  Next we need to calculate the changes::
+Next, IDE's usually pop up a dialog for letting the user configure
+refactoring options like the name of the extracted variable.
+
+After that, we can calculate the changes::
 
   changes = extractor.get_changes('extracted_variable')
 
@@ -168,7 +169,7 @@ need to be reloaded.
 Validating The Project
 ----------------------
 
-When using rope as a library you probably change the files in it in
+When using rope as a library, you probably change the files in it in
 parallel (for example in IDEs).  To force rope to invalidate cached
 information about resources that have been removed or changed outside
 rope you should call `Project.validate()`_ method.  You can pass a
