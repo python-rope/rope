@@ -154,10 +154,15 @@ class Project(_Project):
     def _init_ropefolder(self):
         if self.ropefolder is not None:
             if not self.ropefolder.exists():
-                self.ropefolder.create(recursive=True)
+                self._create_recursively(self.ropefolder)
             if not self.ropefolder.has_child('config.py'):
                 config = self.ropefolder.create_file('config.py')
                 config.write(self._default_config())
+
+    def _create_recursively(self, folder):
+        if folder.parent != self.root and not folder.parent.exists():
+            self._create_recursively(folder.parent)
+        folder.create()
 
     def _init_prefs(self, prefs):
         run_globals = {}

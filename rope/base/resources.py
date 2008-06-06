@@ -177,9 +177,7 @@ class Folder(Resource):
             return False
         return self.path == '' or resource.path.startswith(self.path + '/')
 
-    def create(self, recursive=False):
-        if recursive and not self.parent.exists():
-            self.parent.create(recursive)
+    def create(self):
         self.parent.create_folder(self.name)
 
 

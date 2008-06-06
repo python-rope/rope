@@ -115,12 +115,6 @@ class ProjectTest(unittest.TestCase):
         self.assertEquals('sample notes', open(os.path.join(self.project.address,
                                                             file_path)).read())
 
-    def test_creating_folders_recursively(self):
-        folder_name = 'parent/nested'
-        self.project.get_folder(folder_name).create(recursive=True)
-        folder_path = os.path.join(self.project.address, folder_name)
-        self.assertTrue(os.path.exists(folder_path))
-
     @testutils.assert_raises(ResourceNotFoundError)
     def test_failing_when_creating_file_inside_non_existent_folder(self):
         self.project.root.create_file('NonexistentFolder/SomeFile.txt')
