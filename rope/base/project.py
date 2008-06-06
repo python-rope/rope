@@ -154,7 +154,7 @@ class Project(_Project):
     def _init_ropefolder(self):
         if self.ropefolder is not None:
             if not self.ropefolder.exists():
-                self.ropefolder.create()
+                self.ropefolder.create(recursive=True)
             if not self.ropefolder.has_child('config.py'):
                 config = self.ropefolder.create_file('config.py')
                 config.write(self._default_config())

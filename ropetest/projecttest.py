@@ -945,6 +945,12 @@ class RopeFolderTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         self.project.pycore.analyze_module(mod)
 
+    def test_nested_dot_ropeproject_folder(self):
+        self.project = testutils.sample_project(ropefolder='.f1/f2')
+        ropefolder = self.project.ropefolder
+        self.assertEquals('.f1/f2', ropefolder.path)
+        self.assertTrue(ropefolder.exists())
+
 
 def suite():
     result = unittest.TestSuite()
