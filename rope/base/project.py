@@ -257,7 +257,6 @@ class _FileListCacher(object):
     def __init__(self, project):
         self.project = project
         self.needs_gc = True
-        self._observer = None
         self.files = set()
         self.folders = set()
 
@@ -274,13 +273,6 @@ class _FileListCacher(object):
                     self.observer.remove_resource(folder)
             self.needs_gc = False
         return self.files
-
-    @property
-    def observer(self):
-        if self._observer is None:
-            self._init_observer()
-            self._update_folder(self.project.root)
-        return self._observer
 
     def _updated_resources(self, folder):
         if not folder.exists():
@@ -303,12 +295,16 @@ class _FileListCacher(object):
             self.observer.add_resource(child)
         self.needs_gc = True
 
-    def _init_observer(self):
-        self.rawobserver = ResourceObserver(
+    @property
+    @utils.cacheit
+    def observer(self):
+        rawobserver = ResourceObserver(
             self._changed, self._moved, self._created,
             self._removed, self._validate)
-        self._observer = FilteredResourceObserver(self.rawobserver)
-        self.project.add_observer(self._observer)
+        observer = FilteredResourceObserver(rawobserver)
+        self.project.add_observer(observer)
+        self._update_folder(self.project.root)
+        return observer
 
     def _changed(self, resource):
         if resource.is_folder():
