@@ -56,15 +56,6 @@ class Resource(object):
         """Return the file system path of this resource"""
         return self.project._get_resource_path(self.path)
 
-    def _get_destination_for_move(self, destination):
-        dest_path = self.project._get_resource_path(destination)
-        if os.path.isdir(dest_path):
-            if destination != '':
-                return destination + '/' + self.name
-            else:
-                return self.name
-        return destination
-
     def __eq__(self, obj):
         return self.__class__ == obj.__class__ and self.path == obj.path
 
