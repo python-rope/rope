@@ -96,8 +96,7 @@ class History(object):
 
     def _find_dependencies(self, change_list, change):
         index = change_list.index(change)
-        return _FindChangeDependencies(change_list[index:]).\
-               find_dependencies()
+        return _FindChangeDependencies(change_list[index:])()
 
     def _perform_undos(self, count, task_handle):
         for i in range(count):
@@ -207,7 +206,7 @@ class _FindChangeDependencies(object):
         self.change_list = change_list
         self.changed_resources = set(self.change.get_changed_resources())
 
-    def find_dependencies(self):
+    def __call__(self):
         result = [self.change]
         for change in self.change_list[1:]:
             if self._depends_on(change, result):
