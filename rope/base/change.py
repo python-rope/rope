@@ -44,7 +44,7 @@ class Change(object):
 
     @property
     @utils.cacheit
-    def operations(self):
+    def _operations(self):
         return _ResourceOperations(self.resource.project)
 
 
@@ -153,14 +153,14 @@ class ChangeContents(Change):
     def do(self):
         if self.old_contents is None:
             self.old_contents = self.resource.read()
-        self.operations.write_file(self.resource, self.new_contents)
+        self._operations.write_file(self.resource, self.new_contents)
 
     @_handle_job_set
     def undo(self):
         if self.old_contents is None:
             raise exceptions.HistoryError(
                 'Undoing a change that is not performed yet!')
-        self.operations.write_file(self.resource, self.old_contents)
+        self._operations.write_file(self.resource, self.old_contents)
 
     def __str__(self):
         return 'Change <%s>' % self.resource.path
@@ -205,11 +205,11 @@ class MoveResource(Change):
 
     @_handle_job_set
     def do(self):
-        self.operations.move(self.resource, self.new_resource)
+        self._operations.move(self.resource, self.new_resource)
 
     @_handle_job_set
     def undo(self):
-        self.operations.move(self.new_resource, self.resource)
+        self._operations.move(self.new_resource, self.resource)
 
     def __str__(self):
         return 'Move <%s>' % self.resource.path
@@ -236,11 +236,11 @@ class CreateResource(Change):
 
     @_handle_job_set
     def do(self):
-        self.operations.create(self.resource)
+        self._operations.create(self.resource)
 
     @_handle_job_set
     def undo(self):
-        self.operations.remove(self.resource)
+        self._operations.remove(self.resource)
 
     def __str__(self):
         return 'Create Resource <%s>' % (self.resource.path)
@@ -294,7 +294,7 @@ class RemoveResource(Change):
 
     @_handle_job_set
     def do(self):
-        self.operations.remove(self.resource)
+        self._operations.remove(self.resource)
 
     # TODO: Undoing remove operations
     @_handle_job_set
