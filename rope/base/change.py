@@ -13,28 +13,24 @@ class Change(object):
 
     Rope refactorings return `Change` objects.  They can be previewed,
     committed or undone.
-
     """
 
     def do(self, job_set=None):
         """Perform the change
         
         .. note:: Do use this directly.  Use `Project.do()` instead.
-
         """
 
     def undo(self, job_set=None):
         """Perform the change
         
         .. note:: Do use this directly.  Use `History.undo()` instead.
-
         """
 
     def get_description(self):
         """Return the description of this change
 
         This can be used for previewing the changes.
-
         """
         return str(self)
 
@@ -56,7 +52,6 @@ class ChangeSet(Change):
 
     * `changes`: the list of changes
     * `description`: the goal of these changes
-
     """
 
     def __init__(self, description, timestamp=None):
@@ -140,7 +135,6 @@ class ChangeContents(Change):
 
     * `resource`: The `rope.base.resources.File` to change
     * `new_contents`: What to write in the file
-
     """
 
     def __init__(self, resource, new_contents, old_contents=None):
@@ -190,7 +184,6 @@ class MoveResource(Change):
     * `resource`: The `rope.base.resources.Resource` to move
     * `new_resource`: The destination for move; It is the moved
       resource not the folder containing that resource.
-
     """
 
     def __init__(self, resource, new_location, exact=False):
@@ -228,7 +221,6 @@ class CreateResource(Change):
     Fields:
 
     * `resource`: The resource to create
-
     """
 
     def __init__(self, resource):
@@ -283,10 +275,9 @@ class CreateFile(CreateResource):
 class RemoveResource(Change):
     """A class to remove a resource
 
-    Fields
+    Fields:
 
     * `resource`: The resource to be removed
-
     """
 
     def __init__(self, resource):
