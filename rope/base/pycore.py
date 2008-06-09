@@ -252,9 +252,9 @@ class PyCore(object):
         returns `False` the element is not analyzed.
 
         `search_subscopes` is like `should_analyze`; The difference is
-        that if it returns `False` the sub-scopes are not ignored.
-        That is it is assumed that `should_analyze` returns `False for
-        all of its subscopes.
+        that if it returns `False` the sub-scopes are all ignored.
+        That is it is assumed that `should_analyze` returns `False`
+        for all of its subscopes.
 
         `followed_calls` override the value of ``soa_followed_calls``
         project config.
