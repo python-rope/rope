@@ -5,7 +5,7 @@ import time
 import warnings
 
 import rope.base.fscommands
-from rope.base import taskhandle, exceptions
+from rope.base import taskhandle, exceptions, utils
 
 
 class Change(object):
@@ -41,6 +41,11 @@ class Change(object):
     def get_changed_resources(self):
         """Return the list of resources that will be changed"""
         return []
+
+    @property
+    @utils.cacheit
+    def operations(self):
+        return _ResourceOperations(self.resource.project)
 
 
 class ChangeSet(Change):
@@ -143,7 +148,6 @@ class ChangeContents(Change):
         # IDEA: Only saving diffs; possible problems when undo/redoing
         self.new_contents = new_contents
         self.old_contents = old_contents
-        self.operations = self.resource.project.operations
 
     @_handle_job_set
     def do(self):
@@ -191,7 +195,6 @@ class MoveResource(Change):
 
     def __init__(self, resource, new_location, exact=False):
         self.project = resource.project
-        self.operations = resource.project.operations
         self.resource = resource
         if not exact:
             new_location = _get_destination_for_move(resource, new_location)
@@ -230,7 +233,6 @@ class CreateResource(Change):
 
     def __init__(self, resource):
         self.resource = resource
-        self.operations = self.resource.project.operations
 
     @_handle_job_set
     def do(self):
@@ -289,7 +291,6 @@ class RemoveResource(Change):
 
     def __init__(self, resource):
         self.resource = resource
-        self.operations = resource.project.operations
 
     @_handle_job_set
     def do(self):
@@ -323,9 +324,9 @@ def create_job_set(task_handle, change):
 
 class _ResourceOperations(object):
 
-    def __init__(self, project, fscommands):
+    def __init__(self, project):
         self.project = project
-        self.fscommands = fscommands
+        self.fscommands = project.fscommands
         self.direct_commands = rope.base.fscommands.FileSystemCommands()
 
     def _get_fscommands(self, resource):

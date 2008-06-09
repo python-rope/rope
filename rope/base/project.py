@@ -3,7 +3,6 @@ import os
 import shutil
 import warnings
 
-import rope.base.change
 import rope.base.fscommands
 from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
 from rope.base.resourceobserver import *
@@ -14,7 +13,7 @@ class _Project(object):
 
     def __init__(self, fscommands):
         self.observers = []
-        self.operations = rope.base.change._ResourceOperations(self, fscommands)
+        self.fscommands = fscommands
         self.prefs = prefs.Prefs()
         self.data_files = _DataFiles(self)
 
@@ -26,7 +25,7 @@ class _Project(object):
         folder address is an empty string.  If the resource does not
         exist a `exceptions.ResourceNotFound` exception would be
         raised.  Use `get_file()` and `get_folder()` when you need to
-        get non- existent `Resource`\s.
+        get nonexistent `Resource`\s.
 
         """
         path = self._get_resource_path(resource_name)
@@ -117,8 +116,8 @@ class Project(_Project):
 
         :parameters:
             - `projectroot`: The address of the root folder of the project
-            - `fscommands`: Implements the file system operations rope uses
-              have a look at `rope.base.fscommands`
+            - `fscommands`: Implements the file system operations used
+              by rope; have a look at `rope.base.fscommands`
             - `ropefolder`: The name of the folder in which rope stores
               project configurations and data.  Pass `None` for not using
               such a folder at all.
