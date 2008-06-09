@@ -31,8 +31,8 @@ class History(object):
         will not be appended to `self.undo_list`.
 
         """
-        self.current_change = changes
         try:
+            self.current_change = changes
             changes.do(change.create_job_set(task_handle, changes))
         finally:
             self.current_change = None
@@ -67,7 +67,6 @@ class History(object):
             change = self.undo_list[-1]
         dependencies = self._find_dependencies(self.undo_list, change)
         self._move_front(self.undo_list, dependencies)
-        index = self.undo_list.index(change)
         self._perform_undos(len(dependencies), task_handle)
         return self.redo_list[-len(dependencies):]
 
@@ -87,7 +86,6 @@ class History(object):
             change = self.redo_list[-1]
         dependencies = self._find_dependencies(self.redo_list, change)
         self._move_front(self.redo_list, dependencies)
-        index = self.redo_list.index(change)
         self._perform_redos(len(dependencies), task_handle)
         return self.undo_list[-len(dependencies):]
 
