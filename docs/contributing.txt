@@ -6,12 +6,8 @@
 Get Involved!
 =============
 
-Rope was started because of the lack of good refactoring tools for
-python.  But after observing python IDE limitations we grew bigger
-ideas in our heads.
-
-If you want to have a more powerful python IDE and have big ideas
-in your head, you are welcome to get involved.
+Rope's main goal is being a good refactoring tool for python.  It also
+provides some IDE helpers.  If you like to contribute, you're welcome!
 
 
 How to Help Rope?
@@ -32,9 +28,8 @@ subscribe.
 Wish List
 =========
 
-If you're interested you are welcome to discuss your ideas in
-`rope-dev (at) googlegroups.com`_ mailing list or send your patches.
-Here is only a list of suggestions.
+You are welcome to send your patches to `rope-dev (at)
+googlegroups.com`_ mailing list.  Here is only a list of suggestions.
 
 Issues
 ------
@@ -56,26 +51,26 @@ Contributions are welcome.
 Write Plugins For Other IDEs
 ----------------------------
 
-See ropemacs_ and ropeide_.
+See ropemacs_, ropevim_, eric_ and ropeide_.
 
 
 .. _ropemacs: http://rope.sf.net/ropemacs.html
+.. _ropevim: http://rope.sf.net/ropevim.html
 .. _ropeide: http://rope.sf.net/ropeide.html
+.. _eric4: http://www.die-offenbachs.de/eric/index.html
 
 
 Rope Structure
 ==============
 
-Rope package structure::
+Rope package structure:
 
-  rope
-    base
-    refactor
-    contrib
+* `rope.base`: the base part of rope
+* `rope.refactor`: refactorings and tools used in them
+* `rope.contrib`: IDE helpers
 
-Have a look at ``__init__.py`` of packages for finding their
-description.  Also have a look at `library.txt`_ for a few
-examples.
+Have a look at ``__init__.py`` of these packages or `library.txt`_ for
+more information.
 
 .. _`library.txt`: library.html
 
@@ -94,7 +89,7 @@ Rope uses Mercurial_ CMS:
 Submitting patches
 ==================
 
-Patches to rope's code are welcome.
+Patches are welcome.
 
 Patch style
 -----------
@@ -103,3 +98,4 @@ Patch style
 * Use four spaces for indentation.
 * Include good unit-tests if possible.
 * Rope test suite should pass after patching
+* Use ``hg export`` format to preserve your identity
