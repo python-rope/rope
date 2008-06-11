@@ -84,17 +84,14 @@ class Scope(object):
             return body[0].lineno
         return self.get_start()
 
-    _end = None
-
     def get_end(self):
         pymodule = self._get_global_scope().pyobject
         return pymodule.logical_lines.logical_line_in(self.logical_end)[1]
 
+    @utils.cacheit
     def get_logical_end(self):
-        if self._end is None:
-            global_scope = self._get_global_scope()
-            self._end = global_scope._scope_finder.find_scope_end(self)
-        return self._end
+        global_scope = self._get_global_scope()
+        return global_scope._scope_finder.find_scope_end(self)
 
     start = property(get_start)
     end = property(get_end)
