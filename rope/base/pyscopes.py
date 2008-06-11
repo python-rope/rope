@@ -221,14 +221,6 @@ class _HoldingScopeFinder(object):
         return rope.base.codeanalyze.count_line_indents(
             self.lines.get_line(lineno))
 
-    def get_location(self, offset):
-        current_pos = 0
-        lineno = 1
-        while current_pos + len(self.lines.get_line(lineno)) < offset:
-            current_pos += len(self.lines.get_line(lineno)) + 1
-            lineno += 1
-        return (lineno, offset - current_pos)
-
     def _get_scope_indents(self, scope):
         return self.get_indents(scope.get_start())
 
