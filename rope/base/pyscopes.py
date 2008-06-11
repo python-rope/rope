@@ -1,7 +1,7 @@
 import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.pynames
-from rope.base import ast, exceptions
+from rope.base import ast, exceptions, utils
 
 
 class Scope(object):
@@ -35,9 +35,9 @@ class Scope(object):
         return key in self.get_names()
 
     def get_scopes(self):
-        """Return the subscopes of this scope.
+        """Return the subscopes of this scope
 
-        The returned scopes should be sorted by the order they appear
+        The returned scopes should be sorted by the order they appear.
         """
         if self.scopes is None:
             self.scopes = self._create_scopes()
@@ -51,13 +51,12 @@ class Scope(object):
         return None
 
     def get_propagated_names(self):
-        """Return the names defined in this scope that are visible from
-        scopes contained in this scope
+        """Return the visible names of this scope
 
-        This method returns the same dictionary returned by
-        `get_names()` except for `ClassScope` which returns an empty
-        dict.
-
+        Return the names defined in this scope that are visible from
+        scopes containing this scope.  This method returns the same
+        dictionary returned by `get_names()` except for `ClassScope`
+        which returns an empty dict.
         """
         return self.get_names()
 
@@ -96,7 +95,7 @@ class Scope(object):
     def get_logical_end(self):
         if self._end is None:
             global_scope = self._get_global_scope()
-            self._end = global_scope._get_scope_finder().find_scope_end(self)
+            self._end = global_scope._scope_finder.find_scope_end(self)
         return self._end
 
     start = property(get_start)
@@ -111,7 +110,6 @@ class GlobalScope(Scope):
 
     def __init__(self, pycore, module):
         super(GlobalScope, self).__init__(pycore, module, None)
-        self.scope_finder = None
         self.names = module._get_concluded_data()
 
     def get_start(self):
@@ -136,15 +134,15 @@ class GlobalScope(Scope):
         return self.names.get()
 
     def get_inner_scope_for_line(self, lineno, indents=None):
-        return self._get_scope_finder().get_holding_scope(self, lineno, indents)
+        return self._scope_finder.get_holding_scope(self, lineno, indents)
 
     def get_inner_scope_for_offset(self, offset):
-        return self._get_scope_finder().get_holding_scope_for_offset(self, offset)
+        return self._scope_finder.get_holding_scope_for_offset(self, offset)
 
-    def _get_scope_finder(self):
-        if self.scope_finder is None:
-            self.scope_finder = _HoldingScopeFinder(self.pyobject)
-        return self.scope_finder
+    @property
+    @utils.cacheit
+    def _scope_finder(self):
+        return _HoldingScopeFinder(self.pyobject)
 
     @property
     def builtin_names(self):
