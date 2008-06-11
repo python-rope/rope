@@ -10,7 +10,6 @@ class Scope(object):
         self.pycore = pycore
         self.pyobject = pyobject
         self.parent = parent_scope
-        self.scopes = None
 
     def get_names(self):
         """Return the names defined or imported in this scope"""
@@ -34,14 +33,13 @@ class Scope(object):
         """The same as ``key in self.get_names()``"""
         return key in self.get_names()
 
+    @utils.cacheit
     def get_scopes(self):
         """Return the subscopes of this scope
 
         The returned scopes should be sorted by the order they appear.
         """
-        if self.scopes is None:
-            self.scopes = self._create_scopes()
-        return self.scopes
+        return self._create_scopes()
 
     def lookup(self, name):
         if name in self.get_names():
