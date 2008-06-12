@@ -67,13 +67,12 @@ class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
         _BuiltinElement.__init__(self, builtin, parent)
         pyobjects.AbstractClass.__init__(self)
         self.initial = attributes
-        self.attributes = None
 
+    @utils.cacheit
     def get_attributes(self):
-        if self.attributes is None:
-            self.attributes = _object_attributes(self.builtin, self)
-            self.attributes.update(self.initial)
-        return self.attributes
+        result = _object_attributes(self.builtin, self)
+        result.update(self.initial)
+        return result
 
 
 class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
