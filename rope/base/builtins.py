@@ -2,7 +2,7 @@
 import inspect
 
 import rope.base.evaluate
-from rope.base import pynames, pyobjects, arguments
+from rope.base import pynames, pyobjects, arguments, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -11,13 +11,10 @@ class BuiltinModule(pyobjects.AbstractModule):
         super(BuiltinModule, self).__init__()
         self.name = name
         self.initial = initial
-        self.attributes = None
 
     parent = None
 
     def get_attributes(self):
-        if self.attributes is None:
-            self._calculate_attributes()
         return self.attributes
 
     def get_doc(self):
@@ -27,23 +24,20 @@ class BuiltinModule(pyobjects.AbstractModule):
     def get_name(self):
         return self.name
 
-    def _calculate_attributes(self):
-        self.attributes = {}
-        if self.module is not None:
-            self.attributes = _object_attributes(self.module, self)
-        self.attributes.update(self.initial)
-
-    _loaded = False
-    _module = None
     @property
+    @utils.cacheit
+    def attributes(self):
+        result = _object_attributes(self.module, self)
+        result.update(self.initial)
+        return result
+
+    @property
+    @utils.cacheit
     def module(self):
-        if not self._loaded:
-            self._loaded = True
-            try:
-                self._module = __import__(self.name)
-            except ImportError:
-                self._module = None
-        return self._module
+        try:
+            return __import__(self.name)
+        except ImportError:
+            return
 
 
 class _BuiltinElement(object):
