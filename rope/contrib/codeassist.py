@@ -221,9 +221,8 @@ class _PythonCodeAssist(object):
 
     def _dotted_completions(self, module_scope, holding_scope):
         result = {}
-        pyname_finder = rope.base.evaluate.ScopeNameFinder(module_scope.pyobject)
-        found_pyname = rope.base.evaluate.get_pyname_in_scope(
-            holding_scope, self.expression)
+        found_pyname = rope.base.evaluate.eval_str(holding_scope,
+                                                   self.expression)
         if found_pyname is not None:
             element = found_pyname.get_object()
             for name, pyname in element.get_attributes().items():
@@ -328,7 +327,7 @@ class _PythonCodeAssist(object):
             primary = word_finder.get_primary_at(function_parens - 1)
             try:
                 function_pyname = rope.base.evaluate.\
-                    get_pyname_in_scope(scope, primary)
+                    eval_str(scope, primary)
             except exceptions.BadIdentifierError, e:
                 return {}
             if function_pyname is not None:
@@ -477,7 +476,7 @@ def _find_pyname_at(project, source_code, offset, resource, maxfixes):
         expression = expression.replace('\\\n', ' ').replace('\n', ' ')
         lineno = source_code.count('\n', 0, offset)
         scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-        return rope.base.evaluate.get_pyname_in_scope(scope, expression)
+        return rope.base.evaluate.eval_str(scope, expression)
     def new_pyname():
         return rope.base.evaluate.eval_location(pymodule, offset)
     new_code = pymodule.source_code

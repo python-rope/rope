@@ -31,7 +31,7 @@ def eval_node2(scope, node):
     return evaluator.old_result, evaluator.result
 
 
-def get_pyname_in_scope(holding_scope, name):
+def eval_str(holding_scope, name):
     return get_primary_and_pyname_in_scope(holding_scope, name)[1]
 
 

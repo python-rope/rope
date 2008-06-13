@@ -150,7 +150,7 @@ class _CheckObject(object):
            isinstance(expression.ctx, ast.Store):
             start, end = patchedast.node_region(expression)
             text = pymodule.source_code[start:end]
-            return evaluate.get_pyname_in_scope(scope, text)
+            return evaluate.eval_str(scope, text)
         else:
             return evaluate.eval_node(scope, expression)
 
