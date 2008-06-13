@@ -1,6 +1,7 @@
 import re
 
-from rope.base import exceptions, pynames, resourceobserver, taskhandle
+from rope.base import (exceptions, pynames, resourceobserver,
+                       taskhandle, pyobjects, builtins)
 from rope.refactor import importutils
 
 
@@ -163,10 +164,16 @@ class AutoImport(object):
         if underlined is None:
             underlined = self.underlined
         globals = []
-        for name, pyname in pymodule._get_structural_attributes().items():
+        if isinstance(pymodule, pyobjects.PyDefinedObject):
+            attributes = pymodule._get_structural_attributes()
+        else:
+            attributes = pymodule.get_attributes()
+        for name, pyname in attributes.items():
             if not underlined and name.startswith('_'):
                 continue
             if isinstance(pyname, (pynames.AssignedName, pynames.DefinedName)):
+                globals.append(name)
+            if isinstance(pymodule, builtins.BuiltinModule):
                 globals.append(name)
         self.names[modname] = globals
 

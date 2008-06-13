@@ -117,6 +117,10 @@ class AutoImportTest(unittest.TestCase):
         self.assertEquals(set([(self.mod1, 1), (self.mod2, 2)]),
                           set(self.importer.get_name_locations('myvar')))
 
+    def test_handling_builtin_modules(self):
+        self.importer.update_module('sys')
+        self.assertTrue('sys' in self.importer.get_modules('exit'))
+
 
 class AutoImportObservingTest(unittest.TestCase):
 
