@@ -32,10 +32,10 @@ def eval_node2(scope, node):
 
 
 def eval_str(holding_scope, name):
-    return get_primary_and_pyname_in_scope(holding_scope, name)[1]
+    return eval_str2(holding_scope, name)[1]
 
 
-def get_primary_and_pyname_in_scope(holding_scope, name):
+def eval_str2(holding_scope, name):
     try:
         # parenthesizing for handling cases like 'a_var.\nattr'
         node = ast.parse('(%s)' % name)
@@ -107,7 +107,7 @@ class ScopeNameFinder(object):
             name = self.word_finder.get_from_aliased(offset)
         else:
             name = self.word_finder.get_primary_at(offset)
-        return get_primary_and_pyname_in_scope(holding_scope, name)
+        return eval_str2(holding_scope, name)
 
     def get_enclosing_function(self, offset):
         function_parens = self.word_finder.find_parens_start_from_inside(offset)
