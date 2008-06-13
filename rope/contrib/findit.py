@@ -18,7 +18,7 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
     """
     name = worder.get_name_at(resource, offset)
     this_pymodule = project.pycore.resource_to_pyobject(resource)
-    primary, pyname = rope.base.evaluate.get_primary_and_pyname_at(
+    primary, pyname = rope.base.evaluate.eval_location2(
         this_pymodule, offset)
     def is_match(occurrence):
         return unsure

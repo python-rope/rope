@@ -6,15 +6,15 @@ from rope.base import ast, astutils, exceptions, pyobjects, arguments, worder
 
 BadIdentifierError = exceptions.BadIdentifierError
 
-def get_primary_and_pyname_at(pymodule, offset):
+def eval_location(pymodule, offset):
+    """Find the pyname at the offset"""
+    return eval_location2(pymodule, offset)[1]
+
+
+def eval_location2(pymodule, offset):
     """Find the primary and pyname at offset"""
     pyname_finder = ScopeNameFinder(pymodule)
     return pyname_finder.get_primary_and_pyname_at(offset)
-
-
-def eval_location(pymodule, offset):
-    """Find the pyname at the offset"""
-    return get_primary_and_pyname_at(pymodule, offset)[1]
 
 
 def get_statement_result(scope, node):

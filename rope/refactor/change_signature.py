@@ -21,7 +21,7 @@ class ChangeSignature(object):
     def _set_name_and_pyname(self):
         self.name = worder.get_name_at(self.resource, self.offset)
         this_pymodule = self.pycore.resource_to_pyobject(self.resource)
-        self.primary, self.pyname = evaluate.get_primary_and_pyname_at(
+        self.primary, self.pyname = evaluate.eval_location2(
             this_pymodule, self.offset)
         if self.pyname is None:
             return

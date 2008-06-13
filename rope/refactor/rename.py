@@ -22,7 +22,7 @@ class Rename(object):
             self.old_name = worder.get_name_at(self.resource, offset)
             this_pymodule = self.pycore.resource_to_pyobject(self.resource)
             self.old_instance, self.old_pyname = \
-                evaluate.get_primary_and_pyname_at(this_pymodule, offset)
+                evaluate.eval_location2(this_pymodule, offset)
             if self.old_pyname is None:
                 raise exceptions.RefactoringError(
                     'Rename refactoring should be performed'
