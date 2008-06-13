@@ -21,8 +21,7 @@ classifiers=[
     'Operating System :: OS Independent',
     'Environment :: X11 Applications',
     'Environment :: Win32 (MS Windows)',
-    # Have not been tested on MacOS
-    # 'Environment :: MacOS X',
+    'Environment :: MacOS X',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: GNU General Public License (GPL)',
     'Natural Language :: English',
