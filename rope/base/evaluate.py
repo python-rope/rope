@@ -47,27 +47,26 @@ def eval_str2(holding_scope, name):
 class ScopeNameFinder(object):
 
     def __init__(self, pymodule):
-        self.source_code = pymodule.source_code
         self.module_scope = pymodule.get_scope()
         self.lines = pymodule.lines
-        self.word_finder = worder.Worder(self.source_code, True)
+        self.worder = worder.Worder(pymodule.source_code, True)
 
     def _is_defined_in_class_body(self, holding_scope, offset, lineno):
         if lineno == holding_scope.get_start() and \
            holding_scope.parent is not None and \
            holding_scope.parent.get_kind() == 'Class' and \
-           self.word_finder.is_a_class_or_function_name_in_header(offset):
+           self.worder.is_a_class_or_function_name_in_header(offset):
             return True
         if lineno != holding_scope.get_start() and \
            holding_scope.get_kind() == 'Class' and \
-           self.word_finder.is_name_assigned_in_class_body(offset):
+           self.worder.is_name_assigned_in_class_body(offset):
             return True
         return False
 
     def _is_function_name_in_function_header(self, scope, offset, lineno):
         if scope.get_start() <= lineno <= scope.get_body_start() and \
            scope.get_kind() == 'Function' and \
-           self.word_finder.is_a_class_or_function_name_in_header(offset):
+           self.worder.is_a_class_or_function_name_in_header(offset):
             return True
         return False
 
@@ -78,39 +77,38 @@ class ScopeNameFinder(object):
         lineno = self.lines.get_line_number(offset)
         holding_scope = self.module_scope.get_inner_scope_for_line(lineno)
         # function keyword parameter
-        if self.word_finder.is_function_keyword_parameter(offset):
-            keyword_name = self.word_finder.get_word_at(offset)
+        if self.worder.is_function_keyword_parameter(offset):
+            keyword_name = self.worder.get_word_at(offset)
             pyobject = self.get_enclosing_function(offset)
             if isinstance(pyobject, pyobjects.PyFunction):
                 return (None, pyobject.get_parameters().get(keyword_name, None))
-
         # class body
         if self._is_defined_in_class_body(holding_scope, offset, lineno):
             class_scope = holding_scope
             if lineno == holding_scope.get_start():
                 class_scope = holding_scope.parent
-            name = self.word_finder.get_primary_at(offset).strip()
+            name = self.worder.get_primary_at(offset).strip()
             try:
                 return (None, class_scope.pyobject[name])
             except rope.base.exceptions.AttributeNotFoundError:
                 return (None, None)
         # function header
         if self._is_function_name_in_function_header(holding_scope, offset, lineno):
-            name = self.word_finder.get_primary_at(offset).strip()
+            name = self.worder.get_primary_at(offset).strip()
             return (None, holding_scope.parent[name])
         # from statement module
-        if self.word_finder.is_from_statement_module(offset):
-            module = self.word_finder.get_primary_at(offset)
+        if self.worder.is_from_statement_module(offset):
+            module = self.worder.get_primary_at(offset)
             module_pyname = self._find_module(module)
             return (None, module_pyname)
-        if self.word_finder.is_from_aliased(offset):
-            name = self.word_finder.get_from_aliased(offset)
+        if self.worder.is_from_aliased(offset):
+            name = self.worder.get_from_aliased(offset)
         else:
-            name = self.word_finder.get_primary_at(offset)
+            name = self.worder.get_primary_at(offset)
         return eval_str2(holding_scope, name)
 
     def get_enclosing_function(self, offset):
-        function_parens = self.word_finder.find_parens_start_from_inside(offset)
+        function_parens = self.worder.find_parens_start_from_inside(offset)
         try:
             function_pyname = self.get_pyname_at(function_parens - 1)
         except BadIdentifierError:
@@ -250,9 +248,8 @@ class StatementEvaluator(object):
         module = scope.pyobject.get_module()
         names = {}
         for comp in node.generators:
-            new_names = _get_evaluated_names(
-                comp.target, comp.iter, module,
-                '.__iter__().next()', node.lineno)
+            new_names = _get_evaluated_names(comp.target, comp.iter, module,
+                                             '.__iter__().next()', node.lineno)
             names.update(new_names)
         return rope.base.pyscopes.TemporaryScope(scope.pycore, scope, names)
 
