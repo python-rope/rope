@@ -38,7 +38,7 @@ class Arguments(object):
             return self._evaluate(self.args[0])
 
     def _evaluate(self, ast_node):
-        return rope.base.evaluate.get_statement_result(self.scope, ast_node)
+        return rope.base.evaluate.eval_node(self.scope, ast_node)
 
 
 def create_arguments(primary, pyfunction, call_node, scope):

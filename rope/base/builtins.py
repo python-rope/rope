@@ -580,8 +580,7 @@ class Lambda(pyobjects.AbstractFunction):
         self.scope = scope
 
     def get_returned_object(self, args):
-        result = rope.base.evaluate.get_statement_result(self.scope,
-                                                         self.node.body)
+        result = rope.base.evaluate.eval_node(self.scope, self.node.body)
         if result is not None:
             return result.get_object()
         else:

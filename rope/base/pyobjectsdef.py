@@ -89,8 +89,7 @@ class PyFunction(pyobjects.PyFunction):
         scope = self.parent.get_scope()
         if isinstance(self.parent, PyClass):
             for decorator in self.decorators:
-                pyname = rope.base.evaluate.get_statement_result(scope,
-                                                                 decorator)
+                pyname = rope.base.evaluate.eval_node(scope, decorator)
                 if pyname == rope.base.builtins.builtins['staticmethod']:
                     return 'staticmethod'
                 if pyname == rope.base.builtins.builtins['classmethod']:
@@ -132,8 +131,8 @@ class PyClass(pyobjects.PyClass):
     def _get_bases(self):
         result = []
         for base_name in self.ast_node.bases:
-            base = rope.base.evaluate.get_statement_result(
-                self.parent.get_scope(), base_name)
+            base = rope.base.evaluate.eval_node(self.parent.get_scope(),
+                                                base_name)
             if base is not None and \
                base.get_object().get_type() == get_base_type('Type'):
                 result.append(base.get_object())

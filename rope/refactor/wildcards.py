@@ -152,7 +152,7 @@ class _CheckObject(object):
             text = pymodule.source_code[start:end]
             return evaluate.get_pyname_in_scope(scope, text)
         else:
-            return evaluate.get_statement_result(scope, expression)
+            return evaluate.eval_node(scope, expression)
 
     def _evaluate(self, code):
         attributes = code.split('.')

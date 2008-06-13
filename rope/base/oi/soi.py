@@ -86,8 +86,7 @@ def _infer_returned(pyobject, args):
     maxtries = 3
     for returned_node in reversed(scope._get_returned_asts()[-maxtries:]):
         try:
-            resulting_pyname = evaluate.get_statement_result(scope,
-                                                             returned_node)
+            resulting_pyname = evaluate.eval_node(scope, returned_node)
             if resulting_pyname is None:
                 continue
             pyobject = resulting_pyname.get_object()
@@ -139,7 +138,7 @@ def _follow_pyname(assignment, pymodule, lineno=None):
     if lineno is None:
         lineno = _get_lineno_for_node(assign_node)
     holding_scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-    pyname = evaluate.get_statement_result(holding_scope, assign_node)
+    pyname = evaluate.eval_node(holding_scope, assign_node)
     if pyname is not None:
         result = pyname.get_object()
         if isinstance(result.get_type(), rope.base.builtins.Property) and \

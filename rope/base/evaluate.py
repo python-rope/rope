@@ -17,11 +17,10 @@ def eval_location2(pymodule, offset):
     return pyname_finder.get_primary_and_pyname_at(offset)
 
 
-def get_statement_result(scope, node):
+def eval_node(scope, node):
     """Evaluate a `ast.AST` node and return a PyName
 
     Return `None` if the expression cannot be evaluated.
-
     """
     return get_primary_and_result(scope, node)[1]
 
@@ -146,7 +145,7 @@ class StatementEvaluator(object):
         self.result = self.scope.lookup(node.id)
 
     def _Attribute(self, node):
-        pyname = get_statement_result(self.scope, node.value)
+        pyname = eval_node(self.scope, node.value)
         if pyname is None:
             pyname = rope.base.pynames.UnboundName()
         self.old_result = pyname
@@ -243,7 +242,7 @@ class StatementEvaluator(object):
 
     def _what_does_comprehension_hold(self, node):
         scope = self._make_comprehension_scope(node)
-        pyname = get_statement_result(scope, node.elt)
+        pyname = eval_node(scope, node.elt)
         return pyname.get_object() if pyname is not None else None
 
     def _make_comprehension_scope(self, node):
@@ -269,7 +268,7 @@ class StatementEvaluator(object):
             pyobject=rope.base.builtins.get_tuple(*objects))
 
     def _get_object_for_node(self, stmt):
-        pyname = get_statement_result(self.scope, stmt)
+        pyname = eval_node(self.scope, stmt)
         pyobject = None
         if pyname is not None:
             pyobject = pyname.get_object()
@@ -290,7 +289,7 @@ class StatementEvaluator(object):
             self._call_function(node.value, '__getslice__')
 
     def _call_function(self, node, function_name, other_args=None):
-        pyname = get_statement_result(self.scope, node)
+        pyname = eval_node(self.scope, node)
         if pyname is not None:
             pyobject = pyname.get_object()
         else:

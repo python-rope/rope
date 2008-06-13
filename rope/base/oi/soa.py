@@ -109,10 +109,10 @@ class SOIVisitor(object):
             rope.base.ast.walk(child, visitor)
             nodes.extend(visitor.nodes)
         for subscript, levels in nodes:
-            instance = evaluate.get_statement_result(self.scope, subscript.value)
+            instance = evaluate.eval_node(self.scope, subscript.value)
             args_pynames = []
-            args_pynames.append(evaluate.get_statement_result(
-                                self.scope, subscript.slice.value))
+            args_pynames.append(evaluate.eval_node(self.scope,
+                                                   subscript.slice.value))
             value = rope.base.oi.soi._infer_assignment(
                 rope.base.pynames.AssignmentValue(node.value, levels), self.pymodule)
             args_pynames.append(rope.base.pynames.UnboundName(value))
