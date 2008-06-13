@@ -164,7 +164,7 @@ class ChangeOccurrences(object):
         self.offset = offset
         self.old_name = worder.get_name_at(resource, offset)
         self.pymodule = self.pycore.resource_to_pyobject(self.resource)
-        self.old_pyname = evaluate.get_pyname_at(self.pymodule, offset)
+        self.old_pyname = evaluate.eval_location(self.pymodule, offset)
 
     def get_old_name(self):
         word_finder = worder.Worder(self.resource.read())

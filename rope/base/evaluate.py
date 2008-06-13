@@ -12,7 +12,7 @@ def get_primary_and_pyname_at(pymodule, offset):
     return pyname_finder.get_primary_and_pyname_at(offset)
 
 
-def get_pyname_at(pymodule, offset):
+def eval_location(pymodule, offset):
     """Find the pyname at the offset"""
     return get_primary_and_pyname_at(pymodule, offset)[1]
 

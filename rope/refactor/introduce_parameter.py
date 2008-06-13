@@ -55,7 +55,7 @@ class IntroduceParameter(object):
 
     def _get_name_and_pyname(self):
         return (worder.get_name_at(self.resource, self.offset),
-                evaluate.get_pyname_at(self.pymodule, self.offset))
+                evaluate.eval_location(self.pymodule, self.offset))
 
     def get_changes(self, new_parameter):
         definition_info = functionutils.DefinitionInfo.read(self.pyfunction)

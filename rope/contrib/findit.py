@@ -41,7 +41,7 @@ def find_implementations(project, resource, offset, resources=None,
     """
     name = worder.get_name_at(resource, offset)
     this_pymodule = project.pycore.resource_to_pyobject(resource)
-    pyname = rope.base.evaluate.get_pyname_at(this_pymodule, offset)
+    pyname = rope.base.evaluate.eval_location(this_pymodule, offset)
     if pyname is not None:
         pyobject = pyname.get_object()
         if not isinstance(pyobject, rope.base.pyobjects.PyFunction) or \

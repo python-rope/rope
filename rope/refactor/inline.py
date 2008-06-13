@@ -17,7 +17,7 @@ def create_inline(project, resource, offset):
     """
     pycore = project.pycore
     this_pymodule = pycore.resource_to_pyobject(resource)
-    pyname = evaluate.get_pyname_at(this_pymodule, offset)
+    pyname = evaluate.eval_location(this_pymodule, offset)
     message = 'Inline refactoring should be performed on ' \
               'a method, local variable or parameter.'
     if pyname is None:
@@ -38,7 +38,7 @@ class _Inliner(object):
         self.project = project
         self.pycore = project.pycore
         this_pymodule = self.pycore.resource_to_pyobject(resource)
-        self.pyname = evaluate.get_pyname_at(this_pymodule, offset)
+        self.pyname = evaluate.eval_location(this_pymodule, offset)
         range_finder = worder.Worder(resource.read())
         self.region = range_finder.get_primary_range(offset)
         self.name = range_finder.get_word_at(offset)

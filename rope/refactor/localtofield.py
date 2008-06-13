@@ -13,7 +13,7 @@ class LocalToField(object):
     def get_changes(self):
         name = worder.get_name_at(self.resource, self.offset)
         this_pymodule = self.pycore.resource_to_pyobject(self.resource)
-        pyname = evaluate.get_pyname_at(this_pymodule, self.offset)
+        pyname = evaluate.eval_location(this_pymodule, self.offset)
         if not self._is_a_method_local(pyname):
             raise exceptions.RefactoringError(
                 'Convert local variable to field should be performed on \n'

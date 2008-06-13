@@ -10,7 +10,7 @@ class UseFunction(object):
         self.project = project
         self.offset = offset
         this_pymodule = project.pycore.resource_to_pyobject(resource)
-        pyname = evaluate.get_pyname_at(this_pymodule, offset)
+        pyname = evaluate.eval_location(this_pymodule, offset)
         if pyname is None:
             raise exceptions.RefactoringError('Unresolvable name selected')
         self.pyfunction = pyname.get_object()

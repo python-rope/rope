@@ -9,7 +9,7 @@ class EncapsulateField(object):
         self.pycore = project.pycore
         self.name = worder.get_name_at(resource, offset)
         this_pymodule = self.pycore.resource_to_pyobject(resource)
-        self.pyname = evaluate.get_pyname_at(this_pymodule, offset)
+        self.pyname = evaluate.eval_location(this_pymodule, offset)
         if not self._is_an_attribute(self.pyname):
             raise exceptions.RefactoringError(
                 'Encapsulate field should be performed on class attributes.')
