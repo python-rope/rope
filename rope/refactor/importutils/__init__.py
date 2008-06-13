@@ -206,7 +206,7 @@ class ImportTools(object):
 
     def _rename_in_module(self, pymodule, name, new_name, till_dot=False):
         old_name = name.split('.')[-1]
-        old_pyname = rope.base.evaluate.get_string_result(
+        old_pyname = rope.base.evaluate.get_pyname_in_scope(
             pymodule.get_scope(), name)
         occurrence_finder = occurrences.create_finder(
             self.pycore, old_name, old_pyname, imports=False)
