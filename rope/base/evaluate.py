@@ -22,10 +22,10 @@ def eval_node(scope, node):
 
     Return `None` if the expression cannot be evaluated.
     """
-    return get_primary_and_result(scope, node)[1]
+    return eval_node2(scope, node)[1]
 
 
-def get_primary_and_result(scope, node):
+def eval_node2(scope, node):
     evaluator = StatementEvaluator(scope)
     ast.walk(node, evaluator)
     return evaluator.old_result, evaluator.result
@@ -41,7 +41,7 @@ def get_primary_and_pyname_in_scope(holding_scope, name):
         node = ast.parse('(%s)' % name)
     except SyntaxError:
         raise BadIdentifierError('Not a resolvable python identifier selected.')
-    return get_primary_and_result(holding_scope, node)
+    return eval_node2(holding_scope, node)
 
 
 class ScopeNameFinder(object):
@@ -275,7 +275,7 @@ class StatementEvaluator(object):
         return pyobject
 
     def _get_primary_and_object_for_node(self, stmt):
-        primary, pyname = get_primary_and_result(self.scope, stmt)
+        primary, pyname = eval_node2(self.scope, stmt)
         pyobject = None
         if pyname is not None:
             pyobject = pyname.get_object()

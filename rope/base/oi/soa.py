@@ -53,8 +53,7 @@ class SOIVisitor(object):
     def _Call(self, node):
         for child in rope.base.ast.get_child_nodes(node):
             rope.base.ast.walk(child, self)
-        primary, pyname = evaluate.get_primary_and_result(self.scope,
-                                                          node.func)
+        primary, pyname = evaluate.eval_node2(self.scope, node.func)
         if pyname is None:
             return
         pyfunction = pyname.get_object()
