@@ -34,16 +34,7 @@ class ChangeCollector(object):
             return result
 
 
-class Lines(object):
-
-    def get_line(self, line_number):
-        pass
-
-    def length(self):
-        pass
-
-
-class SourceLinesAdapter(Lines):
+class SourceLinesAdapter(object):
     """Adapts source to Lines interface
 
     Note: The creation of this class is expensive.
@@ -83,7 +74,7 @@ class SourceLinesAdapter(Lines):
         return self.starts[lineno] - 1
 
 
-class ArrayLinesAdapter(Lines):
+class ArrayLinesAdapter(object):
 
     def __init__(self, lines):
         self.lines = lines
