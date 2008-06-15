@@ -1,3 +1,4 @@
+import collections
 import re
 import warnings
 
@@ -86,14 +87,15 @@ class _PatchingASTWalker(object):
                 'Node <%s> has been already patched; please report!' %
                 node.__class__.__name__, RuntimeWarning)
             return
+        base_children = collections.deque(base_children)
         self.children_stack.append(base_children)
-        children = []
+        children = collections.deque()
         formats = []
         suspected_start = self.source.offset
         start = suspected_start
         first_token = True
         while base_children:
-            child = base_children.pop(0)
+            child = base_children.popleft()
             if child is None:
                 continue
             offset = self.source.offset
@@ -125,7 +127,7 @@ class _PatchingASTWalker(object):
             start = self._eat_surrounding_parens(
                 children, suspected_start, start)
         if eat_spaces:
-            children.insert(0, self.source[0:start])
+            children.appendleft(self.source[0:start])
             end_spaces = self.source[self.source.offset:]
             self.source.consume(end_spaces)
             children.append(end_spaces)
@@ -148,7 +150,7 @@ class _PatchingASTWalker(object):
         for i in range(opens):
             new_start = self.source.rfind_token('(', 0, new_start)
         if new_start != start:
-            children.insert(0, self.source.get(new_start, start))
+            children.appendleft(self.source.get(new_start, start))
             start = new_start
         return start
 
@@ -158,8 +160,8 @@ class _PatchingASTWalker(object):
             old_start = start
             old_offset = self.source.offset
             start = index
-            children.insert(0, '(')
-            children.insert(1, self.source[start + 1:old_start])
+            children.appendleft(self.source[start + 1:old_start])
+            children.appendleft('(')
             token_start, token_end = self.source.consume(')')
             children.append(self.source[old_offset:token_start])
             children.append(')')
