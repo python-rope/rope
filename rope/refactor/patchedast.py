@@ -117,20 +117,24 @@ class _PatchingASTWalker(object):
                 token_start = region[0]
             if not first_token:
                 formats.append(self.source.get(offset, token_start))
-                children.append(self.source.get(offset, token_start))
+                if self.children:
+                    children.append(self.source.get(offset, token_start))
             else:
                 first_token = False
                 start = token_start
-            children.append(child)
+            if self.children:
+                children.append(child)
         start = self._handle_parens(children, start, formats)
         if eat_parens:
             start = self._eat_surrounding_parens(
                 children, suspected_start, start)
         if eat_spaces:
-            children.appendleft(self.source[0:start])
+            if self.children:
+                children.appendleft(self.source[0:start])
             end_spaces = self.source[self.source.offset:]
             self.source.consume(end_spaces)
-            children.append(end_spaces)
+            if self.children:
+                children.append(end_spaces)
             start = 0
         if self.children:
             node.sorted_children = children
@@ -145,12 +149,14 @@ class _PatchingASTWalker(object):
         for i in range(closes):
             new_end = self.source.consume(')')[1]
         if new_end is not None:
-            children.append(self.source.get(old_end, new_end))
+            if self.children:
+                children.append(self.source.get(old_end, new_end))
         new_start = start
         for i in range(opens):
             new_start = self.source.rfind_token('(', 0, new_start)
         if new_start != start:
-            children.appendleft(self.source.get(new_start, start))
+            if self.children:
+                children.appendleft(self.source.get(new_start, start))
             start = new_start
         return start
 
@@ -160,11 +166,13 @@ class _PatchingASTWalker(object):
             old_start = start
             old_offset = self.source.offset
             start = index
-            children.appendleft(self.source[start + 1:old_start])
-            children.appendleft('(')
+            if self.children:
+                children.appendleft(self.source[start + 1:old_start])
+                children.appendleft('(')
             token_start, token_end = self.source.consume(')')
-            children.append(self.source[old_offset:token_start])
-            children.append(')')
+            if self.children:
+                children.append(self.source[old_offset:token_start])
+                children.append(')')
         return start
 
     def _count_needed_parens(self, children):
