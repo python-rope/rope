@@ -113,12 +113,12 @@ class _PatchingASTWalker(object):
                     region = self.source.consume_not_equal()
                 else:
                     region = self.source.consume(child)
-                child = self.source.get(region[0], region[1])
+                child = self.source[region[0]:region[1]]
                 token_start = region[0]
             if not first_token:
-                formats.append(self.source.get(offset, token_start))
+                formats.append(self.source[offset:token_start])
                 if self.children:
-                    children.append(self.source.get(offset, token_start))
+                    children.append(self.source[offset:token_start])
             else:
                 first_token = False
                 start = token_start
@@ -150,13 +150,13 @@ class _PatchingASTWalker(object):
             new_end = self.source.consume(')')[1]
         if new_end is not None:
             if self.children:
-                children.append(self.source.get(old_end, new_end))
+                children.append(self.source[old_end:new_end])
         new_start = start
         for i in range(opens):
             new_start = self.source.rfind_token('(', 0, new_start)
         if new_start != start:
             if self.children:
-                children.appendleft(self.source.get(new_start, start))
+                children.appendleft(self.source[new_start:start])
             start = new_start
         return start
 
@@ -688,10 +688,7 @@ class _Source(object):
 
     def till_token(self, token):
         new_offset = self.source.index(token, self.offset)
-        return self.get(self.offset, new_offset)
-
-    def get(self, start, end):
-        return self.source[start:end]
+        return self[self.offset:new_offset]
 
     def rfind_token(self, token, start, end):
         index = start
@@ -706,7 +703,7 @@ class _Source(object):
                 return None
 
     def from_offset(self, offset):
-        return self.get(offset, self.offset)
+        return self[offset:self.offset]
 
     def find_backwards(self, pattern, offset):
         return self.source.rindex(pattern, 0, offset)
