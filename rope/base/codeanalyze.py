@@ -103,7 +103,6 @@ class LinesToReadline(object):
 
 
 class _CustomGenerator(object):
-    """A method object for finding the range of a statement"""
 
     def __init__(self, lines):
         self.lines = lines
