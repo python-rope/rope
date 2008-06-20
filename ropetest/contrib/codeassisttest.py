@@ -177,30 +177,47 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_not_in_result('sys', 'local', result)
 
     def test_nested_classes_local_names(self):
-        code = "global_var = 10\ndef my_func():\n    func_var = 20\n    class C(object):\n" + \
-               "        def another_func(self):\n            local_var = 10\n            func"
+        code = 'global_var = 10\n' \
+               'def my_func():\n' \
+               '    func_var = 20\n' \
+               '    class C(object):\n' \
+               '        def another_func(self):\n' \
+               '            local_var = 10\n' \
+               '            func'
         result = self._assist(code)
         self.assert_completion_in_result('func_var', 'local', result)
 
     def test_nested_classes_global(self):
-        code = "global_var = 10\ndef my_func():\n    func_var = 20\n    class C(object):\n" + \
-               "        def another_func(self):\n            local_var = 10\n            globa"
+        code = 'global_var = 10\n' \
+               'def my_func():\n' \
+               '    func_var = 20\n' \
+               '    class C(object):\n' \
+               '        def another_func(self):\n' \
+               '            local_var = 10\n' \
+               '            globa'
         result = self._assist(code)
         self.assert_completion_in_result('global_var', 'global', result)
 
     def test_nested_classes_global_function(self):
-        code = "global_var = 10\ndef my_func():\n    func_var = 20\n    class C(object):\n" + \
-               "        def another_func(self):\n            local_var = 10\n            my_f"
+        code = 'global_var = 10\n' \
+               'def my_func():\n' \
+               '    func_var = 20\n' \
+               '    class C(object):\n' \
+               '        def another_func(self):\n' \
+               '            local_var = 10\n' \
+               '            my_f'
         result = self._assist(code)
         self.assert_completion_in_result('my_func', 'global', result)
 
     def test_proposing_function_parameters_in_functions(self):
-        code = "def my_func(my_param):\n    my_var = 20\n    my_"
+        code = 'def my_func(my_param):\n    my_var = 20\n    my_'
         result = self._assist(code)
         self.assert_completion_in_result('my_param', 'local', result)
 
     def test_proposing_function_keyword_parameters_in_functions(self):
-        code = "def my_func(my_param, *my_list, **my_kws):\n    my_var = 20\n    my_"
+        code = 'def my_func(my_param, *my_list, **my_kws):\n' \
+               '    my_var = 20\n' \
+               '    my_'
         result = self._assist(code)
         self.assert_completion_in_result('my_param', 'local', result)
         self.assert_completion_in_result('my_list', 'local', result)
@@ -307,8 +324,11 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals((None, 1), result)
 
     def test_get_definition_location_dotted_names(self):
-        code = 'class AClass(object):\n    ' + \
-               '@staticmethod\n    def a_method():\n        pass\nAClass.a_method()'
+        code = 'class AClass(object):\n' \
+               '    @staticmethod\n' \
+               '    def a_method():\n' \
+               '        pass\n' \
+               'AClass.a_method()'
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 2), result)
 
@@ -363,8 +383,11 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result('a_var', 'global', result)
 
     def test_simple_type_inferencing(self):
-        code = 'class Sample(object):\n    def __init__(self, a_param):\n        pass\n' + \
-               '    def a_method(self):\n        pass\n' + \
+        code = 'class Sample(object):\n' \
+               '    def __init__(self, a_param):\n' \
+               '        pass\n' \
+               '    def a_method(self):\n' \
+               '        pass\n' \
                'Sample("hey").a_'
         result = self._assist(code)
         self.assert_completion_in_result('a_method', 'attribute', result)
@@ -435,14 +458,17 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_proposals_sorter_and_missing_type_in_typepref(self):
         code = 'my_global_var = 1\n' \
-               'def my_global_func():\n    pass\n' \
+               'def my_global_func():\n' \
+               '    pass\n' \
                'my_'
         result = self._assist(code)
         proposals = sorted_proposals(result, typepref=['function'])
 
     def test_get_pydoc_for_functions(self):
-        src = 'def a_func():\n    """a function"""\n' \
-              '    a_var = 10\na_func()'
+        src = 'def a_func():\n' \
+              '    """a function"""\n' \
+              '    a_var = 10\n' \
+              'a_func()'
         self.assertTrue(get_doc(self.project, src, len(src) - 4).
                         endswith('a function'))
         get_doc(self.project, src, len(src) - 4).index('a_func()')
@@ -468,17 +494,23 @@ class CodeAssistTest(unittest.TestCase):
                                 src.index('obj')) is not None)
 
     def test_get_pydoc_for_methods_should_include_class_name(self):
-        src = 'class AClass(object):\n    def a_method(self):\n'\
-              '        """hey"""\n        pass\n'
+        src = 'class AClass(object):\n' \
+              '    def a_method(self):\n'\
+              '        """hey"""\n' \
+              '        pass\n'
         doc = get_doc(self.project, src, src.index('a_method') + 1)
         doc.index('AClass.a_method')
         doc.index('hey')
 
     def test_get_pydoc_for_methods_should_include_methods_from_super_classes(self):
-        src = 'class A(object):\n    def a_method(self):\n' \
-              '        """hey1"""\n        pass\n' \
-              'class B(A):\n    def a_method(self):\n' \
-              '        """hey2"""\n        pass\n'
+        src = 'class A(object):\n' \
+              '    def a_method(self):\n' \
+              '        """hey1"""\n' \
+              '        pass\n' \
+              'class B(A):\n' \
+              '    def a_method(self):\n' \
+              '        """hey2"""\n' \
+              '        pass\n'
         doc = get_doc(self.project, src, src.rindex('a_method') + 1)
         doc.index('A.a_method')
         doc.index('hey1')
@@ -744,37 +776,50 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         self.assert_completion_in_result('nestedmod', 'global', result)
 
     def test_completing_after_dot(self):
-        code = 'class SampleClass(object):\n    def sample_method(self):\n' \
-               '        pass\nSampleClass.sam'
+        code = 'class SampleClass(object):\n' \
+               '    def sample_method(self):\n' \
+               '        pass\n' \
+               'SampleClass.sam'
         result = self._assist(code)
         self.assert_completion_in_result('sample_method', 'attribute', result)
 
     def test_completing_after_multiple_dots(self):
-        code = 'class Class1(object):\n    class Class2(object):\n' \
+        code = 'class Class1(object):\n' \
+               '    class Class2(object):\n' \
                '        def sample_method(self):\n' \
-               '            pass\nClass1.Class2.sam'
+               '            pass\n' \
+               'Class1.Class2.sam'
         result = self._assist(code)
         self.assert_completion_in_result('sample_method', 'attribute', result)
 
     def test_completing_after_self_dot(self):
-        code = 'class Sample(object):\n    def method1(self):\n        pass\n' \
-               '    def method2(self):\n        self.m'
+        code = 'class Sample(object):\n' \
+               '    def method1(self):\n' \
+               '        pass\n' \
+               '    def method2(self):\n' \
+               '        self.m'
         result = self._assist(code)
         self.assert_completion_in_result('method1', 'attribute', result)
 
     def test_result_start_offset_for_dotted_completions(self):
-        code = 'class Sample(object):\n    def method1(self):\n        pass\n' \
+        code = 'class Sample(object):\n' \
+               '    def method1(self):\n' \
+               '        pass\n' \
                'Sample.me'
         self.assertEquals(len(code) - 2, starting_offset(code, len(code)))
 
     def test_backslash_after_dots(self):
-        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' \
+        code = 'class Sample(object):\n' \
+               '    def a_method(self):\n' \
+               '        pass\n' \
                'Sample.\\\n       a_m'
         result = self._assist(code)
         self.assert_completion_in_result('a_method', 'attribute', result)
 
     def test_not_proposing_global_names_after_dot(self):
-        code = 'class Sample(object):\n    def a_method(self):\n        pass\n' \
+        code = 'class Sample(object):\n' \
+               '    def a_method(self):\n' \
+               '        pass\n' \
                'Sample.'
         result = self._assist(code)
         self.assert_completion_not_in_result('Sample', 'global', result)
