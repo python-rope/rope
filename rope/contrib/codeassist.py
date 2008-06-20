@@ -89,10 +89,7 @@ def get_calltip(project, source_code, offset, resource=None,
     if pyname is None:
         return None
     pyobject = pyname.get_object()
-    result = PyDocExtractor().get_calltip(pyobject, ignore_unknown)
-    if remove_self:
-        return result.replace('(self)', '()').replace('(self, ', '(')
-    return result
+    return PyDocExtractor().get_calltip(pyobject, ignore_unknown, remove_self)
 
 
 def get_definition_location(project, source_code, offset,
@@ -554,7 +551,7 @@ class PyDocExtractor(object):
             return self._trim_docstring(pyobject.get_doc())
         return None
 
-    def get_calltip(self, pyobject, ignore_unknown=False):
+    def get_calltip(self, pyobject, ignore_unknown=False, remove_self=False):
         try:
             if isinstance(pyobject, pyobjects.AbstractClass):
                 pyobject = pyobject['__init__'].get_object()
@@ -565,7 +562,10 @@ class PyDocExtractor(object):
         if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunction):
             return
         if isinstance(pyobject, pyobjects.AbstractFunction):
-            return self._get_function_signature(pyobject, add_module=True)
+            result = self._get_function_signature(pyobject, add_module=True)
+            if remove_self and self._is_method(pyobject):
+                return result.replace('(self)', '()').replace('(self, ', '(')
+            return result
 
     def _get_class_docstring(self, pyclass):
         contents = self._trim_docstring(pyclass.get_doc(), 2)
