@@ -18,10 +18,10 @@
 - added lineno to `rope.contrib.findit.Location` : May 19, 2008
 
 
-- deprecating some of ChangeSignature methods : May 19, 2008
+- deprecated some of `ChangeSignature` methods : May 19, 2008
 
 
-- added ChangeSignature.get_args() : May 19, 2008
+- added `ChangeSignature.get_args()` : May 19, 2008
 
 
 > Public Release 0.8.2 : May 10, 2008
