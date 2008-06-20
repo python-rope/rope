@@ -14,6 +14,13 @@ Overview
 New Features
 ============
 
+* handling builtin modules in autoimport
+* added lineno to `rope.contrib.findit.Location` module
+* added `ChangeSignature.get_args()`
+* creating parent folders of ``.ropeproject`` if don't exist
+* deprecating some of `ChangeSignature` methods
+* fixed inlining functions with line-breaks in arguments
+
 
 Getting Started
 ===============
