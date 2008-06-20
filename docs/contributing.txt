@@ -51,7 +51,7 @@ Contributions are welcome.
 Write Plugins For Other IDEs
 ----------------------------
 
-See ropemacs_, ropevim_, eric_ and ropeide_.
+See ropemacs_, ropevim_, eric4_ and ropeide_.
 
 
 .. _ropemacs: http://rope.sf.net/ropemacs.html
