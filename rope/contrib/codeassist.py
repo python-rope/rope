@@ -61,7 +61,7 @@ def get_doc(project, source_code, offset, resource=None, maxfixes=1):
 
 
 def get_calltip(project, source_code, offset, resource=None,
-                maxfixes=1, ignore_unknown=False):
+                maxfixes=1, ignore_unknown=False, remove_self=False):
     """Get the calltip of a function
 
     The format of the returned string is
@@ -81,12 +81,18 @@ def get_calltip(project, source_code, offset, resource=None,
 
     If `ignore_unknown` is `True`, `None` is returned for functions
     without source-code like builtins and extensions.
+
+    If `remove_self` is `True`, the first parameter whose name is self
+    will be removed.
     """
     pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
-    return PyDocExtractor().get_calltip(pyobject, ignore_unknown)
+    result = PyDocExtractor().get_calltip(pyobject, ignore_unknown)
+    if remove_self:
+        return result.replace('(self)', '()').replace('(self, ', '(')
+    return result
 
 
 def get_definition_location(project, source_code, offset,

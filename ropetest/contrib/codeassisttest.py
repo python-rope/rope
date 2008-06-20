@@ -641,6 +641,22 @@ class CodeAssistTest(unittest.TestCase):
         doc = get_calltip(self.project, src, 1, ignore_unknown=True)
         self.assertTrue(doc is None)
 
+    def test_removing_self_parameter(self):
+        src = 'class C(object):\n' \
+              '    def f(self):\n'\
+              '        pass\n' \
+              'C().f()'
+        doc = get_calltip(self.project, src, src.rindex('f'), remove_self=True)
+        self.assertEquals('C.f()', doc)
+
+    def test_removing_self_parameter_and_more_than_one_parameter(self):
+        src = 'class C(object):\n' \
+              '    def f(self, p1):\n'\
+              '        pass\n' \
+              'C().f()'
+        doc = get_calltip(self.project, src, src.rindex('f'), remove_self=True)
+        self.assertEquals('C.f(p1)', doc)
+
 
 class CodeAssistInProjectsTest(unittest.TestCase):
 
