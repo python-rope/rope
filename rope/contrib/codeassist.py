@@ -83,7 +83,7 @@ def get_calltip(project, source_code, offset, resource=None,
     without source-code like builtins and extensions.
 
     If `remove_self` is `True`, the first parameter whose name is self
-    will be removed.
+    will be removed for methods.
     """
     pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
     if pyname is None:
