@@ -55,7 +55,10 @@ class PyCoreTest(unittest.TestCase):
 
     def test_class_methods(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class SampleClass(object):\n    def sample_method(self):\n        pass\n')
+        code = 'class SampleClass(object):\n' \
+               '    def sample_method(self):\n' \
+               '        pass\n'
+        mod.write(code)
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element['SampleClass'].get_object()
         self.assertTrue('sample_method' in sample_class)
@@ -85,9 +88,12 @@ class PyCoreTest(unittest.TestCase):
 
     def test_class_attributes_set_in_init_overwriting_a_defined(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class C(object):\n'
-                  '    def __init__(self):\n        self.f = 20\n'
-                  '    def f():\n        pass\n')
+        code = 'class C(object):\n' \
+               '    def __init__(self):\n' \
+               '        self.f = 20\n' \
+               '    def f():\n' \
+               '        pass\n'
+        mod.write(code)
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element['C'].get_object()
         f = sample_class['f'].get_object()
@@ -95,7 +101,10 @@ class PyCoreTest(unittest.TestCase):
 
     def test_classes_inside_other_classes(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class SampleClass(object):\n    class InnerClass(object):\n        pass\n\n')
+        code = 'class SampleClass(object):\n' \
+               '    class InnerClass(object):\n' \
+               '        pass\n\n'
+        mod.write(code)
         mod_element = self.pycore.get_module('mod')
         sample_class = mod_element['SampleClass'].get_object()
         var = sample_class['InnerClass'].get_object()
@@ -130,9 +139,9 @@ class PyCoreTest(unittest.TestCase):
         mod = self.pycore.get_string_module('a = 10\n    ')
 
     def test_parameter_info_for_functions(self):
-        mod = self.pycore.get_string_module('def sample_function(param1, param2=10,' +
-                                            ' *param3, **param4):\n    pass')
-        sample_function = mod['sample_function']
+        code = 'def func(param1, param2=10, *param3, **param4):\n    pass'
+        mod = self.pycore.get_string_module(code)
+        sample_function = mod['func']
         self.assertEquals(['param1', 'param2', 'param3', 'param4'],
                           sample_function.get_object().get_param_names())
 
@@ -149,9 +158,12 @@ class PyCoreTest(unittest.TestCase):
         self.assertTrue('var' in scope.get_names())
 
     def test_inheriting_base_class_attributes(self):
-        mod = self.pycore.get_string_module(
-            'class Base(object):\n    def method(self):\n        pass\n'
-            'class Derived(Base):\n    pass\n')
+        code = 'class Base(object):\n' \
+               '    def method(self):\n' \
+               '        pass\n' \
+               'class Derived(Base):\n' \
+               '    pass\n'
+        mod = self.pycore.get_string_module(code)
         derived = mod['Derived'].get_object()
         self.assertTrue('method' in derived)
         self.assertEquals(get_base_type('Function'),
@@ -177,8 +189,10 @@ class PyCoreTest(unittest.TestCase):
                           derived['method'].get_object())
 
     def test_inheriting_unknown_base_class(self):
-        mod = self.pycore.get_string_module('class Derived(NotFound):\n' \
-                                            '    def f(self):\n        pass\n')
+        code = 'class Derived(NotFound):\n' \
+               '    def f(self):\n' \
+               '        pass\n'
+        mod = self.pycore.get_string_module(code)
         derived = mod['Derived'].get_object()
         self.assertTrue('f' in derived)
 
@@ -316,7 +330,8 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals((mod, 1), a_func.get_definition_location())
 
     def test_get_pyname_definition_location_class(self):
-        mod = self.pycore.get_string_module('class AClass(object):\n    pass\n\n')
+        code = 'class AClass(object):\n    pass\n\n'
+        mod = self.pycore.get_string_module(code)
         a_class = mod['AClass']
         self.assertEquals((mod, 1), a_class.get_definition_location())
 
@@ -348,7 +363,8 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals((imported_module, 2), a_func.get_definition_location())
 
     def test_get_pyname_definition_location_parameters(self):
-        mod = self.pycore.get_string_module('def a_func(param1, param2):\n    a_var = param\n')
+        code = 'def a_func(param1, param2):\n    a_var = param\n'
+        mod = self.pycore.get_string_module(code)
         a_func_scope = mod.get_scope().get_scopes()[0]
         param1 = a_func_scope['param1']
         self.assertEquals((mod, 1), param1.get_definition_location())
@@ -363,9 +379,10 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(None, string_module.get_resource())
 
     def test_get_pyname_definition_location_class2(self):
-        mod = self.pycore.get_string_module(
-            'class AClass(object):\n    def __init__(self):\n'
-            '        self.an_attr = 10\n')
+        code = 'class AClass(object):\n' \
+               '    def __init__(self):\n' \
+               '        self.an_attr = 10\n'
+        mod = self.pycore.get_string_module(code)
         a_class = mod['AClass'].get_object()
         an_attr = a_class['an_attr']
         self.assertEquals((mod, 3), an_attr.get_definition_location())
@@ -430,8 +447,11 @@ class PyCoreTest(unittest.TestCase):
 
     def test_not_leaking_for_vars_inside_parent_scope(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class C(object):\n    def f(self):\n'
-                  '        for my_var1, my_var2 in []:\n            pass\n')
+        code = 'class C(object):\n' \
+               '    def f(self):\n' \
+               '        for my_var1, my_var2 in []:\n' \
+               '            pass\n'
+        mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
         c_class = pymod['C'].get_object()
         self.assertFalse('my_var1' in c_class)
@@ -439,16 +459,24 @@ class PyCoreTest(unittest.TestCase):
 
     def test_not_leaking_for_vars_inside_parent_scope2(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class C(object):\n    def f(self):\n'
-                  '        for my_var in []:\n            pass\n')
+        code = 'class C(object):\n' \
+               '    def f(self):\n' \
+               '        for my_var in []:\n' \
+               '            pass\n'
+        mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
         c_class = pymod['C'].get_object()
         self.assertFalse('my_var' in c_class)
 
     def test_variables_defined_in_excepts(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('try:\n    myvar1 = 1\nexcept:\n    myvar2 = 1\n'
-                  'finally:\n    myvar3 = 1\n')
+        code = 'try:\n' \
+               '    myvar1 = 1\n' \
+               'except:\n' \
+               '    myvar2 = 1\n' \
+               'finally:\n' \
+               '    myvar3 = 1\n'
+        mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
         self.assertTrue('myvar1' in pymod)
         self.assertTrue('myvar2' in pymod)
@@ -456,8 +484,10 @@ class PyCoreTest(unittest.TestCase):
 
     def test_not_leaking_tuple_assigned_names_inside_parent_scope(self):
         mod = testutils.create_module(self.project, 'mod')
-        mod.write('class C(object):\n    def f(self):\n'
-                  '        var1, var2 = range(2)\n')
+        code = 'class C(object):\n' \
+               '    def f(self):\n' \
+               '        var1, var2 = range(2)\n'
+        mod.write(code)
         pymod = self.pycore.resource_to_pyobject(mod)
         c_class = pymod['C'].get_object()
         self.assertFalse('var1' in c_class)
@@ -472,9 +502,13 @@ class PyCoreTest(unittest.TestCase):
 
     @testutils.run_only_for_25
     def test_with_statement_variables_and_tuple_assignment(self):
-        code = 'class A(object):\n    def __enter__(self):        return (1, 2)\n'\
-               '    def __exit__(self, type, value, tb):\n        pass\n'\
-               'with A() as (a, b):    pass\n'
+        code = 'class A(object):\n' \
+               '    def __enter__(self):' \
+               '        return (1, 2)\n' \
+               '    def __exit__(self, type, value, tb):\n' \
+               '        pass\n'\
+               'with A() as (a, b):\n' \
+               '    pass\n'
         if sys.version_info < (2, 6, 0):
             code = 'from __future__ import with_statement\n' + code
         pymod = self.pycore.get_string_module(code)
@@ -484,9 +518,12 @@ class PyCoreTest(unittest.TestCase):
     @testutils.run_only_for_25
     def test_with_statement_variable_type(self):
         code = 'class A(object):\n' \
-               '    def __enter__(self):        return self\n'\
-               '    def __exit__(self, type, value, tb):\n        pass\n'\
-               'with A() as var:    pass\n'
+               '    def __enter__(self):\n' \
+               '        return self\n'\
+               '    def __exit__(self, type, value, tb):\n' \
+               '        pass\n' \
+               'with A() as var:\n' \
+               '    pass\n'
         if sys.version_info < (2, 6, 0):
             code = 'from __future__ import with_statement\n' + code
         pymod = self.pycore.get_string_module(code)
@@ -503,8 +540,11 @@ class PyCoreTest(unittest.TestCase):
         pymod.get_attributes()
 
     def test_check_for_else_block(self):
-        mod = self.pycore.get_string_module('for i in range(10):\n    pass\n'
-                                            'else:\n    myvar = 1\n')
+        code = 'for i in range(10):\n' \
+               '    pass\n' \
+               'else:\n' \
+               '    myvar = 1\n'
+        mod = self.pycore.get_string_module(code)
         a_var = mod['myvar']
         self.assertEquals((mod, 4), a_var.get_definition_location())
 
@@ -604,10 +644,15 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.project = testutils.sample_project()
         self.pycore = self.project.pycore
         samplemod = testutils.create_module(self.project, 'samplemod')
-        samplemod.write(
-            'class SampleClass(object):\n    def sample_method():\n        pass'
-            '\n\ndef sample_func():\n    pass\nsample_var = 10\n'
-            '\ndef _underlined_func():\n    pass\n\n')
+        code = 'class SampleClass(object):\n' \
+               '    def sample_method():\n' \
+               '        pass\n\n' \
+               'def sample_func():\n' \
+               '    pass\n' \
+               'sample_var = 10\n\n' \
+               'def _underlined_func():\n' \
+               '    pass\n\n'
+        samplemod.write(code)
         package = testutils.create_package(self.project, 'package')
         nestedmod = testutils.create_module(self.project, 'nestedmod', package)
 
@@ -666,7 +711,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertTrue('nestedmod' in mod)
 
     def test_from_import_function(self):
-        scope = self.pycore.get_string_scope('def f():\n    from samplemod import SampleClass\n')
+        code = 'def f():\n    from samplemod import SampleClass\n'
+        scope = self.pycore.get_string_scope(code)
         self.assertEquals(get_base_type('Type'),
                           scope.get_scopes()[0]['SampleClass'].
                           get_object().get_type())
@@ -709,12 +755,12 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
         mod1 = testutils.create_module(self.project, 'mod1', pkg2)
         mod2 = testutils.create_module(self.project, 'mod2', pkg2)
-        mod = self.pycore.get_string_module('import pkg1.pkg2.mod1\nimport pkg1.pkg2.mod2\n')
+        code = 'import pkg1.pkg2.mod1\nimport pkg1.pkg2.mod2\n'
+        mod = self.pycore.get_string_module(code)
         package1 = mod['pkg1'].get_object()
         package2 = package1['pkg2'].get_object()
         self.assertEquals(2, len(package2.get_attributes()))
-        self.assertTrue('mod1' in package2 and
-                        'mod2' in package2)
+        self.assertTrue('mod1' in package2 and 'mod2' in package2)
 
     def test_multi_dot_imports_as(self):
         pkg = testutils.create_package(self.project, 'pkg')
@@ -766,21 +812,24 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertTrue('a_var' not in pymod['pkg1'].get_object()['pkg2'].get_object())
 
     def test_from_import_nonexistent_module(self):
-        mod = self.pycore.get_string_module('from doesnotexistmod import DoesNotExistClass\n')
+        code = 'from doesnotexistmod import DoesNotExistClass\n'
+        mod = self.pycore.get_string_module(code)
         self.assertTrue('DoesNotExistClass' in mod)
         self.assertEquals(get_base_type('Unknown'),
                           mod['DoesNotExistClass'].
                           get_object().get_type())
 
     def test_from_import_nonexistent_name(self):
-        mod = self.pycore.get_string_module('from samplemod import DoesNotExistClass\n')
+        code = 'from samplemod import DoesNotExistClass\n'
+        mod = self.pycore.get_string_module(code)
         self.assertTrue('DoesNotExistClass' in mod)
         self.assertEquals(get_base_type('Unknown'),
                           mod['DoesNotExistClass'].
                           get_object().get_type())
 
     def test_not_considering_imported_names_as_sub_scopes(self):
-        scope = self.pycore.get_string_scope('from samplemod import SampleClass\n')
+        code = 'from samplemod import SampleClass\n'
+        scope = self.pycore.get_string_scope(code)
         self.assertEquals(0, len(scope.get_scopes()))
 
     def test_not_considering_imported_modules_as_sub_scopes(self):
@@ -788,15 +837,18 @@ class PyCoreInProjectsTest(unittest.TestCase):
         self.assertEquals(0, len(scope.get_scopes()))
 
     def test_inheriting_dotted_base_class(self):
-        mod = self.pycore.get_string_module('import samplemod\n' +
-                                            'class Derived(samplemod.SampleClass):\n    pass\n')
+        code = 'import samplemod\n' \
+               'class Derived(samplemod.SampleClass):\n' \
+               '    pass\n'
+        mod = self.pycore.get_string_module(code)
         derived = mod['Derived'].get_object()
         self.assertTrue('sample_method' in derived)
 
     def test_self_in_methods(self):
-        scope = self.pycore.get_string_scope(
-            'class Sample(object):\n'
-            '    def func(self):\n        pass\n')
+        code = 'class Sample(object):\n' \
+               '    def func(self):\n' \
+               '        pass\n'
+        scope = self.pycore.get_string_scope(code)
         sample_class = scope['Sample'].get_object()
         func_scope = scope.get_scopes()[0].get_scopes()[0]
         self.assertEquals(sample_class,
@@ -805,15 +857,21 @@ class PyCoreInProjectsTest(unittest.TestCase):
                                 get_object())
 
     def test_none_assignments_in_classes(self):
+        code = 'class C(object):\n' \
+               '    var = ""\n' \
+               '    def f(self):\n' \
+               '        self.var += "".join([])\n'
         scope = self.pycore.get_string_scope(
-            'class C(object):\n    var = ""\n'
-            '    def f(self):\n        self.var += "".join([])\n')
+            code)
         c_class = scope['C'].get_object()
         self.assertTrue('var' in c_class)
 
     def test_self_in_methods_with_decorators(self):
-        scope = self.pycore.get_string_scope('class Sample(object):\n    @staticmethod\n' +
-                                             '    def func(self):\n        pass\n')
+        code = 'class Sample(object):\n' \
+               '    @staticmethod\n' \
+               '    def func(self):\n' \
+               '        pass\n'
+        scope = self.pycore.get_string_scope(code)
         sample_class = scope['Sample'].get_object()
         func_scope = scope.get_scopes()[0].get_scopes()[0]
         self.assertNotEquals(sample_class,
