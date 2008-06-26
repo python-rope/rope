@@ -1,7 +1,8 @@
 from rope.base import exceptions
 import unittest
 
-from rope.contrib.findit import find_occurrences, find_implementations
+from rope.contrib.findit import (find_occurrences, find_implementations,
+                                 find_definition)
 from ropetest import testutils
 
 
@@ -91,6 +92,13 @@ class FindItTest(unittest.TestCase):
         mod1.write('class A(object):\n    pass\n')
         offset = mod1.read().index('A')
         result = find_implementations(self.project, mod1, offset)
+
+    def test_trivial_find_definition(self):
+        code = 'def a_func():\n    pass\na_func()'
+        result = find_definition(self.project, code, len(code) - 3)
+        self.assertEquals(code.index('a_func'), result.offset)
+        self.assertEquals(None, result.resource)
+        self.assertEquals(1, result.lineno)
 
 
 def suite():

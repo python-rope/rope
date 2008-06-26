@@ -65,12 +65,36 @@ def find_implementations(project, resource, offset, resources=None,
     return _find_locations(finder, resources, job_set)
 
 
+def find_definition(project, code, offset, resource=None):
+    """Return the definition location of the python name at `offset`
+
+    A `Location` object is returned if the definition location can be
+    determined, otherwise ``None`` is returned.
+    """
+    pymodule = project.pycore.get_string_module(code, resource)
+    pyname = rope.base.evaluate.eval_location(pymodule, offset)
+    if pyname is not None:
+        module, lineno = pyname.get_definition_location()
+        name = rope.base.worder.Worder(code).get_word_at(offset)
+        if lineno is not None:
+            start = pymodule.lines.get_line_start(lineno)
+            def myfilter(occurrence):
+                if occurrence.offset < start:
+                    return False
+            pyname_filter = occurrences.PyNameFilter(pyname)
+            finder = occurrences.Finder(project.pycore, name,
+                                        [myfilter, pyname_filter])
+            for occurrence in finder.find_occurrences(pymodule=pymodule):
+                return Location(occurrence)
+
+
 class Location(object):
 
-    resource = None
-    offset = None
-    lineno = None
-    unsure = False
+    def __init__(self, occurrence):
+        self.resource = occurrence.resource
+        self.offset = occurrence.get_word_range()[0]
+        self.unsure = occurrence.is_unsure()
+        self.lineno = occurrence.lineno
 
 
 def _find_locations(finder, resources, job_set):
@@ -78,11 +102,7 @@ def _find_locations(finder, resources, job_set):
     for resource in resources:
         job_set.started_job(resource.path)
         for occurrence in finder.find_occurrences(resource):
-            location = Location()
-            location.resource = resource
-            location.offset = occurrence.get_word_range()[0]
-            location.unsure = occurrence.is_unsure()
-            location.lineno = occurrence.lineno
+            location = Location(occurrence)
             result.append(location)
         job_set.finished_job()
     return result
