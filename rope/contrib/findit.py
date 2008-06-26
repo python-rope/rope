@@ -71,8 +71,8 @@ def find_definition(project, code, offset, resource=None):
     A `Location` object is returned if the definition location can be
     determined, otherwise ``None`` is returned.
     """
-    pymodule = project.pycore.get_string_module(code, resource)
-    pyname = rope.base.evaluate.eval_location(pymodule, offset)
+    main_module = project.pycore.get_string_module(code, resource)
+    pyname = rope.base.evaluate.eval_location(main_module, offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
         name = rope.base.worder.Worder(code).get_word_at(offset)
