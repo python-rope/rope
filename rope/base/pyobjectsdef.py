@@ -191,23 +191,17 @@ class PyModule(pyobjects.PyModule):
     def _create_scope(self):
         return rope.base.pyscopes.GlobalScope(self.pycore, self)
 
-    _lines = None
     @property
+    @utils.cacheit
     def lines(self):
-        """return a `SourceLinesAdapter`"""
-        if self._lines is None:
-            self._lines = rope.base.codeanalyze.\
-                          SourceLinesAdapter(self.source_code)
-        return self._lines
+        """A `SourceLinesAdapter`"""
+        return rope.base.codeanalyze.SourceLinesAdapter(self.source_code)
 
-    _logical_lines = None
     @property
+    @utils.cacheit
     def logical_lines(self):
-        """return a `LogicalLinesFinder`"""
-        if self._logical_lines is None:
-            self._logical_lines = \
-                rope.base.codeanalyze.CachingLogicalLineFinder(self.lines)
-        return self._logical_lines
+        """A `LogicalLinesFinder`"""
+        return rope.base.codeanalyze.CachingLogicalLineFinder(self.lines)
 
 
 class PyPackage(pyobjects.PyPackage):
