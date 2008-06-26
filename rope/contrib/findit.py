@@ -78,14 +78,13 @@ def find_definition(project, code, offset, resource=None):
         name = rope.base.worder.Worder(code).get_word_at(offset)
         if lineno is not None:
             start = module.lines.get_line_start(lineno)
-            def myfilter(occurrence):
+            def check_offset(occurrence):
                 if occurrence.offset < start:
                     return False
             pyname_filter = occurrences.PyNameFilter(pyname)
             finder = occurrences.Finder(project.pycore, name,
-                                        [myfilter, pyname_filter])
+                                        [check_offset, pyname_filter])
             for occurrence in finder.find_occurrences(pymodule=module):
-                occurrence.resource = module.resource
                 return Location(occurrence)
 
 
@@ -104,7 +103,6 @@ def _find_locations(finder, resources, job_set):
     for resource in resources:
         job_set.started_job(resource.path)
         for occurrence in finder.find_occurrences(resource):
-            location = Location(occurrence)
-            result.append(location)
+            result.append(Location(occurrence))
         job_set.finished_job()
     return result
