@@ -77,14 +77,15 @@ def find_definition(project, code, offset, resource=None):
         module, lineno = pyname.get_definition_location()
         name = rope.base.worder.Worder(code).get_word_at(offset)
         if lineno is not None:
-            start = pymodule.lines.get_line_start(lineno)
+            start = module.lines.get_line_start(lineno)
             def myfilter(occurrence):
                 if occurrence.offset < start:
                     return False
             pyname_filter = occurrences.PyNameFilter(pyname)
             finder = occurrences.Finder(project.pycore, name,
                                         [myfilter, pyname_filter])
-            for occurrence in finder.find_occurrences(pymodule=pymodule):
+            for occurrence in finder.find_occurrences(pymodule=module):
+                occurrence.resource = module.resource
                 return Location(occurrence)
 
 
