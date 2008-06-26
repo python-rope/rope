@@ -92,7 +92,8 @@ class Location(object):
 
     def __init__(self, occurrence):
         self.resource = occurrence.resource
-        self.offset = occurrence.get_word_range()[0]
+        self.region = occurrence.get_word_range()
+        self.offset = self.region[0]
         self.unsure = occurrence.is_unsure()
         self.lineno = occurrence.lineno
 

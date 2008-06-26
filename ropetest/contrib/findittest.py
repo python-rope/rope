@@ -96,9 +96,11 @@ class FindItTest(unittest.TestCase):
     def test_trivial_find_definition(self):
         code = 'def a_func():\n    pass\na_func()'
         result = find_definition(self.project, code, len(code) - 3)
-        self.assertEquals(code.index('a_func'), result.offset)
+        start = code.index('a_func')
+        self.assertEquals(start, result.offset)
         self.assertEquals(None, result.resource)
         self.assertEquals(1, result.lineno)
+        self.assertEquals((start, start + len('a_func')), result.region)
 
 
 def suite():
