@@ -53,7 +53,8 @@ def starting_offset(source_code, offset):
 
 def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     """Get the pydoc"""
-    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
+    pymodule = _get_pymodule(project.pycore, source_code, resource, maxfixes)
+    pyname = _find_pyname_at(project, source_code, offset, pymodule, maxfixes)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
@@ -85,7 +86,8 @@ def get_calltip(project, source_code, offset, resource=None,
     If `remove_self` is `True`, the first parameter whose name is self
     will be removed for methods.
     """
-    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
+    pymodule = _get_pymodule(project.pycore, source_code, resource, maxfixes)
+    pyname = _find_pyname_at(project, source_code, offset, pymodule, maxfixes)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
@@ -102,7 +104,8 @@ def get_definition_location(project, source_code, offset,
     location cannot be determined ``(None, None)`` is returned.
 
     """
-    pyname = _find_pyname_at(project, source_code, offset, resource, maxfixes)
+    pymodule = _get_pymodule(project.pycore, source_code, resource, maxfixes)
+    pyname = _find_pyname_at(project, source_code, offset, pymodule, maxfixes)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
         if module is not None:
@@ -470,20 +473,18 @@ class _Commenter(object):
         return len(self.lines) - 1
 
 
-def _find_pyname_at(project, source_code, offset, resource, maxfixes):
-    pymodule = _get_pymodule(project.pycore, source_code,
-                             resource, maxfixes=maxfixes)
+def _find_pyname_at(project, code, offset, pymodule, maxfixes):
     def old_pyname():
-        word_finder = worder.Worder(source_code, True)
+        word_finder = worder.Worder(code, True)
         expression = word_finder.get_primary_at(offset)
         expression = expression.replace('\\\n', ' ').replace('\n', ' ')
-        lineno = source_code.count('\n', 0, offset)
+        lineno = code.count('\n', 0, offset)
         scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
         return rope.base.evaluate.eval_str(scope, expression)
     def new_pyname():
         return rope.base.evaluate.eval_location(pymodule, offset)
     new_code = pymodule.source_code
-    if new_code.startswith(source_code[:offset + 1]):
+    if new_code.startswith(code[:offset + 1]):
         return new_pyname()
     result = old_pyname()
     if result is None and offset < len(new_code):
