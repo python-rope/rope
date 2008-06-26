@@ -95,12 +95,20 @@ class FindItTest(unittest.TestCase):
 
     def test_trivial_find_definition(self):
         code = 'def a_func():\n    pass\na_func()'
-        result = find_definition(self.project, code, len(code) - 3)
+        result = find_definition(self.project, code, code.rindex('a_func'))
         start = code.index('a_func')
         self.assertEquals(start, result.offset)
         self.assertEquals(None, result.resource)
         self.assertEquals(1, result.lineno)
         self.assertEquals((start, start + len('a_func')), result.region)
+
+    def test_find_definition_in_other_modules(self):
+        mod1 = testutils.create_module(self.project, 'mod1')
+        mod1.write('var = 1\n')
+        code = 'import mod1\nprint(mod1.var)\n'
+        result = find_definition(self.project, code, code.index('var'))
+        self.assertEquals(mod1, result.resource)
+        self.assertEquals(0, result.offset)
 
 
 def suite():
