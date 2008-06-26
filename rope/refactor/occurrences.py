@@ -296,7 +296,7 @@ class _OccurrenceToolsCreator(object):
 
     def __init__(self, pycore, resource=None, pymodule=None, docs=False):
         self.pycore = pycore
-        self.resource = resource
+        self.__resource = resource
         self.__pymodule = pymodule
         self.docs = docs
 
@@ -308,7 +308,7 @@ class _OccurrenceToolsCreator(object):
     @property
     @utils.cacheit
     def source_code(self):
-        if self.resource is not None:
+        if self.__resource is not None:
             return self.resource.read()
         else:
             return self.pymodule.source_code
@@ -317,6 +317,14 @@ class _OccurrenceToolsCreator(object):
     @utils.cacheit
     def word_finder(self):
         return worder.Worder(self.source_code, self.docs)
+
+    @property
+    @utils.cacheit
+    def resource(self):
+        if self.__resource is not None:
+            return self.__resource
+        if self.__pymodule is not None:
+            return self.__pymodule.resource
 
     @property
     @utils.cacheit
