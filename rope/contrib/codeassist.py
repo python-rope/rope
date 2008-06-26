@@ -4,7 +4,6 @@ import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
-import rope.contrib.findit
 from rope.base import pyobjects, pynames, builtins, exceptions, worder
 from rope.base.codeanalyze import ArrayLinesAdapter, LogicalLineFinder, SourceLinesAdapter
 from rope.refactor import functionutils, importutils
@@ -114,6 +113,7 @@ def get_definition_location(project, source_code, offset,
 
 
 def find_occurrences(*args, **kwds):
+    import rope.contrib.findit
     warnings.warn('Use `rope.contrib.findit.find_occurrences()` instead',
                   DeprecationWarning, stacklevel=2)
     return rope.contrib.findit.find_occurrences(*args, **kwds)
