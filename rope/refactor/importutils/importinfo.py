@@ -145,7 +145,7 @@ class FromImport(ImportInfo):
         """
         if self.level == 0:
             return context.pycore.find_module(
-                self.module_name, current_folder=context.folder)
+                self.module_name, folder=context.folder)
         else:
             return context.pycore.find_relative_module(
                 self.module_name, context.folder, self.level)

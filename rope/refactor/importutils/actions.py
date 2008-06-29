@@ -37,7 +37,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         self.to_be_absolute.extend(self._get_relative_to_absolute_list(import_info))
         new_pairs = []
         for name, alias in import_info.names_and_aliases:
-            resource = self.pycore.find_module(name, current_folder=self.folder)
+            resource = self.pycore.find_module(name, folder=self.folder)
             if resource is None:
                 new_pairs.append((name, alias))
                 continue
@@ -52,7 +52,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         for name, alias in import_info.names_and_aliases:
             if alias is not None:
                 continue
-            resource = self.pycore.find_module(name, current_folder=self.folder)
+            resource = self.pycore.find_module(name, folder=self.folder)
             if resource is None:
                 continue
             absolute_name = self.pycore.modname(resource)
@@ -218,7 +218,7 @@ class SelfImportVisitor(ImportInfoVisitor):
     def visitNormalImport(self, import_stmt, import_info):
         new_pairs = []
         for name, alias in import_info.names_and_aliases:
-            resource = self.pycore.find_module(name, current_folder=self.folder)
+            resource = self.pycore.find_module(name, folder=self.folder)
             if resource is not None and resource == self.resource:
                 imported = name
                 if alias is not None:
@@ -280,7 +280,7 @@ class SortingVisitor(ImportInfoVisitor):
         if import_info.names_and_aliases:
             name, alias = import_info.names_and_aliases[0]
             resource = self.pycore.find_module(
-                name, current_folder=self.folder)
+                name, folder=self.folder)
             self._check_imported_resource(import_stmt, resource, name)
 
     def visitFromImport(self, import_stmt, import_info):

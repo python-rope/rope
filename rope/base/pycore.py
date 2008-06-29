@@ -72,9 +72,9 @@ class PyCore(object):
             return resource.name.endswith('.py')
         return self.python_matcher.does_match(resource)
 
-    def get_module(self, name, current_folder=None):
+    def get_module(self, name, folder=None):
         """Returns a `PyObject` if the module was found."""
-        module = self.find_module(name, current_folder)
+        module = self.find_module(name, folder)
         if module is None:
             module = self._builtin_module(name)
             if module is None:
@@ -85,36 +85,34 @@ class PyCore(object):
     def _builtin_module(self, name):
         return self.extension_cache.get_pymodule(name)
 
-    def get_relative_module(self, name, current_folder, level):
-        module = self.find_relative_module(name, current_folder, level)
+    def get_relative_module(self, name, folder, level):
+        module = self.find_relative_module(name, folder, level)
         if module is None:
             raise ModuleNotFoundError('Module %s not found' % name)
         return self.resource_to_pyobject(module)
 
-    def get_string_module(self, module_content, resource=None,
-                          force_errors=False):
-        """Returns a `PyObject` object for the given module_content
+    def get_string_module(self, code, resource=None, force_errors=False):
+        """Returns a `PyObject` object for the given code
 
         If `force_errors` is `True`, `exceptions.ModuleSyntaxError` is
         raised if module has syntax errors.  This overrides
         ``ignore_syntax_errors`` project config.
 
         """
-        return PyModule(self, module_content, resource,
-                        force_errors=force_errors)
+        return PyModule(self, code, resource, force_errors=force_errors)
 
-    def get_string_scope(self, module_content, resource=None):
-        """Returns a `Scope` object for the given module_content"""
-        return self.get_string_module(module_content, resource).get_scope()
+    def get_string_scope(self, code, resource=None):
+        """Returns a `Scope` object for the given code"""
+        return self.get_string_module(code, resource).get_scope()
 
     def _invalidate_resource_cache(self, resource, new_resource=None):
         for observer in self.cache_observers:
             observer(resource)
 
-    def _find_module_in_source_folder(self, source_folder, module_name):
+    def _find_module_in_folder(self, folder, modname):
         result = []
-        module = source_folder
-        packages = module_name.split('.')
+        module = folder
+        packages = modname.split('.')
         for pkg in packages[:-1]:
             if  module.is_folder() and module.has_child(pkg):
                 module = module.get_child(pkg)
@@ -145,39 +143,37 @@ class PyCore(object):
                 pass
         return result
 
-    def find_module(self, module_name, current_folder=None):
+    def find_module(self, modname, folder=None):
         """Returns a resource corresponding to the given module
 
         returns None if it can not be found
         """
-        module_resource_list = self._find_module_resource_list(module_name,
-                                                               current_folder)
-        if module_resource_list is not None:
-            return module_resource_list[-1]
+        resource_list = self._find_module(modname, folder)
+        if resource_list is not None:
+            return resource_list[-1]
 
-    def find_relative_module(self, module_name, current_folder, level):
+    def find_relative_module(self, modname, folder, level):
         for i in range(level - 1):
-            current_folder = current_folder.parent
-        if module_name == '':
-            return current_folder
+            folder = folder.parent
+        if modname == '':
+            return folder
         else:
-            module = self._find_module_in_source_folder(current_folder, module_name)
+            module = self._find_module_in_folder(folder, modname)
             if module is not None:
                 return module[-1]
 
-    def _find_module_resource_list(self, module_name, current_folder=None):
+    def _find_module(self, modname, folder=None):
         """Returns a list of lists of `Folder`s and `File`s for the given module"""
         for src in self.get_source_folders():
-            module = self._find_module_in_source_folder(src, module_name)
+            module = self._find_module_in_folder(src, modname)
             if module is not None:
                 return module
         for src in self.get_python_path_folders():
-            module = self._find_module_in_source_folder(src, module_name)
+            module = self._find_module_in_folder(src, modname)
             if module is not None:
                 return module
-        if current_folder is not None:
-            module = self._find_module_in_source_folder(current_folder,
-                                                        module_name)
+        if folder is not None:
+            module = self._find_module_in_folder(folder, modname)
             if module is not None:
                 return module
         return None
