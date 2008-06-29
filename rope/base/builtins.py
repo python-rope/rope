@@ -32,7 +32,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         result.update(self.initial)
         for modname in self.submodules:
             name = modname.split('.')[-1]
-            result[name] = BuiltinModule(name, self.submodules)
+            result[name] = BuiltinModule(modname, self.submodules)
         return result
 
     @property
