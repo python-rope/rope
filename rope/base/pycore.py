@@ -293,6 +293,10 @@ class PyCore(object):
             source_folder = source_folder.parent
         return module_name
 
+    @property
+    def extension_modules(self):
+        return self.project.prefs.get('extension_modules', [])
+
 
 class _ModuleCache(object):
 
@@ -332,19 +336,16 @@ class _ModuleCache(object):
 class _ExtensionCache(object):
 
     def __init__(self, pycore):
-        self.project = pycore.project
+        self.pycore = pycore
         self.extensions = {}
 
     def get_pymodule(self, name):
         if name == '__builtin__':
             return builtins.builtins
-        if name not in self.extensions and name in self.allowed:
-            self.extensions[name] = builtins.BuiltinModule(name, self.allowed)
+        allowed = self.pycore.extension_modules
+        if name not in self.extensions and name in allowed:
+            self.extensions[name] = builtins.BuiltinModule(name, allowed)
         return self.extensions.get(name)
-
-    @property
-    def allowed(self):
-        return self.project.prefs.get('extension_modules', [])
 
 
 def perform_soa_on_changed_scopes(project, resource, old_contents):
