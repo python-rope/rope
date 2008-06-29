@@ -31,15 +31,19 @@ class BuiltinModule(pyobjects.AbstractModule):
         result = _object_attributes(self.module, self)
         result.update(self.initial)
         for modname in self.submodules:
-            name = modname.split('.')[-1]
-            result[name] = BuiltinModule(modname, self.submodules)
+            name = modname[len(self.name) + 1:]
+            if '.' not in name:
+                result[name] = BuiltinModule(modname, self.submodules)
         return result
 
     @property
     @utils.cacheit
     def module(self):
         try:
-            return __import__(self.name)
+            result = __import__(self.name)
+            for token in self.name.split('.')[1:]:
+                result = getattr(result, token, None)
+            return result
         except ImportError:
             return
 
@@ -50,7 +54,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         for modname in self.modnames:
             prefix = self.name + '.'
             if modname.startswith(prefix):
-                modnames.append(modname[len(prefix):])
+                modnames.append(modname)
         return modnames
 
 
