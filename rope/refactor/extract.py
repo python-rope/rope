@@ -478,14 +478,20 @@ class _ExtractMethodParts(object):
     def _get_function_signature(self, args):
         args = list(args)
         prefix = ''
-        if self.info.method and not self.info.make_global and \
-                _get_function_kind(self.info.scope) == 'method':
+        if self._extracting_method():
             self_name = self._get_self_name()
+            if self_name is None:
+                raise RefactoringError('Extracting a method from a function '
+                                       'with no self argument.')
             if self_name in args:
                 args.remove(self_name)
             args.insert(0, self_name)
         return prefix + self.info.new_name + \
                '(%s)' % self._get_comma_form(args)
+
+    def _extracting_method(self):
+        return self.info.method and not self.info.make_global and \
+               _get_function_kind(self.info.scope) == 'method'
 
     def _get_self_name(self):
         param_names = self.info.scope.pyobject.get_param_names()

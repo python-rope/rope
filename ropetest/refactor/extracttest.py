@@ -150,6 +150,14 @@ class ExtractMethodTest(unittest.TestCase):
                    '        print(self)\n'
         self.assertEquals(expected, refactored)
 
+    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
+    def test_extract_method_with_no_self_as_argument(self):
+        code = 'class AClass(object):\n' \
+               '    def a_func():\n' \
+               '        print(1)\n'
+        start, end = self._convert_line_range_to_offset(code, 3, 3)
+        refactored = self.do_extract_method(code, start, end, 'new_func')
+
     def test_extract_method_with_multiple_methods(self):
         code = 'class AClass(object):\n' \
                '    def a_func(self):\n' \
