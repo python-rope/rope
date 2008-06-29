@@ -219,13 +219,9 @@ class PyPackage(pyobjects.PyPackage):
     def _create_structural_attributes(self):
         result = {}
         modname = self.pycore.modname(self.resource)
-        for extension in self.pycore.extension_modules:
-            if extension.startswith(modname + '.'):
-                name = extension[len(modname) + 1:]
-                if '.' not in name:
-                    module = rope.base.builtins.BuiltinModule(
-                        extension, self.pycore.extension_modules)
-                    result[name] = rope.base.builtins.BuiltinName(module)
+        extension_submodules = self.pycore._builtin_submodules(modname)
+        for name, module in extension_submodules.iteritems():
+            result[name] = rope.base.builtins.BuiltinName(module)
         if self.resource is None:
             return result
         for name, resource in self._get_child_resources().items():

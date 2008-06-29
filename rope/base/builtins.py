@@ -7,11 +7,11 @@ from rope.base import pynames, pyobjects, arguments, utils
 
 class BuiltinModule(pyobjects.AbstractModule):
 
-    def __init__(self, name, modnames=[], initial={}):
+    def __init__(self, name, pycore=None, initial={}):
         super(BuiltinModule, self).__init__()
         self.name = name
+        self.pycore = pycore
         self.initial = initial
-        self.modnames = modnames
 
     parent = None
 
@@ -30,10 +30,10 @@ class BuiltinModule(pyobjects.AbstractModule):
     def attributes(self):
         result = _object_attributes(self.module, self)
         result.update(self.initial)
-        for modname in self.submodules:
-            name = modname[len(self.name) + 1:]
-            if '.' not in name:
-                result[name] = BuiltinModule(modname, self.submodules)
+        if self.pycore is not None:
+            submodules = self.pycore._builtin_submodules(self.name)
+            for name, module in submodules.iteritems():
+                result[name] = rope.base.builtins.BuiltinName(module)
         return result
 
     @property
@@ -46,16 +46,6 @@ class BuiltinModule(pyobjects.AbstractModule):
             return result
         except ImportError:
             return
-
-    @property
-    @utils.cacheit
-    def submodules(self):
-        modnames = []
-        for modname in self.modnames:
-            prefix = self.name + '.'
-            if modname.startswith(prefix):
-                modnames.append(modname)
-        return modnames
 
 
 class _BuiltinElement(object):

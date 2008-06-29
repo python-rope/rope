@@ -82,6 +82,15 @@ class PyCore(object):
             return module
         return self.resource_to_pyobject(module)
 
+    def _builtin_submodules(self, modname):
+        result = {}
+        for extension in self.extension_modules:
+            if extension.startswith(modname + '.'):
+                name = extension[len(modname) + 1:]
+                if '.' not in name:
+                    result[name] = self._builtin_module(extension)
+        return result
+
     def _builtin_module(self, name):
         return self.extension_cache.get_pymodule(name)
 
@@ -340,7 +349,7 @@ class _ExtensionCache(object):
             return builtins.builtins
         allowed = self.pycore.extension_modules
         if name not in self.extensions and name in allowed:
-            self.extensions[name] = builtins.BuiltinModule(name, allowed)
+            self.extensions[name] = builtins.BuiltinModule(name, self.pycore)
         return self.extensions.get(name)
 
 
