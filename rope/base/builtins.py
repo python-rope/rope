@@ -7,10 +7,11 @@ from rope.base import pynames, pyobjects, arguments, utils
 
 class BuiltinModule(pyobjects.AbstractModule):
 
-    def __init__(self, name, initial={}):
+    def __init__(self, name, modnames=[], initial={}):
         super(BuiltinModule, self).__init__()
         self.name = name
         self.initial = initial
+        self.modnames = modnames
 
     parent = None
 
@@ -22,13 +23,16 @@ class BuiltinModule(pyobjects.AbstractModule):
             return self.module.__doc__
 
     def get_name(self):
-        return self.name
+        return self.name.split('.')[-1]
 
     @property
     @utils.cacheit
     def attributes(self):
         result = _object_attributes(self.module, self)
         result.update(self.initial)
+        for modname in self.submodules:
+            name = modname.split('.')[-1]
+            result[name] = BuiltinModule(name, self.submodules)
         return result
 
     @property
@@ -38,6 +42,16 @@ class BuiltinModule(pyobjects.AbstractModule):
             return __import__(self.name)
         except ImportError:
             return
+
+    @property
+    @utils.cacheit
+    def submodules(self):
+        modnames = []
+        for modname in self.modnames:
+            prefix = self.name + '.'
+            if modname.startswith(prefix):
+                modnames.append(modname[len(prefix):])
+        return modnames
 
 
 class _BuiltinElement(object):
@@ -705,4 +719,4 @@ _initial_builtins = {
     'raw_input': BuiltinName(BuiltinFunction(function=_input_function, builtin=raw_input)),
     }
 
-builtins = BuiltinModule('__builtin__', _initial_builtins)
+builtins = BuiltinModule('__builtin__', initial=_initial_builtins)

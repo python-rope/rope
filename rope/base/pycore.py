@@ -320,7 +320,7 @@ class _ExtensionCache(object):
         if name == '__builtin__':
             return builtins.builtins
         if name not in self.extensions and name in self.allowed:
-            self.extensions[name] = builtins.BuiltinModule(name)
+            self.extensions[name] = builtins.BuiltinModule(name, self.allowed)
         return self.extensions.get(name)
 
     @property

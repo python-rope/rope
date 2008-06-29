@@ -412,7 +412,7 @@ class BuiltinModulesTest(unittest.TestCase):
     def setUp(self):
         super(BuiltinModulesTest, self).setUp()
         self.project = testutils.sample_project(
-            extension_modules=['time', 'invalid_module'])
+            extension_modules=['time', 'invalid', 'invalid.sub'])
         self.pycore = self.project.pycore
         self.mod = testutils.create_module(self.project, 'mod')
 
@@ -436,9 +436,15 @@ class BuiltinModulesTest(unittest.TestCase):
         self.assertTrue('rename' not in pymod['os'].get_object())
 
     def test_nonexistent_modules(self):
-        self.mod.write('import invalid_module')
+        self.mod.write('import invalid')
         pymod = self.pycore.resource_to_pyobject(self.mod)
-        pymod['invalid_module'].get_object()
+        pymod['invalid'].get_object()
+
+    def test_nonexistent_modules(self):
+        self.mod.write('import invalid\nimport invalid.sub')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        invalid = pymod['invalid'].get_object()
+        self.assertTrue('sub' in invalid)
 
 
 def suite():
