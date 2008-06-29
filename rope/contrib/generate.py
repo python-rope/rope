@@ -170,7 +170,7 @@ def _add_import_to_module(pycore, resource, imported):
     pymodule = pycore.resource_to_pyobject(resource)
     import_tools = importutils.ImportTools(pycore)
     module_imports = import_tools.module_imports(pymodule)
-    module_name = importutils.get_module_name(pycore, imported)
+    module_name = pycore.modname(imported)
     new_import = importutils.NormalImport(((module_name, None), ))
     module_imports.add_import(new_import)
     return change.ChangeContents(resource, module_imports.get_changed_source())

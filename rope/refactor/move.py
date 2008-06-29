@@ -290,7 +290,7 @@ class MoveGlobal(object):
         return ChangeContents(self.source, source)
 
     def _new_modname(self, dest):
-        return importutils.get_module_name(self.pycore, dest)
+        return self.pycore.modname(dest)
 
     def _dest_module_changes(self, dest):
         # Changing occurrences
@@ -408,7 +408,7 @@ class MoveModule(object):
         return changes
 
     def _new_modname(self, dest):
-        destname = importutils.get_module_name(self.pycore, dest)
+        destname = self.pycore.modname(dest)
         if destname:
             return destname + '.' + self.old_name
         return self.old_name

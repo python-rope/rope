@@ -158,7 +158,7 @@ class AutoImport(object):
             pass
 
     def _module_name(self, resource):
-        return importutils.get_module_name(self.project.pycore, resource)
+        return self.project.pycore.modname(resource)
 
     def _add_names(self, pymodule, modname, underlined):
         if underlined is None:

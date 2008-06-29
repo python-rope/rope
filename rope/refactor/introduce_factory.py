@@ -66,8 +66,7 @@ class IntroduceFactory(object):
                 if global_:
                     new_pymodule = self.pycore.get_string_module(changed_code,
                                                                  self.resource)
-                    modname = importutils.get_module_name(self.pycore,
-                                                          self.resource)
+                    modname = self.pycore.modname(self.resource)
                     changed_code, imported = importutils.add_import(
                         self.pycore, new_pymodule, modname, factory_name)
                     changed_code = changed_code.replace(replacement, imported)

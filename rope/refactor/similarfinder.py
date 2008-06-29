@@ -357,6 +357,5 @@ def _pydefined_to_str(pydefined):
         while pydefined.parent is not None:
             address.insert(0, pydefined.get_name())
             pydefined = pydefined.parent
-        module_name = importutils.get_module_name(pydefined.pycore,
-                                                  pydefined.resource)
+        module_name = pydefined.pycore.modname(pydefined.resource)
     return '.'.join(module_name.split('.') + address)

@@ -635,8 +635,7 @@ class PyDocExtractor(object):
         if module is not None:
             resource = module.get_resource()
             if resource is not None:
-                return importutils.get_module_name(
-                    pyfunction.pycore, resource) + '.'
+                return pyfunction.pycore.modname(resource) + '.'
         return ''
 
     def _trim_docstring(self, docstring, indents=0):

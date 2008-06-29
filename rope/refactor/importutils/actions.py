@@ -41,7 +41,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
             if resource is None:
                 new_pairs.append((name, alias))
                 continue
-            absolute_name = importinfo.get_module_name(self.pycore, resource)
+            absolute_name = self.pycore.modname(resource)
             new_pairs.append((absolute_name, alias))
         if not import_info._are_name_and_alias_lists_equal(
             new_pairs, import_info.names_and_aliases):
@@ -55,7 +55,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
             resource = self.pycore.find_module(name, current_folder=self.folder)
             if resource is None:
                 continue
-            absolute_name = importinfo.get_module_name(self.pycore, resource)
+            absolute_name = self.pycore.modname(resource)
             if absolute_name != name:
                 result.append((name, absolute_name))
         return result
@@ -64,7 +64,7 @@ class RelativeToAbsoluteVisitor(ImportInfoVisitor):
         resource = import_info.get_imported_resource(self.context)
         if resource is None:
             return None
-        absolute_name = importinfo.get_module_name(self.pycore, resource)
+        absolute_name = self.pycore.modname(resource)
         if import_info.module_name != absolute_name:
             import_stmt.import_info = importinfo.FromImport(
                 absolute_name, 0, import_info.names_and_aliases)

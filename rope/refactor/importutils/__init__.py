@@ -8,8 +8,7 @@ import rope.base.evaluate
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import occurrences, rename
 from rope.refactor.importutils import module_imports
-from rope.refactor.importutils.importinfo import \
-     (NormalImport, FromImport, get_module_name)
+from rope.refactor.importutils.importinfo import NormalImport, FromImport
 import rope.base.codeanalyze
 
 
@@ -72,12 +71,12 @@ class ImportTools(object):
 
     def get_import(self, resource):
         """The import statement for `resource`"""
-        module_name = get_module_name(self.pycore, resource)
+        module_name = self.pycore.modname(resource)
         return NormalImport(((module_name, None), ))
 
     def get_from_import(self, resource, name):
         """The from import statement for `name` in `resource`"""
-        module_name = get_module_name(self.pycore, resource)
+        module_name = self.pycore.modname(resource)
         names = []
         if isinstance(name, list):
             names = [(imported, None) for imported in name]
