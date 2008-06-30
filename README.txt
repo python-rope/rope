@@ -46,6 +46,6 @@ Have a look at ``COPYING`` file for more information.
 
 
 .. _`docs/rope.txt`: docs/rope.html
-.. _`docs/rope.txt`: docs/overview.html
+.. _`docs/overview.txt`: docs/overview.html
 .. _`docs/contributing.txt`: docs/contributing.html
 .. _`docs/library.txt`: docs/library.html
