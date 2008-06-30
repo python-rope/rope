@@ -31,12 +31,12 @@ def _analyze_node(pycore, pydefined, should_analyze,
                           return_false, new_followed_calls)
         if not followed_calls:
             _follow = None
-        visitor = SOIVisitor(pycore, pydefined, _follow)
+        visitor = SOAVisitor(pycore, pydefined, _follow)
         for child in rope.base.ast.get_child_nodes(pydefined.get_ast()):
             rope.base.ast.walk(child, visitor)
 
 
-class SOIVisitor(object):
+class SOAVisitor(object):
 
     def __init__(self, pycore, pydefined, follow_callback=None):
         self.pycore = pycore
@@ -102,7 +102,7 @@ class SOIVisitor(object):
     def _Assign(self, node):
         for child in rope.base.ast.get_child_nodes(node):
             rope.base.ast.walk(child, self)
-        visitor = _SOIAssignVisitor()
+        visitor = _SOAAssignVisitor()
         nodes = []
         for child in node.targets:
             rope.base.ast.walk(child, visitor)
@@ -124,10 +124,10 @@ class SOIVisitor(object):
                 # IDEA: handle `__setslice__`, too
 
 
-class _SOIAssignVisitor(astutils._NodeNameCollector):
+class _SOAAssignVisitor(astutils._NodeNameCollector):
 
     def __init__(self):
-        super(_SOIAssignVisitor, self).__init__()
+        super(_SOAAssignVisitor, self).__init__()
         self.nodes = []
 
     def _added(self, node, levels):
