@@ -427,7 +427,31 @@ After inlining `do_something`, ``mod2.py`` would be::
   print sys.version
   c = mod1.C()
 
-Also rope can inline class methods; for instance in::
+Rope can inline methods, too::
+
+  class C(object):
+
+      var = 1
+
+      def f(self, p):
+	  result = self.var + pn
+	  return result
+
+
+  c = C()
+  x = c.f(1)
+
+After inlining `C.f()`, we'll have::
+
+  class C(object):
+
+      var = 1
+
+  c = C()
+  result = c.var + pn
+  x = result
+
+As another example we will inline a `classmethod`::
 
   class C(object):
       @classmethod
@@ -435,7 +459,7 @@ Also rope can inline class methods; for instance in::
           return 'Saying hello to %s from %s' % (name, cls.__name__)
   hello = C.say_hello('Rope')
 
-inlining `say_hello` will result in::
+Inlining `say_hello` will result in::
 
   class C(object):
       pass
