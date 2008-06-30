@@ -470,9 +470,9 @@ Inlining Parameters
 -------------------
 
 `rope.refactor.inline.create_inline()` creates an `InlineParameter`
-object when it is performed on a parameter.  It passes the default
-value of the parameter wherever its function is called without passing
-it.  For instance in::
+object when performed on a parameter.  It passes the default value of
+the parameter wherever its function is called without passing it.  For
+instance in::
 
   def f(p1=1, p2=1):
       pass
@@ -587,9 +587,9 @@ Basic Implicit Interfaces
 
 Implicit interfaces are the interfaces that you don't explicitly
 define; But you expect a group of classes to have some common
-attributes.  These kinds of interfaces are very common in dynamic
-languages; Since we only have implementation inheritance and not
-interface inheritance.  For instance::
+attributes.  These interfaces are very common in dynamic languages;
+Since we only have implementation inheritance and not interface
+inheritance.  For instance::
 
   class A(object):
 
@@ -633,8 +633,8 @@ function to `newcount` will result in::
   count_for(B())
 
 This also works for change method signature.  Note that this feature
-relies on rope's object inference mechanisms to find out the
-parameters that are passed to a function.
+relies on rope's object analysis mechanisms to find out the parameters
+that are passed to a function.
 
 
 Restructurings
@@ -642,8 +642,18 @@ Restructurings
 
 `rope.refactor.restructure` can be used for performing restructurings.
 A restructuring is a program transformation; not as well defined as
-other refactorings like rename.  Let's see some examples (for more
-examples, see the pydocs in `rope.base.restructure` module).
+other refactorings like rename.  In this section, we'll see some
+examples.  After this example you might like to have a look at:
+
+* `rope.refactor.restructure` for more examples and features not
+  described here like adding imports to changed modules.
+* `rope.refactor.wildcards` for an overview of the arguments the
+  default wildcard supports.
+
+Finally, restructurings can be improved in many ways (for instance
+adding new wildcards).  You might like to discuss your ideas in the
+mailing list.
+
 
 Example 1
 '''''''''
@@ -693,14 +703,14 @@ The values are the parameters that are passed to wildcard matchers.
 The arguments a wildcard takes is based on its type.
 
 For checking the type of a wildcard, we can pass ``type=value`` as an
-arg; ``value`` should be resolved to a python variable (or reference).
-For instance for showing `pow` in this example we can use `mod.pow`.
-As you see this string should start from module name.  For referencing
-python builtin types and functions you can use `__builtin__` module
-(for instance `__builtin__.int`).
+argument; ``value`` should be resolved to a python variable (or
+reference).  For instance for specifying `pow` in this example we can
+use `mod.pow`.  As you see, this string should start from module name.
+For referencing python builtin types and functions you can use
+`__builtin__` module (for instance `__builtin__.int`).
 
-For solving the mentioned problem we change our `pattern`.  But `goal`
-remains the same::
+For solving the mentioned problem, we change our `pattern`.  But
+`goal` remains the same::
 
   pattern: ${pow_func}(${param1}, ${param2})
   goal: ${param1} ** ${param2}
@@ -767,7 +777,7 @@ it to `A.f1()` and `A.f2()`::
           print p
 
       def f2(self, p):
-          print p2
+          print p
 
 
   a = A()
@@ -798,7 +808,7 @@ After performing we will have::
           print p
 
       def f2(self, p):
-          print p2
+          print p
 
 
   a = A()
