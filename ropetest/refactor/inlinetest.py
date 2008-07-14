@@ -530,6 +530,11 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.rindex('f'))
         self.assertEquals('var = 1 + 1\n', refactored)
 
+    def test_inlining_variables_before_comparison(self):
+        code = 'start = 1\nprint(start <= 2)\n'
+        refactored = self._inline(code, code.index('start'))
+        self.assertEquals('print(1 <= 2)\n', refactored)
+
 
 def suite():
     result = unittest.TestSuite()

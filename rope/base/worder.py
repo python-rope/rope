@@ -415,7 +415,7 @@ class _RealFinder(object):
         single = self.code[next_char:next_char + 1]
         double = self.code[next_char:next_char + 2]
         triple = self.code[next_char:next_char + 3]
-        if double != '==':
+        if double not in ('==', '<=', '>='):
             for op in [single, double, triple]:
                 if op.endswith('='):
                     return op
