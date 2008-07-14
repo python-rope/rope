@@ -339,9 +339,7 @@ class _GlobalUnboundNameFinder(_UnboundNameFinder):
             self.unbound.add('.'.join(names[:i + 1]))
 
     def _is_node_interesting(self, node):
-        start = self.start
-        end = self.end
-        return start <= node.lineno < end
+        return self.start <= node.lineno < self.end
 
 
 class _LocalUnboundNameFinder(_UnboundNameFinder):
