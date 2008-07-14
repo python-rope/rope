@@ -264,6 +264,11 @@ class WordRangeFinderTest(unittest.TestCase):
         word_finder = worder.Worder(code)
         self.assertFalse(word_finder.is_assigned_here(0))
 
+    def test_is_assigned_here_for_not_equal_test(self):
+        code = 'a != 1\n'
+        word_finder = worder.Worder(code)
+        self.assertFalse(word_finder.is_assigned_here(0))
+
     # XXX: is_assigned_here should work for tuple assignments
     def xxx_test_is_assigned_here_for_tuple_assignment(self):
         code = 'a, b = (1, 2)\n'
