@@ -42,7 +42,6 @@ class HistoryTest(unittest.TestCase):
         self.project.history.undo()
         self.assertFalse(my_file.exists())
 
-
 class IsolatedHistoryTest(unittest.TestCase):
 
     def setUp(self):
@@ -393,12 +392,37 @@ class SavingHistoryTest(unittest.TestCase):
         history.redo()
         self.assertTrue(myfile.exists())
 
+class ChangeStackTest(unittest.TestCase):
+
+    def setUp(self):
+        super(ChangeStackTest, self).setUp()
+        self.project = testutils.sample_project()
+
+    def tearDown(self):
+        testutils.remove_project(self.project)
+        super(ChangeStackTest, self).tearDown()
+
+    def test_change_stack(self):
+        myfile = self.project.root.create_file('myfile.txt')
+        myfile.write('1')
+        stack = rope.base.history.ChangeStack(self.project)
+        stack.push_change(ChangeContents(myfile, '2'))
+        self.assertEquals('2', myfile.read())
+        stack.push_change(ChangeContents(myfile, '3'))
+        self.assertEquals('3', myfile.read())
+        stack.pop_all()
+        self.assertEquals('1', myfile.read())
+        changes = stack.merged_changes()
+        self.project.do(changes)
+        self.assertEquals('3', myfile.read())
+
 
 def suite():
     result = unittest.TestSuite()
     result.addTests(unittest.makeSuite(HistoryTest))
     result.addTests(unittest.makeSuite(IsolatedHistoryTest))
     result.addTests(unittest.makeSuite(SavingHistoryTest))
+    result.addTests(unittest.makeSuite(ChangeStackTest))
     return result
 
 if __name__ == '__main__':

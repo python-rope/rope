@@ -199,6 +199,24 @@ class History(object):
         del self.redo_list[:]
 
 
+class ChangeStack(object):
+
+    def __init__(self, project):
+        self.project = project
+        self.changes = []
+
+    def push_change(self, changes):
+        self.changes.append(changes)
+        self.project.do(changes)
+
+    def pop_all(self):
+        for i in range(len(self.changes)):
+            self.project.history.undo()
+
+    def merged_changes(self):
+        return self.changes[-1]
+
+
 class _FindChangeDependencies(object):
 
     def __init__(self, change_list):
