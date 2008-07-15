@@ -201,8 +201,9 @@ class History(object):
 
 class ChangeStack(object):
 
-    def __init__(self, project):
+    def __init__(self, project, description='merged changes'):
         self.project = project
+        self.description = description
         self.changes = []
 
     def push_change(self, changes):
@@ -214,7 +215,19 @@ class ChangeStack(object):
             self.project.history.undo()
 
     def merged_changes(self):
-        return self.changes[-1]
+        result = change.ChangeSet(self.description)
+        for changes in self.changes:
+            for c in self._basic_changes(changes):
+                result.add_change(c)
+        return result
+
+    def _basic_changes(self, changes):
+        if isinstance(changes, change.ChangeSet):
+            for child in changes.changes:
+                for atom in self._basic_changes(child):
+                    yield atom
+        else:
+            yield changes
 
 
 class _FindChangeDependencies(object):
