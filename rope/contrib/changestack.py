@@ -8,7 +8,7 @@ class ChangeStack(object):
         self.description = description
         self.stack = []
 
-    def push_change(self, changes):
+    def push(self, changes):
         self.stack.append(changes)
         self.project.do(changes)
 
@@ -16,7 +16,7 @@ class ChangeStack(object):
         for i in range(len(self.stack)):
             self.project.history.undo()
 
-    def merged_changes(self):
+    def merged(self):
         result = change.ChangeSet(self.description)
         for changes in self.stack:
             for c in self._basic_changes(changes):
