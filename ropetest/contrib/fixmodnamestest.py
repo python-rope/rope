@@ -27,6 +27,17 @@ class FixModuleNamesTest(unittest.TestCase):
         self.assertFalse(pkg.exists())
         self.assertTrue(self.project.get_resource('pkg/__init__.py').exists())
 
+    def test_fixing_contents(self):
+        mod1 = create_module(self.project, 'Mod1')
+        mod2 = create_module(self.project, 'Mod2')
+        mod1.write('import Mod2\n')
+        mod2.write('import Mod1\n')
+        self.project.do(FixModuleNames(self.project).get_changes())
+        newmod1 = self.project.get_resource('mod1.py')
+        newmod2 = self.project.get_resource('mod2.py')
+        self.assertEquals('import mod2\n', newmod1.read())
+        self.assertEquals('import mod1\n', newmod2.read())
+
 
 if __name__ == '__main__':
     unittest.main()
