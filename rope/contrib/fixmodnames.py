@@ -8,7 +8,7 @@ class FixModuleNames(object):
     def __init__(self, project):
         self.project = project
 
-    def get_changes(self, fix=str.lower,
+    def get_changes(self, fixer=str.lower,
                     task_handle=taskhandle.NullTaskHandle()):
         stack = changestack.ChangeStack(self.project, 'Fixing module names')
         try:
@@ -17,7 +17,7 @@ class FixModuleNames(object):
                     modname = resource.name.rsplit('.', 1)[0]
                     if modname == '__init__':
                         modname = resource.parent.name
-                    if modname != fix(modname):
+                    if modname != fixer(modname):
                         renamer = rename.Rename(self.project, resource)
                         changes = renamer.get_changes(modname.lower(),
                                                       task_handle=handle)
