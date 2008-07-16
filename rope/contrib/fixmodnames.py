@@ -18,20 +18,36 @@ class FixModuleNames(object):
 
         """
         stack = changestack.ChangeStack(self.project, 'Fixing module names')
+        jobset = task_handle.create_jobset('Fixing module names',
+                                           self._count_fixes(fixer) + 1)
         try:
             while True:
-                for resource in self.project.pycore.get_python_files():
-                    modname = resource.name.rsplit('.', 1)[0]
-                    if modname == '__init__':
-                        modname = resource.parent.name
-                    if modname != fixer(modname):
-                        renamer = rename.Rename(self.project, resource)
-                        changes = renamer.get_changes(modname.lower(),
-                                                      task_handle=handle)
-                        stack.push(changes)
-                        break
+                for resource in self._tobe_fixed(fixer):
+                    jobset.started_job(resource.path)
+                    renamer = rename.Rename(self.project, resource)
+                    changes = renamer.get_changes(fixer(self._name(resource)))
+                    stack.push(changes)
+                    jobset.finished_job()
+                    break
                 else:
                     break
         finally:
+            jobset.started_job('Reverting to original state')
             stack.pop_all()
+            jobset.finished_job()
         return stack.merged()
+
+    def _count_fixes(self, fixer):
+        return len(list(self._tobe_fixed(fixer)))
+
+    def _tobe_fixed(self, fixer):
+        for resource in self.project.pycore.get_python_files():
+            modname = self._name(resource)
+            if modname != fixer(modname):
+                yield resource
+
+    def _name(self, resource):
+        modname = resource.name.rsplit('.', 1)[0]
+        if modname == '__init__':
+            modname = resource.parent.name
+        return modname
