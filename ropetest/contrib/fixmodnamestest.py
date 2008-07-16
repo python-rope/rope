@@ -38,6 +38,14 @@ class FixModuleNamesTest(unittest.TestCase):
         self.assertEquals('import mod2\n', newmod1.read())
         self.assertEquals('import mod1\n', newmod2.read())
 
+    def test_handling_nested_modules(self):
+        pkg = create_package(self.project, 'Pkg')
+        mod = create_module(self.project, 'Pkg.Mod')
+        self.project.do(FixModuleNames(self.project).get_changes())
+        self.assertFalse(pkg.exists())
+        self.assertTrue(self.project.get_resource('pkg/__init__.py').exists())
+        self.assertTrue(self.project.get_resource('pkg/mod.py').exists())
+
 
 if __name__ == '__main__':
     unittest.main()
