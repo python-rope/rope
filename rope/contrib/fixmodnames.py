@@ -1,3 +1,4 @@
+"""Fix the name of modules"""
 from rope.base import change, taskhandle
 from rope.contrib import changestack
 from rope.refactor import rename
@@ -10,6 +11,12 @@ class FixModuleNames(object):
 
     def get_changes(self, fixer=str.lower,
                     task_handle=taskhandle.NullTaskHandle()):
+        """Fix module names
+
+        `fixer` is a function that takes and returns a `str`.  Given
+        the name of a module, it should return the fixed name.
+
+        """
         stack = changestack.ChangeStack(self.project, 'Fixing module names')
         try:
             while True:
