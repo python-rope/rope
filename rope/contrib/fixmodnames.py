@@ -13,6 +13,8 @@ class FixModuleNames(object):
         try:
             for resource in self.project.pycore.get_python_files():
                 modname = resource.name.rsplit('.', 1)[0]
+                if modname == '__init__':
+                    modname = resource.parent.name
                 if not modname.islower():
                     renamer = rename.Rename(self.project, resource)
                     changes = renamer.get_changes(modname.lower())
