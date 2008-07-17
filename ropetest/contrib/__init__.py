@@ -1,20 +1,27 @@
 import unittest
 
 import ropetest.contrib.autoimporttest
-import ropetest.contrib.codeassisttest
-import ropetest.contrib.findittest
-import ropetest.contrib.generatetest
 import ropetest.contrib.changestacktest
+import ropetest.contrib.codeassisttest
+import ropetest.contrib.finderrorstest
+import ropetest.contrib.findittest
+import ropetest.contrib.fixmodnamestest
+import ropetest.contrib.generatetest
 
 
 def suite():
     result = unittest.TestSuite()
-    result.addTests(unittest.makeSuite(ropetest.contrib.generatetest.GenerateTest))
+    result.addTests(unittest.makeSuite(ropetest.contrib.generatetest.
+                                       GenerateTest))
     result.addTests(ropetest.contrib.codeassisttest.suite())
     result.addTests(ropetest.contrib.autoimporttest.suite())
     result.addTests(ropetest.contrib.findittest.suite())
-    result.addTests(unittest.makeSuite(
-            ropetest.contrib.changestacktest.ChangeStackTest))
+    result.addTests(unittest.makeSuite(ropetest.contrib.changestacktest.
+                                       ChangeStackTest))
+    result.addTests(unittest.makeSuite(ropetest.contrib.fixmodnamestest.
+                                       FixModuleNamesTest))
+    result.addTests(unittest.makeSuite(ropetest.contrib.finderrorstest.
+                                       FindErrorsTest))
     return result
 
 
