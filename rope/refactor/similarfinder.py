@@ -77,7 +77,7 @@ class RawSimilarFinder(object):
     def _init_using_ast(self, node, source):
         self.source = source
         self._matched_asts = {}
-        if not hasattr(node, 'sorted_children'):
+        if not hasattr(node, 'region'):
             self.ast = patchedast.patch_ast(node, source)
 
     def get_matches(self, code, start=0, end=None, skip=None):
