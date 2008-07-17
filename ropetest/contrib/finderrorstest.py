@@ -27,5 +27,11 @@ class FindErrorsTest(unittest.TestCase):
         self.assertEquals(1, len(result))
         self.assertEquals(1, result[0].lineno)
 
+    def test_ignoring_builtins(self):
+        self.mod.write('range(2)\n')
+        result = finderrors.find_errors(self.project, self.mod)
+        self.assertEquals(0, len(result))
+
+
 if __name__ == '__main__':
     unittest.main()
