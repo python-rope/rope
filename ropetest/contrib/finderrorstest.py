@@ -32,6 +32,16 @@ class FindErrorsTest(unittest.TestCase):
         result = finderrors.find_errors(self.project, self.mod)
         self.assertEquals(0, len(result))
 
+    def test_bad_attributes(self):
+        code = 'class C(object):\n' \
+               '    pass\n' \
+               'c = C()\n' \
+               'print(c.var)\n'
+        self.mod.write(code)
+        result = finderrors.find_errors(self.project, self.mod)
+        self.assertEquals(1, len(result))
+        self.assertEquals(4, result[0].lineno)
+
 
 if __name__ == '__main__':
     unittest.main()

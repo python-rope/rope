@@ -25,8 +25,20 @@ class _BadAccessFinder(object):
         elif self._is_defined_after(scope, pyname, node.lineno):
             self._add_error(node, 'Defined later')
 
+    def _Attribute(self, node):
+        if not isinstance(node.ctx, ast.Store):
+            scope = self.scope.get_inner_scope_for_line(node.lineno)
+            pyname = evaluate.eval_node(scope, node.value)
+            if pyname is not None and node.attr not in pyname.get_object():
+                self._add_error(node, 'Unresolved attribute')
+        ast.walk(node.value, self)
+
     def _add_error(self, node, msg):
-        error = Error(node.lineno, msg + ' %s' % node.id)
+        if isinstance(node, ast.Attribute):
+            name = node.attr
+        else:
+            name = node.id
+        error = Error(node.lineno, msg + ' ' + name)
         self.errors.append(error)
 
     def _is_defined_after(self, scope, pyname, lineno):
