@@ -2,7 +2,8 @@ import re
 
 import rope.base.exceptions
 import rope.refactor.functionutils
-from rope.base import pynames, pyobjects, codeanalyze, taskhandle, evaluate, worder
+from rope.base import (pynames, pyobjects, codeanalyze,
+                       taskhandle, evaluate, worder, utils)
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import (occurrences, rename, sourceutils,
                            importutils, move, change_signature)
@@ -377,9 +378,6 @@ class _InlineFunctionCallsForModuleHandle(object):
         self.generator = definition_generator
         self.resource = resource
         self.aim = aim_offset
-        self._pymodule = None
-        self._lines = None
-        self._source = None
 
     def occurred_inside_skip(self, change_collector, occurrence):
         if not occurrence.is_defined():
@@ -421,27 +419,23 @@ class _InlineFunctionCallsForModuleHandle(object):
         finder = worder.Worder(source)
         return finder.get_word_parens_range(offset)[1]
 
-    def _get_pymodule(self):
-        if self._pymodule is None:
-            self._pymodule = self.pycore.resource_to_pyobject(self.resource)
-        return self._pymodule
+    @property
+    @utils.saveit
+    def pymodule(self):
+        return self.pycore.resource_to_pyobject(self.resource)
 
-    def _get_source(self):
-        if self._source is None:
-            if self.resource is not None:
-                self._source = self.resource.read()
-            else:
-                self._source = self.pymodule.source_code
-        return self._source
+    @property
+    @utils.saveit
+    def source(self):
+        if self.resource is not None:
+            return self.resource.read()
+        else:
+            return self.pymodule.source_code
 
-    def _get_lines(self):
-        if self._lines is None:
-            self._lines = self.pymodule.lines
-        return self._lines
-
-    source = property(_get_source)
-    lines = property(_get_lines)
-    pymodule = property(_get_pymodule)
+    @property
+    @utils.saveit
+    def lines(self):
+        return self.pymodule.lines
 
 
 def _inline_variable(pycore, pymodule, pyname, name,
