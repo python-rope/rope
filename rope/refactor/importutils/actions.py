@@ -2,6 +2,7 @@ import os
 import sys
 
 from rope.base import pyobjects, exceptions
+from rope.refactor import occurrences
 from rope.refactor.importutils import importinfo
 
 
@@ -352,6 +353,33 @@ class LongImportVisitor(ImportInfoVisitor):
     def _is_long(self, name):
         return name.count('.') > self.maxdots or \
                ('.' in name and len(name) > self.maxlength)
+
+
+class RemovePyNameVisitor(ImportInfoVisitor):
+
+    def __init__(self, pycore, pymodule, pyname, folder):
+        self.pymodule = pymodule
+        self.pyname = pyname
+        self.context = importinfo.ImportContext(pycore, folder)
+
+    def visitFromImport(self, import_stmt, import_info):
+        new_pairs = []
+        if not import_info.is_star_import():
+            for name, alias in import_info.names_and_aliases:
+                try:
+                    pyname = self.pymodule[alias or name]
+                    if occurrences.same_pyname(self.pyname, pyname):
+                        continue
+                except exceptions.AttributeNotFoundError:
+                    pass
+                new_pairs.append((name, alias))
+        return importinfo.FromImport(
+            import_info.module_name, import_info.level, new_pairs)
+
+    def dispatch(self, import_):
+        result = ImportInfoVisitor.dispatch(self, import_)
+        if result is not None:
+            import_.import_info = result
 
 
 def _is_future(info):

@@ -237,6 +237,13 @@ class ModuleImports(object):
             self.add_import(import_info)
         return visitor.to_be_renamed
 
+    def remove_pyname(self, pyname):
+        """Removes pyname when imported in ``from mod import x``"""
+        visitor = actions.RemovePyNameVisitor(self.pycore, self.pymodule,
+                                              pyname, self._current_folder())
+        for import_stmt in self.imports:
+            import_stmt.accept(visitor)
+
 
 class _OneTimeSelector(object):
 

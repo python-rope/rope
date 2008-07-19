@@ -7,7 +7,7 @@ refactorings or as a separate task.
 import rope.base.evaluate
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import occurrences, rename
-from rope.refactor.importutils import module_imports
+from rope.refactor.importutils import module_imports, actions
 from rope.refactor.importutils.importinfo import NormalImport, FromImport
 import rope.base.codeanalyze
 
