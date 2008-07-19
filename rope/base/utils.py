@@ -11,6 +11,7 @@ def saveit(func):
         return getattr(self, name)
     return _wrapper
 
+cacheit = saveit
 
 def prevent_recursion(default):
     """A decorator that returns the return value of `default` in recursions"""
