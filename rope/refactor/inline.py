@@ -191,17 +191,23 @@ class InlineVariable(_Inliner):
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
             resources = self.pycore.get_python_files()
+            if only_current:
+                resources = [self.resource]
         changes = ChangeSet('Inline variable <%s>' % self.name)
-        if self.resource in resources:
-            source = self._change_main_module(remove, only_current)
-            changes.add_change(ChangeContents(self.resource, source))
+        jobset = task_handle.create_jobset('Calculating changes',
+                                           len(resources))
         for resource in resources:
-            if not only_current and self.resource != resource:
+            jobset.started_job(resource.path)
+            if resource == self.resource:
+                source = self._change_main_module(remove, only_current)
+                changes.add_change(ChangeContents(self.resource, source))
+            else:
                 result = self._change_module(resource)
                 if result is not None:
                     result = _add_imports(self.pycore, result,
                                           resource, self.imports)
                     changes.add_change(ChangeContents(resource, result))
+            jobset.finished_job()
         return changes
 
     def _change_main_module(self, remove, only_current):
