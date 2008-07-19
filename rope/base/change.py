@@ -39,7 +39,7 @@ class Change(object):
         return []
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def _operations(self):
         return _ResourceOperations(self.resource.project)
 

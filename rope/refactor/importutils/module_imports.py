@@ -13,7 +13,7 @@ class ModuleImports(object):
         self.filter = import_filter
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def imports(self):
         finder = _GlobalImportFinder(self.pymodule, self.pycore)
         result = finder.find_import_statements()

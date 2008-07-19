@@ -26,7 +26,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         return self.name.split('.')[-1]
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def attributes(self):
         result = _object_attributes(self.module, self)
         result.update(self.initial)
@@ -37,7 +37,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         return result
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def module(self):
         try:
             result = __import__(self.name)
@@ -76,7 +76,7 @@ class BuiltinClass(_BuiltinElement, pyobjects.AbstractClass):
         pyobjects.AbstractClass.__init__(self)
         self.initial = attributes
 
-    @utils.cacheit
+    @utils.saveit
     def get_attributes(self):
         result = _object_attributes(self.builtin, self)
         result.update(self.initial)

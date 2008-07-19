@@ -308,12 +308,12 @@ class _ChangeCallsInModule(object):
         return change_collector.get_changed()
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def pymodule(self):
         return self.pycore.resource_to_pyobject(self.resource)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def source(self):
         if self.resource is not None:
             return self.resource.read()
@@ -321,7 +321,7 @@ class _ChangeCallsInModule(object):
             return self.pymodule.source_code
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def lines(self):
         return self.pymodule.lines
 

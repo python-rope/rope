@@ -91,12 +91,12 @@ class _Project(object):
         pass
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def history(self):
         return history.History(self)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def pycore(self):
         return pycore.PyCore(self)
 
@@ -296,7 +296,7 @@ class _FileListCacher(object):
         self.needs_gc = True
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def observer(self):
         rawobserver = ResourceObserver(
             self._changed, self._moved, self._created,

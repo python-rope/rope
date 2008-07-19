@@ -1,7 +1,7 @@
 import warnings
 
 
-def cacheit(func):
+def saveit(func):
     """A decorator that caches the return value of a function"""
 
     name = '_' + func.__name__

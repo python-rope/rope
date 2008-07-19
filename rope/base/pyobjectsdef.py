@@ -192,13 +192,13 @@ class PyModule(pyobjects.PyModule):
         return rope.base.pyscopes.GlobalScope(self.pycore, self)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def lines(self):
         """A `SourceLinesAdapter`"""
         return rope.base.codeanalyze.SourceLinesAdapter(self.source_code)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def logical_lines(self):
         """A `LogicalLinesFinder`"""
         return rope.base.codeanalyze.CachingLogicalLineFinder(self.lines)

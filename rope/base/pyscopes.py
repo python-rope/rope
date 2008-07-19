@@ -33,7 +33,7 @@ class Scope(object):
         """The same as ``key in self.get_names()``"""
         return key in self.get_names()
 
-    @utils.cacheit
+    @utils.saveit
     def get_scopes(self):
         """Return the subscopes of this scope
 
@@ -88,7 +88,7 @@ class Scope(object):
         pymodule = self._get_global_scope().pyobject
         return pymodule.logical_lines.logical_line_in(self.logical_end)[1]
 
-    @utils.cacheit
+    @utils.saveit
     def get_logical_end(self):
         global_scope = self._get_global_scope()
         return global_scope._scope_finder.find_scope_end(self)
@@ -135,7 +135,7 @@ class GlobalScope(Scope):
         return self._scope_finder.get_holding_scope_for_offset(self, offset)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def _scope_finder(self):
         return _HoldingScopeFinder(self.pyobject)
 

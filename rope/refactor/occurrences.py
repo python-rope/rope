@@ -78,29 +78,29 @@ class Occurrence(object):
         self.offset = offset
         self.resource = tools.resource
 
-    @utils.cacheit
+    @utils.saveit
     def get_word_range(self):
         return self.tools.word_finder.get_word_range(self.offset)
 
-    @utils.cacheit
+    @utils.saveit
     def get_primary_range(self):
         return self.tools.word_finder.get_primary_range(self.offset)
 
-    @utils.cacheit
+    @utils.saveit
     def get_pyname(self):
         try:
             return self.tools.name_finder.get_pyname_at(self.offset)
         except exceptions.BadIdentifierError:
             pass
 
-    @utils.cacheit
+    @utils.saveit
     def get_primary_and_pyname(self):
         try:
             return self.tools.name_finder.get_primary_and_pyname_at(self.offset)
         except exceptions.BadIdentifierError:
             pass
 
-    @utils.cacheit
+    @utils.saveit
     def is_in_import_statement(self):
         return (self.tools.word_finder.is_from_statement(self.offset) or
                 self.tools.word_finder.is_import_statement(self.offset))
@@ -122,7 +122,7 @@ class Occurrence(object):
         return unsure_pyname(self.get_pyname())
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def lineno(self):
         offset = self.get_word_range()[0]
         return self.tools.pymodule.lines.get_line_number(offset)
@@ -301,12 +301,12 @@ class _OccurrenceToolsCreator(object):
         self.docs = docs
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def name_finder(self):
         return evaluate.ScopeNameFinder(self.pymodule)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def source_code(self):
         if self.__resource is not None:
             return self.resource.read()
@@ -314,12 +314,12 @@ class _OccurrenceToolsCreator(object):
             return self.pymodule.source_code
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def word_finder(self):
         return worder.Worder(self.source_code, self.docs)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def resource(self):
         if self.__resource is not None:
             return self.__resource
@@ -327,7 +327,7 @@ class _OccurrenceToolsCreator(object):
             return self.__pymodule.resource
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def pymodule(self):
         if self.__pymodule is not None:
             return self.__pymodule

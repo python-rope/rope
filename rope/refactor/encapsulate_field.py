@@ -182,7 +182,7 @@ class _FindChangesForModule(object):
         return self.worder.is_assigned_in_a_tuple_assignment(offset)
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def source(self):
         if self.resource is not None:
             return self.resource.read()
@@ -190,13 +190,13 @@ class _FindChangesForModule(object):
             return self.pymodule.source_code
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def lines(self):
         if self.pymodule is None:
             self.pymodule = self.pycore.resource_to_pyobject(self.resource)
         return self.pymodule.lines
 
     @property
-    @utils.cacheit
+    @utils.saveit
     def worder(self):
         return worder.Worder(self.source)
