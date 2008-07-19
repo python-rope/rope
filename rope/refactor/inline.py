@@ -193,6 +193,7 @@ class InlineVariable(_Inliner):
         self.pymodule = self.pyname.get_definition_location()[0]
         self.resource = self.pymodule.get_resource()
         self._check_exceptional_conditions()
+        self._init_imports()
 
     def _check_exceptional_conditions(self):
         if len(self.pyname.assignments) != 1:
@@ -201,18 +202,38 @@ class InlineVariable(_Inliner):
 
     def get_changes(self, remove=True, only_current=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
-        source = self._get_changed_module(remove, only_current)
+        if resources is None:
+            resources = self.pycore.get_python_files()
         changes = ChangeSet('Inline variable <%s>' % self.name)
-        if resources is None or self.resource in resources:
+        if self.resource in resources:
+            source = self._change_main_module(remove, only_current)
             changes.add_change(ChangeContents(self.resource, source))
+        for resource in resources:
+            if not only_current and self.resource != resource:
+                result = self._change_module(resource)
+                if result is not None:
+                    changes.add_change(ChangeContents(resource, result))
         return changes
 
-    def _get_changed_module(self, remove, only_current):
+    def _change_main_module(self, remove, only_current):
         region = None
         if only_current:
             region = self.region
         return _inline_variable(self.pycore, self.pymodule, self.pyname,
                                 self.name, remove=remove, region=region)
+
+    def _init_imports(self):
+        self.import_tools = importutils.ImportTools(self.pycore)
+        vardef = _getvardef(self.pymodule, self.pyname)
+        self.imported, self.imports = move.moving_code_with_imports(
+            self.pycore, self.resource, vardef)
+
+    def _change_module(self, resource):
+        finder = occurrences.create_finder(self.pycore, self.name,
+                                           self.pyname, imports=False)
+        changed = rename.rename_in_module(
+            finder, self.imported, resource=resource, replace_primary=True)
+        return changed
 
     def get_kind(self):
         return 'variable'
@@ -440,18 +461,8 @@ class _InlineFunctionCallsForModuleHandle(object):
 
 def _inline_variable(pycore, pymodule, pyname, name,
                      remove=True, region=None):
-    assignment = pyname.assignments[0]
-    definition_line = assignment.ast_node.lineno
-    lines = pymodule.lines
-    logicals = pymodule.logical_lines
-    start, end = logicals.logical_line_in(definition_line)
-    definition_with_assignment = _join_lines(
-        [lines.get_line(n) for n in range(start, end + 1)])
-    if assignment.levels:
-        raise rope.base.exceptions.RefactoringError(
-            'Cannot inline tuple assignments.')
-    definition = definition_with_assignment[definition_with_assignment.\
-                                            index('=') + 1:].strip()
+    definition = _getvardef(pymodule, pyname)
+    start, end = _assigned_lineno(pymodule, pyname)
 
     occurrence_finder = occurrences.create_finder(pycore, name, pyname)
     changed_source = rename.rename_in_module(
@@ -466,3 +477,20 @@ def _inline_variable(pycore, pymodule, pyname, name,
     else:
         source = changed_source
     return source
+
+def _getvardef(pymodule, pyname):
+    assignment = pyname.assignments[0]
+    lines = pymodule.lines
+    start, end = _assigned_lineno(pymodule, pyname)
+    definition_with_assignment = _join_lines(
+        [lines.get_line(n) for n in range(start, end + 1)])
+    if assignment.levels:
+        raise rope.base.exceptions.RefactoringError(
+            'Cannot inline tuple assignments.')
+    definition = definition_with_assignment[definition_with_assignment.\
+                                            index('=') + 1:].strip()
+    return definition
+
+def _assigned_lineno(pymodule, pyname):
+    definition_line = pyname.assignments[0].ast_node.lineno
+    return pymodule.logical_lines.logical_line_in(definition_line)

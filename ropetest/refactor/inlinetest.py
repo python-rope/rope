@@ -535,6 +535,12 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index('start'))
         self.assertEquals('print(1 <= 2)\n', refactored)
 
+    def test_inlining_variables_in_other_modules(self):
+        self.mod.write('myvar = 1\n')
+        self.mod2.write('import mod\nprint(mod.myvar)\n')
+        self._inline2(self.mod, 2)
+        self.assertEquals('import mod\nprint(1)\n', self.mod2.read())
+
 
 def suite():
     result = unittest.TestSuite()
