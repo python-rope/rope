@@ -49,6 +49,9 @@ class PyObject(object):
                 return self.type is obj.type
         return self is obj
 
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
     def __hash__(self):
         """See docs for `__eq__()` method"""
         if type(self) == PyObject and self != self.type:
