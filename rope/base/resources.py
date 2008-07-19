@@ -59,6 +59,9 @@ class Resource(object):
     def __eq__(self, obj):
         return self.__class__ == obj.__class__ and self.path == obj.path
 
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
     def __hash__(self):
         return hash(self.path)
 
