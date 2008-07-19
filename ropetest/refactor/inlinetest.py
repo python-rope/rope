@@ -559,6 +559,18 @@ class InlineTest(unittest.TestCase):
                    'print(sys.argv)\n'
         self.assertEquals(expected, self.mod2.read())
 
+    def test_inlining_variables_and_removing_old_froms(self):
+        self.mod.write('var = 1\n')
+        self.mod2.write('from mod import var\nprint(var)\n')
+        self._inline2(self.mod2, self.mod2.read().rindex('var'))
+        self.assertEquals('print(1)\n', self.mod2.read())
+
+    def test_inlining_method_and_removing_old_froms(self):
+        self.mod.write('def f():    return 1\n')
+        self.mod2.write('from mod import f\nprint(f())\n')
+        self._inline2(self.mod2, self.mod2.read().rindex('f'))
+        self.assertEquals('print(1)\n', self.mod2.read())
+
 
 def suite():
     result = unittest.TestSuite()

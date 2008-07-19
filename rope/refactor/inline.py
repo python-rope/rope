@@ -115,6 +115,8 @@ class InlineMethod(_Inliner):
                 if result is not None:
                     result = _add_imports(self.pycore, result,
                                           file, self.imports)
+                    result = _remove_from(self.pycore, self.pyname,
+                                          result, file)
                     changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
         return changes
@@ -227,6 +229,8 @@ class InlineVariable(_Inliner):
                                            self.pyname, imports=False)
         changed = rename.rename_in_module(
             finder, self.imported, resource=resource, replace_primary=True)
+        if changed:
+            changed = _remove_from(self.pycore, self.pyname, changed, resource)
         return changed
 
     def get_kind(self):
@@ -401,6 +405,10 @@ class _InlineFunctionCallsForModuleHandle(object):
 
     def occurred_outside_skip(self, change_collector, occurrence):
         start, end = occurrence.get_primary_range()
+        # we remove out of date imports later
+        if occurrence.is_in_import_statement():
+            return
+        # the function is referenced outside an import statement
         if not occurrence.is_called():
             raise rope.base.exceptions.RefactoringError(
                 'Reference to inlining function other than function call'
@@ -507,3 +515,9 @@ def _get_pyname(pycore, resource, offset):
     if isinstance(pyname, pynames.ImportedName):
         pyname = pyname._get_imported_pyname()
     return pyname
+
+def _remove_from(pycore, pyname, source, resource):
+    pymodule = pycore.get_string_module(source, resource)
+    module_import = importutils.get_module_imports(pycore, pymodule)
+    module_import.remove_pyname(pyname)
+    return module_import.get_changed_source()
