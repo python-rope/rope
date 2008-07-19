@@ -550,6 +550,15 @@ class InlineTest(unittest.TestCase):
                    'print(mainvar)\n'
         self.assertEquals(expected, self.mod2.read())
 
+    def test_inlining_variables_and_importing_used_imports(self):
+        self.mod.write('import sys\nmyvar = sys.argv\n')
+        self.mod2.write('import mod\nprint(mod.myvar)\n')
+        self._inline2(self.mod, self.mod.read().index('myvar'))
+        expected = 'import mod\n' \
+                   'import sys\n' \
+                   'print(sys.argv)\n'
+        self.assertEquals(expected, self.mod2.read())
+
 
 def suite():
     result = unittest.TestSuite()
