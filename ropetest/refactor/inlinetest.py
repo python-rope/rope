@@ -541,6 +541,15 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, 2)
         self.assertEquals('import mod\nprint(1)\n', self.mod2.read())
 
+    def test_inlining_variables_and_back_importing(self):
+        self.mod.write('mainvar = 1\nmyvar = mainvar\n')
+        self.mod2.write('import mod\nprint(mod.myvar)\n')
+        self._inline2(self.mod, self.mod.read().index('myvar'))
+        expected = 'import mod\n' \
+                   'from mod import mainvar\n' \
+                   'print(mainvar)\n'
+        self.assertEquals(expected, self.mod2.read())
+
 
 def suite():
     result = unittest.TestSuite()

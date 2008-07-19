@@ -66,7 +66,6 @@ class InlineMethod(_Inliner):
         self._init_imports()
 
     def _init_imports(self):
-        self.import_tools = importutils.ImportTools(self.pycore)
         body = sourceutils.get_body(self.pyfunction)
         body, imports = move.moving_code_with_imports(
             self.pycore, self.resource, body)
@@ -114,7 +113,8 @@ class InlineMethod(_Inliner):
                 result = move.ModuleSkipRenamer(
                     self.occurrence_finder, file, handle).get_changed_module()
                 if result is not None:
-                    result = self._add_imports(result, file)
+                    result = _add_imports(self.pycore, result,
+                                          file, self.imports)
                     changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
         return changes
@@ -169,19 +169,6 @@ class InlineMethod(_Inliner):
             return True
         return False
 
-    def _add_imports(self, source, file):
-        if not self.imports:
-            return source
-        pymodule = self.pycore.get_string_module(source, file)
-        module_import = importutils.get_module_imports(self.pycore, pymodule)
-        for import_info in self.imports:
-            module_import.add_import(import_info)
-        source = module_import.get_changed_source()
-        pymodule = self.pycore.get_string_module(source, file)
-        source = self.import_tools.organize_imports(
-            pymodule, unused=False, sort=False)
-        return source
-
     def get_kind(self):
         return 'method'
 
@@ -212,6 +199,8 @@ class InlineVariable(_Inliner):
             if not only_current and self.resource != resource:
                 result = self._change_module(resource)
                 if result is not None:
+                    result = _add_imports(self.pycore, result,
+                                          resource, self.imports)
                     changes.add_change(ChangeContents(resource, result))
         return changes
 
@@ -223,7 +212,6 @@ class InlineVariable(_Inliner):
                                 self.name, remove=remove, region=region)
 
     def _init_imports(self):
-        self.import_tools = importutils.ImportTools(self.pycore)
         vardef = _getvardef(self.pymodule, self.pyname)
         self.imported, self.imports = move.moving_code_with_imports(
             self.pycore, self.resource, vardef)
@@ -494,3 +482,15 @@ def _getvardef(pymodule, pyname):
 def _assigned_lineno(pymodule, pyname):
     definition_line = pyname.assignments[0].ast_node.lineno
     return pymodule.logical_lines.logical_line_in(definition_line)
+
+def _add_imports(pycore, source, resource, imports):
+    if not imports:
+        return source
+    pymodule = pycore.get_string_module(source, resource)
+    module_import = importutils.get_module_imports(pycore, pymodule)
+    for import_info in imports:
+        module_import.add_import(import_info)
+    source = module_import.get_changed_source()
+    pymodule = pycore.get_string_module(source, resource)
+    import_tools = importutils.ImportTools(pycore)
+    return import_tools.organize_imports(pymodule, unused=False, sort=False)
