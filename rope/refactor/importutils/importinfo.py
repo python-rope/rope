@@ -86,6 +86,9 @@ class ImportInfo(object):
         return isinstance(obj, self.__class__) and \
                self.get_import_statement() == obj.get_import_statement()
 
+    def __ne__(self, obj):
+        return not self.__eq__(obj)
+
     @staticmethod
     def get_empty_import():
         return EmptyImport()
