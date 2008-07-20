@@ -38,10 +38,9 @@ class _BadAccessFinder(object):
             name = node.attr
         else:
             name = node.id
-        if name in ['None']:
-            return
-        error = Error(node.lineno, msg + ' ' + name)
-        self.errors.append(error)
+        if name != 'None':
+            error = Error(node.lineno, msg + ' ' + name)
+            self.errors.append(error)
 
     def _is_defined_after(self, scope, pyname, lineno):
         location = pyname.get_definition_location()
