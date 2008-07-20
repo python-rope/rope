@@ -38,6 +38,8 @@ class _BadAccessFinder(object):
             name = node.attr
         else:
             name = node.id
+        if name in ['None']:
+            return
         error = Error(node.lineno, msg + ' ' + name)
         self.errors.append(error)
 

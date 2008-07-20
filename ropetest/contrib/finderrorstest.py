@@ -32,6 +32,11 @@ class FindErrorsTest(unittest.TestCase):
         result = finderrors.find_errors(self.project, self.mod)
         self.assertEquals(0, len(result))
 
+    def test_ignoring_none(self):
+        self.mod.write('var = None\n')
+        result = finderrors.find_errors(self.project, self.mod)
+        self.assertEquals(0, len(result))
+
     def test_bad_attributes(self):
         code = 'class C(object):\n' \
                '    pass\n' \
