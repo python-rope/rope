@@ -256,6 +256,11 @@ class InlineParameter(_Inliner):
         return resource, offset
 
     def get_changes(self, **kwds):
+        """Get the changes needed by this refactoring
+
+        See `rope.refactor.change_signature.ChangeSignature.get_changes()`
+        for arguments.
+        """
         return self.signature.get_changes(self.changers, **kwds)
 
     def get_kind(self):
