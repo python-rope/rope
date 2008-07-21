@@ -204,10 +204,11 @@ class InlineVariable(_Inliner):
     def get_changes(self, remove=True, only_current=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            if only_current:
-                resources = [self.original]
-            else:
                 resources = self.pycore.get_python_files()
+        if only_current:
+            resources = [self.original]
+            if remove and self.original != self.resource:
+                resources.append(self.resource)
         changes = ChangeSet('Inline variable <%s>' % self.name)
         jobset = task_handle.create_jobset('Calculating changes',
                                            len(resources))
@@ -217,7 +218,7 @@ class InlineVariable(_Inliner):
                 source = self._change_main_module(remove, only_current)
                 changes.add_change(ChangeContents(self.resource, source))
             else:
-                result = self._change_module(resource)
+                result = self._change_module(resource, only_current)
                 if result is not None:
                     result = _add_imports(self.pycore, result,
                                           resource, self.imports)
@@ -227,7 +228,7 @@ class InlineVariable(_Inliner):
 
     def _change_main_module(self, remove, only_current):
         region = None
-        if only_current:
+        if only_current and self.original == self.resource:
             region = self.region
         return _inline_variable(self.pycore, self.pymodule, self.pyname,
                                 self.name, remove=remove, region=region)
@@ -237,9 +238,16 @@ class InlineVariable(_Inliner):
         self.imported, self.imports = move.moving_code_with_imports(
             self.pycore, self.resource, vardef)
 
-    def _change_module(self, resource):
-        finder = occurrences.create_finder(self.pycore, self.name,
-                                           self.pyname, imports=False)
+    def _change_module(self, resource, only_current):
+        filters = [occurrences.NoImportsFilter(),
+                   occurrences.PyNameFilter(self.pyname)]
+        if only_current and resource == self.original:
+            def check_aim(occurrence):
+                start, end = occurrence.get_primary_range()
+                if self.offset < start or end < self.offset:
+                    return False
+            filters.insert(0, check_aim)
+        finder = occurrences.Finder(self.pycore, self.name, filters=filters)
         changed = rename.rename_in_module(
             finder, self.imported, resource=resource, replace_primary=True)
         if changed:

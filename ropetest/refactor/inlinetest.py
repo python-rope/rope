@@ -589,6 +589,22 @@ class InlineTest(unittest.TestCase):
         self.assertEquals(code1, self.mod.read())
         self.assertEquals(expected2, self.mod2.read())
 
+    def test_inlining_variables_in_other_modules_and_only_current(self):
+        code1 = 'var = 1\n' \
+                'print(var)\n'
+        code2 = 'import mod\n' \
+                'print(mod.var)\n' \
+                'print(mod.var)\n'
+        self.mod.write(code1)
+        self.mod2.write(code2)
+        self._inline2(self.mod2, self.mod2.read().rindex('var'),
+                      remove=False, only_current=True)
+        expected2 = 'import mod\n' \
+                    'print(mod.var)\n' \
+                    'print(1)\n'
+        self.assertEquals(code1, self.mod.read())
+        self.assertEquals(expected2, self.mod2.read())
+
 
 def suite():
     result = unittest.TestSuite()
