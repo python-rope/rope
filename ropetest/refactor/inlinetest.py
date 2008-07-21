@@ -1,3 +1,4 @@
+from ropetest.testutils import only_for
 import unittest
 
 import rope.base.exceptions
@@ -570,6 +571,23 @@ class InlineTest(unittest.TestCase):
         self.mod2.write('from mod import f\nprint(f())\n')
         self._inline2(self.mod2, self.mod2.read().rindex('f'))
         self.assertEquals('print(1)\n', self.mod2.read())
+
+    def test_inlining_functions_in_other_modules_and_only_current(self):
+        code1 = 'def f():\n' \
+                '    return 1\n' \
+                'print(f())\n'
+        code2 = 'import mod\n' \
+                'print(mod.f())\n' \
+                'print(mod.f())\n'
+        self.mod.write(code1)
+        self.mod2.write(code2)
+        self._inline2(self.mod2, self.mod2.read().rindex('f'),
+                      remove=False, only_current=True)
+        expected2 = 'import mod\n' \
+                    'print(mod.f())\n' \
+                    'print(1)\n'
+        self.assertEquals(code1, self.mod.read())
+        self.assertEquals(expected2, self.mod2.read())
 
 
 def suite():

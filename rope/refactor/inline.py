@@ -44,6 +44,7 @@ class _Inliner(object):
         self.region = range_finder.get_primary_range(offset)
         self.name = range_finder.get_word_at(offset)
         self.offset = offset
+        self.original = resource
 
     def get_changes(self, *args, **kwds):
         pass
@@ -99,7 +100,9 @@ class InlineMethod(_Inliner):
         if resources is None:
             resources = self.pycore.get_python_files()
         if only_current:
-            resources = [self.resource]
+            resources = [self.original]
+            if remove:
+                resources.append(self.resource)
         job_set = task_handle.create_jobset('Collecting Changes',
                                             len(resources))
         for file in resources:
@@ -108,8 +111,11 @@ class InlineMethod(_Inliner):
                 changes.add_change(self._defining_file_changes(
                         changes, remove=remove, only_current=only_current))
             else:
+                aim = None
+                if only_current and self.original == file:
+                    aim = self.offset
                 handle = _InlineFunctionCallsForModuleHandle(
-                    self.pycore, file, self.others_generator)
+                    self.pycore, file, self.others_generator, aim)
                 result = move.ModuleSkipRenamer(
                     self.occurrence_finder, file, handle).get_changed_module()
                 if result is not None:
@@ -139,7 +145,13 @@ class InlineMethod(_Inliner):
 
     def _defining_file_changes(self, changes, remove, only_current):
         start_offset, end_offset = self._get_removed_range()
-        aim = None if not only_current else self.offset
+        aim = None
+        if only_current:
+            if self.resource == self.original:
+                aim = self.offset
+            else:
+                # we don't want to change any of them
+                aim = len(self.resource.read()) + 100
         handle = _InlineFunctionCallsForModuleHandle(
             self.pycore, self.resource,
             self.normal_generator, aim_offset=aim)
@@ -192,9 +204,10 @@ class InlineVariable(_Inliner):
     def get_changes(self, remove=True, only_current=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            resources = self.pycore.get_python_files()
             if only_current:
-                resources = [self.resource]
+                resources = [self.original]
+            else:
+                resources = self.pycore.get_python_files()
         changes = ChangeSet('Inline variable <%s>' % self.name)
         jobset = task_handle.create_jobset('Calculating changes',
                                            len(resources))
