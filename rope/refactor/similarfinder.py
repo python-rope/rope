@@ -78,7 +78,8 @@ class RawSimilarFinder(object):
         self.source = source
         self._matched_asts = {}
         if not hasattr(node, 'region'):
-            self.ast = patchedast.patch_ast(node, source)
+            patchedast.patch_ast(node, source)
+        self.ast = node
 
     def get_matches(self, code, start=0, end=None, skip=None):
         """Search for `code` in source and return a list of `Match`\es
