@@ -121,8 +121,9 @@ class InlineMethod(_Inliner):
                 if result is not None:
                     result = _add_imports(self.pycore, result,
                                           file, self.imports)
-                    result = _remove_from(self.pycore, self.pyname,
-                                          result, file)
+                    if remove:
+                        result = _remove_from(self.pycore, self.pyname,
+                                              result, file)
                     changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
         return changes
@@ -218,7 +219,7 @@ class InlineVariable(_Inliner):
                 source = self._change_main_module(remove, only_current)
                 changes.add_change(ChangeContents(self.resource, source))
             else:
-                result = self._change_module(resource, only_current)
+                result = self._change_module(resource, remove, only_current)
                 if result is not None:
                     result = _add_imports(self.pycore, result,
                                           resource, self.imports)
@@ -238,7 +239,7 @@ class InlineVariable(_Inliner):
         self.imported, self.imports = move.moving_code_with_imports(
             self.pycore, self.resource, vardef)
 
-    def _change_module(self, resource, only_current):
+    def _change_module(self, resource, remove, only_current):
         filters = [occurrences.NoImportsFilter(),
                    occurrences.PyNameFilter(self.pyname)]
         if only_current and resource == self.original:
@@ -250,7 +251,7 @@ class InlineVariable(_Inliner):
         finder = occurrences.Finder(self.pycore, self.name, filters=filters)
         changed = rename.rename_in_module(
             finder, self.imported, resource=resource, replace_primary=True)
-        if changed:
+        if changed and remove:
             changed = _remove_from(self.pycore, self.pyname, changed, resource)
         return changed
 
