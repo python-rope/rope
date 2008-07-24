@@ -1,4 +1,20 @@
-"""Fix the name of modules"""
+"""Fix the name of modules
+
+This module is useful when you want to rename many of the modules in
+your project.  That can happen specially when you want to change their
+naming style.
+
+For instance::
+
+  fixer = FixModuleNames(project)
+  changes = fixer.get_changes(fixer=str.lower)
+  project.do(changes)
+
+Here it renames all modules and packages to use lower-cased chars.
+You can tell it to use any other style by using the ``fixer``
+argument.
+
+"""
 from rope.base import change, taskhandle
 from rope.contrib import changestack
 from rope.refactor import rename
