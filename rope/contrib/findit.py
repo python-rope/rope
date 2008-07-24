@@ -74,7 +74,7 @@ def find_definition(project, code, offset, resource=None, maxfixes=1):
     """
     fixer = fixsyntax.FixSyntax(project.pycore, code, resource, maxfixes)
     main_module = fixer.get_pymodule()
-    pyname = fixer.find_pyname_at(offset)
+    pyname = fixer.pyname_at(offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
         name = rope.base.worder.Worder(code).get_word_at(offset)
