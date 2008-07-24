@@ -205,6 +205,9 @@ class InlineVariable(_Inliner):
     def get_changes(self, remove=True, only_current=False, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
+            if rename._is_local(self.pyname):
+                resources = [self.resource]
+            else:
                 resources = self.pycore.get_python_files()
         if only_current:
             resources = [self.original]
