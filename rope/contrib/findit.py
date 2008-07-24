@@ -2,6 +2,7 @@ import rope.base.codeanalyze
 import rope.base.evaluate
 import rope.base.pyobjects
 from rope.base import taskhandle, exceptions, worder
+from rope.contrib import fixsyntax
 from rope.refactor import occurrences
 
 
@@ -71,11 +72,10 @@ def find_definition(project, code, offset, resource=None, maxfixes=1):
     A `Location` object is returned if the definition location can be
     determined, otherwise ``None`` is returned.
     """
-    import rope.contrib.codeassist
-    main_module = rope.contrib.codeassist._get_pymodule(
-        project.pycore, code, resource, maxfixes)
-    pyname = rope.contrib.codeassist._find_pyname_at(
-        project, code, offset, main_module, maxfixes)
+    main_module = fixsyntax.get_pymodule(project.pycore, code,
+                                          resource, maxfixes)
+    pyname = fixsyntax.find_pyname_at(project, code, offset,
+                                       main_module, maxfixes)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
         name = rope.base.worder.Worder(code).get_word_at(offset)
