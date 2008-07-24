@@ -1,7 +1,23 @@
+"""Finding bad name and attribute accesses
+
+`find_errors` function can be used to find possible bad name and
+attribute accesses.  As an example::
+
+  errors = find_errors(project, project.get_resource('mod.py'))
+  for error in errors:
+      print '%s: %s' % (error.lineno, error.error)
+
+prints possible errors for ``mod.py`` file.
+
+"""
 from rope.base import ast, evaluate
 
 
 def find_errors(project, resource):
+    """Find possible bad name and attribute accesses
+
+    It returns a list of `Error`\s.
+    """
     pymodule = project.pycore.resource_to_pyobject(resource)
     finder = _BadAccessFinder(pymodule)
     ast.walk(pymodule.get_ast(), finder)
