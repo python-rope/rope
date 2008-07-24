@@ -44,9 +44,7 @@ class FixSyntax(object):
     @property
     @utils.saveit
     def commenter(self):
-        lines = self.code.split('\n')
-        lines.append('\n')
-        return _Commenter(lines)
+        return _Commenter(self.code)
 
     def pyname_at(self, offset):
         pymodule = self.get_pymodule()
@@ -57,26 +55,32 @@ class FixSyntax(object):
             lineno = self.code.count('\n', 0, offset)
             scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
             return rope.base.evaluate.eval_str(scope, expression)
-        def new_pyname():
-            return rope.base.evaluate.eval_location(pymodule, offset)
         new_code = pymodule.source_code
+        def new_pyname():
+            newoffset = self.commenter.transfered_offset(offset)
+            return rope.base.evaluate.eval_location(pymodule, newoffset)
         if new_code.startswith(self.code[:offset + 1]):
             return new_pyname()
         result = old_pyname()
-        if result is None and offset < len(new_code):
+        if result is None:
             return new_pyname()
         return result
 
 
 class _Commenter(object):
 
-    def __init__(self, lines):
-        self.lines = lines
-        self.diffs = [0] * len(lines)
+    def __init__(self, code):
+        self.code = code
+        self.lines = self.code.split('\n')
+        self.lines.append('\n')
+        self.origs = range(len(self.lines) + 1)
+        self.diffs = [0] * (len(self.lines) + 1)
 
     def comment(self, lineno):
         start = _logical_start(self.lines, lineno, check_prev=True) - 1
-        end = self._get_block_end(start)
+        # using self._get_stmt_end() instead of self._get_block_end()
+        # to lower commented lines
+        end = self._get_stmt_end(start)
         indents = _get_line_indents(self.lines[start])
         if 0 < start:
             last_lineno = self._last_non_blank(start - 1)
@@ -87,6 +91,11 @@ class _Commenter(object):
         for line in range(start + 1, end + 1):
             self._set(line, self.lines[start])
         self._fix_incomplete_try_blocks(lineno, indents)
+
+    def transfered_offset(self, offset):
+        lineno = self.code.count('\n', 0, offset)
+        diff = sum(self.diffs[:lineno])
+        return offset + diff
 
     def _last_non_blank(self, start):
         while start > 0 and self.lines[start].strip() == '':
@@ -102,6 +111,14 @@ class _Commenter(object):
             else:
                 break
         return end_line
+
+    def _get_stmt_end(self, lineno):
+        end_line = lineno
+        base_indents = _get_line_indents(self.lines[lineno])
+        for i in range(lineno + 1, len(self.lines)):
+            if _get_line_indents(self.lines[i]) <= base_indents:
+                return i - 1
+        return lineno
 
     def _fix_incomplete_try_blocks(self, lineno, indents):
         block_start = lineno
@@ -135,13 +152,12 @@ class _Commenter(object):
         return len(self.lines) - 1
 
     def _set(self, lineno, line):
-        if lineno < len(self.diffs):
-            self.diffs[lineno] += len(self.lines[lineno]) - len(line)
+        self.diffs[self.origs[lineno]] += len(line) - len(self.lines[lineno])
         self.lines[lineno] = line
 
     def _insert(self, lineno, line):
-        if lineno < len(self.diffs):
-            self.diffs[lineno] += len(line) + 1
+        self.diffs[self.origs[lineno]] += len(line) + 1
+        self.origs.insert(lineno, self.origs[lineno])
         self.lines.insert(lineno, line)
 
 def _logical_start(lines, lineno, check_prev=False):
