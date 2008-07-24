@@ -3,6 +3,36 @@
 ===========
 
 
+> Public Release 0.8.4 : June 24, 2008
+
+
+- handling only_current for inline in other modules : July 21, 2008
+
+
+- inlining variable in other modules : July 19, 2008
+
+
+- added `rope.contrib.finderrors` : July 17, 2008
+
+
+- added `rope.contrib.fixmodnames` : July 16, 2008
+
+
+- added `rope.contrib.changestack` : July 15, 2008
+
+
+- better extension module handling : June 29, 2008
+
+
+- added `findit.Location.region` field : June 26, 2008
+
+
+- added `rope.contrib.findit.find_definition()` : June 26, 2008
+
+
+- added ``remove_self`` argument to `get_calltip()` : June 20, 2008
+
+
 > Public Release 0.8.3 : June 20, 2008
 
 
