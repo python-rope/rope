@@ -34,7 +34,7 @@ class ChangeStack(object):
 
     def pop_all(self):
         for i in range(len(self.stack)):
-            self.project.history.undo()
+            self.project.history.undo(drop=True)
 
     def merged(self):
         result = change.ChangeSet(self.description)
