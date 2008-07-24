@@ -1,3 +1,23 @@
+"""For performing many refactorings as a single command
+
+`changestack` module can be used to perform many refactorings on top
+of each other as one bigger command.  It can be used like::
+
+  stack = ChangeStack(project, 'my big command')
+
+  #..
+  stack.push(refactoring1.get_changes())
+  #..
+  stack.push(refactoring2.get_changes())
+  #..
+  stack.push(refactoringX.get_changes())
+
+  stack.pop_all()
+  changes = stack.merged()
+
+Now `changes` can be previewed or performed as before.
+"""
+
 from rope.base import change
 
 
