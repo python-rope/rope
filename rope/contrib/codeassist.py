@@ -53,10 +53,10 @@ def starting_offset(source_code, offset):
 
 def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     """Get the pydoc"""
-    pymodule = fixsyntax.get_pymodule(project.pycore,
-                                       source_code, resource, maxfixes)
-    pyname = fixsyntax.find_pyname_at(project, source_code,
-                                       offset, pymodule, maxfixes)
+    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
+                                resource, maxfixes)
+    pymodule = fixer.get_pymodule()
+    pyname = fixer.pyname_at(offset)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
@@ -88,10 +88,10 @@ def get_calltip(project, source_code, offset, resource=None,
     If `remove_self` is `True`, the first parameter whose name is self
     will be removed for methods.
     """
-    pymodule = fixsyntax.get_pymodule(project.pycore, source_code,
-                                       resource, maxfixes)
-    pyname = fixsyntax.find_pyname_at(project, source_code,
-                                       offset, pymodule, maxfixes)
+    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
+                                resource, maxfixes)
+    pymodule = fixer.get_pymodule()
+    pyname = fixer.pyname_at(offset)
     if pyname is None:
         return None
     pyobject = pyname.get_object()
@@ -108,10 +108,10 @@ def get_definition_location(project, source_code, offset,
     location cannot be determined ``(None, None)`` is returned.
 
     """
-    pymodule = fixsyntax.get_pymodule(project.pycore, source_code,
-                                       resource, maxfixes)
-    pyname = fixsyntax.find_pyname_at(project, source_code, offset,
-                                       pymodule, maxfixes)
+    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
+                                resource, maxfixes)
+    pymodule = fixer.get_pymodule()
+    pyname = fixer.pyname_at(offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
         if module is not None:
@@ -205,6 +205,7 @@ class _PythonCodeAssist(object):
         self.maxfixes = maxfixes
         self.later_locals = later_locals
         self.word_finder = worder.Worder(source_code, True)
+        offset = min(offset, len(source_code))
         self.expression, self.starting, self.offset = \
             self.word_finder.get_splitted_primary_before(offset)
 
@@ -307,8 +308,9 @@ class _PythonCodeAssist(object):
 
     def _code_completions(self):
         lineno = self.code.count('\n', 0, self.offset) + 1
-        pymodule = fixsyntax.get_pymodule(self.pycore, self.code,
-                                           self.resource, self.maxfixes)
+        fixer = fixsyntax.FixSyntax(self.pycore, self.code,
+                                    self.resource, self.maxfixes)
+        pymodule = fixer.get_pymodule()
         module_scope = pymodule.get_scope()
         code = pymodule.source_code
         lines = code.split('\n')

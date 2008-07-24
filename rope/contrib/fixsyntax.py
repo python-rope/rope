@@ -1,63 +1,78 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
-from rope.base import worder, exceptions
+from rope.base import worder, exceptions, utils
 from rope.base.codeanalyze import ArrayLinesAdapter, LogicalLineFinder
 
 
-def get_pymodule(pycore, code, resource, maxfixes=1):
-    """Get a `PyModule`"""
-    commenter = None
-    errors = []
-    tries = 0
-    while True:
-        try:
-            if tries == 0 and resource is not None and resource.read() == code:
-                return pycore.resource_to_pyobject(resource, force_errors=True)
-            return pycore.get_string_module(code, resource=resource,
-                                            force_errors=True)
-        except exceptions.ModuleSyntaxError, e:
-            if tries < maxfixes:
-                tries += 1
-                if commenter is None:
-                    lines = code.split('\n')
-                    lines.append('\n')
-                    commenter = _Commenter(lines)
-                commenter.comment(e.lineno)
-                code = '\n'.join(commenter.lines)
-                errors.append('  * line %s: %s ... fixed' % (e.lineno,
-                                                             e.message_))
-            else:
-                errors.append('  * line %s: %s ... raised!' % (e.lineno,
-                                                               e.message_))
-                new_message = ('\nSyntax errors in file %s:\n' % e.filename) \
-                               + '\n'.join(errors)
-                raise exceptions.ModuleSyntaxError(e.filename, e.lineno,
-                                                   new_message)
+class FixSyntax(object):
 
+    def __init__(self, pycore, code, resource, maxfixes=1):
+        self.pycore = pycore
+        self.code = code
+        self.resource = resource
+        self.maxfixes = maxfixes
 
-def find_pyname_at(project, code, offset, pymodule, maxfixes):
-    def old_pyname():
-        word_finder = worder.Worder(code, True)
-        expression = word_finder.get_primary_at(offset)
-        expression = expression.replace('\\\n', ' ').replace('\n', ' ')
-        lineno = code.count('\n', 0, offset)
-        scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
-        return rope.base.evaluate.eval_str(scope, expression)
-    def new_pyname():
-        return rope.base.evaluate.eval_location(pymodule, offset)
-    new_code = pymodule.source_code
-    if new_code.startswith(code[:offset + 1]):
-        return new_pyname()
-    result = old_pyname()
-    if result is None and offset < len(new_code):
-        return new_pyname()
-    return result
+    @utils.saveit
+    def get_pymodule(self):
+        """Get a `PyModule`"""
+        errors = []
+        code = self.code
+        tries = 0
+        while True:
+            try:
+                if tries == 0 and self.resource is not None and \
+                   self.resource.read() == code:
+                    return self.pycore.resource_to_pyobject(self.resource,
+                                                            force_errors=True)
+                return self.pycore.get_string_module(
+                    code, resource=self.resource, force_errors=True)
+            except exceptions.ModuleSyntaxError, e:
+                if tries < self.maxfixes:
+                    tries += 1
+                    self.commenter.comment(e.lineno)
+                    code = '\n'.join(self.commenter.lines)
+                    errors.append('  * line %s: %s ... fixed' % (e.lineno,
+                                                                 e.message_))
+                else:
+                    errors.append('  * line %s: %s ... raised!' % (e.lineno,
+                                                                   e.message_))
+                    new_message = ('\nSyntax errors in file %s:\n' % e.filename) \
+                                   + '\n'.join(errors)
+                    raise exceptions.ModuleSyntaxError(e.filename, e.lineno,
+                                                       new_message)
+
+    @property
+    @utils.saveit
+    def commenter(self):
+        lines = self.code.split('\n')
+        lines.append('\n')
+        return _Commenter(lines)
+
+    def pyname_at(self, offset):
+        pymodule = self.get_pymodule()
+        def old_pyname():
+            word_finder = worder.Worder(self.code, True)
+            expression = word_finder.get_primary_at(offset)
+            expression = expression.replace('\\\n', ' ').replace('\n', ' ')
+            lineno = self.code.count('\n', 0, offset)
+            scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
+            return rope.base.evaluate.eval_str(scope, expression)
+        def new_pyname():
+            return rope.base.evaluate.eval_location(pymodule, offset)
+        new_code = pymodule.source_code
+        if new_code.startswith(self.code[:offset + 1]):
+            return new_pyname()
+        result = old_pyname()
+        if result is None and offset < len(new_code):
+            return new_pyname()
+        return result
 
 
 class _Commenter(object):
 
     def __init__(self, lines):
         self.lines = lines
+        self.diffs = [0] * len(lines)
 
     def comment(self, lineno):
         start = _logical_start(self.lines, lineno, check_prev=True) - 1
@@ -68,9 +83,9 @@ class _Commenter(object):
             last_line = self.lines[last_lineno]
             if last_line.rstrip().endswith(':'):
                 indents = _get_line_indents(last_line) + 4
-        self.lines[start] = ' ' * indents + 'pass'
+        self._set(start, ' ' * indents + 'pass')
         for line in range(start + 1, end + 1):
-            self.lines[line] = self.lines[start]
+            self._set(line, self.lines[start])
         self._fix_incomplete_try_blocks(lineno, indents)
 
     def _last_non_blank(self, start):
@@ -104,8 +119,8 @@ class _Commenter(object):
                 if not (line.startswith('finally:') or
                         line.startswith('except ') or
                         line.startswith('except:')):
-                    self.lines.insert(block_end, ' ' * indents + 'finally:')
-                    self.lines.insert(block_end + 1, ' ' * indents + '    pass')
+                    self._insert(block_end, ' ' * indents + 'finally:')
+                    self._insert(block_end + 1, ' ' * indents + '    pass')
 
     def _find_matching_deindent(self, line_number):
         indents = _get_line_indents(self.lines[line_number])
@@ -118,6 +133,16 @@ class _Commenter(object):
                     return current_line
             current_line += 1
         return len(self.lines) - 1
+
+    def _set(self, lineno, line):
+        if lineno < len(self.diffs):
+            self.diffs[lineno] += len(self.lines[lineno]) - len(line)
+        self.lines[lineno] = line
+
+    def _insert(self, lineno, line):
+        if lineno < len(self.diffs):
+            self.diffs[lineno] += len(line) + 1
+        self.lines.insert(lineno, line)
 
 def _logical_start(lines, lineno, check_prev=False):
     logical_finder = LogicalLineFinder(ArrayLinesAdapter(lines))
