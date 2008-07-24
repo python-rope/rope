@@ -10,7 +10,7 @@ attribute accesses.  As an example::
 prints possible errors for ``mod.py`` file.
 
 """
-from rope.base import ast, evaluate
+from rope.base import ast, evaluate, pyobjects
 
 
 def find_errors(project, resource):
@@ -45,8 +45,10 @@ class _BadAccessFinder(object):
         if not isinstance(node.ctx, ast.Store):
             scope = self.scope.get_inner_scope_for_line(node.lineno)
             pyname = evaluate.eval_node(scope, node.value)
-            if pyname is not None and node.attr not in pyname.get_object():
-                self._add_error(node, 'Unresolved attribute')
+            if pyname is not None and \
+               pyname.get_object() != pyobjects.get_unknown():
+                if node.attr not in pyname.get_object():
+                    self._add_error(node, 'Unresolved attribute')
         ast.walk(node.value, self)
 
     def _add_error(self, node, msg):
