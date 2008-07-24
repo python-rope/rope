@@ -79,7 +79,7 @@ class Rename(object):
                 'instead. ', DeprecationWarning, stacklevel=2)
             if in_file:
                 resources = [self.resource]
-        if self._is_renaming_a_function_local_name():
+        if _is_local(self.old_pyname):
             resources = [self.resource]
         if resources is None:
             resources = self.pycore.get_python_files()
@@ -110,18 +110,6 @@ class Rename(object):
                 return False
         else:
             return resource in resources
-
-    def _is_renaming_a_function_local_name(self):
-        module, lineno = self.old_pyname.get_definition_location()
-        if lineno is None:
-            return False
-        scope = module.get_scope().get_inner_scope_for_line(lineno)
-        if isinstance(self.old_pyname, pynames.DefinedName) and \
-           scope.get_kind() in ('Function', 'Class'):
-            scope = scope.parent
-        return scope.get_kind() == 'Function' and \
-               self.old_pyname in scope.get_names().values() and \
-               isinstance(self.old_pyname, pynames.AssignedName)
 
     def _is_renaming_a_module(self):
         if isinstance(self.old_pyname.get_object(), pyobjects.AbstractModule):
@@ -214,3 +202,15 @@ def rename_in_module(occurrences_finder, new_name, resource=None, pymodule=None,
         if region is None or region[0] <= start < region[1]:
             change_collector.add_change(start, end, new_name)
     return change_collector.get_changed()
+
+def _is_local(pyname):
+    module, lineno = pyname.get_definition_location()
+    if lineno is None:
+        return False
+    scope = module.get_scope().get_inner_scope_for_line(lineno)
+    if isinstance(pyname, pynames.DefinedName) and \
+       scope.get_kind() in ('Function', 'Class'):
+        scope = scope.parent
+    return scope.get_kind() == 'Function' and \
+           pyname in scope.get_names().values() and \
+           isinstance(pyname, pynames.AssignedName)
