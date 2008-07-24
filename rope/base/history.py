@@ -51,7 +51,8 @@ class History(object):
                 return True
         return False
 
-    def undo(self, change=None, task_handle=taskhandle.NullTaskHandle()):
+    def undo(self, change=None, drop=False,
+             task_handle=taskhandle.NullTaskHandle()):
         """Redo done changes from the history
 
         When `change` is `None`, the last done change will be undone.
@@ -59,6 +60,9 @@ class History(object):
         `self.undo_list`; this change and all changes that depend on
         it will be undone.  In both cases the list of undone changes
         will be returned.
+
+        If `drop` is `True`, the undone change will not be appended to
+        the redo list.
 
         """
         if not self._undo_list:
@@ -68,7 +72,10 @@ class History(object):
         dependencies = self._find_dependencies(self.undo_list, change)
         self._move_front(self.undo_list, dependencies)
         self._perform_undos(len(dependencies), task_handle)
-        return self.redo_list[-len(dependencies):]
+        result = self.redo_list[-len(dependencies):]
+        if drop:
+            del self.redo_list[-len(dependencies):]
+        return result
 
     def redo(self, change=None, task_handle=taskhandle.NullTaskHandle()):
         """Redo undone changes from the history

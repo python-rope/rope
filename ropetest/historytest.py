@@ -128,6 +128,12 @@ class IsolatedHistoryTest(unittest.TestCase):
     def test_redo_list_underflow(self):
         self.history.redo()
 
+    @testutils.assert_raises(exceptions.HistoryError)
+    def test_dropping_undone_changes(self):
+        self.file1.write('1')
+        self.history.undo(drop=True)
+        self.history.redo()
+
     def test_undoing_choosen_changes(self):
         change = ChangeContents(self.file1, '1')
         self.history.do(change)
