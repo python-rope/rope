@@ -205,7 +205,6 @@ class _PythonCodeAssist(object):
         self.maxfixes = maxfixes
         self.later_locals = later_locals
         self.word_finder = worder.Worder(source_code, True)
-        offset = min(offset, len(source_code))
         self.expression, self.starting, self.offset = \
             self.word_finder.get_splitted_primary_before(offset)
 
