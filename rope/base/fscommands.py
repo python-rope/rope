@@ -163,8 +163,8 @@ def unicode_to_file_data(contents, encoding=None):
 
 def file_data_to_unicode(data, encoding=None):
     result = _decode_data(data, encoding)
-    if '\r\n' in result:
-        return result.replace('\r\n', '\n')
+    if '\r' in result:
+        result = result.replace('\r\n', '\n').replace('\r', '\n')
     return result
 
 def _decode_data(data, encoding):
