@@ -16,7 +16,8 @@ def create_fscommands(root):
     commands = {'.hg': MercurialCommands,
                 '.svn': SubversionCommands,
                 '.git': GITCommands,
-                '_svn': SubversionCommands}
+                '_svn': SubversionCommands,
+                '_darcs': DarcsCommands}
     for key in commands:
         if key in dirlist:
             try:
@@ -141,6 +142,33 @@ class GITCommands(object):
         if path.startswith(self.root):
             return path[len(self.root) + 1:]
         return self.root
+
+
+class DarcsCommands(object):
+
+    def __init__(self, root):
+        self.root = root
+        self.normal_actions = FileSystemCommands()
+
+    def create_file(self, path):
+        self.normal_actions.create_file(path)
+        self._do(['add', path])
+
+    def create_folder(self, path):
+        self.normal_actions.create_folder(path)
+        self._do(['add', path])
+
+    def move(self, path, new_location):
+        self._do(['mv', path, new_location])
+
+    def remove(self, path):
+        self.normal_actions.remove(path)
+
+    def write(self, path, data):
+        self.normal_actions.write(path, data)
+
+    def _do(self, args):
+        _execute(['darcs'] + args, cwd=self.root)
 
 
 def _execute(args, cwd=None):
