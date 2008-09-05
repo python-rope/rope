@@ -9,6 +9,19 @@ attribute accesses.  As an example::
 
 prints possible errors for ``mod.py`` file.
 
+TODO:
+
+* use task handles
+* reporting names at most once
+* attributes of extension modules that don't appear in
+  extension_modules project config can be ignored
+* not calling `PyScope.get_inner_scope_for_line()` if it is a
+  bottleneck; needs profiling
+* not reporting occurrences where rope cannot infer the object
+* rope saves multiple objects for some of the names in its objectdb
+  use all of them not to give false positives
+* ... ;-)
+
 """
 from rope.base import ast, evaluate, pyobjects
 
