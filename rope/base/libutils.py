@@ -37,7 +37,7 @@ def relative(root, path):
         if os.path.samefile(root, path):
             return '/'.join(reversed(rel))
         parent = os.path.dirname(path)
-        if not path or parent == path:
+        if not parent or parent == path:
             break
         rel.append(os.path.basename(path))
         path = parent
