@@ -277,10 +277,9 @@ class DOITextualToPyObject(TextualToPyObject):
                 return i + 1
 
     def path_to_resource(self, path):
+        import rope.base.libutils
         root = self.project.address
-        if os.path.isabs(path) and (path == root or
-                                    path.startswith(root + os.sep)):
-            path = path[len(root):].replace(os.sep, '/')
-            if path.startswith('/'):
-                path = path[1:]
+        relpath = rope.base.libutils.relative(root, path)
+        if relpath is not None:
+            path = relpath
         return super(DOITextualToPyObject, self).path_to_resource(path)
