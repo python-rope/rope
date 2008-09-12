@@ -17,11 +17,9 @@ def path_to_resource(project, path, type=None):
     `Project.get_file()`, and `Project.get_folder()` methods.
 
     """
-    path = rope.base.project._realpath(path)
-    project_path = path
-    if path == project.address or path.startswith(project.address + os.sep):
-        project_path = path[len(project.address):].lstrip('/' + os.sep)
-    else:
+    project_path = relative(project.address, path)
+    if project_path is None:
+        project_path = rope.base.project._realpath(path)
         project = rope.base.project.get_no_project()
     if type is None:
         return project.get_resource(project_path)
@@ -31,6 +29,18 @@ def path_to_resource(project, path, type=None):
         return project.get_folder(project_path)
     return None
 
+def relative(root, path):
+    root = rope.base.project._realpath(root)
+    path = rope.base.project._realpath(path)
+    rel = []
+    while True:
+        if os.path.samefile(root, path):
+            return '/'.join(rel)
+        parent = os.path.dirname(path)
+        if not path or parent == path:
+            break
+        rel.append(os.path.basename(path))
+        path = parent
 
 def report_change(project, path, old_content):
     """Report that the contents of file at `path` was changed
