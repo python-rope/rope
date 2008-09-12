@@ -34,8 +34,11 @@ def relative(root, path):
     path = rope.base.project._realpath(path)
     rel = []
     while True:
-        if os.path.samefile(root, path):
-            return '/'.join(reversed(rel))
+        try:
+            if os.path.samefile(root, path):
+                return '/'.join(reversed(rel))
+        except OSError:
+            pass
         parent = os.path.dirname(path)
         if not parent or parent == path:
             break
