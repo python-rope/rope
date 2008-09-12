@@ -1,6 +1,7 @@
 import cPickle as pickle
 import os
 import shutil
+import sys
 import warnings
 
 import rope.base.fscommands
@@ -419,4 +420,9 @@ def _realpath(path):
     Is equivalent to ``realpath(abspath(expanduser(path)))``.
 
     """
+    # there is a bug in cygwin for os.path.abspath() for abs paths
+    if sys.platform == 'cygwin':
+        if path.startswith('/') or path[1:2] == ':':
+            return path
+        return os.path.abspath(os.path.expanduser(path))
     return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
