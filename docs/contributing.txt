@@ -45,7 +45,7 @@ about them, don't hesitate to discuss it in the mailing list.
 Getting Ready For Python 3.0
 ----------------------------
 
-Checkout http://rope.sf.net/hg/rope_py3k Mercurial_ repository.
+Checkout http://bitbucket.org/agr/rope_py3k Mercurial_ repository.
 Contributions are welcome.
 
 Write Plugins For Other IDEs
@@ -80,8 +80,8 @@ Source Repository
 
 Rope uses Mercurial_ CMS:
 
-* Rope main branch: http://rope.sourceforge.net/hg/rope
-* Rope py3k branch: http://rope.sourceforge.net/hg/rope_py3k
+* Rope main branch: http://bitbucket.org/agr/rope
+* Rope py3k branch: http://bitbucket.org/agr/rope_py3k
 
 .. _Mercurial: http://selenic.com/mercurial
 
