@@ -14,6 +14,28 @@ Overview
 New Features
 ============
 
+Changes since 0.8.4:
+
+* supporting Darcs VCS
+* handling files with mac line-ending
+* not searching all files when inlining a local variable
+* fixed cygwin path problems
+
+Some of the changes since 0.8:
+
+* inlining variable in other modules
+* added `rope.contrib.findit.find_definition()`
+* better extension module handling
+* added `rope.contrib.findit.find_definition()`
+* added GIT support in fscommands
+* inlining parameters
+* back importing underlined names in move
+* added `codeassist.get_calltip()`
+* added `libutils.analyze_modules()`
+* added ``soa_followed_calls`` project config
+* `libutils.report_change()` reads `automatic_soa`
+* handling property decorator
+
 
 Getting Started
 ===============
