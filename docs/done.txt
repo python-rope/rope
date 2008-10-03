@@ -3,6 +3,18 @@
 ===========
 
 
+> Public Release 0.9 : October 3, 2008
+
+
+- supporting Darcs VCS : August 20, 2008
+
+
+- handling files with mac line-ending : July 25, 2008
+
+
+- not searching all files when inlining a local variable : July 24, 2008
+
+
 > Public Release 0.8.4 : June 24, 2008
 
 
