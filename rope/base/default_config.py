@@ -66,11 +66,20 @@ def set_prefs(prefs):
     # Builtin and c-extension modules that are allowed to be imported
     # and inspected by rope.
     prefs['extension_modules'] = [
-        'array', 'binascii', 'cmath', 'bz2', 'collections', 'cPickle', 'crypt',
-        'cStringIO', 'datetime', 'errno', 'exceptions', 'gc', 'grp', 'imp',
-        'itertools', 'marshal', 'math', 'mmap', 'nt', 'operator', 'posix',
-        'pwd', 'select', 'signal', 'sys', 'thread', 'unicodedata', 'zlib',
-        'zipimport']
+        '_bisect', '_bytesio', '_collections', '_ctypes',
+        '_curses', '_csv', '_elementtree', '_fileio',
+        '_functools', '_heapq', '_hotshot', '_json',
+        '_locale', '_lsprof', '_md5', '_multibytecodec',
+        '_multiprocessing', '_random', '_sha', '_socket',
+        '_ssl', '_struct', '_weakref',
+        'array', 'binascii', 'cmath', 'bz2', 'collections',
+        'cPickle', 'crypt', 'cStringIO', 'datetime', 'dl',
+        'errno', 'exceptions', 'fcntl', 'gc', 'grp', 'imageop',
+        'imp', 'itertools', 'marshal', 'math', 'mmap', 'nis',
+        'nt', 'operator', 'parser', 'posix', 'pwd', 'pyexpat',
+        'resource', 'select', 'signal', 'strop', 'swpd', 'sys',
+        'syslog', 'thread', 'time', 'termios', 'unicodedata',
+        'zlib', 'zipimport']
 
     # If `True` modules with syntax errors are considered to be empty.
     # The default value is `False`; When `False` syntax errors raise
