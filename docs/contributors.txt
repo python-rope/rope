@@ -6,3 +6,4 @@
 * Sebastjan Trepca <trepca@gmail.com>
 * MATSUI Tetsushi <mft@users.sf.net>
 * Kevin Turner <keturn@keturn.net>
+* Darren Syzling <dsyzling@gmail.com>
