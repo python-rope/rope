@@ -33,11 +33,17 @@ def remove_project(project):
 
 def remove_recursively(path):
     import time
-    if os.name == 'nt':
+    # windows sometimes raises exceptions instead of removing files
+    if os.name == 'nt' or sys.platform == 'cygwin':
+        exception = OSError
+        if os.name == 'nt':
+            exception = WindowsError
         for i in range(12):
             try:
                 _remove_recursively(path)
-            except WindowsError:
+            except exception, e:
+                if isinstance(e, OSError) and e.errno != 16:
+                    raise
                 time.sleep(0.3)
             else:
                 break
