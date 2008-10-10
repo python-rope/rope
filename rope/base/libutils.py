@@ -32,6 +32,11 @@ def path_to_resource(project, path, type=None):
 def relative(root, path):
     root = rope.base.project._realpath(root)
     path = rope.base.project._realpath(path)
+    if os.name == 'nt':
+        root = root.rstrip('\\')
+        if path.startswith(root):
+            return path[len(root):]
+        return
     rel = []
     while True:
         try:
