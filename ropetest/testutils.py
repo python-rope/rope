@@ -42,7 +42,7 @@ def remove_recursively(path):
             try:
                 _remove_recursively(path)
             except exception, e:
-                if isinstance(e, OSError) and e.errno != 16:
+                if isinstance(e, OSError) and e.errno in (13, 16):
                     raise
                 time.sleep(0.3)
             else:
