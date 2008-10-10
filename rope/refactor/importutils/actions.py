@@ -303,12 +303,9 @@ class SortingVisitor(ImportInfoVisitor):
     @classmethod
     def standard_modules(cls):
         if not hasattr(cls, '_standard_modules'):
+            import inspect
             result = set(sys.builtin_module_names)
-            if os.name != 'nt':
-                lib_path = os.path.join(
-                    sys.prefix, 'lib', 'python' + sys.version[:3])
-            else:
-                lib_path = os.path.join(sys.prefix, 'lib%s' % os.sep)
+            lib_path = os.path.dirname(inspect.getsourcefile(os))
             dynload_path = os.path.join(lib_path, 'lib-dynload')
             if os.path.exists(lib_path):
                 for name in os.listdir(lib_path):
