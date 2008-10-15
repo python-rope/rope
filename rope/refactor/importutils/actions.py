@@ -320,8 +320,8 @@ class SortingVisitor(ImportInfoVisitor):
                 for name in os.listdir(dynload_path):
                     path = os.path.join(dynload_path, name)
                     if os.path.isfile(path):
-                        if name.endswith('.so'):
-                            result.add(name[:-3])
+                        if name.endswith('.so') or name.endswith('.dll'):
+                            result.add(os.path.splitext(name)[0])
             cls._standard_modules = result
         return cls._standard_modules
 
