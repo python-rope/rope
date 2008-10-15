@@ -35,7 +35,7 @@ def relative(root, path):
     if os.name == 'nt':
         root = root.rstrip('\\')
         if path.startswith(root):
-            return path[len(root):]
+            return path[len(root):].replace('\\', '/').lstrip('/')
         return
     rel = []
     while True:
