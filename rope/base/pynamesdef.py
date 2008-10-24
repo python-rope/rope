@@ -13,6 +13,7 @@ class AssignedName(pynames.AssignedName):
                                   pynames._get_concluded_data(module))
         self.pyobject.set(pyobject)
 
+    @utils.prevent_recursion(lambda: None)
     def _get_inferred(self):
         if self.module is not None:
             return rope.base.oi.soi.infer_assigned_object(self)
