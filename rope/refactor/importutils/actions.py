@@ -1,7 +1,7 @@
 import os
 import sys
 
-from rope.base import pyobjects, exceptions
+from rope.base import pyobjects, exceptions, stdmods
 from rope.refactor import occurrences
 from rope.refactor.importutils import importinfo
 
@@ -295,35 +295,10 @@ class SortingVisitor(ImportInfoVisitor):
             self.in_project.add(import_stmt)
         elif _is_future(info):
             self.future.add(import_stmt)
-        elif imported_name.split('.')[0] in SortingVisitor.standard_modules():
+        elif imported_name.split('.')[0] in stdmods.standard_modules():
             self.standard.add(import_stmt)
         else:
             self.third_party.add(import_stmt)
-
-    @classmethod
-    def standard_modules(cls):
-        if not hasattr(cls, '_standard_modules'):
-            import inspect
-            result = set(sys.builtin_module_names)
-            lib_path = os.path.dirname(inspect.getsourcefile(os))
-            dynload_path = os.path.join(lib_path, 'lib-dynload')
-            if os.path.exists(lib_path):
-                for name in os.listdir(lib_path):
-                    path = os.path.join(lib_path, name)
-                    if os.path.isdir(path):
-                        if '-' not in name:
-                            result.add(name)
-                    else:
-                        if name.endswith('.py'):
-                            result.add(name[:-3])
-            if os.path.exists(dynload_path):
-                for name in os.listdir(dynload_path):
-                    path = os.path.join(dynload_path, name)
-                    if os.path.isfile(path):
-                        if name.endswith('.so') or name.endswith('.dll'):
-                            result.add(os.path.splitext(name)[0])
-            cls._standard_modules = result
-        return cls._standard_modules
 
 
 class LongImportVisitor(ImportInfoVisitor):
