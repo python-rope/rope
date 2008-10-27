@@ -68,7 +68,7 @@ def set_prefs(prefs):
     prefs['extension_modules'] = []
 
     # Add all standard c-extensions to extension_modules list.
-    prefs['import_dynamic_stdmods'] = True
+    prefs['import_dynload_stdmods'] = True
 
     # If `True` modules with syntax errors are considered to be empty.
     # The default value is `False`; When `False` syntax errors raise

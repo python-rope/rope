@@ -302,7 +302,7 @@ class PyCore(object):
     @utils.cacheit
     def extension_modules(self):
         result = set(self.project.prefs.get('extension_modules', []))
-        if self.project.prefs.get('import_dynamic_stdmods', False):
+        if self.project.prefs.get('import_dynload_stdmods', False):
             result.update(stdmods.dynload_modules())
         return result
 
