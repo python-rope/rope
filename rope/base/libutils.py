@@ -30,25 +30,12 @@ def path_to_resource(project, path, type=None):
     return None
 
 def relative(root, path):
-    root = rope.base.project._realpath(root)
-    path = rope.base.project._realpath(path)
-    if os.name == 'nt':
-        root = root.rstrip('\\')
-        if path.startswith(root):
-            return path[len(root):].replace('\\', '/').lstrip('/')
-        return
-    rel = []
-    while True:
-        try:
-            if os.path.samefile(root, path):
-                return '/'.join(reversed(rel))
-        except OSError:
-            pass
-        parent = os.path.dirname(path)
-        if not parent or parent == path:
-            break
-        rel.append(os.path.basename(path))
-        path = parent
+    root = rope.base.project._realpath(root).replace(os.path.sep, '/')
+    path = rope.base.project._realpath(path).replace(os.path.sep, '/')
+    if path == root:
+    	return ''
+    if path.startswith(root + '/'):
+    	return path[len(root) + 1:]
 
 def report_change(project, path, old_content):
     """Report that the contents of file at `path` was changed
