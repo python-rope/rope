@@ -17,7 +17,8 @@ def sample_project(root=None, foldername=None, **kwds):
     # Using these prefs for faster tests
     prefs = {'save_objectdb': False, 'save_history': False,
              'validate_objectdb': False, 'automatic_soa': False,
-             'ignored_resources': ['.ropeproject', '*.pyc']}
+             'ignored_resources': ['.ropeproject', '*.pyc'],
+             'import_dynload_stdmods': False}
     prefs.update(kwds)
     remove_recursively(root)
     project = rope.base.project.Project(root, **prefs)
