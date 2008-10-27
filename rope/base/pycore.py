@@ -6,7 +6,7 @@ import warnings
 import rope.base.oi.doa
 import rope.base.oi.objectinfo
 import rope.base.oi.soa
-from rope.base import ast, exceptions, taskhandle
+from rope.base import ast, exceptions, taskhandle, utils, stdmods
 from rope.base.exceptions import ModuleNotFoundError
 from rope.base.pyobjectsdef import PyModule, PyPackage, PyClass
 import rope.base.resources
@@ -299,8 +299,12 @@ class PyCore(object):
         return module_name
 
     @property
+    @utils.cacheit
     def extension_modules(self):
-        return self.project.prefs.get('extension_modules', [])
+        result = set(self.project.prefs.get('extension_modules', []))
+        if self.project.prefs.get('import_dynamic_stdmods', False):
+            result.update(stdmods.dynload_modules())
+        return result
 
 
 class _ModuleCache(object):

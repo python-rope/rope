@@ -65,21 +65,10 @@ def set_prefs(prefs):
 
     # Builtin and c-extension modules that are allowed to be imported
     # and inspected by rope.
-    prefs['extension_modules'] = [
-        '_bisect', '_bytesio', '_collections', '_ctypes',
-        '_curses', '_csv', '_elementtree', '_fileio',
-        '_functools', '_heapq', '_hotshot', '_json',
-        '_locale', '_lsprof', '_md5', '_multibytecodec',
-        '_multiprocessing', '_random', '_sha', '_socket',
-        '_ssl', '_struct', '_weakref',
-        'array', 'binascii', 'cmath', 'bz2', 'collections',
-        'cPickle', 'crypt', 'cStringIO', 'datetime', 'dl',
-        'errno', 'exceptions', 'fcntl', 'gc', 'grp', 'imageop',
-        'imp', 'itertools', 'marshal', 'math', 'mmap', 'nis',
-        'nt', 'operator', 'parser', 'posix', 'pwd', 'pyexpat',
-        'resource', 'select', 'signal', 'strop', 'swpd', 'sys',
-        'syslog', 'thread', 'time', 'termios', 'unicodedata',
-        'zlib', 'zipimport']
+    prefs['extension_modules'] = []
+
+    # Add all standard c-extensions to extension_modules list.
+    prefs['import_dynamic_stdmods'] = True
 
     # If `True` modules with syntax errors are considered to be empty.
     # The default value is `False`; When `False` syntax errors raise
