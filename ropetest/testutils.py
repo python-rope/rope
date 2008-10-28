@@ -36,14 +36,11 @@ def remove_recursively(path):
     import time
     # windows sometimes raises exceptions instead of removing files
     if os.name == 'nt' or sys.platform == 'cygwin':
-        exception = OSError
-        if os.name == 'nt':
-            exception = WindowsError
-        for i in range(12):
+          for i in range(12):
             try:
                 _remove_recursively(path)
-            except exception, e:
-                if isinstance(e, OSError) and e.errno in (13, 16):
+            except OSError, e:
+                if e.errno not in (13, 16, 32):
                     raise
                 time.sleep(0.3)
             else:
