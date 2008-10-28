@@ -422,7 +422,7 @@ def _realpath(path):
     """
     # there is a bug in cygwin for os.path.abspath() for abs paths
     if sys.platform == 'cygwin':
-        if path.startswith('/') or path[1:2] == ':':
+        if path[1:3] == ':\\':
             return path
         return os.path.abspath(os.path.expanduser(path))
     return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
