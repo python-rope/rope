@@ -3,6 +3,15 @@
 ===========
 
 
+> Public Release 0.9.1 : October 29, 2008
+
+
+- added import_dynload_stdmods project variable : October 28, 2008
+
+
+- finding dynload standard modules on windows : October 15, 2008
+
+
 > Public Release 0.9 : October 3, 2008
 
 
