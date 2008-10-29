@@ -1095,20 +1095,22 @@ can also extend python path using ``python_path`` config.
 Version Control Systems Support
 ===============================
 
-When you perform refactorings some files might need to be moved (when
-renaming a module) or new files might be created.  When you use a VCS
-rope uses that to perform file system actions.
+When performing refactorings some files might need to be moved (when
+renaming a module) or new files might be created.  When using a VCS,
+rope detects and uses it to perform file system actions.
 
-Currently rope supports Subversion (Uses `pysvn`_ library) and
-Mercurial_.  Rope uses Subversion if the `pysvn` module is available
-and there is a `.svn` in project root.  The Mercurial will be used if
-`mercurial` module is available and there is a `.hg` in project root.
-Rope assumes either all files are under version control in a project
-or there is no version control at all.  Also don't forget to commit
-your changes yourself, rope doesn't do that.
+Currently Mercurial_, GIT_, Darcs_ and SVN (using pysvn_ library) are
+supported.  They are selected based on dot files in project root
+directory.  For instance, Mercurial will be used if `mercurial` module
+is available and there is a ``.hg`` folder in project root.  Rope
+assumes either all files are under version control in a project or
+there is no version control at all.  Also don't forget to commit your
+changes yourself, rope doesn't do that.
 
 Adding support for other VCSs is easy; have a look at
 `library.txt`_.
 
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
+.. _GIT: http://git.or.cz
+.. _darcs: http://darcs.net
