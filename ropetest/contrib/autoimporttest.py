@@ -8,7 +8,7 @@ class AutoImportTest(unittest.TestCase):
 
     def setUp(self):
         super(AutoImportTest, self).setUp()
-        self.project = testutils.sample_project()
+        self.project = testutils.sample_project(extension_modules=['sys'])
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.pkg = testutils.create_package(self.project, 'pkg')
         self.mod2 = testutils.create_module(self.project, 'mod2', self.pkg)
