@@ -1,4 +1,4 @@
-from rope.base import exceptions, ast
+from rope.base import ast, exceptions, utils
 
 
 class PyObject(object):
@@ -177,11 +177,13 @@ class PyDefinedObject(object):
 
     visitor_class = None
 
+    @utils.prevent_recursion(lambda: {})
     def _get_structural_attributes(self):
         if self.structural_attributes is None:
             self.structural_attributes = self._create_structural_attributes()
         return self.structural_attributes
 
+    @utils.prevent_recursion(lambda: {})
     def _get_concluded_attributes(self):
         if self.concluded_attributes.get() is None:
             self._get_structural_attributes()
