@@ -149,15 +149,27 @@ class CompletionProposal(CodeAssistProposal):
 
     """
 
-    def __init__(self, name, kind, type=None):
+    def __init__(self, name, kind, type=None, pyname=None):
         super(CompletionProposal, self).__init__(name, kind)
         self.type = type
+        self.pyname = pyname
 
     def __str__(self):
         return '%s (%s, %s)' % (self.name, self.kind, self.type)
 
     def __repr__(self):
         return str(self)
+
+    @property
+    def parameters(self):
+        """The names of the parameters the function takes.
+
+        Returns None if this completion is not a function.
+        """
+        if isinstance(self.pyname, pynames.DefinedName):
+            pyobject = self.pyname.get_object()
+            if isinstance(pyobject, pyobject.AbstractFunction):
+                return pyobject.get_param_names()
 
 
 def sorted_proposals(proposals, kindpref=None, typepref=None):
@@ -241,7 +253,7 @@ class _PythonCodeAssist(object):
             for name, pyname in element.get_attributes().items():
                 if name.startswith(self.starting):
                     result[name] = CompletionProposal(
-                        name, 'attribute', self._get_pyname_type(pyname))
+                        name, 'attribute', self._get_pyname_type(pyname), pyname)
         return result
 
     def _undotted_completions(self, scope, result, lineno=None):
@@ -259,7 +271,7 @@ class _PythonCodeAssist(object):
                 if lineno is None or self.later_locals or \
                    not self._is_defined_after(scope, pyname, lineno):
                     result[name] = CompletionProposal(
-                        name, kind, self._get_pyname_type(pyname))
+                        name, kind, self._get_pyname_type(pyname), pyname)
 
     def _from_import_completions(self, pymodule):
         module_name = self.word_finder.get_from_module(self.offset)
@@ -270,7 +282,8 @@ class _PythonCodeAssist(object):
         for name in pymodule:
             if name.startswith(self.starting):
                 result[name] = CompletionProposal(name, kind='global',
-                                                  type='imported')
+                                                  type='imported',
+                                                  pyname=pymodule[name])
         return result
 
     def _find_module(self, pymodule, module_name):
