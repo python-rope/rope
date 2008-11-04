@@ -166,8 +166,11 @@ class CompletionProposal(CodeAssistProposal):
 
         Returns None if this completion is not a function.
         """
-        if isinstance(self.pyname, pynames.DefinedName):
-            pyobject = self.pyname.get_object()
+        pyname = self.pyname
+        if isinstance(pyname, pynames.ImportedName):
+            pyname = pyname._get_imported_pyname()
+        if isinstance(pyname, pynames.DefinedName):
+            pyobject = pyname.get_object()
             if isinstance(pyobject, pyobject.AbstractFunction):
                 return pyobject.get_param_names()
 
