@@ -18,7 +18,7 @@ a mail to ``rope-dev-subscribe (at) googlegroups [dot] com`` to
 subscribe.
 
 * Use rope
-* Send bugs reports and request features
+* Send bug reports and request features
 * Submit patches for bugs or new features
 * Discuss your ideas
 
