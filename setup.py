@@ -1,7 +1,15 @@
 import glob
 import os
 import shutil
-from distutils.core import setup
+try:
+    # we don't want to depend on setuptools
+    # please don't use any setuptools specific API
+    from setuptools import setup
+    extra_kwargs = dict(
+        test_suite='ropetest',
+    )
+except ImportError:
+    from distutils.core import setup
 
 import rope
 
@@ -46,6 +54,7 @@ try:
                     'rope.refactor.importutils', 'rope.contrib'],
           package_data={'rope': ['docs/*.txt']},
           license='GNU GPL',
-          classifiers=classifiers)
+          classifiers=classifiers,
+          **extra_kwargs)
 finally:
     remove_temps()
