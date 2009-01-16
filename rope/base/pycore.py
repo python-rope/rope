@@ -290,10 +290,8 @@ class PyCore(object):
             module_name = resource.name[:-3]
             source_folder = resource.parent
 
-        source_folders = self.get_source_folders()
-        source_folders.extend(self.get_python_path_folders())
         while source_folder != source_folder.parent and \
-              source_folder not in source_folders:
+              source_folder.has_child('__init__.py'):
             module_name = source_folder.name + '.' + module_name
             source_folder = source_folder.parent
         return module_name
