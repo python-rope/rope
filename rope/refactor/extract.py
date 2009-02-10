@@ -538,8 +538,11 @@ class _ExtractMethodParts(object):
         if self.info.global_ and not self.info.make_global:
             return ()
         if not self.info.one_line:
-            return list(self.info_collector.prewritten.
-                        intersection(self.info_collector.read))
+            result = (self.info_collector.prewritten &
+                      self.info_collector.read)
+            result |= (self.info_collector.maybe_written &
+                       self.info_collector.postread)
+            return list(result)
         start = self.info.region[0]
         if start == self.info.lines_region[0]:
             start = start + re.search('\S', self.info.extracted).start()
@@ -551,8 +554,9 @@ class _ExtractMethodParts(object):
     def _find_function_returns(self):
         if self.info.one_line or self.info.returned:
             return []
-        return list(self.info_collector.written.
-                    intersection(self.info_collector.postread))
+        written = self.info_collector.written | \
+                  self.info_collector.maybe_written
+        return list(written & self.info_collector.postread)
 
     def _get_unindented_function_body(self, returns):
         if self.info.one_line:
@@ -591,11 +595,13 @@ class _FunctionInformationCollector(object):
         self.end = end
         self.is_global = is_global
         self.prewritten = set()
+        self.maybe_written = set()
         self.written = set()
         self.read = set()
         self.postread = set()
         self.postwritten = set()
         self.host_function = True
+        self.conditional = False
 
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
@@ -607,7 +613,10 @@ class _FunctionInformationCollector(object):
 
     def _written_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
-            self.written.add(name)
+            if self.conditional:
+                self.maybe_written.add(name)
+            else:
+                self.written.add(name)
         if self.start > lineno:
             self.prewritten.add(name)
         if self.end < lineno:
@@ -641,6 +650,24 @@ class _FunctionInformationCollector(object):
 
     def _ClassDef(self, node):
         self._written_variable(node.name, node.lineno)
+
+    def _handle_conditional_node(self, node):
+        self.conditional = True
+        try:
+            for child in ast.get_child_nodes(node):
+                ast.walk(child, self)
+        finally:
+            self.conditional = False
+
+    def _If(self, node):
+        self._handle_conditional_node(node)
+
+    def _While(self, node):
+        self._handle_conditional_node(node)
+
+    def _For(self, node):
+        self._handle_conditional_node(node)
+
 
 
 def _get_argnames(arguments):
