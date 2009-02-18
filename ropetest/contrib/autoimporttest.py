@@ -121,6 +121,11 @@ class AutoImportTest(unittest.TestCase):
         self.importer.update_module('sys')
         self.assertTrue('sys' in self.importer.get_modules('exit'))
 
+    def test_submodules(self):
+        self.assertEquals(set([self.mod1]),
+                          autoimport.submodules(self.mod1))
+        self.assertEquals(set([self.mod2, self.pkg]),
+                          autoimport.submodules(self.pkg))
 
 class AutoImportObservingTest(unittest.TestCase):
 

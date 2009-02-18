@@ -1,7 +1,7 @@
 import re
 
 from rope.base import (exceptions, pynames, resourceobserver,
-                       taskhandle, pyobjects, builtins)
+                       taskhandle, pyobjects, builtins, resources)
 from rope.refactor import importutils
 
 
@@ -106,7 +106,13 @@ class AutoImport(object):
             'Generatig autoimport cache for modules', len(modules))
         for modname in modules:
             job_set.started_job('Working on <%s>' % modname)
-            self.update_module(modname, underlined)
+            if modname.endswith('.*'):
+                mod = self.project.pycore.find_module(modname[:-2])
+                if mod:
+                    for sub in submodules(mod):
+                        self.update_resource(sub, underlined)
+            else:
+                self.update_module(modname, underlined)
             job_set.finished_job()
 
     def clear_cache(self):
@@ -196,3 +202,16 @@ class AutoImport(object):
             modname = self._module_name(resource)
             if modname in self.names:
                 del self.names[modname]
+
+
+def submodules(mod):
+    if isinstance(mod, resources.File):
+        if mod.name.endswith('.py') and mod.name != '__init__.py':
+            return set([mod])
+        return set()
+    if not mod.has_child('__init__.py'):
+        return set()
+    result = set([mod])
+    for child in mod.get_children():
+        result |= submodules(child)
+    return result
