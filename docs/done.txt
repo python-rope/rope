@@ -3,6 +3,24 @@
 ===========
 
 
+> Public Release 0.9.2 : February 19, 2009
+
+
+- caching all sub-modules in `autoimport` : February 18 : 2009
+
+
+- extract method handles conditional variable updates : February 10, 2009
+
+
+- added basic support for setuptools : January 15, 2009
+
+
+- added `CompletionProposal.parameters` : November 4, 2008
+
+
+- fix recursion when creating modules : October 31, 2008
+
+
 > Public Release 0.9.1 : October 29, 2008
 
 
