@@ -1,13 +1,13 @@
 import glob
 import os
 import shutil
+
+extra_kwargs = {}
 try:
     # we don't want to depend on setuptools
     # please don't use any setuptools specific API
     from setuptools import setup
-    extra_kwargs = dict(
-        test_suite='ropetest',
-    )
+    extra_kwargs['test_suite'] = 'ropetest'
 except ImportError:
     from distutils.core import setup
 
