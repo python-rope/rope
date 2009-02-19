@@ -14,16 +14,36 @@ Overview
 New Features
 ============
 
-* added import_dynload_stdmods project variable
-* finding dynload standard modules on windows
-* fixed some windows-specific bugs
+* caching all sub-modules of a module in `rope.contrib.autoimport`
+* fix recursion when creating modules
+* added basic support for setuptools
+* extract method handles conditional variable updates
+* added `rope.contrib.codeassist.CompletionProposal.parameters`
 
-If ``import_dynload_stdmods`` is set, most standard C-extension
-modules are inserted to ``extension_modules``.  Note that rope uses
-the source code to collect information about modules.  If rope cannot
-find the source code of a module (like C-extensions), it can import
-them directly, if listed in ``extension_modules`` variable, and
-analyze them.
+The `rope.contrib.autoimport.AutoImport.generate_module_cache()` has
+been changed to handle module names that end with ``.*``.  Now one can
+use ``rope.*`` to mean `rope` and all of its sub-modules.
+
+Extract method now handles variable updates better.  For instance in::
+
+  def f(a):
+      if 0:
+          a = 1
+      print(a)
+
+When extracting the first two lines of `f()`, `a` should be passed to
+`g()`.  Although these lines don't read `a`, if the conditional write
+(like in ``if`` or ``while`` blocks) does not happen, it results in an
+error.  So the outcome will be::
+
+  def f(a):
+      a = g(a)
+      print(a)
+
+  def g(a):
+      if 0:
+          a = 1
+      return a
 
 
 Getting Started
