@@ -559,6 +559,13 @@ class PatchedASTTest(unittest.TestCase):
             'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
                               'Call', ' ', 'if', ' ', 'Name'])
 
+    def test_ext_slice_node(self):
+        source = 'x = xs[0,:]\n'
+        ast = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('ExtSlice', 7, len(source) - 2)
+        checker.check_children('ExtSlice', ['Index', '', ',', '', 'Slice'])
+
     def test_simple_module_node(self):
         source = 'pass\n'
         ast = patchedast.get_patched_ast(source, True)

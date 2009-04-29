@@ -330,6 +330,14 @@ class _PatchingASTWalker(object):
             children.extend([',', node.locals])
         self._handle(node, children)
 
+    def _ExtSlice(self, node):
+        children = []
+        for index, dim in enumerate(node.dims):
+            if index > 0:
+                children.append(',')
+            children.append(dim)
+        self._handle(node, children)
+
     def _For(self, node):
         children = ['for', node.target, 'in', node.iter, ':']
         children.extend(node.body)
