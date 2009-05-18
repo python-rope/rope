@@ -14,16 +14,6 @@ except ImportError:
 import rope
 
 
-def make_temps():
-    if not os.path.exists('rope/docs'):
-        os.mkdir('rope/docs')
-    for name in glob.glob('docs/*.txt'):
-        shutil.copy(name, 'rope/docs/')
-
-def remove_temps():
-    if os.path.exists('rope/docs'):
-        shutil.rmtree('rope/docs')
-
 classifiers=[
     'Development Status :: 4 - Beta',
     'Operating System :: OS Independent',
@@ -41,20 +31,15 @@ def get_long_description():
     end = lines.index('Getting Started')
     return '\n' + '\n'.join(lines[:end]) + '\n'
 
-make_temps()
-try:
-    setup(name='rope',
-          version=rope.VERSION,
-          description='a python refactoring library...',
-          long_description=get_long_description(),
-          author='Ali Gholami Rudi',
-          author_email='aligrudi@users.sourceforge.net',
-          url='http://rope.sf.net/',
-          packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
-                    'rope.refactor.importutils', 'rope.contrib'],
-          package_data={'rope': ['docs/*.txt']},
-          license='GNU GPL',
-          classifiers=classifiers,
-          **extra_kwargs)
-finally:
-    remove_temps()
+setup(name='rope',
+      version=rope.VERSION,
+      description='a python refactoring library...',
+      long_description=get_long_description(),
+      author='Ali Gholami Rudi',
+      author_email='aligrudi@users.sourceforge.net',
+      url='http://rope.sf.net/',
+      packages=['rope', 'rope.base', 'rope.base.oi', 'rope.refactor',
+                'rope.refactor.importutils', 'rope.contrib'],
+      license='GNU GPL',
+      classifiers=classifiers,
+      **extra_kwargs)
