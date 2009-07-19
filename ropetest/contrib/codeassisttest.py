@@ -26,9 +26,16 @@ class CodeAssistTest(unittest.TestCase):
     def test_simple_assist(self):
         self._assist('', 0)
 
-    def assert_completion_in_result(self, name, kind, result):
+    def assert_completion_in_result(self, name, kind, result, type=None):
         for proposal in result:
-            if proposal.name == name and proposal.kind == kind:
+            if proposal.name == name:
+                self.assertEqual(kind, proposal.kind,
+                        "proposal <%s> has wrong kind, expected " \
+                        "%r, got %r" % (name, kind, proposal.kind))
+                if type is not None:
+                    self.assertEqual(type, proposal.type,
+                            "proposal <%s> has wrong type, expected " \
+                            "%r, got %r" % (name, type, proposal.type))
                 return
         self.fail('completion <%s> not proposed' % name)
 
@@ -116,13 +123,13 @@ class CodeAssistTest(unittest.TestCase):
     def test_including_matching_builtins_types(self):
         code = 'my_var = Excep'
         result = self._assist(code)
-        self.assert_completion_in_result('Exception', 'global', result)
-        self.assert_completion_not_in_result('zip', 'global', result)
+        self.assert_completion_in_result('Exception', 'builtin', result)
+        self.assert_completion_not_in_result('zip', 'builtin', result)
 
     def test_including_matching_builtins_functions(self):
         code = 'my_var = zi'
         result = self._assist(code)
-        self.assert_completion_in_result('zip', 'global', result)
+        self.assert_completion_in_result('zip', 'builtin', result)
 
     def test_including_keywords(self):
         code = 'fo'
@@ -581,7 +588,7 @@ class CodeAssistTest(unittest.TestCase):
     def test_completing_excepts_in_uncomplete_try_blocks(self):
         code = 'try:\n    pass\nexcept Exc'
         result = self._assist(code)
-        self.assert_completion_in_result('Exception', 'global', result)
+        self.assert_completion_in_result('Exception', 'builtin', result)
 
     def test_and_normal_complete_blocks_and_single_fixing(self):
         code = 'try:\n    range.\nexcept:\n    pass\n'
@@ -688,6 +695,118 @@ class CodeAssistTest(unittest.TestCase):
               'C().f()'
         doc = get_calltip(self.project, src, src.rindex('f'), remove_self=True)
         self.assertEquals('C.f(p1)', doc)
+
+    # TESTING PROPOSAL'S KINDS AND TYPES.
+    # SEE RELATION MATRIX IN `CompletionProposal`'s DOCSTRING
+
+    def test_local_variable_completion_proposal(self):
+        code = 'def foo():\n  xvar = 5\n  x'
+        result = self._assist(code)
+        self.assert_completion_in_result('xvar', 'local', result, 'variable')
+
+    def test_global_variable_completion_proposal(self):
+        code = 'yvar = 5\ny'
+        result = self._assist(code)
+        self.assert_completion_in_result('yvar', 'global', result, 'variable')
+
+    def test_builtin_variable_completion_proposal(self):
+        for varname in ('False', 'True'):
+            result = self._assist(varname[0])
+            self.assert_completion_in_result(varname, 'builtin', result,
+                                             type='variable')
+
+    def test_attribute_variable_completion_proposal(self):
+        code = 'class AClass(object):\n  def foo(self):\n    ' \
+               'self.bar = 1\n    self.b'
+        result = self._assist(code)
+        self.assert_completion_in_result('bar', 'attribute', result,
+                                         type='variable')
+
+    def test_local_class_completion_proposal(self):
+        code = 'def foo():\n  class LocalClass(object): pass\n  Lo'
+        result = self._assist(code)
+        self.assert_completion_in_result('LocalClass', 'local', result,
+                                         type='class')
+
+    def test_global_class_completion_proposal(self):
+        code = 'class GlobalClass(object): pass\nGl'
+        result = self._assist(code)
+        self.assert_completion_in_result('GlobalClass', 'global', result,
+                                         type='class')
+
+    def test_builtin_class_completion_proposal(self):
+        for varname in ('object', 'dict', 'file'):
+            result = self._assist(varname[0])
+            self.assert_completion_in_result(varname, 'builtin', result,
+                                             type='class')
+
+    def test_attribute_class_completion_proposal(self):
+        code = 'class Outer(object):\n  class Inner(object): pass\nOuter.'
+        result = self._assist(code)
+        self.assert_completion_in_result('Inner', 'attribute', result,
+                                         type='class')
+
+    def test_local_function_completion_proposal(self):
+        code = 'def outer():\n  def inner(): pass\n  in'
+        result = self._assist(code)
+        self.assert_completion_in_result('inner', 'local', result,
+                                         type='function')
+
+    def test_global_function_completion_proposal(self):
+        code = 'def foo(): pass\nf'
+        result = self._assist(code)
+        self.assert_completion_in_result('foo', 'global', result,
+                                         type='function')
+
+    def test_builtin_function_completion_proposal(self):
+        code = 'a'
+        result = self._assist(code)
+        for expected in ('all', 'any', 'abs'):
+            self.assert_completion_in_result(expected, 'builtin', result,
+                                             type='function')
+
+    def test_attribute_function_completion_proposal(self):
+        code = 'class Some(object):\n  def method(self):\n    self.'
+        result = self._assist(code)
+        self.assert_completion_in_result('method', 'attribute', result,
+                                         type='function')
+
+    def test_local_module_completion_proposal(self):
+        code = 'def foo():\n  import types\n  t'
+        result = self._assist(code)
+        self.assert_completion_in_result('types', 'local', result,
+                                         type='module')
+
+    def test_global_module_completion_proposal(self):
+        code = 'import operator\no'
+        result = self._assist(code)
+        self.assert_completion_in_result('operator', 'global', result,
+                                         type='module')
+
+    def test_attribute_module_completion_proposal(self):
+        code = 'class Some(object):\n  import os\nSome.o'
+        result = self._assist(code)
+        self.assert_completion_in_result('os', 'attribute', result,
+                                         type='module')
+
+    def test_builtin_exception_completion_proposal(self):
+        code = 'def blah():\n  Z'
+        result = self._assist(code)
+        self.assert_completion_in_result('ZeroDivisionError', 'builtin',
+                                         result, type='exception')
+
+    def test_keyword_completion_proposal(self):
+        code = 'f'
+        result = self._assist(code)
+        self.assert_completion_in_result('for', 'keyword', result, type=None)
+        self.assert_completion_in_result('from', 'keyword', result, type=None)
+
+    def test_parameter_keyword_completion_proposal(self):
+        code = 'def func(abc, aloha, alpha, amigo): pass\nfunc(a'
+        result = self._assist(code)
+        for expected in ('abc=', 'aloha=', 'alpha=', 'amigo='):
+            self.assert_completion_in_result(expected, 'parameter_keyword',
+                                             result, type=None)
 
 
 class CodeAssistInProjectsTest(unittest.TestCase):
