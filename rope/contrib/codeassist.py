@@ -442,7 +442,7 @@ class _ProposalSorter(object):
     def __init__(self, code_assist_proposals, kindpref=None, typepref=None):
         self.proposals = code_assist_proposals
         if kindpref is None:
-            kindpref = ['local', 'parameter_keyword', 'global',
+            kindpref = ['parameter_keyword', 'local', 'global',
                         'attribute', 'builtin', 'keyword']
         self.kindpref = kindpref
         if typepref is None:
