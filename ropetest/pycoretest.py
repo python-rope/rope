@@ -571,8 +571,7 @@ class PyCoreTest(unittest.TestCase):
         except exceptions.ModuleSyntaxError, e:
             self.assertEquals(1, e.lineno)
 
-    @testutils.assert_raises(exceptions.ModuleDecodeError)
-    def test_not_syntax_errors_when_cannot_decode_file(self):
+    def test_no_exceptions_on_module_encoding_problems(self):
         mod = testutils.create_module(self.project, 'mod')
         contents = '\nsdsdsd\n\xa9\n'
         file = open(mod.real_path, 'wb')

@@ -159,6 +159,7 @@ class PyModule(pyobjects.PyModule):
         self.source_code = source
         self.star_imports = []
         self.visitor_class = _GlobalVisitor
+        self.coding = fscommands.read_str_coding(self.source_code)
         super(PyModule, self).__init__(pycore, node, resource)
 
     def _init_source(self, pycore, source_code, resource):

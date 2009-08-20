@@ -206,15 +206,21 @@ def file_data_to_unicode(data, encoding=None):
     return result
 
 def _decode_data(data, encoding):
+    if isinstance(data, unicode):
+        return data
     if encoding is None:
         encoding = read_str_coding(data)
+    if encoding is None:
+        # there is no encoding tip, we need to guess.
+        # PEP263 says that "encoding not explicitly defined" means it is ascii,
+        # but we will use utf8 instead since utf8 fully covers ascii and btw is
+        # the only non-latin sane encoding.
+        encoding = 'utf-8'
     try:
-        if encoding is not None:
-            return unicode(data, encoding)
-        return unicode(data)
-    except (UnicodeDecodeError, LookupError):
-        # Using ``utf-8`` if guessed encoding fails
-        return unicode(data, 'utf-8')
+        return data.decode(encoding)
+    except (UnicodeError, LookupError):
+        # fallback to latin1: it should never fail
+        return data.decode('latin1')
 
 
 def read_file_coding(path):

@@ -1,3 +1,4 @@
+# coding: utf-8
 import unittest
 
 from rope.base import exceptions
@@ -470,6 +471,18 @@ class CodeAssistTest(unittest.TestCase):
                'my_'
         result = self._assist(code)
         proposals = sorted_proposals(result, typepref=['function'])
+
+    def test_get_pydoc_unicode(self):
+        src = u'# coding: utf-8\ndef foo():\n  u"юникод-объект"'
+        doc = get_doc(self.project, src, src.index('foo') + 1)
+        self.assertTrue(isinstance(doc, unicode))
+        self.assertTrue(u'юникод-объект' in doc)
+
+    def test_get_pydoc_utf8_bytestring(self):
+        src = u'# coding: utf-8\ndef foo():\n  "байтстринг"'
+        doc = get_doc(self.project, src, src.index('foo') + 1)
+        self.assertTrue(isinstance(doc, unicode))
+        self.assertTrue(u'байтстринг' in doc)
 
     def test_get_pydoc_for_functions(self):
         src = 'def a_func():\n' \
