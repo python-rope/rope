@@ -267,6 +267,17 @@ class PyCoreTest(unittest.TestCase):
         found_module = self.pycore.find_module('sample')
         self.assertEquals(samplepkg, found_module)
 
+    def test_source_folders_preference(self):
+        pkg1 = testutils.create_package(self.project, 'pkg1')
+        src2 = testutils.create_package(self.project, 'pkg1.src2')
+        lost = testutils.create_module(self.project, 'pkg1.src2.lost')
+        self.assertEqual(self.project.pycore.find_module('lost'), None)
+        self.project.close()
+        from rope.base.project import Project
+        self.project = Project(self.project.address,
+                               source_folders=['pkg1/src2'])
+        self.assertEqual(self.project.pycore.find_module('lost'), lost)
+
     def test_getting_empty_source_folders(self):
         self.assertEquals([], self.pycore.get_source_folders())
 

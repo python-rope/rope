@@ -44,7 +44,8 @@ class PyCore(object):
     def _init_source_folders(self):
         self._custom_source_folders = []
         for path in self.project.prefs.get('source_folders', []):
-            self._custom_source_folders.append(path)
+            folder = self.project.get_resource(path)
+            self._custom_source_folders.append(folder)
 
     def _init_automatic_soa(self):
         if not self.automatic_soa:
