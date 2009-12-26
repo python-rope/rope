@@ -857,6 +857,21 @@ class ExtractMethodTest(unittest.TestCase):
                    '    return a\n'
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_with_variables_possibly_written_to(self):
+        code = "def a_func(b):\n" \
+               "    if b > 0:\n" \
+               "        a = 2\n" \
+               "    print a\n"
+        start, end = self._convert_line_range_to_offset(code, 2, 3)
+        refactored = self.do_extract_method(code, start, end, 'extracted')
+        expected = "def a_func(b):\n" \
+                   "    a = extracted(b)\n" \
+                   "    print a\n\n" \
+                   "def extracted(b):\n" \
+                   "    if b > 0:\n" \
+                   "        a = 2\n" \
+                   "    return a\n"
+        self.assertEquals(expected, refactored)
 
 if __name__ == '__main__':
     unittest.main()

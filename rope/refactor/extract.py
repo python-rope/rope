@@ -540,8 +540,10 @@ class _ExtractMethodParts(object):
         if not self.info.one_line:
             result = (self.info_collector.prewritten &
                       self.info_collector.read)
-            result |= (self.info_collector.maybe_written &
-                       self.info_collector.postread)
+            result |= (self.info_collector.prewritten &
+                       self.info_collector.postread &
+                       (self.info_collector.maybe_written -
+                        self.info_collector.written))
             return list(result)
         start = self.info.region[0]
         if start == self.info.lines_region[0]:
