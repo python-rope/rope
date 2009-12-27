@@ -71,9 +71,9 @@ class JobSet(object):
 
     def finished_job(self):
         self.check_status()
+        self.done += 1
         self.handle._inform_observers()
         self.job_name = None
-        self.done += 1
 
     def check_status(self):
         if self.handle.is_stopped():
