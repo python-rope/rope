@@ -56,11 +56,11 @@ class _BuiltinElement(object):
 
     def get_doc(self):
         if self.builtin:
-            return self.builtin.__doc__
+            return getattr(self.builtin, '__doc__', None)
 
     def get_name(self):
         if self.builtin:
-            return self.builtin.__name__
+            return getattr(self.builtin, '__name__', None)
 
     @property
     def parent(self):
@@ -103,6 +103,18 @@ class BuiltinFunction(_BuiltinElement, pyobjects.AbstractFunction):
         return self.argnames
 
 
+class BuiltinUnknown(_BuiltinElement, pyobjects.PyObject):
+
+    def __init__(self, builtin):
+        super(BuiltinUnknown, self).__init__(pyobjects.get_unknown())
+        self.builtin = builtin
+        self.type = pyobjects.get_unknown()
+
+    @utils.saveit
+    def get_attributes(self):
+        return _object_attributes(self.builtin, self)
+
+
 def _object_attributes(obj, parent):
     attributes = {}
     for name in dir(obj):
@@ -115,7 +127,7 @@ def _object_attributes(obj, parent):
         elif inspect.isroutine(child):
             pyobject = BuiltinFunction(builtin=child, parent=parent)
         else:
-            pyobject = pyobjects.get_unknown()
+            pyobject = BuiltinUnknown(builtin=child)
         attributes[name] = BuiltinName(pyobject)
     return attributes
 

@@ -132,6 +132,16 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('zip', 'builtin', result)
 
+    def test_builtin_instances(self):
+        # ``import_dynload_stdmods`` pref is disabled for test project.
+        # we need to have it enabled to make pycore._find_module()
+        # load ``sys`` module.
+        self.project.prefs['import_dynload_stdmods'] = True
+        code = 'from sys import stdout\nstdout.wr'
+        result = self._assist(code)
+        self.assert_completion_in_result('write', 'builtin', result)
+        self.assert_completion_in_result('writelines', 'builtin', result)
+
     def test_including_keywords(self):
         code = 'fo'
         result = self._assist(code)
