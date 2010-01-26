@@ -129,31 +129,31 @@ def find_occurrences(*args, **kwds):
 class CompletionProposal(object):
     """A completion proposal
 
-    The `kind` instance variable shows where proposed name came from
+    The `scope` instance variable shows where proposed name came from
     and can be 'global', 'local', 'builtin', 'attribute', 'keyword',
-    'parameter_keyword'.
+    'imported', 'parameter_keyword'.
 
-    The `type` instance variable shows the aproximate type of the
-    proposed object and can be 'variable', 'class', 'function', 'module',
-    'exception' and `None`.
+    The `type` instance variable shows the approximate type of the
+    proposed object and can be 'instance', 'class', 'function', 'module',
+    and `None`.
 
-    All possible relations between proposal's `kind` and `type` are shown
-    in the table below (different kinds in rows and types in columns.
-    NB: some kind names are shortened):
+    All possible relations between proposal's `scope` and `type` are shown
+    in the table below (different scopes in rows and types in columns):
 
-             | variable | class | function | module | exception | None
-       local |    +     |   +   |    +     |   +    |           |
-      global |    +     |   +   |    +     |   +    |           |
-     builtin |    +     |   +   |    +     |        |     +     |
-      attrib |    +     |   +   |    +     |   +    |           |
-     keyword |          |       |          |        |           |  +
-    param_kw |          |       |          |        |           |  +
+                      | instance | class | function | module | None
+                local |    +     |   +   |    +     |   +    |
+               global |    +     |   +   |    +     |   +    |
+              builtin |    +     |   +   |    +     |        |
+            attribute |    +     |   +   |    +     |   +    |
+             imported |    +     |   +   |    +     |   +    |
+              keyword |          |       |          |        |  +
+    parameter_keyword |          |       |          |        |  +
 
     """
 
-    def __init__(self, name, kind, pyname=None):
+    def __init__(self, name, scope, pyname=None):
         self.name = name
-        self.kind = kind
+        self.scope = scope
         self.pyname = pyname
         if pyname is not None:
             self.type = self._get_type()
@@ -161,7 +161,7 @@ class CompletionProposal(object):
             self.type = None
 
     def __str__(self):
-        return '%s (%s, %s)' % (self.name, self.kind, self.type)
+        return '%s (%s, %s)' % (self.name, self.scope, self.type)
 
     def __repr__(self):
         return str(self)
@@ -183,28 +183,29 @@ class CompletionProposal(object):
     def _get_type(self):
         pyname = self.pyname
         if isinstance(pyname, builtins.BuiltinName):
-            self.kind = 'builtin'
+            self.scope = 'builtin'
             pyobject = pyname.get_object()
             if isinstance(pyobject, builtins.BuiltinFunction):
                 return 'function'
             elif isinstance(pyobject, builtins.BuiltinClass):
                 clsobj = pyobject.builtin
-                if issubclass(clsobj, BaseException):
-                    return 'exception'
                 return 'class'
             elif isinstance(pyobject, builtins.BuiltinObject) or \
                  isinstance(pyobject, builtins.BuiltinName):
-                return 'object'
+                return 'instance'
         elif isinstance(pyname, pynames.ImportedModule):
+            self.scope = 'imported'
             return 'module'
         elif isinstance(pyname, pynames.ImportedName) or \
            isinstance(pyname, pynames.DefinedName):
+            if isinstance(pyname, pynames.ImportedName):
+                self.scope = 'imported'
             pyobject = pyname.get_object()
             if isinstance(pyobject, pyobjects.AbstractFunction):
                 return 'function'
             if isinstance(pyobject, pyobjects.AbstractClass):
                 return 'class'
-        return 'variable'
+        return 'instance'
 
     def get_doc(self):
         """Get the proposed object's docstring.
@@ -217,6 +218,12 @@ class CompletionProposal(object):
         if not hasattr(pyobject, 'get_doc'):
             return None
         return self.pyname.get_object().get_doc()
+
+    @property
+    def kind(self):
+        warnings.warn("the proposal's `kind` property is deprecated, " \
+                      "use `scope` instead")
+        return self.scope
 
 
 # leaved for backward compatibility
@@ -248,21 +255,20 @@ class NamedParamProposal(CompletionProposal):
         return None
 
 
-def sorted_proposals(proposals, kindpref=None, typepref=None):
+def sorted_proposals(proposals, scopepref=None, typepref=None):
     """Sort a list of proposals
 
     Return a sorted list of the given `CodeAssistProposal`\s.
 
-    `kindpref` can be a list of proposal kinds.  Defaults to
-    ``['local', 'parameter_keyword', 'global', 'builtin',
-    'attribute', 'keyword']``.
+    `scopepref` can be a list of proposal scopes.  Defaults to
+    ``['parameter_keyword', 'local', 'global', 'imported',
+    'attribute', 'builtin', 'keyword']``.
 
     `typepref` can be a list of proposal types.  Defaults to
-    ``['class', 'function', 'variable', 'module', 'exception',
-    None]``.  (`None` stands for completions with no type
-    like keywords.)
+    ``['class', 'function', 'instance', 'module', None]``.
+    (`None` stands for completions with no type like keywords.)
     """
-    sorter = _ProposalSorter(proposals, kindpref, typepref)
+    sorter = _ProposalSorter(proposals, scopepref, typepref)
     return sorter.get_sorted_proposal_list()
 
 
@@ -326,9 +332,13 @@ class _PythonCodeAssist(object):
                                                    self.expression)
         if found_pyname is not None:
             element = found_pyname.get_object()
+            compl_scope = 'attribute'
+            if isinstance(element, (pyobjectsdef.PyModule,
+                                    pyobjectsdef.PyPackage)):
+                compl_scope = 'imported'
             for name, pyname in element.get_attributes().items():
                 if name.startswith(self.starting):
-                    result[name] = CompletionProposal(name, 'attribute', pyname)
+                    result[name] = CompletionProposal(name, compl_scope, pyname)
         return result
 
     def _undotted_completions(self, scope, result, lineno=None):
@@ -340,12 +350,13 @@ class _PythonCodeAssist(object):
             names = scope.get_names()
         for name, pyname in names.items():
             if name.startswith(self.starting):
-                kind = 'local'
+                compl_scope = 'local'
                 if scope.get_kind() == 'Module':
-                    kind = 'global'
+                    compl_scope = 'global'
                 if lineno is None or self.later_locals or \
                    not self._is_defined_after(scope, pyname, lineno):
-                    result[name] = CompletionProposal(name, kind, pyname)
+                    result[name] = CompletionProposal(name, compl_scope,
+                                                      pyname)
 
     def _from_import_completions(self, pymodule):
         module_name = self.word_finder.get_from_module(self.offset)
@@ -355,7 +366,7 @@ class _PythonCodeAssist(object):
         result = {}
         for name in pymodule:
             if name.startswith(self.starting):
-                result[name] = CompletionProposal(name, kind='global',
+                result[name] = CompletionProposal(name, scope='global',
                                                   pyname=pymodule[name])
         return result
 
@@ -439,15 +450,14 @@ class _PythonCodeAssist(object):
 class _ProposalSorter(object):
     """Sort a list of code assist proposals"""
 
-    def __init__(self, code_assist_proposals, kindpref=None, typepref=None):
+    def __init__(self, code_assist_proposals, scopepref=None, typepref=None):
         self.proposals = code_assist_proposals
-        if kindpref is None:
-            kindpref = ['parameter_keyword', 'local', 'global',
+        if scopepref is None:
+            scopepref = ['parameter_keyword', 'local', 'global', 'imported',
                         'attribute', 'builtin', 'keyword']
-        self.kindpref = kindpref
+        self.scopepref = scopepref
         if typepref is None:
-            typepref = ['class', 'function', 'variable', 'module',
-                        'exception', None]
+            typepref = ['class', 'function', 'instance', 'module', None]
         self.typerank = dict((type, index)
                               for index, type in enumerate(typepref))
 
@@ -455,14 +465,14 @@ class _ProposalSorter(object):
         """Return a list of `CodeAssistProposal`"""
         proposals = {}
         for proposal in self.proposals:
-            proposals.setdefault(proposal.kind, []).append(proposal)
+            proposals.setdefault(proposal.scope, []).append(proposal)
         result = []
-        for kind in self.kindpref:
-            kind_proposals = proposals.get(kind, [])
-            kind_proposals = [proposal for proposal in kind_proposals
+        for scope in self.scopepref:
+            scope_proposals = proposals.get(scope, [])
+            scope_proposals = [proposal for proposal in scope_proposals
                               if proposal.type in self.typerank]
-            kind_proposals.sort(self._proposal_cmp)
-            result.extend(kind_proposals)
+            scope_proposals.sort(self._proposal_cmp)
+            result.extend(scope_proposals)
         return result
 
     def _proposal_cmp(self, proposal1, proposal2):
