@@ -3,6 +3,33 @@
 ===========
 
 
+> Public Release 0.9.3 : February 4, 2010
+
+
+- codeassist: proposals scopes and types revised : January 26, 2010
+
+
+- codeassist: handling "builtin unknowns" : January 06, 2010
+
+
+- refactor: fixed arguments in extracted method : December 26, 2009
+
+
+- pycore: fixed project's property `source_folders` : October 26, 2009
+
+
+- codeassist: better handling of unicode docstrings : August 20, 2009
+
+
+- setup.py: don't include docs as package data : July 18, 2009
+
+
+- fscommands: handle hg crew ui changes : May 04, 2009
+
+
+- patchedast: handle ExtSlice node : April 29, 2009
+
+
 > Public Release 0.9.2 : February 19, 2009
 
 
