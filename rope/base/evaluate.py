@@ -292,13 +292,15 @@ class StatementEvaluator(object):
         else:
             return
         if function_name in pyobject:
-            call_function = pyobject[function_name].get_object()
+            called = pyobject[function_name].get_object()
+            if not called or not isinstance(called, pyobjects.AbstractFunction):
+                return
             args = [node]
             if other_args:
                 args += other_args
             arguments_ = arguments.Arguments(args, self.scope)
             self.result = rope.base.pynames.UnboundName(
-                pyobject=call_function.get_returned_object(arguments_))
+                pyobject=called.get_returned_object(arguments_))
 
     def _Lambda(self, node):
         self.result = rope.base.pynames.UnboundName(
