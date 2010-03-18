@@ -2,7 +2,7 @@
 import inspect
 
 import rope.base.evaluate
-from rope.base import pynames, pyobjects, arguments, utils
+from rope.base import pynames, pyobjects, arguments, utils, ast
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -597,6 +597,7 @@ class Lambda(pyobjects.AbstractFunction):
     def __init__(self, node, scope):
         super(Lambda, self).__init__()
         self.node = node
+        self.arguments = node.args
         self.scope = scope
 
     def get_returned_object(self, args):
@@ -608,6 +609,22 @@ class Lambda(pyobjects.AbstractFunction):
 
     def get_pattributes(self):
         return {}
+
+    def get_name(self):
+        return  'lambda'
+
+    def get_param_names(self):
+        result = [node.id for node in self.arguments.args
+                  if isinstance(node, ast.Name)]
+        if self.arguments.vararg:
+            result.append('*' + self.arguments.vararg)
+        if self.arguments.kwarg:
+            result.append('**' + self.arguments.kwarg)
+        return result
+
+    @property
+    def parent(self):
+        return self.scope.pyobject
 
 
 class BuiltinObject(BuiltinClass):
