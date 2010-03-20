@@ -27,12 +27,12 @@ class CodeAssistTest(unittest.TestCase):
     def test_simple_assist(self):
         self._assist('', 0)
 
-    def assert_completion_in_result(self, name, kind, result, type=None):
+    def assert_completion_in_result(self, name, scope, result, type=None):
         for proposal in result:
             if proposal.name == name:
-                self.assertEqual(kind, proposal.kind,
-                        "proposal <%s> has wrong kind, expected " \
-                        "%r, got %r" % (name, kind, proposal.kind))
+                self.assertEqual(scope, proposal.scope,
+                        "proposal <%s> has wrong scope, expected " \
+                        "%r, got %r" % (name, scope, proposal.scope))
                 if type is not None:
                     self.assertEqual(type, proposal.type,
                             "proposal <%s> has wrong type, expected " \
@@ -40,9 +40,9 @@ class CodeAssistTest(unittest.TestCase):
                 return
         self.fail('completion <%s> not proposed' % name)
 
-    def assert_completion_not_in_result(self, name, kind, result):
+    def assert_completion_not_in_result(self, name, scope, result):
         for proposal in result:
-            if proposal.name == name and proposal.kind == kind:
+            if proposal.name == name and proposal.scope == scope:
                 self.fail('completion <%s> was proposed' % name)
 
     def test_completing_global_variables(self):
@@ -79,7 +79,7 @@ class CodeAssistTest(unittest.TestCase):
         code = 'variable = 10\nvariable = 20\nt = vari'
         result = self._assist(code)
         count = len([x for x in result
-                     if x.name == 'variable' and x.kind == 'global'])
+                     if x.name == 'variable' and x.scope == 'global'])
         self.assertEquals(1, count)
 
     @testutils.assert_raises(exceptions.ModuleSyntaxError)
@@ -109,12 +109,12 @@ class CodeAssistTest(unittest.TestCase):
     def test_completing_imported_names(self):
         code = 'import sys\na = sy'
         result = self._assist(code)
-        self.assert_completion_in_result('sys', 'global', result)
+        self.assert_completion_in_result('sys', 'imported', result)
 
     def test_completing_imported_names_with_as(self):
         code = 'import sys as mysys\na = mys'
         result = self._assist(code)
-        self.assert_completion_in_result('mysys', 'global', result)
+        self.assert_completion_in_result('mysys', 'imported', result)
 
     def test_not_completing_imported_names_with_as(self):
         code = 'import sys as mysys\na = sy'
@@ -187,7 +187,7 @@ class CodeAssistTest(unittest.TestCase):
     def test_imports_inside_function(self):
         code = "def f():\n    import sys\n    sy"
         result = self._assist(code)
-        self.assert_completion_in_result('sys', 'local', result)
+        self.assert_completion_in_result('sys', 'imported', result)
 
     def test_imports_inside_function_dont_mix_with_globals(self):
         code = "def f():\n    import sys\nsy"
@@ -454,13 +454,13 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals('my_func', proposals[0].name)
         self.assertEquals('_my_func', proposals[1].name)
 
-    def test_proposals_sorter_and_kind_prefs(self):
+    def test_proposals_sorter_and_scope_prefs(self):
         code = 'my_global_var = 1\n' \
                'def func(self):\n' \
                '    my_local_var = 2\n' \
                '    my_'
         result = self._assist(code)
-        proposals = sorted_proposals(result, kindpref=['global', 'local'])
+        proposals = sorted_proposals(result, scopepref=['global', 'local'])
         self.assertEquals('my_global_var', proposals[0].name)
         self.assertEquals('my_local_var', proposals[1].name)
 
@@ -470,7 +470,7 @@ class CodeAssistTest(unittest.TestCase):
                '    pass\n' \
                'my_'
         result = self._assist(code)
-        proposals = sorted_proposals(result, typepref=['variable', 'function'])
+        proposals = sorted_proposals(result, typepref=['instance', 'function'])
         self.assertEquals('my_global_var', proposals[0].name)
         self.assertEquals('my_global_func', proposals[1].name)
 
@@ -725,25 +725,25 @@ class CodeAssistTest(unittest.TestCase):
     def test_local_variable_completion_proposal(self):
         code = 'def foo():\n  xvar = 5\n  x'
         result = self._assist(code)
-        self.assert_completion_in_result('xvar', 'local', result, 'variable')
+        self.assert_completion_in_result('xvar', 'local', result, 'instance')
 
     def test_global_variable_completion_proposal(self):
         code = 'yvar = 5\ny'
         result = self._assist(code)
-        self.assert_completion_in_result('yvar', 'global', result, 'variable')
+        self.assert_completion_in_result('yvar', 'global', result, 'instance')
 
     def test_builtin_variable_completion_proposal(self):
         for varname in ('False', 'True'):
             result = self._assist(varname[0])
             self.assert_completion_in_result(varname, 'builtin', result,
-                                             type='variable')
+                                             type='instance')
 
     def test_attribute_variable_completion_proposal(self):
         code = 'class AClass(object):\n  def foo(self):\n    ' \
                'self.bar = 1\n    self.b'
         result = self._assist(code)
         self.assert_completion_in_result('bar', 'attribute', result,
-                                         type='variable')
+                                         type='instance')
 
     def test_local_class_completion_proposal(self):
         code = 'def foo():\n  class LocalClass(object): pass\n  Lo'
@@ -797,26 +797,26 @@ class CodeAssistTest(unittest.TestCase):
     def test_local_module_completion_proposal(self):
         code = 'def foo():\n  import types\n  t'
         result = self._assist(code)
-        self.assert_completion_in_result('types', 'local', result,
+        self.assert_completion_in_result('types', 'imported', result,
                                          type='module')
 
     def test_global_module_completion_proposal(self):
         code = 'import operator\no'
         result = self._assist(code)
-        self.assert_completion_in_result('operator', 'global', result,
+        self.assert_completion_in_result('operator', 'imported', result,
                                          type='module')
 
     def test_attribute_module_completion_proposal(self):
         code = 'class Some(object):\n  import os\nSome.o'
         result = self._assist(code)
-        self.assert_completion_in_result('os', 'attribute', result,
+        self.assert_completion_in_result('os', 'imported', result,
                                          type='module')
 
     def test_builtin_exception_completion_proposal(self):
         code = 'def blah():\n  Z'
         result = self._assist(code)
         self.assert_completion_in_result('ZeroDivisionError', 'builtin',
-                                         result, type='exception')
+                                         result, type='class')
 
     def test_keyword_completion_proposal(self):
         code = 'f'
@@ -855,41 +855,41 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def _assist(self, code, resource=None, **kwds):
         return code_assist(self.project, code, len(code), resource, **kwds)
 
-    def assert_completion_in_result(self, name, kind, result):
+    def assert_completion_in_result(self, name, scope, result):
         for proposal in result:
-            if proposal.name == name and proposal.kind == kind:
+            if proposal.name == name and proposal.scope == scope:
                 return
         self.fail('completion <%s> not proposed' % name)
 
-    def assert_completion_not_in_result(self, name, kind, result):
+    def assert_completion_not_in_result(self, name, scope, result):
         for proposal in result:
-            if proposal.name == name and proposal.kind == kind:
+            if proposal.name == name and proposal.scope == scope:
                 self.fail('completion <%s> was proposed' % name)
 
     def test_simple_import(self):
         code = 'import samplemod\nsample'
         result = self._assist(code)
-        self.assert_completion_in_result('samplemod', 'global', result)
+        self.assert_completion_in_result('samplemod', 'imported', result)
 
     def test_from_import_class(self):
         code = 'from samplemod import SampleClass\nSample'
         result = self._assist(code)
-        self.assert_completion_in_result('SampleClass', 'global', result)
+        self.assert_completion_in_result('SampleClass', 'imported', result)
 
     def test_from_import_function(self):
         code = 'from samplemod import sample_func\nsample'
         result = self._assist(code)
-        self.assert_completion_in_result('sample_func', 'global', result)
+        self.assert_completion_in_result('sample_func', 'imported', result)
 
     def test_from_import_variable(self):
         code = 'from samplemod import sample_var\nsample'
         result = self._assist(code)
-        self.assert_completion_in_result('sample_var', 'global', result)
+        self.assert_completion_in_result('sample_var', 'imported', result)
 
     def test_from_imports_inside_functions(self):
         code = 'def f():\n    from samplemod import SampleClass\n    Sample'
         result = self._assist(code)
-        self.assert_completion_in_result('SampleClass', 'local', result)
+        self.assert_completion_in_result('SampleClass', 'imported', result)
 
     def test_from_import_only_imports_imported(self):
         code = 'from samplemod import sample_func\nSample'
@@ -899,13 +899,13 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def test_from_import_star(self):
         code = 'from samplemod import *\nSample'
         result = self._assist(code)
-        self.assert_completion_in_result('SampleClass', 'global', result)
+        self.assert_completion_in_result('SampleClass', 'imported', result)
 
     def test_from_import_star2(self):
         code = 'from samplemod import *\nsample'
         result = self._assist(code)
-        self.assert_completion_in_result('sample_func', 'global', result)
-        self.assert_completion_in_result('sample_var', 'global', result)
+        self.assert_completion_in_result('sample_func', 'imported', result)
+        self.assert_completion_in_result('sample_var', 'imported', result)
 
     def test_from_import_star_not_imporing_underlined(self):
         code = 'from samplemod import *\n_under'
@@ -915,7 +915,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def test_from_package_import_mod(self):
         code = 'from package import nestedmod\nnest'
         result = self._assist(code)
-        self.assert_completion_in_result('nestedmod', 'global', result)
+        self.assert_completion_in_result('nestedmod', 'imported', result)
 
     def test_completing_after_dot(self):
         code = 'class SampleClass(object):\n' \
@@ -973,7 +973,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         mod1.write('def a_func():\n    pass\n')
         code = 'import mod1\nmod1.'
         result = self._assist(code, resource=mod2)
-        self.assert_completion_in_result('a_func', 'attribute', result)
+        self.assert_completion_in_result('a_func', 'imported', result)
 
     def test_get_location_on_relative_imports(self):
         pkg = testutils.create_package(self.project, 'pkg')
