@@ -719,6 +719,12 @@ class CodeAssistTest(unittest.TestCase):
         doc = get_calltip(self.project, src, src.rindex('f'), remove_self=True)
         self.assertEquals('C.f(p1)', doc)
 
+    def test_lambda_calltip(self):
+        src = 'foo = lambda x, y=1: None\n' \
+              'foo()'
+        doc = get_calltip(self.project, src, src.rindex('f'))
+        self.assertEqual(doc, 'lambda(x, y)')
+
     # TESTING PROPOSAL'S KINDS AND TYPES.
     # SEE RELATION MATRIX IN `CompletionProposal`'s DOCSTRING
 

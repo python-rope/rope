@@ -607,13 +607,25 @@ class Lambda(pyobjects.AbstractFunction):
         else:
             return pyobjects.get_unknown()
 
-    def get_pattributes(self):
+    def get_module(self):
+        return self.parent.get_module()
+
+    def get_scope(self):
+        return self.scope
+
+    def get_kind(self):
+        return 'lambda'
+
+    def get_ast(self):
+        return self.node
+
+    def get_attributes(self):
         return {}
 
     def get_name(self):
         return  'lambda'
 
-    def get_param_names(self):
+    def get_param_names(self, special_args=True):
         result = [node.id for node in self.arguments.args
                   if isinstance(node, ast.Name)]
         if self.arguments.vararg:

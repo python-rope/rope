@@ -112,6 +112,9 @@ class Worder(object):
     def get_function_and_args_in_header(self, offset):
         return self.code_finder.get_function_and_args_in_header(offset)
 
+    def get_lambda_and_args(self, offset):
+        return self.code_finder.get_lambda_and_args(offset)
+
     def find_function_offset(self, offset):
         return self.code_finder.find_function_offset(offset)
 
@@ -431,15 +434,15 @@ class _RealFinder(object):
         end = self._find_word_end(offset) + 1
         return (start, end)
 
-    def get_word_parens_range(self, offset):
+    def get_word_parens_range(self, offset, opening='(', closing=')'):
         end = self._find_word_end(offset)
-        start_parens = self.code.index('(', end)
+        start_parens = self.code.index(opening, end)
         index = start_parens
         open_count = 0
         while index < len(self.code):
-            if self.code[index] == '(':
+            if self.code[index] == opening:
                 open_count += 1
-            if self.code[index] == ')':
+            if self.code[index] == closing:
                 open_count -= 1
             if open_count == 0:
                 return (start_parens, index + 1)
@@ -499,11 +502,17 @@ class _RealFinder(object):
         lparens, rparens = self.get_word_parens_range(offset)
         return self.raw[offset:rparens + 1]
 
-    def find_function_offset(self, offset):
+    def find_function_offset(self, offset, definition='def '):
         while True:
-            offset = self.code.index('def ', offset)
+            offset = self.code.index(definition, offset)
             if offset == 0 or not self._is_id_char(offset - 1):
                 break
             offset += 1
         def_ = offset + 4
         return self._find_first_non_space_char(def_)
+
+    def get_lambda_and_args(self, offset):
+        offset = self.find_function_offset(offset, definition = 'lambda ')
+        lparens, rparens = self.get_word_parens_range(offset, opening=' ', closing=':')
+        return self.raw[offset:rparens + 1]
+
