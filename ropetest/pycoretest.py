@@ -998,6 +998,18 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod1.write('class A(object):\n    def func2(self):\n        pass\n')
         self.assertTrue('func2' in b_class)
 
+    def test_caching_pymodule_with_syntax_errors(self):
+        self.project.prefs['ignore_syntax_errors'] = True
+        self.project.prefs['automatic_soa'] = True
+        self.project.pycore._init_automatic_soa()
+        source = 'import sys\nab cd'
+        mod = testutils.create_module(self.project, 'mod')
+        mod.write(source)
+        from rope.contrib import fixsyntax
+        fixer = fixsyntax.FixSyntax(self.project.pycore, source, mod, 10)
+        pymodule = fixer.get_pymodule()
+        self.assertTrue(pymodule.source_code.startswith('import sys\npass\n'))
+
 
 class TextChangeDetectorTest(unittest.TestCase):
 
