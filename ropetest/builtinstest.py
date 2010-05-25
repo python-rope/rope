@@ -415,6 +415,15 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(builtins.builtins['int'].get_object(),
                           pymod['l'].get_object().get_type())
 
+    def test_unknown_return_object(self):
+        src = 'import sys\n' \
+              'def foo():\n' \
+              '  res = set(sys.builtin_module_names)\n' \
+              '  if foo: res.add(bar)\n'
+        self.project.prefs['import_dynload_stdmods'] = True
+        self.mod.write(src)
+        self.project.pycore.analyze_module(self.mod)
+
 
 class BuiltinModulesTest(unittest.TestCase):
 

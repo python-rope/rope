@@ -657,8 +657,10 @@ def _infer_sequence_for_pyname(pyname):
     seq = pyname.get_object()
     args = arguments.ObjectArguments([pyname])
     if '__iter__' in seq:
-        iter = seq['__iter__'].get_object().\
-               get_returned_object(args)
+        obj = seq['__iter__'].get_object()
+        if not isinstance(obj, pyobjects.AbstractFunction):
+            return None
+        iter = obj.get_returned_object(args)
         if iter is not None and 'next' in iter:
             holding = iter['next'].get_object().\
                       get_returned_object(args)
