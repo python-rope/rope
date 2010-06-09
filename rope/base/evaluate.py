@@ -199,8 +199,10 @@ class StatementEvaluator(object):
             self._get_object_for_node(node.left))
 
     def _BoolOp(self, node):
-        self.result = rope.base.pynames.UnboundName(
-            self._get_object_for_node(node.values[0]))
+        pyobject = self._get_object_for_node(node.values[0])
+        if pyobject is None:
+            pyobject = self._get_object_for_node(node.values[1])
+        self.result = rope.base.pynames.UnboundName(pyobject)
 
     def _Repr(self, node):
         self.result = self._get_builtin_name('str')
