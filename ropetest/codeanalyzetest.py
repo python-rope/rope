@@ -58,6 +58,11 @@ class WordRangeFinderTest(unittest.TestCase):
         result = word_finder.get_primary_at(offset)
         return result
 
+    def test_keyword_before_parens(self):
+        code = 'if (a_var).an_attr:\n    pass\n'
+        self.assertEquals('(a_var).an_attr',
+                          self._find_primary(code, code.index(':')))
+
     def test_inside_parans(self):
         code = 'a_func(a_var)'
         self.assertEquals('a_var', self._find_primary(code, 10))
