@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 import ropetest.contrib.autoimporttest
@@ -27,4 +28,5 @@ def suite():
 
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
-    runner.run(suite())
+    result = runner.run(suite())
+    sys.exit(not result.wasSuccessful())
