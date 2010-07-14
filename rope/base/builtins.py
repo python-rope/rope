@@ -110,6 +110,9 @@ class BuiltinUnknown(_BuiltinElement, pyobjects.PyObject):
         self.builtin = builtin
         self.type = pyobjects.get_unknown()
 
+    def get_name(self):
+        return getattr(type(self.builtin), '__name__', None)
+
     @utils.saveit
     def get_attributes(self):
         return _object_attributes(self.builtin, self)
