@@ -502,6 +502,17 @@ class MoveRefactoringTest(unittest.TestCase):
         dir = self.project.root.create_folder('dir')
         mover = move.create_move(self.project, dir)
 
+    def test_moving_to_a_module_with_encoding_cookie(self):
+        code1 = '# -*- coding: utf-8 -*-'
+        self.mod1.write(code1)
+        code2 = 'def f(): pass\n'
+        self.mod2.write(code2)
+        mover = move.create_move(self.project, self.mod2,
+                                 code2.index('f()') + 1)
+        self.project.do(mover.get_changes(self.mod1))
+        expected = '%s\n%s' % (code1, code2)
+        self.assertEquals(expected, self.mod1.read())
+
 
 if __name__ == '__main__':
     unittest.main()
