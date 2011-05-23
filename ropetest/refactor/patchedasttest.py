@@ -441,6 +441,17 @@ class PatchedASTTest(unittest.TestCase):
                            'import', ' ', 'alias'])
         checker.check_children('alias', ['y', ' ', 'as', ' ', 'z'])
 
+    @testutils.run_only_for_25
+    def test_from_node_relative_import(self):
+        source = 'from . import y as z\n'
+        ast = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast)
+        checker.check_region('ImportFrom', 0, len(source) - 1)
+        checker.check_children(
+            'ImportFrom', ['from', ' ', '.', '', '', ' ',
+                           'import', ' ', 'alias'])
+        checker.check_children('alias', ['y', ' ', 'as', ' ', 'z'])
+
     def test_simple_gen_expr_node(self):
         source = 'zip(i for i in x)\n'
         ast = patchedast.get_patched_ast(source, True)

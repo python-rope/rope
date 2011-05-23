@@ -350,7 +350,8 @@ class _PatchingASTWalker(object):
         children = ['from']
         if node.level:
             children.append('.' * node.level)
-        children.extend([node.module, 'import'])
+        children.extend([node.module or '', # see comment at rope.base.ast.walk
+                         'import'])
         children.extend(self._child_nodes(node.names, ','))
         self._handle(node, children)
 
