@@ -175,6 +175,13 @@ class RestructureTest(unittest.TestCase):
         self.assertEquals('def f(p):\n    return dup(p)\nx = dup("")\n'
                           'i = 1 * 2\n', self.mod.read())
 
+    def test_statement_after_string_and_column(self):
+        mod_text = 'def f(x):\n  if a == "a": raise Exception("test")\n'
+        self.mod.write(mod_text)
+        refactoring = restructure.Restructure(self.project, '${a}', '${a}')
+        self.project.do(refactoring.get_changes())
+        self.assertEquals(mod_text, self.mod.read())
+
 
 if __name__ == '__main__':
     unittest.main()
