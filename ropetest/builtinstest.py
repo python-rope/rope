@@ -430,6 +430,12 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write(src)
         self.project.pycore.analyze_module(self.mod)
 
+    def test_abstractmethods_attribute(self):
+        # see http://bugs.python.org/issue10006 for details
+        src = 'class SubType(type): pass\nsubtype = SubType()\n'
+        self.mod.write(src)
+        self.project.pycore.analyze_module(self.mod)
+
 
 class BuiltinModulesTest(unittest.TestCase):
 
