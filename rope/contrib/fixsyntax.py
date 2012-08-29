@@ -15,7 +15,7 @@ class FixSyntax(object):
     @utils.saveit
     def get_pymodule(self):
         """Get a `PyModule`"""
-        errors = []
+        msg = None
         code = self.code
         tries = 0
         while True:
@@ -27,19 +27,14 @@ class FixSyntax(object):
                 return self.pycore.get_string_module(
                     code, resource=self.resource, force_errors=True)
             except exceptions.ModuleSyntaxError, e:
+                if msg is None:
+                    msg = '%s:%s %s' % (e.filename, e.lineno, e.message_)
                 if tries < self.maxfixes:
                     tries += 1
                     self.commenter.comment(e.lineno)
                     code = '\n'.join(self.commenter.lines)
-                    errors.append('  * line %s: %s ... fixed' % (e.lineno,
-                                                                 e.message_))
                 else:
-                    errors.append('  * line %s: %s ... raised!' % (e.lineno,
-                                                                   e.message_))
-                    new_message = ('\nSyntax errors in file %s:\n' % e.filename) \
-                                   + '\n'.join(errors)
-                    raise exceptions.ModuleSyntaxError(e.filename, e.lineno,
-                                                       new_message)
+                    raise exceptions.ModuleSyntaxError(e.filename, e.lineno, msg)
 
     @property
     @utils.saveit
