@@ -13,6 +13,7 @@ from rope.base import pyobjects
 from rope.base import pyobjectsdef
 from rope.base import pyscopes
 from rope.base import worder
+from rope.base import utils
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
 
@@ -237,7 +238,7 @@ class CompletionProposal(object):
             if isinstance(pyobject, pyobjects.AbstractFunction):
                 return pyobject.get_param_names()
 
-    @property
+    @utils.lazyprop
     def type(self):
         pyname = self.pyname
         if isinstance(pyname, builtins.BuiltinName):

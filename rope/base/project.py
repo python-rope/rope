@@ -32,6 +32,7 @@ class _Project(object):
         self.data_files = _DataFiles(self)
         self._custom_source_folders = []
 
+    @utils.memoize
     def get_resource(self, resource_name):
         """Get a resource in a project.
 

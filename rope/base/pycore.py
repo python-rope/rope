@@ -133,6 +133,7 @@ class PyCore(object):
     #    packages, that is most of the time
     #  - We need a separate resource observer; `self.observer`
     #    does not get notified about module and folder creations
+    # FIXME This functional could be usefully memoized....
     @utils.deprecated('Use `project.get_source_folders` instead')
     def get_source_folders(self):
         """Returns project source folders"""
@@ -153,6 +154,7 @@ class PyCore(object):
         else:
             return False
 
+    @utils.memoize
     def _find_source_folders(self, folder):
         for resource in folder.get_folders():
             if self._is_package(resource):
