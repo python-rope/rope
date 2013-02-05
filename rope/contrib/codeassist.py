@@ -18,7 +18,8 @@ from rope.refactor import functionutils
 
 
 def code_assist(project, source_code, offset, resource=None,
-                templates=None, maxfixes=1, later_locals=True):
+                templates=None, maxfixes=1, later_locals=True,
+                case_sensitive=False):
     """Return python code completions as a list of `CodeAssistProposal`\s
 
     `resource` is a `rope.base.resources.Resource` object.  If
@@ -36,7 +37,8 @@ def code_assist(project, source_code, offset, resource=None,
                       DeprecationWarning, stacklevel=2)
     assist = _PythonCodeAssist(
         project, source_code, offset, resource=resource,
-        maxfixes=maxfixes, later_locals=later_locals)
+        maxfixes=maxfixes, later_locals=later_locals,
+        case_sensitive=case_sensitive)
     return assist()
 
 
@@ -347,15 +349,26 @@ def default_templates():
     return {}
 
 
+def _startswith(s1, s2):
+        return s1.startswith(s2)
+
+
+def _case_insensitive_startswith(s1, s2):
+    return s1.lower().startswith(s2.lower())
+
+
 class _PythonCodeAssist(object):
 
     def __init__(self, project, source_code, offset, resource=None,
-                 maxfixes=1, later_locals=True):
+                 maxfixes=1, later_locals=True, case_sensitive=False):
         self.project = project
         self.code = source_code
         self.resource = resource
         self.maxfixes = maxfixes
         self.later_locals = later_locals
+        self.case_sensitive = case_sensitive
+        self.startswith = _startswith if case_sensitive \
+            else _case_insensitive_startswith
         self.word_finder = worder.Worder(source_code, True)
         self.expression, self.starting, self.offset = \
             self.word_finder.get_splitted_primary_before(offset)
@@ -372,7 +385,7 @@ class _PythonCodeAssist(object):
     def _matching_keywords(self, starting):
         result = []
         for kw in self.keywords:
-            if kw.startswith(starting):
+            if self.startswith(kw, starting):
                 result.append(CompletionProposal(kw, 'keyword'))
         return result
 
@@ -395,7 +408,7 @@ class _PythonCodeAssist(object):
                                     pyobjectsdef.PyPackage)):
                 compl_scope = 'imported'
             for name, pyname in element.get_attributes().items():
-                if name.startswith(self.starting):
+                if self.startswith(name, self.starting):
                     result[name] = CompletionProposal(name, compl_scope,
                                                       pyname)
         return result
@@ -408,7 +421,7 @@ class _PythonCodeAssist(object):
         else:
             names = scope.get_names()
         for name, pyname in names.items():
-            if name.startswith(self.starting):
+            if self.startswith(name, self.starting):
                 compl_scope = 'local'
                 if scope.get_kind() == 'Module':
                     compl_scope = 'global'
@@ -424,7 +437,7 @@ class _PythonCodeAssist(object):
         pymodule = self._find_module(pymodule, module_name)
         result = {}
         for name in pymodule:
-            if name.startswith(self.starting):
+            if self.startswith(name, self.starting):
                 result[name] = CompletionProposal(name, scope='global',
                                                   pyname=pymodule[name])
         return result
@@ -495,7 +508,7 @@ class _PythonCodeAssist(object):
                         pyobject.get_param_names(special_args=False))
                     result = {}
                     for name in param_names:
-                        if name.startswith(self.starting):
+                        if self.startswith(name, self.starting):
                             result[name + '='] = NamedParamProposal(
                                 name, pyobject
                             )
