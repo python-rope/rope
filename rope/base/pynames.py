@@ -101,6 +101,7 @@ class ImportedModule(PyName):
         self.level = level
         self.resource = resource
         self.pymodule = _get_concluded_data(self.importing_module)
+        self.cached_pyobject = None
 
     def _current_folder(self):
         resource = self.importing_module.get_module().get_resource()
@@ -128,9 +129,13 @@ class ImportedModule(PyName):
         return self.pymodule.get()
 
     def get_object(self):
-        if self._get_pymodule() is None:
-            return rope.base.pyobjects.get_unknown()
-        return self._get_pymodule()
+        if not self.cached_pyobject:
+            pymod = self._get_pymodule()
+            if pymod is None:
+                self.cached_pyobject = rope.base.pyobjects.get_unknown()
+            else:
+                self.cached_pyobject = pymod
+        return self.cached_pyobject
 
     def get_definition_location(self):
         pymodule = self._get_pymodule()
