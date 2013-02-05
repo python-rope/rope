@@ -459,7 +459,7 @@ class _DataFiles(object):
             path += '.gz'
         return self.project.get_file(path)
 
-
+@utils.cached(1000)
 def _realpath(path):
     """Return the real path of `path`
 
