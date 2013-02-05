@@ -56,7 +56,6 @@ def deprecated(message=None):
         return newfunc
     return _decorator
 
-
 def cached(count):
     """A caching decorator based on parameter objects"""
     def decorator(func):

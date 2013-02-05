@@ -5,24 +5,17 @@ import warnings
 import rope.base.codeanalyze
 import rope.base.evaluate
 
-from rope.base import builtins
-from rope.base import exceptions
-from rope.base import libutils
-from rope.base import pynames
-from rope.base import pynamesdef
-from rope.base import pyobjects
-from rope.base import pyobjectsdef
-from rope.base import pyscopes
-from rope.base import utils
-from rope.base import worder
+from rope.base import (builtins, exceptions, libutils, pynames,
+                       pynamesdef, pyobjects, pyobjectsdef, pyscopes,
+                       utils, worder)
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
 
 
 def code_assist(project, source_code, offset, resource=None,
                 templates=None, maxfixes=1, later_locals=True,
-                case_sensitive=True):
-    """Return python code completions as a list of `CodeAssistProposal`\s
+                case_sensitive=False):
+    """Return python code completions as a list of `CodeAssistProposal`
 
     `resource` is a `rope.base.resources.Resource` object.  If
     provided, relative imports are handled.
@@ -57,7 +50,7 @@ def starting_offset(source_code, offset):
 
     """
     word_finder = worder.Worder(source_code, True)
-    expression, starting, starting_offset = \
+    _, _, starting_offset = \
         word_finder.get_splitted_primary_before(offset)
     return starting_offset
 
