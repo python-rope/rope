@@ -6,6 +6,8 @@ from rope.base import codeanalyze, evaluate, exceptions, ast, builtins
 from rope.refactor import (patchedast, sourceutils, occurrences,
                            wildcards, importutils)
 
+from rope.refactor.patchedast import MismatchedTokenError
+
 
 class BadNameInCheckError(exceptions.RefactoringError):
     pass
@@ -22,8 +24,12 @@ class SimilarFinder(object):
     def __init__(self, pymodule, wildcards=None):
         """Construct a SimilarFinder"""
         self.source = pymodule.source_code
-        self.raw_finder = RawSimilarFinder(
-            pymodule.source_code, pymodule.get_ast(), self._does_match)
+        try:
+            self.raw_finder = RawSimilarFinder(
+                pymodule.source_code, pymodule.get_ast(), self._does_match)
+        except MismatchedTokenError as ex: 
+            print "in file %s" % pymodule.resource.path
+            raise
         self.pymodule = pymodule
         if wildcards is None:
             self.wildcards = {}
