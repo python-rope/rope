@@ -1,6 +1,9 @@
 import os.path
 import shutil
 import sys
+import logging
+logging.basicConfig(format='%(levelname)s:%(funcName)s:%(message)s',
+                    level=logging.INFO)
 
 import rope.base.project
 from rope.contrib import generate
@@ -12,8 +15,12 @@ def sample_project(root=None, foldername=None, **kwds):
         if foldername:
             root = foldername
         # HACK: Using ``/dev/shm/`` for faster tests
-        if os.name == 'posix' and os.path.isdir('/dev/shm'):
-            root = '/dev/shm/' + root
+        if os.name == 'posix':
+            if os.path.isdir('/dev/shm') and os.access('/dev/shm', os.W_OK):
+                    root = '/dev/shm/' + root
+            elif os.path.isdir('/tmp') and os.access('/tmp', os.W_OK):
+                    root = '/tmp/' + root
+    logging.debug("Using %s as root of the project.", root)
     # Using these prefs for faster tests
     prefs = {'save_objectdb': False, 'save_history': False,
              'validate_objectdb': False, 'automatic_soa': False,
@@ -27,6 +34,7 @@ def sample_project(root=None, foldername=None, **kwds):
 create_module = generate.create_module
 create_package = generate.create_package
 
+
 def remove_project(project):
     project.close()
     remove_recursively(project.address)
@@ -36,7 +44,7 @@ def remove_recursively(path):
     import time
     # windows sometimes raises exceptions instead of removing files
     if os.name == 'nt' or sys.platform == 'cygwin':
-          for i in range(12):
+        for i in range(12):
             try:
                 _remove_recursively(path)
             except OSError, e:
@@ -47,6 +55,7 @@ def remove_recursively(path):
                 break
     else:
         _remove_recursively(path)
+
 
 def _remove_recursively(path):
     if not os.path.exists(path):

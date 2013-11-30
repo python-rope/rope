@@ -13,6 +13,9 @@ import ropetest.builtinstest
 import ropetest.historytest
 import ropetest.simplifytest
 
+import ropetest.contrib
+import ropetest.refactor
+
 
 def suite():
     result = unittest.TestSuite()
@@ -27,6 +30,10 @@ def suite():
     result.addTests(ropetest.builtinstest.suite())
     result.addTests(ropetest.historytest.suite())
     result.addTests(ropetest.simplifytest.suite())
+
+    result.addTests(ropetest.refactor.suite())
+    result.addTests(ropetest.contrib.suite())
+
     return result
 
 
