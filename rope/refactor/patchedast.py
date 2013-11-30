@@ -266,18 +266,53 @@ class _PatchingASTWalker(object):
         self._handle(node, ['break'])
 
     def _Call(self, node):
-        children = [node.func, '(']
-        args = list(node.args) + node.keywords
-        children.extend(self._child_nodes(args, ','))
+        import itertools
+        def get_offset(n):
+            return self.lines.get_line_start(n.lineno) + n.col_offset
+
+
+        args = []
         if node.starargs is not None:
-            if args:
-                children.append(',')
-            children.extend(['*', node.starargs])
+            args.append(('starargs', node.starargs, get_offset(node.starargs)))
         if node.kwargs is not None:
-            if args or node.starargs is not None:
-                children.append(',')
-            children.extend(['**', node.kwargs])
+            args.append(('kwargs', node.kwargs, get_offset(node.kwargs)))
+        for arg in node.args:
+            args.append(('arg', arg, get_offset(arg)))
+        for kw in node.keywords:
+            args.append(('kw', kw, get_offset(kw.value)))
+
+        args.sort(key=lambda x: x[2])
+        # print args
+
+        children = [node.func, '(']
+
+        arguments = []
+        for type, child_node, _ in args:
+            if type == 'starargs':
+                arguments.append(['*', child_node])
+            elif type == 'kwargs':
+                arguments.append(['**', child_node])
+            elif type == 'arg':
+                arguments.append([child_node])
+            elif type == 'kw':
+                arguments.append([child_node])
+
+        gh = itertools.chain(*self._child_nodes(arguments, ','))
+
+        children.extend(gh)
+
+        # children.extend(self._child_nodes(args, ','))
+        # if node.starargs is not None:
+        #     if args:
+        #         children.append(',')
+        #     children.extend(['*', node.starargs])
+        # if node.kwargs is not None:
+        #     if args or node.starargs is not None:
+        #         children.append(',')
+        #     children.extend(['**', node.kwargs])
         children.append(')')
+
+        # print children
         self._handle(node, children)
 
     def _ClassDef(self, node):
