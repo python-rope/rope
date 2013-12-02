@@ -727,6 +727,19 @@ class PatchedASTTest(unittest.TestCase):
             ['except', ' ', 'Name', '', ',', ' ', 'Name', '', ':',
              '\n    ', 'Pass'])
 
+    def test_try_except_node__with_as_syntax(self):
+        source = 'try:\n    pass\nexcept Exception as e:\n    pass\n'
+        ast = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast)
+        checker.check_children(
+            'TryExcept', ['try', '', ':', '\n    ', 'Pass', '\n',
+                          ('excepthandler', 'ExceptHandler')])
+        checker.check_children(
+            ('excepthandler', 'ExceptHandler'),
+            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
+             '\n    ', 'Pass'])
+
+
     @testutils.run_only_for_25
     def test_try_except_and_finally_node(self):
         source = 'try:\n    pass\nexcept:\n    pass\nfinally:\n    pass\n'
