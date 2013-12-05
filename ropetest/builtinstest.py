@@ -476,6 +476,10 @@ class BuiltinModulesTest(unittest.TestCase):
         invalid = pymod['invalid'].get_object()
         self.assertTrue('sub' in invalid)
 
+    def test_time_in_std_mods(self):
+        import rope.base.stdmods
+        self.assertTrue('time' in rope.base.stdmods.standard_modules())
+
 
 def suite():
     result = unittest.TestSuite()
