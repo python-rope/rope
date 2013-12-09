@@ -73,6 +73,7 @@ class _PatchingASTWalker(object):
     Number = object()
     String = object()
     semicolon_or_as_in_except = object()
+    Not_multiline_string = object()
 
     def __call__(self, node):
         method = getattr(self, '_' + node.__class__.__name__, None)
@@ -110,7 +111,11 @@ class _PatchingASTWalker(object):
             else:
                 if child is self.String:
                     region = self.source.consume_string(
-                        end=self._find_next_statement_start())
+                        end=self._find_next_statement_start(), not_multiline = False)
+                elif child is self.Not_multiline_string:
+                    region = self.source.consume_string(
+                        end=self._find_next_statement_start(), not_multiline = True)
+                                
                 elif child is self.Number:
                     region = self.source.consume_number()
                 elif child == '!=':
@@ -242,7 +247,10 @@ class _PatchingASTWalker(object):
     def _Assign(self, node):
         children = self._child_nodes(node.targets, '=')
         children.append('=')
-        children.append(node.value)
+        if isinstance(node.value, ast.Str):
+            children.append(self.Not_multiline_string)
+        else:
+            children.append(node.value)
         self._handle(node, children)
 
     def _AugAssign(self, node):
@@ -259,7 +267,14 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _BoolOp(self, node):
-        self._handle(node, self._child_nodes(node.values,
+        children = []
+        for no in node.values:
+            if isinstance(no, ast.Str):
+                children.append(self.Not_multiline_string)
+            else:
+                children.append(no)
+
+        self._handle(node, self._child_nodes(children,
                                              self._get_op(node.op)[0]))
 
     def _Break(self, node):
@@ -678,14 +693,66 @@ class _Source(object):
         self.offset = new_offset + len(token)
         return (new_offset, self.offset)
 
-    def consume_string(self, end=None):
-        if _Source._string_pattern is None:
-            original = codeanalyze.get_string_pattern()
-            pattern = r'(%s)((\s|\\\n|#[^\n]*\n)*(%s))*' % \
-                      (original, original)
-            _Source._string_pattern = re.compile(pattern)
-        repattern = _Source._string_pattern
-        return self._consume_pattern(repattern, end)
+    def consume_string(self, end=None, not_multiline=False):
+        import tokenize
+        from StringIO import StringIO
+        fun = StringIO(self[self.offset:]).readline
+        tokens = tokenize.generate_tokens(fun)
+
+        started = False
+        if not_multiline:
+            multiline = False
+        else:
+            multiline = True
+        start_point = None
+        end_point = None 
+
+        while True:
+            if not started:
+                type, token, start, _end, _ = tokens.next()
+
+                if type == tokenize.STRING:
+                    started = True
+                    start_point = start
+                    end_point = _end
+                elif token == '(':
+                    # started = True
+                    # start_point = start
+                    multiline = True
+            else:
+                if multiline == False:
+                    try:
+                        type, token, start, _eend, _ = tokens.next()
+                    except:
+                        break
+                    if type in (4, 5, 53): #(5, 4, 54):
+                        end_point = _eend
+                    else:
+                        break
+                else: # multiline
+                    try:
+                        type, token, start, _eend, _ = tokens.next()
+                    except IndentationError:
+                        break
+                    if type == tokenize.STRING:
+                        if start_point is None:
+                            start_point = start
+                        end_point = _eend
+                    elif type in (5, 4, 53, 56, 54):
+                        pass
+                        # end_point = _eend
+                    elif token == ')':
+                        break
+                    else:
+                        break
+
+        local_code = codeanalyze.SourceLinesAdapter(self[self.offset:])
+
+        start = self.offset + (start_point[1] + local_code.get_line_start(start_point[0]))
+        end = self.offset + (end_point[1] + local_code.get_line_start(end_point[0]))
+        self.offset = (self.offset + (end_point[1] + local_code.get_line_start(end_point[0])))
+
+        return (start, end)
 
     def consume_number(self):
         if _Source._number_pattern is None:
