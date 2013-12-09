@@ -297,22 +297,10 @@ class _PatchingASTWalker(object):
             elif type == 'kw':
                 arguments.append([child_node])
 
-        gh = itertools.chain(*self._child_nodes(arguments, ','))
+        nodes = itertools.chain(*self._child_nodes(arguments, ','))
 
-        children.extend(gh)
-
-        # children.extend(self._child_nodes(args, ','))
-        # if node.starargs is not None:
-        #     if args:
-        #         children.append(',')
-        #     children.extend(['*', node.starargs])
-        # if node.kwargs is not None:
-        #     if args or node.starargs is not None:
-        #         children.append(',')
-        #     children.extend(['**', node.kwargs])
+        children.extend(nodes)
         children.append(')')
-
-        # print children
         self._handle(node, children)
 
     def _ClassDef(self, node):
@@ -615,7 +603,6 @@ class _PatchingASTWalker(object):
         self._excepthandler(node)
 
     def _excepthandler(self, node):
-        # self._handle(node, [self.semicolon_or_as_in_except])
         children = ['except']
         if node.type:
             children.append(node.type)
