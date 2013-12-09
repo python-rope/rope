@@ -495,7 +495,7 @@ class _PatchingASTWalker(object):
         children.extend([node.test, ':'])
         children.extend(node.body)
         if node.orelse:
-            if len(node.orelse) == 1 and self._is_elif(node.orelse[0]):
+            if len(node.orelse) == 1: # and self._is_elif(node.orelse[0]):
                 pass
             else:
                 children.extend(['else', ':'])
