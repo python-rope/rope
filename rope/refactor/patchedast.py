@@ -368,7 +368,11 @@ class _PatchingASTWalker(object):
         self._handle(node, ['...'])
 
     def _Expr(self, node):
-        self._handle(node, [node.value])
+        if isinstance(node.value, ast.Str):
+            # docstrings
+            self._handle(node, [self.Not_multiline_string])
+        else:                
+            self._handle(node, [node.value])
 
     def _Exec(self, node):
         children = []
