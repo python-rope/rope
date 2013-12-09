@@ -634,11 +634,53 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Tuple(self, node):
-        if node.elts:
+        import tokenize
+        from StringIO import StringIO
+        fun = StringIO(self.source[self.source.offset:self._find_next_statement_start()]).readline
+        tokens = tokenize.generate_tokens(fun)
+        
+
+        if len(node.elts) > 1:
             self._handle(node, self._child_nodes(node.elts, ','),
                          eat_parens=True)
+        elif len(node.elts) == 1:
+            self._handle(node, [node.elts[0], ','], eat_parens=True)
         else:
-            self._handle(node, ['(', ')'])
+
+            opened = False
+            surround = []
+            children = []
+            counter = 0
+            while True:
+                try:
+                    op, tok, _1, _2, _3 = tokens.next()
+                    # print 'ttt', tok
+                    if opened == False:
+                        if tok == '(':
+                            opened = True
+                            children.append(tok)
+                        elif tok == ' ':
+                            pass
+                        else:
+                            surround.append(tok)
+                    elif opened == True:
+                        if tok == ')':
+                            children.append(tok)
+                            break
+                        elif tok == '(':
+                            surround = children
+                            children= [tok]
+                        else:
+                            children.append(tok)
+                        # if tok == '(':
+                        #     children = [tok]
+                except tokenize.TokenError:
+                    pass
+
+            for tok in surround:
+                self.source.consume(tok)
+
+            self._handle(node, children)
 
     def _UnaryOp(self, node):
         children = self._get_op(node.op)
