@@ -610,7 +610,7 @@ class ModuleSkipRenamer(object):
         self.replacement = replacement
         self.handle = handle
         if self.handle is None:
-            self.handle = ModuleSkipHandle()
+            self.handle = ModuleSkipRenamerHandle()
 
     def get_changed_module(self):
         source = self.resource.read()
