@@ -34,7 +34,8 @@ class FixSyntax(object):
                     self.commenter.comment(e.lineno)
                     code = '\n'.join(self.commenter.lines)
                 else:
-                    raise exceptions.ModuleSyntaxError(e.filename, e.lineno, msg)
+                    raise exceptions.ModuleSyntaxError(e.filename,
+                                                       e.lineno, msg)
 
     @property
     @utils.saveit
@@ -43,6 +44,7 @@ class FixSyntax(object):
 
     def pyname_at(self, offset):
         pymodule = self.get_pymodule()
+
         def old_pyname():
             word_finder = worder.Worder(self.code, True)
             expression = word_finder.get_primary_at(offset)
@@ -51,6 +53,7 @@ class FixSyntax(object):
             scope = pymodule.get_scope().get_inner_scope_for_line(lineno)
             return rope.base.evaluate.eval_str(scope, expression)
         new_code = pymodule.source_code
+
         def new_pyname():
             newoffset = self.commenter.transfered_offset(offset)
             return rope.base.evaluate.eval_location(pymodule, newoffset)
@@ -108,7 +111,6 @@ class _Commenter(object):
         return end_line
 
     def _get_stmt_end(self, lineno):
-        end_line = lineno
         base_indents = _get_line_indents(self.lines[lineno])
         for i in range(lineno + 1, len(self.lines)):
             if _get_line_indents(self.lines[i]) <= base_indents:
@@ -117,7 +119,7 @@ class _Commenter(object):
 
     def _fix_incomplete_try_blocks(self, lineno, indents):
         block_start = lineno
-        last_indents = current_indents = indents
+        last_indents = indents
         while block_start > 0:
             block_start = rope.base.codeanalyze.get_block_start(
                 ArrayLinesAdapter(self.lines), block_start) - 1
@@ -154,6 +156,7 @@ class _Commenter(object):
         self.diffs[self.origs[lineno]] += len(line) + 1
         self.origs.insert(lineno, self.origs[lineno])
         self.lines.insert(lineno, line)
+
 
 def _logical_start(lines, lineno, check_prev=False):
     logical_finder = LogicalLineFinder(ArrayLinesAdapter(lines))

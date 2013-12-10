@@ -25,7 +25,7 @@ class CodeAssistTest(unittest.TestCase):
     def _assist(self, code, offset=None, **args):
         if offset is None:
             offset = len(code)
-        return code_assist(self.project, code, offset,  **args)
+        return code_assist(self.project, code, offset, **args)
 
     def test_simple_assist(self):
         self._assist('', 0)
@@ -34,12 +34,13 @@ class CodeAssistTest(unittest.TestCase):
         for proposal in result:
             if proposal.name == name:
                 self.assertEqual(scope, proposal.scope,
-                        "proposal <%s> has wrong scope, expected " \
-                        "%r, got %r" % (name, scope, proposal.scope))
+                                 "proposal <%s> has wrong scope, expected "
+                                 "%r, got %r" % (name, scope, proposal.scope))
                 if type is not None:
                     self.assertEqual(type, proposal.type,
-                            "proposal <%s> has wrong type, expected " \
-                            "%r, got %r" % (name, type, proposal.type))
+                                     "proposal <%s> has wrong type, expected "
+                                     "%r, got %r" %
+                                     (name, type, proposal.type))
                 return
         self.fail('completion <%s> not proposed' % name)
 
@@ -264,12 +265,12 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('my_var', 'global', result)
 
-    def test_ignoring_current_statement_while_the_first_statement_of_the_block(self):
+    def test_ignor_current_statement_while_the_first_stmnt_of_the_block(self):
         code = "my_var = 10\ndef f():\n    my_"
         result = self._assist(code)
         self.assert_completion_in_result('my_var', 'global', result)
 
-    def test_ignoring_current_statement_while_current_line_ends_with_a_colon(self):
+    def test_ignor_current_stmnt_while_current_line_ends_with_a_colon(self):
         code = "my_var = 10\nif my_:\n    pass"
         result = self._assist(code, 18)
         self.assert_completion_in_result('my_var', 'global', result)
@@ -314,7 +315,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('my_var', 'global', result)
 
-    def test_ignoring_string_contents_with_triple_quotes_and_double_backslash(self):
+    def test_ignor_str_contents_with_triple_quotes_and_double_backslash(self):
         code = 'my_var = """\\\\"""\nmy_'
         result = self._assist(code)
         self.assert_completion_in_result('my_var', 'global', result)
@@ -361,14 +362,11 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals((module_resource, 1), result)
 
     def test_get_definition_location_for_nested_packages(self):
-        pycore = self.project.pycore
         mod1 = testutils.create_module(self.project, 'mod1')
         pkg1 = testutils.create_package(self.project, 'pkg1')
         pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
-        mod2 = testutils.create_module(self.project, 'mod2', pkg2)
         mod1.write('import pkg1.pkg2.mod2')
 
-        mod1_scope = pycore.resource_to_pyobject(mod1).get_scope()
         init_dot_py = pkg2.get_child('__init__.py')
         found_pyname = get_definition_location(self.project, mod1.read(),
                                                mod1.read().index('pkg2') + 1)
@@ -394,7 +392,8 @@ class CodeAssistTest(unittest.TestCase):
         self.assertEquals((None, 2), result)
 
     def test_if_scopes_in_other_scopes_for_get_definition_location(self):
-        code = 'def f(a_var):\n    pass\na_var = 10\nif True:\n    print a_var\n'
+        code = 'def f(a_var):\n    pass\na_var = 10\n' \
+               'if True:\n    print a_var\n'
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 3), result)
 
@@ -483,7 +482,7 @@ class CodeAssistTest(unittest.TestCase):
                '    pass\n' \
                'my_'
         result = self._assist(code)
-        proposals = sorted_proposals(result, typepref=['function'])
+        proposals = sorted_proposals(result, typepref=['function'])  # noqa
 
     def test_get_pydoc_unicode(self):
         src = u'# coding: utf-8\ndef foo():\n  u"юникод-объект"'
@@ -515,7 +514,6 @@ class CodeAssistTest(unittest.TestCase):
         get_doc(self.project, src, src.index('AClass') + 1).index('AClass')
 
     def test_get_pydoc_for_modules(self):
-        pycore = self.project.pycore
         mod = testutils.create_module(self.project, 'mod')
         mod.write('"""a module"""\n')
         src = 'import mod\nmod'
@@ -535,7 +533,7 @@ class CodeAssistTest(unittest.TestCase):
         doc.index('AClass.a_method')
         doc.index('hey')
 
-    def test_get_pydoc_for_methods_should_include_methods_from_super_classes(self):
+    def test_get_pydoc_for_meths_should_inc_methods_from_super_classes(self):
         src = 'class A(object):\n' \
               '    def a_method(self):\n' \
               '        """hey1"""\n' \
@@ -563,7 +561,7 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_commenting_errors_before_offset(self):
         src = 'lsjd lsjdf\ns = "hey"\ns.replace()\n'
-        doc = get_doc(self.project, src, src.rindex('replace') + 1)
+        doc = get_doc(self.project, src, src.rindex('replace') + 1)  # noqa
 
     def test_proposing_variables_defined_till_the_end_of_scope(self):
         code = 'if True:\n    a_v\na_var = 10\n'
@@ -596,7 +594,8 @@ class CodeAssistTest(unittest.TestCase):
         self.assert_completion_in_result('a_var', 'global', result)
 
     def test_already_complete_try_blocks_with_except2(self):
-        code = 'a_var = 10\ntry:\n    another_var = a_\n    another_var = 10\n' \
+        code = 'a_var = 10\ntry:\n    ' \
+               'another_var = a_\n    another_var = 10\n' \
                'except Exception:\n    pass\n'
         result = self._assist(code, code.rindex('a_') + 2)
         self.assert_completion_in_result('a_var', 'global', result)
@@ -618,7 +617,7 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_and_normal_complete_blocks_and_single_fixing(self):
         code = 'try:\n    range.\nexcept:\n    pass\n'
-        result = self._assist(code, code.index('.'), maxfixes=1)
+        result = self._assist(code, code.index('.'), maxfixes=1)  # noqa
 
     def test_nested_blocks(self):
         code = 'a_var = 10\ntry:\n    try:\n        a_v'
@@ -632,7 +631,7 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_proposing_function_keywords_when_calling_for_non_functions(self):
         code = 'f = 1\nf(p'
-        result = self._assist(code)
+        result = self._assist(code)  # noqa
 
     def test_proposing_function_keywords_when_calling_extra_spaces(self):
         code = 'def f(p):\n    pass\nf( p'
@@ -647,14 +646,15 @@ class CodeAssistTest(unittest.TestCase):
     def test_proposing_function_keywords_when_calling_not_proposing_args(self):
         code = 'def f(p1, *args):\n    pass\nf(1, a'
         result = self._assist(code)
-        self.assert_completion_not_in_result('args=', 'parameter_keyword', result)
+        self.assert_completion_not_in_result('args=', 'parameter_keyword',
+                                             result)
 
-    def test_proposing_function_keywords_when_calling_with_no_nothing_after_parens(self):
+    def test_propos_function_kwrds_when_call_with_no_noth_after_parens(self):
         code = 'def f(p):\n    pass\nf('
         result = self._assist(code)
         self.assert_completion_in_result('p=', 'parameter_keyword', result)
 
-    def test_proposing_function_keywords_when_calling_with_no_nothing_after_parens2(self):
+    def test_propos_function_kwrds_when_call_with_no_noth_after_parens2(self):
         code = 'def f(p):\n    pass\ndef g():\n    h = f\n    f('
         result = self._assist(code)
         self.assert_completion_in_result('p=', 'parameter_keyword', result)
@@ -701,7 +701,7 @@ class CodeAssistTest(unittest.TestCase):
         doc = get_calltip(self.project, src, src.rindex('c'), mod)
         self.assertEquals('mod.C.__call__(self, p)', doc)
 
-    def test_get_calltips_and_including_module_name(self):
+    def test_get_calltips_and_including_module_name_2(self):
         src = 'range()\n'
         doc = get_calltip(self.project, src, 1, ignore_unknown=True)
         self.assertTrue(doc is None)
@@ -847,7 +847,6 @@ class CodeAssistTest(unittest.TestCase):
 
 
 class CodeAssistInProjectsTest(unittest.TestCase):
-
     def setUp(self):
         super(CodeAssistInProjectsTest, self).setUp()
         self.project = testutils.sample_project()
@@ -860,7 +859,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
                'def _underlined_func():\n    pass\n\n'
         samplemod.write(code)
         package = testutils.create_package(self.project, 'package')
-        nestedmod = testutils.create_module(self.project, 'nestedmod', package)
+        nestedmod = testutils.create_module(self.project,  # noqa
+                                            'nestedmod', package)
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -924,7 +924,8 @@ class CodeAssistInProjectsTest(unittest.TestCase):
     def test_from_import_star_not_imporing_underlined(self):
         code = 'from samplemod import *\n_under'
         result = self._assist(code)
-        self.assert_completion_not_in_result('_underlined_func', 'global', result)
+        self.assert_completion_not_in_result('_underlined_func', 'global',
+                                             result)
 
     def test_from_package_import_mod(self):
         code = 'from package import nestedmod\nnest'

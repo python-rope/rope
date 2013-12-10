@@ -89,12 +89,12 @@ class FindItTest(unittest.TestCase):
         self.assertEquals(1, len(result))
         self.assertEquals(mod1.read().rindex('f('), result[0].offset)
 
-    def test_find_implementations_real_implementation(self):
+    def test_find_implementations_real_implementation_simple(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('class A(object):\n    pass\n')
         offset = mod1.read().index('A')
         with self.assertRaises(exceptions.BadIdentifierError):
-            result = find_implementations(self.project, mod1, offset)
+            find_implementations(self.project, mod1, offset)
 
     def test_trivial_find_definition(self):
         code = 'def a_func():\n    pass\na_func()'

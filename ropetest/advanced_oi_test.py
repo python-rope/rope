@@ -42,16 +42,15 @@ class DynamicOITest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2')
         code1 = 'class AClass(object):\n    pass\n'
         code2 = 'from mod1 import AClass\n' \
-               '\ndef a_func(arg):\n    return eval("arg")\n' \
-               'a_var = a_func(AClass)\n'
+            '\ndef a_func(arg):\n    return eval("arg")\n' \
+            'a_var = a_func(AClass)\n'
         mod1.write(code1)
         mod2.write(code2)
         self.pycore.run_module(mod2).wait_process()
-        pymod1 = self.pycore.resource_to_pyobject(mod1)
+        #pymod1 = self.pycore.resource_to_pyobject(mod1)
         pymod2 = self.pycore.resource_to_pyobject(mod2)
         self.assertEquals(pymod2['AClass'].get_object(),
                           pymod2['a_var'].get_object())
-
 
     def test_class_dti(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -217,19 +216,23 @@ class DynamicOITest(unittest.TestCase):
 
     def test_textual_transformations(self):
         mod = testutils.create_module(self.project, 'mod')
-        code = 'class C(object):\n    pass\ndef f():\n    pass\na_var = C()\n' \
+        code = 'class C(object):\n    pass\ndef f():' \
+               '\n    pass\na_var = C()\n' \
                'a_list = [C()]\na_str = "hey"\na_file = open("file.txt")\n'
         mod.write(code)
         to_pyobject = rope.base.oi.transform.TextualToPyObject(self.project)
         to_textual = rope.base.oi.transform.PyObjectToTextual(self.project)
         pymod = self.pycore.resource_to_pyobject(mod)
+
         def complex_to_textual(pyobject):
             return to_textual.transform(
                 to_pyobject.transform(to_textual.transform(pyobject)))
         for name in ('C', 'f', 'a_var', 'a_list', 'a_str', 'a_file'):
             var = pymod[name].get_object()
-            self.assertEquals(to_textual.transform(var), complex_to_textual(var))
-        self.assertEquals(to_textual.transform(pymod), complex_to_textual(pymod))
+            self.assertEquals(to_textual.transform(var),
+                              complex_to_textual(var))
+        self.assertEquals(to_textual.transform(pymod),
+                          complex_to_textual(pymod))
         enumerate_func = rope.base.builtins.builtins['enumerate'].get_object()
         self.assertEquals(to_textual.transform(enumerate_func),
                           complex_to_textual(enumerate_func))
@@ -283,7 +286,8 @@ class DynamicOITest(unittest.TestCase):
     def test_ignoring_star_args(self):
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
-               'def a_func(p, *args):\n    if p == C1:\n        return C1()\n' \
+               'def a_func(p, *args):' \
+               '\n    if p == C1:\n        return C1()\n' \
                '    else:\n        return C2()\n' \
                'a = a_func(C1, 1)\nb = a_func(C2, 2)\n'
         mod.write(code)
@@ -299,7 +303,8 @@ class DynamicOITest(unittest.TestCase):
     def test_ignoring_double_star_args(self):
         mod = testutils.create_module(self.project, 'mod')
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
-               'def a_func(p, *kwds, **args):\n    if p == C1:\n        return C1()\n' \
+               'def a_func(p, *kwds, **args):\n    ' \
+               'if p == C1:\n        return C1()\n' \
                '    else:\n        return C2()\n' \
                'a = a_func(C1, kwd=1)\nb = a_func(C2, kwd=2)\n'
         mod.write(code)
@@ -396,7 +401,7 @@ class NewStaticOITest(unittest.TestCase):
         except RuntimeError, e:
             self.fail(str(e))
 
-    def test_static_oi_for_infering_returned_types_from_functions_based_on_parameters(self):
+    def test_static_oi_for_infer_return_typs_from_funcs_based_on_params(self):
         code = 'class C(object):\n    pass\ndef func(p):\n    return p\n' \
                'a_var = func(C())\n'
         self.mod.write(code)
@@ -461,8 +466,9 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     # TODO: Returning a generator for functions that yield unknowns
-    def xxx_test_handling_generator_functions_when_unknown_type_is_yielded(self):
-        self.mod.write('class C(object):\n    pass\ndef f():\n    yield eval("C()")\n'
+    def xxx_test_handl_generator_functions_when_unknown_type_is_yielded(self):
+        self.mod.write('class C(object):\n    pass'
+                       '\ndef f():\n    yield eval("C()")\n'
                        'a_var = f()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         a_var = pymod['a_var'].get_object()
@@ -491,7 +497,8 @@ class NewStaticOITest(unittest.TestCase):
 
     def test_static_oi_for_lists_per_object_for_fields(self):
         code = 'class C(object):\n    pass\n' \
-               'class A(object):\n    def __init__(self):\n        self.l = []\n' \
+               'class A(object):\n    ' \
+               'def __init__(self):\n        self.l = []\n' \
                '    def set(self):\n        self.l.append(C())\n' \
                'a = A()\na.set()\na_var = a.l[0]\n'
         self.mod.write(code)
@@ -547,7 +554,8 @@ class NewStaticOITest(unittest.TestCase):
 
     def test_static_oi_for_dicts_depending_on_for_loops(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
-               'd = {}\nd[C1()] = C2()\nfor k, v in d.items():\n    a = k\n    b = v\n'
+            'd = {}\nd[C1()] = C2()\n' \
+            'for k, v in d.items():\n    a = k\n    b = v\n'
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
@@ -560,7 +568,8 @@ class NewStaticOITest(unittest.TestCase):
 
     def test_static_oi_for_dicts_depending_on_update(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
-               'd = {}\nd[C1()] = C2()\nd2 = {}\nd2.update(d)\na, b = d2.popitem()\n'
+            'd = {}\nd[C1()] = C2()\n' \
+            'd2 = {}\nd2.update(d)\na, b = d2.popitem()\n'
         self.mod.write(code)
         self.pycore.analyze_module(self.mod)
         pymod = self.pycore.resource_to_pyobject(self.mod)
@@ -620,7 +629,8 @@ class NewStaticOITest(unittest.TestCase):
     def test_not_saving_unknown_function_returns(self):
         mod2 = testutils.create_module(self.project, 'mod2')
         self.mod.write('class C(object):\n    pass\nl = []\nl.append(C())\n')
-        mod2.write('import mod\ndef f():\n    return mod.l.pop()\na_var = f()\n')
+        mod2.write('import mod\ndef f():\n    '
+                   'return mod.l.pop()\na_var = f()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         pymod2 = self.pycore.resource_to_pyobject(mod2)
         c_class = pymod['C'].get_object()
@@ -700,8 +710,8 @@ class NewStaticOITest(unittest.TestCase):
         self.pycore.analyze_module(mod1)
 
         mod1.write('l = {}\nv = l["key"]\n')
-        pymod1 = self.pycore.resource_to_pyobject(mod1)
-        var = pymod1['v'].get_object()
+        pymod1 = self.pycore.resource_to_pyobject(mod1)  # noqa
+        var = pymod1['v'].get_object()  # noqa
 
     def test_always_returning_containing_class_for_selfs(self):
         code = 'class A(object):\n    def f(p):\n        return p\n' \

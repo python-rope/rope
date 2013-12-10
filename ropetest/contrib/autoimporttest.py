@@ -127,6 +127,7 @@ class AutoImportTest(unittest.TestCase):
         self.assertEquals(set([self.mod2, self.pkg]),
                           autoimport.submodules(self.pkg))
 
+
 class AutoImportObservingTest(unittest.TestCase):
 
     def setUp(self):

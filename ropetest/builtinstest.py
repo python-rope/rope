@@ -22,14 +22,16 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertTrue('append' in pymod['l'].get_object())
 
     def test_holding_type_information(self):
-        self.mod.write('class C(object):\n    pass\nl = [C()]\na_var = l.pop()\n')
+        self.mod.write('class C(object):\n    pass\n'
+                       'l = [C()]\na_var = l.pop()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_get_items(self):
-        self.mod.write('class C(object):\n    def __getitem__(self, i):\n        return C()\n'
+        self.mod.write('class C(object):'
+                       '\n    def __getitem__(self, i):\n        return C()\n'
                        'c = C()\na_var = c[0]')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
@@ -44,7 +46,8 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_get_items_from_slices(self):
-        self.mod.write('class C(object):\n    pass\nl = [C()]\na_var = l[:].pop()\n')
+        self.mod.write('class C(object):\n    pass'
+                       '\nl = [C()]\na_var = l[:].pop()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
@@ -71,21 +74,24 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertTrue('get' in pymod['d'].get_object())
 
     def test_get_item_for_dicts(self):
-        self.mod.write('class C(object):\n    pass\nd = {1: C()}\na_var = d[1]\n')
+        self.mod.write('class C(object):\n    pass\n'
+                       'd = {1: C()}\na_var = d[1]\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_popping_dicts(self):
-        self.mod.write('class C(object):\n    pass\nd = {1: C()}\na_var = d.pop(1)\n')
+        self.mod.write('class C(object):\n    pass\n'
+                       'd = {1: C()}\na_var = d.pop(1)\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_getting_keys_from_dicts(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+        self.mod.write('class C1(object):\n    pass\n'
+                       'class C2(object):\n    pass\n'
                        'd = {C1(): C2()}\nfor c in d.keys():\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C1'].get_object()
@@ -93,15 +99,18 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_getting_values_from_dicts(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
-                       'd = {C1(): C2()}\nfor c in d.values():\n    a_var = c\n')
+        self.mod.write('class C1(object):\n    pass\n'
+                       'class C2(object):\n    pass\n'
+                       'd = {C1(): C2()}\nfor c in d.values():'
+                       '\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C2'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_getting_iterkeys_from_dicts(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+        self.mod.write('class C1(object):\n    pass'
+                       '\nclass C2(object):\n    pass\n'
                        'd = {C1(): C2()}\nfor c in d.keys():\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C1'].get_object()
@@ -109,15 +118,18 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_getting_itervalues_from_dicts(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
-                       'd = {C1(): C2()}\nfor c in d.values():\n    a_var = c\n')
+        self.mod.write('class C1(object):\n    pass'
+                       '\nclass C2(object):\n    pass\n'
+                       'd = {C1(): C2()}\nfor c in d.values():'
+                       '\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C2'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_using_copy_for_dicts(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+        self.mod.write('class C1(object):\n    pass'
+                       '\nclass C2(object):\n    pass\n'
                        'd = {C1(): C2()}\nfor c in d.copy():\n    a_var = c\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C1'].get_object()
@@ -125,7 +137,8 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_tuple_assignments_for_items(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+        self.mod.write('class C1(object):\n    pass'
+                       '\nclass C2(object):\n    pass\n'
                        'd = {C1(): C2()}\nkey, value = d.items()[0]\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c1_class = pymod['C1'].get_object()
@@ -136,7 +149,8 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c2_class, value.get_type())
 
     def test_tuple_assignment_for_lists(self):
-        self.mod.write('class C(object):\n    pass\nl = [C(), C()]\na, b = l\n')
+        self.mod.write('class C(object):\n    pass\n'
+                       'l = [C(), C()]\na, b = l\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a'].get_object()
@@ -145,8 +159,10 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c_class, b_var.get_type())
 
     def test_tuple_assignments_for_iteritems_in_fors(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
-                       'd = {C1(): C2()}\nfor x, y in d.items():\n    a = x;\n    b = y\n')
+        self.mod.write('class C1(object):\n    pass\n'
+                       'class C2(object):\n    pass\n'
+                       'd = {C1(): C2()}\n'
+                       'for x, y in d.items():\n    a = x;\n    b = y\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c1_class = pymod['C1'].get_object()
         c2_class = pymod['C2'].get_object()
@@ -156,7 +172,8 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
 
     def test_simple_tuple_assignments(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+        self.mod.write('class C1(object):'
+                       '\n    pass\nclass C2(object):\n    pass\n'
                        'a, b = C1(), C2()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c1_class = pymod['C1'].get_object()
@@ -208,7 +225,8 @@ class BuiltinTypesTest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_making_dicts_using_the_passed_argument_to_init(self):
-        self.mod.write('class C1(object):\n    pass\nclass C2(object):\n    pass\n'
+        self.mod.write('class C1(object):\n    pass\n'
+                       'class C2(object):\n    pass\n'
                        'l1 = [(C1(), C2())]\n'
                        'l2 = dict(l1)\na, b = l2.items()[0]')
         pymod = self.pycore.resource_to_pyobject(self.mod)
@@ -245,7 +263,8 @@ class BuiltinTypesTest(unittest.TestCase):
         self.mod.write(
             'class C(object):\n    pass\n'
             'class A(object):\n    def a_f(self):\n        return C()\n'
-            'class B(A):\n    def b_f(self):\n        return super(B, self).a_f()\n'
+            'class B(A):\n    def b_f(self):\n        '
+            'return super(B, self).a_f()\n'
             'a_var = B.b_f()\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c_class = pymod['C'].get_object()
@@ -321,7 +340,7 @@ class BuiltinTypesTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         c1_class = pymod['C1'].get_object()
         a_var = pymod['a'].get_object()
-        b_var = pymod['b'].get_object()
+        b_var = pymod['b'].get_object()  # noqa
         self.assertEquals(c1_class, a_var.get_type())
 
     def test_enumerate_builtin_function(self):
@@ -335,8 +354,8 @@ class BuiltinTypesTest(unittest.TestCase):
     def test_builtin_class_get_name(self):
         self.assertEquals('object',
                           builtins.builtins['object'].get_object().get_name())
-        self.assertEquals('property',
-                          builtins.builtins['property'].get_object().get_name())
+        self.assertEquals(
+            'property', builtins.builtins['property'].get_object().get_name())
 
     def test_star_args_and_double_star_args(self):
         self.mod.write('def func(p, *args, **kwds):\n    pass\n')
@@ -460,7 +479,7 @@ class BuiltinModulesTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertTrue('rename' not in pymod['os'].get_object())
 
-    def test_ignored_extensions(self):
+    def test_ignored_extensions_2(self):
         self.mod.write('import os')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertTrue('rename' not in pymod['os'].get_object())
@@ -470,7 +489,7 @@ class BuiltinModulesTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         pymod['invalid'].get_object()
 
-    def test_nonexistent_modules(self):
+    def test_nonexistent_modules_2(self):
         self.mod.write('import invalid\nimport invalid.sub')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         invalid = pymod['invalid'].get_object()

@@ -33,9 +33,10 @@ class PyCoreScopesTest(unittest.TestCase):
             'def sample_func():\n'
             '    class SampleClass(object):\n        pass\n')
         self.assertEquals(1, len(scope.get_scopes()))
-        sample_func_scope = scope.get_scopes()[0]
+        sample_func_scope = scope.get_scopes()[0]  # noqa
         self.assertEquals(get_base_type('Type'),
-                          scope.get_scopes()[0]['SampleClass'].get_object().get_type())
+                          scope.get_scopes()[0]['SampleClass'].
+                          get_object().get_type())
 
     def test_simple_class_scope(self):
         scope = self.pycore.get_string_scope(
@@ -125,7 +126,8 @@ class PyCoreScopesTest(unittest.TestCase):
                '    def a_func(self, param):\n        pass\n'
         a_class = self.pycore.get_string_module(code)['AClass']. get_object()
         function_scope = a_class['a_func'].get_object().get_scope()
-        self.assertEquals(a_class, function_scope['self'].get_object().get_type())
+        self.assertEquals(a_class,
+                          function_scope['self'].get_object().get_type())
         self.assertNotEquals(a_class, function_scope['param'].
                              get_object().get_type())
 
@@ -134,8 +136,9 @@ class PyCoreScopesTest(unittest.TestCase):
                '    @staticmethod\n    def a_func(param):\n        pass\n'
         a_class = self.pycore.get_string_module(code)['AClass']. get_object()
         function_scope = a_class['a_func'].\
-                         get_object().get_scope()
-        self.assertNotEquals(a_class, function_scope['param'].get_object().get_type())
+            get_object().get_scope()
+        self.assertNotEquals(a_class,
+                             function_scope['param'].get_object().get_type())
 
     def test_first_parameter_of_class_methods(self):
         code = 'class AClass(object):\n' \
@@ -209,7 +212,7 @@ class PyCoreScopesTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(
             'class A(object):\n    def a(self):\n        pass\n'
             'class B(A):\n    def b(self):\n        pass\n')
-        a_scope = scope['A'].get_object().get_scope()
+        a_scope = scope['A'].get_object().get_scope()  # noqa
         b_scope = scope['B'].get_object().get_scope()
         self.assertTrue('a' in b_scope.get_names())
         self.assertTrue('b' in b_scope.get_names())

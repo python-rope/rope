@@ -5,7 +5,7 @@ except ImportError:
 
 import rope.base.history
 from rope.base import exceptions
-from rope.base.change import *
+import rope.base.change
 from ropetest import testutils
 
 
@@ -45,6 +45,7 @@ class HistoryTest(unittest.TestCase):
         self.project.history.undo()
         self.assertFalse(my_file.exists())
 
+
 class IsolatedHistoryTest(unittest.TestCase):
 
     def setUp(self):
@@ -59,25 +60,25 @@ class IsolatedHistoryTest(unittest.TestCase):
         super(IsolatedHistoryTest, self).tearDown()
 
     def test_simple_undo(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
         self.assertEquals('1', self.file1.read())
         self.history.undo()
         self.assertEquals('', self.file1.read())
 
     def test_tobe_undone(self):
-        change1 = ChangeContents(self.file1, '1')
+        change1 = rope.base.change.ChangeContents(self.file1, '1')
         self.assertEquals(None, self.history.tobe_undone)
         self.history.do(change1)
         self.assertEquals(change1, self.history.tobe_undone)
-        change2 = ChangeContents(self.file1, '2')
+        change2 = rope.base.change.ChangeContents(self.file1, '2')
         self.history.do(change2)
         self.assertEquals(change2, self.history.tobe_undone)
         self.history.undo()
         self.assertEquals(change1, self.history.tobe_undone)
 
     def test_tobe_redone(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
         self.assertEquals(None, self.history.tobe_redone)
         self.history.undo()
@@ -85,8 +86,8 @@ class IsolatedHistoryTest(unittest.TestCase):
 
     def test_undo_limit(self):
         history = rope.base.history.History(self.project, maxundos=1)
-        history.do(ChangeContents(self.file1, '1'))
-        history.do(ChangeContents(self.file1, '2'))
+        history.do(rope.base.change.ChangeContents(self.file1, '1'))
+        history.do(rope.base.change.ChangeContents(self.file1, '2'))
         try:
             history.undo()
             with self.assertRaises(exceptions.HistoryError):
@@ -95,14 +96,14 @@ class IsolatedHistoryTest(unittest.TestCase):
             self.assertEquals('1', self.file1.read())
 
     def test_simple_redo(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
         self.history.undo()
         self.history.redo()
         self.assertEquals('1', self.file1.read())
 
     def test_simple_re_undo(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
         self.history.undo()
         self.history.redo()
@@ -110,13 +111,13 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEquals('', self.file1.read())
 
     def test_multiple_undos(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
-        change = ChangeContents(self.file1, '2')
+        change = rope.base.change.ChangeContents(self.file1, '2')
         self.history.do(change)
         self.history.undo()
         self.assertEquals('1', self.file1.read())
-        change = ChangeContents(self.file1, '3')
+        change = rope.base.change.ChangeContents(self.file1, '3')
         self.history.do(change)
         self.history.undo()
         self.assertEquals('1', self.file1.read())
@@ -138,32 +139,32 @@ class IsolatedHistoryTest(unittest.TestCase):
             self.history.redo()
 
     def test_undoing_choosen_changes(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
         self.history.undo(change)
         self.assertEquals('', self.file1.read())
         self.assertFalse(self.history.undo_list)
 
     def test_undoing_choosen_changes2(self):
-        change1 = ChangeContents(self.file1, '1')
+        change1 = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change1)
-        self.history.do(ChangeContents(self.file1, '2'))
+        self.history.do(rope.base.change.ChangeContents(self.file1, '2'))
         self.history.undo(change1)
         self.assertEquals('', self.file1.read())
         self.assertFalse(self.history.undo_list)
 
     def test_undoing_choosen_changes_not_undoing_others(self):
-        change1 = ChangeContents(self.file1, '1')
+        change1 = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change1)
-        self.history.do(ChangeContents(self.file2, '2'))
+        self.history.do(rope.base.change.ChangeContents(self.file2, '2'))
         self.history.undo(change1)
         self.assertEquals('', self.file1.read())
         self.assertEquals('2', self.file2.read())
 
     def test_undoing_writing_after_moving(self):
-        change1 = ChangeContents(self.file1, '1')
+        change1 = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change1)
-        self.history.do(MoveResource(self.file1, 'file3.txt'))
+        self.history.do(rope.base.change.MoveResource(self.file1, 'file3.txt'))
         file3 = self.project.get_resource('file3.txt')
         self.history.undo(change1)
         self.assertEquals('', self.file1.read())
@@ -172,22 +173,22 @@ class IsolatedHistoryTest(unittest.TestCase):
     def test_undoing_folder_movements_for_undoing_writes_inside_it(self):
         folder = self.project.root.create_folder('folder')
         file3 = folder.create_file('file3.txt')
-        change1 = ChangeContents(file3, '1')
+        change1 = rope.base.change.ChangeContents(file3, '1')
         self.history.do(change1)
-        self.history.do(MoveResource(folder, 'new_folder'))
+        self.history.do(rope.base.change.MoveResource(folder, 'new_folder'))
         new_folder = self.project.get_resource('new_folder')
         self.history.undo(change1)
         self.assertEquals('', file3.read())
         self.assertFalse(new_folder.exists())
 
     def test_undoing_changes_that_depend_on_a_dependant_change(self):
-        change1 = ChangeContents(self.file1, '1')
+        change1 = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change1)
-        changes = ChangeSet('2nd change')
-        changes.add_change(ChangeContents(self.file1, '2'))
-        changes.add_change(ChangeContents(self.file2, '2'))
+        changes = rope.base.change.ChangeSet('2nd change')
+        changes.add_change(rope.base.change.ChangeContents(self.file1, '2'))
+        changes.add_change(rope.base.change.ChangeContents(self.file2, '2'))
         self.history.do(changes)
-        self.history.do(MoveResource(self.file2, 'file3.txt'))
+        self.history.do(rope.base.change.MoveResource(self.file2, 'file3.txt'))
         file3 = self.project.get_resource('file3.txt')
 
         self.history.undo(change1)
@@ -198,35 +199,35 @@ class IsolatedHistoryTest(unittest.TestCase):
     def test_undoing_writes_for_undoing_folder_movements_containing_it(self):
         folder = self.project.root.create_folder('folder')
         old_file = folder.create_file('file3.txt')
-        change1 = MoveResource(folder, 'new_folder')
+        change1 = rope.base.change.MoveResource(folder, 'new_folder')
         self.history.do(change1)
         new_file = self.project.get_resource('new_folder/file3.txt')
-        self.history.do(ChangeContents(new_file, '1'))
+        self.history.do(rope.base.change.ChangeContents(new_file, '1'))
         self.history.undo(change1)
         self.assertEquals('', old_file.read())
         self.assertFalse(new_file.exists())
 
     def test_undoing_not_available_change(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         with self.assertRaises(exceptions.HistoryError):
             self.history.undo(change)
 
     def test_ignoring_ignored_resources(self):
         self.project.set('ignored_resources', ['ignored*'])
         ignored = self.project.get_file('ignored.txt')
-        change = CreateResource(ignored)
+        change = rope.base.change.CreateResource(ignored)
         self.history.do(change)
         self.assertTrue(ignored.exists())
         self.assertEquals(0, len(self.history.undo_list))
 
     def test_get_file_undo_list_simple(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
         self.assertEquals(set([change]),
                           set(self.history.get_file_undo_list(self.file1)))
 
     def test_get_file_undo_list_for_moves(self):
-        change = MoveResource(self.file1, 'file2.txt')
+        change = rope.base.change.MoveResource(self.file1, 'file2.txt')
         self.history.do(change)
         self.assertEquals(set([change]),
                           set(self.history.get_file_undo_list(self.file1)))
@@ -235,27 +236,27 @@ class IsolatedHistoryTest(unittest.TestCase):
     def xxx_test_get_file_undo_list_and_moving_its_contining_folder(self):
         folder = self.project.root.create_folder('folder')
         old_file = folder.create_file('file3.txt')
-        change1 = MoveResource(folder, 'new_folder')
+        change1 = rope.base.change.MoveResource(folder, 'new_folder')
         self.history.do(change1)
         self.assertEquals(set([change1]),
                           set(self.history.get_file_undo_list(old_file)))
 
     def test_clearing_redo_list_after_do(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         self.history.do(change)
         self.history.undo()
         self.history.do(change)
         self.assertEquals(0, len(self.history.redo_list))
 
     def test_undoing_a_not_yet_performed_change(self):
-        change = ChangeContents(self.file1, '1')
+        change = rope.base.change.ChangeContents(self.file1, '1')
         str(change)
         with self.assertRaises(exceptions.HistoryError):
             change.undo()
 
     def test_clearing_up_the_history(self):
-        change1 = ChangeContents(self.file1, '1')
-        change2 = ChangeContents(self.file1, '2')
+        change1 = rope.base.change.ChangeContents(self.file1, '1')
+        change2 = rope.base.change.ChangeContents(self.file1, '2')
         self.history.do(change1)
         self.history.do(change2)
         self.history.undo()
@@ -264,8 +265,8 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEquals(0, len(self.history.redo_list))
 
     def test_redoing_choosen_changes_not_undoing_others(self):
-        change1 = ChangeContents(self.file1, '1')
-        change2 = ChangeContents(self.file2, '2')
+        change1 = rope.base.change.ChangeContents(self.file1, '1')
+        change2 = rope.base.change.ChangeContents(self.file2, '2')
         self.history.do(change1)
         self.history.do(change2)
         self.history.undo()
@@ -282,15 +283,15 @@ class SavingHistoryTest(unittest.TestCase):
         super(SavingHistoryTest, self).setUp()
         self.project = testutils.sample_project()
         self.history = rope.base.history.History(self.project)
-        self.to_data = ChangeToData()
-        self.to_change = DataToChange(self.project)
+        self.to_data = rope.base.change.ChangeToData()
+        self.to_change = rope.base.change.DataToChange(self.project)
 
     def tearDown(self):
         testutils.remove_project(self.project)
         super(SavingHistoryTest, self).tearDown()
 
     def test_simple_set_saving(self):
-        data = self.to_data(ChangeSet('testing'))
+        data = self.to_data(rope.base.change.ChangeSet('testing'))
         change = self.to_change(data)
         self.assertEquals('testing', str(change))
 
@@ -298,7 +299,7 @@ class SavingHistoryTest(unittest.TestCase):
         myfile = self.project.get_file('myfile.txt')
         myfile.create()
         myfile.write('1')
-        data = self.to_data(ChangeContents(myfile, '2'))
+        data = self.to_data(rope.base.change.ChangeContents(myfile, '2'))
         change = self.to_change(data)
         self.history.do(change)
         self.assertEquals('2', myfile.read())
@@ -308,7 +309,7 @@ class SavingHistoryTest(unittest.TestCase):
     def test_move_resource_saving(self):
         myfile = self.project.root.create_file('myfile.txt')
         myfolder = self.project.root.create_folder('myfolder')
-        data = self.to_data(MoveResource(myfile, 'myfolder'))
+        data = self.to_data(rope.base.change.MoveResource(myfile, 'myfolder'))
         change = self.to_change(data)
         self.history.do(change)
         self.assertFalse(myfile.exists())
@@ -320,7 +321,7 @@ class SavingHistoryTest(unittest.TestCase):
     def test_move_resource_saving_for_folders(self):
         myfolder = self.project.root.create_folder('myfolder')
         newfolder = self.project.get_folder('newfolder')
-        change = MoveResource(myfolder, 'newfolder')
+        change = rope.base.change.MoveResource(myfolder, 'newfolder')
         self.history.do(change)
 
         data = self.to_data(change)
@@ -331,7 +332,8 @@ class SavingHistoryTest(unittest.TestCase):
 
     def test_create_file_saving(self):
         myfile = self.project.get_file('myfile.txt')
-        data = self.to_data(CreateFile(self.project.root, 'myfile.txt'))
+        data = self.to_data(rope.base.change.CreateFile(self.project.root,
+                                                        'myfile.txt'))
         change = self.to_change(data)
         self.history.do(change)
         self.assertTrue(myfile.exists())
@@ -340,7 +342,8 @@ class SavingHistoryTest(unittest.TestCase):
 
     def test_create_folder_saving(self):
         myfolder = self.project.get_folder('myfolder')
-        data = self.to_data(CreateFolder(self.project.root, 'myfolder'))
+        data = self.to_data(rope.base.change.CreateFolder(self.project.root,
+                                                          'myfolder'))
         change = self.to_change(data)
         self.history.do(change)
         self.assertTrue(myfolder.exists())
@@ -349,7 +352,7 @@ class SavingHistoryTest(unittest.TestCase):
 
     def test_create_resource_saving(self):
         myfile = self.project.get_file('myfile.txt')
-        data = self.to_data(CreateResource(myfile))
+        data = self.to_data(rope.base.change.CreateResource(myfile))
         change = self.to_change(data)
         self.history.do(change)
         self.assertTrue(myfile.exists())
@@ -358,16 +361,16 @@ class SavingHistoryTest(unittest.TestCase):
 
     def test_remove_resource_saving(self):
         myfile = self.project.root.create_file('myfile.txt')
-        data = self.to_data(RemoveResource(myfile))
+        data = self.to_data(rope.base.change.RemoveResource(myfile))
         change = self.to_change(data)
         self.history.do(change)
         self.assertFalse(myfile.exists())
 
     def test_change_set_saving(self):
-        change = ChangeSet('testing')
+        change = rope.base.change.ChangeSet('testing')
         myfile = self.project.get_file('myfile.txt')
-        change.add_change(CreateResource(myfile))
-        change.add_change(ChangeContents(myfile, '1'))
+        change.add_change(rope.base.change.CreateResource(myfile))
+        change.add_change(rope.base.change.ChangeContents(myfile, '1'))
 
         data = self.to_data(change)
         change = self.to_change(data)
@@ -377,11 +380,11 @@ class SavingHistoryTest(unittest.TestCase):
         self.assertFalse(myfile.exists())
 
     def test_writing_and_reading_history(self):
-        history_file = self.project.get_file('history.pickle')
+        history_file = self.project.get_file('history.pickle')  # noqa
         self.project.set('save_history', True)
         history = rope.base.history.History(self.project)
         myfile = self.project.get_file('myfile.txt')
-        history.do(CreateResource(myfile))
+        history.do(rope.base.change.CreateResource(myfile))
         history.write()
 
         history = rope.base.history.History(self.project)
@@ -389,17 +392,18 @@ class SavingHistoryTest(unittest.TestCase):
         self.assertFalse(myfile.exists())
 
     def test_writing_and_reading_history2(self):
-        history_file = self.project.get_file('history.pickle')
+        history_file = self.project.get_file('history.pickle')  # noqa
         self.project.set('save_history', True)
         history = rope.base.history.History(self.project)
         myfile = self.project.get_file('myfile.txt')
-        history.do(CreateResource(myfile))
+        history.do(rope.base.change.CreateResource(myfile))
         history.undo()
         history.write()
 
         history = rope.base.history.History(self.project)
         history.redo()
         self.assertTrue(myfile.exists())
+
 
 def suite():
     result = unittest.TestSuite()

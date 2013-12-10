@@ -4,8 +4,9 @@ except ImportError:
     import unittest
 
 import rope.base.evaluate
-from rope.base import exceptions, ast, worder, codeanalyze
-from rope.base.codeanalyze import SourceLinesAdapter, LogicalLineFinder, get_block_start
+from rope.base import exceptions, worder, codeanalyze
+from rope.base.codeanalyze import (SourceLinesAdapter,
+                                   LogicalLineFinder, get_block_start)
 from ropetest import testutils
 
 
@@ -115,7 +116,8 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_function_calls2(self):
         code = 'file("afile.txt").read()'
-        self.assertEquals('file("afile.txt").read', self._find_primary(code, 18))
+        self.assertEquals('file("afile.txt").read',
+                          self._find_primary(code, 18))
 
     def test_parens(self):
         code = '("afile.txt").split()'
@@ -212,7 +214,8 @@ class WordRangeFinderTest(unittest.TestCase):
         code = 'import mod\na_var = 10\n'
         word_finder = worder.Worder(code)
         self.assertTrue(word_finder.is_import_statement(code.index('mod') + 1))
-        self.assertFalse(word_finder.is_import_statement(code.index('a_var') + 1))
+        self.assertFalse(word_finder.is_import_statement(
+            code.index('a_var') + 1))
 
     def test_import_statement_finding2(self):
         code = 'import a.b.c.d\nresult = a.b.c.d.f()\n'
@@ -232,7 +235,7 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_getting_primary_and_strings_at_the_end_of_line(self):
         code = 'f(\'\\\'\')\n'
-        result = self._find_primary(code, len(code) - 1)
+        result = self._find_primary(code, len(code) - 1)  # noqa
 
     def test_getting_primary_and_not_crossing_newlines(self):
         code = '\na = (b + c)\n(4 + 1).x\n'
@@ -448,7 +451,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, 'mod1')
         pkg1 = testutils.create_package(self.project, 'pkg1')
         pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
-        mod2 = testutils.create_module(self.project, 'mod2', pkg2)
+        mod2 = testutils.create_module(self.project, 'mod2', pkg2)  # noqa
         mod1.write('import pkg1.pkg2.mod2')
 
         mod1_scope = self.pycore.resource_to_pyobject(mod1).get_scope()
@@ -524,7 +527,8 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEquals((2, 2), line_finder.logical_line_in(2))
 
     def test_multiple_indented_ifs(self):
-        code = 'if True:\n    if True:\n        if True:\n            pass\n    a = 10\n'
+        code = 'if True:\n    if True:\n        ' \
+            'if True:\n            pass\n    a = 10\n'
         line_finder = self._logical_finder(code)
         self.assertEquals((5, 5), line_finder.logical_line_in(5))
 
@@ -590,12 +594,14 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._logical_finder(code)
         self.assertEquals([4, 5], list(line_finder.generate_starts(4)))
 
+
 class TokenizerLogicalLineFinderTest(LogicalLineFinderTest):
 
     def _logical_finder(self, code):
         lines = SourceLinesAdapter(code)
         return codeanalyze.CachingLogicalLineFinder(
             lines, codeanalyze.tokenizer_generator)
+
 
 class CustomLogicalLineFinderTest(LogicalLineFinderTest):
 
