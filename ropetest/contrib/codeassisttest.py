@@ -12,6 +12,7 @@ from rope.contrib.codeassist import (get_definition_location, get_doc,
                                      sorted_proposals, starting_offset,
                                      get_calltip, get_canonical_path)
 from ropetest import testutils
+import cProfile
 
 try:
     unicode
@@ -1128,4 +1129,4 @@ def suite():
     return result
 
 if __name__ == '__main__':
-    unittest.main()
+    cProfile.run('unittest.main()', 'codeassisttest.profile')

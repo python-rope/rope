@@ -6,3 +6,5 @@ docs/build/
 build/
 dist/
 MANIFEST
+codeassisttest.profile
+codeassisttest.svgz
