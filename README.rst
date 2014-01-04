@@ -55,5 +55,5 @@ Have a look at ``COPYING`` file for more information.
 .. _`docs/contributing.txt`: docs/contributing.html
 .. _`docs/library.txt`: docs/library.html
 
-.. image:: https://secure.travis-ci.org/mcepl/rope.png
+.. image:: https://secure.travis-ci.org/python-rope/rope.png
    :alt: Build Status
