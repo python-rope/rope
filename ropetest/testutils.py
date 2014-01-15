@@ -96,12 +96,3 @@ def run_only_for_unix(func):
         def do_nothing(self):
             pass
         return do_nothing
-
-
-def assert_raises(exception_class):
-    """Should be used as a decorator for a unittest.TestCase test method"""
-    def _assert_raises(func):
-        def call_func(self, *args, **kws):
-            self.assertRaises(exception_class, func, self, *args, **kws)
-        return call_func
-    return _assert_raises

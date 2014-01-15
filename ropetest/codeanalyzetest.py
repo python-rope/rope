@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.evaluate
 from rope.base import exceptions, ast, worder, codeanalyze
@@ -454,12 +457,12 @@ class ScopeNameFinderTest(unittest.TestCase):
         found_pyname = name_finder.get_pyname_at(mod1.read().index('pkg2') + 1)
         self.assertEquals(pkg2_pyobject, found_pyname.get_object())
 
-    @testutils.assert_raises(exceptions.RopeError)
     def test_get_pyname_at_on_language_keywords(self):
         code = 'def a_func(a_func):\n    pass\n'
         pymod = self.pycore.get_string_module(code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
-        name_finder.get_pyname_at(code.index('pass'))
+        with self.assertRaises(exceptions.RopeError):
+            name_finder.get_pyname_at(code.index('pass'))
 
     def test_one_liners(self):
         code = 'var = 1\ndef f(): var = 2\nprint var\n'

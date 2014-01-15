@@ -1,5 +1,8 @@
 from ropetest.testutils import only_for
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.exceptions
 from rope.refactor import inline
@@ -60,25 +63,25 @@ class InlineTest(unittest.TestCase):
         refactored = self._inline(code, code.index('a') + 1)
         self.assertEquals('b = 1', refactored)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_on_classes(self):
         code = 'class AClass(object):\n    pass\n'
-        refactored = self._inline(code, code.index('AClass') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self._inline(code, code.index('AClass') + 1)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_multiple_assignments(self):
         code = 'a_var = 10\na_var = 20\n'
-        refactored = self._inline(code, code.index('a_var') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self._inline(code, code.index('a_var') + 1)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_tuple_assignments(self):
         code = 'a_var, another_var = (20, 30)\n'
-        refactored = self._inline(code, code.index('a_var') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self._inline(code, code.index('a_var') + 1)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_on_unknown_vars(self):
         code = 'a_var = another_var\n'
-        refactored = self._inline(code, code.index('another_var') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self._inline(code, code.index('another_var') + 1)
 
     def test_attribute_inlining(self):
         code = 'class A(object):\n    def __init__(self):\n' \
@@ -331,12 +334,12 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('if True:\n    pass\n', self.mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_multiple_returns(self):
         self.mod.write('def less_than_five(var):\n    if var < 5:\n'
                        '        return True\n    return False\n'
                        'a = less_than_five(2)\n')
-        self._inline2(self.mod, self.mod.read().index('less') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline2(self.mod, self.mod.read().index('less') + 1)
 
     def test_multiple_returns_and_not_using_the_value(self):
         self.mod.write('def less_than_five(var):\n    if var < 5:\n'
@@ -344,15 +347,15 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index('less') + 1)
         self.assertEquals('if 2 < 5:\n    True\nFalse\n', self.mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_for_list_arguments(self):
         self.mod.write('def a_func(*args):\n    print(args)\na_func(1)\n')
-        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_for_list_keywods(self):
         self.mod.write('def a_func(**kwds):\n    print(kwds)\na_func(n=1)\n')
-        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
     def test_function_parameters_and_returns_in_other_functions(self):
         code = 'def a_func(param1, param2):\n' \
@@ -362,20 +365,20 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('range(20 + abs(10))\n', self.mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_function_references_other_than_call(self):
         self.mod.write('def a_func(param):\n    print(param)\nf = a_func\n')
-        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_function_referencing_itself(self):
         self.mod.write('def a_func(var):\n    func = a_func\n')
-        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_recursive_functions(self):
         self.mod.write('def a_func(var):\n    a_func(var)\n')
-        self._inline2(self.mod, self.mod.read().index('a_func') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self._inline2(self.mod, self.mod.read().index('a_func') + 1)
 
     # TODO: inlining on function parameters
     def xxx_test_inlining_function_default_parameters(self):

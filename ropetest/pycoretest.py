@@ -1,5 +1,8 @@
 import sys
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.base import exceptions
 from rope.base.pycore import _TextChangeDetector
@@ -110,9 +113,9 @@ class PyCoreTest(unittest.TestCase):
         var = sample_class['InnerClass'].get_object()
         self.assertEquals(get_base_type('Type'), var.get_type())
 
-    @testutils.assert_raises(exceptions.ModuleNotFoundError)
     def test_non_existent_module(self):
-        self.pycore.get_module('doesnotexistmodule')
+        with self.assertRaises(exceptions.ModuleNotFoundError):
+            self.pycore.get_module('doesnotexistmodule')
 
     def test_imported_names(self):
         testutils.create_module(self.project, 'mod1')
@@ -572,9 +575,9 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals((mod, 1), x.get_definition_location())
         self.assertEquals((mod, 2), a.get_definition_location())
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_syntax_errors_in_code(self):
-        mod = self.pycore.get_string_module('xyx print\n')
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            mod = self.pycore.get_string_module('xyx print\n')
 
     def test_holding_error_location_information(self):
         try:
@@ -590,32 +593,32 @@ class PyCoreTest(unittest.TestCase):
         file.close()
         mod.read()
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_syntax_errors_when_cannot_decode_file2(self):
         mod = testutils.create_module(self.project, 'mod')
         contents = '\n\xa9\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
-        self.pycore.resource_to_pyobject(mod)
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self.pycore.resource_to_pyobject(mod)
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_syntax_errors_when_null_bytes(self):
         mod = testutils.create_module(self.project, 'mod')
         contents = '\n\x00\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
-        self.pycore.resource_to_pyobject(mod)
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self.pycore.resource_to_pyobject(mod)
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_syntax_errors_when_bad_strs(self):
         mod = testutils.create_module(self.project, 'mod')
         contents = '\n"\\x0"\n'
         file = open(mod.real_path, 'wb')
         file.write(contents)
         file.close()
-        self.pycore.resource_to_pyobject(mod)
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self.pycore.resource_to_pyobject(mod)
 
     def test_not_reaching_maximum_recursions_with_from_star_imports(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -1072,29 +1075,29 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
             'from some_nonexistent_module import var\n')
         self.assertFalse('var' in pymod)
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_reporting_syntax_errors_with_force_errors(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
         mod = testutils.create_module(self.project, 'mod')
         mod.write('syntax error ...\n')
-        self.project.pycore.resource_to_pyobject(mod, force_errors=True)
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self.project.pycore.resource_to_pyobject(mod, force_errors=True)
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_reporting_syntax_errors_in_strings_with_force_errors(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
-        self.project.pycore.get_string_module('syntax error ...',
-                                              force_errors=True)
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self.project.pycore.get_string_module('syntax error ...',
+                                                  force_errors=True)
 
     def test_not_raising_errors_for_strings_with_ignore_errors(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
         self.project.pycore.get_string_module('syntax error ...')
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_reporting_syntax_errors_with_force_errors_for_packages(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
         pkg = testutils.create_package(self.project, 'pkg')
         pkg.get_child('__init__.py').write('syntax error ...\n')
-        self.project.pycore.resource_to_pyobject(pkg, force_errors=True)
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self.project.pycore.resource_to_pyobject(pkg, force_errors=True)
 
 
 def suite():

@@ -1,5 +1,8 @@
 # coding: utf-8
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.base import exceptions
 from rope.contrib.codeassist import (get_definition_location, get_doc,
@@ -82,10 +85,10 @@ class CodeAssistTest(unittest.TestCase):
                      if x.name == 'variable' and x.scope == 'global'])
         self.assertEquals(1, count)
 
-    @testutils.assert_raises(exceptions.ModuleSyntaxError)
     def test_throwing_exception_in_case_of_syntax_errors(self):
         code = 'sample (sdf+)\n'
-        self._assist(code, maxfixes=0)
+        with self.assertRaises(exceptions.ModuleSyntaxError):
+            self._assist(code, maxfixes=0)
 
     def test_fixing_errors_with_maxfixes(self):
         code = 'def f():\n    sldj sldj\ndef g():\n    ran'

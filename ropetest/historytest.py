@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.history
 from rope.base import exceptions
@@ -80,14 +83,14 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.history.undo()
         self.assertEquals(change, self.history.tobe_redone)
 
-    @testutils.assert_raises(exceptions.HistoryError)
     def test_undo_limit(self):
         history = rope.base.history.History(self.project, maxundos=1)
         history.do(ChangeContents(self.file1, '1'))
         history.do(ChangeContents(self.file1, '2'))
         try:
             history.undo()
-            history.undo()
+            with self.assertRaises(exceptions.HistoryError):
+                history.undo()
         finally:
             self.assertEquals('1', self.file1.read())
 
@@ -120,19 +123,19 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.history.redo()
         self.assertEquals('3', self.file1.read())
 
-    @testutils.assert_raises(exceptions.HistoryError)
     def test_undo_list_underflow(self):
-        self.history.undo()
+        with self.assertRaises(exceptions.HistoryError):
+            self.history.undo()
 
-    @testutils.assert_raises(exceptions.HistoryError)
     def test_redo_list_underflow(self):
-        self.history.redo()
+        with self.assertRaises(exceptions.HistoryError):
+            self.history.redo()
 
-    @testutils.assert_raises(exceptions.HistoryError)
     def test_dropping_undone_changes(self):
         self.file1.write('1')
-        self.history.undo(drop=True)
-        self.history.redo()
+        with self.assertRaises(exceptions.HistoryError):
+            self.history.undo(drop=True)
+            self.history.redo()
 
     def test_undoing_choosen_changes(self):
         change = ChangeContents(self.file1, '1')
@@ -203,10 +206,10 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.assertEquals('', old_file.read())
         self.assertFalse(new_file.exists())
 
-    @testutils.assert_raises(exceptions.HistoryError)
     def test_undoing_not_available_change(self):
         change = ChangeContents(self.file1, '1')
-        self.history.undo(change)
+        with self.assertRaises(exceptions.HistoryError):
+            self.history.undo(change)
 
     def test_ignoring_ignored_resources(self):
         self.project.set('ignored_resources', ['ignored*'])
@@ -244,11 +247,11 @@ class IsolatedHistoryTest(unittest.TestCase):
         self.history.do(change)
         self.assertEquals(0, len(self.history.redo_list))
 
-    @testutils.assert_raises(exceptions.HistoryError)
     def test_undoing_a_not_yet_performed_change(self):
         change = ChangeContents(self.file1, '1')
         str(change)
-        change.undo()
+        with self.assertRaises(exceptions.HistoryError):
+            change.undo()
 
     def test_clearing_up_the_history(self):
         change1 = ChangeContents(self.file1, '1')

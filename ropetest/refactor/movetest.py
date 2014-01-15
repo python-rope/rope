@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.base import exceptions
 from rope.refactor import move
@@ -66,22 +69,22 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('class AClass(object):\n    pass\na_var = AClass()\n',
                           self.mod2.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_folder_destination(self):
         folder = self.project.root.create_folder('folder')
         self.mod1.write('class AClass(object):\n    pass\n')
-        self._move(self.mod1, self.mod1.read().index('AClass') + 1, folder)
+        with self.assertRaises(exceptions.RefactoringError):
+            self._move(self.mod1, self.mod1.read().index('AClass') + 1, folder)
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_raising_exception_for_moving_non_global_elements(self):
         self.mod1.write('def a_func():\n    class AClass(object):\n        pass\n')
-        self._move(self.mod1, self.mod1.read().index('AClass') + 1,
-                   self.mod2)
+        with self.assertRaises(exceptions.RefactoringError):
+            self._move(self.mod1, self.mod1.read().index('AClass') + 1,
+                       self.mod2)
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_raising_exception_for_moving_global_elements_to_the_same_module(self):
         self.mod1.write('def a_func():\n    pass\n')
-        self._move(self.mod1, self.mod1.read().index('a_func'), self.mod1)
+        with self.assertRaises(exceptions.RefactoringError):
+            self._move(self.mod1, self.mod1.read().index('a_func'), self.mod1)
 
     def test_moving_used_imports_to_destination_module(self):
         self.mod3.write('a_var = 10')
@@ -246,13 +249,13 @@ class MoveRefactoringTest(unittest.TestCase):
         self.assertEquals('import os\nimport mod4\n\n\n'
                           'print(mod4.a_var)\n', self.mod2.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_moving_module_refactoring_and_nonexistent_destinations(self):
         self.mod4.write('a_var = 1')
         self.mod2.write('from pkg import mod4\n'
                         'import os\n\n\nprint(mod4.a_var)\n')
-        mover = move.create_move(self.project, self.mod4)
-        mover.get_changes(None).do()
+        with self.assertRaises(exceptions.RefactoringError):
+            mover = move.create_move(self.project, self.mod4)
+            mover.get_changes(None).do()
 
     def test_moving_methods_choosing_the_correct_class(self):
         code = 'class A(object):\n    def a_method(self):\n        pass\n'
@@ -387,23 +390,23 @@ class MoveRefactoringTest(unittest.TestCase):
             '        return self.attr.new_method()\n',
             self.mod1.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_moving_methods_and_nonexistent_attributes(self):
         code = 'class A(object):\n' \
                '    def a_method(self):\n        return 1\n'
         self.mod1.write(code)
-        mover = move.create_move(self.project, self.mod1,
-                                 code.index('a_method'))
-        mover.get_changes('x', 'new_method')
+        with self.assertRaises(exceptions.RefactoringError):
+            mover = move.create_move(self.project, self.mod1,
+                                     code.index('a_method'))
+            mover.get_changes('x', 'new_method')
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_unknown_attribute_type(self):
         code = 'class A(object):\n    attr = 1\n' \
                '    def a_method(self):\n        return 1\n'
         self.mod1.write(code)
-        mover = move.create_move(self.project, self.mod1,
-                                 code.index('a_method'))
-        mover.get_changes('attr', 'new_method')
+        with self.assertRaises(exceptions.RefactoringError):
+            mover = move.create_move(self.project, self.mod1,
+                                     code.index('a_method'))
+            mover.get_changes('attr', 'new_method')
 
     def test_moving_methods_and_moving_used_imports(self):
         self.mod2.write('class B(object):\n    var = 1\n')
@@ -497,10 +500,10 @@ class MoveRefactoringTest(unittest.TestCase):
         expected = 'import mod2\ns = """\\\n"""\nr = mod2.f()\n'
         self.assertEquals(expected, self.mod1.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_raising_an_exception_when_moving_non_package_folders(self):
         dir = self.project.root.create_folder('dir')
-        mover = move.create_move(self.project, dir)
+        with self.assertRaises(exceptions.RefactoringError):
+            mover = move.create_move(self.project, dir)
 
     def test_moving_to_a_module_with_encoding_cookie(self):
         code1 = '# -*- coding: utf-8 -*-'

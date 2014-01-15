@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.base import exceptions
 from rope.contrib import generate
@@ -141,24 +144,24 @@ class GenerateTest(unittest.TestCase):
         self.assertEquals((mod, 1), generator.get_location())
         self.assertEquals('import mod\nmod\n', self.mod.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_generating_variable_already_exists(self):
         code = 'b = 1\nc = b\n'
         self.mod.write(code)
-        changes = self._get_generate(code.index('b')).get_changes()
+        with self.assertRaises(exceptions.RefactoringError):
+            changes = self._get_generate(code.index('b')).get_changes()
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_generating_variable_primary_cannot_be_determined(self):
         code = 'c = can_not_be_found.b\n'
         self.mod.write(code)
-        changes = self._get_generate(code.rindex('b')).get_changes()
+        with self.assertRaises(exceptions.RefactoringError):
+            changes = self._get_generate(code.rindex('b')).get_changes()
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_generating_modules_when_already_exists(self):
         code = 'mod2\n'
         self.mod.write(code)
         generator = self._get_generate_module(code.rindex('mod'))
-        self.project.do(generator.get_changes())
+        with self.assertRaises(exceptions.RefactoringError):
+            self.project.do(generator.get_changes())
 
     def test_generating_static_methods(self):
         code = 'class C(object):\n    pass\nC.a_func()\n'

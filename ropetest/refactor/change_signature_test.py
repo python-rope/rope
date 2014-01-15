@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.exceptions
 from rope.refactor import change_signature
@@ -66,11 +69,11 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def a_func(p1, p2):\n    pass\na_func(1, 2)',
                           self.mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exceptions_for_non_functions(self):
         self.mod.write('a_var = 10')
-        signature = ChangeSignature(self.project, self.mod,
-                                    self.mod.read().index('a_var') + 1)
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            signature = ChangeSignature(self.project, self.mod,
+                                        self.mod.read().index('a_var') + 1)
 
     def test_normalizing_parameters_for_args_parameter(self):
         self.mod.write('def a_func(*arg):\n    pass\na_func(1, 2)\n')
@@ -225,12 +228,12 @@ class ChangeSignatureTest(unittest.TestCase):
         self.assertEquals('def a_func(p1=0, p2=0):\n    pass\na_func(p2=1)\n',
                           self.mod.read())
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_adding_duplicate_parameter_and_raising_exceptions(self):
         self.mod.write('def a_func(p1):\n    pass\n')
-        signature = ChangeSignature(self.project, self.mod,
-                                    self.mod.read().index('a_func') + 1)
-        self.project.do(signature.get_changes([ArgumentAdder(1, 'p1')]))
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            signature = ChangeSignature(self.project, self.mod,
+                                        self.mod.read().index('a_func') + 1)
+            self.project.do(signature.get_changes([ArgumentAdder(1, 'p1')]))
 
     def test_inlining_default_arguments(self):
         self.mod.write('def a_func(p1=0):\n    pass\na_func()\n')

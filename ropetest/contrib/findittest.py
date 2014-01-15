@@ -1,6 +1,9 @@
-from rope.base import exceptions
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
+from rope.base import exceptions
 from rope.contrib.findit import (find_occurrences, find_implementations,
                                  find_definition)
 from ropetest import testutils
@@ -86,12 +89,12 @@ class FindItTest(unittest.TestCase):
         self.assertEquals(1, len(result))
         self.assertEquals(mod1.read().rindex('f('), result[0].offset)
 
-    @testutils.assert_raises(exceptions.BadIdentifierError)
     def test_find_implementations_real_implementation(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('class A(object):\n    pass\n')
         offset = mod1.read().index('A')
-        result = find_implementations(self.project, mod1, offset)
+        with self.assertRaises(exceptions.BadIdentifierError):
+            result = find_implementations(self.project, mod1, offset)
 
     def test_trivial_find_definition(self):
         code = 'def a_func():\n    pass\na_func()'
