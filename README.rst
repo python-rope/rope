@@ -1,3 +1,9 @@
+
+**Note:** *Please note that this project has been moved to* `GitHub python-rope / rope`_
+
+.. _GitHub python-rope / rope: https://github.com/python-rope/rope
+
+
 ========================================
  rope, a python refactoring library ...
 ========================================
