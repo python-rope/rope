@@ -1,4 +1,3 @@
-
 **Note:** *Please note that this project has been moved to* `GitHub python-rope / rope`_
 
 .. _GitHub python-rope / rope: https://github.com/python-rope/rope
@@ -14,7 +13,7 @@ Overview
 
 `Rope`_ is a python refactoring library.
 
-.. _`rope`: http://rope.sf.net/
+.. _`rope`: http://github.com/python-rope/rope
 
 
 New Features
@@ -29,10 +28,10 @@ New Features
 Getting Started
 ===============
 
-* List of features: `docs/rope.txt`_
-* Overview of some of rope's features: `docs/overview.txt`_
-* Using as a library: `docs/library.txt`_
-* Contributing: `docs/contributing.txt`_
+* List of features: `<docs/rope.txt>`_
+* Overview of some of rope's features: `<docs/overview.txt>`_
+* Using as a library: `<docs/library.txt>`_
+* Contributing: `<docs/contributing.txt>`_
 
 To change your project preferences edit
 ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT`` is
