@@ -29,10 +29,10 @@ New Features
 Getting Started
 ===============
 
-* List of features: `docs/rope.txt`_
-* Overview of some of rope's features: `docs/overview.txt`_
-* Using as a library: `docs/library.txt`_
-* Contributing: `docs/contributing.txt`_
+* List of features: `<docs/rope.txt>`_
+* Overview of some of rope's features: `<docs/overview.txt>`_
+* Using as a library: `<docs/library.txt>`_
+* Contributing: `<docs/contributing.txt>`_
 
 To change your project preferences edit
 ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT`` is
