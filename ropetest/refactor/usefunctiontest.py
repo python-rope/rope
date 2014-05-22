@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from rope.base import exceptions
 from ropetest import testutils
@@ -75,11 +78,11 @@ class UseFunctionTest(unittest.TestCase):
         self.assertEquals('import mod1\nprint(mod1.f(2))\n',
                           self.mod2.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_when_performing_on_non_functions(self):
         code = 'var = 1\n'
         self.mod1.write(code)
-        user = UseFunction(self.project, self.mod1, code.rindex('var'))
+        with self.assertRaises(exceptions.RefactoringError):
+            user = UseFunction(self.project, self.mod1, code.rindex('var'))
 
     def test_differing_in_the_inner_temp_names(self):
         code = 'def f(p):\n    a = p + 1\n    print(a)\nb = 2 + 1\nprint(b)\n'
@@ -99,23 +102,23 @@ class UseFunctionTest(unittest.TestCase):
         self.assertEquals('def f(p):\n    a = p + 1\n    return a\n'
                           'var = f(p)\nprint(var)\n', self.mod1.read())
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_exception_when_performing_a_function_with_yield(self):
         code = 'def func():\n    yield 1\n'
         self.mod1.write(code)
-        user = UseFunction(self.project, self.mod1, code.index('func'))
+        with self.assertRaises(exceptions.RefactoringError):
+            user = UseFunction(self.project, self.mod1, code.index('func'))
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_exception_when_performing_a_function_two_returns(self):
         code = 'def func():\n    return 1\n    return 2\n'
         self.mod1.write(code)
-        user = UseFunction(self.project, self.mod1, code.index('func'))
+        with self.assertRaises(exceptions.RefactoringError):
+            user = UseFunction(self.project, self.mod1, code.index('func'))
 
-    @testutils.assert_raises(exceptions.RefactoringError)
     def test_exception_when_returns_is_not_the_last_statement(self):
         code = 'def func():\n    return 2\n    a = 1\n'
         self.mod1.write(code)
-        user = UseFunction(self.project, self.mod1, code.index('func'))
+        with self.assertRaises(exceptions.RefactoringError):
+            user = UseFunction(self.project, self.mod1, code.index('func'))
 
 
 if __name__ == '__main__':

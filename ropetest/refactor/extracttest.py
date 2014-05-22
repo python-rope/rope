@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.codeanalyze
 import rope.base.exceptions
@@ -150,13 +153,13 @@ class ExtractMethodTest(unittest.TestCase):
                    '        print(self)\n'
         self.assertEquals(expected, refactored)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_with_no_self_as_argument(self):
         code = 'class AClass(object):\n' \
                '    def a_func():\n' \
                '        print(1)\n'
         start, end = self._convert_line_range_to_offset(code, 3, 3)
-        refactored = self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_method_with_multiple_methods(self):
         code = 'class AClass(object):\n' \
@@ -216,43 +219,43 @@ class ExtractMethodTest(unittest.TestCase):
                    '    return inner_func\n'
         self.assertEquals(expected, refactored)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_bad_range(self):
         code = "def a_func():\n    pass\na_var = 10\n"
         start, end = self._convert_line_range_to_offset(code, 2, 3)
-        self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_bad_range2(self):
         code = "class AClass(object):\n    pass\n"
         start, end = self._convert_line_range_to_offset(code, 1, 1)
-        self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_containing_return(self):
         code = 'def a_func(arg):\n    if arg:\n        return arg * 2\n    return 1'
         start, end = self._convert_line_range_to_offset(code, 2, 4)
-        self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_containing_yield(self):
         code = "def a_func(arg):\n    yield arg * 2\n"
         start, end = self._convert_line_range_to_offset(code, 2, 2)
-        self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_containing_uncomplete_lines(self):
         code = 'a_var = 20\nanother_var = 30\n'
         start = code.index('20')
         end = code.index('30') + 2
-        self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_extract_method_containing_uncomplete_lines2(self):
         code = 'a_var = 20\nanother_var = 30\n'
         start = code.index('20')
         end = code.index('another') + 5
-        self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_function_and_argument_as_paramenter(self):
         code = 'def a_func(arg):\n    print(arg)\n'
@@ -364,13 +367,13 @@ class ExtractMethodTest(unittest.TestCase):
                    '    for i in range(10):\n        continue\n'
         self.assertEquals(expected, refactored)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_breaks_and_continues_outside_loops(self):
         code = 'def a_func():\n' \
                '    for i in range(10):\n        a = i\n        continue\n'
         start = code.index('a = i')
         end = len(code) - 1
-        refactored = self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self.do_extract_method(code, start, end, 'new_func')
 
     def test_variable_writes_followed_by_variable_reads_after_extraction(self):
         code = 'def a_func():\n    a = 1\n    a = 2\n    b = a\n'
@@ -489,41 +492,41 @@ class ExtractMethodTest(unittest.TestCase):
                    'def new_f(a_var):\n    return a_var\n'
         self.assertEquals(expected, refactored)
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_when_on_incomplete_variables(self):
         code = 'a_var = 10 + 20\n'
         start = code.index('10') + 1
         end = code.index('20') + 2
-        refactored = self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_when_on_incomplete_variables_on_end(self):
         code = 'a_var = 10 + 20\n'
         start = code.index('10')
         end = code.index('20') + 1
-        refactored = self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_on_bad_parens(self):
         code = 'a_var = (10 + 20) + 30\n'
         start = code.index('20')
         end = code.index('30') + 2
-        refactored = self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self.do_extract_method(code, start, end, 'new_func')
 
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def test_raising_exception_on_bad_operators(self):
         code = 'a_var = 10 + 20 + 30\n'
         start = code.index('10')
         end = code.rindex('+') + 1
-        refactored = self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self.do_extract_method(code, start, end, 'new_func')
 
     # FIXME: Extract method should be more intelligent about bad ranges
-    @testutils.assert_raises(rope.base.exceptions.RefactoringError)
     def xxx_test_raising_exception_on_function_parens(self):
         code = 'a = range(10)'
         start = code.index('(')
         end = code.rindex(')') + 1
-        refactored = self.do_extract_method(code, start, end, 'new_func')
+        with self.assertRaises(rope.base.exceptions.RefactoringError):
+            refactored = self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_method_and_extra_blank_lines(self):
         code = '\nprint(1)\n'

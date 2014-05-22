@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.taskhandle
 import rope.refactor.introduce_parameter
@@ -103,11 +106,11 @@ class MethodObjectTest(unittest.TestCase):
                    '        return result\n'
         self.assertEquals(expected, replacer.get_new_class('_New'))
 
-    @testutils.assert_raises(RefactoringError)
     def test_performing_on_not_a_function(self):
         code = 'my_var = 10\n'
         self.mod.write(code)
-        replacer = MethodObject(self.project, self.mod, code.index('my_var'))
+        with self.assertRaises(RefactoringError):
+            replacer = MethodObject(self.project, self.mod, code.index('my_var'))
 
     def test_changing_the_module(self):
         code = 'def func():\n    return 1\n'
@@ -220,11 +223,12 @@ class IntroduceFactoryTest(unittest.TestCase):
         self.assertEquals(expected1, mod1.read())
         self.assertEquals(expected2, mod2.read())
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_for_non_classes(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('def a_func():\n    pass\n')
-        self._introduce_factory(mod, mod.read().index('a_func') + 1, 'create')
+        with self.assertRaises(RefactoringError):
+            self._introduce_factory(mod, mod.read().index('a_func') + 1,
+                                    'create')
 
     def test_undoing_introduce_factory(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -290,7 +294,6 @@ class IntroduceFactoryTest(unittest.TestCase):
                                    mod.read().index('C') + 1)
         self.assertEquals('C', factory.get_name())
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_for_global_factory_for_nested_classes(self):
         code = 'def create_var():\n'\
                '    class AClass(object):\n'\
@@ -298,7 +301,8 @@ class IntroduceFactoryTest(unittest.TestCase):
                '    return AClass()\n'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(code)
-        self._introduce_factory(mod, mod.read().index('AClass') + 1,
+        with self.assertRaises(RefactoringError):
+            self._introduce_factory(mod, mod.read().index('AClass') + 1,
                                            'create', global_factory=True)
 
     def test_changing_occurances_in_the_main_module_for_global_factories(self):
@@ -528,12 +532,11 @@ class EncapsulateFieldTest(unittest.TestCase):
                    'a_var.set_attr(a_var.get_attr() * 2)\n'
         self.assertEquals(expected, self.mod1.read())
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_non_attributes(self):
         self.mod1.write('attr = 10')
-        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
+        with self.assertRaises(RefactoringError):
+            self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments(self):
         self.mod.write(self.a_class)
         code = 'import mod\n' \
@@ -541,9 +544,9 @@ class EncapsulateFieldTest(unittest.TestCase):
                'a_var.attr = 1\n' \
                'a_var.attr, b = 1, 2\n'
         self.mod1.write(code)
-        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
+        with self.assertRaises(RefactoringError):
+            self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_on_tuple_assignments2(self):
         self.mod.write(self.a_class)
         code = 'import mod\n' \
@@ -551,7 +554,8 @@ class EncapsulateFieldTest(unittest.TestCase):
                'a_var.attr = 1\n' \
                'b, a_var.attr = 1, 2\n'
         self.mod1.write(code)
-        self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
+        with self.assertRaises(RefactoringError):
+            self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
 
     def test_tuple_assignments_and_function_calls(self):
         code = 'import mod\n' \
@@ -666,29 +670,29 @@ class LocalToFieldTest(unittest.TestCase):
                    '        self.var = 10\n'
         self.assertEquals(expected, self.mod.read())
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_a_global_var(self):
         self.mod.write('var = 10\n')
-        self._perform_convert_local_variable_to_field(
-            self.mod, self.mod.read().index('var') + 1)
+        with self.assertRaises(RefactoringError):
+            self._perform_convert_local_variable_to_field(
+                self.mod, self.mod.read().index('var') + 1)
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_field(self):
         code = 'class A(object):\n' \
                '    def a_func(self):\n' \
                '        self.var = 10\n'
         self.mod.write(code)
-        self._perform_convert_local_variable_to_field(
-            self.mod, self.mod.read().index('var') + 1)
+        with self.assertRaises(RefactoringError):
+            self._perform_convert_local_variable_to_field(
+                self.mod, self.mod.read().index('var') + 1)
 
-    @testutils.assert_raises(RefactoringError)
     def test_raising_exception_when_performed_on_a_parameter(self):
         code = 'class A(object):\n' \
                '    def a_func(self, var):\n' \
                '        a = var\n'
         self.mod.write(code)
-        self._perform_convert_local_variable_to_field(
-            self.mod, self.mod.read().index('var') + 1)
+        with self.assertRaises(RefactoringError):
+            self._perform_convert_local_variable_to_field(
+                self.mod, self.mod.read().index('var') + 1)
 
     # NOTE: This situation happens alot and is normally not an error
     #@testutils.assert_raises(RefactoringError)
@@ -754,19 +758,19 @@ class IntroduceParameterTest(unittest.TestCase):
                    '    b = p1\n'
         self.assertEquals(expected, self.mod.read())
 
-    @testutils.assert_raises(RefactoringError)
     def test_unknown_variables(self):
         self.mod.write('def f():\n    b = var + c\n')
         offset = self.mod.read().rindex('var')
-        self._introduce_parameter(offset, 'p1')
-        self.assertEquals('def f(p1=var):\n    b = p1 + c\n',
-                          self.mod.read())
+        with self.assertRaises(RefactoringError):
+            self._introduce_parameter(offset, 'p1')
+            self.assertEquals('def f(p1=var):\n    b = p1 + c\n',
+                              self.mod.read())
 
-    @testutils.assert_raises(RefactoringError)
     def test_failing_when_not_inside(self):
         self.mod.write('var = 10\nb = var\n')
         offset = self.mod.read().rindex('var')
-        self._introduce_parameter(offset, 'p1')
+        with self.assertRaises(RefactoringError):
+            self._introduce_parameter(offset, 'p1')
 
     def test_attribute_accesses(self):
         code = 'class C(object):\n' \
@@ -828,19 +832,19 @@ class TaskHandleTest(unittest.TestCase):
         jobs.started_job('job1')
         jobs.finished_job()
 
-    @testutils.assert_raises(InterruptedTaskError)
     def test_test_checking_status(self):
         handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_jobset()
         handle.stop()
-        jobs.check_status()
+        with self.assertRaises(InterruptedTaskError):
+            jobs.check_status()
 
-    @testutils.assert_raises(InterruptedTaskError)
     def test_test_checking_status_when_starting(self):
         handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_jobset()
         handle.stop()
-        jobs.started_job('job1')
+        with self.assertRaises(InterruptedTaskError):
+            jobs.started_job('job1')
 
     def test_calling_the_observer_after_stopping(self):
         handle = rope.base.taskhandle.TaskHandle()
