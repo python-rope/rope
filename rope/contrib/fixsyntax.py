@@ -38,8 +38,9 @@ class FixSyntax(object):
                     self.commenter.comment(e.lineno)
                     code = '\n'.join(self.commenter.lines)
                 else:
-                    raise exceptions.ModuleSyntaxError(e.filename,
-                                                       e.lineno, msg)
+                    raise exceptions.ModuleSyntaxError(
+                        e.filename, e.lineno,
+                        'Failed to fix error: {}'.format(msg))
 
     @property
     @utils.saveit
