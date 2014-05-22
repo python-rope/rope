@@ -1,4 +1,5 @@
-from distutils.core import setup, Command
+from setuptools import setup, Command
+#from distutils.core import setup, Command
 import unittest
 
 import rope
