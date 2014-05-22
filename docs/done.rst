@@ -2,6 +2,15 @@
  Done List
 ===========
 
+> Public Release 0.10.0 : May 22, 2014
+
+- Undre the new management! Matěj Cepl <mcepl@cepl.eu> takes hesitantly
+  over
+
+- Merged all available pull requests and patches to the main codebase
+
+- Tests are green again
+
 
 > Public Release 0.9.3 : February 4, 2010
 

@@ -29,10 +29,10 @@ New Features
 Getting Started
 ===============
 
-* List of features: `<docs/rope.txt>`_
-* Overview of some of rope's features: `<docs/overview.txt>`_
-* Using as a library: `<docs/library.txt>`_
-* Contributing: `<docs/contributing.txt>`_
+* List of features: `<docs/rope.rst>`_
+* Overview of some of rope's features: `<docs/overview.rst>`_
+* Using as a library: `<docs/library.rst>`_
+* Contributing: `<docs/contributing.rst>`_
 
 To change your project preferences edit
 ``$PROJECT_ROOT/.ropeproject/config.py`` where ``$PROJECT_ROOT`` is
@@ -56,10 +56,10 @@ This program is under the terms of GPL (GNU General Public License).
 Have a look at ``COPYING`` file for more information.
 
 
-.. _`docs/rope.txt`: docs/rope.html
-.. _`docs/overview.txt`: docs/overview.html
-.. _`docs/contributing.txt`: docs/contributing.html
-.. _`docs/library.txt`: docs/library.html
+.. _`docs/rope.rst`: docs/rope.html
+.. _`docs/overview.rst`: docs/overview.html
+.. _`docs/contributing.rst`: docs/contributing.html
+.. _`docs/library.rst`: docs/library.html
 
 .. image:: https://secure.travis-ci.org/python-rope/rope.png
    :alt: Build Status
