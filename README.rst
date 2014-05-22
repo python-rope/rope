@@ -20,9 +20,9 @@ Overview
 New Features
 ============
 
-* Undre the new management! Matěj Cepl <mcepl@cepl.eu> takes hesitantly
+* Under new management! Matěj Cepl <mcepl@cepl.eu> takes it hesitantly
   over
-* Merged all available pull requests and patches to the main codebase
+* Merged all availables pull requests and patches to the main codebase
 * Tests are green again
 
 Getting Started
