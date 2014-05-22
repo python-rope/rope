@@ -1,12 +1,16 @@
-from distutils.core import setup, Command
 import sys
+
+try:
+    from setuptools import Command, setup
+except ImportError:
+    from distutils.core import Command, setup
 try:
     import unittest2 as unittest
 except ImportError:
     import unittest
 
-
 import rope
+
 import ropetest
 import ropetest.contrib
 import ropetest.refactor
