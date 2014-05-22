@@ -45,10 +45,10 @@ Features implemented so far:
   * Handling built-in container types
   * Saving object information on disk and validating them
 
-For more information see `overview.txt`_.
+For more information see `overview.rst`_.
 
 
-.. _overview.txt: overview.html
+.. _overview.rst: overview.rst
 .. _pysvn: http://pysvn.tigris.org
 .. _Mercurial: http://selenic.com/mercurial
 .. _GIT: http://git.or.cz

@@ -3,7 +3,7 @@
 =========================
 
 If you need other features, send a feature request.  Have a look at
-`contributing.txt`_.
+`contributing.rst`_.
 
 
 .. contents:: Table of Contents
@@ -235,9 +235,9 @@ that points to that folder.
 
 You can use this method for getting a resource (that is file or
 folder) inside a project.  Uses ``'/'``s for separating directories.
-For instance ``project.get_resource('my_folder/my_file.txt')`` returns
+For instance ``project.get_resource('my_folder/my_file.rst')`` returns
 a `rope.base.resources.File` object that points to
-``${projectroot}/my_folder/my_file.txt`` file.
+``${projectroot}/my_folder/my_file.rst`` file.
 
 Note that this method assumes the resource exists.  If it does not
 exist you can use `Project.get_file()` and `Project.get_folder()`
@@ -524,7 +524,7 @@ Restructuring
 -------------
 
 The example for replacing occurrences of our `pow` function to ``**``
-operator (see the restructuring section of `overview.txt`_)::
+operator (see the restructuring section of `overview.rst`_)::
 
   # Setting up the project
   >>> from rope.base.project import Project
@@ -557,8 +557,8 @@ operator (see the restructuring section of `overview.txt`_)::
 
 See code documentation and test suites for more information.
 
-.. _overview.txt: overview.html
-.. _contributing.txt: contributing.html
+.. _overview.rst: overview.rst
+.. _contributing.rst: contributing.rst
 
 
 Other Topics

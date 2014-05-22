@@ -1,6 +1,6 @@
 """This module can be used for performing cross-project refactorings
 
-See the "cross-project refactorings" section of ``docs/library.txt``
+See the "cross-project refactorings" section of ``docs/library.rst``
 file.
 
 """

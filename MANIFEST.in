@@ -1,4 +1,4 @@
-include README.txt COPYING setup.py MANIFEST.in
+include README.rst COPYING setup.py MANIFEST.in
 recursive-include rope *.py
-recursive-include docs *.txt
+recursive-include docs *.rst
 recursive-include ropetest *.py

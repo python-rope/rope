@@ -34,13 +34,13 @@ googlegroups.com`_ mailing list.  Here is only a list of suggestions.
 Issues
 ------
 
-The `dev/issues.txt`_ file is actually the main rope todo file.  There
+The `dev/issues.rst`_ file is actually the main rope todo file.  There
 is a section called "unresolved issues"; it contains almost every kind
 of task.  Most of them need some thought or discussion.  Pickup
 whichever you are most interested in.  If you have ideas or questions
 about them, don't hesitate to discuss it in the mailing list.
 
-.. _`dev/issues.txt`: dev/issues.html
+.. _`dev/issues.rst`: dev/issues.rst
 
 Getting Ready For Python 3.0
 ----------------------------
@@ -54,10 +54,10 @@ Write Plugins For Other IDEs
 See ropemacs_, ropevim_, eric4_ and ropeide_.
 
 
-.. _ropemacs: http://rope.sf.net/ropemacs.html
-.. _ropevim: http://rope.sf.net/ropevim.html
-.. _ropeide: http://rope.sf.net/ropeide.html
-.. _eric4: http://www.die-offenbachs.de/eric/index.html
+.. _ropemacs: http://rope.sf.net/ropemacs.rst
+.. _ropevim: http://rope.sf.net/ropevim.rst
+.. _ropeide: http://rope.sf.net/ropeide.rst
+.. _eric4: http://www.die-offenbachs.de/eric/index.rst
 
 
 Rope Structure
@@ -69,10 +69,10 @@ Rope package structure:
 * `rope.refactor`: refactorings and tools used in them
 * `rope.contrib`: IDE helpers
 
-Have a look at ``__init__.py`` of these packages or `library.txt`_ for
+Have a look at ``__init__.py`` of these packages or `library.rst`_ for
 more information.
 
-.. _`library.txt`: library.html
+.. _`library.rst`: library.rst
 
 
 Source Repository
