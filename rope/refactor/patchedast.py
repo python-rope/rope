@@ -113,7 +113,8 @@ class _PatchingASTWalker(object):
                     # INFO: This has been added to handle deprecated ``<>``
                     region = self.source.consume_not_equal()
                 elif child == self.semicolon_or_as_in_except:
-                    # INFO: This has been added to handle deprecated semicolon in except
+                    # INFO: This has been added to handle deprecated
+                    # semicolon in except
                     region = self.source.consume_except_as_or_semicolon()
                 else:
                     region = self.source.consume(child)
@@ -209,16 +210,17 @@ class _PatchingASTWalker(object):
             for child in children:
                 if isinstance(child, ast.stmt):
                     return child.col_offset \
-                           + self.lines.get_line_start(child.lineno)
+                        + self.lines.get_line_start(child.lineno)
         return len(self.source.source)
 
-    _operators = {'And': 'and', 'Or': 'or', 'Add': '+', 'Sub': '-', 'Mult': '*',
-                  'Div': '/', 'Mod': '%', 'Pow': '**', 'LShift': '<<',
-                  'RShift': '>>', 'BitOr': '|', 'BitAnd': '&', 'BitXor': '^',
-                  'FloorDiv': '//', 'Invert': '~', 'Not': 'not', 'UAdd': '+',
-                  'USub': '-', 'Eq': '==', 'NotEq': '!=', 'Lt': '<',
-                  'LtE': '<=', 'Gt': '>', 'GtE': '>=', 'Is': 'is',
-                  'IsNot': 'is not', 'In': 'in', 'NotIn': 'not in'}
+    _operators = {'And': 'and', 'Or': 'or', 'Add': '+', 'Sub': '-',
+                  'Mult': '*', 'Div': '/', 'Mod': '%', 'Pow': '**',
+                  'LShift': '<<', 'RShift': '>>', 'BitOr': '|', 'BitAnd': '&',
+                  'BitXor': '^', 'FloorDiv': '//', 'Invert': '~',
+                  'Not': 'not', 'UAdd': '+', 'USub': '-', 'Eq': '==',
+                  'NotEq': '!=', 'Lt': '<', 'LtE': '<=', 'Gt': '>',
+                  'GtE': '>=', 'Is': 'is', 'IsNot': 'is not', 'In': 'in',
+                  'NotIn': 'not in'}
 
     def _get_op(self, node):
         return self._operators[node.__class__.__name__].split(' ')
@@ -355,7 +357,8 @@ class _PatchingASTWalker(object):
         children = ['from']
         if node.level:
             children.append('.' * node.level)
-        children.extend([node.module or '', # see comment at rope.base.ast.walk
+        # see comment at rope.base.ast.walk
+        children.extend([node.module or '',
                          'import'])
         children.extend(self._child_nodes(node.names, ','))
         self._handle(node, children)
@@ -384,7 +387,8 @@ class _PatchingASTWalker(object):
     def _arguments(self, node):
         children = []
         args = list(node.args)
-        defaults = [None] * (len(args) - len(node.defaults)) + list(node.defaults)
+        defaults = [None] * (len(args) - len(node.defaults)) + \
+            list(node.defaults)
         for index, (arg, default) in enumerate(zip(args, defaults)):
             if index > 0:
                 children.append(',')
@@ -581,7 +585,7 @@ class _PatchingASTWalker(object):
             children.append(node.name)
         children.append(':')
         children.extend(node.body)
-        
+
         self._handle(node, children)
 
     def _Tuple(self, node):
@@ -670,11 +674,9 @@ class _Source(object):
         repattern = _Source._not_equals_pattern
         return self._consume_pattern(repattern)
 
-
     def consume_except_as_or_semicolon(self):
         repattern = re.compile(r'as|,')
         return self._consume_pattern(repattern)
-
 
     def _good_token(self, token, offset, start=None):
         """Checks whether consumed token is in comments"""

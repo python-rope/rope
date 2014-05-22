@@ -16,14 +16,15 @@ class PythonFileRunnerTest(unittest.TestCase):
         testutils.remove_project(self.project)
         super(PythonFileRunnerTest, self).tearDown()
 
-    def make_sample_python_file(self, file_path, get_text_function_source=None):
+    def make_sample_python_file(self, file_path,
+                                get_text_function_source=None):
         self.project.root.create_file(file_path)
         file = self.project.get_resource(file_path)
         if not get_text_function_source:
             get_text_function_source = "def get_text():\n    return 'run'\n\n"
         file_content = get_text_function_source + \
-                       "output = open('output.txt', 'w')\n" \
-                       "output.write(get_text())\noutput.close()\n"
+            "output = open('output.txt', 'w')\n" \
+            "output.write(get_text())\noutput.close()\n"
         file.write(file_content)
 
     def get_output_file_content(self, file_path):
@@ -47,27 +48,33 @@ class PythonFileRunnerTest(unittest.TestCase):
 
     def test_passing_arguments(self):
         file_path = 'sample.py'
-        function_source = 'import sys\ndef get_text():\n    return str(sys.argv[1:])\n'
+        function_source = 'import sys\ndef get_text():' \
+            '\n    return str(sys.argv[1:])\n'
         self.make_sample_python_file(file_path, function_source)
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource, args=['hello', 'world'])
         runner.wait_process()
-        self.assertTrue(self.get_output_file_content(file_path).endswith("['hello', 'world']"))
+        self.assertTrue(self.get_output_file_content(
+            file_path).endswith("['hello', 'world']"))
 
     def test_passing_arguments_with_spaces(self):
         file_path = 'sample.py'
-        function_source = 'import sys\ndef get_text():\n    return str(sys.argv[1:])\n'
+        function_source = 'import sys\ndef get_text():' \
+            '\n    return str(sys.argv[1:])\n'
         self.make_sample_python_file(file_path, function_source)
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource, args=['hello world'])
         runner.wait_process()
-        self.assertTrue(self.get_output_file_content(file_path).endswith("['hello world']"))
+        self.assertTrue(self.get_output_file_content(
+            file_path).endswith("['hello world']"))
 
     def test_killing_runner(self):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path,
-                                     "def get_text():" +
-                                     "\n    import time\n    time.sleep(1)\n    return 'run'\n")
+                                     'def get_text():'
+                                     '\n    import time'
+                                     '\n    time.sleep(1)'
+                                     "\n    return 'run'\n")
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.kill_process()
@@ -86,7 +93,8 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path,
                                      "def get_text():" +
-                                     "\n    import sys\n    return sys.stdin.readline()\n")
+                                     "\n    import sys"
+                                     "\n    return sys.stdin.readline()\n")
         temp_file_name = 'processtest.tmp'
         try:
             temp_file = open(temp_file_name, 'w')
@@ -97,7 +105,8 @@ class PythonFileRunnerTest(unittest.TestCase):
             runner = self.pycore.run_module(file_resource, stdin=stdin)
             runner.wait_process()
             stdin.close()
-            self.assertEquals('input text\n', self.get_output_file_content(file_path))
+            self.assertEquals('input text\n',
+                              self.get_output_file_content(file_path))
         finally:
             os.remove(temp_file_name)
 
@@ -105,7 +114,8 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_path = 'sample.py'
         self.make_sample_python_file(file_path,
                                      "def get_text():" +
-                                     "\n    print 'output text'\n    return 'run'\n")
+                                     "\n    print 'output text'"
+                                     "\n    return 'run'\n")
         temp_file_name = 'processtest.tmp'
         try:
             file_resource = self.project.get_resource(file_path)
@@ -127,7 +137,8 @@ class PythonFileRunnerTest(unittest.TestCase):
         file_path = 'test/test.py'
         self.make_sample_python_file(file_path,
                                      "def get_text():\n"
-                                     "    import sample\n    sample.f()\n    return'run'\n")
+                                     "    import sample"
+                                     "\n    sample.f()\n    return'run'\n")
         file_resource = self.project.get_resource(file_path)
         runner = self.pycore.run_module(file_resource)
         runner.wait_process()

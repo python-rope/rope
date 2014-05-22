@@ -1,4 +1,3 @@
-from ropetest.testutils import only_for
 try:
     import unittest2 as unittest
 except ImportError:
@@ -66,22 +65,22 @@ class InlineTest(unittest.TestCase):
     def test_on_classes(self):
         code = 'class AClass(object):\n    pass\n'
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self._inline(code, code.index('AClass') + 1)
+            self._inline(code, code.index('AClass') + 1)
 
     def test_multiple_assignments(self):
         code = 'a_var = 10\na_var = 20\n'
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self._inline(code, code.index('a_var') + 1)
+            self._inline(code, code.index('a_var') + 1)
 
     def test_tuple_assignments(self):
         code = 'a_var, another_var = (20, 30)\n'
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self._inline(code, code.index('a_var') + 1)
+            self._inline(code, code.index('a_var') + 1)
 
     def test_on_unknown_vars(self):
         code = 'a_var = another_var\n'
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self._inline(code, code.index('another_var') + 1)
+            self._inline(code, code.index('another_var') + 1)
 
     def test_attribute_inlining(self):
         code = 'class A(object):\n    def __init__(self):\n' \
@@ -100,7 +99,6 @@ class InlineTest(unittest.TestCase):
                    '        range(3)\n' \
                    'a = A()\nrange(3)'
         self.assertEquals(expected, refactored)
-
 
     def test_a_function_with_no_occurance(self):
         self.mod.write('def a_func():\n    pass\n')
@@ -140,29 +138,35 @@ class InlineTest(unittest.TestCase):
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('print(1)\n', self.mod.read())
 
-    def test_replacing_calls_with_function_definition_in_defining_module2(self):
-        self.mod.write('def a_func():\n    for i in range(10):\n        print(1)\na_func()\n')
+    def test_replac_calls_with_function_definition_in_defining_module2(self):
+        self.mod.write('def a_func():\n    '
+                       'for i in range(10):\n        print(1)\na_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('for i in range(10):\n    print(1)\n', self.mod.read())
+        self.assertEquals('for i in range(10):\n    print(1)\n',
+                          self.mod.read())
 
     def test_replacing_calls_with_method_definition_in_defining_modules(self):
         self.mod.write('class A(object):\n    var = 10\n'
                        '    def a_func(self):\n        print(1)\nA().a_func()')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('class A(object):\n    var = 10\nprint(1)\n', self.mod.read())
+        self.assertEquals('class A(object):\n    var = 10\nprint(1)\n',
+                          self.mod.read())
 
     def test_parameters_with_the_same_name_as_passed(self):
-        self.mod.write('def a_func(var):\n    print(var)\nvar = 1\na_func(var)\n')
+        self.mod.write('def a_func(var):\n    '
+                       'print(var)\nvar = 1\na_func(var)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('var = 1\nprint(var)\n', self.mod.read())
 
     def test_parameters_with_the_same_name_as_passed2(self):
-        self.mod.write('def a_func(var):\n    print(var)\nvar = 1\na_func(var=var)\n')
+        self.mod.write('def a_func(var):\n    '
+                       'print(var)\nvar = 1\na_func(var=var)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('var = 1\nprint(var)\n', self.mod.read())
 
     def test_simple_parameters_renaming(self):
-        self.mod.write('def a_func(param):\n    print(param)\nvar = 1\na_func(var)\n')
+        self.mod.write('def a_func(param):\n    '
+                       'print(param)\nvar = 1\na_func(var)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('var = 1\nprint(var)\n', self.mod.read())
 
@@ -170,7 +174,8 @@ class InlineTest(unittest.TestCase):
         self.mod.write('def a_func(param1, param2):\n    p = param1 + param2\n'
                        'var1 = 1\nvar2 = 1\na_func(var1, var2)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('var1 = 1\nvar2 = 1\np = var1 + var2\n', self.mod.read())
+        self.assertEquals('var1 = 1\nvar2 = 1\np = var1 + var2\n',
+                          self.mod.read())
 
     def test_parameters_renaming_for_passed_constants(self):
         self.mod.write('def a_func(param):\n    print(param)\na_func(1)\n')
@@ -178,21 +183,26 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('print(1)\n', self.mod.read())
 
     def test_parameters_renaming_for_passed_statements(self):
-        self.mod.write('def a_func(param):\n    print(param)\na_func((1 + 2) / 3)\n')
+        self.mod.write('def a_func(param):\n    '
+                       'print(param)\na_func((1 + 2) / 3)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('print((1 + 2) / 3)\n', self.mod.read())
 
-    def test_simple_parameters_renaming_for_multiple_params_using_keywords(self):
-        self.mod.write('def a_func(param1, param2):\n    p = param1 + param2\n'
-                       'var1 = 1\nvar2 = 1\na_func(param2=var1, param1=var2)\n')
+    def test_simple_parameters_renam_for_multiple_params_using_keywords(self):
+        self.mod.write('def a_func(param1, param2):\n    '
+                       'p = param1 + param2\n'
+                       'var1 = 1\nvar2 = 1\n'
+                       'a_func(param2=var1, param1=var2)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('var1 = 1\nvar2 = 1\np = var2 + var1\n', self.mod.read())
+        self.assertEquals('var1 = 1\nvar2 = 1\np = var2 + var1\n',
+                          self.mod.read())
 
-    def test_simple_parameters_renaming_for_multiple_params_using_mixed_keywords(self):
+    def test_simple_params_renam_for_multi_params_using_mixed_keywords(self):
         self.mod.write('def a_func(param1, param2):\n    p = param1 + param2\n'
                        'var1 = 1\nvar2 = 1\na_func(var2, param2=var1)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('var1 = 1\nvar2 = 1\np = var2 + var1\n', self.mod.read())
+        self.assertEquals('var1 = 1\nvar2 = 1\np = var2 + var1\n',
+                          self.mod.read())
 
     def test_simple_putting_in_default_arguments(self):
         self.mod.write('def a_func(param=None):\n    print(param)\n'
@@ -201,13 +211,15 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('print(None)\n', self.mod.read())
 
     def test_overriding_default_arguments(self):
-        self.mod.write('def a_func(param1=1, param2=2):\n    print(param1, param2)\n'
+        self.mod.write('def a_func(param1=1, param2=2):'
+                       '\n    print(param1, param2)\n'
                        'a_func(param2=3)\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('print(1, 3)\n', self.mod.read())
 
     def test_badly_formatted_text(self):
-        self.mod.write('def a_func  (  param1 =  1 ,param2 = 2 )  :\n    print(param1, param2)\n'
+        self.mod.write('def a_func  (  param1 =  1 ,param2 = 2 )  :'
+                       '\n    print(param1, param2)\n'
                        'a_func  ( param2 \n  = 3 )  \n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('print(1, 3)\n', self.mod.read())
@@ -270,8 +282,8 @@ class InlineTest(unittest.TestCase):
         self.mod.write(a_class)
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         expected = 'class A(object):\n' \
-                   '    pass\n' \
-                  'print(1)\n'
+            '    pass\n' \
+            'print(1)\n'
         self.assertEquals(expected, self.mod.read())
 
     def test_static_methods2(self):
@@ -286,10 +298,10 @@ class InlineTest(unittest.TestCase):
         self.mod.write(a_class)
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         expected = 'class A(object):\n' \
-                  '    var = 10\n' \
-                  'an_a = A()\n' \
-                  'print(1)\n' \
-                  'print(2)\n'
+            '    var = 10\n' \
+            'an_a = A()\n' \
+            'print(1)\n' \
+            'print(2)\n'
         self.assertEquals(expected, self.mod.read())
 
     def test_inlining_classmethods(self):
@@ -330,7 +342,8 @@ class InlineTest(unittest.TestCase):
         self.assertEquals('1\n', self.mod.read())
 
     def test_empty_returns_and_inlining_lonely_functions(self):
-        self.mod.write('def a_func():\n    if True:\n        return\na_func()\n')
+        self.mod.write('def a_func():\n    '
+                       'if True:\n        return\na_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('if True:\n    pass\n', self.mod.read())
 
@@ -343,7 +356,8 @@ class InlineTest(unittest.TestCase):
 
     def test_multiple_returns_and_not_using_the_value(self):
         self.mod.write('def less_than_five(var):\n    if var < 5:\n'
-                       '        return True\n    return False\nless_than_five(2)\n')
+                       '        return True\n    '
+                       'return False\nless_than_five(2)\n')
         self._inline2(self.mod, self.mod.read().index('less') + 1)
         self.assertEquals('if 2 < 5:\n    True\nFalse\n', self.mod.read())
 
@@ -384,13 +398,15 @@ class InlineTest(unittest.TestCase):
     def xxx_test_inlining_function_default_parameters(self):
         self.mod.write('def a_func(p1=1):\n    pass\na_func()\n')
         self._inline2(self.mod, self.mod.read().index('p1') + 1)
-        self.assertEquals('def a_func(p1=1):\n    pass\na_func()\n', self.mod.read())
+        self.assertEquals('def a_func(p1=1):\n    pass\na_func()\n',
+                          self.mod.read())
 
     def test_simple_inlining_after_extra_indented_lines(self):
         self.mod.write('def a_func():\n    for i in range(10):\n        pass\n'
                        'if True:\n    pass\na_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
-        self.assertEquals('if True:\n    pass\nfor i in range(10):\n    pass\n',
+        self.assertEquals('if True:\n    pass\nfor i in range(10):'
+                          '\n    pass\n',
                           self.mod.read())
 
     def test_inlining_a_function_with_pydoc(self):
@@ -407,7 +423,8 @@ class InlineTest(unittest.TestCase):
                           "a = A()\nname = a.name\n", self.mod.read())
 
     def test_simple_returns_with_backslashes(self):
-        self.mod.write('def a_func():\n    return 1\\\n        + 2\na = a_func()\n')
+        self.mod.write('def a_func():\n    return 1'
+                       '\\\n        + 2\na = a_func()\n')
         self._inline2(self.mod, self.mod.read().index('a_func') + 1)
         self.assertEquals('a = 1 + 2\n', self.mod.read())
 

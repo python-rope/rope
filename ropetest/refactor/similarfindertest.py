@@ -60,9 +60,9 @@ class SimilarFinderTest(unittest.TestCase):
         result = list(finder.get_match_regions('1'))
         self.assertEquals(2, len(result))
         start1 = source.index('1')
-        self.assertEquals((start1, start1 + 1) , result[0])
+        self.assertEquals((start1, start1 + 1), result[0])
         start2 = source.rindex('1')
-        self.assertEquals((start2, start2 + 1) , result[1])
+        self.assertEquals((start2, start2 + 1), result[1])
 
     def test_multiple_matches2(self):
         source = 'a = 1\nb = 2\n\na = 1\nb = 2\n'
@@ -242,7 +242,6 @@ class CheckingFinderTest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2')
         mod2.write('class A(object):\n    pass\n')
         self.mod1.write('from mod2 import A\nan_a = A()\n')
-        pymod2 = self.pycore.resource_to_pyobject(mod2)
         pymod1 = self.pycore.resource_to_pyobject(self.mod1)
         finder = similarfinder.SimilarFinder(pymod1)
         result = list(finder.get_matches('${a_class}()',

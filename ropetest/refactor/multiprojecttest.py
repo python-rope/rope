@@ -1,7 +1,5 @@
 import unittest
 
-import rope.base.codeanalyze
-import rope.refactor.occurrences
 from rope.refactor import multiproject, rename, move
 from ropetest import testutils
 

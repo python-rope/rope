@@ -5,7 +5,6 @@ except ImportError:
 
 import rope.base.codeanalyze
 import rope.base.exceptions
-import ropetest.testutils as testutils
 from rope.refactor import extract
 from ropetest import testutils
 
@@ -32,7 +31,7 @@ class ExtractMethodTest(unittest.TestCase):
     def do_extract_variable(self, source_code, start, end, extracted, **kwds):
         testmod = testutils.create_module(self.project, 'testmod')
         testmod.write(source_code)
-        extractor = extract.ExtractVariable( self.project, testmod, start, end)
+        extractor = extract.ExtractVariable(self.project, testmod, start, end)
         self.project.do(extractor.get_changes(extracted, **kwds))
         return testmod.read()
 
@@ -57,7 +56,8 @@ class ExtractMethodTest(unittest.TestCase):
         self.assertEquals(expected, refactored)
 
     def test_extract_function_after_scope(self):
-        code = "def a_func():\n    print('one')\n    print('two')\n\nprint('hey')\n"
+        code = "def a_func():\n    print('one')\n    print('two')" \
+            "\n\nprint('hey')\n"
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.do_extract_method(code, start, end, 'extracted')
         expected = "def a_func():\n    extracted()\n    print('two')\n\n" \
@@ -95,7 +95,8 @@ class ExtractMethodTest(unittest.TestCase):
         code = 'def a_func():\n    a_var = 10\n    print(a_var)\n'
         start, end = self._convert_line_range_to_offset(code, 2, 2)
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = 'def a_func():\n    a_var = new_func()\n    print(a_var)\n\n' \
+        expected = 'def a_func():\n    a_var = new_func()' \
+                   '\n    print(a_var)\n\n' \
                    'def new_func():\n    a_var = 10\n    return a_var\n'
         self.assertEquals(expected, refactored)
 
@@ -159,7 +160,7 @@ class ExtractMethodTest(unittest.TestCase):
                '        print(1)\n'
         start, end = self._convert_line_range_to_offset(code, 3, 3)
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self.do_extract_method(code, start, end, 'new_func')
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_method_with_multiple_methods(self):
         code = 'class AClass(object):\n' \
@@ -213,7 +214,8 @@ class ExtractMethodTest(unittest.TestCase):
         start, end = self._convert_line_range_to_offset(code, 3, 4)
         refactored = self.do_extract_method(code, start, end, 'new_func')
         expected = 'def a_func():\n    a_var = 10\n' \
-                   '    inner_func = new_func(a_var)\n    return inner_func\n\n' \
+                   '    inner_func = new_func(a_var)' \
+                   '\n    return inner_func\n\n' \
                    'def new_func(a_var):\n' \
                    '    def inner_func():\n        print(a_var)\n' \
                    '    return inner_func\n'
@@ -232,7 +234,8 @@ class ExtractMethodTest(unittest.TestCase):
             self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_method_containing_return(self):
-        code = 'def a_func(arg):\n    if arg:\n        return arg * 2\n    return 1'
+        code = 'def a_func(arg):\n    if arg:\n        return arg * 2' \
+               '\n    return 1'
         start, end = self._convert_line_range_to_offset(code, 2, 4)
         with self.assertRaises(rope.base.exceptions.RefactoringError):
             self.do_extract_method(code, start, end, 'new_func')
@@ -279,7 +282,8 @@ class ExtractMethodTest(unittest.TestCase):
                '        if True:\n            print(arg)\n'
         start, end = self._convert_line_range_to_offset(code, 3, 4)
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = 'def a_func(arg):\n    if True:\n        new_func(arg)\n\n' \
+        expected = 'def a_func(arg):\n    ' \
+                   'if True:\n        new_func(arg)\n\n' \
                    'def new_func(arg):\n    if True:\n        print(arg)\n'
         self.assertEquals(expected, refactored)
 
@@ -296,7 +300,8 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.index('10')
         end = code.index('20') + 2
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = "\ndef new_func():\n    return 10 + 20\n\na_var = new_func()\n"
+        expected = "\ndef new_func():\n    " \
+                   "return 10 + 20\n\na_var = new_func()\n"
         self.assertEquals(expected, refactored)
 
     def test_single_line_extract_function2(self):
@@ -313,7 +318,8 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.index('10')
         end = code.index('20') + 2
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = '\ndef new_func():\n    return 10 + 20\n\na_var = new_func()\n'
+        expected = '\ndef new_func():\n    ' \
+                   'return 10 + 20\n\na_var = new_func()\n'
         self.assertEquals(expected, refactored)
 
     def test_single_line_extract_method_and_logical_lines2(self):
@@ -342,7 +348,8 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.index('True')
         end = code.index('True') + 4
         refactored = self.do_extract_method(code, start, end, 'new_func')
-        expected = "\ndef new_func():\n    return True\n\nif new_func():\n    pass\n"
+        expected = "\ndef new_func():\n    return True\n\nif new_func():" \
+                   "\n    pass\n"
         self.assertEquals(expected, refactored)
 
     def test_unneeded_params(self):
@@ -373,7 +380,7 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.index('a = i')
         end = len(code) - 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self.do_extract_method(code, start, end, 'new_func')
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_variable_writes_followed_by_variable_reads_after_extraction(self):
         code = 'def a_func():\n    a = 1\n    a = 2\n    b = a\n'
@@ -384,7 +391,7 @@ class ExtractMethodTest(unittest.TestCase):
                    'def new_func():\n    a = 1\n'
         self.assertEquals(expected, refactored)
 
-    def test_variable_writes_followed_by_variable_reads_inside_extraction(self):
+    def test_var_writes_followed_by_var_reads_inside_extraction(self):
         code = 'def a_func():\n    a = 1\n    a = 2\n    b = a\n'
         start = code.index('a = 2')
         end = len(code) - 1
@@ -463,7 +470,8 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.rindex('a_dict')
         end = code.index('count') - 1
         refactored = self.do_extract_variable(code, start, end, 'values')
-        expected = 'a_dict = {1: 1}\nvalues = a_dict.values()\nvalues.count(1)\n'
+        expected = 'a_dict = {1: 1}\n' \
+            'values = a_dict.values()\nvalues.count(1)\n'
         self.assertEquals(expected, refactored)
 
     def test_extract_variable_on_the_last_line_of_a_function(self):
@@ -471,7 +479,8 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.rindex('a_var')
         end = code.index('.keys')
         refactored = self.do_extract_variable(code, start, end, 'new_var')
-        expected = 'def f():\n    a_var = {}\n    new_var = a_var\n    new_var.keys()\n'
+        expected = 'def f():\n    a_var = {}\n    ' \
+            'new_var = a_var\n    new_var.keys()\n'
         self.assertEquals(expected, refactored)
 
     def test_extract_variable_on_the_indented_function_statement(self):
@@ -497,28 +506,28 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.index('10') + 1
         end = code.index('20') + 2
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self.do_extract_method(code, start, end, 'new_func')
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_raising_exception_when_on_incomplete_variables_on_end(self):
         code = 'a_var = 10 + 20\n'
         start = code.index('10')
         end = code.index('20') + 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self.do_extract_method(code, start, end, 'new_func')
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_raising_exception_on_bad_parens(self):
         code = 'a_var = (10 + 20) + 30\n'
         start = code.index('20')
         end = code.index('30') + 2
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self.do_extract_method(code, start, end, 'new_func')
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_raising_exception_on_bad_operators(self):
         code = 'a_var = 10 + 20 + 30\n'
         start = code.index('10')
         end = code.rindex('+') + 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self.do_extract_method(code, start, end, 'new_func')
+            self.do_extract_method(code, start, end, 'new_func')
 
     # FIXME: Extract method should be more intelligent about bad ranges
     def xxx_test_raising_exception_on_function_parens(self):
@@ -526,7 +535,7 @@ class ExtractMethodTest(unittest.TestCase):
         start = code.index('(')
         end = code.rindex(')') + 1
         with self.assertRaises(rope.base.exceptions.RefactoringError):
-            refactored = self.do_extract_method(code, start, end, 'new_func')
+            self.do_extract_method(code, start, end, 'new_func')
 
     def test_extract_method_and_extra_blank_lines(self):
         code = '\nprint(1)\n'
@@ -600,27 +609,30 @@ class ExtractMethodTest(unittest.TestCase):
                '    def func1(self, p1):\n        a = p1 + 2\n' \
                '    def func2(self, p2):\n        a = p2 + 2\n'
         start = code.rindex('p1')
-        end =  code.index('2\n') + 1
+        end = code.index('2\n') + 1
         refactored = self.do_extract_method(code, start, end,
                                             'new_func', similar=True)
         expected = 'class AClass(object):\n\n' \
-                   '    def func1(self, p1):\n        a = self.new_func(p1)\n\n' \
+                   '    def func1(self, p1):\n        ' \
+                   'a = self.new_func(p1)\n\n' \
                    '    def new_func(self, p1):\n        return p1 + 2\n' \
                    '    def func2(self, p2):\n        a = self.new_func(p2)\n'
         self.assertEquals(expected, refactored)
 
-    def test_extract_method_and_similar_statements_where_return_is_different(self):
+    def test_extract_method_and_similar_sttemnts_return_is_different(self):
         code = 'class AClass(object):\n\n' \
                '    def func1(self, p1):\n        a = p1 + 2\n' \
                '    def func2(self, p2):\n        self.attr = p2 + 2\n'
         start = code.rindex('p1')
-        end =  code.index('2\n') + 1
+        end = code.index('2\n') + 1
         refactored = self.do_extract_method(code, start, end,
                                             'new_func', similar=True)
         expected = 'class AClass(object):\n\n' \
-                   '    def func1(self, p1):\n        a = self.new_func(p1)\n\n' \
+                   '    def func1(self, p1):' \
+                   '\n        a = self.new_func(p1)\n\n' \
                    '    def new_func(self, p1):\n        return p1 + 2\n' \
-                   '    def func2(self, p2):\n        self.attr = self.new_func(p2)\n'
+                   '    def func2(self, p2):\n' \
+                   '        self.attr = self.new_func(p2)\n'
         self.assertEquals(expected, refactored)
 
     def test_definition_should_appear_where_it_is_visible(self):
@@ -734,7 +746,7 @@ class ExtractMethodTest(unittest.TestCase):
                    'def new_func():\n    print(1)\n'
         self.assertEquals(expected, refactored)
 
-    def test_extract_method_with_multiple_methods(self):
+    def test_extract_method_with_multiple_methods(self):  # noqa
         code = 'class AClass(object):\n' \
                '    def a_func(self):\n' \
                '        print(1)\n\n' \
@@ -771,7 +783,7 @@ class ExtractMethodTest(unittest.TestCase):
         expected = '\ndef f():\n    a = 1\n    print a\n\nf()\nf()\n'
         self.assertEquals(expected, refactored)
 
-    def test_extracting_methods_in_global_functions_should_be_global(self):
+    def test_extract_methods_in_glob_funcs_should_be_glob(self):
         code = 'def f():\n    a = 1\ndef g():\n    b = 1\n'
         start = code.rindex('1')
         refactored = self.do_extract_method(code, start, start + 1, 'one',
@@ -780,7 +792,7 @@ class ExtractMethodTest(unittest.TestCase):
                    'def one():\n    return 1\n'
         self.assertEquals(expected, refactored)
 
-    def test_extracting_methods_in_global_functions_should_be_global(self):
+    def test_extract_methods_in_glob_funcs_should_be_glob_2(self):
         code = 'if 1:\n    var = 2\n'
         start = code.rindex('2')
         refactored = self.do_extract_method(code, start, start + 1, 'two',

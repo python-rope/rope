@@ -170,7 +170,7 @@ class RestructureTest(unittest.TestCase):
         self.mod.write('def f(p):\n    return p * 2\nx = "" * 2\ni = 1 * 2\n')
         refactoring = restructure.Restructure(
             self.project, '${s} * 2', 'dup(${s})',
-            args={'s': {'type': '__builtins__.str','unsure': True}})
+            args={'s': {'type': '__builtins__.str', 'unsure': True}})
         self.project.do(refactoring.get_changes())
         self.assertEquals('def f(p):\n    return dup(p)\nx = dup("")\n'
                           'i = 1 * 2\n', self.mod.read())

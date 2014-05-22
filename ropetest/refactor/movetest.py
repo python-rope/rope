@@ -27,13 +27,13 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def _move(self, resource, offset, dest_resource):
         changes = move.create_move(self.project, resource, offset).\
-                  get_changes(dest_resource)
+            get_changes(dest_resource)
         self.project.do(changes)
 
     def test_simple_moving(self):
         self.mod1.write('class AClass(object):\n    pass\n')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
-                              self.mod2)
+                   self.mod2)
         self.assertEquals('', self.mod1.read())
         self.assertEquals('class AClass(object):\n    pass\n',
                           self.mod2.read())
@@ -66,7 +66,8 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod2.write('from mod1 import AClass\na_var = AClass()\n')
         self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                    self.mod2)
-        self.assertEquals('class AClass(object):\n    pass\na_var = AClass()\n',
+        self.assertEquals('class AClass(object):\n    '
+                          'pass\na_var = AClass()\n',
                           self.mod2.read())
 
     def test_folder_destination(self):
@@ -76,12 +77,13 @@ class MoveRefactoringTest(unittest.TestCase):
             self._move(self.mod1, self.mod1.read().index('AClass') + 1, folder)
 
     def test_raising_exception_for_moving_non_global_elements(self):
-        self.mod1.write('def a_func():\n    class AClass(object):\n        pass\n')
+        self.mod1.write(
+            'def a_func():\n    class AClass(object):\n        pass\n')
         with self.assertRaises(exceptions.RefactoringError):
             self._move(self.mod1, self.mod1.read().index('AClass') + 1,
                        self.mod2)
 
-    def test_raising_exception_for_moving_global_elements_to_the_same_module(self):
+    def test_raising_exception_for_mov_glob_elemnts_to_the_same_module(self):
         self.mod1.write('def a_func():\n    pass\n')
         with self.assertRaises(exceptions.RefactoringError):
             self._move(self.mod1, self.mod1.read().index('a_func'), self.mod1)
@@ -260,7 +262,8 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_moving_methods_choosing_the_correct_class(self):
         code = 'class A(object):\n    def a_method(self):\n        pass\n'
         self.mod1.write(code)
-        mover = move.create_move(self.project, self.mod1, code.index('a_method'))
+        mover = move.create_move(self.project, self.mod1,
+                                 code.index('a_method'))
         self.assertTrue(isinstance(mover, move.MoveMethod))
 
     def test_moving_methods_getting_new_method_for_empty_methods(self):
@@ -294,7 +297,8 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
-        self.assertEquals('def new_method(self, host):\n    return host.attr\n',
+        self.assertEquals('def new_method(self, host):'
+                          '\n    return host.attr\n',
                           mover.get_new_method('new_method'))
 
     def test_moving_methods_getting_new_method_renaming_main_object(self):
@@ -303,7 +307,8 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write(code)
         mover = move.create_move(self.project, self.mod1,
                                  code.index('a_method'))
-        self.assertEquals('def new_method(self, host):\n    return host.attr\n',
+        self.assertEquals('def new_method(self, host):'
+                          '\n    return host.attr\n',
                           mover.get_new_method('new_method'))
 
     def test_moving_methods_gettin_new_method_with_keyword_arguments(self):
@@ -503,7 +508,7 @@ class MoveRefactoringTest(unittest.TestCase):
     def test_raising_an_exception_when_moving_non_package_folders(self):
         dir = self.project.root.create_folder('dir')
         with self.assertRaises(exceptions.RefactoringError):
-            mover = move.create_move(self.project, dir)
+            move.create_move(self.project, dir)
 
     def test_moving_to_a_module_with_encoding_cookie(self):
         code1 = '# -*- coding: utf-8 -*-'

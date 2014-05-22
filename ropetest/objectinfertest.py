@@ -29,7 +29,7 @@ class ObjectInferTest(unittest.TestCase):
         scope = self.pycore.get_string_scope(code)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_func'].get_object().\
-                        get_scope()['a_var'].get_object()
+            get_scope()['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_classes_in_class_methods(self):
@@ -40,7 +40,7 @@ class ObjectInferTest(unittest.TestCase):
         sample_class = scope['Sample'].get_object()
         another_class = scope['Another'].get_object()
         a_var = another_class['a_method'].\
-                        get_object().get_scope()['a_var'].get_object()
+            get_object().get_scope()['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
     def test_simple_type_inferencing_class_attributes(self):
@@ -110,7 +110,7 @@ class ObjectInferTest(unittest.TestCase):
         a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
 
-    def test_function_returned_object_using_call_special_function_static_type_inference(self):
+    def test_func_returned_obj_using_call_spec_func_static_type_infer(self):
         src = 'class Sample(object):\n' \
               '    def __call__(self):\n        return Sample\n' \
               'sample = Sample()\na_var = sample()'
@@ -202,7 +202,7 @@ class ObjectInferTest(unittest.TestCase):
 
     def test_empty_tuples(self):
         mod = self.pycore.get_string_module('t = ()\na, b = t\n')
-        a = mod['a'].get_object()
+        a = mod['a'].get_object()  # noqa
 
     def test_handling_generator_functions(self):
         code = 'class C(object):\n    pass\n' \
