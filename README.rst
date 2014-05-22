@@ -20,11 +20,10 @@ Overview
 New Features
 ============
 
-* codeassist: better handling of unicode in docstrings
-* codeassist: handling builtin unknowns, such as sys.stdout
-* codeassist: proposals scopes and types revised
-* fscommands: handle hg crew ui changes
-* patchedast: handle ExtSlice node
+* Undre the new management! Matěj Cepl <mcepl@cepl.eu> takes hesitantly
+  over
+* Merged all available pull requests and patches to the main codebase
+* Tests are green again
 
 Getting Started
 ===============
