@@ -20,7 +20,7 @@ def create_move(project, resource, offset=None):
     """
     if offset is None:
         return MoveModule(project, resource)
-    this_pymodule = project.pycore.resource_to_pyobject(resource)
+    this_pymodule = project.get_pymodule(resource)
     pyname = evaluate.eval_location(this_pymodule, offset)
     if pyname is None:
         raise exceptions.RefactoringError(
@@ -51,7 +51,7 @@ class MoveMethod(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.pycore = project.pycore
-        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        this_pymodule = self.project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
         self.method_name = worder.get_name_at(resource, offset)
         self.pyfunction = pyname.get_object()
@@ -201,8 +201,9 @@ class MoveGlobal(object):
     """For moving global function and classes"""
 
     def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
-        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.project = project
+        self.pycore = self.project.pycore
+        this_pymodule = self.project.get_pymodule(resource)
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
         self.old_name = self.old_pyname.get_object().get_name()
         pymodule = self.old_pyname.get_object().get_module()
@@ -255,7 +256,7 @@ class MoveGlobal(object):
             elif file_ == dest:
                 changes.add_change(self._dest_module_changes(dest))
             elif self.tools.occurs_in_module(resource=file_):
-                pymodule = self.pycore.resource_to_pyobject(file_)
+                pymodule = self.project.get_pymodule(file_)
                 # Changing occurrences
                 placeholder = '__rope_renaming_%s_' % self.old_name
                 source = self.tools.rename_in_module(placeholder,
@@ -299,7 +300,7 @@ class MoveGlobal(object):
 
     def _dest_module_changes(self, dest):
         # Changing occurrences
-        pymodule = self.pycore.resource_to_pyobject(dest)
+        pymodule = self.project.get_pymodule(dest)
         source = self.tools.rename_in_module(self.old_name, pymodule)
         pymodule = self.tools.new_pymodule(pymodule, source)
 
@@ -345,7 +346,7 @@ class MoveGlobal(object):
         return moving.rstrip() + '\n'
 
     def _get_moving_region(self):
-        pymodule = self.pycore.resource_to_pyobject(self.source)
+        pymodule = self.project.get_pymodule(self.source)
         lines = pymodule.lines
         scope = self.old_pyname.get_object().get_scope()
         start = lines.get_line_start(scope.get_start())
@@ -427,7 +428,7 @@ class MoveModule(object):
 
     def _change_moving_module(self, changes, dest):
         if not self.source.is_folder():
-            pymodule = self.pycore.resource_to_pyobject(self.source)
+            pymodule = self.project.get_pymodule(self.source)
             source = self.import_tools.relatives_to_absolutes(pymodule)
             pymodule = self.tools.new_pymodule(pymodule, source)
             source = self._change_occurrences_in_module(dest, pymodule)
@@ -441,7 +442,7 @@ class MoveModule(object):
                                            resource=resource):
             return
         if pymodule is None:
-            pymodule = self.pycore.resource_to_pyobject(resource)
+            pymodule = self.project.get_pymodule(resource)
         new_name = self._new_modname(dest)
         new_import = self._new_import(dest)
         source = self.tools.rename_in_module(

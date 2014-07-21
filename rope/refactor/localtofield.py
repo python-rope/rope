@@ -6,13 +6,12 @@ class LocalToField(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
 
     def get_changes(self):
         name = worder.get_name_at(self.resource, self.offset)
-        this_pymodule = self.pycore.resource_to_pyobject(self.resource)
+        this_pymodule = self.project.get_pymodule(self.resource)
         pyname = evaluate.eval_location(this_pymodule, self.offset)
         if not self._is_a_method_local(pyname):
             raise exceptions.RefactoringError(

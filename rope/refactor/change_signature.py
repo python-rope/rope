@@ -10,6 +10,7 @@ from rope.refactor import occurrences, functionutils
 class ChangeSignature(object):
 
     def __init__(self, project, resource, offset):
+        self.project = project
         self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
@@ -21,7 +22,7 @@ class ChangeSignature(object):
 
     def _set_name_and_pyname(self):
         self.name = worder.get_name_at(self.resource, self.offset)
-        this_pymodule = self.pycore.resource_to_pyobject(self.resource)
+        this_pymodule = self.project.get_pymodule(self.resource)
         self.primary, self.pyname = evaluate.eval_location2(
             this_pymodule, self.offset)
         if self.pyname is None:
@@ -57,7 +58,7 @@ class ChangeSignature(object):
         for file in resources:
             job_set.started_job(file.path)
             change_calls = _ChangeCallsInModule(
-                self.pycore, finder, file, call_changer)
+                self.project, finder, file, call_changer)
             changed_file = change_calls.get_changed_module()
             if changed_file is not None:
                 changes.add_change(ChangeContents(file, changed_file))
@@ -288,8 +289,8 @@ class ArgumentReorderer(_ArgumentChanger):
 
 class _ChangeCallsInModule(object):
 
-    def __init__(self, pycore, occurrence_finder, resource, call_changer):
-        self.pycore = pycore
+    def __init__(self, project, occurrence_finder, resource, call_changer):
+        self.project = project
         self.occurrence_finder = occurrence_finder
         self.resource = resource
         self.call_changer = call_changer
@@ -318,7 +319,7 @@ class _ChangeCallsInModule(object):
     @property
     @utils.saveit
     def pymodule(self):
-        return self.pycore.resource_to_pyobject(self.resource)
+        return self.project.get_pymodule(self.resource)
 
     @property
     @utils.saveit

@@ -79,6 +79,7 @@ class Restructure(object):
         See class pydoc for more info about the arguments.
 
         """
+        self.project = project
         self.pycore = project.pycore
         self.pattern = pattern
         self.goal = goal
@@ -138,7 +139,7 @@ class Restructure(object):
         job_set = task_handle.create_jobset('Collecting Changes', len(files))
         for resource in files:
             job_set.started_job(resource.path)
-            pymodule = self.pycore.resource_to_pyobject(resource)
+            pymodule = self.project.get_pymodule(resource)
             finder = similarfinder.SimilarFinder(pymodule,
                                                  wildcards=self.wildcards)
             matches = list(finder.get_matches(self.pattern, self.args))
