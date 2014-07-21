@@ -41,8 +41,7 @@ def create_inline(project, resource, offset):
     `InlineMethod`, `InlineVariable` or `InlineParameter`.
 
     """
-    pycore = project.pycore
-    pyname = _get_pyname(pycore, resource, offset)
+    pyname = _get_pyname(project, resource, offset)
     message = 'Inline refactoring should be performed on ' \
               'a method, local variable or parameter.'
     if pyname is None:
@@ -64,7 +63,7 @@ class _Inliner(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.pycore = project.pycore
-        self.pyname = _get_pyname(self.pycore, resource, offset)
+        self.pyname = _get_pyname(project, resource, offset)
         range_finder = worder.Worder(resource.read())
         self.region = range_finder.get_primary_range(offset)
         self.name = range_finder.get_word_at(offset)
@@ -514,7 +513,7 @@ class _InlineFunctionCallsForModuleHandle(object):
         indents = sourceutils.get_indents(self.lines, start_line)
         primary, pyname = occurrence.get_primary_and_pyname()
 
-        host = self.pycore.resource_to_pyobject(self.resource)
+        host = self.pymodule
         scope = host.scope.get_inner_scope_for_line(lineno)
         definition, returned = self.generator.get_definition(
             primary, pyname, self.source[start:end_parens], scope.get_names(),
@@ -606,8 +605,8 @@ def _add_imports(pycore, source, resource, imports):
     return import_tools.organize_imports(pymodule, unused=False, sort=False)
 
 
-def _get_pyname(pycore, resource, offset):
-    pymodule = pycore.resource_to_pyobject(resource)
+def _get_pyname(project, resource, offset):
+    pymodule = project.get_pymodule(resource)
     pyname = evaluate.eval_location(pymodule, offset)
     if isinstance(pyname, pynames.ImportedName):
         pyname = pyname._get_imported_pyname()

@@ -8,10 +8,11 @@ from rope.refactor import rename, occurrences, sourceutils, importutils
 class IntroduceFactory(object):
 
     def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
+        self.project = project
+        self.pycore = self.project.pycore
         self.offset = offset
 
-        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        this_pymodule = self.project.get_pymodule(resource)
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
         if self.old_pyname is None or \
                 not isinstance(self.old_pyname.get_object(),

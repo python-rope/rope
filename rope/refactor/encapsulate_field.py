@@ -6,9 +6,10 @@ from rope.refactor import sourceutils, occurrences
 class EncapsulateField(object):
 
     def __init__(self, project, resource, offset):
+        self.project = project
         self.pycore = project.pycore
         self.name = worder.get_name_at(resource, offset)
-        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        this_pymodule = self.project.get_pymodule(resource)
         self.pyname = evaluate.eval_location(this_pymodule, offset)
         if not self._is_an_attribute(self.pyname):
             raise exceptions.RefactoringError(
@@ -80,7 +81,7 @@ class EncapsulateField(object):
         return pymodule.get_scope().get_inner_scope_for_line(line)
 
     def _change_holding_module(self, changes, renamer, getter, setter):
-        pymodule = self.pycore.resource_to_pyobject(self.resource)
+        pymodule = self.project.get_pymodule(self.resource)
         class_scope = self._get_defining_class_scope()
         defining_object = self._get_defining_scope().pyobject
         start, end = sourceutils.get_body_region(defining_object)

@@ -28,6 +28,6 @@ class ModuleToPackage(object):
         return changes
 
     def _transform_relatives_to_absolute(self, resource):
-        pymodule = self.pycore.resource_to_pyobject(resource)
+        pymodule = self.project.get_pymodule(resource)
         import_tools = rope.refactor.importutils.ImportTools(self.pycore)
         return import_tools.relatives_to_absolutes(pymodule)

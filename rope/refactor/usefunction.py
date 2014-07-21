@@ -9,7 +9,7 @@ class UseFunction(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.offset = offset
-        this_pymodule = project.pycore.resource_to_pyobject(resource)
+        this_pymodule = project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
         if pyname is None:
             raise exceptions.RefactoringError('Unresolvable name selected')
