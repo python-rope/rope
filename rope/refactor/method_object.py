@@ -8,7 +8,7 @@ class MethodObject(object):
 
     def __init__(self, project, resource, offset):
         self.pycore = project.pycore
-        this_pymodule = self.pycore.resource_to_pyobject(resource)
+        this_pymodule = self.project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
         if pyname is None or not isinstance(pyname.get_object(),
                                             pyobjects.PyFunction):

@@ -35,10 +35,11 @@ class IntroduceParameter(object):
     """
 
     def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
+        self.project = project
+        self.pycore = self.project.pycore
         self.resource = resource
         self.offset = offset
-        self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+        self.pymodule = self.project.get_pymodule(self.resource)
         scope = self.pymodule.get_scope().get_inner_scope_for_offset(offset)
         if scope.get_kind() != 'Function':
             raise exceptions.RefactoringError(

@@ -21,7 +21,7 @@ class Rename(object):
         self.resource = resource
         if offset is not None:
             self.old_name = worder.get_name_at(self.resource, offset)
-            this_pymodule = self.pycore.resource_to_pyobject(self.resource)
+            this_pymodule = self.project.get_pymodule(self.resource)
             self.old_instance, self.old_pyname = \
                 evaluate.eval_location2(this_pymodule, offset)
             if self.old_pyname is None:
@@ -154,7 +154,7 @@ class ChangeOccurrences(object):
         self.resource = resource
         self.offset = offset
         self.old_name = worder.get_name_at(resource, offset)
-        self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+        self.pymodule = project.get_pymodule(self.resource)
         self.old_pyname = evaluate.eval_location(self.pymodule, offset)
 
     def get_old_name(self):

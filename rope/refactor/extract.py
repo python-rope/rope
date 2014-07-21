@@ -97,7 +97,7 @@ class _ExtractInfo(object):
                  variable, similar, make_global):
         self.pycore = project.pycore
         self.resource = resource
-        self.pymodule = self.pycore.resource_to_pyobject(resource)
+        self.pymodule = project.get_pymodule(resource)
         self.global_scope = self.pymodule.get_scope()
         self.source = self.pymodule.source_code
         self.lines = self.pymodule.lines
