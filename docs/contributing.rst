@@ -3,19 +3,19 @@
 ======================
 
 
-Get Involved!
-=============
+Getting Involved!
+=================
 
 Rope's main goal is being a good refactoring tool for python.  It also
-provides some IDE helpers.  If you like to contribute, you're welcome!
+provides some IDE helpers.  If you would like to contribute, you're
+welcome to!
 
 
 How to Help Rope?
 =================
 
-Rope mailing list is `rope-dev (at) googlegroups.com`_.  You can send
-a mail to ``rope-dev-subscribe (at) googlegroups [dot] com`` to
-subscribe.
+Rope's mailing list is `rope-dev (at) googlegroups.com`_.  Click the
+"Join group to post" button to subscribe. Then:
 
 * Use rope
 * Send bug reports and request features
@@ -28,8 +28,8 @@ subscribe.
 Wish List
 =========
 
-You are welcome to send your patches to `rope-dev (at)
-googlegroups.com`_ mailing list.  Here is only a list of suggestions.
+You are welcome to send your patches to the `rope-dev (at)
+googlegroups.com`_ mailing list.  Here is a list of suggestions.
 
 Issues
 ------
@@ -78,12 +78,8 @@ more information.
 Source Repository
 =================
 
-Rope uses Mercurial_ CMS:
-
-* Rope main branch: http://bitbucket.org/agr/rope
-* Rope py3k branch: http://bitbucket.org/agr/rope_py3k
-
-.. _Mercurial: http://selenic.com/mercurial
+Rope uses GitHub_. The repository exists at
+`https://github.com/python-rope/rope`_.
 
 
 Submitting patches
@@ -91,11 +87,21 @@ Submitting patches
 
 Patches are welcome.
 
-Patch style
------------
+Programming Style
+-----------------
 
 * Follow :PEP:`8`.
 * Use four spaces for indentation.
-* Include good unit-tests if possible.
+* Include good unit-tests when appropriate.
 * Rope test suite should pass after patching
-* Use ``hg export`` format to preserve your identity
+
+Sending Patches
+---------------
+
+Follow the instructions on GitHub_ on how to setup Git and fork the
+`python-rope/rope`_ repository. Once your changes are ready, send a
+`pull request`_ for review.
+
+.. _GitHub: http://github.com/
+.. _`python-rope/rope`: https://github.com/python-rope/rope
+.. _`pull request`: https://help.github.com/articles/using-pull-requests
