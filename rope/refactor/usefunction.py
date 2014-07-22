@@ -37,7 +37,7 @@ class UseFunction(object):
     def get_changes(self, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            resources = self.project.pycore.get_python_files()
+            resources = self.project.get_python_files()
         changes = change.ChangeSet('Using function <%s>' %
                                    self.pyfunction.get_name())
         if self.resource in resources:

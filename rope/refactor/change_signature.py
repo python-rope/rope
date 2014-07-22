@@ -44,7 +44,7 @@ class ChangeSignature(object):
     def _change_calls(self, call_changer, in_hierarchy=None, resources=None,
                       handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         changes = ChangeSet('Changing signature of <%s>' % self.name)
         job_set = handle.create_jobset('Collecting Changes', len(resources))
         finder = occurrences.create_finder(

@@ -37,7 +37,7 @@ class IntroduceFactory(object):
 
         """
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         changes = ChangeSet('Introduce factory method <%s>' % factory_name)
         job_set = task_handle.create_jobset('Collecting Changes',
                                             len(resources))

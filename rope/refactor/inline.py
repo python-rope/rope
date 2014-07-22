@@ -121,7 +121,7 @@ class InlineMethod(_Inliner):
         """
         changes = ChangeSet('Inline method <%s>' % self.name)
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         if only_current:
             resources = [self.original]
             if remove:
@@ -228,7 +228,7 @@ class InlineVariable(_Inliner):
             if rename._is_local(self.pyname):
                 resources = [self.resource]
             else:
-                resources = self.pycore.get_python_files()
+                resources = self.project.get_python_files()
         if only_current:
             resources = [self.original]
             if remove and self.original != self.resource:

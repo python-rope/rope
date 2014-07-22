@@ -91,7 +91,7 @@ class AutoImport(object):
 
         """
         if resources is None:
-            resources = self.project.pycore.get_python_files()
+            resources = self.project.get_python_files()
         job_set = task_handle.create_jobset(
             'Generatig autoimport cache', len(resources))
         for file in resources:

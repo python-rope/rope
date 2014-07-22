@@ -57,7 +57,7 @@ class FixModuleNames(object):
         return len(list(self._tobe_fixed(fixer)))
 
     def _tobe_fixed(self, fixer):
-        for resource in self.project.pycore.get_python_files():
+        for resource in self.project.get_python_files():
             modname = self._name(resource)
             if modname != fixer(modname):
                 yield resource

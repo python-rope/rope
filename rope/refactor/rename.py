@@ -84,7 +84,7 @@ class Rename(object):
         if _is_local(self.old_pyname):
             resources = [self.resource]
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         changes = ChangeSet('Renaming <%s> to <%s>' %
                             (self.old_name, new_name))
         finder = occurrences.create_finder(

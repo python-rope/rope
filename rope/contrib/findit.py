@@ -29,7 +29,7 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
         project.pycore, name, pyname, unsure=is_match,
         in_hierarchy=in_hierarchy, instance=primary)
     if resources is None:
-        resources = project.pycore.get_python_files()
+        resources = project.get_python_files()
     job_set = task_handle.create_jobset('Finding Occurrences',
                                         count=len(resources))
     return _find_locations(finder, resources, job_set)
@@ -64,7 +64,7 @@ def find_implementations(project, resource, offset, resources=None,
                occurrences.InHierarchyFilter(pyname, True)]
     finder = occurrences.Finder(project.pycore, name, filters=filters)
     if resources is None:
-        resources = project.pycore.get_python_files()
+        resources = project.get_python_files()
     job_set = task_handle.create_jobset('Finding Implementations',
                                         count=len(resources))
     return _find_locations(finder, resources, job_set)

@@ -75,7 +75,7 @@ class MoveMethod(object):
         """
         changes = ChangeSet('Moving method <%s>' % self.method_name)
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         if new_name is None:
             new_name = self.get_method_name()
         resource1, start1, end1, new_content1 = \
@@ -231,7 +231,7 @@ class MoveGlobal(object):
     def get_changes(self, dest, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         if dest is None or not dest.exists():
             raise exceptions.RefactoringError(
                 'Move destination does not exist.')
@@ -393,7 +393,7 @@ class MoveModule(object):
     def get_changes(self, dest, resources=None,
                     task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
-            resources = self.pycore.get_python_files()
+            resources = self.project.get_python_files()
         if dest is None or not dest.is_folder():
             raise exceptions.RefactoringError(
                 'Move destination for modules should be packages.')

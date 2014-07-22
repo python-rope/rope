@@ -60,7 +60,7 @@ def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
 
     Note that this might be really time consuming.
     """
-    resources = project.pycore.get_python_files()
+    resources = project.get_python_files()
     job_set = task_handle.create_jobset('Analyzing Modules', len(resources))
     for resource in resources:
         job_set.started_job(resource.path)

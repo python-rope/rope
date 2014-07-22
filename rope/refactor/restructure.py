@@ -135,7 +135,7 @@ class Restructure(object):
             files = [resource for resource in resources
                      if self.pycore.is_python_file(resource)]
         else:
-            files = self.pycore.get_python_files()
+            files = self.project.get_python_files()
         job_set = task_handle.create_jobset('Collecting Changes', len(files))
         for resource in files:
             job_set.started_job(resource.path)

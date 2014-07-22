@@ -151,6 +151,11 @@ class Project(_Project):
     def get_files(self):
         return self.file_list.get_files()
 
+    def get_python_files(self):
+        """Returns all python files available in the project"""
+        return [resource for resource in self.get_files()
+                if self.pycore.is_python_file(resource)]
+
     def _get_resource_path(self, name):
         return os.path.join(self._address, *name.split('/'))
 
@@ -245,6 +250,9 @@ class NoProject(_Project):
         return super(NoProject, self).get_resource(universal_name)
 
     def get_files(self):
+        return []
+
+    def get_python_files(self):
         return []
 
     _no_project = None
