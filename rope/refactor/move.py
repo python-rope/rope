@@ -162,7 +162,7 @@ class MoveMethod(object):
         body = self_name + ' = None\n' + self._get_unchanged_body()
         pymodule = self.pycore.get_string_module(body)
         finder = occurrences.create_finder(
-            self.pycore, self_name, pymodule[self_name])
+            self.project, self_name, pymodule[self_name])
         result = rename.rename_in_module(finder, host, pymodule=pymodule)
         if result is None:
             result = body
@@ -208,7 +208,7 @@ class MoveGlobal(object):
         self.old_name = self.old_pyname.get_object().get_name()
         pymodule = self.old_pyname.get_object().get_module()
         self.source = pymodule.get_resource()
-        self.tools = _MoveTools(self.pycore, self.source,
+        self.tools = _MoveTools(self.project, self.source,
                                 self.old_pyname, self.old_name)
         self.import_tools = self.tools.import_tools
         self._check_exceptional_conditions()
@@ -282,7 +282,7 @@ class MoveGlobal(object):
         placeholder = '__rope_moving_%s_' % self.old_name
         handle = _ChangeMoveOccurrencesHandle(placeholder)
         occurrence_finder = occurrences.create_finder(
-            self.pycore, self.old_name, self.old_pyname)
+            self.project, self.old_name, self.old_pyname)
         start, end = self._get_moving_region()
         renamer = ModuleSkipRenamer(occurrence_finder, self.source,
                                     handle, start, end)
@@ -386,7 +386,7 @@ class MoveModule(object):
             self.old_name = self.source.name
         else:
             self.old_name = self.source.name[:-3]
-        self.tools = _MoveTools(self.pycore, self.source,
+        self.tools = _MoveTools(self.project, self.source,
                                 self.old_pyname, self.old_name)
         self.import_tools = self.tools.import_tools
 
@@ -476,8 +476,9 @@ class _ChangeMoveOccurrencesHandle(object):
 
 class _MoveTools(object):
 
-    def __init__(self, pycore, source, pyname, old_name):
-        self.pycore = pycore
+    def __init__(self, project, source, pyname, old_name):
+        self.project = project
+        self.pycore = project.pycore
         self.source = source
         self.old_pyname = pyname
         self.old_name = old_name
@@ -524,7 +525,7 @@ class _MoveTools(object):
         return False
 
     def _create_finder(self, imports):
-        return occurrences.create_finder(self.pycore, self.old_name,
+        return occurrences.create_finder(self.project, self.old_name,
                                          self.old_pyname, imports=imports)
 
     def new_pymodule(self, pymodule, source):
