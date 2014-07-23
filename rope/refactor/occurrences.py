@@ -1,8 +1,46 @@
+"""Find occurrences of a name in a project.
+
+This module consists of a `Finder` that finds all occurrences of a name
+in a project. The `Finder.find_occurrences()` method is a generator that
+yields `Occurrence` instances for each occurrence of the name. To create
+a `Finder` object, use the `create_finder()` function:
+
+    finder = occurrences.create_finder(project, 'foo', pyname)
+    for occurrence in finder.find_occurrences():
+        pass
+
+It's possible to filter the occurrences. They can be specified when
+calling the `create_finder()` function.
+
+  * `only_calls`: If True, return only those instances where the name is
+    a function that's being called.
+
+  * `imports`: If False, don't return instances that are in import
+    statements.
+
+  * `unsure`: If a prediate function, return instances where we don't
+    know what the name references. It also filters based on the
+    predicate function.
+
+  * `docs`: If True, it will search for occurrences in regions normally
+    ignored. E.g., strings and comments.
+
+  * `in_hierarchy`: If True, it will find occurrences if the name is in
+    the class's hierarchy.
+
+  * `instance`: Used only when you want implicit interfaces to be
+    considered.
+"""
+
 import re
 
-import rope.base.pynames
-from rope.base import (pynames, pyobjects, codeanalyze, evaluate,
-                       exceptions, utils, worder)
+from rope.base import codeanalyze
+from rope.base import evaluate
+from rope.base import exceptions
+from rope.base import pynames
+from rope.base import pyobjects
+from rope.base import utils
+from rope.base import worder
 
 
 class Finder(object):
@@ -20,8 +58,8 @@ class Finder(object):
 
     """
 
-    def __init__(self, pycore, name, filters=[lambda o: True], docs=False):
-        self.pycore = pycore
+    def __init__(self, project, name, filters=[lambda o: True], docs=False):
+        self.project = project
         self.name = name
         self.docs = docs
         self.filters = filters
@@ -29,7 +67,7 @@ class Finder(object):
 
     def find_occurrences(self, resource=None, pymodule=None):
         """Generate `Occurrence` instances"""
-        tools = _OccurrenceToolsCreator(self.pycore, resource=resource,
+        tools = _OccurrenceToolsCreator(self.project, resource=resource,
                                         pymodule=pymodule, docs=self.docs)
         for offset in self._textual_finder.find_offsets(tools.source_code):
             occurrence = Occurrence(tools, offset)
@@ -42,7 +80,7 @@ class Finder(object):
                 break
 
 
-def create_finder(pycore, name, pyname, only_calls=False, imports=True,
+def create_finder(project, name, pyname, only_calls=False, imports=True,
                   unsure=None, docs=False, instance=None, in_hierarchy=False):
     """A factory for `Finder`
 
@@ -51,25 +89,25 @@ def create_finder(pycore, name, pyname, only_calls=False, imports=True,
     considered.
 
     """
-    pynames = set([pyname])
+    pynames_ = set([pyname])
     filters = []
     if only_calls:
         filters.append(CallsFilter())
     if not imports:
         filters.append(NoImportsFilter())
-    if isinstance(instance, rope.base.pynames.ParameterName):
+    if isinstance(instance, pynames.ParameterName):
         for pyobject in instance.get_objects():
             try:
-                pynames.add(pyobject[name])
+                pynames_.add(pyobject[name])
             except exceptions.AttributeNotFoundError:
                 pass
-    for pyname in pynames:
+    for pyname in pynames_:
         filters.append(PyNameFilter(pyname))
         if in_hierarchy:
             filters.append(InHierarchyFilter(pyname))
     if unsure:
         filters.append(UnsureFilter(unsure))
-    return Finder(pycore, name, filters=filters, docs=docs)
+    return Finder(project, name, filters=filters, docs=docs)
 
 
 class Occurrence(object):
@@ -158,7 +196,7 @@ def unsure_pyname(pyname, unbound=True):
 
 
 class PyNameFilter(object):
-    """For finding occurrences of a name"""
+    """For finding occurrences of a name."""
 
     def __init__(self, pyname):
         self.pyname = pyname
@@ -169,7 +207,7 @@ class PyNameFilter(object):
 
 
 class InHierarchyFilter(object):
-    """For finding occurrences of a name"""
+    """Finds the occurrence if the name is in the class's hierarchy."""
 
     def __init__(self, pyname, implementations_only=False):
         self.pyname = pyname
@@ -210,6 +248,7 @@ class InHierarchyFilter(object):
 
 
 class UnsureFilter(object):
+    """Occurrences where we don't knoow what the name references."""
 
     def __init__(self, unsure):
         self.unsure = unsure
@@ -220,6 +259,7 @@ class UnsureFilter(object):
 
 
 class NoImportsFilter(object):
+    """Don't include import statements as occurrences."""
 
     def __call__(self, occurrence):
         if occurrence.is_in_import_statement():
@@ -227,6 +267,7 @@ class NoImportsFilter(object):
 
 
 class CallsFilter(object):
+    """Filter out non-call occurrences."""
 
     def __call__(self, occurrence):
         if not occurrence.is_called():
@@ -303,8 +344,8 @@ class _TextualFinder(object):
 
 class _OccurrenceToolsCreator(object):
 
-    def __init__(self, pycore, resource=None, pymodule=None, docs=False):
-        self.pycore = pycore
+    def __init__(self, project, resource=None, pymodule=None, docs=False):
+        self.project = project
         self.__resource = resource
         self.__pymodule = pymodule
         self.docs = docs
@@ -340,4 +381,4 @@ class _OccurrenceToolsCreator(object):
     def pymodule(self):
         if self.__pymodule is not None:
             return self.__pymodule
-        return self.pycore.resource_to_pyobject(self.resource)
+        return self.project.get_pymodule(self.resource)

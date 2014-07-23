@@ -40,7 +40,7 @@ class EncapsulateField(object):
         if setter is None:
             setter = 'set_' + self.name
         renamer = GetterSetterRenameInModule(
-            self.pycore, self.name, self.pyname, getter, setter)
+            self.project, self.name, self.pyname, getter, setter)
         for file in resources:
             job_set.started_job(file.path)
             if file == self.resource:
@@ -104,10 +104,10 @@ class EncapsulateField(object):
 
 class GetterSetterRenameInModule(object):
 
-    def __init__(self, pycore, name, pyname, getter, setter):
-        self.pycore = pycore
+    def __init__(self, project, name, pyname, getter, setter):
+        self.project = project
         self.name = name
-        self.finder = occurrences.create_finder(pycore, name, pyname)
+        self.finder = occurrences.create_finder(project, name, pyname)
         self.getter = getter
         self.setter = setter
 
@@ -121,7 +121,7 @@ class GetterSetterRenameInModule(object):
 class _FindChangesForModule(object):
 
     def __init__(self, finder, resource, pymodule, skip_start, skip_end):
-        self.pycore = finder.pycore
+        self.project = finder.project
         self.finder = finder.finder
         self.getter = finder.getter
         self.setter = finder.setter
@@ -194,7 +194,7 @@ class _FindChangesForModule(object):
     @utils.saveit
     def lines(self):
         if self.pymodule is None:
-            self.pymodule = self.pycore.resource_to_pyobject(self.resource)
+            self.pymodule = self.project.get_pymodule(self.resource)
         return self.pymodule.lines
 
     @property

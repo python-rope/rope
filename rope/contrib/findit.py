@@ -19,14 +19,14 @@ def find_occurrences(project, resource, offset, unsure=False, resources=None,
 
     """
     name = worder.get_name_at(resource, offset)
-    this_pymodule = project.pycore.resource_to_pyobject(resource)
+    this_pymodule = project.get_pymodule(resource)
     primary, pyname = rope.base.evaluate.eval_location2(
         this_pymodule, offset)
 
     def is_match(occurrence):
         return unsure
     finder = occurrences.create_finder(
-        project.pycore, name, pyname, unsure=is_match,
+        project, name, pyname, unsure=is_match,
         in_hierarchy=in_hierarchy, instance=primary)
     if resources is None:
         resources = project.get_python_files()
@@ -43,7 +43,7 @@ def find_implementations(project, resource, offset, resources=None,
     `Location`\s.
     """
     name = worder.get_name_at(resource, offset)
-    this_pymodule = project.pycore.resource_to_pyobject(resource)
+    this_pymodule = project.get_pymodule(resource)
     pyname = rope.base.evaluate.eval_location(this_pymodule, offset)
     if pyname is not None:
         pyobject = pyname.get_object()
@@ -62,7 +62,7 @@ def find_implementations(project, resource, offset, resources=None,
             return False
     filters = [is_defined, not_self,
                occurrences.InHierarchyFilter(pyname, True)]
-    finder = occurrences.Finder(project.pycore, name, filters=filters)
+    finder = occurrences.Finder(project, name, filters=filters)
     if resources is None:
         resources = project.get_python_files()
     job_set = task_handle.create_jobset('Finding Implementations',
@@ -88,7 +88,7 @@ def find_definition(project, code, offset, resource=None, maxfixes=1):
                 if occurrence.offset < start:
                     return False
             pyname_filter = occurrences.PyNameFilter(pyname)
-            finder = occurrences.Finder(project.pycore, name,
+            finder = occurrences.Finder(project, name,
                                         [check_offset, pyname_filter])
             for occurrence in finder.find_occurrences(pymodule=module):
                 return Location(occurrence)
