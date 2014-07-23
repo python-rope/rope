@@ -7,7 +7,8 @@ from rope.refactor import sourceutils, occurrences, rename
 class MethodObject(object):
 
     def __init__(self, project, resource, offset):
-        self.pycore = project.pycore
+        self.project = project
+        self.pycore = self.project.pycore
         this_pymodule = self.project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
         if pyname is None or not isinstance(pyname.get_object(),
@@ -62,7 +63,7 @@ class MethodObject(object):
             body = param + ' = None\n' + body
             pymod = self.pycore.get_string_module(body, self.resource)
             pyname = pymod[param]
-            finder = occurrences.create_finder(self.pycore, param, pyname)
+            finder = occurrences.create_finder(self.project, param, pyname)
             result = rename.rename_in_module(finder, 'self.' + param,
                                              pymodule=pymod)
             body = result[result.index('\n') + 1:]

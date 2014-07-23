@@ -85,7 +85,7 @@ class InlineMethod(_Inliner):
         self.pymodule = self.pyfunction.get_module()
         self.resource = self.pyfunction.get_module().get_resource()
         self.occurrence_finder = occurrences.create_finder(
-            self.pycore, self.name, self.pyname)
+            self.project, self.name, self.pyname)
         self.normal_generator = _DefinitionGenerator(self.project,
                                                      self.pyfunction)
         self._init_imports()
@@ -138,7 +138,7 @@ class InlineMethod(_Inliner):
                 if only_current and self.original == file:
                     aim = self.offset
                 handle = _InlineFunctionCallsForModuleHandle(
-                    self.pycore, file, self.others_generator, aim)
+                    self.project, file, self.others_generator, aim)
                 result = move.ModuleSkipRenamer(
                     self.occurrence_finder, file, handle).get_changed_module()
                 if result is not None:
@@ -175,7 +175,7 @@ class InlineMethod(_Inliner):
                 # we don't want to change any of them
                 aim = len(self.resource.read()) + 100
         handle = _InlineFunctionCallsForModuleHandle(
-            self.pycore, self.resource,
+            self.project, self.resource,
             self.normal_generator, aim_offset=aim)
         replacement = None
         if remove:
@@ -255,7 +255,7 @@ class InlineVariable(_Inliner):
         region = None
         if only_current and self.original == self.resource:
             region = self.region
-        return _inline_variable(self.pycore, self.pymodule, self.pyname,
+        return _inline_variable(self.project, self.pymodule, self.pyname,
                                 self.name, remove=remove, region=region)
 
     def _init_imports(self):
@@ -272,7 +272,7 @@ class InlineVariable(_Inliner):
                 if self.offset < start or end < self.offset:
                     return False
             filters.insert(0, check_aim)
-        finder = occurrences.Finder(self.pycore, self.name, filters=filters)
+        finder = occurrences.Finder(self.project, self.name, filters=filters)
         changed = rename.rename_in_module(
             finder, self.imported, resource=resource, replace_primary=True)
         if changed and remove:
@@ -328,6 +328,7 @@ class _DefinitionGenerator(object):
     unique_prefix = unique_prefix()
 
     def __init__(self, project, pyfunction, body=None):
+        self.project = project
         self.pycore = project.pycore
         self.pyfunction = pyfunction
         self.pymodule = pyfunction.get_module()
@@ -403,7 +404,7 @@ class _DefinitionGenerator(object):
             to_be_inlined = [prefix + item for item in to_be_inlined]
             for item in all_names:
                 pyname = guest[item]
-                occurrence_finder = occurrences.create_finder(self.pycore,
+                occurrence_finder = occurrences.create_finder(self.project,
                                                               item, pyname)
                 source = rename.rename_in_module(occurrence_finder,
                                                  prefix + item, pymodule=guest)
@@ -413,7 +414,7 @@ class _DefinitionGenerator(object):
         for name in to_be_inlined:
             pymodule = self.pycore.get_string_module(source, self.resource)
             pyname = pymodule[name]
-            source = _inline_variable(self.pycore, pymodule, pyname, name)
+            source = _inline_variable(self.project, pymodule, pyname, name)
 
         return self._replace_returns_with(source, returns)
 
@@ -471,7 +472,7 @@ class _DefinitionGenerator(object):
 
 class _InlineFunctionCallsForModuleHandle(object):
 
-    def __init__(self, pycore, resource,
+    def __init__(self, project, resource,
                  definition_generator, aim_offset=None):
         """Inlines occurrences
 
@@ -479,7 +480,7 @@ class _InlineFunctionCallsForModuleHandle(object):
         `aim` offset will be inlined.
 
         """
-        self.pycore = pycore
+        self.project = project
         self.generator = definition_generator
         self.resource = resource
         self.aim = aim_offset
@@ -537,7 +538,7 @@ class _InlineFunctionCallsForModuleHandle(object):
     @property
     @utils.saveit
     def pymodule(self):
-        return self.pycore.resource_to_pyobject(self.resource)
+        return self.project.get_pymodule(self.resource)
 
     @property
     @utils.saveit
@@ -553,12 +554,12 @@ class _InlineFunctionCallsForModuleHandle(object):
         return self.pymodule.lines
 
 
-def _inline_variable(pycore, pymodule, pyname, name,
+def _inline_variable(project, pymodule, pyname, name,
                      remove=True, region=None):
     definition = _getvardef(pymodule, pyname)
     start, end = _assigned_lineno(pymodule, pyname)
 
-    occurrence_finder = occurrences.create_finder(pycore, name, pyname)
+    occurrence_finder = occurrences.create_finder(project, name, pyname)
     changed_source = rename.rename_in_module(
         occurrence_finder, definition, pymodule=pymodule,
         replace_primary=True, writes=False, region=region)
