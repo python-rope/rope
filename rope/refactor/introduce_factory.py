@@ -1,5 +1,6 @@
 import rope.base.exceptions
 import rope.base.pyobjects
+from rope.base import libutils
 from rope.base import taskhandle, evaluate
 from rope.base.change import (ChangeSet, ChangeContents)
 from rope.refactor import rename, occurrences, sourceutils, importutils
@@ -66,8 +67,8 @@ class IntroduceFactory(object):
                                                     global_)
             if changed_code is not None:
                 if global_:
-                    new_pymodule = self.pycore.get_string_module(changed_code,
-                                                                 self.resource)
+                    new_pymodule = libutils.get_string_module(
+                        self.project, changed_code, self.resource)
                     modname = self.pycore.modname(self.resource)
                     changed_code, imported = importutils.add_import(
                         self.pycore, new_pymodule, modname, factory_name)
@@ -83,8 +84,8 @@ class IntroduceFactory(object):
         if source_code is None:
             source_code = self.pymodule.source_code
         else:
-            self.pymodule = self.pycore.get_string_module(
-                source_code, resource=self.resource)
+            self.pymodule = libutils.get_string_module(
+                self.project, source_code, resource=self.resource)
         lines = self.pymodule.lines
         start = self._get_insertion_offset(class_scope, lines)
         result = source_code[:start]

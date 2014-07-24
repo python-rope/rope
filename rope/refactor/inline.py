@@ -21,7 +21,7 @@ import re
 import rope.base.exceptions
 import rope.refactor.functionutils
 from rope.base import (pynames, pyobjects, codeanalyze,
-                       taskhandle, evaluate, worder, utils)
+                       taskhandle, evaluate, worder, utils, libutils)
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import (occurrences, rename, sourceutils,
                            importutils, move, change_signature)
@@ -387,7 +387,7 @@ class _DefinitionGenerator(object):
         header, to_be_inlined = self._calculate_header(primary, pyname, call)
 
         source = header + self.body
-        mod = self.pycore.get_string_module(source)
+        mod = libutils.get_string_module(self.project, source)
         name_dict = mod.get_scope().get_names()
         all_names = [x for x in name_dict if
                      not isinstance(name_dict[x],
@@ -398,7 +398,8 @@ class _DefinitionGenerator(object):
         if len(set(all_names).intersection(set(host_vars))) > 0:
 
             prefix = _DefinitionGenerator.unique_prefix.next()
-            guest = self.pycore.get_string_module(source, self.resource)
+            guest = libutils.get_string_module(self.project, source,
+                                               self.resource)
 
             to_be_inlined = [prefix + item for item in to_be_inlined]
             for item in all_names:
@@ -407,11 +408,13 @@ class _DefinitionGenerator(object):
                                                               item, pyname)
                 source = rename.rename_in_module(occurrence_finder,
                                                  prefix + item, pymodule=guest)
-                guest = self.pycore.get_string_module(source, self.resource)
+                guest = libutils.get_string_module(
+                    self.project, source, self.resource)
 
         #parameters not reassigned inside the functions are now inlined.
         for name in to_be_inlined:
-            pymodule = self.pycore.get_string_module(source, self.resource)
+            pymodule = libutils.get_string_module(
+                self.project, source, self.resource)
             pyname = pymodule[name]
             source = _inline_variable(self.pycore, pymodule, pyname, name)
 
@@ -595,12 +598,12 @@ def _assigned_lineno(pymodule, pyname):
 def _add_imports(pycore, source, resource, imports):
     if not imports:
         return source
-    pymodule = pycore.get_string_module(source, resource)
+    pymodule = libutils.get_string_module(pycore.project, source, resource)
     module_import = importutils.get_module_imports(pycore, pymodule)
     for import_info in imports:
         module_import.add_import(import_info)
     source = module_import.get_changed_source()
-    pymodule = pycore.get_string_module(source, resource)
+    pymodule = libutils.get_string_module(pycore.project, source, resource)
     import_tools = importutils.ImportTools(pycore)
     return import_tools.organize_imports(pymodule, unused=False, sort=False)
 
@@ -614,7 +617,7 @@ def _get_pyname(project, resource, offset):
 
 
 def _remove_from(pycore, pyname, source, resource):
-    pymodule = pycore.get_string_module(source, resource)
+    pymodule = libutils.get_string_module(pycore.project, source, resource)
     module_import = importutils.get_module_imports(pycore, pymodule)
     module_import.remove_pyname(pyname)
     return module_import.get_changed_source()

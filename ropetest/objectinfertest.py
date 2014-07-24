@@ -2,6 +2,7 @@ import unittest
 
 import rope.base.project
 import rope.base.builtins
+from rope.base import libutils
 from ropetest import testutils
 
 
@@ -18,7 +19,7 @@ class ObjectInferTest(unittest.TestCase):
 
     def test_simple_type_inferencing(self):
         code = 'class Sample(object):\n    pass\na_var = Sample()\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
@@ -26,7 +27,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_simple_type_inferencing_classes_defined_in_holding_scope(self):
         code = 'class Sample(object):\n    pass\n' \
                'def a_func():\n    a_var = Sample()\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_func'].get_object().\
             get_scope()['a_var'].get_object()
@@ -36,7 +37,7 @@ class ObjectInferTest(unittest.TestCase):
         code = 'class Sample(object):\n    pass\n' \
                'class Another(object):\n' \
                '    def a_method():\n        a_var = Sample()\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         another_class = scope['Another'].get_object()
         a_var = another_class['a_method'].\
@@ -47,7 +48,7 @@ class ObjectInferTest(unittest.TestCase):
         code = 'class Sample(object):\n    pass\n' \
                'class Another(object):\n' \
                '    def __init__(self):\n        self.a_var = Sample()\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         another_class = scope['Another'].get_object()
         a_var = another_class['a_var'].get_object()
@@ -56,7 +57,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_simple_type_inferencing_for_in_class_assignments(self):
         code = 'class Sample(object):\n    pass\n' \
                'class Another(object):\n    an_attr = Sample()\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         another_class = scope['Another'].get_object()
         an_attr = another_class['an_attr'].get_object()
@@ -65,7 +66,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_simple_type_inferencing_for_chained_assignments(self):
         mod = 'class Sample(object):\n    pass\n' \
               'copied_sample = Sample'
-        mod_scope = self.project.pycore.get_string_scope(mod)
+        mod_scope = libutils.get_string_scope(self.project, mod)
         sample_class = mod_scope['Sample']
         copied_sample = mod_scope['copied_sample']
         self.assertEquals(sample_class.get_object(),
@@ -75,7 +76,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = 'class Sample(object):\n    pass\n' \
               'sample_class = Sample\n' \
               'sample_class = sample_class\n'
-        mod_scope = self.project.pycore.get_string_scope(mod)
+        mod_scope = libutils.get_string_scope(self.project, mod)
         sample_class = mod_scope['Sample']
         sample_class_var = mod_scope['sample_class']
         self.assertEquals(sample_class.get_object(),
@@ -85,7 +86,7 @@ class ObjectInferTest(unittest.TestCase):
         src = 'class Sample(object):\n    pass\n' \
               'def a_func():\n    return Sample\n' \
               'a_var = a_func()\n'
-        scope = self.project.pycore.get_string_scope(src)
+        scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample']
         a_var = scope['a_var']
         self.assertEquals(sample_class.get_object(), a_var.get_object())
@@ -94,7 +95,7 @@ class ObjectInferTest(unittest.TestCase):
         src = 'class Sample(object):\n    pass\n' \
               'def a_func():\n    return Sample()\n' \
               'a_var = a_func()\n'
-        scope = self.project.pycore.get_string_scope(src)
+        scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
@@ -105,7 +106,7 @@ class ObjectInferTest(unittest.TestCase):
               '    if True:\n        return Sample()\n' \
               '    else:\n        return a_func()\n' \
               'a_var = a_func()\n'
-        scope = self.project.pycore.get_string_scope(src)
+        scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
@@ -114,14 +115,14 @@ class ObjectInferTest(unittest.TestCase):
         src = 'class Sample(object):\n' \
               '    def __call__(self):\n        return Sample\n' \
               'sample = Sample()\na_var = sample()'
-        scope = self.project.pycore.get_string_scope(src)
+        scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample']
         a_var = scope['a_var']
         self.assertEquals(sample_class.get_object(), a_var.get_object())
 
     def test_list_type_inferencing(self):
         src = 'class Sample(object):\n    pass\na_var = [Sample()]\n'
-        scope = self.pycore.get_string_scope(src)
+        scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = scope['a_var'].get_object()
         self.assertNotEquals(sample_class, a_var.get_type())
@@ -130,7 +131,7 @@ class ObjectInferTest(unittest.TestCase):
         src = 'class Sample(object):\n' \
               '    def __init__(self):\n        self.a_var = None\n' \
               '    def set(self):\n        self.a_var = Sample()\n'
-        scope = self.pycore.get_string_scope(src)
+        scope = libutils.get_string_scope(self.project, src)
         sample_class = scope['Sample'].get_object()
         a_var = sample_class['a_var'].get_object()
         self.assertEquals(sample_class, a_var.get_type())
@@ -140,7 +141,7 @@ class ObjectInferTest(unittest.TestCase):
               'def f(*args):\n    return A()\n' \
               'class B(object):\n    p = property(f)\n' \
               'a_var = B().p\n'
-        pymod = self.pycore.get_string_module(src)
+        pymod = libutils.get_string_module(self.project, src)
         a_class = pymod['A'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(a_class, a_var.get_type())
@@ -150,7 +151,7 @@ class ObjectInferTest(unittest.TestCase):
               'class B(object):\n    def p_get(self):\n        return A()\n' \
               '    p = property(p_get)\n' \
               'a_var = B().p\n'
-        pymod = self.pycore.get_string_module(src)
+        pymod = libutils.get_string_module(self.project, src)
         a_class = pymod['A'].get_object()
         a_var = pymod['a_var'].get_object()
         self.assertEquals(a_class, a_var.get_type())
@@ -158,7 +159,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_lambda_functions(self):
         code = 'class C(object):\n    pass\n' \
                'l = lambda: C()\na_var = l()'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -166,7 +167,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_mixing_subscript_with_tuple_assigns(self):
         code = 'class C(object):\n    attr = 0\n' \
                'd = {}\nd[0], b = (0, C())\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['b'].get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -174,13 +175,14 @@ class ObjectInferTest(unittest.TestCase):
     def test_mixing_ass_attr_with_tuple_assignment(self):
         code = 'class C(object):\n    attr = 0\n' \
                'c = C()\nc.attr, b = (0, C())\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['b'].get_object()
         self.assertEquals(c_class, a_var.get_type())
 
     def test_mixing_slice_with_tuple_assigns(self):
-        mod = self.pycore.get_string_module(
+        mod = libutils.get_string_module(
+            self.project,
             'class C(object):\n    attr = 0\n'
             'd = [None] * 3\nd[0:2], b = ((0,), C())\n')
         c_class = mod['C'].get_object()
@@ -188,7 +190,8 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     def test_nested_tuple_assignments(self):
-        mod = self.pycore.get_string_module(
+        mod = libutils.get_string_module(
+            self.project,
             'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
             'a, (b, c) = (C1(), (C2(), C1()))\n')
         c1_class = mod['C1'].get_object()
@@ -201,14 +204,15 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c1_class, c_var.get_type())
 
     def test_empty_tuples(self):
-        mod = self.pycore.get_string_module('t = ()\na, b = t\n')
+        mod = libutils.get_string_module(
+            self.project, 't = ()\na, b = t\n')
         a = mod['a'].get_object()  # noqa
 
     def test_handling_generator_functions(self):
         code = 'class C(object):\n    pass\n' \
                'def f():\n    yield C()\n' \
                'for c in f():\n    a_var = c\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -224,7 +228,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_considering_nones_to_be_unknowns(self):
         code = 'class C(object):\n    pass\n' \
                'a_var = None\na_var = C()\na_var = None\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -232,7 +236,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_basic_list_comprehensions(self):
         code = 'class C(object):\n    pass\n' \
                'l = [C() for i in range(1)]\na_var = l[0]\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -240,7 +244,7 @@ class ObjectInferTest(unittest.TestCase):
     def test_basic_generator_expressions(self):
         code = 'class C(object):\n    pass\n' \
                'l = (C() for i in range(1))\na_var = list(l)[0]\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -249,7 +253,7 @@ class ObjectInferTest(unittest.TestCase):
         code = 'class C(object):\n    pass\n' \
                'c_objects = [C(), C()]\n' \
                'l = [c for c in c_objects]\na_var = l[0]\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c_class = mod['C'].get_object()
         a_var = mod['a_var'].get_object()
         self.assertEquals(c_class, a_var.get_type())
@@ -259,7 +263,7 @@ class ObjectInferTest(unittest.TestCase):
                'class C2(object):\n    pass\n' \
                'l = [(c1, c2) for c1 in [C1()] for c2 in [C2()]]\n' \
                'a, b = l[0]\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         c1_class = mod['C1'].get_object()
         c2_class = mod['C2'].get_object()
         a_var = mod['a'].get_object()
@@ -268,7 +272,8 @@ class ObjectInferTest(unittest.TestCase):
         self.assertEquals(c2_class, b_var.get_type())
 
     def test_list_comprehensions_and_multiple_iters(self):
-        mod = self.pycore.get_string_module(
+        mod = libutils.get_string_module(
+            self.project,
             'class C1(object):\n    pass\nclass C2(object):\n    pass\n'
             'l = [(c1, c2) for c1, c2 in [(C1(), C2())]]\n'
             'a, b = l[0]\n')
@@ -283,8 +288,7 @@ class ObjectInferTest(unittest.TestCase):
         code = 'class MyError(Exception):\n    pass\n' \
                'try:\n    raise MyError()\n' \
                'except MyError, e:\n    pass\n'
-        mod = self.pycore.get_string_module(
-            code)
+        mod = libutils.get_string_module(self.project, code)
         my_error = mod['MyError'].get_object()
         e_var = mod['e'].get_object()
         self.assertEquals(my_error, e_var.get_type())
@@ -293,8 +297,7 @@ class ObjectInferTest(unittest.TestCase):
         code = 'class MyError(Exception):\n    pass\n' \
                'try:\n    raise MyError()\n' \
                'except (MyError, Exception), e:\n    pass\n'
-        mod = self.pycore.get_string_module(
-            code)
+        mod = libutils.get_string_module(self.project, code)
         my_error = mod['MyError'].get_object()
         e_var = mod['e'].get_object()
         self.assertEquals(my_error, e_var.get_type())
@@ -304,7 +307,7 @@ class ObjectInferTest(unittest.TestCase):
                'class B(object):\n' \
                '    @property\n    def f(self):\n        return A()\n' \
                'b = B()\nvar = b.f\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         var = mod['var'].get_object()
         a = mod['A'].get_object()
         self.assertEquals(a, var.get_type())
@@ -313,7 +316,7 @@ class ObjectInferTest(unittest.TestCase):
         code = 'class B(object):\n' \
                '    @property\n    def f(self):\n        return self\n' \
                'b = B()\nvar = b.f\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         var = mod['var'].get_object()
         a = mod['B'].get_object()
         self.assertEquals(a, var.get_type())

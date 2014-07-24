@@ -1,7 +1,7 @@
 import warnings
 
 from rope.base import (exceptions, pyobjects, pynames, taskhandle,
-                       evaluate, worder, codeanalyze)
+                       evaluate, worder, codeanalyze, libutils)
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import occurrences
 
@@ -31,7 +31,7 @@ class Rename(object):
         else:
             if not resource.is_folder() and resource.name == '__init__.py':
                 resource = resource.parent
-            dummy_pymodule = self.pycore.get_string_module('')
+            dummy_pymodule = libutils.get_string_module(self.project, '')
             self.old_instance = None
             self.old_pyname = pynames.ImportedModule(dummy_pymodule,
                                                      resource=resource)

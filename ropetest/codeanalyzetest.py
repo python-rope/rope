@@ -4,6 +4,7 @@ except ImportError:
     import unittest
 
 import rope.base.evaluate
+from rope.base import libutils
 from rope.base import exceptions, worder, codeanalyze
 from rope.base.codeanalyze import (SourceLinesAdapter,
                                    LogicalLineFinder, get_block_start)
@@ -357,14 +358,14 @@ class ScopeNameFinderTest(unittest.TestCase):
     # exception, but not in class bodies
     def xxx_test_global_name_in_class_body(self):
         code = 'a_var = 10\nclass C(object):\n    a_var = a_var\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         result = name_finder.get_pyname_at(len(code) - 3)
         self.assertEquals(scope['a_var'], result)
 
     def test_class_variable_attribute_in_class_body(self):
         code = 'a_var = 10\nclass C(object):\n    a_var = a_var\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope['C'].get_object()['a_var']
         result = name_finder.get_pyname_at(len(code) - 12)
@@ -372,7 +373,7 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_class_variable_attribute_in_class_body2(self):
         code = 'a_var = 10\nclass C(object):\n    a_var \\\n= a_var\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope['C'].get_object()['a_var']
         result = name_finder.get_pyname_at(len(code) - 12)
@@ -380,7 +381,7 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_class_method_attribute_in_class_body(self):
         code = 'class C(object):\n    def a_method(self):\n        pass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_method_pyname = scope['C'].get_object()['a_method']
         result = name_finder.get_pyname_at(code.index('a_method') + 2)
@@ -388,7 +389,7 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_inner_class_attribute_in_class_body(self):
         code = 'class C(object):\n    class CC(object):\n        pass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_class_pyname = scope['C'].get_object()['CC']
         result = name_finder.get_pyname_at(code.index('CC') + 2)
@@ -396,7 +397,7 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_class_method_in_class_body_but_not_indexed(self):
         code = 'class C(object):\n    def func(self, func):\n        pass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         a_func_pyname = scope.get_scopes()[0].get_scopes()[0]['func']
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         result = name_finder.get_pyname_at(code.index(', func') + 3)
@@ -404,7 +405,7 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_function_but_not_indexed(self):
         code = 'def a_func(a_func):\n    pass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         a_func_pyname = scope['a_func']
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         result = name_finder.get_pyname_at(code.index('a_func') + 3)
@@ -415,7 +416,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod', root_folder)
         mod.write('def a_func():\n    pass\n')
         code = 'from mod import a_func\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         mod_pyobject = self.pycore.resource_to_pyobject(mod)
         found_pyname = name_finder.get_pyname_at(code.index('mod') + 1)
@@ -425,7 +426,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('def afunc():\n    pass\n')
         code = 'from mod1 import (\n    afunc as func)\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         mod_pyobject = self.pycore.resource_to_pyobject(mod1)
         afunc = mod_pyobject['afunc']
@@ -462,28 +463,28 @@ class ScopeNameFinderTest(unittest.TestCase):
 
     def test_get_pyname_at_on_language_keywords(self):
         code = 'def a_func(a_func):\n    pass\n'
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         with self.assertRaises(exceptions.RopeError):
             name_finder.get_pyname_at(code.index('pass'))
 
     def test_one_liners(self):
         code = 'var = 1\ndef f(): var = 2\nprint var\n'
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
         self.assertEquals(pymod['var'], pyname)
 
     def test_one_liners_with_line_breaks(self):
         code = 'var = 1\ndef f(\n): var = 2\nprint var\n'
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
         self.assertEquals(pymod['var'], pyname)
 
     def test_one_liners_with_line_breaks2(self):
         code = 'var = 1\ndef f(\np): var = 2\nprint var\n'
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
         self.assertEquals(pymod['var'], pyname)

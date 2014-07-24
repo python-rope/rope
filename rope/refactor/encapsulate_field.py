@@ -1,4 +1,10 @@
-from rope.base import pynames, taskhandle, evaluate, exceptions, worder, utils
+from rope.base import evaluate
+from rope.base import exceptions
+from rope.base import libutils
+from rope.base import pynames
+from rope.base import taskhandle
+from rope.base import utils
+from rope.base import worder
 from rope.base.change import ChangeSet, ChangeContents
 from rope.refactor import sourceutils, occurrences
 
@@ -89,7 +95,8 @@ class EncapsulateField(object):
         new_source = renamer.get_changed_module(pymodule=pymodule,
                                                 skip_start=start, skip_end=end)
         if new_source is not None:
-            pymodule = self.pycore.get_string_module(new_source, self.resource)
+            pymodule = libutils.get_string_module(
+                self.project, new_source, self.resource)
             class_scope = pymodule.get_scope().\
                 get_inner_scope_for_line(class_scope.get_start())
         indents = sourceutils.get_indent(self.pycore) * ' '

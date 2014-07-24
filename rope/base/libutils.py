@@ -3,6 +3,7 @@ import os.path
 
 import rope.base.project
 import rope.base.pycore
+from rope.base import pyobjectsdef
 from rope.base import taskhandle
 
 
@@ -66,3 +67,20 @@ def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
         job_set.started_job(resource.path)
         project.pycore.analyze_module(resource)
         job_set.finished_job()
+
+
+def get_string_module(project, code, resource=None, force_errors=False):
+    """Returns a `PyObject` object for the given code
+
+    If `force_errors` is `True`, `exceptions.ModuleSyntaxError` is
+    raised if module has syntax errors.  This overrides
+    ``ignore_syntax_errors`` project config.
+
+    """
+    return pyobjectsdef.PyModule(project.pycore, code, resource,
+                                 force_errors=force_errors)
+
+
+def get_string_scope(project, code, resource=None):
+    """Returns a `Scope` object for the given code"""
+    return get_string_module(project, code, resource).get_scope()

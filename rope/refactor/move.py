@@ -5,7 +5,7 @@ based on inputs.
 
 """
 from rope.base import (pyobjects, codeanalyze, exceptions, pynames,
-                       taskhandle, evaluate, worder)
+                       taskhandle, evaluate, worder, libutils)
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences, sourceutils, \
     functionutils
@@ -94,8 +94,8 @@ class MoveMethod(object):
             import_tools = importutils.ImportTools(self.pycore)
             new_imports = self._get_used_imports(import_tools)
             if new_imports:
-                goal_pymodule = self.pycore.get_string_module(result,
-                                                              resource2)
+                goal_pymodule = libutils.get_string_module(
+                    self.project, result, resource2)
                 result = _add_imports_to_module(
                     import_tools, goal_pymodule, new_imports)
             if resource2 in resources:
@@ -160,7 +160,7 @@ class MoveMethod(object):
     def _get_body(self, host='host'):
         self_name = self._get_self_name()
         body = self_name + ' = None\n' + self._get_unchanged_body()
-        pymodule = self.pycore.get_string_module(body)
+        pymodule = libutils.get_string_module(self.project, body)
         finder = occurrences.create_finder(
             self.pycore, self_name, pymodule[self_name])
         result = rename.rename_in_module(finder, host, pymodule=pymodule)
@@ -288,7 +288,8 @@ class MoveGlobal(object):
                                     handle, start, end)
         source = renamer.get_changed_module()
         if handle.occurred:
-            pymodule = self.pycore.get_string_module(source, self.source)
+            pymodule = libutils.get_string_module(
+                self.project, source, self.source)
             # Adding new import
             source, imported = importutils.add_import(
                 self.pycore, pymodule, self._new_modname(dest), self.old_name)
@@ -327,7 +328,7 @@ class MoveGlobal(object):
 
         # Organizing imports
         source = result
-        pymodule = self.pycore.get_string_module(source, dest)
+        pymodule = libutils.get_string_module(self.project, source, dest)
         source = self.import_tools.organize_imports(pymodule, sort=False,
                                                     unused=False)
         return ChangeContents(dest, source)
@@ -337,7 +338,8 @@ class MoveGlobal(object):
             self.pycore, self.source, self._get_moving_element())
 
     def _get_module_with_imports(self, source_code, resource):
-        pymodule = self.pycore.get_string_module(source_code, resource)
+        pymodule = libutils.get_string_module(
+            self.project, source_code, resource)
         return self.import_tools.module_imports(pymodule)
 
     def _get_moving_element(self):
@@ -363,7 +365,8 @@ class MoveGlobal(object):
             return pymodule, False
         else:
             resource = pymodule.get_resource()
-            pymodule = self.pycore.get_string_module(source, resource)
+            pymodule = libutils.get_string_module(
+                self.project, source, resource)
             return pymodule, True
 
 
@@ -378,7 +381,7 @@ class MoveModule(object):
         if resource.is_folder() and not resource.has_child('__init__.py'):
             raise exceptions.RefactoringError(
                 'Cannot move non-package folder.')
-        dummy_pymodule = self.pycore.get_string_module('')
+        dummy_pymodule = libutils.get_string_module(self.project, '')
         self.old_pyname = pynames.ImportedModule(dummy_pymodule,
                                                  resource=resource)
         self.source = self.old_pyname.get_object().get_resource()
@@ -529,8 +532,8 @@ class _MoveTools(object):
 
     def new_pymodule(self, pymodule, source):
         if source is not None:
-            return self.pycore.get_string_module(
-                source, pymodule.get_resource())
+            return libutils.get_string_module(
+                self.project, source, pymodule.get_resource())
         return pymodule
 
     def new_source(self, pymodule, source):
@@ -551,7 +554,8 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
 
 def moving_code_with_imports(pycore, resource, source):
     import_tools = importutils.ImportTools(pycore)
-    pymodule = pycore.get_string_module(source, resource)
+    project = pycore.project
+    pymodule = libutils.get_string_module(project, source, resource)
     origin = pycore.resource_to_pyobject(resource)
 
     imports = []
@@ -565,12 +569,12 @@ def moving_code_with_imports(pycore, resource, source):
     imports.append(import_tools.get_from_import(resource, back_names))
 
     source = _add_imports_to_module(import_tools, pymodule, imports)
-    pymodule = pycore.get_string_module(source, resource)
+    pymodule = libutils.get_string_module(project, source, resource)
 
     source = import_tools.relatives_to_absolutes(pymodule)
-    pymodule = pycore.get_string_module(source, resource)
+    pymodule = libutils.get_string_module(project, source, resource)
     source = import_tools.organize_imports(pymodule, selfs=False)
-    pymodule = pycore.get_string_module(source, resource)
+    pymodule = libutils.get_string_module(project, source, resource)
 
     # extracting imports after changes
     module_imports = import_tools.module_imports(pymodule)
