@@ -13,7 +13,6 @@ class EncapsulateField(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = project.pycore
         self.name = worder.get_name_at(resource, offset)
         this_pymodule = self.project.get_pymodule(resource)
         self.pyname = evaluate.eval_location(this_pymodule, offset)
@@ -99,7 +98,7 @@ class EncapsulateField(object):
                 self.project, new_source, self.resource)
             class_scope = pymodule.get_scope().\
                 get_inner_scope_for_line(class_scope.get_start())
-        indents = sourceutils.get_indent(self.pycore.project) * ' '
+        indents = sourceutils.get_indent(self.project) * ' '
         getter = 'def %s(self):\n%sreturn self.%s' % \
                  (getter, indents, self.name)
         setter = 'def %s(self, value):\n%sself.%s = value' % \
