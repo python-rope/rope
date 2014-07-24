@@ -1,6 +1,9 @@
 import rope.base.codeanalyze
 import rope.base.evaluate
-from rope.base import worder, exceptions, utils
+from rope.base import exceptions
+from rope.base import libutils
+from rope.base import utils
+from rope.base import worder
 from rope.base.codeanalyze import ArrayLinesAdapter, LogicalLineFinder
 
 
@@ -24,8 +27,9 @@ class FixSyntax(object):
                    self.resource.read() == code:
                     return self.pycore.resource_to_pyobject(self.resource,
                                                             force_errors=True)
-                return self.pycore.get_string_module(
-                    code, resource=self.resource, force_errors=True)
+                return libutils.get_string_module(
+                    self.pycore.project, code, resource=self.resource,
+                    force_errors=True)
             except exceptions.ModuleSyntaxError, e:
                 if msg is None:
                     msg = '%s:%s %s' % (e.filename, e.lineno, e.message_)

@@ -103,6 +103,7 @@ class PyCore(object):
             raise ModuleNotFoundError('Module %s not found' % name)
         return self.resource_to_pyobject(module)
 
+    @utils.deprecated('Use `libutils.get_string_module` instead')
     def get_string_module(self, code, resource=None, force_errors=False):
         """Returns a `PyObject` object for the given code
 
@@ -113,6 +114,7 @@ class PyCore(object):
         """
         return PyModule(self, code, resource, force_errors=force_errors)
 
+    @utils.deprecated('Use `libutils.get_string_scope` instead')
     def get_string_scope(self, code, resource=None):
         """Returns a `Scope` object for the given code"""
         return self.get_string_module(code, resource).get_scope()
@@ -196,6 +198,7 @@ class PyCore(object):
     def resource_to_pyobject(self, resource, force_errors=False):
         return self.module_cache.get_pymodule(resource, force_errors)
 
+    @utils.deprecated('Use `project.get_python_files` instead')
     def get_python_files(self):
         """Returns all python files available in the project"""
         return [resource for resource in self.project.get_files()

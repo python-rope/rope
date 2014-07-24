@@ -1,5 +1,6 @@
 import warnings
 
+from rope.base import libutils
 from rope.base import pyobjects, exceptions, change, evaluate, codeanalyze
 from rope.refactor import sourceutils, occurrences, rename
 
@@ -61,7 +62,8 @@ class MethodObject(object):
         body = sourceutils.get_body(self.pyfunction)
         for param in self._get_parameter_names():
             body = param + ' = None\n' + body
-            pymod = self.pycore.get_string_module(body, self.resource)
+            pymod = libutils.get_string_module(
+                self.project, body, self.resource)
             pyname = pymod[param]
             finder = occurrences.create_finder(self.project, param, pyname)
             result = rename.rename_in_module(finder, 'self.' + param,
