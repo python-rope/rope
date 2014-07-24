@@ -103,7 +103,7 @@ class IntroduceFactory(object):
 
     def _get_factory_method(self, lines, class_scope,
                             factory_name, global_):
-        unit_indents = ' ' * sourceutils.get_indent(self.pycore)
+        unit_indents = ' ' * sourceutils.get_indent(self.project)
         if global_:
             if self._get_scope_indents(lines, class_scope) > 0:
                 raise rope.base.exceptions.RefactoringError(
@@ -114,7 +114,7 @@ class IntroduceFactory(object):
             ('@staticmethod\ndef %s(*args, **kwds):\n' % factory_name +
              '%sreturn %s(*args, **kwds)\n' % (unit_indents, self.old_name))
         indents = self._get_scope_indents(lines, class_scope) + \
-            sourceutils.get_indent(self.pycore)
+            sourceutils.get_indent(self.project)
         return '\n' + sourceutils.indent_lines(unindented_factory, indents)
 
     def _get_scope_indents(self, lines, scope):

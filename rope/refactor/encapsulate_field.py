@@ -99,7 +99,7 @@ class EncapsulateField(object):
                 self.project, new_source, self.resource)
             class_scope = pymodule.get_scope().\
                 get_inner_scope_for_line(class_scope.get_start())
-        indents = sourceutils.get_indent(self.pycore) * ' '
+        indents = sourceutils.get_indent(self.pycore.project) * ' '
         getter = 'def %s(self):\n%sreturn self.%s' % \
                  (getter, indents, self.name)
         setter = 'def %s(self, value):\n%sself.%s = value' % \
