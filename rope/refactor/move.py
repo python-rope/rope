@@ -125,7 +125,7 @@ class MoveMethod(object):
         pymodule = pyobject.get_module()
         return sourceutils.get_indents(
             pymodule.lines, pyobject.get_scope().get_start()) + \
-            sourceutils.get_indent(self.pycore)
+            sourceutils.get_indent(self.project)
 
     def _get_changes_made_by_new_class(self, dest_attr, new_name):
         old_pyclass = self.pyfunction.parent
@@ -152,7 +152,7 @@ class MoveMethod(object):
         return '%s\n%s' % (
             self._get_new_header(name),
             sourceutils.fix_indentation(self._get_body(),
-                                        sourceutils.get_indent(self.pycore)))
+                                        sourceutils.get_indent(self.project)))
 
     def _get_unchanged_body(self):
         return sourceutils.get_body(self.pyfunction)

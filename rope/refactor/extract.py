@@ -36,7 +36,6 @@ class _ExtractRefactoring(object):
     def __init__(self, project, resource, start_offset, end_offset,
                  variable=False):
         self.project = project
-        self.pycore = project.pycore
         self.resource = resource
         self.start_offset = self._fix_start(resource.read(), start_offset)
         self.end_offset = self._fix_end(resource.read(), end_offset)
@@ -95,7 +94,7 @@ class _ExtractInfo(object):
 
     def __init__(self, project, resource, start, end, new_name,
                  variable, similar, make_global):
-        self.pycore = project.pycore
+        self.project = project
         self.resource = resource
         self.pymodule = project.get_pymodule(resource)
         self.global_scope = self.pymodule.get_scope()
@@ -439,7 +438,7 @@ class _ExtractMethodParts(object):
         return result
 
     def _find_temps(self):
-        return usefunction.find_temps(self.info.pycore.project,
+        return usefunction.find_temps(self.info.project,
                                       self._get_body())
 
     def get_checks(self):
@@ -471,7 +470,7 @@ class _ExtractMethodParts(object):
             result.append('@staticmethod\n')
         result.append('def %s:\n' % self._get_function_signature(args))
         unindented_body = self._get_unindented_function_body(returns)
-        indents = sourceutils.get_indent(self.info.pycore)
+        indents = sourceutils.get_indent(self.info.project)
         function_body = sourceutils.indent_lines(unindented_body, indents)
         result.append(function_body)
         definition = ''.join(result)
