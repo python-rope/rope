@@ -17,7 +17,6 @@ class Rename(object):
     def __init__(self, project, resource, offset=None):
         """If `offset` is None, the `resource` itself will be renamed"""
         self.project = project
-        self.pycore = project.pycore
         self.resource = resource
         if offset is not None:
             self.old_name = worder.get_name_at(self.resource, offset)
@@ -151,7 +150,6 @@ class ChangeOccurrences(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = project.pycore
         self.resource = resource
         self.offset = offset
         self.old_name = worder.get_name_at(resource, offset)

@@ -9,7 +9,6 @@ class MethodObject(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = self.project.pycore
         this_pymodule = self.project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
         if pyname is None or not isinstance(pyname.get_object(),
@@ -23,10 +22,10 @@ class MethodObject(object):
 
     def get_new_class(self, name):
         body = sourceutils.fix_indentation(
-            self._get_body(), sourceutils.get_indent(self.pycore) * 2)
+            self._get_body(), sourceutils.get_indent(self.project) * 2)
         return 'class %s(object):\n\n%s%sdef __call__(self):\n%s' % \
                (name, self._get_init(),
-                ' ' * sourceutils.get_indent(self.pycore), body)
+                ' ' * sourceutils.get_indent(self.project), body)
 
     def get_changes(self, classname=None, new_class_name=None):
         if new_class_name is not None:
@@ -38,7 +37,7 @@ class MethodObject(object):
         start, end = sourceutils.get_body_region(self.pyfunction)
         indents = sourceutils.get_indents(
             self.pymodule.lines, self.pyfunction.get_scope().get_start()) + \
-            sourceutils.get_indent(self.pycore)
+            sourceutils.get_indent(self.project)
         new_contents = ' ' * indents + 'return %s(%s)()\n' % \
                        (classname, ', '.join(self._get_parameter_names()))
         collector.add_change(start, end, new_contents)
@@ -73,7 +72,7 @@ class MethodObject(object):
 
     def _get_init(self):
         params = self._get_parameter_names()
-        indents = ' ' * sourceutils.get_indent(self.pycore)
+        indents = ' ' * sourceutils.get_indent(self.project)
         if not params:
             return ''
         header = indents + 'def __init__(self'
