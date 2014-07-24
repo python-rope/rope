@@ -46,7 +46,7 @@ class ImportOrganizer(object):
             self.import_tools.handle_long_imports, resource, offset)
 
     def _perform_command_on_import_tools(self, method, resource, offset):
-        pymodule = self.pycore.resource_to_pyobject(resource)
+        pymodule = self.project.get_pymodule(resource)
         before_performing = pymodule.source_code
         import_filter = None
         if offset is not None:
@@ -68,6 +68,7 @@ class ImportOrganizer(object):
 class ImportTools(object):
 
     def __init__(self, pycore):
+        self.project = pycore.project
         self.pycore = pycore
 
     def get_import(self, resource):
@@ -123,7 +124,7 @@ class ImportTools(object):
             if alias is not None:
                 imported = alias
             occurrence_finder = occurrences.create_finder(
-                self.pycore, imported, pymodule[imported], imports=False)
+                self.project, imported, pymodule[imported], imports=False)
             source = rename.rename_in_module(
                 occurrence_finder, module_name + '.' + name,
                 pymodule=pymodule, replace_primary=True)
@@ -216,7 +217,7 @@ class ImportTools(object):
         old_name = name.split('.')[-1]
         old_pyname = rope.base.evaluate.eval_str(pymodule.get_scope(), name)
         occurrence_finder = occurrences.create_finder(
-            self.pycore, old_name, old_pyname, imports=False)
+            self.project, old_name, old_pyname, imports=False)
         changes = rope.base.codeanalyze.ChangeCollector(pymodule.source_code)
         for occurrence in occurrence_finder.find_occurrences(
                 pymodule=pymodule):
