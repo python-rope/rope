@@ -5,6 +5,7 @@ except ImportError:
     import unittest
 
 from rope.base import exceptions
+from rope.base import libutils
 from rope.base.pycore import _TextChangeDetector
 from rope.base.pyobjects import get_base_type, AbstractFunction
 from ropetest import testutils
@@ -134,30 +135,32 @@ class PyCoreTest(unittest.TestCase):
         self.assertEquals(get_base_type('Module'), imported_mod.get_type())
 
     def test_get_string_module(self):
-        mod = self.pycore.get_string_module('class Sample(object):'
-                                            '\n    pass\n')
+        mod = libutils.get_string_module(
+            self.project, 'class Sample(object):\n    pass\n')
         sample_class = mod['Sample'].get_object()
         self.assertEquals(get_base_type('Type'), sample_class.get_type())
 
     def test_get_string_module_with_extra_spaces(self):
-        mod = self.pycore.get_string_module('a = 10\n    ')  # noqa
+        mod = libutils.get_string_module(
+            self.project, 'a = 10\n    ')  # noqa
 
     def test_parameter_info_for_functions(self):
         code = 'def func(param1, param2=10, *param3, **param4):\n    pass'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         sample_function = mod['func']
         self.assertEquals(['param1', 'param2', 'param3', 'param4'],
                           sample_function.get_object().get_param_names())
 
     # FIXME: Not found modules
     def xxx_test_not_found_module_is_module(self):
-        mod = self.pycore.get_string_module('import doesnotexist\n')
+        mod = libutils.get_string_module(
+            self.project, 'import doesnotexist\n')
         self.assertEquals(get_base_type('Module'),
                           mod['doesnotexist'].
                           get_object().get_type())
 
     def test_mixing_scopes_and_objects_hierarchy(self):
-        mod = self.pycore.get_string_module('var = 200\n')
+        mod = libutils.get_string_module(self.project, 'var = 200\n')
         scope = mod.get_scope()
         self.assertTrue('var' in scope.get_names())
 
@@ -167,7 +170,7 @@ class PyCoreTest(unittest.TestCase):
                '        pass\n' \
                'class Derived(Base):\n' \
                '    pass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         derived = mod['Derived'].get_object()
         self.assertTrue('method' in derived)
         self.assertEquals(get_base_type('Function'),
@@ -177,7 +180,7 @@ class PyCoreTest(unittest.TestCase):
         code = 'class Base1(object):\n    def method1(self):\n        pass\n' \
                'class Base2(object):\n    def method2(self):\n        pass\n' \
                'class Derived(Base1, Base2):\n    pass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         derived = mod['Derived'].get_object()
         self.assertTrue('method1' in derived)
         self.assertTrue('method2' in derived)
@@ -186,7 +189,7 @@ class PyCoreTest(unittest.TestCase):
         code = 'class Base1(object):\n    def method(self):\n        pass\n' \
                'class Base2(object):\n    def method(self):\n        pass\n' \
                'class Derived(Base1, Base2):\n    pass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         base1 = mod['Base1'].get_object()
         derived = mod['Derived'].get_object()
         self.assertEquals(base1['method'].get_object(),
@@ -196,7 +199,7 @@ class PyCoreTest(unittest.TestCase):
         code = 'class Derived(NotFound):\n' \
                '    def f(self):\n' \
                '        pass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         derived = mod['Derived'].get_object()
         self.assertTrue('f' in derived)
 
@@ -341,35 +344,38 @@ class PyCoreTest(unittest.TestCase):
                         src in source_folders)
 
     def test_get_pyname_definition_location(self):
-        mod = self.pycore.get_string_module('a_var = 20\n')
+        mod = libutils.get_string_module(self.project, 'a_var = 20\n')
         a_var = mod['a_var']
         self.assertEquals((mod, 1), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_functions(self):
-        mod = self.pycore.get_string_module('def a_func():\n    pass\n')
+        mod = libutils.get_string_module(
+            self.project, 'def a_func():\n    pass\n')
         a_func = mod['a_func']
         self.assertEquals((mod, 1), a_func.get_definition_location())
 
     def test_get_pyname_definition_location_class(self):
         code = 'class AClass(object):\n    pass\n\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         a_class = mod['AClass']
         self.assertEquals((mod, 1), a_class.get_definition_location())
 
     def test_get_pyname_definition_location_local_variables(self):
-        mod = self.pycore.get_string_module('def a_func():\n    a_var = 10\n')
+        mod = libutils.get_string_module(
+            self.project, 'def a_func():\n    a_var = 10\n')
         a_func_scope = mod.get_scope().get_scopes()[0]
         a_var = a_func_scope['a_var']
         self.assertEquals((mod, 2), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_reassigning(self):
-        mod = self.pycore.get_string_module('a_var = 20\na_var=30\n')
+        mod = libutils.get_string_module(
+            self.project, 'a_var = 20\na_var=30\n')
         a_var = mod['a_var']
         self.assertEquals((mod, 1), a_var.get_definition_location())
 
     def test_get_pyname_definition_location_importes(self):
         testutils.create_module(self.project, 'mod')
-        mod = self.pycore.get_string_module('import mod\n')
+        mod = libutils.get_string_module(self.project, 'import mod\n')
         imported_module = self.pycore.get_module('mod')
         module_pyname = mod['mod']
         self.assertEquals((imported_module, 1),
@@ -379,14 +385,15 @@ class PyCoreTest(unittest.TestCase):
         module_resource = testutils.create_module(self.project, 'mod')
         module_resource.write('\ndef a_func():\n    pass\n')
         imported_module = self.pycore.get_module('mod')
-        mod = self.pycore.get_string_module('from mod import a_func\n')
+        mod = libutils.get_string_module(
+            self.project, 'from mod import a_func\n')
         a_func = mod['a_func']
         self.assertEquals((imported_module, 2),
                           a_func.get_definition_location())
 
     def test_get_pyname_definition_location_parameters(self):
         code = 'def a_func(param1, param2):\n    a_var = param\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         a_func_scope = mod.get_scope().get_scopes()[0]
         param1 = a_func_scope['param1']
         self.assertEquals((mod, 1), param1.get_definition_location())
@@ -397,28 +404,29 @@ class PyCoreTest(unittest.TestCase):
         module_resource = testutils.create_module(self.project, 'mod')
         module = self.pycore.get_module('mod')
         self.assertEquals(module_resource, module.get_resource())
-        string_module = self.pycore.get_string_module(
-            'from mod import a_func\n')
+        string_module = libutils.get_string_module(
+            self.project, 'from mod import a_func\n')
         self.assertEquals(None, string_module.get_resource())
 
     def test_get_pyname_definition_location_class2(self):
         code = 'class AClass(object):\n' \
                '    def __init__(self):\n' \
                '        self.an_attr = 10\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         a_class = mod['AClass'].get_object()
         an_attr = a_class['an_attr']
         self.assertEquals((mod, 3), an_attr.get_definition_location())
 
     def test_import_not_found_module_get_definition_location(self):
-        mod = self.pycore.get_string_module('import doesnotexist\n')
+        mod = libutils.get_string_module(
+            self.project, 'import doesnotexist\n')
         does_not_exist = mod['doesnotexist']
         self.assertEquals((None, None),
                           does_not_exist.get_definition_location())
 
     def test_from_not_found_module_get_definition_location(self):
-        mod = self.pycore.get_string_module(
-            'from doesnotexist import Sample\n')
+        mod = libutils.get_string_module(
+            self.project, 'from doesnotexist import Sample\n')
         sample = mod['Sample']
         self.assertEquals((None, None), sample.get_definition_location())
 
@@ -426,21 +434,22 @@ class PyCoreTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, 'pkg')
         testutils.create_module(self.project, 'mod', pkg)
         pkg_mod = self.pycore.get_module('pkg.mod')
-        mod = self.pycore.get_string_module('from pkg import mod\n')
+        mod = libutils.get_string_module(
+            self.project, 'from pkg import mod\n')
         imported_mod = mod['mod']
         self.assertEquals((pkg_mod, 1),
                           imported_mod.get_definition_location())
 
     def test_get_module_for_defined_pyobjects(self):
-        mod = self.pycore.get_string_module(
-            'class AClass(object):\n    pass\n')
+        mod = libutils.get_string_module(
+            self.project, 'class AClass(object):\n    pass\n')
         a_class = mod['AClass'].get_object()
         self.assertEquals(mod, a_class.get_module())
 
     def test_get_definition_location_for_packages(self):
         testutils.create_package(self.project, 'pkg')
         init_module = self.pycore.get_module('pkg.__init__')
-        mod = self.pycore.get_string_module('import pkg\n')
+        mod = libutils.get_string_module(self.project, 'import pkg\n')
         pkg_pyname = mod['pkg']
         self.assertEquals((init_module, 1),
                           pkg_pyname.get_definition_location())
@@ -449,14 +458,14 @@ class PyCoreTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, 'pkg')
         testutils.create_module(self.project, 'mod', pkg)
         init_module = self.pycore.get_module('pkg.__init__')
-        mod = self.pycore.get_string_module('import pkg.mod')
+        mod = libutils.get_string_module(self.project, 'import pkg.mod')
         pkg_pyname = mod['pkg']
         self.assertEquals((init_module, 1),
                           pkg_pyname.get_definition_location())
 
     def test_out_of_project_modules(self):
-        scope = self.pycore.get_string_scope(
-            'import rope.base.project as project\n')
+        scope = libutils.get_string_scope(
+            self.project, 'import rope.base.project as project\n')
         imported_module = scope['project'].get_object()
         self.assertTrue('Project' in imported_module)
 
@@ -469,7 +478,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_global_keyword(self):
         contents = 'a_var = 1\ndef a_func():\n    global a_var\n'
-        mod = self.pycore.get_string_module(contents)
+        mod = libutils.get_string_module(self.project, contents)
         global_var = mod['a_var']
         func_scope = mod['a_func'].get_object().get_scope()
         local_var = func_scope['a_var']
@@ -527,7 +536,7 @@ class PyCoreTest(unittest.TestCase):
         code = 'import threading\nwith threading.lock() as var:    pass\n'
         if sys.version_info < (2, 6, 0):
             code = 'from __future__ import with_statement\n' + code
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         self.assertTrue('var' in pymod)
 
     @testutils.run_only_for_25
@@ -541,7 +550,7 @@ class PyCoreTest(unittest.TestCase):
                '    pass\n'
         if sys.version_info < (2, 6, 0):
             code = 'from __future__ import with_statement\n' + code
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         self.assertTrue('a' in pymod)
         self.assertTrue('b' in pymod)
 
@@ -556,7 +565,7 @@ class PyCoreTest(unittest.TestCase):
                '    pass\n'
         if sys.version_info < (2, 6, 0):
             code = 'from __future__ import with_statement\n' + code
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         a_class = pymod['A'].get_object()
         var = pymod['var'].get_object()
         self.assertEquals(a_class, var.get_type())
@@ -566,7 +575,7 @@ class PyCoreTest(unittest.TestCase):
         code = 'with open("file"):    pass\n'
         if sys.version_info < (2, 6, 0):
             code = 'from __future__ import with_statement\n' + code
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         pymod.get_attributes()
 
     def test_check_for_else_block(self):
@@ -574,18 +583,19 @@ class PyCoreTest(unittest.TestCase):
                '    pass\n' \
                'else:\n' \
                '    myvar = 1\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         a_var = mod['myvar']
         self.assertEquals((mod, 4), a_var.get_definition_location())
 
     def test_check_names_defined_in_whiles(self):
-        mod = self.pycore.get_string_module('while False:\n    myvar = 1\n')
+        mod = libutils.get_string_module(
+            self.project, 'while False:\n    myvar = 1\n')
         a_var = mod['myvar']
         self.assertEquals((mod, 2), a_var.get_definition_location())
 
     def test_get_definition_location_in_tuple_assnames(self):
-        mod = self.pycore.get_string_module(
-            'def f(x):\n    x.z, a = range(2)\n')
+        mod = libutils.get_string_module(
+            self.project, 'def f(x):\n    x.z, a = range(2)\n')
         x = mod['f'].get_object().get_scope()['x']
         a = mod['f'].get_object().get_scope()['a']
         self.assertEquals((mod, 1), x.get_definition_location())
@@ -593,11 +603,11 @@ class PyCoreTest(unittest.TestCase):
 
     def test_syntax_errors_in_code(self):
         with self.assertRaises(exceptions.ModuleSyntaxError):
-            self.pycore.get_string_module('xyx print\n')
+            libutils.get_string_module(self.project, 'xyx print\n')
 
     def test_holding_error_location_information(self):
         try:
-            self.pycore.get_string_module('xyx print\n')
+            libutils.get_string_module(self.project, 'xyx print\n')
         except exceptions.ModuleSyntaxError, e:
             self.assertEquals(1, e.lineno)
 
@@ -690,19 +700,21 @@ class PyCoreInProjectsTest(unittest.TestCase):
         super(self.__class__, self).tearDown()
 
     def test_simple_import(self):
-        mod = self.pycore.get_string_module('import samplemod\n')
+        mod = libutils.get_string_module(
+            self.project, 'import samplemod\n')
         samplemod = mod['samplemod'].get_object()
         self.assertEquals(get_base_type('Module'), samplemod.get_type())
 
     def test_from_import_class(self):
-        mod = self.pycore.get_string_module(
-            'from samplemod import SampleClass\n')
+        mod = libutils.get_string_module(
+            self.project, 'from samplemod import SampleClass\n')
         result = mod['SampleClass'].get_object()
         self.assertEquals(get_base_type('Type'), result.get_type())
         self.assertTrue('sample_func' not in mod.get_attributes())
 
     def test_from_import_star(self):
-        mod = self.pycore.get_string_module('from samplemod import *\n')
+        mod = libutils.get_string_module(
+            self.project, 'from samplemod import *\n')
         self.assertEquals(get_base_type('Type'),
                           mod['SampleClass'].get_object().get_type())
         self.assertEquals(get_base_type('Function'),
@@ -712,38 +724,42 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_from_import_star_overwriting(self):
         code = 'from samplemod import *\n' \
                'class SampleClass(object):\n    pass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         samplemod = self.pycore.get_module('samplemod')
         sample_class = samplemod['SampleClass'].get_object()
         self.assertNotEquals(sample_class,
                              mod.get_attributes()['SampleClass'].get_object())
 
     def test_from_import_star_not_imporing_underlined(self):
-        mod = self.pycore.get_string_module('from samplemod import *')
+        mod = libutils.get_string_module(
+            self.project, 'from samplemod import *')
         self.assertTrue('_underlined_func' not in mod.get_attributes())
 
     def test_from_import_star_imports_in_functions(self):
-        mod = self.pycore.get_string_module('def f():\n    from os import *\n')
+        mod = libutils.get_string_module(
+            self.project, 'def f():\n    from os import *\n')
         mod['f'].get_object().get_scope().get_names()
 
     def test_from_package_import_mod(self):
-        mod = self.pycore.get_string_module('from package import nestedmod\n')
+        mod = libutils.get_string_module(
+            self.project, 'from package import nestedmod\n')
         self.assertEquals(get_base_type('Module'),
                           mod['nestedmod'].get_object().get_type())
 
     # XXX: Deciding to import everything on import start from packages
     def xxx_test_from_package_import_star(self):
-        mod = self.pycore.get_string_module('from package import *\n')
+        mod = libutils.get_string_module(
+            self.project, 'from package import *\n')
         self.assertTrue('nestedmod' not in mod.get_attributes())
 
     def test_unknown_when_module_cannot_be_found(self):
-        mod = self.pycore.get_string_module(
-            'from doesnotexist import nestedmod\n')
+        mod = libutils.get_string_module(
+            self.project, 'from doesnotexist import nestedmod\n')
         self.assertTrue('nestedmod' in mod)
 
     def test_from_import_function(self):
         code = 'def f():\n    from samplemod import SampleClass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         self.assertEquals(get_base_type('Type'),
                           scope.get_scopes()[0]['SampleClass'].
                           get_object().get_type())
@@ -768,7 +784,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, 'pkg')
         pkg_mod = testutils.create_module(self.project, 'mod', pkg)
         pkg_mod.write('def sample_func():\n    pass\n')
-        mod = self.pycore.get_string_module('import pkg.mod\n')
+        mod = libutils.get_string_module(self.project, 'import pkg.mod\n')
         self.assertTrue('pkg' in mod)
         self.assertTrue('sample_func' in mod['pkg'].get_object()['mod'].
                         get_object())
@@ -777,8 +793,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, 'pkg')
         testutils.create_module(self.project, 'mod1', pkg)
         testutils.create_module(self.project, 'mod2', pkg)
-        mod = self.pycore.get_string_module(
-            'import pkg.mod1\nimport pkg.mod2\n')
+        mod = libutils.get_string_module(
+            self.project, 'import pkg.mod1\nimport pkg.mod2\n')
         package = mod['pkg'].get_object()
         self.assertEquals(2, len(package.get_attributes()))
         self.assertTrue('mod1' in package and
@@ -790,7 +806,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         testutils.create_module(self.project, 'mod1', pkg2)
         testutils.create_module(self.project, 'mod2', pkg2)
         code = 'import pkg1.pkg2.mod1\nimport pkg1.pkg2.mod2\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         package1 = mod['pkg1'].get_object()
         package2 = package1['pkg2'].get_object()
         self.assertEquals(2, len(package2.get_attributes()))
@@ -800,7 +816,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, 'pkg')
         mod1 = testutils.create_module(self.project, 'mod1', pkg)
         mod1.write('def f():\n    pass\n')
-        mod = self.pycore.get_string_module('import pkg.mod1 as mod1\n')
+        mod = libutils.get_string_module(
+            self.project, 'import pkg.mod1 as mod1\n')
         module = mod['mod1'].get_object()
         self.assertTrue('f' in module)
 
@@ -809,7 +826,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg1 = testutils.create_package(self.project, 'pkg1')
         pkg2 = testutils.create_package(self.project, 'pkg2', pkg1)
         testutils.create_module(self.project, 'mod', pkg2)
-        mod = self.pycore.get_string_module('from pkg1 import pkg2\n')
+        mod = libutils.get_string_module(
+            self.project, 'from pkg1 import pkg2\n')
         package = mod['pkg2']
         self.assertEquals(0, len(package.get_attributes()))
 
@@ -850,7 +868,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_import_nonexistent_module(self):
         code = 'from doesnotexistmod import DoesNotExistClass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         self.assertTrue('DoesNotExistClass' in mod)
         self.assertEquals(get_base_type('Unknown'),
                           mod['DoesNotExistClass'].
@@ -858,7 +876,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_from_import_nonexistent_name(self):
         code = 'from samplemod import DoesNotExistClass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         self.assertTrue('DoesNotExistClass' in mod)
         self.assertEquals(get_base_type('Unknown'),
                           mod['DoesNotExistClass'].
@@ -866,18 +884,19 @@ class PyCoreInProjectsTest(unittest.TestCase):
 
     def test_not_considering_imported_names_as_sub_scopes(self):
         code = 'from samplemod import SampleClass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         self.assertEquals(0, len(scope.get_scopes()))
 
     def test_not_considering_imported_modules_as_sub_scopes(self):
-        scope = self.pycore.get_string_scope('import samplemod\n')
+        scope = libutils.get_string_scope(
+            self.project, 'import samplemod\n')
         self.assertEquals(0, len(scope.get_scopes()))
 
     def test_inheriting_dotted_base_class(self):
         code = 'import samplemod\n' \
                'class Derived(samplemod.SampleClass):\n' \
                '    pass\n'
-        mod = self.pycore.get_string_module(code)
+        mod = libutils.get_string_module(self.project, code)
         derived = mod['Derived'].get_object()
         self.assertTrue('sample_method' in derived)
 
@@ -885,7 +904,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         code = 'class Sample(object):\n' \
                '    def func(self):\n' \
                '        pass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         func_scope = scope.get_scopes()[0].get_scopes()[0]
         self.assertEquals(sample_class,
@@ -897,8 +916,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
                '    var = ""\n' \
                '    def f(self):\n' \
                '        self.var += "".join([])\n'
-        scope = self.pycore.get_string_scope(
-            code)
+        scope = libutils.get_string_scope(self.project, code)
         c_class = scope['C'].get_object()
         self.assertTrue('var' in c_class)
 
@@ -907,7 +925,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
                '    @staticmethod\n' \
                '    def func(self):\n' \
                '        pass\n'
-        scope = self.pycore.get_string_scope(code)
+        scope = libutils.get_string_scope(self.project, code)
         sample_class = scope['Sample'].get_object()
         func_scope = scope.get_scopes()[0].get_scopes()[0]
         self.assertNotEquals(sample_class,
@@ -916,7 +934,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_location_of_imports_when_importing(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('from samplemod import SampleClass\n')
-        scope = self.pycore.get_string_scope('from mod import SampleClass\n')
+        scope = libutils.get_string_scope(
+            self.project, 'from mod import SampleClass\n')
         sample_class = scope['SampleClass']
         samplemod = self.pycore.get_module('samplemod')
         self.assertEquals((samplemod, 1),
@@ -926,7 +945,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, 'pkg')
         testutils.create_module(self.project, 'mod', pkg)
         imported_module = self.pycore.get_module('pkg.mod')
-        scope = self.pycore.get_string_scope('import pkg.mod\n')
+        scope = libutils.get_string_scope(self.project, 'import pkg.mod\n')
         mod_pyobject = scope['pkg'].get_object()['mod']
         self.assertEquals((imported_module, 1),
                           mod_pyobject.get_definition_location())
@@ -965,7 +984,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2', pkg)
         mod2.write('import mod1\n')
         mod1_object = self.pycore.resource_to_pyobject(mod1)
-        mod2_object = self.pycore.get_string_module(mod2.read(), mod2)
+        mod2_object = libutils.get_string_module(
+            self.project, mod2.read(), mod2)
         self.assertEquals(mod1_object, mod2_object['mod1'].get_object())
 
     def test_relative_imports_for_string_scopes(self):
@@ -974,7 +994,8 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2', pkg)
         mod2.write('import mod1\n')
         mod1_object = self.pycore.resource_to_pyobject(mod1)
-        mod2_scope = self.pycore.get_string_scope(mod2.read(), mod2)
+        mod2_scope = libutils.get_string_scope(self.project, mod2.read(),
+                                               mod2)
         self.assertEquals(mod1_object, mod2_scope['mod1'].get_object())
 
     @testutils.run_only_for_25
@@ -1090,14 +1111,14 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
 
     def test_ignore_bad_imports(self):
         self.project = testutils.sample_project(ignore_bad_imports=True)
-        pymod = self.project.pycore.get_string_module(
-            'import some_nonexistent_module\n')
+        pymod = libutils.get_string_module(
+            self.project, 'import some_nonexistent_module\n')
         self.assertFalse('some_nonexistent_module' in pymod)
 
     def test_ignore_bad_imports_for_froms(self):
         self.project = testutils.sample_project(ignore_bad_imports=True)
-        pymod = self.project.pycore.get_string_module(
-            'from some_nonexistent_module import var\n')
+        pymod = libutils.get_string_module(
+            self.project, 'from some_nonexistent_module import var\n')
         self.assertFalse('var' in pymod)
 
     def test_reporting_syntax_errors_with_force_errors(self):
@@ -1110,12 +1131,12 @@ class PyCoreProjectConfigsTest(unittest.TestCase):
     def test_reporting_syntax_errors_in_strings_with_force_errors(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
         with self.assertRaises(exceptions.ModuleSyntaxError):
-            self.project.pycore.get_string_module('syntax error ...',
-                                                  force_errors=True)
+            libutils.get_string_module(
+                self.project, 'syntax error ...', force_errors=True)
 
     def test_not_raising_errors_for_strings_with_ignore_errors(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)
-        self.project.pycore.get_string_module('syntax error ...')
+        libutils.get_string_module(self.project, 'syntax error ...')
 
     def test_reporting_syntax_errors_with_force_errors_for_packages(self):
         self.project = testutils.sample_project(ignore_syntax_errors=True)

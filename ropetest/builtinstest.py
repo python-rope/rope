@@ -1,5 +1,6 @@
 import unittest
 
+from rope.base import libutils
 from rope.base import pyobjects, builtins
 from ropetest import testutils
 
@@ -436,7 +437,7 @@ class BuiltinTypesTest(unittest.TestCase):
 
     def test_binary_or_left_value_unknown(self):
         code = 'var = (asdsd or 3)\n'
-        pymod = self.pycore.get_string_module(code)
+        pymod = libutils.get_string_module(self.project, code)
         self.assertEquals(builtins.builtins['int'].get_object(),
                           pymod['var'].get_object().get_type())
 

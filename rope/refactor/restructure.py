@@ -1,6 +1,7 @@
 import warnings
 
 from rope.base import change, taskhandle, builtins, ast, codeanalyze
+from rope.base import libutils
 from rope.refactor import patchedast, similarfinder, sourceutils
 from rope.refactor.importutils import module_imports
 
@@ -162,15 +163,15 @@ class Restructure(object):
         if not imports:
             return source
         import_infos = self._get_import_infos(resource, imports)
-        pymodule = self.pycore.get_string_module(source, resource)
+        pymodule = libutils.get_string_module(self.project, source, resource)
         imports = module_imports.ModuleImports(self.pycore, pymodule)
         for import_info in import_infos:
             imports.add_import(import_info)
         return imports.get_changed_source()
 
     def _get_import_infos(self, resource, imports):
-        pymodule = self.pycore.get_string_module('\n'.join(imports),
-                                                 resource)
+        pymodule = libutils.get_string_module(
+            self.project, '\n'.join(imports), resource)
         imports = module_imports.ModuleImports(self.pycore, pymodule)
         return [imports.import_info
                 for imports in imports.imports]

@@ -1,5 +1,6 @@
 from rope.base import (change, taskhandle, evaluate,
                        exceptions, pyobjects, pynames, ast)
+from rope.base import libutils
 from rope.refactor import restructure, sourceutils, similarfinder
 
 
@@ -122,7 +123,7 @@ class UseFunction(object):
 
 def find_temps(project, code):
     code = 'def f():\n' + sourceutils.indent_lines(code, 4)
-    pymodule = project.pycore.get_string_module(code)
+    pymodule = libutils.get_string_module(project, code)
     result = []
     function_scope = pymodule.get_scope().get_scopes()[0]
     for name, pyname in function_scope.get_names().items():

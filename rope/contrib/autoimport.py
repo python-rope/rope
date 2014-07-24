@@ -1,7 +1,13 @@
 import re
 
-from rope.base import (exceptions, pynames, resourceobserver,
-                       taskhandle, pyobjects, builtins, resources)
+from rope.base import builtins
+from rope.base import exceptions
+from rope.base import libutils
+from rope.base import pynames
+from rope.base import pyobjects
+from rope.base import resources
+from rope.base import resourceobserver
+from rope.base import taskhandle
 from rope.refactor import importutils
 
 
@@ -130,7 +136,7 @@ class AutoImport(object):
         if match is not None:
             code = code[:match.start()]
         try:
-            pymodule = self.project.pycore.get_string_module(code)
+            pymodule = libutils.get_string_module(self.project, code)
         except exceptions.ModuleSyntaxError:
             return 1
         testmodname = '__rope_testmodule_rope'
