@@ -13,7 +13,6 @@ class MoveRefactoringTest(unittest.TestCase):
     def setUp(self):
         super(MoveRefactoringTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.pycore
         self.mod1 = testutils.create_module(self.project, 'mod1')
         self.mod2 = testutils.create_module(self.project, 'mod2')
         self.mod3 = testutils.create_module(self.project, 'mod3')
@@ -142,7 +141,7 @@ class MoveRefactoringTest(unittest.TestCase):
         expected = 'import pkg.mod1\nprint(pkg.mod1)'
         self.assertEquals(expected, self.mod2.read())
         self.assertTrue(not self.mod1.exists() and
-                        self.pycore.find_module('pkg.mod1') is not None)
+                        self.project.find_module('pkg.mod1') is not None)
 
     def test_moving_modules_and_removing_out_of_date_imports(self):
         code = 'import pkg.mod4\nprint(pkg.mod4)'
@@ -150,7 +149,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self._move(self.mod2, code.index('mod4') + 1, self.project.root)
         expected = 'import mod4\nprint(mod4)'
         self.assertEquals(expected, self.mod2.read())
-        self.assertTrue(self.pycore.find_module('mod4') is not None)
+        self.assertTrue(self.project.find_module('mod4') is not None)
 
     def test_moving_modules_and_removing_out_of_date_froms(self):
         code = 'from pkg import mod4\nprint(mod4)'
@@ -171,7 +170,7 @@ class MoveRefactoringTest(unittest.TestCase):
         code = 'import pkg.mod4\nprint(pkg.mod4)'
         self.mod2.write(code)
         self._move(self.mod2, code.index('mod4') + 1, self.project.root)
-        moved = self.pycore.find_module('mod4')
+        moved = self.project.find_module('mod4')
         expected = 'import pkg.mod5\nprint(pkg.mod5)\n'
         self.assertEquals(expected, moved.read())
 
@@ -181,9 +180,9 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write(code)
         self._move(self.mod1, code.index('pkg') + 1, pkg2)
         self.assertFalse(self.pkg.exists())
-        self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
-        self.assertTrue(self.pycore.find_module('pkg2.pkg.mod4') is not None)
-        self.assertTrue(self.pycore.find_module('pkg2.pkg.mod5') is not None)
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod4') is not None)
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod4') is not None)
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod5') is not None)
         expected = 'import pkg2.pkg.mod4\nprint(pkg2.pkg.mod4)'
         self.assertEquals(expected, self.mod1.read())
 
@@ -191,7 +190,7 @@ class MoveRefactoringTest(unittest.TestCase):
         self.mod1.write('import mod1\nprint(mod1)\n')
         self.mod2.write('import mod1\n')
         self._move(self.mod2, self.mod2.read().index('mod1') + 1, self.pkg)
-        moved = self.pycore.find_module('pkg.mod1')
+        moved = self.project.find_module('pkg.mod1')
         self.assertEquals('import pkg.mod1\nprint(pkg.mod1)\n', moved.read())
 
     def test_moving_funtions_to_imported_module(self):

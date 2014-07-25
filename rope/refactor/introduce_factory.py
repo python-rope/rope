@@ -10,7 +10,6 @@ class IntroduceFactory(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = self.project.pycore
         self.offset = offset
 
         this_pymodule = self.project.get_pymodule(resource)
@@ -71,7 +70,7 @@ class IntroduceFactory(object):
                         self.project, changed_code, self.resource)
                     modname = libutils.modname(self.resource)
                     changed_code, imported = importutils.add_import(
-                        self.pycore, new_pymodule, modname, factory_name)
+                        self.project, new_pymodule, modname, factory_name)
                     changed_code = changed_code.replace(replacement, imported)
                 changes.add_change(ChangeContents(file_, changed_code))
             job_set.finished_job()

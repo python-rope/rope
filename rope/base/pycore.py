@@ -42,6 +42,7 @@ class PyCore(object):
             rope.base.resourceobserver.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
 
+    @utils.deprecated('Delete once deprecated functions are gone')
     def _init_source_folders(self):
         self._custom_source_folders = []
         for path in self.project.prefs.get('source_folders', []):
@@ -74,10 +75,11 @@ class PyCore(object):
             return resource.name.endswith('.py')
         return self.python_matcher.does_match(resource)
 
+    @utils.deprecated('Use `project.get_module` instead')
     def get_module(self, name, folder=None):
         """Returns a `PyObject` if the module was found."""
         # check if this is a builtin module
-        pymod = self._builtin_module(name)
+        pymod = self.builtin_module(name)
         if pymod is not None:
             return pymod
         module = self.find_module(name, folder)
@@ -91,14 +93,15 @@ class PyCore(object):
             if extension.startswith(modname + '.'):
                 name = extension[len(modname) + 1:]
                 if '.' not in name:
-                    result[name] = self._builtin_module(extension)
+                    result[name] = self.builtin_module(extension)
         return result
 
-    def _builtin_module(self, name):
+    def builtin_module(self, name):
         return self.extension_cache.get_pymodule(name)
 
+    @utils.deprecated('Use `project.get_relative_module` instead')
     def get_relative_module(self, name, folder, level):
-        module = self.find_relative_module(name, folder, level)
+        module = self.project.find_relative_module(name, folder, level)
         if module is None:
             raise ModuleNotFoundError('Module %s not found' % name)
         return self.resource_to_pyobject(module)
@@ -123,22 +126,7 @@ class PyCore(object):
         for observer in self.cache_observers:
             observer(resource)
 
-    def _find_module_in_folder(self, folder, modname):
-        module = folder
-        packages = modname.split('.')
-        for pkg in packages[:-1]:
-            if module.is_folder() and module.has_child(pkg):
-                module = module.get_child(pkg)
-            else:
-                return None
-        if module.is_folder():
-            if module.has_child(packages[-1]) and \
-               module.get_child(packages[-1]).is_folder():
-                return module.get_child(packages[-1])
-            elif module.has_child(packages[-1] + '.py') and \
-                    not module.get_child(packages[-1] + '.py').is_folder():
-                return module.get_child(packages[-1] + '.py')
-
+    @utils.deprecated('Use `project.get_python_path_folders` instead')
     def get_python_path_folders(self):
         import rope.base.project
         result = []
@@ -151,6 +139,7 @@ class PyCore(object):
                 pass
         return result
 
+    @utils.deprecated('Use `project.find_module` instead')
     def find_module(self, modname, folder=None):
         """Returns a resource corresponding to the given module
 
@@ -158,26 +147,27 @@ class PyCore(object):
         """
         return self._find_module(modname, folder)
 
+    @utils.deprecated('Use `project.find_relative_module` instead')
     def find_relative_module(self, modname, folder, level):
         for i in range(level - 1):
             folder = folder.parent
         if modname == '':
             return folder
         else:
-            return self._find_module_in_folder(folder, modname)
+            return _find_module_in_folder(folder, modname)
 
     def _find_module(self, modname, folder=None):
         """Return `modname` module resource"""
         for src in self.get_source_folders():
-            module = self._find_module_in_folder(src, modname)
+            module = _find_module_in_folder(src, modname)
             if module is not None:
                 return module
         for src in self.get_python_path_folders():
-            module = self._find_module_in_folder(src, modname)
+            module = _find_module_in_folder(src, modname)
             if module is not None:
                 return module
         if folder is not None:
-            module = self._find_module_in_folder(folder, modname)
+            module = _find_module_in_folder(folder, modname)
             if module is not None:
                 return module
         return None
@@ -187,6 +177,7 @@ class PyCore(object):
     #    packages, that is most of the time
     #  - We need a separate resource observer; `self.observer`
     #    does not get notified about module and folder creations
+    @utils.deprecated('Use `project.get_source_folders` instead')
     def get_source_folders(self):
         """Returns project source folders"""
         if self.project.root is None:
@@ -300,6 +291,23 @@ class PyCore(object):
         if self.project.prefs.get('import_dynload_stdmods', False):
             result.update(stdmods.dynload_modules())
         return result
+
+
+def _find_module_in_folder(folder, modname):
+    module = folder
+    packages = modname.split('.')
+    for pkg in packages[:-1]:
+        if module.is_folder() and module.has_child(pkg):
+            module = module.get_child(pkg)
+        else:
+            return None
+    if module.is_folder():
+        if module.has_child(packages[-1]) and \
+           module.get_child(packages[-1]).is_folder():
+            return module.get_child(packages[-1])
+        elif module.has_child(packages[-1] + '.py') and \
+                not module.get_child(packages[-1] + '.py').is_folder():
+            return module.get_child(packages[-1] + '.py')
 
 
 class _ModuleCache(object):

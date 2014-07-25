@@ -175,7 +175,7 @@ class GeneratePackage(_Generate):
 
 def _add_import_to_module(project, resource, imported):
     pymodule = project.get_pymodule(resource)
-    import_tools = importutils.ImportTools(project.pycore)
+    import_tools = importutils.ImportTools(project)
     module_imports = import_tools.module_imports(pymodule)
     module_name = libutils.modname(imported)
     new_import = importutils.NormalImport(((module_name, None), ))
@@ -189,7 +189,7 @@ class _GenerationInfo(object):
         self.pycore = pycore
         self.resource = resource
         self.offset = offset
-        self.source_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.source_pymodule = self.pycore.project.get_pymodule(resource)
         finder = rope.base.evaluate.ScopeNameFinder(self.source_pymodule)
         self.primary, self.pyname = finder.get_primary_and_pyname_at(offset)
         self._init_fields()
@@ -271,7 +271,7 @@ class _GenerationInfo(object):
     def get_package(self):
         primary = self.primary
         if self.primary is None:
-            return self.pycore.get_source_folders()[0]
+            return self.pycore.project.get_source_folders()[0]
         if isinstance(primary.get_object(), pyobjects.PyPackage):
             return primary.get_object().get_resource()
         raise exceptions.RefactoringError(

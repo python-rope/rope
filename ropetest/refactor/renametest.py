@@ -211,7 +211,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2.write('from mod1 import a_func\n')
         self._rename(mod2, mod2.read().index('mod1') + 1, 'newmod')
         self.assertTrue(not mod1.exists() and
-                        self.pycore.find_module('newmod') is not None)
+                        self.project.find_module('newmod') is not None)
         self.assertEquals('from newmod import a_func\n', mod2.read())
 
     def test_renaming_packages(self):
@@ -221,8 +221,8 @@ class RenameRefactoringTest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2', pkg)
         mod2.write('from pkg.mod1 import a_func\n')
         self._rename(mod2, 6, 'newpkg')
-        self.assertTrue(self.pycore.find_module('newpkg.mod1') is not None)
-        new_mod2 = self.pycore.find_module('newpkg.mod2')
+        self.assertTrue(self.project.find_module('newpkg.mod1') is not None)
+        new_mod2 = self.project.find_module('newpkg.mod2')
         self.assertEquals('from newpkg.mod1 import a_func\n', new_mod2.read())
 
     def test_module_dependencies(self):
@@ -326,10 +326,10 @@ class RenameRefactoringTest(unittest.TestCase):
     def test_rename_in_module_renaming_one_letter_names_for_expressions(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('a = 10\nprint(1+a)\n')
-        pymod = self.pycore.get_module('mod1')
+        pymod = self.project.get_module('mod1')
         old_pyname = pymod['a']
         finder = rope.refactor.occurrences.create_finder(
-            self.pycore, 'a', old_pyname)
+            self.project, 'a', old_pyname)
         refactored = rename.rename_in_module(
             finder, 'new_var', pymodule=pymod, replace_primary=True)
         self.assertEquals('new_var = 10\nprint(1+new_var)\n', refactored)

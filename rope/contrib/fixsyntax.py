@@ -25,7 +25,7 @@ class FixSyntax(object):
             try:
                 if tries == 0 and self.resource is not None and \
                    self.resource.read() == code:
-                    return self.pycore.resource_to_pyobject(self.resource,
+                    return self.pycore.project.get_pymodule(self.resource,
                                                             force_errors=True)
                 return libutils.get_string_module(
                     self.pycore.project, code, resource=self.resource,

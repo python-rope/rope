@@ -50,7 +50,6 @@ class MoveMethod(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = project.pycore
         this_pymodule = self.project.get_pymodule(resource)
         pyname = evaluate.eval_location(this_pymodule, offset)
         self.method_name = worder.get_name_at(resource, offset)
@@ -91,7 +90,7 @@ class MoveMethod(object):
             collector2 = codeanalyze.ChangeCollector(resource2.read())
             collector2.add_change(start2, end2, new_content2)
             result = collector2.get_changed()
-            import_tools = importutils.ImportTools(self.pycore)
+            import_tools = importutils.ImportTools(self.project)
             new_imports = self._get_used_imports(import_tools)
             if new_imports:
                 goal_pymodule = libutils.get_string_module(
@@ -110,7 +109,7 @@ class MoveMethod(object):
         return self.method_name
 
     def _get_used_imports(self, import_tools):
-        return importutils.get_imports(self.pycore, self.pyfunction)
+        return importutils.get_imports(self.project, self.pyfunction)
 
     def _get_changes_made_by_old_class(self, dest_attr, new_name):
         pymodule = self.pyfunction.get_module()
@@ -202,7 +201,6 @@ class MoveGlobal(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = self.project.pycore
         this_pymodule = self.project.get_pymodule(resource)
         self.old_pyname = evaluate.eval_location(this_pymodule, offset)
         self.old_name = self.old_pyname.get_object().get_name()
@@ -269,7 +267,7 @@ class MoveGlobal(object):
                 if should_import:
                     pymodule = self.tools.new_pymodule(pymodule, source)
                     source, imported = importutils.add_import(
-                        self.pycore, pymodule, self._new_modname(dest),
+                        self.project, pymodule, self._new_modname(dest),
                         self.old_name)
                     source = source.replace(placeholder, imported)
                 source = self.tools.new_source(pymodule, source)
@@ -292,7 +290,7 @@ class MoveGlobal(object):
                 self.project, source, self.source)
             # Adding new import
             source, imported = importutils.add_import(
-                self.pycore, pymodule, self._new_modname(dest), self.old_name)
+                self.project, pymodule, self._new_modname(dest), self.old_name)
             source = source.replace(placeholder, imported)
         return ChangeContents(self.source, source)
 
@@ -335,7 +333,7 @@ class MoveGlobal(object):
 
     def _get_moving_element_with_imports(self):
         return moving_code_with_imports(
-            self.pycore, self.source, self._get_moving_element())
+            self.project, self.source, self._get_moving_element())
 
     def _get_module_with_imports(self, source_code, resource):
         pymodule = libutils.get_string_module(
@@ -375,7 +373,6 @@ class MoveModule(object):
 
     def __init__(self, project, resource):
         self.project = project
-        self.pycore = project.pycore
         if not resource.is_folder() and resource.name == '__init__.py':
             resource = resource.parent
         if resource.is_folder() and not resource.has_child('__init__.py'):
@@ -481,11 +478,10 @@ class _MoveTools(object):
 
     def __init__(self, project, source, pyname, old_name):
         self.project = project
-        self.pycore = project.pycore
         self.source = source
         self.old_pyname = pyname
         self.old_name = old_name
-        self.import_tools = importutils.ImportTools(self.pycore)
+        self.import_tools = importutils.ImportTools(self.project)
 
     def remove_old_imports(self, pymodule):
         old_source = pymodule.source_code
@@ -553,11 +549,10 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
     return module_with_imports.get_changed_source()
 
 
-def moving_code_with_imports(pycore, resource, source):
-    import_tools = importutils.ImportTools(pycore)
-    project = pycore.project
+def moving_code_with_imports(project, resource, source):
+    import_tools = importutils.ImportTools(project)
     pymodule = libutils.get_string_module(project, source, resource)
-    origin = pycore.resource_to_pyobject(resource)
+    origin = project.get_pymodule(resource)
 
     imports = []
     for stmt in import_tools.module_imports(origin).imports:

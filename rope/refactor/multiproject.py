@@ -33,7 +33,7 @@ class _MultiRefactoring(object):
         self.refactoring = refactoring
         self.projects = [project] + other_projects
         for other_project in other_projects:
-            for folder in self.project.pycore.get_source_folders():
+            for folder in self.project.get_source_folders():
                 other_project.get_prefs().add('python_path', folder.real_path)
         self.refactorings = []
         for other in self.projects:

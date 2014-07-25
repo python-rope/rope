@@ -164,7 +164,7 @@ class Restructure(object):
             return source
         import_infos = self._get_import_infos(resource, imports)
         pymodule = libutils.get_string_module(self.project, source, resource)
-        imports = module_imports.ModuleImports(self.pycore, pymodule)
+        imports = module_imports.ModuleImports(self.project, pymodule)
         for import_info in import_infos:
             imports.add_import(import_info)
         return imports.get_changed_source()
@@ -172,7 +172,7 @@ class Restructure(object):
     def _get_import_infos(self, resource, imports):
         pymodule = libutils.get_string_module(
             self.project, '\n'.join(imports), resource)
-        imports = module_imports.ModuleImports(self.pycore, pymodule)
+        imports = module_imports.ModuleImports(self.project, pymodule)
         return [imports.import_info
                 for imports in imports.imports]
 
@@ -200,7 +200,7 @@ class Restructure(object):
                     return builtins.builtins[name]
             pyobject = _BuiltinsStub()
         else:
-            pyobject = self.pycore.get_module(attributes[0])
+            pyobject = self.project.get_module(attributes[0])
         for attribute in attributes[1:]:
             pyname = pyobject[attribute]
             if pyname is None:
