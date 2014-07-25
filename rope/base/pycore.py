@@ -123,22 +123,6 @@ class PyCore(object):
         for observer in self.cache_observers:
             observer(resource)
 
-    def _find_module_in_folder(self, folder, modname):
-        module = folder
-        packages = modname.split('.')
-        for pkg in packages[:-1]:
-            if module.is_folder() and module.has_child(pkg):
-                module = module.get_child(pkg)
-            else:
-                return None
-        if module.is_folder():
-            if module.has_child(packages[-1]) and \
-               module.get_child(packages[-1]).is_folder():
-                return module.get_child(packages[-1])
-            elif module.has_child(packages[-1] + '.py') and \
-                    not module.get_child(packages[-1] + '.py').is_folder():
-                return module.get_child(packages[-1] + '.py')
-
     def get_python_path_folders(self):
         import rope.base.project
         result = []
@@ -164,20 +148,20 @@ class PyCore(object):
         if modname == '':
             return folder
         else:
-            return self._find_module_in_folder(folder, modname)
+            return _find_module_in_folder(folder, modname)
 
     def _find_module(self, modname, folder=None):
         """Return `modname` module resource"""
         for src in self.get_source_folders():
-            module = self._find_module_in_folder(src, modname)
+            module = _find_module_in_folder(src, modname)
             if module is not None:
                 return module
         for src in self.get_python_path_folders():
-            module = self._find_module_in_folder(src, modname)
+            module = _find_module_in_folder(src, modname)
             if module is not None:
                 return module
         if folder is not None:
-            module = self._find_module_in_folder(folder, modname)
+            module = _find_module_in_folder(folder, modname)
             if module is not None:
                 return module
         return None
@@ -300,6 +284,23 @@ class PyCore(object):
         if self.project.prefs.get('import_dynload_stdmods', False):
             result.update(stdmods.dynload_modules())
         return result
+
+
+def _find_module_in_folder(folder, modname):
+    module = folder
+    packages = modname.split('.')
+    for pkg in packages[:-1]:
+        if module.is_folder() and module.has_child(pkg):
+            module = module.get_child(pkg)
+        else:
+            return None
+    if module.is_folder():
+        if module.has_child(packages[-1]) and \
+           module.get_child(packages[-1]).is_folder():
+            return module.get_child(packages[-1])
+        elif module.has_child(packages[-1] + '.py') and \
+                not module.get_child(packages[-1] + '.py').is_folder():
+            return module.get_child(packages[-1] + '.py')
 
 
 class _ModuleCache(object):
