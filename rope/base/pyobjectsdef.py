@@ -216,7 +216,7 @@ class PyPackage(pyobjects.PyPackage):
         self.resource = resource
         init_dot_py = self._get_init_dot_py()
         if init_dot_py is not None:
-            ast_node = pycore.resource_to_pyobject(
+            ast_node = pycore.project.get_pymodule(
                 init_dot_py, force_errors=force_errors).get_ast()
         else:
             ast_node = ast.parse('\n')
@@ -238,7 +238,7 @@ class PyPackage(pyobjects.PyPackage):
         result = {}
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
-            init_object = self.pycore.resource_to_pyobject(init_dot_py)
+            init_object = self.pycore.project.get_pymodule(init_dot_py)
             result.update(init_object.get_attributes())
         return result
 
@@ -266,7 +266,7 @@ class PyPackage(pyobjects.PyPackage):
     def get_module(self):
         init_dot_py = self._get_init_dot_py()
         if init_dot_py:
-            return self.pycore.resource_to_pyobject(init_dot_py)
+            return self.pycore.project.get_pymodule(init_dot_py)
         return self
 
 

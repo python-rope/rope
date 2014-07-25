@@ -151,7 +151,7 @@ class AutoImport(object):
     def update_resource(self, resource, underlined=None):
         """Update the cache for global names in `resource`"""
         try:
-            pymodule = self.project.pycore.resource_to_pyobject(resource)
+            pymodule = self.project.get_pymodule(resource)
             modname = self._module_name(resource)
             self._add_names(pymodule, modname, underlined)
         except exceptions.ModuleSyntaxError:

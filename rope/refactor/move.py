@@ -552,7 +552,7 @@ def _add_imports_to_module(import_tools, pymodule, new_imports):
 def moving_code_with_imports(project, resource, source):
     import_tools = importutils.ImportTools(project)
     pymodule = libutils.get_string_module(project, source, resource)
-    origin = project.pycore.resource_to_pyobject(resource)
+    origin = project.get_pymodule(resource)
 
     imports = []
     for stmt in import_tools.module_imports(origin).imports:

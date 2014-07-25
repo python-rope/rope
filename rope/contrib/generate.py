@@ -189,7 +189,7 @@ class _GenerationInfo(object):
         self.pycore = pycore
         self.resource = resource
         self.offset = offset
-        self.source_pymodule = self.pycore.resource_to_pyobject(resource)
+        self.source_pymodule = self.pycore.project.get_pymodule(resource)
         finder = rope.base.evaluate.ScopeNameFinder(self.source_pymodule)
         self.primary, self.pyname = finder.get_primary_and_pyname_at(offset)
         self._init_fields()

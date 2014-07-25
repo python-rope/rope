@@ -107,8 +107,8 @@ class _Project(object):
         """
         self.history.do(changes, task_handle=task_handle)
 
-    def get_pymodule(self, resource):
-        return self.pycore.resource_to_pyobject(resource)
+    def get_pymodule(self, resource, force_errors=False):
+        return self.pycore.resource_to_pyobject(resource, force_errors)
 
     def get_pycore(self):
         return self.pycore
