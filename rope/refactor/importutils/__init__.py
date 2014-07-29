@@ -25,8 +25,16 @@ class ImportOrganizer(object):
         self.import_tools = ImportTools(self.pycore)
 
     def organize_imports(self, resource, offset=None):
+        duplicates = self.project.prefs.get("deduplicate_imports")
+        single = self.project.prefs.get("force_single_imports")
+        if duplicates and single:
+            raise Exception("The `deduplicate_imports` and "
+                            "`force_single_imports` options are mutually "
+                            "exclusive")
         return self._perform_command_on_import_tools(
-            self.import_tools.organize_imports, resource, offset)
+            self.import_tools.organize_imports, resource, offset,
+            duplicates=duplicates, single=single,
+            alpha_sort=self.project.prefs.get("sort_imports_alphabetically"))
 
     def expand_star_imports(self, resource, offset=None):
         return self._perform_command_on_import_tools(
@@ -44,14 +52,16 @@ class ImportOrganizer(object):
         return self._perform_command_on_import_tools(
             self.import_tools.handle_long_imports, resource, offset)
 
-    def _perform_command_on_import_tools(self, method, resource, offset):
+    def _perform_command_on_import_tools(self, method, resource, offset,
+                                         **kwargs):
         pymodule = self.pycore.resource_to_pyobject(resource)
         before_performing = pymodule.source_code
         import_filter = None
         if offset is not None:
             import_filter = self._line_filter(
                 pymodule.lines.get_line_number(offset))
-        result = method(pymodule, import_filter=import_filter)
+        kwargs['import_filter'] = import_filter
+        result = method(pymodule, **kwargs)
         if result is not None and result != before_performing:
             changes = ChangeSet(method.__name__.replace('_', ' ') +
                                 ' in <%s>' % resource.path)
@@ -84,13 +94,13 @@ class ImportTools(object):
             names = [(name, None), ]
         return FromImport(module_name, 0, tuple(names))
 
-    def module_imports(self, module, imports_filter=None):
-        return module_imports.ModuleImports(self.pycore, module,
-                                            imports_filter)
+    def module_imports(self, module, **kwargs):
+        return module_imports.ModuleImports(self.pycore, module, **kwargs)
 
     def froms_to_imports(self, pymodule, import_filter=None):
         pymodule = self._clean_up_imports(pymodule, import_filter)
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         for import_stmt in module_imports.imports:
             if import_stmt.readonly or \
                not self._is_transformable_to_normal(import_stmt.import_info):
@@ -98,7 +108,8 @@ class ImportTools(object):
             pymodule = self._from_to_normal(pymodule, import_stmt)
 
         # Adding normal imports in place of froms
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         for import_stmt in module_imports.imports:
             if not import_stmt.readonly and \
                self._is_transformable_to_normal(import_stmt.import_info):
@@ -109,7 +120,8 @@ class ImportTools(object):
         return module_imports.get_changed_source()
 
     def expand_stars(self, pymodule, import_filter=None):
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         module_imports.expand_stars()
         return module_imports.get_changed_source()
 
@@ -132,7 +144,8 @@ class ImportTools(object):
 
     def _clean_up_imports(self, pymodule, import_filter):
         resource = pymodule.get_resource()
-        module_with_imports = self.module_imports(pymodule, import_filter)
+        module_with_imports = self.module_imports(pymodule,
+                                                  import_filter=import_filter)
         module_with_imports.expand_stars()
         source = module_with_imports.get_changed_source()
         if source is not None:
@@ -141,7 +154,8 @@ class ImportTools(object):
         if source is not None:
             pymodule = self.pycore.get_string_module(source, resource)
 
-        module_with_imports = self.module_imports(pymodule, import_filter)
+        module_with_imports = self.module_imports(pymodule,
+                                                  import_filter=import_filter)
         module_with_imports.remove_duplicates()
         module_with_imports.remove_unused_imports()
         source = module_with_imports.get_changed_source()
@@ -150,11 +164,13 @@ class ImportTools(object):
         return pymodule
 
     def relatives_to_absolutes(self, pymodule, import_filter=None):
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         to_be_absolute_list = module_imports.get_relative_to_absolute_list()
         for name, absolute_name in to_be_absolute_list:
             pymodule = self._rename_in_module(pymodule, name, absolute_name)
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         module_imports.get_relative_to_absolute_list()
         source = module_imports.get_changed_source()
         if source is None:
@@ -167,14 +183,19 @@ class ImportTools(object):
         return True
 
     def organize_imports(self, pymodule,
-                         unused=True, duplicates=True,
-                         selfs=True, sort=True, import_filter=None):
-        if unused or duplicates:
-            module_imports = self.module_imports(pymodule, import_filter)
+                         unused=True, duplicates=True, single=False,
+                         selfs=True, sort=True, alpha_sort=False,
+                         import_filter=None):
+        if unused or duplicates or single:
+            module_imports = self.module_imports(pymodule,
+                                                 import_filter=import_filter,
+                                                 force_single=single)
             if unused:
                 module_imports.remove_unused_imports()
             if duplicates:
                 module_imports.remove_duplicates()
+            if single:
+                module_imports.force_single_imports()
             source = module_imports.get_changed_source()
             if source is not None:
                 pymodule = self.pycore.get_string_module(
@@ -182,12 +203,14 @@ class ImportTools(object):
         if selfs:
             pymodule = self._remove_self_imports(pymodule, import_filter)
         if sort:
-            return self.sort_imports(pymodule, import_filter)
+            return self.sort_imports(pymodule, import_filter=import_filter,
+                                     alpha_sort=alpha_sort)
         else:
             return pymodule.source_code
 
     def _remove_self_imports(self, pymodule, import_filter=None):
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         to_be_fixed, to_be_renamed = \
             module_imports.get_self_import_fix_and_rename_list()
         for name in to_be_fixed:
@@ -199,7 +222,8 @@ class ImportTools(object):
                 return pymodule
         for name, new_name in to_be_renamed:
             pymodule = self._rename_in_module(pymodule, name, new_name)
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         module_imports.get_self_import_fix_and_rename_list()
         source = module_imports.get_changed_source()
         if source is not None:
@@ -231,8 +255,8 @@ class ImportTools(object):
                                                      pymodule.get_resource())
         return pymodule
 
-    def sort_imports(self, pymodule, import_filter=None):
-        module_imports = self.module_imports(pymodule, import_filter)
+    def sort_imports(self, pymodule, **kwargs):
+        module_imports = self.module_imports(pymodule, **kwargs)
         module_imports.sort_imports()
         return module_imports.get_changed_source()
 
@@ -240,7 +264,8 @@ class ImportTools(object):
                             import_filter=None):
         # IDEA: `maxdots` and `maxlength` can be specified in project config
         # adding new from imports
-        module_imports = self.module_imports(pymodule, import_filter)
+        module_imports = self.module_imports(pymodule,
+                                             import_filter=import_filter)
         to_be_fixed = module_imports.handle_long_imports(maxdots, maxlength)
         # performing the renaming
         pymodule = self.pycore.get_string_module(

@@ -613,6 +613,25 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod1)
         self.assertEquals('', self.import_tools.organize_imports(pymod))
 
+    def test_organizing_imports_without_deduplication(self):
+        contents = 'from pkg2 import mod2\nfrom pkg2 import mod3\n'
+        self.mod.write(contents)
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals(contents,
+                          self.import_tools.organize_imports(pymod,
+                                                             unused=False,
+                                                             duplicates=False))
+
+    def test_forcing_single_imports(self):
+        self.mod.write('from pkg1 import mod1\nfrom pkg2 import mod2, mod3\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('from pkg1 import mod1\nfrom pkg2 import mod2\n'
+                          'from pkg2 import mod3\n',
+                          self.import_tools.organize_imports(pymod,
+                                                             unused=False,
+                                                             single=True,
+                                                             duplicates=False))
+
     def test_removing_self_imports(self):
         self.mod.write('import mod\nmod.a_var = 1\nprint(mod.a_var)\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
@@ -707,6 +726,15 @@ class ImportUtilsTest(unittest.TestCase):
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.assertEquals('import pkg1.mod1\nimport pkg2.mod2\n',
                           self.import_tools.sort_imports(pymod))
+
+    def test_sorting_imports_purely_alphabetically(self):
+        self.mod.write('from pkg2 import mod3 as mod0\n'
+                       'import pkg2.mod2\nimport pkg1.mod1\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.assertEquals('import pkg1.mod1\nimport pkg2.mod2\n'
+                          'from pkg2 import mod3 as mod0\n',
+                          self.import_tools.sort_imports(pymod,
+                                                         alpha_sort=True))
 
     def test_sorting_imports_and_froms(self):
         self.mod.write('import pkg2.mod2\nfrom pkg1 import mod1\n')

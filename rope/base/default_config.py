@@ -79,6 +79,21 @@ def set_prefs(prefs):
     # appear in the importing namespace.
     prefs['ignore_bad_imports'] = False
 
+    # If `True`, rope will aggregate multiple imports from the same
+    # module into a single import statement when organizing imports.
+    prefs['deduplicate_imports'] = True
+
+    # If `True`, rope will transform a comma list of imports into
+    # multiple separate import statements when organizing
+    # imports. This option is mutually exclusive with
+    # `deduplicate_imports`
+    prefs['force_single_imports'] = False
+
+    # If `True`, rope will sort imports alphabetically by module name
+    # instead of alphabetically by import statement, with from imports
+    # after normal imports.
+    prefs['sort_imports_alphabetically'] = False
+
 
 def project_opened(project):
     """This function is called after opening the project"""

@@ -6,11 +6,14 @@ from rope.refactor.importutils import actions
 
 class ModuleImports(object):
 
-    def __init__(self, pycore, pymodule, import_filter=None):
+    def __init__(self, pycore, pymodule, import_filter=None,
+                 force_single=False, alpha_sort=False):
         self.pycore = pycore
         self.pymodule = pymodule
         self.separating_lines = 0
         self.filter = import_filter
+        self.force_single = force_single
+        self.alpha_sort = alpha_sort
 
     @property
     @utils.saveit
@@ -111,16 +114,22 @@ class ModuleImports(object):
         return result
 
     def add_import(self, import_info):
-        visitor = actions.AddingVisitor(self.pycore, [import_info])
-        for import_statement in self.imports:
-            if import_statement.accept(visitor):
-                break
-        else:
+        def add_new_import():
             lineno = self._get_new_import_lineno()
             blanks = self._get_new_import_blanks()
             self.imports.append(importinfo.ImportStatement(
                                 import_info, lineno, lineno,
                                 blank_lines=blanks))
+
+        if self.force_single:
+            add_new_import()
+        else:
+            visitor = actions.AddingVisitor(self.pycore, [import_info])
+            for import_statement in self.imports:
+                if import_statement.accept(visitor):
+                    break
+            else:
+                add_new_import()
 
     def _get_new_import_blanks(self):
         return 0
@@ -153,6 +162,23 @@ class ModuleImports(object):
                     import_stmt.empty_import()
             else:
                 added_imports.append(import_stmt)
+
+    def force_single_imports(self):
+        """force a single import per statement"""
+        for import_stmt in self.imports[:]:
+            import_info = import_stmt.import_info
+            if import_info.is_empty():
+                continue
+            if len(import_info.names_and_aliases) > 1:
+                for name_and_alias in import_info.names_and_aliases:
+                    if hasattr(import_info, "module_name"):
+                        new_import = importinfo.FromImport(
+                            import_info.module_name, import_info.level,
+                            [name_and_alias])
+                    else:
+                        new_import = importinfo.NormalImport([name_and_alias])
+                    self.add_import(new_import)
+                import_stmt.empty_import()
 
     def get_relative_to_absolute_list(self):
         visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
@@ -207,14 +233,26 @@ class ModuleImports(object):
                 break
         return lineno
 
+    def _get_import_name(self, import_stmt):
+        import_info = import_stmt.import_info
+        if hasattr(import_info, "module_name"):
+            return "%s.%s" % (import_info.module_name,
+                              import_info.names_and_aliases[0][0])
+        else:
+            return import_info.names_and_aliases[0][0]
+
     def _compare_imports(self, stmt1, stmt2):
-        str1 = stmt1.get_import_statement()
-        str2 = stmt2.get_import_statement()
-        if str1.startswith('from ') and not str2.startswith('from '):
-            return 1
-        if not str1.startswith('from ') and str2.startswith('from '):
-            return -1
-        return cmp(str1, str2)
+        if self.alpha_sort:
+            return cmp(self._get_import_name(stmt1),
+                       self._get_import_name(stmt2))
+        else:
+            str1 = stmt1.get_import_statement()
+            str2 = stmt2.get_import_statement()
+            if str1.startswith('from ') and not str2.startswith('from '):
+                return 1
+            if not str1.startswith('from ') and str2.startswith('from '):
+                return -1
+            return cmp(str1, str2)
 
     def _move_imports(self, imports, index, blank_lines):
         if imports:
