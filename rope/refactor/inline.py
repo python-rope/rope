@@ -62,7 +62,6 @@ class _Inliner(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = project.pycore
         self.pyname = _get_pyname(project, resource, offset)
         range_finder = worder.Worder(resource.read())
         self.region = range_finder.get_primary_range(offset)
@@ -93,7 +92,7 @@ class InlineMethod(_Inliner):
     def _init_imports(self):
         body = sourceutils.get_body(self.pyfunction)
         body, imports = move.moving_code_with_imports(
-            self.pycore, self.resource, body)
+            self.project, self.resource, body)
         self.imports = imports
         self.others_generator = _DefinitionGenerator(
             self.project, self.pyfunction, body=body)
@@ -142,10 +141,10 @@ class InlineMethod(_Inliner):
                 result = move.ModuleSkipRenamer(
                     self.occurrence_finder, file, handle).get_changed_module()
                 if result is not None:
-                    result = _add_imports(self.pycore, result,
+                    result = _add_imports(self.project, result,
                                           file, self.imports)
                     if remove:
-                        result = _remove_from(self.pycore, self.pyname,
+                        result = _remove_from(self.project, self.pyname,
                                               result, file)
                     changes.add_change(ChangeContents(file, result))
             job_set.finished_job()
@@ -245,7 +244,7 @@ class InlineVariable(_Inliner):
             else:
                 result = self._change_module(resource, remove, only_current)
                 if result is not None:
-                    result = _add_imports(self.pycore, result,
+                    result = _add_imports(self.project, result,
                                           resource, self.imports)
                     changes.add_change(ChangeContents(resource, result))
             jobset.finished_job()
@@ -261,7 +260,7 @@ class InlineVariable(_Inliner):
     def _init_imports(self):
         vardef = _getvardef(self.pymodule, self.pyname)
         self.imported, self.imports = move.moving_code_with_imports(
-            self.pycore, self.resource, vardef)
+            self.project, self.resource, vardef)
 
     def _change_module(self, resource, remove, only_current):
         filters = [occurrences.NoImportsFilter(),
@@ -276,7 +275,8 @@ class InlineVariable(_Inliner):
         changed = rename.rename_in_module(
             finder, self.imported, resource=resource, replace_primary=True)
         if changed and remove:
-            changed = _remove_from(self.pycore, self.pyname, changed, resource)
+            changed = _remove_from(self.project, self.pyname,
+                                   changed, resource)
         return changed
 
     def get_kind(self):
@@ -329,7 +329,6 @@ class _DefinitionGenerator(object):
 
     def __init__(self, project, pyfunction, body=None):
         self.project = project
-        self.pycore = project.pycore
         self.pyfunction = pyfunction
         self.pymodule = pyfunction.get_module()
         self.resource = self.pymodule.get_resource()
@@ -596,16 +595,16 @@ def _assigned_lineno(pymodule, pyname):
     return pymodule.logical_lines.logical_line_in(definition_line)
 
 
-def _add_imports(pycore, source, resource, imports):
+def _add_imports(project, source, resource, imports):
     if not imports:
         return source
-    pymodule = libutils.get_string_module(pycore.project, source, resource)
-    module_import = importutils.get_module_imports(pycore, pymodule)
+    pymodule = libutils.get_string_module(project, source, resource)
+    module_import = importutils.get_module_imports(project, pymodule)
     for import_info in imports:
         module_import.add_import(import_info)
     source = module_import.get_changed_source()
-    pymodule = libutils.get_string_module(pycore.project, source, resource)
-    import_tools = importutils.ImportTools(pycore)
+    pymodule = libutils.get_string_module(project, source, resource)
+    import_tools = importutils.ImportTools(project)
     return import_tools.organize_imports(pymodule, unused=False, sort=False)
 
 
@@ -617,8 +616,8 @@ def _get_pyname(project, resource, offset):
     return pyname
 
 
-def _remove_from(pycore, pyname, source, resource):
-    pymodule = libutils.get_string_module(pycore.project, source, resource)
-    module_import = importutils.get_module_imports(pycore, pymodule)
+def _remove_from(project, pyname, source, resource):
+    pymodule = libutils.get_string_module(project, source, resource)
+    module_import = importutils.get_module_imports(project, pymodule)
     module_import.remove_pyname(pyname)
     return module_import.get_changed_source()

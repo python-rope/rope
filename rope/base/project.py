@@ -8,6 +8,7 @@ import rope.base.fscommands
 from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
 import rope.base.resourceobserver as resourceobserver
 from rope.base.resources import File, Folder, _ResourceMatcher
+from rope.base.exceptions import ModuleNotFoundError
 
 
 class _Project(object):
@@ -40,6 +41,17 @@ class _Project(object):
         else:
             raise exceptions.ResourceNotFoundError('Unknown resource '
                                                    + resource_name)
+
+    def get_module(self, name, folder=None):
+        """Returns a `PyObject` if the module was found."""
+        # check if this is a builtin module
+        pymod = self.pycore.builtin_module(name)
+        if pymod is not None:
+            return pymod
+        module = self.find_module(name, folder)
+        if module is None:
+            raise ModuleNotFoundError('Module %s not found' % name)
+        return self.pycore.resource_to_pyobject(module)
 
     def validate(self, folder):
         """Validate files and folders contained in this folder
@@ -85,11 +97,26 @@ class _Project(object):
         """Get the folder with `path` (it may not exist)"""
         return Folder(self, path)
 
-    def is_ignored(self, resource):
-        return False
-
     def get_prefs(self):
         return self.prefs
+
+    def find_module(self, modname, folder=None):
+        """Returns a resource corresponding to the given module
+
+        returns None if it can not be found
+        """
+        return self.pycore._find_module(modname, folder)
+
+    def find_relative_module(self, modname, folder, level):
+        for i in range(level - 1):
+            folder = folder.parent
+        if modname == '':
+            return folder
+        else:
+            return rope.base.pycore._find_module_in_folder(folder, modname)
+
+    def is_ignored(self, resource):
+        return False
 
     def _get_resource_path(self, name):
         pass

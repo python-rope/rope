@@ -74,10 +74,11 @@ class PyCore(object):
             return resource.name.endswith('.py')
         return self.python_matcher.does_match(resource)
 
+    @utils.deprecated('Use `project.get_module` instead')
     def get_module(self, name, folder=None):
         """Returns a `PyObject` if the module was found."""
         # check if this is a builtin module
-        pymod = self._builtin_module(name)
+        pymod = self.builtin_module(name)
         if pymod is not None:
             return pymod
         module = self.find_module(name, folder)
@@ -91,14 +92,14 @@ class PyCore(object):
             if extension.startswith(modname + '.'):
                 name = extension[len(modname) + 1:]
                 if '.' not in name:
-                    result[name] = self._builtin_module(extension)
+                    result[name] = self.builtin_module(extension)
         return result
 
-    def _builtin_module(self, name):
+    def builtin_module(self, name):
         return self.extension_cache.get_pymodule(name)
 
     def get_relative_module(self, name, folder, level):
-        module = self.find_relative_module(name, folder, level)
+        module = self.project.find_relative_module(name, folder, level)
         if module is None:
             raise ModuleNotFoundError('Module %s not found' % name)
         return self.resource_to_pyobject(module)
@@ -135,6 +136,7 @@ class PyCore(object):
                 pass
         return result
 
+    @utils.deprecated('Use `project.find_module` instead')
     def find_module(self, modname, folder=None):
         """Returns a resource corresponding to the given module
 
@@ -142,6 +144,7 @@ class PyCore(object):
         """
         return self._find_module(modname, folder)
 
+    @utils.deprecated('Use `project.find_relative_module` instead')
     def find_relative_module(self, modname, folder, level):
         for i in range(level - 1):
             folder = folder.parent

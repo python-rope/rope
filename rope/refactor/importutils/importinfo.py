@@ -147,10 +147,10 @@ class FromImport(ImportInfo):
         Returns `None` if module was not found.
         """
         if self.level == 0:
-            return context.pycore.find_module(
+            return context.project.find_module(
                 self.module_name, folder=context.folder)
         else:
-            return context.pycore.find_relative_module(
+            return context.project.find_relative_module(
                 self.module_name, context.folder, self.level)
 
     def get_imported_module(self, context):
@@ -160,10 +160,10 @@ class FromImport(ImportInfo):
         could not be found.
         """
         if self.level == 0:
-            return context.pycore.get_module(
+            return context.project.get_module(
                 self.module_name, context.folder)
         else:
-            return context.pycore.get_relative_module(
+            return context.project.pycore.get_relative_module(
                 self.module_name, context.folder, self.level)
 
     def get_import_statement(self):
@@ -196,6 +196,6 @@ class EmptyImport(ImportInfo):
 
 class ImportContext(object):
 
-    def __init__(self, pycore, folder):
-        self.pycore = pycore
+    def __init__(self, project, folder):
+        self.project = project
         self.folder = folder

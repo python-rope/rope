@@ -24,14 +24,14 @@ class PyCoreTest(unittest.TestCase):
 
     def test_simple_module(self):
         testutils.create_module(self.project, 'mod')
-        result = self.pycore.get_module('mod')
+        result = self.project.get_module('mod')
         self.assertEquals(get_base_type('Module'), result.type)
         self.assertEquals(0, len(result.get_attributes()))
 
     def test_nested_modules(self):
         pkg = testutils.create_package(self.project, 'pkg')
         mod = testutils.create_module(self.project, 'mod', pkg)  # noqa
-        package = self.pycore.get_module('pkg')
+        package = self.project.get_module('pkg')
         self.assertEquals(get_base_type('Module'), package.get_type())
         self.assertEquals(1, len(package.get_attributes()))
         module = package['mod'].get_object()
@@ -40,20 +40,20 @@ class PyCoreTest(unittest.TestCase):
     def test_package(self):
         pkg = testutils.create_package(self.project, 'pkg')
         mod = testutils.create_module(self.project, 'mod', pkg)  # noqa
-        result = self.pycore.get_module('pkg')
+        result = self.project.get_module('pkg')
         self.assertEquals(get_base_type('Module'), result.type)
 
     def test_simple_class(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class SampleClass(object):\n    pass\n')
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         result = mod_element['SampleClass'].get_object()
         self.assertEquals(get_base_type('Type'), result.get_type())
 
     def test_simple_function(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('def sample_function():\n    pass\n')
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         result = mod_element['sample_function'].get_object()
         self.assertEquals(get_base_type('Function'), result.get_type())
 
@@ -63,7 +63,7 @@ class PyCoreTest(unittest.TestCase):
                '    def sample_method(self):\n' \
                '        pass\n'
         mod.write(code)
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         sample_class = mod_element['SampleClass'].get_object()
         self.assertTrue('sample_method' in sample_class)
         method = sample_class['sample_method'].get_object()
@@ -72,13 +72,13 @@ class PyCoreTest(unittest.TestCase):
     def test_global_variables(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('var = 10')
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         result = mod_element['var']  # noqa
 
     def test_class_variables(self):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class SampleClass(object):\n    var = 10\n')
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         sample_class = mod_element['SampleClass'].get_object()
         var = sample_class['var']  # noqa
 
@@ -86,7 +86,7 @@ class PyCoreTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('class C(object):\n'
                   '    def __init__(self):\n        self.var = 20\n')
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         sample_class = mod_element['C'].get_object()
         var = sample_class['var']  # noqa
 
@@ -98,7 +98,7 @@ class PyCoreTest(unittest.TestCase):
                '    def f():\n' \
                '        pass\n'
         mod.write(code)
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         sample_class = mod_element['C'].get_object()
         f = sample_class['f'].get_object()
         self.assertTrue(isinstance(f, AbstractFunction))
@@ -109,20 +109,20 @@ class PyCoreTest(unittest.TestCase):
                '    class InnerClass(object):\n' \
                '        pass\n\n'
         mod.write(code)
-        mod_element = self.pycore.get_module('mod')
+        mod_element = self.project.get_module('mod')
         sample_class = mod_element['SampleClass'].get_object()
         var = sample_class['InnerClass'].get_object()
         self.assertEquals(get_base_type('Type'), var.get_type())
 
     def test_non_existent_module(self):
         with self.assertRaises(exceptions.ModuleNotFoundError):
-            self.pycore.get_module('doesnotexistmodule')
+            self.project.get_module('doesnotexistmodule')
 
     def test_imported_names(self):
         testutils.create_module(self.project, 'mod1')
         mod = testutils.create_module(self.project, 'mod2')
         mod.write('import mod1\n')
-        module = self.pycore.get_module('mod2')
+        module = self.project.get_module('mod2')
         imported_sys = module['mod1'].get_object()
         self.assertEquals(get_base_type('Module'), imported_sys.get_type())
 
@@ -130,7 +130,7 @@ class PyCoreTest(unittest.TestCase):
         testutils.create_module(self.project, 'mod1')
         mod = testutils.create_module(self.project, 'mod2')
         mod.write('import mod1 as my_import\n')
-        module = self.pycore.get_module('mod2')
+        module = self.project.get_module('mod2')
         imported_mod = module['my_import'].get_object()
         self.assertEquals(get_base_type('Module'), imported_mod.get_type())
 
@@ -245,7 +245,7 @@ class PyCoreTest(unittest.TestCase):
     def test_find_module(self):
         src = self.project.root.create_folder('src')
         samplemod = testutils.create_module(self.project, 'samplemod', src)
-        found_module = self.pycore.find_module('samplemod')
+        found_module = self.project.find_module('samplemod')
         self.assertEquals(samplemod, found_module)
 
     def test_find_nested_module(self):
@@ -253,7 +253,7 @@ class PyCoreTest(unittest.TestCase):
         samplepkg = testutils.create_package(self.project, 'samplepkg', src)
         samplemod = testutils.create_module(self.project, 'samplemod',
                                             samplepkg)
-        found_module = self.pycore.find_module('samplepkg.samplemod')
+        found_module = self.project.find_module('samplepkg.samplemod')
         self.assertEquals(samplemod, found_module)
 
     def test_find_multiple_module(self):
@@ -262,7 +262,7 @@ class PyCoreTest(unittest.TestCase):
         samplemod2 = testutils.create_module(self.project, 'samplemod')
         test = self.project.root.create_folder('test')
         samplemod3 = testutils.create_module(self.project, 'samplemod', test)
-        found_module = self.pycore.find_module('samplemod')
+        found_module = self.project.find_module('samplemod')
         self.assertTrue(samplemod1 == found_module or
                         samplemod2 == found_module or
                         samplemod3 == found_module)
@@ -270,26 +270,26 @@ class PyCoreTest(unittest.TestCase):
     def test_find_module_packages(self):
         src = self.project.root
         samplepkg = testutils.create_package(self.project, 'samplepkg', src)
-        found_module = self.pycore.find_module('samplepkg')
+        found_module = self.project.find_module('samplepkg')
         self.assertEquals(samplepkg, found_module)
 
     def test_find_module_when_module_and_package_with_the_same_name(self):
         src = self.project.root
         testutils.create_module(self.project, 'sample', src)
         samplepkg = testutils.create_package(self.project, 'sample', src)
-        found_module = self.pycore.find_module('sample')
+        found_module = self.project.find_module('sample')
         self.assertEquals(samplepkg, found_module)
 
     def test_source_folders_preference(self):
         testutils.create_package(self.project, 'pkg1')
         testutils.create_package(self.project, 'pkg1.src2')
         lost = testutils.create_module(self.project, 'pkg1.src2.lost')
-        self.assertEqual(self.project.pycore.find_module('lost'), None)
+        self.assertEqual(self.project.find_module('lost'), None)
         self.project.close()
         from rope.base.project import Project
         self.project = Project(self.project.address,
                                source_folders=['pkg1/src2'])
-        self.assertEqual(self.project.pycore.find_module('lost'), lost)
+        self.assertEqual(self.project.find_module('lost'), lost)
 
     def test_getting_empty_source_folders(self):
         self.assertEquals([], self.pycore.get_source_folders())
@@ -376,7 +376,7 @@ class PyCoreTest(unittest.TestCase):
     def test_get_pyname_definition_location_importes(self):
         testutils.create_module(self.project, 'mod')
         mod = libutils.get_string_module(self.project, 'import mod\n')
-        imported_module = self.pycore.get_module('mod')
+        imported_module = self.project.get_module('mod')
         module_pyname = mod['mod']
         self.assertEquals((imported_module, 1),
                           module_pyname.get_definition_location())
@@ -384,7 +384,7 @@ class PyCoreTest(unittest.TestCase):
     def test_get_pyname_definition_location_imports(self):
         module_resource = testutils.create_module(self.project, 'mod')
         module_resource.write('\ndef a_func():\n    pass\n')
-        imported_module = self.pycore.get_module('mod')
+        imported_module = self.project.get_module('mod')
         mod = libutils.get_string_module(
             self.project, 'from mod import a_func\n')
         a_func = mod['a_func']
@@ -402,7 +402,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_module_get_resource(self):
         module_resource = testutils.create_module(self.project, 'mod')
-        module = self.pycore.get_module('mod')
+        module = self.project.get_module('mod')
         self.assertEquals(module_resource, module.get_resource())
         string_module = libutils.get_string_module(
             self.project, 'from mod import a_func\n')
@@ -433,7 +433,7 @@ class PyCoreTest(unittest.TestCase):
     def test_from_package_import_module_get_definition_location(self):
         pkg = testutils.create_package(self.project, 'pkg')
         testutils.create_module(self.project, 'mod', pkg)
-        pkg_mod = self.pycore.get_module('pkg.mod')
+        pkg_mod = self.project.get_module('pkg.mod')
         mod = libutils.get_string_module(
             self.project, 'from pkg import mod\n')
         imported_mod = mod['mod']
@@ -448,7 +448,7 @@ class PyCoreTest(unittest.TestCase):
 
     def test_get_definition_location_for_packages(self):
         testutils.create_package(self.project, 'pkg')
-        init_module = self.pycore.get_module('pkg.__init__')
+        init_module = self.project.get_module('pkg.__init__')
         mod = libutils.get_string_module(self.project, 'import pkg\n')
         pkg_pyname = mod['pkg']
         self.assertEquals((init_module, 1),
@@ -457,7 +457,7 @@ class PyCoreTest(unittest.TestCase):
     def test_get_definition_location_for_filtered_packages(self):
         pkg = testutils.create_package(self.project, 'pkg')
         testutils.create_module(self.project, 'mod', pkg)
-        init_module = self.pycore.get_module('pkg.__init__')
+        init_module = self.project.get_module('pkg.__init__')
         mod = libutils.get_string_module(self.project, 'import pkg.mod')
         pkg_pyname = mod['pkg']
         self.assertEquals((init_module, 1),
@@ -474,7 +474,7 @@ class PyCoreTest(unittest.TestCase):
             u'#\N{LATIN SMALL LETTER I WITH DIAERESIS}\n'
         mod = testutils.create_module(self.project, 'mod')
         mod.write(contents)
-        self.pycore.get_module('mod')
+        self.project.get_module('mod')
 
     def test_global_keyword(self):
         contents = 'a_var = 1\ndef a_func():\n    global a_var\n'
@@ -725,7 +725,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         code = 'from samplemod import *\n' \
                'class SampleClass(object):\n    pass\n'
         mod = libutils.get_string_module(self.project, code)
-        samplemod = self.pycore.get_module('samplemod')
+        samplemod = self.project.get_module('samplemod')
         sample_class = samplemod['SampleClass'].get_object()
         self.assertNotEquals(sample_class,
                              mod.get_attributes()['SampleClass'].get_object())
@@ -769,7 +769,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2')
         mod1.write('import mod2\n')
         mod2.write('import mod1\n')
-        self.pycore.get_module('mod1')
+        self.project.get_module('mod1')
 
     def test_circular_imports2(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -778,7 +778,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
             'from mod2 import Sample2\nclass Sample1(object):\n    pass\n')
         mod2.write(
             'from mod1 import Sample1\nclass Sample2(object):\n    pass\n')
-        self.pycore.get_module('mod1').get_attributes()
+        self.project.get_module('mod1').get_attributes()
 
     def test_multi_dot_imports(self):
         pkg = testutils.create_package(self.project, 'pkg')
@@ -834,10 +834,10 @@ class PyCoreInProjectsTest(unittest.TestCase):
     def test_invalidating_cache_after_resource_change(self):
         module = testutils.create_module(self.project, 'mod')
         module.write('import sys\n')
-        mod1 = self.pycore.get_module('mod')
+        mod1 = self.project.get_module('mod')
         self.assertTrue('var' not in mod1.get_attributes())
         module.write('var = 10\n')
-        mod2 = self.pycore.get_module('mod')
+        mod2 = self.project.get_module('mod')
         self.assertTrue('var' in mod2)
 
     def test_invalidating_cache_after_resource_change_for_init_dot_pys(self):
@@ -846,7 +846,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
         mod.write('import pkg\n')
-        pymod = self.pycore.get_module('mod')
+        pymod = self.project.get_module('mod')
         self.assertTrue('a_var' in pymod['pkg'].get_object())
         init_dot_py.write('new_var = 10\n')
         self.assertTrue('a_var' not in
@@ -859,7 +859,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         init_dot_py = pkg2.get_child('__init__.py')
         init_dot_py.write('a_var = 10\n')
         mod.write('import pkg1\n')
-        pymod = self.pycore.get_module('mod')
+        pymod = self.project.get_module('mod')
         self.assertTrue('a_var' in
                         pymod['pkg1'].get_object()['pkg2'].get_object())
         init_dot_py.write('new_var = 10\n')
@@ -937,14 +937,14 @@ class PyCoreInProjectsTest(unittest.TestCase):
         scope = libutils.get_string_scope(
             self.project, 'from mod import SampleClass\n')
         sample_class = scope['SampleClass']
-        samplemod = self.pycore.get_module('samplemod')
+        samplemod = self.project.get_module('samplemod')
         self.assertEquals((samplemod, 1),
                           sample_class.get_definition_location())
 
     def test_nested_modules(self):
         pkg = testutils.create_package(self.project, 'pkg')
         testutils.create_module(self.project, 'mod', pkg)
-        imported_module = self.pycore.get_module('pkg.mod')
+        imported_module = self.project.get_module('pkg.mod')
         scope = libutils.get_string_scope(self.project, 'import pkg.mod\n')
         mod_pyobject = scope['pkg'].get_object()['mod']
         self.assertEquals((imported_module, 1),
@@ -954,7 +954,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         pkg = testutils.create_package(self.project, 'pkg')
         init_dot_py = pkg.get_child('__init__.py')
         init_dot_py.write('a_var = 1\n')
-        pkg_object = self.pycore.get_module('pkg')
+        pkg_object = self.project.get_module('pkg')
         self.assertTrue('a_var' in pkg_object)
 
     def test_relative_imports(self):
@@ -1026,12 +1026,12 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2.write('def a_func():\n    print(1)\n')
         mod1.write('from mod2 import a_func\na_func()\n')
 
-        pymod1 = self.pycore.get_module('mod1')
-        pymod2 = self.pycore.get_module('mod2')
+        pymod1 = self.project.get_module('mod1')
+        pymod2 = self.project.get_module('mod2')
         self.assertEquals(pymod1['a_func'].get_object(),
                           pymod2['a_func'].get_object())
         mod2.write(mod2.read() + '\n')
-        pymod2 = self.pycore.get_module('mod2')
+        pymod2 = self.project.get_module('mod2')
         self.assertEquals(pymod1['a_func'].get_object(),
                           pymod2['a_func'].get_object())
 
@@ -1041,7 +1041,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod1.write('class A(object):\n    def func1(self):\n        pass\n')
         mod2.write('import mod1\nclass B(mod1.A):\n    pass\n')
 
-        b_class = self.pycore.get_module('mod2')['B'].get_object()
+        b_class = self.project.get_module('mod2')['B'].get_object()
         self.assertTrue('func1' in b_class)
 
         mod1.write('class A(object):\n    def func2(self):\n        pass\n')

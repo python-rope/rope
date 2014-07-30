@@ -116,8 +116,8 @@ class ImportedModule(PyName):
             elif self.module_name is not None:
                 try:
                     if self.level == 0:
-                        pymodule = pycore.get_module(self.module_name,
-                                                     self._current_folder())
+                        pymodule = pycore.project.get_module(
+                            self.module_name, self._current_folder())
                     else:
                         pymodule = pycore.get_relative_module(
                             self.module_name, self._current_folder(),
