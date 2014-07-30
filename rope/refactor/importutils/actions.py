@@ -165,6 +165,8 @@ class AddingVisitor(ImportInfoVisitor):
             return True
 
     def visitFromImport(self, import_stmt, import_info):
+        if self.pycore.project.prefs.get("split_imports"):
+            return False
         if isinstance(self.import_info, import_info.__class__) and \
            import_info.module_name == self.import_info.module_name and \
            import_info.level == self.import_info.level:

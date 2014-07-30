@@ -154,6 +154,23 @@ class ModuleImports(object):
             else:
                 added_imports.append(import_stmt)
 
+    def force_single_imports(self):
+        """force a single import per statement"""
+        for import_stmt in self.imports[:]:
+            import_info = import_stmt.import_info
+            if import_info.is_empty():
+                continue
+            if len(import_info.names_and_aliases) > 1:
+                for name_and_alias in import_info.names_and_aliases:
+                    if hasattr(import_info, "module_name"):
+                        new_import = importinfo.FromImport(
+                            import_info.module_name, import_info.level,
+                            [name_and_alias])
+                    else:
+                        new_import = importinfo.NormalImport([name_and_alias])
+                    self.add_import(new_import)
+                import_stmt.empty_import()
+
     def get_relative_to_absolute_list(self):
         visitor = rope.refactor.importutils.actions.RelativeToAbsoluteVisitor(
             self.pycore, self._current_folder())
@@ -174,14 +191,19 @@ class ModuleImports(object):
         return self.pymodule.get_resource().parent
 
     def sort_imports(self):
+        if self.pycore.project.prefs.get("sort_imports_alphabetically"):
+            sort_kwargs = dict(key=self._get_import_name)
+        else:
+            sort_kwargs = dict(cmp=self._compare_imports)
+
         # IDEA: Sort from import list
         visitor = actions.SortingVisitor(self.pycore, self._current_folder())
         for import_statement in self.imports:
             import_statement.accept(visitor)
-        in_projects = sorted(visitor.in_project, self._compare_imports)
-        third_party = sorted(visitor.third_party, self._compare_imports)
-        standards = sorted(visitor.standard, self._compare_imports)
-        future = sorted(visitor.future, self._compare_imports)
+        in_projects = sorted(visitor.in_project, **sort_kwargs)
+        third_party = sorted(visitor.third_party, **sort_kwargs)
+        standards = sorted(visitor.standard, **sort_kwargs)
+        future = sorted(visitor.future, **sort_kwargs)
         last_index = self._first_import_line()
         last_index = self._move_imports(future, last_index, 0)
         last_index = self._move_imports(standards, last_index, 1)
@@ -206,6 +228,14 @@ class ModuleImports(object):
             else:
                 break
         return lineno
+
+    def _get_import_name(self, import_stmt):
+        import_info = import_stmt.import_info
+        if hasattr(import_info, "module_name"):
+            return "%s.%s" % (import_info.module_name,
+                              import_info.names_and_aliases[0][0])
+        else:
+            return import_info.names_and_aliases[0][0]
 
     def _compare_imports(self, stmt1, stmt2):
         str1 = stmt1.get_import_statement()
