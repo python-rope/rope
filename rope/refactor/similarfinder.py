@@ -2,6 +2,7 @@
 import re
 
 import rope.refactor.wildcards
+from rope.base import libutils
 from rope.base import codeanalyze, exceptions, ast, builtins
 from rope.refactor import (patchedast, wildcards)
 
@@ -365,5 +366,5 @@ def _pydefined_to_str(pydefined):
         while pydefined.parent is not None:
             address.insert(0, pydefined.get_name())
             pydefined = pydefined.parent
-        module_name = pydefined.pycore.modname(pydefined.resource)
+        module_name = libutils.modname(pydefined.resource)
     return '.'.join(module_name.split('.') + address)

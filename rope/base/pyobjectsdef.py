@@ -3,6 +3,7 @@ import rope.base.evaluate
 import rope.base.builtins
 import rope.base.oi.soi
 import rope.base.pyscopes
+import rope.base.libutils
 from rope.base import (pynamesdef as pynames, exceptions, ast,
                        astutils, pyobjects, fscommands, arguments, utils)
 
@@ -223,7 +224,7 @@ class PyPackage(pyobjects.PyPackage):
 
     def _create_structural_attributes(self):
         result = {}
-        modname = self.pycore.modname(self.resource)
+        modname = rope.base.libutils.modname(self.resource)
         extension_submodules = self.pycore._builtin_submodules(modname)
         for name, module in extension_submodules.iteritems():
             result[name] = rope.base.builtins.BuiltinName(module)

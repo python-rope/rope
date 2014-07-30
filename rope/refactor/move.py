@@ -125,7 +125,7 @@ class MoveMethod(object):
         pymodule = pyobject.get_module()
         return sourceutils.get_indents(
             pymodule.lines, pyobject.get_scope().get_start()) + \
-            sourceutils.get_indent(self.pycore)
+            sourceutils.get_indent(self.project)
 
     def _get_changes_made_by_new_class(self, dest_attr, new_name):
         old_pyclass = self.pyfunction.parent
@@ -152,7 +152,7 @@ class MoveMethod(object):
         return '%s\n%s' % (
             self._get_new_header(name),
             sourceutils.fix_indentation(self._get_body(),
-                                        sourceutils.get_indent(self.pycore)))
+                                        sourceutils.get_indent(self.project)))
 
     def _get_unchanged_body(self):
         return sourceutils.get_body(self.pyfunction)
@@ -297,7 +297,7 @@ class MoveGlobal(object):
         return ChangeContents(self.source, source)
 
     def _new_modname(self, dest):
-        return self.pycore.modname(dest)
+        return libutils.modname(dest)
 
     def _dest_module_changes(self, dest):
         # Changing occurrences
@@ -421,7 +421,7 @@ class MoveModule(object):
         return changes
 
     def _new_modname(self, dest):
-        destname = self.pycore.modname(dest)
+        destname = libutils.modname(dest)
         if destname:
             return destname + '.' + self.old_name
         return self.old_name

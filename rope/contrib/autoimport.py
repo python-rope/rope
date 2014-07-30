@@ -170,7 +170,7 @@ class AutoImport(object):
             pass
 
     def _module_name(self, resource):
-        return self.project.pycore.modname(resource)
+        return libutils.modname(resource)
 
     def _add_names(self, pymodule, modname, underlined):
         if underlined is None:
