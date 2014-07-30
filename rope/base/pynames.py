@@ -119,7 +119,7 @@ class ImportedModule(PyName):
                         pymodule = pycore.project.get_module(
                             self.module_name, self._current_folder())
                     else:
-                        pymodule = pycore.get_relative_module(
+                        pymodule = pycore.project.get_relative_module(
                             self.module_name, self._current_folder(),
                             self.level)
                     self.pymodule.set(pymodule)

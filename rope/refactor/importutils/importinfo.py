@@ -163,7 +163,7 @@ class FromImport(ImportInfo):
             return context.project.get_module(
                 self.module_name, context.folder)
         else:
-            return context.project.pycore.get_relative_module(
+            return context.project.get_relative_module(
                 self.module_name, context.folder, self.level)
 
     def get_import_statement(self):

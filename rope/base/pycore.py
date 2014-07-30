@@ -42,6 +42,7 @@ class PyCore(object):
             rope.base.resourceobserver.FilteredResourceObserver(observer)
         self.project.add_observer(self.observer)
 
+    @utils.deprecated('Delete once deprecated functions are gone')
     def _init_source_folders(self):
         self._custom_source_folders = []
         for path in self.project.prefs.get('source_folders', []):
@@ -98,6 +99,7 @@ class PyCore(object):
     def builtin_module(self, name):
         return self.extension_cache.get_pymodule(name)
 
+    @utils.deprecated('Use `project.get_relative_module` instead')
     def get_relative_module(self, name, folder, level):
         module = self.project.find_relative_module(name, folder, level)
         if module is None:
@@ -124,6 +126,7 @@ class PyCore(object):
         for observer in self.cache_observers:
             observer(resource)
 
+    @utils.deprecated('Use `project.get_python_path_folders` instead')
     def get_python_path_folders(self):
         import rope.base.project
         result = []
@@ -174,6 +177,7 @@ class PyCore(object):
     #    packages, that is most of the time
     #  - We need a separate resource observer; `self.observer`
     #    does not get notified about module and folder creations
+    @utils.deprecated('Use `project.get_source_folders` instead')
     def get_source_folders(self):
         """Returns project source folders"""
         if self.project.root is None:

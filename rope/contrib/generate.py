@@ -271,7 +271,7 @@ class _GenerationInfo(object):
     def get_package(self):
         primary = self.primary
         if self.primary is None:
-            return self.pycore.get_source_folders()[0]
+            return self.pycore.project.get_source_folders()[0]
         if isinstance(primary.get_object(), pyobjects.PyPackage):
             return primary.get_object().get_resource()
         raise exceptions.RefactoringError(

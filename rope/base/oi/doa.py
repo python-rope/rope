@@ -25,8 +25,8 @@ class PythonFileRunner(object):
         """Execute the process"""
         env = dict(os.environ)
         file_path = self.file.real_path
-        path_folders = self.pycore.get_source_folders() + \
-            self.pycore.get_python_path_folders()
+        path_folders = self.pycore.project.get_source_folders() + \
+            self.pycore.project.get_python_path_folders()
         env['PYTHONPATH'] = os.pathsep.join(folder.real_path
                                             for folder in path_folders)
         runmod_path = self.pycore.project.find_module('rope.base.oi.runmod').real_path
