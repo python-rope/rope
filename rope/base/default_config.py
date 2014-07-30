@@ -79,15 +79,15 @@ def set_prefs(prefs):
     # appear in the importing namespace.
     prefs['ignore_bad_imports'] = False
 
-    # If `True`, rope will aggregate multiple imports from the same
-    # module into a single import statement when organizing imports.
-    prefs['deduplicate_imports'] = True
-
-    # If `True`, rope will transform a comma list of imports into
-    # multiple separate import statements when organizing
-    # imports. This option is mutually exclusive with
-    # `deduplicate_imports`
-    prefs['force_single_imports'] = False
+    # How rope will organize imports. Valid options are:
+    #
+    # * 'merge': aggregate multiple imports from the same module into
+    #   a single import statement
+    # * 'split': transform a comma list of imports into multiple
+    #   separate import statements
+    #
+    # 'merge' is the default.
+    prefs['import_style'] = 'merge'
 
     # If `True`, rope will sort imports alphabetically by module name
     # instead of alphabetically by import statement, with from imports

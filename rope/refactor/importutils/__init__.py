@@ -25,12 +25,13 @@ class ImportOrganizer(object):
         self.import_tools = ImportTools(self.pycore)
 
     def organize_imports(self, resource, offset=None):
-        duplicates = self.project.prefs.get("deduplicate_imports")
-        single = self.project.prefs.get("force_single_imports")
-        if duplicates and single:
-            raise Exception("The `deduplicate_imports` and "
-                            "`force_single_imports` options are mutually "
-                            "exclusive")
+        style = self.project.prefs.get("import_style", "merge")
+        if style == "split":
+            duplicates = False
+            single = True
+        else:
+            duplicates = True
+            single = False
         return self._perform_command_on_import_tools(
             self.import_tools.organize_imports, resource, offset,
             duplicates=duplicates, single=single,
