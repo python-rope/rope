@@ -22,8 +22,7 @@ class ImportOrganizer(object):
 
     def __init__(self, project):
         self.project = project
-        self.pycore = project.pycore
-        self.import_tools = ImportTools(self.pycore)
+        self.import_tools = ImportTools(self.project)
 
     def organize_imports(self, resource, offset=None):
         return self._perform_command_on_import_tools(
@@ -67,18 +66,17 @@ class ImportOrganizer(object):
 
 class ImportTools(object):
 
-    def __init__(self, pycore):
-        self.project = pycore.project
-        self.pycore = pycore
+    def __init__(self, project):
+        self.project = project
 
     def get_import(self, resource):
         """The import statement for `resource`"""
-        module_name = self.pycore.modname(resource)
+        module_name = libutils.modname(resource)
         return NormalImport(((module_name, None), ))
 
     def get_from_import(self, resource, name):
         """The from import statement for `name` in `resource`"""
-        module_name = self.pycore.modname(resource)
+        module_name = libutils.modname(resource)
         names = []
         if isinstance(name, list):
             names = [(imported, None) for imported in name]
@@ -87,7 +85,7 @@ class ImportTools(object):
         return FromImport(module_name, 0, tuple(names))
 
     def module_imports(self, module, imports_filter=None):
-        return module_imports.ModuleImports(self.pycore, module,
+        return module_imports.ModuleImports(self.project, module,
                                             imports_filter)
 
     def froms_to_imports(self, pymodule, import_filter=None):
@@ -130,7 +128,7 @@ class ImportTools(object):
                 pymodule=pymodule, replace_primary=True)
             if source is not None:
                 pymodule = libutils.get_string_module(
-                    self.pycore.project, source, resource)
+                    self.project, source, resource)
         return pymodule
 
     def _clean_up_imports(self, pymodule, import_filter):
@@ -140,11 +138,11 @@ class ImportTools(object):
         source = module_with_imports.get_changed_source()
         if source is not None:
             pymodule = libutils.get_string_module(
-                self.pycore.project, source, resource)
+                self.project, source, resource)
         source = self.relatives_to_absolutes(pymodule)
         if source is not None:
             pymodule = libutils.get_string_module(
-                self.pycore.project, source, resource)
+                self.project, source, resource)
 
         module_with_imports = self.module_imports(pymodule, import_filter)
         module_with_imports.remove_duplicates()
@@ -152,7 +150,7 @@ class ImportTools(object):
         source = module_with_imports.get_changed_source()
         if source is not None:
             pymodule = libutils.get_string_module(
-                self.pycore.project, source, resource)
+                self.project, source, resource)
         return pymodule
 
     def relatives_to_absolutes(self, pymodule, import_filter=None):
@@ -184,7 +182,7 @@ class ImportTools(object):
             source = module_imports.get_changed_source()
             if source is not None:
                 pymodule = libutils.get_string_module(
-                    self.pycore.project, source, pymodule.get_resource())
+                    self.project, source, pymodule.get_resource())
         if selfs:
             pymodule = self._remove_self_imports(pymodule, import_filter)
         if sort:
@@ -210,7 +208,7 @@ class ImportTools(object):
         source = module_imports.get_changed_source()
         if source is not None:
             pymodule = libutils.get_string_module(
-                self.pycore.project, source, pymodule.get_resource())
+                self.project, source, pymodule.get_resource())
         return pymodule
 
     def _rename_in_module(self, pymodule, name, new_name, till_dot=False):
@@ -234,7 +232,7 @@ class ImportTools(object):
         source = changes.get_changed()
         if source is not None:
             pymodule = libutils.get_string_module(
-                self.pycore.project, source, pymodule.get_resource())
+                self.project, source, pymodule.get_resource())
         return pymodule
 
     def sort_imports(self, pymodule, import_filter=None):
@@ -250,7 +248,7 @@ class ImportTools(object):
         to_be_fixed = module_imports.handle_long_imports(maxdots, maxlength)
         # performing the renaming
         pymodule = libutils.get_string_module(
-            self.pycore.project, module_imports.get_changed_source(),
+            self.project, module_imports.get_changed_source(),
             resource=pymodule.get_resource())
         for name in to_be_fixed:
             pymodule = self._rename_in_module(pymodule, name,
@@ -260,22 +258,22 @@ class ImportTools(object):
                                      import_filter=import_filter)
 
 
-def get_imports(pycore, pydefined):
+def get_imports(project, pydefined):
     """A shortcut for getting the `ImportInfo`\s used in a scope"""
     pymodule = pydefined.get_module()
-    module = module_imports.ModuleImports(pycore, pymodule)
+    module = module_imports.ModuleImports(project, pymodule)
     if pymodule == pydefined:
         return [stmt.import_info for stmt in module.imports]
     return module.get_used_imports(pydefined)
 
 
-def get_module_imports(pycore, pymodule):
+def get_module_imports(project, pymodule):
     """A shortcut for creating a `module_imports.ModuleImports` object"""
-    return module_imports.ModuleImports(pycore, pymodule)
+    return module_imports.ModuleImports(project, pymodule)
 
 
-def add_import(pycore, pymodule, module_name, name=None):
-    imports = get_module_imports(pycore, pymodule)
+def add_import(project, pymodule, module_name, name=None):
+    imports = get_module_imports(project, pymodule)
     candidates = []
     names = []
     # from mod import name
@@ -300,7 +298,7 @@ def add_import(pycore, pymodule, module_name, name=None):
 
     candidates.append(normal_import)
 
-    visitor = actions.AddingVisitor(pycore, candidates)
+    visitor = actions.AddingVisitor(project, candidates)
     selected_import = normal_import
     for import_statement in imports.imports:
         if import_statement.accept(visitor):

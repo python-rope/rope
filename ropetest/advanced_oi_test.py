@@ -338,7 +338,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         mod.move('newmod.py')
-        pymod = self.pycore.get_module('newmod')
+        pymod = self.project.get_module('newmod')
         pymod2 = self.pycore.resource_to_pyobject(mod2)
         self.assertEquals(pymod2['C'].get_object(),
                           pymod['a_var'].get_object())

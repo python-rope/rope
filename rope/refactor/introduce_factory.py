@@ -10,7 +10,6 @@ class IntroduceFactory(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = self.project.pycore
         self.offset = offset
 
         this_pymodule = self.project.get_pymodule(resource)
@@ -69,9 +68,9 @@ class IntroduceFactory(object):
                 if global_:
                     new_pymodule = libutils.get_string_module(
                         self.project, changed_code, self.resource)
-                    modname = self.pycore.modname(self.resource)
+                    modname = libutils.modname(self.resource)
                     changed_code, imported = importutils.add_import(
-                        self.pycore, new_pymodule, modname, factory_name)
+                        self.project, new_pymodule, modname, factory_name)
                     changed_code = changed_code.replace(replacement, imported)
                 changes.add_change(ChangeContents(file_, changed_code))
             job_set.finished_job()
@@ -103,7 +102,7 @@ class IntroduceFactory(object):
 
     def _get_factory_method(self, lines, class_scope,
                             factory_name, global_):
-        unit_indents = ' ' * sourceutils.get_indent(self.pycore)
+        unit_indents = ' ' * sourceutils.get_indent(self.project)
         if global_:
             if self._get_scope_indents(lines, class_scope) > 0:
                 raise rope.base.exceptions.RefactoringError(
@@ -114,7 +113,7 @@ class IntroduceFactory(object):
             ('@staticmethod\ndef %s(*args, **kwds):\n' % factory_name +
              '%sreturn %s(*args, **kwds)\n' % (unit_indents, self.old_name))
         indents = self._get_scope_indents(lines, class_scope) + \
-            sourceutils.get_indent(self.pycore)
+            sourceutils.get_indent(self.project)
         return '\n' + sourceutils.indent_lines(unindented_factory, indents)
 
     def _get_scope_indents(self, lines, scope):

@@ -71,11 +71,10 @@ class AutoImport(object):
     def get_name_locations(self, name):
         """Return a list of ``(resource, lineno)`` tuples"""
         result = []
-        pycore = self.project.pycore
         for module in self.names:
             if name in self.names[module]:
                 try:
-                    pymodule = pycore.get_module(module)
+                    pymodule = self.project.get_module(module)
                     if name in pymodule:
                         pyname = pymodule[name]
                         module, lineno = pyname.get_definition_location()
@@ -113,7 +112,7 @@ class AutoImport(object):
         for modname in modules:
             job_set.started_job('Working on <%s>' % modname)
             if modname.endswith('.*'):
-                mod = self.project.pycore.find_module(modname[:-2])
+                mod = self.project.find_module(modname[:-2])
                 if mod:
                     for sub in submodules(mod):
                         self.update_resource(sub, underlined)
@@ -141,8 +140,8 @@ class AutoImport(object):
             return 1
         testmodname = '__rope_testmodule_rope'
         importinfo = importutils.NormalImport(((testmodname, None),))
-        module_imports = importutils.get_module_imports(
-            self.project.pycore, pymodule)
+        module_imports = importutils.get_module_imports(self.project,
+                                                        pymodule)
         module_imports.add_import(importinfo)
         code = module_imports.get_changed_source()
         offset = code.index(testmodname)
@@ -164,13 +163,13 @@ class AutoImport(object):
         `modname` is the name of a module.
         """
         try:
-            pymodule = self.project.pycore.get_module(modname)
+            pymodule = self.project.get_module(modname)
             self._add_names(pymodule, modname, underlined)
         except exceptions.ModuleNotFoundError:
             pass
 
     def _module_name(self, resource):
-        return self.project.pycore.modname(resource)
+        return libutils.modname(resource)
 
     def _add_names(self, pymodule, modname, underlined):
         if underlined is None:
