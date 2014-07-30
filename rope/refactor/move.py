@@ -297,7 +297,7 @@ class MoveGlobal(object):
         return ChangeContents(self.source, source)
 
     def _new_modname(self, dest):
-        return self.pycore.modname(dest)
+        return libutils.modname(dest)
 
     def _dest_module_changes(self, dest):
         # Changing occurrences
@@ -421,7 +421,7 @@ class MoveModule(object):
         return changes
 
     def _new_modname(self, dest):
-        destname = self.pycore.modname(dest)
+        destname = libutils.modname(dest)
         if destname:
             return destname + '.' + self.old_name
         return self.old_name

@@ -275,6 +275,7 @@ class PyCore(object):
     def __str__(self):
         return str(self.module_cache) + str(self.object_info)
 
+    @utils.deprecated('Use `libutils.modname` instead')
     def modname(self, resource):
         if resource.is_folder():
             module_name = resource.name

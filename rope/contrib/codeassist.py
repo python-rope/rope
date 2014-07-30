@@ -4,6 +4,7 @@ import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
+from rope.base import libutils
 from rope.base import (pyobjects, pyobjectsdef, pynames, builtins,
                        exceptions, worder)
 from rope.contrib import fixsyntax
@@ -584,7 +585,7 @@ class PyDocExtractor(object):
         if module is not None:
             resource = module.get_resource()
             if resource is not None:
-                return pyfunction.pycore.modname(resource) + '.'
+                return libutils.modname(resource) + '.'
         return ''
 
     def _trim_docstring(self, docstring, indents=0):
