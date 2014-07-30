@@ -36,7 +36,6 @@ class IntroduceParameter(object):
 
     def __init__(self, project, resource, offset):
         self.project = project
-        self.pycore = self.project.pycore
         self.resource = resource
         self.offset = offset
         self.pymodule = self.project.get_pymodule(self.resource)
