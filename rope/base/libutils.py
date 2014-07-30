@@ -84,3 +84,22 @@ def get_string_module(project, code, resource=None, force_errors=False):
 def get_string_scope(project, code, resource=None):
     """Returns a `Scope` object for the given code"""
     return get_string_module(project, code, resource).get_scope()
+
+
+def modname(resource):
+    if resource.is_folder():
+        module_name = resource.name
+        source_folder = resource.parent
+    elif resource.name == '__init__.py':
+        module_name = resource.parent.name
+        source_folder = resource.parent.parent
+    else:
+        module_name = resource.name[:-3]
+        source_folder = resource.parent
+
+    while source_folder != source_folder.parent and \
+            source_folder.has_child('__init__.py'):
+        module_name = source_folder.name + '.' + module_name
+        source_folder = source_folder.parent
+
+    return module_name

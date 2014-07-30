@@ -1,4 +1,5 @@
 import rope.base.evaluate
+from rope.base import libutils
 from rope.base import (change, pyobjects, exceptions, pynames, worder,
                        codeanalyze)
 from rope.refactor import sourceutils, importutils, functionutils, suites
@@ -141,7 +142,7 @@ class GenerateModule(_Generate):
                 'Module <%s> already exists' % new_resource.path)
         changes.add_change(change.CreateResource(new_resource))
         changes.add_change(_add_import_to_module(
-                           self.project.pycore, self.resource, new_resource))
+                           self.project, self.resource, new_resource))
         return changes
 
     def get_location(self):
@@ -161,7 +162,7 @@ class GeneratePackage(_Generate):
                 'Package <%s> already exists' % new_resource.path)
         changes.add_change(change.CreateResource(new_resource))
         changes.add_change(_add_import_to_module(
-                           self.project.pycore, self.resource, new_resource))
+                           self.project, self.resource, new_resource))
         child = self.project.get_folder(package.path + '/' + self.name)
         changes.add_change(change.CreateFile(child, '__init__.py'))
         return changes
@@ -172,11 +173,11 @@ class GeneratePackage(_Generate):
         return (child.get_child('__init__.py'), 1)
 
 
-def _add_import_to_module(pycore, resource, imported):
-    pymodule = pycore.resource_to_pyobject(resource)
-    import_tools = importutils.ImportTools(pycore)
+def _add_import_to_module(project, resource, imported):
+    pymodule = project.get_pymodule(resource)
+    import_tools = importutils.ImportTools(project)
     module_imports = import_tools.module_imports(pymodule)
-    module_name = pycore.modname(imported)
+    module_name = libutils.modname(imported)
     new_import = importutils.NormalImport(((module_name, None), ))
     module_imports.add_import(new_import)
     return change.ChangeContents(resource, module_imports.get_changed_source())
@@ -270,7 +271,7 @@ class _GenerationInfo(object):
     def get_package(self):
         primary = self.primary
         if self.primary is None:
-            return self.pycore.get_source_folders()[0]
+            return self.pycore.project.get_source_folders()[0]
         if isinstance(primary.get_object(), pyobjects.PyPackage):
             return primary.get_object().get_resource()
         raise exceptions.RefactoringError(

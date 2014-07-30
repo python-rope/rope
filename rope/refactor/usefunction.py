@@ -75,7 +75,7 @@ class UseFunction(object):
         return find_temps(self.project, self._get_body())
 
     def _module_name(self):
-        return self.project.pycore.modname(self.resource)
+        return libutils.modname(self.resource)
 
     def _make_pattern(self):
         params = self.pyfunction.get_param_names()

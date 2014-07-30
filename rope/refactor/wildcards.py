@@ -169,7 +169,7 @@ class _CheckObject(object):
                     return name in builtins.builtins
             pyobject = _BuiltinsStub()
         else:
-            pyobject = self.project.pycore.get_module(attributes[0])
+            pyobject = self.project.get_module(attributes[0])
         for attribute in attributes[1:]:
             pyname = pyobject[attribute]
             if pyname is None:

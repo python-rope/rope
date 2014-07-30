@@ -481,6 +481,58 @@ class ProjectTest(unittest.TestCase):
         finally:
             testutils.remove_project(project2)
 
+    def test_getting_empty_source_folders(self):
+        self.assertEquals([], self.project.get_source_folders())
+
+    def test_root_source_folder(self):
+        self.project.root.create_file('sample.py')
+        source_folders = self.project.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(self.project.root in source_folders)
+
+    def test_root_source_folder2(self):
+        self.project.root.create_file('mod1.py')
+        self.project.root.create_file('mod2.py')
+        source_folders = self.project.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(self.project.root in source_folders)
+
+    def test_src_source_folder(self):
+        src = self.project.root.create_folder('src')
+        src.create_file('sample.py')
+        source_folders = self.project.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(self.project.get_resource('src') in source_folders)
+
+    def test_packages(self):
+        src = self.project.root.create_folder('src')
+        pkg = src.create_folder('package')
+        pkg.create_file('__init__.py')
+        source_folders = self.project.get_source_folders()
+        self.assertEquals(1, len(source_folders))
+        self.assertTrue(src in source_folders)
+
+    def test_multi_source_folders(self):
+        src = self.project.root.create_folder('src')
+        package = src.create_folder('package')
+        package.create_file('__init__.py')
+        test = self.project.root.create_folder('test')
+        test.create_file('alltests.py')
+        source_folders = self.project.get_source_folders()
+        self.assertEquals(2, len(source_folders))
+        self.assertTrue(src in source_folders)
+        self.assertTrue(test in source_folders)
+
+    def test_multi_source_folders2(self):
+        testutils.create_module(self.project, 'mod1')
+        src = self.project.root.create_folder('src')
+        package = testutils.create_package(self.project, 'package', src)
+        testutils.create_module(self.project, 'mod2', package)
+        source_folders = self.project.get_source_folders()
+        self.assertEquals(2, len(source_folders))
+        self.assertTrue(self.project.root in source_folders and
+                        src in source_folders)
+
 
 class ResourceObserverTest(unittest.TestCase):
 

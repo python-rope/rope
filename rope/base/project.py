@@ -8,6 +8,7 @@ import rope.base.fscommands
 from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
 import rope.base.resourceobserver as resourceobserver
 from rope.base.resources import File, Folder, _ResourceMatcher
+from rope.base.exceptions import ModuleNotFoundError
 
 
 class _Project(object):
@@ -17,6 +18,7 @@ class _Project(object):
         self.fscommands = fscommands
         self.prefs = prefs.Prefs()
         self.data_files = _DataFiles(self)
+        self._custom_source_folders = []
 
     def get_resource(self, resource_name):
         """Get a resource in a project.
@@ -40,6 +42,40 @@ class _Project(object):
         else:
             raise exceptions.ResourceNotFoundError('Unknown resource '
                                                    + resource_name)
+
+    def get_module(self, name, folder=None):
+        """Returns a `PyObject` if the module was found."""
+        # check if this is a builtin module
+        pymod = self.pycore.builtin_module(name)
+        if pymod is not None:
+            return pymod
+        module = self.find_module(name, folder)
+        if module is None:
+            raise ModuleNotFoundError('Module %s not found' % name)
+        return self.pycore.resource_to_pyobject(module)
+
+    def get_python_path_folders(self):
+        result = []
+        for src in self.prefs.get('python_path', []) + sys.path:
+            try:
+                src_folder = get_no_project().get_resource(src)
+                result.append(src_folder)
+            except exceptions.ResourceNotFoundError:
+                pass
+        return result
+
+    # INFO: It was decided not to cache source folders, since:
+    #  - Does not take much time when the root folder contains
+    #    packages, that is most of the time
+    #  - We need a separate resource observer; `self.observer`
+    #    does not get notified about module and folder creations
+    def get_source_folders(self):
+        """Returns project source folders"""
+        if self.root is None:
+            return []
+        result = list(self._custom_source_folders)
+        result.extend(self.pycore._find_source_folders(self.root))
+        return result
 
     def validate(self, folder):
         """Validate files and folders contained in this folder
@@ -85,11 +121,44 @@ class _Project(object):
         """Get the folder with `path` (it may not exist)"""
         return Folder(self, path)
 
-    def is_ignored(self, resource):
-        return False
-
     def get_prefs(self):
         return self.prefs
+
+    def get_relative_module(self, name, folder, level):
+        module = self.find_relative_module(name, folder, level)
+        if module is None:
+            raise ModuleNotFoundError('Module %s not found' % name)
+        return self.pycore.resource_to_pyobject(module)
+
+    def find_module(self, modname, folder=None):
+        """Returns a resource corresponding to the given module
+
+        returns None if it can not be found
+        """
+        for src in self.get_source_folders():
+            module = _find_module_in_folder(src, modname)
+            if module is not None:
+                return module
+        for src in self.get_python_path_folders():
+            module = _find_module_in_folder(src, modname)
+            if module is not None:
+                return module
+        if folder is not None:
+            module = _find_module_in_folder(folder, modname)
+            if module is not None:
+                return module
+        return None
+
+    def find_relative_module(self, modname, folder, level):
+        for i in range(level - 1):
+            folder = folder.parent
+        if modname == '':
+            return folder
+        else:
+            return _find_module_in_folder(folder, modname)
+
+    def is_ignored(self, resource):
+        return False
 
     def _get_resource_path(self, name):
         pass
@@ -147,6 +216,12 @@ class Project(_Project):
         if ropefolder is not None:
             self.prefs['ignored_resources'] = [ropefolder]
         self._init_prefs(prefs)
+        self._init_source_folders()
+
+    def _init_source_folders(self):
+        for path in self.prefs.get('source_folders', []):
+            folder = self.get_resource(path)
+            self._custom_source_folders.append(folder)
 
     def get_files(self):
         return self.file_list.get_files()
@@ -384,3 +459,20 @@ def _realpath(path):
             return path
         return os.path.abspath(os.path.expanduser(path))
     return os.path.realpath(os.path.abspath(os.path.expanduser(path)))
+
+
+def _find_module_in_folder(folder, modname):
+    module = folder
+    packages = modname.split('.')
+    for pkg in packages[:-1]:
+        if module.is_folder() and module.has_child(pkg):
+            module = module.get_child(pkg)
+        else:
+            return None
+    if module.is_folder():
+        if module.has_child(packages[-1]) and \
+           module.get_child(packages[-1]).is_folder():
+            return module.get_child(packages[-1])
+        elif module.has_child(packages[-1] + '.py') and \
+                not module.get_child(packages[-1] + '.py').is_folder():
+            return module.get_child(packages[-1] + '.py')

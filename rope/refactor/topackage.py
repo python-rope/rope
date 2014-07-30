@@ -7,7 +7,6 @@ class ModuleToPackage(object):
 
     def __init__(self, project, resource):
         self.project = project
-        self.pycore = project.pycore
         self.resource = resource
 
     def get_changes(self):
@@ -29,5 +28,5 @@ class ModuleToPackage(object):
 
     def _transform_relatives_to_absolute(self, resource):
         pymodule = self.project.get_pymodule(resource)
-        import_tools = rope.refactor.importutils.ImportTools(self.pycore)
+        import_tools = rope.refactor.importutils.ImportTools(self.project)
         return import_tools.relatives_to_absolutes(pymodule)
