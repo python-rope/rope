@@ -218,6 +218,7 @@ class Project(_Project):
         self._init_prefs(prefs)
         self._init_source_folders()
 
+    @utils.deprecated('Delete once deprecated functions are gone')
     def _init_source_folders(self):
         for path in self.prefs.get('source_folders', []):
             folder = self.get_resource(path)
