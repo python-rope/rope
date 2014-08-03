@@ -54,8 +54,7 @@ def starting_offset(source_code, offset):
 
 def get_doc(project, source_code, offset, resource=None, maxfixes=1):
     """Get the pydoc"""
-    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
-                                resource, maxfixes)
+    fixer = fixsyntax.FixSyntax(project, source_code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is None:
         return None
@@ -88,8 +87,7 @@ def get_calltip(project, source_code, offset, resource=None,
     If `remove_self` is `True`, the first parameter whose name is self
     will be removed for methods.
     """
-    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
-                                resource, maxfixes)
+    fixer = fixsyntax.FixSyntax(project, source_code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is None:
         return None
@@ -107,8 +105,7 @@ def get_definition_location(project, source_code, offset,
     location cannot be determined ``(None, None)`` is returned.
 
     """
-    fixer = fixsyntax.FixSyntax(project.pycore, source_code,
-                                resource, maxfixes)
+    fixer = fixsyntax.FixSyntax(project, source_code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()
@@ -291,7 +288,6 @@ class _PythonCodeAssist(object):
     def __init__(self, project, source_code, offset, resource=None,
                  maxfixes=1, later_locals=True):
         self.project = project
-        self.pycore = self.project.pycore
         self.code = source_code
         self.resource = resource
         self.maxfixes = maxfixes
@@ -386,7 +382,7 @@ class _PythonCodeAssist(object):
 
     def _code_completions(self):
         lineno = self.code.count('\n', 0, self.offset) + 1
-        fixer = fixsyntax.FixSyntax(self.pycore, self.code,
+        fixer = fixsyntax.FixSyntax(self.project, self.code,
                                     self.resource, self.maxfixes)
         pymodule = fixer.get_pymodule()
         module_scope = pymodule.get_scope()

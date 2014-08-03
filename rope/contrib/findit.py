@@ -76,7 +76,7 @@ def find_definition(project, code, offset, resource=None, maxfixes=1):
     A `Location` object is returned if the definition location can be
     determined, otherwise ``None`` is returned.
     """
-    fixer = fixsyntax.FixSyntax(project.pycore, code, resource, maxfixes)
+    fixer = fixsyntax.FixSyntax(project, code, resource, maxfixes)
     pyname = fixer.pyname_at(offset)
     if pyname is not None:
         module, lineno = pyname.get_definition_location()

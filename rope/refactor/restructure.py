@@ -53,7 +53,6 @@ class Restructure(object):
        from rope.contrib import generate
 
       args
-       pycore: type=rope.base.pycore.PyCore
        project: type=rope.base.project.Project
 
     Example #4::
@@ -81,7 +80,6 @@ class Restructure(object):
 
         """
         self.project = project
-        self.pycore = project.pycore
         self.pattern = pattern
         self.goal = goal
         self.args = args
@@ -134,7 +132,7 @@ class Restructure(object):
                                    (self.pattern, self.goal))
         if resources is not None:
             files = [resource for resource in resources
-                     if self.pycore.is_python_file(resource)]
+                     if libutils.is_python_file(self.project, resource)]
         else:
             files = self.project.get_python_files()
         job_set = task_handle.create_jobset('Collecting Changes', len(files))

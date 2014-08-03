@@ -989,10 +989,9 @@ class RopeFolderTest(unittest.TestCase):
     def test_ignoring_syntax_errors(self):
         self.project = testutils.sample_project(ropefolder=None,
                                                 ignore_syntax_errors=True)
-        pycore = self.project.pycore
         mod = testutils.create_module(self.project, 'mod')
         mod.write('xyz print')
-        pymod = pycore.resource_to_pyobject(mod)  # noqa
+        pymod = self.project.get_pymodule(mod)  # noqa
 
     def test_compressed_history(self):
         self.project = testutils.sample_project(compress_history=True)

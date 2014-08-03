@@ -11,7 +11,6 @@ class ObjectInferTest(unittest.TestCase):
     def setUp(self):
         super(ObjectInferTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -221,7 +220,7 @@ class ObjectInferTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('def f():\n    yield ""\n'
                   'for s in f():\n    a_var = s\n')
-        pymod = self.pycore.resource_to_pyobject(mod)
+        pymod = self.project.get_pymodule(mod)
         a_var = pymod['a_var'].get_object()
         self.assertTrue(isinstance(a_var.get_type(), rope.base.builtins.Str))
 

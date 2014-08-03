@@ -17,7 +17,7 @@ class SimilarFinderTest(unittest.TestCase):
 
     def _create_finder(self, source, **kwds):
         self.mod.write(source)
-        pymodule = self.project.pycore.resource_to_pyobject(self.mod)
+        pymodule = self.project.get_pymodule(self.mod)
         return similarfinder.SimilarFinder(pymodule, **kwds)
 
     def test_trivial_case(self):
@@ -162,7 +162,6 @@ class CheckingFinderTest(unittest.TestCase):
     def setUp(self):
         super(CheckingFinderTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.pycore
         self.mod1 = testutils.create_module(self.project, 'mod1')
 
     def tearDown(self):
@@ -171,20 +170,20 @@ class CheckingFinderTest(unittest.TestCase):
 
     def test_trivial_case(self):
         self.mod1.write('')
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         self.assertEquals([], list(finder.get_matches('10', {})))
 
     def test_simple_finding(self):
         self.mod1.write('class A(object):\n    pass\na = A()\n')
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches('${anything} = ${A}()', {}))
         self.assertEquals(1, len(result))
 
     def test_not_matching_when_the_name_does_not_match(self):
         self.mod1.write('class A(object):\n    pass\na = list()\n')
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches('${anything} = ${C}()',
                                          {'C': 'name=mod1.A'}))
@@ -192,7 +191,7 @@ class CheckingFinderTest(unittest.TestCase):
 
     def test_not_matching_unknowns_finding(self):
         self.mod1.write('class A(object):\n    pass\na = unknown()\n')
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches('${anything} = ${C}()',
                                          {'C': 'name=mod1.A'}))
@@ -201,7 +200,7 @@ class CheckingFinderTest(unittest.TestCase):
     def test_finding_and_matching_pyobjects(self):
         source = 'class A(object):\n    pass\nNewA = A\na = NewA()\n'
         self.mod1.write(source)
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches('${anything} = ${A}()',
                                          {'A': 'object=mod1.A'}))
@@ -213,7 +212,7 @@ class CheckingFinderTest(unittest.TestCase):
         source = 'class A(object):\n    def f(self):\n        pass\n' \
                  'a = A()\nb = a.f()\n'
         self.mod1.write(source)
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches('${anything} = ${inst}.f()',
                                          {'inst': 'type=mod1.A'}))
@@ -223,7 +222,7 @@ class CheckingFinderTest(unittest.TestCase):
 
     def test_checking_the_type_of_an_ass_name_node(self):
         self.mod1.write('class A(object):\n    pass\nan_a = A()\n')
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches('${a} = ${assigned}',
                                          {'a': 'type=mod1.A'}))
@@ -232,7 +231,7 @@ class CheckingFinderTest(unittest.TestCase):
     def test_checking_instance_of_an_ass_name_node(self):
         self.mod1.write('class A(object):\n    pass\n'
                         'class B(A):\n    pass\nb = B()\n')
-        pymodule = self.pycore.resource_to_pyobject(self.mod1)
+        pymodule = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymodule)
         result = list(finder.get_matches('${a} = ${assigned}',
                                          {'a': 'instance=mod1.A'}))
@@ -242,7 +241,7 @@ class CheckingFinderTest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2')
         mod2.write('class A(object):\n    pass\n')
         self.mod1.write('from mod2 import A\nan_a = A()\n')
-        pymod1 = self.pycore.resource_to_pyobject(self.mod1)
+        pymod1 = self.project.get_pymodule(self.mod1)
         finder = similarfinder.SimilarFinder(pymod1)
         result = list(finder.get_matches('${a_class}()',
                                          {'a_class': 'name=mod2.A'}))

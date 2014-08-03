@@ -86,6 +86,10 @@ def get_string_scope(project, code, resource=None):
     return get_string_module(project, code, resource).get_scope()
 
 
+def is_python_file(project, resource):
+    return project.pycore.is_python_file(resource)
+
+
 def modname(resource):
     if resource.is_folder():
         module_name = resource.name
