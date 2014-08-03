@@ -283,7 +283,7 @@ put them in an inconsistent state.
 
 
 `rope.base.fscommands`
-----------------------
+======================
 
 The `rope.base.fscommands` module implements the basic file system
 operations that rope needs to perform.  The main reason for the
@@ -296,7 +296,7 @@ rope to use your new class.
 
 
 ``.ropeproject`` Folder
------------------------
+=======================
 
 From version ``0.5``, rope makes a ``.ropeproject`` folder in the
 project by default for saving project configurations and data.  The
@@ -489,13 +489,12 @@ Using rename refactoring::
   # Alternatively you can use `generate` module.
   # Creating modules and packages using `generate` module
   >>> from rope.contrib import generate
-  >>> pycore = project.pycore
   >>> pkg = generate.create_package(project, 'pkg')
   >>> mod2 = generate.create_module(project, 'mod2', pkg)
   >>> mod2.write('import mod1\nprint mod1.a_var\n')
 
-  # We can use `PyCore.find_module` for finding modules, too
-  >>> assert mod2 == pycore.find_module('pkg.mod2')
+  # We can use `Project.find_module` for finding modules, too
+  >>> assert mod2 == project.find_module('pkg.mod2')
 
   # Performing rename refactoring on `mod1.a_var`
   >>> from rope.refactor.rename import Rename
