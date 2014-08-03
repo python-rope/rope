@@ -9,8 +9,8 @@ from rope.base.codeanalyze import ArrayLinesAdapter, LogicalLineFinder
 
 class FixSyntax(object):
 
-    def __init__(self, pycore, code, resource, maxfixes=1):
-        self.pycore = pycore
+    def __init__(self, project, code, resource, maxfixes=1):
+        self.project = project
         self.code = code
         self.resource = resource
         self.maxfixes = maxfixes
@@ -25,10 +25,10 @@ class FixSyntax(object):
             try:
                 if tries == 0 and self.resource is not None and \
                    self.resource.read() == code:
-                    return self.pycore.project.get_pymodule(self.resource,
-                                                            force_errors=True)
+                    return self.project.get_pymodule(self.resource,
+                                                     force_errors=True)
                 return libutils.get_string_module(
-                    self.pycore.project, code, resource=self.resource,
+                    self.project, code, resource=self.resource,
                     force_errors=True)
             except exceptions.ModuleSyntaxError, e:
                 if msg is None:

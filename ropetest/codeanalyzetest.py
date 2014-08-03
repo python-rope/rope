@@ -348,7 +348,6 @@ class ScopeNameFinderTest(unittest.TestCase):
     def setUp(self):
         super(ScopeNameFinderTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -418,7 +417,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         code = 'from mod import a_func\n'
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
-        mod_pyobject = self.pycore.resource_to_pyobject(mod)
+        mod_pyobject = self.project.get_pymodule(mod)
         found_pyname = name_finder.get_pyname_at(code.index('mod') + 1)
         self.assertEquals(mod_pyobject, found_pyname.get_object())
 
@@ -428,7 +427,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         code = 'from mod1 import (\n    afunc as func)\n'
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
-        mod_pyobject = self.pycore.resource_to_pyobject(mod1)
+        mod_pyobject = self.project.get_pymodule(mod1)
         afunc = mod_pyobject['afunc']
         found_pyname = name_finder.get_pyname_at(code.index('afunc') + 1)
         self.assertEquals(afunc.get_object(), found_pyname.get_object())
@@ -442,9 +441,9 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod1.write('def a_func():\n    pass\n')
         code = 'from ..mod1 import a_func\n'
         mod2.write(code)
-        mod2_scope = self.pycore.resource_to_pyobject(mod2).get_scope()
+        mod2_scope = self.project.get_pymodule(mod2).get_scope()
         name_finder = rope.base.evaluate.ScopeNameFinder(mod2_scope.pyobject)
-        mod1_pyobject = self.pycore.resource_to_pyobject(mod1)
+        mod1_pyobject = self.project.get_pymodule(mod1)
         found_pyname = name_finder.get_pyname_at(code.index('mod1') + 1)
         self.assertEquals(mod1_pyobject, found_pyname.get_object())
 
@@ -455,9 +454,9 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod2 = testutils.create_module(self.project, 'mod2', pkg2)  # noqa
         mod1.write('import pkg1.pkg2.mod2')
 
-        mod1_scope = self.pycore.resource_to_pyobject(mod1).get_scope()
+        mod1_scope = self.project.get_pymodule(mod1).get_scope()
         name_finder = rope.base.evaluate.ScopeNameFinder(mod1_scope.pyobject)
-        pkg2_pyobject = self.pycore.resource_to_pyobject(pkg2)
+        pkg2_pyobject = self.project.get_pymodule(pkg2)
         found_pyname = name_finder.get_pyname_at(mod1.read().index('pkg2') + 1)
         self.assertEquals(pkg2_pyobject, found_pyname.get_object())
 

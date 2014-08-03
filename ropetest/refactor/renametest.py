@@ -13,7 +13,6 @@ class RenameRefactoringTest(unittest.TestCase):
     def setUp(self):
         super(RenameRefactoringTest, self).setUp()
         self.project = testutils.sample_project()
-        self.pycore = self.project.pycore
 
     def tearDown(self):
         testutils.remove_project(self.project)
@@ -230,7 +229,7 @@ class RenameRefactoringTest(unittest.TestCase):
         mod1.write('class AClass(object):\n    pass\n')
         mod2 = testutils.create_module(self.project, 'mod2')
         mod2.write('import mod1\na_var = mod1.AClass()\n')
-        self.pycore.resource_to_pyobject(mod2).get_attributes()['mod1']
+        self.project.get_pymodule(mod2).get_attributes()['mod1']
         mod1.write('def AClass():\n    return 0\n')
 
         self._rename(mod2, len(mod2.read()) - 3, 'a_func')

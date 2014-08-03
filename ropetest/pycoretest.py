@@ -1003,7 +1003,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write(source)
         from rope.contrib import fixsyntax
-        fixer = fixsyntax.FixSyntax(self.project.pycore, source, mod, 10)
+        fixer = fixsyntax.FixSyntax(self.project, source, mod, 10)
         pymodule = fixer.get_pymodule()
         self.assertTrue(pymodule.source_code.startswith('import sys\npass\n'))
 
