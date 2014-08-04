@@ -622,11 +622,30 @@ class ImportUtilsTest(unittest.TestCase):
                           self.import_tools.organize_imports(pymod,
                                                              unused=False))
 
-    def test_forcing_single_imports(self):
+    def test_splitting_imports(self):
         self.mod.write('from pkg1 import mod1\nfrom pkg2 import mod2, mod3\n')
         pymod = self.pycore.resource_to_pyobject(self.mod)
         self.project.prefs['split_imports'] = True
         self.assertEquals('from pkg1 import mod1\nfrom pkg2 import mod2\n'
+                          'from pkg2 import mod3\n',
+                          self.import_tools.organize_imports(pymod,
+                                                             unused=False))
+
+    def test_splitting_duplicate_imports(self):
+        self.mod.write('from pkg2 import mod1\nfrom pkg2 import mod1, mod2\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.project.prefs['split_imports'] = True
+        self.assertEquals('from pkg2 import mod1\nfrom pkg2 import mod2\n',
+                          self.import_tools.organize_imports(pymod,
+                                                             unused=False))
+
+    def test_splitting_duplicate_imports2(self):
+        self.mod.write('from pkg2 import mod1, mod3\n'
+                       'from pkg2 import mod1, mod2\n'
+                       'from pkg2 import mod2, mod3\n')
+        pymod = self.pycore.resource_to_pyobject(self.mod)
+        self.project.prefs['split_imports'] = True
+        self.assertEquals('from pkg2 import mod1\nfrom pkg2 import mod2\n'
                           'from pkg2 import mod3\n',
                           self.import_tools.organize_imports(pymod,
                                                              unused=False))
