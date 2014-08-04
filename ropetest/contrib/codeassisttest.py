@@ -1,4 +1,6 @@
 # coding: utf-8
+
+import os.path
 try:
     import unittest2 as unittest
 except ImportError:
@@ -8,7 +10,7 @@ from rope.base import exceptions
 from rope.contrib.codeassist import (get_definition_location, get_doc,
                                      starting_expression, code_assist,
                                      sorted_proposals, starting_offset,
-                                     get_calltip)
+                                     get_calltip, get_canonical_path)
 from ropetest import testutils
 
 
@@ -844,6 +846,62 @@ class CodeAssistTest(unittest.TestCase):
         for expected in ('abc=', 'aloha=', 'alpha=', 'amigo='):
             self.assert_completion_in_result(expected, 'parameter_keyword',
                                              result, type=None)
+
+    def test_object_path_global(self):
+        code = 'GLOBAL_VARIABLE = 42\n'
+        resource = testutils.create_module(self.project, 'mod')
+        resource.write(code)
+        result = get_canonical_path(self.project, resource, 1)
+        mod_path = os.path.join(self.project.address, 'mod.py')
+        self.assertEquals(
+            result, [(mod_path, 'MODULE'),
+                     ('GLOBAL_VARIABLE', 'VARIABLE')])
+
+    def test_object_path_attribute(self):
+        code = 'class Foo(object):\n' \
+               '    attr = 42\n'
+        resource = testutils.create_module(self.project, 'mod')
+        resource.write(code)
+        result = get_canonical_path(self.project, resource, 24)
+        mod_path = os.path.join(self.project.address, 'mod.py')
+        self.assertEquals(
+            result, [(mod_path, 'MODULE'), ('Foo', 'CLASS'),
+                     ('attr', 'VARIABLE')])
+
+    def test_object_path_subclass(self):
+        code = 'class Foo(object):\n' \
+               '    class Bar(object):\n' \
+               '        pass\n'
+        resource = testutils.create_module(self.project, 'mod')
+        resource.write(code)
+        result = get_canonical_path(self.project, resource, 30)
+        mod_path = os.path.join(self.project.address, 'mod.py')
+        self.assertEquals(
+            result, [(mod_path, 'MODULE'), ('Foo', 'CLASS'),
+                     ('Bar', 'CLASS')])
+
+    def test_object_path_method_parameter(self):
+        code = 'class Foo(object):\n' \
+               '    def bar(self, a, b, c):\n' \
+               '        pass\n'
+        resource = testutils.create_module(self.project, 'mod')
+        resource.write(code)
+        result = get_canonical_path(self.project, resource, 41)
+        mod_path = os.path.join(self.project.address, 'mod.py')
+        self.assertEquals(
+            result, [(mod_path, 'MODULE'), ('Foo', 'CLASS'),
+                     ('bar', 'FUNCTION'), ('b', 'PARAMETER')])
+
+    def test_object_path_variable(self):
+        code = 'def bar(a):\n' \
+               '    x = a + 42\n'
+        resource = testutils.create_module(self.project, 'mod')
+        resource.write(code)
+        result = get_canonical_path(self.project, resource, 17)
+        mod_path = os.path.join(self.project.address, 'mod.py')
+        self.assertEquals(
+            result, [(mod_path, 'MODULE'), ('bar', 'FUNCTION'),
+                     ('x', 'VARIABLE')])
 
 
 class CodeAssistInProjectsTest(unittest.TestCase):

@@ -4,9 +4,15 @@ import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
+from rope.base import builtins
+from rope.base import exceptions
 from rope.base import libutils
-from rope.base import (pyobjects, pyobjectsdef, pynames, builtins,
-                       exceptions, worder)
+from rope.base import pynames
+from rope.base import pynamesdef
+from rope.base import pyobjects
+from rope.base import pyobjectsdef
+from rope.base import pyscopes
+from rope.base import worder
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
 
@@ -119,6 +125,64 @@ def find_occurrences(*args, **kwds):
     warnings.warn('Use `rope.contrib.findit.find_occurrences()` instead',
                   DeprecationWarning, stacklevel=2)
     return rope.contrib.findit.find_occurrences(*args, **kwds)
+
+
+def get_canonical_path(project, resource, offset):
+    """Get the canonical path to an object.
+
+    Given the offset of the object, this returns a list of
+    (name, name_type) tuples representing the canonical path to the
+    object. For example, the 'x' in the following code:
+
+        class Foo(object):
+            def bar(self):
+                class Qux(object):
+                    def mux(self, x):
+                        pass
+
+    we will return:
+
+        [('Foo', 'CLASS'), ('bar', 'FUNCTION'), ('Qux', 'CLASS'),
+         ('mux', 'FUNCTION'), ('x', 'PARAMETER')]
+
+    `resource` is a `rope.base.resources.Resource` object.
+
+    `offset` is the offset of the pyname you want the path to.
+
+    """
+    # Retrieve the PyName.
+    pymod = project.get_pymodule(resource)
+    pyname = rope.base.evaluate.eval_location(pymod, offset)
+
+    # Now get the location of the definition and its containing scope.
+    defmod, lineno = pyname.get_definition_location()
+    if not defmod:
+        return None
+    scope = defmod.get_scope().get_inner_scope_for_line(lineno)
+
+    # Start with the name of the object we're interested in.
+    names = []
+    if isinstance(pyname, pynamesdef.ParameterName):
+        names = [(worder.get_name_at(pymod.get_resource(), offset),
+                  'PARAMETER') ]
+    elif isinstance(pyname, pynamesdef.AssignedName):
+        names = [(worder.get_name_at(pymod.get_resource(), offset),
+                  'VARIABLE')]
+
+    # Collect scope names.
+    while scope.parent:
+        if isinstance(scope, pyscopes.FunctionScope):
+            scope_type = 'FUNCTION'
+        elif isinstance(scope, pyscopes.ClassScope):
+            scope_type = 'CLASS'
+        else:
+            scope_type = None
+        names.append((scope.pyobject.get_name(), scope_type))
+        scope = scope.parent
+
+    names.append((defmod.get_resource().real_path, 'MODULE'))
+    names.reverse()
+    return names
 
 
 class CompletionProposal(object):
