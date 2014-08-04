@@ -173,11 +173,10 @@ class ImportTools(object):
             module_imports = self.module_imports(pymodule, import_filter)
             if unused:
                 module_imports.remove_unused_imports()
+            if self.pycore.project.prefs.get("split_imports"):
+                module_imports.force_single_imports()
             if duplicates:
-                if self.pycore.project.prefs.get("split_imports"):
-                    module_imports.force_single_imports()
-                else:
-                    module_imports.remove_duplicates()
+                module_imports.remove_duplicates()
             source = module_imports.get_changed_source()
             if source is not None:
                 pymodule = self.pycore.get_string_module(
