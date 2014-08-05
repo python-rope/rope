@@ -192,7 +192,7 @@ class ModuleImports(object):
         return self.pymodule.get_resource().parent
 
     def sort_imports(self):
-        if self.pycore.project.prefs.get("sort_imports_alphabetically"):
+        if self.project.prefs.get("sort_imports_alphabetically"):
             sort_kwargs = dict(key=self._get_import_name)
         else:
             sort_kwargs = dict(cmp=self._compare_imports)

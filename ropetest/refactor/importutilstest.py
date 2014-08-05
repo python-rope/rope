@@ -615,7 +615,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_organizing_imports_without_deduplication(self):
         contents = 'from pkg2 import mod2\nfrom pkg2 import mod3\n'
         self.mod.write(contents)
-        pymod = self.pycore.resource_to_pyobject(self.mod)
+        pymod = self.project.get_pymodule(self.mod)
         self.project.prefs['split_imports'] = True
         self.assertEquals(contents,
                           self.import_tools.organize_imports(pymod,
@@ -623,7 +623,7 @@ class ImportUtilsTest(unittest.TestCase):
 
     def test_splitting_imports(self):
         self.mod.write('from pkg1 import mod1\nfrom pkg2 import mod2, mod3\n')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
+        pymod = self.project.get_pymodule(self.mod)
         self.project.prefs['split_imports'] = True
         self.assertEquals('from pkg1 import mod1\nfrom pkg2 import mod2\n'
                           'from pkg2 import mod3\n',
@@ -632,7 +632,7 @@ class ImportUtilsTest(unittest.TestCase):
 
     def test_splitting_duplicate_imports(self):
         self.mod.write('from pkg2 import mod1\nfrom pkg2 import mod1, mod2\n')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
+        pymod = self.project.get_pymodule(self.mod)
         self.project.prefs['split_imports'] = True
         self.assertEquals('from pkg2 import mod1\nfrom pkg2 import mod2\n',
                           self.import_tools.organize_imports(pymod,
@@ -642,7 +642,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.mod.write('from pkg2 import mod1, mod3\n'
                        'from pkg2 import mod1, mod2\n'
                        'from pkg2 import mod2, mod3\n')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
+        pymod = self.project.get_pymodule(self.mod)
         self.project.prefs['split_imports'] = True
         self.assertEquals('from pkg2 import mod1\nfrom pkg2 import mod2\n'
                           'from pkg2 import mod3\n',
@@ -747,7 +747,7 @@ class ImportUtilsTest(unittest.TestCase):
     def test_sorting_imports_purely_alphabetically(self):
         self.mod.write('from pkg2 import mod3 as mod0\n'
                        'import pkg2.mod2\nimport pkg1.mod1\n')
-        pymod = self.pycore.resource_to_pyobject(self.mod)
+        pymod = self.project.get_pymodule(self.mod)
         self.project.prefs['sort_imports_alphabetically'] = True
         self.assertEquals('import pkg1.mod1\nimport pkg2.mod2\n'
                           'from pkg2 import mod3 as mod0\n',

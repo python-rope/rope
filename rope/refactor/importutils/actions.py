@@ -174,7 +174,7 @@ class AddingVisitor(ImportInfoVisitor):
             if self.import_info.is_star_import():
                 import_stmt.import_info = self.import_info
                 return True
-            if self.pycore.project.prefs.get("split_imports"):
+            if self.project.prefs.get("split_imports"):
                 return self.import_info.names_and_aliases == \
                     import_info.names_and_aliases
             new_pairs = list(import_info.names_and_aliases)

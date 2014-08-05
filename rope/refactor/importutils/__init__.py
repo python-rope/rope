@@ -177,7 +177,7 @@ class ImportTools(object):
             module_imports = self.module_imports(pymodule, import_filter)
             if unused:
                 module_imports.remove_unused_imports()
-            if self.pycore.project.prefs.get("split_imports"):
+            if self.project.prefs.get("split_imports"):
                 module_imports.force_single_imports()
             if duplicates:
                 module_imports.remove_duplicates()
