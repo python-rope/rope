@@ -18,7 +18,7 @@ This section will help you get started as soon as possible.
 Making A Project
 ----------------
 
-The first thing you should do is make a project::
+The first thing you should do is make a project:
 
 .. code-block:: python
 
