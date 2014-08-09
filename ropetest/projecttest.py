@@ -1,3 +1,4 @@
+import os
 import os.path
 try:
     import unittest2 as unittest
@@ -221,6 +222,18 @@ class ProjectTest(unittest.TestCase):
                         filePath == children[1].path)
         self.assertTrue(folderPath == children[0].path or
                         folderPath == children[1].path)
+
+    def test_does_not_fail_for_permission_denied(self):
+        bad_dir = os.path.join(self.sample_folder, "bad_dir")
+        os.makedirs(bad_dir)
+        os.chmod(bad_dir, 0o000)
+        try:
+            parent = self.project.get_resource(self.sample_folder)
+
+            parent.get_children()
+
+        finally:
+            os.chmod(bad_dir, 0o755)
 
     def test_getting_files(self):
         files = self.project.root.get_files()

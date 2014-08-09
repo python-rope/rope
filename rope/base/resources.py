@@ -142,8 +142,12 @@ class Folder(Resource):
 
     def get_children(self):
         """Return the children of this folder"""
+        try:
+            children = os.listdir(self.real_path)
+        except OSError:
+            return []
         result = []
-        for name in os.listdir(self.real_path):
+        for name in children:
             try:
                 child = self.get_child(name)
             except exceptions.ResourceNotFoundError:
