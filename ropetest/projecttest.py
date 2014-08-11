@@ -1,5 +1,6 @@
 import os
 import os.path
+import shutil
 try:
     import unittest2 as unittest
 except ImportError:
@@ -226,6 +227,7 @@ class ProjectTest(unittest.TestCase):
     def test_does_not_fail_for_permission_denied(self):
         bad_dir = os.path.join(self.sample_folder, "bad_dir")
         os.makedirs(bad_dir)
+        self.addCleanup(shutil.rmtree, bad_dir)
         os.chmod(bad_dir, 0o000)
         try:
             parent = self.project.get_resource(self.sample_folder)
