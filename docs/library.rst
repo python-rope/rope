@@ -59,7 +59,7 @@ It's good to know that:
 Library Utilities
 -----------------
 
-The ``rope.base.libutils`` module provides tools that make using rope as a
+The `rope.base.libutils`_ module provides tools that make using rope as a
 library easier.  We'll talk more about this module later.
 
 
@@ -240,8 +240,120 @@ function when you don't need a project anymore:
   myproject.close()
 
 
-`rope.base.project.Project`
-===========================
+``rope.base.libutils``
+======================
+
+The ``rope.base.libutils`` module contains functions that make life
+easier for building refactoring tools. In some cases, the functions
+offer a unified way to access or create objects. You're encouraged to
+use ``rope.base.libutils`` functions whenever possible, because the APIs
+here may not be as volatile as class methods.
+
+
+``libutils.analyze_modules()``
+------------------------------
+
+Perform static object analysis on all Python files in the project. Note,
+this may be a very time consuming task.
+
+.. code-block:: python
+
+  libutils.analyze_modules(myproject)
+
+
+``libutils.get_string_module()``
+--------------------------------
+
+Returns a ``rope.base.pyobjects.PyModule`` object for the code string.
+An optional ``resource`` argument can be specified for the resource this
+code is associated with. If ``force_errors` is ``True``, then
+``rope.base.exceptions.ModuleSyntaxError`` is raised when the code has
+syntax errors. Otherwise, syntax errors are silently ignored. Note that
+``force_errors`` overrides the ``ignore_syntax_errors`` project
+configuration flag.
+
+.. code-block:: python
+
+  pymodule = libutils.get_string_module(myproject, source)
+
+
+``libutils.get_string_scope()``
+-------------------------------
+
+Get the ``rope.base.pyscopes.GlobalScope`` object for the code string.
+This is the outermost scope of the code encompassing the whole module.
+
+.. code-block:: python
+
+  scope = libutils.get_string_scope(myproject, source)
+
+
+``libutils.is_python_file()``
+-----------------------------
+
+Returns ``True`` if the resource is a Python file.
+
+.. code-block:: python
+
+  libutils.is_python_file(myproject, resource)
+
+
+``libutils.modname()``
+----------------------
+
+Retrieves the dotted path string to the module that contains that given
+resource.
+
+.. code-block:: python
+
+  # If resource is 'path/to/resource.py' relative to the project's root
+  # directory, this returns the string: 'path.to.resource'.
+  module_name = libutils.modname(resource)
+
+
+``libutils.path_to_resource()``
+-------------------------------
+
+Get the resource --- a file or folder --- at the given path. An optional
+``type`` argument can be used if the resource doesn't yet exist. The
+values for ``type`` are the strings ``'file'`` or ``'folder'``.
+
+.. code-block:: python
+
+  # Resource for an existing file.
+  myfile = libutils.path_to_resource(myproject, '/path/to/file.py')
+
+  # Resource for a non-existing folder.
+  new_folder = libutils.path_to_resource(myproject, '/path/to/folder', type='folder')
+
+
+``libutils.relative()``
+-----------------------
+
+Retrieve the path relative to the ``root``.
+
+.. code-block:: python
+
+  # Get the path relative to the project's root directory.
+  relpath = libutils.relative(myproject.address, path)
+
+
+``libutils.report_change()``
+----------------------------
+
+Report to all a project's
+``rope.base.resourceobserver.ResourceObserver``\s that the contents of
+the file at ``path`` were changed. The new contents of the file are
+retrieved by reading the file. This function also reanalyzes the module
+to collect information about function calls that may have been changed.
+
+.. code-block:: python
+
+  libutils.report_change(myproject, '/path/to/file.py', old_contents)
+
+
+``rope.base.project.Project``
+=============================
 
 You can create a project by:
 
@@ -254,25 +366,6 @@ Where the ``root_address`` is the root folder of your project.
 A project has some useful fields.  ``Project.address`` is the address of
 the root folder of a project.  ``Project.root`` is a ``Folder`` object
 that points to that folder.
-
-
-`Project.get_resource()`
-------------------------
-
-You can use this method for getting a resource (that is file or
-folder) inside a project.  Uses ``'/'``\s for separating directories.
-For instance:
-
-.. code-block:: python
-
-  project.get_resource('my_folder/my_file.rst')
-
-This returns a ``rope.base.resources.File`` object that points to
-``${projectroot}/my_folder/my_file.rst`` file.
-
-Note that this method assumes the resource exists.  If it does not
-exist, you should use the ``Project.get_file()`` and
-``Project.get_folder()`` methods.
 
 
 `Project.do()`
