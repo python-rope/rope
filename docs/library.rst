@@ -84,7 +84,7 @@ The first approach uses the `Project.get_resource()`_ method.
 However, it's preferable to use the ``libutils.path_to_resource()``
 function, because it's more flexible and offers a unified way to create
 resources.  It takes a ``project`` and ``path`` as parameters with an
-optional ``type``.  The ``type`` field, with values ``file`` or
+optional ``type``.  The ``type`` parameter, with values ``file`` or
 ``folder``, can create a resource for an object that doesn't exist yet.
 
 .. code-block:: python
@@ -96,11 +96,10 @@ optional ``type``.  The ``type`` field, with values ``file`` or
 
 
 Consider we have a resource.  How can we know anything about it? The
-answer is to use its ``path`` and ``real_path`` fields.
+answer is to use its ``path`` and ``real_path`` attributes.
 ``Resource.real_path`` is the absolute path of the resource in the
-file-system.  ``Resource.path`` field contains the address of a resource
-relative to project root (the same format as needed by
-`Project.get_resource()`_).
+file-system.  The ``Resource.path`` attribute contains the address of a
+resource relative to the project's root.
 
 
 Performing Refactorings
@@ -363,9 +362,9 @@ You can create a project by:
 
 Where the ``root_address`` is the root folder of your project.
 
-A project has some useful fields.  ``Project.address`` is the address of
-the root folder of a project.  ``Project.root`` is a ``Folder`` object
-that points to that folder.
+A project has some useful attributes.  ``Project.address`` is the
+address of the root folder of a project.  ``Project.root`` is a
+``Folder`` object that points to that folder.
 
 
 `Project.do()`
@@ -441,8 +440,8 @@ history.
 `rope.base.pycore.PyCore`
 =========================
 
-Provides useful methods for managing python modules and packages.
-Each project has a ``PyCore`` that can be accessed using
+Provides useful methods for managing python modules and packages.  Each
+project has a ``PyCore`` that can be accessed using the
 ``Project.pycore`` attribute.
 
 ``PyCore.run_module()`` runs a resource.  When running, it collects type
@@ -585,7 +584,7 @@ folder.
   use them.
 
 * ``rope.refactor.localtofield``:
-  Change a local variable to field
+  Change a local variable to field.
 
 * ``rope.refactor.topackage``:
   Transform a module to a package with the same name.
