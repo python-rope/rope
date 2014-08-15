@@ -310,6 +310,17 @@ resource.
   module_name = libutils.modname(resource)
 
 
+``libutils.path_relative_to_project_root()``
+--------------------------------------------
+
+Retrieve the path relative to the project's root directory.
+
+.. code-block:: python
+
+  # Get the path relative to the project's root directory.
+  relpath = libutils.relative(myproject.address, path)
+
+
 ``libutils.path_to_resource()``
 -------------------------------
 
@@ -324,17 +335,6 @@ values for ``type`` are the strings ``'file'`` or ``'folder'``.
 
   # Resource for a non-existing folder.
   new_folder = libutils.path_to_resource(myproject, '/path/to/folder', type='folder')
-
-
-``libutils.relative()``
------------------------
-
-Retrieve the path relative to the ``root``.
-
-.. code-block:: python
-
-  # Get the path relative to the project's root directory.
-  relpath = libutils.relative(myproject.address, path)
 
 
 ``libutils.report_change()``
