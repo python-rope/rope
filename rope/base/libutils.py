@@ -61,6 +61,14 @@ def report_change(project, path, old_content):
                                                        old_content)
 
 
+def analyze_module(project, resource):
+    """Perform static object analysis on a python file in the project
+
+    Note that this might be really time consuming.
+    """
+    project.pycore.analyze_module(resource)
+
+
 def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
     """Perform static object analysis on all python files in the project
 
@@ -70,7 +78,7 @@ def analyze_modules(project, task_handle=taskhandle.NullTaskHandle()):
     job_set = task_handle.create_jobset('Analyzing Modules', len(resources))
     for resource in resources:
         job_set.started_job(resource.path)
-        project.pycore.analyze_module(resource)
+        analyze_module(project, resource)
         job_set.finished_job()
 
 

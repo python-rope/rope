@@ -48,7 +48,9 @@ rope.
 Renaming Attributes
 -------------------
 
-Consider we have::
+Consider we have:
+
+.. code-block:: python
 
   class AClass(object):
 
@@ -62,7 +64,9 @@ Consider we have::
   a_var.a_method(a_var.an_attr)
 
 After renaming ``an_attr`` to ``new_attr`` and ``a_method`` to
-``new_method`` we'll have::
+``new_method`` we'll have:
+
+.. code-block:: python
 
   class AClass(object):
 
@@ -79,7 +83,9 @@ After renaming ``an_attr`` to ``new_attr`` and ``a_method`` to
 Renaming Function Keyword Parameters
 ------------------------------------
 
-On::
+On:
+
+.. code-block:: python
 
   def a_func(a_param):
       print a_param
@@ -88,7 +94,9 @@ On::
   a_func(10)
 
 performing rename refactoring on any occurrence of ``a_param`` will
-result in::
+result in:
+
+.. code-block:: python
 
   def a_func(new_param):
       print new_param
@@ -106,7 +114,9 @@ Consider the project tree is something like::
     mod1.py
     mod2.py
 
-``mod1.py`` contains::
+``mod1.py`` contains:
+
+.. code-block:: python
 
   import mod2
   from mod2 import AClass
@@ -115,7 +125,9 @@ Consider the project tree is something like::
   a_var = AClass()
 
 After performing rename refactoring one of the ``mod2`` occurrences in
-`mod1` we'll get::
+`mod1` we'll get:
+
+.. code-block:: python
 
   import newmod
   from newmod import AClass
@@ -136,7 +148,9 @@ Renaming Occurrences In Strings And Comments
 You can tell rope to rename all occurrences of a name in comments and
 strings.  This can be done by passing ``docs=True`` to
 `Rename.get_changes()` method.  Rope renames names in comments and
-strings only where the name is visible.  For example in::
+strings only where the name is visible.  For example in:
+
+.. code-block:: python
 
   def f():
       a_var = 1
@@ -146,7 +160,9 @@ strings only where the name is visible.  For example in::
   # f prints a_var
 
 after we rename the `a_var` local variable in `f()` to `new_var` we
-would get::
+would get:
+
+.. code-block:: python
 
   def f():
       new_var = 1
@@ -158,14 +174,18 @@ would get::
 This makes it safe to assume that this option does not perform wrong
 renames most of the time.
 
-This also changes occurrences inside evaluated strings::
+This also changes occurrences inside evaluated strings:
+
+.. code-block:: python
 
   def func():
       print 'func() called'
 
   eval('func()')
 
-After renaming `func` to `newfunc` we should have::
+After renaming ``func`` to ``newfunc`` we should have:
+
+.. code-block:: python
 
   def newfunc():
       print 'newfunc() called'
@@ -178,7 +198,9 @@ Rename When Unsure
 
 This option tells rope to rename when it doesn't know whether it is an
 exact match or not.  For example after renaming `C.a_func` when the
-'rename when unsure' option is set in::
+'rename when unsure' option is set in:
+
+.. code-block:: python
 
   class C(object):
 
@@ -189,8 +211,10 @@ exact match or not.  For example after renaming `C.a_func` when the
       arg.a_func()
 
   C().a_func()
-  
-we would have::
+
+we would have:
+
+.. code-block:: python
 
   class C(object):
 
@@ -202,7 +226,7 @@ we would have::
 
   C().new_func()
 
-Note that the global `a_func` was not renamed because we are sure that
+Note that the global ``a_func`` was not renamed because we are sure that
 it is not a match.  But when using this option there might be some
 unexpected renames.  So only use this option when the name is almost
 unique and is not defined in other places.
@@ -216,7 +240,9 @@ of its attributes.  The old method will call the new method.  If you
 want to change all of the occurrences of the old method to use the new
 method you can inline it afterwards.
 
-For instance if you perform move method on `a_method` in::
+For instance if you perform move method on ``a_method`` in:
+
+.. code-block:: python
 
   class A(object):
       pass
@@ -234,8 +260,10 @@ For instance if you perform move method on `a_method` in::
 
 You will be asked for the destination field and the name of the new
 method.  If you use ``attr`` and ``new_method`` in these fields
-and press enter, you'll have::
-      
+and press enter, you'll have:
+
+.. code-block:: python
+
   class A(object):
 
       def new_method(self):
@@ -253,8 +281,10 @@ and press enter, you'll have::
   b = B()
   b.a_method()
 
-Now if you want to change the occurrences of `B.a_method()` to use
-`A.new_method()`, you can inline `B.a_method()`::
+Now if you want to change the occurrences of ``B.a_method()`` to use
+``A.new_method()``, you can inline ``B.a_method()``:
+
+.. code-block:: python
 
   class A(object):
 
@@ -275,7 +305,9 @@ Moving Fields
 
 Rope does not have a separate refactoring for moving fields.  Rope's
 refactorings are very flexible, though.  You can use the rename
-refactoring to move fields.  For instance::
+refactoring to move fields.  For instance:
+
+.. code-block:: python
 
   class A(object):
       pass
@@ -289,9 +321,11 @@ refactoring to move fields.  For instance::
   b = B()
   print(b.attr)
 
-consider we want to move `attr` to `A`.  We can do that by renaming `attr`
-to `a.attr`::
-  
+consider we want to move ``attr`` to ``A``.  We can do that by renaming
+``attr`` to ``a.attr``:
+
+.. code-block:: python
+
   class A(object):
       pass
 
@@ -304,21 +338,25 @@ to `a.attr`::
   b = B()
   print(b.a.attr)
 
-You can move the definition of `attr` manually.
+You can move the definition of ``attr`` manually.
 
 
 Extract Method
 --------------
 
 In these examples ``${region_start}`` and ``${region_end}`` show the
-selected region for extraction::
+selected region for extraction:
+
+.. code-block:: python
 
   def a_func():
       a = 1
       b = 2 * a
       c = ${region_start}a * 2 + b * 3${region_end}
 
-After performing extract method we'll have::
+After performing extract method we'll have:
+
+.. code-block:: python
 
   def a_func():
       a = 1
@@ -328,7 +366,9 @@ After performing extract method we'll have::
   def new_func(a, b):
       return a * 2 + b * 3
 
-For multi-line extractions if we have::
+For multi-line extractions if we have:
+
+.. code-block:: python
 
   def a_func():
       a = 1
@@ -336,7 +376,9 @@ For multi-line extractions if we have::
       c = a * 2 + b * 3${region_end}
       print b, c
 
-After performing extract method we'll have::
+After performing extract method we'll have:
+
+.. code-block:: python
 
   def a_func():
       a = 1
@@ -354,14 +396,18 @@ Extracting Similar Expressions/Statements
 
 When performing extract method or local variable refactorings you can
 tell rope to extract similar expressions/statements.  For instance
-in::
+in:
+
+.. code-block:: python
 
   if True:
       x = 2 * 3
   else:
       x = 2 * 3 + 1
 
-Extracting ``2 * 3`` will result in::
+Extracting ``2 * 3`` will result in:
+
+.. code-block:: python
 
   six = 2 * 3
   if True:
@@ -374,7 +420,9 @@ Extract Method In staticmethods/classmethods
 --------------------------------------------
 
 The extract method refactoring has been enhanced to handle static and
-class methods better.  For instance in::
+class methods better.  For instance in:
+
+.. code-block:: python
 
   class A(object):
 
@@ -382,7 +430,9 @@ class methods better.  For instance in::
       def f(a):
           b = a * 2
 
-if you extract ``a * 2`` as a method you'll get::
+if you extract ``a * 2`` as a method you'll get:
+
+.. code-block:: python
 
   class A(object):
 
@@ -399,7 +449,9 @@ Inline Method Refactoring
 -------------------------
 
 Inline method refactoring can add imports when necessary.  For
-instance consider ``mod1.py`` is::
+instance consider ``mod1.py`` is:
+
+.. code-block:: python
 
   import sys
 
@@ -411,14 +463,18 @@ instance consider ``mod1.py`` is::
       print sys.version
       return C()
 
-and ``mod2.py`` is::
+and ``mod2.py`` is:
+
+.. code-block:: python
 
   import mod1
 
 
   c = mod1.do_something()
 
-After inlining `do_something`, ``mod2.py`` would be::
+After inlining ``do_something``, ``mod2.py`` would be:
+
+.. code-block:: python
 
   import mod1
   import sys
@@ -427,21 +483,25 @@ After inlining `do_something`, ``mod2.py`` would be::
   print sys.version
   c = mod1.C()
 
-Rope can inline methods, too::
+Rope can inline methods, too:
+
+.. code-block:: python
 
   class C(object):
 
       var = 1
 
       def f(self, p):
-	  result = self.var + pn
-	  return result
+          result = self.var + pn
+          return result
 
 
   c = C()
   x = c.f(1)
 
-After inlining `C.f()`, we'll have::
+After inlining ``C.f()``, we'll have:
+
+.. code-block:: python
 
   class C(object):
 
@@ -451,7 +511,9 @@ After inlining `C.f()`, we'll have::
   result = c.var + pn
   x = result
 
-As another example we will inline a `classmethod`::
+As another example we will inline a ``classmethod``:
+
+.. code-block:: python
 
   class C(object):
       @classmethod
@@ -459,7 +521,9 @@ As another example we will inline a `classmethod`::
           return 'Saying hello to %s from %s' % (name, cls.__name__)
   hello = C.say_hello('Rope')
 
-Inlining `say_hello` will result in::
+Inlining ``say_hello`` will result in:
+
+.. code-block:: python
 
   class C(object):
       pass
@@ -469,10 +533,12 @@ Inlining `say_hello` will result in::
 Inlining Parameters
 -------------------
 
-`rope.refactor.inline.create_inline()` creates an `InlineParameter`
+``rope.refactor.inline.create_inline()`` creates an ``InlineParameter``
 object when performed on a parameter.  It passes the default value of
 the parameter wherever its function is called without passing it.  For
-instance in::
+instance in:
+
+.. code-block:: python
 
   def f(p1=1, p2=1):
       pass
@@ -481,7 +547,9 @@ instance in::
   f()
   f(3, 4)
 
-after inlining p2 parameter will have::
+after inlining p2 parameter will have:
+
+.. code-block:: python
 
   def f(p1=1, p2=1):
       pass
@@ -495,7 +563,9 @@ Use Function Refactoring
 ------------------------
 
 It tries to find the places in which a function can be used and
-changes the code to call it instead.  For instance if mod1 is::
+changes the code to call it instead.  For instance if mod1 is:
+
+.. code-block:: python
 
   def square(p):
       return p ** 2
@@ -503,18 +573,24 @@ changes the code to call it instead.  For instance if mod1 is::
   my_var = 3 ** 2
 
 
-and mod2 is::
+and mod2 is:
+
+.. code-block:: python
 
   another_var = 4 ** 2
 
-if we perform "use function" on square function, mod1 will be::
+if we perform "use function" on square function, mod1 will be:
+
+.. code-block:: python
 
   def square(p):
       return p ** 2
 
   my_var = square(3)
 
-and mod2 will be::
+and mod2 will be:
+
+.. code-block:: python
 
   import mod1
   another_var = mod1.square(4)
@@ -523,20 +599,26 @@ and mod2 will be::
 Automatic Default Insertion In Change Signature
 -----------------------------------------------
 
-The `rope.refactor.change_signature.ArgumentReorderer` signature
-changer takes a parameter called ``autodef``.  If not `None`, its
+The ``rope.refactor.change_signature.ArgumentReorderer`` signature
+changer takes a parameter called ``autodef``.  If not ``None``, its
 value is used whenever rope needs to insert a default for a parameter
 (that happens when an argument without default is moved after another
-that has a default value).  For instance in::
+that has a default value).  For instance in:
+
+.. code-block:: python
 
   def f(p1, p2=2):
       pass
 
-if we reorder using::
+if we reorder using:
+
+.. code-block:: python
 
   changers = [ArgumentReorderer([1, 0], autodef='1')]
 
-will result in::
+will result in:
+
+.. code-block:: python
 
   def f(p2=2, p1=1):
       pass
@@ -574,12 +656,12 @@ more than 27 characters to be long.
 Stoppable Refactorings
 ----------------------
 
-Some refactorings might take a long time to finish (based on the size
-of your project).  The `get_changes()` method of these refactorings
-take a parameter called `task_handle`.  If you want to monitor or stop
-these refactoring you can pass a `rope.refactor.
-taskhandle.TaskHandle` to this method.  See `rope.refactor.taskhandle`
-module for more information.
+Some refactorings might take a long time to finish (based on the size of
+your project).  The ``get_changes()`` method of these refactorings take
+a parameter called ``task_handle``.  If you want to monitor or stop
+these refactoring you can pass a ``rope.refactor.taskhandle.TaskHandle``
+to this method.  See ``rope.refactor.taskhandle`` module for more
+information.
 
 
 Basic Implicit Interfaces
@@ -589,7 +671,9 @@ Implicit interfaces are the interfaces that you don't explicitly
 define; But you expect a group of classes to have some common
 attributes.  These interfaces are very common in dynamic languages;
 Since we only have implementation inheritance and not interface
-inheritance.  For instance::
+inheritance.  For instance:
+
+.. code-block:: python
 
   class A(object):
 
@@ -607,14 +691,16 @@ inheritance.  For instance::
   count_for(A())
   count_for(B())
 
-Here we know that there is an implicit interface defined by the
-function `count_for` that provides `count()`.  Here when we rename
-`A.count()` we expect `B.count()` to be renamed, too.  Currently rope
-supports a basic form of implicit interfaces.  When you try to rename
-an attribute of a parameter, rope renames that attribute for all
-objects that have been passed to that function in different call
-sites.  That is renaming the occurrence of `count` in `count_for`
-function to `newcount` will result in::
+Here we know that there is an implicit interface defined by the function
+``count_for`` that provides ``count()``.  Here when we rename
+``A.count()`` we expect ``B.count()`` to be renamed, too.  Currently
+rope supports a basic form of implicit interfaces.  When you try to
+rename an attribute of a parameter, rope renames that attribute for all
+objects that have been passed to that function in different call sites.
+That is renaming the occurrence of ``count`` in ``count_for`` function
+to ``newcount`` will result in:
+
+.. code-block:: python
 
   class A(object):
 
@@ -640,14 +726,14 @@ that are passed to a function.
 Restructurings
 --------------
 
-`rope.refactor.restructure` can be used for performing restructurings.
+``rope.refactor.restructure`` can be used for performing restructurings.
 A restructuring is a program transformation; not as well defined as
 other refactorings like rename.  In this section, we'll see some
 examples.  After this example you might like to have a look at:
 
-* `rope.refactor.restructure` for more examples and features not
+* ``rope.refactor.restructure`` for more examples and features not
   described here like adding imports to changed modules.
-* `rope.refactor.wildcards` for an overview of the arguments the
+* ``rope.refactor.wildcards`` for an overview of the arguments the
   default wildcard supports.
 
 Finally, restructurings can be improved in many ways (for instance
@@ -659,7 +745,9 @@ Example 1
 '''''''''
 
 In its basic form we have a pattern and a goal.  Consider we were not
-aware of the ``**`` operator and wrote our own ::
+aware of the ``**`` operator and wrote our own:
+
+.. code-block:: python
 
   def pow(x, y):
       result = 1
@@ -669,7 +757,7 @@ aware of the ``**`` operator and wrote our own ::
 
   print pow(2, 3)
 
-Now that we know ``**`` exists we want to use it wherever `pow` is
+Now that we know ``**`` exists we want to use it wherever ``pow`` is
 used (there might be hundreds of them!).  We can use a pattern like::
 
   pattern: pow(${param1}, ${param2})
@@ -683,7 +771,9 @@ every expression at that point will match.
 
 You can use the matched names in goal and they will be replaced with
 the string that was matched in each occurrence.  So the outcome of our
-restructuring will be::
+restructuring will be:
+
+.. code-block:: python
 
   def pow(x, y):
       result = 1
@@ -693,7 +783,7 @@ restructuring will be::
 
   print 2 ** 3
 
-It seems to be working but what if `pow` is imported in some module or
+It seems to be working but what if ``pow`` is imported in some module or
 we have some other function defined in some other module that uses the
 same name and we don't want to change it.  Wildcard arguments come to
 rescue.  Wildcard arguments is a mapping; Its keys are wildcard names
@@ -704,31 +794,35 @@ The arguments a wildcard takes is based on its type.
 
 For checking the type of a wildcard, we can pass ``type=value`` as an
 argument; ``value`` should be resolved to a python variable (or
-reference).  For instance for specifying `pow` in this example we can
-use `mod.pow`.  As you see, this string should start from module name.
+reference).  For instance for specifying ``pow`` in this example we can
+use ``mod.pow``.  As you see, this string should start from module name.
 For referencing python builtin types and functions you can use
-`__builtin__` module (for instance `__builtin__.int`).
+``__builtin__`` module (for instance ``__builtin__.int``).
 
-For solving the mentioned problem, we change our `pattern`.  But
-`goal` remains the same::
+For solving the mentioned problem, we change our ``pattern``.  But
+``goal`` remains the same::
 
   pattern: ${pow_func}(${param1}, ${param2})
   goal: ${param1} ** ${param2}
 
-Consider the name of the module containing our `pow` function is
-`mod`.  ``args`` can be::
+Consider the name of the module containing our ``pow`` function is
+``mod``.  ``args`` can be::
 
   pow_func: name=mod.pow
 
 If we need to pass more arguments to a wildcard matcher we can use
 ``,`` to separate them.  Such as ``name: type=mod.MyClass,exact``.
 
-This restructuring handles aliases; like in::
+This restructuring handles aliases like in:
+
+.. code-block:: python
 
   mypow = pow
   result = mypow(2, 3)
 
-Transforms into::
+Transforms into:
+
+.. code-block:: python
 
   mypow = pow
   result = 2 ** 3
@@ -752,7 +846,9 @@ For performing this refactoring using rope library see `library.rst`_.
 Example 2
 '''''''''
 
-As another example consider::
+As another example consider:
+
+.. code-block:: python
 
   class A(object):
 
@@ -764,8 +860,10 @@ As another example consider::
   a = A()
   a.f(1, 2)
 
-Later we decide that `A.f()` is doing too much and we want to divide
-it to `A.f1()` and `A.f2()`::
+Later we decide that ``A.f()`` is doing too much and we want to divide
+it to ``A.f1()`` and ``A.f2()``:
+
+.. code-block:: python
 
   class A(object):
 
@@ -796,7 +894,9 @@ Restructurings come to rescue::
   args:
    inst: type=mod.A
 
-After performing we will have::
+After performing we will have:
+
+.. code-block:: python
 
   class A(object):
 
@@ -820,7 +920,9 @@ Example 3
 '''''''''
 
 If you like to replace every occurrences of ``x.set(y)`` with ``x =
-y`` when x is an instance of `mod.A` in::
+y`` when x is an instance of ``mod.A`` in:
+
+.. code-block:: python
 
   from mod import A
 
@@ -835,7 +937,9 @@ We can perform a restructuring with these information::
 
   args: x: type=mod.A
 
-After performing the above restructuring we'll have::
+After performing the above restructuring we'll have:
+
+.. code-block:: python
 
   from mod import A
 
@@ -843,7 +947,9 @@ After performing the above restructuring we'll have::
   b = A()
   a = b
 
-Note that ``mod.py`` contains something like::
+Note that ``mod.py`` contains something like:
+
+.. code-block:: python
 
   class A(object):
 
@@ -870,7 +976,7 @@ someday!
 Static Object Inference
 -----------------------
 
-::
+.. code-block:: python
 
   class AClass(object):
 
@@ -891,7 +997,9 @@ Static Object Inference
   #another_var.call_a_func().${codeassist}
 
 
-Basic support for builtin types::
+Basic support for builtin types:
+
+.. code-block:: python
 
   a_list = [AClass(), AClass()]
   for x in a_list:
@@ -905,7 +1013,9 @@ Basic support for builtin types::
       #key.${codeassist}
       #value.${codeassist}
 
-Enhanced static returned object inference::
+Enhanced static returned object inference:
+
+.. code-block:: python
 
     class C(object):
 
@@ -917,9 +1027,12 @@ Enhanced static returned object inference::
 
     a_var = a_func(C())
 
-Here rope knows that the type of a_var is a `list` that holds `str`\s.
+Here rope knows that the type of a_var is a ``list`` that holds
+``str``\s.
 
-Supporting generator functions::
+Supporting generator functions:
+
+.. code-block:: python
 
   class C(object):
       pass
@@ -931,10 +1044,12 @@ Supporting generator functions::
   for c in a_generator():
       a_var = c
 
-Here the objects `a_var` and `c` hold are known.
+Here the objects ``a_var`` and ``c`` hold are known.
 
 Rope collects different types of data during SOA, like per name data
-for builtin container types::
+for builtin container types:
+
+.. code-block:: python
 
   l1 = [C()]
   var1 = l1.pop()
@@ -943,21 +1058,23 @@ for builtin container types::
   l2.append(C())
   var2 = l2.pop()
 
-Here rope can easily infer the type of `var1`.  But for knowing the
-type of `var2`, it needs to analyze the items inserted into `l2` which
-might happen in other modules.  Rope can do that by running SOA on
+Here rope can easily infer the type of ``var1``.  But for knowing the
+type of ``var2``, it needs to analyze the items inserted into ``l2``
+which might happen in other modules.  Rope can do that by running SOA on
 that module.
 
 You might be wondering is there any reason for using DOA instead of
 SOA.  The answer is that DOA might be more accurate and handles
-complex and dynamic situations.  For example in::
+complex and dynamic situations.  For example in:
+
+.. code-block:: python
 
   def f(arg):
       return eval(arg)
 
   a_var = f('C')
 
-SOA can no way conclude the object `a_var` holds but it is really
+SOA can no way conclude the object ``a_var`` holds but it is really
 trivial for DOA.  What's more SOA only analyzes calls in one module
 while DOA analyzes any call that happens when running a module.  That
 is, for achieving the same result as DOA you might need to run SOA on
@@ -968,13 +1085,15 @@ situations.) One advantage of SOA is that it is much faster than DOA.
 Dynamic Object Analysis
 -----------------------
 
-`PyCore.run_module()` runs a module and collects object information if
+``PyCore.run_module()`` runs a module and collects object information if
 ``perform_doa`` project config is set.  Since as the program runs rope
 gathers type information, the program runs much slower.  After the
 program is run, you can get better code assists and some of the
 refactorings perform much better.
 
-``mod1.py``::
+``mod1.py``:
+
+.. code-block:: python
 
   def f1(param):
       pass
@@ -985,11 +1104,13 @@ refactorings perform much better.
       #param.${codeassist}
       return param
 
-Using code assist in specified places does not give any information
-and there is actually no information about the return type of `f2` or
-`param` parameter of `f1`.
+Using code assist in specified places does not give any information and
+there is actually no information about the return type of ``f2`` or
+``param`` parameter of ``f1``.
 
-``mod2.py``::
+``mod2.py``:
+
+.. code-block:: python
 
   import mod1
 
@@ -1001,13 +1122,15 @@ and there is actually no information about the return type of `f2` or
   a_var = A()
   mod1.f1(a_var)
 
-Retry those code assists after performing DOA on `mod2` module.
+Retry those code assists after performing DOA on ``mod2`` module.
 
 
 Builtin Container Types
 '''''''''''''''''''''''
 
-Builtin types can be handled in a limited way, too::
+Builtin types can be handled in a limited way, too:
+
+.. code-block:: python
 
   class A(object):
 
@@ -1028,7 +1151,9 @@ Test the the proposed completions after running this module.
 Guessing Function Returned Value Based On Parameters
 ----------------------------------------------------
 
-``mod1.py``::
+``mod1.py``:
+
+.. code-block:: python
 
   class C1(object):
 
@@ -1050,9 +1175,11 @@ Guessing Function Returned Value Based On Parameters
   func(C1())
   func(C2())
 
-After running `mod1` either SOA or DOA on this module you can test:
+After running ``mod1`` either SOA or DOA on this module you can test:
 
-``mod2.py``::
+``mod2.py``:
+
+.. code-block:: python
 
   import mod1
 

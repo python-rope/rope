@@ -197,35 +197,41 @@ resource to this method.  For example:
 
 .. code-block:: python
 
-  myproject.validate()
+  myproject.validate(resource)
 
-This validates all files and directories in the project.  Call this
+This validates all files and directories in resource.  Call this
 function every time you want use rope (i.e., before performing
 refactorings).
 
 
-Activating Static Object Analysis
+Performing Static Object Analysis
 ---------------------------------
 
-One of the greatest strengths of rope is its static object analysis
-(SOA).  You can perform SOA on a module using the
-`PyCore.analyze_module()` method. However, performing SOA on a module is
-not cheap.  The best time for performing SOA is when saving files.  And
-it should be performed only on changed scopes.
+One of the greatest strengths of rope is its Static Object Analysis
+(SOA). It analyzes function calls and assignments to collect the types
+of objects passed to the function. Rope uses the collected data to infer
+the type of function parameters, return values, and the objects stored
+in built-in containers. The function
+``rope.base.libutils.analyze_modules()`` performs SOA on all modules in
+the project. It is recommended that you call this function occasionally,
+and especially before performing large refactorings. Note that analyzing
+all modules of a project may take a long time.
 
-But because rope is not notified about the changes the IDE performs, you
-need to tell rope about the change.  You can do so by using
-``rope.base.libutils.report_change()``.  Whenever you want to change a
-module you can do something like:
+If you have ``automatic_soa`` set, which instructs rop to analyze the
+changed scopes of modules, then you should report the changes by calling
+``rope.base.libutils.report_change()`` when saving files, as follows:
 
 .. code-block:: python
 
-  # Do the writing.
+  # Save the new contents.
   old_contents = resource.read()
-  resource.write(new_content)
+  resource.write(new_contents)
 
   # Inform rope about the change.
   libutils.report_change(myproject, path, old_contents)
+
+Note, however, that the use of ``automatic_soa`` is discouraged, because it may
+slow down saving considerably.
 
 
 Closing The Project
@@ -249,11 +255,22 @@ use ``rope.base.libutils`` functions whenever possible, because the APIs
 here may not be as volatile as class methods.
 
 
+``libutils.analyze_module()``
+------------------------------
+
+Perform static object analysis on a Python file in the project. Note,
+this may be a very time consuming task.
+
+.. code-block:: python
+
+  libutils.analyze_module(myproject, resource)
+
+
 ``libutils.analyze_modules()``
 ------------------------------
 
-Perform static object analysis on all Python files in the project. Note,
-this may be a very time consuming task.
+Perform static object analysis on all Python files in the project. Note
+that it might take a long time to finish.
 
 .. code-block:: python
 
@@ -337,20 +354,6 @@ values for ``type`` are the strings ``'file'`` or ``'folder'``.
   new_folder = libutils.path_to_resource(myproject, '/path/to/folder', type='folder')
 
 
-``libutils.report_change()``
-----------------------------
-
-Report to all a project's
-``rope.base.resourceobserver.ResourceObserver``\s that the contents of
-the file at ``path`` were changed. The new contents of the file are
-retrieved by reading the file. This function also reanalyzes the module
-to collect information about function calls that may have been changed.
-
-.. code-block:: python
-
-  libutils.report_change(myproject, '/path/to/file.py', old_contents)
-
-
 ``rope.base.project.Project``
 =============================
 
@@ -389,16 +392,17 @@ this only if you have committed your changes using rope.
 --------------------
 
 When using rope as a library, you will probably change the files in that
-project in parallel (for example in IDEs).  To force rope to invalidate
+project in parallel (for example in IDEs).  To force rope to validate
 cached information about resources that have been removed or changed
-outside rope, you should call ``Project.validate``.  You should pass a
+outside rope, you should call ``Project.validate()``.  You should pass a
 resource to this method.  For example:
 
 .. code-block:: python
 
   project.validate(project.root)
 
-This validates all files and directories in the project.
+This validates all files and directories in the project and clears the
+cache of all recorded changes.
 
 
 `Project.close()`
