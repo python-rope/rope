@@ -142,8 +142,20 @@ class Occurrence(object):
 
     @utils.saveit
     def is_in_import_statement(self):
-        return (self.tools.word_finder.is_from_statement(self.offset) or
-                self.tools.word_finder.is_import_statement(self.offset))
+        return self.is_in_from_statement() or \
+            self.is_in_normal_import_statement()
+
+    @utils.saveit
+    def is_in_from_statement(self):
+        return self.tools.word_finder.is_from_statement(self.offset)
+
+    @utils.saveit
+    def is_in_normal_import_statement(self):
+        return self.tools.word_finder.is_import_statement(self.offset)
+
+    @utils.saveit
+    def is_from_star_statement(self):
+        return self.tools.word_finder.is_from_star_statement(self.offset)
 
     def is_called(self):
         return self.tools.word_finder.is_a_function_being_called(self.offset)
