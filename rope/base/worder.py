@@ -74,6 +74,9 @@ class Worder(object):
     def is_from_statement(self, offset):
         return self.code_finder.is_from_statement(offset)
 
+    def is_from_star_statement(self, offset):
+        return self.code_finder.is_from_star_statement(offset)
+
     def get_from_aliased(self, offset):
         return self.code_finder.get_from_aliased(offset)
 
@@ -328,6 +331,18 @@ class _RealFinder(object):
             return False
         from_names = self._find_first_non_space_char(from_names)
         return self._find_import_end(from_names) >= offset
+
+    def is_from_star_statement(self, offset):
+        try:
+            last_from = self.code.rindex('from ', 0, offset)
+            from_import = self.code.index(' import ', last_from)
+            from_names = from_import + 8
+        except ValueError:
+            return False
+        from_names = self._find_first_non_space_char(from_names)
+        if self._find_import_end(from_names) < offset:
+            return False
+        return self.code[from_names] == '*'
 
     def is_from_statement_module(self, offset):
         if offset >= len(self.code) - 1:

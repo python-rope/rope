@@ -185,7 +185,7 @@ class ChangeOccurrences(object):
 
 def rename_in_module(occurrences_finder, new_name, resource=None,
                      pymodule=None, replace_primary=False, region=None,
-                     reads=True, writes=True):
+                     reads=True, writes=True, in_imports_only=False):
     """Returns the changed source or `None` if there is no changes"""
     if resource is not None:
         source_code = resource.read()
@@ -194,6 +194,8 @@ def rename_in_module(occurrences_finder, new_name, resource=None,
     change_collector = codeanalyze.ChangeCollector(source_code)
     for occurrence in occurrences_finder.find_occurrences(resource, pymodule):
         if replace_primary and occurrence.is_a_fixed_primary():
+            continue
+        if in_imports_only and not occurrence.is_in_import_statement():
             continue
         if replace_primary:
             start, end = occurrence.get_primary_range()

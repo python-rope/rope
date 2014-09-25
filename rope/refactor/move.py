@@ -423,8 +423,13 @@ class MoveModule(object):
             return destname + '.' + self.old_name
         return self.old_name
 
-    def _new_import(self, dest):
+    def _new_normal_import(self, dest):
         return importutils.NormalImport([(self._new_modname(dest), None)])
+
+    def _new_from_import(self, dest_name):
+        module_name = '.'.join(dest_name[:-1])
+        name = dest_name[-1]
+        return importutils.FromImport(module_name, 0, [(name, None)])
 
     def _change_moving_module(self, changes, dest):
         if not self.source.is_folder():
@@ -441,12 +446,26 @@ class MoveModule(object):
         if not self.tools.occurs_in_module(pymodule=pymodule,
                                            resource=resource):
             return
+
         if pymodule is None:
             pymodule = self.project.get_pymodule(resource)
         new_name = self._new_modname(dest)
-        new_import = self._new_import(dest)
-        source = self.tools.rename_in_module(
-            new_name, imports=True, pymodule=pymodule, resource=resource)
+        dest_name = new_name.split('.')
+        (in_from_stmt, is_star) = self.tools.occurs_in_from_statement(
+            pymodule=pymodule, resource=resource, imports=True)
+
+        if in_from_stmt and len(dest_name) > 1:
+            if is_star:
+              dest_name.append('*')
+            new_import = self._new_from_import(dest_name)
+            source = self.tools.rename_in_module(
+                new_name, imports=True, pymodule=pymodule, resource=resource,
+                in_imports_only=True)
+        else:
+            new_import = self._new_normal_import(dest)
+            source = self.tools.rename_in_module(
+                new_name, imports=True, pymodule=pymodule, resource=resource)
+
         should_import = self.tools.occurs_in_module(
             pymodule=pymodule, resource=resource, imports=False)
         pymodule = self.tools.new_pymodule(pymodule, source)
@@ -509,19 +528,39 @@ class _MoveTools(object):
             return new_source
 
     def rename_in_module(self, new_name, pymodule=None,
-                         imports=False, resource=None):
+                         imports=False, resource=None,
+                         in_imports_only=False):
         occurrence_finder = self._create_finder(imports)
         source = rename.rename_in_module(
             occurrence_finder, new_name, replace_primary=True,
-            pymodule=pymodule, resource=resource)
+            pymodule=pymodule, resource=resource,
+            in_imports_only=in_imports_only)
         return source
 
     def occurs_in_module(self, pymodule=None, resource=None, imports=True):
+        for occurrence in self._find_occurrences(pymodule, resource, imports):
+            return True
+        return False
+
+    def occurs_in_from_statement(self, pymodule=None, resource=None,
+                                 imports=True):
+        for occurrence in self._find_occurrences(pymodule, resource, imports):
+            if occurrence.is_in_from_statement():
+                return (True, occurrence.is_from_star_statement())
+        return (False, False)
+
+    def occurs_in_normal_import_statement(self, pymodule=None, resource=None,
+                                          imports=True):
+        for occurrence in self._find_occurrences(pymodule, resource, imports):
+            if occurrence.is_in_normal_import_statement():
+                return True
+        return False
+
+    def _find_occurrences(self, pymodule=None, resource=None, imports=True):
         finder = self._create_finder(imports)
         for occurrence in finder.find_occurrences(pymodule=pymodule,
                                                   resource=resource):
-            return True
-        return False
+            yield occurrence
 
     def _create_finder(self, imports):
         return occurrences.create_finder(self.project, self.old_name,
