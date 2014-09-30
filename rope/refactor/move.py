@@ -9,6 +9,7 @@ from rope.base import (pyobjects, codeanalyze, exceptions, pynames,
 from rope.base.change import ChangeSet, ChangeContents, MoveResource
 from rope.refactor import importutils, rename, occurrences, sourceutils, \
     functionutils
+import rope.refactor.importutils
 
 
 def create_move(project, resource, offset=None):
@@ -426,6 +427,11 @@ class MoveModule(object):
     def _new_import(self, dest):
         return importutils.NormalImport([(self._new_modname(dest), None)])
 
+    def _new_from_import(self, dest_name):
+        module_name = '.'.join(dest_name[:-1])
+        name = dest_name[-1]
+        return importutils.FromImport(module_name, 0, [(name, None)])
+
     def _change_moving_module(self, changes, dest):
         if not self.source.is_folder():
             pymodule = self.project.get_pymodule(self.source)
@@ -444,11 +450,36 @@ class MoveModule(object):
         if pymodule is None:
             pymodule = self.project.get_pymodule(resource)
         new_name = self._new_modname(dest)
-        new_import = self._new_import(dest)
-        source = self.tools.rename_in_module(
-            new_name, imports=True, pymodule=pymodule, resource=resource)
-        should_import = self.tools.occurs_in_module(
-            pymodule=pymodule, resource=resource, imports=False)
+        new_import = self._new_from_import(new_name.split('.'))
+
+        context = importutils.importinfo.ImportContext(self.project, None)
+        module_imports = importutils.get_module_imports(self.project, pymodule)
+        old_import_name = libutils.modname(
+            self.tools.old_pyname.get_object().get_resource())
+
+        perform_normal_import_change = True
+        if len(new_name.split('.')) > 1:
+            for import_stmt in module_imports.imports:
+                if isinstance(import_stmt.import_info, importutils.FromImport):
+                    cur_import_name = (
+                        import_stmt.import_info.module_name + '.' +
+                        import_stmt.import_info.names_and_aliases[0][0]
+                    )
+                    if cur_import_name == old_import_name:
+                        source = self.tools.add_imports(pymodule, [new_import])
+                        perform_normal_import_change = False
+
+        source = module_imports.get_changed_source()
+
+        if perform_normal_import_change:
+            new_import = self._new_import(dest)
+            source = self.tools.rename_in_module(
+                new_name, imports=True, pymodule=pymodule, resource=resource)
+            should_import = self.tools.occurs_in_module(
+                pymodule=pymodule, resource=resource, imports=False)
+        else:
+            should_import = True
+
         pymodule = self.tools.new_pymodule(pymodule, source)
         source = self.tools.remove_old_imports(pymodule)
         if should_import:
