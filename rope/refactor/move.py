@@ -444,9 +444,23 @@ class MoveModule(object):
         if pymodule is None:
             pymodule = self.project.get_pymodule(resource)
         new_name = self._new_modname(dest)
+        module_imports = importutils.get_module_imports(self.project, pymodule)
+        changed = False
+
+        source = None
+        if libutils.modname(dest):
+            changed = self._change_import_statements(dest, new_name,
+                                                     module_imports)
+            if changed:
+                source = self.tools.remove_old_imports(pymodule)
+                source = module_imports.get_changed_source()
+                source = self.tools.new_source(pymodule, source)
+                pymodule = self.tools.new_pymodule(pymodule, source)
+
         new_import = self._new_import(dest)
         source = self.tools.rename_in_module(
-            new_name, imports=True, pymodule=pymodule, resource=resource)
+            new_name, imports=True, pymodule=pymodule,
+            resource=resource if not changed else None)
         should_import = self.tools.occurs_in_module(
             pymodule=pymodule, resource=resource, imports=False)
         pymodule = self.tools.new_pymodule(pymodule, source)
@@ -455,8 +469,75 @@ class MoveModule(object):
             pymodule = self.tools.new_pymodule(pymodule, source)
             source = self.tools.add_imports(pymodule, [new_import])
         source = self.tools.new_source(pymodule, source)
-        if source != pymodule.resource.read():
+        if source is not None and source != pymodule.resource.read():
             return source
+        return None
+
+
+    def _change_import_statements(self, dest, new_name, module_imports):
+        moving_module = self.source
+        parent_module = moving_module.parent
+
+        changed = False
+        for import_stmt in module_imports.imports:
+            if not any(name_and_alias[0] == self.old_name
+                       for name_and_alias in
+                       import_stmt.import_info.names_and_aliases) and \
+               not any(name_and_alias[0] == libutils.modname(self.source)
+                       for name_and_alias in
+                       import_stmt.import_info.names_and_aliases):
+                continue
+
+            # Case 1: Look for normal imports of the moving module.
+            if isinstance(import_stmt.import_info, importutils.NormalImport):
+                continue
+
+            # Case 2: The moving module is from-imported.
+            changed = self._handle_moving_in_from_import_stmt(
+                dest, import_stmt, module_imports, parent_module) or changed
+
+            # Case 3: Names are imported from the moving module.
+            context = importutils.importinfo.ImportContext(self.project, None)
+            if not import_stmt.import_info.is_empty() and \
+               import_stmt.import_info.get_imported_resource(context) == \
+                    moving_module:
+                import_stmt.import_info = importutils.FromImport(
+                    new_name, import_stmt.import_info.level,
+                    import_stmt.import_info.names_and_aliases)
+                changed = True
+
+        return changed
+
+    def _handle_moving_in_from_import_stmt(self, dest, import_stmt,
+                                           module_imports, parent_module):
+        changed = False
+        context = importutils.importinfo.ImportContext(self.project, None)
+        if import_stmt.import_info.get_imported_resource(context) == \
+                parent_module:
+            imports = import_stmt.import_info.names_and_aliases
+            new_imports = []
+            for name, alias in imports:
+                # The moving module was imported.
+                if name == self.old_name:
+                    changed = True
+                    new_import = importutils.FromImport(
+                        libutils.modname(dest), 0,
+                        [(self.old_name, alias)])
+                    module_imports.add_import(new_import)
+                else:
+                    new_imports.append((name, alias))
+
+            # Update the imports if the imported names were changed.
+            if new_imports != imports:
+                changed = True
+                if new_imports:
+                    import_stmt.import_info = importutils.FromImport(
+                        import_stmt.import_info.module_name,
+                        import_stmt.import_info.level,
+                        new_imports)
+                else:
+                    import_stmt.empty_import()
+        return changed
 
 
 class _ChangeMoveOccurrencesHandle(object):

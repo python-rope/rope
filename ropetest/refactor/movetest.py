@@ -193,6 +193,146 @@ class MoveRefactoringTest(unittest.TestCase):
         moved = self.project.find_module('pkg.mod1')
         self.assertEquals('import pkg.mod1\nprint(pkg.mod1)\n', moved.read())
 
+    def test_moving_modules_with_from_imports(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        code = ('from pkg import mod4\n'
+                'print(mod4)')
+        self.mod1.write(code)
+        self._move(self.mod1, code.index('pkg') + 1, pkg2)
+        self.assertFalse(self.pkg.exists())
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod4') is not None)
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod5') is not None)
+        expected = ('from pkg2.pkg import mod4\n'
+                    'print(mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_modules_with_from_import(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        pkg3 = testutils.create_package(self.project, 'pkg3', pkg2)
+        pkg4 = testutils.create_package(self.project, 'pkg4', pkg3)
+        code = ('from pkg import mod4\n'
+                'print(mod4)')
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(
+            self.project.find_module('pkg2.pkg3.pkg4.mod4') is not None)
+        expected = ('from pkg2.pkg3.pkg4 import mod4\n'
+                    'print(mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_modules_with_multi_from_imports(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        pkg3 = testutils.create_package(self.project, 'pkg3', pkg2)
+        pkg4 = testutils.create_package(self.project, 'pkg4', pkg3)
+        code = ('from pkg import mod4, mod5\n'
+                'print(mod4)')
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(
+            self.project.find_module('pkg2.pkg3.pkg4.mod4') is not None)
+        expected = ('from pkg import mod5\n'
+                    'from pkg2.pkg3.pkg4 import mod4\n'
+                    'print(mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_modules_with_from_and_normal_imports(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        pkg3 = testutils.create_package(self.project, 'pkg3', pkg2)
+        pkg4 = testutils.create_package(self.project, 'pkg4', pkg3)
+        code = ('from pkg import mod4\n'
+                'import pkg.mod4\n'
+                'print(mod4)\n'
+                'print(pkg.mod4)')
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(
+            self.project.find_module('pkg2.pkg3.pkg4.mod4') is not None)
+        expected = ('import pkg2.pkg3.pkg4.mod4\n'
+                    'from pkg2.pkg3.pkg4 import mod4\n'
+                    'print(mod4)\n'
+                    'print(pkg2.pkg3.pkg4.mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_modules_with_normal_and_from_imports(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        pkg3 = testutils.create_package(self.project, 'pkg3', pkg2)
+        pkg4 = testutils.create_package(self.project, 'pkg4', pkg3)
+        code = ('import pkg.mod4\n'
+                'from pkg import mod4\n'
+                'print(mod4)\n'
+                'print(pkg.mod4)')
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(
+            self.project.find_module('pkg2.pkg3.pkg4.mod4') is not None)
+        expected = ('import pkg2.pkg3.pkg4.mod4\n'
+                    'from pkg2.pkg3.pkg4 import mod4\n'
+                    'print(mod4)\n'
+                    'print(pkg2.pkg3.pkg4.mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_modules_from_import_variable(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        pkg3 = testutils.create_package(self.project, 'pkg3', pkg2)
+        pkg4 = testutils.create_package(self.project, 'pkg4', pkg3)
+        code = ('from pkg.mod4 import foo\n'
+                'print(foo)')
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(
+            self.project.find_module('pkg2.pkg3.pkg4.mod4') is not None)
+        expected = ('from pkg2.pkg3.pkg4.mod4 import foo\n'
+                    'print(foo)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_modules_normal_import(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        pkg3 = testutils.create_package(self.project, 'pkg3', pkg2)
+        pkg4 = testutils.create_package(self.project, 'pkg4', pkg3)
+        code = ('import pkg.mod4\n'
+                'print(pkg.mod4)')
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg4)
+        self.assertTrue(
+            self.project.find_module('pkg2.pkg3.pkg4.mod4') is not None)
+        expected = ('import pkg2.pkg3.pkg4.mod4\n'
+                    'print(pkg2.pkg3.pkg4.mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_package_with_from_and_normal_imports(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        code = ('from pkg import mod4\n'
+                'import pkg.mod4\n'
+                'print(pkg.mod4)\n'
+                'print(mod4)')
+        self.mod1.write(code)
+        self._move(self.mod1, code.index('pkg') + 1, pkg2)
+        self.assertFalse(self.pkg.exists())
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod4') is not None)
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod5') is not None)
+        expected = ('from pkg2.pkg import mod4\n'
+                    'import pkg2.pkg.mod4\n'
+                    'print(pkg2.pkg.mod4)\n'
+                    'print(mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
+    def test_moving_package_with_from_and_normal_imports2(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2')
+        code = ('import pkg.mod4\n'
+                'from pkg import mod4\n'
+                'print(pkg.mod4)\n'
+                'print(mod4)')
+        self.mod1.write(code)
+        self._move(self.mod1, code.index('pkg') + 1, pkg2)
+        self.assertFalse(self.pkg.exists())
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod4') is not None)
+        self.assertTrue(self.project.find_module('pkg2.pkg.mod5') is not None)
+        expected = ('import pkg2.pkg.mod4\n'
+                    'from pkg2.pkg import mod4\n'
+                    'print(pkg2.pkg.mod4)\n'
+                    'print(mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
     def test_moving_funtions_to_imported_module(self):
         code = 'import mod1\n' \
                'def a_func():\n' \
