@@ -452,7 +452,6 @@ class MoveModule(object):
             changed = self._change_import_statements(dest, new_name,
                                                      module_imports)
             if changed:
-                source = self.tools.remove_old_imports(pymodule)
                 source = module_imports.get_changed_source()
                 source = self.tools.new_source(pymodule, source)
                 pymodule = self.tools.new_pymodule(pymodule, source)

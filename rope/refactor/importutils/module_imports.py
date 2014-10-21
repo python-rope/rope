@@ -50,11 +50,18 @@ class ModuleImports(object):
         return result
 
     def get_changed_source(self):
-        imports = self.imports
-        after_removing = self._remove_imports(imports)
-        imports = [stmt for stmt in imports
+        # Make sure we forward a removed import's preceding blank
+        # lines count to the following import statement.
+        prev_stmt = None
+        for stmt in self.imports:
+            if prev_stmt is not None and prev_stmt.import_info.is_empty():
+                stmt.blank_lines = max(prev_stmt.blank_lines, stmt.blank_lines)
+            prev_stmt = stmt
+        # The new list of imports.
+        imports = [stmt for stmt in self.imports
                    if not stmt.import_info.is_empty()]
 
+        after_removing = self._remove_imports(self.imports)
         first_non_blank = self._first_non_blank_line(after_removing, 0)
         first_import = self._first_import_line() - 1
         result = []
