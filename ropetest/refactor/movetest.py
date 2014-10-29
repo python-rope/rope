@@ -355,6 +355,48 @@ class MoveRefactoringTest(unittest.TestCase):
                     'print(mod4)')
         self.assertEquals(expected, self.mod1.read())
 
+    def test_moving_package_referenced_by_local_from_import(self):
+        pkg2 = testutils.create_package(self.project, 'pkg2', self.pkg)
+        code = ('import pkg.mod4\n'
+                'from x import y\n'
+                'from y import z\n'
+                'from a import b\n'
+                'from b import c\n'
+                'def f(a):\n'
+                '    if a:\n'
+                '        from pkg import mod4\n'
+                '        print(mod4)\n'
+                '    else:\n'
+                '        if a is not None:\n'
+                '            from pkg import mod4\n'
+                '            print(mod4)\n'
+                'class f:\n'
+                '    def g(self):\n'
+                '        from pkg import mod4\n'
+                '        print(mod4)\n'
+                'print(pkg.mod4)')
+        self.mod1.write(code)
+        self._move(self.mod4, None, pkg2)
+        expected = ('import pkg.pkg2.mod4\n'
+                    'from x import y\n'
+                    'from y import z\n'
+                    'from a import b\n'
+                    'from b import c\n'
+                    'def f(a):\n'
+                    '    if a:\n'
+                    '        from pkg.pkg2 import mod4\n'
+                    '        print(mod4)\n'
+                    '    else:\n'
+                    '        if a is not None:\n'
+                    '            from pkg.pkg2 import mod4\n'
+                    '            print(mod4)\n'
+                    'class f:\n'
+                    '    def g(self):\n'
+                    '        from pkg.pkg2 import mod4\n'
+                    '        print(mod4)\n'
+                    'print(pkg.pkg2.mod4)')
+        self.assertEquals(expected, self.mod1.read())
+
     def test_moving_funtions_to_imported_module(self):
         code = 'import mod1\n' \
                'def a_func():\n' \
