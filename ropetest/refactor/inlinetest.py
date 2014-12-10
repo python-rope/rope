@@ -625,6 +625,28 @@ class InlineTest(unittest.TestCase):
         self.assertEquals(code1, self.mod.read())
         self.assertEquals(expected2, self.mod2.read())
 
+    def test_inlining_does_not_change_string_constants(self):
+        code = 'var = 1\n' \
+               'print("var\\\n' \
+               '")\n'
+        expected = 'var = 1\n' \
+                   'print("var\\\n' \
+                   '")\n'
+        refactored = self._inline(code, code.rindex('var'),
+                                  remove=False, only_current=True, docs=False)
+        self.assertEquals(expected, refactored)
+
+    def test_inlining_does_change_string_constants_if_docs_is_set(self):
+        code = 'var = 1\n' \
+               'print("var\\\n' \
+               '")\n'
+        expected = 'var = 1\n' \
+                   'print("1\\\n' \
+                   '")\n'
+        refactored = self._inline(code, code.rindex('var'),
+                                  remove=False, only_current=True, docs=True)
+        self.assertEquals(expected, refactored)
+
 
 def suite():
     result = unittest.TestSuite()

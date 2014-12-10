@@ -63,7 +63,7 @@ class _Inliner(object):
     def __init__(self, project, resource, offset):
         self.project = project
         self.pyname = _get_pyname(project, resource, offset)
-        range_finder = worder.Worder(resource.read())
+        range_finder = worder.Worder(resource.read(), True)
         self.region = range_finder.get_primary_range(offset)
         self.name = range_finder.get_word_at(offset)
         self.offset = offset
@@ -222,7 +222,7 @@ class InlineVariable(_Inliner):
                 'Local variable should be assigned once for inlining.')
 
     def get_changes(self, remove=True, only_current=False, resources=None,
-                    task_handle=taskhandle.NullTaskHandle()):
+                    docs=False, task_handle=taskhandle.NullTaskHandle()):
         if resources is None:
             if rename._is_local(self.pyname):
                 resources = [self.resource]
@@ -239,7 +239,7 @@ class InlineVariable(_Inliner):
         for resource in resources:
             jobset.started_job(resource.path)
             if resource == self.resource:
-                source = self._change_main_module(remove, only_current)
+                source = self._change_main_module(remove, only_current, docs)
                 changes.add_change(ChangeContents(self.resource, source))
             else:
                 result = self._change_module(resource, remove, only_current)
@@ -250,12 +250,13 @@ class InlineVariable(_Inliner):
             jobset.finished_job()
         return changes
 
-    def _change_main_module(self, remove, only_current):
+    def _change_main_module(self, remove, only_current, docs):
         region = None
         if only_current and self.original == self.resource:
             region = self.region
         return _inline_variable(self.project, self.pymodule, self.pyname,
-                                self.name, remove=remove, region=region)
+                                self.name, remove=remove, region=region,
+                                docs=docs)
 
     def _init_imports(self):
         vardef = _getvardef(self.pymodule, self.pyname)
@@ -557,11 +558,12 @@ class _InlineFunctionCallsForModuleHandle(object):
 
 
 def _inline_variable(project, pymodule, pyname, name,
-                     remove=True, region=None):
+                     remove=True, region=None, docs=False):
     definition = _getvardef(pymodule, pyname)
     start, end = _assigned_lineno(pymodule, pyname)
 
-    occurrence_finder = occurrences.create_finder(project, name, pyname)
+    occurrence_finder = occurrences.create_finder(project, name, pyname,
+                                                  docs=docs)
     changed_source = rename.rename_in_module(
         occurrence_finder, definition, pymodule=pymodule,
         replace_primary=True, writes=False, region=region)
