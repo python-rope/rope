@@ -46,7 +46,17 @@ def set_prefs(prefs):
 
     # If `False` when running modules or unit tests "dynamic object
     # analysis" is turned off.  This makes them much faster.
-    prefs['perform_doa'] = True
+    #
+    # There is also a security risk involved with this (CVE-2014-3539),
+    # because during by this rope can be persuaded to open under some
+    # circumstances a network port for short moment of time, which can
+    # be used to push commands to the running process, so that such
+    # process could proceed some commands under the privilegis of the
+    # user running rope.  Therefore this variable defaults to False, and
+    # anybody who would like to change its value to True is advised to
+    # make sure the computer is well firewalled against possible
+    # intruders.
+    prefs['perform_doa'] = False
 
     # Rope can check the validity of its object DB when running.
     prefs['validate_objectdb'] = True
