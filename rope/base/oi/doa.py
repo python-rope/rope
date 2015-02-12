@@ -116,7 +116,7 @@ class _SocketReceiver(_MessageReceiver):
         self.data_port = 3037
         while self.data_port < 4000:
             try:
-                self.server_socket.bind(('', self.data_port))
+                self.server_socket.bind(('127.0.0.1', self.data_port))
                 break
             except socket.error:
                 self.data_port += 1
