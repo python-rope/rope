@@ -104,7 +104,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg1 import *',
                           imports[0].import_info.get_import_statement())
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_get_import_statements_for_new_relatives(self):
         self.mod2.write('from .mod3 import x\n')
         pymod = self.project.get_module('pkg2.mod2')
@@ -587,7 +587,7 @@ class ImportUtilsTest(unittest.TestCase):
         self.assertEquals('from pkg2.mod3 import a_func\n',
                           self.import_tools.relatives_to_absolutes(pymod))
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_transform_rel_imports_to_abs_imports_for_new_relatives(self):
         self.mod3.write('def a_func():\n    pass\n')
         self.mod2.write('from .mod3 import a_func\n')

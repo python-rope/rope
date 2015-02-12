@@ -437,7 +437,7 @@ class PatchedASTTest(unittest.TestCase):
             'ImportFrom', ['from', ' ', 'x', ' ', 'import', ' ', 'alias'])
         checker.check_children('alias', ['y'])
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_from_node(self):
         source = 'from ..x import y as z\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -448,7 +448,7 @@ class PatchedASTTest(unittest.TestCase):
                            'import', ' ', 'alias'])
         checker.check_children('alias', ['y', ' ', 'as', ' ', 'z'])
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_from_node_relative_import(self):
         source = 'from . import y as z\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -744,7 +744,7 @@ class PatchedASTTest(unittest.TestCase):
             'While', ['while', ' ', 'Name', '', ':', '\n    ', 'Pass', '\n',
                       'else', '', ':', '\n    ', 'Pass'])
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_with_node(self):
         source = 'from __future__ import with_statement\nwith a as ' \
             'b:\n    pass\n'
@@ -786,7 +786,7 @@ class PatchedASTTest(unittest.TestCase):
             ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
              '\n    ', 'Pass'])
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_try_except_and_finally_node(self):
         source = 'try:\n    pass\nexcept:\n    pass\nfinally:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -827,7 +827,7 @@ class PatchedASTTest(unittest.TestCase):
         source = '1;\n'
         patchedast.get_patched_ast(source, True)
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_if_exp_node(self):
         source = '1 if True else 2\n'
         ast_frag = patchedast.get_patched_ast(source, True)

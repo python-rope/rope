@@ -479,7 +479,7 @@ class PyCoreTest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         self.assertFalse('var1' in c_class)
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_with_statement_variables(self):
         code = 'import threading\nwith threading.lock() as var:    pass\n'
         if sys.version_info < (2, 6, 0):
@@ -487,7 +487,7 @@ class PyCoreTest(unittest.TestCase):
         pymod = libutils.get_string_module(self.project, code)
         self.assertTrue('var' in pymod)
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_with_statement_variables_and_tuple_assignment(self):
         code = 'class A(object):\n' \
                '    def __enter__(self):' \
@@ -502,7 +502,7 @@ class PyCoreTest(unittest.TestCase):
         self.assertTrue('a' in pymod)
         self.assertTrue('b' in pymod)
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_with_statement_variable_type(self):
         code = 'class A(object):\n' \
                '    def __enter__(self):\n' \
@@ -518,7 +518,7 @@ class PyCoreTest(unittest.TestCase):
         var = pymod['var'].get_object()
         self.assertEquals(a_class, var.get_type())
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_with_statement_with_no_vars(self):
         code = 'with open("file"):    pass\n'
         if sys.version_info < (2, 6, 0):
@@ -946,7 +946,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
                                                mod2)
         self.assertEquals(mod1_object, mod2_scope['mod1'].get_object())
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_new_style_relative_imports(self):
         pkg = testutils.create_package(self.project, 'pkg')
         mod1 = testutils.create_module(self.project, 'mod1', pkg)
@@ -956,7 +956,7 @@ class PyCoreInProjectsTest(unittest.TestCase):
         mod2_object = self.pycore.resource_to_pyobject(mod2)
         self.assertEquals(mod1_object, mod2_object['mod1'].get_object())
 
-    @testutils.run_only_for_25
+    @testutils.only_for('2.5')
     def test_new_style_relative_imports2(self):
         pkg = testutils.create_package(self.project, 'pkg')
         mod1 = testutils.create_module(self.project, 'mod1')
