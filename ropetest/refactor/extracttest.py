@@ -888,5 +888,71 @@ class ExtractMethodTest(unittest.TestCase):
                    "    return a\n"
         self.assertEquals(expected, refactored)
 
+    def test_extract_method_with_list_comprehension(self):
+        code = "def foo():\n" \
+               "    x = [e for e in []]\n" \
+               "    f = 23\n" \
+               "\n" \
+               "    for e, f in []:\n" \
+               "        def bar():\n" \
+               "            e[42] = 1\n"
+        start, end = self._convert_line_range_to_offset(code, 4, 7)
+        refactored = self.do_extract_method(code, start, end, 'baz')
+        expected = "def foo():\n" \
+                   "    x = [e for e in []]\n" \
+                   "    f = 23\n" \
+                   "\n" \
+                   "    baz()\n" \
+                   "\n" \
+                   "def baz():\n" \
+                   "    for e, f in []:\n" \
+                   "        def bar():\n" \
+                   "            e[42] = 1\n"
+        self.assertEquals(expected, refactored)
+
+    def test_extract_method_with_list_comprehension_and_iter(self):
+        code = "def foo():\n" \
+               "    x = [e for e in []]\n" \
+               "    f = 23\n" \
+               "\n" \
+               "    for x, f in x:\n" \
+               "        def bar():\n" \
+               "            x[42] = 1\n"
+        start, end = self._convert_line_range_to_offset(code, 4, 7)
+        refactored = self.do_extract_method(code, start, end, 'baz')
+        expected = "def foo():\n" \
+                   "    x = [e for e in []]\n" \
+                   "    f = 23\n" \
+                   "\n" \
+                   "    baz(x)\n" \
+                   "\n" \
+                   "def baz(x):\n" \
+                   "    for x, f in x:\n" \
+                   "        def bar():\n" \
+                   "            x[42] = 1\n"
+        self.assertEquals(expected, refactored)
+
+    def test_extract_method_with_list_comprehension_and_orelse(self):
+        code = "def foo():\n" \
+               "    x = [e for e in []]\n" \
+               "    f = 23\n" \
+               "\n" \
+               "    for e, f in []:\n" \
+               "        def bar():\n" \
+               "            e[42] = 1\n"
+        start, end = self._convert_line_range_to_offset(code, 4, 7)
+        refactored = self.do_extract_method(code, start, end, 'baz')
+        expected = "def foo():\n" \
+                   "    x = [e for e in []]\n" \
+                   "    f = 23\n" \
+                   "\n" \
+                   "    baz()\n" \
+                   "\n" \
+                   "def baz():\n" \
+                   "    for e, f in []:\n" \
+                   "        def bar():\n" \
+                   "            e[42] = 1\n"
+        self.assertEquals(expected, refactored)
+
 if __name__ == '__main__':
     unittest.main()

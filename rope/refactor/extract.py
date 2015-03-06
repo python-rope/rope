@@ -610,7 +610,8 @@ class _FunctionInformationCollector(object):
     def _read_variable(self, name, lineno):
         if self.start <= lineno <= self.end:
             if name not in self.written:
-                self.read.add(name)
+                if not self.conditional or name not in self.maybe_written:
+                    self.read.add(name)
         if self.end < lineno:
             if name not in self.postwritten:
                 self.postread.add(name)
@@ -670,7 +671,18 @@ class _FunctionInformationCollector(object):
         self._handle_conditional_node(node)
 
     def _For(self, node):
-        self._handle_conditional_node(node)
+        self.conditional = True
+        try:
+            # iter has to be checked before the target variables
+            ast.walk(node.iter, self)
+            ast.walk(node.target, self)
+
+            for child in node.body:
+                ast.walk(child, self)
+            for child in node.orelse:
+                ast.walk(child, self)
+        finally:
+            self.conditional = False
 
 
 def _get_argnames(arguments):
