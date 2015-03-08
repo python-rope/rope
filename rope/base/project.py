@@ -453,6 +453,11 @@ def _realpath(path):
 
     Is equivalent to ``realpath(abspath(expanduser(path)))``.
 
+    Of the particular notice is the hack dealing with the unfortunate
+    sitaution of running native-Windows python (os.name == 'nt') inside
+    of Cygwin (abspath starts with '/'), which apparently normal
+    os.path.realpath completely messes up.
+
     """
     # there is a bug in cygwin for os.path.abspath() for abs paths
     if sys.platform == 'cygwin':
