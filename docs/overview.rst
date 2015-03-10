@@ -551,7 +551,7 @@ after inlining p2 parameter will have:
 
 .. code-block:: python
 
-  def f(p1=1, p2=1):
+  def f(p1=1, p2=2):
       pass
 
   f(3, 2)
