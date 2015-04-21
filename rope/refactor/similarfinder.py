@@ -28,7 +28,7 @@ class SimilarFinder(object):
             self.raw_finder = RawSimilarFinder(
                 pymodule.source_code, pymodule.get_ast(), self._does_match)
         except MismatchedTokenError:
-            print "in file %s" % pymodule.resource.path
+            print("in file %s" % pymodule.resource.path)
             raise
         self.pymodule = pymodule
         if wildcards is None:

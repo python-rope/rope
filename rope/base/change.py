@@ -369,7 +369,7 @@ class _ResourceOperations(object):
                 fscommands.create_file(resource_path)
             else:
                 fscommands.create_folder(resource_path)
-        except IOError, e:
+        except IOError as e:
             raise exceptions.RopeError(e)
 
 

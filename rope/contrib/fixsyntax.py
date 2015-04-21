@@ -30,7 +30,7 @@ class FixSyntax(object):
                 return libutils.get_string_module(
                     self.project, code, resource=self.resource,
                     force_errors=True)
-            except exceptions.ModuleSyntaxError, e:
+            except exceptions.ModuleSyntaxError as e:
                 if msg is None:
                     msg = '%s:%s %s' % (e.filename, e.lineno, e.message_)
                 if tries < self.maxfixes:

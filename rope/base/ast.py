@@ -14,7 +14,7 @@ def parse(source, filename='<string>'):
         source += '\n'
     try:
         return compile(source, filename, 'exec', _ast.PyCF_ONLY_AST)
-    except (TypeError, ValueError), e:
+    except (TypeError, ValueError) as e:
         error = SyntaxError()
         error.lineno = 1
         error.filename = filename

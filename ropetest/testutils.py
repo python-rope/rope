@@ -47,7 +47,7 @@ def remove_recursively(path):
         for i in range(12):
             try:
                 _remove_recursively(path)
-            except OSError, e:
+            except OSError as e:
                 if e.errno not in (13, 16, 32):
                     raise
                 time.sleep(0.3)

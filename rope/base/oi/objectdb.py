@@ -78,7 +78,7 @@ class ObjectDB(object):
             self.files[path].create_scope(key)
         result = self.files[path][key]
         if isinstance(result, dict):
-            print self.files, self.files[path], self.files[path][key]
+            print(self.files, self.files[path], self.files[path][key])
         return result
 
     def _file_removed(self, path):

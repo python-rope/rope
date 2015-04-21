@@ -109,7 +109,7 @@ class File(Resource):
         data = self.read_bytes()
         try:
             return fscommands.file_data_to_unicode(data)
-        except UnicodeDecodeError, e:
+        except UnicodeDecodeError as e:
             raise exceptions.ModuleDecodeError(self.path, e.reason)
 
     def read_bytes(self):

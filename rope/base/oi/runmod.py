@@ -166,14 +166,14 @@ def __rope_start_everything():
             if isinstance(object_, types.CodeType):
                 return self._get_persisted_code(object_)
             if isinstance(object_, types.FunctionType):
-                return self._get_persisted_code(object_.func_code)
+                return self._get_persisted_code(object_.__code__)
             if isinstance(object_, types.MethodType):
-                return self._get_persisted_code(object_.im_func.func_code)
+                return self._get_persisted_code(object_.__func__.__code__)
             if isinstance(object_, types.ModuleType):
                 return self._get_persisted_module(object_)
             if isinstance(object_, (str, unicode, list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
-            if isinstance(object_, (types.TypeType, types.ClassType)):
+            if isinstance(object_, type):
                 return self._get_persisted_class(object_)
             return ('instance', self._get_persisted_class(type(object_)))
 

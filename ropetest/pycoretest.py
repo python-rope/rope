@@ -556,7 +556,7 @@ class PyCoreTest(unittest.TestCase):
     def test_holding_error_location_information(self):
         try:
             libutils.get_string_module(self.project, 'xyx print\n')
-        except exceptions.ModuleSyntaxError, e:
+        except exceptions.ModuleSyntaxError as e:
             self.assertEquals(1, e.lineno)
 
     def test_no_exceptions_on_module_encoding_problems(self):

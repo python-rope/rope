@@ -398,7 +398,7 @@ class NewStaticOITest(unittest.TestCase):
         self.mod.write(code)
         try:
             self.pycore.analyze_module(self.mod)
-        except RuntimeError, e:
+        except RuntimeError as e:
             self.fail(str(e))
 
     def test_static_oi_for_infer_return_typs_from_funcs_based_on_params(self):

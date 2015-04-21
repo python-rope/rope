@@ -181,9 +181,9 @@ class PyModule(pyobjects.PyModule):
                 else:
                     source_bytes = source_code
             ast_node = ast.parse(source_bytes, filename=filename)
-        except SyntaxError, e:
+        except SyntaxError as e:
             raise exceptions.ModuleSyntaxError(filename, e.lineno, e.msg)
-        except UnicodeDecodeError, e:
+        except UnicodeDecodeError as e:
             raise exceptions.ModuleSyntaxError(filename, 1, '%s' % (e.reason))
         return source_code, ast_node
 

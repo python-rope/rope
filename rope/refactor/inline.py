@@ -398,7 +398,7 @@ class _DefinitionGenerator(object):
         # inside the inlined function are renamed
         if len(set(all_names).intersection(set(host_vars))) > 0:
 
-            prefix = _DefinitionGenerator.unique_prefix.next()
+            prefix = next(_DefinitionGenerator.unique_prefix)
             guest = libutils.get_string_module(self.project, source,
                                                self.resource)
 

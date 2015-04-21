@@ -177,7 +177,7 @@ class LogicalLineFinder(object):
             block_start = get_block_start(self.lines, line_number, indents)
             try:
                 return self._block_logical_line(block_start, line_number)
-            except IndentationError, e:
+            except IndentationError as e:
                 tries += 1
                 if tries == 5:
                     raise e
@@ -222,7 +222,7 @@ class LogicalLineFinder(object):
                 if line_number <= end:
                     return (start, end)
                 last_end = end + 1
-        except tokenize.TokenError, e:
+        except tokenize.TokenError as e:
             current = e.args[1][0]
             return (last_end, max(last_end, current - 1))
         return (last_end, None)
