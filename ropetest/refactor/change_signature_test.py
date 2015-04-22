@@ -183,6 +183,7 @@ class ChangeSignatureTest(unittest.TestCase):
                           self.mod.read())
 
     # XXX: What to do here for star args?
+    @unittest.skip("How to deal with start args?")
     def xxx_test_removing_arguments_star_args2(self):
         self.mod.write('def a_func(p1, *args):\n    pass\n'
                        'a_func(2, 3, p1=1)\n')

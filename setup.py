@@ -1,4 +1,5 @@
 from distutils.core import setup, Command
+import sys
 import unittest
 
 import rope
@@ -23,7 +24,8 @@ class RunTests(Command):
     def run(self):
         tests = unittest.TestSuite(ropetest.suite())
         runner = unittest.TextTestRunner(verbosity=2)
-        runner.run(tests)
+        results = runner.run(tests)
+        sys.exit(0 if results.wasSuccessful() else 1)
 
 
 classifiers = [

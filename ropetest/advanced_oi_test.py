@@ -1,4 +1,7 @@
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import rope.base.oi
 import rope.base.libutils
@@ -466,6 +469,7 @@ class NewStaticOITest(unittest.TestCase):
         self.assertEquals(c_class, a_var.get_type())
 
     # TODO: Returning a generator for functions that yield unknowns
+    @unittest.skip("Returning a generator that yields unknowns")
     def xxx_test_handl_generator_functions_when_unknown_type_is_yielded(self):
         self.mod.write('class C(object):\n    pass'
                        '\ndef f():\n    yield eval("C()")\n'
