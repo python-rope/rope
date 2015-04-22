@@ -3,15 +3,20 @@ from _ast import *
 
 from rope.base import fscommands
 
+try:
+    unicode
+except NameError:
+    unicode = str
+
 
 def parse(source, filename='<string>'):
     # NOTE: the raw string should be given to `compile` function
     if isinstance(source, unicode):
         source = fscommands.unicode_to_file_data(source)
-    if '\r' in source:
-        source = source.replace('\r\n', '\n').replace('\r', '\n')
-    if not source.endswith('\n'):
-        source += '\n'
+    if b'\r' in source:
+        source = source.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+    if not source.endswith(b'\n'):
+        source += b'\n'
     try:
         return compile(source, filename, 'exec', _ast.PyCF_ONLY_AST)
     except (TypeError, ValueError) as e:

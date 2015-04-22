@@ -1,5 +1,9 @@
 """This module trys to support builtin types and functions."""
 import inspect
+try:
+    raw_input
+except NameError:
+    raw_input = input
 
 import rope.base.evaluate
 from rope.base import pynames, pyobjects, arguments, utils, ast
@@ -32,7 +36,7 @@ class BuiltinModule(pyobjects.AbstractModule):
         result.update(self.initial)
         if self.pycore is not None:
             submodules = self.pycore._builtin_submodules(self.name)
-            for name, module in submodules.iteritems():
+            for name, module in submodules.items():
                 result[name] = rope.base.builtins.BuiltinName(module)
         return result
 
@@ -266,7 +270,10 @@ class List(BuiltinClass):
         # Getting methods
         collector('__getitem__', function=self._list_get)
         collector('pop', function=self._list_get)
-        collector('__getslice__', function=self._self_get)
+        try:
+            collector('__getslice__', function=self._self_get)
+        except AttributeError:
+            pass
 
         super(List, self).__init__(list, collector.attributes)
 
@@ -487,13 +494,20 @@ class Str(BuiltinClass):
         collector = _AttributeCollector(str)
         collector('__iter__', get_iterator(self_object), check_existence=False)
 
-        self_methods = ['__getitem__', '__getslice__', 'capitalize', 'center',
-                        'decode', 'encode', 'expandtabs', 'join', 'ljust',
+        self_methods = ['__getitem__', 'capitalize', 'center',
+                        'encode', 'expandtabs', 'join', 'ljust',
                         'lower', 'lstrip', 'replace', 'rjust', 'rstrip',
                         'strip', 'swapcase', 'title', 'translate', 'upper',
                         'zfill']
         for method in self_methods:
             collector(method, self_object)
+
+        py2_self_methods = ["__getslice__", "decode"]
+        for method in py2_self_methods:
+            try:
+                collector(method, self_object)
+            except AttributeError:
+                pass
 
         for method in ['rsplit', 'split', 'splitlines']:
             collector(method, get_list(self_object))
@@ -568,7 +582,7 @@ class File(BuiltinClass):
         attributes = {}
 
         def add(name, returned=None, function=None):
-            builtin = getattr(file, name, None)
+            builtin = getattr(open, name, None)
             attributes[name] = BuiltinName(
                 BuiltinFunction(returned=returned, function=function,
                                 builtin=builtin))
@@ -578,7 +592,7 @@ class File(BuiltinClass):
         for method in ['close', 'flush', 'lineno', 'isatty', 'seek', 'tell',
                        'truncate', 'write', 'writelines']:
             add(method)
-        super(File, self).__init__(file, attributes)
+        super(File, self).__init__(open, attributes)
 
 
 get_file = _create_builtin_getter(File)

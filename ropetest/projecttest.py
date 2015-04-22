@@ -80,11 +80,12 @@ class ProjectTest(unittest.TestCase):
 
     def test_failure_when_project_root_exists_and_is_a_file(self):
         project_root = 'sampleproject2'
-        open(project_root, 'w').close()
-        with self.assertRaises(RopeError):
-            Project(project_root)
-
-        testutils.remove_recursively(project_root)
+        try:
+            open(project_root, 'w').close()
+            with self.assertRaises(RopeError):
+                Project(project_root)
+        finally:
+            testutils.remove_recursively(project_root)
 
     def test_creating_folders(self):
         folderName = 'SampleFolder'
@@ -299,7 +300,7 @@ class ProjectTest(unittest.TestCase):
         src_folder = os.path.join(root, 'src')
         os.mkdir(src_folder)
         test_pyc = os.path.join(src_folder, 'test.pyc')
-        file(test_pyc, 'w').close()
+        open(test_pyc, 'w').close()
         for x in self.project.get_files():
             self.assertNotEquals('src/test.pyc', x.path)
 
@@ -725,7 +726,7 @@ class ResourceObserverTest(unittest.TestCase):
         sample_observer = _SampleObserver()
         self.project.add_observer(FilteredResourceObserver(sample_observer,
                                                            [my_file]))
-        file(my_file.real_path, 'w').close()
+        open(my_file.real_path, 'w').close()
         self.project.validate(root)
         self.assertEquals(my_file, sample_observer.last_created)
         self.assertEquals(1, sample_observer.change_count)
@@ -736,7 +737,7 @@ class ResourceObserverTest(unittest.TestCase):
         sample_observer = _SampleObserver()
         self.project.add_observer(FilteredResourceObserver(sample_observer,
                                                            [my_file]))
-        file(my_file.real_path, 'w').close()
+        open(my_file.real_path, 'w').close()
         self.project.validate(root)
         self.project.validate(root)
         self.assertEquals(my_file, sample_observer.last_created)
@@ -829,7 +830,7 @@ class OutOfProjectTest(unittest.TestCase):
 
     def test_simple_out_of_project_file(self):
         sample_file_path = os.path.join(self.test_directory, 'sample.txt')
-        sample_file = file(sample_file_path, 'w')
+        sample_file = open(sample_file_path, 'w')
         sample_file.write('sample content\n')
         sample_file.close()
         sample_resource = self.no_project.get_resource(sample_file_path)
@@ -842,13 +843,13 @@ class OutOfProjectTest(unittest.TestCase):
         self.assertEquals([], sample_folder.get_children())
 
         sample_file_path = os.path.join(sample_folder_path, 'sample.txt')
-        file(sample_file_path, 'w').close()
+        open(sample_file_path, 'w').close()
         sample_resource = self.no_project.get_resource(sample_file_path)
         self.assertEquals(sample_resource, sample_folder.get_children()[0])
 
     def test_using_absolute_path(self):
         sample_file_path = os.path.join(self.test_directory, 'sample.txt')
-        file(sample_file_path, 'w').close()
+        open(sample_file_path, 'w').close()
         normal_sample_resource = self.no_project.get_resource(sample_file_path)
         absolute_sample_resource = \
             self.no_project.get_resource(os.path.abspath(sample_file_path))
@@ -861,7 +862,7 @@ class OutOfProjectTest(unittest.TestCase):
         self.assertEquals([], sample_folder.get_children())
 
         sample_file_path = os.path.join(sample_folder_path, 'sample.txt')
-        file(sample_file_path, 'w').close()
+        open(sample_file_path, 'w').close()
         sample_resource = self.no_project.get_resource(sample_file_path)
         self.assertTrue(sample_folder.has_child('sample.txt'))
         self.assertFalse(sample_folder.has_child('doesnothave.txt'))
@@ -870,7 +871,7 @@ class OutOfProjectTest(unittest.TestCase):
 
     def test_out_of_project_files_and_path_to_resource(self):
         sample_file_path = os.path.join(self.test_directory, 'sample.txt')
-        sample_file = file(sample_file_path, 'w')
+        sample_file = open(sample_file_path, 'w')
         sample_file.write('sample content\n')
         sample_file.close()
         sample_resource = self.no_project.get_resource(sample_file_path)

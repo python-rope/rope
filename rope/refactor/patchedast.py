@@ -4,6 +4,10 @@ import warnings
 
 from rope.base import ast, codeanalyze, exceptions
 
+try:
+    basestring
+except NameError:
+    basestring = (str, bytes)
 
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes

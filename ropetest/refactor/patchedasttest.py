@@ -4,6 +4,11 @@ from rope.base import ast
 from rope.refactor import patchedast
 from ropetest import testutils
 
+try:
+    basestring
+except NameError:
+    basestring = (str, bytes)
+
 
 class PatchedASTTest(unittest.TestCase):
 

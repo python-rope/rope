@@ -10,6 +10,10 @@ import os
 import shutil
 import subprocess
 
+try:
+    unicode
+except NameError:
+    unicode = str
 
 def create_fscommands(root):
     dirlist = os.listdir(root)
@@ -240,16 +244,27 @@ def read_file_coding(path):
 
 
 def read_str_coding(source):
+    if type(source) == bytes:
+        newline = b'\n'
+    else:
+        newline = '\n'
+    #try:
+    #    source = source.decode("utf-8")
+    #except AttributeError:
+    #    pass
     try:
-        first = source.index('\n') + 1
-        second = source.index('\n', first) + 1
+        first = source.index(newline) + 1
+        second = source.index(newline, first) + 1
     except ValueError:
         second = len(source)
     return _find_coding(source[:second])
 
 
 def _find_coding(text):
-    coding = 'coding'
+    if type(text) == bytes:
+        coding = b'coding'
+    else:
+        coding = "coding"
     try:
         start = text.index(coding) + len(coding)
         if text[start] not in '=:':

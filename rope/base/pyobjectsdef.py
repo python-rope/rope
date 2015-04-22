@@ -8,6 +8,11 @@ from rope.base import (pynamesdef as pynames, exceptions, ast,
                        astutils, pyobjects, fscommands, arguments, utils)
 
 
+try:
+    unicode
+except NameError:
+    unicode = str
+
 class PyFunction(pyobjects.PyFunction):
 
     def __init__(self, pycore, ast_node, parent):
@@ -226,7 +231,7 @@ class PyPackage(pyobjects.PyPackage):
         result = {}
         modname = rope.base.libutils.modname(self.resource)
         extension_submodules = self.pycore._builtin_submodules(modname)
-        for name, module in extension_submodules.iteritems():
+        for name, module in extension_submodules.items():
             result[name] = rope.base.builtins.BuiltinName(module)
         if self.resource is None:
             return result

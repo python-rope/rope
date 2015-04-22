@@ -1,9 +1,20 @@
+try:
+    execfile
+except NameError:
+    def execfile(fn, global_vars, local_vars):
+        with open(fn) as f:
+            code = compile(f.read(), fn, 'exec')
+            exec(code, global_vars, local_vars)
+
 
 def __rope_start_everything():
     import os
     import sys
     import socket
-    import cPickle as pickle
+    try:
+        import pickle
+    except ImportError:
+        import cPickle as pickle
     import marshal
     import inspect
     import types

@@ -527,28 +527,21 @@ class _ProposalSorter(object):
             scope_proposals = proposals.get(scope, [])
             scope_proposals = [proposal for proposal in scope_proposals
                                if proposal.type in self.typerank]
-            scope_proposals.sort(self._proposal_cmp)
+            scope_proposals.sort(key=self._proposal_key)
             result.extend(scope_proposals)
         return result
 
-    def _proposal_cmp(self, proposal1, proposal2):
-        if proposal1.type != proposal2.type:
-            return cmp(self.typerank.get(proposal1.type, 100),
-                       self.typerank.get(proposal2.type, 100))
-        return self._compare_underlined_names(proposal1.name,
-                                              proposal2.name)
-
-    def _compare_underlined_names(self, name1, name2):
-        def underline_count(name):
-            result = 0
-            while result < len(name) and name[result] == '_':
-                result += 1
-            return result
-        underline_count1 = underline_count(name1)
-        underline_count2 = underline_count(name2)
-        if underline_count1 != underline_count2:
-            return cmp(underline_count1, underline_count2)
-        return cmp(name1, name2)
+    def _proposal_key(self, proposal1):
+        def _underline_count(name):
+             return sum(1 for c in name if c == "_")
+        return (self.typerank.get(proposal1.type, 100),
+                _underline_count(proposal1.name),
+                proposal1.name)
+        #if proposal1.type != proposal2.type:
+        #    return cmp(self.typerank.get(proposal1.type, 100),
+        #               self.typerank.get(proposal2.type, 100))
+        #return self._compare_underlined_names(proposal1.name,
+        #                                      proposal2.name)
 
 
 class PyDocExtractor(object):

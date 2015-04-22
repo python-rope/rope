@@ -19,9 +19,7 @@ class ChangeCollector(object):
         if not self.changes:
             return None
 
-        def compare_changes(change1, change2):
-            return cmp(change1[:2], change2[:2])
-        self.changes.sort(compare_changes)
+        self.changes.sort(key=lambda x: x[:2])
         pieces = []
         last_changed = 0
         for change in self.changes:

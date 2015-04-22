@@ -1,4 +1,3 @@
-import cPickle as pickle
 import os
 import shutil
 import sys
@@ -9,6 +8,19 @@ from rope.base import exceptions, taskhandle, prefs, history, pycore, utils
 import rope.base.resourceobserver as resourceobserver
 from rope.base.resources import File, Folder, _ResourceMatcher
 from rope.base.exceptions import ModuleNotFoundError
+
+try:
+    import pickle
+except ImportError:
+    import cPickle as pickle
+try:
+    execfile
+except NameError:
+    def execfile(fn, global_vars, local_vars):
+        with open(fn) as f:
+            code = compile(f.read(), fn, 'exec')
+            exec(code, global_vars, local_vars)
+
 
 
 class _Project(object):

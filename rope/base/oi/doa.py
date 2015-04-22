@@ -1,4 +1,7 @@
-import cPickle as pickle
+try:
+    import pickle
+except ImportError:
+    import cPickle as pickle
 import marshal
 import os
 import socket

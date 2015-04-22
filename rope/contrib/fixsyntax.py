@@ -40,7 +40,7 @@ class FixSyntax(object):
                 else:
                     raise exceptions.ModuleSyntaxError(
                         e.filename, e.lineno,
-                        'Failed to fix error: {}'.format(msg))
+                        'Failed to fix error: {0}'.format(msg))
 
     @property
     @utils.saveit

@@ -13,6 +13,10 @@ from rope.contrib.codeassist import (get_definition_location, get_doc,
                                      get_calltip, get_canonical_path)
 from ropetest import testutils
 
+try:
+    unicode
+except NameError:
+    unicode = str
 
 class CodeAssistTest(unittest.TestCase):
 

@@ -68,7 +68,7 @@ class ModuleImports(object):
         # Writing module docs
         result.extend(after_removing[first_non_blank:first_import])
         # Writing imports
-        sorted_imports = sorted(imports, self._compare_import_locations)
+        sorted_imports = sorted(imports, key=self._get_location)
         for stmt in sorted_imports:
             if stmt != sorted_imports[0]:
                 result.append('\n' * stmt.blank_lines)
@@ -88,13 +88,11 @@ class ModuleImports(object):
             start = stmt.get_old_location()[0]
         return start
 
-    def _compare_import_locations(self, stmt1, stmt2):
-        def get_location(stmt):
-            if stmt.get_new_start() is not None:
-                return stmt.get_new_start()
-            else:
-                return stmt.get_old_location()[0]
-        return cmp(get_location(stmt1), get_location(stmt2))
+    def _get_location(self, stmt):
+        if stmt.get_new_start() is not None:
+            return stmt.get_new_start()
+        else:
+            return stmt.get_old_location()[0]
 
     def _remove_imports(self, imports):
         lines = self.pymodule.source_code.splitlines(True)
@@ -202,7 +200,7 @@ class ModuleImports(object):
         if self.project.prefs.get("sort_imports_alphabetically"):
             sort_kwargs = dict(key=self._get_import_name)
         else:
-            sort_kwargs = dict(cmp=self._compare_imports)
+            sort_kwargs = dict(key=self._key_imports)
 
         # IDEA: Sort from import list
         visitor = actions.SortingVisitor(self.project, self._current_folder())
@@ -245,14 +243,17 @@ class ModuleImports(object):
         else:
             return import_info.names_and_aliases[0][0]
 
-    def _compare_imports(self, stmt1, stmt2):
-        str1 = stmt1.get_import_statement()
-        str2 = stmt2.get_import_statement()
-        if str1.startswith('from ') and not str2.startswith('from '):
-            return 1
-        if not str1.startswith('from ') and str2.startswith('from '):
-            return -1
-        return cmp(str1, str2)
+    def _key_imports(self, stm1):
+        str1 = stm1.get_import_statement()
+        return str1.startswith("from "), str1
+
+        #str1 = stmt1.get_import_statement()
+        #str2 = stmt2.get_import_statement()
+        #if str1.startswith('from ') and not str2.startswith('from '):
+        #    return 1
+        #if not str1.startswith('from ') and str2.startswith('from '):
+        #    return -1
+        #return cmp(str1, str2)
 
     def _move_imports(self, imports, index, blank_lines):
         if imports:

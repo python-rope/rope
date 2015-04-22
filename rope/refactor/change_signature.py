@@ -347,8 +347,6 @@ class _MultipleFinders(object):
         all_occurrences = []
         for finder in self.finders:
             all_occurrences.extend(finder.find_occurrences(resource, pymodule))
-        all_occurrences.sort(self._cmp_occurrences)
+        all_occurrences.sort(key=lambda x: x.get_primary_range())
         return all_occurrences
 
-    def _cmp_occurrences(self, o1, o2):
-        return cmp(o1.get_primary_range(), o2.get_primary_range())

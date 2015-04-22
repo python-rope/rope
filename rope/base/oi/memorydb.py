@@ -21,6 +21,16 @@ class MemoryDB(objectdb.FileDict):
     def keys(self):
         return self._files.keys()
 
+    def __iter__(self):
+        for f in self._files:
+            yield f
+
+    def __len__(self):
+        return len(self._files)
+
+    def __setitem__(self):
+        raise NotImplementedError()
+
     def __contains__(self, key):
         return key in self._files
 
@@ -75,6 +85,17 @@ class FileInfo(objectdb.FileInfo):
 
     def __delitem__(self, key):
         del self.scopes[key]
+
+    def __iter__(self):
+        for s in self.scopes:
+            yield s
+
+    def __len__(self):
+        return len(self.scopes)
+
+    def __setitem__(self):
+        raise NotImplementedError()
+
 
 
 class ScopeInfo(objectdb.ScopeInfo):
