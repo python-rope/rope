@@ -247,10 +247,7 @@ class _PatchingASTWalker(object):
     def _Assign(self, node):
         children = self._child_nodes(node.targets, '=')
         children.append('=')
-        if isinstance(node.value, ast.Str):
-            children.append(self.Not_multiline_string)
-        else:
-            children.append(node.value)
+        children.append(node.value)
         self._handle(node, children)
 
     def _AugAssign(self, node):
