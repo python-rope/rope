@@ -493,6 +493,19 @@ class _PatchingASTWalker(object):
         children.append(']')
         self._handle(node, children)
 
+    def _SetComp(self, node):
+        children = ['{', node.elt]
+        children.extend(node.generators)
+        children.append('}')
+        self._handle(node, children)
+
+    def _DictComp(self, node):
+        children = ['{']
+        children.extend([node.key, ':', node.value])
+        children.extend(node.generators)
+        children.append('}')
+        self._handle(node, children)
+    
     def _Module(self, node):
         self._handle(node, list(node.body), eat_spaces=True)
 
