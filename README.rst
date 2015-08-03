@@ -14,7 +14,7 @@ Overview
 
 `Rope`_ is a python refactoring library.
 
-.. _`rope`: http://rope.sf.net/
+.. _`rope`: https://github.com/python-rope/rope
 
 
 New Features
