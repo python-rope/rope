@@ -579,7 +579,14 @@ class PatchedASTTest(unittest.TestCase):
                               'Call', ' ', 'if', ' ', 'Name'])
 
     def test_set_node(self):
+        # make sure we are in a python version with set literals
         source = '{1, 2}\n'
+
+        try:
+            eval(source)
+        except SyntaxError:
+            return
+
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Set', 0, len(source) - 1)
