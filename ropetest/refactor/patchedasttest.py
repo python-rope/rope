@@ -578,6 +578,14 @@ class PatchedASTTest(unittest.TestCase):
             'comprehension', ['for', ' ', 'Name', ' ', 'in', ' ',
                               'Call', ' ', 'if', ' ', 'Name'])
 
+    def test_set_node(self):
+        source = '{1, 2}\n'
+        ast_frag = patchedast.get_patched_ast(source, True)
+        checker = _ResultChecker(self, ast_frag)
+        checker.check_region('Set', 0, len(source) - 1)
+        checker.check_children(
+            'Set', ['{', '', 'Num', '', ',', ' ', 'Num', '', '}'])
+
     def test_set_comp_node(self):
         # make sure we are in a python version with set comprehensions
         source = '{i for i in range(1) if True}\n'
