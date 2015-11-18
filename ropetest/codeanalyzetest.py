@@ -568,6 +568,16 @@ class LogicalLineFinderTest(unittest.TestCase):
         line_finder = self._logical_finder(code)
         self.assertEquals((1, 1), line_finder.logical_line_in(1))
 
+    def test_logical_lines_for_multiline_string_with_extra_quotes_front(self):
+        code = '""""Docs."""\na = 1\n'
+        line_finder = self._logical_finder(code)
+        self.assertEquals((2, 2), line_finder.logical_line_in(2))
+
+    def test_logical_lines_for_multiline_string_with_escaped_quotes(self):
+        code = '"""Quotes \\""" "\\"" \' """\na = 1\n'
+        line_finder = self._logical_finder(code)
+        self.assertEquals((2, 2), line_finder.logical_line_in(2))
+
     def test_generating_line_starts(self):
         code = 'a = 1\na = 2\n\na = 3\n'
         line_finder = self._logical_finder(code)
