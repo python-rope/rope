@@ -856,6 +856,15 @@ class ImportUtilsTest(unittest.TestCase):
             '"""\ndocs\n"""\nimport mod\n\n\ndef f():\n    print(mod)\n',
             self.import_tools.sort_imports(pymod))
 
+    def test_sorting_imports_moving_to_top_and_module_docs2(self):
+        self.mod.write('"""\ndocs\n"""\n\n\nimport bbb\nimport aaa\n'
+                       'def f():\n    print(mod)\nimport mod\n')
+        pymod = self.project.get_module('mod')
+        self.assertEquals(
+            '"""\ndocs\n"""\n\n\nimport aaa\nimport bbb\n\n'
+            'import mod\n\n\ndef f():\n    print(mod)\n',
+            self.import_tools.sort_imports(pymod))
+
     def test_sorting_future_imports(self):
         self.mod.write('import os\nfrom __future__ import devision\n')
         pymod = self.project.get_module('mod')

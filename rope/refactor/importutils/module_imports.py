@@ -223,6 +223,9 @@ class ModuleImports(object):
         if self.pymodule.get_doc() is not None:
             lineno = 1
         if len(nodes) > lineno:
+            if (isinstance(nodes[lineno], ast.Import) or
+                isinstance(nodes[lineno], ast.ImportFrom)):
+                return nodes[lineno].lineno
             lineno = self.pymodule.logical_lines.logical_line_in(
                 nodes[lineno].lineno)[0]
         else:

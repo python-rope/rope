@@ -335,7 +335,8 @@ class MoveRefactoringTest(unittest.TestCase):
 
     def test_moving_package_and_retaining_blank_lines(self):
         pkg2 = testutils.create_package(self.project, 'pkg2', self.pkg)
-        code = ('import pkg.mod4\n\n'
+        code = ('"""Docstring followed by blank lines."""\n\n'
+                'import pkg.mod4\n\n'
                 'from pkg import mod4\n'
                 'from x import y\n'
                 'from y import z\n'
@@ -345,7 +346,8 @@ class MoveRefactoringTest(unittest.TestCase):
                 'print(mod4)')
         self.mod1.write(code)
         self._move(self.mod4, None, pkg2)
-        expected = ('import pkg.pkg2.mod4\n\n'
+        expected = ('"""Docstring followed by blank lines."""\n\n'
+                    'import pkg.pkg2.mod4\n\n'
                     'from x import y\n'
                     'from y import z\n'
                     'from a import b\n'
