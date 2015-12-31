@@ -8,6 +8,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import evaluate, utils, arguments
+from rope.base.oi.docstrings import _handle_nonfirst_parameters
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -39,6 +40,7 @@ def infer_parameter_objects(pyfunction):
     if result is None:
         result = _parameter_objects(pyfunction)
     _handle_first_parameter(pyfunction, result)
+    _handle_nonfirst_parameters(pyfunction, result)
     return result
 
 
