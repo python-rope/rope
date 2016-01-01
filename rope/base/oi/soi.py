@@ -33,7 +33,7 @@ def infer_returned_object(pyfunction, args):
     if result is not None:
         return result
     type_ = hint_return(pyfunction)
-    if type_:
+    if type_ is not None:
         return rope.base.pyobjects.PyObject(type_)
 
 
