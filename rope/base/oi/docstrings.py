@@ -60,17 +60,17 @@ def _handle_nonfirst_parameters(pyfunc, parameters):
             continue
         if not val or not isinstance(val.get_type(), PyObject):
             continue
-        type_ = hint_param(name, pyfunc)
+        type_ = hint_param(pyfunc, name)
         if type_ is not None:
             val.type = type_
 
 
-def hint_param(name, pyfunc):
+def hint_param(pyfunc, param_name):
     type_strs = None
     func = pyfunc
     while not type_strs and func:
         if func.get_doc():
-            type_strs = _search_param_in_docstr(func.get_doc(), name)
+            type_strs = _search_param_in_docstr(func.get_doc(), param_name)
         func = _get_superfunc(func)
 
     if type_strs:
@@ -99,17 +99,17 @@ def _get_mro(pyclass):
     return l
 
 
-def _resolve_type(type_name, pyfunc):
+def _resolve_type(type_name, pyobj):
     type_ = None
     if '.' not in type_name:
         try:
-            type_ = pyfunc.get_module().get_scope().get_name(type_name).get_object()
+            type_ = pyobj.get_module().get_scope().get_name(type_name).get_object()
         except Exception:
             pass
     else:
         mod_name, attr_name = type_name.rsplit('.', 1)
         try:
-            mod_finder = ScopeNameFinder(pyfunc.get_module())
+            mod_finder = ScopeNameFinder(pyobj.get_module())
             mod = mod_finder._find_module(mod_name).get_object()
             type_ = mod.get_attribute(attr_name).get_object()
         except Exception:
@@ -184,3 +184,14 @@ def _search_return_in_docstr(code):
         match = p.search(code)
         if match:
             return _strip_rst_role(match.group(1))
+
+
+def hint_attr(pyclass, attr_name):
+    type_strs = None
+    for cls in _get_mro(pyclass):
+        if cls.get_doc():
+            type_strs = _search_param_in_docstr(cls.get_doc(), attr_name)
+            if type_strs:
+                break
+    if type_strs:
+        return _resolve_type(type_strs[0], pyclass)
