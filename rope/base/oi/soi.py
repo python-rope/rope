@@ -8,7 +8,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import evaluate, utils, arguments
-from rope.base.oi.docstrings import _handle_nonfirst_parameters
+from rope.base.oi.docstrings import _handle_nonfirst_parameters, hint_return
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -29,7 +29,10 @@ def infer_returned_object(pyfunction, args):
                 pyfunction.get_param_names(special_args=False))
             object_info.function_called(pyfunction, params, result)
         return result
-    return object_info.get_returned(pyfunction, args)
+    result = object_info.get_returned(pyfunction, args)
+    if result is not None:
+        return result
+    return hint_return(pyfunction)
 
 
 @_ignore_inferred

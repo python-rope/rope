@@ -54,35 +54,37 @@ else:
         return []
 
 
-def _handle_nonfirst_parameters(pyobject, parameters):
-
-    for i, (name, val) in enumerate(zip(pyobject.get_param_names(), parameters)):
+def _handle_nonfirst_parameters(pyfunc, parameters):
+    for i, (name, val) in enumerate(zip(pyfunc.get_param_names(), parameters)):
         if i == 0:
             continue
         if not val or not isinstance(val.get_type(), PyObject):
             continue
-
-        type_strs = None
-        func = pyobject
-        while not type_strs and func:
-            if func.get_doc():
-                type_strs = _search_param_in_docstr(func.get_doc(), name)
-            func = _get_superfunc(func)
-
-        if type_strs:
-            type_ = _resolve_type(type_strs[0], pyobject)
-            if type_ is not None:
-                val.type = type_
+        type_ = hint_param(name, pyfunc)
+        if type_ is not None:
+            val.type = type_
 
 
-def _get_superfunc(pyobject):
+def hint_param(name, pyfunc):
+    type_strs = None
+    func = pyfunc
+    while not type_strs and func:
+        if func.get_doc():
+            type_strs = _search_param_in_docstr(func.get_doc(), name)
+        func = _get_superfunc(func)
 
-    if not isinstance(pyobject.parent, PyClass):
+    if type_strs:
+        return _resolve_type(type_strs[0], pyfunc)
+
+
+def _get_superfunc(pyfunc):
+
+    if not isinstance(pyfunc.parent, PyClass):
         return
 
-    for cls in _get_mro(pyobject.parent)[1:]:
+    for cls in _get_mro(pyfunc.parent)[1:]:
         try:
-            return cls.get_attribute(pyobject.get_name()).get_object()
+            return cls.get_attribute(pyfunc.get_name()).get_object()
         except AttributeNotFoundError:
             pass
 
@@ -97,17 +99,17 @@ def _get_mro(pyclass):
     return l
 
 
-def _resolve_type(type_name, pyobject):
+def _resolve_type(type_name, pyfunc):
     type_ = None
     if '.' not in type_name:
         try:
-            type_ = pyobject.get_module().get_scope().get_name(type_name).get_object()
+            type_ = pyfunc.get_module().get_scope().get_name(type_name).get_object()
         except Exception:
             pass
     else:
         mod_name, attr_name = type_name.rsplit('.', 1)
         try:
-            mod_finder = ScopeNameFinder(pyobject.get_module())
+            mod_finder = ScopeNameFinder(pyfunc.get_module())
             mod = mod_finder._find_module(mod_name).get_object()
             type_ = mod.get_attribute(attr_name).get_object()
         except Exception:
@@ -164,6 +166,17 @@ def _strip_rst_role(type_str):
         return match.group(1)
     else:
         return type_str
+
+
+def hint_return(pyfunc):
+    type_str = None
+    func = pyfunc
+    while not type_str and func:
+        if func.get_doc():
+            type_str = _search_return_in_docstr(func.get_doc())
+        func = _get_superfunc(func)
+    if type_str:
+        return _resolve_type(type_str, pyfunc)
 
 
 def _search_return_in_docstr(code):
