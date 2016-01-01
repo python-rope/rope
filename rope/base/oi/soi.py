@@ -8,7 +8,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import evaluate, utils, arguments
-from rope.base.oi.docstrings import _handle_nonfirst_parameters, hint_return
+from rope.base.oi.docstrings import hint_return, hint_param
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -32,7 +32,9 @@ def infer_returned_object(pyfunction, args):
     result = object_info.get_returned(pyfunction, args)
     if result is not None:
         return result
-    return hint_return(pyfunction)
+    type_ = hint_return(pyfunction)
+    if type_:
+        return rope.base.pyobjects.PyObject(type_)
 
 
 @_ignore_inferred
@@ -43,7 +45,6 @@ def infer_parameter_objects(pyfunction):
     if result is None:
         result = _parameter_objects(pyfunction)
     _handle_first_parameter(pyfunction, result)
-    _handle_nonfirst_parameters(pyfunction, result)
     return result
 
 
@@ -111,8 +112,15 @@ def _infer_returned(pyobject, args):
 
 
 def _parameter_objects(pyobject):
+    result = []
     params = pyobject.get_param_names(special_args=False)
-    return [rope.base.pyobjects.get_unknown()] * len(params)
+    for name in params:
+        type_ = hint_param(pyobject, name)
+        if type_ is not None:
+            result.append(rope.base.pyobjects.PyObject(type_))
+        else:
+            result.append(rope.base.pyobjects.get_unknown())
+    return result
 
 # handling `rope.base.pynames.AssignmentValue`
 

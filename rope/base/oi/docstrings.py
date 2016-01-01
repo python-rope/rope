@@ -55,6 +55,7 @@ else:
 
 
 def _handle_nonfirst_parameters(pyfunc, parameters):
+    # TODO: Kill me in favor of _parameter_objects()
     for i, (name, val) in enumerate(zip(pyfunc.get_param_names(), parameters)):
         if i == 0:
             continue
@@ -62,7 +63,7 @@ def _handle_nonfirst_parameters(pyfunc, parameters):
             continue
         type_ = hint_param(pyfunc, name)
         if type_ is not None:
-            val.type = type_
+            parameters[i] = PyObject(type_)
 
 
 def hint_param(pyfunc, param_name):
