@@ -15,7 +15,7 @@ from ast import literal_eval
 
 from rope.base.exceptions import AttributeNotFoundError
 from rope.base.evaluate import ScopeNameFinder
-from rope.base.pyobjects import PyObject, PyClass
+from rope.base.pyobjects import PyClass
 
 DOCSTRING_PARAM_PATTERNS = [
     r'\s*:type\s+%s:\s*([^\n, ]+)',  # Sphinx
@@ -52,18 +52,6 @@ else:
                 else:
                     return [p_type]
         return []
-
-
-def _handle_nonfirst_parameters(pyfunc, parameters):
-    # TODO: Kill me in favor of _parameter_objects()
-    for i, (name, val) in enumerate(zip(pyfunc.get_param_names(), parameters)):
-        if i == 0:
-            continue
-        if not val or not isinstance(val.get_type(), PyObject):
-            continue
-        type_ = hint_param(pyfunc, name)
-        if type_ is not None:
-            parameters[i] = PyObject(type_)
 
 
 def hint_param(pyfunc, param_name):
