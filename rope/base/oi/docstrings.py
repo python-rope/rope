@@ -13,17 +13,19 @@ Thanks to @davidhalter for MIT License.
 import re
 from ast import literal_eval
 
+from rope.base.exceptions import AttributeNotFoundError
 from rope.base.evaluate import ScopeNameFinder
+from rope.base.pyobjects import PyObject, PyClass
 
 DOCSTRING_PARAM_PATTERNS = [
-    r'\s*:type\s+%s:\s*([^\n]+)',  # Sphinx
-    r'\s*:param\s+(\w+)\s+%s:[^\n]+',  # Sphinx param with type
-    r'\s*@type\s+%s:\s*([^\n]+)',  # Epydoc
+    r'\s*:type\s+%s:\s*([^\n, ]+)',  # Sphinx
+    r'\s*:param\s+(\w+)\s+%s:[^\n, ]+',  # Sphinx param with type
+    r'\s*@type\s+%s:\s*([^\n, ]+)',  # Epydoc
 ]
 
 DOCSTRING_RETURN_PATTERNS = [
-    re.compile(r'\s*:rtype:\s*([^\n]+)', re.M),  # Sphinx
-    re.compile(r'\s*@rtype:\s*([^\n]+)', re.M),  # Epydoc
+    re.compile(r'\s*:rtype:\s*([^\n, ]+)', re.M),  # Sphinx
+    re.compile(r'\s*@rtype:\s*([^\n, ]+)', re.M),  # Epydoc
 ]
 
 REST_ROLE_PATTERN = re.compile(r':[^`]+:`([^`]+)`')
@@ -53,19 +55,46 @@ else:
 
 
 def _handle_nonfirst_parameters(pyobject, parameters):
-    doc_str = pyobject.get_doc()
-    if not doc_str:
-        return
 
     for i, (name, val) in enumerate(zip(pyobject.get_param_names(), parameters)):
         if i == 0:
             continue
+        if not val or not isinstance(val.get_type(), PyObject):
+            continue
 
-        type_strs = _search_param_in_docstr(doc_str, name)
+        type_strs = None
+        func = pyobject
+        while not type_strs and func:
+            if func.get_doc():
+                type_strs = _search_param_in_docstr(func.get_doc(), name)
+            func = _get_superfunc(func)
+
         if type_strs:
             type_ = _resolve_type(type_strs[0], pyobject)
             if type_ is not None:
                 val.type = type_
+
+
+def _get_superfunc(pyobject):
+
+    if not isinstance(pyobject.parent, PyClass):
+        return
+
+    for cls in _get_mro(pyobject.parent)[1:]:
+        try:
+            return cls.get_attribute(pyobject.get_name()).get_object()
+        except AttributeNotFoundError:
+            pass
+
+
+def _get_mro(pyclass):
+    # FIXME: to use real mro() result
+    l = [pyclass]
+    for cls in l:
+        for super_cls in cls.get_superclasses():
+            if super_cls not in l:
+                l.append(super_cls)
+    return l
 
 
 def _resolve_type(type_name, pyobject):
