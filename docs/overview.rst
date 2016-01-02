@@ -1282,7 +1282,7 @@ Currently supported type hinting for:
 
 - function parameter type, using function doctring (:type or @type)
 - function return type, using function doctring (:rtype or @rtype)
-- class attribute type, using class docstring (:type or @type)
+- class attribute type, using class docstring (:type or @type). Attribute should by set to None or NotImplemented in class or constructor of class.
 
 Custom Source Folders
 =====================

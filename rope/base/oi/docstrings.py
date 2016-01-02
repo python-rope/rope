@@ -2,13 +2,13 @@
 Hinting the type using docstring of class/function like here
 https://www.jetbrains.com/pycharm/help/type-hinting-in-pycharm.html#d290117e333
 
-It's a necessary thing if you are using Dependency Injection
-(three ways - Constructor Injection, Setter Injection, and Interface Injection):
+It's an irreplaceable thing if you are using Dependency Injection with passive class
+(when Assembler sets dependency to public attribute of instance):
 http://www.martinfowler.com/articles/injection.html
 
 Some code extracted (or based on code) from:
 https://github.com/davidhalter/jedi/blob/b489019f5bd5750051122b94cc767df47751ecb7/jedi/evaluate/docstrings.py
-Thanks to @davidhalter for MIT License.
+Thanks to @davidhalter for this utils under MIT License.
 """
 import re
 from ast import literal_eval
