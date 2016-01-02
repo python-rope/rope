@@ -1,6 +1,6 @@
 """
 Hinting the type using docstring of class/function like here
-https://www.jetbrains.com/pycharm/help/type-hinting-in-pycharm.html#d290117e333
+https://www.jetbrains.com/pycharm/help/type-hinting-in-pycharm.html
 
 It's an irreplaceable thing if you are using Dependency Injection with passive class
 (when Assembler sets dependency to public attribute of instance):
