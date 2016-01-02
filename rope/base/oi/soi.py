@@ -80,12 +80,19 @@ def _infer_assigned_object_by_hint(pyname):
     holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
     pyobject = holding_scope.pyobject
     if isinstance(pyobject, rope.base.pyobjects.PyClass):
-        for name, attr in pyobject.get_attributes().items():
-            if attr is pyname:
-                type_ = hint_attr(pyobject, name)
-                if type_ is not None:
-                    return rope.base.pyobjects.PyObject(type_)
-                break
+        pyclass = pyobject
+    elif (isinstance(pyobject, rope.base.pyobjectsdef.PyFunction) and
+          pyobject.get_name() == '__init__' and
+          isinstance(pyobject.parent, rope.base.pyobjects.PyClass)):
+        pyclass = pyobject.parent
+    else:
+        return
+    for name, attr in pyclass.get_attributes().items():
+        if attr is pyname:
+            type_ = hint_attr(pyclass, name)
+            if type_ is not None:
+                return rope.base.pyobjects.PyObject(type_)
+            break
 
 
 def get_passed_objects(pyfunction, parameter_index):

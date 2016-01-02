@@ -78,7 +78,7 @@ class HintingTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('isAlive', 'attribute', result)
 
-    def test_hint_attr_by_notimplemented(self):
+    def test_hint_attr_defined_by_notimplemented(self):
         code = 'class Sample(object):\n' \
                '    """:type a_attr: threading.Thread"""\n' \
                '    a_attr = NotImplemented\n'\
@@ -87,12 +87,56 @@ class HintingTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('isAlive', 'attribute', result)
 
-    def test_hierarchical_hint_attr_by_notimplemented(self):
+    def test_hierarchical_hint_attr_defined_by_notimplemented(self):
         code = 'class ISample(object):\n' \
                '    """:type a_attr: threading.Thread"""\n' \
                '\n\n' \
                'class Sample(ISample):\n' \
                '    a_attr = NotImplemented\n'\
+               '    def a_method(self):\n' \
+               '        self.a_attr.isA'
+        result = self._assist(code)
+        self.assert_completion_in_result('isAlive', 'attribute', result)
+
+    def test_hint_attr_defined_by_constructor(self):
+        code = 'class Sample(object):\n' \
+               '    """:type a_attr: threading.Thread"""\n' \
+               '    def __init__(self):\n' \
+               '        self.a_attr = None\n' \
+               '    def a_method(self):\n' \
+               '        self.a_attr.isA'
+        result = self._assist(code)
+        self.assert_completion_in_result('isAlive', 'attribute', result)
+
+    def test_hierarchical_hint_attr_by_constructor(self):
+        code = 'class ISample(object):\n' \
+               '    """:type a_attr: threading.Thread"""\n' \
+               '\n\n' \
+               'class Sample(ISample):\n' \
+               '    def __init__(self):\n' \
+               '        self.a_attr = None\n' \
+               '    def a_method(self):\n' \
+               '        self.a_attr.isA'
+        result = self._assist(code)
+        self.assert_completion_in_result('isAlive', 'attribute', result)
+
+    def test_hint_attr_defined_by_notimplemented_in_constructor(self):
+        code = 'class Sample(object):\n' \
+               '    """:type a_attr: threading.Thread"""\n' \
+               '    def __init__(self):\n' \
+               '        self.a_attr = NotImplemented\n' \
+               '    def a_method(self):\n' \
+               '        self.a_attr.isA'
+        result = self._assist(code)
+        self.assert_completion_in_result('isAlive', 'attribute', result)
+
+    def test_hierarchical_hint_attr_by_notimplemented_in_constructor(self):
+        code = 'class ISample(object):\n' \
+               '    """:type a_attr: threading.Thread"""\n' \
+               '\n\n' \
+               'class Sample(ISample):\n' \
+               '    def __init__(self):\n' \
+               '        self.a_attr = NotImplemented\n' \
                '    def a_method(self):\n' \
                '        self.a_attr.isA'
         result = self._assist(code)
