@@ -70,9 +70,29 @@ class HintingTest(unittest.TestCase):
     def test_hierarchical_hint_attr(self):
         code = 'class ISample(object):\n' \
                '    """:type a_attr: threading.Thread"""\n' \
-               '    a_attr = None\n'\
                '\n\n' \
                'class Sample(ISample):\n' \
+               '    a_attr = None\n'\
+               '    def a_method(self):\n' \
+               '        self.a_attr.isA'
+        result = self._assist(code)
+        self.assert_completion_in_result('isAlive', 'attribute', result)
+
+    def test_hint_attr_by_notimplemented(self):
+        code = 'class Sample(object):\n' \
+               '    """:type a_attr: threading.Thread"""\n' \
+               '    a_attr = NotImplemented\n'\
+               '    def a_method(self):\n' \
+               '        self.a_attr.isA'
+        result = self._assist(code)
+        self.assert_completion_in_result('isAlive', 'attribute', result)
+
+    def test_hierarchical_hint_attr_by_notimplemented(self):
+        code = 'class ISample(object):\n' \
+               '    """:type a_attr: threading.Thread"""\n' \
+               '\n\n' \
+               'class Sample(ISample):\n' \
+               '    a_attr = NotImplemented\n'\
                '    def a_method(self):\n' \
                '        self.a_attr.isA'
         result = self._assist(code)

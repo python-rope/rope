@@ -68,7 +68,9 @@ def infer_assigned_object(pyname):
         return
     for assignment in reversed(pyname.assignments):
         result = _infer_assignment(assignment, pyname.module)
-        if result is not None:
+        if isinstance(result, rope.base.builtins.BuiltinUnknown) and result.get_name() == 'NotImplementedType':
+            break
+        elif result is not None:
             return result
     return _infer_assigned_object_by_hint(pyname)
 
