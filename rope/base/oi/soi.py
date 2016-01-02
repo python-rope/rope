@@ -8,7 +8,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import evaluate, utils, arguments
-from rope.base.oi.docstrings import hint_return, hint_param
+from rope.base.oi.docstrings import hint_return, hint_param, hint_attr
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -70,6 +70,20 @@ def infer_assigned_object(pyname):
         result = _infer_assignment(assignment, pyname.module)
         if result is not None:
             return result
+    return _infer_assigned_object_by_hint(pyname)
+
+
+def _infer_assigned_object_by_hint(pyname):
+    lineno = _get_lineno_for_node(pyname.assignments[0].ast_node)
+    holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
+    pyobject = holding_scope.pyobject
+    if isinstance(pyobject, rope.base.pyobjects.PyClass):
+        for name, attr in pyobject.get_attributes().items():
+            if attr is pyname:
+                type_ = hint_attr(pyobject, name)
+                if type_ is not None:
+                    return rope.base.pyobjects.PyObject(type_)
+                break
 
 
 def get_passed_objects(pyfunction, parameter_index):
