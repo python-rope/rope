@@ -83,7 +83,7 @@ def _get_mro(pyclass):
     l = [pyclass]
     for cls in l:
         for super_cls in cls.get_superclasses():
-            if super_cls not in l:
+            if isinstance(super_cls, PyClass) and super_cls not in l:
                 l.append(super_cls)
     return l
 
