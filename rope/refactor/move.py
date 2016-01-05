@@ -605,7 +605,8 @@ class _MoveTools(object):
 
     def _create_finder(self, imports):
         return occurrences.create_finder(self.project, self.old_name,
-                                         self.old_pyname, imports=imports)
+                                         self.old_pyname, imports=imports,
+                                         keywords=False)
 
     def new_pymodule(self, pymodule, source):
         if source is not None:

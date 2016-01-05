@@ -174,6 +174,15 @@ class MoveRefactoringTest(unittest.TestCase):
         expected = 'import pkg.mod5\nprint(pkg.mod5)\n'
         self.assertEquals(expected, moved.read())
 
+    def test_moving_module_kwarg_same_name_as_old(self):
+        self.mod1.write('def foo(mod1=0):\n    pass')
+        code = 'import mod1\nmod1.foo(mod1=1)'
+        self.mod2.write(code)
+        self._move(self.mod1, None, self.pkg)
+        moved = self.project.find_module('mod2')
+        expected = 'import pkg.mod1\npkg.mod1.foo(mod1=1)'
+        self.assertEquals(expected, moved.read())
+
     def test_moving_packages(self):
         pkg2 = testutils.create_package(self.project, 'pkg2')
         code = 'import pkg.mod4\nprint(pkg.mod4)'
