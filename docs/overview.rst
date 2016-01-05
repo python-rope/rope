@@ -1212,9 +1212,17 @@ Rope uses this feature by default but you can disable it by editing
 Type Hinting
 ------------
 
+Currently supported type hinting for:
+
+- function parameter type, using function doctring (:type or @type)
+- function return type, using function doctring (:rtype or @rtype)
+- class attribute type, using class docstring (:type or @type). Attribute should by set to None or NotImplemented in class or constructor of class.
+- any assignment, using type comments of PEP 0484.
+
 If rope cannot detect the type of a function argument correctly (due to the
 dynamic nature of Python), you can help it by hinting the type using
-one of the following docstring syntax styles:
+one of the following docstring syntax styles.
+
 
 **Sphinx style**
 
@@ -1231,6 +1239,7 @@ http://sphinx-doc.org/domains.html#info-field-lists
         """
         node.| # complete here
 
+
 **Epydoc**
 
 http://epydoc.sourceforge.net/manual-fields.html
@@ -1244,6 +1253,7 @@ http://epydoc.sourceforge.net/manual-fields.html
 
         """
         node.| # complete here
+
 
 **Numpydoc**
 
@@ -1278,11 +1288,18 @@ In order to support the numpydoc format, you need to install the `numpydoc
         """
         var2.| # complete here
 
-Currently supported type hinting for:
 
-- function parameter type, using function doctring (:type or @type)
-- function return type, using function doctring (:rtype or @rtype)
-- class attribute type, using class docstring (:type or @type). Attribute should by set to None or NotImplemented in class or constructor of class.
+**PEP 0484**
+
+https://www.python.org/dev/peps/pep-0484/#type-comments
+
+::
+
+   class Sample(object):
+       def __init__(self):
+           self.x = None  # type: random.Random
+           self.x.| # complete here
+
 
 Custom Source Folders
 =====================
