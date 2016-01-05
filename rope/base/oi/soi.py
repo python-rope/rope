@@ -70,12 +70,20 @@ def infer_assigned_object(pyname):
         result = _infer_assignment(assignment, pyname.module)
         if isinstance(result, rope.base.builtins.BuiltinUnknown) and result.get_name() == 'NotImplementedType':
             break
+        elif result == rope.base.pyobjects.get_unknown():
+            break
         elif result is not None:
             return result
-    result = hint_pep0484(pyname)
-    if result is not None:
-        return result
-    return _infer_assigned_object_by_hint(pyname)
+
+    hinting_result = hint_pep0484(pyname)
+    if hinting_result is not None:
+        return hinting_result
+
+    hinting_result = _infer_assigned_object_by_hint(pyname)
+    if hinting_result is not None:
+        return hinting_result
+
+    return result
 
 
 def _infer_assigned_object_by_hint(pyname):
