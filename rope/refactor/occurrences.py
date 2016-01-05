@@ -30,6 +30,9 @@ calling the `create_finder()` function.
 
   * `instance`: Used only when you want implicit interfaces to be
     considered.
+
+  * `keywords`: If False, don't return instances that are the names of keyword
+    arguments
 """
 
 import re
@@ -81,7 +84,8 @@ class Finder(object):
 
 
 def create_finder(project, name, pyname, only_calls=False, imports=True,
-                  unsure=None, docs=False, instance=None, in_hierarchy=False):
+                  unsure=None, docs=False, instance=None, in_hierarchy=False,
+                  keywords=True):
     """A factory for `Finder`
 
     Based on the arguments it creates a list of filters.  `instance`
@@ -95,6 +99,8 @@ def create_finder(project, name, pyname, only_calls=False, imports=True,
         filters.append(CallsFilter())
     if not imports:
         filters.append(NoImportsFilter())
+    if not keywords:
+        filters.append(NoKeywordsFilter())
     if isinstance(instance, pynames.ParameterName):
         for pyobject in instance.get_objects():
             try:
@@ -162,6 +168,10 @@ class Occurrence(object):
 
     def is_unsure(self):
         return unsure_pyname(self.get_pyname())
+
+    def is_function_keyword_parameter(self):
+        return self.tools.word_finder.is_function_keyword_parameter(
+            self.offset)
 
     @property
     @utils.saveit
@@ -271,6 +281,14 @@ class CallsFilter(object):
 
     def __call__(self, occurrence):
         if not occurrence.is_called():
+            return False
+
+
+class NoKeywordsFilter(object):
+    """Filter out keyword parameters."""
+
+    def __call__(self, occurrence):
+        if occurrence.is_function_keyword_parameter():
             return False
 
 
