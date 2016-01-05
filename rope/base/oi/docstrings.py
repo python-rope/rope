@@ -17,6 +17,10 @@ from rope.base.exceptions import AttributeNotFoundError
 from rope.base.evaluate import ScopeNameFinder
 from rope.base.pyobjects import PyClass
 
+PEP0484_PATTERN = [
+    re.compile(r'type:\s*([^\n, ]+)'),
+]
+
 DOCSTRING_PARAM_PATTERNS = [
     r'\s*:type\s+%s:\s*([^\n, ]+)',  # Sphinx
     r'\s*:param\s+(\w+)\s+%s:[^\n]+',  # Sphinx param with type
@@ -29,7 +33,6 @@ DOCSTRING_RETURN_PATTERNS = [
 ]
 
 REST_ROLE_PATTERN = re.compile(r':[^`]+:`([^`]+)`')
-
 
 try:
     from numpydoc.docscrape import NumpyDocString
@@ -52,6 +55,30 @@ else:
                 else:
                     return [p_type]
         return []
+
+
+def hint_pep0484(pyname):
+    from rope.base.oi.soi import _get_lineno_for_node
+    lineno = _get_lineno_for_node(pyname.assignments[0].ast_node)
+    holding_scope = pyname.module.get_scope().get_inner_scope_for_line(lineno)
+    line = holding_scope._get_global_scope()._scope_finder.lines.get_line(lineno)
+    if '#' in line:
+        type_strs = _search_type_in_pep0484(line.split('#', 1)[1])
+        if type_strs:
+            return _resolve_type(type_strs[0], holding_scope.pyobject)
+
+
+def _search_type_in_pep0484(code):
+    """ For more info see:
+    https://www.python.org/dev/peps/pep-0484/#type-comments
+
+    >>> _search_type_in_pep0484('type: int')
+    ['int']
+    """
+    for p in PEP0484_PATTERN:
+        match = p.search(code)
+        if match:
+            return [match.group(1)]
 
 
 def hint_param(pyfunc, param_name):

@@ -8,7 +8,7 @@ import rope.base.builtins
 import rope.base.pynames
 import rope.base.pyobjects
 from rope.base import evaluate, utils, arguments
-from rope.base.oi.docstrings import hint_return, hint_param, hint_attr
+from rope.base.oi.docstrings import hint_return, hint_param, hint_attr, hint_pep0484
 
 
 _ignore_inferred = utils.ignore_exception(
@@ -72,6 +72,9 @@ def infer_assigned_object(pyname):
             break
         elif result is not None:
             return result
+    result = hint_pep0484(pyname)
+    if result is not None:
+        return result
     return _infer_assigned_object_by_hint(pyname)
 
 

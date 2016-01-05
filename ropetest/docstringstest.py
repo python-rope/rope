@@ -144,6 +144,14 @@ class HintingTest(unittest.TestCase):
         result = self._assist(code)
         self.assert_completion_in_result('isAlive', 'attribute', result)
 
+    def test_hint_pep0484_attr(self):
+        code = 'class Sample(object):\n' \
+               '    a_attr = None  # type: threading.Thread\n'\
+               '    def a_method(self):\n' \
+               '        self.a_attr.isA'
+        result = self._assist(code)
+        self.assert_completion_in_result('isAlive', 'attribute', result)
+
 
 def suite():
     result = unittest.TestSuite()
