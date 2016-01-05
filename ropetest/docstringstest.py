@@ -53,6 +53,8 @@ class HintingTest(unittest.TestCase):
                '        """:rtype: threading.Thread"""\n' \
                '\n\n' \
                'class Sample(ISample):\n' \
+               '    def b_method(self):\n' \
+               '        pass\n' \
                '    def a_method(self):\n' \
                '        self.b_method().isA'
         result = self._assist(code)
