@@ -17,7 +17,7 @@ from rope.base.exceptions import AttributeNotFoundError
 from rope.base.evaluate import ScopeNameFinder
 from rope.base.pyobjects import PyClass
 
-PEP0484_PATTERN = [
+PEP0484_PATTERNS = [
     re.compile(r'type:\s*([^\n, ]+)'),
 ]
 
@@ -75,7 +75,7 @@ def _search_type_in_pep0484(code):
     >>> _search_type_in_pep0484('type: int')
     ['int']
     """
-    for p in PEP0484_PATTERN:
+    for p in PEP0484_PATTERNS:
         match = p.search(code)
         if match:
             return [match.group(1)]
