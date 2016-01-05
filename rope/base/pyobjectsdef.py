@@ -76,8 +76,12 @@ class PyFunction(pyobjects.PyFunction):
 
     def get_param_names(self, special_args=True):
         # TODO: handle tuple parameters
-        result = [node.id for node in self.arguments.args
-                  if isinstance(node, ast.Name)]
+        if hasattr(ast, 'arg'):  # Py3
+            result = [node.arg for node in self.arguments.args
+                      if isinstance(node, ast.arg)]
+        else:  # Py2
+            result = [node.id for node in self.arguments.args
+                      if isinstance(node, ast.Name)]
         if special_args:
             if self.arguments.vararg:
                 result.append(self.arguments.vararg)
