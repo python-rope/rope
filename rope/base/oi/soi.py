@@ -93,7 +93,6 @@ def _infer_assigned_object_by_hint(pyname):
     if isinstance(pyobject, rope.base.pyobjects.PyClass):
         pyclass = pyobject
     elif (isinstance(pyobject, rope.base.pyobjectsdef.PyFunction) and
-          pyobject.get_name() == '__init__' and
           isinstance(pyobject.parent, rope.base.pyobjects.PyClass)):
         pyclass = pyobject.parent
     else:
