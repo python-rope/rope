@@ -4,6 +4,7 @@ except ImportError:
     import unittest
 
 import rope.base.evaluate
+import rope.comp as comp
 from rope.base import libutils
 from rope.base import exceptions, worder, codeanalyze
 from rope.base.codeanalyze import (SourceLinesAdapter,
@@ -85,24 +86,36 @@ class WordRangeFinderTest(unittest.TestCase):
         self.assertEquals('a_var.an_attr', self._find_primary(code, 10))
 
     def test_word_finder_on_word_beginning(self):
-        code = 'print a_var\n'
+        if comp.PY3:
+            code = 'print(a_var)\n'
+        else:
+            code = 'print a_var\n'
         word_finder = worder.Worder(code)
         result = word_finder.get_word_at(code.index('a_var'))
         self.assertEquals('a_var', result)
 
     def test_word_finder_on_primary_beginning(self):
-        code = 'print a_var\n'
+        if comp.PY3:
+            code = 'print(a_var)\n'
+        else:
+            code = 'print a_var\n'
         result = self._find_primary(code, code.index('a_var'))
         self.assertEquals('a_var', result)
 
     def test_word_finder_on_word_ending(self):
-        code = 'print a_var\n'
+        if comp.PY3:
+            code = 'print(a_var)\n'
+        else:
+            code = 'print a_var\n'
         word_finder = worder.Worder(code)
         result = word_finder.get_word_at(code.index('a_var') + 5)
         self.assertEquals('a_var', result)
 
     def test_word_finder_on_primary_ending(self):
-        code = 'print a_var\n'
+        if comp.PY3:
+            code = 'print(a_var)\n'
+        else:
+            code = 'print a_var\n'
         result = self._find_primary(code, code.index('a_var') + 5)
         self.assertEquals('a_var', result)
 
@@ -186,7 +199,10 @@ class WordRangeFinderTest(unittest.TestCase):
                           self._find_primary(code, 25))
 
     def test_dictionaries(self):
-        code = 'print {1: "one", 2: "two"}.keys()'
+        if comp.PY3:
+            code = 'print({1: "one", 2: "two"}.keys())'
+        else:
+            code = 'print {1: "one", 2: "two"}.keys()'
         self.assertEquals('{1: "one", 2: "two"}.keys',
                           self._find_primary(code, 29))
 
@@ -468,21 +484,30 @@ class ScopeNameFinderTest(unittest.TestCase):
             name_finder.get_pyname_at(code.index('pass'))
 
     def test_one_liners(self):
-        code = 'var = 1\ndef f(): var = 2\nprint var\n'
+        if comp.PY3:
+            code = 'var = 1\ndef f(): var = 2\nprint(var)\n'
+        else:
+            code = 'var = 1\ndef f(): var = 2\nprint var\n'
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
         self.assertEquals(pymod['var'], pyname)
 
     def test_one_liners_with_line_breaks(self):
-        code = 'var = 1\ndef f(\n): var = 2\nprint var\n'
+        if comp.PY3:
+            code = 'var = 1\ndef f(\n): var = 2\nprint(var)\n'
+        else:
+            code = 'var = 1\ndef f(\n): var = 2\nprint var\n'
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
         self.assertEquals(pymod['var'], pyname)
 
     def test_one_liners_with_line_breaks2(self):
-        code = 'var = 1\ndef f(\np): var = 2\nprint var\n'
+        if comp.PY3:
+            code = 'var = 1\ndef f(\np): var = 2\nprint(var)\n'
+        else:
+            code = 'var = 1\ndef f(\np): var = 2\nprint var\n'
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
@@ -517,7 +542,10 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEquals((1, 3), line_finder.logical_line_in(2))
 
     def test_explicit_continuation(self):
-        code = 'print 2\na_var = (3 + \n    4, \n    5)\n'
+        if comp.PY3:
+            code = 'print(2)\na_var = (3 + \n    4, \n    5)\n'
+        else:
+            code = 'print 2\na_var = (3 + \n    4, \n    5)\n'
         line_finder = self._logical_finder(code)
         self.assertEquals((2, 4), line_finder.logical_line_in(2))
 
@@ -543,7 +571,10 @@ class LogicalLineFinderTest(unittest.TestCase):
         self.assertEquals((1, 2), line_finder.logical_line_in(2))
 
     def test_fors_and_block_start(self):
-        code = 'l = range(10)\nfor i in l:\n    print i\n'
+        if comp.PY3:
+            code = 'l = range(10)\nfor i in l:\n    print(i)\n'
+        else:
+            code = 'l = range(10)\nfor i in l:\n    print i\n'
         self.assertEquals(2, get_block_start(SourceLinesAdapter(code), 2))
 
     def test_problems_with_inner_indentations(self):

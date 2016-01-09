@@ -106,7 +106,7 @@ def get_unknown():
     write::
 
       if pyname.get_object() == get_unknown():
-          print 'cannot determine what this pyname holds'
+          print('cannot determine what this pyname holds')
 
     Rope could have used `None` for indicating unknown objects but
     we had to check that in many places.  So actually this method
