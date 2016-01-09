@@ -6,6 +6,7 @@ except NameError:
     raw_input = input
 
 import rope.base.evaluate
+from rope import comp
 from rope.base import pynames, pyobjects, arguments, utils, ast
 
 
@@ -801,4 +802,4 @@ _initial_builtins = {
                              builtin=raw_input)),
 }
 
-builtins = BuiltinModule('__builtin__', initial=_initial_builtins)
+builtins = BuiltinModule(comp.builtins.__name__, initial=_initial_builtins)
