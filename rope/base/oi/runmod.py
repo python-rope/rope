@@ -1,10 +1,3 @@
-try:
-    execfile
-except NameError:
-    def execfile(fn, global_vars, local_vars):
-        with open(fn) as f:
-            code = compile(f.read(), fn, 'exec')
-            exec(code, global_vars, local_vars)
 
 
 def __rope_start_everything():
@@ -19,6 +12,7 @@ def __rope_start_everything():
     import inspect
     import types
     import threading
+    import rope.comp as comp
 
     class _MessageSender(object):
 
@@ -30,7 +24,7 @@ def __rope_start_everything():
         def __init__(self, port):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect(('127.0.0.1', port))
-            self.my_file = s.makefile('w')
+            self.my_file = s.makefile('wb')
 
         def send_data(self, data):
             if not self.my_file.closed:
@@ -136,7 +130,7 @@ def __rope_start_everything():
                 return ('unknown',)
 
         def _get_persisted_builtin(self, object_):
-            if isinstance(object_, (str, unicode)):
+            if isinstance(object_, comp.string_types):
                 return ('builtin', 'str')
             if isinstance(object_, list):
                 holding = None
@@ -182,7 +176,7 @@ def __rope_start_everything():
                 return self._get_persisted_code(object_.__func__.__code__)
             if isinstance(object_, types.ModuleType):
                 return self._get_persisted_module(object_)
-            if isinstance(object_, (str, unicode, list, dict, tuple, set)):
+            if isinstance(object_, comp.string_types + (list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
             if isinstance(object_, type):
                 return self._get_persisted_class(object_)
@@ -218,7 +212,7 @@ def __rope_start_everything():
     if send_info != '-':
         data_sender = _FunctionCallDataSender(send_info, project_root)
     del sys.argv[1:4]
-    execfile(file_to_run, run_globals)
+    comp.execfile(file_to_run, run_globals)
     if send_info != '-':
         data_sender.close()
 
