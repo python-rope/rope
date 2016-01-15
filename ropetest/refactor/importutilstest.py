@@ -865,6 +865,17 @@ class ImportUtilsTest(unittest.TestCase):
             'import mod\n\n\ndef f():\n    print(mod)\n',
             self.import_tools.sort_imports(pymod))
 
+    def test_get_changed_source_preserves_blank_lines(self):
+        self.mod.write(
+            '__author__ = "author"\n\nimport aaa\n\nimport bbb\n\n'
+            'def f():\n    print(mod)\n')
+        pymod = self.project.get_module('mod')
+        module_with_imports = self.import_tools.module_imports(pymod)
+        self.assertEquals(
+            'import aaa\n\nimport bbb\n\n__author__ = "author"\n\n'
+            'def f():\n    print(mod)\n',
+            module_with_imports.get_changed_source())
+
     def test_sorting_future_imports(self):
         self.mod.write('import os\nfrom __future__ import devision\n')
         pymod = self.project.get_module('mod')
