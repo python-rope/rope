@@ -97,13 +97,19 @@ class ModuleImports(object):
     def _remove_imports(self, imports):
         lines = self.pymodule.source_code.splitlines(True)
         after_removing = []
+        first_import_line = self._first_import_line()
         last_index = 0
         for stmt in imports:
             start, end = stmt.get_old_location()
-            after_removing.extend(lines[last_index:start - 1])
+            blank_lines = 0
+            if start != first_import_line:
+              for lineno in range(start - 2, last_index - 1, -1):
+                  if lines[lineno].strip() == '':
+                      blank_lines += 1
+                  else:
+                      break
+            after_removing.extend(lines[last_index:start - 1 - blank_lines])
             last_index = end - 1
-            for i in range(start, end):
-                after_removing.append('')
         after_removing.extend(lines[last_index:])
         return after_removing
 
