@@ -8,6 +8,7 @@ try:
     str = unicode
 except NameError:  # PY3
 
+    str = str
     string_types = (str,)
     integer_types = (int,)
     import builtins
