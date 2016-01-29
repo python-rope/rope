@@ -4,7 +4,6 @@ except ImportError:
     import unittest
 
 import rope.base.evaluate
-import rope.comp as comp
 from rope.base import libutils
 from rope.base import exceptions, worder, codeanalyze
 from rope.base.codeanalyze import (SourceLinesAdapter,

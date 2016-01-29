@@ -6,7 +6,6 @@ try:
 except ImportError:
     import unittest
 
-import rope.comp as comp
 from rope.base import exceptions
 from rope.contrib.codeassist import (get_definition_location, get_doc,
                                      starting_expression, code_assist,
@@ -18,6 +17,7 @@ try:
     unicode
 except NameError:
     unicode = str
+
 
 class CodeAssistTest(unittest.TestCase):
 
@@ -401,7 +401,7 @@ class CodeAssistTest(unittest.TestCase):
     def test_if_scopes_in_other_scopes_for_get_definition_location(self):
         code = 'def f(a_var):\n    pass\na_var = 10\n' + \
                'if True:\n' + \
-               ('    print(a_var)\n' if comp.PY3 else '    print a_var\n')
+               '    print(a_var)\n'
         result = get_definition_location(self.project, code, len(code) - 3)
         self.assertEquals((None, 3), result)
 
