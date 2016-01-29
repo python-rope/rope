@@ -25,6 +25,17 @@ class ModuleImports(object):
                     import_stmt.readonly = True
         return result
 
+    @property
+    @utils.saveit
+    def local_imports(self):
+        finder = _LocalImportFinder(self.pymodule)
+        result = finder.find_import_statements()
+        if self.filter is not None:
+            for import_stmt in result:
+                if not self.filter(import_stmt):
+                    import_stmt.readonly = True
+        return result
+
     def _get_unbound_names(self, defined_pyobject):
         visitor = _GlobalUnboundNameFinder(self.pymodule, defined_pyobject)
         ast.walk(self.pymodule.get_ast(), visitor)
@@ -417,7 +428,7 @@ class _LocalUnboundNameFinder(_UnboundNameFinder):
         self.parent.add_unbound(name)
 
 
-class _GlobalImportFinder(object):
+class _ImportFinder(object):
 
     def __init__(self, pymodule):
         self.current_folder = None
@@ -443,11 +454,6 @@ class _GlobalImportFinder(object):
         return _count_blank_lines(self.lines.get_line, lineno + 1,
                                   self.lines.length())
 
-    def get_separating_line_count(self):
-        if not self.imports:
-            return 0
-        return self._count_empty_lines_after(self.imports[-1].end_line - 1)
-
     def _get_text(self, start_line, end_line):
         result = []
         for index in range(start_line, end_line):
@@ -462,17 +468,25 @@ class _GlobalImportFinder(object):
             node.module or '',  # see comment at rope.base.ast.walk
             level, self._get_names(node.names))
         start_line = node.lineno
-        self.imports.append(importinfo.ImportStatement(
-                            import_info, node.lineno, end_line,
-                            self._get_text(start_line, end_line),
-                            blank_lines=
-                            self._count_empty_lines_before(start_line)))
+        import_stmt = importinfo.ImportStatement(
+                import_info, node.lineno, end_line,
+                self._get_text(start_line, end_line),
+                blank_lines=self._count_empty_lines_before(start_line))
+        self.imports.append(import_stmt)
 
     def _get_names(self, alias_names):
         result = []
         for alias in alias_names:
             result.append((alias.name, alias.asname))
         return result
+
+
+class _GlobalImportFinder(_ImportFinder):
+
+    def get_separating_line_count(self):
+        if not self.imports:
+            return 0
+        return self._count_empty_lines_after(self.imports[-1].end_line - 1)
 
     def find_import_statements(self):
         nodes = self.pymodule.get_ast().body
@@ -484,4 +498,29 @@ class _GlobalImportFinder(object):
                 self.visit_import(node, end_line)
             if isinstance(node, ast.ImportFrom):
                 self.visit_from(node, end_line)
+        return self.imports
+
+
+class _LocalImportFinder(_ImportFinder):
+
+    def __init__(self, pymodule):
+        super(_LocalImportFinder, self).__init__(pymodule)
+        self.global_body = self.pymodule.get_ast().body
+
+    def _Import(self, node):
+        if node in self.global_body:
+            return
+        lines = self.pymodule.logical_lines
+        end_line = lines.logical_line_in(node.lineno)[1] + 1
+        self.visit_import(node, end_line)
+
+    def _ImportFrom(self, node):
+        if node in self.global_body:
+            return
+        lines = self.pymodule.logical_lines
+        end_line = lines.logical_line_in(node.lineno)[1] + 1
+        self.visit_from(node, end_line)
+
+    def find_import_statements(self):
+        ast.walk(self.pymodule.get_ast(), self)
         return self.imports

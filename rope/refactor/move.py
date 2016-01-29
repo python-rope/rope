@@ -447,14 +447,8 @@ class MoveModule(object):
         module_imports = importutils.get_module_imports(self.project, pymodule)
         changed = False
 
-        source = None
-        if libutils.modname(dest):
-            changed = self._change_import_statements(dest, new_name,
-                                                     module_imports)
-            if changed:
-                source = module_imports.get_changed_source()
-                source = self.tools.new_source(pymodule, source)
-                pymodule = self.tools.new_pymodule(pymodule, source)
+        changed, pymodule = self._convert_from_import_statements(
+            pymodule, dest, new_name, module_imports)
 
         new_import = self._new_import(dest)
         source = self.tools.rename_in_module(
@@ -472,6 +466,40 @@ class MoveModule(object):
             return source
         return None
 
+    def _convert_from_import_statements(self, pymodule, dest, new_name,
+                                        module_imports):
+        if not libutils.modname(dest):
+          return False, pymodule
+
+        changed = self._change_import_statements(dest, new_name,
+                                                 module_imports)
+        if changed:
+            source = module_imports.get_changed_source()
+            source = self.tools.new_source(pymodule, source)
+            pymodule = self.tools.new_pymodule(pymodule, source)
+            module_imports = importutils.get_module_imports(self.project,
+                                                            pymodule)
+
+        if self._change_local_import_statements(dest, module_imports):
+            source = module_imports.get_changed_source()
+            source = self.tools.new_source(pymodule, source)
+            pymodule = self.tools.new_pymodule(pymodule, source)
+            changed = True
+
+        return changed, pymodule
+
+    def _name_occurs_in_import_statement(self, import_stmt):
+        if any(name_and_alias[0] == self.old_name
+               for name_and_alias in
+               import_stmt.import_info.names_and_aliases):
+            # The name occurs in a from-import statement.
+            return True
+        if any(name_and_alias[0] == libutils.modname(self.source)
+               for name_and_alias in
+               import_stmt.import_info.names_and_aliases):
+            # The name occurs in a normal import statement.
+            return True
+        return False
 
     def _change_import_statements(self, dest, new_name, module_imports):
         moving_module = self.source
@@ -479,12 +507,7 @@ class MoveModule(object):
 
         changed = False
         for import_stmt in module_imports.imports:
-            if not any(name_and_alias[0] == self.old_name
-                       for name_and_alias in
-                       import_stmt.import_info.names_and_aliases) and \
-               not any(name_and_alias[0] == libutils.modname(self.source)
-                       for name_and_alias in
-                       import_stmt.import_info.names_and_aliases):
+            if not self._name_occurs_in_import_statement(import_stmt):
                 continue
 
             # Case 1: Look for normal imports of the moving module.
@@ -505,6 +528,59 @@ class MoveModule(object):
                     import_stmt.import_info.names_and_aliases)
                 changed = True
 
+        return changed
+
+    def _change_local_import_statements(self, dest, module_imports):
+        lines = module_imports.pymodule.source_code.splitlines(True)
+        moving_module = self.source
+        parent_module = moving_module.parent
+        changed = False
+
+        for import_stmt in reversed(module_imports.local_imports):
+            if not self._name_occurs_in_import_statement(import_stmt):
+                continue
+
+            context = importutils.importinfo.ImportContext(self.project, None)
+            if not isinstance(import_stmt.import_info,
+                              importutils.FromImport) or \
+               import_stmt.import_info.get_imported_resource(context) != \
+                    parent_module:
+                continue
+
+            # Remove the old import statement from the source.
+            start, end = import_stmt.start_line - 1, import_stmt.end_line - 1
+
+            # Count the number of whitespaces at the beginning of the line so
+            # that we can retain them after replacing the import.
+            num_whitespace = len(lines[start]) - len(lines[start].lstrip())
+            del lines[start:end]
+
+            new_imports = []
+            old_imports = []
+            for name, alias in import_stmt.import_info.names_and_aliases:
+                if name == self.old_name:
+                    new_imports.append((name, alias))
+                else:
+                    old_imports.append((name, alias))
+
+            # Add the new import statement(s).
+            old_module_name = import_stmt.import_info.module_name
+            import_stmt.import_info = importutils.FromImport(
+                libutils.modname(dest), 0, new_imports)
+            # Retain the beginning whitespace.
+            lines.insert(start, ' ' * num_whitespace +
+                         import_stmt.get_import_statement() + '\n')
+            if old_imports:
+                # If there are any remaining imports that were in the
+                # import statement add them now.
+                import_stmt.import_info = importutils.FromImport(
+                    old_module_name, 0, old_imports)
+                lines.insert(start, ' ' * num_whitespace +
+                             import_stmt.get_import_statement() + '\n')
+            changed = True
+
+        module_imports.pymodule = self.tools.new_pymodule(
+            module_imports.pymodule, ''.join(lines))
         return changed
 
     def _handle_moving_in_from_import_stmt(self, dest, import_stmt,
