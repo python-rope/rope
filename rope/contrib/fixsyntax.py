@@ -76,7 +76,7 @@ class _Commenter(object):
         self.code = code
         self.lines = self.code.split('\n')
         self.lines.append('\n')
-        self.origs = range(len(self.lines) + 1)
+        self.origs = list(range(len(self.lines) + 1))
         self.diffs = [0] * (len(self.lines) + 1)
 
     def comment(self, lineno):

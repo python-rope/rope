@@ -44,6 +44,7 @@ Features implemented so far:
   * Static and dynamic object analysis
   * Handling built-in container types
   * Saving object information on disk and validating them
+  * Type hints using docstring or type comments PEP 0484
 
 For more information see `overview.rst`_.
 

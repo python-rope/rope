@@ -1,5 +1,6 @@
 import unittest
 
+from rope import comp
 from rope.base import ast
 from rope.refactor import patchedast
 from ropetest import testutils
@@ -668,7 +669,10 @@ class PatchedASTTest(unittest.TestCase):
                                          ',', ' ', 'Num', '', ','])
 
     def test_printnl_node(self):
-        source = 'print 1\n'
+        if comp.PY3:
+            source = 'print(1)\n'
+        else:
+            source = 'print 1\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Print', 0, len(source) - 1)

@@ -5,7 +5,7 @@ attribute accesses.  As an example::
 
   errors = find_errors(project, project.get_resource('mod.py'))
   for error in errors:
-      print '%s: %s' % (error.lineno, error.error)
+      print('%s: %s' % (error.lineno, error.error))
 
 prints possible errors for ``mod.py`` file.
 
