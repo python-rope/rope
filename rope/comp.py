@@ -14,11 +14,15 @@ except NameError:  # PY3
     string_types = (str,)
     integer_types = (int,)
     import builtins
+    ast_arg_type = _ast.arg
 
     def execfile(fn, global_vars=None, local_vars=None):
         with open(fn) as f:
             code = compile(f.read(), fn, 'exec')
-            exec(code, global_vars or {}, local_vars or {})
+            exec_args = []
+            if local_vars:
+                exec_args.append(local_vars)
+            exec(code, global_vars or {}, *exec_args)
 
 
 else:  # PY2
@@ -26,13 +30,15 @@ else:  # PY2
     string_types = (basestring,)
     integer_types = (int, long)
     builtins = __import__('__builtin__')
+    ast_arg_type = _ast.Name
     execfile = execfile
 
 
-def get_param_name(param):
-    if PY3 and isinstance(param, _ast.arg):
-        return param.arg
-    if isinstance(param, _ast.Name):
-        return param.id
-    return param
-
+def get_ast_arg_arg(arg):
+    if PY3 and isinstance(arg, _ast.arg):
+        return arg.arg
+    if isinstance(arg, _ast.Name):
+        return arg.id
+    if isinstance(arg, string_types):
+        return arg
+    raise ValueError('UnknownType Passed to get_ast_asg_arg')

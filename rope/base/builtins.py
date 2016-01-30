@@ -657,15 +657,12 @@ class Lambda(pyobjects.AbstractFunction):
         return 'lambda'
 
     def get_param_names(self, special_args=True):
-        ast_type = ast.Name
-        if comp.PY3:
-            ast_type = ast.arg
-        result = [comp.get_param_name(node) for node in self.arguments.args
-                  if isinstance(node, ast_type)]
+        result = [comp.get_ast_arg_arg(node) for node in self.arguments.args
+                  if isinstance(node, comp.ast_arg_type)]
         if self.arguments.vararg:
-            result.append('*' + comp.get_param_name(self.arguments.vararg))
+            result.append('*' + comp.get_ast_arg_arg(self.arguments.vararg))
         if self.arguments.kwarg:
-            result.append('**' + comp.get_param_name(self.arguments.kwarg))
+            result.append('**' + comp.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     @property

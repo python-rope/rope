@@ -87,9 +87,9 @@ class PyFunction(pyobjects.PyFunction):
                       if isinstance(node, ast.Name)]
         if special_args:
             if self.arguments.vararg:
-                result.append(comp.get_param_name(self.arguments.vararg))
+                result.append(comp.get_ast_arg_arg(self.arguments.vararg))
             if self.arguments.kwarg:
-                result.append(comp.get_param_name(self.arguments.kwarg))
+                result.append(comp.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     def get_kind(self):
