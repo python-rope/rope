@@ -602,10 +602,24 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _TryFinally(self, node):
+        is_there_except_handler = False
+        not_empty_body = True
+        if len(node.finalbody) == 1:
+            if comp.PY2:
+                is_there_except_handler = isinstance(node.body[0], ast.TryExcept)
+                not_empty_body = not bool(len(node.body))
+            elif comp.PY3:
+                try:
+                    is_there_except_handler = isinstance(node.handlers[0], ast.ExceptHandler)
+                    not_empty_body = True
+                except IndexError:
+                    pass
         children = []
-        if len(node.body) != 1 or not isinstance(node.body[0], ast.TryExcept):
+        if not_empty_body or not is_there_except_handler:
             children.extend(['try', ':'])
         children.extend(node.body)
+        if comp.PY3:
+            children.extend(node.handlers)
         children.extend(['finally', ':'])
         children.extend(node.finalbody)
         self._handle(node, children)

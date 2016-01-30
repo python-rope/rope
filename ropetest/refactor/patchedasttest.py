@@ -793,9 +793,14 @@ class PatchedASTTest(unittest.TestCase):
         source = 'try:\n    pass\nfinally:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
+        node_to_test = 'Try' if comp.PY3 else 'TryFinally'
+        if comp.PY3:
+            expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'finally',
+                                 '', ':', '\n    ', 'Pass']
+        else:
+            expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'finally', '', ':', '\n    ', 'Pass']
         checker.check_children(
-            'TryFinally', ['try', '', ':', '\n    ', 'Pass', '\n', 'finally',
-                           '', ':', '\n    ', 'Pass'])
+            node_to_test, expected_children)
 
     @testutils.only_for_versions_lower('3')
     def test_try_except_node(self):
@@ -829,9 +834,16 @@ class PatchedASTTest(unittest.TestCase):
         source = 'try:\n    pass\nexcept:\n    pass\nfinally:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
+        node_to_test = 'Try' if comp.PY3 else 'TryFinally'
+        if comp.PY3:
+            expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'ExceptHandler', '\n',
+                                 'finally', '', ':', '\n    ', 'Pass']
+        else:
+            expected_children = ['TryExcept', '\n', 'finally', '', ':', '\n    ', 'Pass']
         checker.check_children(
-            'TryFinally', ['TryExcept', '\n', 'finally',
-                           '', ':', '\n    ', 'Pass'])
+            node_to_test,
+            expected_children
+        )
 
     def test_ignoring_comments(self):
         source = '#1\n1\n'
