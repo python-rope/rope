@@ -7,11 +7,14 @@ import rope.base.libutils
 from rope.base import (pynamesdef as pynames, exceptions, ast,
                        astutils, pyobjects, fscommands, arguments, utils)
 
+from rope import comp
+
 
 try:
     unicode
 except NameError:
     unicode = str
+
 
 class PyFunction(pyobjects.PyFunction):
 
@@ -84,9 +87,9 @@ class PyFunction(pyobjects.PyFunction):
                       if isinstance(node, ast.Name)]
         if special_args:
             if self.arguments.vararg:
-                result.append(self.arguments.vararg)
+                result.append(comp.get_param_name(self.arguments.vararg))
             if self.arguments.kwarg:
-                result.append(self.arguments.kwarg)
+                result.append(comp.get_param_name(self.arguments.kwarg))
         return result
 
     def get_kind(self):

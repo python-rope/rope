@@ -1,4 +1,6 @@
 import sys
+import _ast
+# from rope.base import ast
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -25,3 +27,12 @@ else:  # PY2
     integer_types = (int, long)
     builtins = __import__('__builtin__')
     execfile = execfile
+
+
+def get_param_name(param):
+    if PY3 and isinstance(param, _ast.arg):
+        return param.arg
+    if isinstance(param, _ast.Name):
+        return param.id
+    raise ValueError('Unknown param type passed')
+
