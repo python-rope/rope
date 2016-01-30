@@ -797,8 +797,9 @@ class PatchedASTTest(unittest.TestCase):
             'TryFinally', ['try', '', ':', '\n    ', 'Pass', '\n', 'finally',
                            '', ':', '\n    ', 'Pass'])
 
+    @testutils.only_for_versions_lower('3')
     def test_try_except_node(self):
-        source = 'try:\n    pass\nexcept Exception as e:\n    pass\n'
+        source = 'try:\n    pass\nexcept Exception, e:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(
@@ -806,19 +807,21 @@ class PatchedASTTest(unittest.TestCase):
                           ('excepthandler', 'ExceptHandler')])
         checker.check_children(
             ('excepthandler', 'ExceptHandler'),
-            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
+            ['except', ' ', 'Name', '', ',', ' ', 'Name', '', ':',
              '\n    ', 'Pass'])
 
     def test_try_except_node__with_as_syntax(self):
         source = 'try:\n    pass\nexcept Exception as e:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
+        node_to_test = 'Try' if comp.PY3 else 'TryExcept'
+        is_catched_exception_ast_type = comp.PY2
         checker.check_children(
-            'TryExcept', ['try', '', ':', '\n    ', 'Pass', '\n',
-                          ('excepthandler', 'ExceptHandler')])
+            node_to_test, ['try', '', ':', '\n    ', 'Pass', '\n',
+                           ('excepthandler', 'ExceptHandler')])
         checker.check_children(
             ('excepthandler', 'ExceptHandler'),
-            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
+            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name' if is_catched_exception_ast_type else 'e', '', ':',
              '\n    ', 'Pass'])
 
     @testutils.only_for('2.5')
