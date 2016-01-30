@@ -12,11 +12,8 @@ def _stdlib_path():
         return sysconfig.get_python_lib(standard_lib=True,
                                         plat_specific=True)
     elif comp.PY3:
-        # @todo, it works with this stuff.. maybe it would work well
-        # on travis, not sure yet
-        # return '/home/sergeyg/.virtualenvs/rit/lib/python3.4'
         import sysconfig
-        return sysconfig.get_config_var('LIBDIR')
+        return sysconfig.get_config_var('LIBDIR') + os.sep + 'python' + '.'.join(map(str, sys.version_info[0:2]))
 
 
 @utils.cached(1)
