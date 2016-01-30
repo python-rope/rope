@@ -34,5 +34,5 @@ def get_param_name(param):
         return param.arg
     if isinstance(param, _ast.Name):
         return param.id
-    raise ValueError('Unknown param type passed')
+    return param
 
