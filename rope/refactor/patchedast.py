@@ -542,15 +542,30 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Raise(self, node):
-        children = ['raise']
-        if node.type:
-            children.append(node.type)
-        if node.inst:
-            children.append(',')
-            children.append(node.inst)
-        if node.tback:
-            children.append(',')
-            children.append(node.tback)
+
+        def get_python3_raise_children(node):
+            children = ['raise']
+            if node.exc:
+                children.append(node.exc)
+            if node.cause:
+                children.append(node.cause)
+            return children
+
+        def get_python2_raise_children(node):
+            children = ['raise']
+            if node.type:
+                children.append(node.type)
+            if node.inst:
+                children.append(',')
+                children.append(node.inst)
+            if node.tback:
+                children.append(',')
+                children.append(node.tback)
+            return children
+        if comp.PY2:
+            children = get_python2_raise_children(node)
+        else:
+            children = get_python3_raise_children(node)
         self._handle(node, children)
 
     def _Return(self, node):

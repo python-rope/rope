@@ -77,7 +77,7 @@ def only_for(version):
         'This test requires at least {0} version of Python.'.format(version))
 
 
-def only_for_lower_versions(version):
+def only_for_versions_lower(version):
     """Should be used as a decorator for a unittest.TestCase test method"""
     return unittest.skipIf(
         sys.version > version,
