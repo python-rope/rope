@@ -390,10 +390,7 @@ class _ScopeVisitor(object):
         return result
 
     def _With(self, node):
-        if comp.PY2:
-            withitem = node
-        else:
-            withitem = node.__dict__['items'][0]
+        withitem = comp.get_ast_with(node)
         if withitem.optional_vars:
             self._update_evaluated(withitem.optional_vars,
                                    withitem.context_expr, '.__enter__()')

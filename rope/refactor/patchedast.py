@@ -3,11 +3,13 @@ import re
 import warnings
 
 from rope.base import ast, codeanalyze, exceptions
+from rope import comp
 
 try:
     basestring
 except NameError:
     basestring = (str, bytes)
+
 
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes
@@ -651,9 +653,10 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _With(self, node):
-        children = ['with', node.context_expr]
-        if node.optional_vars:
-            children.extend(['as', node.optional_vars])
+        withitem = comp.get_ast_with(node)
+        children = ['with', withitem.context_expr]
+        if withitem.optional_vars:
+            children.extend(['as', withitem.optional_vars])
         children.append(':')
         children.extend(node.body)
         self._handle(node, children)

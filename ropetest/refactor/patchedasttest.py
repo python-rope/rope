@@ -372,8 +372,9 @@ class PatchedASTTest(unittest.TestCase):
             'Function', ['def', ' ', 'f', '', '(', '', 'arguments',
                          '', ')', '', ':', '\n    ', 'Expr', '\n    ',
                          'Pass'])
+        expected_arg_name = comp.ast_arg_type.__name__
         checker.check_children(
-            'arguments', ['Name', '', ',',
+            'arguments', [expected_arg_name, '', ',',
                           ' ', '**', '', 'p2'])
 
     def test_function_node_and_tuple_parameters(self):
@@ -544,8 +545,9 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region('Lambda', 0, len(source) - 1)
         checker.check_children(
             'Lambda', ['lambda', ' ', 'arguments', '', ':', ' ', 'Name'])
+        expected_arg_name = comp.ast_arg_type.__name__
         checker.check_children(
-            'arguments', ['Name', '', ',', ' ', 'Name', '', '=', '',
+            'arguments', [expected_arg_name, '', ',', ' ', expected_arg_name, '', '=', '',
                           'Num', '', ',', ' ', '*', '', 'z'])
 
     def test_list_node(self):
@@ -782,7 +784,7 @@ class PatchedASTTest(unittest.TestCase):
                            '', ':', '\n    ', 'Pass'])
 
     def test_try_except_node(self):
-        source = 'try:\n    pass\nexcept Exception, e:\n    pass\n'
+        source = 'try:\n    pass\nexcept Exception as e:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_children(

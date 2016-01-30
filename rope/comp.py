@@ -39,3 +39,9 @@ def get_ast_arg_arg(arg):
     if isinstance(arg, string_types):
         return arg
     raise ValueError('UnknownType Passed to get_ast_asg_arg')
+
+
+def get_ast_with(node):
+    if PY2:
+        return node
+    return node.items[0]
