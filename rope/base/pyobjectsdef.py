@@ -390,9 +390,13 @@ class _ScopeVisitor(object):
         return result
 
     def _With(self, node):
-        if node.optional_vars:
-            self._update_evaluated(node.optional_vars,
-                                   node.context_expr, '.__enter__()')
+        if comp.PY2:
+            withitem = node
+        else:
+            withitem = node.__dict__['items'][0]
+        if withitem.optional_vars:
+            self._update_evaluated(withitem.optional_vars,
+                                   withitem.context_expr, '.__enter__()')
         for child in node.body:
             ast.walk(child, self)
 
