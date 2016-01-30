@@ -671,14 +671,11 @@ class PatchedASTTest(unittest.TestCase):
                                          ',', ' ', 'Num', '', ','])
 
     def test_printnl_node(self):
-        if comp.PY3:
-            source = 'print(1)\n'
-        else:
-            source = 'print 1\n'
+        source = 'print(1)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         checker.check_region('Print', 0, len(source) - 1)
-        checker.check_children('Print', ['print', ' ', 'Num'])
+        checker.check_children('Print', ['print', '(', 'Num', ')'])
 
     def test_raise_node(self):
         source = 'raise x, y, z\n'
