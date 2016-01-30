@@ -663,9 +663,9 @@ class Lambda(pyobjects.AbstractFunction):
         result = [comp.get_param_name(node) for node in self.arguments.args
                   if isinstance(node, ast_type)]
         if self.arguments.vararg:
-            result.append('*' + self.arguments.vararg)
+            result.append('*' + comp.get_param_name(self.arguments.vararg))
         if self.arguments.kwarg:
-            result.append('**' + self.arguments.kwarg)
+            result.append('**' + comp.get_param_name(self.arguments.kwarg))
         return result
 
     @property
