@@ -662,6 +662,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children('Expr', ['BoolOp'])
         checker.check_children('BoolOp', ['UnaryOp', ' ', 'or', ' ', 'Name'])
 
+    @unittest.skipIf(comp.PY3, 'only for python2 because print is no longer statement in python3')
     def test_print_node(self):
         source = 'print >>out, 1,\n'
         ast_frag = patchedast.get_patched_ast(source, True)
@@ -670,6 +671,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children('Print', ['print', ' ', '>>', '', 'Name', '',
                                          ',', ' ', 'Num', '', ','])
 
+    @unittest.skipIf(comp.PY3, 'only for python2 because print is no longer statement in python3')
     def test_printnl_node(self):
         source = 'print(1)\n'
         ast_frag = patchedast.get_patched_ast(source, True)
