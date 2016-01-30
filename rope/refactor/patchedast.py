@@ -515,12 +515,15 @@ class _PatchingASTWalker(object):
         children.extend(node.generators)
         children.append('}')
         self._handle(node, children)
-    
+
     def _Module(self, node):
         self._handle(node, list(node.body), eat_spaces=True)
 
     def _Name(self, node):
         self._handle(node, [node.id])
+
+    def _arg(self, node):
+        self._handle(node, [node.arg])
 
     def _Pass(self, node):
         self._handle(node, ['pass'])
@@ -598,6 +601,12 @@ class _PatchingASTWalker(object):
             children.extend(['else', ':'])
             children.extend(node.orelse)
         self._handle(node, children)
+
+    def _Try(self, node):
+        if len(node.finalbody):
+            self._TryFinally(node)
+        else:
+            self._TryExcept(node)
 
     def _ExceptHandler(self, node):
         self._excepthandler(node)
