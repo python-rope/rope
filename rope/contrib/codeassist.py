@@ -4,18 +4,15 @@ import warnings
 
 import rope.base.codeanalyze
 import rope.base.evaluate
-import six
-from rope.base import (
-    builtins,
-    exceptions,
-    libutils,
-    pynames,
-    pynamesdef,
-    pyobjects,
-    pyobjectsdef,
-    pyscopes,
-    worder
-)
+from rope.base import builtins
+from rope.base import exceptions
+from rope.base import libutils
+from rope.base import pynames
+from rope.base import pynamesdef
+from rope.base import pyobjects
+from rope.base import pyobjectsdef
+from rope.base import pyscopes
+from rope.base import worder
 from rope.contrib import fixsyntax
 from rope.refactor import functionutils
 
@@ -410,7 +407,7 @@ class _PythonCodeAssist(object):
             names = scope.get_propagated_names()
         else:
             names = scope.get_names()
-        for name, pyname in six.viewitems(names):
+        for name, pyname in names.items():
             if name.startswith(self.starting):
                 compl_scope = 'local'
                 if scope.get_kind() == 'Module':
@@ -566,7 +563,6 @@ class PyDocExtractor(object):
                 pyobject = pyobject['__call__'].get_object()
         except exceptions.AttributeNotFoundError:
             return None
-
         if ignore_unknown and not isinstance(pyobject, pyobjects.PyFunction):
             return
         if isinstance(pyobject, pyobjects.AbstractFunction):
