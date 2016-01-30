@@ -19,10 +19,7 @@ except NameError:  # PY3
     def execfile(fn, global_vars=None, local_vars=None):
         with open(fn) as f:
             code = compile(f.read(), fn, 'exec')
-            exec_args = []
-            if local_vars:
-                exec_args.append(local_vars)
-            exec(code, global_vars or {}, *exec_args)
+            exec(code, global_vars or {}, local_vars)
 
 
 else:  # PY2
