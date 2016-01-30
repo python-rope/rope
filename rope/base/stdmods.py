@@ -1,13 +1,19 @@
+import re
 import os
 import sys
 
 from rope.base import utils
+from rope import comp
 
 
 def _stdlib_path():
-    import distutils.sysconfig
-    return distutils.sysconfig.get_python_lib(standard_lib=True,
-                                              plat_specific=True)
+    if comp.PY2:
+        from distutils import sysconfig
+        return sysconfig.get_python_lib(standard_lib=True,
+                                        plat_specific=True)
+    elif comp.PY3:
+        import sysconfig
+        return sysconfig.get_config_var('LIBDIR')
 
 
 @utils.cached(1)
@@ -31,6 +37,13 @@ def python_modules():
     return result
 
 
+def normalize_so_name(name):
+    """
+    Handle different types of python installations
+    """
+    return re.sub('\.cpython-\d+', '', os.path.splitext(name)[0].replace('module', ''))
+
+
 @utils.cached(1)
 def dynload_modules():
     result = set(sys.builtin_module_names)
@@ -42,5 +55,5 @@ def dynload_modules():
                 if name.endswith('.dll'):
                     result.add(os.path.splitext(name)[0])
                 if name.endswith('.so'):
-                    result.add(os.path.splitext(name)[0].replace('module', ''))
+                    result.add(normalize_so_name(name))
     return result

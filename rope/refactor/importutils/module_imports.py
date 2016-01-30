@@ -223,8 +223,10 @@ class ModuleImports(object):
         if self.pymodule.get_doc() is not None:
             lineno = 1
         if len(nodes) > lineno:
-            if (isinstance(nodes[lineno], ast.Import) or
-                isinstance(nodes[lineno], ast.ImportFrom)):
+            if (
+                isinstance(nodes[lineno], ast.Import) or
+                isinstance(nodes[lineno], ast.ImportFrom)
+            ):
                 return nodes[lineno].lineno
             lineno = self.pymodule.logical_lines.logical_line_in(
                 nodes[lineno].lineno)[0]
@@ -250,13 +252,13 @@ class ModuleImports(object):
         str1 = stm1.get_import_statement()
         return str1.startswith("from "), str1
 
-        #str1 = stmt1.get_import_statement()
-        #str2 = stmt2.get_import_statement()
-        #if str1.startswith('from ') and not str2.startswith('from '):
+        # str1 = stmt1.get_import_statement()
+        # str2 = stmt2.get_import_statement()
+        # if str1.startswith('from ') and not str2.startswith('from '):
         #    return 1
-        #if not str1.startswith('from ') and str2.startswith('from '):
+        # if not str1.startswith('from ') and str2.startswith('from '):
         #    return -1
-        #return cmp(str1, str2)
+        # return cmp(str1, str2)
 
     def _move_imports(self, imports, index, blank_lines):
         if imports:
@@ -474,8 +476,7 @@ class _GlobalImportFinder(object):
         self.imports.append(importinfo.ImportStatement(
                             import_info, node.lineno, end_line,
                             self._get_text(start_line, end_line),
-                            blank_lines=
-                            self._count_empty_lines_before(start_line)))
+                            blank_lines=self._count_empty_lines_before(start_line)))
 
     def _get_names(self, alias_names):
         result = []
