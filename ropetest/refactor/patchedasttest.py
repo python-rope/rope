@@ -792,7 +792,7 @@ class PatchedASTTest(unittest.TestCase):
                           ('excepthandler', 'ExceptHandler')])
         checker.check_children(
             ('excepthandler', 'ExceptHandler'),
-            ['except', ' ', 'Name', '', ',', ' ', 'Name', '', ':',
+            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
              '\n    ', 'Pass'])
 
     def test_try_except_node__with_as_syntax(self):
