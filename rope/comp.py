@@ -42,6 +42,7 @@ def get_ast_arg_arg(arg):
 
 
 def get_ast_with(node):
+    # @todo fixmee - handle all withitems
     if PY2:
         return node
     return node.items[0]

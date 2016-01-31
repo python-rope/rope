@@ -602,6 +602,7 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _TryFinally(self, node):
+        # @todo fixme
         is_there_except_handler = False
         not_empty_body = True
         if len(node.finalbody) == 1:
