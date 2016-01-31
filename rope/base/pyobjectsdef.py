@@ -403,6 +403,13 @@ class _ScopeVisitor(object):
             if isinstance(node.type, ast.Tuple) and type_node.elts:
                 type_node = type_node.elts[0]
             self._update_evaluated(node.name, type_node, eval_type=True)
+
+        if comp.PY27:
+            # handles case for syntax MyError as e
+            if node.name is not None and isinstance(node.type, ast.Name):
+                self._update_evaluated(node, node.type, eval_type=True)
+            if node.name is not None and isinstance(node.type, ast.Tuple):
+                self._update_evaluated(node, node, eval_type=True)
         for child in node.body:
             ast.walk(child, self)
 

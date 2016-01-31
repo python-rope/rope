@@ -6,6 +6,7 @@ except ImportError:
 import rope.base.oi
 import rope.base.libutils
 from ropetest import testutils
+from rope import comp
 
 
 class DynamicOITest(unittest.TestCase):
@@ -182,9 +183,14 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dict_keys_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
-        code = 'class C(object):\n    pass\n' \
-               'def a_func(arg):\n    return eval("arg")\n' \
-               'a_var = a_func({C(): 1}).keys()[0]\n'
+        if comp.PY3:
+            code = 'class C(object):\n    pass\n' \
+                   'def a_func(arg):\n    return eval("arg")\n' \
+                   'a_var = list(a_func({C(): 1}))[0]\n'
+        else:
+            code = 'class C(object):\n    pass\n' \
+                   'def a_func(arg):\n    return eval("arg")\n' \
+                   'a_var = a_func({C(): 1}).keys()[0]\n'
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
