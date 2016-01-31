@@ -6,6 +6,7 @@ from rope.base.exceptions import RefactoringError
 from rope.refactor import (sourceutils, similarfinder,
                            patchedast, suites, usefunction)
 from rope import comp
+from rope.abc import OrderedSet
 
 
 # Extract refactoring has lots of special cases.  I tried to split it
@@ -599,12 +600,12 @@ class _FunctionInformationCollector(object):
         self.start = start
         self.end = end
         self.is_global = is_global
-        self.prewritten = set()
-        self.maybe_written = set()
-        self.written = set()
-        self.read = set()
-        self.postread = set()
-        self.postwritten = set()
+        self.prewritten = OrderedSet()
+        self.maybe_written = OrderedSet()
+        self.written = OrderedSet()
+        self.read = OrderedSet()
+        self.postread = OrderedSet()
+        self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
 
