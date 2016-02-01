@@ -7,11 +7,14 @@ import rope.base.libutils
 from rope.base import (pynamesdef as pynames, exceptions, ast,
                        astutils, pyobjects, fscommands, arguments, utils)
 
+from rope import comp
+
 
 try:
     unicode
 except NameError:
     unicode = str
+
 
 class PyFunction(pyobjects.PyFunction):
 
@@ -84,9 +87,9 @@ class PyFunction(pyobjects.PyFunction):
                       if isinstance(node, ast.Name)]
         if special_args:
             if self.arguments.vararg:
-                result.append(self.arguments.vararg)
+                result.append(comp.get_ast_arg_arg(self.arguments.vararg))
             if self.arguments.kwarg:
-                result.append(self.arguments.kwarg)
+                result.append(comp.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     def get_kind(self):
@@ -387,9 +390,10 @@ class _ScopeVisitor(object):
         return result
 
     def _With(self, node):
-        if node.optional_vars:
-            self._update_evaluated(node.optional_vars,
-                                   node.context_expr, '.__enter__()')
+        withitem = comp.get_ast_with(node)
+        if withitem.optional_vars:
+            self._update_evaluated(withitem.optional_vars,
+                                   withitem.context_expr, '.__enter__()')
         for child in node.body:
             ast.walk(child, self)
 
@@ -399,6 +403,13 @@ class _ScopeVisitor(object):
             if isinstance(node.type, ast.Tuple) and type_node.elts:
                 type_node = type_node.elts[0]
             self._update_evaluated(node.name, type_node, eval_type=True)
+
+        if comp.PY27:
+            # handles case for syntax MyError as e
+            if node.name is not None and isinstance(node.type, ast.Name):
+                self._update_evaluated(node, node.type, eval_type=True)
+            if node.name is not None and isinstance(node.type, ast.Tuple):
+                self._update_evaluated(node, node, eval_type=True)
         for child in node.body:
             ast.walk(child, self)
 

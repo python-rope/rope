@@ -5,6 +5,8 @@ from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
 from rope.refactor import (sourceutils, similarfinder,
                            patchedast, suites, usefunction)
+from rope import comp
+from rope.abc import OrderedSet
 
 
 # Extract refactoring has lots of special cases.  I tried to split it
@@ -598,12 +600,12 @@ class _FunctionInformationCollector(object):
         self.start = start
         self.end = end
         self.is_global = is_global
-        self.prewritten = set()
-        self.maybe_written = set()
-        self.written = set()
-        self.read = set()
-        self.postread = set()
-        self.postwritten = set()
+        self.prewritten = OrderedSet()
+        self.maybe_written = OrderedSet()
+        self.written = OrderedSet()
+        self.read = OrderedSet()
+        self.postread = OrderedSet()
+        self.postwritten = OrderedSet()
         self.host_function = True
         self.conditional = False
 
@@ -686,12 +688,12 @@ class _FunctionInformationCollector(object):
 
 
 def _get_argnames(arguments):
-    result = [node.id for node in arguments.args
-              if isinstance(node, ast.Name)]
+    result = [comp.get_ast_arg_arg(node) for node in arguments.args
+              if isinstance(node, comp.ast_arg_type)]
     if arguments.vararg:
-        result.append(arguments.vararg)
+        result.append(comp.get_ast_arg_arg(arguments.vararg))
     if arguments.kwarg:
-        result.append(arguments.kwarg)
+        result.append(comp.get_ast_arg_arg(arguments.kwarg))
     return result
 
 
