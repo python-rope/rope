@@ -142,7 +142,7 @@ def __rope_start_everything():
                 keys = None
                 values = None
                 if len(object_) > 0:
-                    keys = object_.keys()[0]
+                    keys = list(object_.keys())[0]
                     values = object_[keys]
                 return ('builtin', 'dict',
                         self._object_to_persisted_form(keys),
