@@ -1,12 +1,12 @@
 import re
 
+from rope.abc import OrderedSet
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
+from rope.base.utils import pycompat
 from rope.refactor import (sourceutils, similarfinder,
                            patchedast, suites, usefunction)
-from rope import comp
-from rope.abc import OrderedSet
 
 
 # Extract refactoring has lots of special cases.  I tried to split it
@@ -688,12 +688,12 @@ class _FunctionInformationCollector(object):
 
 
 def _get_argnames(arguments):
-    result = [comp.get_ast_arg_arg(node) for node in arguments.args
-              if isinstance(node, comp.ast_arg_type)]
+    result = [pycompat.get_ast_arg_arg(node) for node in arguments.args
+              if isinstance(node, pycompat.ast_arg_type)]
     if arguments.vararg:
-        result.append(comp.get_ast_arg_arg(arguments.vararg))
+        result.append(pycompat.get_ast_arg_arg(arguments.vararg))
     if arguments.kwarg:
-        result.append(comp.get_ast_arg_arg(arguments.kwarg))
+        result.append(pycompat.get_ast_arg_arg(arguments.kwarg))
     return result
 
 

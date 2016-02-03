@@ -1,14 +1,12 @@
+import rope.base.builtins
 import rope.base.codeanalyze
 import rope.base.evaluate
-import rope.base.builtins
+import rope.base.libutils
 import rope.base.oi.soi
 import rope.base.pyscopes
-import rope.base.libutils
 from rope.base import (pynamesdef as pynames, exceptions, ast,
                        astutils, pyobjects, fscommands, arguments, utils)
-
-from rope import comp
-
+from rope.base.utils import pycompat
 
 try:
     unicode
@@ -87,9 +85,9 @@ class PyFunction(pyobjects.PyFunction):
                       if isinstance(node, ast.Name)]
         if special_args:
             if self.arguments.vararg:
-                result.append(comp.get_ast_arg_arg(self.arguments.vararg))
+                result.append(pycompat.get_ast_arg_arg(self.arguments.vararg))
             if self.arguments.kwarg:
-                result.append(comp.get_ast_arg_arg(self.arguments.kwarg))
+                result.append(pycompat.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     def get_kind(self):
@@ -390,7 +388,7 @@ class _ScopeVisitor(object):
         return result
 
     def _With(self, node):
-        withitem = comp.get_ast_with(node)
+        withitem = pycompat.get_ast_with(node)
         if withitem.optional_vars:
             self._update_evaluated(withitem.optional_vars,
                                    withitem.context_expr, '.__enter__()')
@@ -404,7 +402,7 @@ class _ScopeVisitor(object):
                 type_node = type_node.elts[0]
             self._update_evaluated(node.name, type_node, eval_type=True)
 
-        if comp.PY27:
+        if pycompat.PY27:
             # handles case for syntax MyError as e
             if node.name is not None and isinstance(node.type, ast.Name):
                 self._update_evaluated(node, node.type, eval_type=True)
