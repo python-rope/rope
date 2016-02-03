@@ -524,6 +524,9 @@ class _PatchingASTWalker(object):
     def _Name(self, node):
         self._handle(node, [node.id])
 
+    def _NameConstant(self, node):
+        self._handle(node, [str(node.value)])
+
     def _arg(self, node):
         self._handle(node, [node.arg])
 
