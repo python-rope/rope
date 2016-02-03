@@ -402,11 +402,11 @@ class _PatchingASTWalker(object):
         if node.vararg is not None:
             if args:
                 children.append(',')
-            children.extend(['*', node.vararg])
+            children.extend(['*', comp.get_ast_arg_arg(node.vararg)])
         if node.kwarg is not None:
             if args or node.vararg is not None:
                 children.append(',')
-            children.extend(['**', node.kwarg])
+            children.extend(['**', comp.get_ast_arg_arg(node.kwarg)])
         self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):

@@ -22,6 +22,9 @@ except NameError:  # PY3
             code = compile(f.read(), fn, 'exec')
             exec(code, global_vars or {}, local_vars)
 
+    def get_ast_arg_arg(node):
+        return node.arg
+
 
 else:  # PY2
 
@@ -31,15 +34,10 @@ else:  # PY2
     ast_arg_type = _ast.Name
     execfile = execfile
 
-
-def get_ast_arg_arg(arg):
-    if PY3 and isinstance(arg, _ast.arg):
-        return arg.arg
-    if isinstance(arg, _ast.Name):
-        return arg.id
-    if isinstance(arg, string_types):
-        return arg
-    raise ValueError('UnknownType Passed to get_ast_asg_arg')
+    def get_ast_arg_arg(node):
+        if isinstance(node, string_types):  # Python2 arguments.vararg, arguments.kwarg
+            return node
+        return node.id
 
 
 def get_ast_with(node):
