@@ -18,8 +18,8 @@ Overview
 New Features
 ============
 
-* Under new management! Matěj Cepl <mcepl@cepl.eu> takes it hesitantly
-  over
+* Right now Ivan Zakrevsky and Sergey Glazyrin as emacs fans are
+  working to give the library a new life and support at the same time in a roper package python versions > 2.7
 * Merged all availables pull requests and patches to the main codebase
 * Tests are green again
 
