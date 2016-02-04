@@ -1,17 +1,17 @@
-import re
 import os
+import re
 import sys
 
 from rope.base import utils
-from rope import comp
+from rope.base.utils import pycompat
 
 
 def _stdlib_path():
-    if comp.PY2:
+    if pycompat.PY2:
         from distutils import sysconfig
         return sysconfig.get_python_lib(standard_lib=True,
                                         plat_specific=True)
-    elif comp.PY3:
+    elif pycompat.PY3:
         import sysconfig
         return sysconfig.get_config_var('LIBDIR') + os.sep + 'python' + '.'.join(map(str, sys.version_info[0:2]))
 

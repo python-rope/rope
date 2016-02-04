@@ -3,7 +3,7 @@ import re
 import warnings
 
 from rope.base import ast, codeanalyze, exceptions
-from rope import comp
+from rope.base.utils import pycompat
 
 try:
     basestring
@@ -402,11 +402,11 @@ class _PatchingASTWalker(object):
         if node.vararg is not None:
             if args:
                 children.append(',')
-            children.extend(['*', node.vararg])
+            children.extend(['*', pycompat.get_ast_arg_arg(node.vararg)])
         if node.kwarg is not None:
             if args or node.vararg is not None:
                 children.append(',')
-            children.extend(['**', node.kwarg])
+            children.extend(['**', pycompat.get_ast_arg_arg(node.kwarg)])
         self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):
@@ -524,6 +524,9 @@ class _PatchingASTWalker(object):
     def _Name(self, node):
         self._handle(node, [node.id])
 
+    def _NameConstant(self, node):
+        self._handle(node, [str(node.value)])
+
     def _arg(self, node):
         self._handle(node, [node.arg])
 
@@ -562,7 +565,7 @@ class _PatchingASTWalker(object):
                 children.append(',')
                 children.append(node.tback)
             return children
-        if comp.PY2:
+        if pycompat.PY2:
             children = get_python2_raise_children(node)
         else:
             children = get_python3_raise_children(node)
@@ -606,10 +609,10 @@ class _PatchingASTWalker(object):
         is_there_except_handler = False
         not_empty_body = True
         if len(node.finalbody) == 1:
-            if comp.PY2:
+            if pycompat.PY2:
                 is_there_except_handler = isinstance(node.body[0], ast.TryExcept)
                 not_empty_body = not bool(len(node.body))
-            elif comp.PY3:
+            elif pycompat.PY3:
                 try:
                     is_there_except_handler = isinstance(node.handlers[0], ast.ExceptHandler)
                     not_empty_body = True
@@ -619,7 +622,7 @@ class _PatchingASTWalker(object):
         if not_empty_body or not is_there_except_handler:
             children.extend(['try', ':'])
         children.extend(node.body)
-        if comp.PY3:
+        if pycompat.PY3:
             children.extend(node.handlers)
         children.extend(['finally', ':'])
         children.extend(node.finalbody)
@@ -683,7 +686,7 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _With(self, node):
-        withitem = comp.get_ast_with(node)
+        withitem = pycompat.get_ast_with(node)
         children = ['with', withitem.context_expr]
         if withitem.optional_vars:
             children.extend(['as', withitem.optional_vars])

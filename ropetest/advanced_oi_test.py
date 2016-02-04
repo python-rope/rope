@@ -3,10 +3,10 @@ try:
 except ImportError:
     import unittest
 
-import rope.base.oi
 import rope.base.libutils
+import rope.base.oi
+from rope.base.utils import pycompat
 from ropetest import testutils
-from rope import comp
 
 
 class DynamicOITest(unittest.TestCase):
@@ -183,7 +183,7 @@ class DynamicOITest(unittest.TestCase):
 
     def test_dict_keys_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
-        if comp.PY3:
+        if pycompat.PY3:
             code = 'class C(object):\n    pass\n' \
                    'def a_func(arg):\n    return eval("arg")\n' \
                    'a_var = list(a_func({C(): 1}))[0]\n'

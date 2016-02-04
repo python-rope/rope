@@ -6,8 +6,8 @@ except NameError:
     raw_input = input
 
 import rope.base.evaluate
-from rope import comp
-from rope.base import pynames, pyobjects, arguments, utils, ast
+from rope.base.utils import pycompat
+from rope.base import pynames, pyobjects, arguments, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -657,12 +657,12 @@ class Lambda(pyobjects.AbstractFunction):
         return 'lambda'
 
     def get_param_names(self, special_args=True):
-        result = [comp.get_ast_arg_arg(node) for node in self.arguments.args
-                  if isinstance(node, comp.ast_arg_type)]
+        result = [pycompat.get_ast_arg_arg(node) for node in self.arguments.args
+                  if isinstance(node, pycompat.ast_arg_type)]
         if self.arguments.vararg:
-            result.append('*' + comp.get_ast_arg_arg(self.arguments.vararg))
+            result.append('*' + pycompat.get_ast_arg_arg(self.arguments.vararg))
         if self.arguments.kwarg:
-            result.append('**' + comp.get_ast_arg_arg(self.arguments.kwarg))
+            result.append('**' + pycompat.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     @property
@@ -802,4 +802,4 @@ _initial_builtins = {
                              builtin=raw_input)),
 }
 
-builtins = BuiltinModule(comp.builtins.__name__, initial=_initial_builtins)
+builtins = BuiltinModule(pycompat.builtins.__name__, initial=_initial_builtins)

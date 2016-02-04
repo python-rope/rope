@@ -1,7 +1,7 @@
 import unittest
 
-from rope import comp
 from rope.base import ast
+from rope.base.utils import pycompat
 from rope.refactor import patchedast
 from ropetest import testutils
 
@@ -374,7 +374,7 @@ class PatchedASTTest(unittest.TestCase):
             'Function', ['def', ' ', 'f', '', '(', '', 'arguments',
                          '', ')', '', ':', '\n    ', 'Expr', '\n    ',
                          'Pass'])
-        expected_arg_name = comp.ast_arg_type.__name__
+        expected_arg_name = pycompat.ast_arg_type.__name__
         checker.check_children(
             'arguments', [expected_arg_name, '', ',',
                           ' ', '**', '', 'p2'])
@@ -550,7 +550,7 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region('Lambda', 0, len(source) - 1)
         checker.check_children(
             'Lambda', ['lambda', ' ', 'arguments', '', ':', ' ', 'Name'])
-        expected_arg_name = comp.ast_arg_type.__name__
+        expected_arg_name = pycompat.ast_arg_type.__name__
         checker.check_children(
             'arguments', [expected_arg_name, '', ',', ' ', expected_arg_name, '', '=', '',
                           'Num', '', ',', ' ', '*', '', 'z'])
@@ -793,8 +793,8 @@ class PatchedASTTest(unittest.TestCase):
         source = 'try:\n    pass\nfinally:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        node_to_test = 'Try' if comp.PY3 else 'TryFinally'
-        if comp.PY3:
+        node_to_test = 'Try' if pycompat.PY3 else 'TryFinally'
+        if pycompat.PY3:
             expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'finally',
                                  '', ':', '\n    ', 'Pass']
         else:
@@ -819,8 +819,8 @@ class PatchedASTTest(unittest.TestCase):
         source = 'try:\n    pass\nexcept Exception as e:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        node_to_test = 'Try' if comp.PY3 else 'TryExcept'
-        is_catched_exception_ast_type = comp.PY2
+        node_to_test = 'Try' if pycompat.PY3 else 'TryExcept'
+        is_catched_exception_ast_type = pycompat.PY2
         checker.check_children(
             node_to_test, ['try', '', ':', '\n    ', 'Pass', '\n',
                            ('excepthandler', 'ExceptHandler')])
@@ -834,8 +834,8 @@ class PatchedASTTest(unittest.TestCase):
         source = 'try:\n    pass\nexcept:\n    pass\nfinally:\n    pass\n'
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
-        node_to_test = 'Try' if comp.PY3 else 'TryFinally'
-        if comp.PY3:
+        node_to_test = 'Try' if pycompat.PY3 else 'TryFinally'
+        if pycompat.PY3:
             expected_children = ['try', '', ':', '\n    ', 'Pass', '\n', 'ExceptHandler', '\n',
                                  'finally', '', ':', '\n    ', 'Pass']
         else:
