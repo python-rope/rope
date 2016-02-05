@@ -23,8 +23,6 @@ except NameError:  # PY3
             exec(code, global_vars or {}, local_vars)
 
     def get_ast_arg_arg(node):
-        if isinstance(node, string_types):
-            return node
         return node.arg
 
 
