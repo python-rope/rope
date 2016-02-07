@@ -97,7 +97,6 @@ class FileInfo(objectdb.FileInfo):
         raise NotImplementedError()
 
 
-
 class ScopeInfo(objectdb.ScopeInfo):
 
     def __init__(self):

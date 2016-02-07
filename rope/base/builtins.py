@@ -226,6 +226,9 @@ class _CallContext(object):
             pymodule = pyname.get_definition_location()[0]
             pymodule.pycore.object_info.save_per_name(scope, name, value)
 
+    def get_arguments_number(self):
+        return len(self.args.args)
+
 
 class _AttributeCollector(object):
 
@@ -269,7 +272,7 @@ class List(BuiltinClass):
                   argnames=['self', 'iterable'])
 
         # Getting methods
-        collector('__getitem__', function=self._list_get)
+        collector('__getitem__', function=self._self_get if pycompat.PY3 else self._list_get)
         collector('pop', function=self._list_get)
         try:
             collector('__getslice__', function=self._self_get)
@@ -305,7 +308,11 @@ class List(BuiltinClass):
         return get_iterator(self._list_get(context))
 
     def _self_get(self, context):
-        return get_list(self._list_get(context))
+        # @todo - refactor, not sure how to implement it properly
+        if context.get_arguments_number() > 1:
+            return self._list_get(context)
+        else:
+            return get_list(self._list_get(context))
 
 
 get_list = _create_builtin_getter(List)
