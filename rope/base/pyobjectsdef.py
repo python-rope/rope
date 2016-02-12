@@ -380,11 +380,16 @@ class _ScopeVisitor(object):
     def _update_evaluated(self, targets, assigned,
                           evaluation='', eval_type=False):
         result = {}
-        names = astutils.get_name_levels(targets)
-        for name, levels in names:
-            assignment = pynames.AssignmentValue(assigned, levels,
+        if isinstance(targets, str):
+            assignment = pynames.AssignmentValue(assigned, [],
                                                  evaluation, eval_type)
-            self._assigned(name, assignment)
+            self._assigned(targets, assignment)
+        else:
+            names = astutils.get_name_levels(targets)
+            for name, levels in names:
+                assignment = pynames.AssignmentValue(assigned, levels,
+                                                     evaluation, eval_type)
+                self._assigned(name, assignment)
         return result
 
     def _With(self, node):
@@ -396,18 +401,13 @@ class _ScopeVisitor(object):
             ast.walk(child, self)
 
     def _excepthandler(self, node):
-        if node.name is not None and isinstance(node.name, ast.Name):
+        node_name_type = str if pycompat.PY3 else ast.Name
+        if node.name is not None and isinstance(node.name, node_name_type):
             type_node = node.type
             if isinstance(node.type, ast.Tuple) and type_node.elts:
                 type_node = type_node.elts[0]
             self._update_evaluated(node.name, type_node, eval_type=True)
 
-        if pycompat.PY27:
-            # handles case for syntax MyError as e
-            if node.name is not None and isinstance(node.type, ast.Name):
-                self._update_evaluated(node, node.type, eval_type=True)
-            if node.name is not None and isinstance(node.type, ast.Tuple):
-                self._update_evaluated(node, node, eval_type=True)
         for child in node.body:
             ast.walk(child, self)
 
