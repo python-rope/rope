@@ -1,6 +1,6 @@
 import re
 
-from rope.abc import OrderedSet
+from rope.base.utils.datastructures import OrderedSet
 from rope.base import ast, codeanalyze
 from rope.base.change import ChangeSet, ChangeContents
 from rope.base.exceptions import RefactoringError
