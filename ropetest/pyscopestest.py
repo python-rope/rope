@@ -20,24 +20,24 @@ class PyCoreScopesTest(unittest.TestCase):
         scope = libutils.get_string_scope(
             self.project, 'def sample_func():\n    pass\n')
         sample_func = scope['sample_func'].get_object()
-        self.assertEquals(get_base_type('Function'), sample_func.get_type())
+        self.assertEqual(get_base_type('Function'), sample_func.get_type())
 
     def test_simple_function_scope(self):
         scope = libutils.get_string_scope(
             self.project, 'def sample_func():\n    a = 10\n')
-        self.assertEquals(1, len(scope.get_scopes()))
+        self.assertEqual(1, len(scope.get_scopes()))
         sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(1, len(sample_func_scope.get_names()))
-        self.assertEquals(0, len(sample_func_scope.get_scopes()))
+        self.assertEqual(1, len(sample_func_scope.get_names()))
+        self.assertEqual(0, len(sample_func_scope.get_scopes()))
 
     def test_classes_inside_function_scopes(self):
         scope = libutils.get_string_scope(
             self.project,
             'def sample_func():\n'
             '    class SampleClass(object):\n        pass\n')
-        self.assertEquals(1, len(scope.get_scopes()))
+        self.assertEqual(1, len(scope.get_scopes()))
         sample_func_scope = scope.get_scopes()[0]  # noqa
-        self.assertEquals(get_base_type('Type'),
+        self.assertEqual(get_base_type('Type'),
                           scope.get_scopes()[0]['SampleClass'].
                           get_object().get_type())
 
@@ -46,20 +46,20 @@ class PyCoreScopesTest(unittest.TestCase):
             self.project,
             'class SampleClass(object):\n'
             '    def f(self):\n        var = 10\n')
-        self.assertEquals(1, len(scope.get_scopes()))
+        self.assertEqual(1, len(scope.get_scopes()))
         sample_class_scope = scope.get_scopes()[0]
         self.assertTrue('f' in sample_class_scope)
-        self.assertEquals(1, len(sample_class_scope.get_scopes()))
+        self.assertEqual(1, len(sample_class_scope.get_scopes()))
         f_in_class = sample_class_scope.get_scopes()[0]
         self.assertTrue('var' in f_in_class)
 
     def test_get_lineno(self):
         scope = libutils.get_string_scope(
             self.project, '\ndef sample_func():\n    a = 10\n')
-        self.assertEquals(1, len(scope.get_scopes()))
+        self.assertEqual(1, len(scope.get_scopes()))
         sample_func_scope = scope.get_scopes()[0]
-        self.assertEquals(1, scope.get_start())
-        self.assertEquals(2, sample_func_scope.get_start())
+        self.assertEqual(1, scope.get_start())
+        self.assertEqual(2, sample_func_scope.get_start())
 
     def test_scope_kind(self):
         scope = libutils.get_string_scope(
@@ -68,9 +68,9 @@ class PyCoreScopesTest(unittest.TestCase):
             'def sample_func():\n    pass\n')
         sample_class_scope = scope.get_scopes()[0]
         sample_func_scope = scope.get_scopes()[1]
-        self.assertEquals('Module', scope.get_kind())
-        self.assertEquals('Class', sample_class_scope.get_kind())
-        self.assertEquals('Function', sample_func_scope.get_kind())
+        self.assertEqual('Module', scope.get_kind())
+        self.assertEqual('Class', sample_class_scope.get_kind())
+        self.assertEqual('Function', sample_func_scope.get_kind())
 
     def test_function_parameters_in_scope_names(self):
         scope = libutils.get_string_scope(
@@ -90,7 +90,7 @@ class PyCoreScopesTest(unittest.TestCase):
             self.project,
             'var1 = 10\ndef sample_func(param):\n    var2 = 20\n')
         self.assertTrue(scope.lookup('var2') is None)
-        self.assertEquals(get_base_type('Function'),
+        self.assertEqual(get_base_type('Function'),
                           scope.lookup('sample_func').get_object().get_type())
         sample_func_scope = scope.get_scopes()[0]
         self.assertTrue(sample_func_scope.lookup('var1') is not None)
@@ -138,7 +138,7 @@ class PyCoreScopesTest(unittest.TestCase):
         a_class = libutils.get_string_module(self.project, code)['AClass'].\
             get_object()
         function_scope = a_class['a_func'].get_object().get_scope()
-        self.assertEquals(a_class,
+        self.assertEqual(a_class,
                           function_scope['self'].get_object().get_type())
         self.assertNotEquals(a_class, function_scope['param'].
                              get_object().get_type())
@@ -159,7 +159,7 @@ class PyCoreScopesTest(unittest.TestCase):
         a_class = libutils.get_string_module(self.project, code)['AClass'].\
             get_object()
         function_scope = a_class['a_func'].get_object().get_scope()
-        self.assertEquals(a_class, function_scope['cls'].get_object())
+        self.assertEqual(a_class, function_scope['cls'].get_object())
 
     def test_first_parameter_with_self_as_name_and_unknown_decorator(self):
         code = 'def my_decorator(func):\n    return func\n'\
@@ -168,7 +168,7 @@ class PyCoreScopesTest(unittest.TestCase):
         a_class = libutils.get_string_module(self.project, code)['AClass'].\
             get_object()
         function_scope = a_class['a_func'].get_object().get_scope()
-        self.assertEquals(a_class, function_scope['self'].
+        self.assertEqual(a_class, function_scope['self'].
                           get_object().get_type())
 
     def test_inside_class_scope_attribute_lookup(self):
@@ -177,7 +177,7 @@ class PyCoreScopesTest(unittest.TestCase):
             'class C(object):\n'
             '    an_attr = 1\n'
             '    def a_func(self):\n        pass')
-        self.assertEquals(1, len(scope.get_scopes()))
+        self.assertEqual(1, len(scope.get_scopes()))
         c_scope = scope.get_scopes()[0]
         self.assertTrue('an_attr'in c_scope.get_names())
         self.assertTrue(c_scope.lookup('an_attr') is not None)
@@ -190,7 +190,7 @@ class PyCoreScopesTest(unittest.TestCase):
             'class C(object):\n'
             '    def __init__(self):\n        self.an_attr = 1\n'
             '    def a_func(self):\n        pass')
-        self.assertEquals(1, len(scope.get_scopes()))
+        self.assertEqual(1, len(scope.get_scopes()))
         c_scope = scope.get_scopes()[0]
         f_in_c = c_scope.get_scopes()[0]
         self.assertTrue(f_in_c.lookup('an_attr') is None)
@@ -203,12 +203,12 @@ class PyCoreScopesTest(unittest.TestCase):
             '    def a_func(self):\n        pass\n')
         c_scope = scope.get_scopes()[0]
         f_in_c = c_scope.get_scopes()[0]
-        self.assertEquals(f_in_c, scope.get_inner_scope_for_line(4))
+        self.assertEqual(f_in_c, scope.get_inner_scope_for_line(4))
 
     def test_getting_overwritten_scopes(self):
         scope = libutils.get_string_scope(
             self.project, 'def f():\n    pass\ndef f():\n    pass\n')
-        self.assertEquals(2, len(scope.get_scopes()))
+        self.assertEqual(2, len(scope.get_scopes()))
         f1_scope = scope.get_scopes()[0]
         f2_scope = scope.get_scopes()[1]
         self.assertNotEquals(f1_scope, f2_scope)
@@ -216,7 +216,7 @@ class PyCoreScopesTest(unittest.TestCase):
     def test_assigning_builtin_names(self):
         mod = libutils.get_string_module(self.project, 'range = 1\n')
         range = mod.get_scope().lookup('range')
-        self.assertEquals((mod, 1), range.get_definition_location())
+        self.assertEqual((mod, 1), range.get_definition_location())
 
     def test_get_inner_scope_and_logical_lines(self):
         scope = libutils.get_string_scope(
@@ -225,7 +225,7 @@ class PyCoreScopesTest(unittest.TestCase):
             '    def f():\n        s = """\n1\n2\n"""\n        a = 1\n')
         c_scope = scope.get_scopes()[0]
         f_in_c = c_scope.get_scopes()[0]
-        self.assertEquals(f_in_c, scope.get_inner_scope_for_line(7))
+        self.assertEqual(f_in_c, scope.get_inner_scope_for_line(7))
 
     def test_getting_defined_names_for_classes(self):
         scope = libutils.get_string_scope(

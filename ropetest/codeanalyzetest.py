@@ -21,33 +21,33 @@ class SourceLinesAdapterTest(unittest.TestCase):
 
     def test_source_lines_simple(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')
-        self.assertEquals('line1', to_lines.get_line(1))
-        self.assertEquals('line2', to_lines.get_line(2))
-        self.assertEquals('', to_lines.get_line(3))
-        self.assertEquals(3, to_lines.length())
+        self.assertEqual('line1', to_lines.get_line(1))
+        self.assertEqual('line2', to_lines.get_line(2))
+        self.assertEqual('', to_lines.get_line(3))
+        self.assertEqual(3, to_lines.length())
 
     def test_source_lines_get_line_number(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')
-        self.assertEquals(1, to_lines.get_line_number(0))
-        self.assertEquals(1, to_lines.get_line_number(5))
-        self.assertEquals(2, to_lines.get_line_number(7))
-        self.assertEquals(3, to_lines.get_line_number(12))
+        self.assertEqual(1, to_lines.get_line_number(0))
+        self.assertEqual(1, to_lines.get_line_number(5))
+        self.assertEqual(2, to_lines.get_line_number(7))
+        self.assertEqual(3, to_lines.get_line_number(12))
 
     def test_source_lines_get_line_start(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')
-        self.assertEquals(0, to_lines.get_line_start(1))
-        self.assertEquals(6, to_lines.get_line_start(2))
-        self.assertEquals(12, to_lines.get_line_start(3))
+        self.assertEqual(0, to_lines.get_line_start(1))
+        self.assertEqual(6, to_lines.get_line_start(2))
+        self.assertEqual(12, to_lines.get_line_start(3))
 
     def test_source_lines_get_line_end(self):
         to_lines = SourceLinesAdapter('line1\nline2\n')
-        self.assertEquals(5, to_lines.get_line_end(1))
-        self.assertEquals(11, to_lines.get_line_end(2))
-        self.assertEquals(12, to_lines.get_line_end(3))
+        self.assertEqual(5, to_lines.get_line_end(1))
+        self.assertEqual(11, to_lines.get_line_end(2))
+        self.assertEqual(12, to_lines.get_line_end(3))
 
     def test_source_lines_last_line_with_no_new_line(self):
         to_lines = SourceLinesAdapter('line1')
-        self.assertEquals(1, to_lines.get_line_number(5))
+        self.assertEqual(1, to_lines.get_line_number(5))
 
 
 class WordRangeFinderTest(unittest.TestCase):
@@ -65,151 +65,151 @@ class WordRangeFinderTest(unittest.TestCase):
 
     def test_keyword_before_parens(self):
         code = 'if (a_var).an_attr:\n    pass\n'
-        self.assertEquals('(a_var).an_attr',
+        self.assertEqual('(a_var).an_attr',
                           self._find_primary(code, code.index(':')))
 
     def test_inside_parans(self):
         code = 'a_func(a_var)'
-        self.assertEquals('a_var', self._find_primary(code, 10))
+        self.assertEqual('a_var', self._find_primary(code, 10))
 
     def test_simple_names(self):
         code = 'a_var = 10'
-        self.assertEquals('a_var', self._find_primary(code, 3))
+        self.assertEqual('a_var', self._find_primary(code, 3))
 
     def test_function_calls(self):
         code = 'sample_function()'
-        self.assertEquals('sample_function', self._find_primary(code, 10))
+        self.assertEqual('sample_function', self._find_primary(code, 10))
 
     def test_attribute_accesses(self):
         code = 'a_var.an_attr'
-        self.assertEquals('a_var.an_attr', self._find_primary(code, 10))
+        self.assertEqual('a_var.an_attr', self._find_primary(code, 10))
 
     def test_word_finder_on_word_beginning(self):
         code = 'print(a_var)\n'
         word_finder = worder.Worder(code)
         result = word_finder.get_word_at(code.index('a_var'))
-        self.assertEquals('a_var', result)
+        self.assertEqual('a_var', result)
 
     def test_word_finder_on_primary_beginning(self):
         code = 'print(a_var)\n'
         result = self._find_primary(code, code.index('a_var'))
-        self.assertEquals('a_var', result)
+        self.assertEqual('a_var', result)
 
     def test_word_finder_on_word_ending(self):
         code = 'print(a_var)\n'
         word_finder = worder.Worder(code)
         result = word_finder.get_word_at(code.index('a_var') + 5)
-        self.assertEquals('a_var', result)
+        self.assertEqual('a_var', result)
 
     def test_word_finder_on_primary_ending(self):
         code = 'print(a_var)\n'
         result = self._find_primary(code, code.index('a_var') + 5)
-        self.assertEquals('a_var', result)
+        self.assertEqual('a_var', result)
 
     def test_word_finder_on_primaries_with_dots_inside_parens(self):
         code = '(a_var.\nattr)'
         result = self._find_primary(code, code.index('attr') + 1)
-        self.assertEquals('a_var.\nattr', result)
+        self.assertEqual('a_var.\nattr', result)
 
     def test_strings(self):
         code = '"a string".split()'
-        self.assertEquals('"a string".split', self._find_primary(code, 14))
+        self.assertEqual('"a string".split', self._find_primary(code, 14))
 
     def test_function_calls2(self):
         code = 'file("afile.txt").read()'
-        self.assertEquals('file("afile.txt").read',
+        self.assertEqual('file("afile.txt").read',
                           self._find_primary(code, 18))
 
     def test_parens(self):
         code = '("afile.txt").split()'
-        self.assertEquals('("afile.txt").split', self._find_primary(code, 18))
+        self.assertEqual('("afile.txt").split', self._find_primary(code, 18))
 
     def test_function_with_no_param(self):
         code = 'AClass().a_func()'
-        self.assertEquals('AClass().a_func', self._find_primary(code, 12))
+        self.assertEqual('AClass().a_func', self._find_primary(code, 12))
 
     def test_function_with_multiple_param(self):
         code = 'AClass(a_param, another_param, "a string").a_func()'
-        self.assertEquals('AClass(a_param, another_param, "a string").a_func',
+        self.assertEqual('AClass(a_param, another_param, "a string").a_func',
                           self._find_primary(code, 44))
 
     def test_param_expressions(self):
         code = 'AClass(an_object.an_attr).a_func()'
-        self.assertEquals('an_object.an_attr', self._find_primary(code, 20))
+        self.assertEqual('an_object.an_attr', self._find_primary(code, 20))
 
     def test_string_parens(self):
         code = 'a_func("(").an_attr'
-        self.assertEquals('a_func("(").an_attr', self._find_primary(code, 16))
+        self.assertEqual('a_func("(").an_attr', self._find_primary(code, 16))
 
     def test_extra_spaces(self):
         code = 'a_func  (  "(" ) .   an_attr'
-        self.assertEquals('a_func  (  "(" ) .   an_attr',
+        self.assertEqual('a_func  (  "(" ) .   an_attr',
                           self._find_primary(code, 26))
 
     def test_functions_on_ending_parens(self):
         code = 'A()'
-        self.assertEquals('A()', self._find_primary(code, 2))
+        self.assertEqual('A()', self._find_primary(code, 2))
 
     def test_splitted_statement(self):
         word_finder = worder.Worder('an_object.an_attr')
-        self.assertEquals(('an_object', 'an_at', 10),
+        self.assertEqual(('an_object', 'an_at', 10),
                           word_finder.get_splitted_primary_before(15))
 
     def test_empty_splitted_statement(self):
         word_finder = worder.Worder('an_attr')
-        self.assertEquals(('', 'an_at', 0),
+        self.assertEqual(('', 'an_at', 0),
                           word_finder.get_splitted_primary_before(5))
 
     def test_empty_splitted_statement2(self):
         word_finder = worder.Worder('an_object.')
-        self.assertEquals(('an_object', '', 10),
+        self.assertEqual(('an_object', '', 10),
                           word_finder.get_splitted_primary_before(10))
 
     def test_empty_splitted_statement3(self):
         word_finder = worder.Worder('')
-        self.assertEquals(('', '', 0),
+        self.assertEqual(('', '', 0),
                           word_finder.get_splitted_primary_before(0))
 
     def test_empty_splitted_statement4(self):
         word_finder = worder.Worder('a_var = ')
-        self.assertEquals(('', '', 8),
+        self.assertEqual(('', '', 8),
                           word_finder.get_splitted_primary_before(8))
 
     def test_empty_splitted_statement5(self):
         word_finder = worder.Worder('a.')
-        self.assertEquals(('a', '', 2),
+        self.assertEqual(('a', '', 2),
                           word_finder.get_splitted_primary_before(2))
 
     def test_operators_inside_parens(self):
         code = '(a_var + another_var).reverse()'
-        self.assertEquals('(a_var + another_var).reverse',
+        self.assertEqual('(a_var + another_var).reverse',
                           self._find_primary(code, 25))
 
     def test_dictionaries(self):
         code = 'print({1: "one", 2: "two"}.keys())'
-        self.assertEquals('{1: "one", 2: "two"}.keys',
+        self.assertEqual('{1: "one", 2: "two"}.keys',
                           self._find_primary(code, 29))
 
     def test_following_parens(self):
         code = 'a_var = a_func()()'
         result = self._find_primary(code, code.index(')(') + 3)
-        self.assertEquals('a_func()()', result)
+        self.assertEqual('a_func()()', result)
 
     def test_comments_for_finding_statements(self):
         code = '# var2 . \n  var3'
-        self.assertEquals('var3', self._find_primary(code, code.index('3')))
+        self.assertEqual('var3', self._find_primary(code, code.index('3')))
 
     def test_str_in_comments_for_finding_statements(self):
         code = '# "var2" . \n  var3'
-        self.assertEquals('var3', self._find_primary(code, code.index('3')))
+        self.assertEqual('var3', self._find_primary(code, code.index('3')))
 
     def test_comments_for_finding_statements2(self):
         code = 'var1 + "# var2".\n  var3'
-        self.assertEquals('var3', self._find_primary(code, 21))
+        self.assertEqual('var3', self._find_primary(code, 21))
 
     def test_comments_for_finding_statements3(self):
         code = '"" + # var2.\n  var3'
-        self.assertEquals('var3', self._find_primary(code, 21))
+        self.assertEqual('var3', self._find_primary(code, 21))
 
     def test_import_statement_finding(self):
         code = 'import mod\na_var = 10\n'
@@ -227,12 +227,12 @@ class WordRangeFinderTest(unittest.TestCase):
         code = 's = str()\ns.title()\n'
         word_finder = worder.Worder(code)
         result = word_finder.get_word_parens_range(code.rindex('()') - 1)
-        self.assertEquals((len(code) - 3, len(code) - 1), result)
+        self.assertEqual((len(code) - 3, len(code) - 1), result)
 
     def test_getting_primary_before_get_index(self):
         code = '\na = (b + c).d[0]()\n'
         result = self._find_primary(code, len(code) - 2)
-        self.assertEquals('(b + c).d[0]()', result)
+        self.assertEqual('(b + c).d[0]()', result)
 
     def test_getting_primary_and_strings_at_the_end_of_line(self):
         code = 'f(\'\\\'\')\n'
@@ -241,13 +241,13 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_getting_primary_and_not_crossing_newlines(self):
         code = '\na = (b + c)\n(4 + 1).x\n'
         result = self._find_primary(code, len(code) - 1)
-        self.assertEquals('(4 + 1).x', result)
+        self.assertEqual('(4 + 1).x', result)
 
     # XXX: cancatenated string literals
     def xxx_test_getting_primary_cancatenating_strs(self):
         code = 's = "a"\n"b" "c"\n'
         result = self._find_primary(code, len(code) - 2)
-        self.assertEquals('"b" "c"', result)
+        self.assertEqual('"b" "c"', result)
 
     def test_is_a_function_being_called_with_parens_on_next_line(self):
         code = 'func\n(1, 2)\n'
@@ -258,18 +258,18 @@ class WordRangeFinderTest(unittest.TestCase):
     def xxx_test_triple_quotes(self):
         code = 's = """string"""\n'
         result = self._find_primary(code, len(code) - 1)
-        self.assertEquals('"""string"""', result)
+        self.assertEqual('"""string"""', result)
 
     def test_triple_quotes_spanning_multiple_lines(self):
         code = 's = """\\\nl1\nl2\n """\n'
         result = self._find_primary(code, len(code) - 2)
-        self.assertEquals('"""\\\nl1\nl2\n """', result)
+        self.assertEqual('"""\\\nl1\nl2\n """', result)
 
     def test_get_word_parens_range_and_string_literals(self):
         code = 'f(1, ")", 2)\n'
         word_finder = worder.Worder(code)
         result = word_finder.get_word_parens_range(0)
-        self.assertEquals((1, len(code) - 1), result)
+        self.assertEqual((1, len(code) - 1), result)
 
     def test_is_assigned_here_for_equality_test(self):
         code = 'a == 1\n'
@@ -306,35 +306,35 @@ class WordRangeFinderTest(unittest.TestCase):
     def test_find_parens_start(self):
         code = 'f(p)\n'
         finder = worder.Worder(code)
-        self.assertEquals(1, finder.find_parens_start_from_inside(2))
+        self.assertEqual(1, finder.find_parens_start_from_inside(2))
 
     def test_underlined_find_parens_start(self):
         code = 'f(p="")\n'
         finder = worder.Worder(code)
-        self.assertEquals(1, finder._find_parens_start(len(code) - 2))
+        self.assertEqual(1, finder._find_parens_start(len(code) - 2))
 
     def test_find_parens_start_with_multiple_entries(self):
         code = 'myfunc(p1, p2, p3\n'
         finder = worder.Worder(code)
-        self.assertEquals(code.index('('),
+        self.assertEqual(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
     def test_find_parens_start_with_nested_parens(self):
         code = 'myfunc(p1, (p2, p3), p4\n'
         finder = worder.Worder(code)
-        self.assertEquals(code.index('('),
+        self.assertEqual(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
     def test_find_parens_start_with_parens_in_strs(self):
         code = 'myfunc(p1, "(", p4\n'
         finder = worder.Worder(code)
-        self.assertEquals(code.index('('),
+        self.assertEqual(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
     def test_find_parens_start_with_parens_in_strs_in_multiple_lines(self):
         code = 'myfunc  (\np1\n , \n "(" \n, \np4\n'
         finder = worder.Worder(code)
-        self.assertEquals(code.index('('),
+        self.assertEqual(code.index('('),
                           finder.find_parens_start_from_inside(len(code) - 1))
 
     def test_is_on_function_keyword(self):
@@ -360,7 +360,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         scope = libutils.get_string_scope(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         result = name_finder.get_pyname_at(len(code) - 3)
-        self.assertEquals(scope['a_var'], result)
+        self.assertEqual(scope['a_var'], result)
 
     def test_class_variable_attribute_in_class_body(self):
         code = 'a_var = 10\nclass C(object):\n    a_var = a_var\n'
@@ -368,7 +368,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope['C'].get_object()['a_var']
         result = name_finder.get_pyname_at(len(code) - 12)
-        self.assertEquals(a_var_pyname, result)
+        self.assertEqual(a_var_pyname, result)
 
     def test_class_variable_attribute_in_class_body2(self):
         code = 'a_var = 10\nclass C(object):\n    a_var \\\n= a_var\n'
@@ -376,7 +376,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_var_pyname = scope['C'].get_object()['a_var']
         result = name_finder.get_pyname_at(len(code) - 12)
-        self.assertEquals(a_var_pyname, result)
+        self.assertEqual(a_var_pyname, result)
 
     def test_class_method_attribute_in_class_body(self):
         code = 'class C(object):\n    def a_method(self):\n        pass\n'
@@ -384,7 +384,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_method_pyname = scope['C'].get_object()['a_method']
         result = name_finder.get_pyname_at(code.index('a_method') + 2)
-        self.assertEquals(a_method_pyname, result)
+        self.assertEqual(a_method_pyname, result)
 
     def test_inner_class_attribute_in_class_body(self):
         code = 'class C(object):\n    class CC(object):\n        pass\n'
@@ -392,7 +392,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         a_class_pyname = scope['C'].get_object()['CC']
         result = name_finder.get_pyname_at(code.index('CC') + 2)
-        self.assertEquals(a_class_pyname, result)
+        self.assertEqual(a_class_pyname, result)
 
     def test_class_method_in_class_body_but_not_indexed(self):
         code = 'class C(object):\n    def func(self, func):\n        pass\n'
@@ -400,7 +400,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         a_func_pyname = scope.get_scopes()[0].get_scopes()[0]['func']
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         result = name_finder.get_pyname_at(code.index(', func') + 3)
-        self.assertEquals(a_func_pyname, result)
+        self.assertEqual(a_func_pyname, result)
 
     def test_function_but_not_indexed(self):
         code = 'def a_func(a_func):\n    pass\n'
@@ -408,7 +408,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         a_func_pyname = scope['a_func']
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         result = name_finder.get_pyname_at(code.index('a_func') + 3)
-        self.assertEquals(a_func_pyname, result)
+        self.assertEqual(a_func_pyname, result)
 
     def test_modules_after_from_statements(self):
         root_folder = self.project.root
@@ -419,7 +419,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(scope.pyobject)
         mod_pyobject = self.project.get_pymodule(mod)
         found_pyname = name_finder.get_pyname_at(code.index('mod') + 1)
-        self.assertEquals(mod_pyobject, found_pyname.get_object())
+        self.assertEqual(mod_pyobject, found_pyname.get_object())
 
     def test_renaming_functions_with_from_import_and_parens(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -430,7 +430,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         mod_pyobject = self.project.get_pymodule(mod1)
         afunc = mod_pyobject['afunc']
         found_pyname = name_finder.get_pyname_at(code.index('afunc') + 1)
-        self.assertEquals(afunc.get_object(), found_pyname.get_object())
+        self.assertEqual(afunc.get_object(), found_pyname.get_object())
 
     @testutils.only_for('2.5')
     def test_relative_modules_after_from_statements(self):
@@ -445,7 +445,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(mod2_scope.pyobject)
         mod1_pyobject = self.project.get_pymodule(mod1)
         found_pyname = name_finder.get_pyname_at(code.index('mod1') + 1)
-        self.assertEquals(mod1_pyobject, found_pyname.get_object())
+        self.assertEqual(mod1_pyobject, found_pyname.get_object())
 
     def test_relative_modules_after_from_statements2(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -458,7 +458,7 @@ class ScopeNameFinderTest(unittest.TestCase):
         name_finder = rope.base.evaluate.ScopeNameFinder(mod1_scope.pyobject)
         pkg2_pyobject = self.project.get_pymodule(pkg2)
         found_pyname = name_finder.get_pyname_at(mod1.read().index('pkg2') + 1)
-        self.assertEquals(pkg2_pyobject, found_pyname.get_object())
+        self.assertEqual(pkg2_pyobject, found_pyname.get_object())
 
     def test_get_pyname_at_on_language_keywords(self):
         code = 'def a_func(a_func):\n    pass\n'
@@ -472,21 +472,21 @@ class ScopeNameFinderTest(unittest.TestCase):
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
-        self.assertEquals(pymod['var'], pyname)
+        self.assertEqual(pymod['var'], pyname)
 
     def test_one_liners_with_line_breaks(self):
         code = 'var = 1\ndef f(\n): var = 2\nprint(var)\n'
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
-        self.assertEquals(pymod['var'], pyname)
+        self.assertEqual(pymod['var'], pyname)
 
     def test_one_liners_with_line_breaks2(self):
         code = 'var = 1\ndef f(\np): var = 2\nprint(var)\n'
         pymod = libutils.get_string_module(self.project, code)
         name_finder = rope.base.evaluate.ScopeNameFinder(pymod)
         pyname = name_finder.get_pyname_at(code.rindex('var'))
-        self.assertEquals(pymod['var'], pyname)
+        self.assertEqual(pymod['var'], pyname)
 
 
 class LogicalLineFinderTest(unittest.TestCase):
@@ -503,106 +503,106 @@ class LogicalLineFinderTest(unittest.TestCase):
     def test_normal_lines(self):
         code = 'a_var = 10'
         line_finder = self._logical_finder(code)
-        self.assertEquals((1, 1), line_finder.logical_line_in(1))
+        self.assertEqual((1, 1), line_finder.logical_line_in(1))
 
     def test_normal_lines2(self):
         code = 'another = 10\na_var = 20\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((1, 1), line_finder.logical_line_in(1))
-        self.assertEquals((2, 2), line_finder.logical_line_in(2))
+        self.assertEqual((1, 1), line_finder.logical_line_in(1))
+        self.assertEqual((2, 2), line_finder.logical_line_in(2))
 
     def test_implicit_continuation(self):
         code = 'a_var = 3 + \\\n    4 + \\\n    5'
         line_finder = self._logical_finder(code)
-        self.assertEquals((1, 3), line_finder.logical_line_in(2))
+        self.assertEqual((1, 3), line_finder.logical_line_in(2))
 
     def test_explicit_continuation(self):
         code = 'print(2)\na_var = (3 + \n    4, \n    5)\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((2, 4), line_finder.logical_line_in(2))
+        self.assertEqual((2, 4), line_finder.logical_line_in(2))
 
     def test_explicit_continuation_comments(self):
         code = '#\na_var = 3\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((2, 2), line_finder.logical_line_in(2))
+        self.assertEqual((2, 2), line_finder.logical_line_in(2))
 
     def test_multiple_indented_ifs(self):
         code = 'if True:\n    if True:\n        ' \
             'if True:\n            pass\n    a = 10\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((5, 5), line_finder.logical_line_in(5))
+        self.assertEqual((5, 5), line_finder.logical_line_in(5))
 
     def test_list_comprehensions_and_fors(self):
         code = 'a_list = [i\n    for i in range(10)]\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((1, 2), line_finder.logical_line_in(2))
+        self.assertEqual((1, 2), line_finder.logical_line_in(2))
 
     def test_generator_expressions_and_fors(self):
         code = 'a_list = (i\n    for i in range(10))\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((1, 2), line_finder.logical_line_in(2))
+        self.assertEqual((1, 2), line_finder.logical_line_in(2))
 
     def test_fors_and_block_start(self):
         code = 'l = range(10)\nfor i in l:\n    print(i)\n'
-        self.assertEquals(2, get_block_start(SourceLinesAdapter(code), 2))
+        self.assertEqual(2, get_block_start(SourceLinesAdapter(code), 2))
 
     def test_problems_with_inner_indentations(self):
         code = 'if True:\n    if True:\n        if True:\n            pass\n' \
                '    a = \\\n        1\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((5, 6), line_finder.logical_line_in(6))
+        self.assertEqual((5, 6), line_finder.logical_line_in(6))
 
     def test_problems_with_inner_indentations2(self):
         code = 'if True:\n    if True:\n        pass\n' \
                'a = 1\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((4, 4), line_finder.logical_line_in(4))
+        self.assertEqual((4, 4), line_finder.logical_line_in(4))
 
     def test_logical_lines_for_else(self):
         code = 'if True:\n    pass\nelse:\n    pass\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((3, 3), line_finder.logical_line_in(3))
+        self.assertEqual((3, 3), line_finder.logical_line_in(3))
 
     def test_logical_lines_for_lines_with_wrong_continues(self):
         code = 'var = 1 + \\'
         line_finder = self._logical_finder(code)
-        self.assertEquals((1, 1), line_finder.logical_line_in(1))
+        self.assertEqual((1, 1), line_finder.logical_line_in(1))
 
     def test_logical_lines_for_multiline_string_with_extra_quotes_front(self):
         code = '""""Docs."""\na = 1\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((2, 2), line_finder.logical_line_in(2))
+        self.assertEqual((2, 2), line_finder.logical_line_in(2))
 
     def test_logical_lines_for_multiline_string_with_escaped_quotes(self):
         code = '"""Quotes \\""" "\\"" \' """\na = 1\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals((2, 2), line_finder.logical_line_in(2))
+        self.assertEqual((2, 2), line_finder.logical_line_in(2))
 
     def test_generating_line_starts(self):
         code = 'a = 1\na = 2\n\na = 3\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals([1, 2, 4], list(line_finder.generate_starts()))
+        self.assertEqual([1, 2, 4], list(line_finder.generate_starts()))
 
     def test_generating_line_starts2(self):
         code = 'a = 1\na = 2\n\na = \\ 3\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals([2, 4], list(line_finder.generate_starts(2)))
+        self.assertEqual([2, 4], list(line_finder.generate_starts(2)))
 
     def test_generating_line_starts3(self):
         code = 'a = 1\na = 2\n\na = \\ 3\n'
         line_finder = LogicalLineFinder(SourceLinesAdapter(code))
-        self.assertEquals([2], list(line_finder.generate_starts(2, 3)))
+        self.assertEqual([2], list(line_finder.generate_starts(2, 3)))
 
     def test_generating_line_starts_for_multi_line_statements(self):
         code = '\na = \\\n 1 + \\\n 1\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals([2], list(line_finder.generate_starts()))
+        self.assertEqual([2], list(line_finder.generate_starts()))
 
     def test_generating_line_starts_and_unmatched_deindents(self):
         code = 'if True:\n    if True:\n        if True:\n' \
                '            a = 1\n    b = 1\n'
         line_finder = self._logical_finder(code)
-        self.assertEquals([4, 5], list(line_finder.generate_starts(4)))
+        self.assertEqual([4, 5], list(line_finder.generate_starts(4)))
 
 
 class TokenizerLogicalLineFinderTest(LogicalLineFinderTest):

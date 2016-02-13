@@ -91,7 +91,7 @@ class CodeAssistTest(unittest.TestCase):
         result = self._assist(code)
         count = len([x for x in result
                      if x.name == 'variable' and x.scope == 'global'])
-        self.assertEquals(1, count)
+        self.assertEqual(1, count)
 
     def test_throwing_exception_in_case_of_syntax_errors(self):
         code = 'sample (sdf+)\n'
@@ -115,7 +115,7 @@ class CodeAssistTest(unittest.TestCase):
 
     def test_completion_result(self):
         code = 'my_global = 10\nt = my'
-        self.assertEquals(len(code) - 2, starting_offset(code, len(code)))
+        self.assertEqual(len(code) - 2, starting_offset(code, len(code)))
 
     def test_completing_imported_names(self):
         code = 'import sys\na = sy'
@@ -345,12 +345,12 @@ class CodeAssistTest(unittest.TestCase):
     def test_get_definition_location(self):
         code = 'def a_func():\n    pass\na_func()'
         result = get_definition_location(self.project, code, len(code) - 3)
-        self.assertEquals((None, 1), result)
+        self.assertEqual((None, 1), result)
 
     def test_get_definition_location_underlined_names(self):
         code = 'def a_sample_func():\n    pass\na_sample_func()'
         result = get_definition_location(self.project, code, len(code) - 11)
-        self.assertEquals((None, 1), result)
+        self.assertEqual((None, 1), result)
 
     def test_get_definition_location_dotted_names(self):
         code = 'class AClass(object):\n' \
@@ -359,14 +359,14 @@ class CodeAssistTest(unittest.TestCase):
                '        pass\n' \
                'AClass.a_method()'
         result = get_definition_location(self.project, code, len(code) - 3)
-        self.assertEquals((None, 2), result)
+        self.assertEqual((None, 2), result)
 
     def test_get_definition_location_dotted_module_names(self):
         module_resource = testutils.create_module(self.project, 'mod')
         module_resource.write('def a_func():\n    pass\n')
         code = 'import mod\nmod.a_func()'
         result = get_definition_location(self.project, code, len(code) - 3)
-        self.assertEquals((module_resource, 1), result)
+        self.assertEqual((module_resource, 1), result)
 
     def test_get_definition_location_for_nested_packages(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -377,33 +377,33 @@ class CodeAssistTest(unittest.TestCase):
         init_dot_py = pkg2.get_child('__init__.py')
         found_pyname = get_definition_location(self.project, mod1.read(),
                                                mod1.read().index('pkg2') + 1)
-        self.assertEquals(init_dot_py, found_pyname[0])
+        self.assertEqual(init_dot_py, found_pyname[0])
 
     def test_get_definition_location_unknown(self):
         code = 'a_func()\n'
         result = get_definition_location(self.project, code, len(code) - 3)
-        self.assertEquals((None, None), result)
+        self.assertEqual((None, None), result)
 
     def test_get_definition_location_dot_spaces(self):
         code = 'class AClass(object):\n    ' \
                '@staticmethod\n    def a_method():\n' \
                '        pass\nAClass.\\\n     a_method()'
         result = get_definition_location(self.project, code, len(code) - 3)
-        self.assertEquals((None, 2), result)
+        self.assertEqual((None, 2), result)
 
     def test_get_definition_location_dot_line_break_inside_parens(self):
         code = 'class A(object):\n    def a_method(self):\n        pass\n' + \
                '(A.\na_method)'
         result = get_definition_location(self.project, code,
                                          code.rindex('a_method') + 1)
-        self.assertEquals((None, 2), result)
+        self.assertEqual((None, 2), result)
 
     def test_if_scopes_in_other_scopes_for_get_definition_location(self):
         code = 'def f(a_var):\n    pass\na_var = 10\n' + \
                'if True:\n' + \
                '    print(a_var)\n'
         result = get_definition_location(self.project, code, len(code) - 3)
-        self.assertEquals((None, 3), result)
+        self.assertEqual((None, 3), result)
 
     def test_code_assists_in_parens(self):
         code = 'def a_func(a_var):\n    pass\na_var = 10\na_func(a_'
@@ -425,8 +425,8 @@ class CodeAssistTest(unittest.TestCase):
                '    my_sample_var = 20\n' + \
                '    my_sample_'
         proposals = sorted_proposals(self._assist(code))
-        self.assertEquals('my_sample_var', proposals[0].name)
-        self.assertEquals('my_sample_function', proposals[1].name)
+        self.assertEqual('my_sample_var', proposals[0].name)
+        self.assertEqual('my_sample_function', proposals[1].name)
 
     def test_proposals_sorter_for_methods_and_attributes(self):
         code = 'class A(object):\n' + \
@@ -439,9 +439,9 @@ class CodeAssistTest(unittest.TestCase):
                'a_var = A()\n' + \
                'a_var.my_'
         proposals = sorted_proposals(self._assist(code))
-        self.assertEquals('my_b_func', proposals[0].name)
-        self.assertEquals('my_c_func', proposals[1].name)
-        self.assertEquals('my_a_var', proposals[2].name)
+        self.assertEqual('my_b_func', proposals[0].name)
+        self.assertEqual('my_c_func', proposals[1].name)
+        self.assertEqual('my_a_var', proposals[2].name)
 
     def test_proposals_sorter_for_global_methods_and_funcs(self):
         code = 'def my_b_func(self):\n' + \
@@ -449,8 +449,8 @@ class CodeAssistTest(unittest.TestCase):
                'my_a_var = 10\n' + \
                'my_'
         proposals = sorted_proposals(self._assist(code))
-        self.assertEquals('my_b_func', proposals[0].name)
-        self.assertEquals('my_a_var', proposals[1].name)
+        self.assertEqual('my_b_func', proposals[0].name)
+        self.assertEqual('my_a_var', proposals[1].name)
 
     def test_proposals_sorter_underlined_methods(self):
         code = 'class A(object):\n' + \
@@ -461,8 +461,8 @@ class CodeAssistTest(unittest.TestCase):
                'a_var = A()\n' + \
                'a_var.'
         proposals = sorted_proposals(self._assist(code))
-        self.assertEquals('my_func', proposals[0].name)
-        self.assertEquals('_my_func', proposals[1].name)
+        self.assertEqual('my_func', proposals[0].name)
+        self.assertEqual('_my_func', proposals[1].name)
 
     def test_proposals_sorter_and_scope_prefs(self):
         code = 'my_global_var = 1\n' \
@@ -471,8 +471,8 @@ class CodeAssistTest(unittest.TestCase):
                '    my_'
         result = self._assist(code)
         proposals = sorted_proposals(result, scopepref=['global', 'local'])
-        self.assertEquals('my_global_var', proposals[0].name)
-        self.assertEquals('my_local_var', proposals[1].name)
+        self.assertEqual('my_global_var', proposals[0].name)
+        self.assertEqual('my_local_var', proposals[1].name)
 
     def test_proposals_sorter_and_type_prefs(self):
         code = 'my_global_var = 1\n' \
@@ -481,8 +481,8 @@ class CodeAssistTest(unittest.TestCase):
                'my_'
         result = self._assist(code)
         proposals = sorted_proposals(result, typepref=['instance', 'function'])
-        self.assertEquals('my_global_var', proposals[0].name)
-        self.assertEquals('my_global_func', proposals[1].name)
+        self.assertEqual('my_global_var', proposals[0].name)
+        self.assertEqual('my_global_func', proposals[1].name)
 
     def test_proposals_sorter_and_missing_type_in_typepref(self):
         code = 'my_global_var = 1\n' \
@@ -525,7 +525,7 @@ class CodeAssistTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('"""a module"""\n')
         src = 'import mod\nmod'
-        self.assertEquals('a module', get_doc(self.project, src, len(src) - 1))
+        self.assertEqual('a module', get_doc(self.project, src, len(src) - 1))
 
     def test_get_pydoc_for_builtins(self):
         src = 'print(object)\n'
@@ -685,20 +685,20 @@ class CodeAssistTest(unittest.TestCase):
     def test_simple_get_calltips(self):
         src = 'def f():\n    pass\nvar = f()\n'
         doc = get_calltip(self.project, src, src.rindex('f'))
-        self.assertEquals('f()', doc)
+        self.assertEqual('f()', doc)
 
     def test_get_calltips_for_classes(self):
         src = 'class C(object):\n' \
               '    def __init__(self):\n        pass\nC('
         doc = get_calltip(self.project, src, len(src) - 1)
-        self.assertEquals('C.__init__(self)', doc)
+        self.assertEqual('C.__init__(self)', doc)
 
     def test_get_calltips_for_objects_with_call(self):
         src = 'class C(object):\n' \
               '    def __call__(self, p):\n        pass\n' \
               'c = C()\nc(1,'
         doc = get_calltip(self.project, src, src.rindex('c'))
-        self.assertEquals('C.__call__(self, p)', doc)
+        self.assertEqual('C.__call__(self, p)', doc)
 
     def test_get_calltips_and_including_module_name(self):
         src = 'class C(object):\n' \
@@ -707,7 +707,7 @@ class CodeAssistTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write(src)
         doc = get_calltip(self.project, src, src.rindex('c'), mod)
-        self.assertEquals('mod.C.__call__(self, p)', doc)
+        self.assertEqual('mod.C.__call__(self, p)', doc)
 
     def test_get_calltips_and_including_module_name_2(self):
         src = 'range()\n'
@@ -720,7 +720,7 @@ class CodeAssistTest(unittest.TestCase):
               '        pass\n' \
               'C().f()'
         doc = get_calltip(self.project, src, src.rindex('f'), remove_self=True)
-        self.assertEquals('C.f()', doc)
+        self.assertEqual('C.f()', doc)
 
     def test_removing_self_parameter_and_more_than_one_parameter(self):
         src = 'class C(object):\n' \
@@ -728,7 +728,7 @@ class CodeAssistTest(unittest.TestCase):
               '        pass\n' \
               'C().f()'
         doc = get_calltip(self.project, src, src.rindex('f'), remove_self=True)
-        self.assertEquals('C.f(p1)', doc)
+        self.assertEqual('C.f(p1)', doc)
 
     def test_lambda_calltip(self):
         src = 'foo = lambda x, y=1: None\n' \
@@ -859,7 +859,7 @@ class CodeAssistTest(unittest.TestCase):
         resource.write(code)
         result = get_canonical_path(self.project, resource, 1)
         mod_path = os.path.join(self.project.address, 'mod.py')
-        self.assertEquals(
+        self.assertEqual(
             result, [(mod_path, 'MODULE'),
                      ('GLOBAL_VARIABLE', 'VARIABLE')])
 
@@ -870,7 +870,7 @@ class CodeAssistTest(unittest.TestCase):
         resource.write(code)
         result = get_canonical_path(self.project, resource, 24)
         mod_path = os.path.join(self.project.address, 'mod.py')
-        self.assertEquals(
+        self.assertEqual(
             result, [(mod_path, 'MODULE'), ('Foo', 'CLASS'),
                      ('attr', 'VARIABLE')])
 
@@ -882,7 +882,7 @@ class CodeAssistTest(unittest.TestCase):
         resource.write(code)
         result = get_canonical_path(self.project, resource, 30)
         mod_path = os.path.join(self.project.address, 'mod.py')
-        self.assertEquals(
+        self.assertEqual(
             result, [(mod_path, 'MODULE'), ('Foo', 'CLASS'),
                      ('Bar', 'CLASS')])
 
@@ -894,7 +894,7 @@ class CodeAssistTest(unittest.TestCase):
         resource.write(code)
         result = get_canonical_path(self.project, resource, 41)
         mod_path = os.path.join(self.project.address, 'mod.py')
-        self.assertEquals(
+        self.assertEqual(
             result, [(mod_path, 'MODULE'), ('Foo', 'CLASS'),
                      ('bar', 'FUNCTION'), ('b', 'PARAMETER')])
 
@@ -905,7 +905,7 @@ class CodeAssistTest(unittest.TestCase):
         resource.write(code)
         result = get_canonical_path(self.project, resource, 17)
         mod_path = os.path.join(self.project.address, 'mod.py')
-        self.assertEquals(
+        self.assertEqual(
             result, [(mod_path, 'MODULE'), ('bar', 'FUNCTION'),
                      ('x', 'VARIABLE')])
 
@@ -1027,7 +1027,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
                '    def method1(self):\n' \
                '        pass\n' \
                'Sample.me'
-        self.assertEquals(len(code) - 2, starting_offset(code, len(code)))
+        self.assertEqual(len(code) - 2, starting_offset(code, len(code)))
 
     def test_backslash_after_dots(self):
         code = 'class Sample(object):\n' \
@@ -1062,13 +1062,13 @@ class CodeAssistInProjectsTest(unittest.TestCase):
         code = 'import mod1\nmod1.a_func\n'
         result = get_definition_location(self.project, code,
                                          len(code) - 2, mod2)
-        self.assertEquals((mod1, 1), result)
+        self.assertEqual((mod1, 1), result)
 
     def test_get_definition_location_for_builtins(self):
         code = 'import sys\n'
         result = get_definition_location(self.project, code,
                                          len(code) - 2)
-        self.assertEquals((None, None), result)
+        self.assertEqual((None, None), result)
 
     def test_get_doc_on_relative_imports(self):
         pkg = testutils.create_package(self.project, 'pkg')
@@ -1120,7 +1120,7 @@ class CodeAssistInProjectsTest(unittest.TestCase):
 
     def test_starting_expression(self):
         code = 'l = list()\nl.app'
-        self.assertEquals('l.app', starting_expression(code, len(code)))
+        self.assertEqual('l.app', starting_expression(code, len(code)))
 
 
 def suite():
