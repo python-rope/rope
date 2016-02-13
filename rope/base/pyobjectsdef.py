@@ -393,10 +393,10 @@ class _ScopeVisitor(object):
         return result
 
     def _With(self, node):
-        withitem = pycompat.get_ast_with(node)
-        if withitem.optional_vars:
-            self._update_evaluated(withitem.optional_vars,
-                                   withitem.context_expr, '.__enter__()')
+        for item in pycompat.get_ast_with_items(node):
+            if item.optional_vars:
+                self._update_evaluated(item.optional_vars,
+                                       item.context_expr, '.__enter__()')
         for child in node.body:
             ast.walk(child, self)
 
