@@ -12,8 +12,8 @@ def _stdlib_path():
         return sysconfig.get_python_lib(standard_lib=True,
                                         plat_specific=True)
     elif pycompat.PY3:
-        import sysconfig
-        return sysconfig.get_config_var('LIBDIR') + os.sep + 'python' + '.'.join(map(str, sys.version_info[0:2]))
+        import inspect
+        return os.path.dirname(inspect.getsourcefile(inspect))
 
 
 @utils.cached(1)
