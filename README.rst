@@ -11,11 +11,11 @@ Overview
 ========
 
 `Rope`_ is a python refactoring library.
-`Rope Offical`_ originally it was written by @aligrudi and a long time was supported by @mcepl.
+`RopeOffical`_ originally it was written by @aligrudi and a long time was supported by @mcepl.
 We hope to give this library fresh breath and new life.
 
 .. _`rope`: https://github.com/sergeyglazyrindev/rope
-.. _`rope official`: https://github.com/python-rope/rope
+.. _`ropeofficial`: https://github.com/python-rope/rope
 
 
 New Features
