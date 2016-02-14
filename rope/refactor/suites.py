@@ -1,4 +1,5 @@
 from rope.base import ast
+from rope.base.utils import pycompat
 
 
 def find_visible(node, lines):
@@ -115,12 +116,26 @@ class _SuiteWalker(object):
         self.suites.append(Suite(node.body, node.lineno, self.suite))
 
     def _TryFinally(self, node):
-        if len(node.finalbody) == 1 and \
-           isinstance(node.body[0], ast.TryExcept):
-            self._TryExcept(node.body[0])
+        proceed_to_except_handler = False
+        if len(node.finalbody) == 1:
+            if pycompat.PY2:
+                proceed_to_except_handler = isinstance(node.body[0], ast.TryExcept)
+            elif pycompat.PY3:
+                try:
+                    proceed_to_except_handler = isinstance(node.handlers[0], ast.ExceptHandler)
+                except IndexError:
+                    pass
+        if proceed_to_except_handler:
+            self._TryExcept(node if pycompat.PY3 else node.body[0])
         else:
             self.suites.append(Suite(node.body, node.lineno, self.suite))
         self.suites.append(Suite(node.finalbody, node.lineno, self.suite))
+
+    def _Try(self, node):
+        if len(node.finalbody) == 1:
+            self._TryFinally(node)
+        else:
+            self._TryExcept(node)
 
     def _TryExcept(self, node):
         self.suites.append(Suite(node.body, node.lineno, self.suite))

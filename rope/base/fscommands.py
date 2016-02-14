@@ -9,7 +9,8 @@ provided by `FileSystemCommands` class.  See `SubversionCommands` and
 import os
 import shutil
 import subprocess
-import rope.comp as comp
+
+import rope.base.utils.pycompat as pycompat
 
 try:
     unicode
@@ -262,10 +263,10 @@ def read_str_coding(source):
 
 
 def _find_coding(text):
-    if isinstance(text, comp.str):
+    if isinstance(text, pycompat.str):
         text = text.encode('utf-8')
     coding = b'coding'
-    to_chr = chr if comp.PY3 else lambda x: x
+    to_chr = chr if pycompat.PY3 else lambda x: x
     try:
         start = text.index(coding) + len(coding)
         if text[start] not in b'=:':
