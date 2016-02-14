@@ -6,8 +6,8 @@ except NameError:
     raw_input = input
 
 import rope.base.evaluate
-from rope import comp
-from rope.base import pynames, pyobjects, arguments, utils, ast
+from rope.base.utils import pycompat
+from rope.base import pynames, pyobjects, arguments, utils
 
 
 class BuiltinModule(pyobjects.AbstractModule):
@@ -226,6 +226,9 @@ class _CallContext(object):
             pymodule = pyname.get_definition_location()[0]
             pymodule.pycore.object_info.save_per_name(scope, name, value)
 
+    def get_arguments_number(self):
+        return len(self.args.args)
+
 
 class _AttributeCollector(object):
 
@@ -269,7 +272,7 @@ class List(BuiltinClass):
                   argnames=['self', 'iterable'])
 
         # Getting methods
-        collector('__getitem__', function=self._list_get)
+        collector('__getitem__', function=self._self_get if pycompat.PY3 else self._list_get)
         collector('pop', function=self._list_get)
         try:
             collector('__getslice__', function=self._self_get)
@@ -305,7 +308,11 @@ class List(BuiltinClass):
         return get_iterator(self._list_get(context))
 
     def _self_get(self, context):
-        return get_list(self._list_get(context))
+        # @todo - refactor, not sure how to implement it properly
+        if context.get_arguments_number() > 1:
+            return self._list_get(context)
+        else:
+            return get_list(self._list_get(context))
 
 
 get_list = _create_builtin_getter(List)
@@ -657,12 +664,12 @@ class Lambda(pyobjects.AbstractFunction):
         return 'lambda'
 
     def get_param_names(self, special_args=True):
-        result = [node.id for node in self.arguments.args
-                  if isinstance(node, ast.Name)]
+        result = [pycompat.get_ast_arg_arg(node) for node in self.arguments.args
+                  if isinstance(node, pycompat.ast_arg_type)]
         if self.arguments.vararg:
-            result.append('*' + self.arguments.vararg)
+            result.append('*' + pycompat.get_ast_arg_arg(self.arguments.vararg))
         if self.arguments.kwarg:
-            result.append('**' + self.arguments.kwarg)
+            result.append('**' + pycompat.get_ast_arg_arg(self.arguments.kwarg))
         return result
 
     @property
@@ -802,4 +809,4 @@ _initial_builtins = {
                              builtin=raw_input)),
 }
 
-builtins = BuiltinModule(comp.builtins.__name__, initial=_initial_builtins)
+builtins = BuiltinModule(pycompat.builtins.__name__, initial=_initial_builtins)

@@ -12,7 +12,7 @@ def __rope_start_everything():
     import inspect
     import types
     import threading
-    import rope.comp as comp
+    import rope.base.utils.pycompat as pycompat
 
     class _MessageSender(object):
 
@@ -81,8 +81,9 @@ def __rope_start_everything():
             code = frame.f_code
             for argname in code.co_varnames[:code.co_argcount]:
                 try:
-                    args.append(self._object_to_persisted_form(
-                        frame.f_locals[argname]))
+                    argvalue = self._object_to_persisted_form(
+                        frame.f_locals[argname])
+                    args.append(argvalue)
                 except (TypeError, AttributeError):
                     args.append(('unknown',))
             try:
@@ -102,7 +103,6 @@ def __rope_start_everything():
             #    return False
             #return not frame.f_back or
             #    not self._is_code_inside_project(frame.f_back.f_code)
-
             if not self._is_code_inside_project(frame.f_code) and \
                (not frame.f_back or
                     not self._is_code_inside_project(frame.f_back.f_code)):
@@ -130,7 +130,7 @@ def __rope_start_everything():
                 return ('unknown',)
 
         def _get_persisted_builtin(self, object_):
-            if isinstance(object_, comp.string_types):
+            if isinstance(object_, pycompat.string_types):
                 return ('builtin', 'str')
             if isinstance(object_, list):
                 holding = None
@@ -142,7 +142,7 @@ def __rope_start_everything():
                 keys = None
                 values = None
                 if len(object_) > 0:
-                    keys = object_.keys()[0]
+                    keys = [key for key in object_.keys() if key != '__locals__'][0]
                     values = object_[keys]
                 return ('builtin', 'dict',
                         self._object_to_persisted_form(keys),
@@ -176,7 +176,7 @@ def __rope_start_everything():
                 return self._get_persisted_code(object_.__func__.__code__)
             if isinstance(object_, types.ModuleType):
                 return self._get_persisted_module(object_)
-            if isinstance(object_, comp.string_types + (list, dict, tuple, set)):
+            if isinstance(object_, pycompat.string_types + (list, dict, tuple, set)):
                 return self._get_persisted_builtin(object_)
             if isinstance(object_, type):
                 return self._get_persisted_class(object_)
@@ -209,10 +209,11 @@ def __rope_start_everything():
     run_globals.update({'__name__': '__main__',
                         '__builtins__': __builtins__,
                         '__file__': file_to_run})
+
     if send_info != '-':
         data_sender = _FunctionCallDataSender(send_info, project_root)
     del sys.argv[1:4]
-    comp.execfile(file_to_run, run_globals)
+    pycompat.execfile(file_to_run, run_globals)
     if send_info != '-':
         data_sender.close()
 

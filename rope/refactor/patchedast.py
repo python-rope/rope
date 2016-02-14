@@ -3,11 +3,13 @@ import re
 import warnings
 
 from rope.base import ast, codeanalyze, exceptions
+from rope.base.utils import pycompat
 
 try:
     basestring
 except NameError:
     basestring = (str, bytes)
+
 
 def get_patched_ast(source, sorted_children=False):
     """Adds ``region`` and ``sorted_children`` fields to nodes
@@ -400,11 +402,11 @@ class _PatchingASTWalker(object):
         if node.vararg is not None:
             if args:
                 children.append(',')
-            children.extend(['*', node.vararg])
+            children.extend(['*', pycompat.get_ast_arg_arg(node.vararg)])
         if node.kwarg is not None:
             if args or node.vararg is not None:
                 children.append(',')
-            children.extend(['**', node.kwarg])
+            children.extend(['**', pycompat.get_ast_arg_arg(node.kwarg)])
         self._handle(node, children)
 
     def _add_args_to_children(self, children, arg, default):
@@ -515,12 +517,18 @@ class _PatchingASTWalker(object):
         children.extend(node.generators)
         children.append('}')
         self._handle(node, children)
-    
+
     def _Module(self, node):
         self._handle(node, list(node.body), eat_spaces=True)
 
     def _Name(self, node):
         self._handle(node, [node.id])
+
+    def _NameConstant(self, node):
+        self._handle(node, [str(node.value)])
+
+    def _arg(self, node):
+        self._handle(node, [node.arg])
 
     def _Pass(self, node):
         self._handle(node, ['pass'])
@@ -537,15 +545,30 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _Raise(self, node):
-        children = ['raise']
-        if node.type:
-            children.append(node.type)
-        if node.inst:
-            children.append(',')
-            children.append(node.inst)
-        if node.tback:
-            children.append(',')
-            children.append(node.tback)
+
+        def get_python3_raise_children(node):
+            children = ['raise']
+            if node.exc:
+                children.append(node.exc)
+            if node.cause:
+                children.append(node.cause)
+            return children
+
+        def get_python2_raise_children(node):
+            children = ['raise']
+            if node.type:
+                children.append(node.type)
+            if node.inst:
+                children.append(',')
+                children.append(node.inst)
+            if node.tback:
+                children.append(',')
+                children.append(node.tback)
+            return children
+        if pycompat.PY2:
+            children = get_python2_raise_children(node)
+        else:
+            children = get_python3_raise_children(node)
         self._handle(node, children)
 
     def _Return(self, node):
@@ -582,10 +605,25 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _TryFinally(self, node):
+        # @todo fixme
+        is_there_except_handler = False
+        not_empty_body = True
+        if len(node.finalbody) == 1:
+            if pycompat.PY2:
+                is_there_except_handler = isinstance(node.body[0], ast.TryExcept)
+                not_empty_body = not bool(len(node.body))
+            elif pycompat.PY3:
+                try:
+                    is_there_except_handler = isinstance(node.handlers[0], ast.ExceptHandler)
+                    not_empty_body = True
+                except IndexError:
+                    pass
         children = []
-        if len(node.body) != 1 or not isinstance(node.body[0], ast.TryExcept):
+        if not_empty_body or not is_there_except_handler:
             children.extend(['try', ':'])
         children.extend(node.body)
+        if pycompat.PY3:
+            children.extend(node.handlers)
         children.extend(['finally', ':'])
         children.extend(node.finalbody)
         self._handle(node, children)
@@ -598,6 +636,12 @@ class _PatchingASTWalker(object):
             children.extend(['else', ':'])
             children.extend(node.orelse)
         self._handle(node, children)
+
+    def _Try(self, node):
+        if len(node.finalbody):
+            self._TryFinally(node)
+        else:
+            self._TryExcept(node)
 
     def _ExceptHandler(self, node):
         self._excepthandler(node)
@@ -642,9 +686,10 @@ class _PatchingASTWalker(object):
         self._handle(node, children)
 
     def _With(self, node):
-        children = ['with', node.context_expr]
-        if node.optional_vars:
-            children.extend(['as', node.optional_vars])
+        withitem = pycompat.get_ast_with(node)
+        children = ['with', withitem.context_expr]
+        if withitem.optional_vars:
+            children.extend(['as', withitem.optional_vars])
         children.append(':')
         children.extend(node.body)
         self._handle(node, children)
