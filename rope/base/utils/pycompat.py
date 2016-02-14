@@ -44,4 +44,5 @@ else:  # PY2
         return node.id
 
     def get_ast_with_items(node):
-            return [node]
+        # @todo, do we need to handle all with items in python 2 ?
+        return [node]

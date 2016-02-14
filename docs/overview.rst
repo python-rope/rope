@@ -737,8 +737,7 @@ examples.  After this example you might like to have a look at:
   default wildcard supports.
 
 Finally, restructurings can be improved in many ways (for instance
-adding new wildcards).  You might like to discuss your ideas in the
-mailing list.
+adding new wildcards). 
 
 
 Example 1

@@ -77,12 +77,8 @@ class PyFunction(pyobjects.PyFunction):
 
     def get_param_names(self, special_args=True):
         # TODO: handle tuple parameters
-        if hasattr(ast, 'arg'):  # Py3
-            result = [node.arg for node in self.arguments.args
-                      if isinstance(node, ast.arg)]
-        else:  # Py2
-            result = [node.id for node in self.arguments.args
-                      if isinstance(node, ast.Name)]
+        result = [pycompat.get_ast_arg_arg(node) for node in self.arguments.args
+                  if isinstance(node, pycompat.ast_arg_type)]
         if special_args:
             if self.arguments.vararg:
                 result.append(pycompat.get_ast_arg_arg(self.arguments.vararg))
@@ -484,12 +480,8 @@ class _ClassVisitor(_ScopeVisitor):
         if len(node.args.args) > 0:
             first = node.args.args[0]
             new_visitor = None
-            if hasattr(ast, 'arg'):  # Py3
-                if isinstance(first, ast.arg):
-                    new_visitor = _ClassInitVisitor(self, first.arg)
-            else:  # Py2
-                if isinstance(first, ast.Name):
-                    new_visitor = _ClassInitVisitor(self, first.id)
+            if isinstance(first, pycompat.ast_arg_type):
+                new_visitor = _ClassInitVisitor(self, pycompat.get_ast_arg_arg(first))
             if new_visitor is not None:
                 for child in ast.get_child_nodes(node):
                     ast.walk(child, new_visitor)

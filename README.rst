@@ -1,5 +1,5 @@
 
-.. _GitHub python-rope / rope: https://github.com/python-rope/rope
+.. _GitHub python-rope / rope: https://github.com/sergeyglazyrindev/rope
 
 
 ========================================
@@ -11,8 +11,11 @@ Overview
 ========
 
 `Rope`_ is a python refactoring library.
+`Official Rope`_ originally was written by @aligrudi and a long time was supported by @mcepl.
+We hope to give this library fresh breath and new life.
 
-.. _`rope`: https://github.com/python-rope/rope
+.. _`rope`: https://github.com/sergeyglazyrindev/rope
+.. _`Official Rope`: https://github.com/python-rope/rope
 
 
 New Features
@@ -40,10 +43,9 @@ you open a project).
 Bug Reports
 ===========
 
-Send your bug reports and feature requests to `rope-dev (at)
-googlegroups.com`_.
+Please create issues or enhancements on github `Issues`_ page.
 
-.. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
+.. _`Issues`: https://github.com/sergeyglazyrindev/rope/issues
 
 
 License
