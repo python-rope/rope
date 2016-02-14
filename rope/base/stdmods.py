@@ -53,7 +53,7 @@ def dynload_modules():
             path = os.path.join(dynload_path, name)
             if os.path.isfile(path):
                 if name.endswith('.dll'):
-                    result.add(os.path.splitext(name)[0])
+                    result.add(os.path.splitext(normalize_so_name(name))[0])
                 if name.endswith('.so'):
                     result.add(normalize_so_name(name))
     return result
