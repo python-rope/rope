@@ -23,10 +23,12 @@ except NameError:  # PY3
             exec(code, global_vars or {}, local_vars)
 
     def get_ast_arg_arg(node):
-        if isinstance(node, string_types):
+        if isinstance(node, string_types):  # TODO: G21: Understand the Algorithm (Where it's used?)
             return node
         return node.arg
 
+    def get_ast_with_items(node):
+        return node.items
 
 else:  # PY2
 
@@ -41,9 +43,5 @@ else:  # PY2
             return node
         return node.id
 
-
-def get_ast_with(node):
-    # @todo fixmee - handle all withitems
-    if PY2:
-        return node
-    return node.items[0]
+    def get_ast_with_items(node):
+            return [node]

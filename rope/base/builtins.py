@@ -272,10 +272,10 @@ class List(BuiltinClass):
                   argnames=['self', 'iterable'])
 
         # Getting methods
-        collector('__getitem__', function=self._self_get if pycompat.PY3 else self._list_get)
+        collector('__getitem__', function=self._list_get)
         collector('pop', function=self._list_get)
         try:
-            collector('__getslice__', function=self._self_get)
+            collector('__getslice__', function=self._list_get)
         except AttributeError:
             pass
 
@@ -301,6 +301,10 @@ class List(BuiltinClass):
 
     def _list_get(self, context):
         if self.holding is not None:
+            args = context.get_arguments(['self', 'key'])
+            if (len(args) > 1 and args[1] is not None and
+                    args[1].get_type() == builtins['slice'].get_object()):
+                return get_list(self.holding)
             return self.holding
         return context.get_per_name()
 
@@ -308,11 +312,7 @@ class List(BuiltinClass):
         return get_iterator(self._list_get(context))
 
     def _self_get(self, context):
-        # @todo - refactor, not sure how to implement it properly
-        if context.get_arguments_number() > 1:
-            return self._list_get(context)
-        else:
-            return get_list(self._list_get(context))
+        return get_list(self._list_get(context))
 
 
 get_list = _create_builtin_getter(List)
@@ -422,7 +422,7 @@ class Tuple(BuiltinClass):
         if objects:
             first = objects[0]
         attributes = {
-            '__getitem__': BuiltinName(BuiltinFunction(first)),
+            '__getitem__': BuiltinName(BuiltinFunction(first)),  # TODO: add slice support
             '__getslice__':
             BuiltinName(BuiltinFunction(pyobjects.PyObject(self))),
             '__new__': BuiltinName(BuiltinFunction(function=self._new_tuple)),
