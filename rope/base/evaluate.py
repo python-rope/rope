@@ -291,7 +291,11 @@ class StatementEvaluator(object):
             self._call_function(node.value, '__getitem__',
                                 [node.slice.value])
         elif isinstance(node.slice, ast.Slice):
-            self._call_function(node.value, '__getitem__' if pycompat.PY3 else '__getslice__')
+            self._call_function(node.value, '__getitem__',
+                                [node.slice])
+
+    def _Slice(self, node):
+        self.result = self._get_builtin_name('slice')
 
     def _call_function(self, node, function_name, other_args=None):
         pyname = eval_node(self.scope, node)
