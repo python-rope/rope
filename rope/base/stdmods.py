@@ -12,8 +12,8 @@ def _stdlib_path():
         return sysconfig.get_python_lib(standard_lib=True,
                                         plat_specific=True)
     elif pycompat.PY3:
-        import sysconfig
-        return sysconfig.get_config_var('LIBDIR') + os.sep + 'python' + '.'.join(map(str, sys.version_info[0:2]))
+        import inspect
+        return os.path.dirname(inspect.getsourcefile(inspect))
 
 
 @utils.cached(1)
@@ -41,7 +41,9 @@ def normalize_so_name(name):
     """
     Handle different types of python installations
     """
-    return re.sub('\.cpython-\d+', '', os.path.splitext(name)[0].replace('module', ''))
+    if "cpython" in name:
+        return os.path.splitext(os.path.splitext(name)[0])[0]
+    return os.path.splitext(name)[0]
 
 
 @utils.cached(1)
@@ -53,7 +55,7 @@ def dynload_modules():
             path = os.path.join(dynload_path, name)
             if os.path.isfile(path):
                 if name.endswith('.dll'):
-                    result.add(os.path.splitext(name)[0])
+                    result.add(normalize_so_name(name))
                 if name.endswith('.so'):
                     result.add(normalize_so_name(name))
     return result

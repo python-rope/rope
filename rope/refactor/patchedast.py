@@ -653,7 +653,7 @@ class _PatchingASTWalker(object):
             children.append(node.type)
         if node.name:
             children.append(self.semicolon_or_as_in_except)
-            children.append(ast.Name(id=node.name) if pycompat.PY3 else node.name)
+            children.append(node.name)
         children.append(':')
         children.extend(node.body)
 

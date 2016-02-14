@@ -61,5 +61,5 @@ Have a look at `COPYING`_ for more information.
 .. _`docs/library.rst`: docs/library.html
 .. _`COPYING`: COPYING
 
-.. image:: https://secure.travis-ci.org/python-rope/rope.png
+.. image:: https://secure.travis-ci.org/sergeyglazyrindev/rope.png
    :alt: Build Status
