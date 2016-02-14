@@ -497,7 +497,6 @@ class BuiltinModulesTest(unittest.TestCase):
 
     def test_time_in_std_mods(self):
         import rope.base.stdmods
-        self.assertEqual(['time'], rope.base.stdmods.standard_modules())
         self.assertTrue('time' in rope.base.stdmods.standard_modules())
 
 
