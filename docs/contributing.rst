@@ -14,22 +14,15 @@ welcome to!
 How to Help Rope?
 =================
 
-Rope's mailing list is `rope-dev (at) googlegroups.com`_.  Click the
-"Join group to post" button to subscribe. Then:
+Look into `Issues`_ page and check if you can fix/help/suggest how to fix any issue/enhancement.
 
-* Use rope
-* Send bug reports and request features
-* Submit patches for bugs or new features
-* Discuss your ideas
-
-.. _`rope-dev (at) googlegroups.com`: http://groups.google.com/group/rope-dev
+.. _`Issues`: https://github.com/sergeyglazyrindev/rope/issues
 
 
 Wish List
 =========
 
-You are welcome to send your patches to the `rope-dev (at)
-googlegroups.com`_ mailing list.  Here is a list of suggestions.
+You are welcome to send your patches to this repository Issues page.
 
 Issues
 ------
@@ -38,15 +31,9 @@ The `dev/issues.rst`_ file is actually the main rope todo file.  There
 is a section called "unresolved issues"; it contains almost every kind
 of task.  Most of them need some thought or discussion.  Pickup
 whichever you are most interested in.  If you have ideas or questions
-about them, don't hesitate to discuss it in the mailing list.
+about them, please create corresponding issue and we can discuss enhancements, etc
 
 .. _`dev/issues.rst`: dev/issues.rst
-
-Getting Ready For Python 3.0
-----------------------------
-
-Checkout http://bitbucket.org/agr/rope_py3k Mercurial_ repository.
-Contributions are welcome.
 
 Write Plugins For Other IDEs
 ----------------------------
@@ -78,8 +65,7 @@ more information.
 Source Repository
 =================
 
-Rope uses GitHub_. The repository exists at
-`https://github.com/sergeyglazyrindev/rope`_.
+Rope uses GitHub_. The repository exists at https://github.com/sergeyglazyrindev/rope.
 
 
 Submitting patches
