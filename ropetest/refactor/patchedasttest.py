@@ -824,16 +824,11 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             node_to_test, ['try', '', ':', '\n    ', 'Pass', '\n',
                            ('excepthandler', 'ExceptHandler')])
-        if pycompat.PY3:
-            checker.check_children(
-                ('excepthandler', 'ExceptHandler'),
-                ['except', ' ', 'Name', ' ', 'as', ' ', 'e', '', ':',
-                 '\n    ', 'Pass'])
-        else:
-            checker.check_children(
-                ('excepthandler', 'ExceptHandler'),
-                ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
-                 '\n    ', 'Pass'])
+        expected_child = 'e' if pycompat.PY3 else 'Name'
+        checker.check_children(
+            ('excepthandler', 'ExceptHandler'),
+            ['except', ' ', 'Name', ' ', 'as', ' ', expected_child, '', ':',
+             '\n    ', 'Pass'])
 
     @testutils.only_for('2.5')
     def test_try_except_and_finally_node(self):
