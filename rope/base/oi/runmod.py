@@ -142,6 +142,8 @@ def __rope_start_everything():
                 keys = None
                 values = None
                 if len(object_) > 0:
+                    # @todo - fix it properly, why is __locals__ being
+                    # duplicated ?
                     keys = [key for key in object_.keys() if key != '__locals__'][0]
                     values = object_[keys]
                 return ('builtin', 'dict',

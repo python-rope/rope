@@ -226,9 +226,6 @@ class _CallContext(object):
             pymodule = pyname.get_definition_location()[0]
             pymodule.pycore.object_info.save_per_name(scope, name, value)
 
-    def get_arguments_number(self):
-        return len(self.args.args)
-
 
 class _AttributeCollector(object):
 
