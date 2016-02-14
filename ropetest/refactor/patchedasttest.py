@@ -821,13 +821,12 @@ class PatchedASTTest(unittest.TestCase):
         ast_frag = patchedast.get_patched_ast(source, True)
         checker = _ResultChecker(self, ast_frag)
         node_to_test = 'Try' if pycompat.PY3 else 'TryExcept'
-        is_catched_exception_ast_type = pycompat.PY2
         checker.check_children(
             node_to_test, ['try', '', ':', '\n    ', 'Pass', '\n',
                            ('excepthandler', 'ExceptHandler')])
         checker.check_children(
             ('excepthandler', 'ExceptHandler'),
-            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name' if is_catched_exception_ast_type else 'e', '', ':',
+            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
              '\n    ', 'Pass'])
 
     @testutils.only_for('2.5')
