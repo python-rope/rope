@@ -79,7 +79,7 @@ Source Repository
 =================
 
 Rope uses GitHub_. The repository exists at
-`https://github.com/python-rope/rope`_.
+`https://github.com/sergeyglazyrindev/rope`_.
 
 
 Submitting patches
@@ -99,9 +99,9 @@ Sending Patches
 ---------------
 
 Follow the instructions on GitHub_ on how to setup Git and fork the
-`python-rope/rope`_ repository. Once your changes are ready, send a
+`sergeyglazyrindev/rope`_ repository. Once your changes are ready, send a
 `pull request`_ for review.
 
 .. _GitHub: http://github.com/
-.. _`python-rope/rope`: https://github.com/python-rope/rope
+.. _`sergeyglazyrindev/rope`: https://github.com/sergeyglazyrindev/rope
 .. _`pull request`: https://help.github.com/articles/using-pull-requests
