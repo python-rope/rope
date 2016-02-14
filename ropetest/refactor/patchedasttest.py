@@ -374,9 +374,9 @@ class PatchedASTTest(unittest.TestCase):
             'Function', ['def', ' ', 'f', '', '(', '', 'arguments',
                          '', ')', '', ':', '\n    ', 'Expr', '\n    ',
                          'Pass'])
-        expected_ast_arg_name = pycompat.ast_arg_type.__name__
+        expected_child = pycompat.ast_arg_type.__name__
         checker.check_children(
-            'arguments', [expected_ast_arg_name, '', ',',
+            'arguments', [expected_child, '', ',',
                           ' ', '**', '', 'p2'])
 
     @testutils.only_for_versions_lower('3')
@@ -550,9 +550,9 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_region('Lambda', 0, len(source) - 1)
         checker.check_children(
             'Lambda', ['lambda', ' ', 'arguments', '', ':', ' ', 'Name'])
-        expected_arg_name = pycompat.ast_arg_type.__name__
+        expected_child = pycompat.ast_arg_type.__name__
         checker.check_children(
-            'arguments', [expected_arg_name, '', ',', ' ', expected_arg_name, '', '=', '',
+            'arguments', [expected_child, '', ',', ' ', expected_child, '', '=', '',
                           'Num', '', ',', ' ', '*', '', 'z'])
 
     def test_list_node(self):
@@ -824,10 +824,16 @@ class PatchedASTTest(unittest.TestCase):
         checker.check_children(
             node_to_test, ['try', '', ':', '\n    ', 'Pass', '\n',
                            ('excepthandler', 'ExceptHandler')])
-        checker.check_children(
-            ('excepthandler', 'ExceptHandler'),
-            ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
-             '\n    ', 'Pass'])
+        if pycompat.PY3:
+            checker.check_children(
+                ('excepthandler', 'ExceptHandler'),
+                ['except', ' ', 'Name', ' ', 'as', ' ', 'e', '', ':',
+                 '\n    ', 'Pass'])
+        else:
+            checker.check_children(
+                ('excepthandler', 'ExceptHandler'),
+                ['except', ' ', 'Name', ' ', 'as', ' ', 'Name', '', ':',
+                 '\n    ', 'Pass'])
 
     @testutils.only_for('2.5')
     def test_try_except_and_finally_node(self):
