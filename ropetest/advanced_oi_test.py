@@ -27,7 +27,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
-        self.assertEqual(pymod['a_func'].get_object(),
+        self.assertEquals(pymod['a_func'].get_object(),
                           pymod['a_var'].get_object())
 
     def test_module_dti(self):
@@ -38,7 +38,7 @@ class DynamicOITest(unittest.TestCase):
         mod2.write(code)
         self.pycore.run_module(mod2).wait_process()
         pymod2 = self.project.get_pymodule(mod2)
-        self.assertEqual(self.project.get_pymodule(mod1),
+        self.assertEquals(self.project.get_pymodule(mod1),
                           pymod2['a_var'].get_object())
 
     def test_class_from_another_module_dti(self):
@@ -53,7 +53,7 @@ class DynamicOITest(unittest.TestCase):
         self.pycore.run_module(mod2).wait_process()
         #pymod1 = self.project.get_pymodule(mod1)
         pymod2 = self.project.get_pymodule(mod2)
-        self.assertEqual(pymod2['AClass'].get_object(),
+        self.assertEquals(pymod2['AClass'].get_object(),
                           pymod2['a_var'].get_object())
 
     def test_class_dti(self):
@@ -64,7 +64,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
-        self.assertEqual(pymod['AClass'].get_object(),
+        self.assertEquals(pymod['AClass'].get_object(),
                           pymod['a_var'].get_object())
 
     def test_instance_dti(self):
@@ -75,7 +75,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
-        self.assertEqual(pymod['AClass'].get_object(),
+        self.assertEquals(pymod['AClass'].get_object(),
                           pymod['a_var'].get_object().get_type())
 
     def test_method_dti(self):
@@ -87,7 +87,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
-        self.assertEqual(pymod['AClass'].get_object(),
+        self.assertEquals(pymod['AClass'].get_object(),
                           pymod['a_var'].get_object().get_type())
 
     def test_function_argument_dti(self):
@@ -97,7 +97,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.project.get_pymodule(mod).get_scope()
-        self.assertEqual(pyscope['a_func'].get_object(),
+        self.assertEquals(pyscope['a_func'].get_object(),
                           pyscope.get_scopes()[0]['arg'].get_object())
 
     def test_classes_with_the_same_name(self):
@@ -109,7 +109,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pymod = self.project.get_pymodule(mod)
-        self.assertEqual(pymod['AClass'].get_object(),
+        self.assertEquals(pymod['AClass'].get_object(),
                           pymod['a_var'].get_object())
 
     def test_nested_classes(self):
@@ -121,7 +121,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.project.get_pymodule(mod).get_scope()
-        self.assertEqual(pyscope.get_scopes()[0]['AClass'].get_object(),
+        self.assertEquals(pyscope.get_scopes()[0]['AClass'].get_object(),
                           pyscope['a_var'].get_object())
 
     def test_function_argument_dti2(self):
@@ -131,7 +131,7 @@ class DynamicOITest(unittest.TestCase):
         mod.write(code)
         self.pycore.run_module(mod).wait_process()
         pyscope = self.project.get_pymodule(mod).get_scope()
-        self.assertEqual(pyscope['a_func'].get_object(),
+        self.assertEquals(pyscope['a_func'].get_object(),
                           pyscope.get_scopes()[0]['arg'].get_object())
 
     def test_dti_and_concluded_data_invalidation(self):
@@ -142,7 +142,7 @@ class DynamicOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(mod)
         pymod['a_var'].get_object()
         self.pycore.run_module(mod).wait_process()
-        self.assertEqual(pymod['a_func'].get_object(),
+        self.assertEquals(pymod['a_func'].get_object(),
                           pymod['a_var'].get_object())
 
     def test_list_objects_and_dynamicoi(self):
@@ -155,7 +155,7 @@ class DynamicOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_for_loops_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -167,7 +167,7 @@ class DynamicOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_objects_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -179,7 +179,7 @@ class DynamicOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_keys_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -196,7 +196,7 @@ class DynamicOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_dict_keys_and_dynamicoi2(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -210,8 +210,8 @@ class DynamicOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_strs_and_dynamicoi(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -238,12 +238,12 @@ class DynamicOITest(unittest.TestCase):
                 to_pyobject.transform(to_textual.transform(pyobject)))
         for name in ('C', 'f', 'a_var', 'a_list', 'a_str', 'a_file'):
             var = pymod[name].get_object()
-            self.assertEqual(to_textual.transform(var),
+            self.assertEquals(to_textual.transform(var),
                               complex_to_textual(var))
-        self.assertEqual(to_textual.transform(pymod),
+        self.assertEquals(to_textual.transform(pymod),
                           complex_to_textual(pymod))
         enumerate_func = rope.base.builtins.builtins['enumerate'].get_object()
-        self.assertEqual(to_textual.transform(enumerate_func),
+        self.assertEquals(to_textual.transform(enumerate_func),
                           complex_to_textual(enumerate_func))
 
     def test_arguments_with_keywords(self):
@@ -258,8 +258,8 @@ class DynamicOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_a_function_with_different_returns(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -273,8 +273,8 @@ class DynamicOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_a_function_with_different_returns2(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -289,8 +289,8 @@ class DynamicOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_ignoring_star_args(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -306,8 +306,8 @@ class DynamicOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_ignoring_double_star_args(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -323,8 +323,8 @@ class DynamicOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_invalidating_data_after_changing(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -349,7 +349,7 @@ class DynamicOITest(unittest.TestCase):
         mod.move('newmod.py')
         pymod = self.project.get_module('newmod')
         pymod2 = self.project.get_pymodule(mod2)
-        self.assertEqual(pymod2['C'].get_object(),
+        self.assertEquals(pymod2['C'].get_object(),
                           pymod['a_var'].get_object())
 
 
@@ -373,7 +373,7 @@ class NewStaticOITest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
         p_type = f_scope['p'].get_object().get_type()
-        self.assertEqual(c_class, p_type)
+        self.assertEquals(c_class, p_type)
 
     def test_static_oi_not_failing_when_callin_callables(self):
         code = 'class C(object):\n    pass\nC()\n'
@@ -389,7 +389,7 @@ class NewStaticOITest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
         p_type = f_scope['p'].get_object().get_type()
-        self.assertEqual(c_class, p_type)
+        self.assertEquals(c_class, p_type)
 
     def test_static_oi_class_methods(self):
         code = 'class C(object):\n    def f(self, p):\n        pass\n' \
@@ -400,7 +400,7 @@ class NewStaticOITest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         f_scope = c_class['f'].get_object().get_scope()
         p_type = f_scope['p'].get_object().get_type()
-        self.assertEqual(c_class, p_type)
+        self.assertEquals(c_class, p_type)
 
     def test_static_oi_preventing_soi_maximum_recursion_exceptions(self):
         code = 'item = {}\nfor item in item.keys():\n    pass\n'
@@ -417,7 +417,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_a_function_with_different_returns(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
@@ -429,8 +429,8 @@ class NewStaticOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_not_reporting_out_of_date_information(self):
         code = 'class C1(object):\n    pass\n' \
@@ -439,13 +439,13 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod['C1'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
 
         self.mod.write(code.replace('C1', 'C2'))
         pymod = self.project.get_pymodule(self.mod)
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c2_class, a_var.get_type())
+        self.assertEquals(c2_class, a_var.get_type())
 
     def test_invalidating_concluded_data_in_a_function(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -458,13 +458,13 @@ class NewStaticOITest(unittest.TestCase):
         pymod2 = self.project.get_pymodule(mod2)
         c1_class = pymod2['C1'].get_object()
         a_var = pymod2['a_var'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
 
         mod2.write(mod2.read()[:mod2.read().rfind('C1()')] + 'C2())\n')
         pymod2 = self.project.get_pymodule(mod2)
         c2_class = pymod2['C2'].get_object()
         a_var = pymod2['a_var'].get_object()
-        self.assertEqual(c2_class, a_var.get_type())
+        self.assertEquals(c2_class, a_var.get_type())
 
     def test_handling_generator_functions_for_strs(self):
         self.mod.write('class C(object):\n    pass\ndef f(p):\n    yield p()\n'
@@ -472,7 +472,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     # TODO: Returning a generator for functions that yield unknowns
     @unittest.skip("Returning a generator that yields unknowns")
@@ -493,7 +493,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_get_item(self):
         code = 'class C(object):\n    pass\nl = list()\n' \
@@ -503,7 +503,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_fields(self):
         code = 'class C(object):\n    pass\n' \
@@ -516,7 +516,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_set_item(self):
         code = 'class C(object):\n    pass\nl = [None]\n' \
@@ -526,7 +526,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_extending_lists(self):
         code = 'class C(object):\n    pass\nl = []\n' \
@@ -536,7 +536,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_lists_per_object_for_iters(self):
         code = 'class C(object):\n    pass\n' \
@@ -547,7 +547,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_append_function(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
@@ -559,8 +559,8 @@ class NewStaticOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_for_loops(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
@@ -573,8 +573,8 @@ class NewStaticOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_update(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
@@ -587,8 +587,8 @@ class NewStaticOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_static_oi_for_dicts_depending_on_update_on_seqs(self):
         code = 'class C1(object):\n    pass\nclass C2(object):\n    pass\n' \
@@ -600,8 +600,8 @@ class NewStaticOITest(unittest.TestCase):
         c2_class = pymod['C2'].get_object()
         a_var = pymod['a'].get_object()
         b_var = pymod['b'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
-        self.assertEqual(c2_class, b_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
+        self.assertEquals(c2_class, b_var.get_type())
 
     def test_static_oi_for_sets_per_object_for_set_item(self):
         code = 'class C(object):\n    pass\ns = set()\n' \
@@ -611,7 +611,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c_class = pymod['C'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c_class, a_var.get_type())
+        self.assertEquals(c_class, a_var.get_type())
 
     def test_properties_and_calling_get_property(self):
         code = 'class C1(object):\n    pass\n' \
@@ -622,7 +622,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod['C1'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
 
     def test_soi_on_constructors(self):
         code = 'class C1(object):\n    pass\n' \
@@ -634,7 +634,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         c1_class = pymod['C1'].get_object()
         a_var = pymod['a_var'].get_object()
-        self.assertEqual(c1_class, a_var.get_type())
+        self.assertEquals(c1_class, a_var.get_type())
 
     def test_not_saving_unknown_function_returns(self):
         mod2 = testutils.create_module(self.project, 'mod2')
@@ -650,7 +650,7 @@ class NewStaticOITest(unittest.TestCase):
         self.assertNotEquals(c_class, a_var.get_object().get_type())
 
         self.pycore.analyze_module(self.mod)
-        self.assertEqual(c_class, a_var.get_object().get_type())
+        self.assertEquals(c_class, a_var.get_object().get_type())
 
     def test_using_the_best_callinfo(self):
         code = 'class C1(object):\n    pass\n' \
@@ -662,7 +662,7 @@ class NewStaticOITest(unittest.TestCase):
         c1_class = pymod['C1'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
         arg2 = f_scope['arg2'].get_object()
-        self.assertEqual(c1_class, arg2.get_type())
+        self.assertEquals(c1_class, arg2.get_type())
 
     def test_call_function_and_parameters(self):
         code = 'class A(object):\n    def __call__(self, p):\n        pass\n' \
@@ -685,7 +685,7 @@ class NewStaticOITest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
         p_type = f_scope['p'].get_object().get_type()
-        self.assertEqual(c_class, p_type)
+        self.assertEquals(c_class, p_type)
 
     def test_report_libutils_and_analyze_all_modules(self):
         code = 'class C(object):\n    pass\ndef f(p):\n    pass\nf(C())\n'
@@ -695,7 +695,7 @@ class NewStaticOITest(unittest.TestCase):
         c_class = pymod['C'].get_object()
         f_scope = pymod['f'].get_object().get_scope()
         p_type = f_scope['p'].get_object().get_type()
-        self.assertEqual(c_class, p_type)
+        self.assertEquals(c_class, p_type)
 
     def test_validation_problems_for_objectdb_retrievals(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -709,7 +709,7 @@ class NewStaticOITest(unittest.TestCase):
         c_class = pymod2['C'].get_object()
         pymod1 = self.project.get_pymodule(mod1)
         var_pyname = pymod1['var']
-        self.assertEqual(c_class, var_pyname.get_object().get_type())
+        self.assertEquals(c_class, var_pyname.get_object().get_type())
         mod2.write('import mod1\n\nmod1.l.append("")\n')
         self.assertNotEquals(c_class, var_pyname.get_object().get_type(),
                              'Class `C` no more exists')
@@ -732,7 +732,7 @@ class NewStaticOITest(unittest.TestCase):
         a_class = pymod['A'].get_object()
         f_scope = a_class.get_scope().get_scopes()[0]
         p_type = f_scope['p'].get_object().get_type()
-        self.assertEqual(a_class, p_type)
+        self.assertEquals(a_class, p_type)
 
     def test_following_function_calls_when_asked_to(self):
         code = 'class A(object):\n    pass\n' \
@@ -746,7 +746,7 @@ class NewStaticOITest(unittest.TestCase):
         pymod = self.project.get_pymodule(self.mod)
         a_class = pymod['A'].get_object()
         x_var = pymod['x'].get_object().get_type()
-        self.assertEqual(a_class, x_var)
+        self.assertEquals(a_class, x_var)
 
 
 def suite():

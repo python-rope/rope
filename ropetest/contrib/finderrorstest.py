@@ -18,24 +18,24 @@ class FindErrorsTest(unittest.TestCase):
     def test_unresolved_variables(self):
         self.mod.write('print(var)\n')
         result = finderrors.find_errors(self.project, self.mod)
-        self.assertEqual(1, len(result))
-        self.assertEqual(1, result[0].lineno)
+        self.assertEquals(1, len(result))
+        self.assertEquals(1, result[0].lineno)
 
     def test_defined_later(self):
         self.mod.write('print(var)\nvar = 1\n')
         result = finderrors.find_errors(self.project, self.mod)
-        self.assertEqual(1, len(result))
-        self.assertEqual(1, result[0].lineno)
+        self.assertEquals(1, len(result))
+        self.assertEquals(1, result[0].lineno)
 
     def test_ignoring_builtins(self):
         self.mod.write('range(2)\n')
         result = finderrors.find_errors(self.project, self.mod)
-        self.assertEqual(0, len(result))
+        self.assertEquals(0, len(result))
 
     def test_ignoring_none(self):
         self.mod.write('var = None\n')
         result = finderrors.find_errors(self.project, self.mod)
-        self.assertEqual(0, len(result))
+        self.assertEquals(0, len(result))
 
     def test_bad_attributes(self):
         code = 'class C(object):\n' \
@@ -44,8 +44,8 @@ class FindErrorsTest(unittest.TestCase):
                'print(c.var)\n'
         self.mod.write(code)
         result = finderrors.find_errors(self.project, self.mod)
-        self.assertEqual(1, len(result))
-        self.assertEqual(4, result[0].lineno)
+        self.assertEquals(1, len(result))
+        self.assertEquals(4, result[0].lineno)
 
 
 if __name__ == '__main__':

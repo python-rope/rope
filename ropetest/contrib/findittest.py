@@ -23,9 +23,9 @@ class FindItTest(unittest.TestCase):
         mod = testutils.create_module(self.project, 'mod')
         mod.write('a_var = 1\n')
         result = find_occurrences(self.project, mod, 1)
-        self.assertEqual(mod, result[0].resource)
-        self.assertEqual(0, result[0].offset)
-        self.assertEqual(False, result[0].unsure)
+        self.assertEquals(mod, result[0].resource)
+        self.assertEquals(0, result[0].offset)
+        self.assertEquals(False, result[0].unsure)
 
     def test_finding_occurrences_in_more_than_one_module(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -33,7 +33,7 @@ class FindItTest(unittest.TestCase):
         mod1.write('a_var = 1\n')
         mod2.write('import mod1\nmy_var = mod1.a_var')
         result = find_occurrences(self.project, mod1, 1)
-        self.assertEqual(2, len(result))
+        self.assertEquals(2, len(result))
         modules = (result[0].resource, result[1].resource)
         self.assertTrue(mod1 in modules and mod2 in modules)
 
@@ -43,7 +43,7 @@ class FindItTest(unittest.TestCase):
                    'def f(arg):\n    arg.a_func()\n')
         result = find_occurrences(
             self.project, mod1, mod1.read().index('a_func'), unsure=True)
-        self.assertEqual(2, len(result))
+        self.assertEquals(2, len(result))
 
     def test_find_occurrences_resources_parameter(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -51,8 +51,8 @@ class FindItTest(unittest.TestCase):
         mod1.write('a_var = 1\n')
         mod2.write('import mod1\nmy_var = mod1.a_var')
         result = find_occurrences(self.project, mod1, 1, resources=[mod1])
-        self.assertEqual(1, len(result))
-        self.assertEqual((mod1, 0), (result[0].resource, result[0].offset))
+        self.assertEquals(1, len(result))
+        self.assertEquals((mod1, 0), (result[0].resource, result[0].offset))
 
     def test_find_occurrences_and_class_hierarchies(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -62,15 +62,15 @@ class FindItTest(unittest.TestCase):
         result1 = find_occurrences(self.project, mod1, offset)
         result2 = find_occurrences(self.project, mod1,
                                    offset, in_hierarchy=True)
-        self.assertEqual(1, len(result1))
-        self.assertEqual(2, len(result2))
+        self.assertEquals(1, len(result1))
+        self.assertEquals(2, len(result2))
 
     def test_trivial_find_implementations(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('class A(object):\n    def f(self):\n        pass\n')
         offset = mod1.read().rindex('f(')
         result = find_implementations(self.project, mod1, offset)
-        self.assertEqual([], result)
+        self.assertEquals([], result)
 
     def test_find_implementations_and_not_returning_parents(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -78,7 +78,7 @@ class FindItTest(unittest.TestCase):
                    'class B(A):\n    def f(self):\n        pass\n')
         offset = mod1.read().rindex('f(')
         result = find_implementations(self.project, mod1, offset)
-        self.assertEqual([], result)
+        self.assertEquals([], result)
 
     def test_find_implementations_real_implementation(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -86,8 +86,8 @@ class FindItTest(unittest.TestCase):
                    'class B(A):\n    def f(self):\n        pass\n')
         offset = mod1.read().index('f(')
         result = find_implementations(self.project, mod1, offset)
-        self.assertEqual(1, len(result))
-        self.assertEqual(mod1.read().rindex('f('), result[0].offset)
+        self.assertEquals(1, len(result))
+        self.assertEquals(mod1.read().rindex('f('), result[0].offset)
 
     def test_find_implementations_real_implementation_simple(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -100,18 +100,18 @@ class FindItTest(unittest.TestCase):
         code = 'def a_func():\n    pass\na_func()'
         result = find_definition(self.project, code, code.rindex('a_func'))
         start = code.index('a_func')
-        self.assertEqual(start, result.offset)
-        self.assertEqual(None, result.resource)
-        self.assertEqual(1, result.lineno)
-        self.assertEqual((start, start + len('a_func')), result.region)
+        self.assertEquals(start, result.offset)
+        self.assertEquals(None, result.resource)
+        self.assertEquals(1, result.lineno)
+        self.assertEquals((start, start + len('a_func')), result.region)
 
     def test_find_definition_in_other_modules(self):
         mod1 = testutils.create_module(self.project, 'mod1')
         mod1.write('var = 1\n')
         code = 'import mod1\nprint(mod1.var)\n'
         result = find_definition(self.project, code, code.index('var'))
-        self.assertEqual(mod1, result.resource)
-        self.assertEqual(0, result.offset)
+        self.assertEquals(mod1, result.resource)
+        self.assertEquals(0, result.offset)
 
 
 def suite():

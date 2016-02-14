@@ -21,14 +21,14 @@ class ChangeStackTest(unittest.TestCase):
         myfile.write('1')
         stack = rope.contrib.changestack.ChangeStack(self.project)
         stack.push(rope.base.change.ChangeContents(myfile, '2'))
-        self.assertEqual('2', myfile.read())
+        self.assertEquals('2', myfile.read())
         stack.push(rope.base.change.ChangeContents(myfile, '3'))
-        self.assertEqual('3', myfile.read())
+        self.assertEquals('3', myfile.read())
         stack.pop_all()
-        self.assertEqual('1', myfile.read())
+        self.assertEquals('1', myfile.read())
         changes = stack.merged()
         self.project.do(changes)
-        self.assertEqual('3', myfile.read())
+        self.assertEquals('3', myfile.read())
 
 
 if __name__ == '__main__':

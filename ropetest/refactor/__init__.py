@@ -40,7 +40,7 @@ class MethodObjectTest(unittest.TestCase):
         code = 'def func():\n    pass\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
-        self.assertEqual(
+        self.assertEquals(
             'class _New(object):\n\n    def __call__(self):\n        pass\n',
             replacer.get_new_class('_New'))
 
@@ -48,7 +48,7 @@ class MethodObjectTest(unittest.TestCase):
         code = 'def func():\n    return 1\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
-        self.assertEqual(
+        self.assertEquals(
             'class _New(object):\n\n    def __call__(self):'
             '\n        return 1\n',
             replacer.get_new_class('_New'))
@@ -57,7 +57,7 @@ class MethodObjectTest(unittest.TestCase):
         code = 'def func(\n    ):\n    return 1\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
-        self.assertEqual(
+        self.assertEquals(
             'class _New(object):\n\n    def __call__(self):'
             '\n        return 1\n',
             replacer.get_new_class('_New'))
@@ -66,7 +66,7 @@ class MethodObjectTest(unittest.TestCase):
         code = 'def func(param):\n    return 1\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
-        self.assertEqual(
+        self.assertEquals(
             'class _New(object):\n\n'
             '    def __init__(self, param):\n        self.param = param\n\n'
             '    def __call__(self):\n        return 1\n',
@@ -76,7 +76,7 @@ class MethodObjectTest(unittest.TestCase):
         code = 'def func(self):\n    return 1\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
-        self.assertEqual(
+        self.assertEquals(
             'class _New(object):\n\n'
             '    def __init__(self, host):\n        self.self = host\n\n'
             '    def __call__(self):\n        return 1\n',
@@ -86,7 +86,7 @@ class MethodObjectTest(unittest.TestCase):
         code = 'def func(param):\n    return param\n'
         self.mod.write(code)
         replacer = MethodObject(self.project, self.mod, code.index('func'))
-        self.assertEqual(
+        self.assertEquals(
             'class _New(object):\n\n'
             '    def __init__(self, param):\n        self.param = param\n\n'
             '    def __call__(self):\n        return self.param\n',
@@ -107,7 +107,7 @@ class MethodObjectTest(unittest.TestCase):
                    '        result = self.arg + ' \
                    'self.args[0] + self.kwds[self.arg]\n' \
                    '        return result\n'
-        self.assertEqual(expected, replacer.get_new_class('_New'))
+        self.assertEquals(expected, replacer.get_new_class('_New'))
 
     def test_performing_on_not_a_function(self):
         code = 'my_var = 10\n'
@@ -125,7 +125,7 @@ class MethodObjectTest(unittest.TestCase):
                    'class _New(object):\n\n' \
                    '    def __call__(self):\n' \
                    '        return 1\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
     def test_changing_the_module_and_class_methods(self):
         code = 'class C(object):\n\n' \
@@ -146,7 +146,7 @@ class MethodObjectTest(unittest.TestCase):
                    '        self.self = host\n\n' \
                    '    def __call__(self):\n' \
                    '        return 1\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
 
 class IntroduceFactoryTest(unittest.TestCase):
@@ -176,7 +176,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '    def create(*args, **kwds):\n' \
                    '        return AClass(*args, **kwds)\n'
         self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
-        self.assertEqual(expected, mod.read())
+        self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_the_main_module(self):
         code = 'class AClass(object):\n' \
@@ -191,7 +191,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '        return AClass(*args, **kwds)\n'\
                    'a_var = AClass.create()'
         self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
-        self.assertEqual(expected, mod.read())
+        self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_with_arguments(self):
         code = 'class AClass(object):\n' \
@@ -208,7 +208,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '        return AClass(*args, **kwds)\n' \
                    'a_var = AClass.create(10)\n'
         self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
-        self.assertEqual(expected, mod.read())
+        self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_other_modules(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -224,8 +224,8 @@ class IntroduceFactoryTest(unittest.TestCase):
                     '        return AClass(*args, **kwds)\n'
         expected2 = 'import mod1\n' \
                     'a_var = mod1.AClass.create()\n'
-        self.assertEqual(expected1, mod1.read())
-        self.assertEqual(expected2, mod2.read())
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
 
     def test_raising_exception_for_non_classes(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -244,8 +244,8 @@ class IntroduceFactoryTest(unittest.TestCase):
         self._introduce_factory(mod1, mod1.read().index('AClass') + 1,
                                 'create')
         self.project.history.undo()
-        self.assertEqual(code1, mod1.read())
-        self.assertEqual(code2, mod2.read())
+        self.assertEquals(code1, mod1.read())
+        self.assertEquals(code2, mod2.read())
 
     def test_using_on_an_occurance_outside_the_main_module(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -261,8 +261,8 @@ class IntroduceFactoryTest(unittest.TestCase):
                     '        return AClass(*args, **kwds)\n'
         expected2 = 'import mod1\n' \
                     'a_var = mod1.AClass.create()\n'
-        self.assertEqual(expected1, mod1.read())
-        self.assertEqual(expected2, mod2.read())
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
 
     def test_introduce_factory_in_nested_scopes(self):
         code = 'def create_var():\n'\
@@ -279,7 +279,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '            return AClass(*args, **kwds)\n'\
                    '    return AClass.create()\n'
         self._introduce_factory(mod, mod.read().index('AClass') + 1, 'create')
-        self.assertEqual(expected, mod.read())
+        self.assertEquals(expected, mod.read())
 
     def test_adding_factory_for_global_factories(self):
         code = 'class AClass(object):\n    an_attr = 10\n'
@@ -291,7 +291,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '    return AClass(*args, **kwds)\n'
         self._introduce_factory(mod, mod.read().index('AClass') + 1,
                                 'create', global_factory=True)
-        self.assertEqual(expected, mod.read())
+        self.assertEquals(expected, mod.read())
 
     def test_get_name_for_factories(self):
         code = 'class C(object):\n    pass\n'
@@ -299,7 +299,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod.write(code)
         factory = IntroduceFactory(self.project, mod,
                                    mod.read().index('C') + 1)
-        self.assertEqual('C', factory.get_name())
+        self.assertEquals('C', factory.get_name())
 
     def test_raising_exception_for_global_factory_for_nested_classes(self):
         code = 'def create_var():\n'\
@@ -324,7 +324,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    'a_var = create()'
         self._introduce_factory(mod, mod.read().index('AClass') + 1,
                                 'create', global_factory=True)
-        self.assertEqual(expected, mod.read())
+        self.assertEquals(expected, mod.read())
 
     def test_changing_occurances_in_other_modules_for_global_factories(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -339,8 +339,8 @@ class IntroduceFactoryTest(unittest.TestCase):
                     '    return AClass(*args, **kwds)\n'
         expected2 = 'import mod1\n' \
                     'a_var = mod1.create()\n'
-        self.assertEqual(expected1, mod1.read())
-        self.assertEqual(expected2, mod2.read())
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
 
     def test_import_if_necessary_in_other_mods_for_global_factories(self):
         mod1 = testutils.create_module(self.project, 'mod1')
@@ -355,8 +355,8 @@ class IntroduceFactoryTest(unittest.TestCase):
                     '    return AClass(*args, **kwds)\n'
         expected2 = 'from mod1 import AClass, create\n' \
                     'pair = create(), AClass\n'
-        self.assertEqual(expected1, mod1.read())
-        self.assertEqual(expected2, mod2.read())
+        self.assertEquals(expected1, mod1.read())
+        self.assertEquals(expected2, mod2.read())
 
     def test_changing_occurances_for_renamed_classes(self):
         code = 'class AClass(object):\n    an_attr = 10' \
@@ -371,7 +371,7 @@ class IntroduceFactoryTest(unittest.TestCase):
                    'a_class = AClass\n' \
                    'a_var = a_class()'
         self._introduce_factory(mod, mod.read().index('a_class') + 1, 'create')
-        self.assertEqual(expected, mod.read())
+        self.assertEquals(expected, mod.read())
 
     def test_changing_occurrs_in_the_same_module_with_conflict_ranges(self):
         mod = testutils.create_module(self.project, 'mod')
@@ -398,7 +398,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2 = self.project.get_resource('mod2')
         root_folder = self.project.root
         self.assertFalse(root_folder.has_child('mod2.py'))
-        self.assertEqual('class AClass(object):\n    pass\n',
+        self.assertEquals('class AClass(object):\n    pass\n',
                           root_folder.get_child('mod2').
                           get_child('__init__.py').read())
 
@@ -420,7 +420,7 @@ class IntroduceFactoryTest(unittest.TestCase):
         mod2.write('class AClass(object):\n    pass\n')
         self._transform_module_to_package(mod1)
         new_init = self.project.get_resource('pkg/mod1/__init__.py')
-        self.assertEqual('import pkg.mod2\nfrom pkg.mod2 import AClass\n',
+        self.assertEquals('import pkg.mod2\nfrom pkg.mod2 import AClass\n',
                           new_init.read())
 
     def test_resources_parameter(self):
@@ -437,8 +437,8 @@ class IntroduceFactoryTest(unittest.TestCase):
                    '        return A(*args, **kwds)\n'
         self._introduce_factory(mod, mod.read().index('A') + 1,
                                 'create', resources=[mod])
-        self.assertEqual(expected, mod.read())
-        self.assertEqual(code1, mod1.read())
+        self.assertEquals(expected, mod.read())
+        self.assertEquals(code1, mod1.read())
 
 
 class EncapsulateFieldTest(unittest.TestCase):
@@ -472,7 +472,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         code = self.a_class
         self.mod.write(code)
         self._encapsulate(self.mod, code.index('attr') + 1)
-        self.assertEqual(self.encapsulated, self.mod.read())
+        self.assertEquals(self.encapsulated, self.mod.read())
 
     def test_changing_getters_in_other_modules(self):
         code = 'import mod\n' \
@@ -484,7 +484,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = 'import mod\n' \
                    'a_var = mod.A()\n' \
                    'range(a_var.get_attr())\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_setters_in_other_modules(self):
         code = 'import mod\n' \
@@ -496,7 +496,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = 'import mod\n' \
                    'a_var = mod.A()\n' \
                    'a_var.set_attr(1)\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_getters_in_setters(self):
         code = 'import mod\n' \
@@ -508,12 +508,12 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = 'import mod\n' \
                    'a_var = mod.A()\n' \
                    'a_var.set_attr(1 + a_var.get_attr())\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_appending_to_class_end(self):
         self.mod1.write(self.a_class + 'a_var = A()\n')
         self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
-        self.assertEqual(self.encapsulated + 'a_var = A()\n',
+        self.assertEquals(self.encapsulated + 'a_var = A()\n',
                           self.mod1.read())
 
     def test_performing_in_other_modules(self):
@@ -523,11 +523,11 @@ class EncapsulateFieldTest(unittest.TestCase):
         self.mod1.write(code)
         self.mod.write(self.a_class)
         self._encapsulate(self.mod1, self.mod1.read().index('attr') + 1)
-        self.assertEqual(self.encapsulated, self.mod.read())
+        self.assertEquals(self.encapsulated, self.mod.read())
         expected = 'import mod\n' \
                    'a_var = mod.A()\n' \
                    'range(a_var.get_attr())\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_main_module_occurances(self):
         code = self.a_class + \
@@ -538,7 +538,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = self.encapsulated + \
             'a_var = A()\n' \
             'a_var.set_attr(a_var.get_attr() * 2)\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_raising_exception_when_performed_on_non_attributes(self):
         self.mod1.write('attr = 10')
@@ -579,7 +579,7 @@ class EncapsulateFieldTest(unittest.TestCase):
                    '    pass\n' \
                    'a_var = mod.A()\n' \
                    'func(a_var.get_attr(), a2=2)\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_tuple_assignments(self):
         code = 'import mod\n' \
@@ -591,7 +591,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = 'import mod\n' \
                    'a_var = mod.A()\n' \
                    'a, b = a_var.get_attr(), 1\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_augmented_assignments(self):
         code = 'import mod\n' \
@@ -603,7 +603,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = 'import mod\n' \
                    'a_var = mod.A()\n' \
                    'a_var.set_attr(a_var.get_attr() + 1)\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_augmented_assignments2(self):
         code = 'import mod\n' \
@@ -615,7 +615,7 @@ class EncapsulateFieldTest(unittest.TestCase):
         expected = 'import mod\n' \
                    'a_var = mod.A()\n' \
                    'a_var.set_attr(a_var.get_attr() << 1)\n'
-        self.assertEqual(expected, self.mod1.read())
+        self.assertEquals(expected, self.mod1.read())
 
     def test_changing_occurrences_inside_the_class(self):
         new_class = self.a_class + '\n' \
@@ -627,7 +627,7 @@ class EncapsulateFieldTest(unittest.TestCase):
             '    def a_func(self):\n' \
             '        self.set_attr(1)\n' + \
             self.added_methods
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
     def test_getter_and_setter_parameters(self):
         self.mod.write(self.a_class)
@@ -636,17 +636,17 @@ class EncapsulateFieldTest(unittest.TestCase):
         new_methods = self.added_methods.replace('get_attr', 'getAttr').\
             replace('set_attr', 'setAttr')
         expected = self.a_class + new_methods
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
     def test_using_resources_parameter(self):
         self.mod1.write('import mod\na = mod.A()\nvar = a.attr\n')
         self.mod.write(self.a_class)
         self._encapsulate(self.mod, self.mod.read().index('attr') + 1,
                           resources=[self.mod])
-        self.assertEqual('import mod\na = mod.A()\nvar = a.attr\n',
+        self.assertEquals('import mod\na = mod.A()\nvar = a.attr\n',
                           self.mod1.read())
         expected = self.a_class + self.added_methods
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
 
 class LocalToFieldTest(unittest.TestCase):
@@ -676,7 +676,7 @@ class LocalToFieldTest(unittest.TestCase):
         expected = 'class A(object):\n' \
                    '    def a_func(self):\n' \
                    '        self.var = 10\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
     def test_raising_exception_when_performed_on_a_global_var(self):
         self.mod.write('var = 10\n')
@@ -723,7 +723,7 @@ class LocalToFieldTest(unittest.TestCase):
         expected = 'class A(object):\n' \
                    '    def a_func(myself):\n' \
                    '        myself.var = 10\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
 
 class IntroduceParameterTest(unittest.TestCase):
@@ -752,7 +752,7 @@ class IntroduceParameterTest(unittest.TestCase):
         expected = 'var = 1\n' \
                    'def f(var=var):\n' \
                    '    b = var\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
     def test_changing_function_body(self):
         code = 'var = 1\n' \
@@ -764,14 +764,14 @@ class IntroduceParameterTest(unittest.TestCase):
         expected = 'var = 1\n' \
                    'def f(p1=var):\n' \
                    '    b = p1\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
     def test_unknown_variables(self):
         self.mod.write('def f():\n    b = var + c\n')
         offset = self.mod.read().rindex('var')
         with self.assertRaises(RefactoringError):
             self._introduce_parameter(offset, 'p1')
-            self.assertEqual('def f(p1=var):\n    b = p1 + c\n',
+            self.assertEquals('def f(p1=var):\n    b = p1 + c\n',
                               self.mod.read())
 
     def test_failing_when_not_inside(self):
@@ -793,7 +793,7 @@ class IntroduceParameterTest(unittest.TestCase):
                    'c = C()\n' \
                    'def f(p1=c.a):\n' \
                    '    b = p1\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
     def test_introducing_parameters_for_methods(self):
         code = 'var = 1\n' \
@@ -807,7 +807,7 @@ class IntroduceParameterTest(unittest.TestCase):
                    'class C(object):\n' \
                    '    def f(self, p1=var):\n' \
                    '        b = p1\n'
-        self.assertEqual(expected, self.mod.read())
+        self.assertEquals(expected, self.mod.read())
 
 
 class _MockTaskObserver(object):
@@ -833,7 +833,7 @@ class TaskHandleTest(unittest.TestCase):
     def test_job_sets(self):
         handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_jobset()
-        self.assertEqual([jobs], handle.get_jobsets())
+        self.assertEquals([jobs], handle.get_jobsets())
 
     def test_starting_and_finishing_jobs(self):
         handle = rope.base.taskhandle.TaskHandle()
@@ -860,14 +860,14 @@ class TaskHandleTest(unittest.TestCase):
         observer = _MockTaskObserver()
         handle.add_observer(observer)
         handle.stop()
-        self.assertEqual(1, observer.called)
+        self.assertEquals(1, observer.called)
 
     def test_calling_the_observer_after_creating_job_sets(self):
         handle = rope.base.taskhandle.TaskHandle()
         observer = _MockTaskObserver()
         handle.add_observer(observer)
         jobs = handle.create_jobset()  # noqa
-        self.assertEqual(1, observer.called)
+        self.assertEquals(1, observer.called)
 
     def test_calling_the_observer_when_starting_and_finishing_jobs(self):
         handle = rope.base.taskhandle.TaskHandle()
@@ -876,26 +876,26 @@ class TaskHandleTest(unittest.TestCase):
         jobs = handle.create_jobset(name='test job set', count=1)
         jobs.started_job('job1')
         jobs.finished_job()
-        self.assertEqual(3, observer.called)
+        self.assertEquals(3, observer.called)
 
     def test_job_set_get_percent_done(self):
         handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_jobset(name='test job set', count=2)
-        self.assertEqual(0, jobs.get_percent_done())
+        self.assertEquals(0, jobs.get_percent_done())
         jobs.started_job('job1')
         jobs.finished_job()
-        self.assertEqual(50, jobs.get_percent_done())
+        self.assertEquals(50, jobs.get_percent_done())
         jobs.started_job('job2')
         jobs.finished_job()
-        self.assertEqual(100, jobs.get_percent_done())
+        self.assertEquals(100, jobs.get_percent_done())
 
     def test_getting_job_name(self):
         handle = rope.base.taskhandle.TaskHandle()
         jobs = handle.create_jobset(name='test job set', count=1)
-        self.assertEqual('test job set', jobs.get_name())
-        self.assertEqual(None, jobs.get_active_job_name())
+        self.assertEquals('test job set', jobs.get_name())
+        self.assertEquals(None, jobs.get_active_job_name())
         jobs.started_job('job1')
-        self.assertEqual('job1', jobs.get_active_job_name())
+        self.assertEquals('job1', jobs.get_active_job_name())
 
 
 def suite():

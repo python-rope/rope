@@ -25,14 +25,14 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual(code, self.mod1.read())
+        self.assertEquals(code, self.mod1.read())
 
     def test_simple_function(self):
         code = 'def f(p):\n    print(p)\nprint(1)\n'
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual('def f(p):\n    print(p)\nf(1)\n',
+        self.assertEquals('def f(p):\n    print(p)\nf(1)\n',
                           self.mod1.read())
 
     def test_simple_function2(self):
@@ -40,7 +40,7 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual('def f(p):\n    print(p + 1)\nf(1)\n',
+        self.assertEquals('def f(p):\n    print(p + 1)\nf(1)\n',
                           self.mod1.read())
 
     def test_functions_with_multiple_statements(self):
@@ -48,7 +48,7 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual('def f(p):\n    r = p + 1\n    print(r)\nf(2)\n',
+        self.assertEquals('def f(p):\n    r = p + 1\n    print(r)\nf(2)\n',
                           self.mod1.read())
 
     def test_returning(self):
@@ -56,7 +56,7 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual(
+        self.assertEquals(
             'def f(p):\n    return p + 1\nr = f(2)\nprint(r)\n',
             self.mod1.read())
 
@@ -65,7 +65,7 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual(
+        self.assertEquals(
             'def f(p):\n    return p + 1\nprint(f(2))\n',
             self.mod1.read())
 
@@ -75,7 +75,7 @@ class UseFunctionTest(unittest.TestCase):
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.mod2.write('print(2 + 1)\n')
         self.project.do(user.get_changes())
-        self.assertEqual('import mod1\nprint(mod1.f(2))\n',
+        self.assertEquals('import mod1\nprint(mod1.f(2))\n',
                           self.mod2.read())
 
     def test_when_performing_on_non_functions(self):
@@ -89,7 +89,7 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual('def f(p):\n    a = p + 1\n    print(a)\nf(2)\n',
+        self.assertEquals('def f(p):\n    a = p + 1\n    print(a)\nf(2)\n',
                           self.mod1.read())
 
     # TODO: probably new options should be added to restructure
@@ -99,7 +99,7 @@ class UseFunctionTest(unittest.TestCase):
         self.mod1.write(code)
         user = UseFunction(self.project, self.mod1, code.rindex('f'))
         self.project.do(user.get_changes())
-        self.assertEqual('def f(p):\n    a = p + 1\n    return a\n'
+        self.assertEquals('def f(p):\n    a = p + 1\n    return a\n'
                           'var = f(p)\nprint(var)\n', self.mod1.read())
 
     def test_exception_when_performing_a_function_with_yield(self):
