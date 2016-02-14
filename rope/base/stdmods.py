@@ -41,7 +41,9 @@ def normalize_so_name(name):
     """
     Handle different types of python installations
     """
-    return re.sub('\.cpython-\d+', '', os.path.splitext(name)[0].replace('module', ''))
+    if "cpython" in name:
+        return os.path.splitext(os.path.splitext(name)[0])[0]
+    return os.path.splitext(name)[0]
 
 
 @utils.cached(1)
@@ -53,7 +55,7 @@ def dynload_modules():
             path = os.path.join(dynload_path, name)
             if os.path.isfile(path):
                 if name.endswith('.dll'):
-                    result.add(os.path.splitext(normalize_so_name(name))[0])
+                    result.add(normalize_so_name(name))
                 if name.endswith('.so'):
                     result.add(normalize_so_name(name))
     return result
