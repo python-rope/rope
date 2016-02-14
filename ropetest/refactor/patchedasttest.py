@@ -374,9 +374,9 @@ class PatchedASTTest(unittest.TestCase):
             'Function', ['def', ' ', 'f', '', '(', '', 'arguments',
                          '', ')', '', ':', '\n    ', 'Expr', '\n    ',
                          'Pass'])
-        expected_arg_name = pycompat.ast_arg_type.__name__
+        expected_ast_arg_name = pycompat.ast_arg_type.__name__
         checker.check_children(
-            'arguments', [expected_arg_name, '', ',',
+            'arguments', [expected_ast_arg_name, '', ',',
                           ' ', '**', '', 'p2'])
 
     @testutils.only_for_versions_lower('3')
